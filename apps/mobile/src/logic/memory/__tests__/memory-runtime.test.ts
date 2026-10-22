@@ -6,7 +6,7 @@ import type { TelemetryEvent } from '../../../platform/telemetry';
 import { applyVocabEvents, type VocabEvent } from '../../vocab/progress';
 import { addDays } from '../../vocab/srs';
 import { MEMORY_KEY } from '../keys';
-import { createMemoryRuntime, type MemoryRuntime, type MemoryRuntimeDeps } from '../memory-runtime';
+import { createMemoryRuntime, stampOf, type MemoryRuntime, type MemoryRuntimeDeps } from '../memory-runtime';
 import { INDEX, ITEMS, finished, utcDay } from './fixtures';
 
 /**
@@ -414,5 +414,14 @@ describe('fixed clocks in four time zones (the suite runs under TZ=UTC)', () => 
     expect(await twoAnswers('America/Los_Angeles', '2026-11-01T07:30:00.000Z', '2026-11-02T07:30:00.000Z')).toEqual({ box: 1, met: '2026-11-01' });
     // 8 March: a 23-hour day; 23:30 on the 7th and 00:30 on the 9th are two days apart.
     expect(await twoAnswers('America/Los_Angeles', '2026-03-08T07:30:00.000Z', '2026-03-09T07:30:00.000Z')).toEqual({ box: 2, met: '2026-03-07' });
+  });
+});
+
+describe('the schedule stamp', () => {
+  it('is the device clock, at most a day past the latest stamp the store holds', () => {
+    const rows = { a: { sh: 'stage2', st: { b: 1, d: null, c: 0, r: 0, n: 1, f: '2026-10-01', s: 1, at: '2026-10-20T00:00:00.000Z' } } };
+    expect(stampOf({ rows: {} }, new Date('2030-01-01T00:00:00.000Z'))).toBe('2030-01-01T00:00:00.000Z');
+    expect(stampOf({ rows }, new Date('2026-10-20T12:00:00.000Z'))).toBe('2026-10-20T12:00:00.000Z');
+    expect(stampOf({ rows }, new Date('2030-01-01T00:00:00.000Z'))).toBe('2026-10-21T00:00:00.000Z');
   });
 });

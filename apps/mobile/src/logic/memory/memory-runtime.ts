@@ -90,6 +90,24 @@ export interface MemoryRuntime {
 }
 
 const VOCAB_ID = /^vocab:/;
+/** How far past the latest stamp in the store a new stamp may be (as the word slice's clamp, F-VOC-005 section 3.3). */
+const STAMP_CLAMP_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The schedule stamp `at` of an answer at `at`: the device clock, but never more than a day past the
+ * latest stamp the store holds (its own answers and every state pulled from the server), so a device
+ * clock set far ahead cannot make its schedule win every merge for long (CM-11's clock guard holds
+ * the server side). The local day of the answer is never clamped.
+ */
+export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date): string {
+  let latest = Number.NEGATIVE_INFINITY;
+  for (const row of Object.values(file.rows)) {
+    const t = Date.parse(row.st.at);
+    if (t > latest) latest = t;
+  }
+  const ms = at.getTime();
+  return new Date(Number.isFinite(latest) && ms > latest + STAMP_CLAMP_MS ? latest + STAMP_CLAMP_MS : ms).toISOString();
+}
 const PULL_PAGES = 5;
 
 /** The rung a word question asked: heard to picture is recognize, the rest read (F-VOC-005 formats). */
@@ -202,7 +220,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         if (!file) return;
         const { index } = await items();
         const day = deps.dayOf(at);
-        const iso = at.toISOString();
+        const iso = stampOf(file, at);
         const counts = today(profileId, file, day, index.retired);
         const pending = new Set(file.pending);
         for (const a of rest) {
