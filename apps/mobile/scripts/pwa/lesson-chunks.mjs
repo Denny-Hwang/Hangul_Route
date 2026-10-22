@@ -39,7 +39,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the site page titles and descriptions, the share-card caption, the 404 lines and the longer privacy text to the
   // bundled `landing` messages: 6,495,681 B raw / 1,618,867 B gzip (release) and 6,495,837 B raw / 1,618,965 B gzip
   // (app-host) on 8eba8de96, against 6,491,702 B raw on main 52403c87b, so the line is 6,495,837 B plus an 8,163 B margin.
-  startBundleRaw: 6_504_000,
+  // The final integration (integrate/final-oa-site: OA-7b #798, SN-1 #813 and SN-2 #804 on main 7eb5bad61) adds Who is
+  // joining? to the shell and the site-entry strings to the bundled `landing` messages: 6,518,688 B raw / 1,624,797 B
+  // gzip (release `build:web`), so the line is that measurement plus a 6,312 B rounding margin (#814 shrinks it).
+  startBundleRaw: 6_525_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
