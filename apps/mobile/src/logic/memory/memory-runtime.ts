@@ -12,6 +12,7 @@ import { MemoryPullSchema } from '@hangul-route/content-schema/memory';
 import type { FirstRoundAnswer } from '../../store/quest-run-store';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { ReviewItemIndex } from '../reviews/review-items-store';
+import { engineStates, withSentenceCredit } from '../reviews/engine';
 import { applyVocabEvents, vocabOf, type VocabEvent } from '../vocab/progress';
 import { daysBetween, isDue } from '../vocab/srs';
 import { countAnswer, durableWeek, memoryDailyPayload, openDay, studyMinutes } from './daily';
@@ -267,7 +268,11 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         const iso = stampOf(file, at, deps.serverTime?.(profileId) ?? null);
         const counts = today(profileId, file, day, index.retired);
         const pending = new Set(file.pending);
-        for (const a of rest) {
+        // Credit inside sentences (section 4.3, row CM-13): a right sentence also answers the due words inside it.
+        const snap = deps.snapshot(profileId);
+        const credited = withSentenceCredit({ index, states: engineStates(file.rows, snap ? vocabOf(snap) : undefined), today: day, voice: true }, rest);
+        words.push(...vocabAnswers(profileId, credited.filter((a) => VOCAB_ID.test(a.itemId))));
+        for (const a of credited.filter((c) => !VOCAB_ID.test(c.itemId))) {
           const item = index.byId.get(a.itemId);
           if (!item || index.retired.has(item.id)) continue;
           const row = file.rows[item.id];

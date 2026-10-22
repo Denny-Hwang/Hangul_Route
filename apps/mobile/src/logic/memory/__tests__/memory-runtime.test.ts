@@ -8,6 +8,7 @@ import { addDays } from '../../vocab/srs';
 import { MEMORY_KEY } from '../keys';
 import { createMemoryRuntime, stampOf, type MemoryRuntime, type MemoryRuntimeDeps } from '../memory-runtime';
 import { INDEX, ITEMS, finished, utcDay } from './fixtures';
+import { wordsInside } from '../../reviews/engine';
 
 /**
  * The memory store at runtime (F-CURR-002 sections 4.3, 4.8, 4.9, 11.3, row CM-12): recording from
@@ -178,6 +179,27 @@ describe('recording from a quest round', () => {
       expect(e.profileId).toBe('p1');
       expect(CURR_TELEMETRY_PAYLOADS['memory.daily'].safeParse(e.payload).success).toBe(true);
     }
+  });
+
+  it('a right sentence in a quest round also answers the due word inside it (credit inside sentences, section 4.3)', async () => {
+    const pair = INDEX.items
+      .filter((i) => i.kind === 'pat')
+      .map((pat) => ({ pat, word: wordsInside(pat, INDEX).find((id) => !id.startsWith('vocab:')) }))
+      .find((p) => p.word !== undefined) as { pat: (typeof ITEMS)[number]; word: string };
+    const d = device();
+    await d.rt.recordAnswers('p1', [{ itemId: pair.word, correct: true, rung: 'read' }], d.clock.now);
+    expect(await stateOf(d, pair.word)).toMatchObject({ b: 1, d: '2026-10-23' });
+    d.clock.now = new Date('2026-10-23T09:00:00.000Z');
+    const sentence = { questId: 'quest:x', episodeId: pair.pat.cells[0] as string, correct: true, asked: { texts: [pair.pat.ko], rung: 'read' as const }, at: d.clock.now };
+    await d.rt.recordRound('p1', sentence);
+    // The word was due, so the credit is its spaced answer of the day: up one box, once.
+    expect(await stateOf(d, pair.word)).toMatchObject({ b: 2, d: addDays('2026-10-23', 3), n: 2 });
+    await d.rt.recordRound('p1', { ...sentence, at: new Date('2026-10-23T10:00:00.000Z') });
+    expect(await stateOf(d, pair.word)).toMatchObject({ b: 2, n: 2 });
+    // A miss credits nothing.
+    d.clock.now = new Date('2026-10-26T09:00:00.000Z');
+    await d.rt.recordRound('p1', { ...sentence, correct: false, at: d.clock.now });
+    expect(await stateOf(d, pair.word)).toMatchObject({ b: 2, n: 2 });
   });
 
   it('a retired or unknown id given to recordAnswers is left out', async () => {
