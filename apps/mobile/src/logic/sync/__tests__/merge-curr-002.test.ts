@@ -240,6 +240,15 @@ describe('mergeSnapshots: `daily` retention of 14 local days (section 4.8, row C
     expect(ids(mergeSnapshots(tabletSide, phoneSide, { now: NOW }))).toEqual(expected);
   });
 
+  it('a daily entry dated far ahead (a wrong clock) never prunes the real entries (section 13)', () => {
+    const wrongClock = base({ reviews: [dailyOn('2027-03-01', 0)] });
+    const phoneSide = base({ reviews: [dailyOn('2026-10-10', 0), dailyOn('2026-10-21', 0)] });
+    const ids = mergeSnapshots(phoneSide, wrongClock, { now: NOW })
+      .reviews.map((r) => r.id)
+      .sort();
+    expect(ids).toEqual(['daily:2026-10-10:0', 'daily:2026-10-21:0', 'daily:2027-03-01:0']);
+  });
+
   it('a pruned entry never comes back from an older copy', () => {
     const fresh = mergeSnapshots(base({ reviews: [dailyOn('2026-10-21', 0)] }), base({ reviews: [dailyOn('2026-09-01', 0)] }), { now: NOW });
     expect(fresh.reviews.map((r) => r.id)).toEqual(['daily:2026-10-21:0']);
