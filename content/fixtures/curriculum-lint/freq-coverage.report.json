@@ -1,0 +1,198 @@
+{
+  "$comment": "F-CURR-002 §9.3 report fixture (row CM-7): the taught words of each stage and how many are on a stand-in grade-A list. Not real content, and not the NIKL list.",
+  "rule": "freq-coverage",
+  "gradeA": [
+    "하늘",
+    "별",
+    "나무",
+    "사과"
+  ],
+  "files": {
+    "content/episodes/stage-2/nature.json": {
+      "id": "episode:stage2-nature",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "구름",
+                          "romanization": "gureum",
+                          "en": "cloud"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    },
+    "content/episodes/stage-3/life.json": {
+      "id": "episode:stage3-life",
+      "stage": "stage3",
+      "theme": "life",
+      "status": "draft",
+      "titleEn": "Sky and Sea",
+      "quests": [
+        {
+          "id": "quest:stage3-life-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "사과",
+                          "romanization": "sagwa",
+                          "en": "apple"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "빵",
+                          "romanization": "ppang",
+                          "en": "bread"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s3-life-q1-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s3-life-q1-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word.",
+                  "target": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "culture": [],
+      "rewardCardIds": []
+    }
+  },
+  "report": [
+    {
+      "stage": 2,
+      "taught": 3,
+      "onList": 2
+    },
+    {
+      "stage": 3,
+      "taught": 2,
+      "onList": 1
+    }
+  ]
+}

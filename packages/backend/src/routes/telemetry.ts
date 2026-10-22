@@ -1,6 +1,9 @@
 import { isServerOnlyTelemetryName, isTelemetryEventName } from '@hangul-route/content-schema';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
+import { learningRollupsEnabled, rollUpEvent, type RollupEnv } from '../lib/learning-rollups';
+import { clientKey } from '../lib/rate-limit';
 import { appendEvent, keptEventFields } from '../lib/server-events';
 import { id, type TelemetryEvent } from '../store';
 
@@ -14,9 +17,18 @@ import { id, type TelemetryEvent } from '../store';
  * codes and never a profile id, `browse.*` and `notes.*` events keep only
  * their documented fields and never a profile id (F-BROWSE-001 section 9,
  * F-FEEDBACK-001 section 10), `billing.*` names are refused with 422 because
- * only the Worker records them (F-BILL-002 section 10), and the log is
+ * only the Worker records them (F-BILL-002 section 10), as are `space.goal.set`
+ * and `space.goal.met` (F-CURR-002 section 11.3), an F-CURR-002 name
+ * (section 11.3, row CM-3) keeps its payload only when it parses against its
+ * strict schema, `session.end` keeps only the CM-3 fields that fit their codes,
+ * and the log is
  * capped: these rules live in lib/server-events.ts, shared with the events the
  * Worker records itself.
+ * The log stays transient diagnostics. A name on the rollup allowlist also adds
+ * 1 to a few `learning_rollups` cells (F-CURR-002 section 11.2, row CM-70a,
+ * lib/learning-rollups.ts) from the kept payload alone, never the profile id;
+ * a failed rollup write never fails the event, and the dashboard variable
+ * `LEARNING_ROLLUPS=disabled` stops the writes at once.
  * There is deliberately no read route (audit SEC-3).
  */
 export const telemetryRoutes = new Hono();
@@ -41,13 +53,22 @@ function clientTimestamp(raw: unknown, nowMs: number): string | null {
   return new Date(ms).toISOString();
 }
 
+/** The Worker's execution context, or undefined where there is none (Hono throws on the getter then, as in tests). */
+function executionContextOf(c: Context): { waitUntil: (p: Promise<unknown>) => void } | undefined {
+  try {
+    return c.executionCtx;
+  } catch {
+    return undefined;
+  }
+}
+
 telemetryRoutes.post('/', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown> | null;
   const name = body?.name;
   if (!isTelemetryEventName(name)) {
     return fail(c, 'bad_request', 'unknown event name', 422);
   }
-  // `billing.*` is recorded by the Worker itself (F-BILL-002 section 10): a client can never forge one.
+  // `billing.*` (F-BILL-002 section 10) and `space.goal.*` (F-CURR-002 section 11.3) are recorded by the Worker itself: a client can never forge one.
   if (isServerOnlyTelemetryName(name)) {
     return fail(c, 'bad_request', 'server-only event name', 422);
   }
@@ -62,5 +83,14 @@ telemetryRoutes.post('/', async (c) => {
     at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };
-  return ok(c, { event: appendEvent(event) }, 201);
+  const stored = appendEvent(event);
+  // The name and kept payload only: the profile id never reaches the rollup. After the answer when
+  // the runtime allows it (waitUntil), so a slow D1 write never delays the 201 into a client retry.
+  if (learningRollupsEnabled(c.env as RollupEnv | undefined)) {
+    const rollup = rollUpEvent(() => dbFor(c), { name, payload: stored.payload, receivedAt, at: event.at }, clientKey((h) => c.req.header(h)));
+    const ctx = executionContextOf(c);
+    if (ctx) ctx.waitUntil(rollup);
+    else await rollup;
+  }
+  return ok(c, { event: stored }, 201);
 });

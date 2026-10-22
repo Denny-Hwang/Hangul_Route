@@ -23,7 +23,7 @@ Parent and siblings: CLAUDE.md section 1 (audience, languages, anti-shame, grid)
 6. **New categories are Topic Packs on topic pages that the learner reaches by swiping the Journey view sideways, not a sixth grid column** (owner decision OD-2, 2026-10-21). The first page is the five themes exactly as today. Swiping sideways shows further pages of pack columns, at most five a page, so no cell is ever under the 48 dp touch target at 320 px. Page dots and an edge arrow show there is more to the side, and buttons do the same as the swipe for keyboard and screen-reader users. A sixth column would put the cell under 48 dp, and the theme key is in 54 files and the Worker. There are eight packs in three waves; the first wave is Numbers & Time, People & Family and Feelings & Me (OD-4; section 6).
 7. **Remove authoring bottlenecks before content scales.** Generated modules stop being committed, and the catalogue version becomes a date stamp authored in content, so parallel content PRs have no shared file (section 9).
 8. **Lessons and stories load outside the start bundle.** A manifest of 60 KB or less is loaded at start. Lesson and story bodies are precached, content-hashed static chunks, so offline still works and start-up gets lighter while content triples (section 10).
-9. **Every phase is measured without PII, and the data has somewhere to land first.** A persistent rollup table ships in Phase 0, before the shadow period it measures. A public, read-only remote config with off-only overrides replaces build-only kill switches, and a daily guardrail evaluator lowers a ramp on a breach. Each learner profile is placed in an experiment bucket. Metrics are counts by content id, and any group with fewer than 20 profiles is suppressed (sections 3, 11, 12).
+9. **Every phase is measured without PII, and the data has somewhere to land first.** A persistent rollup table ships in Phase 0, before the shadow period it measures. A public, read-only remote config with off-only overrides replaces build-only kill switches, and a daily guardrail evaluator lowers a ramp on a breach. Each learner profile is placed in an experiment bucket. Metrics are counts by content id, and any group with fewer than 20 events on a day (profile-days for the once-a-day names) is suppressed (sections 3, 11, 12).
 
 ## 1. Context
 
@@ -85,12 +85,12 @@ Baselines come from the two-week shadow period of row CM-12, which writes into t
 
 ### 3.3 Guardrails
 
-The guardrail evaluator (row CM-70b) checks these once a day from the rollup table. On a breach it lowers the ramping flag to its previous step through the remote config (section 12.3).
+The guardrail evaluator (row CM-70b) checks these once a day from the rollup table. On a breach it lowers the ramping flag to its previous step through the remote config (section 12.3). A rise or fall counts as a breach only when it passes the line below and is statistically clear for the cohort sizes; section 12.3 gives the exact rule.
 
-- Mid-quest quit rate per game kind (`session.end` with `questLeft: 1`, by `leftAtKind`) must not rise by more than 2 pp.
+- Mid-quest quit rate, overall and per game kind (`session.end` with `questLeft: 1`, by `leftAtKind`), must not rise by more than 2 pp. Until row CM-70c the per-kind rate is the kind's share of all reporting sessions, so it is weaker than written (12.3).
 - Quits after a wrong streak (`session.end` with `afterWrongStreak: 2` and `questLeft: 1`) must not rise.
 - Median session length must not fall by more than 10%, and p90 must stay under 20 minutes.
-- Sync 4xx and 5xx rates must not double, the p95 memory delta size must stay under 32 KB, and D1 rows written per day must stay under 50% of the free-tier daily quota.
+- Sync 4xx and 5xx rates must not double, the p95 memory delta size must stay under 32 KB, and D1 rows written per day must stay under 50% of the free-tier daily quota. The evaluator's D1 line is advisory until row CM-70d: it sees only the rows the rollup sink writes, which stop at 20% (12.3), so the account total is the owner's check.
 - The start bundle must not grow (section 10).
 - The crash and error rate stays flat.
 
@@ -217,7 +217,7 @@ Each grid cell and each pack level shows a level from 0 to 3. It is drawn as a t
 
 ### 4.5 Review sessions
 
-All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine is pure, deterministic for a seed, and works offline.
+All sessions share one engine (`logic/reviews/engine.ts`, in the existing `apps/mobile/src/logic/reviews/` directory, row CM-13). The engine is pure, deterministic for a seed, and works offline.
 
 | Session | Length | Where it lives | Selection | Learner sees |
 |---|---|---|---|---|
@@ -235,7 +235,7 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 
 **Listening rounds never depend on telling homophones apart.**
 - **`dictation-unambiguous` lint and engine rule.** An item may be asked in Dictation (Type Hangul `hear`), or in any heard round whose options are spellings, only if its standard pronunciation has exactly one spelling among the taught items (낫 / 낮 / 낯 all sound [낟]; 같이 sounds [가치]), or the prompt shows a picture or gloss that settles it. Items with a `soundChange` flag stay out of hear mode until recordings A-9 and A-10 exist. The review engine applies the same rule when it picks a produce-rung format.
-- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it.
+- **The spelling round of Letters S2** (section 5.2) is a read-plus-meaning round: picture or gloss with audio, then "Which spelling matches this word?". Its two options may sound the same (책이 and 채기 are both [채기]), and the picture or gloss is what settles it. CM-0b amends F-CURR-001 U-8 for this one round kind, and the lint requires the picture or gloss on it. With a screen reader on, each option's label spells the option block by block with the letter names (책이: 치읓 애 기역, 이응 이; 채기: 치읓 애, 기역 이), never the word or its romanization alone, so the two options can be told apart by ear.
 
 **Never on a review screen:** a percentage, an "n of m" score, or a per-question timer. A lint enforces this (section 9.3).
 
@@ -317,14 +317,17 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 | `stageCheckAt` | `Record<stage, ISO>` | earliest |
 | `testedOut` | `Record<cellId, ISO>` | earliest |
 | `goals` | `{ daily: 3 \| 6 \| 10, weeklyDays: 3 \| 5 \| 7, setAt }` | last writer wins on `setAt` |
-| `dayLog` | `Record<localDay, Record<installKey, points>>`, last 70 days. `installKey` is a random id made on the device; it never leaves the snapshot | max per day and install key; read as the sum over install keys |
+| `dayLog` | `Record<localDay, Record<installKey, points>>`, the newest 70 days that hold points (counted as days, so one wrong-clock day evicts at most one real day). `installKey` is a random id made on the device; it never leaves the snapshot | max per day and install key; read as the sum over install keys |
 | `streakLocal` | `{ run, lastDay }`, the current run on the local day | later `lastDay` wins; equal days take the higher `run` |
 | `streakBest` | the best run ever | max |
 | `stamps` | `Record<stampId, ISO>` | earliest |
 | `memSeededAt` | ISO | earliest |
+| `steadyWeeks` | `Record<weekMonday, ISO>`: the weeks whose learned days reached the weekly days in force that week (an active F-PLAN-002 plan's days, else `goals.weeklyDays`). The week is the ISO week on local days, Monday to Sunday in every locale, keyed by its Monday (`YYYY-MM-DD`), so a UI-language switch or two devices on different locales give one key. A pure, idempotent latch check writes it after each finished activity, each snapshot merge, on Home open and when goals are saved, over the weeks still in `dayLog` (7.4; `design/wireframes/home/goal-ring-weekly-dots.md`). The steady-weeks headline reads only its key count, so it never drops when `dayLog` passes 70 days or the goal changes | union of keys; earliest per key |
+| `stageCeremonyAt` | `Record<stageKey, ISO>`: stages 2-7 whose ceremony was offered (7.3) or which the retroactive summary (step 7 below) listed. The summary lists only finished stages with no key, so no stage is summed up twice | union of keys; earliest per key |
 
 - `SessionLog` gains an optional `localDay`, written when the session is logged, so a later local-day count never depends on today's time zone.
 - `reviews[]` starts to receive `daily`, `feedback` and `stage-certificate` entries; the schema already exists. `ReviewKindSchema` gains `cell-check` and `warmup`. Because `ReviewKindSchema` is a strict enum inside `SnapshotPutSchema` and `BackupFileSchema`, row CM-3b first makes the `reviews` array lenient per entry on every read path (unknown kinds are dropped per entry, as `lenientArray` does in `sync.ts`) and deploys that to the Worker. Every row that writes a new kind is marked W→A.
+- **`daily` retention.** `daily` entries (the Daily Review and each Keep going) are kept for 14 local days: after every merge, on the client and in the Worker's merge and preserve path, the list keeps only the `daily` entries whose `scope` (the local day) is within 14 days of the newest `daily` entry's `scope`. The prune gives the same result on every side, so the union never brings a pruned entry back. No other kind is pruned (`cell-check` and `stage-certificate` carry best results). A snapshot-size test covers a year of daily use (rows CM-3b and CM-14; `design/wireframes/reviews/daily-review.md`).
 - `ProgressSummarySchema` gains an optional, lenient `memory` block, computed on the device and carried by the existing snapshot PUT: `{ wordsKnown, readyToRefresh, cellBestCounts: [l1, l2, l3], stageChecks, weekPoints, topDue: up to 8 item ids }`. It feeds reports, the console, the family lantern and `class-review` (sections 7.6, 8).
 
 **One-time seeding on first launch of the new build.** It runs per profile, is idempotent, and is guarded by `memSeededAt`.
@@ -334,8 +337,8 @@ All sessions share one engine (`logic/review/engine.ts`, row CM-13). The engine 
 4. Topic words already in `vocab` are not copied; the engine reads them where they are.
 5. Placement `priorityTokens` symbols are seeded at box 1, due on day 1.
 6. `cellBest` starts at 1 for every cell done.
-7. **Upper-cell cards and stage ceremonies are awarded retroactively.** Each card row (CM-23) awards its own cards from `questDoneAt` when it ships. The Stage Check row (CM-22) shows one summary screen, "You finished Stages 2-3 earlier", which lists whatever cards exist at that time. The summary is shown once, not one modal per stage.
-8. **Streak switch-over.** `streakLocal.run` starts at `max(old streakDays, the run recomputed on local days)`, and `streakBest` at the larger of that and any earlier best. The old `streakDays` is still written for older builds, but the new build displays only `streakLocal` and `streakBest`, so a sync from an older device can never make the number drop.
+7. **Upper-cell cards and stage ceremonies are awarded retroactively.** Each card row (CM-23) awards its own cards from `questDoneAt` when it ships. The Stage Check row (CM-22) shows one summary screen, "You finished Stages 2-3 earlier", which lists whatever cards exist at that time. The summary is shown once, not one modal per stage, and each stage it lists is latched in `stageCeremonyAt`.
+8. **Streak switch-over.** `streakLocal.run` starts at `max(old streakDays, the run recomputed on local days)`, and `streakBest` at the larger of that and any earlier best. The old `streakDays` is still written for older builds, but the new build displays only `streakLocal` and `streakBest`, so a sync from an older device can never make the number drop (section 7.4 names the one case between two new builds where a sync shows a run has ended).
 
 Fixture tests run against snapshots from five historical schema points: before `vocab`, before `questDoneAt`, before `placements`, a current snapshot, and an empty one. Backup-file restore is tested too. A fixture with all 107 quests done asserts that every item has a due day, no day has more than 15 seeded items due, and the spread length is reported.
 
@@ -451,16 +454,16 @@ The Journey view becomes a row of pages that the learner moves between by swipin
 
 | Part | Rule |
 |---|---|
-| Page 1 | The five themes and seven stage rows, **exactly as today** (`design/wireframes/journey/grid.md`): the same cells, sizes, glyphs, words, states and rings. Page 1 never scrolls sideways inside itself, so a theme column is never cut off |
+| Page 1 | The five themes and seven stage rows, **exactly as today** (`design/wireframes/journey/grid.md`): the same cells, sizes, glyphs, words, states and rings. Page 1 never scrolls sideways inside itself, so a theme column is never cut off. With no pack shown the screen is today's, unchanged. *(CM-D3 proposal, owner to confirm:)* with packs shown, the page bar sits above the column labels and the header band is one height on every page (the larger of 64 dp and page 1's measured label height), so only the space above page 1's theme labels grows (`design/wireframes/journey/topic-pages.md` "Header band") |
 | Pages 2 and later | Pack columns, **at most five a page**, in the pack order of section 6.5. With all eight packs: page 2 holds packs 1-5 and page 3 holds packs 6-8. A page with fewer than five packs keeps the same column width and leaves the rest of the row empty; columns never stretch or shrink to fill it |
 | Cell size | A pack column uses the theme-column width of the same window (`journeyCellSize`), so a pack cell is 54 dp wide at 320 px, as on page 1, and **never under the 48 dp target**. At 768 px and in the two-pane wide window, pages keep the cell sizes of `grid.md` |
 | Rows | Every page has the same seven stage rows at the same heights, so paging keeps the vertical scroll position. A pack level sits in the row of its stage (`levels[].stage`: Stages 2, 3, 4, 6 and 7). Rows 1 and 5 of a pack page hold an empty, unlabelled space, not a "coming later" cell |
-| Column header | The pack's name and its `homeTheme` glyph. Tapping it opens the pack page; the target is 48 dp or more |
+| Column header | The pack's name and its `homeTheme` glyph. Tapping it opens the pack page; the target is 48 dp or more. *(CM-D3 proposal, owner to confirm:)* the full name does not fit a 54 dp column, so the header shows the pack's short word (`learner.journey.packWord.<key>`, one word of the pack's title in the UI locale) under the glyph, with the full title as the accessible name (`design/wireframes/journey/topic-pages.md` "The pack word rule") |
 | Pack cell | Opens the level's cell sheet, like a theme cell. It shows the mastery ring of its pack level (4.4), and its entitlement follows section 6.3 |
 | Which packs show | Packs with `status: 'ready'` whose `topicPacks` and `pack.<key>` switches are on. A page with no pack to show is not drawn. With no pack to show, the Journey view is page 1 alone, with no dots and no arrows: exactly today's screen |
 | Swipe | A horizontal swipe moves one whole page and snaps to it. The gesture locks direction, so a swipe that starts mostly vertical stays a vertical scroll |
-| Visible affordance | A row of page dots under the title, the current dot filled, and an arrow button at the right edge of the column-header row while a later page exists (a matching arrow at the left edge on later pages). The dots and arrows only appear when there are two or more pages |
-| Buttons (no swipe needed) | The arrow buttons are 48 dp targets, in the tab order, and do exactly what a swipe does. On web, Left and Right arrow keys change the page while focus is in the column-header row. After a page change, focus moves to the first column header of the new page |
+| Visible affordance | A row of page dots under the title, the current dot filled, and an arrow button at the right edge of the column-header row while a later page exists (a matching arrow at the left edge on later pages). The dots and arrows only appear when there are two or more pages. As designed in CM-D3 (`design/wireframes/journey/topic-pages.md`): the arrows sit at the two ends of a page bar directly above the column-header row, with the page name and the dots between them, because at 320 px the five columns fill the whole header row |
+| Buttons (no swipe needed) | The arrow buttons are 48 dp targets or larger (64 dp, `touchTarget.min`, as designed in CM-D3), in the tab order, and do exactly what a swipe does. On web, Left and Right arrow keys change the page while focus is in the column-header row. After a page change, focus moves to the first column header of the new page; on page 1, which has no header button, focus moves to the page 1 region |
 | Screen readers | The arrows are labelled with where they go ("More topics, page 2 of 3", "Back to the five themes"). A page change is announced with the page name and number. Each page is a labelled region ("Five themes", "Topics, page 2 of 3"). Pack cells use the same label pattern as theme cells |
 | Reduced motion | With reduced motion on (`useReducedMotion`, `platform/motion.ts`), a page change jumps with no slide; a swipe still works and settles without animation |
 | Where it opens | Journey always opens on page 1. The Explore slot and the planner open the pack page, and Back from the pack page returns to the topic page that holds the pack. The current page is kept for the session only; it is never stored or sent |
@@ -625,7 +628,7 @@ Every format is reading, listening or writing. None records or measures speech. 
 | F7 | **Hidden Heritage** | `hidden-heritage` (new) | S2-S5 | L | Pic-Word Match on the same targets | Blueprint 06 game 10, its "signature". Find the named things in a large scene. Each target is given as the Korean word, heard and written with romanization, never as an English label. Scenes are **original** art in theme tokens about subjects that genre paintings show; they are not copies or tracings (OD-10). One scene is 25 KB or less, lazy. Also a projector slide |
 | F8 | **My Story** | `my-story` (new) | S7, packs | M | Write Frame on the first frame | Blueprint 06 game 12. 3-5 chained write-frames make a short text. **Slots are word-bank only, with no free text**, as in Write Frame. The finished text is shown at the end as "My page" and is **not kept** after the quest (F-CURR-001 OD-6); a kept keepsake is open decision OD-13. Never sent in telemetry |
 | F9 | **Decoding Sprint** | uses `syllable-build` and Listen & Pick | S1 review | M | hidden | An optional 60-second bonus, like the vocab Speed Round. It plays only real syllables from the Stage 1 table and an allowlist the device voice is tested on. Each sprint ends with a short held-out probe of syllables not drilled in any sprint, which G9 measures. The rate is a private personal best, never compared with anyone (OD-8) |
-| F10 | **Yut Review** | review skin | any | M | the plain review screen | Right answers throw the yut sticks on a board. The randomness is play only; it never decides a reward |
+| F10 | **Yut Review** | review skin | any | M | the plain review screen | Every finished review item throws the yut sticks on a board, whatever its result, so the board never shows a miss (amended in row CM-D2; was "right answers throw"). The randomness is play only; it never decides a reward |
 
 **Check rotation (`lesson-check-variety`).**
 - No game kind may be used for more than 40% of a stage's Checks.
@@ -699,7 +702,11 @@ Default Checks by stage:
 - The streak stays, counted on the local day (`streakLocal`, section 4.8).
 - Any learning activity keeps it: a quest, a Daily Review, a story or a word set. This amends F-REPORT-001 OD-19, where only quest sessions moved the streak (open decision OD-14).
 - Up to 2 rest days a local week are granted automatically.
-- When a run ends, Home shows "Start a new run" and keeps the best run (`streakBest`). It never says "lost". The displayed number never drops because of a sync.
+- When a run ends, Home shows "Start a new run" and keeps the best run (`streakBest`). It never says "lost". The displayed number never drops because of a sync, with one exception (amended 2026-10-21 in the CM-4 review, for the owner to see):
+  - **The exception.** Another device on a new build already shows the same run as ended, because it knew a learning day earlier in that week that this device did not. It holds a longer run on the same last day, and a stored run never goes down in a merge (the field rule in section 4.8, the Worker's too). So the merged record also shows that the run has ended. It never shows a smaller number, and the next learning day starts the run as usual.
+  - **Why it cannot be avoided without a schema change.** The merged record is then the same as that other device's own record, which must show nothing: it showed the longer run the day before, and showing a shorter one would be visible decay (section 7.7).
+  - **Everything else holds.** A sync with an older build never lowers the number. Days another device adds never end the run this device shows: the merge carries each copy's own run, and `streakLocal` keeps the run Home shows.
+  - **Hand-off.** CM-4 shows nothing for an ended run (the pill hides). Row CM-17 ships the "Start a new run" copy (en, es and ko, with the review ledger) and the `streakBest` display on Home.
 
 **Copy.** Copy may nudge positively ("2 minutes to today's goal", "4 items are ready to refresh"). It never uses loss framing, and nothing sends a nagging notification.
 
@@ -782,10 +789,26 @@ Today every new cell hand-edits or regenerates several shared files: the committ
 | Item today | After CM-6 |
 |---|---|
 | Catalogue (`catalog/data.ts` rows) | Generated from `content/` by `build-lessons.mjs` |
-| `CATALOG_VERSION` and the quest additions history | Each new quest carries `addedIn`, an integer date stamp `YYYYMMDD`, in its content file. `CATALOG_VERSION` is generated as the largest stamp. The history up to 32 keeps its integers, which are all smaller than any date stamp, so the order holds. A CI check on the up-to-date branch fails if a new quest's stamp is lower than `main`'s current version; the fix is a one-field edit in the PR's own file |
+| `CATALOG_VERSION` and the quest additions history | Each new quest carries `addedIn`, an integer date stamp `YYYYMMDD`, in its content file. `CATALOG_VERSION` is generated as the largest stamp. The history up to 32 keeps its integers, which are all smaller than any date stamp, so the order holds. A CI check on the up-to-date branch fails if a new quest's stamp is not above `main`'s current version; the fix is a one-field edit in the PR's own file |
 | Route-day pins | Derived from the manifest, with a snapshot test |
 | Presenter font subset | Derived from all taught Korean |
 | e2e spec | `journey-upper-cell.spec.ts` lists cells and packs from the manifest |
+
+**Decision record (row CM-6, 2026-10-21).**
+- **Where the modules are written.** `scripts/generate.mjs` (`pnpm generate`) runs the six content generators. The turbo task `//#generate` is a dependency of `dev`, `build`, `typecheck`, `test` and `test:coverage`. The root `postinstall` runs it too: the content-validation steps call package scripts directly, and the three Workers Builds deploys run only `pnpm install` before they bundle. No workflow file changed.
+- **`--check` is the determinism test.** In CI the files on disk come from the postinstall run, so each existing `--check` step compares a second run with the first. `scripts/__tests__/generate.test.mjs` (`test:scripts`) runs the generators twice into fresh trees, once with every folder listed in reverse, and compares the bytes.
+- **Catalogue.** `build-lessons.mjs` writes `packages/content-schema/src/catalog/catalog.generated.ts`: the upper-stage cells and quests, the story rows and the topic rows. `data.ts` keeps the Stage 1 and Stage 5 rows, which are TypeScript, and the frozen shelf order and anchors of the first 24 stories. A later story takes the next shelf place, in `addedIn` order (slug breaks a tie), so a shipped story never moves. A later festival story names its anchor in its own file (`shelf.anchor`); the first 24 state none there, and two stories may not claim one anchor.
+- **Hand-written quests.** A Stage 1 quest (row CM-33) or a Stage 5 book quest (rows CM-46a and CM-46) added after version 32 is still a TypeScript row of `data.ts`, so it is stamped in `packages/content-schema/src/catalog/hand-stamps.json` (quest id to `addedIn`). The generator folds those stamps into `CATALOG_VERSION` and the additions history, the stamp check holds them to the same rules as a content file's stamp, and a test fails a stamp on a quest that is not a hand-written one added after 32. Such a PR edits `data.ts` and this file; a content PR does not. Row for row, the switch matched the committed catalogue (`fixtures/catalog-v32.json`). Only the quest order changed: it is now route order, so the console quest picker lists stages 1 to 7 in order. The cells and their quests are written as compact rows (`[stage, theme, title, status, minutes, quests]`, a quest being `[title, minutes, teaches]`), and `expandCellRows` (`assemble.ts`) gives back the ids, cells and kinds. Written out as full objects they grew the start bundle by 13,803 B. Compact, it measures 7,335,491 B raw on the release build, 425 B above CM-5's 7,335,066 B and under the 7,340,000 B line. A new quest adds about 40 B.
+- **Stamp check.** `scripts/check-added-in.mjs` runs from `build-lessons.mjs --check` against `origin/main`. Content-validation checks out the full history. Where `origin/main` does not resolve, a local run skips the check with a notice and a CI run fails. The rules:
+  - A new quest's stamp must be **above** main's version. An equal stamp would leave `CATALOG_VERSION` where it is, so a placement stored between the two deploys would never place out the new quest (`placedOutGrowth`). The message names the stamp to use: today (UTC), or the day after main's version if that is later.
+  - A new quest's stamp is at most 14 days after the first stamp the branch may use (today, or the day after main's version if that is later), so one typo cannot raise the floor of every later PR. The window counts from that stamp, not from today: each stamped merge can move main's version a day ahead of the calendar, and a window from today would leave no valid stamp after a burst of more than 14 such merges.
+  - The version never falls. A branch that stops shipping the quest holding main's version (a removed story, a ready cell turned back to draft) fails: a plan or placement stored at the higher version would stop growing. Turning a lower-stamped cell back to draft is allowed.
+  - A quest main already ships keeps its stamp. A quest of the history up to 32 carries none.
+  - The base tree is read leniently (status, ids, stamps), so a lesson rule that only the branch enforces does not fail on main's files.
+  - The order holds only when the check runs on the branch as it will merge. `scripts/__tests__/stamp-order.test.mjs` runs the check in the required CI unit job (`test:scripts`) with no workflow change: on GitHub Actions it fetches the pull request's base branch and checks the checked-out merge with main against it, failing closed when the fetch fails. The ruleset does not require an up-to-date branch (`strict_required_status_checks_policy` is off), so a green run can be stale once another stamped PR merges. Turning that on is a ruleset change left to the owner. Until then, stamped content PRs merge one at a time, each brought up to date with main first (the merge watcher's update-branch re-runs the required check), and never in one batch. This is a merge rule for every row that adds a quest, starting with the first CM content row.
+  - Generation needs the devDependencies: `build-lessons.mjs` reads the app's jamo through `scripts/ts-loader.mjs`, which needs `typescript`. An install without them (`--prod`, `NODE_ENV=production`) fails at the postinstall with a message that says so. Every CI job and deploy build installs them today (a plain `pnpm install --frozen-lockfile`).
+- **Native and dev builds.** `apps/mobile/metro.config.js` runs `scripts/generate.mjs` before it returns Expo's default config. Metro loads it for `expo start`, `expo export` and the Xcode bundle phase (`expo export:embed`), so a build started outside turbo still bundles the current content. Each generator writes a module only when its bytes change, so a dev server does not reload for nothing.
+- **Presenter font.** The font stays committed, because CI has neither the subsetter nor the source font. It is built from all taught Korean: the drawn fields plus every `ko` / `…Ko` field of the letters, scopes, quests, cards, listed topics, and the title, keywords and tiers of listed stories (566 code points, 49,408 B). `--check` now tests coverage, so a wider font passes.
 
 - **Pack scaffolding (row CM-50a).** `scripts/new-pack.mjs <key> --home <theme>` scaffolds `pack.json` and five `stage-<n>.json` skeletons with `status: 'draft'`. Their TODO strings fail lint for `ready`.
 - **Target.** A level PR (3 quests plus es and ko overlays) touches only its own files under `content/` and `content/i18n/`. Level PRs can run in parallel worktrees with no shared conflict point.
@@ -831,8 +854,8 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 
 **Row CM-5 (lessons) and row CM-8 (stories):**
 1. **Split the manifest from the bodies.**
-   - `lessons-index` keeps only ids, English titles, minutes, stage, theme, pack and volume, at 60 KB raw or less (372 KB today).
-   - es and ko titles move to one small title chunk per locale, loaded for the active locale only.
+   - `lessons-index` (the start-loaded manifest) keeps only what a screen draws before any chunk loads: ids, English titles, minutes, stage, theme, pack and volume, each episode's quest list and the letters each quest teaches, at 60,000 B raw or less (372 KB before CM-5). Until row CM-40 it also carries the display lines the grid, Home and the lesson page draw (an episode's subtitle, Hoya intro and reward cards, a quest's blurb); CM-40 moves them out, as the decision record below sets out.
+   - es and ko titles move to one small title chunk per locale (30,000 B or less), loaded for the active locale only.
    - Story shelf metadata and ids join the manifest. Story tiers, scenes and art move out.
 2. **Move bodies out of the JS bundle.** Quest bodies, story bodies, the review-item index, Volume 2 and packs move to static JSON chunks.
    - The PWA build emits them, Workbox precaches them, and they are fetched on demand.
@@ -845,29 +868,115 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
    - A new precache-size report shows the totals.
 4. **Fallback.** If the learner precache passes its ceiling, packs switch to runtime caching with a "Save for offline" control (row CM-5B, conditional). The precache is measured first.
 
+**Decision record (row CM-5, 2026-10-21): Metro async bundles, not JSON assets.**
+- **Spike.** One stage module behind a literal `import()` in `expo export --platform web` (Expo SDK 52, Metro 0.81). Metro emits it as its own bundle, `_expo/static/js/web/<module>-<md5>.js`, named by the md5 of its content, and leaves it out of the start bundle. If the same module is also reached by a static import or `require`, Metro keeps it in the start bundle and emits an empty bundle (0 B). At runtime the start bundle needs Metro's bundle loader (`__loadBundleAsync`). Expo Router installs it with the whole of `@expo/metro-runtime`; this app does not use Expo Router, so the first spike build failed with "Requiring unknown module". `apps/mobile/src/async-bundles.ts` installs only the loader (`@expo/metro-runtime/src/async-require`), and `index.ts` imports it first. The loader adds 1,948 B to the start bundle. With it, a chunk loads by a script tag, from the precache when offline (PWA offline e2e).
+- **Decision.** The async bundles work in the PWA build, so they are used, as item 2 says. JSON assets stay the fallback if a later Expo upgrade breaks them.
+- **The PWA on WebKit (the open iOS 14 offline issue).** That issue is the iOS 14.8.1 home-screen PWA, which is WebKit with a service worker that does not always take control, so the web path is the one that matters:
+  - With a worker in control, every chunk is in the precache and loads from it offline. Evidence: the offline e2e passes in Chromium, and the same Stage 2 lesson plays in WebKit (Playwright's iPhone 13 project, `E2E_WEBKIT=1`) with the server stopped after one online visit, all 25 cell chunks loading from the precache. (Playwright's WebKit cannot reload a page after `context.setOffline(true)`, "WebKit encountered an internal error", which fails every spec of `offline.spec.ts` that does so, including the ones this row did not touch; the stopped-server run is the WebKit evidence.)
+  - Once the first screen is up, the web app loads every cell chunk in the background (`platform/lesson-prefetch.web.ts`; `requestIdleCallback`, or a short timer where Safari has none). The bytes were in the start bundle before, so this adds nothing to memory; it means a session that started online keeps every lesson when the network goes, even with no worker in control, which is the iOS 14 case. A session that starts offline with no worker in control could not open the app before this row either.
+  - The window this leaves: with no worker in control, Safari starts the background load 1.5 s after the first screen (`PREFETCH_FALLBACK_MS`; it has no `requestIdleCallback`) and then asks for 27 chunks. A session that loses the network inside that window, before they are in, loses the lessons not yet loaded, which it would have kept before this row, when they were in the start bundle. On a working network the window is a few seconds after the first screen; with a worker in control there is none.
+  - A chunk that answers with the app's HTML page, or with another build's chunk, means the page runs an older build than the server (another tab applied an update and its worker dropped this build's chunks, or a deploy landed while no worker was in control). The page reloads once, online only and at most once a minute (`platform/new-build-reload.web.ts`), onto the new build.
+  - The host's single-page fallback answers a missing chunk with `index.html` (200). Without `X-Content-Type-Options: nosniff` the browser runs it, Metro finds no module in it, and that is the newer-build case above. If a host rule ever sends nosniff there, the browser refuses the page as a script and fires the same `error` as a network failure. So a script error, when online, asks the chunk URL once more (`cache: 'no-store'`): a 404 or an HTML answer is a newer build and reloads the same way, anything else (the script, a server error, no answer) is a network failure. `pwa-postbuild.mjs` also fails a build whose `_headers` would send nosniff on a lesson chunk, so the plain path stays the one in use.
+  - A chunk that cannot load at all (offline with no worker, a request that hangs past 15 s) shows the crash screen, never a reload. Its Try again returns to Home, and opening the lesson loads the chunk again. A load that hangs past 15 s also gives up its pending script (`platform/lesson-chunk-abandon.web.ts`), because Metro's loader keeps a pending load by its path and would hand the same hung request to every later try. The newer-build paths (HTML that runs, HTML refused under nosniff) and the network failure are in the offline e2e, with the worker blocked.
+  - The crash screen is the app's own Oops screen, whose copy is calm and blames no one, reused here so this row adds no strings. An in-place retry on the waiting screen (a line that the lesson needs the internet once, and a retry button) needs new strings, so it is row CM-5C in section 17.
+  - The iOS 14 issue is therefore not made worse: a lesson that opened offline before this row still opens, apart from the background-load window above.
+- **Native builds.** Metro splits bundles only on the web. `npx expo export --platform ios` gives one Hermes bundle (`index-<md5>.hbc`, 10.8 MB) and no `lessons-cell-*` file; the step text of the Stage 2 Letters & Books chunk and the Spanish title chunk are inside it. With no split, Metro's `import()` resolves from the bundle with no request, so the native `buildUrlForBundle` (which throws in production without `location`) is never reached. The loader stays installed on native too, because the dev server's lazy bundles need it.
+  - Run evidence: the same production export as plain JS (`--no-bytecode`, 8.99 MB) was evaluated in a JavaScript VM without its entry calls, with a bundle loader that throws if called. The manifest module's own `loadLessonCell` and `loadLessonTitles` loaded all 25 cell chunks and both title chunks, each with the hash the manifest names; the Stage 2 Letters & Books first quest came back with its six steps (intro, discover, practice, apply, check, reward), and the loader was never called. The compiled call is `asyncRequire(id, d.paths)`, and a native dependency map carries no `paths`, so `import()` goes straight to `require.importAll`.
+  - Not run: a Release build in the iOS simulator. No simulator UI driver is installed in this environment (no Maestro, idb or Detox) and the app has no deep link into a lesson, so a simulator run cannot open one unattended. The VM run executes the same production module code; Hermes only compiles it to bytecode. A device or simulator check of a Stage 2 lesson stays on the release checklist of the next native build.
+- **Layout.** `scripts/build-lessons.mjs` writes `__generated__/lessons-index.ts` (the start-loaded manifest) and `__generated__/lesson-chunks/`:
+  - one chunk per ready cell, `lessons-cell-stage<n>-<theme>.ts`, with the steps of its quests, its game scopes and the es / ko glosses of both;
+  - one title chunk per locale, `lessons-titles-<locale>.ts`.
+- **Manifest fields, and how they stay under their lines.** The manifest built here holds what item 1 lists, the quest list of each episode, `LESSON_TEACHES` (the jamo each quest's Discover step teaches) and, until CM-40, the display lines: each episode's subtitle, Hoya intro and reward cards, and each quest's blurb. The title chunks hold the es / ko text of the same fields. These are what the grid, the Home cards, the lesson page, a closed quest's letters, the results teaser and the placement catalogue draw before any chunk loads, so moving them into the cell chunks would make those screens wait on a fetch.
+  - Projected sizes, from the per-entity averages of the measured Volume 1 manifest (an episode 422 B, a quest 174 B, 144 B of loader and hash per cell; without the display lines an episode is 253 B and a quest 81 B) and of the title chunks (es 165 B, ko 176 B per entity; titles only 55 B and 57 B):
+
+    | Content | Manifest (60,000 B line) as built now | Manifest without the display lines | es / ko title chunk (30,000 B line) as built now | es / ko titles only |
+    |---|---|---|---|---|
+    | Volume 1 (25 cells, 78 quests; measured) | 30,364 B | about 18,900 B | 17,517 / 18,659 B | about 6,100 / 6,300 B |
+    | Volume 1 + 2 (50 episodes, 153 quests) | about 58,100 B | about 35,400 B | about 34,000 / 36,300 B | about 11,600 / 12,000 B |
+    | Volume 1 + 2 + the 8 packs in the same manifest (90, 273) | about 102,500 B | about 61,900 B | about 60,500 / 64,500 B | about 20,300 / 21,000 B |
+
+  - As built now, the title chunks would pass 80% of their line with the second Volume 2 content row and the manifest with the fourth. So **row CM-40** (before any Volume 2 content row) moves the display lines out of the manifest and the title chunks into one precached "lesson headers" chunk per locale, English included, loaded before the first screen the way the title chunk is (the same 2.5 s wait at most), and gives each Volume 2 episode a body chunk of its own. The manifest then holds what item 1 lists, the quest lists and `LESSON_TEACHES`.
+  - Even without the display lines, the packs in the same manifest would pass its line. So **row CM-50a** keeps the pack levels out of the start-loaded manifest: their headers go in a pack manifest chunk, and their titles in a pack title chunk per locale, loaded when the topic pages open (packs sit off the route, OD-2). The 60,000 B line then covers Volume 1, Volume 2 and the story shelf (CM-8), at about 35 KB before the shelf.
+- **Content hashes.** Each chunk exports `CHUNK_HASH`, the first 16 hex characters of the sha256 of its data, and the manifest names the same hash. The app refuses a chunk whose hash differs. `apps/mobile/scripts/pwa/lesson-chunks.mjs`, run by `pwa-postbuild.mjs`, fails the build in each of these cases:
+  - a manifest entry has no bundle, or more than one;
+  - a bundle does not carry the manifest's hash;
+  - a bundle's file name is not the md5 of its content;
+  - a bundle is missing from the precache;
+  - the start bundle does not name every hash;
+  - the start bundle carries a chunk.
+- **On demand.**
+  - The learner app loads the active locale's title chunk before its first screen, and a newly chosen locale applies once its titles are in. Either waits 2.5 s at most (`TITLES_GRACE_MS`): past that, the screens show in the chosen locale with the lesson titles in English, and draw them again when the chunk arrives (the localized memos key on `useLessonTitlesVersion`). A title chunk that failed offline is asked for again when the network is back.
+  - The quest player and the game screen load their cell's chunk. They draw only the screen header (the way back) for the frame or two this takes, and a calm "Loading lesson" line if it takes longer than 500 ms. A chunk that cannot load goes to the crash screen, whose Try again returns to Home; opening the lesson again loads the chunk.
+  - My Route and the grown-up reports count skills over every quest, so they load every chunk and recompute as each one arrives. Counts only fill.
+  - All lessons and the presenter read the whole catalogue, so they mount once every chunk is in. If a chunk fails, they show the crash screen with Try again, never a catalogue with empty lessons.
+- **Budget lines on the deploy.** `build:web` passes `--budget`, and `build:web` is also the Cloudflare Workers Builds deploy command. On the deploy's own build (`WORKERS_CI` or `CF_PAGES` set) a budget line only warns, so it never stops a deploy, a hotfix least of all. The pull request's `build:web` in CI fails on it. The chunk checks above fail every build, deploy or not.
+- **Measured (release build `pnpm build:web` on 619f4ae2b, the main this row merges onto, no recorded clips).** The start bundle before CM-5 was measured on a384759ca; main has changed only docs since.
+
+  | Measure | Size |
+  |---|---|
+  | Start bundle | 8,321,783 B raw / 1,921,695 B gzip before CM-5; 7,337,815 B raw / 1,793,420 B gzip after (-983,968 B raw) |
+  | Lesson chunks (27 bundles) | 1,014,012 B raw / 151,300 B gzip |
+  | Generated lesson modules (`build-lessons.mjs --report`) | 940,591 B raw / 142,270 B gzip |
+  | Manifest (`lessons-index.ts`) | 30,364 B raw |
+  | Title chunks | es 17,517 B, ko 18,659 B |
+  | Largest cell chunk module | Stage 2 Letters & Books, 61,381 B raw / 11,070 B gzip (six quests) |
+  | Stage game content | largest is Stage 6, 129,982 B raw / 16,806 B gzip |
+  | Learner precache | 35 files, 8,787,329 B |
+
+  - The start bundle line is its size after CM-5 plus a 2,185 B rounding margin: 7,340,000 B. The bundle cannot grow back by more than that margin, and lesson content that slips back into it is also caught by the chunk check above. A row that adds to the start bundle raises the line as a reviewed one-line change with its measurement. CM-8 lowers it with its own measurement.
+  - The learner precache line is 11,287,329 B (measured + 2.5 MB), so CM-5B stays untriggered.
+  - Lines are absolute, so a row that merged after this measurement and grew the start bundle can turn the next build red with no change of its own. The fix is to re-measure in the row that grew the bundle, not in the row that happens to build next; this row re-measures on its merge-time main before it merges.
+  - Audio: the measurement holds no recorded clips (none are bundled yet). The clips are precached, so they count toward the same line. The row that lands the jamo recordings re-measures the precache and moves the line by the clips' measured bytes, as a reviewed one-line change, so recordings never trigger CM-5B on their own.
+
+**Decision record (row CM-8, 2026-10-21): stories on the CM-5 mechanism.**
+- **Layout.** `scripts/build-stories.mjs` writes `__generated__/stories-index.ts` (the story shelf, loaded at start) and `__generated__/story-chunks/story-<slug>.ts`, one Metro async bundle per story, with the same hashing (`chunkHash` of `build-lessons.mjs`) and the same `pwa-postbuild.mjs` checks (one bundle per chunk, carrying the shelf's hash, named by the md5 of its content, precached, never in the start bundle). `stories.generated.ts` is gone.
+- **What the shelf holds.** Each story without its body: id, state, titles, theme, kind, stage, minutes, Hoya lines, the review gate (`language`, `culture`, the advisory), the shelf, card and reward blocks, the levels of its tiers with their scene counts, and its card's keyword. Schema defaults are left out. The body is `tiers` (scenes and art), `facts`, `keywords`, `summaryEn`, `learningGoalsEn`, `origin`, `verification`, `referenceDisplay`, `errata`, `authorNotes` and the whole `review` block. The shelf episodes and quests are derived from the shelf in the app.
+- **On demand.** The reader, its games, Sources and Culture notes wait for their stories' chunks with the lessons' waiting state (`LessonWaiting`: the header for a frame or two, then the calm "Loading lesson" line). Culture notes waits for every story that carries notes, failure included: a note story whose chunk fails goes to the crash screen like the reader, so a note the learner found is never left out of the list or of a deep link (`CultureNotes { storyId, noteId }`). Results loads its story's chunk, but which story extras it shows (Next story, Read again, Episode) is known from the shelf (the title and the levels), so they are drawn at the first frame and never shift in when the chunk lands. The same recovery as CM-5 applies: a load times out after 15 s and gives up its pending script (`platform/lesson-chunk-abandon.web.ts`, by the story's bundle name `story-<slug>`), a chunk of a newer build reloads the page once (online only, at most once a minute), a script error asks the chunk URL once more (`platform/new-build-reload.web.ts` matches `story-<slug>-<md5>.js` as well as the lesson chunks), and any other failed chunk goes to the crash screen, whose Try again loads it again. `pwa-postbuild.mjs` fails a build whose `_headers` would send nosniff on a story chunk, as on a lesson chunk. The shelf, Home and the episode page load the chunks of the stories they show, and draw each cover as it arrives (the theme tint stands in). A card face and a card page subscribe to their own story only, and a card page shows its front only (no flip, no Share) until its story's chunk is in, so a blank back is never drawn or shared; meanwhile the card is marked busy (`accessibilityState.busy`), so a screen reader hears that it is loading, not only that the flip is unavailable. The story cards are built at start from the shelf, so a cold build lists, groups and awards the same cards with the same faces as a warm one (`content/__tests__/story-cards-cold.test.ts`); a card's blurb, fact and citation switch to the loaded values when its story's chunk arrives. All lessons, the presenter and the e2e hook mount once every chunk is in; a failed story chunk shows the crash screen there, never a catalogue without that story. The story index of All lessons and the presenter reads the shelf's levels, so it never depends on a chunk. On the web, once the first screen is up, every story chunk loads in the background with the lesson chunks (`prefetchWhenIdle`, again on back-online), so a session that started online keeps every story when the network goes, as it did while the stories were in the start bundle.
+- **Story overlays: a known start-bundle cost.** The es and ko story overlays stay in the start bundle (`OVERLAYS` of `i18n-overlays.generated.ts`: 374,426 B of its 636,321 B of overlay JSON are `story:*` entries, mostly scene narration) and apply to the body once it is in. They grow with each story or tier that CM-46a and CM-46 add. The start bundle line now sits less than 5 KB over its measurement, so that growth fails `build:web --budget` and cannot pass unseen. Row **CM-8b** (section 17), which CM-46a and CM-46 depend on, moves the `story:<slug>` narration and caption overlays into the story's chunk (or a per-locale story overlay chunk) and keeps only titles and card text at start, instead of raising the line.
+- **Measured (release build `pnpm build:web` of this row's final code, on CM-5's head fe2be67e8, no recorded clips; CI's `build:web` report on the pull request head is the enforcing check).**
+
+  | Measure | Size |
+  |---|---|
+  | Start bundle | 7,337,815 B raw / 1,793,420 B gzip before CM-8 (after CM-5); 6,345,469 B raw / 1,573,399 B gzip after (-992,346 B raw; -1,976,314 B raw since before CM-5) |
+  | Story chunks (24 bundles) | 983,601 B raw / 241,020 B gzip; the same lines hold the built bundles (below) |
+  | Generated story modules (`build-stories.mjs --report`) | 869,644 B raw / 220,524 B gzip; largest chunk `pansori-tales` 46,511 B raw |
+  | Manifest (`lessons-index.ts` 30,364 B + `stories-index.ts` 27,116 B) | 57,480 B raw, under the 60,000 B line (2,520 B headroom) |
+  | Learner precache | 59 files, 8,778,584 B |
+
+  - The start bundle line (`PRECACHE_BUDGET.startBundleRaw`) is lowered to the CM-8 measurement plus a 4,531 B rounding margin: 6,350,000 B (it was 7,340,000 B after CM-5). The bundle cannot grow back by more than that margin, so neither the stories nor anything else can return to it unseen; a row that adds to the start bundle raises the line as a reviewed one-line change with its measurement. `build:web --budget` in CI enforces it on the real build; the budget test only pins the line. On the phase-0 integration branch (#802), where CM-1 to CM-4, CM-6, CM-7, CM-70a and CM-70b join CM-5 and CM-8, the release build measures 6,371,165 B raw / 1,582,440 B gzip (+25,696 B raw over CM-8 alone), so the line is raised to 6,380,000 B, that measurement plus an 8,835 B rounding margin.
+  - The story lines are checked twice: on the generated modules (`build-stories.mjs --check` and `--report`) and on the built bundles the service worker caches (`pwa-postbuild.mjs --budget`: the largest story bundle against 70,000 B, the story bundles against 2,000,000 B raw and 510,000 B gzip; `PRECACHE_BUDGET` holds the same numbers as `BUDGET`, and a test keeps them equal). A built bundle is about 13% larger than its module (983,601 against 869,644 B).
+  - The stories gzip line is 510,000 B: the measured gzip share of the story modules (220,524 / 869,644) applied to the 2,000,000 B raw line (507,155 B), rounded up. The two lines describe the same planned capacity (Sizing basis). Story content that compresses like today's reaches the raw line first; content that compresses worse (inline art, long unrepeated text) reaches the gzip line first, so the gzip line still binds.
+  - Manifest headroom is 2,520 B, and each story's shelf entry averages about 1,130 B, so today the 60,000 B manifest line, not the 2,000,000 B stories line, sets how many stories fit: about two more. The 11 book 2 tales of CM-46 add about 12,400 B of shelf, and CM-46a about 300 B of tier levels.
+  - The Hoya lines (`hoyaIntroEn`, `hoyaOutroEn`, 4,415 B together) stay in the shelf: the shelf quests and episodes (`content/stories.ts`) and the book quests (`content/books.ts`, `storyQuestSkeleton`) are derived from them at start, and `storyQuestSkeleton` throws on an empty line. They can move only with that derivation.
+  - The fields that only body readers use move first: `coverSceneId` (456 B; read only with the tiers it names, by the covers, the scene view, card art and the presenter deck, which all need the chunk anyway), then `review.advisoryNoteEn` (899 B; read by the reader, Sources and the presenter, which all wait for the chunk), then `cardKeyword` (2,719 B; the card face then waits for its story's chunk, so it goes last). Together about 4,070 B, which is not room for CM-46.
+  - So row **CM-8b** (section 17) lands before CM-46a: it makes those moves, and if the projection for the plan's 35 stories with CM-40's lesson manifest (about 35,400 B without the display lines) still passes 80% of the line, it gives the story shelf a manifest chunk of its own, loaded before the first screen the way CM-40's lesson headers chunk is, instead of raising the 60,000 B line.
+- **Native.** `npx expo export --platform ios` of this row's final code gives one Hermes bundle (`index-<md5>.hbc`, 10,857,728 B) and no `story-*` file; the 24 story chunk hashes and the story text (for example a fact of `pansori-tales`) are inside it. The story chunks are reached through the same literal `import()` as CM-5's lesson chunks, which on native resolves from the bundle with no request (CM-5 run evidence: a native dependency map carries no `paths`, so `import()` goes straight to `require.importAll`), so `loadStoryBody` never reaches the network. CM-8 also removes the Hermes start-up evaluation of the 1.26 MB story literal: the start bundle holds the 27,116 B shelf, and a story body is evaluated when its chunk is first asked for. Not run: a Release build in the iOS simulator or on a device (as for CM-5); the check of a story offline stays on the release checklist of the next native build, with F-STORY-001 PR 1.10.
+
 **Ceilings.** Each ceiling is a reviewed one-line change with measured numbers in its PR. These are lazy and precached, so they put no weight on start-up (OD-5).
 
 | Budget line | Today | New ceiling |
 |---|---|---|
-| Start bundle | measured in CM-5 | must not grow at any row; after CM-5 and CM-8 it shrinks by about 1.5 MB raw (the lesson index and the story module leave it) |
+| Start bundle | 8,321,783 B raw before CM-5; 7,337,815 B raw after CM-5; 6,345,469 B raw after CM-8; 6,371,165 B raw on the phase-0 integration (#802) | must not grow at any row: 6,380,000 B raw, the phase-0 integration measurement (6,371,165 B raw, #802) plus an 8,835 B rounding margin (`PRECACHE_BUDGET.startBundleRaw`; 6,350,000 B after CM-8 alone, 7,340,000 B after CM-5); after CM-5 and CM-8 it shrank by 1,976,314 B raw (the lesson index and the story module left it) |
 | `manifestRaw` (English, lessons and story shelf) | 372 KB (whole lesson index) | 60,000 B |
 | Title chunk per locale | — | 30,000 B |
+| Per cell chunk (one cell's emitted body chunk module: steps, scopes and their glosses), raw / gzip | — (largest at CM-5: 61,381 / 11,070, Stage 2 Letters & Books) | 90,000 / 16,000 (`cellChunkRaw`, `cellChunkGzip`); Volume 2 gets a chunk of its own per cell and volume (CM-40), because both volumes in one chunk would pass the line (about 120 KB for Letters & Books), and CM-40 re-measures the line |
 | Core lessons total (Volume 1 + 2), raw / gzip | 950,000 / 140,000 | 1,400,000 / 210,000 |
-| Per stage chunk, raw / gzip | 150,000 / 32,000 | 220,000 / 40,000 |
+| Per stage chunk (a stage's game scopes and their glosses, as F-CURR-001 measured its stage module), raw / gzip | 150,000 / 32,000 | 220,000 / 40,000 |
 | Per pack chunk, raw / gzip | — | 90,000 / 14,000 |
 | All packs, raw / gzip | — | 750,000 / 120,000 (8 packs) |
 | Review-item index, raw / gzip | — | 150,000 / 30,000 |
-| Per story chunk, raw | — | 70,000 |
-| Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; the gzip ceiling is set from the CM-8 measurement |
+| Per story chunk, raw | — | 70,000 (the generated module and the built bundle) |
+| Stories total, raw | 1,255,855 (1,300,000 ceiling), in the start bundle | 2,000,000, precached; gzip 510,000 (set from the CM-8 measurement); checked on the modules and on the built bundles. Today the manifest line sets the story capacity (decision record above, CM-8b) |
 | Hidden Heritage scene | — | 25,000 B each |
-| Learner precache total | measured in CM-5 | measured + 2.5 MB |
+| Learner precache total | 8,787,329 B (CM-5, 35 files, no recorded clips) | measured + 2.5 MB = 11,287,329 B (`PRECACHE_BUDGET.learnerPrecacheRaw`); re-measured when the jamo recordings land |
 | Per-quest average, raw | 9,000 | 9,000 (unchanged) |
 
 **Sizing basis.**
 - A quest is about 5 KB raw on the compact literal. Volume 2 is 75 quests, about 400 KB raw. The packs are 120 quests, about 650 KB raw.
 - Stories: 11 new tales (after the de-duplication of section 5) at about 52 KB each is about 570 KB raw, and read tiers for 10 listen-only stories at about 12 KB each is about 120 KB raw. 1,256 KB + 690 KB is about 1.95 MB, under the 2,000,000 B ceiling.
 - About 1.9 MB raw is added over the whole plan, all of it outside the start bundle.
-- CM-46a and CM-46 depend on CM-8, so no story row can grow the start bundle.
+- The 60,000 B manifest line covers Volume 1, Volume 2 and the story shelf once CM-40 has moved the lesson display lines out; the packs keep a manifest chunk of their own (CM-50a), because at the plan's scale they alone would pass it (decision record above).
+- CM-46a and CM-46 depend on CM-8, so no story row can grow the start bundle with story bodies (tiers, scenes, art). Two things still grow with each story or tier until CM-8b moves them: the es / ko story overlays, which stay in the start bundle (374,426 B of `story:*` entries, mostly scene narration, against a start bundle margin of 4,531 B), and the story shelf in the 60,000 B manifest (2,520 B of headroom, about two stories). CM-46a and CM-46 therefore depend on CM-8b as well.
 
 **Offline.** The memory store, review engine, goals and "This week in Korea" all work offline. Remote config fails safe (12.2). Nothing in Phases 1-2 adds a network dependency, so the open iOS 14 offline issue is not made worse.
 
@@ -878,7 +987,7 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 - **Payloads.** They carry ids, codes, counts and buckets only: no names, no free text, no learner input. Write Frame and My Story text is never sent. `profileId` rides in the envelope, as rule 3 of TELEMETRY-NAMES-2 says, and is never stored by the rollup.
 - **Worker first.** Every name is added to `TELEMETRY_EVENT_NAMES` and deployed to the Worker before the app sends it. The exact-list test is updated.
 - **Per-item data stays on the device.** It is aggregated into one daily event.
-- **Small groups are hidden.** Dashboards suppress any group with fewer than 20 profiles.
+- **Small groups are hidden.** Dashboards suppress any group with fewer than 20 events on a day. For the once-a-day names (`memory.daily`, `items.seeded`, `goal.met`, `week.goal_met`) events are profile-days; every other metric is labelled as events, never as profiles (`readRollups` in `packages/backend/src/lib/learning-rollups.ts`).
 
 ### 11.2 Where the data lands (row CM-70a, Phase 0)
 
@@ -897,10 +1006,11 @@ CREATE TABLE learning_rollups (
 ```
 
 - **Aggregate at ingest.** `POST /api/telemetry` keeps its validation. For names on a rollup allowlist, it also adds 1 to the matching rows. No profile id, install key or device id is stored.
-- **Profile-days, not profiles.** Each per-profile metric is a once-per-local-day device event (`memory.daily`, `goal.met`), so its `events` on one day equal the profiles that sent it that day. Suppression applies per day (fewer than 20 events hides the group), and a distribution such as the north star's p25, p50 and p75 comes from the counts per bucket.
+- **Profile-days, not profiles.** Each per-profile metric is a once-per-local-day device event (`memory.daily`, `goal.met`), so its `events` on one day are about the profiles that sent it that day: a local day straddles two UTC days, and a once-a-day event whose client time is more than 24 hours before ingest (a late offline flush) adds no rows, so a device back after days offline counts once. Suppression applies per day (fewer than 20 events hides the group), and a distribution such as the north star's p25, p50 and p75 comes from the counts per bucket.
 - **The device emits guardrail inputs itself**, so no per-profile join is needed: `questLeft` and `leftAtKind` on `session.end` give the quit rate, and `durableWeekBucket` in `memory.daily` gives the north star.
 - **Experiment arms** are a `dim`, so A/B arms can be compared without an id.
-- **Cost.** One upsert per rollup row touched; a daily event touches about 10 rows. Rows written count toward the D1 guardrail of 3.3.
+- **Cost.** One upsert per rollup row touched, plus one for the day's counter row; a daily event touches about 10 rows (at most 15). Rows written count toward the D1 guardrail of 3.3: rollups are capped at 20,000 rows written a day (20% of the free tier), counted exactly in the counter row, so 30,000 stay for sync and every other table under the 50% line. A day that reached the cap is partial, and readers mark or skip it.
+- **Retention.** No purge yet: the table holds aggregate codes and counts only, a few hundred rows a day. A bounded purge can follow with row CM-70.
 
 ### 11.3 New names: section R of `TELEMETRY-NAMES-2.md`, added by row CM-3
 
@@ -1007,7 +1117,19 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 4. 100%.
 
 - **The owner advances each step** by editing `remote_config`.
-- **Guardrail evaluator (row CM-70b).** A scheduled Worker (Cron Trigger) runs once a day. For each ramping flag it compares the last 7 days of guardrail metrics (3.3) for the flag's arm with the cohort before the ramp step. On a breach it lowers the flag's `pct` to the previous step, writes the reason to `remote_config.reason`, and the owner metrics page shows it. Lowering is the only automatic action, which matches "remote can only reduce".
+- **Guardrail evaluator (row CM-70b).** A scheduled Worker (Cron Trigger) runs once a day. For each ramping flag it compares the last 7 days of guardrail metrics (3.3) with the cohort before the ramp step. On a breach it lowers the flag's `pct` to the previous step, writes the reason to `remote_config.reason`, and the owner metrics page shows it. Lowering is the only automatic action, which matches "remote can only reduce". The rule as built (row CM-70b):
+  - **Windows.** The step is the row's `updated_at`. The cohort after it is the full UTC days since the step (at most the last 7); the cohort before it is the 7 days before the step day; the step day is in neither. A step is compared once 3 full days have passed. A baseline step more than 14 days old is no longer compared (`stale-step`: it has passed about 10 daily checks, and a baseline that old reads seasonal drift as a breach); after a lowering the age is the kept baseline's, not the lowering's. A ramp held past that has no automatic guardrail until the owner advances or re-stamps it, and the run log counts it as `unguarded`.
+  - **Same weekdays.** Use has a weekly rhythm, and the after window holds 3 to 7 days. Each cohort keeps only the days whose weekday the other cohort also holds (each weekday once on each side), so a Friday-to-Sunday after window is read against Friday to Sunday before the step. A day on which the rollups stopped at their cap (row CM-70a, `cappedDays`) is partial; it is left out of both cohorts with its weekday.
+  - **Noise.** Each rule needs its line and a one-sided test: a two-proportion z with continuity correction for the quit rates, Mann-Whitney for the median, a one-sample z on the share of sessions of 20 minutes or more for p90. All comparisons of one run for one flag share a 2% alpha (Bonferroni: about z 3.1 with 21 game kinds). A comparison needs at least 100 sessions in each cohort. Seeded tests show a healthy ramp at realistic sizes (1 to 21 kinds, 25 to 200 sessions per kind a day) is lowered on at most about 4% of steps.
+  - **Small groups (a deviation from the per-day rule of 11.2).** The evaluator shows no cell, so the 20-event threshold applies to the group a comparison uses, summed over the cohort's days: a (cohort, metric, dim) group. Per day it would leave out nearly every game kind at real traffic (2 or 3 quits a kind a day) and keep only the days with many quits, which leans every rate upward. An after group under 20 is never compared, and a before group under 20 is read as its upper bound, 19 (the reason shows `<=`), which understates a rise. The owner metrics page (row CM-70) keeps the per-day rule of 11.2. A flag none of whose comparisons had the cohorts to run is logged as skipped `unchecked`, never as kept.
+  - **Quit rate.** Two lines with the same 2 pp limit and test: all kinds together (the quits over every session that reports `questLeft`), which also sees a game kind that did not exist before the step, and per game kind. A `session.end` names the game kind only for a quit (`leftAtKind`, the round on screen), so the rate for kind K is the rollups' own definition (row CM-70a): the quits at K over every session that reports `questLeft`. That is K's share of all play: with 8 kinds played evenly, a kind's own quit rate has to rise by about 16 pp to move its line by 2 pp (about 40 pp with 21 kinds), so this line catches a kind that breaks badly, and the overall, median, p90 and wrong-streak lines catch smaller drifts. Row CM-70c adds a per-kind count of sessions so the 3.3 line can be measured as written.
+  - **Absolute lines.** The p90 line (20 minutes) and the D1 line (50%) count only when the cohort before the step was under the line, so a level the ramp did not cause never walks a flag down. When p90 was already 20 minutes or more before a step, the owner checks it by hand during that ramp.
+  - **D1 rows written** reads the rollup sink's own day counter: the rows it wrote that day, counted exactly (row CM-70a). The sink stops at 20,000 rows (20% of the free tier), so this line cannot fire while that cap holds; it is advisory. Row CM-70d reads the account total, sync included; until then that is the owner's check in the D1 dashboard (runbook K-3).
+  - **Cohort, not arm (a deviation from "for the flag's arm").** `session.end` names no flag, so the cohort after a step is everyone who used the app in that window, not the flag's arm. A real effect inside a 10% arm shows about 10 times smaller overall, so the guardrail is weakest at the first step. A breach cannot be pinned on one flag, so every ramping flag whose windows show it is lowered in the same run (the safe direction). The owner ramps one flag at a time to keep a breach attributable. Row CM-70c adds per-flag arms so this becomes the arm comparison.
+  - **Baseline after a lowering.** The reason names the step whose before window was used (`guardrail <day> base <day> pct 50->10: ...`). While the row is as the evaluator left it (its `updated_at` day and `pct` are those of the reason), the next comparisons keep that before window, so a lower step that is still worse than before the ramp is lowered again. Any owner edit of the row, even of `reason` alone with a new `updated_at`, starts a new baseline from that `updated_at`, so the owner changes `updated_at` only when advancing a step.
+  - **Writes.** The UPDATE applies only while the row is exactly as read (on, the whole-number `pct`, the same `updated_at`), so any owner edit during the run wins. A run makes at most 8 write attempts (a refused one counts), so it stays at 46 of the 50 statements a Free-plan invocation allows. Each run logs one `guardrail.run` line (flag names, steps, skip codes, the `unguarded` count) to Workers Logs. The run goes after the retention purge, so the purge never waits on it.
+  - **Re-raising after a lowering.** The owner's edit starts a new baseline from its `updated_at`, and that before window holds the breached days. So after a `guardrail` reason the owner waits at least 7 full days at the lowered step before raising again (runbook K-3), so the new baseline is the lowered step's own week.
+  - **Kill switch.** `GUARDRAIL_EVALUATOR` (a dashboard text variable, unset is on) set to anything but `enabled` stops the evaluator at once without a deploy; the purge still runs and the run logs `disabled: true`.
 - **Shadow first.** `memoryRecord` ships 2 weeks before `dailyReview`. During that time it only records and computes, and its `memory.daily` events land in `learning_rollups`. That sets the baselines for G1 to G3 and checks the seeding's due spread.
 
 ## 13. Risks
@@ -1020,6 +1142,10 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 | Counters that drop | Learner screens read only `s`, `r`, `n` and latches (4.4) |
 | Memory sync size or cost | Shard rows (1-3 written per sync); server `seq` cursor; seeded states never uploaded; 500-item and 64 KB caps; p95 delta and D1 rows-written guardrails |
 | Strict schemas break older clients | Lenient-on-read arrays and keys, Worker first (CM-3b); `BACKUP_VERSION` stays 1 |
+| Older builds and rollbacks after a W→A row ships | The Worker must not be rolled back past CM-3b once any W→A row has shipped: an older Worker strips the new fields on the next PUT and answers 422 to the new review kinds. App builds from before CM-3b read backups strictly and cannot restore a file that holds a `cell-check` or `warmup` review, so the first row that writes one gates on a minimum app version (CM-3b) |
+| A wrong device clock wins every merge | The Worker drops a `dayLog` day after its own UTC today + 1 day, reads such a `streakLocal` as absent, and reads a latch time or `memSeededAt` after its now as now. A `goals.setAt` up to 10 minutes ahead is read as now; further ahead it reads as absent when goals are stored, so stored goals are kept and a later real change on another device still wins on every later sync. `dayLog` is trimmed by count, not by distance from its newest day, and a day with 0 points takes no place (CM-3b). The wrong-clock device keeps its own value and sends it again on each sync; the rows that write goals, `dayLog` and `streakLocal` (CM-17) cap what they write at the last server time seen, so it stops |
+| A review kind added after CM-3b | The Worker stores `reviews` as sent, so a build that does not know a newer kind drops those entries on its next sync and the server copy loses them. The row that adds the kind first adds a Worker preserve rule for stored entries of kinds the sender left out (Worker first) |
+| The new fields cannot be cleared | Every F-CURR-002 field merges one way (union, max or earliest) on both sides, and an absent key keeps the stored value, so no client can clear them. A reset or start-over row needs a Worker-side reset first (Worker first) |
 | Item ids shift when copy is edited | `items-stable-id` snapshot plus alias and retired lists |
 | Device voice only (no recordings; the iOS 14 offline issue is open) | Sound-change and homophone flags; `dictation-unambiguous`; the read-plus-meaning spelling round; Dictation and Decoding Sprint fall back to reading with the existing sound notice; recordings A-9 and A-10 are an owner task and block nothing here |
 | Goals or streak become pressure | Light default, automatic rest days, no loss copy, no nagging, MAR anti-shame list |
@@ -1049,7 +1175,8 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - the 60-day simulation scenarios S-a to S-e (4.3)
 
 **Merge** (Worker and client):
-- commutative and idempotent for memory item fields (with the tie-break), `cellBest`, `dayLog` (summed per install key), `streakLocal`, `streakBest`, `stamps`, `testedOut`, `cellCheckAt` and `stageCheckAt`
+- commutative and idempotent for memory item fields (with the tie-break), `cellBest`, `dayLog` (summed per install key), `streakLocal`, `streakBest`, `stamps`, `testedOut`, `cellCheckAt`, `stageCheckAt`, `steadyWeeks` and `stageCeremonyAt`
+- the `daily` retention prune of `reviews[]`: the same result whichever side merges first, and an entry pruned on one side never returns from the other
 - a produce miss on device A merged with an older state on device B
 - the Worker preserve rule when keys are absent
 - older-client snapshots round-trip; a snapshot or backup with an unknown review kind drops that entry and keeps the rest
@@ -1101,7 +1228,7 @@ About 85 content PRs at 4 a week come to about 21 weeks of content, so the plan 
 - grid with mastery rings at 320 px, cells still 54 dp
 - 48 dp targets on the topic pages (pack cells, column headers and arrow buttons at 320 px) and in the new games
 - reduced-motion ceremonies and page changes with no slide
-- keyboard paging on web and focus moving to the new page's first column header
+- keyboard paging on web and focus moving to the new page's first column header (on page 1, which has no header button, to the page 1 region)
 - contrast of theme tokens
 - screen-reader labels for rings ("Mastered", "Ready to refresh", "New volume"), and for the page arrows and page-change announcements
 
@@ -1137,7 +1264,7 @@ The owner decided every row on 2026-10-21 (section 21). OD-2 changed from the pr
 | OD-2 | Where new categories live | **Changed by the owner: Topic Packs on topic pages reached by a horizontal swipe of the Journey view.** Page 1 keeps the five themes exactly as today; later pages hold up to five pack columns each, never under 48 dp at 320 px, with page dots, an edge arrow, arrow buttons for keyboard and screen-reader users, and no slide under reduced motion (6.1). The pack data model is unchanged | An Explore shelf under the Journey grid and on Home (the proposed default); a sixth grid column (cells under 48 dp at 320 px; 54-file refactor) | CM-D3, CM-50a, CM-50b |
 | OD-3 | Pack entitlement | **Levels follow their stage** (S2+ paid once gating is on); free learners see the pack page and one Discover preview | The first quest of each pack is free (widens the free plan beyond Stage 1) | CM-50a, CM-50b |
 | OD-4 | First wave of packs | **Confirmed: Numbers & Time, People & Family, Feelings & Me** | Any other order of section 6.5 | CM-51 to CM-53 |
-| OD-5 | Lesson and story budget ceilings | **Raise as in section 10**; all lazy and precached; the start bundle must not grow | Keep today's ceilings (no Volume 2, book 2 or packs fit) | CM-5, CM-8, CM-40, CM-46, CM-50a |
+| OD-5 | Lesson and story budget ceilings | **Raise as in section 10**; all lazy and precached; the start bundle must not grow | Keep today's ceilings (no Volume 2, book 2 or packs fit) | CM-5, CM-8, CM-8b (the story overlays and shelf leave the start bundle and the manifest before CM-46a, instead of a raise), CM-40, CM-46, CM-50a |
 | OD-6 | Home headline number | **Confirmed: weekly dots and steady weeks**, with the local-day streak kept below them and 2 automatic rest days a local week | Keep the streak as the headline | CM-17 |
 | OD-7 | Family lantern and class goal | **On**, totals only, target set by a grown-up behind the PIN | Off until asked | CM-61, CM-62 |
 | OD-8 | Decoding Sprint, a 60-second optional bonus | **Yes**, optional, private personal best, like the vocab Speed Round | No timed activity outside the Speed Round | CM-32 |
@@ -1147,6 +1274,8 @@ The owner decided every row on 2026-10-21 (section 21). OD-2 changed from the pr
 | OD-12 | Stage one-liner wording | **S4** "Read and answer short everyday exchanges." · **S5** "Read heritage stories and tales with Hoya." (folk stories return once the book 2 tales ship) · **S6** "Take Korean out into the world: menus, signs and short messages." · **S7** `anchorSkillEn` "Write a short personal introduction" | Other wording | CM-1 |
 | OD-13 | My Story keepsake | **Not kept**: "My page" is shown at the end and cleared, as F-CURR-001 OD-6 | A kept, device-only keepsake page (needs a privacy review row and its own spec) | CM-38 |
 | OD-14 | What keeps the streak | **Any learning activity** (quest, Daily Review, story, word set); amend F-REPORT-001 OD-19 in CM-0b | Quest sessions only, as F-REPORT-001 OD-19 today | CM-4, CM-17 |
+
+**After OD-12 (open, needs owner wording).** Row CM-1 changed only the four OD-12 strings. Four older `stages.ts` strings still break the `review-copy` patterns (9.3), and CM-1's test holds them in a shrink-only `KNOWN_EXCEPTIONS` list: `stage7.oneLinerEn` "Say what you think, feel, and create — in Korean." (a speaking word; shown on the Journey), `stage2.anchorSkillEn` "Read and pronounce 60 core words across daily themes" (a speaking word), and `stage1.anchorSkillEn` and `stage5.anchorSkillEn` (`%`). The es and ko values of these fields carry the same wording. A reading and writing frame for Stage 7, such as "Write about what you think, feel and make, in Korean.", is a proposal only. A follow-up copy PR with the owner's wording rewrites them with es and ko and removes them from the list.
 
 ## 17. PR breakdown
 
@@ -1162,14 +1291,18 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-2 | `feat(backend,mobile): public remote config in D1 with off-only overrides, per-profile percentage ramps and a foreground refetch (F-CURR-002)` (W→A) | M | — | 0 | Worker route, cache headers, only-reduce, client fallback order, pct bucketing per profile, refetch age |
 | CM-3 | `feat(content-schema,backend): telemetry names section R and session.end fields (F-CURR-002)` (Worker first) | S | CM-0b | 0 | exact-list test |
 | CM-3b | `feat(content-schema,backend): additive snapshot fields, review kinds cell-check and warmup, SessionLog localDay, summary memory block, all lenient on read (F-CURR-002)` (Worker first) | M | CM-0b | 0 | unknown kind dropped per entry in snapshot, backup and Rescue Code paths; Worker preserve rule; older-client round-trip |
-| CM-4 | `fix(mobile): streak on the local day, streakLocal and streakBest, no-drop switch-over (F-CURR-002 OD-14)` (W→A) | M | CM-3b | 0 | TZ fixed-clock tests, switch-over, an older-build sync never lowers the display |
+| CM-4 | `fix(mobile): streak on the local day, streakLocal and streakBest, no-drop switch-over (F-CURR-002 OD-14)` (W→A) | M | CM-3b | 0 | TZ fixed-clock tests, switch-over, an older-build sync never lowers the display; between two new builds, only the section 7.4 exception (a run another copy already ended), never a smaller number |
 | CM-5 | `perf(content): lesson manifest split, per-locale title chunks, content-hashed precached bodies, budget lines, precache report (F-CURR-002)` | L | — | 0 | start-bundle and manifest budgets, precache gaps, chunk hash check, lazy-load test, offline e2e |
 | CM-5B | `feat(mobile): Save for offline for packs` (only if the precache ceiling is crossed) | M | CM-5 report | 4 | offline e2e |
+| CM-5C | `feat(mobile): in-place retry on the lesson waiting screen when a chunk needs the internet (F-CURR-002 §10)` | S | CM-5 | about 2 | render test from a cold store, offline e2e with the worker blocked |
 | CM-6 | `build(content): generated modules no longer committed, turbo generate task, generated catalogue, addedIn date stamps for CATALOG_VERSION, derived route-day pins, presenter font and e2e cell list (F-CURR-002)` | L | CM-5 | 0 | generator determinism, catalogue parity, stamp check, route-day snapshot, font coverage |
 | CM-7 | `feat(content-schema): lint rules (errors for Volume 2, packs and new stories; warnings for Volume 1) and coverage reports (F-CURR-002)` | M | — | 0 | rule unit tests with fixtures |
 | CM-8 | `perf(content): stories out of the start bundle, shelf metadata in the manifest, per-story precached chunks (F-CURR-002)` | L | CM-5 | 0 | start bundle shrinks, per-story budget, offline story e2e |
+| CM-8b | `perf(content): story narration overlays into the story chunks, body-only shelf fields out of the manifest, a story shelf chunk if the projection needs it (F-CURR-002 §10)` | M | CM-8 (and CM-40 for the projection) | 0 | start bundle shrinks (budget test), manifest budget with the 35-story projection, es and ko overlays applied to a story whose chunk loads later, offline story e2e in Spanish |
 | CM-70a | `feat(backend): learning_rollups table and aggregation at ingest (F-CURR-002)` (Worker first) | M | CM-3 | 0 | no id stored, profile-day counting, suppression, additive SQL |
 | CM-70b | `feat(backend): daily guardrail evaluator on a Cron Trigger that lowers a breached ramp (F-CURR-002)` | M | CM-2, CM-70a | 0 | breach lowers one step, only lowers, reason recorded |
+| CM-70c | `feat(content-schema,backend,mobile): per-flag arms on session.end and arm cells in learning_rollups, so the guardrail evaluator compares a flag's arm with the rest (F-CURR-002)` (Worker first) | M | CM-2, CM-3, CM-70a, CM-70b | 0 | arm list closed to served flag names, no id stored, arm-vs-rest comparison, cohort fallback while arms are under the minimum; a per-kind session count (the kinds a session played, a closed set) so the per-kind quit line of 3.3 is the kind's own rate |
+| CM-70d | `feat(backend): the D1 guardrail reads the account's rows written per day, not only the rollup sink's (F-CURR-002)` | S | CM-70b | 0 | owner chooses the source (Cloudflare GraphQL Analytics with a read-only scoped token, or the Worker summing `meta.rows_written` per day); the evaluator's D1 line reads it; no new write per request |
 | CM-D1 | `design(reviews): Daily Review and Keep going, mastery ring, Cell and Stage Check, ceremony, goal ring and weekly dots (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
 | CM-D2 | `design(minigame): Cloze Pick, Dictation, Syllable Build, Match Shape, Story Order, Role Play, My Story, Yut Review (F-CURR-002)` | M | CM-0 | 0 | MAR design review |
 | CM-D3 | `design(journey): Hidden Heritage scene style, Journey topic pages by horizontal swipe with page dots and arrow buttons, pack page, Passport; grid.md amended for the topic pages (F-CURR-002 OD-2)` | M | CM-0 | 0 | MAR design review |
@@ -1185,15 +1318,15 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-14 | `feat(mobile): Daily Review, Keep going and mission slot 3 (F-CURR-002)` | M | CM-13, CM-D1 | about 16 | e2e incl. offline, stars-only result, end-early, review-first suggestion |
 | CM-15 | `feat(mobile): quest warm-up and Try these again (F-CURR-002)` (W→A for `warmup`) | M | CM-13, CM-3b | about 6 | U-5 unchanged, e2e |
 | CM-16 | `feat(content-schema,backend,web,mobile): summary memory block, teacher learning-summary route, reports show words known, ready to refresh and mastery (F-CURR-002)` (W→A) | L | CM-3b, CM-12, CM-20 | about 10 | report builder tests, route permission tests, console e2e |
-| CM-17 | `feat(mobile,backend): daily and weekly goals, rest days, points per install key (F-CURR-002)` (W→A for new fields) | L | CM-4, CM-3, CM-3b, CM-D1 | about 16 | points accrual and sum, rest days, TZ tests, merge |
+| CM-17 | `feat(mobile,backend): daily and weekly goals, rest days, points per install key (F-CURR-002)` (W→A for new fields) | L | CM-4, CM-3, CM-3b, CM-D1 | about 16 | points accrual and sum, rest days, TZ tests, merge; also ships the ended-run "Start a new run" copy (en, es, ko, review ledger) and the `streakBest` display on Home (section 7.4), which CM-4 leaves out |
 
 ### Phase 2: achievement
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
 | CM-20 | `feat(mobile): mastery levels on best box, started-volume denominator, cellBest latch, grid ring, words known milestones (F-CURR-002)` | M | CM-12, CM-D1 | about 8 | derivation reads only monotonic fields, latch never drops, New volume marker, 320 px visual, a11y labels |
-| CM-21 | `feat(mobile): Cell Check and test-out (F-CURR-002)` (W→A for `cell-check`) | L | CM-13, CM-20, CM-3b | about 10 | seeding by result, untested at box 1, entitlement, `routeNext` skip, e2e |
-| CM-22 | `feat(mobile): Stage Checks for Stages 2-7, PRIZE_STAGES, ceremony, retroactive summary listing existing cards (F-CURR-002)` | L | CM-21, OD-1 | about 12 | prize table, summary once, never blocks, `stage.card_opened`, e2e |
+| CM-21 | `feat(mobile): Cell Check and test-out (F-CURR-002)` (W→A for `cell-check`) | L | CM-13, CM-20, CM-3b, CM-D1 | about 10 | seeding by result, untested at box 1, entitlement, `routeNext` skip, e2e |
+| CM-22 | `feat(mobile): Stage Checks for Stages 2-7, PRIZE_STAGES, ceremony, retroactive summary listing existing cards (F-CURR-002)` (W→A for `stageCeremonyAt`) | L | CM-21, CM-3b, CM-D1, OD-1 | about 12 | prize table, summary once, never blocks, `stage.card_opened`, e2e |
 | CM-23 ×3 | `feat(cards): upper-cell cards, category albums and their retroactive award, Stages 2-3 / 4 / 6-7 (F-CARD-S2..S7, F-CURR-002)` | L each | CM-22 | about 60 each (card names and backs) | card-award tests including retroactive, album legendary, art budget |
 | CM-24 | `feat(mobile): adaptive pacing in quests, compact Discover and scaffold (F-CURR-002)` | M | CM-12 | about 2 | compact and scaffold rules, standard-path U-5, adapted-path U-11 |
 | CM-25 | `feat(mobile): Stage Jump Ahead; amend F-PLC-001 ceiling (F-CURR-002)` | M | CM-21 | about 6 | placement fixtures |
@@ -1208,7 +1341,7 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 | CM-33 | `feat(mobile,content): Match Shape game and Stage 1 letter-shape origins (F-CURR-002)` | M | CM-D2 | about 4 | sources, Stage 1 additions unit tests, Playwright |
 | CM-34 | `feat(mobile): Story Order game (F-CURR-002)` | S | CM-D2 | about 3 | `story-order-text`, fallback, Playwright |
 | CM-35 | `feat(mobile): Role Play read-and-tap game (F-CURR-002)` | L | CM-D2 | about 5 | branch reducer, every branch ends well, no speaking UI, fallback, Playwright |
-| CM-36 | `feat(mobile): Hidden Heritage engine, first scene (Food) and slide kind (F-CURR-002 OD-10)` | L | CM-D3 | about 5 | hit areas a11y, Korean-word targets, 25 KB budget, fallback, Playwright |
+| CM-36 | `feat(mobile): Hidden Heritage engine, first scene (Food) and slide kind (F-CURR-002 OD-10)` | L | CM-D3 | about 8 | hit areas a11y, Korean-word targets, 25 KB budget, fallback, Playwright |
 | CM-37 ×4 | `feat(content): Hidden Heritage scenes for Letters, Holidays, Nature, Play (F-CURR-002)` | M each | CM-36 | about 10 each | scene budget, MAR culture pass |
 | CM-38 | `feat(mobile): My Story game, word-bank slots, not kept (F-CURR-002 OD-13)` | M | CM-D2 | about 5 | no free text, nothing stored (P-1 extended), fallback, Playwright |
 | CM-39 | `feat(mobile): Yut Review skin (F-CURR-002)` | M | CM-14, CM-D2 | about 4 | randomness never decides reward, Playwright |
@@ -1218,18 +1351,20 @@ Sizes: S under about 300 changed lines, M about 300-1,000, L above 1,000 (split 
 
 ### Phase 4: depth (Volume 2)
 
+CM-40 also carries two items of section 10 (decision record, "Manifest fields"): it moves the lesson display lines (an episode's subtitle, Hoya intro and reward cards, a quest's blurb) out of the start-loaded manifest and the title chunks into one precached lesson headers chunk per locale, English included, loaded before the first screen like the title chunk; and it gives each Volume 2 episode a body chunk of its own. Both land before the first Volume 2 content row, with the measured numbers in its PR.
+
 Formats used decide extra dependencies: S2 rows need CM-36/37 (Hidden Heritage) and CM-32 (Syllable Build) where their table uses them; S4 rows need CM-35 (Role Play); S6 rows need CM-47 (realia kinds); S7 rows need CM-38 (My Story); Play S2 needs CM-39 (Yut Review). CM-3B is not a dependency, because the lint is an error for Volume 2 files from day one.
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-40 | `feat(mobile,content-schema,web): two volumes per cell: id regexes, build-lessons v2 input, CatalogCell.episodeIds, placement and route days, lecture chooser, Vol 1 and Vol 2 on the cell sheet (F-STORY-005 PR 5.8, F-CURR-002)` | L | CM-5, CM-6 | about 3 | capacity, `episodesFor` order, placement of v2 quests, chooser accepts v2, e2e |
+| CM-40 | `feat(mobile,content-schema,web): two volumes per cell: id regexes, build-lessons v2 input, CatalogCell.episodeIds, placement and route days, lecture chooser, Vol 1 and Vol 2 on the cell sheet (F-STORY-005 PR 5.8, F-CURR-002)` | L | CM-5, CM-6 | about 3 | capacity, `episodesFor` order, placement of v2 quests, chooser accepts v2, e2e; the lesson headers chunk and a body chunk per volume (below) with their manifest, title chunk and cell chunk lines |
 | CM-41 ×5 | `content(stage<n>): Nature Volume 2, S2 / S3 / S4 / S6 / S7 (F-CURR-002)` | M each | CM-40, CM-30, CM-31, plus the format rows above | overlays | U-rules, recycle, sources, MAR |
 | CM-42 ×5 | `content(stage<n>): Play Volume 2 (F-CURR-002)` | M each | same | overlays | same |
 | CM-43 ×5 | `content(stage<n>): Food Volume 2 (F-CURR-002)` | M each | same | overlays | same |
 | CM-44 ×5 | `content(stage<n>): Letters Volume 2 (F-CURR-002)` | M each | same | overlays | same |
 | CM-45 ×5 | `content(stage<n>): Holidays Volume 2 (F-CURR-002 OD-9)` | M each | same | overlays | same |
-| CM-46a | `content(stories): read tiers for the 10 listen-only stories (F-CURR-002)` | M | CM-8 | overlays | story checks, per-story budget |
-| CM-46 ×5 | `content(stage5): book 2 tales for Nature, Food, Holidays (folk tales), Play, Letters (F-CURR-002)` | M each | CM-8, CM-34, CM-46a | overlays | story pipeline, `story-topic-unique`, adaptation rule, coverage report, MAR |
+| CM-46a | `content(stories): read tiers for the 10 listen-only stories (F-CURR-002)` | M | CM-8, CM-8b | overlays | story checks, per-story budget |
+| CM-46 ×5 | `content(stage5): book 2 tales for Nature, Food, Holidays (folk tales), Play, Letters (F-CURR-002)` | M each | CM-8, CM-8b, CM-34, CM-46a | overlays | story pipeline, `story-topic-unique`, adaptation rule, coverage report, MAR |
 | CM-47 | `feat(mobile,content-schema): realia kinds recipe, receipt, label, forecast, calendar, timetable, map, poster (F-CURR-002)` | M | — | about 8 | renderer per kind, art budget |
 | CM-48 | `feat(mobile,content): This week in Korea, engine and first 13 drops (F-CURR-002)` | M | CM-12 | about 4 + overlays | date gating offline, TZ tests |
 
@@ -1239,8 +1374,8 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold |
-| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 18 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
+| CM-50a | `feat(content-schema,scripts): Topic Pack schema, PACK_LEVEL_ID_RE, CatalogPack, build-lessons pack input, pack order list, placement and route-day rules, new-pack scaffold (F-CURR-002 OD-2, OD-3)` | L | CM-6 | 0 | schema, `pack-skeleton`, packs never placed out, every pack directory in `order.json`, scaffold, pack levels outside the start-loaded manifest (section 10: a pack manifest chunk and a pack title chunk per locale, loaded with the topic pages) |
+| CM-50b | `feat(mobile): Journey topic pages by horizontal swipe, with page dots, arrow buttons and keyboard paging, and the pack page (F-CURR-002 OD-2)` | M | CM-50a, CM-20, CM-D3 | about 37 | page layout (page 1 unchanged, five columns a page, 54 dp at 320 px), swipe direction lock, buttons and arrow keys, screen-reader labels, reduced motion, entitlement, `topicPacks` and `pack.<key>` off behaviour, e2e |
 | CM-50c | `feat(mobile,web): lecture and console chooser accept pack levels (F-CURR-002)` | S-M | CM-50a | about 2 | chooser regex, deck schema, old-presenter decode failure |
 | CM-51 ×5 | `content(packs): Numbers & Time, levels 1-5 with the Pack Check in L5 (F-CURR-002)` | M each | CM-50a, CM-50b, plus the level rows above | overlays | U-rules, sources, MAR |
 | CM-52 ×5 | `content(packs): People & Family (F-CURR-002)` | M each | same | overlays | same |
@@ -1256,7 +1391,7 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | PR | Title | Size | Depends on | Strings | Tests |
 |---|---|---|---|---|---|
-| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 30 | deterministic pick, latch merge |
+| CM-60 | `feat(mobile): weekly quests and Passport stamps (F-CURR-002)` | M | CM-17 | about 48 | deterministic pick, latch merge, quest kind stored with each weekly stamp |
 | CM-61 | `feat(backend,mobile,web): family lantern, Worker total from summaries, space-goal read, target behind the PIN (F-CURR-002 OD-7)` (W→A) | M | CM-16, CM-17, owner request A account switching and PIN | about 8 | totals only, cross-device sum, offline total, PIN gate, e2e with 2 profiles |
 | CM-62 | `feat(backend,web,mobile): class goal, space_goals, counts-only class-progress route, console setter, presenter bar (F-CURR-002 OD-7)` (W→A) | L | CM-3, CM-16, CM-17 | about 12 | Worker totals, class scope allowed on class-progress only, additive SQL, e2e |
 | CM-63 | `feat(lecture): game block and presets by-topic, class-check, class-review (F-CURR-002)` | L | CM-16, CM-21, CM-36, CM-39 | about 18 | no names on projector, slide mapping, old-presenter decode failure, e2e |
@@ -1268,14 +1403,14 @@ Each pack is 5 level PRs; the Pack Check ships in the L5 PR. Level dependencies 
 
 | Group | PRs |
 |---|---|
-| Phase 0 | 16 (plus the conditional CM-5B) |
+| Phase 0 | 20 (plus the conditional CM-5B) |
 | Phase 1 | 8 |
 | Phase 2 | 8 (CM-23 counts as 3) |
 | Phase 3 | 20 (CM-37 ×4, CM-3A ×5) |
 | Phase 4 | 34 (5 themes ×5, book 2 ×5, plus CM-40, CM-46a, CM-47, CM-48) |
 | Phase 5 | 44 (8 packs ×5, plus CM-50a, CM-50b, CM-50c, CM-59) |
 | Phase 6 | 7 |
-| **Total** | **137** |
+| **Total** | **141** |
 
 CM-5B is conditional and is counted only if the CM-5 report triggers it. Each content row's PR description lists the MAR pass findings with outcomes, the `--report` bytes for the chunk, test counts and one 320 px screenshot.
 
@@ -1310,13 +1445,15 @@ CM-5B is conditional and is counted only if the CM-5 report triggers it. Each co
 ## 19. Unverified assumptions
 
 1. **Per-quest size.** About 5 KB raw per quest on the compact literal is measured on Volume 1 cells. The first Volume 2 cell records its real number here.
-2. **Assets instead of async bundles on web.** Whether Metro async bundles work in the PWA build is not known. CM-5 decides with a spike, and JSON assets are the safe default.
+2. **Assets instead of async bundles on web.** Resolved by CM-5 (decision record in section 10): Metro async bundles work in the PWA build once Metro's bundle loader is installed at the entry, so they are used; JSON assets stay the fallback.
 3. **Memory delta size.** About 60-80 B per changed item state after JSON. CM-12's shadow period measures the p95 delta per day.
 4. **NIKL word list licence.** The 2003 list is publicly distributed. It is used at build time only, and its terms are checked before it enters the repo. If they forbid that, `freq-coverage` runs from a local file outside the repo.
 5. **Device voice on pseudo-words.** The Decoding Sprint uses real syllables only, because device voices read some non-words unpredictably. CM-32 tests the allowlist on iOS, Android and desktop voices.
 6. **Weekly actives.** If there are fewer than about 400 per arm, A/B tests become directional staged rollouts (3.4).
 7. **Review load.** The 60-day simulation (4.3) models learner behaviour. The shadow period checks the real due-pool sizes against it before `dailyReview` ramps.
 8. **Worker CPU on shard merges.** A 500-item merge is expected to fit the free-tier CPU limit. CM-11 benchmarks it; if it does not fit, the cap per call is lowered.
+9. **Guardrails on cohorts, not arms.** Until row CM-70c, the guardrail evaluator compares everyone before a step with everyone after it (12.3). It assumes a harmful feature shows in the whole cohort. At a 10% step an effect inside the arm is diluted about 10 times, and a breach lowers every ramping flag whose windows show it. The inputs come from an anonymous endpoint; a forger can at most pause a ramp one step, with the reason on the row, or spend the rollup budget so the flag is `unchecked`.
+10. **Guardrail lines weaker than 3.3 states.** Until row CM-70c the per-kind quit line is a kind's share of all play (12.3), and until row CM-70d the D1 line sees only the rollup sink's rows, so it is advisory. The evaluator applies the 20-event threshold per cohort, not per day (12.3); the owner metrics page keeps the per-day rule.
 
 ## 20. Review round 1 (2026-10-21)
 
@@ -1330,6 +1467,7 @@ The owner answered section 16 on 2026-10-21:
 - **OD-4 confirmed.** The first wave is Numbers & Time, People & Family and Feelings & Me.
 - **OD-6 confirmed.** Weekly dots are the Home headline, with 2 automatic rest days a local week.
 - **Every other OD** stands as proposed and is now decided.
+- **Open for the owner (CM-D3 design pass).** Two §6.1 write-backs are proposals until the owner confirms them: the header band that grows the space above page 1's theme labels when packs are shown (README D3), and the short pack word under the column-header glyph in place of the full name (README D5).
 
 ---
 

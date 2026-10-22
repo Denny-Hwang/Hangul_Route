@@ -98,6 +98,19 @@ keep_vars = true
 #                                    value) is the kill switch: every class and school reader sees the
 #                                    base scope at once; families are unaffected and acknowledgements
 #                                    still record. GET /health shows features.classScopeFull.
+# LEARNING_ROLLUPS                   F-CURR-002 section 11.2 (row CM-70a): leave UNSET (on). Unset,
+#                                    empty or "enabled" lets POST /api/telemetry add counts to the
+#                                    D1 table learning_rollups (codes and counts only, under a write
+#                                    budget of 20,000 rows a day). "disabled" (or any other value) is
+#                                    the kill switch: no rollup row is written; events are still
+#                                    accepted. Keep it out of [vars] (a [vars] value returns on every
+#                                    deploy).
+# GUARDRAIL_EVALUATOR                F-CURR-002 section 12.3 (row CM-70b): leave UNSET (on). Unset,
+#                                    empty or "enabled" lets the daily Cron Trigger lower a breached
+#                                    ramp in remote_config. "disabled" (or any other value) is the
+#                                    kill switch: the evaluator reads and writes nothing, the purge
+#                                    still runs, and Workers Logs show guardrail.run disabled: true.
+#                                    Keep it out of [vars].
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db
@@ -134,7 +147,9 @@ migrations_dir = "migrations"
 # Once a day at 11:17 UTC the Worker's `scheduled` handler (src/index.ts) runs
 # the bounded retention purge: notes past 180 days, reported notes 90 days after
 # their newest report, lifted holds after 365 days, and dead rate counters, at
-# most 5 rounds of 200 rows. Cron Triggers are allowed on the Workers Free plan;
+# most 5 rounds of 200 rows. The same run then evaluates the F-CURR-002
+# guardrails (row CM-70b) and only lowers a breached ramp in remote_config.
+# Cron Triggers are allowed on the Workers Free plan;
 # the deploy command is unchanged (wrangler deploy registers the schedule).
 [triggers]
 crons = ["17 11 * * *"]

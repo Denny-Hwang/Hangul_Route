@@ -1,22 +1,52 @@
 #!/usr/bin/env node
-// F-CURR-001 §3.10, §3.12 — lesson bundle generator (row C-2).
+// F-CURR-001 §3.10, §3.12 — lesson bundle generator (row C-2); split into a manifest and
+// content-hashed chunks by F-CURR-002 §10 (row CM-5).
 //
 // Reads the upper-stage lesson cells, content/episodes/stage-<n>/<theme>.json for
 // n in 2, 3, 4, 6, 7 (Stage 1 is hand-written TypeScript, Stage 5 holds the story
 // books), drops `status: "draft"` cells (they stay "Coming later"), reads the es / ko
-// glosses of content/i18n/<locale>/lessons-stage<n>-<theme>.json and writes:
+// glosses of content/i18n/<locale>/lessons-stage<n>-<theme>.json and writes, under
+// apps/mobile/src/content/__generated__/:
 //
-//   apps/mobile/src/content/__generated__/lessons-index.ts     (imported at start)
-//       LESSON_EPISODES        Episode[]   one shipped grid episode per ready cell
-//       LESSON_QUESTS          Quest[]     its quests: ids, titles, minutes, steps (no scopes)
-//       LESSON_INDEX_OVERLAYS  Overlays    es / ko of the episode and quest entities
-//   apps/mobile/src/content/__generated__/lessons-stage<n>.ts  (one per stage, reached lazily)
-//       LESSON_SCOPES          Record<ref, MinigameScope>  the game content of the stage's quests
-//       LESSON_SCOPE_OVERLAYS  Overlays    es / ko of the minigame entities
+//   lessons-index.ts                                  the manifest (imported at start)
+//       LESSON_EPISODES        Episode[]               one shipped grid episode per ready cell
+//       LESSON_QUESTS          LessonQuestHeader[]     its quests: ids, English titles, blurbs, minutes, cards (no steps)
+//       LESSON_TEACHES         Record<quest, jamo[]>   the jamo ids each quest's Discover step teaches (only quests that teach)
+//       LESSON_CELL_CHUNKS     Record<episode, hash>   the hash of each cell's body chunk
+//       LESSON_TITLE_CHUNKS    Record<locale, hash>    the hash of each locale's title chunk
+//       loadLessonCell / loadLessonTitles             one literal `import()` per chunk
+//   lesson-chunks/lessons-cell-stage<n>-<theme>.ts    one body chunk per ready cell (on demand)
+//       CHUNK_HASH, LESSON_STEPS (by quest id), LESSON_SCOPES (by minigame ref),
+//       LESSON_OVERLAYS (es / ko of the steps and the minigame entities)
+//   lesson-chunks/lessons-titles-<locale>.ts          one title chunk per overlay locale (active locale only)
+//       CHUNK_HASH, LESSON_TITLE_OVERLAYS (the episode and quest titles, subtitles, intros, blurbs, teasers)
 //
-// The index never imports a stage module: `apps/mobile/src/content/lesson-modules.ts`
-// reaches each stage through one literal `require` (Metro and Hermes resolve only
-// literal strings), so a stage's scopes are evaluated only when one of its quests opens.
+// and the catalogue rows that come from content/ (F-CURR-002 §9.1, row CM-6), under
+// packages/content-schema/src/catalog/:
+//
+//   catalog.generated.ts
+//       GENERATED_CATALOG_VERSION   the largest `addedIn` stamp of a shipped quest, else 32 (the last
+//                                   hand-kept version; every stamp is a YYYYMMDD date, so larger)
+//       GENERATED_QUEST_ADDITIONS   the shipped quest ids by their `addedIn` stamp: the content files'
+//                                   stamps and those of catalog/hand-stamps.json (a hand-written quest
+//                                   added after version 32: Stage 1, a Stage 5 book)
+//       GENERATED_LESSON_CELL_ROWS  one compact row per upper-stage cell file (a draft is "Coming soon"),
+//                                   with its quests' titles, minutes and `teaches` (Discover symbols);
+//                                   expandCellRows (catalog/assemble.ts) gives the ids, cells and kinds
+//       GENERATED_STORIES           one row per content/stories/*.json (the offer status rule of the catalogue)
+//       GENERATED_TOPICS            one row per content/vocab/<topic>.json
+//   catalog/data.ts adds the hand-written Stage 1 and Stage 5 rows and the frozen shelf order of the
+//   first 24 stories, so a content PR touches only its own files under content/ (§9.1 target).
+//
+// Every one of these modules is generated, never committed (row CM-6): `pnpm generate`
+// (scripts/generate.mjs) writes them, the turbo `generate` task runs it before dev, build,
+// typecheck and test, and the root `postinstall` runs it after every `pnpm install` (CI jobs and
+// the Workers Builds deploys install first).
+//
+// Nothing imports a chunk statically: Metro splits every `import()` of the manifest into its own
+// web bundle (the PWA precaches it, the app loads it on demand) and keeps them all in the one
+// native bundle. The hash is the sha256 of the chunk's data; pwa-postbuild.mjs checks every
+// manifest entry against the web bundle that carries it (F-CURR-002 §10 decision record).
 //
 // This is a shaper, like build-stories.mjs: it checks what it emits (ids, statuses,
 // refs, the fields it reads, and the two review sign-offs of a ready cell, §3.8), maps
@@ -27,38 +57,54 @@
 // further gate. Culture-note sources never reach the bundle (§3.10).
 //
 // Usage:
-//   node scripts/build-lessons.mjs            write the modules
-//   node scripts/build-lessons.mjs --check    fail if a checked-in module differs (CI)
-//   node scripts/build-lessons.mjs --report   print raw and gzip bytes per cell, per stage
-//                                             module and in total; fail over budget (CI)
+//   node scripts/build-lessons.mjs            write the modules (and remove the ones no longer built)
+//   node scripts/build-lessons.mjs --check    determinism (CI): fail if a module on disk (written by an earlier
+//                                             run, e.g. the postinstall) differs from this run or is no longer
+//                                             built; then the addedIn stamp check against origin/main
+//                                             (scripts/check-added-in.mjs) when that ref exists
+//   node scripts/build-lessons.mjs --report   print raw and gzip bytes per cell, per module, per stage
+//                                             and in total; fail over budget (CI)
 //
-// Dependency-free Node. Exit 0 when written / in sync / within budget, 1 on a content,
+// Node with one devDependency: `typescript`, which scripts/ts-loader.mjs uses to read the app's
+// jamo (apps/mobile/src/content/jamo.ts) for the catalogue's `teaches`. The postinstall, the turbo
+// `generate` task and metro.config.js all run this script, so an install without devDependencies
+// (`pnpm install --prod`, NODE_ENV=production) cannot generate the modules. Exit 0 when written / in sync / within budget, 1 on a content,
 // drift or budget error, 2 on a usage error. HANGUL_ROUTE_ROOT overrides the repo root (tests).
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { register } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { OVERLAY_LOCALES, isOverlayFieldAllowed, overlayPrefix } from "./overlay-fields.mjs";
+import { writeIfChanged } from "./write-if-changed.mjs";
 
 export const GENERATED_HEADER =
-  "// GENERATED by scripts/build-lessons.mjs — do not edit. Source: content/episodes/stage-<n>/*.json, content/i18n/{es,ko}/lessons-*.json (F-CURR-001)\n";
+  "// GENERATED by scripts/build-lessons.mjs — do not edit. Source: content/episodes/stage-<n>/*.json, content/i18n/{es,ko}/lessons-*.json (F-CURR-001, F-CURR-002)\n";
 
 /** The stages that hold lesson cells, in grid order. */
 export const LESSON_STAGES = Object.freeze([2, 3, 4, 6, 7]);
 export const THEMES = Object.freeze(["letters", "life", "rites", "nature", "crafts"]);
 export const OUT_DIR = join("apps", "mobile", "src", "content", "__generated__");
+/** The chunks' folder under OUT_DIR. */
+export const CHUNK_DIR = "lesson-chunks";
 
 /**
- * Bundle budget (F-CURR-001 §3.12). Raising a ceiling is a reviewed one-line change
- * with the measured numbers in the PR.
+ * Bundle budget (F-CURR-001 §3.12, F-CURR-002 §10 and OD-5). Raising a ceiling is a reviewed
+ * one-line change with the measured numbers in the PR.
  */
 export const BUDGET = Object.freeze({
   perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
-  stageRaw: 150_000,
-  stageGzip: 32_000,
-  totalRaw: 950_000, // F-CURR-001 integration of S6-1..S7-5, S3-4, T-1: all 24 cells measure about 0.9 MB raw on the compact literal (section 9)
-  totalGzip: 140_000, // F-CURR-001 integration of S6-1..S7-5, S3-4, T-1: all 24 cells measure about 133 KB gzip (section 9)
+  manifestRaw: 60_000, // F-CURR-002 CM-5: the start-loaded lessons-index.ts (372,236 B before the split)
+  titleChunkRaw: 30_000, // F-CURR-002 CM-5: one locale's title chunk
+  cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
+  cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
+  stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
+  stageGzip: 40_000, // F-CURR-002 CM-5 (OD-5): was 32,000
+  totalRaw: 1_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000)
+  totalGzip: 210_000, // F-CURR-002 CM-5 (OD-5): was 140,000
 });
 
 export class ContentError extends Error {
@@ -212,11 +258,13 @@ export function shapeCell(cell, rel) {
   }
   const quests = need(cell, "quests", rel, "array");
   const scopes = {};
+  const stamps = {};
   const shapedQuests = quests.map((quest, qi) => {
     const where = `${rel} quests[${qi}]`;
     if (!isObject(quest)) throw new ContentError("a quest is an object", where);
     const questId = `quest:${stage}-${theme}-q${qi + 1}`;
     if (quest.id !== questId) throw new ContentError(`id must be ${questId}`, where);
+    if (quest.addedIn !== undefined) stamps[questId] = addedInStamp(quest.addedIn, where);
     const steps = need(quest, "steps", where, "array");
     for (const scope of need(quest, "scopes", where, "array")) {
       const ref = need(scope, "ref", where);
@@ -246,7 +294,7 @@ export function shapeCell(cell, rel) {
     pillarTags: need(cell, "pillarTags", rel, "array"),
     status: "shipped",
   };
-  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes };
+  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes, stamps, file: rel };
 }
 
 /** The ids an overlay of this cell may name: its episode, its quests and its scope refs. */
@@ -279,79 +327,483 @@ export function cellOverlays(shaped, files) {
 
 const sortedKeys = (obj) => Object.fromEntries(Object.keys(obj).sort().map((k) => [k, obj[k]]));
 
-/** Split overlays by where the entity lives: episode / quest in the index, minigame in the stage module. */
-function splitOverlays(overlays) {
-  const index = Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}]));
-  const scopes = Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}]));
-  for (const locale of OVERLAY_LOCALES) {
-    for (const [id, entry] of Object.entries(overlays[locale])) {
-      (overlayPrefix(id) === "minigame" ? scopes : index)[locale][id] = entry;
+// ---- chunks (F-CURR-002 §10, row CM-5) -----------------------------------------------------
+
+/** The quest fields the start-loaded manifest keeps; `steps` goes to the cell's body chunk. */
+const QUEST_HEADER = PICK_QUEST.filter((k) => k !== "steps");
+
+/** A quest overlay field of the body chunk (`steps.<stepId>....`); every other episode or quest field is a title. */
+const isBodyField = (id, field) => overlayPrefix(id) === "minigame" || field.startsWith("steps.");
+
+/**
+ * The jamo ids a quest's Discover step introduces, in page order: `questTeaches`
+ * (apps/mobile/src/logic/stage1/curriculum.ts) over its steps. The manifest keeps them, so the
+ * screens that name a quest's letters before its chunk loads (a closed quest's preview on the
+ * lesson page, the results teaser, the placement and letter-wall catalogues) read them at start.
+ */
+export function discoverJamo(steps) {
+  const ids = [];
+  for (const step of steps) {
+    for (const page of step.discover?.pages ?? []) {
+      for (const item of page.items ?? []) if (item.type === "jamo") ids.push(item.jamoId);
     }
   }
-  return { index, scopes };
+  return ids;
 }
 
-/** Pure: ready shaped cells (with their overlays) -> the module sources by output file name. */
-export function buildModules(cells) {
+/** The content hash a chunk module carries (`CHUNK_HASH`) and the manifest names: sha256 of its data literal, 16 hex. */
+export const chunkHash = (text) => createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
+
+/** `episode:stage2-letters` -> `lessons-cell-stage2-letters` (the file, and the name of its web bundle). */
+export const cellChunkName = (episodeId) => `lessons-cell-${episodeId.replace(/^episode:/, "")}`;
+export const titleChunkName = (locale) => `lessons-titles-${locale}`;
+
+const emptyOverlays = () => Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}]));
+const overlaysLiteral = (o) => literal(Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, sortedKeys(o[l])])));
+
+/**
+ * Pure: ready shaped cells -> what each chunk holds and its hash.
+ *   manifest  the episodes and the quest headers (no steps), English only
+ *   cells     one body per cell: steps by quest id, scopes by ref, the es / ko glosses of both
+ *   titles    one table per locale: the episode and quest titles, subtitles, intros, blurbs, teasers
+ */
+export function planChunks(cells) {
   const ready = cells.filter((c) => c.status === "ready");
-  const indexOverlays = Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}]));
-  const stage = Object.fromEntries(LESSON_STAGES.map((n) => [n, { scopes: {}, overlays: Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}])) }]));
-  for (const cell of ready) {
-    const { index, scopes } = splitOverlays(cell.overlays);
+  const titles = emptyOverlays();
+  const cellChunks = ready.map((cell) => {
+    const overlays = emptyOverlays();
     for (const locale of OVERLAY_LOCALES) {
-      Object.assign(indexOverlays[locale], index[locale]);
-      Object.assign(stage[cell.stageNo].overlays[locale], scopes[locale]);
+      for (const [id, entry] of Object.entries(cell.overlays[locale])) {
+        const body = Object.entries(entry).filter(([field]) => isBodyField(id, field));
+        const title = Object.entries(entry).filter(([field]) => !isBodyField(id, field));
+        if (body.length > 0) overlays[locale][id] = Object.fromEntries(body);
+        if (title.length > 0) titles[locale][id] = Object.fromEntries(title);
+      }
     }
-    Object.assign(stage[cell.stageNo].scopes, cell.scopes);
-  }
-  const overlaysLiteral = (o) => literal(Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, sortedKeys(o[l])])));
+    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
+    const scopes = literal(sortedKeys(cell.scopes));
+    const glosses = overlaysLiteral(overlays);
+    return {
+      id: cell.episode.id,
+      stageNo: cell.stageNo,
+      name: cellChunkName(cell.episode.id),
+      hash: chunkHash(steps + scopes + glosses),
+      literals: { steps, scopes, glosses },
+    };
+  });
+  const titleChunks = OVERLAY_LOCALES.map((locale) => {
+    const table = literal(sortedKeys(titles[locale]));
+    return { locale, name: titleChunkName(locale), hash: chunkHash(table), literal: table };
+  });
+  return {
+    episodes: ready.map((c) => c.episode),
+    quests: ready.flatMap((c) => c.quests.map((q) => Object.fromEntries(QUEST_HEADER.filter((k) => q[k] !== undefined).map((k) => [k, q[k]])))),
+    teaches: Object.fromEntries(ready.flatMap((c) => c.quests.map((q) => [q.id, discoverJamo(q.steps)]).filter(([, ids]) => ids.length > 0))),
+    cells: cellChunks,
+    titles: titleChunks,
+  };
+}
+
+/** Pure: the chunk names and hashes the manifest lists (pwa-postbuild.mjs checks the web bundles against them). */
+export function chunkManifest(cells) {
+  const plan = planChunks(cells);
+  return [...plan.cells, ...plan.titles].map(({ name, hash }) => ({ name, hash }));
+}
+
+const q = (s) => JSON.stringify(s);
+
+/** Pure: ready shaped cells (with their overlays) -> the module sources by path under OUT_DIR. */
+export function buildModules(cells) {
+  const plan = planChunks(cells);
+  const cellCases = plan.cells.map((c) => `    case ${q(c.id)}:\n      return import('./${CHUNK_DIR}/${c.name}');\n`).join("");
+  const titleCases = plan.titles.map((t) => `    case ${q(t.locale)}:\n      return import('./${CHUNK_DIR}/${t.name}');\n`).join("");
   const modules = {
     "lessons-index.ts":
       GENERATED_HEADER +
-      "import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';\n\n" +
-      "/** The shipped upper-stage lesson cells (F-CURR-001): headers only; the scopes live in lessons-stage<n>.ts. */\n" +
-      `export const LESSON_EPISODES: Episode[] = ${literal(ready.map((c) => c.episode))};\n\n` +
-      `export const LESSON_QUESTS: Quest[] = ${literal(ready.flatMap((c) => c.quests))};\n\n` +
-      `export const LESSON_INDEX_OVERLAYS: Overlays = ${overlaysLiteral(indexOverlays)};\n`,
+      "import type { Episode, OverlayLocale } from '@hangul-route/content-schema';\n" +
+      "import type { LessonCellChunk, LessonQuestHeader, LessonTitleChunk } from '../../logic/lessons/lesson-store';\n\n" +
+      "/**\n" +
+      " * The start-loaded lesson manifest (F-CURR-002 §10, row CM-5): the shipped upper-stage cells and their\n" +
+      " * quests, English headers only. Each cell's steps, scopes and glosses are one content-hashed chunk, and\n" +
+      " * the es / ko titles one chunk per locale, reached only through the literal `import()`s below: Metro\n" +
+      " * emits each as its own web bundle (precached by the service worker, loaded on demand) and keeps them\n" +
+      " * in the one native bundle.\n" +
+      " */\n" +
+      `export const LESSON_EPISODES: Episode[] = ${literal(plan.episodes)};\n\n` +
+      `export const LESSON_QUESTS: LessonQuestHeader[] = ${literal(plan.quests)};\n\n` +
+      "/** The jamo ids each lesson quest's Discover step teaches, in page order (only the quests that teach some): read before any chunk loads. */\n" +
+      `export const LESSON_TEACHES: Readonly<Record<string, readonly string[]>> = ${literal(plan.teaches)};\n\n` +
+      "/** Each cell's body chunk by episode id: the hash its module carries as `CHUNK_HASH`. */\n" +
+      `export const LESSON_CELL_CHUNKS: Readonly<Record<string, string>> = ${literal(Object.fromEntries(plan.cells.map((c) => [c.id, c.hash])))};\n\n` +
+      "/** The title chunk of each overlay locale: the hash its module carries as `CHUNK_HASH`. */\n" +
+      `export const LESSON_TITLE_CHUNKS: Readonly<Record<OverlayLocale, string>> = ${literal(Object.fromEntries(plan.titles.map((t) => [t.locale, t.hash])))};\n\n` +
+      "/** The body chunk of a shipped cell; undefined for any other id. One literal `import()` per chunk (Metro resolves only literals). */\n" +
+      "export function loadLessonCell(cellId: string): Promise<LessonCellChunk> | undefined {\n" +
+      "  switch (cellId) {\n" +
+      cellCases +
+      "    default:\n" +
+      "      return undefined;\n" +
+      "  }\n" +
+      "}\n\n" +
+      "/** The title chunk of an overlay locale (English titles are in the manifest). */\n" +
+      "export function loadLessonTitles(locale: OverlayLocale): Promise<LessonTitleChunk> {\n" +
+      "  switch (locale) {\n" +
+      titleCases +
+      "  }\n" +
+      "}\n",
   };
-  for (const n of LESSON_STAGES) {
-    modules[`lessons-stage${n}.ts`] =
-      GENERATED_HEADER +
-      "import type { Overlays } from '@hangul-route/content-schema';\n" +
-      "import type { MinigameScope } from '../../logic/minigame-config';\n\n" +
-      `/** The game content of the Stage ${n} lesson quests, by minigame ref (reached lazily, never from lessons-index.ts). */\n` +
-      `export const LESSON_SCOPES: Readonly<Record<string, MinigameScope>> = ${literal(sortedKeys(stage[n].scopes))};\n\n` +
-      `export const LESSON_SCOPE_OVERLAYS: Overlays = ${overlaysLiteral(stage[n].overlays)};\n`;
+  const chunkHeader = (what) =>
+    GENERATED_HEADER +
+    `import type { ${what} } from '../../../logic/lessons/lesson-store';\n\n`;
+  for (const c of plan.cells) {
+    modules[`${CHUNK_DIR}/${c.name}.ts`] =
+      chunkHeader("LessonCellChunk") +
+      `/** The body of ${c.id} (F-CURR-002 §10): reached only through \`loadLessonCell\` in ../lessons-index.ts, never imported statically. */\n` +
+      `export const CHUNK_HASH = ${q(c.hash)};\n\n` +
+      `export const LESSON_STEPS: LessonCellChunk['LESSON_STEPS'] = ${c.literals.steps};\n\n` +
+      `export const LESSON_SCOPES: LessonCellChunk['LESSON_SCOPES'] = ${c.literals.scopes};\n\n` +
+      `export const LESSON_OVERLAYS: LessonCellChunk['LESSON_OVERLAYS'] = ${c.literals.glosses};\n`;
+  }
+  for (const t of plan.titles) {
+    modules[`${CHUNK_DIR}/${t.name}.ts`] =
+      chunkHeader("LessonTitleChunk") +
+      `/** The ${t.locale} titles of the lesson cells and quests (F-CURR-002 §10): loaded for the active UI locale only, through \`loadLessonTitles\`. */\n` +
+      `export const CHUNK_HASH = ${q(t.hash)};\n\n` +
+      `export const LESSON_TITLE_OVERLAYS: LessonTitleChunk['LESSON_TITLE_OVERLAYS'] = ${t.literal};\n`;
   }
   return modules;
 }
 
+// ---- catalogue rows (F-CURR-002 §9.1, row CM-6) ----------------------------------------------
+
+/** The catalogue module, beside catalog/data.ts in the content-schema package. */
+export const CATALOG_OUT = join("packages", "content-schema", "src", "catalog", "catalog.generated.ts");
+
+export const CATALOG_HEADER =
+  "// GENERATED by scripts/build-lessons.mjs — do not edit. Source: content/episodes/stage-<n>/*.json, content/stories/*.json, content/vocab/*.json (F-CURR-002 §9.1, row CM-6)\n";
+
+/**
+ * The last hand-kept catalogue version (F-CURR-001 S7-5). Versions up to it keep their integers
+ * (`CATALOG_QUEST_ADDITIONS` in versions.ts); a quest added after it carries an `addedIn` date stamp,
+ * and every stamp is larger, so the order of versions holds.
+ */
+export const HISTORY_LAST_VERSION = 32;
+
+/**
+ * The stamps of hand-written quests added after version 32 (a Stage 1 quest or a Stage 5 book quest of
+ * catalog/data.ts), by quest id: the one place a TypeScript row carries its `addedIn`. A quest of
+ * content/ is stamped in its own file instead. scripts/check-added-in.mjs holds these to the same rules.
+ */
+export const HAND_STAMPS = "packages/content-schema/src/catalog/hand-stamps.json";
+
+/** catalog/hand-stamps.json as `{ questId: stamp }` (empty when absent); throws ContentError on a bad entry. */
+export function readHandStamps(root) {
+  const file = join(root, ...HAND_STAMPS.split("/"));
+  if (!existsSync(file)) return {};
+  let json;
+  try {
+    json = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new ContentError(`invalid JSON: ${error.message}`, HAND_STAMPS);
+  }
+  if (!isObject(json)) throw new ContentError("hand-stamps.json holds one object: quest id -> addedIn", HAND_STAMPS);
+  const out = {};
+  for (const id of Object.keys(json).sort(byString)) {
+    if (!/^quest:[a-z0-9-]+$/.test(id)) throw new ContentError(`${JSON.stringify(id)} is not a quest id (quest:<id>)`, HAND_STAMPS);
+    try {
+      out[id] = addedInStamp(json[id], HAND_STAMPS);
+    } catch (error) {
+      throw new ContentError(`${id}: ${error.message}`, HAND_STAMPS);
+    }
+  }
+  return out;
+}
+
+/** The span of an `addedIn` stamp: a calendar date written YYYYMMDD. */
+const STAMP_MIN = 20260101;
+const STAMP_MAX = 20991231;
+
+/** An `addedIn` value checked as a real YYYYMMDD date; throws ContentError otherwise. */
+export function addedInStamp(value, where) {
+  const ok =
+    Number.isInteger(value) &&
+    value >= STAMP_MIN &&
+    value <= STAMP_MAX &&
+    (() => {
+      const y = Math.floor(value / 10000);
+      const m = Math.floor(value / 100) % 100;
+      const d = value % 100;
+      const date = new Date(Date.UTC(y, m - 1, d));
+      return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+    })();
+  if (!ok) throw new ContentError(`addedIn must be a date stamp YYYYMMDD (an integer such as 20261105), not ${JSON.stringify(value)}`, where);
+  return value;
+}
+
+/** A content/stories file -> its catalogue row, the fields catalog/data.ts cannot know. */
+export function shapeStoryRow(story, rel) {
+  if (!isObject(story)) throw new ContentError("a story file holds one object", rel);
+  const id = need(story, "id", rel);
+  const slug = /^story:([a-z0-9-]+)$/.exec(id)?.[1];
+  if (slug === undefined) throw new ContentError(`id ${JSON.stringify(id)} must be story:<slug>`, rel);
+  if (!isObject(story.title)) throw new ContentError("title must be an object with en", rel);
+  const review = isObject(story.review) ? story.review : {};
+  const row = {
+    slug,
+    title: need(story.title, "en", rel),
+    recommendedStage: need(story, "recommendedStage", rel, "number"),
+    theme: need(story, "theme", rel),
+    minutes: need(story, "minutes", rel, "number"),
+    sampler: isObject(story.shelf) && story.shelf.sampler === true,
+    // A festival anchor (F-STORY-005 section 3.3) of a story after the frozen shelf; data.ts keeps the first 24's.
+    ...(isObject(story.shelf) && story.shelf.anchor !== undefined ? { anchor: need(story.shelf, "anchor", `${rel} shelf`) } : {}),
+    // catalogStatusOfStory (catalog/schema.ts): ready, with a shelf block and both review sign-offs.
+    status:
+      story.state === "ready" && isObject(story.shelf) && review.language === "native-reviewed" && review.culture === "culture-reviewed" ? "ready" : "draft",
+  };
+  return story.addedIn === undefined ? row : { ...row, addedIn: addedInStamp(story.addedIn, rel) };
+}
+
+/** A content/vocab/<topic>.json file -> its catalogue row (id, key, title, order). */
+export function shapeTopicRow(file, rel) {
+  if (!isObject(file) || !isObject(file.topic)) throw new ContentError("a topic file needs a topic object", rel);
+  const key = need(file.topic, "key", rel);
+  return { id: `topic:${key}`, key, title: need(file.topic, "titleEn", rel), order: need(file.topic, "order", rel, "number") };
+}
+
+/** The symbol keys of the quest's Discover jamo items (`questTeaches` + the catalogue spelling). */
+function teachesOf(quest, symbolKeys, where) {
+  const keys = [];
+  for (const step of quest.steps) {
+    for (const page of isObject(step.discover) && Array.isArray(step.discover.pages) ? step.discover.pages : []) {
+      for (const item of Array.isArray(page?.items) ? page.items : []) {
+        if (item?.type !== "jamo") continue;
+        const key = symbolKeys.get(item.jamoId);
+        if (key === undefined) throw new ContentError(`Discover teaches ${item.jamoId}, which the app's jamo (apps/mobile/src/content/jamo.ts) do not know`, where);
+        keys.push(key);
+      }
+    }
+  }
+  return keys;
+}
+
+/** A jamo's symbol key as the catalogue spells it: the letter, or `<letter>/final` for a batchim. */
+export const symbolKeyOf = (jamo) => (jamo.kind === "batchim" ? `${jamo.char}/final` : jamo.char);
+
+const byString = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Pure: shaped cells, story rows, topic rows and hand stamps -> the generated catalogue model.
+ * `symbolKeys` maps a jamo id to its symbol key (the app's `jamoKnown`); `handStamps` is
+ * readHandStamps (quest id -> stamp, for the hand-written quests of catalog/data.ts).
+ */
+export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new Map(), handStamps = {} }) {
+  const lessonCells = [];
+  const lessonQuests = [];
+  const stamps = [];
+  const sortedCells = [...cells].sort((a, b) => a.stageNo - b.stageNo || THEMES.indexOf(a.episode.theme) - THEMES.indexOf(b.episode.theme));
+  for (const cell of sortedCells) {
+    const { episode } = cell;
+    if (cell.status !== "ready") {
+      // A draft cell stays the bundle's "Coming soon" placeholder (`makePreviewEpisode`: 10 minutes, no quests).
+      lessonCells.push({ stage: episode.stage, theme: episode.theme, episodeId: episode.id, title: episode.titleEn, status: "preview", minutes: 10, questIds: [] });
+      continue;
+    }
+    lessonCells.push({
+      stage: episode.stage,
+      theme: episode.theme,
+      episodeId: episode.id,
+      title: episode.titleEn,
+      status: "shipped",
+      minutes: episode.estimatedMinutes,
+      questIds: episode.questIds,
+    });
+    for (const quest of cell.quests) {
+      lessonQuests.push({
+        id: quest.id,
+        episodeId: episode.id,
+        stage: episode.stage,
+        theme: episode.theme,
+        title: quest.titleEn,
+        minutes: quest.estimatedMinutes,
+        teaches: teachesOf(quest, symbolKeys, `${cell.file ?? episode.id} ${quest.id}`),
+        kind: "lesson",
+      });
+      if (cell.stamps?.[quest.id] !== undefined) stamps.push([cell.stamps[quest.id], quest.id]);
+    }
+  }
+  const storyRows = [...stories].sort((a, b) => byString(a.slug, b.slug));
+  for (const story of storyRows) if (story.addedIn !== undefined) stamps.push([story.addedIn, `quest:story-${story.slug}-listen`]);
+  const fromContent = new Set([...lessonQuests.map((q) => q.id), ...storyRows.map((story) => `quest:story-${story.slug}-listen`)]);
+  for (const [id, stamp] of Object.entries(handStamps)) {
+    if (fromContent.has(id)) throw new ContentError(`${id} is a quest of content/: its addedIn goes in its own content file, not in hand-stamps.json`, HAND_STAMPS);
+    stamps.push([stamp, id]);
+  }
+  const additions = {};
+  for (const [stamp, id] of stamps.sort((a, b) => a[0] - b[0] || byString(a[1], b[1]))) (additions[stamp] ??= []).push(id);
+  return {
+    version: Math.max(HISTORY_LAST_VERSION, ...stamps.map(([stamp]) => stamp)),
+    additions,
+    cells: lessonCells,
+    quests: lessonQuests,
+    // A story keeps its stamp: assembleCatalog orders the stories after the frozen shelf by it.
+    stories: storyRows,
+    topics: [...topics].sort((a, b) => a.order - b.order || byString(a.key, b.key)),
+  };
+}
+
+/**
+ * Pure: the model's cells and quests -> the compact cell rows of catalog.generated.ts. Throws when a
+ * row would not expand back to the model (a quest id off its position, a quest of another cell).
+ */
+export function cellRowsOf(model) {
+  const byCell = new Map(model.cells.map((cell) => [cell.episodeId, []]));
+  for (const quest of model.quests) {
+    const list = byCell.get(quest.episodeId);
+    if (list === undefined) throw new Error(`catalogue quest ${quest.id} names no generated cell (${quest.episodeId})`);
+    list.push(quest);
+  }
+  return model.cells.map((cell) => {
+    const quests = byCell.get(cell.episodeId);
+    const ids = quests.map((_, i) => `quest:${cell.stage}-${cell.theme}-q${i + 1}`);
+    const fits =
+      cell.episodeId === `episode:${cell.stage}-${cell.theme}` &&
+      cell.questIds.length === ids.length &&
+      cell.questIds.every((id, i) => id === ids[i]) &&
+      quests.every((q, i) => q.id === ids[i] && q.stage === cell.stage && q.theme === cell.theme && q.kind === "lesson");
+    if (!fits) throw new Error(`catalogue cell ${cell.episodeId} does not fit a compact row (ids by position, one cell)`);
+    return [cell.stage, cell.theme, cell.title, cell.status, cell.minutes, quests.map((q) => [q.title, q.minutes, q.teaches])];
+  });
+}
+
+/** Pure: the catalogue model -> the source of catalog.generated.ts. */
+export function renderCatalogue(model) {
+  const rows = (items) => (items.length === 0 ? "[]" : `[\n${items.map((item) => `  ${literal(item)},`).join("\n")}\n]`);
+  const additions = Object.entries(model.additions);
+  return (
+    CATALOG_HEADER +
+    "import type { GeneratedCellRow, GeneratedStoryRow, GeneratedTopicRow } from './assemble';\n\n" +
+    "/**\n" +
+    " * The catalogue rows content/ defines (F-CURR-002 §9.1, row CM-6), assembled with the hand-written\n" +
+    " * Stage 1 and Stage 5 rows by ./data.ts. Gitignored: `pnpm generate` writes it.\n" +
+    " */\n\n" +
+    `/** The largest \`addedIn\` stamp of a shipped quest, or ${HISTORY_LAST_VERSION} (the last hand-kept version) when none carries one. */\n` +
+    `export const GENERATED_CATALOG_VERSION = ${model.version};\n\n` +
+    "/** The shipped quests that carry an `addedIn` stamp, by stamp (versions.ts appends them to the history). */\n" +
+    "export const GENERATED_QUEST_ADDITIONS: Readonly<Record<number, readonly string[]>> = " +
+    (additions.length === 0 ? "{}" : `{\n${additions.map(([stamp, ids]) => `  ${stamp}: ${literal(ids)},`).join("\n")}\n}`) +
+    ";\n\n" +
+    "/**\n" +
+    " * One row per upper-stage cell file (stages 2, 3, 4, 6 and 7), in grid order:\n" +
+    " * [stage, theme, title, status, minutes, quests], a quest being [title, minutes, teaches].\n" +
+    " * Compact for the start bundle; expandCellRows (./assemble.ts) gives the ids, cells and kinds.\n" +
+    " */\n" +
+    `export const GENERATED_LESSON_CELL_ROWS: GeneratedCellRow[] = ${rows(cellRowsOf(model))};\n\n` +
+    "/** One row per story file, by slug; ./data.ts gives each its shelf order and festival anchor. */\n" +
+    `export const GENERATED_STORIES: GeneratedStoryRow[] = ${rows(model.stories)};\n\n` +
+    "/** One row per vocabulary topic file, in topic order. */\n" +
+    `export const GENERATED_TOPICS: GeneratedTopicRow[] = ${rows(model.topics)};\n`
+  );
+}
+
+/** Every content/stories/*.json (not recursive: research/ is provenance) as a catalogue row, by file name. */
+export function readStoryRows(root) {
+  const dir = join(root, "content", "stories");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".json"))
+    .sort(byString)
+    .map((name) => {
+      const { rel, json } = readJson(root, join(dir, name));
+      return shapeStoryRow(json, rel);
+    });
+}
+
+/** Every content/vocab/<topic>.json (not the `_` registries) as a catalogue row. */
+export function readTopicRows(root) {
+  const dir = join(root, "content", "vocab");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith(".json") && !name.startsWith("_"))
+    .sort(byString)
+    .map((name) => {
+      const { rel, json } = readJson(root, join(dir, name));
+      return shapeTopicRow(json, rel);
+    });
+}
+
+let loaderRegistered = false;
+
+/**
+ * The app's jamo symbol keys (`jamoKnown` of apps/mobile/src/content/jamo.ts, read through
+ * scripts/ts-loader.mjs): the Stage 1 symbols and the Word Builder ones. An empty map when the
+ * file is absent (a test tree with no Discover jamo).
+ */
+export async function loadSymbolKeys(root) {
+  const file = join(root, "apps", "mobile", "src", "content", "jamo.ts");
+  if (!existsSync(file)) return new Map();
+  if (!loaderRegistered) {
+    register(pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "ts-loader.mjs")));
+    loaderRegistered = true;
+  }
+  const { jamoKnown } = await import(pathToFileURL(file).href);
+  return new Map(jamoKnown.map((jamo) => [jamo.id, symbolKeyOf(jamo)]));
+}
+
 // ---- budget -------------------------------------------------------------------------------
 
-/** Pure: bytes per ready cell (its quests and scopes as emitted), per stage module and in total. */
+const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
+
+/**
+ * Pure: bytes per ready cell (its quests and scopes as authored, English), per module, per stage
+ * and in total. A stage is measured as F-CURR-001 §3.12 measured its stage module: the game
+ * scopes of its cells and their es / ko glosses (the steps now ride in the same chunks and count
+ * in the per-quest average and the total). Each gzip figure is of the concatenation, as before.
+ */
 export function sizes(cells, modules) {
-  const perCell = cells
-    .filter((c) => c.status === "ready")
-    .map((c) => {
-      const text = literal(c.quests) + literal(c.scopes);
-      return { id: c.episode.id, quests: c.quests.length, raw: bytes(text), gzip: gzipSync(text).length };
-    });
-  const perModule = Object.entries(modules).map(([name, text]) => ({ name, raw: bytes(text), gzip: gzipSync(text).length }));
+  const ready = cells.filter((c) => c.status === "ready");
+  const perCell = ready.map((c) => {
+    const text = literal(c.quests) + literal(c.scopes);
+    return { id: c.episode.id, quests: c.quests.length, raw: bytes(text), gzip: gzipSync(text).length };
+  });
+  const perModule = Object.entries(modules).map(([name, text]) => measure(name, text));
+  const perStage = LESSON_STAGES.map((n) => {
+    const own = ready.filter((c) => c.stageNo === n);
+    const glosses = emptyOverlays();
+    for (const c of own) {
+      for (const locale of OVERLAY_LOCALES) {
+        for (const [id, entry] of Object.entries(c.overlays[locale])) if (overlayPrefix(id) === "minigame") glosses[locale][id] = entry;
+      }
+    }
+    const text = literal(sortedKeys(Object.assign({}, ...own.map((c) => c.scopes)))) + overlaysLiteral(glosses);
+    return { stage: n, cells: own.length, ...measure(`stage ${n}`, own.length === 0 ? "" : text) };
+  });
   const all = Object.values(modules).join("");
-  return { perCell, perModule, total: { raw: bytes(all), gzip: gzipSync(all).length } };
+  return { perCell, perModule, perStage, total: { raw: bytes(all), gzip: gzipSync(all).length } };
 }
 
 /** Pure: size problems as human-readable strings (empty = within budget). */
-export function checkBudget({ perCell, perModule, total }) {
+export function checkBudget({ perCell, perModule, perStage = [], total }) {
   const problems = [];
   for (const c of perCell) {
     const cap = BUDGET.perQuestRawAvg * c.quests;
     if (c.raw > cap) problems.push(`${c.id} is ${c.raw} B raw for ${c.quests} quests, over its ceiling of ${cap} B (${BUDGET.perQuestRawAvg} B per quest)`);
   }
   for (const m of perModule) {
-    if (!m.name.startsWith("lessons-stage")) continue;
-    if (m.raw > BUDGET.stageRaw) problems.push(`${m.name} is ${m.raw} B raw, over the ceiling of ${BUDGET.stageRaw} B`);
-    if (m.gzip > BUDGET.stageGzip) problems.push(`${m.name} is ${m.gzip} B gzip, over the ceiling of ${BUDGET.stageGzip} B`);
+    if (m.name === "lessons-index.ts" && m.raw > BUDGET.manifestRaw) {
+      problems.push(`the start-loaded manifest lessons-index.ts is ${m.raw} B raw, over the ceiling of ${BUDGET.manifestRaw} B`);
+    }
+    if (m.name.startsWith(`${CHUNK_DIR}/lessons-titles-`) && m.raw > BUDGET.titleChunkRaw) {
+      problems.push(`${m.name} is ${m.raw} B raw, over the title chunk ceiling of ${BUDGET.titleChunkRaw} B`);
+    }
+    if (m.name.startsWith(`${CHUNK_DIR}/lessons-cell-`)) {
+      if (m.raw > BUDGET.cellChunkRaw) problems.push(`${m.name} is ${m.raw} B raw, over the cell chunk ceiling of ${BUDGET.cellChunkRaw} B`);
+      if (m.gzip > BUDGET.cellChunkGzip) problems.push(`${m.name} is ${m.gzip} B gzip, over the cell chunk ceiling of ${BUDGET.cellChunkGzip} B`);
+    }
+  }
+  for (const s of perStage) {
+    if (s.raw > BUDGET.stageRaw) problems.push(`the Stage ${s.stage} game content is ${s.raw} B raw, over the ceiling of ${BUDGET.stageRaw} B`);
+    if (s.gzip > BUDGET.stageGzip) problems.push(`the Stage ${s.stage} game content is ${s.gzip} B gzip, over the ceiling of ${BUDGET.stageGzip} B`);
   }
   if (total.raw > BUDGET.totalRaw) problems.push(`the lesson modules are ${total.raw} B raw, over the ceiling of ${BUDGET.totalRaw} B`);
   if (total.gzip > BUDGET.totalGzip) problems.push(`the lesson modules are ${total.gzip} B gzip, over the ceiling of ${BUDGET.totalGzip} B`);
@@ -399,9 +851,38 @@ export function readCells(root) {
   return cells;
 }
 
+/**
+ * The generated lesson files that are on disk but no longer built: the per-stage modules of
+ * F-CURR-001 (`lessons-stage<n>.ts`) and the chunk of a cell that is no longer ready.
+ */
+export function staleFiles(root, modules) {
+  const out = [];
+  const dir = join(root, OUT_DIR);
+  if (existsSync(dir)) out.push(...readdirSync(dir).filter((f) => /^lessons-stage\d\.ts$/.test(f)));
+  const chunks = join(dir, CHUNK_DIR);
+  if (existsSync(chunks)) out.push(...readdirSync(chunks).filter((f) => f.endsWith(".ts")).map((f) => `${CHUNK_DIR}/${f}`));
+  return out.filter((name) => modules[name] === undefined);
+}
+
 const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report]";
 
-export function main(argv, root) {
+/** Every file this generator writes, by path relative to the root: the lesson modules and the catalogue. */
+export async function generatedOutputs(root, cells = readCells(root)) {
+  const modules = buildModules(cells);
+  const catalogue = catalogueOf({
+    cells,
+    stories: readStoryRows(root),
+    topics: readTopicRows(root),
+    symbolKeys: await loadSymbolKeys(root),
+    handStamps: readHandStamps(root),
+  });
+  const outputs = {};
+  for (const [name, source] of Object.entries(modules)) outputs[join(OUT_DIR, name)] = source;
+  outputs[CATALOG_OUT] = renderCatalogue(catalogue);
+  return { modules, outputs };
+}
+
+export async function main(argv, root) {
   const opts = { check: false, report: false };
   for (const arg of argv) {
     if (arg === "--check") opts.check = true;
@@ -412,50 +893,95 @@ export function main(argv, root) {
     }
   }
   let cells;
+  let generated;
   try {
     cells = readCells(root);
+    generated = await generatedOutputs(root, cells);
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
     process.stdout.write(`::error file=${error.file}::${error.message}\n`);
     return 1;
   }
-  const modules = buildModules(cells);
+  const { modules, outputs } = generated;
   const ready = cells.filter((c) => c.status === "ready").length;
+  const outRel = OUT_DIR.split(sep).join("/");
 
   if (opts.report) {
     const report = sizes(cells, modules);
     process.stdout.write(`Lesson modules (ready cells: ${ready}, drafts: ${cells.length - ready}):\n`);
     for (const c of report.perCell) process.stdout.write(`  ${c.id}  ${c.quests} quests  ${c.raw} B raw  ${c.gzip} B gzip\n`);
     for (const m of report.perModule) process.stdout.write(`  ${m.name}  ${m.raw} B raw  ${m.gzip} B gzip\n`);
+    for (const s of report.perStage) process.stdout.write(`  stage ${s.stage} game content  ${s.cells} cells  ${s.raw} B raw  ${s.gzip} B gzip\n`);
     process.stdout.write(`  total  ${report.total.raw} B raw  ${report.total.gzip} B gzip\n`);
     process.stdout.write(
-      `Budget: ${BUDGET.perQuestRawAvg} B raw per quest (cell average), ${BUDGET.stageRaw} B raw and ${BUDGET.stageGzip} B gzip per stage module, ${BUDGET.totalRaw} B raw and ${BUDGET.totalGzip} B gzip in total\n`,
+      `Budget: ${BUDGET.perQuestRawAvg} B raw per quest (cell average), ${BUDGET.manifestRaw} B raw for the manifest, ${BUDGET.titleChunkRaw} B raw per title chunk, ` +
+        `${BUDGET.cellChunkRaw} B raw and ${BUDGET.cellChunkGzip} B gzip per cell chunk, ` +
+        `${BUDGET.stageRaw} B raw and ${BUDGET.stageGzip} B gzip per stage, ${BUDGET.totalRaw} B raw and ${BUDGET.totalGzip} B gzip in total\n`,
     );
     const problems = checkBudget(report);
-    for (const p of problems) process.stdout.write(`::error file=${OUT_DIR.split(sep).join("/")}::${p}\n`);
+    for (const p of problems) process.stdout.write(`::error file=${outRel}::${p}\n`);
     return problems.length === 0 ? 0 : 1;
   }
 
+  const stale = staleFiles(root, modules);
   if (opts.check) {
-    let stale = 0;
-    for (const [name, source] of Object.entries(modules)) {
-      const target = join(root, OUT_DIR, name);
+    // Determinism (F-CURR-002 §9.1): the files on disk come from an earlier run (`pnpm generate`, the postinstall);
+    // this run must give the same bytes. The modules are generated, never committed.
+    let drift = 0;
+    for (const [name, source] of Object.entries(outputs)) {
+      const target = join(root, name);
       if (!existsSync(target) || readFileSync(target, "utf8") !== source) {
-        stale += 1;
+        drift += 1;
         process.stdout.write(
-          `::error file=${relOf(root, target)}::generated lesson module is missing or out of date with content/episodes; run node scripts/build-lessons.mjs and commit the result\n`,
+          `::error file=${relOf(root, target)}::generated module is missing or differs from a fresh run of scripts/build-lessons.mjs (generators must be deterministic); run pnpm generate\n`,
         );
       }
     }
-    if (stale > 0) return 1;
-    process.stdout.write(`lesson modules are up to date (ready cells: ${ready})\n`);
-    return 0;
+    for (const name of stale) {
+      drift += 1;
+      process.stdout.write(`::error file=${outRel}/${name}::generated lesson module is no longer built; run pnpm generate (it removes it)\n`);
+    }
+    if (drift > 0) return 1;
+    process.stdout.write(`lesson modules and catalogue are deterministic (ready cells: ${ready})\n`);
+    return checkStampsAgainstBase(root);
   }
 
-  mkdirSync(join(root, OUT_DIR), { recursive: true });
-  for (const [name, source] of Object.entries(modules)) writeFileSync(join(root, OUT_DIR, name), source);
-  process.stdout.write(`wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready})\n`);
+  mkdirSync(join(root, OUT_DIR, CHUNK_DIR), { recursive: true });
+  for (const name of stale) rmSync(join(root, OUT_DIR, name));
+  for (const [name, source] of Object.entries(outputs)) {
+    writeIfChanged(join(root, name), source);
+  }
+  process.stdout.write(
+    `wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready}) and the catalogue rows` +
+      (stale.length > 0 ? `, removed ${stale.length} no longer built\n` : "\n"),
+  );
   return 0;
+}
+
+/**
+ * The addedIn stamp check of `--check` (scripts/check-added-in.mjs): against HANGUL_ROUTE_STAMP_BASE,
+ * default origin/main. When that ref does not resolve, a local run skips it with a notice and a CI
+ * run (GITHUB_ACTIONS=true) fails, so a changed checkout cannot turn the check off unseen.
+ * HANGUL_ROUTE_STAMP_BASE=none skips it.
+ */
+function checkStampsAgainstBase(root) {
+  const base = process.env.HANGUL_ROUTE_STAMP_BASE ?? "origin/main";
+  if (base === "none") return 0;
+  const known = spawnSync("git", ["rev-parse", "--verify", "--quiet", `${base}^{commit}`], { cwd: root, encoding: "utf8" });
+  if (known.status !== 0) {
+    if (process.env.GITHUB_ACTIONS === "true") {
+      process.stdout.write(`::error::addedIn stamp check: ${base} does not resolve; the job needs the base branch's history (content-validation.yml checks out fetch-depth 0)\n`);
+      return 1;
+    }
+    process.stdout.write(`addedIn stamp check skipped: ${base} does not resolve here (content-validation.yml checks out the full history)\n`);
+    return 0;
+  }
+  // A child process: check-added-in.mjs imports this module, which is still evaluating here.
+  const script = join(dirname(fileURLToPath(import.meta.url)), "check-added-in.mjs");
+  const run = spawnSync(process.execPath, [script, "--base", base], { cwd: root, encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: root } });
+  process.stdout.write(run.stdout ?? "");
+  process.stderr.write(run.stderr ?? "");
+  return run.status ?? 1;
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
@@ -463,5 +989,5 @@ if (isMain) {
   const root = process.env.HANGUL_ROUTE_ROOT
     ? resolve(process.env.HANGUL_ROUTE_ROOT)
     : join(dirname(fileURLToPath(import.meta.url)), "..");
-  process.exitCode = main(process.argv.slice(2), root);
+  process.exitCode = await main(process.argv.slice(2), root);
 }

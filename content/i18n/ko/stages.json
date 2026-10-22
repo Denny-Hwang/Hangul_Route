@@ -19,23 +19,23 @@
     },
     "stage:stage4": {
       "title": "대화",
-      "oneLiner": "실생활에서 쓰는 첫 짧은 대화를 나눠요.",
+      "oneLiner": "짧은 일상 대화를 읽고 답해요.",
       "anchorSkill": "인사와 질문으로 4번 주고받는 대화하기"
     },
     "stage:stage5": {
       "title": "이야기",
-      "oneLiner": "호야와 함께 짧은 이야기와 한국 옛이야기를 읽어요.",
+      "oneLiner": "호야와 함께 문화 이야기와 짧은 이야기를 읽어요.",
       "anchorSkill": "5문장 이야기를 읽고 80% 이상 이해하기"
     },
     "stage:stage6": {
       "title": "실생활",
-      "oneLiner": "메뉴, 표지판, 전화까지, 한국어를 밖에서 써 봐요.",
+      "oneLiner": "메뉴, 표지판, 짧은 메시지까지, 한국어를 밖에서 써 봐요.",
       "anchorSkill": "음식 주문하기, 길 묻기, 사촌에게 메시지 보내기"
     },
     "stage:stage7": {
       "title": "자기표현",
       "oneLiner": "생각하고 느끼고 만든 것을 한국어로 말해요.",
-      "anchorSkill": "1분 자기소개 녹음하기"
+      "anchorSkill": "짧은 자기소개 쓰기"
     }
   }
 }

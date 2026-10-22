@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { APP_ROUTES } from './app-shell';
 import { EntitlementProviderSchema, EntitlementStatusSchema, PlanKeySchema, PurchasablePlanKeySchema, SubjectKindSchema } from './entitlement';
+import { CURR_TELEMETRY_SERVER_ONLY } from './curr-telemetry';
 import { SpaceKindSchema, SpaceRoleSchema } from './space';
 
 /**
@@ -78,9 +79,14 @@ export type ReceiptView = z.infer<typeof ReceiptViewSchema>;
  */
 export const BILLING_TELEMETRY_PREFIX = 'billing.';
 
-/** Whether a telemetry name is one only the Worker records (every `billing.*` name). */
+const CURR_SERVER_ONLY: ReadonlySet<string> = new Set(CURR_TELEMETRY_SERVER_ONLY);
+
+/**
+ * Whether a telemetry name is one only the Worker records: every `billing.*` name, and the class
+ * goal names `space.goal.set` / `space.goal.met` (F-CURR-002 section 11.3, TELEMETRY-NAMES-2 section R).
+ */
 export function isServerOnlyTelemetryName(name: unknown): boolean {
-  return typeof name === 'string' && name.startsWith(BILLING_TELEMETRY_PREFIX);
+  return typeof name === 'string' && (name.startsWith(BILLING_TELEMETRY_PREFIX) || CURR_SERVER_ONLY.has(name));
 }
 
 /** From the bound Stripe key prefix: `sk_test_` / `rk_test_`, `sk_live_` / `rk_live_`, or no key. */

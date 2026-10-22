@@ -1,0 +1,225 @@
+// F-CURR-002 §10 (row CM-5): the lesson chunk checks and the precache report of pwa-postbuild.mjs.
+import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
+import { grownUpHeadersBlock } from '../app-host/headers.mjs';
+import {
+  PRECACHE_BUDGET,
+  WEB_JS_DIR,
+  budgetIsAdvisory,
+  isStartBundle,
+  lessonChunkProblems,
+  lessonChunkUrls,
+  md5,
+  nosniffLessonChunks,
+  precacheBudgetProblems,
+  precacheReport,
+  reportLines,
+} from '../pwa/lesson-chunks.mjs';
+
+const MANIFEST = [
+  { name: 'lessons-cell-stage2-rites', hash: '0123456789abcdef' },
+  { name: 'lessons-titles-es', hash: 'fedcba9876543210' },
+];
+const START = `${WEB_JS_DIR}/index-0a1b2c.js`;
+const startText = `var m={"episode:stage2-rites":"0123456789abcdef"},t={"es":"fedcba9876543210"};`;
+const chunk = (name, hash) => {
+  const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}";e.LESSON_STEPS={}});`;
+  return { url: `${WEB_JS_DIR}/${name}-${md5(text)}.js`, text };
+};
+const sound = () => [{ url: START, text: startText }, ...MANIFEST.map((m) => chunk(m.name, m.hash))];
+const all = (bundles) => bundles.map((b) => b.url);
+
+describe('lessonChunkProblems', () => {
+  it('passes a build where every chunk is its own precached bundle carrying the manifest hash', () => {
+    const bundles = sound();
+    expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual([]);
+    // Precache URLs may carry a leading slash.
+    expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles).map((u) => `/${u}`) })).toEqual([]);
+    expect(isStartBundle(START)).toBe(true);
+    expect(isStartBundle(bundles[1].url)).toBe(false);
+  });
+
+  it('fails a chunk missing from the build, and one missing from the precache (the clip gaps mechanism)', () => {
+    const bundles = sound().filter((b) => !b.url.includes('lessons-titles-es'));
+    expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual(['lessons-titles-es has no web bundle: the chunk is missing from the build']);
+    const built = sound();
+    const problems = lessonChunkProblems({ manifest: MANIFEST, bundles: built, precached: all(built).slice(0, 2) });
+    expect(problems).toEqual([`${built[2].url} is missing from the precache`]);
+  });
+
+  it('fails a chunk pulled into the start bundle (Metro leaves an empty bundle behind)', () => {
+    const empty = { url: `${WEB_JS_DIR}/lessons-cell-stage2-rites-${md5('')}.js`, text: '' };
+    const bundles = [{ url: START, text: `${startText}e.CHUNK_HASH = "0123456789abcdef";` }, empty, chunk('lessons-titles-es', 'fedcba9876543210')];
+    expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual([
+      `lessons-cell-stage2-rites is in the start bundle ${START}: a static import pulled the chunk in`,
+      `${empty.url} does not carry 0123456789abcdef, the hash the manifest names for lessons-cell-stage2-rites`,
+    ]);
+  });
+
+  it('checks each manifest entry against its chunk hash, and the bundle name against its content', () => {
+    const stale = chunk('lessons-cell-stage2-rites', 'aaaaaaaaaaaaaaaa');
+    const renamed = { url: `${WEB_JS_DIR}/lessons-titles-es-${md5('other')}.js`, text: chunk('lessons-titles-es', 'fedcba9876543210').text };
+    const bundles = [{ url: START, text: startText }, stale, renamed];
+    expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual([
+      `${stale.url} does not carry 0123456789abcdef, the hash the manifest names for lessons-cell-stage2-rites`,
+      `${renamed.url}: its file name is not the md5 of its content`,
+    ]);
+  });
+
+  it('fails a start bundle that does not name the hashes (built from other content), two bundles of one chunk, or no single start bundle', () => {
+    const bundles = [{ url: START, text: 'var m={};' }, ...MANIFEST.map((m) => chunk(m.name, m.hash))];
+    expect(lessonChunkProblems({ manifest: MANIFEST.slice(0, 1), bundles, precached: all(bundles) })).toEqual([
+      `the start bundle ${START} does not name lessons-cell-stage2-rites's hash 0123456789abcdef: the shell and the chunk come from other content`,
+    ]);
+    const twice = [...sound(), { ...chunk('lessons-titles-es', 'fedcba9876543210'), url: `${WEB_JS_DIR}/lessons-titles-es-${'0'.repeat(32)}.js` }];
+    expect(lessonChunkProblems({ manifest: MANIFEST.slice(1), bundles: twice, precached: all(twice) })[0]).toMatch(/^lessons-titles-es has 2 web bundles: /);
+    const none = MANIFEST.map((m) => chunk(m.name, m.hash));
+    expect(lessonChunkProblems({ manifest: [], bundles: none, precached: all(none) })).toEqual([`expected one start bundle (${WEB_JS_DIR}/index-<hash>.js), found 0`]);
+  });
+});
+
+describe('the story chunks of row CM-8 (the same checks)', () => {
+  const STORIES = [{ name: 'story-sun-and-moon', hash: '1111222233334444' }];
+  const storyChunk = (name, hash) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}";e.STORY_BODY={}});`;
+    return { url: `${WEB_JS_DIR}/${name}-${md5(text)}.js`, text };
+  };
+  const withStory = () => [
+    { url: START, text: `${startText}var s=[{"id":"story:sun-and-moon","chunk":"1111222233334444"}];` },
+    ...MANIFEST.map((m) => chunk(m.name, m.hash)),
+    storyChunk('story-sun-and-moon', '1111222233334444'),
+  ];
+
+  it('passes a story chunk that is its own precached bundle, and fails one missing from the precache or pulled into the start bundle', () => {
+    const bundles = withStory();
+    const manifest = [...MANIFEST, ...STORIES];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles).slice(0, 3) })).toEqual([`${bundles[3].url} is missing from the precache`]);
+    const pulled = [{ url: START, text: `${bundles[0].text}e.CHUNK_HASH="1111222233334444";` }, ...bundles.slice(1, 3), { url: `${WEB_JS_DIR}/story-sun-and-moon-${md5('')}.js`, text: '' }];
+    expect(lessonChunkProblems({ manifest, bundles: pulled, precached: all(pulled) })).toEqual([
+      `story-sun-and-moon is in the start bundle ${START}: a static import pulled the chunk in`,
+      `${pulled[3].url} does not carry 1111222233334444, the hash the manifest names for story-sun-and-moon`,
+    ]);
+  });
+
+  it('lists the story bundles with the lesson bundles for the nosniff check (an older build asks for either)', () => {
+    const bundles = withStory();
+    expect(lessonChunkUrls([...MANIFEST, ...STORIES], bundles)).toEqual(bundles.slice(1).map((b) => b.url));
+    expect(nosniffLessonChunks('/_expo/*\n  X-Content-Type-Options: nosniff\n', lessonChunkUrls([...MANIFEST, ...STORIES], bundles))).toContain(bundles[3].url);
+  });
+
+  it('counts the story chunks apart from the lesson chunks in the report', () => {
+    const bundles = withStory();
+    const report = precacheReport({ manifest: MANIFEST, stories: STORIES, bundles, precache: { count: 4, size: 99 } });
+    expect(report.lessonChunks.count).toBe(2);
+    expect(report.storyChunks).toEqual({ count: 1, raw: bundles[3].text.length, gzip: expect.any(Number), largest: { url: bundles[3].url, raw: bundles[3].text.length } });
+    const lines = reportLines(report);
+    expect(lines[3]).toMatch(/^ {2}story chunks {2}1 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    expect(lines).toHaveLength(5);
+    // Without a story manifest the story line counts none.
+    expect(precacheReport({ manifest: MANIFEST, bundles, precache: { count: 4, size: 99 } }).storyChunks).toEqual({ count: 0, raw: 0, gzip: 0, largest: null });
+  });
+
+  it('holds the built story bundles to the story lines: one bundle, the raw total and the gzip total', () => {
+    const lines = { ...PRECACHE_BUDGET, storyChunkRaw: 100, storiesRaw: 150, storiesGzip: 40 };
+    const report = {
+      start: { url: START, raw: 1, gzip: 1 },
+      lessonChunks: { count: 0, raw: 0, gzip: 0, largest: null },
+      storyChunks: { count: 2, raw: 151, gzip: 41, largest: { url: `${WEB_JS_DIR}/story-sun-and-moon-${md5('x')}.js`, raw: 101 } },
+      precache: { count: 3, raw: 153 },
+    };
+    expect(precacheBudgetProblems(report, lines)).toEqual([
+      expect.stringMatching(new RegExp(`^the story bundle ${WEB_JS_DIR}/story-sun-and-moon-[0-9a-f]{32}\\.js is 101 B raw, over the per-story ceiling of 100 B `)),
+      expect.stringMatching(/^the story bundles are 151 B raw, over the stories ceiling of 150 B /),
+      expect.stringMatching(/^the story bundles are 41 B gzip, over the stories ceiling of 40 B gzip /),
+    ]);
+    expect(precacheBudgetProblems({ ...report, storyChunks: { count: 2, raw: 150, gzip: 40, largest: { url: 'x', raw: 100 } } }, lines)).toEqual([]);
+    expect(precacheBudgetProblems({ ...report, storyChunks: { count: 0, raw: 0, gzip: 0, largest: null } }, lines)).toEqual([]);
+  });
+
+  it('the story lines on the built bundles are the lines of scripts/build-stories.mjs', async () => {
+    const { BUDGET } = await import('../../../../scripts/build-stories.mjs');
+    expect(PRECACHE_BUDGET.storyChunkRaw).toBe(BUDGET.perStoryRaw);
+    expect(PRECACHE_BUDGET.storiesRaw).toBe(BUDGET.totalRaw);
+    expect(PRECACHE_BUDGET.storiesGzip).toBe(BUDGET.totalGzip);
+  });
+});
+
+describe('precacheReport and its budget lines', () => {
+  it('measures the start bundle, the lesson chunks and the learner precache', () => {
+    const bundles = sound();
+    const report = precacheReport({ manifest: MANIFEST, bundles, precache: { count: 9, size: 1234 } });
+    expect(report.start).toEqual({ url: START, raw: startText.length, gzip: expect.any(Number) });
+    expect(report.lessonChunks.count).toBe(2);
+    expect(report.lessonChunks.raw).toBe(bundles[1].text.length + bundles[2].text.length);
+    expect(report.precache).toEqual({ count: 9, raw: 1234 });
+    const lines = reportLines(report);
+    expect(lines[0]).toBe('pwa-postbuild: precache report (F-CURR-002 §10)');
+    expect(lines[1]).toContain(`start bundle  ${START}  ${startText.length} B raw`);
+    expect(lines[1]).toContain(`(ceiling ${PRECACHE_BUDGET.startBundleRaw} B raw)`);
+    expect(lines[2]).toMatch(/^ {2}lesson chunks {2}2 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    expect(lines[3]).toBe('  story chunks  0 bundles  0 B raw  0 B gzip');
+    expect(lines[4]).toBe(`  learner precache  9 files  1234 B  (ceiling ${PRECACHE_BUDGET.learnerPrecacheRaw} B)`);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+  });
+
+  it('fails a start bundle that grew and a precache over its line (CM-5B is then triggered)', () => {
+    const report = {
+      start: { url: START, raw: PRECACHE_BUDGET.startBundleRaw + 1, gzip: 1 },
+      lessonChunks: { count: 0, raw: 0, gzip: 0 },
+      precache: { count: 1, raw: PRECACHE_BUDGET.learnerPrecacheRaw + 1 },
+    };
+    expect(precacheBudgetProblems(report)).toEqual([
+      expect.stringMatching(
+        new RegExp(`^the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow .*raise PRECACHE_BUDGET\\.startBundleRaw`),
+      ),
+      `the learner precache is ${PRECACHE_BUDGET.learnerPrecacheRaw + 1} B, over its ceiling of ${PRECACHE_BUDGET.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
+    ]);
+    expect(precacheBudgetProblems({ ...report, start: null, precache: { count: 0, raw: 0 } })).toEqual(['no start bundle to measure']);
+    // A report without the story line (as CM-5 built it) prints the others.
+    expect(reportLines({ ...report, start: null })).toHaveLength(3);
+  });
+
+  it('the start bundle line is its size after CM-8 with a small margin, under the CM-5 size, so it shrank; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+    // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
+    // 6,371,165 B on the phase-0 integration (#802).
+    // The margin stays under 10 KB, so the stories (or anything else) cannot come back into the start bundle.
+    // This pins the line only; `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the
+    // real start bundle against it.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_380_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_371_165).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_371_165).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_337_815);
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
+  });
+
+  it('the budget only warns on the deploy build (Cloudflare Workers Builds or Pages), and fails everywhere else', () => {
+    expect(budgetIsAdvisory({ WORKERS_CI: '1' })).toBe(true);
+    expect(budgetIsAdvisory({ CF_PAGES: '1' })).toBe(true);
+    expect(budgetIsAdvisory({ CI: 'true', GITHUB_ACTIONS: 'true' })).toBe(false);
+    expect(budgetIsAdvisory({})).toBe(false);
+  });
+});
+
+describe('nosniffLessonChunks', () => {
+  const urls = lessonChunkUrls(MANIFEST, sound());
+
+  it('lists the lesson chunk bundles of a build, not the start bundle', () => {
+    expect(urls).toHaveLength(MANIFEST.length);
+    expect(urls.every((u) => /^_expo\/static\/js\/web\/lessons-/.test(u))).toBe(true);
+  });
+
+  it('passes the shipped rules: public/_headers plus the grown-up block merge-console.mjs appends', () => {
+    const shipped = readFileSync(new URL('../../public/_headers', import.meta.url), 'utf8');
+    expect(nosniffLessonChunks(`${shipped}\n${grownUpHeadersBlock(GROWN_UP_PREFIXES)}`, urls)).toEqual([]);
+  });
+
+  it('fails a rule that would serve the chunks with nosniff, so a chunk request of an older build keeps reaching the reload', () => {
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/_expo/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual(urls);
+    expect(nosniffLessonChunks('/teach/*\n  X-Content-Type-Options: nosniff\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('/*\n  X-Content-Type-Options: nosniff\n/_expo/*\n  ! X-Content-Type-Options\n', urls)).toEqual([]);
+    expect(nosniffLessonChunks('', urls)).toEqual([]);
+  });
+});

@@ -24,7 +24,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { JourneyGrid } from '../../components/JourneyGrid';
-import { useLocale, useMessages } from '../../i18n/use-messages';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { browseLibrary, browseRouteTrail, stageOneLiners, type BrowseLibraryGroup, type BrowseSection } from '../../logic/browse/catalogue';
 import { accessOf, browseGridAccess, browseGridEpisodes, itemViewedEvent, sectionAfter } from '../../logic/browse/home-view';
@@ -143,8 +143,10 @@ export function SectionControl({ sections, value, onChange }: { sections: readon
 export function RouteSection({ open }: { open: OpenTargets }): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
+  const titles = useLessonTitlesVersion();
   const { bundle } = useBrowseSession();
-  const rows = useMemo(() => browseRouteTrail({ bundle, messages, locale }), [bundle, messages, locale]);
+  const rows = useMemo(() => browseRouteTrail({ bundle, messages, locale }), [bundle, messages, locale, titles]);
   return (
     <View testID="browse-route">
       {rows.map((row) =>

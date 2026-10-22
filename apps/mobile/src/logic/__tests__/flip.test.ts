@@ -121,14 +121,17 @@ describe('CardDetailView uses FlipCard (behaviour unchanged)', () => {
 
   it('gates Share mid-flip through onFlippingChange (F-CARD-003 section 8)', () => {
     expect(view).toContain('onFlippingChange={setIsFlipping}');
-    expect(view).toContain('disabled={isFlipping}');
+    // Also until a story card's chunk is in (F-CURR-002 §10, row CM-8), so a blank back is never shared.
+    expect(view).toContain('disabled={isFlipping || !storyReady}');
   });
 
-  it('a card that cannot flip says it is locked on either face, shows no flip hint and returns to the front', () => {
+  it('a locked card says it is locked on either face; a card that cannot flip shows no flip hint and returns to the front', () => {
     expect(view).toContain('disabled={!canFlip}');
+    // An earned story card cannot flip until its story's chunk is in (F-CURR-002 §10, row CM-8), and is not called locked meanwhile.
+    expect(view).toContain('const canFlip = unlocked && storyReady;');
     // F-STORY-006 PR 6.5b: the locked label carries the earn hint ("Locked card. Finish the episode: ...").
-    expect(view).toContain('accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : lockedLabel}');
-    expect(view).toContain('accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : lockedLabel}');
+    expect(view).toContain('accessibilityLabelFront={unlocked ? messages.a11y.flipToBack : lockedLabel}');
+    expect(view).toContain('accessibilityLabelBack={unlocked ? messages.a11y.flipToFront : lockedLabel}');
     expect(view).toContain('flipHint={canFlip ? m.flip.back : null}');
     expect(view).toMatch(/if \(!canFlip\) setFace\('front'\)/);
   });

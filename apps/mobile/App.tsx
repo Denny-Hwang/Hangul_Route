@@ -22,8 +22,12 @@ import { flushQueue } from './src/platform/telemetry';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
-import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { lessonContent } from './src/content/lessons';
+import { storyContent } from './src/content/stories';
+import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
+import { startRemoteConfig } from './src/store/remote-config-store';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
@@ -36,6 +40,11 @@ const queryClient = new QueryClient({
 
 /** The root navigator's container, for the web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2). */
 const navigation = createNavigationContainerRef<RootStackParamList>();
+
+/** Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8); a failed one is left for the screen that needs it. */
+const prefetchContent = async (): Promise<void> => {
+  await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll()]);
+};
 
 export default function App(): React.ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
@@ -77,6 +86,8 @@ export default function App(): React.ReactElement {
     // lessons, the presenter) applies here live; a page back in front re-reads the record.
     const unfollow = followDeviceSettings();
     void countVisit();
+    // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
+    const stopRemoteConfig = startRemoteConfig();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
     // Background progress sync (F-SYNC-002): debounced after every write,
@@ -84,11 +95,18 @@ export default function App(): React.ReactElement {
     setProgressPersistListener((learnerId) => useSyncStore.getState().requestSync(learnerId));
     // Plans and memberships arrive through the inbox after each successful sync (F-PLAN-001).
     const offInbox = registerInboxRefresh();
+    let stopPrefetch = (): void => {};
     void hydrateLearnerData()
       .catch(() => undefined)
+      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
+      // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
+      .then(() => lessonContent.untilTitlesSettled(activeLocale(useLocaleStore.getState())))
       .then(async () => {
         if (!live) return;
         setReady(true);
+        // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so the lessons and the
+        // stories stay when the network goes.
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
         // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
         await rederiveAllLocal().catch(() => undefined);
         void useSyncStore.getState().syncAll();
@@ -101,10 +119,15 @@ export default function App(): React.ReactElement {
       if (event === 'back-online') {
         void flushQueue();
         void useSyncStore.getState().syncAll();
+        // Lesson chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
+        lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined);
+        stopPrefetch();
+        stopPrefetch = prefetchWhenIdle(prefetchContent);
       }
     });
     return () => {
       live = false;
+      stopPrefetch();
       uninstallUnlock();
       unbindLevel();
       unbindGate();
@@ -112,6 +135,7 @@ export default function App(): React.ReactElement {
       off();
       offInbox();
       foreground.remove();
+      stopRemoteConfig();
       setProgressPersistListener(null);
     };
   }, [countVisit]);
