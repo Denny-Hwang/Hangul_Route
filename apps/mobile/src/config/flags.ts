@@ -208,8 +208,8 @@ export interface Flags {
   /**
    * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 6 and 16, row OA-4a): the chooser at launch
    * on a shared device, after 30 minutes in the background, on the `who=1` boot intent and on a held join code, the
-   * Home Switch button, the Profile row and the Grown-up area's Switch user. OFF when row OA-4a lands; OA-10 turns it
-   * on. `EXPO_PUBLIC_WHO_CHOOSER` (`parseKillSwitch`). Off: no trigger, no Switch, `who=1` ignored, the Profile tile
+   * Home Switch button, the Profile row and the Grown-up area's Switch user. OFF when row OA-4a landed; ON since row
+   * OA-10. `EXPO_PUBLIC_WHO_CHOOSER` is a kill switch (`parseKillSwitch`). Off: no trigger, no Switch, `who=1` ignored, the Profile tile
    * row as before. The session close on every change of learner and the cross-tab profile list have no switch.
    */
   whoChooserEnabled: boolean;
@@ -235,8 +235,8 @@ export interface Flags {
   /**
    * [OA] "Who is joining?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, sections 10.3 and 16, row OA-7b): a family code
    * on a device with 2 or more learner profiles lists them with check boxes and joins each picked learner in turn,
-   * and a family hand-off code on a shared device opens that checklist. OFF when row OA-7b lands; OA-10 turns it on.
-   * `EXPO_PUBLIC_MULTI_JOIN` (`parseKillSwitch`). Off: the one-learner join of today.
+   * and a family hand-off code on a shared device opens that checklist. OFF when row OA-7b landed; ON since row OA-10.
+   * `EXPO_PUBLIC_MULTI_JOIN` is a kill switch (`parseKillSwitch`). Off: the one-learner join of today.
    */
   multiJoinEnabled: boolean;
 }
@@ -261,10 +261,10 @@ const launchDefaults: Flags = {
   // LV-7 turned this on with the web default and the site claim (AMENDMENTS-LECTURE-V2 LV-D1).
   lectureModeEnabled: true,
   pinPauseStepsEnabled: true,
-  whoChooserEnabled: false,
+  whoChooserEnabled: true,
   pinResetSignInEnabled: false,
   biometricShortcutEnabled: true,
-  multiJoinEnabled: false,
+  multiJoinEnabled: true,
 };
 
 export const flags: Flags = {

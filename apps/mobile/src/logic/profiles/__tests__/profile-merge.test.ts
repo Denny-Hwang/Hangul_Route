@@ -115,6 +115,14 @@ describe('storedProfileItems (a damaged hr:profiles never stops a write)', () =>
     expect(storedProfileItems(null)).toEqual([]);
     expect(storedProfileItems({ id: 'profile:a1' })).toEqual([]);
   });
+
+  it('[OA] drops the legacy per-profile parentPinHash from every item (row OA-10, section 13.1), without mutating', () => {
+    const legacy = { id: 'profile:a1', displayName: 'Mina', parentPinHash: 'salt:digest' };
+    const items = storedProfileItems<{ id: string; displayName: string }>([legacy, { id: 'profile:b1', displayName: 'Bo' }]);
+    expect(items).toEqual([{ id: 'profile:a1', displayName: 'Mina' }, { id: 'profile:b1', displayName: 'Bo' }]);
+    expect('parentPinHash' in items[0]!).toBe(false);
+    expect(legacy.parentPinHash).toBe('salt:digest');
+  });
 });
 
 describe('sameProfileList', () => {

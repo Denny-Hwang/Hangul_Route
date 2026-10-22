@@ -165,24 +165,8 @@ export function learners(set: ProfileSet): Profile[] {
   return set.profiles.filter((p) => p.role === 'learner');
 }
 
-export function parentProfile(set: ProfileSet): Profile | null {
-  return set.profiles.find((p) => p.role === 'parent') ?? null;
-}
-
 export function activeProfile(set: ProfileSet): Profile | null {
   return set.profiles.find((p) => p.id === set.activeId) ?? null;
-}
-
-/**
- * Onboarding order is forced (§3.2): the parent profile is created first, and
- * a device is not set up until at least one learner exists.
- */
-export type OnboardingStep = 'create-parent' | 'create-learner' | 'done';
-
-export function nextOnboardingStep(set: ProfileSet): OnboardingStep {
-  if (parentProfile(set) === null) return 'create-parent';
-  if (learners(set).length === 0) return 'create-learner';
-  return 'done';
 }
 
 // --- storage-key namespacing (§3.3 data isolation) --------------------------

@@ -352,19 +352,9 @@ Lines of a `pin` device that the PIN cannot open, chosen by the cause whether or
 
 ### 3.10 Role switching
 
-| From | To | How | Gate |
-|---|---|---|---|
-| learner | learner | Profile switch (F-PROF-001 section 3.4) | none (unchanged) |
-| learner | family or teacher | Profile → grown-up zone → **Grown-up home** row (first row) | fresh PIN (section 3.9), then Clerk sign-in if signed out |
-| learner | family or teacher | Profile → grown-up zone → dashboard card **Open**; Plan screen **Open billing** | as above |
-| no profile (Welcome) | family or teacher | persona row → `/signin?persona=` | Clerk sign-in; account creation behind the adult step; the lock applies only when the marker is not `none` (not possible without profiles) |
-| family | teacher (or back) | persona switch in the frame; or the "Go to …" buttons of the "not set up yet" states | none (same account) |
-| family or teacher | the other persona, not yet held | cross-link "Also teach a class?" / "Learning at home too?" → `/start?persona=` | none |
-| family or teacher | learner | **Back to learning** / **Open the learner app** | clears the unlock and the console session |
-| family or teacher | another account | Sign out → `/signin` | Clerk |
-| any grown-up page | the same page after 15 idle minutes on a locked device | lock screen | PIN (when the epoch is trusted) or a secret-proving sign-in |
+**[OA]** Replaced by AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3 (row OA-10), which is the one role-switching table; the table that stood here is superseded. In short: **Who is using this?** (`WhoIsUsing`) is where every switch starts. It opens at launch on a shared device, after 30 minutes in the background, from Home **Switch**, Profile **Who is using this?**, the Grown-up area's **Switch user** and the console's **Learner app** exit (`who=1`), and arriving there closes the grown-up session. A learner tile needs no gate (a locked one asks the grown-up PIN and opens no session). The **Grown-up area** row asks the PIN as before. On the web the **Family**, **Teacher** and **School** rows (or **Sign in as a grown-up** when no use is known) ask a fresh PIN, verify only, then hand off with `openGrownUpArea({ via: 'chooser', target })` (`/parent`, `/teach?persona=teacher`, `/teach?focus=school`) and Clerk sign-in when signed out. The Profile tiles and Profile → Grown-up area stay. Every change of learner and every exit from the Grown-up area stack closes the session (OA-D5b). Within the console the frame's persona switch needs no gate (same account), and **Back to learning** / **Open the learner app** land on the chooser and clear the unlock and the console session. The console lock (15 idle minutes, or 5 minutes hidden) asks the PIN (trusted epoch), a secret-proving sign-in, or a passkey where the marker is read and is not `pin`. Native builds show only the Grown-up area row until F-AUTH-004 (OA-11).
 
-A grown-up who is also a learner on the same device uses both: learning at `/`, the grown-up area through the gate.
+A grown-up who is also a learner on the same device uses both: learning at `/` through their own tile (which can be locked with the grown-up PIN), the grown-up uses through the rows.
 
 ### 3.11 Deep links and `next`
 

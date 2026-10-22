@@ -6,11 +6,12 @@ import { shot } from './shots';
 
 /**
  * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a, section 20): the device's one chooser in
- * the learner app. It needs a bundle built with `EXPO_PUBLIC_WHO_CHOOSER=true` (the flag ships off with this row;
- * OA-10 turns it on), so it runs only with `E2E_WHO=1`:
+ * the learner app. The chooser is on by default since row OA-10, so it runs on the release build (`build:web`) in
+ * every pull request; only a bundle built with the kill switch off (`EXPO_PUBLIC_WHO_CHOOSER=false`) skips it, with
+ * `E2E_WHO=0`:
  *
- *   EXPO_PUBLIC_WHO_CHOOSER=true pnpm --filter @hangul-route/mobile build:web
- *   E2E_WHO=1 pnpm --filter @hangul-route/mobile exec playwright test who-is-using
+ *   pnpm --filter @hangul-route/mobile build:web
+ *   pnpm --filter @hangul-route/mobile exec playwright test who-is-using
  *
  * Covered: launch on a shared device, one tap to Home, the return after 30 minutes in the background, a
  * single-learner device not asked, the class join link (the caption, then Join prefilled for the learner picked),
@@ -20,7 +21,7 @@ import { shot } from './shots';
  * CS-21 (the pending 24-hour wait with Cancel the wait). G7 (a tile tap to Home, p95 within 300 ms) runs with
  * `E2E_WHO_TIMING=1` too, for the nightly switch-on lane, which row OA-10 wires (spec section 22).
  */
-test.skip(process.env.E2E_WHO !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true (E2E_WHO=1)');
+test.skip(process.env.E2E_WHO === '0', 'a build with the kill switch EXPO_PUBLIC_WHO_CHOOSER=false (E2E_WHO=0)');
 test.use({ viewport: { width: 360, height: 740 } });
 
 const en = getMessages('en');
@@ -115,18 +116,40 @@ test.describe('Who is using this?', () => {
     await expect.poll(() => readStored(page, 'profiles:active')).toBe('profile:joon0001');
   });
 
-  test('who=1 with a held hand-off code keeps the join: the chooser once, with the caption', async ({ page }) => {
-    await sharedDevice(page);
-    // Written as the who=1 page starts (as the family home leaves it), so the page running before it cannot take it.
+  /** Written as the who=1 page starts (as the family home leaves it), so the page running before it cannot take it. */
+  async function handOffCode(page: Page): Promise<void> {
     await page.addInitScript(() => {
       if (location.search.includes('who=1')) sessionStorage.setItem('hr:shell:joinCode', JSON.stringify({ v: 1, code: 'FAM234', at: Date.now() }));
     });
+  }
+
+  test('who=1 with a held hand-off code, Who is joining? off (E2E_MULTI_JOIN=0): the chooser once, with the caption', async ({ page }) => {
+    test.skip(process.env.E2E_MULTI_JOIN !== '0', 'Who is joining? is on by default since row OA-10; this is its kill switch (EXPO_PUBLIC_MULTI_JOIN=false, E2E_MULTI_JOIN=0)');
+    await sharedDevice(page);
+    await handOffCode(page);
     await page.goto('/?who=1');
     await expect(title(page)).toBeVisible();
     await expect(page.getByText(w.joinCaption, { exact: true })).toBeVisible();
     expect(await page.evaluate(() => location.search)).toBe('');
     await tile(page, 'Mina').click();
     await expect(page.getByTestId('join-code')).toHaveValue('FAM234');
+  });
+
+  test('who=1 with a held hand-off code, Who is joining? on (the default since OA-10): Join takes the code for the checklist, and leaving it shows the chooser once (OA-D20, CS-5)', async ({ page }) => {
+    test.skip(process.env.E2E_MULTI_JOIN === '0', 'a build with EXPO_PUBLIC_MULTI_JOIN=false');
+    await sharedDevice(page);
+    await handOffCode(page);
+    await page.goto('/?who=1');
+    // The family code's lookup leads to the checklist (join-batch.spec.ts, on a build with the API); the code is
+    // never in the address.
+    await expect(page.getByRole('heading', { name: en.caregiver.join.title, exact: true })).toBeVisible();
+    await expect(page.getByTestId('join-code')).toHaveValue('FAM234');
+    expect(await page.evaluate(() => location.href)).not.toContain('FAM234');
+    // Leaving Join still asks who is using the device before anyone plays.
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(title(page)).toBeVisible();
+    await tile(page, 'Mina').click();
+    await expect(page.getByText('Hi, Mina!')).toBeVisible();
   });
 
   test('CS-2: arriving clears the tab\'s unlock and console session, tells the other tabs, and a grown-up row asks the PIN', async ({ page, context }) => {

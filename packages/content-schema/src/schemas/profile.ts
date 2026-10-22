@@ -32,7 +32,8 @@ export const ProfileSchema = z.object({
   role: ProfileRoleSchema,
   createdAt: z.string(),
   lastActiveAt: z.string().optional(),
-  parentPinHash: z.string().optional(),
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 13.1 (row OA-10): no `parentPinHash`. The grown-up PIN is the
+  // device-level `account:parentPinHash`; a legacy per-profile hash is stripped wherever it is still read.
   /** Local only (F-LEARN-001 L2): never synced. Absent = treated as 'child'. */
   learnerType: LearnerTypeSchema.optional(),
 });
@@ -42,7 +43,6 @@ export const ProfileListSchema = z.array(ProfileSchema);
 export const FamilySchema = z.object({
   id: z.string().regex(/^family:[a-z0-9-]+$/),
   ownerEmail: z.string().email().optional(),
-  parentPinHash: z.string().optional(),
   profiles: ProfileListSchema,
   createdAt: z.string(),
 });

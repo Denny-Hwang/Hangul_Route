@@ -9,7 +9,6 @@ import type { LearnerLevelId } from '@hangul-route/content-schema';
 export interface Family {
   id: string;
   email?: string;
-  parentPinHash?: string;
   ownerId?: string;
   createdAt: string;
 }

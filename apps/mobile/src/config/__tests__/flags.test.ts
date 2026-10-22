@@ -491,19 +491,19 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_PIN_PAUSE_STEPS');
   });
 
-  it('[OA] whoChooserEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-4a) is OFF when the row lands; the switch values turn it on', async () => {
+  it('[OA] whoChooserEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-4a) is ON after row OA-10; the kill switch values turn it off', async () => {
     delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
     let mod = await reload();
-    expect(mod.flags.whoChooserEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.whoChooserEnabled).toBe(false);
-    for (const on of ['true', '1', 'on', ' YES ']) {
-      process.env.EXPO_PUBLIC_WHO_CHOOSER = on;
+    expect(mod.flags.whoChooserEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.whoChooserEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_WHO_CHOOSER = off;
       mod = await reload();
-      expect(mod.flags.whoChooserEnabled, JSON.stringify(on)).toBe(true);
+      expect(mod.flags.whoChooserEnabled, JSON.stringify(off)).toBe(false);
     }
     process.env.EXPO_PUBLIC_WHO_CHOOSER = 'maybe';
     mod = await reload();
-    expect(mod.flags.whoChooserEnabled).toBe(false);
+    expect(mod.flags.whoChooserEnabled).toBe(true);
     delete process.env.EXPO_PUBLIC_WHO_CHOOSER;
   }, RELOADS_MS);
 
@@ -557,19 +557,19 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT');
   });
 
-  it('[OA] multiJoinEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-7b) is OFF when the row lands; the switch values turn it on', async () => {
+  it('[OA] multiJoinEnabled (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-7b) is ON after row OA-10; the kill switch values turn it off', async () => {
     delete process.env.EXPO_PUBLIC_MULTI_JOIN;
     let mod = await reload();
-    expect(mod.flags.multiJoinEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.multiJoinEnabled).toBe(false);
-    for (const on of ['true', '1', 'on', ' YES ']) {
-      process.env.EXPO_PUBLIC_MULTI_JOIN = on;
+    expect(mod.flags.multiJoinEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.multiJoinEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_MULTI_JOIN = off;
       mod = await reload();
-      expect(mod.flags.multiJoinEnabled, JSON.stringify(on)).toBe(true);
+      expect(mod.flags.multiJoinEnabled, JSON.stringify(off)).toBe(false);
     }
     process.env.EXPO_PUBLIC_MULTI_JOIN = 'maybe';
     mod = await reload();
-    expect(mod.flags.multiJoinEnabled).toBe(false);
+    expect(mod.flags.multiJoinEnabled).toBe(true);
     delete process.env.EXPO_PUBLIC_MULTI_JOIN;
   }, RELOADS_MS);
 

@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
@@ -293,10 +294,26 @@ export async function openForGrownUps(page: Page): Promise<void> {
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 }
 
+const whoEn = getMessages('en');
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-10: "Who is using this?" is on by default, so a shared device (2 or
+ * more learners, a locked profile or a known grown-up use) opens on the chooser at launch, after 30 minutes in the
+ * background and on the way back from the grown-up pages. Waits for `name`'s Home or the chooser; on the chooser,
+ * taps `name`'s tile (one tap, no PIN), then waits for Home. A single-learner device goes straight on.
+ */
+export async function homeFor(page: Page, name: string): Promise<void> {
+  const home = page.getByText(`Hi, ${name}!`);
+  const chooser = page.getByRole('heading', { name: whoEn.learner.who.title, exact: true });
+  await expect(home.or(chooser).first()).toBeVisible();
+  if (await chooser.isVisible()) await page.getByRole('button', { name: whoEn.a11y.who.tile(name), exact: true }).click();
+  await expect(home).toBeVisible();
+}
+
 /** Home to the Grown-up area PIN screen (verify mode) of a family device. */
 export async function openGrownUpZone(page: Page, name: string): Promise<void> {
   await page.goto('/');
-  await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
+  await homeFor(page, name);
   // The install guide shows from the third cached open and covers the Home tabs.
   const guide = page.getByTestId('install-guide');
   await page.waitForTimeout(800);

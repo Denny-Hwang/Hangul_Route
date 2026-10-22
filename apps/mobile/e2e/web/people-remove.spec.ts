@@ -10,13 +10,13 @@ import { shot } from './shots';
  * CS-20): Grown-up area → People on this device → a learner → Remove from this device asks a fresh PIN and a
  * ConfirmSheet with the name; a saved learner is removed with Remove; an unsaved one first tries to sync, then offers
  * Save progress first and a second step to remove anyway; no stored key with the removed id remains, and the removal
- * calls no route (a class-scoped learner included). Needs a bundle with the chooser on and an API address (mocked here,
- * every request recorded and refused), so it runs only with `E2E_WHO_API=1`:
+ * calls no route (a class-scoped learner included). Needs a bundle with an API address (mocked here, every request
+ * recorded and refused; the chooser is on by default since row OA-10), so it runs only with `E2E_WHO_API=1`:
  *
- *   EXPO_PUBLIC_WHO_CHOOSER=true EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid npx expo export --platform web --output-dir dist --clear
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid npx expo export --platform web --output-dir dist --clear
  *   E2E_WHO_API=1 pnpm --filter @hangul-route/mobile exec playwright test people-remove
  */
-test.skip(process.env.E2E_WHO_API !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true and EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid');
+test.skip(process.env.E2E_WHO_API !== '1', 'needs a build with EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid (E2E_WHO_API=1); the chooser is on by default');
 test.use({ serviceWorkers: 'block', viewport: { width: 360, height: 740 } });
 
 const API = 'https://api.e2e.invalid';

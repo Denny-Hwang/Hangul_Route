@@ -13,6 +13,7 @@ import {
 } from '../logic/profiles/profile-model';
 import {
   addTombstone,
+  holdsLegacyPinHash,
   mergeProfileLists,
   parseTombstones,
   pruneTombstones,
@@ -75,7 +76,6 @@ interface Actions {
   applyServerProfile: (id: string, server: ServerLearnerFields) => boolean;
   setActive: (id: string) => void;
   remove: (id: string) => void;
-  setParentPin: (pinHash: string) => void;
   /** Restore paths add a profile that already exists elsewhere (keeps its id). */
   adoptProfile: (profile: Profile) => void;
 }
@@ -314,7 +314,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   activeSince: Date.now(),
 
   hydrate: async () => {
-    const stored = (await readJson<Profile[]>(PROFILES_KEY)) ?? [];
+    const storedRaw = await readJson<unknown>(PROFILES_KEY);
+    // [OA] Row OA-10 (section 13.1): a legacy per-profile `parentPinHash` is dropped here and written off the device.
+    const stored = storedProfileItems<Profile>(storedRaw);
     const activeId = await readJson<string | null>(ACTIVE_KEY);
     // [OA] OA-D19: a learner removed in another tab (an older bundle may have written it back) stays removed.
     const removed = new Set(parseTombstones(await readJson<unknown>(PROFILE_TOMBSTONES_KEY)).ids);
@@ -326,6 +328,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     // An active id that is no longer in the list (removed in another tab) falls back as `followMerged` does.
     const active = activeId === null || activeId === undefined ? null : profiles.some((p) => p.id === activeId) ? activeId : (profiles[0]?.id ?? null);
     set({ profiles, activeId: active, hydrated: true, activeSince: Date.now() });
+    if (holdsLegacyPinHash(storedRaw)) persistList();
   },
 
   refresh: () => {
@@ -413,13 +416,6 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     commitSet(set, { profiles, activeId }, { profiles: [...profiles, profile], activeId: activeId ?? profile.id }, { change: adding(profile), revivedId: profile.id });
   },
 
-  setParentPin: (pinHash) => {
-    const before = { profiles: get().profiles, activeId: get().activeId };
-    const profiles = before.profiles.map((p) => ({ ...p, parentPinHash: pinHash }));
-    const next = { profiles, activeId: before.activeId };
-    set(next);
-    persist(next, before, (list) => list.map((p) => ({ ...p, parentPinHash: pinHash })));
-  },
 }));
 
 export function activeProfileSelector(state: State): Profile | null {

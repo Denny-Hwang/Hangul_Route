@@ -7,13 +7,14 @@ import { shot } from './shots';
 /**
  * [OA] Locked learner profiles (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-5, section 20; CS-3, CS-19): a locked tile
  * asks the grown-up PIN and opens that learner only; a locked active profile shows the chooser at every launch and
- * after 5 minutes in the background; the Edit profile switch locks a learner. It needs a bundle built with
- * `EXPO_PUBLIC_WHO_CHOOSER=true` (the flag ships off), so it runs only with `E2E_WHO=1`:
+ * after 5 minutes in the background; the Edit profile switch locks a learner. The chooser is on by default since row
+ * OA-10, so it runs on the release build in every pull request; a bundle built with the kill switch off
+ * (`EXPO_PUBLIC_WHO_CHOOSER=false`) skips it with `E2E_WHO=0`:
  *
- *   EXPO_PUBLIC_WHO_CHOOSER=true pnpm --filter @hangul-route/mobile build:web
- *   E2E_WHO=1 pnpm --filter @hangul-route/mobile exec playwright test who-locked
+ *   pnpm --filter @hangul-route/mobile build:web
+ *   pnpm --filter @hangul-route/mobile exec playwright test who-locked
  */
-test.skip(process.env.E2E_WHO !== '1', 'needs a build with EXPO_PUBLIC_WHO_CHOOSER=true (E2E_WHO=1)');
+test.skip(process.env.E2E_WHO === '0', 'a build with the kill switch EXPO_PUBLIC_WHO_CHOOSER=false (E2E_WHO=0)');
 test.use({ viewport: { width: 360, height: 740 } });
 
 const en = getMessages('en');

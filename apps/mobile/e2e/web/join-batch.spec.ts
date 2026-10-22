@@ -8,14 +8,13 @@ import { shot } from './shots';
  * [OA] Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, OA-D20, section 10.3; row OA-7b, section 20, CS-11):
  * a family hand-off code on a shared device opens the checklist, and joining a learner other than the active one asks
  * a fresh PIN first. Against a mocked sync API (the family's seats and the learner registration). It needs a bundle
- * built with the API, the chooser and the batch join on (both flags ship off; OA-10 turns them on), so it runs only
- * with `E2E_MULTI_JOIN=1`:
+ * built with an API address (the chooser and the batch join are on by default since row OA-10), so it runs only with
+ * `E2E_MULTI_JOIN=1`:
  *
- *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid EXPO_PUBLIC_WHO_CHOOSER=true EXPO_PUBLIC_MULTI_JOIN=true \
- *     pnpm --filter @hangul-route/mobile build:web
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
  *   E2E_MULTI_JOIN=1 pnpm --filter @hangul-route/mobile exec playwright test join-batch
  */
-test.skip(process.env.E2E_MULTI_JOIN !== '1', 'needs a build with the API, EXPO_PUBLIC_WHO_CHOOSER=true and EXPO_PUBLIC_MULTI_JOIN=true (E2E_MULTI_JOIN=1)');
+test.skip(process.env.E2E_MULTI_JOIN !== '1', 'needs a build with an API address (E2E_MULTI_JOIN=1); the chooser and the batch join are on by default');
 test.use({ serviceWorkers: 'block', viewport: { width: 320, height: 640 } });
 
 const API = 'https://api.e2e.invalid';

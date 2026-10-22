@@ -2,12 +2,13 @@ import type { Profile } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { changedServerFields, hasFields, mergePending, queueRepair, sendableFields, serverFieldsOf, serverName, serverProfileChanges, shouldPullServerProfile } from '../learner-profile';
 
-const profile: Profile = { id: 'profile:a', displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self', parentPinHash: 'h' };
+const profile: Profile = { id: 'profile:a', displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't', learnerType: 'self' };
 
 describe('logic/sync/learner-profile (F-PROF-001)', () => {
   it('serverFieldsOf and changedServerFields carry only name, level and avatar', () => {
     expect(serverFieldsOf(profile)).toEqual({ displayName: 'test', ageGroup: '5-7', avatar: 'hoya-orange' });
-    expect(changedServerFields(profile, { ...profile, learnerType: 'child', parentPinHash: 'x' })).toEqual({});
+    // A legacy record an older bundle wrote may still carry a per-profile PIN hash (row OA-10): it is never a server field.
+    expect(changedServerFields(profile, { ...profile, learnerType: 'child', parentPinHash: 'x' } as Profile)).toEqual({});
     expect(changedServerFields(profile, { ...profile, displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' })).toEqual({ displayName: 'Sungjoo', ageGroup: '8-9', avatar: 'hoya-blue' });
   });
 
