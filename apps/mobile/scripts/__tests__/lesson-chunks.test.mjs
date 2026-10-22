@@ -317,7 +317,8 @@ describe('precacheReport and its budget lines', () => {
     // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build),
     // 4,712,987 B after the start bundle shrink on main 7eb5bad61 (the es / ko text and the grown-up roots became
     // precached chunks; 6,491,546 B on its main), 4,732,797 B with that shrink merged onto the final integration
-    // (main fc580beed, release build), 4,744,598 B with rows CM-10 to CM-14 and the CM-14 review fixes (the Daily Review's
+    // (main fc580beed, release build), 4,744,234 B with [GU] the always-on guest rules (GU-2, release build), 4,747,423 B with its review fixes,
+    // 4,744,598 B with rows CM-10 to CM-14 and the CM-14 review fixes (the Daily Review's
     // route, Home card and strings; its screen, rounds and engine are chunks). The margin stays under 10 KB, so the stories, the locale text,
     // the grown-up roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
     // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.

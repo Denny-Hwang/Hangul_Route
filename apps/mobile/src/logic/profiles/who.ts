@@ -5,10 +5,12 @@ import {
   GROWN_UP_BACKGROUND_MS,
   SCHOOL_FOCUS_QUERY,
   type GrownUpUse,
+  type GuestRecord,
   type ThemeKey,
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { compareNames } from '@hangul-route/i18n';
+import { gateProfiles } from '../guest/guest-model';
 import type { GrownUpHandoffRequest } from '../shell/handoff-rules';
 
 /**
@@ -36,15 +38,20 @@ export interface WhoProfile {
  * known grown-up use. A device whose marker is `none` (self-only, no PIN) with a single learner profile is not made
  * shared by a known use alone, so a lone adult learner who also teaches is not asked at every launch. A lock on an id
  * that is not a profile here (a stray id, section 13.2) counts for nothing. No profile is never shared.
+ * [GU] GU-D14, AMENDMENTS-GUEST-FIRST-LESSON section 9.2 (row GU-2): a live guest (`guest`, a record whose id is not a
+ * profile here) counts as one more learner profile, so one profile and a live guest is shared. A guest alone is no
+ * profile: the device is not shared.
  */
 export function isSharedDevice(input: {
   profiles: readonly { id: string }[];
   locks: readonly string[];
   uses: readonly GrownUpUse[];
   marker: WhoMarker;
+  guest?: GuestRecord | null;
 }): boolean {
-  const { profiles, locks, uses, marker } = input;
-  if (profiles.length === 0) return false;
+  const { locks, uses, marker } = input;
+  if (input.profiles.length === 0) return false;
+  const profiles = gateProfiles(input.profiles, input.guest);
   if (profiles.length >= 2) return true;
   const ids = new Set(profiles.map((p) => p.id));
   if (locks.some((id) => ids.has(id))) return true;

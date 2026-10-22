@@ -1,7 +1,9 @@
-import { DEVICE_GATE_KEY, type DeviceGateMarker } from '@hangul-route/content-schema';
+import { DEVICE_GATE_KEY, GUEST_KEY, type DeviceGateMarker } from '@hangul-route/content-schema';
+import { storedGuestMayLive } from '../logic/guest/guest-model';
 import { deviceGateMarker, sameMarker, storedMarkerProfiles, storedProfilesReadable } from '../logic/shell/device-gate';
 import { readJsonExact, writeJson } from '../platform/storage';
 import { PIN_HASH_KEY, useAccountStore } from './account-store';
+import { useGuestStore } from './guest-store';
 import { PROFILES_KEY, useProfileStore } from './profile-store';
 
 /**
@@ -23,6 +25,9 @@ import { PROFILES_KEY, useProfileStore } from './profile-store';
  *   the epoch is not reconciled, so a lost read never records "no PIN";
  * - writes run one at a time, each for the newest marker, and a marker equal to the last one
  *   written is not written again.
+ * - [GU] GU-D14, CS-G6 (row GU-2): a live guest counts as a learner read as a child, so the marker
+ *   is `nopin` or `pin` while one lives; nothing is written before `hr:guest` has been read, and a
+ *   `none` is refused while the stored `hr:guest` may hold a live guest (or does not parse).
  *
  * `currentDeviceGateMarker()` is the marker for this device as the app sees it now (`null`
  * before the stores load); the grown-up hand-off copies its epoch into the unlock.
@@ -53,7 +58,9 @@ async function storageAgrees(marker: DeviceGateMarker): Promise<boolean> {
   const rawHash = await readJsonExact<unknown>(PIN_HASH_KEY);
   if (rawHash !== null && typeof rawHash !== 'string') return false;
   const { pinSetAt } = useAccountStore.getState();
-  return sameMarker(deviceGateMarker({ profiles: storedMarkerProfiles(rawProfiles), parentPinHash: rawHash, pinSetAt }), marker);
+  if (!sameMarker(deviceGateMarker({ profiles: storedMarkerProfiles(rawProfiles), parentPinHash: rawHash, pinSetAt }), marker)) return false;
+  // [GU] CS-G6: a guest the stored record may hold keeps the marker off `none`; a record that does not parse throws here.
+  return !storedGuestMayLive(await readJsonExact<unknown>(GUEST_KEY), rawProfiles);
 }
 
 async function flush(gen: number): Promise<void> {
@@ -100,7 +107,8 @@ function evaluate(gen: number): void {
   if (gen !== generation) return;
   const { profiles, hydrated: profilesIn } = useProfileStore.getState();
   const account = useAccountStore.getState();
-  if (!profilesIn || !account.hydrated) return;
+  const guest = useGuestStore.getState();
+  if (!profilesIn || !account.hydrated || !guest.hydrated) return;
   if (account.pinHashReadFailed) {
     // The PIN hash could not be read: this device says nothing (the console keeps the stored
     // marker or its own fallback, and the hand-off writes no unlock) until a PIN is set again.
@@ -113,7 +121,7 @@ function evaluate(gen: number): void {
     useAccountStore.getState().reconcilePinEpoch(Date.now());
   }
   const { parentPinHash, pinSetAt } = useAccountStore.getState();
-  current = deviceGateMarker({ profiles, parentPinHash, pinSetAt });
+  current = deviceGateMarker({ profiles, parentPinHash, pinSetAt, guest: guest.record });
   // A refused `none` is checked again once the device said something else in between.
   if (refused !== null && !sameMarker(refused, current)) refused = null;
   schedule(gen);
@@ -130,10 +138,12 @@ export function bindDeviceGateMarker(): () => void {
   scheduled = false;
   const offProfiles = useProfileStore.subscribe(() => evaluate(gen));
   const offAccount = useAccountStore.subscribe(() => evaluate(gen));
+  const offGuest = useGuestStore.subscribe(() => evaluate(gen));
   evaluate(gen);
   return () => {
     offProfiles();
     offAccount();
+    offGuest();
     if (gen === generation) {
       generation += 1;
       current = null;

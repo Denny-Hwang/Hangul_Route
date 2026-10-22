@@ -15,6 +15,7 @@ import {
 import { isAppVisible, subscribeAppVisibility } from '../platform/app-visibility';
 import { readJson, writeJson } from '../platform/storage';
 import { apiBaseUrl } from '../platform/sync-api';
+import { useGuestStore } from './guest-store';
 import { useProfileStore } from './profile-store';
 
 /**
@@ -166,7 +167,8 @@ function decidable(s: State): boolean {
  */
 export function currFlagOn(
   flag: CurrFlagName,
-  profileId: string | null = useProfileStore.getState().activeId,
+  // [GU] Section 5.3 (row GU-2): a guest run is in no experiment and plays the default (no profile to bucket).
+  profileId: string | null = useGuestStore.getState().running ? null : useProfileStore.getState().activeId,
   cache?: RemoteConfigCache | null,
 ): boolean {
   let copy: RemoteConfigCache | null;
@@ -190,7 +192,8 @@ export function useCurrFlag(flag: CurrFlagName): boolean {
   const cache = useRemoteConfigStore((s) => s.cache);
   const ready = useRemoteConfigStore(decidable);
   const activeId = useProfileStore((s) => s.activeId);
-  return ready ? currFlagOn(flag, activeId, cache) : false;
+  const guestRun = useGuestStore((s) => s.running);
+  return ready ? currFlagOn(flag, guestRun ? null : activeId, cache) : false;
 }
 
 /** Tests only. */

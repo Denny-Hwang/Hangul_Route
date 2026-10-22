@@ -1,5 +1,7 @@
 import { useAccountStore, watchCoveredLearners } from './account-store';
 import { useAudioStore } from './audio-store';
+import { liveGuestId } from './guest-store';
+import { hydrateGuest } from './guest-sweep';
 import { useLayoutStore } from './layout-store';
 import { useLocaleStore } from './locale-store';
 import { useMembershipStore } from './membership-store';
@@ -41,6 +43,10 @@ import { useTierStore } from './tier-store';
  */
 export async function hydrateLearnerData(): Promise<void> {
   await useProfileStore.getState().hydrate();
+  // [GU] Row GU-2 (AMENDMENTS-GUEST-FIRST-LESSON 5.4, GU-D13): `hr:guest` after the list, so its repair and sweep read
+  // it; a live guest's progress loads with the profiles' (its id is never a profile, so no welcome card comes).
+  await hydrateGuest();
+  const guestId = liveGuestId();
   const { profiles, activeId } = useProfileStore.getState();
   const progress = useProgressStore.getState();
   const stories = useStoryStore.getState();
@@ -59,6 +65,7 @@ export async function hydrateLearnerData(): Promise<void> {
     // [OA] Row OA-5: the locks, before the first screen (they fail closed and never throw).
     hydrateProfileLocks(),
     ...profiles.map((p) => progress.hydrate(p.id)),
+    ...(guestId === null ? [] : [progress.hydrate(guestId)]),
     ...profiles.map((p) => stories.hydrate(p.id)),
     ...profiles.map((p) => tiers.hydrate(p.id)),
     ...profiles.map((p) => memberships.hydrate(p.id)),
