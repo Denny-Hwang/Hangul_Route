@@ -34,6 +34,7 @@ import type { ClassMoveEndReason } from '@hangul-route/content-schema';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import type { RemoteConfigRow } from './remote-config-types';
 import type { RollupKey, RollupRow } from './rollup-types';
+import type { MemoryShardWrite, MemoryShardWriteResult, StoredMemoryShard } from './memory-shard-types';
 
 export * from './transfer-types';
 export * from './class-move-types';
@@ -527,6 +528,20 @@ export interface Db {
    * since it was read is left as the owner set it.
    */
   lowerRemoteConfigPct(flag: string, fromPct: number, fromUpdatedAt: string, toPct: number, updatedAt: string, reason: string): Promise<boolean>;
+
+  // memory shards (F-CURR-002 section 4.8, row CM-11; migration 0016). Learning state only, keyed by the opaque learner id.
+  /** The learner's rows of the named shards (absent shards are left out), in shard order. */
+  memoryShardsOf(learnerId: string, shards: readonly string[]): Promise<StoredMemoryShard[]>;
+  /** The learner's rows written after `since`, in `seq` then shard order. */
+  memoryShardsSince(learnerId: string, since: number): Promise<StoredMemoryShard[]>;
+  /** The learner's highest `seq`, 0 with no row. */
+  memoryHighestSeq(learnerId: string): Promise<number>;
+  /**
+   * Writes the shards in one batch. Each applies only while its row is still at `baseSeq` (absent for null), and each
+   * written row gets the learner's highest `seq` + 1, computed inside the write, so every later write has a higher
+   * `seq` than any row a reader has seen. Answers which shards were written and which had changed since the read.
+   */
+  writeMemoryShards(learnerId: string, writes: readonly MemoryShardWrite[], updatedAt: string): Promise<MemoryShardWriteResult>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

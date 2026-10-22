@@ -28,6 +28,7 @@ import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { usePlanStore } from '../plan-store';
 import { onSynced, setSyncApiForTests, useSyncStore } from '../sync-store';
+import { setMemoryStoreHook } from '../../logic/sync/memory-hook';
 
 const snap = (quests: string[]): ProgressSnapshot => ({
   profileId: 'profile:a',
@@ -569,6 +570,23 @@ describe('rescue code lifecycle (F-RESTORE-001)', () => {
     await useSyncStore.getState().syncNow('profile:z');
     expect(api.issueRescueCode).not.toHaveBeenCalled();
     expect(useSyncStore.getState().byLearner['profile:z']?.rescueCode).toBe('TIGER-MOON-4821');
+  });
+
+  it('claim starts the memory store pull for the adopted learner (F-CURR-002 section 4.8), and a claim without a store works as before', async () => {
+    const claim = vi.fn(async () => ({ status: 'ok', learner: { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' }, secret: 'as', snapshot: null }));
+    setSyncApiForTests({ ...fakeApi(), claimRescueCode: claim } as never);
+    expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+    const pull = vi.fn(async () => undefined);
+    setMemoryStoreHook({ backup: vi.fn(async () => undefined), restore: vi.fn(async () => undefined), pull });
+    try {
+      expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+      expect(pull).toHaveBeenCalledWith('profile:a');
+      // A pull that fails never fails the claim.
+      setMemoryStoreHook({ backup: vi.fn(async () => undefined), restore: vi.fn(async () => undefined), pull: vi.fn(async () => Promise.reject(new Error('network'))) });
+      expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+    } finally {
+      setMemoryStoreHook(null);
+    }
   });
 
   it('claim merges into an existing local profile and maps errors', async () => {
