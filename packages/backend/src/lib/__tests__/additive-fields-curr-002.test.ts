@@ -9,7 +9,7 @@ import { ADDITIVE_FIELDS, preserveAdditiveFields } from '../additive-fields';
 const stored = (payload: unknown, summary: unknown) => ({ payload, summary });
 const incoming = (payload: Record<string, unknown>, summary: Record<string, unknown>) => ({ payload, summary });
 
-const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt'];
+const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks'];
 const fields = {
   cellBest: { 'letters-s2': 2, 'life-s3': 1 },
   cellCheckAt: { 'letters-s2': '2026-10-20T09:00:00.000Z' },
@@ -21,6 +21,7 @@ const fields = {
   streakBest: 9,
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
+  steadyWeeks: { '2026-10-19': '2026-10-21T09:00:00.000Z' },
 };
 const memory = { wordsKnown: 42, readyToRefresh: 7, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 18, topDue: ['lex:sagwa'] };
 
@@ -72,6 +73,7 @@ describe('preserveAdditiveFields (F-CURR-002 section 4.8 fields)', () => {
       streakBest: 5,
       stamps: { 'first-album': '2026-10-21T00:00:00.000Z' },
       memSeededAt: '2026-10-16T00:00:00.000Z',
+      steadyWeeks: { '2026-10-19': '2026-10-22T09:00:00.000Z', '2026-10-12': '2026-10-16T09:00:00.000Z' },
     };
     const out = preserveAdditiveFields(incoming(sent, {}), stored(fields, {}));
     expect(out.payload).toEqual({
@@ -87,6 +89,8 @@ describe('preserveAdditiveFields (F-CURR-002 section 4.8 fields)', () => {
       streakBest: 9,
       stamps: { 'first-album': '2026-10-21T00:00:00.000Z', 'first-cell': '2026-10-15T09:00:00.000Z' },
       memSeededAt: '2026-10-14T09:00:00.000Z',
+      // A week another device latched stays; the earliest time per week wins.
+      steadyWeeks: { '2026-10-12': '2026-10-16T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' },
     });
   });
 

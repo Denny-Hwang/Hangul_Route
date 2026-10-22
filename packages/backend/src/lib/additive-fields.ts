@@ -1,6 +1,7 @@
 import {
   CellBestSchema,
   DayLogSchema,
+  SteadyWeeksSchema,
   GoalsSchema,
   LatchRecordSchema,
   ProgressSnapshotSchema,
@@ -260,6 +261,8 @@ const CURR_002_FIELDS: readonly AdditiveField[] = [
    * malformed) keeps it too, as `summary.activity` does.
    */
   { ...curr002('memSeededAt', shape.memSeededAt, mergeEarliest), summaryKey: 'memory', keepStoredSummaryWhenSent: true },
+  /* The steady-weeks latch (row CM-17): union of keys, earliest per key, so the Home headline never drops. */
+  curr002('steadyWeeks', SteadyWeeksSchema, mergeLatchRecord),
 ];
 
 export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT, SESSIONS, ...CURR_002_FIELDS];

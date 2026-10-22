@@ -51,6 +51,7 @@ const fields = {
   streakBest: 9,
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
+  steadyWeeks: { '2026-10-19': '2026-10-21T09:00:00.000Z' },
 };
 const memory = { wordsKnown: 42, readyToRefresh: 7, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 18, topDue: ['lex:sagwa'] };
 
@@ -236,5 +237,18 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const data = ((await res.json()) as { data: { snapshot: { snapshot: Stored['snapshot'] } } }).data;
     expect(data.snapshot.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);
     expect(data.snapshot.snapshot).toMatchObject(fields);
+  });
+  it('steadyWeeks (row CM-17): two devices union their latched weeks, the earliest time per week, and a week no time zone has reached is dropped', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const phone = { '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' };
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { steadyWeeks: phone }), summary });
+    // A tablet that latched the week later, never saw the earlier week, and whose clock once read 2099.
+    const tablet = { '2026-10-19': '2026-10-22T08:00:00.000Z', '2099-01-05': '2026-10-22T08:00:00.000Z', '2026-10-05': '2099-01-01T00:00:00.000Z' };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: snapshotFor('profile:suni', { steadyWeeks: tablet }), summary })).status).toBe(200);
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot.steadyWeeks).toEqual({ '2026-10-05': '2026-10-22T12:00:00.000Z', ...phone });
+    // An older build leaves the key out: the count never drops.
+    await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
+    expect(Object.keys((await get('profile:suni', auth)).snapshot.steadyWeeks as object)).toHaveLength(3);
   });
 });

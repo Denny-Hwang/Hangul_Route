@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CurriculumMetaSchema } from '../curriculum/draft';
-import { isDateKey } from '../curriculum/dates';
+import { isDateKey, weekdayOf } from '../curriculum/dates';
 import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
 import { PlacementResultSchema } from './placement';
 import { PlanItemSchema } from './plan-item';
@@ -230,6 +230,21 @@ export const StreakLocalSchema = z
 export type StreakLocal = NonNullable<z.infer<typeof StreakLocalSchema>>;
 
 /**
+ * A week key of `steadyWeeks`: the Monday (`YYYY-MM-DD`) that starts an ISO
+ * week on local days, Monday to Sunday in every locale (F-CURR-002 section
+ * 4.8), so a UI-language switch or two devices on different locales give one
+ * key. A day that is not a Monday drops on read.
+ */
+export const WeekMondaySchema = z.string().refine((day) => isDateKey(day) && weekdayOf(day) === 'mon');
+
+/**
+ * `steadyWeeks`: week Monday -> when the week latched (its learned days first
+ * reached the weekly days in force that week). Union of keys, earliest per
+ * key, so the steady-weeks count only grows; lenient per entry.
+ */
+export const SteadyWeeksSchema = lenientRecord(WeekMondaySchema, IsoInstantSchema, PROGRESS_RECORD_MAX);
+
+/**
  * A self-route (F-PLAN-002 section 3.5 / 3.9): a curriculum kept on the
  * learner's device, inside the progress snapshot, so it rides sync, the backup
  * file and Rescue Code restore. A stopped route is archived (`archivedAt`),
@@ -323,6 +338,8 @@ export const ProgressSnapshotSchema = z.object({
   stamps: LatchRecordSchema,
   /** When the one-time memory seeding ran; earliest wins. */
   memSeededAt: IsoInstantSchema.optional().catch(undefined),
+  /** Week Monday -> when that week reached its weekly goal; union of keys, earliest per key (row CM-17). */
+  steadyWeeks: SteadyWeeksSchema,
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
@@ -348,6 +365,7 @@ export const CURR_002_SNAPSHOT_KEYS = [
   'streakBest',
   'stamps',
   'memSeededAt',
+  'steadyWeeks',
 ] as const;
 
 /**
