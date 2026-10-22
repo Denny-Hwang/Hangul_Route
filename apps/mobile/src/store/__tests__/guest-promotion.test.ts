@@ -512,3 +512,38 @@ describe('[GU] sync and backups never see the guest (CS-G7)', () => {
     expect(lists.join('')).not.toContain(GUEST.id);
   });
 });
+
+describe('[GU] the owner keeps the guest from People on this device (row GU-5, 9.2)', () => {
+  const OWNER = { id: 'profile:owner001', displayName: 'Ana', ageGroup: '10-11' as const, avatar: 'hoya-green' as const, role: 'learner' as const, createdAt: '2026-09-01T00:00:00.000Z', learnerType: 'self' as const };
+
+  it('keepActive: the guest becomes a learner with its id, the active learner and the grown-up session stay', async () => {
+    disk.set('profiles', JSON.stringify([OWNER]));
+    useProfileStore.setState({ profiles: [OWNER], activeId: OWNER.id, hydrated: true });
+    liveGuest(false);
+    await useProgressStore.getState().hydrate(GUEST.id);
+    playQuestOne(3);
+    await settle();
+    useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+
+    const outcome = await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()), { keepActive: true });
+    await settle();
+
+    expect(outcome).toMatchObject({ kind: 'saved', confirmed: true });
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([OWNER.id, GUEST.id]);
+    expect(useProfileStore.getState().activeId).toBe(OWNER.id);
+    expect(parse('profiles:active')).toBe(OWNER.id);
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+    expect(disk.has('guest')).toBe(false);
+    // G2: the quest's card is the new learner's.
+    expect(cardsOf(useProgressStore.getState().byProfile[GUEST.id])).toContain('card:book');
+  });
+
+  it('without keepActive the saved guest is made active, as the guest\'s own save does', async () => {
+    disk.set('profiles', JSON.stringify([OWNER]));
+    useProfileStore.setState({ profiles: [OWNER], activeId: OWNER.id, hydrated: true });
+    liveGuest(false);
+    await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()));
+    await settle();
+    expect(useProfileStore.getState().activeId).toBe(GUEST.id);
+  });
+});

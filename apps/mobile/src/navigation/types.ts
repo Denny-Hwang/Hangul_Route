@@ -336,8 +336,10 @@ export type RootStackParamList = {
    * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6, row OA-4a; wireframe `profiles/who-is-using.md`):
    * the device's one chooser. Root stack, above `Main`, no Back, the Android back swallowed. `trigger`: why it opened
    * (`who.shown`, and `profile.switch` with `via: 'chooser'`). A held join code is never a param (OA-D20).
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 6.1 (row GU-5): `try`, the `return` chooser of `who=1` with `try=1`,
+   * which also draws **Try the first quest**.
    */
-  WhoIsUsing: { trigger: WhoTrigger };
+  WhoIsUsing: { trigger: WhoTrigger; try?: true };
   /**
    * [OA] One person on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a; wireframe
    * `profiles/people-on-device.md` Panel B): the lock switch, Edit profile, the report and Remove from this device.
@@ -375,7 +377,12 @@ export type OnboardingStackParamList = {
    * `then: 'join'`: started at Welcome's "Got a class code?" or at the class join link; Join a class opens after the
    * profile is made, with the link's `code` filled in (owner decision 2026-10-17).
    */
-  CreateProfile: { firstRun: boolean; then?: 'join'; code?: string };
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 8.3, 9.2 (row GU-5): `from: 'guest'` with `owner: true` is **Keep as a
+   * learner** from People on this device: the guest's two save steps inside the grown-up session (the case `owner`),
+   * step 2 planned as Add a learner's, back to the Grown-up area after the save.
+   */
+  CreateProfile: { firstRun: boolean; then?: 'join'; code?: string; from?: 'guest'; owner?: true };
   FirstQuestPreview: { profileId: string };
   /** The level check's fork (F-PLC-001 section 3.1 step 1), between CreateProfile and FirstQuestPreview. */
   PlacementInvite: { profileId: string };

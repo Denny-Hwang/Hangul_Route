@@ -12,7 +12,8 @@ export interface GateEvent {
 }
 
 export type SwitchVia = 'chooser' | 'profile' | 'home';
-export type SwitchTrigger = 'launch' | 'return' | 'resume' | 'join' | 'manual' | 'none';
+/** [GU] Row GU-5: `try`, a learner tile picked on a chooser the site opened (AMENDMENTS-GUEST-FIRST-LESSON section 12). */
+export type SwitchTrigger = 'launch' | 'return' | 'resume' | 'join' | 'manual' | 'try' | 'none';
 export type MinutesIn = '0-2' | '2-10' | '10+';
 
 const MINUTE_MS = 60_000;

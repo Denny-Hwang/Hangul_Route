@@ -90,6 +90,12 @@ interface Actions {
   promoteGuest: (
     record: GuestRecord,
     input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind; learnerType: LearnerType },
+    /**
+     * [GU] Row GU-5 (section 9.2): `keepActive` is **Keep as a learner** from People on this device: the active learner
+     * stays active (the new learner is not switched to), so the grown-up session that asked for it stays open and the
+     * grown-up returns to the Grown-up area. A device with no active learner still makes the new one active.
+     */
+    options?: { keepActive?: boolean },
   ) => Promise<GuestPromotion>;
 }
 
@@ -445,7 +451,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     commitSet(set, { profiles, activeId }, { profiles: [...profiles, profile], activeId: activeId ?? profile.id }, { change: adding(profile), revivedId: profile.id });
   },
 
-  promoteGuest: async (record, input) => {
+  promoteGuest: async (record, input, options = {}) => {
     let outcome = { kind: 'failed' } as GuestPromotion;
     // One step in this tab's queue and inside the `hr:profiles` lock: the duplicate check, the write and its read back.
     await enqueue(() =>
@@ -469,7 +475,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
         const result = createProfileReducer({ profiles, activeId }, input, fixed);
         // Made active now: `lastActiveAt` is the save, `createdAt` the run's start.
         const created: Profile = { ...result.created, lastActiveAt: new Date(now).toISOString() };
-        const next = { profiles: [...profiles, created], activeId: created.id };
+        const next = { profiles: [...profiles, created], activeId: options.keepActive === true && activeId !== null ? activeId : created.id };
         const changed = closesSession(activeId, next.activeId);
         set(changed ? { ...next, activeSince: now } : next);
         // `adding` keeps a copy another tab stored meanwhile: never two profiles with one id.
@@ -485,7 +491,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
           set({ profiles: current.profiles.filter((p) => p.id !== created.id), activeId: current.activeId === created.id ? activeId : current.activeId });
           return;
         }
-        persistActive(created.id);
+        persistActive(next.activeId);
         if (changed) closeGrownUpSession('switch');
         let confirmed = false;
         try {

@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
-import { batchHandoffPending, chooserLaunchTrigger } from '../store/who-chooser';
+import { batchHandoffPending, chooserLaunchParams, chooserLaunchTrigger } from '../store/who-chooser';
 import { endGuestRunOutside, takeGuestLaunch, type GuestRoute } from '../store/guest-launch';
 import { BootIntentHook, LaunchBatchJoinHook } from './boot-intent';
 import { MainTabs } from './tabs';
@@ -142,7 +142,7 @@ export function RootNavigator(): React.ReactElement {
           name="WhoIsUsing"
           component={WhoIsUsingScreen}
           options={{ gestureEnabled: false, animation: 'fade' }}
-          initialParams={launch.trigger === null ? undefined : { trigger: launch.trigger }}
+          initialParams={launch.trigger === null ? undefined : chooserLaunchParams(launch.trigger)}
         />
         <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
         <Stack.Screen name="CellStories" component={CellStoriesScreen} getId={cellStoriesRouteIdOf} />

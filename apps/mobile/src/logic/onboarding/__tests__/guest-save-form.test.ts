@@ -218,3 +218,16 @@ describe('promotionPlan for each consent state the form gives (5.4)', () => {
     expect(held).toMatchObject({ id: 'profile:guest001', createdAt: STAMP });
   });
 });
+
+describe('[GU] formPlan, the owner keep from People on this device (row GU-5, 8.3)', () => {
+  it('step 2 is planned as Add a learner: the "Me" card keeps its optional PIN row where a PIN is stored', () => {
+    const owner: FormState = { ...guest, owner: true, parentPinHash: 'salt:hash' };
+    const added: FormState = { ...owner, fromGuest: undefined, owner: undefined };
+    for (const learnerType of ['self', 'child'] as const) {
+      expect(formPlan({ ...owner, learnerType })).toEqual(formPlan({ ...added, learnerType }));
+    }
+    expect(formPlan({ ...owner, learnerType: 'self' })).toMatchObject({ card: 'self', pinOptional: true });
+    // Still the guest's two steps.
+    expect(setupSteps(owner)).toEqual(['name', 'privacy']);
+  });
+});

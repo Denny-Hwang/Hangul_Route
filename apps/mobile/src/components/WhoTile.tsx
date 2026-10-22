@@ -2,6 +2,7 @@ import { Body, Icon, borderWidth, colors, radii, shadows, spacing, touchTarget }
 import type { ThemeKey } from '@hangul-route/content-schema';
 import React, { forwardRef } from 'react';
 import { Pressable, View, type View as ViewType } from 'react-native';
+import { DEFAULT_AVATAR } from '../logic/profiles/avatar-catalog';
 import { LockBadge } from './LockBadge';
 import { ProfileAvatar } from './ProfileAvatar';
 
@@ -11,7 +12,12 @@ export const WHO_TILE_AVATAR = 72;
 const ADD_CIRCLE = 48;
 
 export interface WhoTileProps {
-  variant: 'learner' | 'add';
+  /**
+   * [GU] Row GU-5 (mock `design/screens/profiles/who-is-using-guest.md` D11): `try` is **Try the first quest**, drawn
+   * like Add a learner (dashed, the play glyph) with `line` under its label; `guest` is the live guest's own tile, drawn
+   * like a learner tile with the default cub and `line` as its caption, never a tint, a lock or any progress (CS-G5).
+   */
+  variant: 'learner' | 'add' | 'try' | 'guest';
   /** The learner's name (a learner tile), or the Add label; wraps, never truncates. */
   label: string;
   /** The cub of a learner tile. */
@@ -27,6 +33,8 @@ export interface WhoTileProps {
    * be read, so the screen's one `locksUnread` line says it for every tile).
    */
   caption?: string | null;
+  /** [GU] The line under the label of a `try` tile (**No profile needed**) or a `guest` tile (**Not saved yet**). */
+  line?: string;
   accessibilityLabel: string;
   accessibilityHint?: string;
   /** Web: the one tile of the grid that is a tab stop (roving `tabindex`, section 14). */
@@ -44,12 +52,20 @@ export interface WhoTileProps {
  * variant is the dashed Add a learner tile. Reduced motion is the default: the cub keeps its idle pose.
  * [OA] Row OA-5: a `locked` tile carries the lock badge on its plate and the caption under the name (the badge alone
  * while the locks cannot be read); the lock is the glyph and the words, never colour alone.
+ * [GU] Row GU-5: the `try` and `guest` variants (AMENDMENTS-GUEST-FIRST-LESSON section 9.1). Every label and line
+ * wraps at spaces and grows the tile (`minHeight` only, no line clamp), so nothing is cut at 320 px with Largest text.
  */
 export const WhoTile = forwardRef<ViewType, WhoTileProps>(function WhoTile(
-  { variant, label, avatar, tint = null, width, locked = false, caption = null, accessibilityLabel, accessibilityHint, tabStop = true, onPress, onFocus, testID },
+  { variant, label, avatar, tint = null, width, locked = false, caption = null, line, accessibilityLabel, accessibilityHint, tabStop = true, onPress, onFocus, testID },
   ref,
 ): React.ReactElement {
-  const add = variant === 'add';
+  // [GU] The try tile is a start, not a person: Add a learner's dashed look (D11).
+  const add = variant === 'add' || variant === 'try';
+  // [GU] The guest's tile: the default cub, untinted, never locked (CS-G5).
+  const guest = variant === 'guest';
+  const plateTint = guest ? null : tint;
+  const isLocked = !guest && locked;
+  const sub = testID === undefined ? undefined : `${testID}-line`;
   return (
     <Pressable
       ref={ref}
@@ -87,20 +103,25 @@ export const WhoTile = forwardRef<ViewType, WhoTileProps>(function WhoTile(
                   justifyContent: 'center',
                 }}
               >
-                <Icon name="plus" size={24} color={colors.border.shape} />
+                <Icon name={variant === 'try' ? 'play' : 'plus'} size={24} color={colors.border.shape} />
               </View>
               <Body weight="semibold" align="center">
                 {label}
               </Body>
+              {variant === 'try' && line !== undefined ? (
+                <Body size="sm" tone="secondary" align="center" testID={sub}>
+                  {line}
+                </Body>
+              ) : null}
             </View>
           ) : (
             <>
               <View
                 testID={testID === undefined ? undefined : `${testID}-plate`}
-                style={{ padding: spacing.md, alignItems: 'center', backgroundColor: tint === null ? colors.surface.sunken : colors.theme[tint] }}
+                style={{ padding: spacing.md, alignItems: 'center', backgroundColor: plateTint === null ? colors.surface.sunken : colors.theme[plateTint] }}
               >
-                <ProfileAvatar avatar={avatar ?? 'hoya-orange'} size={WHO_TILE_AVATAR} pose="idle" />
-                {locked ? (
+                <ProfileAvatar avatar={guest ? DEFAULT_AVATAR : (avatar ?? DEFAULT_AVATAR)} size={WHO_TILE_AVATAR} pose="idle" />
+                {isLocked ? (
                   <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }}>
                     <LockBadge testID={testID === undefined ? undefined : `${testID}-lock`} />
                   </View>
@@ -110,9 +131,14 @@ export const WhoTile = forwardRef<ViewType, WhoTileProps>(function WhoTile(
                 <Body size="lg" weight="bold" align="center">
                   {label}
                 </Body>
-                {locked && caption !== null ? (
+                {isLocked && caption !== null ? (
                   <Body size="sm" tone="secondary" align="center" testID={testID === undefined ? undefined : `${testID}-caption`}>
                     {caption}
+                  </Body>
+                ) : null}
+                {guest && line !== undefined ? (
+                  <Body size="sm" tone="secondary" align="center" testID={sub}>
+                    {line}
                   </Body>
                 ) : null}
               </View>

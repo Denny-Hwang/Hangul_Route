@@ -28,6 +28,12 @@ export interface FormState {
    * steps (`setupSteps`), the email folded behind **Add an email**, and no PIN part on a device that holds a PIN.
    */
   fromGuest?: boolean;
+  /**
+   * [GU] Row GU-5 (sections 8.3, 9.2): the guest's two steps opened by **Keep as a learner** inside a grown-up session
+   * (the case `owner`): step 2 is planned as Add a learner's (the grown-up's own choices, not the guest's), so the
+   * "Me" card keeps its optional PIN row as Add a learner does.
+   */
+  owner?: boolean;
 }
 
 export interface FormPlan {
@@ -58,7 +64,7 @@ export function formPlan(s: FormState): FormPlan | null {
     consent,
     pinRequired,
     // [GU] CS-G10: on the guest's save the optional row only where no PIN is stored, so a submit never replaces one.
-    pinOptional: card === 'self' && (s.fromGuest !== true || s.parentPinHash === null),
+    pinOptional: card === 'self' && (s.fromGuest !== true || s.owner === true || s.parentPinHash === null),
     showEmail: consent !== null,
   };
 }

@@ -124,6 +124,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const firstRun = route.params?.firstRun ?? false;
   // [GU] The guest's save is the Guest stack's route (`GuestStackParamList.CreateProfile`), the same screen.
   const fromGuest = (route.params as { from?: unknown } | undefined)?.from === 'guest';
+  // [GU] Row GU-5 (section 9.2): Keep as a learner from People on this device, inside the grown-up session (`owner`).
+  const ownerKeep = fromGuest && (route.params as { owner?: unknown } | undefined)?.owner === true;
   const levelCheckOn = useMemo(() => placementEntriesOn(flags.placementEnabled), []);
 
   const [step, setStep] = useState<SetupStep>(fromGuest ? 'name' : 'who');
@@ -170,6 +172,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     selfAcceptedAt,
     parentPinHash,
     ...(fromGuest ? { fromGuest } : {}),
+    ...(ownerKeep ? { owner: true } : {}),
   };
   const plan = formPlan(state);
   const missing = stepMissing(step, state);
@@ -285,7 +288,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     try {
       // [GU] GU-D11: a first run on a device whose only learner is a live guest promotes it (the switch on).
       const setupPromotes = !fromGuest && firstRun && flags.guestLessonEnabled && liveGuestId() !== null && !useProfileStore.getState().profiles.some((p) => p.role === 'learner');
-      const guest: SubmitInput['guest'] = fromGuest ? { gated, via: guestSaveEntry() } : setupPromotes ? { gated: false, via: 'setup' } : undefined;
+      // [GU] Row GU-5: the owner's keep is a setup form a grown-up opened (`via: 'setup'`), not the guest's own save card.
+      const guest: SubmitInput['guest'] = ownerKeep ? { gated, via: 'setup' } : fromGuest ? { gated, via: guestSaveEntry() } : setupPromotes ? { gated: false, via: 'setup' } : undefined;
       const result = await submitProfile(
         { state, level, avatar, firstRun, ...(guest === undefined ? {} : { guest }) },
         {
@@ -294,11 +298,15 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           acceptSelfConsent,
           setParentPinHash,
           setParentEmail: saveParentEmail,
-          createProfile: guest === undefined ? createProfile : promoteLiveGuest,
+          // [GU] Row GU-5: the owner's keep leaves the active learner (and so the grown-up session) as it is.
+          createProfile: guest === undefined ? createProfile : ownerKeep ? (input) => promoteLiveGuest(input, { keepActive: true }) : promoteLiveGuest,
           track: (event) => void track(event),
         },
       );
-      if (result.ok && fromGuest) {
+      if (result.ok && ownerKeep) {
+        // [GU] Section 8.4: from People on this device the save returns there; the grown-up stays in the Grown-up area.
+        navigation.getParent<NavigationProp<RootStackParamList>>()?.navigate('ParentDashboard');
+      } else if (result.ok && fromGuest) {
         // [GU] Section 8.4: Home of the new profile, the Guest stack gone, one Hoya bubble; no level-check fork.
         noteGuestSaved(result.profile.id, holdsFirstQuestCard(result.profile.id));
         leaveGuestRunSaved(navigation);
