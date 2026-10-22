@@ -14,6 +14,16 @@ export function onProfileRemoved(listener: Listener): () => void {
   };
 }
 
+/**
+ * Tells every store. [OA] Row OA-7a (CS-20): a listener that throws never keeps the others from hearing the removal,
+ * and the error stays here (the removal's own sweep, `store/remove-from-device.ts`, still deletes what is stored).
+ */
 export function notifyProfileRemoved(profileId: string): void {
-  for (const listener of listeners) listener(profileId);
+  for (const listener of listeners) {
+    try {
+      listener(profileId);
+    } catch {
+      // The next store still forgets the learner.
+    }
+  }
 }

@@ -7,6 +7,9 @@ const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
+  // [OA] Row OA-5: the locks are read exactly (and once more on a fresh connection when that fails).
+  readJsonExact: vi.fn(async (k: string) => mem.get(k) ?? null),
+  readJsonExactFresh: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
@@ -20,6 +23,7 @@ import { useAccountStore } from '../account-store';
 import { useAudioStore } from '../audio-store';
 import { useLayoutStore } from '../layout-store';
 import { hydrateLearnerData } from '../bootstrap';
+import { resetProfileLocks, useProfileLocks } from '../profile-locks';
 import { useLocaleStore } from '../locale-store';
 import { rederiveAllLocal, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
@@ -152,6 +156,14 @@ describe('cold start (audit UX-01 / L16)', () => {
     expect(stored.cards.map((c) => c.cardId)).toEqual(['card:book', 'card:tiger']);
     expect(stored.quests.map((q) => q.questId)).toEqual(['quest:a']);
     expect(stored.sessions).toHaveLength(1);
+  });
+
+  it('[OA] reads the profile locks before resolving, so the first screen never shows a locked learner unlocked (row OA-5)', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Bo')]);
+    mem.set('profiles:locks', { v: 1, ids: ['profile:b'] });
+    resetProfileLocks();
+    await hydrateLearnerData();
+    expect(useProfileLocks.getState().read).toEqual(['profile:b']);
   });
 
   it('a fresh install resolves with nothing to load', async () => {

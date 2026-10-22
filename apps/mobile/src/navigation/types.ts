@@ -1,10 +1,11 @@
-import type { BrowseTarget, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
+import type { BrowseTarget, GrownUpUse, PlacementSource, StageKey, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { AskFrom } from '../logic/access-copy';
 import type { PreviewFrom } from '../logic/episode-access';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { PlanChoice, ProposalSource } from '../logic/route/proposal-flow';
 import type { SetupState } from '../logic/route/setup-flow';
+import type { WhoTrigger } from '../logic/profiles/who';
 import type { GrownUpVia } from '../logic/shell/handoff-rules';
 import type { CellStoriesSource } from '../logic/story/cell-stories';
 import type { LibrarySectionId } from '../logic/story/library-sections';
@@ -62,6 +63,16 @@ export type GrownUpDestination =
   | 'ClassScope'
   /** AMENDMENTS-LECTURE-V2 E5 (LV-6, web only): the dashboard's Lecture mode card after the session lapsed; back to the dashboard, where one more tap opens the presenter tab. */
   | 'LectureMode'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D21 (row OA-4a): the chooser's Cancel the wait; verify only, never creates or resets a PIN; a correct PIN clears the pending 24-hour wait and returns to the chooser. */
+  | 'CancelReset'
+  /** [OA] Row OA-5, section 6.3: a locked learner tile (`PinEntry.profileId`); verify only with `verifyForLockedProfile`, then that learner's Home; never a grown-up session (CS-3). */
+  | 'LockedProfile'
+  /** [OA] Row OA-5, OA-D5b (3): the PIN again for a control that changes who is on the device (the Edit profile lock switch); verify only, marks a fresh PIN and goes back. */
+  | 'FreshPin'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.6 (OA-9, native): the Grown-up area's face or fingerprint switch; a fresh PIN turns it on, then back. */
+  | 'BiometricShortcut'
+  /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 5.3, CS-4 (row OA-4b, web only): a Family, Teacher, School or Sign in row on the chooser (`PinEntry.use`); verify only, never creates or resets a PIN; a correct PIN hands off to that use's page; with no PIN stored, the no-PIN line and Continue to `/signin`. */
+  | 'GrownUpUse'
   // add new members above this line
 ;
 
@@ -133,8 +144,12 @@ export type RootStackParamList = {
    * replaces only that one, and refuses when another plan became active meanwhile.
    */
   RoutePreview: { profileId: string; setup: SetupState; replacing: string | null };
-  /** "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. */
-  RouteOverview: { profileId: string };
+  /**
+   * "Your weekly plan" (G3): this week first, later weeks folded, Move my plan along, Change, Stop. [OA]
+   * `viewer: 'grownup'` when opened from the Grown-up area (the plan steps, a learner's Learning Route there): it then
+   * counts as a Grown-up area page, so the grown-up session is not closed on the way (OA-D5b (2)).
+   */
+  RouteOverview: { profileId: string; viewer?: 'grownup' };
   /** The Stage 1 prize ceremony (F-QUEST-002 §3.8), opened from Results on the run that completed the stage. */
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */
@@ -143,8 +158,16 @@ export type RootStackParamList = {
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {
     next: GrownUpDestination;
-    /** `'setup'` opens PIN creation even when one is stored (Forgot PIN, F-LEARN-001 §3.5). */
-    mode?: 'setup';
+    /**
+     * `'setup'` opens PIN creation even when one is stored (Forgot PIN, F-LEARN-001 §3.5). [OA] `'change'` asks the
+     * current PIN first, then opens creation (the reset-by-wait notice's Change PIN, OA-D21).
+     */
+    mode?: 'setup' | 'change';
+    /**
+     * [OA] OA-D21: Change PIN on the reset-by-wait notice. Once the new PIN is stored the screen goes back to the
+     * Grown-up area that asked (gate open), instead of opening a second one.
+     */
+    returnAfterSet?: boolean;
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
     /**
@@ -171,13 +194,25 @@ export type RootStackParamList = {
     transferId?: string;
     /** `next: 'BrowseLessons'`: where All lessons opens (a content target, never a learner id); absent opens its home. */
     browseTarget?: BrowseTarget;
+    /** [OA] `next: 'LockedProfile'`: the surface of the locked tile (the chooser and its trigger, or the Profile tiles), for `profile.switch`. */
+    lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
+    /** [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`. */
+    use?: GrownUpUse | 'signin';
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
-  PinReset: { next: GrownUpDestination; profileId?: string };
+  PinReset: {
+    next: GrownUpDestination;
+    profileId?: string;
+    /** [OA] Row OA-5: carried back to the PIN screen, so a locked tile's reset still sends `profile.switch` and keeps a held join. */
+    lockedFrom?: RootStackParamList['PinEntry']['lockedFrom'];
+  };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
-  /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
-  SaveProgress: undefined;
+  /**
+   * sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). [OA] `profileId` (row OA-7a): Save progress
+   * first on the Remove sheet opens it for that learner; absent, the active learner.
+   */
+  SaveProgress: { profileId?: string } | undefined;
   /**
    * A class move from this device (F-SPACE-002 section 4.12, T-7c; `design/screens/transfer/app-sheets.md`):
    * enter the new class code, Find class, read the consent sheet, send. Behind the grown-up gate unless it
@@ -293,6 +328,18 @@ export type RootStackParamList = {
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.
    */
   ClassScope: { profileId: string };
+  /**
+   * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6, row OA-4a; wireframe `profiles/who-is-using.md`):
+   * the device's one chooser. Root stack, above `Main`, no Back, the Android back swallowed. `trigger`: why it opened
+   * (`who.shown`, and `profile.switch` with `via: 'chooser'`). A held join code is never a param (OA-D20).
+   */
+  WhoIsUsing: { trigger: WhoTrigger };
+  /**
+   * [OA] One person on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a; wireframe
+   * `profiles/people-on-device.md` Panel B): the lock switch, Edit profile, the report and Remove from this device.
+   * In the Grown-up area stack, reached from its People on this device card.
+   */
+  PersonOnDevice: { profileId: string };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

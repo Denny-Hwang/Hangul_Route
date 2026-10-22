@@ -21,11 +21,11 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
 | ISC | 63 |
-| MIT | 741 |
+| MIT | 743 |
 | MPL-2.0 | 1 |
 | Python-2.0 | 1 |
 | Unlicense | 3 |
-| **Total** | **884** |
+| **Total** | **886** |
 
 ## Packages
 
@@ -454,10 +454,12 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | expo-font | 13.0.4 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-haptics | 14.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-keep-awake | 14.0.3 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-local-authentication | 15.0.2 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-localization | 16.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-modules-autolinking | 2.0.8 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-modules-core | 2.2.3 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-network | 7.0.5 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-secure-store | 14.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-sharing | 13.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-speech | 13.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-status-bar | 2.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |

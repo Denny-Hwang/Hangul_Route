@@ -7,6 +7,9 @@ import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 import { syncApi, useSyncStore } from './sync-store';
 
+/** The class moves this learner has seen (`hr:class-moves-seen:<id>`); exported for the removal sweep (row OA-7a). */
+export const CLASS_MOVES_SEEN_KEY = classMovesSeenKey;
+
 /**
  * [TV] The class update and the one-time move notices on this device — AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4,
  * TV-D5, TV-D10. The inbox fields (`classScope`, `classMoves`) are kept in memory only, from the last inbox of this

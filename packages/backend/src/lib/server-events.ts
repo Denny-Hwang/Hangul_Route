@@ -17,6 +17,7 @@ import {
   NOTE_PRESET_IDS,
   NOTE_REACTION_IDS,
   NOTE_REPORT_REASONS,
+  OA_TELEMETRY_PAYLOADS,
   PlanKeySchema,
   REPORT_TELEMETRY_PAYLOAD,
   REPORT_TELEMETRY_PREFIX,
@@ -255,6 +256,21 @@ const SPACE_SERVER_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
   'space.admin.left': {},
 };
 
+/**
+ * [OA] One account, many users (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15, OA-D18): every name of the section 15
+ * table, the existing `profile.switch`, `parent.gate.opened`, `pin.reset_*` and `shell.grown_up_handoff` included, is
+ * stored without a profile id, so no event links two profiles of one device, and keeps per key only a value its
+ * documented schema (`OA_TELEMETRY_PAYLOADS`) accepts: enum codes, booleans and whole numbers in their bounds
+ * (`picked`, `joined`, `refused` 0 to 12; `grownUps` 0 to 4; `step` 1 to 5). Any other key or value is dropped,
+ * whatever a client sends. Checked first in `keptEventFields`, before every prefix rule.
+ */
+export const OA_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = Object.fromEntries(
+  Object.entries(OA_TELEMETRY_PAYLOADS).map(([name, schema]) => [
+    name,
+    Object.fromEntries(Object.entries(schema.shape as Record<string, { safeParse(value: unknown): { success: boolean } }>).map(([key, field]): [string, FieldRule] => [key, (value) => value !== undefined && field.safeParse(value).success])),
+  ]),
+);
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -298,12 +314,14 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * event (F-FEEDBACK-001 section 10), a `billing.*` event (F-BILL-002 section 10)
  * and a `lecture.*` event (AMENDMENTS-LECTURE-V2 section 11). An F-CURR-002 name keeps its
  * payload only when it parses (section 11.3), and `session.end` drops a CM-3 field off its codes.
+ * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS keeps only its documented fields and never a profile id (`OA_PAYLOAD_RULES`).
  */
 export function keptEventFields(
   name: TelemetryEventName,
   payload: Record<string, unknown> | undefined,
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
+  if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
   if (isCurrTelemetryName(name)) {
     const parsed = CURR_TELEMETRY_PAYLOADS[name].safeParse(payload);
     const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;

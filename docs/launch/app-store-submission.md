@@ -16,8 +16,9 @@
 | 아이콘 1024², 어댑티브 아이콘, 스플래시 1284×2778 | `apps/mobile/assets/` (#54) | ✅ |
 | 암호화 수출 규정: `ITSAppUsesNonExemptEncryption = false` | `app.json` → `ios.config.usesNonExemptEncryption` | ✅ (제출 시 질문 생략됨) |
 | iOS Privacy Manifest (`PrivacyInfo.xcprivacy`): tracking 없음, 수집 데이터 = Product Interaction (미연결·비추적·분석 목적), Required-Reason API 4종 | `app.json` → `ios.privacyManifests` | ✅ |
-| Android: 권한 최소화, `RECORD_AUDIO` 명시 차단 (VoiceEcho 플래그 OFF) | `app.json` → `android.blockedPermissions` | ✅ |
+| Android: 권한 최소화, `RECORD_AUDIO` 명시 차단 (VoiceEcho 플래그 OFF). 얼굴·지문 바로가기가 추가하는 normal 권한은 아래 행 | `app.json` → `android.blockedPermissions` | ✅ |
 | 녹음 클립 재생용 `expo-av` (F-AUDIO-004 A-7, #257): 플러그인 `microphonePermission: false` → `Info.plist` 에 `NSMicrophoneUsageDescription` 없음 (prebuild 확인), `RECORD_AUDIO` 계속 차단. 플러그인이 `MODIFY_AUDIO_SETTINGS` (normal 권한, 설치 시 자동 허용) 를 추가함. `libEXAV` 바이너리에 녹음 코드 경로가 남아 있어 ITMS-90683 여부는 §4 Validate 로 확인 | `app.json` → `plugins` | ⏳ Validate 대기 (#264) |
+| [OA] 어른용 얼굴·지문 바로가기 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-9, `EXPO_PUBLIC_BIOMETRIC_SHORTCUT`): iOS 는 `expo-secure-store` 플러그인 `faceIDPermission` → `Info.plist` 의 `NSFaceIDUsageDescription` (en) 과 `locales/es.json` · `locales/ko.json` 의 `InfoPlist.strings` (prebuild 확인). Android 는 `expo-local-authentication` 과 `androidx.biometric` 의 라이브러리 manifest 가 `USE_BIOMETRIC` · `USE_FINGERPRINT` (normal 권한, 설치 시 자동 허용) 를 병합함. 기기마다 꺼진 채 시작, 기기 암호로 넘어가는 길 없음 | `app.json` → `plugins` | ⏳ Validate 대기 (#264), 기기 확인 §4 |
 | 깨진 config plugin 제거 (`expo-status-bar` 는 플러그인이 아님 → `expo config`/EAS 빌드 실패 원인) | `app.json` | ✅ `npx expo config` 통과 |
 | EAS 빌드/제출 프로필 (`development` · `preview` · `production` autoIncrement) | `apps/mobile/eas.json` | ✅ placeholder 3개는 §2 |
 | 프로덕션 크래시 가드 (`OopsScreen` + `react-error-boundary`) | `apps/mobile/App.tsx` | ✅ |
@@ -67,6 +68,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
   - [ ] 강제 크래시 확인이 필요하면 dev 빌드에서 `throw` 후 OopsScreen → Try again
 - [ ] iPad: 세로 고정 + 레이아웃 깨짐 없음 (supportsTablet = true 이므로 iPad 스크린샷 필수)
 - [ ] **Validate App** (Xcode Organizer → Validate, 또는 업로드 후 App Store Connect 처리 메일): **ITMS-90683 (마이크 purpose string 누락) 없음** 확인. 나오면 `app.json` 의 `microphonePermission` 에 짧고 사실대로인 문구를 넣음 (앱은 녹음하지 않음). 아카이브가 Xcode 26 에서 expo-localization 때문에 실패하면 먼저 #263 해결. 결과는 #264 에 기록
+- [ ] **얼굴·지문 바로가기 (OA-9, 플래그 켠 첫 TestFlight 빌드 전)**: Xcode 로 만든 `.app` 의 `Info.plist` 에 `NSFaceIDUsageDescription` 이 있고 기기 언어 en/es/ko 에서 시스템 안내 문구가 각각 "Face ID opens the grown-up area when a grown-up turns it on." / "Face ID abre la zona de adultos cuando un adulto lo activa." / "어른이 켜 두면 Face ID로 어른 공간을 열어요." 로 보인다 · Grown-up area 에서 PIN 을 새로 넣고 스위치를 켠 뒤 PIN 화면의 Use face or fingerprint 로 열린다 · Face ID 를 여러 번 틀려 잠긴 상태에서 탭해도 **기기 암호 입력 창이 뜨지 않는다** · 설정에서 얼굴이나 지문을 새로 등록한 뒤 탭하면 스위치가 꺼지고 "Face or fingerprint changed on this device. Enter the PIN." 줄이 보인다 (iOS 가 null 이 아니라 오류를 던지면 `classifyShortcutRead` 에 그 OSStatus 를 추가). Android 빌드 전에는 병합된 manifest 의 `USE_BIOMETRIC` · `USE_FINGERPRINT` 를 확인. 결과는 #264 에 기록 (#263 해결 후)
 - [ ] **Open-source notices (store-submission gate, proprietary LICENSE 2026-10-14)**: after `expo prebuild` and `pod install`, compare every pod in `apps/mobile/ios/Podfile.lock` with THIRD_PARTY_NOTICES.md. A pod that is neither an npm package already listed (React Native and Expo pods ship inside their npm packages) nor a `NATIVE_COMPONENTS` row in `scripts/third-party-notices.mjs` (rows marked `ios`) is added there with its license and copyright line, then `node scripts/third-party-notices.mjs` is run and the change merged before upload. A copyleft pod stops the submission. Before any Android release, do the same for the Gradle dependencies (the notices do not cover Android yet).
 
 ## 5. 스토어 메타데이터 입력 — 약 1시간

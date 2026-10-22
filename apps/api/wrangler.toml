@@ -98,6 +98,16 @@ keep_vars = true
 #                                    value) is the kill switch: every class and school reader sees the
 #                                    base scope at once; families are unaffected and acknowledgements
 #                                    still record. GET /health shows features.classScopeFull.
+# TELEMETRY_DAILY                    [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1: leave UNSET (on).
+#                                    Unset, empty or "enabled" counts the section 15 events and
+#                                    session.start in the anonymous D1 table telemetry_daily (migration
+#                                    0015: day, name, kept codes and a count; never an id). "disabled" (or
+#                                    any other value) is the kill switch: no counter writes, and the
+#                                    telemetry route reads nothing for them; events are still accepted.
+#                                    The daily purge keeps removing rows older than 400 days either way.
+#                                    Writes are bounded per isolate only (600 rows a minute, 5,000 a UTC
+#                                    day): on a D1 write-quota alert, set "disabled" first, so sync,
+#                                    sign-up and billing keep their share of the quota.
 # LEARNING_ROLLUPS                   F-CURR-002 section 11.2 (row CM-70a): leave UNSET (on). Unset,
 #                                    empty or "enabled" lets POST /api/telemetry add counts to the
 #                                    D1 table learning_rollups (codes and counts only, under a write

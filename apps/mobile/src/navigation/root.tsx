@@ -1,7 +1,9 @@
 import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
+import { chooserLaunchTrigger } from '../store/who-chooser';
 import { BootIntentHook } from './boot-intent';
 import { MainTabs } from './tabs';
 import type { RootStackParamList } from './types';
@@ -50,6 +52,8 @@ import { VocabCardsScreen } from '../screens/vocab/VocabCardsScreen';
 import { VocabMatchScreen } from '../screens/vocab/VocabMatchScreen';
 import { VocabTopicScreen } from '../screens/vocab/VocabTopicScreen';
 import { VocabTopicsScreen } from '../screens/vocab/VocabTopicsScreen';
+import { WhoIsUsingScreen } from '../screens/who/WhoIsUsingScreen';
+import { PersonOnDeviceScreen } from '../screens/parent/PersonOnDeviceScreen';
 import { cellStoriesRouteId } from '../logic/story/cell-stories';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
@@ -75,12 +79,27 @@ export function RootNavigator(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const hydrated = useProfileStore((s) => s.hydrated);
   const hasProfile = profiles.length > 0;
+  // [OA] "Who is using this?" at launch (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2, row OA-4a): decided once,
+  // after the profiles and the profile locks are read; with the flag off it is decided at once (no chooser).
+  const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null }>(() => ({ decided: !flags.whoChooserEnabled, trigger: null }));
+  useEffect(() => {
+    if (launch.decided || !hydrated) return undefined;
+    let live = true;
+    void chooserLaunchTrigger()
+      .catch(() => null)
+      .then((trigger) => {
+        if (live) setLaunch({ decided: true, trigger });
+      });
+    return () => {
+      live = false;
+    };
+  }, [hydrated, launch.decided]);
 
   // `initialRouteName` is read once when the navigator mounts, so mounting
   // before storage has hydrated would send a returning learner back to
   // onboarding on every cold launch. Hold on a blank canvas (~1 frame on
   // device) until the profile store has loaded.
-  if (!hydrated) {
+  if (!hydrated || !launch.decided) {
     return <Screen tone="canvas">{null}</Screen>;
   }
 
@@ -96,10 +115,17 @@ export function RootNavigator(): React.ReactElement {
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
-        initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
+        initialRouteName={launch.trigger !== null ? 'WhoIsUsing' : hasProfile ? 'Main' : 'Onboarding'}
       >
         <Stack.Screen name="Onboarding" component={OnboardingStack} />
         <Stack.Screen name="Main" component={MainTabs} />
+        {/* [OA] "Who is using this?" (row OA-4a): no Back, no swipe back; reached only while flags.whoChooserEnabled is on. */}
+        <Stack.Screen
+          name="WhoIsUsing"
+          component={WhoIsUsingScreen}
+          options={{ gestureEnabled: false, animation: 'fade' }}
+          initialParams={launch.trigger === null ? undefined : { trigger: launch.trigger }}
+        />
         <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
         <Stack.Screen name="CellStories" component={CellStoriesScreen} getId={cellStoriesRouteIdOf} />
         <Stack.Screen name="MyRoute" component={MyRouteScreen} />
@@ -158,6 +184,8 @@ export function RootNavigator(): React.ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
+        {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
+        {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
       </Stack.Navigator>
       {/* After the stack, so the navigator is registered when the boot intent opens the PIN screen (F-APP-001 section 3.9). */}
       <BootIntentHook />

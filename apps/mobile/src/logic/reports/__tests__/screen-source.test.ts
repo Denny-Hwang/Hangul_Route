@@ -79,7 +79,7 @@ describe('entries', () => {
     expect(dashboard).toContain('{reportsEnabledFor(locale) ? (');
     expect(dashboard).not.toContain('flags.reportsEnabled');
     expect(dashboard).toContain('messages.report.action.seeReport');
-    expect(dashboard).toContain('reportEntry(profileId, opensDirectly(sessionOpen))');
+    expect(dashboard).toContain("reportEntry(profileId, passGate('LearnerReport', opensDirectly(sessionOpen)))");
   });
 
   it('the PIN screen continues to the report it was asked for', () => {

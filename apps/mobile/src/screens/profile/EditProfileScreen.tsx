@@ -21,7 +21,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, TextInput, View } from 'react-native';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
+import { flags } from '../../config/flags';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { ProfileLockCard } from '../../components/ProfileLockCard';
 import { useMessages } from '../../i18n/use-messages';
 import { privacyUrl } from '../../logic/links';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
@@ -64,6 +66,12 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, I, and
  * onboarding/setup-steps.md, G (the Privacy block and "I'm under 13", F-LEARN-001 §3.15.6).
  * Rules live in logic/profiles/edit-profile (tested); this file paints them.
+ *
+ * [OA] Row OA-5 (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D9, sections 8.2, 8.4; wireframe `profiles/people-on-device.md`
+ * Panel B): **Lock with the grown-up PIN**, a switch that acts at once (not on Save). It needs a PIN entered in the
+ * last 2 minutes (`needsFreshPin`), else it asks the PIN again (`PinEntry { next: 'FreshPin' }`) and applies the change
+ * when that PIN is right; without a PIN it is disabled with **Set a grown-up PIN first.** Shown only while
+ * `EXPO_PUBLIC_WHO_CHOOSER` is on; the locks themselves are enforced either way. Nothing here is synced.
  */
 export function EditProfileScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
@@ -79,6 +87,8 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const acceptGuardianConsent = useAccountStore((s) => s.acceptGuardianConsent);
   const acceptSelfConsent = useAccountStore((s) => s.acceptSelfConsent);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
+  // [OA] Row OA-5: the lock of this learner (`ProfileLockCard`, shared with People on this device, row OA-7a).
+  const lockShown = flags.whoChooserEnabled && original?.role === 'learner';
   const inClass = useMembershipStore((s) => (s.byLearner[profileId] ?? []).some((r) => r.kind === 'class'));
   const hydrateMemberships = useMembershipStore((s) => s.hydrate);
   const deviceScope = useMembershipStore((s) => s.deviceScope);
@@ -276,6 +286,19 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
           </Caption>
         </>
       ) : null}
+      {lockShown ? (
+        <>
+          <Spacer size="lg" />
+          <ProfileLockCard
+            profileId={profileId}
+            onAskPin={() => navigation.navigate('PinEntry', { next: 'FreshPin' })}
+            subscribeFocus={(listener) => navigation.addListener('focus', listener)}
+            failedLine={e.saveFailed}
+            testID="edit-lock"
+          />
+        </>
+      ) : null}
+
       <Spacer size="lg" />
       <Body weight="semibold">{e.nameLabel}</Body>
       <Spacer size="xs" />

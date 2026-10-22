@@ -21,6 +21,10 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_BROWSE?: string;
   /** Class moves (F-SPACE-002 section 4.8; [TV] TV-D13): on unless `false`, `0`, `off` or `disabled`. */
   NEXT_PUBLIC_CLASS_TRANSFER?: string;
+  /** [OA] Use a passkey on the grown-up lock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): on unless `false`, `0`, `off` or `disabled`. */
+  NEXT_PUBLIC_LOCK_PASSKEY?: string;
+  /** [OA] The sign-in PIN reset page (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): off unless `true`, `1`, `on`, `yes` or `enabled`. */
+  NEXT_PUBLIC_PIN_RESET_SIGNIN?: string;
   NODE_ENV?: string;
 }
 
@@ -45,6 +49,8 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_REPORTS_ENABLED: process.env.NEXT_PUBLIC_REPORTS_ENABLED,
     NEXT_PUBLIC_BROWSE: process.env.NEXT_PUBLIC_BROWSE,
     NEXT_PUBLIC_CLASS_TRANSFER: process.env.NEXT_PUBLIC_CLASS_TRANSFER,
+    NEXT_PUBLIC_LOCK_PASSKEY: process.env.NEXT_PUBLIC_LOCK_PASSKEY,
+    NEXT_PUBLIC_PIN_RESET_SIGNIN: process.env.NEXT_PUBLIC_PIN_RESET_SIGNIN,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -192,6 +198,34 @@ export function browseEntryShown(origin: string, env: ConsoleEnv = buildEnv()): 
 export function classTransferEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const value = env.NEXT_PUBLIC_CLASS_TRANSFER?.trim().toLowerCase();
   return !(value === 'false' || value === '0' || value === 'off' || value === 'disabled');
+}
+
+/**
+ * [OA] Use a passkey on the grown-up lock (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 7.4 and 16): on by default; exactly
+ * `false`, `0`, `off` or `disabled` (case and spaces ignored) hides the button on a build. Only the button: the
+ * passkey rule for a sign-in on a `pin` browser and every other part of row OA-3 are always on.
+ */
+export function lockPasskeyEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const value = env.NEXT_PUBLIC_LOCK_PASSKEY?.trim().toLowerCase();
+  return !(value === 'false' || value === '0' || value === 'off' || value === 'disabled');
+}
+
+/** [OA] The sign-in PIN reset when the build sets no value: off when row OA-6 lands; OA-10 turns it on (section 16). */
+const PIN_RESET_SIGNIN_LAUNCH_DEFAULT = false;
+
+/**
+ * [OA] Reset the grown-up PIN by signing in (AMENDMENTS-ONE-ACCOUNT-MANY-USERS sections 8.5 and 16, row OA-6), the
+ * console twin of the learner app's `EXPO_PUBLIC_PIN_RESET_SIGNIN`: `/account/pin-reset` checks and hands off only with
+ * it on. `true`, `1`, `on`, `yes` or `enabled` turns it on and `false`, `0`, `off`, `no` or `disabled` off (case and
+ * spaces ignored; the same words as the learner app's twin, so one value set on both turns both on); anything else, or
+ * none, is the launch default, off. Off, the page answers `console.pinReset.unavailable`
+ * and writes nothing.
+ */
+export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const value = env.NEXT_PUBLIC_PIN_RESET_SIGNIN?.trim().toLowerCase();
+  if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
+  if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
+  return PIN_RESET_SIGNIN_LAUNCH_DEFAULT;
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

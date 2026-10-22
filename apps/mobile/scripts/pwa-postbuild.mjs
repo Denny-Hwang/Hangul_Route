@@ -19,7 +19,7 @@
 // Story chunks (CM-8): every story's body is its own chunk of scripts/build-stories.mjs, under the same checks and
 // in the same report.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -167,7 +167,11 @@ const precache = {
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
-  maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+  // 10 MiB (was 8 MiB, [OA] row OA-7a): the AMENDMENTS-ONE-ACCOUNT-MANY-USERS rows grow the app bundle to 8,379,807 B
+  // at OA-5 (8.8 KB under 8 MiB) and 8,400,304 B with People on this device, which would leave it out of the precache
+  // and the post-build below fails on that. The limit is not a size budget; the bundle size is watched where it is
+  // measured (F-CURR-001 section 3.12, the amendment's section 16).
+  maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
 };
 
 const { count, size, warnings } = await generateSW({
@@ -214,6 +218,15 @@ const unprecachedJs = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url))
   : [];
 if (unprecachedJs.length > 0) throw new Error(`pwa-postbuild: app bundles missing from the precache (over maximumFileSizeToCacheInBytes?): ${unprecachedJs.join(', ')}`);
+// [OA] Row OA-7a review: a warning well before the limit, so the growth is seen before an offline start is at risk.
+if (existsSync(jsDir)) {
+  for (const f of readdirSync(jsDir).filter((name) => name.endsWith('.js'))) {
+    const bytes = statSync(join(jsDir, f)).size;
+    if (bytes > 0.9 * precache.maximumFileSizeToCacheInBytes) {
+      process.stdout.write(`pwa-postbuild: warning: ${f} is ${bytes} B, over 90 % of the ${precache.maximumFileSizeToCacheInBytes} B precache limit\n`);
+    }
+  }
+}
 
 // The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
 // build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline fixtures, never chunks).

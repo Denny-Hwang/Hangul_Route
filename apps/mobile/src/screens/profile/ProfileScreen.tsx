@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { LockBadge } from '../../components/LockBadge';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { placementEntriesOn } from '../../logic/placement/entry';
@@ -29,18 +30,19 @@ import { profileRowOpens } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
-import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { installGuideVariant } from '../../logic/pwa/install-guide';
 import { installEnv } from '../../platform/pwa';
 import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
+import { useLocks } from '../../store/profile-locks';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { useProgressStore } from '../../store/progress-store';
 import { useLocaleStore } from '../../store/locale-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
-import { useUiStore } from '../../store/ui-store';
+import { passGate, trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
 import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
@@ -65,6 +67,8 @@ export function ProfileScreen(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const active = useProfileStore(activeProfileSelector);
   const setActive = useProfileStore((s) => s.setActive);
+  // [OA] Row OA-5: locks are enforced on these tiles whatever the chooser flag says (fail safe, section 16).
+  const locks = useLocks(profiles);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
@@ -83,7 +87,6 @@ export function ProfileScreen(): React.ReactElement {
   const displayLine = t.display.line(LOCALE_META[locale].endonym, m.common.display.size[textSize]);
   // For grown-ups starts collapsed (owner request 2026-10-16, item 8).
   const [grownUpsOpen, setGrownUpsOpen] = useState(false);
-  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
   const { copy, pinSet, opensDirectly, audience } = useAudience();
@@ -92,19 +95,18 @@ export function ProfileScreen(): React.ReactElement {
   const textScale = useTypeScale();
   const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
-  // A verified grown-up may add another child without re-entering the PIN
-  // inside the 15-minute session window (F-PROF-001 §3.2). A self-only device
-  // that never set a PIN has no gate to pass (F-LEARN-001 L7), so a learner
-  // is not made to invent a PIN just to reach their own settings.
-  const parentSessionOpen = isParentSessionValid(
-    parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
-    Date.now(),
-  );
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-1, OA-D5b: Profile is a learner screen, so an open grown-up session is
+  // never honoured here (before OA-2 the 15-minute session let a grown-up add another learner without the PIN,
+  // F-PROF-001 section 3.2). Only a self-only device that never set a PIN has no gate to pass (F-LEARN-001 L7), so a
+  // learner is not made to invent a PIN just to reach their own settings.
+  const opensHere = opensDirectly(false);
   const openGrownUps = (
     next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'EditProfile',
     profileId?: string,
   ): void => {
-    if (opensDirectly(parentSessionOpen)) {
+    if (opensHere) {
+      // [OA] Section 15: a gate that a device without a gate opened directly.
+      trackGateOpened(next, 'open');
       if (next === 'EditProfile') {
         if (profileId !== undefined) navigation.navigate('EditProfile', { profileId });
       } else if (next === 'AddProfile') {
@@ -134,11 +136,21 @@ export function ProfileScreen(): React.ReactElement {
       <Heading level="title">{t.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.profileSwitchHint}</Body>
+      {locks.unread ? (
+        // [OA] Section 13.2: the locks could not be read, so every tile is locked; one line says it for all of them.
+        <>
+          <Spacer size="xs" />
+          <Body tone="secondary" testID="profile-locks-unread">
+            {m.learner.who.locksUnread}
+          </Body>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {profiles.map((p) => {
           const isActive = p.id === active?.id;
+          const locked = locks.locked.has(p.id);
           const level = levelWords(m, p.ageGroup)?.label ?? null;
           return (
             <View
@@ -152,14 +164,37 @@ export function ProfileScreen(): React.ReactElement {
               }}
             >
               <Pressable
-                onPress={() => setActive(p.id)}
+                testID={`profile-tile-${p.id}`}
+                onPress={() => {
+                  // [OA] Row OA-5, section 6.3: a locked learner opens only with the grown-up PIN, and the unlock opens
+                  // that learner only, never a grown-up session (CS-3). The active learner's own tile switches nothing.
+                  if (locked && !isActive) {
+                    navigation.navigate('PinEntry', { next: 'LockedProfile', profileId: p.id, lockedFrom: { via: 'profile' } });
+                    return;
+                  }
+                  // [OA] G1 baseline (section 15): a switch from the Profile tiles; the same tile again is no switch.
+                  if (p.id !== active?.id) trackProfileSwitch('profile', false);
+                  // setActive closes any grown-up session on a change of learner (OA-D5b, CS-15).
+                  setActive(p.id);
+                }}
                 accessibilityRole="button"
-                accessibilityLabel={t.switchTo(p.displayName)}
+                // The active learner's own tile asks nothing, so only another locked tile is named as one the PIN opens.
+                accessibilityLabel={locked && !isActive ? m.a11y.who.lockedTile(p.displayName) : t.switchTo(p.displayName)}
                 style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
               >
                 <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
+                {locked ? (
+                  <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }}>
+                    <LockBadge testID={`profile-tile-lock-${p.id}`} />
+                  </View>
+                ) : null}
                 <Spacer size="xs" />
                 <Body weight="semibold">{p.displayName}</Body>
+                {locked && !locks.unread ? (
+                  <Caption tone="secondary" align="center">
+                    {m.learner.who.lockedCaption}
+                  </Caption>
+                ) : null}
                 {level ? <Caption tone="muted">{level}</Caption> : null}
                 {isActive ? <Pill label={t.playingNow} tone="primary" size="sm" /> : null}
               </Pressable>
@@ -178,6 +213,27 @@ export function ProfileScreen(): React.ReactElement {
           );
         })}
       </View>
+
+      {switchOffered(learnerProfiles(profiles).length) ? (
+        <>
+          {/* [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): the chooser; the tiles above stay a second way to switch. */}
+          <Spacer size="lg" />
+          <Card padding="md">
+            <Pressable
+              testID="profile-who-row"
+              onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
+              accessibilityRole="button"
+              accessibilityLabel={m.learner.who.profileRow}
+              style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+            >
+              <Body weight="semibold" style={{ flex: 1 }}>
+                {m.learner.who.profileRow}
+              </Body>
+              <Icon name="arrow-right" size={24} color={colors.text.muted} />
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Button
@@ -322,7 +378,10 @@ export function ProfileScreen(): React.ReactElement {
               <Pressable
                 testID="profile-plan-row"
                 onPress={() => {
-                  if (profileRowOpens({ learnerType: effectiveLearnerType(active), opensDirectly: opensDirectly(parentSessionOpen) }) === 'proposal') {
+                  const learnerType = effectiveLearnerType(active);
+                  if (profileRowOpens({ learnerType, opensDirectly: opensHere }) === 'proposal') {
+                    // A self profile's own plan is no gate; a child's plan on a device without a gate is one.
+                    if (learnerType !== 'self') passGate('RouteProposal', true);
                     navigation.navigate('RouteProposal', { source: 'profile', profileId: active.id });
                   } else {
                     navigation.navigate('PinEntry', { next: 'RouteProposal', profileId: active.id });

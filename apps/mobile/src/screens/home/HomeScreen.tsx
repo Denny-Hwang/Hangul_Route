@@ -18,6 +18,7 @@ import {
   colors,
   spacing,
   touchTarget,
+  useEffectiveFontScale,
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
@@ -94,9 +95,12 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
+import { passGate } from '../../store/gate-telemetry';
 import { PictureArt } from '../minigames/PictureArt';
 import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
 import { DisplayButton } from '../../components/DisplayButton';
+import { WhoSwitchButton } from '../../components/WhoSwitchButton';
+import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
@@ -108,9 +112,13 @@ import { RouteStrip } from './RouteStrip';
 import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
+import { PinResetExpiredNotice } from '../parent/PinResetExpiredNotice';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
+/** [OA] The greeting's narrowest width once the header trail holds Switch (design/screens/profiles/README.md D7): 8rem. */
+const GREETING_MIN_REM = 8;
+const REM = 16;
 /** Hoya beside the greeting at scale 1 (phones); x1.2 on regular, x1.4 on wide (F-LAYOUT-001 §3.6). */
 const HOYA_SIZE = 72;
 /** Two columns: missions left (flex 3), progress / homework / tip right (flex 2), wireframe layout/wide B. */
@@ -359,6 +367,9 @@ export function HomeScreen(): React.ReactElement {
   const titles = useLessonTitlesVersion();
   const { copy, audience } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
+  // [OA] With the Switch button the trail is three controls: it wraps under the greeting, which keeps 8rem (OA-0b D7).
+  const switchShown = switchOffered(learnerProfiles(useProfileStore((s) => s.profiles)).length);
+  const greetingMin = GREETING_MIN_REM * REM * useEffectiveFontScale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
   // The Display (Aa) sheet (AMENDMENTS-DISPLAY-NAV section 3.6): not behind the grown-up gate.
@@ -597,7 +608,7 @@ export function HomeScreen(): React.ReactElement {
   const ask = askFor(audience, isClassOnly(memberships ?? []), m.learner.access);
   const onAsk = (): void => {
     void track(helpAskedEvent(profile?.id, 'home', ask.audience));
-    const gate = askGate(gateOpensDirectlyNow(), 'home');
+    const gate = askGate(passGate('Paywall', gateOpensDirectlyNow()), 'home');
     if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
     else navigation.navigate('PinEntry', gate.params);
   };
@@ -628,6 +639,7 @@ export function HomeScreen(): React.ReactElement {
   const openLocked = (card: MissionCard): boolean => {
     const lock = homeCardLock({ card, entries: storyIndex, isQuestOpen: questOpen, isStoryLocked, opensDirectly: gateOpensDirectlyNow() });
     if (!lock) return false;
+    if (lock.gate.route === 'Paywall') passGate('Paywall', true);
     if (lock.storyId) void track({ name: 'story.locked.tapped', profileId: profile?.id, payload: { storyId: lock.storyId } });
     if (lock.gate.route === 'Paywall') navigation.navigate('Paywall', lock.gate.params);
     else navigation.navigate('PinEntry', lock.gate.params);
@@ -894,15 +906,21 @@ export function HomeScreen(): React.ReactElement {
   return (
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+      {/* [OA] A refused sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): once, over the start. */}
+      <PinResetExpiredNotice />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: switchShown ? 'wrap' : 'nowrap' }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, ...(switchShown ? { minWidth: greetingMin } : {}) }}>
           <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
           <Body tone="secondary">{m.learner.home.subtitle}</Body>
         </View>
+        {/* The trail: one group, so it wraps as a whole under the greeting (right-aligned) when the row is narrow. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginLeft: 'auto' }}>
         {/* The Aa button (AMENDMENTS-DISPLAY-NAV section 3.6): the device's language and text size, beside Profile. */}
         <DisplayButton onPress={() => setDisplayOpen(true)} testID="home-display" />
+        {/* [OA] Switch (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a): opens "Who is using this?"; nothing while its flag is off. */}
+        <WhoSwitchButton onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })} />
         {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
             colour its avatar name says (not the Pillar theme), with a visible
             label — the only way to profiles, backup, classes and the grown-up zone. */}
@@ -918,6 +936,7 @@ export function HomeScreen(): React.ReactElement {
             {m.learner.home.profileLabel}
           </Caption>
         </Pressable>
+        </View>
       </View>
 
       <Spacer size="lg" />

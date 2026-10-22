@@ -101,13 +101,11 @@ Suggestions are produced by a small rules table:
   **when** the new message is saved,
   **then** the new one replaces the old (queue depth = 1, prevents stacking).
 
-### 3.5 Linked learners only
+### 3.5 Every learner on the device ([OA] row OA-7a)
 
-- **Given** the parent profile is active,
-  **when** the dashboard builds,
-  **then** only learner profiles created **on this device** by **this parent profile** appear. Phase 1 has no cross-device link (no Clerk yet).
-- A learner without a linked parent (e.g. a teacher-created profile, Phase 2) does **not** render on this dashboard.
-- **Phase 2 note**: once F-SYNC-001 / F-SPACE-001 land (roadmap `multi-persona-sync-platform.md` §1), "linked" means *membership in this parent's family space*, so a learner who is also in a class shows here with the same `summary_json` the teacher sees. A class average is a teacher-roster number only (F-TCH-001 §3.2) and must never reach the shared read-only `parent/learner-detail` component.
+- **[OA]** AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.1 (standing rule: parents and teachers see all learner info) replaces "linked by this parent profile": **given** the Grown-up area is open, **when** the dashboard builds, **then** **every** learner profile on this device appears, whoever created it. There is no parent device profile (OA-D2).
+- With `EXPO_PUBLIC_WHO_CHOOSER` on, the dashboard opens with **People on this device**: one row per learner (cub, name, the lock glyph for a locked profile), each opening that person's page with **Lock with the grown-up PIN**, Edit profile, the report and **Remove from this device** (F-PROF-001 §3.6).
+- **Phase 2 note**: once F-SYNC-001 / F-SPACE-001 land (roadmap `multi-persona-sync-platform.md` §1), a learner who is also in a class shows here with the same `summary_json` the teacher sees. A class average is a teacher-roster number only (F-TCH-001 §3.2) and must never reach the shared read-only `parent/learner-detail` component.
 
 ### 3.6 Anti-shame contract — extends to caregivers
 

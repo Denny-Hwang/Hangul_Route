@@ -4,9 +4,11 @@ import React from 'react';
 import { TextInput } from 'react-native';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { flags } from '../../../config/flags';
 import { useAccountStore } from '../../../store/account-store';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useMembershipStore } from '../../../store/membership-store';
+import { resetProfileLocks, useProfileLocks } from '../../../store/profile-locks';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
 import { buttonsNamed, byTestId, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
@@ -27,6 +29,20 @@ vi.mock('../../../platform/dialog', () => ({
   },
 }));
 
+// [OA] Row OA-5: the lock write is the store's (tested in store/__tests__/profile-locks.test.ts); here it is watched.
+const lockWrites = vi.hoisted(() => ({ calls: [] as [string, boolean][], ok: true }));
+vi.mock('../../../store/profile-locks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../store/profile-locks')>();
+  return {
+    ...actual,
+    setProfileLocked: vi.fn(async (id: string, locked: boolean) => {
+      lockWrites.calls.push([id, locked]);
+      if (lockWrites.ok) actual.useProfileLocks.setState({ read: locked ? [id] : [] });
+      return lockWrites.ok;
+    }),
+  };
+});
+
 /**
  * F-LEARN-001 section 3.11: Edit profile on a class device (a class re-link, `device-scope` 'class'), where the
  * server refuses name, level and cub edits. The three rows are disabled, the class-device line shows, the "teacher's
@@ -36,7 +52,18 @@ vi.mock('../../../platform/dialog', () => ({
 
 const e = getMessages('en').learner.editProfile;
 const LEARNER_ID = 'profile:test';
-const navigation = { navigate: vi.fn(), goBack: vi.fn() };
+const focusListeners: (() => void)[] = [];
+const navigation = {
+  navigate: vi.fn(),
+  goBack: vi.fn(),
+  addListener: (type: string, listener: () => void) => {
+    if (type === 'focus') focusListeners.push(listener);
+    return () => {
+      const at = focusListeners.indexOf(listener);
+      if (at >= 0) focusListeners.splice(at, 1);
+    };
+  },
+};
 const realDeviceScope = useMembershipStore.getState().deviceScope;
 const realHydrate = useMembershipStore.getState().hydrate;
 
@@ -208,6 +235,105 @@ describe('EditProfileScreen: a back with changes not saved yet asks first (AMEND
     expect(nav.goBack).toHaveBeenCalledTimes(1);
     // The back Leave sends goes through.
     expect(nav.back()).toBe(false);
+    await unmount(renderer);
+  });
+});
+
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-5 (OA-D5b (3), sections 8.2, 8.4, 16; CS-4): the Edit profile lock
+ * switch. It acts at once, needs a PIN entered in the last 2 minutes (else it asks the PIN again and applies the change
+ * when that PIN is right), is disabled with "Set a grown-up PIN first." without a PIN, and is hidden with the chooser
+ * flag off.
+ */
+describe('[OA] EditProfileScreen lock switch (row OA-5)', () => {
+  const people = getMessages('en').caregiver.people;
+  const pinM = getMessages('en').caregiver.pin;
+  // The React Native Switch itself (its props), not the host element react-native-web draws for it.
+  const lockSwitch = (root: ReactTestInstance): ReactTestInstance | undefined =>
+    root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'edit-lock-switch' && typeof n.props.onValueChange === 'function')[0];
+  const isDisabled = (node: ReactTestInstance): boolean => node.props.disabled === true || node.props['aria-disabled'] === true;
+
+  beforeEach(() => {
+    lockWrites.calls = [];
+    lockWrites.ok = true;
+    resetProfileLocks();
+    flags.whoChooserEnabled = true;
+    seed(async () => 'full');
+    useAccountStore.setState({ parentPinHash: 'h:1234' });
+  });
+
+  afterEach(() => {
+    flags.whoChooserEnabled = false;
+  });
+
+  it('is hidden while the chooser flag is off (the locks stay enforced elsewhere)', async () => {
+    flags.whoChooserEnabled = false;
+    const renderer = await render(screen());
+    expect(lockSwitch(renderer.root)).toBeUndefined();
+    expect(byTestId(renderer.root, 'edit-lock-switch')).toHaveLength(0);
+    await unmount(renderer);
+  });
+
+  it('without a PIN it is disabled with "Set a grown-up PIN first." (CS-4)', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const renderer = await render(screen());
+    const node = lockSwitch(renderer.root)!;
+    expect(isDisabled(node)).toBe(true);
+    expect(screenTexts(byTestId(renderer.root, 'edit-lock-hint')[0]!)).toEqual([pinM.needsPinFirst]);
+    await act(async () => node.props.onValueChange(true));
+    expect(lockWrites.calls).toEqual([]);
+    expect(navigation.navigate).not.toHaveBeenCalled();
+    await unmount(renderer);
+  });
+
+  it('a PIN entered in the last 2 minutes: the lock applies at once, with the label and hint', async () => {
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() - 30_000 });
+    const renderer = await render(screen());
+    expect(screenTexts(renderer.root)).toEqual(expect.arrayContaining([people.lock, people.lockHint]));
+    await act(async () => lockSwitch(renderer.root)!.props.onValueChange(true));
+    expect(lockWrites.calls).toEqual([[LEARNER_ID, true]]);
+    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(lockSwitch(renderer.root)!.props.value).toBe(true);
+    await unmount(renderer);
+  });
+
+  it('an older PIN (only the 15-minute session open): it asks the PIN again first, then applies the change', async () => {
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 60_000, lastPinVerifiedAt: Date.now() - 3 * 60_000 });
+    useProfileLocks.setState({ read: [LEARNER_ID] });
+    const renderer = await render(screen());
+    expect(lockSwitch(renderer.root)!.props.value).toBe(true);
+    await act(async () => lockSwitch(renderer.root)!.props.onValueChange(false));
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(lockWrites.calls).toEqual([]);
+    // The PIN screen accepted the PIN (it marks a fresh PIN and goes back): the unlock applies now, once.
+    await act(async () => useUiStore.getState().markPinVerified());
+    expect(lockWrites.calls).toEqual([[LEARNER_ID, false]]);
+    expect(lockSwitch(renderer.root)!.props.value).toBe(false);
+    await unmount(renderer);
+  });
+
+  it('no PIN at all entered yet: it asks first; a cancelled PIN changes nothing', async () => {
+    useUiStore.setState({ lastPinVerifiedAt: null });
+    const renderer = await render(screen());
+    await act(async () => lockSwitch(renderer.root)!.props.onValueChange(true));
+    expect(navigation.navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(lockWrites.calls).toEqual([]);
+    expect(lockSwitch(renderer.root)!.props.value).toBe(false);
+    // Back on this screen without a right PIN: the change is dropped, so a later PIN for something else applies nothing.
+    await act(async () => focusListeners.forEach((l) => l()));
+    await act(async () => useUiStore.getState().markPinVerified());
+    expect(lockWrites.calls).toEqual([]);
+    expect(lockSwitch(renderer.root)!.props.value).toBe(false);
+    await unmount(renderer);
+  });
+
+  it('a write that fails leaves the switch as it was and says so calmly', async () => {
+    lockWrites.ok = false;
+    useUiStore.setState({ lastPinVerifiedAt: Date.now() });
+    const renderer = await render(screen());
+    await act(async () => lockSwitch(renderer.root)!.props.onValueChange(true));
+    expect(lockSwitch(renderer.root)!.props.value).toBe(false);
+    expect(screenTexts(byTestId(renderer.root, 'edit-lock-failed')[0]!)).toEqual([e.saveFailed]);
     await unmount(renderer);
   });
 });

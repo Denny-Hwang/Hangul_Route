@@ -23,10 +23,11 @@ import { summarize } from '../logic/sync/summarize';
 import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
-import { readJson, readJsonStrict, writeJson } from '../platform/storage';
+import { readJson, readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
 import { usePlanStore } from './plan-store';
 import { onProfileEdited } from './profile-edits';
+import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { questOpenFor } from './tier-store';
@@ -89,6 +90,22 @@ interface Actions {
   applyInboxLearner: (learnerId: string, learner: InboxLearnerRow) => Promise<void>;
   /** Take over a learner the server handed us (rescue claim, re-link approval): profile, snapshot, credentials. */
   adoptServerLearner: (input: AdoptInput) => Promise<RestorePlan>;
+  /**
+   * [OA] Row OA-7a (section 10.4, CS-20): the learner was removed from this device. Its record (device secret, Rescue
+   * Code, queued edit) is deleted, a queued run is dropped, and nothing more is written for it, even by a run already
+   * in flight, until a restore adopts it again (`adoptCredentials`, `adoptServerLearner`). No server call is made.
+   */
+  forgetLearner: (learnerId: string) => void;
+  /**
+   * [OA] Row OA-7a (section 10.4): whether a push for the learner is running, due to run again or queued, so a
+   * write may not be on the server yet (the saved check reads it as not saved).
+   */
+  syncBusy: (learnerId: string) => boolean;
+  /**
+   * [OA] Row OA-7a (section 10.4): pushes the learner now, a queued run included, and waits for a run that follows
+   * (a merge queues one); at most three runs. Answers the record after the last one.
+   */
+  flushLearner: (learnerId: string) => Promise<LearnerSyncState>;
 }
 
 export interface AdoptInput {
@@ -98,7 +115,12 @@ export interface AdoptInput {
   rescueCode?: string | null;
 }
 
-const key = (learnerId: string): string => `sync:${learnerId}`;
+/** The per-learner sync record (`hr:sync:<id>`); exported for the removal sweep (row OA-7a). */
+export const SYNC_KEY = (learnerId: string): string => `sync:${learnerId}`;
+const key = SYNC_KEY;
+
+/** [OA] Learners removed from this device in this session (row OA-7a): nothing is written for them until a restore. */
+const removedHere = new Set<string>();
 
 function blank(learnerId: string): LearnerSyncState {
   return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null, pendingProfile: null, profileAt: null };
@@ -190,6 +212,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
   const update = (learnerId: string, patch: Partial<LearnerSyncState>): LearnerSyncState => {
     const current = get().byLearner[learnerId] ?? blank(learnerId);
     const next = { ...current, ...patch };
+    // [OA] A run that was in flight when the learner was removed writes nothing back (CS-20).
+    if (removedHere.has(learnerId)) return next;
     set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: next } }));
     void writeJson(key(learnerId), persistable(next));
     return next;
@@ -388,6 +412,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     update(learnerId, { status: 'syncing' });
     const registered = await ensureRegistered(profile, state, client);
+    // [OA] Row OA-7a (CS-12, CS-20): a learner removed while this run waited goes no further: no push, no code.
+    if (removedHere.has(learnerId)) return state;
     if (!registered?.secret) return get().byLearner[learnerId] ?? state;
     const creds = { deviceId: await getDeviceId(), secret: registered.secret };
     let profileError: string | null = null;
@@ -409,6 +435,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       api: { putSnapshot: (id, body) => client.putSnapshot(id, body, creds) },
     });
 
+    if (removedHere.has(learnerId)) return state;
     if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
     if (outcome.status === 'retry-later') {
       applyServerSnapshot(learnerId, local, outcome.snapshot);
@@ -418,7 +445,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
     const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: profileError });
     // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
-    if (!synced.rescueCode) await get().issueRescueCode(learnerId);
+    if (!synced.rescueCode && !removedHere.has(learnerId)) await get().issueRescueCode(learnerId);
+    if (removedHere.has(learnerId)) return state;
     for (const listener of syncedListeners) listener(learnerId);
     return get().byLearner[learnerId] ?? synced;
   }
@@ -483,13 +511,16 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     },
 
     adoptCredentials: (learnerId, secret, rev) => {
+      removedHere.delete(learnerId);
       update(learnerId, { secret, rev, status: 'idle', lastError: null });
     },
 
     issueRescueCode: async (learnerId) => {
       const client = api();
+      // [OA] Row OA-7a: never for a learner removed from this device (its record is gone; CS-12).
+      if (removedHere.has(learnerId)) return null;
       const state = await get().hydrate(learnerId);
-      if (!client || !state.secret) return null;
+      if (!client || !state.secret || removedHere.has(learnerId)) return null;
       const result = await client.issueRescueCode(learnerId, { deviceId: await getDeviceId(), secret: state.secret });
       if (result.status !== 'ok') {
         update(learnerId, { lastError: result.code });
@@ -511,6 +542,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     adoptServerLearner: async ({ learner, secret, snapshot: server, rescueCode }) => {
       const learnerId = learner.id;
+      // [OA] A learner removed earlier in this session comes back through its Rescue Code (section 10.4).
+      removedHere.delete(learnerId);
       // Let a running sync finish first: its fold would read the restored copy as a local write.
       await inflight.get(learnerId);
       // Loaded first: `update` below would otherwise start from a blank record and lose a queued edit.
@@ -552,8 +585,41 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       get().requestSync(learnerId);
       return plan;
     },
+
+    forgetLearner: (learnerId) => {
+      removedHere.add(learnerId);
+      scheduler.cancel(learnerId);
+      rerun.delete(learnerId);
+      editCounts.delete(learnerId);
+      set((s) => {
+        const { [learnerId]: _gone, ...rest } = s.byLearner;
+        return { byLearner: rest };
+      });
+      removeKey(key(learnerId)).catch(() => undefined);
+    },
+
+    syncBusy: (learnerId) => inflight.has(learnerId) || rerun.has(learnerId) || scheduler.has(learnerId),
+
+    flushLearner: async (learnerId) => {
+      scheduler.cancel(learnerId);
+      let state = await get().syncNow(learnerId);
+      for (let run = 1; run < 3; run += 1) {
+        const running = inflight.get(learnerId);
+        if (running) {
+          state = await running;
+          continue;
+        }
+        if (!scheduler.has(learnerId)) break;
+        scheduler.cancel(learnerId);
+        state = await get().syncNow(learnerId);
+      }
+      return state;
+    },
   };
 });
+
+// [OA] Row OA-7a: a removed learner leaves no sync record (device secret, Rescue Code, queued edit) behind (CS-20).
+onProfileRemoved((learnerId) => useSyncStore.getState().forgetLearner(learnerId));
 
 // Every learner name, level or avatar edit on this device is queued for the server (F-PROF-001).
 onProfileEdited((learnerId, fields) => {

@@ -1,6 +1,7 @@
 import { parseJoinLink, safeNextPath } from '@hangul-route/content-schema';
 import { afterGateHandoff } from '../browse/gate-entry';
 import { grownUpPinParams } from './handoff-rules';
+import { PIN_RESET_SETUP_PARAMS, type PinResetOutcome } from './pin-reset-ticket';
 
 /**
  * Boot intents of the learner app (F-APP-001 sections 3.9 and 3.11). Pure: the root reads the
@@ -18,6 +19,10 @@ import { grownUpPinParams } from './handoff-rules';
  * `gate=browse` (F-BROWSE-001 section 4.3, BR-12b) is the All lessons Access screen's "Back to the
  * grown-up area": the PIN screen for All lessons (`PinEntry { next: 'BrowseLessons' }`), then a fresh
  * gate pass. Only `gate` leaves the address; every other key stays, `lang` included.
+ *
+ * [OA] `gate=pin-reset` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5, row OA-6) is the console's
+ * `/account/pin-reset` after a fresh sign-in by the PIN owner: the ticket it wrote decides (`pin-reset-ticket.ts`), so
+ * the intent itself carries nothing. Only `gate` leaves the address; every other key stays, `lang` included.
  */
 export interface GrownUpBootIntent {
   kind: 'grown-up';
@@ -39,7 +44,21 @@ export interface JoinBootIntent {
   code: string | null;
 }
 
-export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent;
+/**
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2, OA-D12 (row OA-4a): `who=1`, the console's Learner app exit and
+ * Open the app on this device without a code. It opens "Who is using this?" (`return`) on a device with a profile.
+ * It leaves the address like `gate=`; it is ignored while the chooser flag is off, so the console can add it first.
+ */
+export interface WhoBootIntent {
+  kind: 'who';
+}
+
+/** [OA] Section 8.5 step 5: the sign-in reset's hand-off; the ticket in `sessionStorage` holds the rest. */
+export interface PinResetBootIntent {
+  kind: 'pin-reset';
+}
+
+export type BootIntent = GrownUpBootIntent | BrowseBootIntent | JoinBootIntent | WhoBootIntent | PinResetBootIntent;
 
 export interface ParsedBootIntent {
   intent: BootIntent | null;
@@ -53,6 +72,9 @@ const GATE = 'gate';
 const NEXT = 'next';
 const GROWN_UP_GATE = 'grown-up';
 const BROWSE_GATE = 'browse';
+const WHO = 'who';
+const WHO_RETURN = '1';
+const PIN_RESET_GATE = 'pin-reset';
 
 const queryOf = (params: URLSearchParams): string => {
   const rest = params.toString();
@@ -67,30 +89,44 @@ const queryOf = (params: URLSearchParams): string => {
 export function parseJoinBootIntent(location: { pathname: string; search: string; hash: string }): { intent: JoinBootIntent; address: string } | null {
   const link = parseJoinLink(location);
   if (link === null) return null;
-  return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
+  // [OA] OA-D20: a join wins over `who=1`, which leaves the address too, so a reload does not open the chooser again.
+  const params = new URLSearchParams(location.search);
+  if (params.get(WHO) !== WHO_RETURN) return { intent: { kind: 'join', code: link.code }, address: `/${location.search}` };
+  params.delete(WHO);
+  return { intent: { kind: 'join', code: link.code }, address: `/${queryOf(params)}` };
 }
 
 export function parseBootIntent(search: string): ParsedBootIntent {
   const params = new URLSearchParams(search);
+  // [OA] `who=1` leaves the address whatever else is there; a `gate=` intent beside it wins (it ends on a PIN screen,
+  // CS-5). Any other `who` value is not an intent and stays where it was.
+  const who = params.get(WHO) === WHO_RETURN;
+  if (who) params.delete(WHO);
+  const whoOnly = (): ParsedBootIntent =>
+    who ? { intent: { kind: 'who' }, search: queryOf(params), changed: true } : { intent: null, search, changed: false };
   const gate = params.get(GATE);
   if (gate === BROWSE_GATE) {
     params.delete(GATE);
     return { intent: { kind: 'browse' }, search: queryOf(params), changed: true };
   }
-  if (gate !== GROWN_UP_GATE) return { intent: null, search, changed: false };
+  if (gate === PIN_RESET_GATE) {
+    params.delete(GATE);
+    return { intent: { kind: 'pin-reset' }, search: queryOf(params), changed: true };
+  }
+  if (gate !== GROWN_UP_GATE) return whoOnly();
   const next = safeNextPath(params.get(NEXT));
   params.delete(GATE);
   params.delete(NEXT);
   return {
-    intent: next === null ? null : { kind: 'grown-up', next },
+    intent: next === null ? (who ? { kind: 'who' } : null) : { kind: 'grown-up', next },
     search: queryOf(params),
     changed: true,
   };
 }
 
 /** What `openBootIntentWhenReady` needs of the navigation container (a subset of its ref). */
-/** The PIN screen params a boot intent opens: the grown-up area's, or All lessons' (BR-12b). */
-export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'BrowseLessons' };
+/** The PIN screen params a boot intent opens: the grown-up area's, All lessons' (BR-12b), or [OA] the new PIN's. */
+export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'BrowseLessons' } | typeof PIN_RESET_SETUP_PARAMS;
 
 /**
  * Where the join link opens: Join a class on a device with a profile, else Welcome with the link's code shown, where
@@ -98,14 +134,17 @@ export type BootPinParams = ReturnType<typeof grownUpPinParams> | { next: 'Brows
  */
 export type JoinIntentTarget =
   | { screen: 'JoinSpace'; params: { code?: string } }
-  | { screen: 'Onboarding'; params: { screen: 'Welcome'; params: { classLink: true; code?: string } } };
+  | { screen: 'Onboarding'; params: { screen: 'Welcome'; params: { classLink: true; code?: string } } }
+  /** [OA] OA-D20: a shared device asks who is joining first; `hold` is the code to keep in memory (never in the address or the route). */
+  | { screen: 'WhoIsUsing'; params: { trigger: 'join' }; hold: { code: string | null } };
 
 export interface BootIntentNavigator {
   isReady: () => boolean;
   navigate: ((screen: 'PinEntry', params: BootPinParams) => void) &
     ((screen: 'ParentDashboard', params: { browseBlocked: true }) => void) &
     ((screen: 'JoinSpace', params: Extract<JoinIntentTarget, { screen: 'JoinSpace' }>['params']) => void) &
-    ((screen: 'Onboarding', params: Extract<JoinIntentTarget, { screen: 'Onboarding' }>['params']) => void);
+    ((screen: 'Onboarding', params: Extract<JoinIntentTarget, { screen: 'Onboarding' }>['params']) => void) &
+    ((screen: 'WhoIsUsing', params: { trigger: 'join' | 'return' }) => void);
   addListener: (event: 'state', listener: () => void) => () => void;
 }
 
@@ -115,8 +154,10 @@ export interface BootIntentNavigator {
  * not the installed home-screen app's or the native app's, so a learner who already plays there lands here with "no
  * profile". Welcome shows the code to type in that app and keeps "I already have progress" next to Start.
  */
-export function joinIntentTarget(intent: JoinBootIntent, hasProfile: boolean): JoinIntentTarget {
+export function joinIntentTarget(intent: JoinBootIntent, hasProfile: boolean, shared: boolean = false): JoinIntentTarget {
   const code = intent.code === null ? {} : { code: intent.code };
+  // [OA] OA-D20: on a shared device (the chooser flag on) the code is held and the chooser asks who is joining.
+  if (hasProfile && shared) return { screen: 'WhoIsUsing', params: { trigger: 'join' }, hold: { code: intent.code } };
   if (hasProfile) return { screen: 'JoinSpace', params: code };
   return { screen: 'Onboarding', params: { screen: 'Welcome', params: { classLink: true, ...code } } };
 }
@@ -130,6 +171,24 @@ export interface BootIntentSource {
 export interface JoinIntentHandoff {
   /** Whether a learner profile exists on this device (the profile store, hydrated before the navigator mounts). */
   hasProfile: () => boolean;
+  /** [OA] Whether the device is shared with the chooser flag on (OA-D20); absent reads false (Join as today). */
+  shared?: () => boolean;
+  /** [OA] Keeps the code in memory for the learner picked on the chooser. */
+  hold?: (code: string | null) => void;
+}
+
+/** [OA] The `who=1` hand-off (row OA-4a): absent, or `open` answering false (the flag off), takes and drops it. */
+export interface WhoIntentHandoff {
+  /** Opens the chooser with the `return` trigger; false when it does not open (the flag off, no profile). */
+  open: () => boolean;
+}
+
+/** [OA] The sign-in reset's hand-off for `gate=pin-reset` (section 8.5 step 5): web only. */
+export interface PinResetIntentHandoff {
+  /** The ticket read once at boot, checked against the clock and the current marker; `off` when the switch is off. */
+  outcome: () => PinResetOutcome | 'off';
+  /** Shows "That took a while. Sign in again to set a new PIN." over the start screen. */
+  showExpired: () => void;
 }
 
 /** The All lessons gate hand-off for `gate=browse` (F-BROWSE-001 section 4.3): web only. */
@@ -146,21 +205,40 @@ export interface BrowseIntentHandoff {
  * stops listening. Nothing happens when there is no intent, or when it was already taken (an
  * ErrorBoundary remount). `gate=browse` opens the PIN screen for All lessons, or the hand-off
  * itself when the gate opens directly; without a `browse` hand-off it is taken and dropped.
+ * [OA] `gate=pin-reset` opens the new-PIN screen for an accepted ticket, else the expired line; with the switch off, or
+ * without a `pinReset` hand-off, it is taken and dropped.
  * Returns the cleanup for the effect.
  */
-export function openBootIntentWhenReady(nav: BootIntentNavigator, source: BootIntentSource, browse?: BrowseIntentHandoff, join?: JoinIntentHandoff): () => void {
+export function openBootIntentWhenReady(
+  nav: BootIntentNavigator,
+  source: BootIntentSource,
+  browse?: BrowseIntentHandoff,
+  join?: JoinIntentHandoff,
+  who?: WhoIntentHandoff,
+  pinReset?: PinResetIntentHandoff,
+): () => void {
   const open = (): boolean => {
     const intent = source.peek();
     if (intent === null) return true;
     if (!nav.isReady()) return false;
     source.consume();
     if (intent.kind === 'grown-up') nav.navigate('PinEntry', grownUpPinParams({ via: 'lock', target: intent.next }));
-    else if (intent.kind === 'join') {
+    else if (intent.kind === 'pin-reset') {
+      const outcome = pinReset?.outcome() ?? 'off';
+      if (outcome === 'setup') nav.navigate('PinEntry', PIN_RESET_SETUP_PARAMS);
+      else if (outcome === 'expired') pinReset?.showExpired();
+    } else if (intent.kind === 'join') {
       // The join link (owner decision 2026-10-17): without a `join` hand-off it is taken and dropped, as `browse` is.
       if (join === undefined) return true;
-      const target = joinIntentTarget(intent, join.hasProfile());
-      if (target.screen === 'JoinSpace') nav.navigate('JoinSpace', target.params);
+      const target = joinIntentTarget(intent, join.hasProfile(), join.shared?.() ?? false);
+      if (target.screen === 'WhoIsUsing') {
+        join.hold?.(target.hold.code);
+        nav.navigate('WhoIsUsing', target.params);
+      } else if (target.screen === 'JoinSpace') nav.navigate('JoinSpace', target.params);
       else nav.navigate('Onboarding', target.params);
+    } else if (intent.kind === 'who') {
+      // [OA] Opened by the hand-off itself (the chooser flag off: taken and dropped).
+      who?.open();
     } else if (browse === undefined) return true;
     else if (browse.opensDirectly()) {
       // A refused pass opens the dashboard, which says why under Open all lessons (as the PIN screen does).

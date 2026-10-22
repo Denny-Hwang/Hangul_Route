@@ -5,6 +5,8 @@
  * so cooldown/expiry behaviour is deterministic under test.
  */
 
+import { GROWN_UP_BACKGROUND_MS, GROWN_UP_FRESH_PIN_MS } from '@hangul-route/content-schema';
+
 /** A verified parent session lets "add another child" skip a re-PIN (§3.2). */
 export const PARENT_SESSION_MS = 15 * 60_000;
 
@@ -37,11 +39,14 @@ export function closeParentSession(): null {
 /**
  * Where a profile switch may be initiated from — §3.4. Switching mid-Quest
  * would strand the running game's state, so it is offered on home only.
+ * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6.2 (row OA-4a): `resume` is a pick on the chooser that a return
+ * from the background opened over a running screen (a quest, a game, the story reader, the level check). It is
+ * always allowed and always persists the leaving learner's state first.
  */
-export type SwitchOrigin = 'home' | 'quest' | 'minigame' | 'onboarding';
+export type SwitchOrigin = 'home' | 'quest' | 'minigame' | 'onboarding' | 'resume';
 
 export function canSwitchProfileFrom(origin: SwitchOrigin): boolean {
-  return origin === 'home';
+  return origin === 'home' || origin === 'resume';
 }
 
 /**
@@ -68,5 +73,166 @@ export function planProfileSwitch(origin: SwitchOrigin, questInProgress: boolean
   if (!canSwitchProfileFrom(origin)) {
     return { allowed: false, persistRequired: false, reason: 'locked-to-quest' };
   }
+  // [OA] A pick over a running screen never discards it without a persist, whatever the screen reports.
+  if (origin === 'resume') return { allowed: true, persistRequired: true };
   return { allowed: true, persistRequired: questInProgress };
+}
+
+// ---- [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS (row OA-2): the grown-up session closes on every hand-back ----
+
+/**
+ * [OA] OA-D5b (1): a change of the active learner, from any surface, closes the grown-up session. Choosing the
+ * active learner again is no change; a first choice (no active learner before) is one.
+ */
+export function closesSession(prevActiveId: string | null, nextActiveId: string | null): boolean {
+  return prevActiveId !== nextActiveId;
+}
+
+/**
+ * [OA] The grown-up controls that change who is on the device need a PIN within `GROWN_UP_FRESH_PIN_MS` (OA-D5b (3));
+ * so does Change PIN on the reset-by-wait notice (OA-D21), which sets a new PIN without asking the current one, and
+ * so does turning face or fingerprint on (`biometric_on`, section 8.6, row OA-9).
+ */
+export type FreshPinAction = 'remove' | 'lock' | 'unlock' | 'join_other' | 'change_pin' | 'biometric_on';
+
+/**
+ * [OA] Whether `action` must ask for the PIN (or face or fingerprint) again: unless one was entered in the last
+ * `GROWN_UP_FRESH_PIN_MS` (2 minutes). An open 15-minute session alone is not enough. A clock that ran backwards
+ * does not count as fresh.
+ */
+export function needsFreshPin(_action: FreshPinAction, lastPinVerifiedAt: number | null, now: number): boolean {
+  if (lastPinVerifiedAt === null) return true;
+  const age = now - lastPinVerifiedAt;
+  return !(age >= 0 && age < GROWN_UP_FRESH_PIN_MS);
+}
+
+/**
+ * [OA] OA-D16: a grown-up session ends after `GROWN_UP_BACKGROUND_MS` (5 minutes) in the background. Wall-clock
+ * times (when the app was hidden, when it came back), not a timer, so a suspended page still counts the time.
+ */
+export function backgroundLapsed(hiddenAt: number | null, shownAt: number): boolean {
+  if (hiddenAt === null) return false;
+  return shownAt - hiddenAt >= GROWN_UP_BACKGROUND_MS;
+}
+
+/**
+ * [OA] OA-D5b (2): where a route belongs. `area` is the Grown-up area stack (the local dashboard and every page
+ * reached through the grown-up gate); `gate` is the PIN screens and onboarding, which never close or open
+ * anything by themselves; every other route is a learner screen, so a route added later counts as a learner one
+ * (the safe side: leaving the area for it asks the PIN again).
+ */
+export type RouteZone = 'area' | 'gate' | 'learner';
+
+const AREA_ROUTES: ReadonlySet<string> = new Set([
+  'ParentDashboard',
+  'LearnerReport',
+  'PlacementReport',
+  'NotesGrownUp',
+  'NoteReport',
+  'EditProfile',
+  'Restore',
+  'SaveProgress',
+  'Paywall',
+  'MoveClass',
+  'ApproveTransfer',
+  'ClassScope',
+  'RouteProposal',
+  'RouteSetup',
+  'RoutePreview',
+  // [OA] Row OA-7a: People on this device, one person's page.
+  'PersonOnDevice',
+]);
+// The onboarding stack's own screens are the focused routes while it shows (`getCurrentRoute` names the leaf).
+const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']);
+/** Routes shared by learners and grown-ups: in the area when opened from it (`viewer: 'grownup'`), else a learner screen. */
+const SHARED_ROUTES: ReadonlySet<string> = new Set(['MyRoute', 'RouteOverview']);
+
+export function routeZone(name: string, params?: unknown): RouteZone {
+  if (GATE_ROUTES.has(name)) return 'gate';
+  if (AREA_ROUTES.has(name)) return 'area';
+  // A learner's Learning Route or weekly plan opened from the Grown-up area (F-ROUTE-001 section 3.1, F-PLAN-002 3.9).
+  if (SHARED_ROUTES.has(name) && (params as { viewer?: unknown } | undefined)?.viewer === 'grownup') return 'area';
+  return 'learner';
+}
+
+/** [OA] What the tracker needs to know about the grown-up session when focus lands on a route. */
+export interface FocusContext {
+  /** A grown-up session (the 15-minute gate or a fresh PIN) is open. */
+  sessionOpen: boolean;
+  /**
+   * The PIN screen just went back to the screen that asked, with the gate open for the action that waited there
+   * (an Open link, Open billing, the level check's finish): that one landing keeps the session for that action.
+   */
+  returning: boolean;
+}
+
+const NO_SESSION: FocusContext = { sessionOpen: false, returning: false };
+
+/**
+ * [OA] Follows focus from route to route and says when the grown-up session must close (OA-D5b (2), CS-1, CS-15):
+ * when focus leaves the Grown-up area for a learner screen (Back, Close or the tab bar, whatever the area was opened
+ * from), and when it lands on any learner screen while a session is open, unless that landing is the PIN screen's
+ * return to the action that asked for it. So an open session is honoured only inside the Grown-up area stack and
+ * for that one waiting action, never by a later gate on a learner screen. The PIN screens and onboarding in
+ * between do not count: area, PIN screen, learner screen is a leave too.
+ */
+export function areaExitTracker(): (zone: RouteZone, ctx?: FocusContext) => boolean {
+  let last: RouteZone | null = null;
+  return (zone, ctx = NO_SESSION) => {
+    if (zone === 'gate') return false;
+    const close = zone === 'learner' && (last === 'area' || (ctx.sessionOpen && !ctx.returning));
+    last = zone;
+    return close;
+  };
+}
+
+/** [OA] A root stack route as the navigator keeps it; `key` and nested `state` are kept as they are. */
+export interface LeaveRoute {
+  name: string;
+  params?: unknown;
+  key?: string;
+  state?: unknown;
+}
+
+/**
+ * [OA] OA-D16, CS-14: the root routes to keep when a closed session leaves the Grown-up area: everything below the
+ * first Grown-up area route (the learner screens the area was opened from). Null when no area route is on the
+ * stack. A stack that starts in the area keeps the learner home (`Main`).
+ */
+export function areaLeaveRoutes(routes: ReadonlyArray<LeaveRoute>): LeaveRoute[] | null {
+  const first = routes.findIndex((r) => routeZone(r.name, r.params) === 'area');
+  if (first < 0) return null;
+  return first === 0 ? [{ name: 'Main' }] : routes.slice(0, first);
+}
+
+/** [OA] The grown-up session times the learner app holds in memory (`ui-store`). */
+export interface GrownUpSessionTimes {
+  parentGateOpenedAt: number | null;
+  lastPinVerifiedAt: number | null;
+}
+
+/** [OA] What arriving at the chooser does (section 6.3, OA-D5, CS-2). */
+export interface ChooserArrival {
+  /** The session times after the arrival: both cleared. */
+  times: GrownUpSessionTimes;
+  /** Whether a grown-up session (the gate or a fresh PIN) was open and is now closed. */
+  closed: boolean;
+  /** This tab's `hr:grownup:unlock` and `hr:console:session` are cleared (web). */
+  clearTab: true;
+  /** The `hr-grownup` lock message is posted to the other tabs (web). */
+  postLock: true;
+}
+
+/**
+ * [OA] Section 6.3, OA-D5, CS-2: arriving at the chooser closes the grown-up session whatever it was (the 15-minute
+ * gate and the fresh PIN both), clears the tab's unlock and console session, and tells the other tabs to lock. It
+ * writes nothing else. A grown-up row opened right after asks the PIN again.
+ */
+export function closeOnChooser(state: GrownUpSessionTimes): ChooserArrival {
+  return {
+    times: { parentGateOpenedAt: null, lastPinVerifiedAt: null },
+    closed: state.parentGateOpenedAt !== null || state.lastPinVerifiedAt !== null,
+    clearTab: true,
+    postLock: true,
+  };
 }
