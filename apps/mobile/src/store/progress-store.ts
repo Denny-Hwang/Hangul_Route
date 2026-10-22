@@ -2,6 +2,8 @@ import {
   PlacementResultSchema,
   ReviewEntrySchema,
   SelfRouteSchema,
+  latestLocalDay,
+  pruneDailyReviews,
   type PlacementResult,
   type ProgressSnapshot,
   type ReviewEntry,
@@ -686,9 +688,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (!parsed.success) return false;
     const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
     const kept = snap.reviews.find((r) => r.id === parsed.data.id);
-    const reviews = kept
-      ? snap.reviews.map((r) => (r.id === parsed.data.id ? mergeReview(r, parsed.data) : r))
-      : [...snap.reviews, parsed.data];
+    // `daily` entries are kept for 14 local days (F-CURR-002 section 4.8), as the merge and the Worker keep them; a pulled
+    // entry dated past the latest local day of now (a clock far ahead) never prunes the one just written (section 13).
+    const reviews = pruneDailyReviews(kept ? snap.reviews.map((r) => (r.id === parsed.data.id ? mergeReview(r, parsed.data) : r)) : [...snap.reviews, parsed.data], {
+      latestDay: latestLocalDay(new Date()),
+    });
     const updated: ProgressSnapshot = { ...snap, reviews, updatedAt: new Date().toISOString() };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);

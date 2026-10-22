@@ -238,13 +238,13 @@ export const learner = {
     mission: {
       heading: 'Hoy con Hoya',
       sameAsHero: 'Igual que tu siguiente lección de arriba',
-      dailyTest: { title: 'Repaso rápido' },
+      dailyReview: { title: 'Repaso diario' },
       subtitle: {
         replay: 'Otra vuelta con Hoya',
         story: 'Hora del cuento',
         new: 'Algo nuevo hoy',
         assigned: 'Elegido para ti',
-        dailyTest: 'Un minuto con Hoya',
+        dailyReview: 'Unos 3 minutos',
       },
       vocab: {
         title: '¡Palabras listas!',
@@ -1908,5 +1908,32 @@ export const learner = {
       school: 'Escuela',
       signIn: 'Entrar como persona adulta',
     },
+  },
+  /** El Repaso diario (F-CURR-002, CM-14): estrellas y cuántas cosas quedaron más firmes; nunca un porcentaje, "n de m" ni reloj. */
+  dailyReview: {
+    title: 'Repaso diario',
+    readyLine: (n: number) => plural('es', n, { one: 'Hay 1 cosa lista para repasar', other: `Hay ${n} cosas listas para repasar` }),
+    result: {
+      headline: { three: '¡Maravilloso!', two: '¡Buen trabajo!', one: '¡Buen intento!' },
+      stronger: (n: number) => plural('es', n, { one: '1 quedó más firme', other: `${n} quedaron más firmes` }),
+      noneStronger: 'Cada respuesta te ayuda a recordar.',
+      backHome: { cta: 'Ir al inicio' },
+    },
+    allRefreshed: {
+      title: 'Todo repasado por hoy',
+      body: 'Por ahora no hay nada que repasar. Juega una misión o lee un cuento.',
+    },
+    leave: {
+      title: '¿Paramos por ahora?',
+      body: 'Lo que respondiste sigue contando.',
+      stay: { cta: 'Seguir' },
+      stop: { cta: 'Parar' },
+    },
+  },
+  keepGoing: {
+    offer: '¿Quieres hacer unas más?',
+    cta: 'Repasar más',
+    enough: { title: 'Por hoy ya es suficiente.', body: 'Hoya te traerá el resto pronto.' },
+    doneToday: { title: 'Repaso diario hecho hoy' },
   },
 } satisfies DeepPartial<Messages['learner']>;

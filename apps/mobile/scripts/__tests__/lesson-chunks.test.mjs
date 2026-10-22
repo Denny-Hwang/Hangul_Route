@@ -7,6 +7,7 @@ import {
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
   MEMORY_CHUNKS,
+  REVIEW_CHUNKS,
   ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -298,12 +299,13 @@ describe('precacheReport and its budget lines', () => {
     // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build),
     // 4,712,987 B after the start bundle shrink on main 7eb5bad61 (the es / ko text and the grown-up roots became
     // precached chunks; 6,491,546 B on its main), 4,732,797 B with that shrink merged onto the final integration
-    // (main fc580beed, release build). The margin stays under 10 KB, so the stories, the locale text, the grown-up
-    // roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
+    // (main fc580beed, release build), 4,744,598 B with rows CM-10 to CM-14 and the CM-14 review fixes (the Daily Review's
+    // route, Home card and strings; its screen, rounds and engine are chunks). The margin stays under 10 KB, so the stories, the locale text,
+    // the grown-up roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
     // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_740_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_598).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_598).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
@@ -401,5 +403,25 @@ describe('the memory store chunk (F-CURR-002 row CM-12)', () => {
     const start = { url: START, text: 'var m="memory-chunk:runtime";' };
     expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`memory-chunk is in the start bundle ${START}: a static import pulled it in`]);
     expect(markedChunkProblems({ chunks: MEMORY_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
+  });
+});
+
+describe('the Daily Review chunk (F-CURR-002 row CM-14)', () => {
+  it('names the chunk the route loads, and its marker is the one the chunk module exports', () => {
+    expect(REVIEW_CHUNKS).toEqual([{ name: 'daily-review-chunk', marker: 'review-chunk:daily' }]);
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('src/screens/reviews/daily-review-chunk.tsx')).toContain(`export const DAILY_REVIEW_CHUNK = '${REVIEW_CHUNKS[0].marker}';`);
+    // One literal import() site; Home's card reads the memory chunk's API instead (through the boot module).
+    expect(read('src/screens/reviews/DailyReviewRoute.tsx')).toContain(`import('./daily-review-chunk')`);
+    expect(read('src/screens/home/use-daily-review-home.ts')).not.toContain('daily-review-chunk');
+    expect(read('src/logic/memory/memory-chunk.ts')).toContain('export function dailyReviewApi()');
+  });
+
+  it('fails a build that pulled the Daily Review chunk into the start bundle', () => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.DAILY_REVIEW_CHUNK="review-chunk:daily"});`;
+    const chunk = { url: `${WEB_JS_DIR}/daily-review-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var m="review-chunk:daily";' };
+    expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`daily-review-chunk is in the start bundle ${START}: a static import pulled it in`]);
+    expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
   });
 });

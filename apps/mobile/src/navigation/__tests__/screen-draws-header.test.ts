@@ -41,6 +41,14 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
 };
 
+/**
+ * Screens a route loads from a chunk of its own (F-CURR-002 §10), by `file#Tag` where the route draws it: the
+ * `file#Component` the chunk's tag is, which the scan follows as if it were imported.
+ */
+const LAZY_SCREENS: Readonly<Record<string, string>> = {
+  'screens/reviews/DailyReviewRoute.tsx#DailyReviewScreen': 'screens/reviews/DailyReviewScreen.tsx#DailyReviewScreen',
+};
+
 /** Host components that only lay out what they hold: they pass when one of their children draws a `Screen`. */
 const LAYOUT_TAGS = new Set(['', 'React.Fragment', 'Fragment', 'View', 'ErrorBoundary', 'PreviewFrame', 'SafeAreaProvider']);
 
@@ -265,7 +273,8 @@ function jsxVerdict(node: ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragm
   if (/\.Navigator$/.test(tag)) return ok();
   if (LAYOUT_TAGS.has(tag) || /(^|\.)\w*Provider$/.test(tag)) return childrenVerdict(node, tag, src, scope, via);
   if (/^[A-Z]/.test(tag) && !tag.includes('.')) {
-    const decl = declarationOf(src, tag);
+    const lazy = LAZY_SCREENS[`${src.path}#${tag}`]?.split('#');
+    const decl = lazy ? declarationOf(source(lazy[0] as string), lazy[1] as string) : declarationOf(src, tag);
     if (decl === null) return fail(`${via}: <${tag}> is not declared where this scan can see it`);
     // A component that only wraps what it is given (a context override around a game): what it holds decides.
     if (!ts.isJsxSelfClosingElement(node) && decl.kind === 'function' && rendersChildren(decl)) return childrenVerdict(node, tag, src, scope, via);

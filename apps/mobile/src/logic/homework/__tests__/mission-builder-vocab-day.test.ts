@@ -220,10 +220,10 @@ describe('repinVocabDay and vocabCarry, unit rules (F-VOC-005 P-3b)', () => {
     expect(slot(build({ pinned: story('next'), vocab: NUDGE, vocabDay: '2026-10-14' }), 3)).toMatchObject({ kind: 'vocab', vocabDue: 4 });
   });
 
-  it('the Daily Test stays in slot 3 on any day', () => {
-    const capabilities = { dailyTestAvailable: true };
-    const pinned = build({ capabilities, vocabDay: '2026-10-13' });
-    expect(slot(build({ capabilities, pinned, vocab: NUDGE, vocabDay: '2026-10-14' }), 3)?.kind).toBe('daily-test');
+  it('the Daily Review stays in slot 3 on any local day', () => {
+    const dailyReview = { due: 5, done: false, reviewFirst: false };
+    const pinned = build({ dailyReview, vocabDay: '2026-10-13' });
+    expect(slot(build({ dailyReview, pinned, vocab: NUDGE, vocabDay: '2026-10-14' }), 3)?.kind).toBe('daily-review');
   });
 
   it('a carry is read only for the same profile, an earlier UTC day and the same local day', () => {

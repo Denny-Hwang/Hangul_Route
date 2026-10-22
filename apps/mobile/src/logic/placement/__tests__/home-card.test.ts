@@ -98,7 +98,7 @@ describe('card (2) in its compact form under the hero (AMENDMENTS-DISPLAY-NAV se
 
   it('never for a replay card, a card with no quest, or a Home with no hero', () => {
     expect(isSameAsHero({ kind: 'replay', questId: 'quest:q1', collected: false }, hero)).toBe(false);
-    expect(isSameAsHero({ kind: 'daily-test', collected: false }, hero)).toBe(false);
+    expect(isSameAsHero({ kind: 'daily-review', collected: false }, hero)).toBe(false);
     expect(isSameAsHero({ kind: 'new', questId: 'quest:q1', collected: false }, null)).toBe(false);
   });
 });

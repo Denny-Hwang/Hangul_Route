@@ -1,4 +1,4 @@
-import { addDays, dateKey } from '../curriculum/dates';
+import { addDays, dateKey, isDateKey } from '../curriculum/dates';
 import {
   DAY_LOG_INSTALL_KEYS_MAX,
   GoalsSchema,
@@ -215,4 +215,35 @@ export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Dat
   if (dropStreak) delete out.streakLocal;
   if (dropGoals) delete out.goals;
   return out as T;
+}
+
+/** F-CURR-002 section 4.8: `daily` review entries (the Daily Review and each Keep going) are kept for this many local days. */
+export const DAILY_REVIEW_RETENTION_DAYS = 14;
+
+/**
+ * The `daily` retention of section 4.8 (rows CM-3b and CM-14), applied after every merge on the client and in the
+ * Worker's snapshot write: the list keeps only the `daily` entries whose `scope` (the local day it was played,
+ * `YYYY-MM-DD`) is within 14 local days of the newest `daily` entry's `scope`, that day included. A `daily` entry
+ * whose scope is not a local day (none is written so) has no day to measure, so it is left as it is, like every
+ * other kind. No other kind is pruned (`cell-check` and `stage-certificate` carry best results). A union of pruned
+ * lists never brings a pruned entry back. Returns the list itself when nothing is pruned.
+ *
+ * The section 13 wrong-clock guard: `latestDay` (`latestLocalDay(now)`, the latest local day any time zone can have)
+ * bounds the newest scope. A `daily` scope later than it was written by a clock far ahead (or a tampered client):
+ * it never anchors the window, so it cannot prune the real entries, today's included. With `dropLater` (the Worker,
+ * as `boundToNow` drops a later `dayLog` day) such an entry is dropped; without it (the app, whose own clock may be
+ * the wrong one) it is kept as it is, and the Worker drops it on the next write.
+ */
+export function pruneDailyReviews<T extends { kind: string; scope: string }>(reviews: T[], bound: { latestDay?: string; dropLater?: boolean } = {}): T[] {
+  const { latestDay, dropLater = false } = bound;
+  const later = (r: T): boolean => latestDay !== undefined && r.scope > latestDay;
+  let newest: string | undefined;
+  for (const r of reviews) if (r.kind === 'daily' && isDateKey(r.scope) && !later(r) && (newest === undefined || r.scope > newest)) newest = r.scope;
+  const from = newest === undefined ? undefined : addDays(newest, 1 - DAILY_REVIEW_RETENTION_DAYS);
+  const kept = reviews.filter((r) => {
+    if (r.kind !== 'daily' || !isDateKey(r.scope)) return true;
+    if (later(r)) return !dropLater;
+    return from === undefined || r.scope >= from;
+  });
+  return kept.length === reviews.length ? reviews : kept;
 }

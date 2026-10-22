@@ -246,15 +246,15 @@ describe('slot ② — the same stages as Results and My route (F-ROUTE-001 R-4a
   });
 });
 
-describe('slot ③ — daily test capability gate (§9.2)', () => {
-  it('renders the daily test when the review engine is available', () => {
-    const plan = build({ capabilities: { dailyTestAvailable: true } });
-    expect(plan.cards[2]).toMatchObject({ slot: 3, kind: 'daily-test' });
+describe('slot ③ — the Daily Review, flag-gated (F-CURR-002 §4.5, §12.2; F-HW-001 §9.2)', () => {
+  it('renders the Daily Review when it is on and 3 or more items are due', () => {
+    const plan = build({ dailyReview: { due: 5, done: false, reviewFirst: false } });
+    expect(plan.cards[2]).toMatchObject({ slot: 3, kind: 'daily-review' });
   });
 
-  it('falls back to a live card while F-RVW-001 has not shipped', () => {
-    const plan = build();
-    expect(plan.cards[2]?.kind).not.toBe('daily-test');
+  it('falls back to a live card with the Daily Review off', () => {
+    const plan = build({ dailyReview: null });
+    expect(plan.cards[2]?.kind).not.toBe('daily-review');
     expect(plan.cards).toHaveLength(3);
   });
 
@@ -411,7 +411,7 @@ describe('anti-shame copy (§3.3)', () => {
       expect(scanLearnerCopy(missionCopy(build({ snapshot: snap }), learner))).toEqual([]);
     }
     expect(
-      scanLearnerCopy(missionCopy(build({ capabilities: { dailyTestAvailable: true } }), learner)),
+      scanLearnerCopy(missionCopy(build({ dailyReview: { due: 5, done: false, reviewFirst: false } }), learner)),
     ).toEqual([]);
   });
 });
@@ -420,22 +420,22 @@ describe('mission card words come from the dictionary (F-I18N-001 §3.4 rule 3)'
   it('cards carry a subtitle code, never prose', () => {
     const cards = build({ snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]) }).cards;
     expect(cards.map((c) => c.subtitle)).toEqual(['replay', 'new', 'explore']);
-    expect(build({ capabilities: { dailyTestAvailable: true } }).cards[2]).toMatchObject({
-      kind: 'daily-test',
+    expect(build({ dailyReview: { due: 5, done: false, reviewFirst: false } }).cards[2]).toMatchObject({
+      kind: 'daily-review',
       titleEn: null,
-      subtitle: 'dailyTest',
+      subtitle: 'dailyReview',
     });
   });
 
   it('missionCardText renders the title and subtitle in the given message subtree', () => {
     const cards = build({
       snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]),
-      capabilities: { dailyTestAvailable: true },
+      dailyReview: { due: 5, done: false, reviewFirst: false },
     }).cards;
     expect(cards.map((c) => missionCardText(c, learner))).toEqual([
       { title: 'Meet g, n, d', subtitle: 'One more go with Hoya' },
       { title: 'Meet m, b, s', subtitle: 'Something new today' },
-      { title: 'Quick review', subtitle: 'About a minute with Hoya' },
+      { title: 'Daily Review', subtitle: 'About 3 minutes' },
     ]);
     expect(missionCardText({ ...cards[1]!, subtitle: 'assigned' }, learner).subtitle).toBe('Picked just for you');
     expect(missionCardText({ ...cards[1]!, subtitle: 'explore' }, learner).subtitle).toBe('Take a look');
@@ -797,7 +797,7 @@ describe('card ② at the end of the free lessons (F-ENT-003 section 3.7, PR E3-
         c.slot === 1
           ? { ...c, kind: 'replay' as const, questId: 'quest:a', episodeId: 'episode:one' }
           : c.slot === 3
-            ? { slot: 3 as const, kind: 'daily-test' as const, titleEn: null, subtitle: 'dailyTest' as const, collected: false }
+            ? { slot: 3 as const, kind: 'daily-review' as const, titleEn: null, subtitle: 'dailyReview' as const, collected: false }
             : c,
       ),
     };

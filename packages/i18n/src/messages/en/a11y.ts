@@ -442,4 +442,13 @@ export const a11y = {
     /** [OA] Row OA-7a: a locked learner's row in People on this device, where a tap opens the person page without a PIN. */
     lockedRow: (name: string) => `${name}, locked`,
   },
+  /** The Daily Review and Keep going (F-CURR-002 row CM-14; design/wireframes/reviews/daily-review.md, Accessibility). */
+  dailyReview: {
+    /** The [x] at the top left of a round: it opens the stop sheet. */
+    close: 'Stop the review',
+    /** The round dots: the position only, never right or wrong, never "n of m". */
+    round: (n: number) => `Round ${n}`,
+    /** The result's stars, in words and never against a total. */
+    stars: (n: number) => plural('en', n, { one: '1 star', other: `${n} stars` }),
+  },
 } as const;

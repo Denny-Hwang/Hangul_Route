@@ -109,6 +109,7 @@ import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vo
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
+import { missionDailyReviewOf, useDailyReviewHome } from './use-daily-review-home';
 import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
@@ -129,7 +130,7 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
   replay: 'replay',
   new: 'play',
   story: 'library',
-  'daily-test': 'star',
+  'daily-review': 'replay',
   explore: 'journey',
   // F-ENT-003 E3-7: the free-end card draws its own card; a practice card leads with its replay icon (or the topic or story cover).
   'free-end': 'star',
@@ -408,6 +409,11 @@ export function HomeScreen(): React.ReactElement {
   // The device's local day, the vocabulary card's day (F-VOC-005 P5, P-3b): read again at local midnight too.
   const localToday = useToday('local');
   const homeworkDue = dueTodayCount(snap?.homework, today);
+  // The Daily Review (F-CURR-002 row CM-14): slot 3 from 3 due items, first on a review-first day; off, today's slot 3.
+  const dailyReview = useDailyReviewHome(profile?.id ?? null, localToday, snap?.reviews);
+  const dailyReviewInput = missionDailyReviewOf(dailyReview);
+  // The day's plan waits for the first read (at most DAILY_REVIEW_HOME_WAIT_MS), so a fresh pin never misses the card it should hold.
+  const awaitReview = dailyReview.state === 'loading' && profile !== undefined && profile !== null && pinnedMission(profile.id, today) === null;
 
   // Recent stars waits for a first star (owner request 2026-10-16, item 8): an empty row of stars is never shown.
   const recentStars = recentStarsOf(snap?.quests ?? []);
@@ -488,7 +494,7 @@ export function HomeScreen(): React.ReactElement {
     return place && episode ? m.learner.home.next.where(place.stage, localizeEpisode(episode, locale).titleEn, place.index, place.total) : null;
   }, [nextLesson, locale, m, titles]);
   const mission = useMemo(() => {
-    if (!profile || !snap || !routeInput) return null;
+    if (!profile || !snap || !routeInput || awaitReview) return null;
     const today = routeInput.today;
     const built = buildTodaysMission({
       profileId: profile.id,
@@ -527,6 +533,7 @@ export function HomeScreen(): React.ReactElement {
       // The card appears and leaves at local midnight, not at the plan's UTC rollover (F-VOC-005 P-3b).
       vocabDay: localToday,
       vocabCarry: latestPin(profile.id),
+      dailyReview: dailyReviewInput,
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
@@ -541,7 +548,12 @@ export function HomeScreen(): React.ReactElement {
     pinMission(merged);
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf, localToday]);
+  }, [profile, snap, tier, questOpen, routeInput, bookmarks, storyIndex, freeEndSeen, freeTopics, samplerStory, isStoryLocked, vocabTopicOf, localToday, dailyReviewInput, awaitReview]);
+  // Review first (section 4.3): one positive line above the cards while the Daily Review card leads and is not done.
+  const readyLine =
+    mission?.reviewFirst === true && dailyReview.state === 'ready' && dailyReview.value.due > 0 && !mission.cards.some((c) => c.kind === 'daily-review' && c.collected)
+      ? m.learner.dailyReview.readyLine(dailyReview.value.due)
+      : null;
   // A story card's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the theme tint stands in until it arrives.
   const missionStoryIds = useMemo(
     () =>
@@ -647,6 +659,11 @@ export function HomeScreen(): React.ReactElement {
   };
 
   const openCard = (card: MissionCard): void => {
+    // The Daily Review (row CM-14): its rounds, or the done-today page once it is collected.
+    if (card.kind === 'daily-review') {
+      navigation.navigate('DailyReview');
+      return;
+    }
     // "Say hello again": a Relaxed Speed Round of the topic with the most due words (F-VOC-005 section 3.7).
     // A topic locked after the pin goes to the topic page from there, which opens the grown-up gate (D5).
     if (card.kind === 'vocab') {
@@ -797,6 +814,12 @@ export function HomeScreen(): React.ReactElement {
         ) : null}
         <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
         <Spacer size="sm" />
+        {readyLine !== null ? (
+          <>
+            <Body testID="home-review-ready">{readyLine}</Body>
+            <Spacer size="sm" />
+          </>
+        ) : null}
         <View testID="home-missions" style={{ gap: spacing.sm }}>
           {mission.cards.map((card) => {
             if (card.kind === 'free-end') {

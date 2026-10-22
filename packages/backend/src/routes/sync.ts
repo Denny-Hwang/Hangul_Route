@@ -1,4 +1,15 @@
-import { LearnerProfilePatchSchema, LearnerRegisterSchema, NoteDevicePrefsPutSchema, NoteReportSchema, NoteStatePutSchema, SnapshotPutSchema, TIER_GRACE_MS, boundToNow } from '@hangul-route/content-schema';
+import {
+  LearnerProfilePatchSchema,
+  LearnerRegisterSchema,
+  NoteDevicePrefsPutSchema,
+  NoteReportSchema,
+  NoteStatePutSchema,
+  SnapshotPutSchema,
+  TIER_GRACE_MS,
+  boundToNow,
+  latestLocalDay,
+  pruneDailyReviews,
+} from '@hangul-route/content-schema';
 import {
   MEMORY_PUSH_MAX_BYTES,
   MEMORY_PUSH_MAX_SHARDS,
@@ -90,6 +101,11 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   const sent = boundToNow(body.snapshot, new Date(), current?.payload);
   // An older app build re-uploads without the newer additive fields: keep what is stored (lib/additive-fields.ts).
   const kept = preserveAdditiveFields({ payload: sent, summary: body.summary }, current && { payload: current.payload, summary: current.summary });
+  // `daily` review entries are kept for 14 local days, the same prune as the app's merge (F-CURR-002 section 4.8); a
+  // `daily` entry dated after the latest local day any time zone has now (a clock far ahead) is dropped, as a later
+  // `dayLog` day is, so it can never anchor the window and prune the real entries (section 13).
+  const reviews = pruneDailyReviews(kept.payload.reviews, { latestDay: latestLocalDay(new Date()), dropLater: true });
+  const payload = reviews === kept.payload.reviews ? kept.payload : { ...kept.payload, reviews };
   const record: SnapshotRecord = {
     learnerId,
     rev: currentRev + 1,
@@ -97,7 +113,7 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     contentVer: body.contentVer,
     deviceId: auth,
     summary: kept.summary,
-    payload: kept.payload,
+    payload,
     updatedAt: new Date().toISOString(),
   };
   // Compare-and-set: another device may have written between the read above and here (SYNC-1).

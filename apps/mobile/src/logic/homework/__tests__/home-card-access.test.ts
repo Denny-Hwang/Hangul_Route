@@ -93,9 +93,9 @@ describe('homeCardLock (F-STORY-004 PR 4.8e)', () => {
     const locked = (): boolean => true;
     const explore = card({ slot: 3, kind: 'explore', subtitle: 'explore', episodeId: 'episode:s1-e3' });
     const topic = card({ slot: 3, kind: 'practice', subtitle: 'practice', topicKey: 'food', practiceKind: 'topic' });
-    const dailyTest = card({ slot: 3, kind: 'daily-test', titleEn: null, subtitle: 'dailyTest' });
+    const dailyReview = card({ slot: 3, kind: 'daily-review', titleEn: null, subtitle: 'dailyReview' });
     const freeEnd = card({ slot: 2, kind: 'free-end', subtitle: 'freeEnd' });
-    for (const c of [explore, topic, dailyTest, freeEnd]) {
+    for (const c of [explore, topic, dailyReview, freeEnd]) {
       expect(homeCardLock(input({ card: c, isQuestOpen: closed, isStoryLocked: locked }))).toBeNull();
     }
   });
@@ -130,8 +130,8 @@ describe('isHomeCardLocked (F-STORY-004 PR 4.8f: the locked look of a pinned car
   it('never marks a card that opens no quest player or reader', () => {
     const explore = card({ slot: 3, kind: 'explore', subtitle: 'explore', episodeId: 'episode:s1-e3' });
     const topic = card({ slot: 3, kind: 'practice', subtitle: 'practice', topicKey: 'food', practiceKind: 'topic' });
-    const dailyTest = card({ slot: 3, kind: 'daily-test', titleEn: null, subtitle: 'dailyTest' });
-    for (const c of [explore, topic, dailyTest]) {
+    const dailyReview = card({ slot: 3, kind: 'daily-review', titleEn: null, subtitle: 'dailyReview' });
+    for (const c of [explore, topic, dailyReview]) {
       expect(look({ card: c, isQuestOpen: () => false, isStoryLocked: () => true })).toBe(false);
     }
   });

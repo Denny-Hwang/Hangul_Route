@@ -296,4 +296,9 @@ export const a11y = {
     lockedTile: (name: string) => `${name}, con candado. Se abre con el PIN de adultos.`,
     lockedRow: (name: string) => `${name}, con candado`,
   },
+  dailyReview: {
+    close: 'Parar el repaso',
+    round: (n: number) => `Ronda ${n}`,
+    stars: (n: number) => plural('es', n, { one: '1 estrella', other: `${n} estrellas` }),
+  },
 } satisfies DeepPartial<Messages['a11y']>;
