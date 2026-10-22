@@ -62,7 +62,7 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(prefillName('school', 'Seoul Hangul')).toBe('Seoul Hangul school');
     expect(prefillName('school', '')).toBe('Our school');
     expect(roleCards().map((r) => r.kind)).toEqual(['family', 'class', 'school']);
-    expect(roleCards()[0]).toEqual({ kind: 'family', title: 'Parent / caregiver', line: 'Home — my kids' });
+    expect(roleCards()[0]).toEqual({ kind: 'family', title: 'Parent / caregiver', line: 'At home — the learners in my family' });
   });
 
   it('reads role cards, and prefilled names from the dictionary in every locale (F-I18N-001 PR 10a)', () => {

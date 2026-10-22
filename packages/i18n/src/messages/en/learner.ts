@@ -21,7 +21,7 @@ export const learner = {
     invitation: 'Want to learn Korean letters with me? It only takes a few minutes a day.',
     cta: "Let's start",
     restore: 'I already have progress',
-    trust: 'Start Korean from zero. Built with kids, parents, and grandparents in mind.',
+    trust: 'Start Korean from zero, at any age. No ads, ever.',
     /**
      * The grown-ups' row under the restore link (F-APP-001 A-7, section 3.6; wireframe
      * onboarding/welcome-personas.md, design/screens/app-shell/learner-entry.md D10). Web only,
@@ -1174,7 +1174,10 @@ export const learner = {
       title: 'Where should we start?',
       newToKorean: 'I am new to Korean',
       knowSome: 'I already know some Korean',
-      duration: 'It takes a few minutes. You can stop at any time.',
+      /** The sublabel under knowSome: what that choice opens (no digit, never the word test). */
+      duration: 'A short level check. You can stop at any time.',
+      /** The sublabel under newToKorean. */
+      newToKoreanHint: 'Start with the first letters.',
     },
     language: {
       title: 'Pick the language for the check',

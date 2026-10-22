@@ -14,7 +14,7 @@ export const learner = {
     invitation: '저와 함께 한글을 배워 볼래요? 하루에 몇 분이면 돼요.',
     cta: '시작해요',
     restore: '이미 하던 진도가 있어요',
-    trust: '한국어를 처음부터 시작해요. 아이, 부모님, 조부모님 모두를 생각하며 만들었어요.',
+    trust: '나이와 상관없이 한국어를 처음부터 시작해요. 광고는 절대 없어요.',
     grownUps: {
       lead: '학습자를 도와주러 왔나요?',
       parent: '부모님 또는 보호자',
@@ -851,7 +851,8 @@ export const learner = {
       title: '어디서부터 시작할까요?',
       newToKorean: '한국어는 처음이에요',
       knowSome: '한국어를 조금 알아요',
-      duration: '몇 분이면 돼요. 언제든지 그만할 수 있어요.',
+      duration: '짧은 수준 확인이에요. 언제든지 그만할 수 있어요.',
+      newToKoreanHint: '첫 글자부터 시작해요.',
     },
     language: {
       title: '확인에 쓸 언어를 골라요',

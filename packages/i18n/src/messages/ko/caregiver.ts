@@ -355,6 +355,8 @@ export const caregiver = {
       addToHome: '홈 화면에 추가',
       browserMenu: '브라우저 메뉴',
       installApp: '앱 설치 / 홈 화면에 추가',
+      fileMenu: '파일 메뉴',
+      addToDock: 'Dock에 추가',
     },
     install: { cta: '설치' },
     inAppBrowser: '먼저 이 페이지를 Safari나 Chrome에서 열어 주세요.',

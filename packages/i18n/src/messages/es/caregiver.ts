@@ -368,6 +368,8 @@ export const caregiver = {
       addToHome: 'Agregar a inicio',
       browserMenu: 'Menú del navegador',
       installApp: 'Instalar app / Agregar a inicio',
+      fileMenu: 'Menú Archivo',
+      addToDock: 'Agregar al Dock',
     },
     install: { cta: 'Instalar' },
     inAppBrowser: 'Primero abre esta página en Safari o Chrome.',

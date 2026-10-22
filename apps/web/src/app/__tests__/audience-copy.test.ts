@@ -106,6 +106,18 @@ describe('learner PWA manifest (UF-04)', () => {
     const hits = KIDS_ONLY_FRAMING.filter(({ re }) => re.test(description)).map(({ name }) => name);
     expect(hits).toEqual([]);
   });
+
+  // app-first-run (2026-10-21): "Works offline" now says "on most devices" (an in-app browser or a private window may
+  // not keep the app), and the install sizes browsers ask for first (192 and 512 px, "any") sit beside the 1024 px one.
+  it('says where it works offline, and lists 192, 512 and 1024 px icons that exist', () => {
+    expect(manifest.description).toBe('Learn the Korean alphabet with Hoya the tiger, one heritage card at a time. Works offline on most devices.');
+    const icons = (manifest as { icons?: { src: string; sizes: string; purpose?: string }[] }).icons ?? [];
+    expect(icons.map((i) => i.sizes)).toEqual(['192x192', '512x512', '1024x1024']);
+    for (const icon of icons) {
+      expect(icon.purpose).toBe('any');
+      expect(existsSync(join(webSrc, '..', '..', 'mobile', 'public', icon.src.replace(/^\//, ''))), icon.src).toBe(true);
+    }
+  });
 });
 
 describe('learner PWA shell meta description (pwa-postbuild.mjs)', () => {

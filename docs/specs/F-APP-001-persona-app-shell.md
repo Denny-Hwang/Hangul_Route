@@ -686,7 +686,7 @@ Each row states what the sibling must use or change so the specs agree. The sibl
 - **Clerk session carried from hangulroute.com**: a grown-up already signed in on the site may arrive signed in; on a locked device the first visit still asks for a secret-proving sign-in (no trusted epoch yet).
 - **Build time**: the learner Worker build adds a Next build (about 1-2 minutes on Workers Builds; the 20-minute limit is far). The `web-app.yml` job grows by the same amount.
 - **Two copies of `_next`** (site and app hosts) are independent deploys of the same commit; a console page and its chunks always come from the same build, so there is no skew between them.
-- **Noticed, not changed here**: `learner.welcome.trust` says "Built with kids, parents, and grandparents in mind" on a shared surface; the marketing and copy owners should review it against the CLAUDE.md audience rule.
+- **Noticed, not changed here**: `learner.welcome.trust` says "Built with kids, parents, and grandparents in mind" on a shared surface; the marketing and copy owners should review it against the CLAUDE.md audience rule. **Done 2026-10-21 (app-first-run):** it now reads "Start Korean from zero, at any age. No ads, ever.", and `learner-messages.test.ts` checks that no Welcome string in en, es or ko names an age group.
 
 ---
 

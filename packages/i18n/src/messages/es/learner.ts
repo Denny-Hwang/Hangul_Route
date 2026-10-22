@@ -14,7 +14,7 @@ export const learner = {
     invitation: '¿Aprendemos las letras coreanas? Solo toma unos minutos al día.',
     cta: '¡Empecemos!',
     restore: 'Ya tengo progreso',
-    trust: 'Empieza el coreano desde cero. Hecho pensando en niños, padres y abuelos.',
+    trust: 'Empieza el coreano desde cero, a cualquier edad. Sin anuncios, nunca.',
     grownUps: {
       lead: '¿Acompañas a alguien que aprende?',
       parent: 'Familia o quien cuida',
@@ -872,7 +872,8 @@ export const learner = {
       title: '¿Por dónde empezamos?',
       newToKorean: 'El coreano es nuevo para mí',
       knowSome: 'Ya sé algo de coreano',
-      duration: 'Toma unos minutos. Puedes parar cuando quieras.',
+      duration: 'Una prueba de nivel corta. Puedes parar cuando quieras.',
+      newToKoreanHint: 'Empieza con las primeras letras.',
     },
     language: {
       title: 'Elige el idioma de la prueba',

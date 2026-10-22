@@ -2,7 +2,7 @@
 
 import type { BillingSummary, Promo, PurchasablePlanKey } from '@hangul-route/content-schema';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccountCard, AddPlanSection, BillingCard, BillingNote, BillingSkeleton, BillingStyles, EmptyState, FailPanel, HelpSection, ModeBanner, ReturnNoticeRegion, type PromoFormProps } from '@/components/console/BillingHomeParts';
+import { AccountCard, AddPlanSection, BillingCard, BillingNote, BillingSkeleton, BillingStyles, EmptyState, FailPanel, FreeForEveryone, HelpSection, ModeBanner, ReturnNoticeRegion, type PromoFormProps } from '@/components/console/BillingHomeParts';
 import { AdultFrame } from '@/components/console/AdultFrame';
 import { StepUpDialog, useStepUp } from '@/components/console/StepUpDialog';
 import { Notice } from '@/components/console/ui';
@@ -289,6 +289,8 @@ export default function BillingPage(): JSX.Element {
             {view.addPlan ? (
               <AddPlanSection offers={view.addPlan.offers} contact={view.addPlan.contact} promo={promoProps} onBuy={(offer) => void buy(offer.planKey, offer.spaceId)} disabled={actionsDisabled} waitingSpaceId={waitingId} />
             ) : null}
+            {/* Once under the offers: reports and notes come with every plan, the free one too (app-first-run). */}
+            {view.freeForEveryone ? <FreeForEveryone text={view.freeForEveryone} /> : null}
             <HelpSection help={view.help} />
           </>
         )}
