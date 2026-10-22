@@ -339,14 +339,22 @@ describe('the expired line (section 8.5 step 5, board 10)', () => {
 
   // [OA] Round 2: the status mounts empty and the line goes in on the next turn, so a screen reader announces it.
   it('mounts the status empty, then puts the line in', async () => {
-    usePinResetNotice.getState().showExpired();
-    const r = await render(<PinResetExpiredNotice />);
-    const [empty] = byTestId(r.root, 'pin-reset-expired');
-    expect(empty).toBeDefined();
-    expect(screenTexts(empty as ReactTestInstance)).toEqual([]);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    await r.update(<PinResetExpiredNotice />);
-    expect(screenTexts(byTestId(r.root, 'pin-reset-expired')[0] as ReactTestInstance)).toEqual([m.reset.signIn.expired]);
+    // Only the timers are faked, so the fill waits for the advance below. With real timers, React 18's async act
+    // flushes through a macrotask, and on a slow runner the zero-delay fill could land before the empty check.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      usePinResetNotice.getState().showExpired();
+      const r = await render(<PinResetExpiredNotice />);
+      const [empty] = byTestId(r.root, 'pin-reset-expired');
+      expect(empty).toBeDefined();
+      expect(screenTexts(empty as ReactTestInstance)).toEqual([]);
+      await act(async () => {
+        vi.advanceTimersByTime(0);
+      });
+      expect(screenTexts(byTestId(r.root, 'pin-reset-expired')[0] as ReactTestInstance)).toEqual([m.reset.signIn.expired]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a line raised for a boot that started elsewhere is stale when Home first renders: taken, never shown', async () => {
