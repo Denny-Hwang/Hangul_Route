@@ -104,11 +104,15 @@ const cell = {
         {
           ref: 'minigame:s2-life-q2-e',
           kind: 'realia-read',
-          realia: { ref: 'realia:menu-prices', title: kt('메뉴', 'menyu', 'menu'), entries: [{ id: 'e1', text: kt('김밥', 'gimbap', 'kimbap') }], altEn: 'A menu with prices' },
+          realia: { ref: 'realia:menu-prices', title: kt('메뉴', 'menyu', 'menu'), entries: [{ id: 'e1', text: kt('김밥', 'gimbap', 'kimbap'), value: kt('이천 원', 'icheon won', '2,000 won') }], altEn: 'A menu with prices' },
           rounds: [
             { id: 'q1', key: kt('김밥', 'gimbap', 'kimbap'), options: [{ id: 'a', figure: '2,000' }], answerId: 'a' },
             { id: 'q2', options: [{ id: 'a', text: kt('이천 원', 'icheon won', '2,000 won') }], answerId: 'a' },
             { id: 'q3', options: [{ id: 'a', figure: '1' }], answerId: 'b' },
+            // A key word that is an entry's value; one the card does not hold (no gloss key); one glossed otherwise than the card.
+            { id: 'q4', key: kt('이천 원', 'icheon won', '2,000 won'), options: [], answerId: 'a' },
+            { id: 'q5', key: kt('물', 'mul', 'water'), options: [], answerId: 'a' },
+            { id: 'q6', key: kt('김밥', 'gimbap', 'seaweed rice roll'), options: [], answerId: 'a' },
           ],
         },
         { ref: 'minigame:s2-life-q2-f', kind: 'type-hangul', rounds: [{ id: 't1', target: kt('학교', 'hakgyo', 'school'), pictureRef: 'word:school', soundChange: true }] },
@@ -166,6 +170,9 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
       // A realia round's key word is glossed at the card entry it names.
       ['lex', '김밥', 'round', 'minigame:s2-life-q2-e#realiaRead.realia.entries.e1.text.gloss', '', 'loose', '', '', ''],
       ['lex', '이천 원', 'round', m('q2-e', 'realiaRead.rounds.q2.options.a.text.gloss'), '', 'loose', '', '', ''],
+      ['lex', '이천 원', 'round', m('q2-e', 'realiaRead.realia.entries.e1.value.gloss'), '', 'loose', '', '', ''],
+      ['lex', '물', 'round', '', '', 'loose', '', '', ''],
+      ['lex', '김밥', 'round', '', '', 'loose', '', '', ''],
       ['lex', '학교', 'round', m('q2-f', 'typeHangul.rounds.t1.target.gloss'), 'word:school', 'loose', '', '', 'sc'],
       ['lex', '달', 'round', m('q2-g', 'traceWord.rounds.t1.word.gloss'), '', 'loose', '', '', ''],
       ['pat', '___을/를 좋아해요.', 'round', m('q2-h', 'writeFrame.rounds.w1.frame.gloss'), '', '', '', '', ''],
