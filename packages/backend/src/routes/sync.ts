@@ -13,6 +13,7 @@ import { dbFor, NOTE_INBOX_LIMIT, noteRateKey, noteRetentionCuts, type Db, type 
 import { fail, meta, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { preserveAdditiveFields } from '../lib/additive-fields';
+import { reviewCapsOf, servedSnapshot, writtenSnapshot } from '../lib/review-kinds';
 import { MemoryWriteConflict, pushMemory } from '../lib/memory-shards';
 import { tierForLearner } from '../lib/entitlement';
 import { publicLearner } from '../lib/learners';
@@ -71,13 +72,15 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   if (body.snapshot.profileId !== learnerId) {
     return fail(c, 'bad_request', 'snapshot.profileId must match the learner', 422);
   }
+  // The review kinds this app reads beyond the CM-3b set (F-CURR-002 section 13, lib/review-kinds.ts).
+  const caps = reviewCapsOf(c.req.queries('cap'));
 
   const conflict = (current: SnapshotRecord | null): Response =>
     c.json(
       {
         ok: false,
         error: { code: 'conflict', message: 'Snapshot changed on the server — merge and retry' },
-        data: { rev: current?.rev ?? 0, snapshot: current?.payload ?? null, summary: current?.summary ?? null },
+        data: { rev: current?.rev ?? 0, snapshot: current ? servedSnapshot(current.payload, caps) : null, summary: current?.summary ?? null },
       },
       409,
     );
@@ -97,7 +100,8 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     contentVer: body.contentVer,
     deviceId: auth,
     summary: kept.summary,
-    payload: kept.payload,
+    // A gated review kind the sender cannot read is kept from the stored copy, then the 14-day retention (section 4.8).
+    payload: writtenSnapshot(kept.payload, current?.payload, caps),
     updatedAt: new Date().toISOString(),
   };
   // Compare-and-set: another device may have written between the read above and here (SYNC-1).
@@ -142,7 +146,7 @@ syncRoutes.get('/learners/:id/snapshot', async (c) => {
   if (!record) return fail(c, 'no_snapshot', 'No snapshot uploaded yet', 404);
   return ok(c, {
     rev: record.rev,
-    snapshot: record.payload,
+    snapshot: servedSnapshot(record.payload, reviewCapsOf(c.req.queries('cap'))),
     summary: record.summary,
     updatedAt: record.updatedAt,
     schemaVer: record.schemaVer,
