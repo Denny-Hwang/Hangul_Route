@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { LOCALES, LOCALE_STATUS } from '../locales';
+import { LOCALES, LOCALE_META, LOCALE_STATUS } from '../locales';
 import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { fallbackPaths, getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
-import { STALE_SITE_WORDS, landingBannedWord } from './landing-banned';
+import { STALE_SITE_WORDS, landingBannedWord, staleSiteWord } from './landing-banned';
 import { SAMPLES } from './samples';
 
 // F-I18N-001 PR 11a: the site's copy (metadata, landing, about, privacy, terms, the waitlist
@@ -80,7 +80,10 @@ describe('landing: sentences that take a value render the former text', () => {
   it('privacy and terms: the address and the level labels are passed in', () => {
     const values = { email: 'hello@example.com', levels: 'A / B' };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
-      'Learner profile: a display nickname and a starting level the learner picks (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.',
+      // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level; placement.start, item_answered, complete,
+      // skipped and override_applied go up as usage events (apps/mobile/src/logic/placement/events.ts), and the full
+      // result is backed up in the sync snapshot (Codex review on #804, P1).
+      "Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it. If the learner takes the level check, it sends us usage events. When it starts: where it was started, its language and length, whether the sound guide shows by itself or after a tap, and the learner's starting level. For each answer: which question it was and which part of the check it belongs to, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took. When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped. We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened. The finished result is saved with the learner's progress and backed up to our servers with it; the app keeps the 10 most recent. Each result has an id and holds every answer (which question, which choice was picked, recorded by its id and not its words, whether it was right, wrong or not sure, whether the sound guide was used, whether the sound could play, and how long it took); how the learner did in each part of the check and in each of the five skills; the suggested levels, whether the learner reached the highest level the check measures, the first lesson, the lessons the learner can skip, up to three letters or skills to practice first, and whether the suggested level is outside the learner's plan; when the check started and ended, where it was started, its language, length and settings, and which versions of the questions and lessons it used; why the learner is learning Korean, if they picked a reason; why it stopped; and, if a grown-up picked a different start, that start and when. A short summary of the newest result (when it was taken, the suggested levels, the five skills, whether the learner reached the highest level and whether a grown-up changed the start) is saved with the learner's progress reports.",
     );
     expect(l.legal.privacy.sections.emailList.paragraphs.removal(values)).toBe(
       'Removal and erasure: to be taken off the list, or to have your address erased, email hello@example.com from the address you signed up with and we will remove it.',
@@ -136,8 +139,9 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
+  // SN-2: then the school administrators an owner can invite (owner decision 2026-10-21 (b): no free seat numbers).
   const SIZES =
-    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit.';
+    'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
   const billing = l.legal.terms.sections.billing;
 
@@ -187,6 +191,76 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   });
 });
 
+/**
+ * AMENDMENTS-SITE-NEWUSER SN-2: facts in the Privacy Policy and the Terms that had fallen behind the app. English-
+ * authoritative (L10): es and ko show this English. No claim of legal review; the draft banner is gone (owner decision
+ * 2026-10-21 (c)), and nothing says a legal review happened or is pending.
+ */
+describe('legal: SN-2 accuracy (English-authoritative)', () => {
+  const privacy = l.legal.privacy.sections;
+
+  it("the account contact is the sign-in email of a parent, teacher or school administrator; the school's receipts go to its payer only", () => {
+    // Codex review on #804 (P2): an administrator cannot reach the checkout, portal or receipts of the school they
+    // administer (space-seats.test.ts); the same account may still pay for its own family or class plan.
+    expect(privacy.collect.bullets.contact).toBe(
+      "Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan's receipts. A school administrator cannot buy or manage the school's plan, so their email is not used for the school's receipts.",
+    );
+  });
+
+  it('no voice is recorded: no voice mini-game ships, and the site promises no speaking', () => {
+    expect(privacy.never.bullets.media).toBe('No contacts, photos, or microphone audio leave the device. The app does not record your voice.');
+    expect(privacy.never.bullets.media).not.toMatch(/voice mini-game|process speech/i);
+  });
+
+  it('both documents point at the date at the top, where the page shows it', () => {
+    expect(privacy.changes.paragraphs.p1).toBe(
+      'If we make a material change, we will notify parents in the app or by email before it takes effect. The date at the top shows the current version.',
+    );
+    expect(l.legal.terms.sections.changes.paragraphs.p1).toBe(
+      'If we make material changes, we will notify parents in the app or by email before they take effect. The date at the top shows the current version.',
+    );
+  });
+
+  it('a school has up to three grown-ups with admin rights: the owner and two administrators', () => {
+    expect(privacy.collect.bullets.schoolAdmins.startsWith(
+      "A school's owner can add up to two administrators with an invite link, so a school has up to three grown-ups with admin rights. Administrators see",
+    )).toBe(true);
+  });
+
+  it('claims no legal review, and es and ko keep the English text (L10)', () => {
+    const text = JSON.stringify([l.legal.privacy, l.legal.terms, l.meta.pages, l.notFound]);
+    expect(text).not.toMatch(/reviewed by (a )?(lawyer|counsel|attorney)|legally reviewed|native speaker|expert[- ]reviewed/i);
+    // Owner decision 2026-10-21 (c): no draft banner and no line that a legal review is pending.
+    expect(text).not.toMatch(/\bdraft\b|legal counsel|pending review|confirmed with (legal )?counsel/i);
+    expect(Object.keys(l.legal)).toEqual(['backHome', 'englishAuthoritative', 'privacy', 'terms']);
+    for (const locale of ['es', 'ko'] as const) {
+      const legal = getMessages(locale).landing.legal;
+      expect(legal.privacy.sections.collect.bullets.contact).toBe(privacy.collect.bullets.contact);
+      expect(legal.terms.sections.changes.paragraphs.p1).toBe(l.legal.terms.sections.changes.paragraphs.p1);
+    }
+  });
+});
+
+/** AMENDMENTS-SITE-NEWUSER §3.14 and appendix A (row SN-2): the share image's alt text in each locale. */
+describe('landing.captures.og: the share image alt text (SN-2)', () => {
+  it('names Hoya and the words the image shows, the brand and the tagline passed in', () => {
+    expect(l.captures.og('Hangul Route', l.meta.tagline)).toBe('Hoya the tiger next to the words Hangul Route: Learn Hangul from zero, at any age.');
+    const es = getMessages('es').landing;
+    expect(es.captures.og('Hangul Route', es.meta.tagline)).toBe('Hoya, el tigre, junto a las palabras Hangul Route: Aprende hangul desde cero, a cualquier edad.');
+    const ko = getMessages('ko').landing;
+    expect(ko.captures.og('Hangul Route', ko.meta.tagline)).toBe('호랑이 호야와 Hangul Route 로고. 문구: 나이와 상관없이, 한글을 처음부터 배워요.');
+  });
+
+  it('types neither the brand nor a tagline into the message, in any locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const out = getMessages(locale).landing.captures.og('{B}', '{T}');
+      expect(out, locale).toContain('{B}');
+      expect(out, locale).toContain('{T}');
+      expect(out, locale).not.toMatch(/Hangul Route|hangulroute/i);
+    }
+  });
+});
+
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the waitlist consent line byte-identical (#146, CONSENT_TEXT_VERSION); the band speaks of launch news only', () => {
     expect(l.waitlist.consentLead).toBe(
@@ -213,15 +287,17 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     expect(JSON.stringify(l.plans)).not.toMatch(/[$€£₩]|\d+\s*(USD|dollars?)|lifetime/i);
   });
 
-  it('keeps the legal effective dates and the draft notice (#149)', () => {
+  it('keeps the legal effective dates (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
-    expect(l.legal.privacy.effective).toBe('Effective October 20, 2026');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
+    expect(l.legal.privacy.effective).toBe('Effective October 22, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
-    expect(l.legal.terms.effective).toBe('Effective October 20, 2026');
-    expect(l.legal.draft).toBe('Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed, as the Privacy Policy.
+    expect(l.legal.terms.effective).toBe('Effective October 22, 2026');
+    expect('draft' in l.legal).toBe(false);
   });
 });
 
@@ -376,13 +452,18 @@ describe('landing: no words of an older site, in any locale', () => {
       expect(STALE_SITE_WORDS.test(bad), bad).toBe(true);
     }
     expect(STALE_SITE_WORDS.test("We'll email you when family and class plans launch.")).toBe(false);
+    // [SN] The schools section's invite link is the live product (AMENDMENTS-SITE-NEWUSER §3.6), but only there, and
+    // only the invite words: an older word in the same path still fails.
+    expect(staleSiteWord('Create a school space, then invite teachers.', 'landing.persona.teachers.schools.space')).toBe(false);
+    expect(staleSiteWord('Send me the invite', 'landing.home.news.body')).toBe(true);
+    expect(staleSiteWord('invite teachers. Nothing to install', 'landing.persona.teachers.schools.space')).toBe(true);
   });
 
   for (const locale of LOCALES) {
     it(`${locale}: no stale word outside the legal documents`, () => {
       const tree = getMessages(locale).landing;
       for (const path of leafPaths(tree).filter((p) => !p.startsWith('legal.'))) {
-        for (const out of outputs(tree, path)) expect(STALE_SITE_WORDS.test(out), `landing.${path}: ${out}`).toBe(false);
+        for (const out of outputs(tree, path)) expect(staleSiteWord(out, `landing.${path}`), `landing.${path}: ${out}`).toBe(false);
       }
     });
   }
@@ -450,5 +531,149 @@ describe('landing: no words of an older site, in any locale', () => {
       const m = getMessages(locale).landing;
       expect(`${m.meta.description} ${m.plans.paid.coming}`, locale).not.toMatch(/more stages are coming|vienen más etapas|더 많은 단계가 준비/i);
     }
+  });
+});
+
+/**
+ * [SN] AMENDMENTS-SITE-NEWUSER appendix A (row SN-1): the site-entry strings, word for word in en, es and ko as the
+ * multi-agent review passed them. Values (taught Korean, the caps, the contact address, endonyms) are passed in, never
+ * typed into a message, and the removed keys are gone in every locale.
+ */
+describe('landing: the site-entry strings (AMENDMENTS-SITE-NEWUSER appendix A)', () => {
+  const APPENDIX_A: Record<'en' | 'es' | 'ko', Record<string, string>> = {
+    en: {
+      'nav.startShort': 'Start',
+      'home.hero.forParents': "I'm a parent or caregiver",
+      'home.hero.forTeachers': "I'm a teacher",
+      'home.closing.title': 'Ready for your first Korean letter?',
+      'home.closing.body': 'Stage 1 is free. No email or password. Your first quest takes about five minutes.',
+      'persona.parents.create': 'Create a free family space',
+      'persona.teachers.create': 'Create a free class',
+      'persona.haveAccount': 'Already have an account? Sign in',
+      'persona.teachers.schools.title': 'Use it across a whole school',
+      'persona.teachers.schools.space': 'Create a school space, then invite teachers or create classes for them.',
+      'persona.teachers.schools.ownerPlan': "The school's owner manages the plan.",
+      'persona.teachers.schools.moves': 'Move a student to another class in the school. Their family is told, and the student never types a new code.',
+      'captures.home': "The learner's home screen: a greeting, the streak and cards so far, and the next lesson with a Start button.",
+      'captures.game': 'A mini-game: hear a sound and tap the matching letter.',
+      'captures.report': 'A weekly report for one learner: days practiced, what went well and what to practice next.',
+      'captures.classList': "The class page: this week's summary for the whole class.",
+      'captures.lectureSlide': 'A Lecture mode slide on a big screen: a letter, its stroke order and its sound.',
+      'captures.caption.home': 'Home screen',
+      'captures.caption.game': 'A mini-game',
+      'captures.caption.card': 'A heritage card',
+    },
+    es: {
+      'nav.startShort': 'Empezar',
+      'home.hero.forParents': 'Soy madre, padre o tutor',
+      'home.hero.forTeachers': 'Soy docente',
+      'home.closing.title': '¿Vamos por tu primera letra coreana?',
+      'home.closing.body': 'La Etapa 1 es gratis. Sin correo ni contraseña. Tu primera misión dura unos cinco minutos.',
+      'persona.parents.create': 'Crear un espacio familiar gratis',
+      'persona.teachers.create': 'Crear una clase gratis',
+      'persona.haveAccount': '¿Ya tienes una cuenta? Entrar',
+      'persona.teachers.schools.title': 'Úsalo en toda una escuela',
+      'persona.teachers.schools.space': 'Crea un espacio de escuela y después invita a docentes o crea tú las clases de cada docente.',
+      'persona.teachers.schools.ownerPlan': 'El plan lo gestiona quien creó la escuela.',
+      'persona.teachers.schools.moves': 'Cambia a un estudiante a otra clase de la escuela. Se avisa a su familia, y el estudiante no tiene que escribir un código nuevo.',
+      'captures.home': 'La pantalla de inicio del estudiante: un saludo, la racha y las tarjetas hasta ahora, y la próxima lección con un botón para empezar.',
+      'captures.game': 'Un minijuego: escucha un sonido y toca la letra que corresponde.',
+      'captures.report': 'Un informe semanal de un estudiante: días de práctica, lo que salió bien y qué practicar después.',
+      'captures.classList': 'La página de la clase: el resumen de esta semana de toda la clase.',
+      'captures.lectureSlide': 'Una diapositiva del Modo proyección en pantalla grande: una letra, el orden de sus trazos y su sonido.',
+      'captures.caption.home': 'Pantalla de inicio',
+      'captures.caption.game': 'Un minijuego',
+      'captures.caption.card': 'Una tarjeta cultural',
+    },
+    ko: {
+      'nav.startShort': '시작',
+      'home.hero.forParents': '부모 또는 보호자예요',
+      'home.hero.forTeachers': '선생님이에요',
+      'home.closing.title': '첫 한글 글자를 만나 볼까요?',
+      'home.closing.body': '1단계는 무료예요. 이메일도 비밀번호도 필요 없어요. 첫 퀘스트는 5분 정도면 돼요.',
+      'persona.parents.create': '무료 가족 공간 만들기',
+      'persona.teachers.create': '무료 반 만들기',
+      'persona.haveAccount': '이미 계정이 있나요? 로그인',
+      'persona.teachers.schools.title': '학교 전체에서 함께 써요',
+      'persona.teachers.schools.space': '학교 공간을 만든 뒤, 선생님을 초대하거나 선생님 대신 반을 만들어요.',
+      'persona.teachers.schools.ownerPlan': '플랜은 학교를 만든 분이 관리해요.',
+      'persona.teachers.schools.moves': '학생을 학교 안의 다른 반으로 옮길 수 있어요. 가족에게 알림이 가고, 학생은 새 코드를 입력하지 않아도 돼요.',
+      'captures.home': '학습자 홈 화면: 인사, 연속 학습 일수와 모은 카드, 시작 버튼이 있는 다음 레슨.',
+      'captures.game': '미니게임: 소리를 듣고 맞는 글자를 눌러요.',
+      'captures.report': '학습자 한 명의 주간 리포트: 연습한 날, 잘한 점, 다음에 연습할 점.',
+      'captures.classList': '반 페이지: 반 전체의 이번 주 요약.',
+      'captures.lectureSlide': '큰 화면에 띄운 강의 모드 슬라이드: 글자, 획순, 소리.',
+      'captures.caption.home': '홈 화면',
+      'captures.caption.game': '미니게임',
+      'captures.caption.card': '문화 카드',
+    },
+  };
+
+  for (const locale of ['en', 'es', 'ko'] as const) {
+    const t = getMessages(locale).landing;
+    it(`${locale}: every appendix A string, in its own words (no English fallback)`, () => {
+      for (const [path, value] of Object.entries(APPENDIX_A[locale])) expect(lookup(t, path), path).toBe(value);
+      if (locale !== 'en') {
+        const fallback = fallbackPaths(locale).filter((path) => Object.keys(APPENDIX_A.en).some((key) => path === `landing.${key}`));
+        expect(fallback).toEqual([]);
+      }
+    });
+
+    it(`${locale}: the values are passed in (the caps, the address, the taught Korean)`, () => {
+      const S = t.persona.teachers.schools;
+      expect(S.admins(2)).toContain('2');
+      expect(S.admins(7)).toContain('7');
+      // Owner decision (b) 2026-10-21 (OD-SN-11): the size lines take the address only and state no seat figure.
+      expect(S.size('x@example.com')).toContain('x@example.com');
+      expect(S.sizeContract('x@example.com')).toContain('x@example.com');
+      expect(`${S.size('x@example.com')} ${S.sizeContract('x@example.com')}`).not.toMatch(/\d/);
+      expect(t.captures.discover('LETTER', 'ROMAN')).toContain('LETTER');
+      expect(t.captures.discover('LETTER', 'ROMAN')).toContain('(ROMAN)');
+      expect(t.captures.card('WORD', 'ROMAN', 'MEANING')).toContain('WORD');
+      expect(t.captures.card('WORD', 'ROMAN', 'MEANING')).toContain('(ROMAN)');
+    });
+
+    it(`${locale}: no endonym, no address and no Hangul is typed into a site-entry message`, () => {
+      const outputs = [
+        ...Object.keys(APPENDIX_A.en).map((path) => String(lookup(t, path))),
+        t.persona.teachers.schools.admins(2),
+        t.persona.teachers.schools.size('x@example.com'),
+        t.persona.teachers.schools.sizeContract('x@example.com'),
+        t.captures.discover('x', 'a'),
+        t.captures.card('x', 'horangi', 'tiger'),
+      ];
+      for (const out of outputs) {
+        for (const meta of Object.values(LOCALE_META)) expect(out, out).not.toContain(meta.endonym);
+        expect(out.replace('x@example.com', ''), out).not.toMatch(/@|hangulroute\.com/);
+      }
+      // Korean UI words are Korean; outside the Korean UI no Hangul is typed into these messages (taught Korean is passed in).
+      if (locale !== 'ko') for (const out of outputs) expect(out, out).not.toMatch(/[\u3131-\u318e\uac00-\ud7a3]/);
+    });
+
+    it(`${locale}: the removed keys are gone (hero grown-ups link, the persona sign-in actions)`, () => {
+      for (const path of ['home.hero.grownUps', 'persona.parents.signIn', 'persona.teachers.signIn']) expect(lookup(t, path), path).toBeUndefined();
+    });
+
+    it(`${locale}: no price, no plan term, no billing word in the schools lines while plans are not on sale`, () => {
+      const S = t.persona.teachers.schools;
+      const lines = [S.title, S.space, S.admins(2), S.moves, S.size('x@example.com')].join(' ');
+      expect(lines).not.toMatch(/\$|€|₩|\bprice\b|\bprecio\b|가격|\bper (year|month)\b|\bbilling\b|facturación|결제/i);
+    });
+  }
+
+  it('English pins: the plural administrators line and the size lines (no seat figure)', () => {
+    const S = l.persona.teachers.schools;
+    expect(S.admins(2)).toBe("Add up to 2 more administrators with an invite link. They can open class lists and reports and move students between the school's classes.");
+    expect(S.admins(1)).toBe("Add up to 1 more administrator with an invite link. They can open class lists and reports and move students between the school's classes.");
+    expect(S.size('hello@example.com')).toBe('Need room for more students? Write to hello@example.com.');
+    expect(S.sizeContract('hello@example.com')).toBe('Need room for more students? Write to hello@example.com about a School Contract.');
+    expect(l.captures.discover('x', 'a')).toBe('The app on a phone, in the first quest: new letters, starting with x (a), each with a button to hear it.');
+    expect(l.captures.card('x', 'horangi', 'tiger')).toBe('A Korean heritage card: x (horangi), meaning tiger.');
+    // es uses "admin(s)" as the console does (AMENDMENTS-SEATS-ADMINS §9.4: no gender agreement).
+    expect(getMessages('es').landing.persona.teachers.schools.admins(1)).toContain('1 admin más');
+    expect(getMessages('es').landing.persona.teachers.schools.admins(2)).toContain('2 admins más');
+    expect(getMessages('es').landing.persona.teachers.schools.size('hello@example.com')).toBe('¿Necesitas lugar para más estudiantes? Escribe a hello@example.com.');
+    expect(getMessages('ko').landing.persona.teachers.schools.size('hello@example.com')).toBe('학생 자리가 더 필요하면 hello@example.com 주소로 문의해 주세요.');
+    expect(getMessages('ko').landing.captures.card('x', 'horangi', 'tiger')).toBe('한국 문화 카드: x(horangi).');
   });
 });

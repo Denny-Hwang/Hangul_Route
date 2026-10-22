@@ -3,9 +3,7 @@
   "pages": {
     "/": [
       "a /privacy",
-      "a mailto:hello@hangulroute.com",
-      "button submit",
-      "input email"
+      "a mailto:hello@hangulroute.com"
     ]
   },
   "shownLocales": {}

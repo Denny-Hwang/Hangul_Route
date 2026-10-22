@@ -115,6 +115,10 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * cancel or failed match leaves the screen as it was and is not a miss; an enrolment change turns it off and puts
  * `biometric.changed` in the subtitle's place. It never opens setup or reset. Destination `BiometricShortcut`: the
  * Grown-up area's switch asked for a fresh PIN; a correct PIN turns the shortcut on and goes back.
+ *
+ * [OA] Destination `JoinSpace` (row OA-7b, CS-11): Who is joining? asks the PIN before a learner other than the
+ * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a first PIN set here returns to Join, which goes on;
+ * a PIN set at the end of a reset (`via`) returns too but is no fresh PIN, so Join asks it once more.
  */
 
 const DOT_SIZE = 20;
@@ -431,6 +435,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       back();
+    } else if (route.params.next === 'JoinSpace') {
+      // [OA] CS-11 (row OA-7b): back to Who is joining?, which sees the fresh PIN and goes on to the name steps.
+      back();
     } else {
       navigation.replace('ParentDashboard');
     }
@@ -550,6 +557,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           navigation.goBack();
           return;
         }
+        // [OA] CS-11 (row OA-7b): a first PIN set just now for Who is joining? was entered twice this minute, so it is
+        // fresh. A PIN set at the end of a reset (the 24-hour wait or the Rescue Code, `via`) is not: Join asks it again.
+        if (route.params.next === 'JoinSpace' && route.params.via === undefined) markPinVerified();
         proceed();
         return;
       }

@@ -1,4 +1,4 @@
-import { getMessages } from '@hangul-route/i18n';
+import { getMessages, LOCALE_META, LOCALES } from '@hangul-route/i18n';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -26,25 +26,63 @@ test.describe('locale routes', () => {
     });
   }
 
-  test('unknown paths get the 404 page in an English document', async ({ page }) => {
-    const response = await page.goto('/no-such-page');
-    expect(response?.status()).toBe(404);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByText('This page could not be found.')).toBeVisible();
-  });
-
-  // The 404 body is Next's own component, a full-screen inline box that `.hr-site-404` sizes to its content. If a
-  // Next upgrade changes that markup, the two ways on would drop below the fold again; this pins them on screen.
-  const notFound = getMessages('en').landing.notFound;
-  for (const [width, height] of [[320, 568], [375, 812]] as const) {
-    test(`the 404 page shows its two ways on in the first screen at ${width} x ${height}`, async ({ page }) => {
-      await page.setViewportSize({ width, height });
-      await page.goto('/no-such-page');
-      for (const name of [notFound.home, notFound.start]) {
-        const link = page.getByRole('main').getByRole('link', { name, exact: true });
-        await expect(link).toBeInViewport({ ratio: 1 });
+  // AMENDMENTS-SITE-NEWUSER SN-2: the Worker serves the nearest 404.html (`404-page`; e2e/serve-out.mjs does the
+  // same), so an unknown path under /es or /ko gets that locale's 404 page: its <html lang>, its words, links to its
+  // own home and to the learner app in its language, one <title> and `noindex` alone.
+  for (const [path, locale] of [['/no-such-page', 'en'], ['/es/nope', 'es'], ['/ko/nope', 'ko']] as const) {
+    test(`${path} gets the ${locale} 404 page: lang, one title, noindex alone and two ways on`, async ({ page }) => {
+      const t = getMessages(locale).landing.notFound;
+      const response = await page.goto(path);
+      expect(response?.status()).toBe(404);
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.locator('title')).toHaveCount(1);
+      await expect(page).toHaveTitle(t.title);
+      const robots = page.locator('meta[name="robots"]');
+      await expect(robots).toHaveCount(1);
+      await expect(robots).toHaveAttribute('content', 'noindex');
+      await expect(page.getByRole('heading', { level: 1, name: t.title })).toBeVisible();
+      await expect(page.getByText(t.body)).toBeVisible();
+      const main = page.getByRole('main');
+      await expect(main.getByRole('link', { name: t.home, exact: true })).toHaveAttribute('href', locale === 'en' ? '/' : `/${locale}`);
+      await expect(main.getByRole('link', { name: t.start, exact: true })).toHaveAttribute(
+        'href',
+        locale === 'en' ? 'https://app.hangulroute.com' : `https://app.hangulroute.com?lang=${locale}`,
+      );
+      // AMENDMENTS-SITE-NEWUSER §3.7 and §8: the site's 404 body, never Next's default block, and the home text link
+      // before Start learning (the mock's order).
+      await expect(page.locator('.next-error-h1')).toHaveCount(0);
+      await expect(page.getByText('This page could not be found.')).toHaveCount(0);
+      const order = await main.getByRole('link').evaluateAll((links) => links.map((a) => a.textContent?.trim()));
+      expect(order).toEqual([t.home, t.start]);
+      await expect(main.locator('svg[data-pose="waving"]')).toHaveCount(1);
+      // §3.2 and §8: the language links of the 404 point at each locale's home (the unknown path would be another 404).
+      // Each link goes to the home of the language it names: `sitePath(target, '/')`, so `/` for English and
+      // `/<locale>` otherwise (a link with hreflang="es" pointing at `/ko` fails here).
+      const languageLinks = page.locator('footer a[hreflang]');
+      expect(await languageLinks.count()).toBeGreaterThanOrEqual(2);
+      const homeOf = new Map(LOCALES.map((target) => [LOCALE_META[target].htmlLang, target === 'en' ? '/' : `/${target}`]));
+      const pairs = await languageLinks.evaluateAll((links) => links.map((a) => [a.getAttribute('hreflang'), a.getAttribute('href')] as const));
+      for (const [hreflang, href] of pairs) {
+        expect(homeOf.has(hreflang ?? ''), `hreflang ${hreflang}`).toBe(true);
+        expect(href, `hreflang ${hreflang}`).toBe(homeOf.get(hreflang ?? ''));
       }
     });
+  }
+
+  // The two ways on stay on the first screen of a small phone, under the header (§3.7, §3.11: Start learning ends on the
+  // 320 x 568 first screen in every locale).
+  for (const [width, height] of [[320, 568], [375, 812]] as const) {
+    for (const [path, locale] of [['/no-such-page', 'en'], ['/es/nope', 'es'], ['/ko/nope', 'ko']] as const) {
+      test(`${path} shows its two ways on in the first screen at ${width} x ${height}`, async ({ page }) => {
+        const notFound = getMessages(locale).landing.notFound;
+        await page.setViewportSize({ width, height });
+        await page.goto(path);
+        for (const name of [notFound.start, notFound.home]) {
+          const link = page.getByRole('main').getByRole('link', { name, exact: true });
+          await expect(link).toBeInViewport({ ratio: 1 });
+        }
+      });
+    }
   }
 
   for (const [path, lang] of LOCALE_PAGES) {

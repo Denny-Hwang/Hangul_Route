@@ -123,6 +123,23 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
       joinHeld = true;
     } else {
       const handed = takeJoinHandoff();
+      if (handed !== null && batchOpensAtLaunch(profiles.length)) {
+        // [OA] OA-D20, OA-D14 (row OA-7b): the family home's code opens Who is joining? instead of the chooser. The
+        // chooser this launch would have shown waits for the end of the join (`takeBatchLaunchChooser`), so the device
+        // never goes on as whoever played last (CS-5).
+        batchHandoff = handed;
+        batchLaunchChooser = chooserTrigger({
+          event: intent?.kind === 'who' ? 'return' : 'launch',
+          shared,
+          activeLocked: activeProfileLocked(),
+          profiles: profiles.length,
+          backgroundMs: 0,
+          joinHeld: false,
+          flag: true,
+        });
+        if (intent?.kind === 'who') consumeBootIntent();
+        return null;
+      }
       if (handed !== null) {
         holdJoin(handed, now);
         joinHeld = true;
@@ -132,6 +149,46 @@ export async function chooserLaunchTrigger(now: number = Date.now()): Promise<Wh
   const event: ChooserEvent = intent?.kind === 'who' ? 'return' : 'launch';
   if (intent?.kind === 'who') consumeBootIntent();
   return chooserTrigger({ event, shared, activeLocked: activeProfileLocked(), profiles: profiles.length, backgroundMs: 0, joinHeld, flag: true });
+}
+
+// ---- [OA] Who is joining? at launch (OA-D14, OA-D20; row OA-7b) ----
+
+/** The family home's hand-off code taken at launch for Who is joining?, in memory only (never in the address). */
+let batchHandoff: string | null = null;
+
+/**
+ * [OA] Whether a family hand-off code at launch opens Who is joining? instead of the chooser (OA-D20): the flag on
+ * (`EXPO_PUBLIC_MULTI_JOIN`), 2 or more learner profiles, and the active profile not locked. A locked active profile
+ * keeps the chooser (CS-19): the hand-off is then held for the learner picked there, as before.
+ */
+export function batchOpensAtLaunch(learnerCount: number = learnerProfiles().length): boolean {
+  return flags.multiJoinEnabled && learnerCount >= 2 && !activeProfileLocked();
+}
+
+/** Whether the launch took a hand-off code for Who is joining? (the root stack then opens Join over Home). */
+export function batchHandoffPending(): boolean {
+  return batchHandoff !== null;
+}
+
+/** The chooser the launch deferred for Who is joining? (OA-D20, CS-5), or null. */
+let batchLaunchChooser: WhoTrigger | null = null;
+
+/**
+ * [OA] Leaving Join after a launch that took the hand-off code (Done, or Back): the chooser that launch would have
+ * shown, taken once, so "Who is using this?" still asks before anyone plays (OA-D20, CS-5). Null when the launch took
+ * no code or the chooser already showed.
+ */
+export function takeBatchLaunchChooser(): WhoTrigger | null {
+  const trigger = batchLaunchChooser;
+  batchLaunchChooser = null;
+  return trigger;
+}
+
+/** Join takes the launch's hand-off code once; the lookup then runs at once and the checklist follows. */
+export function takeBatchHandoff(): string | null {
+  const code = batchHandoff;
+  batchHandoff = null;
+  return code;
 }
 
 /** The `who=1` hand-off for `BootIntentHook`: opens the chooser when the flag is on and a profile exists. */
@@ -268,4 +325,6 @@ export function persistLeaving(): void {
 export function resetChooserState(): void {
   usesKnown = [];
   held = null;
+  batchHandoff = null;
+  batchLaunchChooser = null;
 }

@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { APP_ROUTES } from '@hangul-route/content-schema';
+import { APP_ROUTES, FREE_CLASS_STUDENT_CAP } from '@hangul-route/content-schema';
 import { LOCALES, type UiLocale } from '@hangul-route/i18n';
 import type { Metadata } from 'next';
 import { createElement, type ComponentType, type ReactNode } from 'react';
@@ -37,6 +37,8 @@ import * as LocPrivacy from '../(loc)/[locale]/privacy/page';
 import * as LocTeachers from '../(loc)/[locale]/teachers/page';
 import * as LocLicenses from '../(loc)/[locale]/licenses/page';
 import * as LocTerms from '../(loc)/[locale]/terms/page';
+import * as LocNotFound from '../(loc)/[locale]/404/page';
+import * as EnNotFound from '../not-found';
 import { SITE_PRICE_PATTERNS } from './site-price-patterns';
 
 /**
@@ -219,6 +221,13 @@ function renderRoutes(): Rendered[] {
       out.push({ label: `${page} (${locale} route)`, html: renderToStaticMarkup(createElement(LocLayout, { params, children })) });
     }
   }
+  // The 404 pages (AMENDMENTS-SITE-NEWUSER SN-2): `out/404.html` and `out/<locale>/404.html`.
+  out.push({ label: '404 (en)', html: renderToStaticMarkup(createElement(EnNotFound.default)) });
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    const params = { locale };
+    const children: ReactNode = createElement(LocNotFound.default, { params });
+    out.push({ label: `404 (${locale} route)`, html: renderToStaticMarkup(createElement(LocLayout, { params, children })) });
+  }
   return out;
 }
 
@@ -247,6 +256,10 @@ function metadataTexts(): Array<{ label: string; text: string }> {
       out.push({ label: `${page} (${locale})`, text: JSON.stringify(LOC_ROUTES[page].generateMetadata({ params: { locale } })) });
     }
   }
+  out.push({ label: '404 (en)', text: JSON.stringify(EnNotFound.metadata) });
+  for (const locale of LOCALES.filter((l) => l !== 'en')) {
+    out.push({ label: `404 (${locale})`, text: JSON.stringify(LocNotFound.generateMetadata({ params: { locale } })) });
+  }
   return out;
 }
 
@@ -262,7 +275,8 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
       vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', showAll);
       const pages = [...renderRoutes(), ...renderClaimStates()];
       const nonEn = LOCALES.length - 1;
-      expect(pages).toHaveLength(SITE_PAGES.length * (1 + nonEn) + LOCALES.length * (CLAIMS_PAGES.length * 2 + PLAIN_PAGES.length));
+      // + 1 + nonEn: the 404 page in English and in each site locale.
+      expect(pages).toHaveLength((SITE_PAGES.length + 1) * (1 + nonEn) + LOCALES.length * (CLAIMS_PAGES.length * 2 + PLAIN_PAGES.length));
       const found = pages.flatMap(({ label, html }) => linksOf(html).filter(isBillingLink).map((href) => `${label}: ${href}`));
       expect(found).toEqual([]);
       const printed = pages.filter(({ html }) => STRIPE_PAYMENT_URL.test(textOf(html))).map(({ label }) => label);
@@ -293,7 +307,9 @@ describe('site-no-billing: rendered pages carry no billing link (F-BILL-002 B-10
     expect([...CLAIMS_PAGES, ...PLAIN_PAGES].map(([page]) => page).sort()).toEqual([...SITE_PAGES].sort());
     const routeFiles = (dir: string): string[] => sourceFiles(dir).filter((file) => /(?:^|\/)page\.tsx$/.test(file));
     expect(routeFiles(join(appDir, '(en)'))).toHaveLength(SITE_PAGES.length);
-    expect(routeFiles(join(appDir, '(loc)'))).toHaveLength(SITE_PAGES.length);
+    // Plus `[locale]/404`, the locale 404 page, scanned on its own in renderRoutes (SN-2).
+    expect(routeFiles(join(appDir, '(loc)'))).toHaveLength(SITE_PAGES.length + 1);
+    expect(routeFiles(join(appDir, '(loc)')).some((file) => file.endsWith(join('[locale]', '404', 'page.tsx')))).toBe(true);
   });
 });
 
@@ -308,6 +324,45 @@ describe('site-no-billing: rendered pages name no amount (F-BILL-002 B-10)', () 
     const terms = textOf(renderToStaticMarkup(createElement(TermsPage, { locale })));
     const privacy = textOf(renderToStaticMarkup(createElement(PrivacyPage, { locale })));
     expect(`${terms} ${privacy}`).toMatch(/\bStripe\b/);
+  });
+});
+
+/**
+ * Owner decision 2026-10-21 (b), AMENDMENTS-SITE-NEWUSER SN-2: the site does not publish the free-tier seat numbers.
+ * The removed Terms sentence was "Without a paid plan, a family holds up to 4 learners, a class up to 20 students and
+ * a school up to 50 students."; these patterns catch it, or a translation of it, on any page in any locale.
+ */
+const FREE_SEAT_PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
+  { name: 'the free class cap (en)', re: new RegExp(`\\bup to ${FREE_CLASS_STUDENT_CAP} students\\b`, 'i') },
+  { name: 'a free-tier size (en)', re: /\bwithout a paid plan\b|\bfree (?:plan|space|class|tier) holds\b/i },
+  { name: 'the free class cap (es)', re: new RegExp(`\\bhasta ${FREE_CLASS_STUDENT_CAP} (?:alumnos|estudiantes)\\b`, 'i') },
+  { name: 'a free-tier size (es)', re: /\bsin (?:un )?plan de pago\b/i },
+  { name: 'the free class cap (ko)', re: new RegExp(`\uCD5C\uB300 ${FREE_CLASS_STUDENT_CAP}\\s?\uBA85`) },
+  { name: 'a free-tier size (ko)', re: /\uC720\uB8CC \uD50C\uB79C \uC5C6\uC774/ },
+];
+
+describe('site-no-billing: no free seat numbers on the site (owner decision 2026-10-21 (b), SN-2)', () => {
+  it('no page, in any locale or claim state, publishes a free-tier seat number', () => {
+    const pages = [...renderRoutes(), ...renderClaimStates()];
+    const found = pages.flatMap(({ label, html }) =>
+      FREE_SEAT_PATTERNS.filter(({ re }) => re.test(textOf(html))).map(({ name }) => `${label}: ${name}`),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it.each([
+    'Without a paid plan, a family holds up to 4 learners, a class up to 20 students and a school up to 50 students.',
+    'A free class holds up to 20 students.',
+    'Sin un plan de pago, una clase admite hasta 20 alumnos.',
+    '\uC720\uB8CC \uD50C\uB79C \uC5C6\uC774 \uD559\uAE09\uC740 \uCD5C\uB300 20\uBA85\uAE4C\uC9C0',
+  ])('the rule catches %s', (text) => {
+    expect(FREE_SEAT_PATTERNS.some(({ re }) => re.test(text))).toBe(true);
+  });
+
+  it('the rule lets the paid plan sizes through', () => {
+    const paid =
+      'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers.';
+    expect(FREE_SEAT_PATTERNS.filter(({ re }) => re.test(paid)).map(({ name }) => name)).toEqual([]);
   });
 });
 

@@ -50,13 +50,19 @@ const PERSONA = { phoneMax: 4060, phoneHeadroom: 3700, wideMax: 3200, words: 550
  * Home budgets (§3.11): about 3.5 screens at 375 x 812 (headroom 2,810: 2,750 plus the footer's locale switcher row on
  * phones, F-I18N-001 rows 15b / 16b), 2,100 px at 1280 x 800 (the switcher sits on the copyright line there), 280 words.
  */
-const HOME = { phoneMax: 2900, phoneHeadroom: 2810, wideMax: 2100, words: 280, current: false, folds: false } as const;
+const HOME = { phoneMax: 3250, phoneHeadroom: 3150, wideMax: 2300, words: 300, current: false, folds: false } as const;
+/**
+ * [SN] AMENDMENTS-SITE-NEWUSER §3.11: the closing band and the hero capture cost about 180 px on a phone, so the home
+ * moves to 3,250 (headroom 3,150), 2,300 at 1280 and 300 words; `/teachers` gains the media row and the schools
+ * section: 4,300 (headroom 4,150) and 3,600 at 1280. The other persona pages keep theirs.
+ */
+const TEACHERS = { ...PERSONA, phoneMax: 4300, phoneHeadroom: 4150, wideMax: 3600 } as const;
 
 const PAGES: readonly SitePageBudget[] = [
   { path: '/', h1: en.home.hero.title, lead: en.home.hero.lead, primary: en.home.hero.start, ...HOME },
   { path: '/learners', h1: en.persona.learners.title, lead: en.persona.learners.lead, primary: en.nav.start, ...PERSONA },
-  { path: '/parents', h1: en.persona.parents.title, lead: en.persona.parents.lead, primary: en.persona.parents.signIn, ...PERSONA },
-  { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.signIn, ...PERSONA },
+  { path: '/parents', h1: en.persona.parents.title, lead: en.persona.parents.lead, primary: en.persona.parents.create, ...PERSONA },
+  { path: '/teachers', h1: en.persona.teachers.title, lead: en.persona.teachers.lead, primary: en.persona.teachers.create, ...TEACHERS },
 ];
 
 /**
@@ -109,14 +115,24 @@ async function headerRows(page: Page): Promise<{ height: number; rows: number }>
   return page.evaluate(() => {
     const header = document.querySelector('header.hr-site-header');
     if (!header) return { height: 0, rows: 0 };
-    const tops = new Set<number>();
-    for (const el of Array.from(header.querySelectorAll('a'))) {
+    const boxes: Array<{ top: number; bottom: number }> = [];
+    // [SN] The language control's summary is a header control too (AMENDMENTS-SITE-NEWUSER §3.2). The closed menu's
+    // links are not drawn (checkVisibility), and neither is the skip link until it is focused.
+    for (const el of Array.from(header.querySelectorAll('a, summary'))) {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) tops.add(Math.round(r.top));
+      if (r.width > 0 && r.height > 0 && r.bottom > 0 && el.checkVisibility()) boxes.push({ top: r.top, bottom: r.bottom });
     }
-    // Controls whose tops are within a few px share a row (sub-pixel layout and differing heights).
-    const sorted = [...tops].sort((a, b) => a - b);
-    const rows = sorted.filter((top, i) => i === 0 || top - (sorted[i - 1] ?? top) > 8).length;
+    // Controls share a row when they overlap vertically (items are centred in the row, so a taller one, such as the
+    // brand mark at 200 % text, starts higher than its neighbours).
+    boxes.sort((a, b) => a.top - b.top);
+    let rows = 0;
+    let rowBottom = -Infinity;
+    for (const box of boxes) {
+      if (box.top >= rowBottom - 1) {
+        rows += 1;
+        rowBottom = box.bottom;
+      } else rowBottom = Math.max(rowBottom, box.bottom);
+    }
     return { height: header.getBoundingClientRect().height, rows };
   });
 }
@@ -183,14 +199,20 @@ for (const budget of PAGES) {
     });
 
     for (const width of [320, 375]) {
-      test(`at ${width} px the header is one row, at most ${HEADER_MAX} px tall: the brand and Sign in`, async ({ page }) => {
+      const home = budget.path === '/';
+      test(`at ${width} px the header is one row, at most ${HEADER_MAX} px tall: the brand, ${home ? '' : 'Start, '}Language and Sign in`, async ({ page }) => {
         await page.setViewportSize({ width, height: 812 });
         await page.goto(budget.path);
         const { height, rows } = await headerRows(page);
         expect(rows).toBe(1);
         expect(height).toBeLessThanOrEqual(HEADER_MAX);
-        await expect(page.locator('header.hr-site-header').getByRole('link', { name: en.nav.signIn, exact: true })).toBeVisible();
-        await expect(page.locator('header.hr-site-header').getByRole('link', { name: en.nav.start, exact: true })).toBeHidden();
+        const header = page.locator('header.hr-site-header');
+        await expect(header.getByRole('link', { name: en.nav.signIn, exact: true })).toBeVisible();
+        await expect(header.locator('summary')).toBeVisible();
+        // [SN] OD-SN-1: the phone Start pill on every page but `/`, named "Start learning", reading "Start".
+        const start = header.getByRole('link', { name: en.nav.start, exact: true });
+        if (home) await expect(start).toBeHidden();
+        else await expect(start).toHaveText(en.nav.startShort);
         await expect(page.getByRole('navigation', { name: en.nav.label })).toBeHidden();
       });
     }
@@ -306,4 +328,99 @@ for (const { path, legal } of [
       await expect(header.getByRole('link', { name: en.nav.signIn, exact: true })).toHaveCount(legal ? 0 : 1);
     });
   });
+}
+
+/**
+ * [SN] AMENDMENTS-SITE-NEWUSER §3.11 first screens: at 375 x 812 the home also shows the two grown-up links and the
+ * brand name in every locale; at 320 x 568 the persona pages show their Create action in every locale.
+ */
+for (const lang of ['en', 'es', 'ko'] as const) {
+  const t = getMessages(lang).landing;
+  const prefix = lang === 'en' ? '' : `/${lang}`;
+  test.describe(`[SN] ${lang} first screens and header`, () => {
+    test(`${prefix || '/'} at 375 x 812: the grown-up links and the brand name on the first screen`, async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await page.goto(prefix || '/');
+      for (const name of [t.home.hero.forParents, t.home.hero.forTeachers]) {
+        const box = await page.locator('main').getByRole('link', { name, exact: true }).boundingBox();
+        expect(box, name).not.toBeNull();
+        expect((box?.y ?? Infinity) + (box?.height ?? 0), `${name} ends on the first screen`).toBeLessThanOrEqual(812);
+      }
+      const brandName = page.locator('header .hr-site-brand-name');
+      await expect(brandName).toBeVisible();
+      const box = await brandName.boundingBox();
+      expect(box?.width ?? 0, 'the name is drawn, not visually hidden').toBeGreaterThan(40);
+    });
+
+    for (const [path, create] of [
+      ['/parents', t.persona.parents.create],
+      ['/teachers', t.persona.teachers.create],
+    ] as const) {
+      test(`${prefix}${path} at 320 x 568: Create on the first screen`, async ({ page }) => {
+        await page.setViewportSize({ width: 320, height: 568 });
+        await page.goto(`${prefix}${path}`);
+        const box = await page.locator('main').getByRole('link', { name: create, exact: true }).first().boundingBox();
+        expect(box).not.toBeNull();
+        expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThanOrEqual(568);
+        expect((box?.x ?? -1) + (box?.width ?? Infinity)).toBeLessThanOrEqual(320);
+      });
+    }
+
+    for (const path of ['/', '/learners', '/parents', '/teachers', '/about']) {
+      for (const width of [320, 375]) {
+        test(`${prefix}${path === '/' ? '' : path || '/'} at ${width} px: the header is one row, at most ${HEADER_MAX} px tall`, async ({ page }) => {
+          await page.setViewportSize({ width, height: 812 });
+          await page.goto(`${prefix}${path === '/' ? '' : path}` || '/');
+          const { height, rows } = await headerRows(page);
+          expect(rows).toBe(1);
+          expect(height).toBeLessThanOrEqual(HEADER_MAX);
+        });
+      }
+    }
+  });
+}
+
+/**
+ * [SN] On tablets and laptops the header is one row in every locale (from 720 to 959 px the brand shows its mark and
+ * the language control its globe, so the Spanish labels fit beside the nav from about 740 px; between 720 and 740 px
+ * the Spanish header takes two rows, which no device width in common use falls in).
+ */
+for (const lang of ['en', 'es', 'ko'] as const) {
+  for (const width of [768, 1024, 1280]) {
+    test(`[SN] ${lang} at ${width} px: the header is one row on every site page`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      for (const path of ['/', '/learners', '/parents', '/teachers', '/about', '/privacy']) {
+        await page.goto(lang === 'en' ? path : path === '/' ? `/${lang}` : `/${lang}${path}`);
+        const { height, rows } = await headerRows(page);
+        expect(rows, `${lang} ${path}`).toBe(1);
+        expect(height, `${lang} ${path}`).toBeLessThanOrEqual(HEADER_MAX);
+      }
+    });
+  }
+}
+
+/** [SN] §3.11 image budgets: the page's own capture files, one locale, every `<picture>` source counted. */
+const IMAGE_BUDGET_KB: Readonly<Record<string, number>> = { '/': 40, '/learners': 70, '/parents': 60, '/teachers': 80 };
+for (const lang of ['en', 'es', 'ko'] as const) {
+  for (const [path, kb] of Object.entries(IMAGE_BUDGET_KB)) {
+    const url = lang === 'en' ? path : path === '/' ? `/${lang}` : `/${lang}${path}`;
+    test(`[SN] ${url}: its captures are at most ${kb} KB, each in the page's locale`, async ({ page }) => {
+      await page.goto(url);
+      const srcs = await page.evaluate(() =>
+        [...new Set(Array.from(document.querySelectorAll('main img[src], main source[srcset]')).map((el) => el.getAttribute('src') ?? el.getAttribute('srcset') ?? ''))].filter(
+          (src) => src.startsWith('/site/captures/'),
+        ),
+      );
+      expect(srcs.length).toBeGreaterThan(0);
+      let bytes = 0;
+      for (const src of srcs) {
+        expect(src).toMatch(new RegExp(`^/site/captures/${lang}/[a-z-]+\\.[0-9a-f]{8}\\.webp$`));
+        const res = await page.request.get(src);
+        expect(res.ok(), src).toBe(true);
+        expect(res.headers()['content-type']).toBe('image/webp');
+        bytes += (await res.body()).byteLength;
+      }
+      expect(bytes).toBeLessThanOrEqual(kb * 1024);
+    });
+  }
 }

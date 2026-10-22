@@ -59,7 +59,7 @@ export function dictionaryLocale(locale: UiLocale, pseudo: boolean = pseudoLocal
 /**
  * Dictionary subtrees that stay English in every locale on purpose: the Privacy Policy and the Terms of
  * Service are English-authoritative until legal review (decision L10, F-I18N-001 §4). es / ko show the
- * English text under a localized notice (`landing.legal.draft` and `backHome` stay translatable), so an
+ * English text under a localized notice (`landing.legal.englishAuthoritative` and `backHome` stay translatable), so an
  * overlay must not set a leaf under these prefixes (messages.structure.test.ts), and they are not
  * fallbacks: they never count against a locale's key coverage (§3.10 release gate).
  */

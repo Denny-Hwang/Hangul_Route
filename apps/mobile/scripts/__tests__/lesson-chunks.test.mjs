@@ -183,13 +183,15 @@ describe('precacheReport and its budget lines', () => {
 
   it('the start bundle line is its size after CM-8 with a small margin, under the CM-5 size, so it shrank; the precache line is the CM-5 measurement plus 2.5 MB', () => {
     // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
-    // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801).
+    // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801),
+    // 6,495,837 B with the SN-2 site strings in the bundled `landing` messages (#804, app-host build), 6,518,688 B on
+    // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build).
     // The margin stays under 10 KB, so the stories (or anything else) cannot come back into the start bundle.
     // This pins the line only; `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the
     // real start bundle against it.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_495_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 6_487_010).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 6_487_010).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_525_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_518_688).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 6_518_688).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_337_815);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

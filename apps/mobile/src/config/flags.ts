@@ -231,6 +231,14 @@ export interface Flags {
    * opt-in, so the PIN screen offers only the pad.
    */
   biometricShortcutEnabled: boolean;
+
+  /**
+   * [OA] "Who is joining?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, sections 10.3 and 16, row OA-7b): a family code
+   * on a device with 2 or more learner profiles lists them with check boxes and joins each picked learner in turn,
+   * and a family hand-off code on a shared device opens that checklist. OFF when row OA-7b lands; OA-10 turns it on.
+   * `EXPO_PUBLIC_MULTI_JOIN` (`parseKillSwitch`). Off: the one-learner join of today.
+   */
+  multiJoinEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -256,6 +264,7 @@ const launchDefaults: Flags = {
   whoChooserEnabled: false,
   pinResetSignInEnabled: false,
   biometricShortcutEnabled: true,
+  multiJoinEnabled: false,
 };
 
 export const flags: Flags = {
@@ -287,6 +296,7 @@ export const flags: Flags = {
   // The console twin's vocabulary too (`enabled`, `disabled`): one value turns both sides on.
   pinResetSignInEnabled: parseLectureSwitch(process.env.EXPO_PUBLIC_PIN_RESET_SIGNIN, launchDefaults.pinResetSignInEnabled),
   biometricShortcutEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_BIOMETRIC_SHORTCUT, launchDefaults.biometricShortcutEnabled),
+  multiJoinEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_MULTI_JOIN, launchDefaults.multiJoinEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

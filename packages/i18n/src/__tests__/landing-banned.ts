@@ -23,6 +23,21 @@ export const SPATIAL_BEHIND_PATHS: ReadonlySet<string> = new Set([
 export const STALE_SITE_WORDS =
   /multiplic|곱셈|invite|invitaci[oó]n|초대|Hangul Route launches|Hangul Route se lance|Hangul Route가 출시|Nothing to install|instalar nada|설치할 것이 없|Annyeong/i;
 
+/**
+ * [SN] The schools section of `/teachers` (AMENDMENTS-SITE-NEWUSER §3.6) names the live school invite link on purpose,
+ * as the legal text does: in these paths only the invite words are allowed; every other stale word is still checked.
+ */
+export const SCHOOL_INVITE_PATHS: ReadonlySet<string> = new Set([
+  'landing.persona.teachers.schools.space',
+  'landing.persona.teachers.schools.admins',
+]);
+
+/** Whether a landing string at `path` holds a word of an older site (`STALE_SITE_WORDS`), after the school invite exemption. */
+export function staleSiteWord(text: string, path: string): boolean {
+  const checked = SCHOOL_INVITE_PATHS.has(path) ? text.replace(/invite|invitaci[oó]n|초대/gi, ' ') : text;
+  return STALE_SITE_WORDS.test(checked);
+}
+
 /** The first caregiver-banned word in a landing string at `path`, after the spatial "behind" exemption. */
 export function landingBannedWord(text: string, locale: UiLocale, path: string): string | null {
   const checked = locale === 'en' && SPATIAL_BEHIND_PATHS.has(path) ? text.replace(/\bbehind\b/gi, ' ') : text;

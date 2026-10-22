@@ -85,3 +85,12 @@ export function signIn(persona?: GrownUpPersona, locale: UiLocale = 'en'): strin
   const href = `${grownUpOrigin()}${APP_ROUTES.signIn}`;
   return appEntryUrl(persona ? `${href}?persona=${persona}` : href, locale);
 }
+
+/**
+ * [SN] The create view of `/signin` (AMENDMENTS-SITE-NEWUSER §3.8): `?mode=create&persona=<p>`, which opens the
+ * grown-up create view with that persona's hint (`app/(console)/signin/page.tsx`), plus `?lang=` from `/es` and
+ * `/ko`. Every rule of `signIn` holds: one origin variable, never `/teach`, `/parent`, `/account` or billing.
+ */
+export function createAccount(persona: GrownUpPersona, locale: UiLocale = 'en'): string {
+  return appEntryUrl(`${grownUpOrigin()}${APP_ROUTES.signIn}?mode=create&persona=${persona}`, locale);
+}
