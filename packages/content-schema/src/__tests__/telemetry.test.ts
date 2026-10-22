@@ -166,6 +166,12 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.goal.met',
         'lecture.game.finished',
         'exp.exposure',
+        'guest.started',
+        'guest.first_letter',
+        'guest.quest_done',
+        'guest.left',
+        'guest.saved',
+        'guest.expired',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
