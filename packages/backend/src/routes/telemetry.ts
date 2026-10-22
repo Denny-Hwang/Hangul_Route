@@ -29,6 +29,9 @@ import { id, type TelemetryEvent } from '../store';
  * anonymous `telemetry_daily` table (section 15.1, lib/telemetry-daily.ts): written through within per-isolate
  * bounds (held and summed only past them), best effort, after the response is decided, never failing this route
  * and never retried.
+ * [GU] A `guest.*` name (AMENDMENTS-GUEST-FIRST-LESSON section 12) is stored with no profile id ever (CS-G7) and
+ * only its listed codes (GUEST_PAYLOAD_RULES, lib/server-events.ts), and is counted the same way; `onboarding.started`
+ * is counted with only its boolean `firstRun`/`fromGuest` dims (ONBOARDING_STARTED_DIM_KEYS, lib/telemetry-daily.ts).
  * The log stays transient diagnostics. A name on the rollup allowlist also adds
  * 1 to a few `learning_rollups` cells (F-CURR-002 section 11.2, row CM-70a,
  * lib/learning-rollups.ts) from the kept payload alone, never the profile id;
