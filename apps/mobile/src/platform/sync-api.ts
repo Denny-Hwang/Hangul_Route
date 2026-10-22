@@ -96,7 +96,7 @@ export type LookupResult =
 export type JoinResult =
   | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership }
   | { status: 'error'; code: 'cap_family' | 'cap_class' | 'cap_school'; cap?: number }
-  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'forbidden' };
 
 export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
 
@@ -393,6 +393,9 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 409) return seatRefusal(code, r.body);
       if (r.status === 422) return { status: 'error', code: code === 'not_joinable' ? 'not_joinable' : 'invalid' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      // [OA] Row OA-7b: the device check refused this learner (no or a wrong secret, bound elsewhere, class-scoped).
+      // Not worth trying again, unlike a `5xx`.
+      if (r.status === 401 || r.status === 403) return { status: 'error', code: 'forbidden' };
       return { status: 'error', code: 'unknown' };
     },
 

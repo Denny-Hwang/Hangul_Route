@@ -199,4 +199,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'learner.presenter.presets.length.option',
   // AMENDMENTS-LECTURE-V2 section 12.2 (LV-4): the console's length chip, the same "{n} min".
   'console.lecture.presets.length.option',
+  // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4 (OA-7b): a refused seat, the name and the cap line joined by ": ".
+  'caregiver.join.who.refused',
 ];

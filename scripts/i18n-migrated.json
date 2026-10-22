@@ -136,7 +136,9 @@
     "apps/mobile/src/components/ProfileLockCard.tsx",
     "apps/web/src/components/console/PinResetPage.tsx",
     "apps/web/src/app/(console)/account/pin-reset/page.tsx",
-    "apps/mobile/src/screens/parent/PinResetExpiredNotice.tsx"
+    "apps/mobile/src/screens/parent/PinResetExpiredNotice.tsx",
+    "apps/mobile/src/screens/sync/JoinBatch.tsx",
+    "apps/mobile/src/screens/sync/JoinNameField.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

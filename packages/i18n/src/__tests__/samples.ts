@@ -926,4 +926,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.who.lockedTile': [['Sora'], ['Jo Ann']],
   'a11y.who.lockedRow': [['Sora'], ['Jo Ann']],
   'caregiver.people.removeAsk': [['Jun'], ['Jo Ann']],
+  // [OA] Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-7b): counts, a learner name, a family name, a cap line.
+  'caregiver.join.who.result': [[0, 2], [1, 3], [2, 3], [12, 12]],
+  'caregiver.join.who.joined': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.already': [['Mina'], ['Jo Ann']],
+  'caregiver.join.who.refused': [['Sora', 'This family already has 4 learners. Ask a grown-up in your family.']],
+  'caregiver.join.who.consentTitle': [['Kim family']],
+  'caregiver.join.who.consentLine': [['Mina'], ['Jo Ann']],
 };

@@ -692,9 +692,10 @@ OA-0b: a row's caption is its accessibility hint (description), never joined int
 | `people.spacesStay` | Their place in a family or class stays. A grown-up can change it in the account pages. | Su lugar en una familia o clase se mantiene. Un adulto puede cambiarlo en las páginas de la cuenta. | 가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요. |
 | `join.who.title` | Who is joining? | ¿Quién se une? | 누가 들어가나요? |
 | `join.who.hint` | Pick each learner on this device who should join. | Elige a cada estudiante de este dispositivo que se unirá. | 이 기기에서 함께 들어갈 학습자를 모두 골라요. |
-| `join.who.result(joined, total)` | {joined} of {total} joined. | Se unieron {joined} de {total}. | {total}명 중 {joined}명이 들어갔어요. |
+| `join.who.result(joined, total)` | {joined} of {total} joined. | Se unieron {joined} de {total}. (OA-7b: "Se unió 1 de {total}." for one) | {total}명 중 {joined}명이 들어갔어요. |
 | `join.who.already(name)` | {name} is already in this family. | {name} ya está en esta familia. | {name}: 이미 이 가족에 있어요. |
 | `join.who.joined(name)` (OA-0b: the per-learner "joined" result line had no row) | {name} joined. | {name} se unió. | {name}: 들어갔어요. |
+| `join.who.refused(name, line)` (OA-7b: the colon form of the per-learner cap line, below) | {name}: {line} | {name}: {line} | {name}: {line} |
 | `join.who.takesPlace` | Takes a family place. | Ocupa un lugar en la familia. | 가족 자리를 하나 써요. |
 | `join.who.classOnly` | Linked for a class on this device. | En este dispositivo, solo es para su clase. | 이 기기에서는 반에만 연결돼 있어요. |
 | `join.who.retry` | Try again | Reintentar | 다시 해 보기 |
@@ -791,7 +792,7 @@ Applied in this PR (OA-0) as notes at the top of each file: F-PROF-001, F-APP-00
 | OA-7b | batch plan (fresh PIN needed when a non-active learner is picked; a locked profile unchecked with Takes a family place; class-scoped learners disabled), per-learner result lines, stop on the first network error, idempotent retry | Who is joining? with the mocked Worker: two join, one refused at the cap; a never-synced learner registered under the one consent; no join request before Yes, join and none after Not now; the PIN asked again at Yes, join after 2 minutes and after a change of picks; the network drops after the first join, then Try again | `join-batch.spec.ts` (CS-11): a family hand-off code on a shared device opens the checklist |
 | OA-8 | `subscriptionCovers` recording once, only after a successful hydrated read with at least one learner, retried otherwise; coverage of old and new profiles; no loss | Plan screen line for a 5th new profile | — |
 | OA-9 | opt-in validity by epoch; cancel is not a miss; no fallback flag; a SecureStore read that is invalidated turns the shortcut off; a success during a pause opens and resets `strikes` | the switch and warning in the Grown-up area; PinEntry button; the enrolment-changed line | native unit only (no web) (CS-13, CS-18); a device check on the Xcode build that `NSFaceIDUsageDescription` is present |
-| OA-10 | backups strip `parentPinHash` | — | the full child-safety suite CS-1 to CS-21 on the release build with every switch on; G2 timing; G7 p95 nightly; WebKit run locally as DN section 15 records |
+| OA-10 | backups strip `parentPinHash` | — | the full child-safety suite CS-1 to CS-21 on the release build with every switch on (including the flag-gated `join-batch.spec.ts` for CS-11, `E2E_MULTI_JOIN=1`); G2 timing; G7 p95 nightly; WebKit run locally as DN section 15 records |
 
 Every row also runs the locale matrix and the es and ko coverage ratchets for its strings.
 

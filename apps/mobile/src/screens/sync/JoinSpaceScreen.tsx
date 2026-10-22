@@ -2,10 +2,10 @@ import { Body, Button, Caption, Card, Heading, HoyaBubble, Screen, Spacer, borde
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, lookupRefusal } from '../../logic/spaces/join-code';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
-import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
+import { validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { takeJoinHandoff } from '../../platform/join-handoff';
@@ -16,6 +16,13 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
+import { flags } from '../../config/flags';
+import { tileOrder } from '../../logic/profiles/who';
+import { batchOffered, checklistRows, locksThatCount, type ChecklistRow } from '../../logic/spaces/join-batch';
+import { useAccountStore } from '../../store/account-store';
+import { holdJoin, learnerProfiles, readProfileLocks, takeBatchHandoff, takeBatchLaunchChooser } from '../../store/who-chooser';
+import { JoinBatch } from './JoinBatch';
+import { JoinNameField } from './JoinNameField';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinSpace'>;
 type Found = Extract<LookupOutcome, { ok: true }>['space'];
@@ -44,9 +51,17 @@ export const RELINK_POLL_MS = 4000;
  * [SA] Learner caps (AMENDMENTS-SEATS-ADMINS section 3.4): the lookup carries the active learner, and its `seat` picks
  * the line (a full family, class or school). At a full class with a roster the roster pick and relink stay, with the
  * line above "I'm new"; the atomic `/join` is still the only gate, and its refusal reads the cap the Worker sent.
+ *
+ * [OA] Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, OA-D20, sections 10.3 and 10.6; row OA-7b): with
+ * `flags.multiJoinEnabled` on, a family the lookup found on a device with 2 or more learner profiles opens the
+ * checklist (`JoinBatch`) in place of the one-learner name step; class codes keep the one-learner flow. A family
+ * hand-off code the launch took for the checklist (`takeBatchHandoff`) fills the code and is looked up at once; should
+ * it turn out to be a class code, it is held and the chooser asks who is joining (OA-D20), never joining as whoever
+ * played last.
  */
 export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
+  const locale = useLocale();
   const [codeFieldWidth, setCodeFieldWidth] = useState(0);
   const messages = useMessages();
   const m = messages.caregiver.join;
@@ -67,6 +82,10 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
   const [seatLine, setSeatLine] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
+  // [OA] Who is joining? (row OA-7b): the checklist rows once the lookup found a family it applies to.
+  const [batch, setBatch] = useState<readonly ChecklistRow[] | null>(null);
+  // [OA] The launch's family hand-off code (OA-D20): looked up at once, once.
+  const [launchCode, setLaunchCode] = useState<string | null>(null);
   const cloudAvailable = !!apiBaseUrl();
   // The grown-up gate (F-LEARN-001 L7), read like ProfileScreen reads it: closed means the name cannot change here.
   const { opensDirectly } = useAudience();
@@ -96,25 +115,56 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
   // hand-off is always taken, so a code left in the tab never fills a later Join screen.
   const linkCode = route.params?.code;
   useEffect(() => {
-    const handed = takeJoinHandoff();
+    const launched = takeBatchHandoff();
+    const handed = launched ?? takeJoinHandoff();
     const prefill = joinPrefill(linkCode, handed);
     if (prefill !== null) setCode(prefill);
+    if (launched !== null && prefill !== null && linkCode === undefined) setLaunchCode(prefill);
   }, [linkCode]);
 
-  const find = async (): Promise<void> => {
+  /**
+   * [OA] The checklist rows when Who is joining? applies to this family (section 10.3), else null: the flag on, 2 or
+   * more learner profiles, at least one not class-scoped on this device. Locks count only with a PIN (fail closed).
+   */
+  const batchRowsFor = async (kind: Found['kind']): Promise<ChecklistRow[] | null> => {
+    const learners = tileOrder(learnerProfiles(useProfileStore.getState().profiles), locale);
+    if (!flags.multiJoinEnabled || kind !== 'family' || learners.length < 2) return null;
+    const ids = learners.map((l) => l.id);
+    // A scope that cannot be read fails closed, as the locks do: the row is disabled (Linked for a class on this device.).
+    const scopes = await Promise.all(ids.map((id) => deviceScope(id).catch(() => 'class' as const)));
+    const classScoped = ids.filter((_, i) => scopes[i] === 'class');
+    if (!batchOffered({ flag: true, kind, learners, classScoped })) return null;
+    const locks = locksThatCount(await readProfileLocks(), useAccountStore.getState().parentPinHash !== null, ids);
+    return checklistRows({ learners, activeId: profileId, locks, classScoped });
+  };
+
+  const find = async (typed: string = code): Promise<void> => {
     setMessage(null);
     setSeatLine(null);
     setBusy(true);
     // [SA] The active learner goes with the lookup, so a member who already holds the seat finds room (section 3.4).
-    const result = await lookup(code, profileId ?? undefined);
-    setBusy(false);
+    const result = await lookup(typed, profileId ?? undefined);
     if (!result.ok) {
+      setBusy(false);
       setMessage(joinErrorMessage(result.error, messages.caregiver));
       return;
     }
+    // [OA] OA-D20: the launch's hand-off code was a class code after all: the chooser asks who is joining.
+    if (launchCode !== null && result.space.kind !== 'family' && flags.whoChooserEnabled) {
+      setBusy(false);
+      // The chooser shows now, so the one the launch deferred is spent.
+      takeBatchLaunchChooser();
+      holdJoin(typed);
+      navigation.navigate('WhoIsUsing', { trigger: 'join' });
+      return;
+    }
+    const rows = await batchRowsFor(result.space.kind);
+    setBusy(false);
     // [SA] The line comes from `seat.reason` (else the old `full`). At a class with a roster, a returning student can
     // still pick their name (relink takes no seat), so the roster stays and the line sits above "I'm new".
-    const refusal = lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
+    // [OA] Who is joining? reads each learner's seat from its own `/join` (a member keeps its place), so the lookup's
+    // line for the active learner does not stop the checklist (section 10.2).
+    const refusal = rows !== null ? null : lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
     if (refusal !== null) {
       const line = joinErrorMessage(refusal.code, messages.caregiver, refusal.cap);
       if (result.space.kind !== 'class' || result.roster.length === 0) {
@@ -126,7 +176,27 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
     }
     setFound(result.space);
     setRoster(result.roster);
+    setBatch(rows);
   };
+
+  // [OA] The launch's family hand-off code is looked up at once, so the checklist opens (OA-D20).
+  useEffect(() => {
+    if (launchCode === null) return;
+    void find(launchCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per launch code
+  }, [launchCode]);
+
+  // [OA] OA-D20, CS-5: a launch that took the hand-off code deferred its chooser. Leaving Join (Done, Back to today, a
+  // back gesture) opens "Who is using this?" as the launch would have, instead of Home as whoever played last.
+  useEffect(() => {
+    if (launchCode === null) return undefined;
+    return navigation.addListener('beforeRemove', (e) => {
+      const trigger = takeBatchLaunchChooser();
+      if (trigger === null) return;
+      e.preventDefault();
+      navigation.reset({ index: 0, routes: [{ name: 'WhoIsUsing', params: { trigger } }] });
+    });
+  }, [launchCode, navigation]);
 
   const askRelink = async (pick: RosterName): Promise<void> => {
     if (!found) return;
@@ -240,49 +310,20 @@ export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElemen
             }}
           />
         </Card>
+      ) : found && batch !== null ? (
+        <JoinBatch
+          space={found}
+          code={code}
+          rows={batch}
+          gateClosed={gateClosed}
+          askPin={() => navigation.navigate('PinEntry', { next: 'JoinSpace' })}
+          onDone={() => navigation.navigate('Main', { screen: 'Home' })}
+        />
       ) : found ? (
         <Card padding="lg" tone="brand" testID="join-confirm">
           <Caption tone="muted">{seeYouAs}</Caption>
           <Spacer size="xs" />
-          <TextInput
-            value={joinName}
-            onChangeText={setName}
-            editable={!nameLocked}
-            aria-disabled={nameLocked}
-            testID="join-name"
-            maxLength={Math.max(NAME_MAX, profile?.displayName.length ?? 0)}
-            autoCorrect={false}
-            // Names start with a capital in every word, on purpose: "sungjoo" becomes "Sungjoo", never only the first word.
-            autoCapitalize="words"
-            accessibilityLabel={messages.a11y.joinName}
-            style={{
-              minHeight: touchTarget.child,
-              paddingHorizontal: spacing.md,
-              fontSize: textScale.size.title,
-              fontWeight: '700',
-              color: nameLocked ? colors.text.secondary : colors.text.primary,
-              backgroundColor: nameLocked ? colors.surface.sunken : colors.surface.paper,
-              borderWidth: 2,
-              borderColor: colors.border.subtle,
-              borderRadius: radii.lg,
-            }}
-          />
-          {hint !== null ? (
-            <>
-              <Spacer size="xs" />
-              <Caption tone="secondary">{hint}</Caption>
-            </>
-          ) : null}
-          <Spacer size="xs" />
-          <Caption tone="muted">{m.confirm.sameEverywhere}</Caption>
-          {nameLocked ? (
-            <>
-              <Spacer size="xs" />
-              <Caption tone="muted" testID="join-name-locked">
-                {classDevice ? messages.learner.editProfile.classDevice : m.confirm.nameLocked}
-              </Caption>
-            </>
-          ) : null}
+          <JoinNameField value={joinName} onChange={setName} locked={nameLocked} classDevice={classDevice} profileName={profile?.displayName ?? ''} hint={hint} />
           <Spacer size="md" />
           <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
           <Spacer size="sm" />

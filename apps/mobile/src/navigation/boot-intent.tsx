@@ -10,7 +10,7 @@ import { gateOpensDirectlyNow } from '../store/gate-now';
 import { usePinResetNotice } from '../store/pin-reset-notice';
 import { useProfileStore } from '../store/profile-store';
 import { passGate } from '../store/gate-telemetry';
-import { deviceShared, holdJoin, whoReturnTrigger } from '../store/who-chooser';
+import { batchHandoffPending, deviceShared, holdJoin, whoReturnTrigger } from '../store/who-chooser';
 
 /**
  * [OA] `gate=pin-reset` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): the ticket the root read, once, against
@@ -69,6 +69,30 @@ export function BootIntentHook(): null {
       // The expired line is for Home, the start screen of a device with a profile; a first run never shows it.
       { outcome: pinResetOutcomeNow, showExpired: () => (useProfileStore.getState().profiles.length > 0 ? usePinResetNotice.getState().showExpired() : undefined) },
     );
+  }, [root]);
+  return null;
+}
+
+/**
+ * [OA] Who is joining? at launch (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, OA-D20; row OA-7b): when the launch took
+ * the family home's hand-off code for the checklist (`batchHandoffPending`), Join opens over Home as soon as the
+ * navigator is ready, once. Join takes the code from memory (`takeBatchHandoff`), never from a route or the address,
+ * and looks it up at once. Rendered by the root stack only when the launch took one.
+ */
+export function LaunchBatchJoinHook(): null {
+  const root = useContext(NavigationContainerRefContext);
+  useEffect(() => {
+    if (!root) return undefined;
+    const open = (): boolean => {
+      if (!root.isReady()) return false;
+      if (batchHandoffPending()) root.navigate('JoinSpace');
+      return true;
+    };
+    if (open()) return undefined;
+    const off = root.addListener('state', () => {
+      if (open()) off();
+    });
+    return off;
   }, [root]);
   return null;
 }
