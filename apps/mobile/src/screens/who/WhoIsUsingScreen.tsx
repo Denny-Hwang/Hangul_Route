@@ -32,6 +32,7 @@ import {
   type GrownUpRowUse,
   type WhoMarker,
 } from '../../logic/profiles/who';
+import { gateProfiles } from '../../logic/guest/guest-model';
 import { gateRequired } from '../../logic/profiles/learner-type';
 import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import type { RootStackParamList } from '../../navigation/types';
@@ -41,6 +42,7 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { trackGateOpened, trackProfileSwitch } from '../../store/gate-telemetry';
 import { arriveAtChooser } from '../../store/grown-up-session';
+import { useGuestStore } from '../../store/guest-store';
 import { useLocks } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -88,7 +90,9 @@ export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactEleme
   const tints = useMemo(() => tileTints(learnerProfiles(allProfiles)), [allProfiles]);
   // [OA] Row OA-5: the locked learners (void without a PIN; every learner while the locks cannot be read).
   const locks = useLocks(allProfiles);
-  const marker: WhoMarker = !gateRequired({ profiles: allProfiles, parentPinHash }) ? 'none' : parentPinHash !== null ? 'pin' : 'nopin';
+  // [GU] GU-D14: a live guest counts as a learner read as a child, so the rows' marker is never `none` while one lives.
+  const guest = useGuestStore((g) => g.record);
+  const marker: WhoMarker = !gateRequired({ profiles: gateProfiles(allProfiles, guest), parentPinHash }) ? 'none' : parentPinHash !== null ? 'pin' : 'nopin';
   const wait = resetWaitState(pinResetRequestedAt, Date.now());
   // [OA] Row OA-4b: the uses known on this browser, as read at launch, then read again on every opening.
   const [uses, setUses] = useState(() => knownUses());

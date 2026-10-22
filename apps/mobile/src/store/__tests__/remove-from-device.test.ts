@@ -49,6 +49,8 @@ import { removalCheck, removeFromDevice, savedNow, syncThenCheck } from '../remo
 import { useSyncStore, type LearnerSyncState } from '../sync-store';
 import { useUiStore } from '../ui-store';
 import { bindRemovedElsewhere } from '../who-chooser';
+import { useGuestStore } from '../guest-store';
+import { hydrateGuest } from '../guest-sweep';
 
 const fetchSpy = vi.fn(async () => {
   throw new Error('no network in this test');
@@ -406,5 +408,73 @@ describe('[OA] every store forgets on its own, and the sweep catches what is lef
     await removeFromDevice(jun, 'anyway');
     expect(await useSyncStore.getState().issueRescueCode(jun)).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+// [GU] AMENDMENTS-GUEST-FIRST-LESSON GU-D13 (row GU-2, section 19): the boot's sweep of a never-saved guest goes through
+// the same removal: every per-profile store forgets the id (`notifyProfileRemoved`) and the key sweep deletes what is
+// left, so no stored key of the guest's id remains; a learner on the list keeps every key; nothing reaches a server.
+describe('[GU] the boot sweep of a never-saved guest (GU-D13), seeded with a guest', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const STARTED = Date.parse('2026-09-01T10:00:00.000Z');
+  const guest = { v: 1, id: 'profile:guest001', startedAt: new Date(STARTED).toISOString(), lastAt: new Date(STARTED).toISOString(), via: 'site', questDone: true };
+
+  it('30 days without play on a device with no profile: every key of the guest id goes, guest.expired is sent without an id', async () => {
+    seedAll(guest.id);
+    disk.set('guest', JSON.stringify(guest));
+    // The stores hold the guest in memory too, as after a run.
+    await useProgressStore.getState().hydrate(guest.id);
+    useGuestStore.setState({ hydrated: false });
+
+    expect(await hydrateGuest(STARTED + 30 * DAY + 1)).toBe('sweep');
+    await settle();
+
+    expect((await listKeys()).filter((k) => k.includes(guest.id))).toEqual([]);
+    expect(disk.has('guest')).toBe(false);
+    expect(useProgressStore.getState().byProfile[guest.id]).toBeUndefined();
+    expect(useGuestStore.getState()).toMatchObject({ record: null, running: false, hydrated: true });
+    expect(sent).toEqual([{ name: 'guest.expired', payload: { questDone: true } }]);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('7 days on a device with learner profiles; the learners keep every key, and a younger guest is kept', async () => {
+    const { mina } = learners();
+    seedAll(mina);
+    seedAll(guest.id);
+    disk.set('guest', JSON.stringify(guest));
+
+    expect(await hydrateGuest(STARTED + 7 * DAY)).toBe('keep');
+    expect(useGuestStore.getState().record).toMatchObject({ id: guest.id });
+    expect(await hydrateGuest(STARTED + 7 * DAY + 1)).toBe('sweep');
+    await settle();
+
+    const keys = await listKeys();
+    expect(keys.filter((k) => k.includes(guest.id))).toEqual([]);
+    for (const template of Object.values(PER_PROFILE_KEYS)) expect(keys, template(mina)).toContain(template(mina));
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toContain(mina);
+  });
+
+  it('a record that has not parsed for 30 days goes with the keys of its id; one with no time goes at once', async () => {
+    seedAll(guest.id);
+    disk.set('guest', JSON.stringify({ ...guest, v: 3 }));
+    expect(await hydrateGuest(STARTED + 30 * DAY + 1)).toBe('sweep');
+    await settle();
+    expect((await listKeys()).filter((k) => k.includes(guest.id))).toEqual([]);
+    expect(sent).toEqual([{ name: 'guest.expired', payload: { questDone: true } }]);
+
+    disk.set('guest', JSON.stringify({ v: 3 }));
+    expect(await hydrateGuest(STARTED)).toBe('sweep');
+    expect(disk.has('guest')).toBe(false);
+  });
+
+  it('a broken record naming a learner on the list never sweeps that learner\'s keys', async () => {
+    const { mina } = learners();
+    seedAll(mina);
+    disk.set('guest', JSON.stringify({ id: mina }));
+    expect(await hydrateGuest(STARTED)).toBe('sweep');
+    await settle();
+    const keys = await listKeys();
+    for (const template of Object.values(PER_PROFILE_KEYS)) expect(keys, template(mina)).toContain(template(mina));
+    expect(disk.has('guest')).toBe(false);
   });
 });

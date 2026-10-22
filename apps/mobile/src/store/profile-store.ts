@@ -1,4 +1,4 @@
-import type { AvatarKind, LearnerType, Profile } from '@hangul-route/content-schema';
+import type { AvatarKind, GuestRecord, LearnerType, Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import {
   activeProfile,
@@ -78,6 +78,16 @@ interface Actions {
   remove: (id: string) => void;
   /** Restore paths add a profile that already exists elsewhere (keeps its id). */
   adoptProfile: (profile: Profile) => void;
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 5.4 step 2 (row GU-2): saves the guest as an ordinary profile with the
+   * guest's id (GU-D2, GU-D9) and the run's start as `createdAt`, appended and made active in one write under the
+   * `hr:profiles` lock. The list is read again first, and an id already on it (another tab saved the guest) is refused
+   * (`null`). The name and the other fields pass the `createProfile` reducer's validation, unchanged.
+   */
+  promoteGuest: (
+    record: GuestRecord,
+    input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind; learnerType: LearnerType },
+  ) => Promise<Profile | null>;
 }
 
 /**
@@ -416,6 +426,23 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     commitSet(set, { profiles, activeId }, { profiles: [...profiles, profile], activeId: activeId ?? profile.id }, { change: adding(profile), revivedId: profile.id });
   },
 
+  promoteGuest: async (record, input) => {
+    // The stored list first: a guest another tab saved is already a profile there.
+    await get().refresh().catch(() => undefined);
+    const { profiles, activeId } = get();
+    if (profiles.some((p) => p.id === record.id)) return null;
+    const startedAt = Date.parse(record.startedAt);
+    const now = Date.now();
+    const fixed: Clock = { now: () => (Number.isFinite(startedAt) ? startedAt : now), nextId: () => record.id.slice('profile:'.length) };
+    // The id is the guest's (`profile:` and the same suffix).
+    const result = createProfileReducer({ profiles, activeId }, input, fixed);
+    // Made active now: `lastActiveAt` is the save, `createdAt` the run's start.
+    const created: Profile = { ...result.created, lastActiveAt: new Date(now).toISOString() };
+    const next = { profiles: [...profiles, created], activeId: created.id };
+    // `adding` keeps a copy another tab stored meanwhile: never two profiles with one id.
+    commitSet(set, { profiles, activeId }, next, { now, change: adding(created), revivedId: created.id });
+    return created;
+  },
 }));
 
 export function activeProfileSelector(state: State): Profile | null {

@@ -205,6 +205,14 @@ export const TELEMETRY_EVENT_NAMES = [
   'space.goal.met',
   'lecture.game.finished',
   'exp.exposure',
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-1, Worker first; payloads: GUEST_TELEMETRY_PAYLOADS in
+  // guest.ts: codes, booleans and bounded counts only; the Worker stores every one of them without a profileId, CS-G7)
+  'guest.started',
+  'guest.first_letter',
+  'guest.quest_done',
+  'guest.left',
+  'guest.saved',
+  'guest.expired',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

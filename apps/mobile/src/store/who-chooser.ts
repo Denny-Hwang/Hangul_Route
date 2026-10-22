@@ -7,7 +7,9 @@ import { consumeBootIntent, peekBootIntent } from '../platform/app-root';
 import { subscribeAppVisibility } from '../platform/app-visibility';
 import { readDeviceUses } from '../platform/device-uses';
 import { takeJoinHandoff } from '../platform/join-handoff';
+import { gateProfiles } from '../logic/guest/guest-model';
 import { useAccountStore } from './account-store';
+import { useGuestStore } from './guest-store';
 import { hydrateProfileLocks, lockedIds } from './profile-locks';
 import { onActiveRemovedElsewhere, useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
@@ -29,7 +31,8 @@ export function learnerProfiles(profiles: readonly Profile[] = useProfileStore.g
 export function whoMarker(): WhoMarker {
   const { profiles } = useProfileStore.getState();
   const { parentPinHash } = useAccountStore.getState();
-  if (!gateRequired({ profiles, parentPinHash })) return 'none';
+  // [GU] GU-D14: a live guest counts as a learner read as a child.
+  if (!gateRequired({ profiles: gateProfiles(profiles, useGuestStore.getState().record), parentPinHash })) return 'none';
   return parentPinHash !== null ? 'pin' : 'nopin';
 }
 
@@ -52,7 +55,8 @@ export async function refreshKnownUses(): Promise<readonly GrownUpUse[]> {
 /** Section 6.2: whether the device is shared now, the known grown-up uses included (row OA-4b). */
 export function deviceShared(): boolean {
   const profiles = learnerProfiles();
-  return isSharedDevice({ profiles, locks: lockedIds(profiles), uses: usesKnown, marker: whoMarker() });
+  // [GU] GU-D14, section 9.2: one profile and a live guest is shared.
+  return isSharedDevice({ profiles, locks: lockedIds(profiles), uses: usesKnown, marker: whoMarker(), guest: useGuestStore.getState().record });
 }
 
 /** Whether any learner profile is locked now (`who.shown` `anyLocked`, section 15); every one while unreadable. */

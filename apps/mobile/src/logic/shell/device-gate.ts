@@ -1,4 +1,5 @@
-import type { DeviceGateMarker, LearnerType, ProfileRole } from '@hangul-route/content-schema';
+import type { DeviceGateMarker, GuestRecord, LearnerType, ProfileRole } from '@hangul-route/content-schema';
+import { gateProfiles } from '../guest/guest-model';
 import { gateRequired } from '../profiles/learner-type';
 
 /**
@@ -11,6 +12,10 @@ import { gateRequired } from '../profiles/learner-type';
  * | at least one learner profile, gate required, a PIN stored           | `pin` with `pinEpoch`      |
  * | at least one learner profile, gate required, no PIN (family device) | `nopin`                    |
  * | otherwise (no learner profile, or a self-only device without a PIN) | `none`                     |
+ *
+ * [GU] GU-D14, CS-G6 (row GU-2): a live guest (`guest`, a record whose id is not on the list) counts as a learner whose
+ * `learnerType` is unset, read as a child, so the marker is `nopin` or `pin` while one lives, never `none`, a
+ * self-only device without a PIN included.
  *
  * `pinEpoch` is the time the current PIN was set (`account:pinSetAt`); a PIN set before A-6 has
  * none and reads as `0`, which the console never trusts. The marker holds no name, no count and
@@ -28,6 +33,8 @@ export const NO_PIN_SEEN = 'none';
 export const PIN_HASH_UNREAD = 'unread';
 
 interface ProfileLike {
+  /** Present on the profiles in memory; the raw stored list is read without it. */
+  id?: string;
   /** Absent on a profile saved before roles existed: read as `learner`, like `ProfileRoleSchema`'s default. */
   role?: ProfileRole;
   learnerType?: LearnerType;
@@ -94,9 +101,10 @@ export function deviceGateMarker(input: {
   profiles: readonly ProfileLike[];
   parentPinHash: string | null;
   pinSetAt: number | null;
+  guest?: GuestRecord | null;
 }): DeviceGateMarker {
   const { parentPinHash } = input;
-  const profiles = input.profiles.map((p) => ({ ...p, role: isLearnerEntry(p) ? ('learner' as const) : (p.role as ProfileRole) }));
+  const profiles = gateProfiles(input.profiles, input.guest).map((p) => ({ ...p, role: isLearnerEntry(p) ? ('learner' as const) : (p.role as ProfileRole) }));
   if (!profiles.some((p) => p.role === 'learner') || !gateRequired({ profiles, parentPinHash })) return { v: 1, gate: 'none' };
   if (parentPinHash === null) return { v: 1, gate: 'nopin' };
   return { v: 1, gate: 'pin', pinEpoch: pinEpochOf(input.pinSetAt) };

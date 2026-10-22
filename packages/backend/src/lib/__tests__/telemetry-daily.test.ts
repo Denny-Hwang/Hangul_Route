@@ -1,8 +1,9 @@
 import { TELEMETRY_DAILY_KEEP_DAYS, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryDb, type Db } from '../../db';
-import { OA_PAYLOAD_RULES } from '../server-events';
+import { GUEST_PAYLOAD_RULES, OA_PAYLOAD_RULES } from '../server-events';
 import {
+  ONBOARDING_STARTED_DIM_KEYS,
   TELEMETRY_DAILY_PURGE_LIMIT,
   TELEMETRY_DAILY_WINDOW_MS,
   TELEMETRY_DAILY_WRITES_PER_DAY,
@@ -37,9 +38,12 @@ describe('telemetryDailyEnabled', () => {
 });
 
 describe('isDailyCountedName', () => {
-  it('counts the section 15 names and session.start, nothing else', () => {
+  it('counts the section 15 names, session.start, [GU] the guest.* names and onboarding.started, nothing else', () => {
     const counted = TELEMETRY_EVENT_NAMES.filter(isDailyCountedName);
-    expect([...counted].sort()).toEqual(['session.start', ...Object.keys(OA_PAYLOAD_RULES)].sort());
+    expect([...counted].sort()).toEqual(['session.start', 'onboarding.started', ...Object.keys(OA_PAYLOAD_RULES), ...Object.keys(GUEST_PAYLOAD_RULES)].sort());
+    for (const name of ['guest.started', 'guest.first_letter', 'guest.quest_done', 'guest.left', 'guest.saved', 'guest.expired', 'onboarding.started']) expect(isDailyCountedName(name), name).toBe(true);
+    expect(isDailyCountedName('guest.peeked')).toBe(false);
+    expect(isDailyCountedName('onboarding.consent_given')).toBe(false);
     expect(isDailyCountedName('constructor')).toBe(false);
     expect(isDailyCountedName('quest.complete')).toBe(false);
   });
@@ -52,6 +56,21 @@ describe('dailyDims', () => {
     expect(dailyDims('who.picked', undefined)).toBe('');
     expect(dailyDims('who.picked', {})).toBe('');
     expect(dailyDims('session.start', { source: 'pwa' })).toBe('');
+  });
+
+  it('[GU] onboarding.started keeps only boolean firstRun and fromGuest as dims', () => {
+    expect(ONBOARDING_STARTED_DIM_KEYS).toEqual(['firstRun', 'fromGuest']);
+    expect(dailyDims('onboarding.started', { level: '8-9', firstRun: true, hasEmail: false, fromGuest: true })).toBe('{"firstRun":true,"fromGuest":true}');
+    expect(dailyDims('onboarding.started', { fromGuest: false, hasEmail: true, firstRun: false, level: '15+' })).toBe('{"firstRun":false,"fromGuest":false}');
+    // An older client sends no fromGuest; a non-boolean value is never a dim.
+    expect(dailyDims('onboarding.started', { level: '8-9', firstRun: true, hasEmail: false })).toBe('{"firstRun":true}');
+    expect(dailyDims('onboarding.started', { firstRun: 'profile:a', fromGuest: 1, name: 'Mina' })).toBe('');
+    expect(dailyDims('onboarding.started', undefined)).toBe('');
+  });
+
+  it('[GU] a guest.* count keeps the payload the rules kept', () => {
+    expect(dailyDims('guest.saved', { via: 'results', gated: false, consent: 'new' })).toBe('{"consent":"new","gated":false,"via":"results"}');
+    expect(dailyDims('guest.started', { via: 'site', resumed: false })).toBe('{"resumed":false,"via":"site"}');
   });
 });
 

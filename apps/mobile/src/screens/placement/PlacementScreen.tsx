@@ -44,6 +44,7 @@ import { completedAtOf, newResponse, placementStart, resultRoutes, rungPosition,
 import { isFreeContent } from '../../logic/content-access';
 import { nextStartedEvent, routeNext } from '../../logic/route-next';
 import { resolvePicture } from '../../logic/picture-ref';
+import { gateProfiles } from '../../logic/guest/guest-model';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
 import { isBackAction } from '../../logic/navigation/back-action';
@@ -55,6 +56,7 @@ import { useAccountStore } from '../../store/account-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { acceptPlanOffer, applyPlanUpdate, planOfferNow } from '../../store/plan-offer-store';
 import { useRouteStore } from '../../store/route-store';
+import { useGuestStore } from '../../store/guest-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePracticeSession } from '../use-practice-session';
@@ -148,6 +150,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const profile = useProfileStore(activeProfileSelector);
   const profiles = useProfileStore((s) => s.profiles);
   const parentPinHash = useAccountStore((s) => s.parentPinHash);
+  // [GU] GU-D14 (row GU-2): the report gate counts a live guest as a learner read as a child.
+  const guest = useGuestStore((s) => s.record);
+  const gateList = useMemo(() => gateProfiles(profiles, guest), [profiles, guest]);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const resetParentGate = useUiStore((s) => s.resetParentGate);
   const uiLocale = useLocale();
@@ -359,7 +364,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         planUpdateAvailable: offer?.kind === 'update' && offer.source === 'retake',
         // The story shelf (F-STORY-004) is not in the app yet: "See the whole map".
         hasReviewedShelfStory: false,
-        gateRequired: gateRequired({ profiles, parentPinHash }),
+        gateRequired: gateRequired({ profiles: gateList, parentPinHash }),
       });
       setFinished({
         result,
@@ -378,7 +383,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       }
       dispatch({ type: 'runFinished' });
     },
-    [profile, profiles, parentPinHash, leave, dispatch, uiLocale],
+    [profile, gateList, parentPinHash, leave, dispatch, uiLocale],
   );
 
   useEffect(() => {
@@ -412,13 +417,13 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   }, [parentGateOpenedAt, applyRun, resetParentGate]);
 
   const finishForGrownUp = useCallback((): void => {
-    if (gateRequired({ profiles, parentPinHash })) {
+    if (gateRequired({ profiles: gateList, parentPinHash })) {
       grownUpAskedAt.current = Date.now();
       navigation.navigate('PinEntry', { next: 'PlacementFinish' });
     } else {
       applyRun({ type: 'quit', by: 'grown-up' });
     }
-  }, [profiles, parentPinHash, navigation, applyRun]);
+  }, [gateList, parentPinHash, navigation, applyRun]);
 
   // Back (the route's ScreenHeader Close, the browser and the phone back through the history bridge, a swipe; AMENDMENTS-
   // DISPLAY-NAV section 7.1): the exit sheet while a run is open; the language screen from the options; otherwise the
@@ -511,7 +516,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         case 'forGrownUps':
           // The grown-up report of this learner (F-PLC-001 section 3.9), behind the PIN when the gate is required.
           if (profileId === null) return;
-          if (gateRequired({ profiles, parentPinHash })) navigation.navigate('PinEntry', { next: 'PlacementReport', profileId });
+          if (gateRequired({ profiles: gateList, parentPinHash })) navigation.navigate('PinEntry', { next: 'PlacementReport', profileId });
           else navigation.navigate('PlacementReport', { profileId });
           return;
         case 'tryStandard':
@@ -541,7 +546,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         }
       }
     },
-    [finished, resetTo, navigation, profiles, parentPinHash, source, profileId],
+    [finished, resetTo, navigation, gateList, parentPinHash, source, profileId],
   );
 
   const acceptPlan = useCallback(

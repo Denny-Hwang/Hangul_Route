@@ -1,7 +1,7 @@
-import { LECTURE_DECODE_FAILURES, LECTURE_PRESETS, REPORT_TELEMETRY_PAYLOAD, type TelemetryEventName } from '@hangul-route/content-schema';
+import { GUEST_TELEMETRY_NAMES, LECTURE_DECODE_FAILURES, LECTURE_PRESETS, REPORT_TELEMETRY_PAYLOAD, TELEMETRY_EVENT_NAMES, type TelemetryEventName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { store } from '../../store';
-import { MAX_EVENTS, OA_PAYLOAD_RULES, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
+import { GUEST_PAYLOAD_RULES, MAX_EVENTS, OA_PAYLOAD_RULES, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
 
 /**
  * The Worker's own telemetry (F-REPORT-001 section 3.13): the console has no
@@ -347,6 +347,72 @@ describe('[OA] OA_PAYLOAD_RULES (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15: c
   it('leaves the other names as they were (an ordinary event keeps its profile id)', () => {
     expect(keptEventFields('session.start', { a: 1 }, 'profile:a')).toEqual({ profileId: 'profile:a', payload: { a: 1 } });
     expect(keptEventFields('profile.updated', { field: 'level' }, 'profile:a')).toEqual({ profileId: 'profile:a', payload: { field: 'level' } });
+  });
+});
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-1, Worker first; CS-G7 on the server): per guest.* name, a
+ * documented payload, and per key a value off its codes or bounds.
+ */
+const GUEST_EVENTS: Record<string, { valid: Record<string, unknown>; off: Record<string, unknown> }> = {
+  'guest.started': { valid: { via: 'welcome', resumed: false }, off: { via: 'email', resumed: 'false' } },
+  'guest.first_letter': { valid: { secondsIn: '60+' }, off: { secondsIn: 42 } },
+  'guest.quest_done': { valid: { stars: 0 }, off: { stars: 4 } },
+  'guest.left': { valid: { at: 'quest' }, off: { at: 'results' } },
+  'guest.saved': { valid: { gated: false, consent: 'new', via: 'results' }, off: { gated: 1, consent: 'guardian', via: 'site' } },
+  'guest.expired': { valid: { questDone: true }, off: { questDone: null } },
+};
+
+describe('[GU] GUEST_PAYLOAD_RULES (AMENDMENTS-GUEST-FIRST-LESSON section 12: codes, booleans and bounded counts, never a profile id)', () => {
+  it('has a rule set for exactly the guest.* names of the shared list', () => {
+    expect(Object.keys(GUEST_PAYLOAD_RULES)).toEqual(Object.keys(GUEST_EVENTS));
+    expect(Object.keys(GUEST_PAYLOAD_RULES)).toEqual([...GUEST_TELEMETRY_NAMES]);
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n.startsWith('guest.'))).toEqual(Object.keys(GUEST_EVENTS));
+  });
+
+  it.each(Object.entries(GUEST_EVENTS))('%s keeps its documented payload and never a profile id', (name, { valid }) => {
+    expect(keptEventFields(name as TelemetryEventName, valid, 'profile:guest-1')).toEqual({ profileId: undefined, payload: valid });
+  });
+
+  it.each(Object.entries(GUEST_EVENTS))('%s drops a smuggled profileId, an extra key and every out-of-range value', (name, { valid, off }) => {
+    const sent = { ...valid, profileId: 'profile:guest-1', learnerType: 'child', name: 'Mina', deviceId: 'device:x', level: '8-9' };
+    expect(keptEventFields(name as TelemetryEventName, sent, 'profile:guest-1')).toEqual({ profileId: undefined, payload: valid });
+    expect(keptEventFields(name as TelemetryEventName, { ...off, profileId: 'profile:guest-1', extra: 'x' }, 'profile:guest-1')).toEqual({ profileId: undefined, payload: undefined });
+    for (const [key, value] of Object.entries(off)) {
+      const kept = keptEventFields(name as TelemetryEventName, { ...valid, [key]: value }, undefined).payload ?? {};
+      expect(Object.keys(kept), `${name}.${key}`).not.toContain(key);
+      expect(Object.keys(kept).length, `${name}.${key}`).toBe(Object.keys(valid).length - 1);
+    }
+    expect(keptEventFields(name as TelemetryEventName, undefined, 'profile:guest-1')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('guest.quest_done keeps stars only as a whole number 0 to 3', () => {
+    for (const stars of [0, 1, 2, 3]) expect(keptEventFields('guest.quest_done', { stars }, undefined).payload).toEqual({ stars });
+    for (const stars of [-1, 4, 2.5, Number.NaN, Number.POSITIVE_INFINITY, '3', true]) {
+      expect(keptEventFields('guest.quest_done', { stars }, undefined).payload, String(stars)).toBeUndefined();
+    }
+  });
+
+  it('guest.saved never keeps learnerType, whatever the client sends', () => {
+    const kept = keptEventFields('guest.saved', { gated: true, consent: 'existing', via: 'later', learnerType: 'child' }, 'profile:a');
+    expect(kept).toEqual({ profileId: undefined, payload: { gated: true, consent: 'existing', via: 'later' } });
+  });
+
+  it('a guest.* name off the list keeps no profile id and no payload', () => {
+    expect(keptEventFields('guest.peeked' as TelemetryEventName, { via: 'site' }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  it('who.* and profile.switch keep the new try and guest codes', () => {
+    expect(keptEventFields('who.shown', { trigger: 'try', learners: '2', grownUps: 1, anyLocked: false, resetPending: false }, 'profile:a').payload).toEqual({ trigger: 'try', learners: '2', grownUps: 1, anyLocked: false, resetPending: false });
+    expect(keptEventFields('who.picked', { kind: 'try' }, undefined).payload).toEqual({ kind: 'try' });
+    expect(keptEventFields('who.picked', { kind: 'guest' }, 'profile:a')).toEqual({ profileId: undefined, payload: { kind: 'guest' } });
+    expect(keptEventFields('profile.switch', { via: 'chooser', trigger: 'try', locked: false, minutesIn: '0-2' }, 'profile:a').payload).toEqual({ via: 'chooser', trigger: 'try', locked: false, minutesIn: '0-2' });
+    expect(keptEventFields('who.picked', { kind: 'visitor' }, undefined).payload).toBeUndefined();
+  });
+
+  it('onboarding.started stays an ordinary event: its payload and profile id as given (only the daily count narrows it)', () => {
+    const payload = { level: '8-9', firstRun: true, hasEmail: false, fromGuest: true };
+    expect(keptEventFields('onboarding.started', payload, 'profile:a')).toEqual({ profileId: 'profile:a', payload });
   });
 });
 

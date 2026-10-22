@@ -23,6 +23,7 @@ const api = vi.hoisted(() => ({ base: null as string | null }));
 vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: () => api.base }));
 
 import { bucketOf, REFETCH_MIN_AGE_MS, RETRY_AFTER_FAILURE_MS } from '../../logic/remote-config/remote-config';
+import { useGuestStore } from '../guest-store';
 import { useProfileStore } from '../profile-store';
 import { CONFIG_PATH, REMOTE_CONFIG_KEY, currFlagOn, resetRemoteConfigForTests, startRemoteConfig, useRemoteConfigStore } from '../remote-config-store';
 
@@ -327,5 +328,21 @@ describe('startRemoteConfig · foreground refetch by age', () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(f.calls).toHaveLength(0);
     stop();
+  });
+});
+
+// [GU] AMENDMENTS-GUEST-FIRST-LESSON section 5.3 (row GU-2): a guest run is in no F-CURR-002 experiment. It plays the
+// default (no profile to bucket), even on a device whose active profile is in a ramped arm.
+describe('[GU] a guest run plays the default', () => {
+  it('a ramped flag on for the active profile is off while this tab is in a guest run, and on again after it', () => {
+    const id = ['a1', 'b2', 'c3', 'd4', 'e5', 'f6', 'g7', 'h8'].find((p) => bucketOf(p, 'dailyReview') < 40)!;
+    useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { dailyReview: { on: true, pct: 40 } } } });
+    useProfileStore.setState({ activeId: id });
+    expect(currFlagOn('dailyReview')).toBe(true);
+    useGuestStore.setState({ record: { v: 1, id: 'profile:guest001', startedAt: '2026-10-22T00:00:00.000Z', lastAt: '2026-10-22T00:00:00.000Z', via: 'site', questDone: false }, running: true });
+    expect(currFlagOn('dailyReview')).toBe(false);
+    useGuestStore.setState({ running: false });
+    expect(currFlagOn('dailyReview')).toBe(true);
+    useGuestStore.setState({ record: null });
   });
 });
