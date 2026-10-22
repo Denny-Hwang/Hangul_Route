@@ -174,7 +174,7 @@ export function SiteHeader({ locale, page = '/', home = page === '/', current, v
           <LanguageMenu label={t.footer.language} items={languageMenuItems(locale, page)} push={!phoneStart} />
           {full ? (
             <a
-              href={signIn()}
+              href={signIn(undefined, locale)}
               className="hr-site-signin"
               style={{
                 ...HIT,

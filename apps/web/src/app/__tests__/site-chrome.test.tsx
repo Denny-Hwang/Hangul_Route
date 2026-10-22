@@ -179,9 +179,10 @@ describe('SiteHeader', () => {
     expect(rules).toMatch(/\.hr-site-lang-summary\s*\{[^}]*min-width:\s*var\(--hr-site-touch-min\);[^}]*min-height:\s*var\(--hr-site-touch-min\)/);
   });
 
-  it('a locale page links its locale: brand and persona links prefixed, the app link carries ?lang=', () => {
+  it('a locale page links its locale: brand and persona links prefixed, the app link and Sign in carry ?lang=', () => {
     const es = controls(renderToStaticMarkup(<SiteHeader locale="es" page="/learners" current="learners" />));
-    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), ...personaPaths('es'), ...menuPaths('/learners'), signIn()]);
+    expect(es.map(hrefOf)).toEqual(['#content', '/es', learnerStart('es'), ...personaPaths('es'), ...menuPaths('/learners'), signIn(undefined, 'es')]);
+    expect(signIn(undefined, 'es')).toContain('lang=es');
     expect(personaPaths('es')).toContain('/es/learners');
     expect(learnerStart('es')).toContain('lang=es');
   });
@@ -339,7 +340,8 @@ describe('SiteFooter', () => {
 
   it('a locale page links its locale', () => {
     const es = controls(renderToStaticMarkup(<SiteFooter locale="es" page="/learners" />)).map(hrefOf);
-    expect(es).toEqual(expect.arrayContaining(['/es/learners', '/es/about', '/es/privacy', learnerStart('es')]));
+    expect(es).toEqual(expect.arrayContaining(['/es/learners', '/es/about', '/es/privacy', learnerStart('es'), signIn(undefined, 'es')]));
+    expect(es).not.toContain(signIn());
   });
 
   it('the locale switcher shows now that es and ko ship, keeps the page and marks the current locale', () => {

@@ -130,7 +130,7 @@ export function SiteFooter({ locale, page, current, variant = 'default' }: SiteF
             {variant === 'default' ? (
               <Group id="footer-app" title={t.footer.app}>
                 {link(learnerStart(locale), t.nav.start, false)}
-                {link(signIn(), t.nav.signIn, false)}
+                {link(signIn(undefined, locale), t.nav.signIn, false)}
               </Group>
             ) : null}
           </div>

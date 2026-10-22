@@ -240,10 +240,13 @@ describe('locale pages are the English pages with locale links', () => {
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
       // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
-      // [SN] The grown-up create and sign-in links carry `lang` from a locale page too (AMENDMENTS-SITE-NEWUSER §3.8).
+      // [SN] The grown-up create and sign-in links carry `lang` from a locale page too (AMENDMENTS-SITE-NEWUSER §3.8),
+      // the header and footer Sign in (no persona) included.
       const toLocale = (href: string): string =>
         /\/signin\?(mode=create&amp;)?persona=/.test(href)
           ? `${href}&amp;lang=${locale}`
+          : /\/signin$/.test(href)
+            ? `${href}?lang=${locale}`
           : href === '/'
           ? `/${locale}`
           : ['/about', '/privacy', '/terms', '/learners', '/parents', '/teachers', '/licenses'].includes(href)
