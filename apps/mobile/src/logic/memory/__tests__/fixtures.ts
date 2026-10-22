@@ -1,5 +1,5 @@
 import { CATALOG, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
-import { decodeReviewItems, type ReviewItem } from '@hangul-route/content-schema/review-items';
+import { decodeRetiredItem, decodeReviewItems, type ReviewItem } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../../content/__generated__/review-item-chunks/review-items';
 import type { ReviewItemIndex } from '../../reviews/review-items-store';
 
@@ -10,8 +10,9 @@ import type { ReviewItemIndex } from '../../reviews/review-items-store';
  */
 
 export const ITEMS: readonly ReviewItem[] = decodeReviewItems(chunk);
-export const RETIRED: ReadonlySet<string> = new Set(chunk.REVIEW_RETIRED_IDS);
-export const INDEX: ReviewItemIndex = { items: ITEMS, byId: new Map(ITEMS.map((i) => [i.id, i])), retired: RETIRED };
+const RETIRED_ITEMS = chunk.REVIEW_RETIRED.map(decodeRetiredItem);
+export const RETIRED: ReadonlySet<string> = new Set(RETIRED_ITEMS.map((r) => r.id));
+export const INDEX: ReviewItemIndex = { items: ITEMS, byId: new Map(ITEMS.map((i) => [i.id, i])), retired: RETIRED, retiredById: new Map(RETIRED_ITEMS.map((r) => [r.id, r])) };
 
 export const LESSON_QUESTS = CATALOG.quests.filter((q) => q.kind === 'lesson');
 
