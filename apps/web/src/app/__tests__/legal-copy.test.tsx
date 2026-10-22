@@ -92,7 +92,9 @@ describe('privacy policy', () => {
     expect(privacy).toContain(
       'When it ends: the level it suggests for reading and for listening, whether the learner reached the highest level the check measures, how many of the five skills it checks are secure, its length, how many questions were asked and why it stopped.',
     );
-    expect(privacy).toContain('We also note when the check is skipped or a grown-up picks a different start.');
+    expect(privacy).toContain(
+      "We also note when the check is skipped and from which screen, and when a grown-up picks a different start. Each event carries the learner's id and the time it happened.",
+    );
     expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
     expect(privacy).not.toMatch(/age group/i);
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);
@@ -115,9 +117,9 @@ describe('privacy policy', () => {
       length: 'its language, length and settings',
       mode: 'its language, length and settings',
       revealMode: 'its language, length and settings',
-      bankVersion: 'which version of the questions it used',
-      contentVer: 'which version of the questions it used',
-      catalogVersion: 'which version of the questions it used',
+      bankVersion: 'which versions of the questions and lessons it used',
+      contentVer: 'which versions of the questions and lessons it used',
+      catalogVersion: 'which versions of the questions and lessons it used',
       motivation: 'why the learner is learning Korean, if they picked a reason',
       responses: 'holds every answer',
       gates: 'how the learner did in each part of the check',
