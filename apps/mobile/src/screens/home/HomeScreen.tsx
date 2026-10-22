@@ -412,7 +412,7 @@ export function HomeScreen(): React.ReactElement {
   // The Daily Review (F-CURR-002 row CM-14): slot 3 from 3 due items, first on a review-first day; off, today's slot 3.
   const dailyReview = useDailyReviewHome(profile?.id ?? null, localToday, snap?.reviews);
   const dailyReviewInput = missionDailyReviewOf(dailyReview);
-  // The day's plan waits for the first read (a frame or two), so a fresh pin never misses the card it should hold.
+  // The day's plan waits for the first read (at most DAILY_REVIEW_HOME_WAIT_MS), so a fresh pin never misses the card it should hold.
   const awaitReview = dailyReview.state === 'loading' && profile !== undefined && profile !== null && pinnedMission(profile.id, today) === null;
 
   // Recent stars waits for a first star (owner request 2026-10-16, item 8): an empty row of stars is never shown.

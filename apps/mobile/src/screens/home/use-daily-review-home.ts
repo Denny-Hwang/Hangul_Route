@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MissionDailyReview } from '../../logic/homework/mission-builder';
 import { memoryChunk, memoryRecordsFor } from '../../logic/memory/boot';
+import { DAILY_REVIEW_HOME_WAIT_MS, onLateRead } from '../../logic/reviews/home-wait';
 import { useCurrFlag } from '../../store/remote-config-store';
 
 /**
@@ -10,8 +11,10 @@ import { useCurrFlag } from '../../store/remote-config-store';
  * when Home comes into focus, the learner's reviews change or the local day turns.
  *
  * - `off`: `dailyReview` or `memoryRecord` is off for the learner (or a grown-up persona): slot 3 keeps today's chain.
- * - `loading`: the first read is on its way; Home waits for it before it pins the day's plan (a frame or two).
- * - `unknown`: the store could not be read: a pinned card stays as it was, a fresh plan keeps today's chain.
+ * - `loading`: the first read is on its way; Home waits for it before it pins the day's plan, at most
+ *   `DAILY_REVIEW_HOME_WAIT_MS` (then `unknown`; the read still lands later and the card joins slot 3 then).
+ * - `unknown`: the store could not be read (or not in time): a pinned card stays as it was, a fresh plan keeps
+ *   today's chain.
  * - `ready`: the counts.
  */
 export type DailyReviewHome = { state: 'off' } | { state: 'loading' } | { state: 'unknown' } | { state: 'ready'; value: MissionDailyReview };
@@ -32,15 +35,19 @@ export function useDailyReviewHome(profileId: string | null, localToday: string,
 
   const refresh = useCallback(() => {
     if (!on || profileId === null) return;
-    memoryChunk()
+    const value = memoryChunk()
       .then((chunk) => chunk.dailyReviewApi().homeDailyReview(profileId))
       .then(
-        (value) => value,
+        (v) => v,
         () => null,
-      )
-      .then((value) => {
-        if (alive.current) setRead({ key, home: value === null ? { state: 'unknown' } : { state: 'ready', value } });
-      });
+      );
+    // Never hold the Today cards for long (section 4.3: never blocks new content): a slow first read reads as unknown.
+    onLateRead(value, DAILY_REVIEW_HOME_WAIT_MS, () => {
+      if (alive.current) setRead((prev) => (prev !== null && prev.key === key ? prev : { key, home: { state: 'unknown' } }));
+    });
+    void value.then((v) => {
+      if (alive.current) setRead({ key, home: v === null ? { state: 'unknown' } : { state: 'ready', value: v } });
+    });
   }, [on, profileId, key]);
 
   useEffect(() => {
