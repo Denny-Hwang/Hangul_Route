@@ -75,6 +75,8 @@ export type GrownUpDestination =
   | 'GrownUpUse'
   /** [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS CS-11 (row OA-7b): Who is joining? asks a fresh PIN before a learner other than the active one joins; a correct PIN (or a new one) returns to Join, which goes on. */
   | 'JoinSpace'
+  /** [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.2 (row GU-4, CS-G2, CS-G10): Keep my progress after the first quest on a device with a PIN, in the `Guest` stack; verify only with `verifyForLockedProfile`, then the save form; never a grown-up session, never a new PIN. */
+  | 'SaveGuest'
   // add new members above this line
 ;
 
@@ -336,14 +338,22 @@ export type RootStackParamList = {
    * [OA] "Who is using this?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 6, row OA-4a; wireframe `profiles/who-is-using.md`):
    * the device's one chooser. Root stack, above `Main`, no Back, the Android back swallowed. `trigger`: why it opened
    * (`who.shown`, and `profile.switch` with `via: 'chooser'`). A held join code is never a param (OA-D20).
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 6.1 (row GU-5): `try`, the `return` chooser of `who=1` with `try=1`,
+   * which also draws **Try the first quest**.
    */
-  WhoIsUsing: { trigger: WhoTrigger };
+  WhoIsUsing: { trigger: WhoTrigger; try?: true };
   /**
    * [OA] One person on this device (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 10.4, row OA-7a; wireframe
    * `profiles/people-on-device.md` Panel B): the lock switch, Edit profile, the report and Remove from this device.
    * In the Grown-up area stack, reached from its People on this device card.
    */
   PersonOnDevice: { profileId: string };
+  /**
+   * [GU] The guest's first quest (AMENDMENTS-GUEST-FIRST-LESSON sections 6.2 and 7.1, row GU-3): its own stack above
+   * `Main`, registered only while `flags.guestLessonEnabled` is on, holding the screens of `GuestStackParamList` and
+   * nothing else (CS-G1).
+   */
+  Guest: NavigatorScreenParams<GuestStackParamList>;
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */
@@ -369,7 +379,12 @@ export type OnboardingStackParamList = {
    * `then: 'join'`: started at Welcome's "Got a class code?" or at the class join link; Join a class opens after the
    * profile is made, with the link's `code` filled in (owner decision 2026-10-17).
    */
-  CreateProfile: { firstRun: boolean; then?: 'join'; code?: string };
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 8.3, 9.2 (row GU-5): `from: 'guest'` with `owner: true` is **Keep as a
+   * learner** from People on this device: the guest's two save steps inside the grown-up session (the case `owner`),
+   * step 2 planned as Add a learner's, back to the Grown-up area after the save.
+   */
+  CreateProfile: { firstRun: boolean; then?: 'join'; code?: string; from?: 'guest'; owner?: true };
   FirstQuestPreview: { profileId: string };
   /** The level check's fork (F-PLC-001 section 3.1 step 1), between CreateProfile and FirstQuestPreview. */
   PlacementInvite: { profileId: string };
@@ -394,6 +409,24 @@ export type MainTabParamList = {
    * cleared; a section that is not offered opens Cards.
    */
   Library: { section?: LibrarySectionId } | undefined;
+};
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 7.1, CS-G1 (row GU-3): every route a guest run can reach. `QuestPlayer`
+ * plays Stage 1 quest 1 with the guest ports, `Minigame` its games, `Results` the guest variant, `CardDetail` the card
+ * page and `GuestLater` the Not now card (row GU-4 fills it). Row GU-4 registers the save's two routes,
+ * `CreateProfile { from: 'guest' }` and the verify-only `PinEntry { next: 'SaveGuest' }`. Nothing else: no tabs, no
+ * Profile, no Grown-up area, no Paywall, no Join, no notes, no Learning Route, no level check, no Lecture mode, no All
+ * lessons. `guest-stack.test.ts` walks this list and every navigate target of the stack's screens.
+ */
+export type GuestStackParamList = {
+  QuestPlayer: { questId: string; episodeId: string };
+  Minigame: RootStackParamList['Minigame'];
+  Results: RootStackParamList['Results'];
+  CardDetail: RootStackParamList['CardDetail'];
+  GuestLater: undefined;
+  CreateProfile: { firstRun: boolean; from: 'guest' };
+  PinEntry: { next: 'SaveGuest' };
 };
 
 declare global {

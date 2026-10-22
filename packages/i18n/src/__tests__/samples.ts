@@ -970,4 +970,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.goals.day.learnedToday': [['Friday'], ['Wednesday']],
   'a11y.goals.day.rest': [['Tuesday'], ['Wednesday']],
   'a11y.goals.day.today': [['Friday'], ['Wednesday']],
+  // [GU] The save after the first quest (AMENDMENTS-GUEST-FIRST-LESSON 16.2, row GU-4): the days (30, or 7), a learner name.
+  'learner.guest.later.title': [[30], [7]],
+  'learner.guest.saved': [['Sam'], ['Jo Ann']],
+  'learner.guest.savedNoCard': [['Sam'], ['Jo Ann']],
+  // [GU] The Privacy Policy's first-quest bullet (AMENDMENTS-GUEST-FIRST-LESSON row GU-6): GUEST_TTL_DAYS and GUEST_TTL_SHARED_DAYS.
+  'landing.legal.privacy.sections.collect.bullets.guest': [[{ email: 'hello@example.com', levels: 'New reader / Some reading', days: 30, sharedDays: 7 }]],
 };

@@ -1,6 +1,7 @@
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
+import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { learnerStart, signIn } from '../../lib/site-links';
 import { SITE_PAGES, shownSiteLocales, type SitePage } from '../../lib/site-metadata';
 import { sitePath } from '../../lib/site-path';
@@ -39,6 +40,8 @@ export interface SiteHeaderProps {
   /** The persona page being shown, marked in the nav with `aria-current="page"`. */
   current?: PersonaPage;
   variant?: SiteChromeVariant;
+  /** [GU] Which claims show; Start learning carries `try=1` while `guestLesson` does (tests render both states). */
+  claims?: Readonly<SiteClaims>;
 }
 
 /** The language control's links: the same page in every shown locale, named by its endonym (never a message). */
@@ -74,7 +77,7 @@ const CURRENT_MARK = {
  * Links to the app (Start learning, Sign in) are plain `<a>` in the same tab (they leave the site route group);
  * the brand and the persona links stay inside it (`next/link`). Every control is at least 64 x 64.
  */
-export function SiteHeader({ locale, page = '/', home = page === '/', current, variant = 'default' }: SiteHeaderProps): JSX.Element {
+export function SiteHeader({ locale, page = '/', home = page === '/', current, variant = 'default', claims = SITE_CLAIMS }: SiteHeaderProps): JSX.Element {
   const t = getMessages(locale).landing;
   const full = variant === 'default';
   // The phone Start pill is drawn on every full header but the home's; without it the language control takes the
@@ -144,7 +147,7 @@ export function SiteHeader({ locale, page = '/', home = page === '/', current, v
           </Link>
           {full ? (
             <a
-              href={learnerStart(locale)}
+              href={learnerStart(locale, claims)}
               aria-label={t.nav.start}
               className={phoneStart ? 'hr-site-header-start hr-site-primary' : 'hr-site-wide-only hr-site-header-start hr-site-primary'}
               style={{ ...HIT_SIZE, borderRadius: radii.pill, fontWeight: typography.weight.bold, whiteSpace: 'nowrap' }}

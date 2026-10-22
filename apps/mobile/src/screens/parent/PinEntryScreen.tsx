@@ -12,7 +12,7 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
@@ -25,6 +25,7 @@ import {
   forGrownUpArea as opensGrownUpArea,
   forLockedProfile,
   forGrownUpUse,
+  forSaveGuest,
   grownUpAreaNoPin,
   initialPinMode,
   pinCreatedWhere,
@@ -43,6 +44,8 @@ import { pauseAnnounceKey, pauseText, showsPauseHelp } from '../../logic/profile
 import { shortcutOffered } from '../../logic/profiles/biometric-shortcut';
 import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import { chooserHandoff, rowLabelKey } from '../../logic/profiles/who';
+import { guestFormParams } from '../../logic/guest/guest-save';
+import { guestOnlyGate } from '../../logic/guest/guest-model';
 import { routeGateStep } from '../../logic/route/proposal-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { flags } from '../../config/flags';
@@ -56,12 +59,15 @@ import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
 import { gateDestOf } from '../../logic/profiles/gate-events';
 import { trackGateOpened, trackPinPaused, trackProfileSwitch } from '../../store/gate-telemetry';
+import { useGuestStore } from '../../store/guest-store';
 import { verifyForLockedProfile } from '../../store/profile-locks';
 import { useProfileStore } from '../../store/profile-store';
 import { useUiStore } from '../../store/ui-store';
 import { pickLanding } from '../../logic/profiles/who';
 import { routeZone } from '../../logic/profiles/session';
 import { heldJoin, persistLeaving, takeHeldJoin } from '../../store/who-chooser';
+import { openGuestFormAfterPin } from '../guest/guest-exits';
+import { GuestOnlyGateBox } from './guest-keep';
 import { RESET_SETUP_IDLE_MS, bindResetSetupLapse, resetSetupLapseDeps } from './use-gate-lapse';
 import { useBiometricAvailability } from './use-biometric-available';
 
@@ -119,6 +125,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * [OA] Destination `JoinSpace` (row OA-7b, CS-11): Who is joining? asks the PIN before a learner other than the
  * active one joins. A correct PIN (a fresh PIN, `markPinVerified`) or a first PIN set here returns to Join, which goes on;
  * a PIN set at the end of a reset (`via`) returns too but is no fresh PIN, so Join asks it once more.
+ *
+ * [GU] Destination `SaveGuest` (AMENDMENTS-GUEST-FIRST-LESSON section 8.2, row GU-4; CS-G2, CS-G9, CS-G10): Keep my
+ * progress after the first quest on a device that holds a PIN, in the `Guest` stack. Verify only, through
+ * `verifyForLockedProfile` (strikes reset, a pending wait cleared), no Forgot PIN?: a correct PIN replaces this screen
+ * with the save form and does nothing else (no `markPinVerified`, no `openParentGate`, no `parent.gate.opened`, no
+ * fresh-PIN credit). Face or fingerprint never stands in for it (it goes back). Cancel and Close go back to the save
+ * card. With no PIN stored the screen refuses and goes back: it never creates one. It reads no grown-up session, so an
+ * open one never skips the PIN.
  */
 
 const DOT_SIZE = 20;
@@ -164,10 +178,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const cancelReset = forCancelReset(route.params);
   const lockedProfile = forLockedProfile(route.params);
   const freshPin = forFreshPin(route.params);
+  const saveGuest = forSaveGuest(route.params);
   const noPin = grownUpAreaNoPin(route.params, storedHash);
   const lockedName = useProfileStore((s) => (lockedProfile ? (s.profiles.find((p) => p.id === route.params.profileId)?.displayName ?? null) : null));
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
+  // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 9.2 (row GU-5): the guest-only gate. This setup is shown only because an
+  // unsaved first quest is kept here (no PIN, no child profile): one line says why, with Remove the first quest.
+  const guestRecord = useGuestStore((g) => g.record);
+  const guestRunning = useGuestStore((g) => g.running);
+  const deviceProfiles = useProfileStore((s) => s.profiles);
   const [entry, setEntry] = useState('');
   const [firstPin, setFirstPin] = useState('');
   const [hint, setHint] = useState<string | null>(null);
@@ -301,7 +321,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const voided = voidWithoutPin(route.params, storedHash, hashReadFailed);
   // [OA] A hash that could not be read at hydrate is read again on arrival, so the lock can be checked (or found void).
   useEffect(() => {
-    if ((lockedProfile || freshPin) && hashReadFailed) void retryPinHashRead();
+    if ((lockedProfile || freshPin || saveGuest) && hashReadFailed) void retryPinHashRead();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
   }, []);
   useEffect(() => {
@@ -353,8 +373,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     return result;
   };
 
-  const proceed = (): void => {
-    openParentGate();
+  /**
+   * The destination, once the gate is through. [GU] `open` false: the guest-only gate's Remove the first quest, after
+   * which the destination opens as it did before the guest (directly, no grown-up session, section 9.2).
+   */
+  const proceed = (open = true): void => {
+    if (open) openParentGate();
     if (route.params.next === 'PlacementFinish') {
       // The level check is underneath: it sees the gate open and ends the run for the grown-up.
       back();
@@ -451,6 +475,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   /** A correct PIN, or face or fingerprint standing in for it (section 8.6): the same path for every destination. */
   const afterVerified = async (via: 'pin' | 'biometric'): Promise<void> => {
+    // [GU] CS-G2: the guest's save opens through `verifyForLockedProfile` in `submit` only; never a session from here.
+    if (saveGuest) {
+      leave();
+      return;
+    }
     // [OA] CS-3: a locked tile's PIN opens through `verifyForLockedProfile` and `openLocked` in `submit`, never here.
     // Face or fingerprint on a locked tile stays fail closed: it never marks a fresh PIN and never opens the gate.
     if (gateDestOf(route.params.next) === 'locked_profile') {
@@ -563,7 +592,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         proceed();
         return;
       }
-      if ((lockedProfile || freshPin) && useAccountStore.getState().pinHashReadFailed) {
+      if ((lockedProfile || freshPin || saveGuest) && useAccountStore.getState().pinHashReadFailed) {
         // [OA] Fail closed (13.2): the PIN hash is unknown, so it is read again before any check; while it stays
         // unknown nothing opens, no attempt is counted and the pad stays usable.
         await retryPinHashRead();
@@ -578,11 +607,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           return;
         }
       }
-      if (lockedProfile) {
+      if (lockedProfile || saveGuest) {
         // [OA] Section 6.3, CS-3: the locked-profile verify path: no gate session, no fresh PIN.
         const result = await verifyForLockedProfile(entry, { hasher: pinHasher, schedule });
         setEntry('');
         if (result.paused) trackPinPaused(result.paused.step);
+        if (result.ok && saveGuest) {
+          // [GU] CS-G2: the save form in this screen's place (the Guest stack), nothing else.
+          openGuestFormAfterPin(navigation as unknown as Parameters<typeof openGuestFormAfterPin>[0], guestFormParams(useProfileStore.getState().profiles));
+          return;
+        }
         if (result.ok) {
           trackGateOpened(route.params.next, 'pin');
           gateSent.current = true;
@@ -647,6 +681,32 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         ? copy.pinCreateSubtitle
         : m.entry.createAgainSubtitle;
 
+  // [GU] Section 9.2, CS-G1, CS-G10: on the first setup step only, never inside a guest run (the `Guest` stack opens no
+  // setup anyway), never for the guest's own `SaveGuest`, never on the sign-in reset's new PIN. Shown with the guest
+  // switch off too, so a grown-up asked for a PIN because of a kept record always sees why.
+  const guestOnly =
+    mode === 'setup-1' && !saveGuest && !guestRunning && route.params.via === undefined && guestOnlyGate({ profiles: deviceProfiles, guest: guestRecord, parentPinHash: storedHash });
+  /**
+   * [GU] Remove the first quest went through (the sweep): the destination as before the guest (`parent.gate.opened`
+   * `open`). Row GU-5 review: only when the gate, read again from storage after the sweep, opens directly; when another
+   * tab meanwhile saved the guest as a child or set a PIN, this screen stays (verify once a PIN is stored, else setup).
+   * A destination this screen returns to with `back()` (PlacementFinish, Billing, ExternalLink, LectureMode, JoinSpace,
+   * BiometricShortcut) sees no gate opened and takes one more tap, which now opens directly (section 9.2).
+   */
+  const afterGuestRemoved = (opensDirectly: boolean): void => {
+    if (opensDirectly) {
+      trackGateOpened(route.params.next, 'open');
+      proceed(false);
+      return;
+    }
+    const nextMode = initialPinMode(route.params, useAccountStore.getState().parentPinHash);
+    if (nextMode !== mode) {
+      setEntry('');
+      setFirstPin('');
+      setMode(nextMode);
+    }
+  };
+
   // [OA] Section 8.3: seconds under a minute, minutes above; the help line from the 3rd pause, Grown-up area only.
   // [OA] After an enrolment change the changed line takes the subtitle's place; a pause line or a hint goes first.
   const changedLine = biometricChanged ? m.biometric.changed : null;
@@ -662,6 +722,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const biometricSlot = (available: boolean): boolean =>
     mode === 'verify' &&
     !verifiedGoesToSetup(route.params) &&
+    // [GU] The guest's save asks the typed PIN only (CS-G2).
+    !saveGuest &&
     shortcutOffered({
       flagOn: flags.biometricShortcutEnabled,
       available,
@@ -791,6 +853,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           >
             <Button label={m.biometric.cta} tone="secondary" size="md" fullWidth disabled onPress={() => undefined} />
           </View>
+        ) : null}
+        {/*
+          [GU] The guest-only gate (mock who-is-using-guest.md D15): one sunken box between the subtitle and the dots,
+          inside the measured block so the pad gets what is left. Plain text in reading order, not a live region.
+        */}
+        {guestOnly ? (
+          <Suspense fallback={null}>
+            <GuestOnlyGateBox onRemoved={afterGuestRemoved} />
+          </Suspense>
         ) : null}
       </View>
 

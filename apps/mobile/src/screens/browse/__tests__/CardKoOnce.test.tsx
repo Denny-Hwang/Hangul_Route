@@ -85,7 +85,8 @@ describe('card surfaces dedupe the Korean word through card-art helpers', () => 
     ['library/CardDetailView.tsx', /cardKoLine\(card\) \?/],
     ['library/CardDetailView.tsx', /cardTitleIsKo\(card\) \? null/],
     ['episode/EpisodeDetailView.tsx', /cardKoLine\(c\) \?/],
-    ['results/ResultsScreen.tsx', /cardKoLine\(card\) \?/],
+    // The quest card celebration of Results (learner and guest), in its own file since row GU-3.
+    ['results/CardUnlockBanner.tsx', /cardKoLine\(card\) \?/],
   ])('%s', (file, pattern) => {
     expect(read(file)).toMatch(pattern);
   });

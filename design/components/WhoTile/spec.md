@@ -18,9 +18,16 @@ One learner on the "Who is using this?" chooser: the learner's cub and name, not
 | `locked` | `boolean` | lock badge and the caption `learner.who.lockedCaption` |
 | `captionHidden` | `boolean` | the locks-unreadable state draws the badge without the caption (the screen's one line says it) |
 | `onPress` | `() => void` | |
-| `variant` | `'learner' \| 'add'` | `add`: dashed tile with `plus` and `learner.who.add` |
+| `variant` | `'learner' \| 'add' \| 'try' \| 'guest'` | `add`: dashed tile with `plus` and `learner.who.add`. [GU] `try` and `guest` (row GU-5, `docs/specs/AMENDMENTS-GUEST-FIRST-LESSON.md` section 9.1, mock `design/screens/profiles/who-is-using-guest.md` D11 the two shapes, D12 320 px at Largest): see below |
+| `line` | `string` | [GU] the line under the label of a `try` tile (`learner.who.trySub`) or a `guest` tile (`learner.who.guestCaption`); `size.bodySm` `text.secondary`, wraps, never truncates; ignored by `learner` and `add` |
 
 Never props: progress, stars, cards, level, streak, space, last played, time (CS-6). A snapshot test rejects those keys in the chooser tree.
+
+[GU] The two guest variants (row GU-5, AMENDMENTS-GUEST-FIRST-LESSON sections 9.1 and 9.2, CS-G5; mock `who-is-using-guest.md` D11 for the two shapes, D12 for 320 px at Largest). The chooser draws at most one of them, after Add a learner:
+
+- `try`, **Try the first quest**: drawn as Add a learner (dashed `border.shape`, `surface.canvas`, a 48 paper circle) with the `play` glyph instead of `plus`, the label `learner.who.try` in `size.body` semibold and `line` (`learner.who.trySub`, **No profile needed**) under it in `size.bodySm` `text.secondary`. Named `a11y.who.try`.
+- `guest`, the live guest's own tile: drawn as a learner tile with the default cub (`DEFAULT_AVATAR`, idle pose) whatever `avatar` says, an untinted `surface.sunken` plate (`tint` is ignored), never the lock badge or the locked caption (`locked` is ignored), the label `learner.who.guest` (**First quest**) and `line` (`learner.who.guestCaption`, **Not saved yet**) under it. It never carries stars, cards, level, streak or time (CS-G5, OA CS-6). Named `a11y.who.guest`.
+- Neither is ever locked, offers a lock or needs a PIN. Every label and line wraps at spaces and grows the tile (`minHeight` only, no line clamp), so nothing is cut at 320 px with two columns and Largest text, in en, es and ko.
 
 ## Anatomy and tokens
 
@@ -56,6 +63,8 @@ Never props: progress, stars, cards, level, streak, space, last played, time (CS
 | locks unreadable | badge without caption on every tile; the screen shows `learner.who.locksUnread` |
 | tinted | plate in the tint |
 | add | dashed variant |
+| try | [GU] dashed variant, `play` glyph, `line` under the label (D11) |
+| guest | [GU] default cub, untinted plate, no lock, `line` as the caption, never progress (D11) |
 
 There is no disabled tile: a learner tile is always one tap.
 

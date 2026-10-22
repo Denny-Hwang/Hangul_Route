@@ -360,3 +360,106 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
     expect(await rows()).toEqual([{ day: DAY, name: 'who.picked', dims: '{"kind":"add"}', n: 1 }]);
   });
 });
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-1, Worker first, before any client sends a guest event): the
+ * guest.* names are accepted, stored without a profile id (CS-G7 on the server) and with their codes only, and each
+ * one, plus onboarding.started with only firstRun and fromGuest, adds one to the anonymous telemetry_daily counter of
+ * its UTC day: codes only, never a profile id, a device id or a time finer than a day.
+ */
+describe('[GU] POST /api/telemetry · guest.* names and the daily counters', () => {
+  const DAY = NOW.toISOString().slice(0, 10);
+  const rows = () => testDb.telemetryDailyOf(DAY);
+  const drain = () => flushTelemetryDaily(() => testDb, Date.now() + TELEMETRY_DAILY_WINDOW_MS);
+  const GUEST_ID = 'profile:k3x9-2a';
+
+  beforeEach(async () => {
+    await testDb.reset();
+    resetTelemetryDailyBudgetForTests();
+  });
+
+  it('accepts the six guest.* names and refuses an unlisted one', async () => {
+    for (const name of ['guest.started', 'guest.first_letter', 'guest.quest_done', 'guest.left', 'guest.saved', 'guest.expired']) {
+      expect((await post({ name })).status, name).toBe(201);
+    }
+    expect((await post({ name: 'guest.peeked', payload: { via: 'site' } })).status).toBe(422);
+    expect(store.events).toHaveLength(6);
+  });
+
+  it('stores every guest.* event without a profile id and with its documented codes only', async () => {
+    const sent: Array<[string, Record<string, unknown>]> = [
+      ['guest.started', { via: 'site', resumed: false }],
+      ['guest.first_letter', { secondsIn: '0-15' }],
+      ['guest.quest_done', { stars: 2 }],
+      ['guest.left', { at: 'save' }],
+      ['guest.saved', { gated: true, consent: 'new', via: 'results' }],
+      ['guest.expired', { questDone: true }],
+    ];
+    for (const [name, payload] of sent) {
+      const r = await post({ name, profileId: GUEST_ID, payload: { ...payload, profileId: GUEST_ID, learnerType: 'child', name: 'Mina', deviceId: 'device:x', startedAt: '2026-10-09T11:58:12.345Z' } });
+      expect(r.status, name).toBe(201);
+      expect(r.body.data?.event.profileId, name).toBeUndefined();
+      expect(r.body.data?.event.payload, name).toEqual(payload);
+    }
+    // An out-of-range value is dropped: with no other key, nothing of the payload is kept.
+    const off = await post({ name: 'guest.quest_done', profileId: GUEST_ID, payload: { stars: 7 } });
+    expect(off.body.data?.event.payload).toBeUndefined();
+    expect(JSON.stringify(store.events)).not.toMatch(/k3x9|Mina|device:x|child|11:58/);
+  });
+
+  it('counts each kept guest.* event and onboarding.started (firstRun, fromGuest only) by day, with codes only', async () => {
+    await post({ name: 'guest.started', profileId: GUEST_ID, payload: { via: 'site', resumed: false, profileId: GUEST_ID } });
+    await post({ name: 'guest.started', payload: { resumed: false, via: 'site' } });
+    await post({ name: 'guest.started', payload: { via: 'welcome', resumed: true } });
+    await post({ name: 'guest.first_letter', profileId: GUEST_ID, payload: { secondsIn: '30-60', at: '2026-10-09T11:59:01.000Z' } });
+    await post({ name: 'guest.quest_done', payload: { stars: 3 } });
+    await post({ name: 'guest.left', payload: { at: 'quest' } });
+    await post({ name: 'guest.saved', profileId: GUEST_ID, payload: { gated: false, consent: 'existing', via: 'welcome', learnerType: 'child' } });
+    await post({ name: 'guest.expired', payload: { questDone: false } });
+    await post({ name: 'onboarding.started', profileId: GUEST_ID, payload: { level: '8-9', firstRun: true, hasEmail: true, fromGuest: true } });
+    await post({ name: 'onboarding.started', profileId: 'profile:other', payload: { level: '15+', firstRun: true, hasEmail: false, fromGuest: true } });
+    await post({ name: 'onboarding.started', profileId: 'profile:old', payload: { level: '8-9', firstRun: false, hasEmail: false } });
+    // not counted: an ordinary onboarding name
+    await post({ name: 'onboarding.consent_given', profileId: GUEST_ID, payload: { basis: 'guardian', hasEmail: true, pinSet: false } });
+    await drain();
+    expect(await rows()).toEqual([
+      { day: DAY, name: 'guest.expired', dims: '{"questDone":false}', n: 1 },
+      { day: DAY, name: 'guest.first_letter', dims: '{"secondsIn":"30-60"}', n: 1 },
+      { day: DAY, name: 'guest.left', dims: '{"at":"quest"}', n: 1 },
+      { day: DAY, name: 'guest.quest_done', dims: '{"stars":3}', n: 1 },
+      { day: DAY, name: 'guest.saved', dims: '{"consent":"existing","gated":false,"via":"welcome"}', n: 1 },
+      { day: DAY, name: 'guest.started', dims: '{"resumed":false,"via":"site"}', n: 2 },
+      { day: DAY, name: 'guest.started', dims: '{"resumed":true,"via":"welcome"}', n: 1 },
+      { day: DAY, name: 'onboarding.started', dims: '{"firstRun":false}', n: 1 },
+      { day: DAY, name: 'onboarding.started', dims: '{"firstRun":true,"fromGuest":true}', n: 2 },
+    ]);
+    // Codes only: no profile or device id, no level, no email flag, no time finer than the day.
+    expect(JSON.stringify(await rows())).not.toMatch(/profile|k3x9|device|level|hasEmail|8-9|15\+|learnerType|child|T\d\d:/);
+    for (const row of await rows()) expect(Object.keys(row).sort()).toEqual(['day', 'dims', 'n', 'name']);
+    // The stored onboarding.started is unchanged: the narrowing is the count's only.
+    expect(store.events.find((e) => e.name === 'onboarding.started')?.payload).toEqual({ level: '8-9', firstRun: true, hasEmail: true, fromGuest: true });
+  });
+
+  it("counts the who.* and profile.switch 'try' and 'guest' codes", async () => {
+    await post({ name: 'who.shown', payload: { trigger: 'try', learners: '2', grownUps: 1, anyLocked: false, resetPending: false } });
+    await post({ name: 'who.picked', payload: { kind: 'try' } });
+    await post({ name: 'who.picked', payload: { kind: 'guest' } });
+    await post({ name: 'profile.switch', profileId: 'profile:suni', payload: { via: 'chooser', trigger: 'try', locked: false, minutesIn: '0-2' } });
+    await drain();
+    expect(await rows()).toEqual([
+      { day: DAY, name: 'profile.switch', dims: '{"locked":false,"minutesIn":"0-2","trigger":"try","via":"chooser"}', n: 1 },
+      { day: DAY, name: 'who.picked', dims: '{"kind":"guest"}', n: 1 },
+      { day: DAY, name: 'who.picked', dims: '{"kind":"try"}', n: 1 },
+      { day: DAY, name: 'who.shown', dims: '{"anyLocked":false,"grownUps":1,"learners":"2","resetPending":false,"trigger":"try"}', n: 1 },
+    ]);
+  });
+
+  it('TELEMETRY_DAILY off counts no guest event; the event is still accepted without a profile id', async () => {
+    const res = await app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'guest.started', profileId: GUEST_ID, payload: { via: 'site', resumed: false } }) }, { TELEMETRY_DAILY: 'disabled' });
+    expect(res.status).toBe(201);
+    expect(store.events).toHaveLength(1);
+    expect(store.events[0]?.profileId).toBeUndefined();
+    await drain();
+    expect(await rows()).toEqual([]);
+  });
+});

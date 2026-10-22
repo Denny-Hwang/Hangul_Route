@@ -30,6 +30,7 @@ import { sessionDayNow } from '../platform/goal-clock';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
+import { isLiveGuestId } from './guest-store';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 
@@ -574,8 +575,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const owned = new Set(snap.cards.map((c) => c.cardId));
     const now = new Date().toISOString();
     const added: ProgressSnapshot['cards'] = [];
+    // [GU] Section 5.3 (row GU-2): the welcome card comes with the profile record, so a guest is never given one; it
+    // arrives with the save (the reconcile after `promoteGuest`).
+    const guest = isLiveGuestId(profileId);
     for (const card of cards) {
-      if (owned.has(card.cardId)) continue;
+      if (owned.has(card.cardId) || (guest && WELCOME_CARD_IDS.has(card.cardId))) continue;
       owned.add(card.cardId);
       added.push({ cardId: card.cardId, unlockedAt: card.unlockedAt ?? now, newSinceLastView: true });
     }
@@ -650,7 +654,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       openSession: { profileId, sessionId, owner: options.owner, streak: options.streak, ...(options.keepsRun ? { keepsRun: true } : {}) },
     }));
     persist(profileId, updated);
-    if (options.streak) {
+    // [GU] GU-D15 (row GU-2): no `session.start` for a guest, so OA's G1 counts profile sessions only.
+    if (options.streak && !isLiveGuestId(profileId)) {
       void track({
         name: 'session.start',
         profileId,

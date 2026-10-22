@@ -125,6 +125,10 @@ export function pinRequiredForNewProfile(i: { learnerType: LearnerType; parentPi
   // learnerType === 'child' && parentPinHash === null
 ```
 
+[GU] Row GU-4 (`AMENDMENTS-GUEST-FIRST-LESSON.md` sections 5.4, 8.3 and 8.5, GU-D11): the submit order below is unchanged (consent, PIN hash, email), and ends in `promoteGuest` instead of `createProfile` when the form is the guest's save, or a first run (Let's start, the class link) on a device whose only learner is a live guest with `EXPO_PUBLIC_GUEST_LESSON` on: the profile is written with the guest's id and the run's start as `createdAt`, then `hr:guest` is deleted. `onboarding.started` then carries `fromGuest: true`, and `guest.saved { gated, consent, via }` follows (section 3.8). A promotion that could not be written answers `save-failed` (the guest stays; Continue can be pressed again).
+
+[GU] Row GU-2 (`AMENDMENTS-GUEST-FIRST-LESSON.md` GU-D14): every `gateRequired` caller takes `gateProfiles(profiles, guest)` (`logic/guest/guest-model.ts`): while a guest lives (`hr:guest` with an id not on the profile list) it counts as one more learner whose `learnerType` is unset (read as `'child'`). The callers: `gateOpensDirectly` (`gate-route.ts`, every grown-up entry), the device gate marker (`logic/shell/device-gate.ts`), the transfer consent gate (`consent-gate.ts`), the placement report gate (`PlacementScreen.tsx`), the chooser's marker and `isSharedDevice` (`who.ts`). The wording readers of `deviceAudience` keep the profile list.
+
 `store/account-store.ts` gains (keys follow the file's `account:` convention, all via `platform/storage`):
 
 | State | Key | Meaning |
@@ -334,6 +338,8 @@ Counsel reviews the switch from child-directed to mixed-audience (audit UF-09). 
 
 The pure rules live in `apps/mobile/src/logic/onboarding/setup-steps.ts` (100 % covered), on top of `formPlan` / `missingStep` (`create-profile-form.ts`):
 
+[GU] Row GU-4 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 8.3): the screen also opens in the `Guest` stack as `CreateProfile { firstRun, from: 'guest' }`, the save after a guest's first quest. `FormState` gains `fromGuest`, and the rules below gain its variant: `SetupStep` adds `'name'`; `setupSteps` is always `['name', 'privacy']` ("Step 1 of 2", "Step 2 of 2"); step 1 asks the name only (heading **Keep your progress**, label **Name**, the line **You can pick a Hoya and a reading level later in Profile.**; level and cub take `DEFAULT_LEARNER_LEVEL` and `DEFAULT_AVATAR`); step 2 opens with who is learning (the two cards of section 3.15.2, nothing preselected, always `lessons.plain` under them) and, after an answer, the card of section 3.15.3 and the Ready card; `previousStep` and `systemBack` take `fromGuest` (Back on `name` leaves for the save card, Back on `privacy` opens `name` with every value kept). When the device already holds what the answer needs, step 2 is the who cards and Ready only (`formPlan(s).card === null`).
+
 ```ts
 export type SetupStep = 'who' | 'profile' | 'privacy';
 /** The steps this answer needs: ['who'] before an answer; then 'profile', and 'privacy' only when formPlan(s).card !== null. */
@@ -377,6 +383,8 @@ export function systemBack(step: SetupStep, actionType: string): SetupStep | 'le
 - Changing the answer later (Back to step 1, pick the other card) keeps name, level, cub and email and resets the checkbox, the PIN and the optional-PIN row, exactly as `chooseWho` does today. `onboarding.who_selected` still fires once per form, on the first answer. **Exception, the latch (§3.15.3):** after "I'm under 13", "Me" is shown disabled (`accessibilityState.disabled`, sunken surface, muted label) with the caption **"A grown-up finishes setting this up."** under the cards.
 
 #### 3.15.3 Step 3, Privacy
+
+[GU] Row GU-4 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 8.3, CS-G8, CS-G10): on the guest's save (`fromGuest`) the email is folded: inside either card the email field is replaced by the row **Add an email (optional)** (`createProfile.email.add`; a disclosure button with `accessibilityState.expanded`, at least `touchTarget.min` tall, the shipped `plus` / `close` glyph), which opens today's field, caption and validation and moves focus to the field; closing it, or a new answer, clears what was typed (`toggleEmailRow`), so an email typed on the "Me" card is never carried over. The under-13 latch and the guardian PIN are unchanged. After a `SaveGuest` verify (a PIN is stored) the guest variant of `formPlan` draws no PIN part: `pinRequired` is already false and `pinOptional` needs `parentPinHash === null`, so the save never replaces the stored PIN.
 
 Heading **"Privacy"**, caption "Step 3 of 3", then the card for the answer, then one plain line **"Agreeing doesn't change the lessons."** (both paths, whenever the card has a consent checkbox; a Privacy step that only creates the grown-up PIN, a child added on a device with the guardian consent but no PIN, has no agreement on screen and so no such line).
 

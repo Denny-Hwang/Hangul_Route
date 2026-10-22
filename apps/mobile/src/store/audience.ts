@@ -3,6 +3,7 @@ import { audienceCopy, type AudienceCopy } from '../logic/audience-copy';
 import { deviceAudience, type DeviceAudience } from '../logic/profiles/learner-type';
 import { gateOpensDirectly } from '../logic/profiles/gate-route';
 import { useAccountStore } from './account-store';
+import { useGuestStore } from './guest-store';
 import { useProfileStore } from './profile-store';
 
 export interface AudienceView {
@@ -19,11 +20,13 @@ export function useAudience(): AudienceView {
   const messages = useMessages();
   const profiles = useProfileStore((s) => s.profiles);
   const parentPinHash = useAccountStore((s) => s.parentPinHash);
+  // [GU] GU-D14: the wording keeps the profile list; the gate counts a live guest.
+  const guest = useGuestStore((s) => s.record);
   const audience = deviceAudience(profiles);
   return {
     audience,
     copy: audienceCopy(audience, messages.caregiver.audience),
     pinSet: parentPinHash !== null,
-    opensDirectly: (sessionOpen) => gateOpensDirectly({ profiles, parentPinHash, sessionOpen }),
+    opensDirectly: (sessionOpen) => gateOpensDirectly({ profiles, parentPinHash, sessionOpen, guest }),
   };
 }

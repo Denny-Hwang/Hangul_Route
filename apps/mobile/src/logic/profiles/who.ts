@@ -5,10 +5,12 @@ import {
   GROWN_UP_BACKGROUND_MS,
   SCHOOL_FOCUS_QUERY,
   type GrownUpUse,
+  type GuestRecord,
   type ThemeKey,
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { compareNames } from '@hangul-route/i18n';
+import { gateProfiles } from '../guest/guest-model';
 import type { GrownUpHandoffRequest } from '../shell/handoff-rules';
 
 /**
@@ -21,8 +23,12 @@ import type { GrownUpHandoffRequest } from '../shell/handoff-rules';
 /** The device gate marker as a code (`logic/profiles/gate-events.ts` `markerCode`). */
 export type WhoMarker = 'none' | 'pin' | 'nopin';
 
-/** Why the chooser opened (section 6.2): the `trigger` of `who.shown` and of `profile.switch` with `via: 'chooser'`. */
-export type WhoTrigger = 'launch' | 'return' | 'resume' | 'join' | 'manual';
+/**
+ * Why the chooser opened (section 6.2): the `trigger` of `who.shown` and of `profile.switch` with `via: 'chooser'`.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 6.1 (row GU-5): `try`, the site's Start learning (`?try=1`) on a device
+ * with learner profiles.
+ */
+export type WhoTrigger = 'launch' | 'return' | 'resume' | 'join' | 'manual' | 'try';
 
 /** A learner profile as the chooser reads it: its id, name, cub, and its place in creation order (the list order). */
 export interface WhoProfile {
@@ -36,15 +42,20 @@ export interface WhoProfile {
  * known grown-up use. A device whose marker is `none` (self-only, no PIN) with a single learner profile is not made
  * shared by a known use alone, so a lone adult learner who also teaches is not asked at every launch. A lock on an id
  * that is not a profile here (a stray id, section 13.2) counts for nothing. No profile is never shared.
+ * [GU] GU-D14, AMENDMENTS-GUEST-FIRST-LESSON section 9.2 (row GU-2): a live guest (`guest`, a record whose id is not a
+ * profile here) counts as one more learner profile, so one profile and a live guest is shared. A guest alone is no
+ * profile: the device is not shared.
  */
 export function isSharedDevice(input: {
   profiles: readonly { id: string }[];
   locks: readonly string[];
   uses: readonly GrownUpUse[];
   marker: WhoMarker;
+  guest?: GuestRecord | null;
 }): boolean {
-  const { profiles, locks, uses, marker } = input;
-  if (profiles.length === 0) return false;
+  const { locks, uses, marker } = input;
+  if (input.profiles.length === 0) return false;
+  const profiles = gateProfiles(input.profiles, input.guest);
   if (profiles.length >= 2) return true;
   const ids = new Set(profiles.map((p) => p.id));
   if (locks.some((id) => ids.has(id))) return true;
@@ -55,8 +66,9 @@ export function isSharedDevice(input: {
 /**
  * The moments the chooser may open (section 6.2): the app start, the `who=1` boot intent (the console's Learner app
  * exit, `return`), a return from the background (`resume`) and a Switch someone pressed (`manual`).
+ * [GU] Row GU-5: `try`, the app start with the `try=1` boot intent while the guest switch is on.
  */
-export type ChooserEvent = 'launch' | 'return' | 'resume' | 'manual';
+export type ChooserEvent = 'launch' | 'return' | 'resume' | 'manual' | 'try';
 
 /**
  * Whether the chooser opens, and with which trigger code, or `null` for not at all (section 6.2, OA-D6, OA-D20).
@@ -70,6 +82,10 @@ export type ChooserEvent = 'launch' | 'return' | 'resume' | 'manual';
  * - `resume`: a shared device back after `CHOOSER_RESUME_MS` (30 min) in the background, or a locked active profile
  *   back after `GROWN_UP_BACKGROUND_MS` (5 min). A clock that ran backwards counts no time (section 12).
  * - `manual`: always (Home Switch, the Profile row, Switch user).
+ * - [GU] `try` (AMENDMENTS-GUEST-FIRST-LESSON section 6.1, GU-D7, CS-G4, OQ-G9): with at least one profile, shared or
+ *   not, and whether or not the active profile is locked, the chooser opens with the trigger `try` (where **Try the
+ *   first quest** shows); it never selects, creates or opens a profile. A held join wins (OA-D20): `join` on a shared
+ *   device, else `null` so Join opens as today. With the flag off the intent is ignored like every other.
  */
 export function chooserTrigger(input: {
   event: ChooserEvent;
@@ -97,7 +113,27 @@ export function chooserTrigger(input: {
     }
     case 'manual':
       return 'manual';
+    case 'try':
+      if (joinHeld) return shared ? 'join' : null;
+      return 'try';
   }
+}
+
+/** [GU] Section 9.1: the one guest tile the chooser may draw after Add a learner. */
+export type GuestTile = 'guest' | 'try';
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 9.1 (row GU-5, CS-G4, CS-G5, OQ-G8): at most one guest tile, and only
+ * with the guest switch on (`guestOn`). A live guest on the device shows its own tile (`guest`: resume the run). With
+ * no live guest, **Try the first quest** (`try`) shows only on a chooser the site opened: the `try` trigger, or the
+ * `return` trigger together with `try=1` (`tried`). A held class code (`joining`, or the `join` trigger) shows none:
+ * joining needs a profile. Launch, resume and Switch without a live guest show none.
+ */
+export function guestTile(input: { guestOn: boolean; liveGuest: boolean; trigger: WhoTrigger; tried: boolean; joining: boolean }): GuestTile | null {
+  const { guestOn, liveGuest, trigger, tried, joining } = input;
+  if (!guestOn || joining || trigger === 'join') return null;
+  if (liveGuest) return 'guest';
+  return trigger === 'try' || (trigger === 'return' && tried) ? 'try' : null;
 }
 
 /**
@@ -255,7 +291,8 @@ export function whoShownEvent(input: { trigger: WhoTrigger; learners: number; gr
   };
 }
 
-export type WhoPickKind = 'learner' | 'locked_learner' | 'grown_up' | 'add' | 'cancel_reset';
+/** [GU] Row GU-5, section 12: `try` (Try the first quest) and `guest` (the guest's own tile). */
+export type WhoPickKind = 'learner' | 'locked_learner' | 'grown_up' | 'add' | 'cancel_reset' | 'try' | 'guest';
 export type WhoPickUse = 'family' | 'teacher' | 'school' | 'area' | 'signin';
 
 /** `who.picked` (section 15): what was picked, and for a grown-up row which use. */

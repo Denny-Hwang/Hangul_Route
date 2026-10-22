@@ -723,4 +723,21 @@ describe('Who is joining? with the mocked Worker (OA-7b)', () => {
     expect(leave()).toBe(false);
     expect(navigation.reset).not.toHaveBeenCalled();
   });
+
+  it('[GU] a live first quest kept on the device is never listed (AMENDMENTS-GUEST-FIRST-LESSON section 9.2, row GU-5)', async () => {
+    seed();
+    const { useGuestStore } = await import('../../../store/guest-store');
+    const guest = { v: 1 as const, id: 'profile:guest001', startedAt: '2026-10-22T10:00:00.000Z', lastAt: '2026-10-22T10:05:00.000Z', via: 'chooser' as const, questDone: true };
+    disk.set('guest', guest);
+    useGuestStore.setState({ record: guest, running: false, hydrated: true, memoryOnly: false });
+    try {
+      setSyncApiForTests(worker().api as never);
+      const root = await reachChecklist();
+      expect(byTestId(root, `join-who-row-${guest.id}`)).toHaveLength(0);
+      expect(root.findAll((n) => typeof n.type === 'string' && n.props.role === 'checkbox')).toHaveLength(3);
+      expect(screenTexts(root)).not.toContain(en.learner.who.guest);
+    } finally {
+      useGuestStore.setState({ record: null, running: false });
+    }
+  });
 });

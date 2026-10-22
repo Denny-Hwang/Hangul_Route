@@ -421,7 +421,7 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(sw).toMatch(/"_expo\/static\/js\/web\/review-items-[0-9a-f]{32}\.js"/);
     expect(run.stdout).toContain('  review-item chunk  1 bundles  ');
     // The locale chunks and the grown-up roots: precached and reported beside them.
-    for (const name of ['locale-es', 'locale-ko', 'PresenterApp', 'BrowseApp']) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
+    for (const name of ['locale-es', 'locale-ko', 'PresenterApp', 'BrowseApp', 'guest-chunk']) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
     expect(run.stdout).toContain('  locale chunks  2 bundles  ');
     expect(run.stdout).toContain('  grown-up root chunks  2 bundles  ');
     expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling \d+ B\)/);

@@ -32,9 +32,11 @@ import { PinSetupField } from '../../components/PinSetupField';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { flags } from '../../config/flags';
 import { isValidEmail } from '../../logic/email';
+import { guestSaveGate } from '../../logic/guest/guest-model';
+import { setupPromotesGuest, type GuestSaveRecheck } from '../../logic/guest/guest-save';
 import { privacyUrl } from '../../logic/links';
 import { lessonsLine, readyLine, whoCopy } from '../../logic/onboarding/create-profile-copy';
-import { formPlan, nameHint, type FormState } from '../../logic/onboarding/create-profile-form';
+import { emailFieldShown, formPlan, nameHint, toggleEmailRow, type FormState } from '../../logic/onboarding/create-profile-form';
 import { levelSelected, whoSelected } from '../../logic/onboarding/onboarding-events';
 import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-setup';
 import {
@@ -47,7 +49,7 @@ import {
   systemBack,
   type SetupStep,
 } from '../../logic/onboarding/setup-steps';
-import { submitProfile } from '../../logic/onboarding/submit-profile';
+import { submitProfile, type SubmitInput } from '../../logic/onboarding/submit-profile';
 import { placementEntriesOn, profileCreatedNext } from '../../logic/placement/entry';
 import { AVATAR_PRESETS, DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { createPinHash } from '../../logic/profiles/pin-hash';
@@ -58,7 +60,10 @@ import { pinHasher } from '../../platform/crypto';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
+import { adoptSavedGuest, guestSaveEntry, holdsFirstQuestCard, noteGuestSaved, promoteLiveGuest, recheckGuestSave } from '../../store/guest-save';
+import { liveGuestId, useGuestStore } from '../../store/guest-store';
 import { useProfileStore } from '../../store/profile-store';
+import { leaveGuestRunSaved, reaskGuestSavePin } from '../guest/guest-exits';
 import { syncApi } from '../../store/sync-store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
@@ -90,6 +95,18 @@ const fieldStyle = (borderColor: string, fontSize: number) =>
  * when the check is on, else the first-quest preview.
  * Design reference: design/wireframes/onboarding/setup-steps.md, A to H.
  * Rules live in logic/onboarding (tested); this file paints them.
+ *
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 8.3 to 8.5 (row GU-4; mock `design/screens/onboarding/guest-save.md`
+ * D6 to D8). `{ firstRun, from: 'guest' }`, in the `Guest` stack: the save after the first quest, in two steps: the
+ * name (**Keep your progress**; level and cub take the defaults), then Privacy, which opens with who is learning
+ * (nothing preselected, always `lessons.plain` under it) and, after an answer, the agreement card for it (the "Me"
+ * card's under-13 latch, the guardian PIN when one is required, no PIN part where a PIN is stored, CS-G10) and Ready.
+ * The email is folded behind **Add an email (optional)**: a disclosure whose field takes focus when it opens and is
+ * cleared when it closes or the answer changes (never carried from the "Me" card, CS-G8). Back on step 1 returns to
+ * the save card; Back on step 2 keeps every value. Continue runs F-LEARN-001 section 3.3's order, then `promoteGuest`
+ * (`hr:guest` deleted), `guest.saved`, and Home of the new profile with one Hoya bubble; no level-check fork.
+ * GU-D11: a first run on a device whose only learner is a live guest (the switch on) keeps its three steps and the
+ * fork, and promotes the guest instead of making a new profile (`guest.saved { via: 'setup' }`).
  */
 export function CreateProfileScreen({ navigation, route }: Props): React.ReactElement {
   const textScale = useTypeScale();
@@ -106,9 +123,26 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const saveParentEmail = useAccountStore((s) => s.setParentEmail);
 
   const firstRun = route.params?.firstRun ?? false;
+  // [GU] The guest's save is the Guest stack's route (`GuestStackParamList.CreateProfile`), the same screen.
+  const fromGuest = (route.params as { from?: unknown } | undefined)?.from === 'guest';
+  // [GU] Row GU-5 (section 9.2): Keep as a learner from People on this device, inside the grown-up session (`owner`).
+  // Defence in depth (GU-5 review, CS-G9, CS-G10): never inside a guest run, so the guest's own save always rechecks.
+  const [ownerKeep] = useState(() => fromGuest && (route.params as { owner?: unknown } | undefined)?.owner === true && !useGuestStore.getState().running);
   const levelCheckOn = useMemo(() => placementEntriesOn(flags.placementEnabled), []);
 
-  const [step, setStep] = useState<SetupStep>('who');
+  const [step, setStep] = useState<SetupStep>(fromGuest ? 'name' : 'who');
+  // [GU] The case the save opened in, before this form could set a PIN: `verify` asked the PIN (`guest.saved.gated`).
+  const [gated] = useState(() => fromGuest && guestSaveGate({ profiles: useProfileStore.getState().profiles, parentPinHash }) === 'verify');
+  // [GU] The folded email row of the guest's save (closed: no email field, nothing typed is kept).
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // [GU] The live guest the form saves (read when it opened), a PIN hash this form wrote, a consent it wrote before a
+  // promotion failed, and a leave the recheck chose (the step-back listener lets it through).
+  const [guestId] = useState(() => (fromGuest ? liveGuestId() : null));
+  const ownPinHash = useRef<string | null>(null);
+  const consentWritten = useRef(false);
+  const leaving = useRef(false);
+  const emailRef = useRef<TextInput | null>(null);
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [name, setName] = useState('');
   const [level, setLevel] = useState<LearnerLevelId>(DEFAULT_LEARNER_LEVEL);
@@ -129,7 +163,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const whoReported = useRef(false);
   const levelReported = useRef(false);
   // The system back reads the step through a ref (the listener is added once).
-  const stepRef = useRef<SetupStep>('who');
+  const stepRef = useRef<SetupStep>(fromGuest ? 'name' : 'who');
   stepRef.current = step;
   // Focus target after a step change: the step's heading, or the under-13 note.
   const headingRef = useRef<object | null>(null);
@@ -145,6 +179,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     guardianAcceptedAt,
     selfAcceptedAt,
     parentPinHash,
+    ...(fromGuest ? { fromGuest } : {}),
+    ...(ownerKeep ? { owner: true } : {}),
   };
   const plan = formPlan(state);
   const missing = stepMissing(step, state);
@@ -159,20 +195,26 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
-        const back = systemBack(stepRef.current, e.data.action.type);
+        if (leaving.current) return;
+        const back = systemBack(stepRef.current, e.data.action.type, fromGuest);
         if (back === 'leave' || back === 'ignore') return;
         e.preventDefault();
         moved.current = true;
         setStep(back);
       }),
-    [navigation],
+    [navigation, fromGuest],
   );
 
   // The native iOS swipe cannot be cancelled by `beforeRemove` (native-stack): it is
   // on only on the question, where leaving the route is what back does (§3.15.4).
   useEffect(() => {
-    navigation.setOptions({ gestureEnabled: step === 'who' });
-  }, [navigation, step]);
+    navigation.setOptions({ gestureEnabled: step === (fromGuest ? 'name' : 'who') });
+  }, [navigation, step, fromGuest]);
+
+  // [GU] Opening Add an email moves focus to its field (section 14).
+  useEffect(() => {
+    if (emailOpen) emailRef.current?.focus();
+  }, [emailOpen]);
 
   useEffect(() => {
     // Not on the first paint: the screen reader starts at the top by itself.
@@ -197,6 +239,17 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     setPinSetup(PIN_SETUP_START);
     setPinRowOpen(false);
     setPinError(null);
+    // [GU] On the guest's save the email sits with the answer: a new answer starts it over (CS-G8).
+    if (fromGuest) {
+      setEmail('');
+      setEmailOpen(false);
+    }
+  };
+
+  const toggleEmail = (): void => {
+    const next = toggleEmailRow({ open: emailOpen, email });
+    setEmailOpen(next.open);
+    setEmail(next.email);
   };
 
   const underThirteen = (): void => {
@@ -204,6 +257,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     setLearnerType(next.learnerType);
     setAgreed(next.agreed);
     setEmail(next.email);
+    setEmailOpen(false);
     setPinSetup(PIN_SETUP_START);
     setPinRowOpen(false);
     setPinError(null);
@@ -239,20 +293,51 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     if (busy) return;
     setBusy(true);
     setPinError(null);
+    setSaveError(null);
     try {
+      // [GU] Section 8.2, CS-G9, CS-G10: the gate is read again from storage before anything is written. A learner
+      // added, a PIN set or this guest saved in another tab while the form was open never lets the save past them.
+      // [GU] Row GU-5: the owner's keep runs inside the grown-up session (the case `owner`), not the guest's gate.
+      if (fromGuest && !ownerKeep) {
+        const check = await recheckGuestSave({ gated, guestId, ownPinHash: ownPinHash.current });
+        if (check !== 'go') {
+          await afterRecheck(check);
+          return;
+        }
+      }
+      // [GU] GU-D11: a first run on a device whose only learner is a live guest promotes it (the switch on).
+      const setupPromotes = !fromGuest && firstRun && flags.guestLessonEnabled && setupPromotesGuest({ guestLive: liveGuestId() !== null, profiles: useProfileStore.getState().profiles });
+      // [GU] Row GU-5: the owner's keep is a setup form a grown-up opened (`via: 'setup'`; `gated` false, the save itself asks no PIN), not the guest's own save card.
+      const guest: SubmitInput['guest'] = fromGuest
+        ? { gated: ownerKeep ? false : gated, via: ownerKeep ? 'setup' : guestSaveEntry(), ...(consentWritten.current ? { consentGiven: true } : {}) }
+        : setupPromotes
+          ? { gated: false, via: 'setup' }
+          : undefined;
       const result = await submitProfile(
-        { state, level, avatar, firstRun },
+        { state, level, avatar, firstRun, ...(guest === undefined ? {} : { guest }) },
         {
           hashPin: (pin) => createPinHash(pin, pinHasher),
           acceptGuardianConsent,
           acceptSelfConsent,
-          setParentPinHash,
+          setParentPinHash: (hash) => {
+            // [GU] A PIN this form set is its own on a later Continue (a promotion that failed): not one set elsewhere.
+            if (fromGuest) ownPinHash.current = hash;
+            setParentPinHash(hash);
+          },
           setParentEmail: saveParentEmail,
-          createProfile,
+          // [GU] Row GU-5: the owner's keep leaves the active learner (and so the grown-up session) as it is.
+          createProfile: guest === undefined ? createProfile : ownerKeep ? (input) => promoteLiveGuest(input, { keepActive: true }) : promoteLiveGuest,
           track: (event) => void track(event),
         },
       );
-      if (result.ok) {
+      if (result.ok && ownerKeep) {
+        // [GU] Section 8.4: from People on this device the save returns there; the grown-up stays in the Grown-up area.
+        navigation.getParent<NavigationProp<RootStackParamList>>()?.navigate('ParentDashboard');
+      } else if (result.ok && fromGuest) {
+        // [GU] Section 8.4: Home of the new profile, the Guest stack gone, one Hoya bubble; no level-check fork.
+        noteGuestSaved(result.profile.id, holdsFirstQuestCard(result.profile.id));
+        leaveGuestRunSaved(navigation);
+      } else if (result.ok) {
         // The level check's fork when it is on (F-PLC-001 section 3.1 step 1, first and later profiles alike); a first
         // run begun at "Got a class code?" goes to Join a class instead, with Home under it (Back and Done land there).
         const next = profileCreatedNext(route.params?.then, levelCheckOn);
@@ -267,10 +352,34 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         else navigation.reset({ index: 0, routes: [{ name: next, params: { profileId: result.profile.id } }] });
       } else if (result.reason === 'pin-failed') {
         setPinError(c.pinFailed);
+      } else if (result.reason === 'save-failed') {
+        // [GU] The consent was written before the promotion failed: a later Continue still reports it as new.
+        if (fromGuest && plan !== null && plan.consent !== null) consentWritten.current = true;
+        setSaveError(messages.common.errors.generic);
       }
     } finally {
       setBusy(false);
     }
+  };
+
+  /**
+   * [GU] The recheck found another case (section 8.2): back to the save card (now `owner`, or the PIN asked is gone),
+   * the `SaveGuest` PIN first (a PIN set elsewhere, CS-G9), that profile's Home (saved in another tab), or a line.
+   */
+  const afterRecheck = async (check: Exclude<GuestSaveRecheck, 'go'>): Promise<void> => {
+    if (check === 'card' || check === 'pin') {
+      leaving.current = true;
+      if (check === 'card') navigation.goBack();
+      else reaskGuestSavePin(navigation as unknown as Parameters<typeof reaskGuestSavePin>[0]);
+      return;
+    }
+    const adopted = check === 'saved' && guestId !== null ? await adoptSavedGuest(guestId) : null;
+    if (adopted === null) {
+      setSaveError(messages.common.errors.generic);
+      return;
+    }
+    noteGuestSaved(adopted.id, holdsFirstQuestCard(adopted.id));
+    leaveGuestRunSaved(navigation);
   };
 
   const onContinue = (): void => {
@@ -280,7 +389,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     else goTo(next);
   };
 
-  const title = step === 'who' ? c.title : step === 'profile' ? (words?.title ?? c.title) : c.privacy.title;
+  const title = step === 'who' ? c.title : step === 'profile' ? (words?.title ?? c.title) : step === 'name' ? c.guest.title : c.privacy.title;
   const consentText = plan?.card === 'self' ? c.self.agree : c.guardian.agree;
 
   const header = (
@@ -306,7 +415,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
 
   const whoStep = (
     <>
-      <Spacer size="lg" />
+      <Spacer size={fromGuest ? 'sm' : 'lg'} />
       <View accessibilityRole="radiogroup" accessibilityLabel={c.title} style={{ gap: spacing.sm }}>
         <OptionCard
           label={c.who.self.label}
@@ -329,7 +438,46 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         </>
       ) : null}
       <Spacer size="md" />
-      <Caption tone="secondary">{lessonsLine(c, levelCheckOn)}</Caption>
+      <Caption tone="secondary">{lessonsLine(c, levelCheckOn, fromGuest)}</Caption>
+    </>
+  );
+
+  /** The name field with its hints; `description`: a line under it (the guest's save). */
+  const nameField = (label: string, description?: string): React.ReactElement => (
+    <>
+      <Body weight="semibold">{label}</Body>
+      <Spacer size="xs" />
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder={c.namePlaceholder}
+        placeholderTextColor={colors.text.muted}
+        accessibilityLabel={label}
+        {...(description === undefined ? {} : { accessibilityHint: description })}
+        maxLength={NAME_MAX}
+        autoCapitalize="words"
+        style={fieldStyle(colors.border.subtle, textScale.size.bodyLg)}
+      />
+      {hint !== null && (
+        <>
+          <Spacer size="xs" />
+          <Caption tone="secondary">{hint}</Caption>
+        </>
+      )}
+      {description !== undefined ? (
+        <>
+          <Spacer size="xs" />
+          <Caption tone="secondary">{description}</Caption>
+        </>
+      ) : null}
+    </>
+  );
+
+  // [GU] Step 1 of 2 of the guest's save: the name only (mock D6).
+  const nameStep = (
+    <>
+      <Spacer size="xl" />
+      {nameField(c.guest.nameLabel, c.guest.later)}
     </>
   );
 
@@ -337,24 +485,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     words === null ? null : (
       <>
         <Spacer size="xl" />
-        <Body weight="semibold">{words.nameLabel}</Body>
-        <Spacer size="xs" />
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder={c.namePlaceholder}
-          placeholderTextColor={colors.text.muted}
-          accessibilityLabel={words.nameLabel}
-          maxLength={NAME_MAX}
-          autoCapitalize="words"
-          style={fieldStyle(colors.border.subtle, textScale.size.bodyLg)}
-        />
-        {hint !== null && (
-          <>
-            <Spacer size="xs" />
-            <Caption tone="secondary">{hint}</Caption>
-          </>
-        )}
+        {nameField(words.nameLabel)}
 
         <Spacer size="xl" />
         <Body weight="semibold">{words.levelHeading}</Body>
@@ -446,7 +577,26 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
             {plan.card === 'self' ? c.self.body : c.guardian.body}
           </Body>
 
-          {plan.showEmail ? (
+          {fromGuest && plan.showEmail ? (
+            <>
+              <Spacer size="md" />
+              {/* [GU] Add an email (optional), folded (mock D8): the same row pattern as the PIN row below. */}
+              <Pressable
+                onPress={toggleEmail}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: emailOpen }}
+                aria-expanded={emailOpen}
+                testID="create-profile-email-row"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+              >
+                <Icon name={emailOpen ? 'close' : 'plus'} size={spacing.xl} color={colors.text.secondary} />
+                <Body size="sm" style={{ flex: 1 }}>
+                  {c.email.add}
+                </Body>
+              </Pressable>
+            </>
+          ) : null}
+          {emailFieldShown(plan, fromGuest, emailOpen) ? (
             <>
               <Spacer size="md" />
               <Body weight="semibold" size="sm">
@@ -455,6 +605,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
               <Caption tone="muted">{c.email.caption}</Caption>
               <Spacer size="xs" />
               <TextInput
+                ref={emailRef}
                 value={email}
                 onChangeText={setEmail}
                 placeholder={c.email.placeholder}
@@ -590,9 +741,18 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
     // Keyed by step: each step opens scrolled to the top (§3.15.4).
     <Screen key={step} tone="canvas" scrollable>
       {header}
-      {step === 'who' ? whoStep : step === 'profile' ? profileStep : privacyStep}
+      {step === 'who' ? whoStep : step === 'profile' ? profileStep : step === 'name' ? nameStep : fromGuest ? (
+        // [GU] Step 2 of 2 of the guest's save: who is learning, then the agreement card for the answer (mock D7).
+        <>
+          <Spacer size="lg" />
+          <Body weight="semibold">{c.title}</Body>
+          {whoStep}
+          {privacyStep}
+        </>
+      ) : privacyStep}
 
-      {isLast ? (
+      {/* [GU] On the guest's Privacy step, Ready waits for an answer (mock D7). */}
+      {isLast && !(fromGuest && learnerType === null) ? (
         <>
           <Spacer size="xxl" />
           <Card padding="md" tone="brand">
@@ -622,6 +782,14 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           <Spacer size="xs" />
           <Caption tone="secondary" align="center">
             {c.missing[missing]}
+          </Caption>
+        </>
+      ) : null}
+      {saveError !== null ? (
+        <>
+          <Spacer size="xs" />
+          <Caption tone="secondary" align="center" testID="create-profile-save-error">
+            {saveError}
           </Caption>
         </>
       ) : null}

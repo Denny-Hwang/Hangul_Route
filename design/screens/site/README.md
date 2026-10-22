@@ -92,3 +92,5 @@ These are the mock's numbers, not the real export's: S-4a, S-4b and S-5 measure 
 - **Launch news:** the existing `WaitlistForm`, unchanged, on today's `brand.primary` band, because its consent and success lines are `text.onPrimary`. On the band the focus ring is `text.onPrimary` (`border.focus` is under 3:1 on `brand.primary`), a band rule in `globals.css`, not a change to the form.
 - **Header label:** "Sign in" alone (OD-12 default); the persona pages carry "Sign in as a parent / teacher".
 - **No new colour, no new token, no motion.** The fold chevron turns without animation.
+
+> [GU] The guest start (`AMENDMENTS-GUEST-FIRST-LESSON.md` 13.2, design row GU-0b): the hero line, How it works steps 1 and 3 and the /learners level answer with the `guestLesson` claim on, built from the real export, are in `guest/` (`guest/README.md`).

@@ -28,9 +28,19 @@ export const consentGiven = (basis: 'guardian' | 'self_13plus', hasEmail: boolea
   payload: { basis, hasEmail, pinSet },
 });
 
-export const onboardingStarted = (level: LearnerLevelId, firstRun: boolean, hasEmail: boolean): OnboardingEvent => ({
+/** [GU] `fromGuest` (row GU-4): sent, as true, only when the profile was saved from a guest's first quest. */
+export const onboardingStarted = (level: LearnerLevelId, firstRun: boolean, hasEmail: boolean, fromGuest?: true): OnboardingEvent => ({
   name: 'onboarding.started',
-  payload: { level, firstRun, hasEmail },
+  payload: fromGuest === undefined ? { level, firstRun, hasEmail } : { level, firstRun, hasEmail, fromGuest },
+});
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-4): the first quest was saved as a profile. Codes only, never
+ * `learnerType` or an id (`GUEST_TELEMETRY_PAYLOADS['guest.saved']`).
+ */
+export const guestSaved = (gated: boolean, consent: 'new' | 'existing', via: 'results' | 'welcome' | 'later' | 'setup'): OnboardingEvent => ({
+  name: 'guest.saved',
+  payload: { gated, consent, via },
 });
 
 export const pinCreated = (where: 'first_run' | 'gate' | 'reset' | 'optional'): OnboardingEvent => ({

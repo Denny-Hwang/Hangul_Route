@@ -82,6 +82,7 @@ export const learner = {
       caption: '이 기기에만 저장해요. 이메일이 없어도 배우고 백업할 수 있어요.',
       placeholder: '이름@email.com',
       invalid: '이메일이 맞지 않는 것 같아요. 철자를 확인해요.',
+      add: '이메일 추가하기 (선택)',
     },
     pinFailed: 'PIN을 설정하지 못했어요. 다시 해 보세요.',
     privacyLink: '개인정보 처리방침 읽기',
@@ -99,6 +100,11 @@ export const learner = {
       agree: '동의 칸에 표시해요',
       pin: 'PIN을 만들어요',
       email: '이메일을 확인하거나 비워 두세요',
+    },
+    guest: {
+      title: '진도 간직하기',
+      nameLabel: '이름',
+      later: '호야와 읽기 수준은 나중에 프로필에서 고를 수 있어요.',
     },
   },
 
@@ -1841,6 +1847,11 @@ export const learner = {
       school: '학교',
       signIn: '어른으로 로그인',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): 고르기 화면의 손님 타일. */
+    try: '첫 퀘스트 해 보기',
+    trySub: '프로필 없어도 돼요',
+    guest: '첫 퀘스트',
+    guestCaption: '아직 저장 전이에요',
   },
   /** 오늘의 복습 (F-CURR-002, CM-14): 별과 더 단단해진 개수만 보여 줘요. 퍼센트, 'n개 중 m개', 시간 제한은 없어요. */
   dailyReview: {
@@ -1915,5 +1926,33 @@ export const learner = {
       dayMet: '오늘 목표 완료!',
       weekMet: (count: number) => `이번 주 목표 달성! 목표를 채운 주가 모두 ${count}주예요.`,
     },
+  },
+  /** [GU] 프로필 없이 첫 퀘스트 해 보기 (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): 퀘스트, 프로필, 이름을 넣다. */
+  guest: {
+    welcome: {
+      waiting: '첫 퀘스트가 기다리고 있어요.',
+      resume: '내 퀘스트로 돌아가기',
+      saveTitle: '이름을 넣으면 첫 퀘스트를 간직할 수 있어요.',
+      save: '내 이름 넣기',
+      keeps: '첫 퀘스트에서 한 것은 새로 만드는 프로필로 이어져요.',
+    },
+    memoryOnly: '이 브라우저는 창을 닫으면 퀘스트를 간직하지 못해요. 끝나고 이름을 넣으면 간직할 수 있어요.',
+    // No particle attached to a variable: {name} is followed by a comma (section 16).
+    results: {
+      line: '이름을 넣으면 호야가 카드와 별을 간직해 줘요.',
+      lineNoCard: '이름을 넣으면 호야가 첫 퀘스트를 간직해 줘요.',
+      keep: '내 진도 간직하기',
+      notNow: '나중에',
+      askGrownUp: '이 기기의 어른이 PIN으로 추가해 줘요.',
+      askOwner: '이 기기를 쓰는 사람이 추가해 줄 수 있어요.',
+    },
+    later: {
+      title: (days: number) => `호야가 이 브라우저에 퀘스트를 간직할 수 있어요. 퀘스트를 하지 않으면 최대 ${days}일까지예요.`,
+      line: '아직 백업되지 않았어요. 이름을 넣으면 백업되고 계속할 수 있어요.',
+      save: '내 이름 넣기',
+      close: '닫기',
+    },
+    saved: (name: string) => `${name}, 카드가 라이브러리에 있어요.`,
+    savedNoCard: (name: string) => `${name}, 첫 퀘스트를 저장했어요.`,
   },
 } satisfies DeepPartial<Messages['learner']>;

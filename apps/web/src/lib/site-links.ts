@@ -1,5 +1,6 @@
 import { APP_ORIGIN, APP_ROUTES, type AdultPersona } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
+import { SITE_CLAIMS, showsClaim, type SiteClaims } from '../data/site-claims';
 import { appUrl } from './console/config';
 import { appEntryUrl } from './site-path';
 
@@ -71,9 +72,24 @@ export function grownUpOrigin(env: { CONSOLE_ORIGIN?: string } = { CONSOLE_ORIGI
   return parseConsoleOrigin(env.CONSOLE_ORIGIN) ?? SITE_DEFAULT_CONSOLE_ORIGIN;
 }
 
-/** The learner app from a site page in `locale`, with `?lang=` from `/es` or `/ko` (F-I18N-001 §3.3). */
-export function learnerStart(locale: UiLocale): string {
-  return appEntryUrl(appUrl(), locale);
+/**
+ * [GU] The boot intent that opens quest 1 before any profile (AMENDMENTS-GUEST-FIRST-LESSON GU-D5): `try=1`, a flag
+ * and nothing else (no id, no name), read once by the learner app and removed from the address.
+ */
+export const TRY_INTENT = { name: 'try', value: '1' } as const;
+
+/**
+ * The learner app from a site page in `locale`, with `?lang=` from `/es` or `/ko` (F-I18N-001 §3.3). [GU] While the
+ * `guestLesson` claim shows (AMENDMENTS-GUEST-FIRST-LESSON section 13.2) the link also carries `try=1`, after `lang`:
+ * `https://app.hangulroute.com/?try=1`, `https://app.hangulroute.com/?lang=es&try=1`. Every Start learning on the site
+ * comes from here, so every one of them carries it; Sign in and Create never do.
+ */
+export function learnerStart(locale: UiLocale, claims: Readonly<SiteClaims> = SITE_CLAIMS): string {
+  const href = appEntryUrl(appUrl(), locale);
+  if (!showsClaim(claims, 'guestLesson', locale)) return href;
+  const url = new URL(href);
+  url.searchParams.append(TRY_INTENT.name, TRY_INTENT.value);
+  return url.toString();
 }
 
 /**

@@ -65,6 +65,16 @@ export interface QuestPlayerViewProps {
    * CM-15), each behind its own switch. Absent (the All lessons preview): neither shows.
    */
   reviewsFor?: string | null;
+  /**
+   * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 7.2 (row GU-3): one plain line under Hoya's hello (step 1), between
+   * Hoya's card and Continue: the guest run's storage-blocked line. Not a live region, read in order.
+   */
+  introNote?: string;
+  /**
+   * [GU] Section 6.2: the quest opens its stack (the guest run), so the navigator cannot go back; the header still
+   * draws Close, which asks the same leave question as every back.
+   */
+  ownClose?: boolean;
 }
 
 type QuestReviewPlan = NonNullable<Awaited<ReturnType<QuestReviewChunk['planQuestWarmup']>>>;
@@ -122,7 +132,7 @@ export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement
   return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
-function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null }: QuestPlayerViewProps): React.ReactElement {
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -256,10 +266,13 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): every back while a step shows (the
   // header's Close, the browser and the phone back through the history bridge, a swipe) asks first, as Close always
   // did; Leave in the sheet runs the ports' leave (a replace or a navigate, never held here), Keep playing stays.
-  useRouteBackGuard(() => {
-    if (!quest || !step) return false;
+  const askLeave = (): void => {
     if (onAskLeave) onAskLeave();
     else confirmQuit();
+  };
+  useRouteBackGuard(() => {
+    if (!quest || !step) return false;
+    askLeave();
     return true;
   }, !!quest && !!step);
 
@@ -298,7 +311,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
 
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
-    <Screen tone="canvas" scrollable={step.kind !== 'discover'}>
+    <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={ownClose ? { leading: { kind: 'close', onPress: askLeave } } : undefined}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
           <Progress value={stepIndex + 1} max={quest.steps.length} tone="primary" variant="dots" />
@@ -346,6 +359,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
               />
             ) : undefined
           }
+          note={stepIndex === 0 ? introNote : undefined}
         />
       )}
     </Screen>
@@ -358,6 +372,7 @@ function NarrativeStepBody({
   onContinue,
   isReward,
   actions,
+  note,
 }: {
   copy: QuestMessages;
   line: NarrativeLine;
@@ -365,6 +380,8 @@ function NarrativeStepBody({
   isReward: boolean;
   /** In place of the step's own button: the reward step's Try these again, offered or being planned (F-CURR-002 row CM-15). */
   actions?: React.ReactNode;
+  /** [GU] A plain line between Hoya's card and Continue (the guest run's storage-blocked line, section 7.2). */
+  note?: string;
 }): React.ReactElement {
   return (
     <View style={{ flex: 1 }}>
@@ -386,6 +403,14 @@ function NarrativeStepBody({
           </>
         ) : null}
       </Card>
+      {note !== undefined ? (
+        <>
+          <Spacer size="md" />
+          <Body tone="secondary" testID="quest-intro-note">
+            {note}
+          </Body>
+        </>
+      ) : null}
       <View style={{ flex: 1 }} />
       {actions ?? <Button label={isReward ? copy.seeResults.cta : copy.continue.cta} tone="primary" size="hero" fullWidth onPress={onContinue} />}
       <Spacer size="lg" />

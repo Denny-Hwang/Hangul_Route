@@ -85,6 +85,7 @@ export const learner = {
       caption: 'Se guarda en este dispositivo. Puedes aprender y hacer copias de seguridad sin él.',
       placeholder: 'nombre@correo.com',
       invalid: 'Ese correo no parece correcto. Revisa cómo está escrito.',
+      add: 'Añadir un correo (opcional)',
     },
     pinFailed: 'No se pudo crear el PIN. Reintenta.',
     privacyLink: 'Leer la Política de privacidad',
@@ -102,6 +103,11 @@ export const learner = {
       agree: 'Marca la casilla para aceptar',
       pin: 'Crea el PIN',
       email: 'Revisa el correo o déjalo vacío',
+    },
+    guest: {
+      title: 'Conserva tu progreso',
+      nameLabel: 'Nombre',
+      later: 'Puedes elegir un Hoya y un nivel de lectura después en Perfil.',
     },
   },
 
@@ -1908,6 +1914,11 @@ export const learner = {
       school: 'Escuela',
       signIn: 'Entrar como persona adulta',
     },
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 16.3 (GU-5): las fichas de invitado del selector. */
+    try: 'Prueba la primera misión',
+    trySub: 'Sin crear un perfil',
+    guest: 'Primera misión',
+    guestCaption: 'Aún sin guardar',
   },
   /** El Repaso diario (F-CURR-002, CM-14): estrellas y cuántas cosas quedaron más firmes; nunca un porcentaje, "n de m" ni reloj. */
   dailyReview: {
@@ -1983,5 +1994,32 @@ export const learner = {
       weekMet: (count: number) =>
         plural('es', count, { one: '¡Meta de la semana lograda! Ya llevas 1 semana cumplida.', other: `¡Meta de la semana lograda! Ya llevas ${count} semanas cumplidas.` }),
     },
+  },
+  /** [GU] Probar la primera misión sin perfil (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): misión, perfil, añadir. */
+  guest: {
+    welcome: {
+      waiting: 'Tu primera misión te espera.',
+      resume: 'Volver a mi misión',
+      saveTitle: 'Añade tu nombre para conservar tu primera misión.',
+      save: 'Añadir mi nombre',
+      keeps: 'Lo que hiciste en la primera misión pasa al perfil que crees.',
+    },
+    memoryOnly: 'Este navegador no puede guardar la misión cuando lo cierres. Añade un nombre al final para conservarla.',
+    results: {
+      line: 'Añade un nombre para que Hoya guarde tu tarjeta y tus estrellas.',
+      lineNoCard: 'Añade un nombre para que Hoya guarde tu primera misión.',
+      keep: 'Conservar mi progreso',
+      notNow: 'Ahora no',
+      askGrownUp: 'Un adulto de este dispositivo te añade con el PIN.',
+      askOwner: 'La persona que usa este dispositivo puede añadirte.',
+    },
+    later: {
+      title: (days: number) => `Hoya puede guardar tu misión en este navegador hasta ${days} días sin jugar.`,
+      line: 'Todavía no tiene copia de seguridad. Añade un nombre para respaldarla y seguir.',
+      save: 'Añadir mi nombre',
+      close: 'Cerrar',
+    },
+    saved: (name: string) => `${name}, tu tarjeta ya está en la colección.`,
+    savedNoCard: (name: string) => `${name}, tu primera misión está guardada.`,
   },
 } satisfies DeepPartial<Messages['learner']>;

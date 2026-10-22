@@ -827,5 +827,12 @@ export const caregiver = {
     keep: '그대로 두기',
     checking: '진도가 저장됐는지 확인하고 있어요…',
     spacesStay: '가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요.',
+    /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 9.2, 16.3 (GU-5): 저장하지 않은 첫 퀘스트. */
+    guestRow: '첫 퀘스트, 저장 전',
+    guestKeep: '학습자로 간직하기',
+    guestRemove: '첫 퀘스트 지우기',
+    guestOnlyGate: '누군가 이 브라우저에서 첫 퀘스트를 해 보고 간직하지 않았어요. PIN을 만들거나 그 퀘스트를 지워요.',
+    guestRemoveAsk: '첫 퀘스트를 지울까요?',
+    guestConfirm: '이 퀘스트의 카드와 별이 이 브라우저에서 지워져요.',
   },
 } satisfies DeepPartial<Messages['caregiver']>;

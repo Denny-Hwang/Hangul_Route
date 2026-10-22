@@ -114,6 +114,8 @@ export const learner = {
       caption: 'Kept on this device. Learning and backup work without it.',
       placeholder: 'name@email.com',
       invalid: 'That email looks off. Check the spelling.',
+      /** [GU] Row GU-4 (AMENDMENTS-GUEST-FIRST-LESSON 8.3, 16.2): the folded row that opens the email field on the guest's save. */
+      add: 'Add an email (optional)',
     },
     pinFailed: "Couldn't set the PIN. Try again.",
     privacyLink: 'Read the Privacy Policy',
@@ -138,6 +140,16 @@ export const learner = {
       agree: 'Tick the box to agree',
       pin: 'Create the PIN',
       email: 'Check the email, or leave it empty',
+    },
+    /**
+     * [GU] Row GU-4 (AMENDMENTS-GUEST-FIRST-LESSON 8.3, 16.2): step 1 of 2 of the save after the first quest: the
+     * heading, the name field's label, and the line under it (level and cub take the defaults). Step 2 reuses the
+     * keys above unchanged.
+     */
+    guest: {
+      title: 'Keep your progress',
+      nameLabel: 'Name',
+      later: 'You can pick a Hoya and a reading level later in Profile.',
     },
   },
 
@@ -2476,6 +2488,15 @@ export const learner = {
       school: 'School',
       signIn: 'Sign in as a grown-up',
     },
+    /**
+     * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 16.3 (row GU-5): the chooser's guest tiles, after Add a learner, with the
+     * guest switch on. `try` and `trySub`: the dashed tile on a chooser the site's Start learning opened (no live guest);
+     * `guest` and `guestCaption`: the live guest's own tile (never stars, cards, a level, a streak or a time, CS-G5).
+     */
+    try: 'Try the first quest',
+    trySub: 'No profile needed',
+    guest: 'First quest',
+    guestCaption: 'Not saved yet',
   },
   /**
    * The Daily Review (F-CURR-002 sections 4.5, 7.4 and 7.7, row CM-14; design/wireframes/reviews/daily-review.md): 10 short
@@ -2587,5 +2608,44 @@ export const learner = {
       weekMet: (count: number) =>
         plural('en', count, { one: 'Week goal reached! That is 1 steady week.', other: `Week goal reached! That is ${count} steady weeks.` }),
     },
+  },
+  /**
+   * [GU] Try the first quest without a profile (AMENDMENTS-GUEST-FIRST-LESSON section 16.1, row GU-3). Never the word
+   * "guest" on screen, no age wording. `welcome.*` is Welcome's waiting card while a quest waits on a device with no
+   * profile: `waiting` + `resume` before quest 1 is done, `saveTitle` + `save` after it; `keeps` is the line under
+   * Let's start. `memoryOnly` is the plain line under Hoya's hello when this browser cannot keep the quest (7.2).
+   */
+  guest: {
+    welcome: {
+      waiting: 'Your first quest is waiting.',
+      resume: 'Back to my quest',
+      saveTitle: 'Add your name to keep your first quest.',
+      save: 'Add my name',
+      keeps: 'What you did in the first quest stays with the profile you make.',
+    },
+    memoryOnly: "This browser can't keep the quest after you close it. Add a name at the end to keep it.",
+    /**
+     * [GU] Row GU-4 (16.2). `results.*`: the save card on the first quest's Results: Hoya's line (`line` when the card
+     * is kept, else `lineNoCard`), **Keep my progress** (never "Save my progress", the Grown-up area's rescue-code
+     * action), the quiet **Not now**, the caption when a PIN is asked, and the ask-the-owner line on a device someone
+     * else uses. `later.*`: the Not now card (`days` is 30, or 7 on a device with profiles). `saved` / `savedNoCard`:
+     * Hoya's bubble on the first Home after the save.
+     */
+    results: {
+      line: 'Add a name so Hoya can keep your card and stars.',
+      lineNoCard: 'Add a name so Hoya can keep your first quest.',
+      keep: 'Keep my progress',
+      notNow: 'Not now',
+      askGrownUp: 'A grown-up on this device adds you with the PIN.',
+      askOwner: 'The person who uses this device can add you.',
+    },
+    later: {
+      title: (days: number) => `Hoya can keep your quest in this browser for up to ${days} days without play.`,
+      line: "It isn't backed up yet. Add a name to back it up and keep going.",
+      save: 'Add my name',
+      close: 'Close',
+    },
+    saved: (name: string) => `${name}, your card is in your Library.`,
+    savedNoCard: (name: string) => `${name}, your first quest is saved.`,
   },
 } as const;

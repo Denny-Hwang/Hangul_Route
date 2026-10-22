@@ -26,6 +26,9 @@ const child = (id: string, displayName: string): Profile => ({
   learnerType: 'child',
 });
 
+/** [GU] Row GU-5: the first-quest row's actions (no live guest in these tests). */
+const NO_GUEST = { onKeep: () => undefined, onAskPin: () => undefined, subscribeFocus: () => () => undefined };
+
 const PROFILES = [child('profile:mina0001', 'Mina'), child('profile:jun00001', 'Jun'), child('profile:sora0001', 'Sora')];
 
 beforeEach(() => {
@@ -43,7 +46,7 @@ afterEach(async () => {
 describe('[OA] People on this device (row OA-7a)', () => {
   it('lists every learner on the device under the title, in order; a tap opens that person', async () => {
     const onOpen = vi.fn();
-    const r = await render(<PeopleOnDeviceCard profiles={PROFILES} onOpen={onOpen} />);
+    const r = await render(<PeopleOnDeviceCard profiles={PROFILES} onOpen={onOpen} guest={NO_GUEST} />);
     expect(screenTexts(r.root)[0]).toBe(en.caregiver.people.title);
     const rows = r.root.findAll((n) => typeof n.type === 'string' && n.props.role === 'button').map((n) => n.props['aria-label']);
     expect(rows).toEqual(['Mina', 'Jun', 'Sora']);
@@ -56,7 +59,7 @@ describe('[OA] People on this device (row OA-7a)', () => {
   it('a locked learner carries the glyph and is named as locked (a tap here asks no PIN)', async () => {
     useProfileLocks.setState({ read: ['profile:sora0001'] });
     const onOpen = vi.fn();
-    const r = await render(<PeopleOnDeviceCard profiles={PROFILES} onOpen={onOpen} />);
+    const r = await render(<PeopleOnDeviceCard profiles={PROFILES} onOpen={onOpen} guest={NO_GUEST} />);
     expect(byTestId(r.root, 'people-row-lock-profile:sora0001')).toHaveLength(1);
     expect(byTestId(r.root, 'people-row-lock-profile:mina0001')).toHaveLength(0);
     await press(buttonsNamed(r.root, en.a11y.who.lockedRow('Sora'))[0] as ReactTestInstance);
@@ -64,7 +67,7 @@ describe('[OA] People on this device (row OA-7a)', () => {
   });
 
   it('no learner: nothing is drawn', async () => {
-    const r = await render(<PeopleOnDeviceCard profiles={[]} onOpen={vi.fn()} />);
+    const r = await render(<PeopleOnDeviceCard profiles={[]} onOpen={vi.fn()} guest={NO_GUEST} />);
     expect(byTestId(r.root, 'people-on-device')).toHaveLength(0);
   });
 });
