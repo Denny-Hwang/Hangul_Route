@@ -2,7 +2,7 @@ import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import type { RoundAsked } from '../memory/asked';
 import { normalizeAskedKo, resolveItems, resolveRound, type ItemLookup } from '../memory/resolve';
 import type { Rung } from '../memory/spacing';
-import { buildTryAgain, buildWarmup, itemVisible, jitter, ALL_VISIBLE, type EngineContext, type ReviewQuestion } from './engine';
+import { buildTryAgain, buildWarmup, itemVisible, jitter, ALL_VISIBLE, type EngineContext, type ReviewQuestion, type WarmupQuest } from './engine';
 import type { PickOption, PickRound, QuestReviewKind, QuestReviewPlan } from './quest-review-session';
 
 /**
@@ -161,7 +161,7 @@ function plan(kind: QuestReviewKind, questions: readonly ReviewQuestion[], ctx: 
 }
 
 /** The warm-up of a quest: empty (so skipped) when nothing from an earlier cell is due, and before Stage 2. */
-export function planWarmup(ctx: EngineContext, quest: { cell: string; stage: number }, glossOf: GlossOf): QuestReviewPlan {
+export function planWarmup(ctx: EngineContext, quest: WarmupQuest, glossOf: GlossOf): QuestReviewPlan {
   const quick = { ...ctx, maxRung: QUICK_MAX_RUNG };
   return plan('warmup', buildWarmup(quick, quest).questions, quick, glossOf);
 }

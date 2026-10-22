@@ -6,7 +6,7 @@ import { useAudioStore } from '../../../store/audio-store';
 import { resetRemoteConfigForTests } from '../../../store/remote-config-store';
 import type { MemoryRow } from '../../memory/memory-file';
 import { localDay } from '../../vocab/progress';
-import { glossFor, planQuestTryAgain, planQuestWarmup, type ReviewInputs } from '../quest-review-planner';
+import { earlierInRoute, glossFor, planQuestTryAgain, planQuestWarmup, routeCellRanks, type ReviewInputs } from '../quest-review-planner';
 import type { ReviewItemIndex } from '../review-items-store';
 
 vi.mock('../../../platform/storage', () => ({
@@ -96,5 +96,44 @@ describe('planning from the store', () => {
     const again = await planQuestTryAgain(read(met), { profileId: 'profile:a', episodeId: stage3.id, locale: 'en', missed: [{ texts: ['cha'] }, { texts: ['none'] }] });
     expect(again?.rounds.map((r) => r.itemId)).toEqual(['lex:cha']);
     expect(await planQuestTryAgain(read(met), { profileId: 'profile:a', episodeId: stage3.id, locale: 'en', missed: [] })).toBeNull();
+  });
+});
+
+describe('the warm-up draws from earlier cells in route order (section 4.3, the CM-13 decision record)', () => {
+  // The Stage 2 grid cells in route order: a replay of one never warms up with what a later one taught.
+  const ranks = routeCellRanks();
+  const stage2 = [...ranks.keys()].filter((cell) => episodesAll.find((e) => e.id === cell)?.stage === 'stage2');
+  const [first, quest, last] = [stage2[0]!, stage2[1]!, stage2[stage2.length - 1]!];
+
+  it('the route holds several Stage 2 cells, in order', () => {
+    expect(stage2.length).toBeGreaterThanOrEqual(3);
+    expect(ranks.get(first)! < ranks.get(quest)!).toBe(true);
+    expect(ranks.get(quest)! < ranks.get(last)!).toBe(true);
+  });
+
+  it('a due item taught by a later cell of the same stage is never asked; one from an earlier cell of that stage is', async () => {
+    const earlier = Array.from({ length: 2 }, (_, i) => mk(`lex:early${i}`, { cells: [first] }));
+    const later = Array.from({ length: 3 }, (_, i) => mk(`lex:later${i}`, { cells: [last] }));
+    const items = [...earlier, ...later];
+    const rows = Object.fromEntries(items.map((w) => [w.id, row({ c: 0, r: 0 })]));
+    const read: ReviewInputs = async () => ({ index: index(items), rows });
+    const warm = await planQuestWarmup(read, { profileId: 'profile:a', episodeId: quest, locale: 'en' });
+    expect(warm?.rounds.map((r) => r.itemId).sort()).toEqual(earlier.map((i) => i.id).sort());
+    // From the last Stage 2 cell the first cell's items are earlier, and its own items are left to its steps.
+    const fromLast = await planQuestWarmup(read, { profileId: 'profile:a', episodeId: last, locale: 'en' });
+    expect(fromLast?.rounds.map((r) => r.itemId).sort()).toEqual(earlier.map((i) => i.id).sort());
+    // From the first Stage 2 cell nothing came before it in Stage 2, so nothing is asked.
+    expect(await planQuestWarmup(read, { profileId: 'profile:a', episodeId: first, locale: 'en' })).toBeNull();
+  });
+
+  it('a cell off the route counts by its stage; a quest off the route keeps the engine’s stage rule', () => {
+    const stages: Record<string, number> = { 'story:low': 1, 'story:high': 5 };
+    const earlier = earlierInRoute(quest, 2, ranks, (cell) => stages[cell] ?? 0);
+    expect(earlier?.(first)).toBe(true);
+    expect(earlier?.(last)).toBe(false);
+    expect(earlier?.('story:low')).toBe(true);
+    expect(earlier?.('story:high')).toBe(false);
+    expect(earlier?.('story:unknown')).toBe(false);
+    expect(earlierInRoute('story:off-route', 2, ranks)).toBeUndefined();
   });
 });

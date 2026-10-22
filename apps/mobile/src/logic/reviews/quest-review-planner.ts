@@ -1,7 +1,8 @@
 import type { UiLocale } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
-import { episodeById } from '../../content';
+import { episodeById, episodesAll, questsAll } from '../../content';
 import { lessonContent } from '../../content/lessons';
+import { journeyContent } from '../../content/sync-context';
 import { useAudioStore } from '../../store/audio-store';
 import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
@@ -10,8 +11,9 @@ import { CONTENT_OVERLAYS } from '../content-locale';
 import type { RoundAsked } from '../memory/asked';
 import type { MemoryRow } from '../memory/memory-file';
 import { buildLookup, cellOfEpisode } from '../memory/resolve';
+import { routeOrder } from '../my-route/order';
 import { localDay, vocabOf } from '../vocab/progress';
-import { buildTryAgain, buildWarmup, engineStates, type EngineContext } from './engine';
+import { buildTryAgain, buildWarmup, engineStates, type EngineContext, type WarmupQuest } from './engine';
 import { stageNumber } from './quest-review-gate';
 import type { QuestReviewPlan } from './quest-review-session';
 import { QUICK_MAX_RUNG, missedItemIds, planTryAgain, planWarmup, type GlossOf } from './quest-reviews';
@@ -58,10 +60,43 @@ async function contextFor(read: ReviewInputs, profileId: string): Promise<Engine
 }
 
 /** The lesson cells of these items, loaded so their glosses are in for the UI language; a failed load keeps the English. */
-async function glossesIn(ctx: EngineContext, itemIds: readonly string[]): Promise<void> {
+async function glossesIn(ctx: EngineContext, itemIds: readonly string[], locale: UiLocale): Promise<void> {
+  // The English gloss is the item's own, so an English learner waits for no lesson cell.
+  if (locale === 'en') return;
   const cells = new Set<string>();
   for (const id of itemIds) for (const cell of ctx.index.byId.get(id)?.cells ?? []) cells.add(cell);
   await lessonContent.ensureCells([...cells]).catch(() => undefined);
+}
+
+/** The grid cells in route order (F-ROUTE-001 section 3.2): each at the place of its first quest. */
+export function routeCellRanks(): ReadonlyMap<string, number> {
+  const rank = new Map<string, number>();
+  for (const entry of routeOrder({ catalog: journeyContent.catalog, episodes: episodesAll, quests: questsAll })) {
+    if (!rank.has(entry.episodeId)) rank.set(entry.episodeId, rank.size);
+  }
+  return rank;
+}
+
+/**
+ * The warm-up's "earlier cells" (section 4.3, the CM-13 decision record): a cell before the quest's in route order,
+ * so a replay of an early quest never warms up with what a later cell of its stage taught. A cell off the route (a
+ * shelf story) counts as earlier when its stage is at most the quest's. A quest off the route keeps the engine's
+ * stage rule (no predicate).
+ */
+export function earlierInRoute(
+  questCell: string,
+  stage: number,
+  ranks: ReadonlyMap<string, number> = routeCellRanks(),
+  stageOfCell: (cell: string) => number = (cell) => stageNumber(episodeById(cell.startsWith('story:') ? `episode:shelf-${cell.slice('story:'.length)}` : cell)?.stage),
+): WarmupQuest['earlier'] {
+  const at = ranks.get(questCell);
+  if (at === undefined) return undefined;
+  return (cell) => {
+    const rank = ranks.get(cell);
+    if (rank !== undefined) return rank < at;
+    const cellStage = stageOfCell(cell);
+    return cellStage > 0 && cellStage <= stage;
+  };
 }
 
 export interface WarmupRequest {
@@ -74,8 +109,11 @@ export interface WarmupRequest {
 export async function planQuestWarmup(read: ReviewInputs, input: WarmupRequest): Promise<QuestReviewPlan | null> {
   const ctx = await contextFor(read, input.profileId);
   if (!ctx) return null;
-  const quest = { cell: cellOfEpisode(input.episodeId), stage: stageNumber(episodeById(input.episodeId)?.stage) };
-  await glossesIn(ctx, buildWarmup({ ...ctx, maxRung: QUICK_MAX_RUNG }, quest).questions.map((q) => q.itemId));
+  const cell = cellOfEpisode(input.episodeId);
+  const stage = stageNumber(episodeById(input.episodeId)?.stage);
+  const earlier = earlierInRoute(cell, stage);
+  const quest: WarmupQuest = earlier ? { cell, stage, earlier } : { cell, stage };
+  await glossesIn(ctx, buildWarmup({ ...ctx, maxRung: QUICK_MAX_RUNG }, quest).questions.map((q) => q.itemId), input.locale);
   const plan = planWarmup(ctx, quest, glossFor(input.locale));
   return plan.rounds.length > 0 ? plan : null;
 }
@@ -90,7 +128,7 @@ export async function planQuestTryAgain(read: ReviewInputs, input: TryAgainReque
   const ctx = await contextFor(read, input.profileId);
   if (!ctx) return null;
   const missed = missedItemIds(buildLookup(ctx.index.items, ctx.index.retired), cellOfEpisode(input.episodeId), input.missed);
-  await glossesIn(ctx, buildTryAgain({ ...ctx, maxRung: QUICK_MAX_RUNG }, missed).questions.map((q) => q.itemId));
+  await glossesIn(ctx, buildTryAgain({ ...ctx, maxRung: QUICK_MAX_RUNG }, missed).questions.map((q) => q.itemId), input.locale);
   const plan = planTryAgain(ctx, missed, glossFor(input.locale));
   return plan.rounds.length > 0 ? plan : null;
 }
