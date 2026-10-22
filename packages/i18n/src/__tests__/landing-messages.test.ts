@@ -4,7 +4,7 @@ import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { fallbackPaths, getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
-import { STALE_SITE_WORDS, landingBannedWord } from './landing-banned';
+import { STALE_SITE_WORDS, landingBannedWord, staleSiteWord } from './landing-banned';
 import { SAMPLES } from './samples';
 
 // F-I18N-001 PR 11a: the site's copy (metadata, landing, about, privacy, terms, the waitlist
@@ -452,13 +452,18 @@ describe('landing: no words of an older site, in any locale', () => {
       expect(STALE_SITE_WORDS.test(bad), bad).toBe(true);
     }
     expect(STALE_SITE_WORDS.test("We'll email you when family and class plans launch.")).toBe(false);
+    // [SN] The schools section's invite link is the live product (AMENDMENTS-SITE-NEWUSER §3.6), but only there, and
+    // only the invite words: an older word in the same path still fails.
+    expect(staleSiteWord('Create a school space, then invite teachers.', 'landing.persona.teachers.schools.space')).toBe(false);
+    expect(staleSiteWord('Send me the invite', 'landing.home.news.body')).toBe(true);
+    expect(staleSiteWord('invite teachers. Nothing to install', 'landing.persona.teachers.schools.space')).toBe(true);
   });
 
   for (const locale of LOCALES) {
     it(`${locale}: no stale word outside the legal documents`, () => {
       const tree = getMessages(locale).landing;
       for (const path of leafPaths(tree).filter((p) => !p.startsWith('legal.'))) {
-        for (const out of outputs(tree, path)) expect(STALE_SITE_WORDS.test(out), `landing.${path}: ${out}`).toBe(false);
+        for (const out of outputs(tree, path)) expect(staleSiteWord(out, `landing.${path}`), `landing.${path}: ${out}`).toBe(false);
       }
     });
   }
