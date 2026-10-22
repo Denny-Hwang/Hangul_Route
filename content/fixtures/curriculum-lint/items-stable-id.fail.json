@@ -1,0 +1,165 @@
+{
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-10): a frozen id no longer taught with no alias or retirement (an error on the snapshot), a retirement and an alias that name no frozen id (errors), a new word of a Volume 2 cell that is not frozen yet (an error), and one of a Volume 1 cell (a warning until row CM-3B). Not real content.",
+  "rule": "items-stable-id",
+  "files": {
+    "content/episodes/stage-2/nature.v2.json": {
+      "id": "episode:stage2-nature-v2",
+      "stage": "stage2",
+      "theme": "nature",
+      "status": "ready",
+      "titleEn": "A cell",
+      "quests": [
+        {
+          "id": "quest:stage2-nature-v2-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "하늘",
+                          "romanization": "haneul",
+                          "en": "sky"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "별",
+                          "romanization": "byeol",
+                          "en": "star"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": []
+        }
+      ],
+      "volume": 2
+    },
+    "content/episodes/stage-3/nature.json": {
+      "id": "episode:stage3-nature",
+      "stage": "stage3",
+      "theme": "nature",
+      "status": "ready",
+      "titleEn": "A cell",
+      "quests": [
+        {
+          "id": "quest:stage3-nature-q1",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "달",
+                          "romanization": "dal",
+                          "en": "moon"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "바다",
+                          "romanization": "bada",
+                          "en": "sea"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": []
+        }
+      ]
+    },
+    "packages/content-schema/src/review-items/items-stable-id.json": {
+      "schemaVersion": 1,
+      "ids": {
+        "lex|하늘": "lex:haneul",
+        "lex|달": "lex:dal",
+        "lex|강": "lex:gang"
+      },
+      "alias": {
+        "lex|강물": "lex:river"
+      },
+      "retired": [
+        "lex:san"
+      ]
+    }
+  },
+  "expect": [
+    [
+      "items-stable-id",
+      "error",
+      "packages/content-schema/src/review-items/items-stable-id.json",
+      "ids.lex|강"
+    ],
+    [
+      "items-stable-id",
+      "error",
+      "packages/content-schema/src/review-items/items-stable-id.json",
+      "retired.lex:san"
+    ],
+    [
+      "items-stable-id",
+      "error",
+      "packages/content-schema/src/review-items/items-stable-id.json",
+      "alias.lex|강물"
+    ],
+    [
+      "items-stable-id",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[0].steps[1].discover.pages[0].items[1]"
+    ],
+    [
+      "items-stable-id",
+      "warning",
+      "content/episodes/stage-3/nature.json",
+      "quests[0].steps[1].discover.pages[0].items[1]"
+    ]
+  ]
+}
