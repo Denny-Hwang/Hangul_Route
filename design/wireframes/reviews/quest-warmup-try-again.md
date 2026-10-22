@@ -71,8 +71,9 @@ T2. Result
 - The warm-up is skipped (no panel at all) when nothing from an earlier cell is due, before Stage 2, on a quest that
   resumes past its first step, or when its plan is not ready within 1.5 s. The reward step holds its buttons at most
   0.8 s while Try these again is planned.
-- A back during Try these again goes on to Results (the quest is done); a back during the warm-up asks the quest's
-  Leave sheet, as on any step.
+- Try these again opens on Results, over its content, once Results has saved the quest's score and card: its
+  button finishes the quest as See results does. A back during it, or its See results, shows Results (the quest is
+  done and saved); a back during the warm-up asks the quest's Leave sheet, as on any step.
 
 ## States
 

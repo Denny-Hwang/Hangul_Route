@@ -302,11 +302,12 @@ describe('precacheReport and its budget lines', () => {
     // (main fc580beed, release build). The margin stays under 10 KB, so the stories, the locale text, the grown-up
     // roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
     // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
-    // F-CURR-002 row CM-15 measured 4,743,658 B (the quest warm-up's and Try these again's gates in the player, the
-    // review-kind gate of the sync and backup paths, the merge's retention; their sessions are a chunk of their own).
+    // F-CURR-002 row CM-15 measured 4,744,698 B (the quest warm-up's and Try these again's gates in the player, the
+    // hand-over to Results, the preload, the review-kind gate of the sync and backup paths, the merge's retention; their
+    // sessions are a chunk of their own).
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_743_658).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_743_658).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_698).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_698).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

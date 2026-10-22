@@ -47,10 +47,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // chunk per locale and the presenter and All lessons chunks of their own: 4,712,987 B raw / 1,237,660 B gzip on main
   // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
   // 4,732,797 B raw / 1,243,089 B gzip, so the line was that measurement plus a 7,203 B rounding margin. F-CURR-002 row
-  // CM-15 (the quest warm-up and Try these again) keeps its sessions, the review engine and its planning in chunks of their
-  // own; the start bundle gains only the player's two gates and their timing, the review-kind gate of the sync and backup
-  // paths and the 14-day retention of the merge: 4,743,658 B raw / 1,247,482 B gzip (release `build:web`) against
-  // 4,738,771 B raw on its parent (CM-13, 91747cfc0), so the line is that measurement plus a 6,342 B rounding margin.
+  // CM-15 (the quest warm-up and Try these again) keeps its sessions and round view in a chunk of their own and its
+  // planning in the memory chunk, beside the review engine; the start bundle gains only the player's two gates and their
+  // timing, the hand-over of Try these again to Results, the preload, the review-kind gate of the sync and backup paths
+  // and the 14-day retention of the merge: 4,744,698 B raw / 1,247,756 B gzip (release `build:web`) against 4,738,771 B
+  // raw on its parent (CM-13, 91747cfc0), so the line is that measurement plus a 5,302 B rounding margin. By module
+  // (esbuild-minified source, before Metro's wrappers): the player 1,626 B, quest-reviews.ts 1,114 B, the content-schema
+  // gate and retention 797 B, the merge 552 B, Results 355 B, the gate 256 B, boot 205 B, the rest under 110 B each; no
+  // new dependency.
   startBundleRaw: 4_750_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -145,8 +149,8 @@ export const ROOT_CHUNKS = Object.freeze([
 export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk', marker: 'memory-chunk:runtime' })]);
 
 /**
- * The quest warm-up and Try these again (F-CURR-002 row CM-15): the sessions, the review engine and the round view
- * are a bundle of their own, reached only through the literal `import()` of `src/screens/quest/quest-reviews.ts`
+ * The quest warm-up and Try these again (F-CURR-002 row CM-15): the sessions and the round view are a bundle of
+ * their own (the review engine and the planning ride in the memory chunk), reached only through the literal `import()` of `src/screens/quest/quest-reviews.ts`
  * while `questWarmup` or `missedPractice` is on, so the start bundle carries none of it. The chunk module exports its
  * marker (`QUEST_REVIEW_CHUNK`).
  */
