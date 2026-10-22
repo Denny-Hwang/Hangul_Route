@@ -71,10 +71,10 @@ export function TeachersPage({ locale = DEFAULT_LOCALE, claims = SITE_CLAIMS }: 
     ...(showsClaim(claims, 'lectureMode', locale) ? [T.class.lecture] : []),
   ];
   return (
-    <SiteShell locale={locale} page="/teachers" current="teachers">
+    <SiteShell locale={locale} page="/teachers" current="teachers" claims={claims}>
       <PageHead title={T.title} lead={T.lead} after={haveAccount}>
         <PrimaryAction href={create}>{T.create}</PrimaryAction>
-        <SecondaryAction href={learnerStart(locale)}>{T.tryIt}</SecondaryAction>
+        <SecondaryAction href={learnerStart(locale, claims)}>{T.tryIt}</SecondaryAction>
       </PageHead>
 
       <Section id="teachers-setup" title={T.setup.title}>

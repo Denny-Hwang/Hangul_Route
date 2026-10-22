@@ -83,6 +83,7 @@ export const landing = {
       forTeachers: '선생님이에요',
       facts: '1단계는 무료예요 · 가입 없이 바로 시작해요 · 처음 방문한 뒤에는 대부분의 기기에서 오프라인으로도 돼요',
       bubble: (letter: string, romanization: string) => `안녕하세요! 오늘 만날 글자: ${letter} (${romanization})`,
+      guest: '첫 퀘스트를 바로 시작해요. 이름은 끝나고 넣어요.',
     },
     who: {
       title: '누구를 위한 앱인가요?',
@@ -104,12 +105,18 @@ export const landing = {
     how: {
       title: '이렇게 해요',
       steps: {
-        start: { title: '프로필 만들기', body: '이름과 호야를 골라요.' },
+        start: { title: '프로필 만들기', body: '이름과 호야를 골라요.', guestTitle: '바로 시작하기' },
         quests: { title: '5분 퀘스트로 배우기', body: '글자, 소리, 첫 낱말을 소리와 그림으로 배워요.' },
-        collect: { title: '모으면서 계속하기', body: '한국 문화 카드를 받아요. 진도는 저장되고 백업돼요.' },
+        collect: {
+          title: '모으면서 계속하기',
+          body: '한국 문화 카드를 받아요. 진도는 저장되고 백업돼요.',
+          guestBody: '한국 문화 카드를 받아요. 이름을 넣으면 진도가 저장되고 백업돼요.',
+        },
       },
       routeBody: '한국 문화 카드를 받고, 지금 있는 곳과 다음에 할 것을 학습 루트 전체로 한눈에 봐요.',
       levelBody: '이름과 호야를 골라요. 수준 확인은 선택 사항이에요.',
+      guestLevelBody: '첫 퀘스트를 해요. 수준 확인은 그다음에 해요.',
+      guestStartBody: '첫 퀘스트를 하고 나서 이름을 넣어요.',
     },
     promises: {
       label: '우리의 약속',
@@ -185,6 +192,7 @@ export const landing = {
         level: {
           q: '한글을 조금 알아요. 처음부터 시작해야 하나요?',
           a: '아니요. 시작할 때 ‘한국어를 조금 알아요’를 누르고 수준 확인을 해요. 호야가 어디서 시작할지 알려 줘요.',
+          guestA: '아니요. 첫 퀘스트를 하고 이름을 넣은 다음, 홈에서 ‘수준 확인하기’를 눌러요. 호야가 어디서 시작할지 알려 줘요.',
         },
       },
       after: {

@@ -3,6 +3,7 @@ import { colors, layout, spacing, typography } from '@hangul-route/design-system
 import { DEFAULT_LOCALE, getMessages, type LegalValues, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { GUEST_TTL_DAYS, GUEST_TTL_SHARED_DAYS } from '../../data/guest-ttl';
 import { sitePath } from '../../lib/site-path';
 import { HIT, rem } from '../../lib/site-style';
 import { EnglishAuthoritativeNotice } from './EnglishAuthoritativeNotice';
@@ -20,7 +21,12 @@ export function TermsPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): J
   const t = legal.terms;
   // English level names on purpose: the legal body stays English in every locale (L10), so it quotes the English
   // `LEARNER_LEVELS` labels, not `common.levels` (the UI-locale words the app and console draw).
-  const values: LegalValues = { email: CONTACT_EMAIL, levels: LEARNER_LEVELS.map((l) => l.label).join(' / ') };
+  const values: LegalValues = {
+    email: CONTACT_EMAIL,
+    levels: LEARNER_LEVELS.map((l) => l.label).join(' / '),
+    days: GUEST_TTL_DAYS,
+    sharedDays: GUEST_TTL_SHARED_DAYS,
+  };
   const text = (item: LegalItem): string => (typeof item === 'function' ? item(values) : item);
   // The document stays English in every locale (L10): marked `lang="en"` inside a `/es` or `/ko` page, unmarked on the English page.
   const docLang = locale === DEFAULT_LOCALE ? undefined : 'en';

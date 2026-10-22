@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { APP_ORIGIN, APP_ROUTES, personaHint } from '@hangul-route/content-schema';
 import { LOCALES } from '@hangul-route/i18n';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { SITE_CLAIMS } from '../../data/site-claims';
 import { appUrl } from '../console/config';
 import { CONSOLE_ORIGIN_OFF, SITE_DEFAULT_CONSOLE_ORIGIN, createAccount, grownUpOrigin, learnerStart, parseConsoleOrigin, signIn, type GrownUpPersona } from '../site-links';
 import { appEntryUrl } from '../site-path';
@@ -203,6 +204,63 @@ describe('learnerStart (the learner app, unchanged behaviour)', () => {
     vi.stubEnv('CONSOLE_ORIGIN', 'https://console.example.com');
     expect(learnerStart('en')).toBe('https://preview.app.example.com');
     expect(learnerStart('es')).toBe('https://preview.app.example.com?lang=es');
+  });
+});
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2: with the `guestLesson` claim on, every Start learning carries the
+ * `try=1` boot intent (after `lang` when present) and nothing else; Sign in and Create never do. Both states pinned.
+ */
+describe('[GU] learnerStart with the guestLesson claim', () => {
+  const ON = { ...SITE_CLAIMS, guestLesson: true } as const;
+  const OFF = { ...SITE_CLAIMS, guestLesson: false } as const;
+
+  it('defaults to SITE_CLAIMS, where the claim is off until GU-7: no try=1 today', () => {
+    expect(SITE_CLAIMS.guestLesson).toBe(false);
+    for (const locale of LOCALES) {
+      expect(learnerStart(locale)).toBe(learnerStart(locale, SITE_CLAIMS));
+      expect(learnerStart(locale)).not.toMatch(/try=/);
+    }
+  });
+
+  it('off: exactly the link of today, in every locale', () => {
+    for (const locale of LOCALES) expect(learnerStart(locale, OFF)).toBe(appEntryUrl(appUrl(), locale));
+    expect(learnerStart('en', OFF)).toBe('https://app.hangulroute.com');
+    expect(learnerStart('es', OFF)).toBe('https://app.hangulroute.com?lang=es');
+  });
+
+  it('on: try=1 after lang, as the spec writes the links', () => {
+    expect(learnerStart('en', ON)).toBe('https://app.hangulroute.com/?try=1');
+    expect(learnerStart('es', ON)).toBe('https://app.hangulroute.com/?lang=es&try=1');
+    expect(learnerStart('ko', ON)).toBe('https://app.hangulroute.com/?lang=ko&try=1');
+  });
+
+  it('on: the same app, the same lang, and only try=1 added (no id, no other parameter)', () => {
+    for (const locale of LOCALES) {
+      const off = new URL(learnerStart(locale, OFF));
+      const on = new URL(learnerStart(locale, ON));
+      expect(on.origin).toBe(off.origin);
+      expect(on.pathname).toBe('/');
+      const params = [...on.searchParams.entries()];
+      expect(params.at(-1)).toEqual(['try', '1']);
+      expect(params.slice(0, -1)).toEqual([...off.searchParams.entries()]);
+    }
+  });
+
+  it('on: follows NEXT_PUBLIC_APP_URL like the off link', () => {
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://preview.app.example.com/');
+    expect(learnerStart('en', ON)).toBe('https://preview.app.example.com/?try=1');
+    expect(learnerStart('ko', ON)).toBe('https://preview.app.example.com/?lang=ko&try=1');
+  });
+
+  it('Sign in and Create never carry try=1, and take no claims', () => {
+    for (const locale of LOCALES) {
+      for (const href of [signIn(undefined, locale), ...PERSONAS.flatMap((persona) => [signIn(persona, locale), createAccount(persona, locale)])]) {
+        expect(href).not.toMatch(/[?&]try=/);
+      }
+    }
+    expect(signIn.length).toBeLessThanOrEqual(2);
+    expect(createAccount.length).toBeLessThanOrEqual(2);
   });
 });
 

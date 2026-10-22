@@ -1,10 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getMessages, retiredDataPromises } from '@hangul-route/i18n';
+import { getMessages, retiredDataPromises, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { siteLocaleParams } from '@/lib/site-locales';
+import { AboutPage } from '../../components/landing/AboutPage';
+import { HomePage } from '../../components/landing/HomePage';
+import { LearnersPage } from '../../components/landing/LearnersPage';
+import { PrivacyPage } from '../../components/landing/PrivacyPage';
+import { SITE_CLAIMS } from '../../data/site-claims';
 // The pages are imported here, once, not inside each test: a page load pulls in the whole landing graph (i18n
 // dictionaries, content schema, design-system art), and inside a test body it counted against the 5 s test
 // timeout, which a busy CI runner came close to. Imported at the top, they load while the file is collected.
@@ -241,5 +246,37 @@ describe('Privacy Policy: school administrators (section 6.7)', () => {
 
   it('says nothing of family or stand-alone class renames being kept', () => {
     expect(PARAGRAPH).not.toMatch(/famil/i);
+  });
+});
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13 (row GU-6): with the `guestLesson` claim forced on, the pages that change
+ * (the home's hero line and How it works, the /learners level answer, the Privacy Policy's first-quest bullet) still
+ * make no retired data promise, in every site locale; and the bullet states the one case before a profile exists
+ * without taking back the backup sentence every learner profile keeps.
+ */
+describe('[GU] the guestLesson claim on: no retired data promise', () => {
+  const ON = { ...SITE_CLAIMS, guestLesson: true } as const;
+  const LOCALES = ['en', ...siteLocaleParams().map(({ locale }) => locale)] as const;
+  const PAGES = [
+    ['/', (locale: UiLocale) => renderToStaticMarkup(<HomePage locale={locale} claims={ON} />)],
+    ['/learners', (locale: UiLocale) => renderToStaticMarkup(<LearnersPage locale={locale} claims={ON} />)],
+    ['/privacy', (locale: UiLocale) => renderToStaticMarkup(<PrivacyPage locale={locale} claims={ON} />)],
+    ['/about', (locale: UiLocale) => renderToStaticMarkup(<AboutPage locale={locale} claims={ON} />)],
+  ] as const;
+
+  for (const locale of LOCALES) {
+    for (const [name, render] of PAGES) {
+      it(`${locale} ${name}`, () => {
+        expect(retiredDataPromises(blocksOf(render(locale)))).toEqual([]);
+      });
+    }
+  }
+
+  it('the Privacy Policy keeps the backup sentence beside the first-quest bullet', () => {
+    const privacy = textOf(renderToStaticMarkup(<PrivacyPage locale="en" claims={ON} />));
+    expect(privacy).toContain(BACKUP_FIRST);
+    expect(privacy).toContain('Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers.');
+    expect(privacy).toContain("When a name is added, they become that learner's progress and are backed up like any other.");
   });
 });

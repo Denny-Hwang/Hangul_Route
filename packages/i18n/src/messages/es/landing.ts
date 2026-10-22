@@ -80,6 +80,7 @@ export const landing = {
       forTeachers: 'Soy docente',
       facts: 'La Etapa 1 es gratis · Sin registro para empezar · Funciona sin conexión en la mayoría de los dispositivos después de tu primera visita',
       bubble: (letter: string, romanization: string) => `¡Hola! Conozcamos la letra ${letter}\u00a0(${romanization}).`,
+      guest: 'Empieza tu primera misión ya. Añade un nombre al final.',
     },
     who: {
       title: '¿Para quién es?',
@@ -101,12 +102,18 @@ export const landing = {
     how: {
       title: 'Cómo funciona',
       steps: {
-        start: { title: 'Crea un perfil', body: 'Elige un nombre y un Hoya.' },
+        start: { title: 'Crea un perfil', body: 'Elige un nombre y un Hoya.', guestTitle: 'Empieza ya' },
         quests: { title: 'Aprende en misiones de cinco minutos', body: 'Letras, sonidos y primeras palabras, con sonido e imágenes.' },
-        collect: { title: 'Colecciona y sigue adelante', body: 'Gana tarjetas de cultura coreana. Tu progreso se guarda y se respalda.' },
+        collect: {
+          title: 'Colecciona y sigue adelante',
+          body: 'Gana tarjetas de cultura coreana. Tu progreso se guarda y se respalda.',
+          guestBody: 'Gana tarjetas de cultura coreana. Añade un nombre y tu progreso se guarda y se respalda.',
+        },
       },
       routeBody: 'Gana tarjetas de cultura coreana y mira toda tu Ruta de aprendizaje: dónde estás y qué sigue.',
       levelBody: 'Elige un nombre y un Hoya. La prueba de nivel es opcional.',
+      guestLevelBody: 'Juega tu primera misión. Después comprueba tu nivel.',
+      guestStartBody: 'Juega tu primera misión y luego añade un nombre.',
     },
     promises: {
       label: 'Nuestras promesas',
@@ -184,6 +191,7 @@ export const landing = {
         level: {
           q: 'Ya sé algo de hangul. ¿Tengo que empezar desde el principio?',
           a: 'No. Al comenzar, toca «Ya sé algo de coreano» y haz una prueba de nivel. Hoya te sugiere por dónde empezar.',
+          guestA: 'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel» en Inicio. Hoya te sugiere por dónde empezar.',
         },
       },
       after: {

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { LOCALES, LOCALE_META, LOCALE_STATUS } from '../locales';
 import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
-import { fallbackPaths, getMessages } from '../resolve';
+import { retiredDataPromises } from '../data-promises';
+import { fallbackPaths, getMessages, isEnglishAuthoritative } from '../resolve';
 import { leafPaths, lookup } from '../tree';
 import { STALE_SITE_WORDS, landingBannedWord, staleSiteWord } from './landing-banned';
 import { SAMPLES } from './samples';
@@ -48,6 +49,7 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.persona.learners.faq.level).toEqual({
       q: 'I already know some Hangul. Do I have to start at the beginning?',
       a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
+      guestA: 'No. Play the first quest, add a name, then tap “Take the level check” on Home. Hoya suggests where to begin.',
     });
     expect(l.home.how.levelBody).toBe('Pick a name and a Hoya. A level check is optional.');
     expect(l.persona.learners.after).toEqual({
@@ -56,6 +58,63 @@ describe('landing: sentences that take a value render the former text', () => {
     });
     // Placement is a level check, never a "test", in the English copy.
     expect(JSON.stringify([l.persona.learners.faq.level, l.home.how.levelBody])).not.toMatch(/\btest\b|\bplacement\b/i);
+  });
+
+  it('[GU] the guest start lines (AMENDMENTS-GUEST-FIRST-LESSON section 16.4) in en, es and ko; the level answer quotes Home\'s button word for word', () => {
+    expect(l.home.hero.guest).toBe('Start your first quest right away. Add a name at the end.');
+    expect(l.home.how.steps.start.guestTitle).toBe('Start right away');
+    expect(l.home.how.guestLevelBody).toBe('Play your first quest. Check your level after.');
+    expect(l.home.how.guestStartBody).toBe('Play your first quest, then add a name.');
+    expect(l.home.how.steps.collect.guestBody).toBe('Earn Korean culture cards. Add a name, and your progress is saved and backed up.');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const m = getMessages(locale);
+      const take = m.learner.placement.homeCard.take;
+      expect(m.landing.persona.learners.faq.level.guestA, locale).toContain(take);
+      // The guest answer never names the first-run button a guest no longer meets before the first quest.
+      expect(m.landing.persona.learners.faq.level.guestA, locale).not.toContain(m.learner.placement.invite.knowSome);
+      for (const line of [
+        m.landing.home.hero.guest,
+        m.landing.home.how.steps.start.guestTitle,
+        m.landing.home.how.guestLevelBody,
+        m.landing.home.how.guestStartBody,
+        m.landing.home.how.steps.collect.guestBody,
+        m.landing.persona.learners.faq.level.guestA,
+      ]) {
+        expect(line.trim().length, locale).toBeGreaterThan(0);
+        // Spec rules: "guest" is never a word on screen, no age wording, no price, no seat number, no review claim.
+        expect(line, locale).not.toMatch(/\bguest\b|invitad|게스트|\bkids?\b|\bchild(ren)?\b|\bages?\b|[$€£]\s?\d|\d|native|expert|nativ|원어민|전문가/i);
+      }
+    }
+    const es = getMessages('es').landing;
+    expect(es.home.hero.guest).toBe('Empieza tu primera misión ya. Añade un nombre al final.');
+    expect(es.home.how.steps.start.guestTitle).toBe('Empieza ya');
+    expect(es.home.how.guestLevelBody).toBe('Juega tu primera misión. Después comprueba tu nivel.');
+    expect(es.home.how.guestStartBody).toBe('Juega tu primera misión y luego añade un nombre.');
+    expect(es.home.how.steps.collect.guestBody).toBe('Gana tarjetas de cultura coreana. Añade un nombre y tu progreso se guarda y se respalda.');
+    expect(es.persona.learners.faq.level.guestA).toBe(
+      'No. Juega la primera misión, añade un nombre y luego toca «Hacer la prueba de nivel» en Inicio. Hoya te sugiere por dónde empezar.',
+    );
+    const ko = getMessages('ko').landing;
+    expect(ko.home.hero.guest).toBe('첫 퀘스트를 바로 시작해요. 이름은 끝나고 넣어요.');
+    expect(ko.home.how.steps.start.guestTitle).toBe('바로 시작하기');
+    expect(ko.home.how.guestLevelBody).toBe('첫 퀘스트를 해요. 수준 확인은 그다음에 해요.');
+    expect(ko.home.how.guestStartBody).toBe('첫 퀘스트를 하고 나서 이름을 넣어요.');
+    expect(ko.home.how.steps.collect.guestBody).toBe('한국 문화 카드를 받아요. 이름을 넣으면 진도가 저장되고 백업돼요.');
+    expect(ko.persona.learners.faq.level.guestA).toBe('아니요. 첫 퀘스트를 하고 이름을 넣은 다음, 홈에서 ‘수준 확인하기’를 눌러요. 호야가 어디서 시작할지 알려 줘요.');
+  });
+
+  it('[GU] the Privacy Policy first-quest bullet is English only (L10) and takes its days as values', () => {
+    const bullet = l.legal.privacy.sections.collect.bullets.guest({ email: 'hello@example.com', levels: 'New reader', days: 30, sharedDays: 7 });
+    expect(bullet).toBe(
+      "Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
+    );
+    expect(isEnglishAuthoritative('landing.legal.privacy.sections.collect.bullets.guest')).toBe(true);
+    for (const locale of ['es', 'ko'] as const) {
+      expect(getMessages(locale).landing.legal.privacy.sections.collect.bullets.guest, locale).toBe(l.legal.privacy.sections.collect.bullets.guest);
+    }
+    expect(retiredDataPromises(bullet)).toEqual([]);
+    // No wording that a legal review happened or is pending (spec section 11).
+    expect(bullet).not.toMatch(/legal review|counsel|lawyer|reviewed|pending/i);
   });
 
   it('the footer year is a value', () => {
@@ -78,7 +137,7 @@ describe('landing: sentences that take a value render the former text', () => {
   });
 
   it('privacy and terms: the address and the level labels are passed in', () => {
-    const values = { email: 'hello@example.com', levels: 'A / B' };
+    const values = { email: 'hello@example.com', levels: 'A / B', days: 30, sharedDays: 7 };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
       // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level; placement.start, item_answered, complete,
       // skipped and override_applied go up as usage events (apps/mobile/src/logic/placement/events.ts), and the full
@@ -114,7 +173,7 @@ describe('privacy: progress report lines (F-REPORT-001 RP-0b)', () => {
 
 describe('privacy: notes from grown-ups (F-FEEDBACK-001 section 8.7, FB-13; English-authoritative)', () => {
   const bullets = l.legal.privacy.sections.collect.bullets;
-  const values = { email: 'hello@hangulroute.com', levels: 'A / B' };
+  const values = { email: 'hello@hangulroute.com', levels: 'A / B', days: 30, sharedDays: 7 };
 
   it('says who can send, the only answer, what a teacher and the family see, take back, how long notes are kept, and how to hide, report, stop and delete', () => {
     expect(typeof bullets.notes).toBe('function');

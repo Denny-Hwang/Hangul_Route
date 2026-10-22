@@ -1,5 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { homePath, openForcedHome } from './forced-claims';
 
 /**
  * Length and glance budgets of the layered site (F-SITE-002 §3.11), over the static export, in Chromium.
@@ -423,4 +424,99 @@ for (const lang of ['en', 'es', 'ko'] as const) {
       expect(bytes).toBeLessThanOrEqual(kb * 1024);
     });
   }
+}
+
+/**
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (row GU-6): the home with the `guestLesson` claim forced on through
+ * its `claims` prop (`forced-claims.ts`; the export keeps the claim off until GU-7). AMENDMENTS-SITE-NEWUSER section
+ * 3.11's first screens hold in every locale: at 375 x 812 the two grown-up links and the brand name, at 320 x 568 the
+ * header, the h1, the lead and Start learning. The hero line sits right under the facts line, above the grown-up links.
+ * The heights and words are recorded (annotations) for GU-7, which re-measures them with the shipped value and changes
+ * no budget.
+ */
+for (const lang of ['en', 'es', 'ko'] as const) {
+  const t = getMessages(lang).landing;
+  const hero = t.home.hero;
+  test.describe(`[GU] ${homePath(lang)} with the guestLesson claim forced on`, () => {
+    test('the harness measures what ships: with today\'s claims its home is the export\'s home, box for box', async ({ page }) => {
+      const measure = async (): Promise<number[]> =>
+        page.evaluate(() => {
+          const out = [document.documentElement.scrollHeight];
+          for (const selector of ['header.hr-site-header', '#home-title', '.hr-site-lead', '.hr-site-hero-links', '#home-how', '.hr-site-band']) {
+            const r = document.querySelector(selector)?.getBoundingClientRect();
+            out.push(Math.round(r?.top ?? -1), Math.round(r?.height ?? -1));
+          }
+          return out;
+        });
+      for (const [width, height] of [
+        [375, 812],
+        [1280, 800],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await page.goto(homePath(lang));
+        const shipped = await measure();
+        await openForcedHome(page, lang, 'off');
+        await expect(page.locator('.hr-site-hero-guest')).toHaveCount(0);
+        const harness = await measure();
+        for (const [i, value] of harness.entries()) expect(Math.abs(value - (shipped[i] ?? NaN)), `${width}: value ${i}`).toBeLessThanOrEqual(2);
+      }
+    });
+
+    test('at 375 x 812: the grown-up links and the brand name on the first screen; the line under the facts line, above the links', async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 812 });
+      await openForcedHome(page, lang, 'on');
+      const main = page.locator('main');
+      const line = main.getByText(hero.guest, { exact: true });
+      await expect(line).toBeVisible();
+      const facts = await main.getByText(hero.facts, { exact: true }).boundingBox();
+      const lineBox = await line.boundingBox();
+      for (const name of [hero.forParents, hero.forTeachers]) {
+        const box = await main.getByRole('link', { name, exact: true }).boundingBox();
+        expect(box, name).not.toBeNull();
+        expect((box?.y ?? Infinity) + (box?.height ?? 0), `${name} ends on the first screen`).toBeLessThanOrEqual(812);
+        expect(box?.y ?? -1, `${name} is under the line`).toBeGreaterThanOrEqual((lineBox?.y ?? Infinity) + (lineBox?.height ?? 0) - 1);
+      }
+      expect(lineBox?.y ?? -1, 'the line is under the facts line').toBeGreaterThanOrEqual((facts?.y ?? Infinity) + (facts?.height ?? 0) - 1);
+      const brandName = page.locator('header .hr-site-brand-name');
+      await expect(brandName).toBeVisible();
+      expect((await brandName.boundingBox())?.width ?? 0, 'the name is drawn, not visually hidden').toBeGreaterThan(40);
+      // Body size, the lead's colour: the line reads as text, not as a second action.
+      const style = await line.evaluate((el) => ({ tag: el.tagName, size: getComputedStyle(el).fontSize, color: getComputedStyle(el).color }));
+      const lead = await main.getByText(hero.lead, { exact: true }).evaluate((el) => getComputedStyle(el).color);
+      expect(style.tag).toBe('P');
+      expect(style.color).toBe(lead);
+      expect(style.size).toBe(await page.evaluate(() => getComputedStyle(document.querySelector('.hr-site') as Element).fontSize));
+    });
+
+    test('at 320 x 568: the header, the h1, the lead and Start learning on the first screen', async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 568 });
+      await openForcedHome(page, lang, 'on');
+      const parts: Array<[string, Locator]> = [
+        ['header', page.locator('header.hr-site-header')],
+        ['h1', page.getByRole('heading', { level: 1, name: hero.title })],
+        ['lead', page.locator('main').getByText(hero.lead, { exact: true })],
+        ['Start learning', page.locator('main').getByRole('link', { name: hero.start, exact: true }).first()],
+      ];
+      for (const [name, locator] of parts) {
+        await expect(locator, name).toBeVisible();
+        const box = await locator.boundingBox();
+        expect((box?.y ?? Infinity) + (box?.height ?? 0), `${name} ends on the first screen`).toBeLessThanOrEqual(568);
+        expect((box?.x ?? -1) + (box?.width ?? Infinity), `${name} fits the width`).toBeLessThanOrEqual(320);
+      }
+    });
+
+    test('heights and words with the claim on (recorded for GU-7)', async ({ page }) => {
+      for (const [width, height] of [
+        [375, 812],
+        [1280, 800],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await openForcedHome(page, lang, 'on');
+        const scroll = await page.evaluate(() => document.documentElement.scrollHeight);
+        const words = await page.evaluate(() => document.body.innerText.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length);
+        test.info().annotations.push({ type: `guestLesson on, ${width}`, description: `height ${scroll} px, ${words} words` });
+        expect(words).toBeGreaterThan(50);
+      }
+    });
+  });
 }

@@ -53,6 +53,12 @@ const PAYMENT_CHANNELS =
 export interface LegalValues {
   email: string;
   levels: string;
+  /**
+   * [GU] The days a never-saved first quest is kept without play (`GUEST_TTL_DAYS`, AMENDMENTS-GUEST-FIRST-LESSON
+   * GU-D13), and on a device that already has learner profiles (`GUEST_TTL_SHARED_DAYS`).
+   */
+  days: number;
+  sharedDays: number;
 }
 
 export const landing = {
@@ -152,6 +158,12 @@ export const landing = {
        * greeting: taught Korean is passed in with its romanization, never typed here (CLAUDE.md §1).
        */
       bubble: (letter: string, romanization: string) => `Hi! Let's meet ${letter}\u00a0(${romanization}).`,
+      /**
+       * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2: the hero's one line under the facts line, only while the
+       * `guestLesson` claim is on (Start learning then opens quest 1 before any profile). It names what the link does
+       * and adds no second action. "a name": the learner's display name, asked after the first quest.
+       */
+      guest: 'Start your first quest right away. Add a name at the end.',
     },
     who: {
       title: 'Who is it for?',
@@ -174,10 +186,23 @@ export const landing = {
       title: 'How it works',
       steps: {
         /** The first run: a name and a Hoya (`learner.createProfile.avatarHeading` "Pick a Hoya"); "No sign-up to start" is in the hero facts. */
-        start: { title: 'Make a profile', body: 'Pick a name and a Hoya.' },
+        start: {
+          title: 'Make a profile',
+          body: 'Pick a name and a Hoya.',
+          /** [GU] Step 1's title while the `guestLesson` claim is on: the first quest comes before the name (GU-0b D16). */
+          guestTitle: 'Start right away',
+        },
         quests: { title: 'Learn in five-minute quests', body: 'Letters, sounds and first words, with sound and pictures.' },
         /** "Saved and backed up": the app backs up every learner's progress with no sign-in (see `persona.parents.safe.bullets.backup`). */
-        collect: { title: 'Collect and keep going', body: 'Earn Korean culture cards. Your progress is saved and backed up.' },
+        collect: {
+          title: 'Collect and keep going',
+          body: 'Earn Korean culture cards. Your progress is saved and backed up.',
+          /**
+           * [GU] Step 3's line while the `guestLesson` claim is on: a first quest played before a name is kept in that
+           * browser only and is backed up once a name is added (the Privacy Policy's first-quest bullet).
+           */
+          guestBody: 'Earn Korean culture cards. Add a name, and your progress is saved and backed up.',
+        },
       },
       routeBody: 'Earn Korean culture cards and see your whole Learning Route: where you are and what comes next.',
       /**
@@ -186,6 +211,13 @@ export const landing = {
        * line, not a fourth step: the home's word budget (280, F-SITE-002 §3.11) is full with it.
        */
       levelBody: 'Pick a name and a Hoya. A level check is optional.',
+      /**
+       * [GU] Step 1's line while the `guestLesson` claim is on (AMENDMENTS-GUEST-FIRST-LESSON section 13.2), under
+       * `steps.start.guestTitle`: with the `levelCheck` claim on, the level check comes after the first quest (Home's
+       * level-check card); with it off, the name comes after the first quest.
+       */
+      guestLevelBody: 'Play your first quest. Check your level after.',
+      guestStartBody: 'Play your first quest, then add a name.',
     },
     promises: {
       /** The section's visually hidden heading. */
@@ -297,6 +329,11 @@ export const landing = {
         level: {
           q: 'I already know some Hangul. Do I have to start at the beginning?',
           a: 'No. When you start, tap “I already know some Korean” and take a level check. Hoya suggests where to begin.',
+          /**
+           * [GU] The answer while the `guestLesson` claim is on too: the first quest comes first, so the level check is
+           * Home's card. The button is `learner.placement.homeCard.take` word for word.
+           */
+          guestA: 'No. Play the first quest, add a name, then tap “Take the level check” on Home. Hoya suggests where to begin.',
         },
       },
       /** One paragraph under "What you learn first": what comes after Stage 1. */
@@ -630,6 +667,16 @@ export const landing = {
             contact:
               'Account contact: the email a parent, teacher or school administrator signs in with, used for sign-in and account recovery. The email of the grown-up who buys a plan is also used for that plan\'s receipts. A school administrator cannot buy or manage the school\'s plan, so their email is not used for the school\'s receipts.',
             device: 'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
+            /**
+             * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.3 (row GU-6; shown only while the `guestLesson` claim is on,
+             * so from GU-7): quest 1 tried before a profile exists. The guest record (`hr:guest`) and the quest's results
+             * stay in that browser with no name and are never synced (section 11); the save makes them an ordinary
+             * learner's, backed up like any other (F-SYNC-002). The app's sweep removes a never-saved record on its next
+             * open after `days` days without play (`sharedDays` on a device with learner profiles, GU-D13); the
+             * browser's own clearing, or its storage limits, can remove it first. English only (L10).
+             */
+            guest: ({ days, sharedDays }: LegalValues) =>
+              `Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after ${days} days without play (${sharedDays} days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.`,
           },
         },
         never: {
