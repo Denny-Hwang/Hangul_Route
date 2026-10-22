@@ -48,6 +48,7 @@ import { assertOneSender, prefixUpperBound } from './feedback-rules';
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import { clampPct, readOn, type RemoteConfigRow } from './remote-config-types';
 import { uniqueRollupKeys, type RollupKey, type RollupRow } from './rollup-types';
+import type { MemoryShardWrite, MemoryShardWriteResult, StoredMemoryShard } from './memory-shard-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -77,6 +78,8 @@ export interface D1Like {
 
 type Row = Record<string, unknown>;
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+/** A `memory_shards` row (migration 0016); `states` stays text. */
+const toMemoryShard = (r: Record<string, unknown>): StoredMemoryShard => ({ shard: str(r.shard), seq: Number(r.seq), states: str(r.states), updatedAt: str(r.updated_at) });
 const nstr = (v: unknown): string | null => (typeof v === 'string' ? v : null);
 const num = (v: unknown): number => (typeof v === 'number' ? v : Number(v ?? 0));
 const nnum = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
@@ -502,7 +505,10 @@ const TELEMETRY_DAILY_TABLES = ['telemetry_daily'] as const;
 export const TELEMETRY_DAILY_ROWS_PER_STATEMENT = 25;
 /** F-CURR-002 row CM-70a: the table of migration 0014 (section 11.2). */
 const ROLLUP_TABLES = ['learning_rollups'] as const;
+/** F-CURR-002 row CM-11: the table of migration 0016 (section 4.8), a child of `learners`. */
+const MEMORY_SHARD_TABLES = ['memory_shards'] as const;
 const RESET_TABLES = [
+  ...MEMORY_SHARD_TABLES,
   ...TELEMETRY_DAILY_TABLES,
   'remote_config', // migration 0013 (F-CURR-002 CM-2), no foreign keys
   ...ROLLUP_TABLES,
@@ -658,10 +664,12 @@ export class D1Db implements Db {
     // one transaction (F-SPACE-002 section 4.7, F-FEEDBACK-001 section 7.4). A table of migration 0005 or 0008
     // is named only once that migration has created it: an erase is the live caregiver route, and "no such
     // table" would roll the whole batch back if this Worker ever ran before the migration.
-    const present = await this.presentTables([...CLASS_MOVE_TABLES, ...FEEDBACK_TABLES, ...TRANSFER_TABLES]);
+    const present = await this.presentTables([...MEMORY_SHARD_TABLES, ...CLASS_MOVE_TABLES, ...FEEDBACK_TABLES, ...TRANSFER_TABLES]);
     const rateKeys = learnerRateKeys(learnerId);
     const pairPrefix = notePairPrefix(learnerId);
     const guarded: Array<[string, string, unknown[]]> = [
+      // F-CURR-002 row CM-11 (migration 0016): the learner's memory store.
+      ['memory_shards', 'DELETE FROM memory_shards WHERE learner_id = ?', [learnerId]],
       ['class_moves', 'DELETE FROM class_moves WHERE learner_id = ?', [learnerId]],
       ['class_scope_acks', 'DELETE FROM class_scope_acks WHERE learner_id = ?', [learnerId]],
       ['feedback_reports', 'DELETE FROM feedback_reports WHERE learner_id = ?', [learnerId]],
@@ -1774,6 +1782,42 @@ export class D1Db implements Db {
         toPct,
       ])) > 0
     );
+  }
+
+  // F-CURR-002 section 4.8 (row CM-11): the memory shards of migration 0016.
+  memoryShardsOf(learnerId: string, shards: readonly string[]): Promise<StoredMemoryShard[]> {
+    if (shards.length === 0) return Promise.resolve([]);
+    return this.many(`SELECT shard, seq, states, updated_at FROM memory_shards WHERE learner_id = ? AND shard IN (${placeholders(shards)}) ORDER BY shard`, [learnerId, ...shards], toMemoryShard);
+  }
+  memoryShardsSince(learnerId: string, since: number): Promise<StoredMemoryShard[]> {
+    return this.many('SELECT shard, seq, states, updated_at FROM memory_shards WHERE learner_id = ? AND seq > ? ORDER BY seq, shard', [learnerId, since], toMemoryShard);
+  }
+  async memoryHighestSeq(learnerId: string): Promise<number> {
+    return (await this.one('SELECT COALESCE(MAX(seq), 0) AS seq FROM memory_shards WHERE learner_id = ?', [learnerId], (r) => Number(r.seq))) ?? 0;
+  }
+  /**
+   * One batch, one statement per shard. The new `seq` is read inside each statement, so in D1's single writer every
+   * committed row has a higher `seq` than any row committed before it, and a reader's cursor never skips a later write.
+   * An update applies only at the `seq` the merge read; an insert only while the shard has no row.
+   */
+  async writeMemoryShards(learnerId: string, writes: readonly MemoryShardWrite[], updatedAt: string): Promise<MemoryShardWriteResult> {
+    if (writes.length === 0) return { written: [], conflicts: [] };
+    const next = '(SELECT COALESCE(MAX(seq), 0) + 1 FROM memory_shards WHERE learner_id = ?)';
+    const changes = await this.batchChanges(
+      writes.map((w): [string, unknown[]] =>
+        w.baseSeq === null
+          ? [
+              // WHERE before ON CONFLICT: an upsert on INSERT ... SELECT needs one to parse.
+              `INSERT INTO memory_shards (learner_id, shard, seq, states, updated_at) SELECT ?, ?, ${next}, ?, ? WHERE true ON CONFLICT (learner_id, shard) DO NOTHING`,
+              [learnerId, w.shard, learnerId, w.states, updatedAt],
+            ]
+          : [`UPDATE memory_shards SET states = ?, updated_at = ?, seq = ${next} WHERE learner_id = ? AND shard = ? AND seq = ?`, [w.states, updatedAt, learnerId, learnerId, w.shard, w.baseSeq]],
+      ),
+    );
+    const written: string[] = [];
+    const conflicts: string[] = [];
+    writes.forEach((w, i) => (changes[i] === 1 ? written : conflicts).push(w.shard));
+    return { written, conflicts };
   }
 
   /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */

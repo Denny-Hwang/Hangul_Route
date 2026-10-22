@@ -10,6 +10,7 @@ export * from './class-move-types';
 export * from './admin-types';
 export * from './remote-config-types';
 export type { RollupKey, RollupRow } from './rollup-types';
+export type { MemoryShardWrite, MemoryShardWriteResult, StoredMemoryShard } from './memory-shard-types';
 export { D1Db, MemoryDb };
 
 /** The dev / test backend when no D1 binding is present (only where dev fallbacks are opted in — lib/runtime). */
