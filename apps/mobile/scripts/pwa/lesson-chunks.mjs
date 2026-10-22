@@ -33,8 +33,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-5) plus a 4,531 B rounding margin. A row that adds to it raises this line with its measurement; the es / ko story
   // overlays still in the start bundle leave it with row CM-8b, before CM-46a adds narration. The phase-0 integration
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
-  // measurement plus an 8,835 B rounding margin.
-  startBundleRaw: 6_380_000,
+  // measurement plus an 8,835 B rounding margin. The site-entry row (AMENDMENTS-SITE-NEWUSER SN-1, #813) adds the
+  // site's `landing` strings in en, es and ko, which the learner bundle carries with the dictionary: main 49efb010b
+  // measures 6,374,902 B raw / 1,583,719 B gzip, #813 6,381,117 B raw (release `expo export` of its fix-stage head),
+  // and #806's site facts add 955 B on main (6,375,857 B). The line is #813's measurement plus #806's 955 B plus a
+  // 7,928 B rounding margin, so both rows fit once merged.
+  startBundleRaw: 6_390_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
