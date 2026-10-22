@@ -90,6 +90,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
       ports={ports}
       onOpenGame={(stepIndex) => navigation.navigate('Minigame', { questId, episodeId, stepIndex })}
       onBack={() => navigation.goBack()}
+      reviewsFor={profile ? profile.id : null}
     />
   );
 }

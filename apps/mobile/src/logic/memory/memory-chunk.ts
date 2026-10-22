@@ -13,6 +13,7 @@ import { useSyncStore } from '../../store/sync-store';
 import { useTierStore } from '../../store/tier-store';
 import { CONTENT_OVERLAYS } from '../content-locale';
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
+import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
@@ -111,3 +112,24 @@ export function dailyReviewApi(): DailyReviewApi {
   });
   return dailyReview;
 }
+
+/** A learner's stored rows and the review items, for the review surfaces; null when the store cannot be read. */
+const reviewInputs: ReviewInputs = async (profileId) => {
+  const [index, file] = await Promise.all([reviewItemStore.ensure(), memoryRuntime().file(profileId)]);
+  return file ? { index, rows: file.rows } : null;
+};
+
+/**
+ * The quest warm-up and Try these again (F-CURR-002 row CM-15), planned here beside the review engine and the
+ * store they read, so the sessions' own chunk (`screens/quest/quest-review-chunk.tsx`) shares no module with
+ * this one. Reached through `questReviewPlanner` of the boot module.
+ */
+export const questReviewPlanner = {
+  warmup: (input: WarmupRequest) => planQuestWarmup(reviewInputs, input),
+  again: (input: TryAgainRequest) => planQuestTryAgain(reviewInputs, input),
+  /** Reads what the plans read, so a plan asked for soon after is quick; a failed read is only a slower plan. */
+  preload: (profileId: string): Promise<void> => reviewInputs(profileId).then(
+    () => undefined,
+    () => undefined,
+  ),
+};

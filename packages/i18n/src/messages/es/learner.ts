@@ -1936,4 +1936,14 @@ export const learner = {
     enough: { title: 'Por hoy ya es suficiente.', body: 'Hoya te traerá el resto pronto.' },
     doneToday: { title: 'Repaso diario hecho hoy' },
   },
+  warmUp: {
+    pill: 'Repaso',
+    intro: 'Un repaso rápido antes de empezar.',
+    skip: { cta: 'Saltar repaso' },
+    done: 'Repaso hecho',
+  },
+  tryAgain: {
+    cta: 'Probar estos otra vez',
+    intro: 'Otro vistazo rápido a los más difíciles.',
+  },
 } satisfies DeepPartial<Messages['learner']>;

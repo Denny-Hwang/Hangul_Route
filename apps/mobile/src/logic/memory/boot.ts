@@ -75,6 +75,21 @@ export function recordAnswers(profileId: string, answers: readonly MemoryAnswer[
   return quietly((r) => r.recordAnswers(profileId, answers, at));
 }
 
+export type QuestReviewPlanner = MemoryChunk['questReviewPlanner'];
+
+/**
+ * The planner of the quest warm-up and Try these again (rows CM-15), in the memory store's chunk with the review
+ * engine: null unless the profile records (a review planned from a pool nobody fills would be empty or stale), or
+ * when the chunk cannot load.
+ */
+export function questReviewPlanner(profileId: string): Promise<QuestReviewPlanner | null> {
+  if (!memoryRecordsFor(profileId)) return Promise.resolve(null);
+  return memoryChunk().then(
+    (m) => m.questReviewPlanner,
+    () => null,
+  );
+}
+
 /** The active learner's start: the one-time seeding and the last day's `memory.daily`, when it records. */
 export function activateMemory(profileId: string | null = useProfileStore.getState().activeId): void {
   if (!memoryRecordsFor(profileId)) return;

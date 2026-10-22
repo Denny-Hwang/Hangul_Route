@@ -2521,4 +2521,19 @@ export const learner = {
     /** The collected Daily Review card on Home, tapped. */
     doneToday: { title: 'Daily Review done today' },
   },
+  /**
+   * The warm-up before a Stage 2+ quest (F-CURR-002 section 4.5, row CM-15): up to 3 earlier items, outside the six
+   * steps, nothing scored. The rounds reuse the shipped instruction lines. Read by the `review-copy` rule.
+   */
+  warmUp: {
+    pill: 'Warm-up',
+    intro: 'A quick look back before we start.',
+    skip: { cta: 'Skip warm-up' },
+    done: 'Warmed up',
+  },
+  /** Try these again on the reward step (F-CURR-002 section 4.5): the quest's misses, stars only, never required. */
+  tryAgain: {
+    cta: 'Try these again',
+    intro: 'A quick second look at the tricky ones.',
+  },
 } as const;

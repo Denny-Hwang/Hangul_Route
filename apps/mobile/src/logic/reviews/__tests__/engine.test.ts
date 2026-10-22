@@ -743,3 +743,22 @@ describe('topic words, read where they are (section 4.8 step 4)', () => {
     expect(Object.keys(engineStates({ 'lex:x': undefined }))).toEqual([]);
   });
 });
+
+describe('a session that asks no higher than a rung (row CM-15: the quick warm-up and Try these again)', () => {
+  it('asks an item the ladder would ask at produce at read instead, keeps recognize and read as they are, and the voice rule still holds', () => {
+    const held = mk('lex:held', { home: 'rites', cells: ['episode:stage2-rites'] });
+    const fresh = mk('lex:fresh', { home: 'nature', cells: ['episode:stage2-nature'] });
+    const states = { 'lex:held': { st: st({ b: 4, s: 4, c: 2, r: 3 }) }, 'lex:fresh': { st: st({ b: 1, c: 0 }) } };
+    const quest = { cell: 'episode:stage3-life', stage: 3 };
+    expect(buildWarmup(ctxOf([held, fresh], states), quest).questions.find((q) => q.itemId === 'lex:held')?.rung).toBe('produce');
+    const capped = buildWarmup(ctxOf([held, fresh], states, { maxRung: 'read' }), quest).questions;
+    expect(capped.map((q) => [q.itemId, q.rung, q.format])).toEqual(
+      expect.arrayContaining([
+        ['lex:held', 'read', 'read-pick'],
+        ['lex:fresh', expect.stringMatching(/^(recognize|read)$/), expect.stringMatching(/^(hear-pick|read-pick)$/)],
+      ]),
+    );
+    const quiet = buildTryAgain(ctxOf([held, fresh], states, { maxRung: 'read', voice: false }), ['lex:held', 'lex:fresh']).questions;
+    expect(quiet.every((q) => q.rung === 'read' && q.format === 'read-pick')).toBe(true);
+  });
+});

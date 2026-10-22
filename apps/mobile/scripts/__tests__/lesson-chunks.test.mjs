@@ -7,6 +7,7 @@ import {
   LOCALE_CHUNKS,
   PRECACHE_BUDGET,
   MEMORY_CHUNKS,
+  QUEST_REVIEW_CHUNKS,
   REVIEW_CHUNKS,
   ROOT_CHUNKS,
   WEB_JS_DIR,
@@ -303,9 +304,12 @@ describe('precacheReport and its budget lines', () => {
     // route, Home card and strings; its screen, rounds and engine are chunks). The margin stays under 10 KB, so the stories, the locale text,
     // the grown-up roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
     // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
+    // F-CURR-002 row CM-15 measured 4,744,698 B (the quest warm-up's and Try these again's gates in the player, the
+    // hand-over to Results, the preload, the review-kind gate of the sync and backup paths, the merge's retention; their
+    // sessions are a chunk of their own).
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_598).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_598).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_698).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_744_698).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
@@ -423,5 +427,22 @@ describe('the Daily Review chunk (F-CURR-002 row CM-14)', () => {
     const start = { url: START, text: 'var m="review-chunk:daily";' };
     expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`daily-review-chunk is in the start bundle ${START}: a static import pulled it in`]);
     expect(markedChunkProblems({ chunks: REVIEW_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
+  });
+});
+
+describe('the quest warm-up and Try these again chunk (F-CURR-002 row CM-15)', () => {
+  it('names the chunk the quest player loads, and its marker is the one the chunk module exports', () => {
+    expect(QUEST_REVIEW_CHUNKS).toEqual([{ name: 'quest-review-chunk', marker: 'quest-review-chunk:session' }]);
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('src/screens/quest/quest-review-chunk.tsx')).toContain(`export const QUEST_REVIEW_CHUNK = '${QUEST_REVIEW_CHUNKS[0].marker}';`);
+    expect(read('src/screens/quest/quest-reviews.ts')).toContain(`import('./quest-review-chunk')`);
+  });
+
+  it('fails a build that pulled the sessions into the start bundle', () => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.QUEST_REVIEW_CHUNK="quest-review-chunk:session"});`;
+    const chunk = { url: `${WEB_JS_DIR}/quest-review-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var m="quest-review-chunk:session";' };
+    expect(markedChunkProblems({ chunks: QUEST_REVIEW_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`quest-review-chunk is in the start bundle ${START}: a static import pulled it in`]);
+    expect(markedChunkProblems({ chunks: QUEST_REVIEW_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
   });
 });

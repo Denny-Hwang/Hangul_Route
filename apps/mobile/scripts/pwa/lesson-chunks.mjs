@@ -154,6 +154,14 @@ export const MEMORY_CHUNKS = Object.freeze([Object.freeze({ name: 'memory-chunk'
 export const REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'daily-review-chunk', marker: 'review-chunk:daily' })]);
 
 /**
+ * The quest warm-up and Try these again (F-CURR-002 row CM-15): the sessions and the round view are a bundle of
+ * their own (the review engine and the planning ride in the memory chunk), reached only through the literal `import()` of `src/screens/quest/quest-reviews.ts`
+ * while `questWarmup` or `missedPractice` is on, so the start bundle carries none of it. The chunk module exports its
+ * marker (`QUEST_REVIEW_CHUNK`).
+ */
+export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-review-chunk', marker: 'quest-review-chunk:session' })]);
+
+/**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves

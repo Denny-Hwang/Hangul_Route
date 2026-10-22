@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CurriculumMetaSchema } from '../curriculum/draft';
-import { isDateKey } from '../curriculum/dates';
+import { daysBetween, isDateKey } from '../curriculum/dates';
 import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
 import { PlacementResultSchema } from './placement';
 import { PlanItemSchema } from './plan-item';
@@ -115,6 +115,60 @@ export function withKnownReviews<T extends { reviews: unknown }>(snapshot: T): T
   const reviews = read.success ? read.data : [];
   const sent = snapshot.reviews;
   return Array.isArray(sent) && sent.length === reviews.length ? snapshot : { ...snapshot, reviews };
+}
+
+/**
+ * Review kinds an app build from before row CM-3b cannot read: its `ReviewKindSchema` was strict inside the
+ * snapshot and backup schemas, so one such entry failed the whole copy (F-CURR-002 section 13, "Older builds and
+ * rollbacks after a W→A row ships"). Row CM-15 writes `warmup` first, so it ships the gate: an app that reads a
+ * gated kind declares the capability of the same name (`?cap=warmup` on its snapshot read, its snapshot write and
+ * its Rescue Code claim); the Worker serves these entries only to a caller that declares them and keeps the stored
+ * ones when a caller that does not re-uploads (`packages/backend/src/lib/review-kinds.ts`), and a backup file never
+ * holds one, as any build may restore a file. Row CM-21 appends `cell-check`.
+ */
+export const GATED_REVIEW_KINDS = ['warmup'] as const satisfies readonly ReviewKind[];
+
+/** The reviews a reader may receive: without the gated kinds it does not declare. The list itself when nothing drops. */
+export function reviewsForReader<T extends { kind: unknown }>(reviews: readonly T[], caps: ReadonlySet<string>): readonly T[] {
+  const hidden = GATED_REVIEW_KINDS.filter((kind) => !caps.has(kind)) as readonly unknown[];
+  if (hidden.length === 0 || !reviews.some((r) => hidden.includes(r.kind))) return reviews;
+  return reviews.filter((r) => !hidden.includes(r.kind));
+}
+
+/**
+ * Kinds kept for 14 local days (F-CURR-002 section 4.8, the `daily` rule): the quest warm-up and Try these again
+ * (row CM-15) carry no best result, and each writes one entry per local day. After every write and merge, on the
+ * device and in the Worker's write path, the list keeps only the entries of such a kind whose `scope` (the local
+ * day) is within 14 days of the newest entry of that kind, so every side prunes alike and a union never brings a
+ * pruned entry back. An entry whose scope is not a local day is kept. Row CM-14 appends `daily`.
+ */
+export const RETAINED_REVIEW_KINDS = ['warmup', 'feedback'] as const satisfies readonly ReviewKind[];
+export const REVIEW_RETENTION_DAYS = 14;
+
+/**
+ * The reviews after the retention rule; the list itself when nothing is pruned. `latestDay` (the latest local day
+ * any time zone has now, `latestLocalDay`) bounds a wrong device clock, as it bounds `dayLog`: an entry of a kept kind
+ * dated after it is dropped, so it is never the newest and cannot prune the real days (section 13, wrong device clock).
+ */
+export function pruneReviews<T extends { kind: unknown; scope: unknown }>(reviews: readonly T[], latestDay?: string): readonly T[] {
+  const newest = new Map<unknown, string>();
+  const day = (r: T): string | null => (typeof r.scope === 'string' && isDateKey(r.scope) ? r.scope : null);
+  const retained = RETAINED_REVIEW_KINDS as readonly unknown[];
+  const ahead = (d: string): boolean => latestDay !== undefined && d > latestDay;
+  for (const r of reviews) {
+    const d = day(r);
+    if (d === null || !retained.includes(r.kind) || ahead(d)) continue;
+    const held = newest.get(r.kind);
+    if (held === undefined || d > held) newest.set(r.kind, d);
+  }
+  const kept = reviews.filter((r) => {
+    const d = day(r);
+    if (d === null || !retained.includes(r.kind)) return true;
+    if (ahead(d)) return false;
+    const top = newest.get(r.kind);
+    return top === undefined || daysBetween(d, top) < REVIEW_RETENTION_DAYS;
+  });
+  return kept.length === reviews.length ? reviews : kept;
 }
 
 /** Bounds for the F-CURR-002 snapshot fields: ids and keys up to 64 characters, ISO values up to 40. */

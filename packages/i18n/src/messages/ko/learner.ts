@@ -1869,4 +1869,14 @@ export const learner = {
     enough: { title: '오늘은 이만하면 충분해요.', body: '나머지는 호야가 곧 다시 보여 줄 거예요.' },
     doneToday: { title: '오늘의 복습을 마쳤어요' },
   },
+  warmUp: {
+    pill: '준비 운동',
+    intro: '시작하기 전에 잠깐 되짚어 봐요.',
+    skip: { cta: '준비 운동 건너뛰기' },
+    done: '준비 운동 끝',
+  },
+  tryAgain: {
+    cta: '한 번 더 해 보기',
+    intro: '헷갈렸던 것을 한 번 더 살펴봐요.',
+  },
 } satisfies DeepPartial<Messages['learner']>;
