@@ -302,6 +302,7 @@ export const landing = {
     classList: 'La página de la clase: el resumen de esta semana de toda la clase.',
     lectureSlide: 'Una diapositiva del Modo proyección en pantalla grande: una letra, el orden de sus trazos y su sonido.',
     caption: { home: 'Pantalla de inicio', game: 'Un minijuego', card: 'Una tarjeta cultural' },
+    og: (brand: string, tagline: string) => `Hoya, el tigre, junto a las palabras ${brand}: ${tagline}`,
   },
   cards: {
     listLabel: 'Tarjetas de la Etapa 1',
@@ -394,9 +395,6 @@ export const landing = {
     home: 'Ir a la página de inicio',
     start: 'Empezar a aprender',
     title: 'No encontramos esta página',
-  },
-  captures: {
-    og: (brand: string, tagline: string) => `Hoya, el tigre, junto a las palabras ${brand}: ${tagline}`,
   },
   localeBanner: {
     label: 'Sugerencia de idioma',

@@ -302,6 +302,7 @@ export const landing = {
     classList: '반 페이지: 반 전체의 이번 주 요약.',
     lectureSlide: '큰 화면에 띄운 강의 모드 슬라이드: 글자, 획순, 소리.',
     caption: { home: '홈 화면', game: '미니게임', card: '문화 카드' },
+    og: (brand: string, tagline: string) => `호랑이 호야와 ${brand} 로고. 문구: ${tagline}`,
   },
   cards: {
     listLabel: '1단계 문화 카드',
@@ -393,9 +394,6 @@ export const landing = {
     home: '홈으로 가기',
     start: '배우기 시작하기',
     title: '페이지를 찾을 수 없어요',
-  },
-  captures: {
-    og: (brand: string, tagline: string) => `호랑이 호야와 ${brand} 로고. 문구: ${tagline}`,
   },
   localeBanner: {
     label: '언어 추천',

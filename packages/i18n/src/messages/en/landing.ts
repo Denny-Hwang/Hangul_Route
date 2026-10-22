@@ -446,6 +446,11 @@ export const landing = {
     lectureSlide: 'A Lecture mode slide on a big screen: a letter, its stroke order and its sound.',
     /** The short visible captions under the three `/learners` captures. */
     caption: { home: 'Home screen', game: 'A mini-game', card: 'A heritage card' },
+    /**
+     * The share image of each locale (`public/site/<locale>/og.png`, §3.14, row SN-2), `og:image:alt` and
+     * `twitter:image:alt`; the brand and the locale's tagline are passed in, as the image shows them.
+     */
+    og: (brand: string, tagline: string) => `Hoya the tiger next to the words ${brand}: ${tagline}`,
   },
   /**
    * The heritage-card grid in the `/learners` cards fold (`HeritageCardsPreview`). The Korean, romanization, gloss and
@@ -868,14 +873,6 @@ export const landing = {
     home: 'Go to the home page',
     start: 'Start learning',
     title: 'Page not found',
-  },
-  /**
-   * Alt text of the site's pictures (AMENDMENTS-SITE-NEWUSER appendix A). `og`: the share image of each locale
-   * (`public/site/<locale>/og.png`, §3.14, row SN-2), `og:image:alt` and `twitter:image:alt`; the brand and the
-   * locale's tagline are passed in, as the image shows them.
-   */
-  captures: {
-    og: (brand: string, tagline: string) => `Hoya the tiger next to the words ${brand}: ${tagline}`,
   },
   /**
    * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a
