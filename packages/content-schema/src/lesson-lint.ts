@@ -877,9 +877,11 @@ function tierOfCell(cell: string, shipped: ReadonlySet<string>): CurriculumTier 
 /**
  * `items-stable-id` (§4.2, row CM-10), over the tree when it holds the frozen-id snapshot
  * (`REVIEW_SNAPSHOT_FILE`; validate-content.mjs adds it and the frozen Stage 1 table). An issue of an
- * item is reported on the file that teaches it, with that file's severity; an issue of the snapshot
- * itself (a frozen id no longer taught, an alias or retirement that names no frozen id) on the
- * snapshot, as an error: scripts/build-review-items.mjs stops the build on those.
+ * item is reported on the file that teaches it, an issue of the snapshot itself (a frozen id no
+ * longer taught, an alias or retirement that names no frozen id) on the snapshot. Only a new item
+ * not frozen yet takes its file's severity (a warning for Volume 1 and a shipped story); every other
+ * issue is an error whatever the file, as scripts/build-review-items.mjs (`isBlocking`) stops the
+ * build, and with it `pnpm install` and the dev server, on it.
  */
 function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<string>, push: Push): void {
   const raw = tree.get(REVIEW_SNAPSHOT_FILE);
@@ -903,7 +905,8 @@ function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<
   });
   for (const issue of issues) {
     const where = issueWhere(issue);
-    push(where.file, issue.cell === undefined ? 'volume2' : tierOfCell(issue.cell, shipped), { rule: 'items-stable-id', path: where.path, message: issue.message });
+    const tier = issue.code === 'not-frozen' && issue.cell !== undefined ? tierOfCell(issue.cell, shipped) : 'volume2';
+    push(where.file, tier, { rule: 'items-stable-id', path: where.path, message: issue.message });
   }
 }
 

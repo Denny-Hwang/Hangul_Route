@@ -104,7 +104,7 @@ describe('the all-107-quests fixture (scenario S-c)', () => {
     const last = [...days.keys()].sort().at(-1) as string;
     expect(daysBetween(SEED_DAY, last)).toBe(seed.spreadDays);
     // Every taught lesson item that is not a topic word or retired is seeded.
-    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && i.cells.some((c) => c.startsWith('episode:')));
+    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some((c) => c.startsWith('episode:')));
     expect(seed.count).toBe(expected.length);
     expect(seed.spreadDays).toBeLessThanOrEqual(62);
   });
@@ -112,7 +112,7 @@ describe('the all-107-quests fixture (scenario S-c)', () => {
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
     const lastQuest = LESSON_QUESTS[106];
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
-    const lastCellItems = ITEMS.filter((i) => i.cells.includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
+    const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
     expect(firstDay.some((id) => lastCellItems.includes(id))).toBe(true);
   });
 
@@ -136,7 +136,7 @@ describe('the all-107-quests fixture (scenario S-c)', () => {
     s.questDoneAt = { [story?.id as string]: '2026-09-01T00:00:00.000Z' };
     const out = deriveSeed(input(s));
     const slug = (story?.episodeId as string).slice('episode:shelf-'.length);
-    const storyItems = ITEMS.filter((i) => i.cells.includes(`story:${slug}`) && !i.id.startsWith('vocab:'));
+    const storyItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(`story:${slug}`) && !i.id.startsWith('vocab:'));
     expect(out.count).toBe(storyItems.length);
   });
 

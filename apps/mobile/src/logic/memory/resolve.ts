@@ -60,9 +60,9 @@ export function buildLookup(items: readonly ReviewItem[], retired: ReadonlySet<s
   return { byId: new Map(items.map((i) => [i.id, i])), byKo, retired };
 }
 
-/** The best of several items with the same Korean: the round's own cell, the kind it asks, an initial symbol before a final, then the id. */
+/** The best of several items with the same Korean: one the round's own cell teaches or asks again, the kind it asks, an initial symbol before a final, then the id. */
 function pick(candidates: readonly ReviewItem[], cell: string, kind: ReviewItemKind | undefined): ReviewItem | undefined {
-  const score = (i: ReviewItem): number => (i.cells.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
+  const score = (i: ReviewItem): number => (i.cells.includes(cell) || i.asked.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
   let best: ReviewItem | undefined;
   for (const item of candidates) {
     if (best === undefined || score(item) > score(best) || (score(item) === score(best) && item.id < best.id)) best = item;

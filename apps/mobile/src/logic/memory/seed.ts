@@ -11,8 +11,8 @@ import { cellOfEpisode, shardOf } from './resolve';
  * every device in the same time zone, so the seeded states (`n` = 0) are never uploaded and each
  * device derives them again from `questDoneAt` and `memSeededAt`.
  *
- * 1. Every quest done in `questDoneAt` by `memSeededAt` seeds its cell's items: box 2 when a quest
- *    of the item scored 3 stars, box 1 otherwise; `n` stays 0, so a seeded item counts in no
+ * 1. Every quest done in `questDoneAt` by `memSeededAt` seeds its cell's items (the items it teaches
+ *    and those it asks again): box 2 when a quest of the item scored 3 stars, box 1 otherwise; `n` stays 0, so a seeded item counts in no
  *    learner-facing number until it is answered. A snapshot from before `questDoneAt` is latched
  *    first (`latchQuests`, its one-time backfill from `completedAt`).
  * 2. The items are spread from the day after `memSeededAt`, at most 15 a day, so over
@@ -106,7 +106,8 @@ export function deriveSeed(input: SeedInput): Seed {
     let latest = Number.NEGATIVE_INFINITY;
     let earliest = Number.POSITIVE_INFINITY;
     let threeStar = false;
-    for (const cell of item.cells) {
+    // The cells that teach it and those that ask it again (a recycle): a done quest of either has shown it.
+    for (const cell of [...item.cells, ...item.asked]) {
       const c = byCell.get(cell);
       if (!c) continue;
       latest = Math.max(latest, c.latest);

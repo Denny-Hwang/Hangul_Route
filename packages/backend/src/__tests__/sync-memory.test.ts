@@ -134,6 +134,22 @@ describe('/api/sync/learners/:id/memory (F-CURR-002 section 4.8, Worker first)',
       expect(declared.status).toBe(413);
     });
 
+    it('a chunked body with no declared length is read only up to the cap, then answers 413', async () => {
+      let chunks = 0;
+      const chunk = new TextEncoder().encode('x'.repeat(16 * 1024));
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          chunks += 1;
+          if (chunks > 40) controller.close();
+          else controller.enqueue(chunk);
+        },
+      });
+      const res = await app.request(`/api/sync/learners/${SUNI}/memory`, { method: 'POST', headers: phone, body, duplex: 'half' } as RequestInit);
+      expect(res.status).toBe(413);
+      // 64 KB is four chunks; the fifth passes the cap and the read stops there (a stream may pull one ahead).
+      expect(chunks).toBeLessThanOrEqual(6);
+    });
+
     it('more shards than the cap answer 413', async () => {
       const shards = Object.fromEntries(Array.from({ length: MEMORY_PUSH_MAX_SHARDS + 1 }, (_, i) => [`pack:p${i}`, { 'lex:sagwa': state() }]));
       expect((await push(phone, shards)).status).toBe(413);
@@ -198,6 +214,20 @@ describe('/api/sync/learners/:id/memory (F-CURR-002 section 4.8, Worker first)',
       await push(phone, { stage2: { 'lex:sagwa': miss } });
       await push(tablet, { stage2: { 'lex:sagwa': older } });
       expect((await pull(tablet, 0)).pull?.shards[0]?.states['lex:sagwa']).toEqual(miss);
+    });
+
+    it('a far-future at from a wrong device clock does not beat a later real answer from another device (section 13)', async () => {
+      const tablet = await bind(TABLET, 'full');
+      const wrong = state({ b: 7, d: '2030-01-10', c: 3, r: RECOGNIZE, n: 2, s: 7, at: '2030-01-01T00:00:00.000Z' });
+      await push(phone, { stage2: { 'lex:sagwa': wrong } });
+      // Nothing stored yet: the far-future at is read as the Worker's now.
+      expect((await pull(tablet, 0)).pull?.shards[0]?.states['lex:sagwa']).toEqual({ ...wrong, at: NOW.toISOString() });
+      vi.setSystemTime(new Date('2026-10-22T13:00:00.000Z'));
+      const real = state({ b: 2, d: '2026-10-23', c: 1, r: READ, n: 3, s: 2, at: '2026-10-22T12:30:00.000Z' });
+      await push(tablet, { stage2: { 'lex:sagwa': real } });
+      // The wrong clock sends its state again on its next sync: the stored schedule is kept, the grow-only fields still merge.
+      await push(phone, { stage2: { 'lex:sagwa': wrong } });
+      expect((await pull(phone, 0)).pull?.shards[0]?.states['lex:sagwa']).toEqual({ ...real, r: RECOGNIZE | READ, n: 3, s: 7 });
     });
 
     it('seq paging: a late upload with an old at still reaches every other device, and a cursor never skips a write', async () => {

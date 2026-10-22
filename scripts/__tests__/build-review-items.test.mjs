@@ -144,8 +144,10 @@ describe("build-review-items.mjs over the repository's content", () => {
     writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...frozen, retired: ["lex:somsatang"] }));
     const retired = run(root);
     assert.equal(retired.status, 0, retired.stdout);
-    assert.match(chunkFile(root), /export const REVIEW_RETIRED_IDS: readonly string\[\] = \["lex:somsatang"\];/);
-    assert.ok(!chunkFile(root).includes('"lex:somsatang","솜사탕"'), "a retired id is in no row");
+    // The retired item keeps its id and Korean for reports, and is in no row.
+    assert.match(chunkFile(root), /export const REVIEW_RETIRED: readonly RetiredItemRow\[\] = \[\["lex:somsatang","솜사탕",""\]\];/);
+    const rowsPart = chunkFile(root).split("export const REVIEW_RETIRED")[0];
+    assert.ok(!rowsPart.includes('"lex:somsatang"'), "a retired id is in no row");
   });
 
   test("a broken frozen file is a content error; a usage error exits 2", () => {
@@ -166,9 +168,9 @@ describe("build-review-items.mjs over the repository's content", () => {
   });
 
   test("the hash covers the tables, the rows and the retired ids", () => {
-    const chunk = { tables: { cells: ["stage2-life"], homes: ["life"] }, rows: [["lex:sagwa", "사과", "", "apple", "", 0, 2 | 8, [0], 3, [], 0, ""]] };
+    const chunk = { tables: { cells: ["stage2-life"], homes: ["life"] }, rows: [["lex:sagwa", "사과", "", "apple", "", 0, 2 | 8, [0], 3, [], 0, "", []]] };
     const a = buildModules(chunk).hash;
-    assert.notEqual(buildModules(chunk, ["lex:old"]).hash, a);
+    assert.notEqual(buildModules(chunk, [["lex:old", "옛말", ""]]).hash, a);
     assert.notEqual(buildModules({ ...chunk, tables: { cells: ["stage3-life"], homes: ["life"] } }).hash, a);
     assert.equal(buildModules(chunk, []).hash, a);
   });

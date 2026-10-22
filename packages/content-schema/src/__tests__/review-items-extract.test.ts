@@ -163,7 +163,8 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
       ['pat', '안녕!', 'round', m('q2-c', 'storySteps.l1.label'), '', '', '', '', ''],
       ['pat', '사과를 먹어요.', 'round', m('q2-d', 'orderIt.rounds.o1.sentence.gloss'), 'word:food-apple', '', '', '', ''],
       ['rea', '메뉴', 'round', m('q2-e', 'realiaRead.realia.alt'), '', '', '', 'realia:menu-prices', ''],
-      ['lex', '김밥', 'round', '', '', 'loose', '', '', ''],
+      // A realia round's key word is glossed at the card entry it names.
+      ['lex', '김밥', 'round', 'minigame:s2-life-q2-e#realiaRead.realia.entries.e1.text.gloss', '', 'loose', '', '', ''],
       ['lex', '이천 원', 'round', m('q2-e', 'realiaRead.rounds.q2.options.a.text.gloss'), '', 'loose', '', '', ''],
       ['lex', '학교', 'round', m('q2-f', 'typeHangul.rounds.t1.target.gloss'), 'word:school', 'loose', '', '', 'sc'],
       ['lex', '달', 'round', m('q2-g', 'traceWord.rounds.t1.word.gloss'), '', 'loose', '', '', ''],
@@ -198,7 +199,7 @@ describe('stage1Occurrences: the Stage 1 symbol, syllable and word tables', () =
     {
       id: 'quest:stage1-letters-q1',
       steps: [
-        { id: 's2', kind: 'discover', discover: { pages: [{ items: [{ type: 'jamo', jamoId: 'jamo:a' }, { type: 'word', word: kt('가', 'ga') }] }] } },
+        { id: 's2', kind: 'discover', discover: { pages: [{ items: [{ type: 'jamo', jamoId: 'jamo:a', example: kt('아이', 'ai', 'child') }, { type: 'word', word: kt('나무', 'namu', 'tree'), picture: 'card:tree' }] }] } },
         { id: 's3', kind: 'practice', minigameRef: 'minigame:s1-letters-q1-play' },
         { id: 's4', kind: 'apply', minigameRef: 'minigame:s1-letters-q1-apply' },
         { id: 's5', kind: 'check', minigameRef: 'minigame:s1-letters-q1-check' },
@@ -232,9 +233,10 @@ describe('stage1Occurrences: the Stage 1 symbol, syllable and word tables', () =
   };
   const occs = stage1Occurrences({ symbols: SYMBOLS, quests, scopes });
 
-  it('reads each symbol a Discover page teaches and every scored scope of the quest', () => {
+  it('reads each symbol and word a Discover page teaches (not a letter\'s example word) and every scored scope of the quest', () => {
     expect(occs.map((o) => [o.kind, o.ko, o.source, o.glossKey ?? '', o.picture ?? ''])).toEqual([
       ['sym', 'ㅏ', 'discover', '', ''],
+      ['lex', '나무', 'discover', 'quest:stage1-letters-q1#steps.s2.discover.pages.0.items.1.word.gloss', 'card:tree'],
       ['sym', 'ㅏ', 'round', '', ''],
       ['sym', 'ㄱ', 'round', '', ''],
       ['syl', '가', 'round', '', ''],

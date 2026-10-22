@@ -1,4 +1,4 @@
-import type { MemoryItemState } from '@hangul-route/content-schema/memory';
+import { mergeMemoryShard, type MemoryItemState, type MemoryShardStates } from '@hangul-route/content-schema/memory';
 import { describe, expect, it } from 'vitest';
 import { MemoryDb, type Db, type MemoryShardWrite } from '../../db';
 import { MEMORY_WRITE_ATTEMPTS, MemoryWriteConflict, planShardWrites, pushMemory, readShardStates } from '../memory-shards';
@@ -27,11 +27,63 @@ describe('planShardWrites', () => {
       { shard: 'stage2', seq: 4, states: JSON.stringify({ 'lex:sagwa': state() }), updatedAt: T },
       { shard: 'week', seq: 5, states: JSON.stringify({ 'lex:chuseok': state() }), updatedAt: T },
     ];
-    const writes = planShardWrites(stored, { week: { 'lex:chuseok': state() }, stage3: { 'pat:n-juseyo': state() }, stage2: { 'lex:bae~pear': state() } });
+    const writes = planShardWrites(stored, { week: { 'lex:chuseok': state() }, stage3: { 'pat:n-juseyo': state() }, stage2: { 'lex:bae~pear': state() } }, NOW);
     expect(writes).toEqual([
       { shard: 'stage2', states: JSON.stringify({ 'lex:bae~pear': state(), 'lex:sagwa': state() }), baseSeq: 4 },
       { shard: 'stage3', states: JSON.stringify({ 'pat:n-juseyo': state() }), baseSeq: null },
     ]);
+  });
+});
+
+describe('planShardWrites, the in-place merge', () => {
+  /** A small seeded generator, so the cases are the same on every run. */
+  const rng = (seed: number): (() => number) => () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  const pick = (next: () => number, max: number): number => Math.floor(next() * max);
+  const randomState = (next: () => number): MemoryItemState => ({
+    b: pick(next, 8),
+    d: pick(next, 4) === 0 ? null : `2026-10-2${pick(next, 9) + 1}`,
+    c: pick(next, 4),
+    r: pick(next, 8),
+    n: pick(next, 5) + 1,
+    f: `2026-10-0${pick(next, 9) + 1}`,
+    s: pick(next, 8),
+    at: `2026-10-22T0${pick(next, 3)}:00:00.000Z`,
+  });
+  const randomShard = (next: () => number, size: number): MemoryShardStates =>
+    Object.fromEntries(Array.from({ length: size }, () => [`lex:w${pick(next, 12)}`, randomState(next)]));
+
+  it('writes exactly the text of mergeMemoryShard of the two copies, and nothing when that equals the stored text', () => {
+    const next = rng(822);
+    let unchanged = 0;
+    for (let k = 0; k < 400; k += 1) {
+      // The Worker wrote the stored text, so it is a merged (key-ordered) shard.
+      const storedStates = mergeMemoryShard({}, randomShard(next, pick(next, 8)));
+      const sent = randomShard(next, pick(next, 4));
+      const rows = Object.keys(storedStates).length > 0 ? [{ shard: 'stage2', seq: 3, states: JSON.stringify(storedStates), updatedAt: T }] : [];
+      const expected = JSON.stringify(mergeMemoryShard(storedStates, sent));
+      const writes = planShardWrites(rows, { stage2: sent }, NOW);
+      if (rows.length > 0 && expected === rows[0]?.states) {
+        unchanged += 1;
+        expect(writes).toEqual([]);
+      } else {
+        expect(writes).toEqual([{ shard: 'stage2', states: expected, baseSeq: rows.length > 0 ? 3 : null }]);
+      }
+    }
+    expect(unchanged).toBeGreaterThan(0);
+  });
+
+  it('a pushed at a little ahead of the Worker clock is read as now; far ahead it keeps the stored schedule and still merges the grow-only fields', () => {
+    const storedItem = state({ b: 4, d: '2026-10-26', c: 1, r: 1, n: 5, s: 4, at: '2026-10-22T11:00:00.000Z' });
+    const rows = [{ shard: 'stage2', seq: 2, states: JSON.stringify({ 'lex:sagwa': storedItem }), updatedAt: T }];
+    const soon = planShardWrites(rows, { stage2: { 'lex:sagwa': state({ b: 2, at: '2026-10-22T12:05:00.000Z' }) } }, NOW);
+    expect(JSON.parse(soon[0]?.states ?? '{}')['lex:sagwa']).toMatchObject({ b: 2, at: T });
+    const far = planShardWrites(rows, { stage2: { 'lex:sagwa': state({ b: 7, d: '2030-01-01', c: 3, r: 4, n: 9, s: 7, at: '2030-01-01T00:00:00.000Z' }) } }, NOW);
+    expect(JSON.parse(far[0]?.states ?? '{}')['lex:sagwa']).toEqual({ ...storedItem, r: 5, n: 9, s: 7 });
+    const fresh = planShardWrites([], { stage3: { 'pat:n-juseyo': state({ at: '2030-01-01T00:00:00.000Z' }) } }, NOW);
+    expect(JSON.parse(fresh[0]?.states ?? '{}')['pat:n-juseyo'].at).toBe(T);
   });
 });
 

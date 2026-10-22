@@ -41,10 +41,9 @@ function countingD1(d1: D1Like): D1Like & { rowsWritten: () => number } {
 }
 
 describe('migration 0016_memory_shards.sql · production safety', () => {
-  it('is the only migration with its number, and the newest', () => {
+  it('is the only migration with its number (scripts/check-migrations.mjs guards the numbering)', () => {
     const files = readdirSync(DIR).filter((f) => f.endsWith('.sql'));
     expect(files.filter((f) => f.startsWith('0016_'))).toEqual([FILE]);
-    expect(files.sort().at(-1)).toBe(FILE);
   });
 
   it('is one CREATE TABLE and one CREATE INDEX: no ALTER, DROP, UPDATE, DELETE or INSERT', () => {

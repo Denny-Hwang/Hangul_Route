@@ -12,6 +12,7 @@ const item = (over: Partial<ReviewItem> & Pick<ReviewItem, 'id' | 'kind' | 'ko'>
   stage: 2,
   volume: 1,
   cells: ['episode:stage2-life'],
+  asked: [],
   formats: ['read-pick'],
   soundChange: false,
   homophoneOf: [],
