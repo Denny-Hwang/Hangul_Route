@@ -5,7 +5,7 @@ import {
   type VocabProgress,
   type VocabTopicProgress,
 } from '@hangul-route/content-schema';
-import { MIN_BOX, addDays, onHinted, onRight, onSelf, onWrong, type Schedule } from './srs';
+import { MIN_BOX, addDays, isDue, onHinted, onRight, onSelf, onWrong, type Schedule } from './srs';
 
 /**
  * Word progress events and the pure reducer — F-VOC-005 section 3.2.
@@ -116,6 +116,32 @@ function caughtOf(caught: unknown): number {
   return typeof caught === 'number' && Number.isInteger(caught) && caught >= 0 ? caught : 0;
 }
 
+/** How `applyVocabEvents` schedules. */
+export interface VocabRuleOptions {
+  /**
+   * The spacing rule of F-VOC-005 P3 as amended by F-CURR-002 section 4.3 (row CM-0b), applied by row
+   * CM-12 while `memoryRecord` is on for the profile: only a word's first answer of the local day,
+   * on a due word, can raise its box; a wrong answer lowers it at most once a local day; "Got it"
+   * never raises a word that fell today. Off, the section 3.2 table applies as before.
+   */
+  spacing?: boolean;
+}
+
+/**
+ * Whether the word fell today (F-VOC-005 section 3.4, the spacing rule): read before the event is
+ * applied. A fall leaves the word below its best box, due tomorrow, answered today; a word whose
+ * `bestBox` is 1 (or that stands at its best box) has never fallen. The section 3.4 signature reads
+ * the stamp's local day, but the stamp clamp (24 hours past the latest stamp in the slice, section
+ * 3.3) dates the stamp of a learner back after a day away before today, so the day of the answer
+ * (`last`) counts too; a "Show me again" today (which moves no `last`) is still read by the stamp.
+ */
+export function fellToday(s: VocabItemState, today: string): boolean {
+  if (s.bestBox <= MIN_BOX || s.box >= s.bestBox || s.due !== addDays(today, 1)) return false;
+  if (s.last === today) return true;
+  const at = new Date(s.at);
+  return Number.isFinite(at.getTime()) && localDay(at) === today;
+}
+
 /**
  * Fold `events` into `v` in order. `today` is the device's local day of `now`;
  * the schedule stamp `at` is `now`, clamped to at most 24 hours past the
@@ -127,7 +153,7 @@ function caughtOf(caught: unknown): number {
  * Returns `v` itself when nothing changed (no events, all ignored, or an
  * invalid clock), so a caller can skip the write.
  */
-export function applyVocabEvents(v: VocabProgress, events: readonly VocabEvent[], now: Date): VocabProgress {
+export function applyVocabEvents(v: VocabProgress, events: readonly VocabEvent[], now: Date, options: VocabRuleOptions = {}): VocabProgress {
   const nowMs = now.getTime();
   if (events.length === 0 || !Number.isFinite(nowMs)) return v;
   const latest = latestStamp(v.items);
@@ -155,6 +181,11 @@ export function applyVocabEvents(v: VocabProgress, events: readonly VocabEvent[]
     items.set(s.id, { ...s, ...counts, box: next.box, bestBox: next.bestBox, due: next.due, at });
     changed = true;
   };
+  /** The counts only: box, due and the schedule stamp stay, so the merge sees no schedule change. */
+  const count = (s: VocabItemState, counts: Partial<Pick<VocabItemState, 'seen' | 'right' | 'last'>>): void => {
+    items.set(s.id, { ...s, ...counts });
+    changed = true;
+  };
 
   for (const e of events) {
     if (e.type === 'session') {
@@ -177,11 +208,24 @@ export function applyVocabEvents(v: VocabProgress, events: readonly VocabEvent[]
     const s = ensure(e.id);
     if (s === null || e.type === 'introduced') continue;
     if (e.type === 'self') {
+      // "Got it" never raises a word that fell today under the spacing rule (P4 as amended).
+      if (options.spacing && e.known && fellToday(s, today)) continue;
       const next = onSelf(s, e.known, today);
       if (next !== s) reschedule(s, next, {});
       continue;
     }
     const last = today > s.last ? today : s.last;
+    if (options.spacing) {
+      // Read before the event is applied: the word's first answer today, on a due word.
+      const spaced = s.last < today && isDue(s, today);
+      if (!e.correct) {
+        if (fellToday(s, today)) count(s, { seen: s.seen + 1, last });
+        else reschedule(s, onWrong(s, today), { seen: s.seen + 1, last });
+      } else if (!spaced) count(s, { seen: s.seen + 1, ...(e.hinted ? {} : { right: s.right + 1 }), last });
+      else if (e.hinted) reschedule(s, onHinted(s, today), { seen: s.seen + 1, last });
+      else reschedule(s, onRight(s, today), { seen: s.seen + 1, right: s.right + 1, last });
+      continue;
+    }
     if (!e.correct) reschedule(s, onWrong(s, today), { seen: s.seen + 1, last });
     else if (e.hinted) reschedule(s, onHinted(s, today), { seen: s.seen + 1, last });
     else reschedule(s, onRight(s, today), { seen: s.seen + 1, right: s.right + 1, last });

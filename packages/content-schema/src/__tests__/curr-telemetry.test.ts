@@ -11,6 +11,13 @@ import {
   TELEMETRY_EVENT_NAMES,
   isCurrTelemetryName,
   isTelemetryEventName,
+  ItemCountBucketSchema,
+  ROLLUP_ITEM_COUNT_EDGES,
+  ROLLUP_SEEDED_COUNT_EDGES,
+  ROLLUP_SPREAD_DAYS_EDGES,
+  SeededCountBucketSchema,
+  SpreadDaysBucketSchema,
+  rollupBucketCodes,
 } from '../index';
 
 /**
@@ -54,14 +61,14 @@ const daily = {
   newHeld: 3,
   minutes: 12,
   durableWeekBucket: '10-19',
-  dueVolumeBucket: '20+',
+  dueVolumeBucket: '20-29',
   arms: { E1: 'a', E2: 'b' },
 };
 
 /** One valid payload per name, as the emitting rows will send it. */
 const VALID: Record<(typeof SECTION_R)[number], Record<string, unknown>> = {
   'memory.daily': daily,
-  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '31+' },
+  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '46-62' },
   'mastery.level_up': { cellId: 'episode:stage2-life', level: 2 },
   'stage.card_opened': { stage: 'stage3' },
   'testout.finished': { cellId: 'episode:stage4-rites', passed: true, items: 10, firstTryCorrect: 9 },
@@ -176,7 +183,7 @@ describe('memory.daily (F-CURR-002 sections 3.1, 11.2 and 11.3)', () => {
   });
 
   it('takes buckets as bucket codes, never free text or a raw number', () => {
-    for (const bucket of ['0', '1-4', '10-19', '31+']) expect(M.safeParse({ ...daily, durableWeekBucket: bucket }).success, bucket).toBe(true);
+    for (const bucket of ['0', '3-4', '10-19', '500+']) expect(M.safeParse({ ...daily, durableWeekBucket: bucket }).success, bucket).toBe(true);
     for (const bucket of ['', 'many', 'Suni', '1 to 4', '-1', 12, '1-4-9', '123456', '19-10', '5-5', '00000', '010-19', '07+']) {
       expect(M.safeParse({ ...daily, durableWeekBucket: bucket }).success, String(bucket)).toBe(false);
       expect(M.safeParse({ ...daily, dueVolumeBucket: bucket }).success, String(bucket)).toBe(false);
@@ -287,5 +294,35 @@ describe('session.end payload (TELEMETRY-NAMES-2 section A, three optional field
 
   it('exposes the three new fields on their own for the Worker', () => {
     expect(Object.keys(SESSION_END_QUEST_FIELDS).sort()).toEqual(['afterWrongStreak', 'leftAtKind', 'questLeft']);
+  });
+});
+
+describe('the bucket enums of row CM-12 (Worker first, TELEMETRY-NAMES-2 section R)', () => {
+  const M = CURR_TELEMETRY_PAYLOADS['memory.daily'];
+  const S = CURR_TELEMETRY_PAYLOADS['items.seeded'];
+  const daily = { hist: [], lapses: 0, items: 0, newHeld: 0, minutes: 0, durableWeekBucket: '0', dueVolumeBucket: '0' };
+
+  it('each bucket field takes exactly the codes of its shared edges, the codes the rollups store', () => {
+    expect(ItemCountBucketSchema.options).toEqual(rollupBucketCodes(ROLLUP_ITEM_COUNT_EDGES));
+    expect(SeededCountBucketSchema.options).toEqual(rollupBucketCodes(ROLLUP_SEEDED_COUNT_EDGES));
+    expect(SpreadDaysBucketSchema.options).toEqual(rollupBucketCodes(ROLLUP_SPREAD_DAYS_EDGES));
+    for (const code of rollupBucketCodes(ROLLUP_ITEM_COUNT_EDGES)) {
+      expect(M.safeParse({ ...daily, durableWeekBucket: code, dueVolumeBucket: code }).success, code).toBe(true);
+    }
+    for (const count of rollupBucketCodes(ROLLUP_SEEDED_COUNT_EDGES)) {
+      for (const spread of rollupBucketCodes(ROLLUP_SPREAD_DAYS_EDGES)) expect(S.safeParse({ countBucket: count, spreadDaysBucket: spread }).success).toBe(true);
+    }
+  });
+
+  it('a raw count that fits the generic bucket shape is refused', () => {
+    for (const raw of ['37', '7', '12-13', '1-4', '20+', '501+']) {
+      expect(M.safeParse({ ...daily, durableWeekBucket: raw }).success, raw).toBe(false);
+      expect(M.safeParse({ ...daily, dueVolumeBucket: raw }).success, raw).toBe(false);
+      expect(S.safeParse({ countBucket: raw, spreadDaysBucket: '0' }).success, raw).toBe(false);
+      expect(S.safeParse({ countBucket: '0', spreadDaysBucket: raw }).success, raw).toBe(false);
+    }
+    // The spread runs past 31 days (31-45, 46-62, 63-90, 91+), so the old open top is not a code.
+    expect(S.safeParse({ countBucket: '0', spreadDaysBucket: '31+' }).success).toBe(false);
+    expect(S.safeParse({ countBucket: '500-999', spreadDaysBucket: '31-45' }).success).toBe(true);
   });
 });

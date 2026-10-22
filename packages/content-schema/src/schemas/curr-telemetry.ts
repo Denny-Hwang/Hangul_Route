@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ROLLUP_ITEM_COUNT_EDGES, ROLLUP_SEEDED_COUNT_EDGES, ROLLUP_SPREAD_DAYS_EDGES, rollupBucketCodes } from './curr-rollup-buckets';
 import { StageKeySchema } from './heritage-card';
 import { MinigameKindSchema } from './minigame';
 import { QUEST_ID_RE } from './quest';
@@ -64,12 +65,28 @@ const BUCKET_RE = /^(0|[1-9]\d{0,4})(?:-(0|[1-9]\d{0,4})|\+)?$/;
  * such as `0`, `10-19` or `31+`, with no leading zeros. The shape keeps free text out, but a
  * single number such as `37` still fits it, so it cannot tell a bucket from a raw value: the
  * emitting row (CM-12, CM-32) adds a per-field enum of its bucket codes to
- * `CURR_TELEMETRY_PAYLOADS`, Worker first, before it sends (TELEMETRY-NAMES-2 section R).
+ * `CURR_TELEMETRY_PAYLOADS`, Worker first, before it sends (TELEMETRY-NAMES-2 section R). Row CM-12
+ * has done so for `items.seeded` and the two buckets of `memory.daily` (below); the three buckets of
+ * `decode.sprint.finished` keep this shape until row CM-32.
  */
 export const TelemetryBucketSchema = z.string().refine((code) => {
   const m = BUCKET_RE.exec(code);
   return m !== null && (m[2] === undefined || Number(m[1]) < Number(m[2]));
 }, 'a bucket code: a number, an ascending range or an open top');
+
+/**
+ * The per-field bucket enums of row CM-12 (TELEMETRY-NAMES-2 section R, Worker first): a bucket field
+ * that row CM-12 sends takes only the codes of its shared edges (`curr-rollup-buckets.ts`), so a raw
+ * count that happens to fit the bucket shape (`37`) is refused. Built from the same edges the device
+ * buckets with and the rollups store, so the three always agree.
+ */
+const bucketEnum = (edges: readonly number[]) => z.enum(rollupBucketCodes(edges) as [string, ...string[]]);
+/** `durableWeekBucket` and `dueVolumeBucket` of `memory.daily`: weekly or daily item counts. */
+export const ItemCountBucketSchema = bucketEnum(ROLLUP_ITEM_COUNT_EDGES);
+/** `countBucket` of `items.seeded`. */
+export const SeededCountBucketSchema = bucketEnum(ROLLUP_SEEDED_COUNT_EDGES);
+/** `spreadDaysBucket` of `items.seeded`. */
+export const SpreadDaysBucketSchema = bucketEnum(ROLLUP_SPREAD_DAYS_EDGES);
 
 /** Review item kinds (section 4.2). */
 export const REVIEW_ITEM_KINDS = ['sym', 'syl', 'lex', 'pat', 'exc', 'rea'] as const;
@@ -131,15 +148,15 @@ const MemoryDailySchema = z
     items: count,
     newHeld: count,
     minutes: wholeUpTo(1440),
-    durableWeekBucket: TelemetryBucketSchema,
-    dueVolumeBucket: TelemetryBucketSchema,
+    durableWeekBucket: ItemCountBucketSchema,
+    dueVolumeBucket: ItemCountBucketSchema,
     arms: ArmsSchema.optional(),
   })
   .strict();
 
 export const CURR_TELEMETRY_PAYLOADS = {
   'memory.daily': MemoryDailySchema,
-  'items.seeded': z.object({ countBucket: TelemetryBucketSchema, spreadDaysBucket: TelemetryBucketSchema }).strict(),
+  'items.seeded': z.object({ countBucket: SeededCountBucketSchema, spreadDaysBucket: SpreadDaysBucketSchema }).strict(),
   'mastery.level_up': z.object({ cellId: CellOrPackLevelIdSchema, level: z.number().int().min(1).max(3) }).strict(),
   'stage.card_opened': z.object({ stage: StageKeySchema }).strict(),
   'testout.finished': z
