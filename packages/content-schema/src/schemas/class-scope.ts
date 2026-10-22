@@ -62,9 +62,28 @@ export function classScopeRank(version: string | null | undefined): 0 | 1 | 2 {
   return isFullScopeVersion(version) ? 1 : 0;
 }
 
-/** The body of both acknowledgement routes (console and device). */
-export const ClassScopeAckBodySchema = z.object({ version: z.string().min(1).max(64) }).strict();
+/**
+ * The body of both acknowledgement routes (console and device). `version` is the text the Worker names as current
+ * (the stale check); `shown` is the text the client actually drew from its own bundle (`CLASS_SCOPE_TEXT_VERSION`),
+ * sent from row CM-16 on. A client built before that row draws the list without the `memory` item and sends no
+ * `shown`, so its acknowledgement is recorded at `CLASS_SCOPE_PRE_MEMORY_VERSION` (`acknowledgedScopeVersion`).
+ */
+export const ClassScopeAckBodySchema = z.object({ version: z.string().min(1).max(64), shown: z.string().min(1).max(64).optional() }).strict();
 export type ClassScopeAckBody = z.infer<typeof ClassScopeAckBodySchema>;
+
+/** The last class-scope text without the `memory` item: what every client built before row CM-16 draws. */
+export const CLASS_SCOPE_PRE_MEMORY_VERSION = 'class-scope-2026-10';
+
+/**
+ * The version an acknowledgement is recorded at: the text the client drew (`shown`), never more than the current one
+ * it confirmed. An acknowledgement without `shown`, or with a text this Worker does not know, is recorded at
+ * `CLASS_SCOPE_PRE_MEMORY_VERSION`, so a family never opens an item its screen did not list.
+ */
+export function acknowledgedScopeVersion(body: ClassScopeAckBody): string {
+  const shown = body.shown;
+  if (shown === undefined || classScopeRank(shown) === 0) return CLASS_SCOPE_PRE_MEMORY_VERSION;
+  return classScopeRank(shown) <= classScopeRank(body.version) ? shown : body.version;
+}
 
 // ---------------------------------------------------------------------------
 // What the full scope adds (section 2 of the amendment)

@@ -416,7 +416,7 @@ describe('the family sees a one-time notice (TV-D10)', () => {
 });
 
 describe('the class-scope update (TV-D2 to TV-D5)', () => {
-  const ack = (user: string, learnerId = SUNI, body: unknown = { version: CLASS_SCOPE_TEXT_VERSION }, family = FAMILY) => post(`/api/spaces/${family}/learners/${learnerId}/class-scope`, user, body);
+  const ack = (user: string, learnerId = SUNI, body: unknown = { version: CLASS_SCOPE_TEXT_VERSION, shown: CLASS_SCOPE_TEXT_VERSION }, family = FAMILY) => post(`/api/spaces/${family}/learners/${learnerId}/class-scope`, user, body);
   const rosterRow = async (spaceId: string, user: string) => {
     const r = await get(`/api/spaces/${spaceId}/roster`, user);
     return (r.body.data as { learners: Array<Record<string, unknown> & { summary: Record<string, unknown> }> }).learners.find((l) => l.id === SUNI);
@@ -576,6 +576,32 @@ describe('the class-scope update (TV-D2 to TV-D5)', () => {
       expect((await rosterRow(A, 'teacher-a'))?.summary.memory).toEqual(memory);
       expect(((await get(`/api/spaces/${A}/learners/${SUNI}/report`, 'teacher-a')).body.data as { summary: Record<string, unknown> }).summary.memory).toEqual(memory);
       expect((await get(`/api/spaces/${FAMILY}/class-scope`, 'mom')).body.data).toMatchObject({ learners: [{ learnerId: SUNI, needed: false }] });
+    });
+
+    it('an app or console built before row CM-16 (no `shown`: it drew the list without the memory item) never opens them', async () => {
+      // The console of an older build: it confirms the version the Worker names, but its list had no memory item.
+      const consoleAck = await ack('mom', SUNI, { version: CLASS_SCOPE_TEXT_VERSION });
+      expect(consoleAck.status).toBe(200);
+      expect(consoleAck.body.data).toMatchObject({ version: 'class-scope-2026-10' });
+      expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: 'class-scope-2026-10' });
+      let row = await rosterRow(A, 'teacher-a');
+      expect(row?.scope).toBe('full');
+      expect(row?.summary).toHaveProperty('vocab');
+      expect(row?.summary).not.toHaveProperty('memory');
+      const learning = (await get(`/api/spaces/${A}/learning-summary`, 'teacher-a')).body.data as { learners: Array<{ learnerId: string; memory: unknown }> };
+      expect(learning.learners.find((l) => l.learnerId === SUNI)?.memory).toBeNull();
+      // Still asked for the update, which a current build shows with the memory item.
+      expect(((await get(`/api/spaces/${FAMILY}/class-scope`, 'mom')).body.data as { learners: Array<{ learnerId: string; needed: boolean }> }).learners.find((l) => l.learnerId === SUNI)?.needed).toBe(true);
+      // The app of an older build, on the device route: the same.
+      expect((await call('PUT', `/api/sync/learners/${SUNI}/class-scope`, device(PHONE, PHONE_SECRET), { version: CLASS_SCOPE_TEXT_VERSION })).status).toBe(200);
+      expect(await db.getClassScopeAck(SUNI)).toMatchObject({ textVersion: 'class-scope-2026-10' });
+      expect((await rosterRow(A, 'teacher-a'))?.summary).not.toHaveProperty('memory');
+      // A `shown` the Worker does not know counts as the earlier list too.
+      expect((await ack('mom', SUNI, { version: CLASS_SCOPE_TEXT_VERSION, shown: 'class-scope-2099-01' })).body.data).toMatchObject({ version: 'class-scope-2026-10' });
+      // A current build names the text it drew: now they open.
+      expect((await call('PUT', `/api/sync/learners/${SUNI}/class-scope`, device(PHONE, PHONE_SECRET), { version: CLASS_SCOPE_TEXT_VERSION, shown: CLASS_SCOPE_TEXT_VERSION })).status).toBe(200);
+      row = await rosterRow(A, 'teacher-a');
+      expect(row?.summary.memory).toEqual(memory);
     });
 
     it('an acknowledgement that opens less never replaces one that opens more', async () => {

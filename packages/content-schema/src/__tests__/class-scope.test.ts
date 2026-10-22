@@ -6,6 +6,7 @@ import {
   CLASS_MOVE_PURGE_AFTER_MS,
   CLASS_MOVE_WINDOW_MS,
   CLASS_SCOPE_LINE_IDS,
+  CLASS_SCOPE_PRE_MEMORY_VERSION,
   CLASS_SCOPE_TEXT,
   CLASS_SCOPE_TEXT_VERSION,
   ClassMoveCreateBodySchema,
@@ -26,6 +27,7 @@ import {
   TEACHER_VISIBLE_SUMMARY_KEYS,
   TRANSFER_CONSENT_LOCALES,
   TRANSFER_CONSENT_TEXT,
+  acknowledgedScopeVersion,
   classScopeItems,
   classScopeRank,
   isFullScopeVersion,
@@ -89,6 +91,18 @@ describe('[TV] class-scope versions', () => {
     expect(isFullScopeVersion('class-scope-2025-01')).toBe(false);
     expect(isFullScopeVersion(null)).toBe(false);
     expect(isFullScopeVersion(undefined)).toBe(false);
+  });
+
+  it('F-CURR-002 CM-16: an acknowledgement is recorded at the text the client drew, never more than the current one', () => {
+    // A build from before row CM-16 sends no `shown`: its list had no memory item.
+    expect(acknowledgedScopeVersion({ version: CLASS_SCOPE_TEXT_VERSION })).toBe(CLASS_SCOPE_PRE_MEMORY_VERSION);
+    expect(classScopeRank(CLASS_SCOPE_PRE_MEMORY_VERSION)).toBe(1);
+    expect(acknowledgedScopeVersion({ version: CLASS_SCOPE_TEXT_VERSION, shown: CLASS_SCOPE_TEXT_VERSION })).toBe(CLASS_SCOPE_TEXT_VERSION);
+    expect(acknowledgedScopeVersion({ version: CLASS_SCOPE_TEXT_VERSION, shown: 'class-scope-2026-10' })).toBe('class-scope-2026-10');
+    expect(acknowledgedScopeVersion({ version: CLASS_SCOPE_TEXT_VERSION, shown: 'class-scope-2099-01' })).toBe(CLASS_SCOPE_PRE_MEMORY_VERSION);
+    expect(acknowledgedScopeVersion({ version: 'class-scope-2026-10', shown: CLASS_SCOPE_TEXT_VERSION })).toBe('class-scope-2026-10');
+    expect(ClassScopeAckBodySchema.safeParse({ version: CLASS_SCOPE_TEXT_VERSION, shown: CLASS_SCOPE_TEXT_VERSION }).success).toBe(true);
+    expect(ClassScopeAckBodySchema.safeParse({ version: CLASS_SCOPE_TEXT_VERSION, shown: '' }).success).toBe(false);
   });
 
   it('pins a hash of every locale to the current version', () => {

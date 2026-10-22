@@ -8,6 +8,7 @@ import {
   ClassMoveEmptyBodySchema,
   ClassMovePreviewBodySchema,
   ClassScopeAckBodySchema,
+  acknowledgedScopeVersion,
   LEARNER_CLASS_CAP,
   isMemoryScopeVersion,
   rosterAlias,
@@ -546,7 +547,8 @@ classMoveRoutes.post('/:id/learners/:learnerId/class-scope', async (c) => {
   if ((role !== 'owner' && role !== 'caregiver') || !(await db.membership(family.id, 'learner', learnerId))) return notFound(c);
   if (!body) return badRequest(c);
   if (body.version !== CLASS_SCOPE_TEXT_VERSION) return fail(c, 'class_scope_stale', 'The update has changed', 422, { current: CLASS_SCOPE_TEXT_VERSION });
-  const ack = await recordClassScopeAck(db, { learnerId, textVersion: body.version, basis: 'caregiver', evidence: account.id }, new Date());
+  // Recorded at the text the console drew (row CM-16): a console built before it listed no `memory` item.
+  const ack = await recordClassScopeAck(db, { learnerId, textVersion: acknowledgedScopeVersion(body), basis: 'caregiver', evidence: account.id }, new Date());
   event('space.scope.acknowledged', { basis: 'caregiver' });
   return ok(c, { version: ack.textVersion, ackedAt: ack.ackedAt });
 });
@@ -559,7 +561,8 @@ classScopeSyncRoutes.put('/learners/:id/class-scope', async (c) => {
   const body = await readBody(c, ClassScopeAckBodySchema);
   if (!body) return badRequest(c);
   if (body.version !== CLASS_SCOPE_TEXT_VERSION) return fail(c, 'class_scope_stale', 'The update has changed', 422, { current: CLASS_SCOPE_TEXT_VERSION });
-  const ack = await recordClassScopeAck(dbFor(c), { learnerId, textVersion: body.version, basis: 'device', evidence: deviceId }, new Date());
+  // Recorded at the text the app drew (row CM-16): an app built before it listed no `memory` item.
+  const ack = await recordClassScopeAck(dbFor(c), { learnerId, textVersion: acknowledgedScopeVersion(body), basis: 'device', evidence: deviceId }, new Date());
   event('space.scope.acknowledged', { basis: 'device' });
   return ok(c, { version: ack.textVersion, ackedAt: ack.ackedAt });
 });
