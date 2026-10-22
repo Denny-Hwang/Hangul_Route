@@ -90,3 +90,7 @@ RP-9's tests for the voice (`logic/reports/__tests__/voice.test.ts`, spec sectio
 - Calendar and growth line carry the same text alternatives as the console; letter tiles announce the letter (`lang="ko"`) and its romanization from their visible content, plus their expanded state.
 - Tabs: each `SectionTabs` tab has `aria-controls` the report panel, and the report below the tabs is the `tabpanel` labelled by the selected tab (as the console, `learner-report.md`).
 - Read-only: nothing on this screen writes progress or changes the active profile; `report.viewed` goes without `profileId` (spec section 3.13).
+
+## Words and review (F-CURR-002 row CM-16)
+
+The in-app report's More detail draws the same Words and review block as the console (`learner-report.md`, the section of the same name): `h3` `report.detail.memory` and one body line per count above 0, after the letter tiles and before Milestones (`testID` `learner-report-detail-memory`). It reads the device's own summary (`summarizeFor`), whose `memory` block the screen asks the memory store for when it opens (read-only; nothing is recorded). The block is drawn only while that profile records (`memoryRecord` on for a learner profile); a grown-up persona has none. No line names the learner, so the second voice reads the same lines. Counts only, never a percentage (section 3.4).
