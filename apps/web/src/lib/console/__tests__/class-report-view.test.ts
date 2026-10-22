@@ -130,6 +130,7 @@ describe('the week class report (behaviour 5 words)', () => {
   it('more detail: level-check counts per strand and the homework link blocks', () => {
     expect(v.moreDetail).toEqual({
       button: 'More detail',
+      memory: null,
       levelCheck: { heading: 'Level check (learners who took one)', strands: [{ name: 'Sounds of letters', rows: ['Secure: 3', 'Getting there: 2', 'Next to learn: 1', 'Not checked yet: 0'] }] },
       homework: { heading: 'Homework', plans: [{ href: '/teach/space/plan?id=space%3Asunflower&plan=plan%3Aweek-3', title: 'Week three', counts: 'Assigned to 12, started by 9, finished by 6' }] },
     });
@@ -312,5 +313,40 @@ describe('rosterClassReportLink: the roll-up Class report link', () => {
     expect(rosterClassReportLink({ spaceId: 'space:kim', kind: 'family', enabled: true })).toBeNull();
     expect(rosterClassReportLink({ spaceId: 'space:s', kind: 'school', enabled: true })).toBeNull();
     expect(rosterClassReportLink({ spaceId: 'space:sunflower', kind: 'class', enabled: false })).toBeNull();
+  });
+});
+
+describe('the memory totals (F-CURR-002 CM-16)', () => {
+  const memory = { learners: 3, wordsKnown: 120, readyToRefresh: 14, levels: [9, 3, 1] as [number, number, number], stageChecks: 2 };
+
+  it('More detail opens with the totals and how many learners they come from', () => {
+    const v = view({ data: body({ ...REPORT, memory }) });
+    expect(v.moreDetail?.memory).toEqual({
+      heading: 'Words and review',
+      lines: ['Words known, added together: 120', 'Items ready to refresh, added together: 14', 'Episodes: 9 done, 3 practiced, 1 mastered', 'Stage Checks passed, added together: 2'],
+      from: 'From 3 learners whose apps share these counts.',
+    });
+  });
+
+  it('a total of 0 has no line; all zero, or no block, draws no memory block (never a zero as a result)', () => {
+    const v = view({ data: body({ ...REPORT, memory: { ...memory, readyToRefresh: 0, stageChecks: 0, levels: [0, 0, 0] } }) });
+    expect(v.moreDetail?.memory?.lines).toEqual(['Words known, added together: 120']);
+    const zero = { learners: 1, wordsKnown: 0, readyToRefresh: 0, levels: [0, 0, 0] as [number, number, number], stageChecks: 0 };
+    expect(view({ data: body({ ...REPORT, memory: zero }) }).moreDetail?.memory).toBeNull();
+    expect(view({ data: body({ ...REPORT, memory: { ...memory, learners: 0 } }) }).moreDetail?.memory).toBeNull();
+    expect(view().moreDetail?.memory).toBeNull();
+  });
+
+  it('opens More detail on its own when there is no level check and no homework', () => {
+    const v = view({ data: body({ ...REPORT, levelCheck: [], plans: [], memory: { ...memory, learners: 1 } }) });
+    expect(v.moreDetail).toMatchObject({ levelCheck: null, homework: null, memory: { from: 'From 1 learner whose app shares these counts.' } });
+  });
+
+  it('reads in Spanish and Korean', () => {
+    const es = view({ data: body({ ...REPORT, memory }), locale: 'es' }).moreDetail?.memory;
+    expect(es?.heading).toBe('Palabras y repaso');
+    expect(es?.lines[2]).toBe('Episodios: 9 terminados, 3 practicados, 1 dominado');
+    const ko = view({ data: body({ ...REPORT, memory }), locale: 'ko' }).moreDetail?.memory;
+    expect(ko?.lines[0]).toBe('아는 단어, 모두 더해서: 120개');
   });
 });

@@ -90,6 +90,11 @@ export interface ClassReportView {
   } | null;
   moreDetail: {
     button: string;
+    /**
+     * F-CURR-002 CM-16: the class's memory counts, totals over the learners whose app shares them (`report.memory`),
+     * then the line saying how many; null without any (never a zero as a result).
+     */
+    memory: { heading: string; lines: string[]; from: string } | null;
     levelCheck: { heading: string; strands: { name: string; rows: string[] }[] } | null;
     homework: { heading: string; plans: { href: string; title: string; counts: string }[] } | null;
   } | null;
@@ -277,6 +282,7 @@ export function classReportView(input: ClassReportViewInput): ClassReportView {
         strands: r.levelCheck.map((row) => ({ name: strandName(row.strand, m), rows: STATUS_ROWS.map(([key, status]) => c.count(m.report.strand.status[status], row[key] as number)) })),
       }
     : null;
+  const memory = memoryOf(r.memory, m);
   const homework = r.plans.length
     ? { heading: c.section.homework, plans: r.plans.map((plan) => ({ href: ROUTES.spacePlan(space.id, plan.planId), title: plan.title, counts: c.planRow(plan.assigned, plan.started, plan.finished) })) }
     : null;
@@ -309,8 +315,26 @@ export function classReportView(input: ClassReportViewInput): ClassReportView {
       : null,
     practiceTogether: revisit || planLesson ? { heading: c.section.practiceTogether, revisit, planLesson } : null,
     thisPeriod,
-    moreDetail: levelCheck || homework ? { button: m.report.section.moreDetail, levelCheck, homework } : null,
+    moreDetail: memory || levelCheck || homework ? { button: m.report.section.moreDetail, memory, levelCheck, homework } : null,
   };
+}
+
+/**
+ * The class's memory block (F-CURR-002 CM-16, `design/screens/reports/class-report.md`): totals added together, a line
+ * only above 0, the episodes per mastery level, and how many learners they come from. Never a mean, a maximum or a
+ * learner's own figure. Null when the report carries none or every total is 0.
+ */
+function memoryOf(memory: ClassReport['memory'], m: Messages): NonNullable<ClassReportView['moreDetail']>['memory'] {
+  if (!memory || memory.learners === 0) return null;
+  const c = m.report.class;
+  const [done, practiced, mastered] = memory.levels;
+  const lines = [
+    ...(memory.wordsKnown > 0 ? [c.wordsKnown(memory.wordsKnown)] : []),
+    ...(memory.readyToRefresh > 0 ? [c.readyToRefresh(memory.readyToRefresh)] : []),
+    ...(done + practiced + mastered > 0 ? [m.report.detail.mastery(done, practiced, mastered)] : []),
+    ...(memory.stageChecks > 0 ? [c.stageChecks(memory.stageChecks)] : []),
+  ];
+  return lines.length ? { heading: m.report.detail.memory, lines, from: c.memoryFrom(memory.learners) } : null;
 }
 
 /** Which screen the class page draws (section 3.14). */

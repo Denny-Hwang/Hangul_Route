@@ -37,6 +37,8 @@ export {
   type ReportPlanCounts,
   type LearnerReportDetail,
   type LearnerReport,
+  reportMemoryOf,
+  type ReportMemory,
 } from './learner-report';
 export {
   wentWell,

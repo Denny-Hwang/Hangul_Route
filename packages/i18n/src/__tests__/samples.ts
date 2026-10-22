@@ -941,4 +941,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.persona.teachers.schools.sizeContract': [['hello@example.com']],
   'landing.captures.discover': [['x', 'a']],
   'landing.captures.card': [['x', 'horangi', 'tiger']],
+  // F-CURR-002 CM-16: the memory counts in reports
+  'report.detail.wordsKnown': [[1], [2000]],
+  'report.detail.readyToRefresh': [[1], [2], [120]],
+  'report.detail.mastery': [[1, 1, 1], [35, 12, 4]],
+  'report.detail.stageChecks': [[1], [7]],
+  'report.class.memoryFrom': [[1], [2], [30]],
+  'report.class.wordsKnown': [[1], [24000]],
+  'report.class.readyToRefresh': [[1], [600]],
+  'report.class.stageChecks': [[1], [90]],
 };

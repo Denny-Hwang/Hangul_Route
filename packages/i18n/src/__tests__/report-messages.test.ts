@@ -411,6 +411,8 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['report.class.milestone', (m, n) => m.report.class.milestone(7, 'Self-expression', n)],
   ['report.class.minutesTotal', (m, n) => m.report.class.minutesTotal(n)],
   ['report.class.medianMinutes', (m, n) => m.report.class.medianMinutes(n)],
+  ['report.detail.readyToRefresh', (m, n) => m.report.detail.readyToRefresh(n)],
+  ['report.class.memoryFrom', (m, n) => m.report.class.memoryFrom(n)],
 ];
 
 /** Messages with a number that is not a noun count (no plural to choose), each with the reason. */
@@ -433,6 +435,12 @@ const NUMBER_NOT_COUNTED: Readonly<Record<string, string>> = {
   'report.class.band.range': 'a range of 2 or more days, always plural',
   'report.class.band.atLeast': 'the 10+ band, always plural',
   'report.class.planRow': 'numbers after "assigned to", "started by" and "finished by", no noun',
+  'report.detail.wordsKnown': 'a label and its number',
+  'report.detail.mastery': 'numbers beside "done", "practiced" and "mastered", no noun',
+  'report.detail.stageChecks': 'a label and its number',
+  'report.class.wordsKnown': 'a label and its number',
+  'report.class.readyToRefresh': 'a label and its number',
+  'report.class.stageChecks': 'a label and its number',
 };
 
 describe('report counts use plural() in every locale (en, es, ko, en-XA)', () => {

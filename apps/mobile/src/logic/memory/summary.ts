@@ -77,7 +77,11 @@ export function memorySummaryOf({ rows, retired, snapshot, today }: MemorySummar
   due.sort((a, b) => a.box - b.box || (a.due < b.due ? -1 : a.due > b.due ? 1 : 0) || jitterOf(a.id) - jitterOf(b.id) || (a.id < b.id ? -1 : 1));
 
   const levels: [number, number, number] = [0, 0, 0];
-  for (const level of Object.values(snapshot.cellBest ?? {})) if (level >= 1 && level <= 3) levels[level - 1] += 1;
+  for (const level of Object.values(snapshot.cellBest ?? {})) {
+    if (level === 1) levels[0] += 1;
+    else if (level === 2) levels[1] += 1;
+    else if (level === 3) levels[2] += 1;
+  }
 
   const monday = weekStartOf(today);
   let weekPoints = 0;
