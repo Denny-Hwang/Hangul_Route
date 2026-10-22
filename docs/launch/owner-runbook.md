@@ -612,9 +612,18 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 > GU-7 부터 학습자 앱 웹 빌드의 `EXPO_PUBLIC_GUEST_LESSON` 이 기본 켜짐이고, 사이트의 `SITE_CLAIMS.guestLesson` 도 같은 PR 에서 켜졌다. 사이트의 Start learning 은 `https://app.hangulroute.com/?try=1` 로 가고, 프로필이 없는 기기에서는 Stage 1 퀘스트 1 이 바로 열린다 (첫 글자 ㅏ 까지 2번 누름; 프로필이 있는 기기는 "Who is using this?" 에서 Try the first quest 를 눌러 3번). 대시보드에서 할 일은 없다. Stripe 와는 무관하다 (Live 는 계속 꺼 둔다). 배포 순서: GU-1 (Worker 의 `guest.*` 규칙과 하루 집계) 이 운영에 먼저 나가 있어야 한다.
 
+**L-0. GU-7 을 머지하기 전 (merge gates, 하나라도 빠지면 머지하지 않는다; PR #833 은 그때까지 draft)**
+1. GU-1 (#816) 부터 GU-6 (#823) 까지 모두 main 에 있고, GU-1 의 Worker 가 운영에 배포된 지 **14일 이상** 지났다. G5 의 기준선 (사양 section 1 의 G5 행: "counted from GU-1 on, at least 14 days before GU-7") 은 GU-1 이 `onboarding.started` 를 세기 시작한 날부터만 있다. 그 전에 켜면 L-1 의 첫 기준을 잴 수 없다.
+2. 집계가 정말 쌓였는지 확인한다. D1 Console: `SELECT MIN(day) AS first_day, COUNT(DISTINCT day) AS days FROM telemetry_daily WHERE name = 'onboarding.started';` → `first_day` 가 머지일보다 14일 이상 앞이어야 한다.
+3. 기준선을 재서 아래에 적는다 (켜기 전 14일 평균, 머지 당일 기준). D1 Console: `SELECT SUM(n) / 14.0 AS mean_per_day FROM telemetry_daily WHERE name = 'onboarding.started' AND dims LIKE '%"firstRun":true%' AND day >= date('now', '-14 day') AND day < date('now');` (첫 프로필이 없는 날은 행이 없으니 14 로 나눈다.) 기록: GU-1 운영 배포일 `____-__-__`, 기준선 `____` /일, 잰 날 `____-__-__`. 80 % 선은 이 값의 0.8 배다.
+4. 개인정보 처리방침의 시행일 (`landing.legal.privacy.effective`, 영어만, L10) 이 머지하는 날이다. 지금은 "Effective October 22, 2026" (SN-2 가 넣은 값, GU-7 PR 을 연 날) 이다. 머지가 더 늦으면 GU-7 의 머지일 fix stage 가 날짜와 `legal-copy.test.tsx` · `landing-messages.test.ts` 의 고정값을 바꾸고, MAR 뒤 `landing` 원장을 다시 서명한다 (es · ko 는 번역할 값이 없다).
+5. 머지 시점의 main 위로 브랜치를 올린 뒤 CI 가 모두 초록이다 (PWA e2e 샤드 전체와 사이트의 `site-budgets.spec.ts` 포함). 시작 번들 (start bundle) 은 그 main 에서 다시 잰다 (F-CURR-002 section 10). CI 의 Linux 글꼴로 en `/` 1280 px 이 예산 (2,300 px) 을 넘으면 예산을 바꾸지 않고 사양 section 13.2 가 미리 승인한 960 px 대안을 같은 PR 에 넣는다.
+
 **L-1. 멈추는 기준 (kill criteria, 하나라도 해당하면 L-2 로 끈다)**
 - G5 (`onboarding.started` 중 `firstRun: true` 의 하루 수, 7일 평균) 가 켜기 전 14일 평균의 80 % 아래로 **7일 연속** 내려간다. D1 Console: `SELECT day, SUM(n) FROM telemetry_daily WHERE name = 'onboarding.started' AND dims LIKE '%"firstRun":true%' GROUP BY day ORDER BY day DESC LIMIT 28;`
 - 운영 빌드에서 CS-G 테스트 (`apps/mobile/e2e/web/guest-child-safety.spec.ts` 의 CS-G1 ~ CS-G10, 또는 그 표가 가리키는 테스트) 가 하나라도 실패한다.
+  - 어디서 알게 되나: (1) PR 과 main 의 CI 가 같은 `build:web` 릴리스 빌드 (운영과 같은 플래그 값, API 주소만 없음) 로 이 스위트를 돌린다. main 에서 실패하면 그것이 운영 빌드의 실패다. (2) 앱을 배포할 때마다 손으로 확인한다 (3분): 프로필 없는 새 창에서 `https://app.hangulroute.com/?try=1` → Hoya 의 인사, Continue → ㅏ. 퀘스트를 끝내고 Not now → Close → Welcome (어른 화면, 결제, 콘솔, 로그인 화면이 한 번도 나오지 않는다). PIN 이 있는 기기에서는 Keep my progress → PIN → 이름 폼만 열리고, 저장 뒤 Profile and settings → For grown-ups → Account pages 가 다시 PIN 을 묻는다. (3) 배포된 호스트에 이 스위트를 정기적으로 돌리는 일은 워크플로 변경이 필요해 오너 몫의 후속 작업이다.
+  - CI 가 아직 돌리지 않는 부분 (워크플로는 오너만 바꾼다): CS-G7 의 telemetry 절반 (어떤 이벤트에도 `profileId` 가 없음, `E2E_GUEST_API=1`), `guest-save.spec.ts` 의 등록 · 오프라인 저장 검사, 스위치를 끈 빌드 (`EXPO_PUBLIC_GUEST_LESSON=false`, `E2E_GUEST=0`) 의 L-2 확인. 지금은 단위 테스트 (`telemetry-guest.test.ts`, `flags.test.ts`) 와 PR 의 로컬 실행이 덮는다. 워크플로에 넣을 단계는 PR #833 의 리뷰 답글에 적어 두었다.
 - 저장할 때 진도를 잃었다는 신고, 또는 첫 퀘스트 중인 학습자가 어른 화면 (Grown-up area, 결제, 콘솔, 프로필 등) 에 닿았다는 신고가 하나라도 들어온다.
 
 **L-2. 끄기 (kill switch, 5분) — 앱 스위치를 먼저**

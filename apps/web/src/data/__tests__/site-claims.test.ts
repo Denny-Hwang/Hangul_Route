@@ -165,12 +165,12 @@ describe('SITE_CLAIMS (what the site says today)', () => {
     const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
     const learnerFlags = readFileSync(join(root, 'mobile', 'src', 'config', 'flags.ts'), 'utf8');
     // The web learner build's launch value (GU-D16: a native bundle stays off, so the default is `!isNativeBundle()`).
+    // The claim may never run ahead of the feature: a PR turning the app switch's default off fails here until it
+    // sets the claim back to false.
     const learnerOn = /launchDefaults: Flags = \{[^}]*\bguestLessonEnabled: !isNativeBundle\(\),/.test(learnerFlags);
     expect(learnerOn).toBe(true);
     expect(SITE_CLAIMS.guestLesson).toBe(true);
     for (const locale of UI_LOCALES) expect(showsClaim(SITE_CLAIMS, 'guestLesson', locale), locale).toBe(true);
-    // The claim may never run ahead of the feature: a PR turning the app switch's default off must set it back.
-    expect(!SITE_CLAIMS.guestLesson || learnerOn).toBe(true);
   });
 
   it('[GU] shows the guest start lines in every UI locale, free, while its claim is on, and hides them with it off (both states pinned)', () => {

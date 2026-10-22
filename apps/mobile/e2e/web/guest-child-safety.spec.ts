@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Browser, BrowserContext, Page, Request } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, passDiscover, playCheckByIds, readStored, seedStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
+import { onboardChild, openForGrownUps, passDiscover, playCheckByIds, readStored, seedStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -19,14 +19,18 @@ import { shot } from './shots';
  *
  * | Invariant | Here (320 px and wide) | Also |
  * |---|---|---|
- * | G1 | 2 taps on an empty device; 3 taps on a device with profiles and the chooser | `guest-first-quest.spec.ts`, `who-guest.spec.ts` |
+ * | G1 | 2 taps on an empty device; 3 taps on a device with profiles and the chooser (the site's tap, then every click the page itself received, counted in the page) | `guest-first-quest.spec.ts`, `who-guest.spec.ts` |
  * | CS-G1 | a whole run to Results, Not now and Close: only the 7.1 routes, no grown-up control, one tab on `/` | `guest-first-quest.spec.ts` (the route self-check), `guest-stack.test.ts` (the static walk), `guest-nav-guard.test.ts` |
- * | CS-G2 | the `SaveGuest` PIN opens the form only: no grown-up session, and the grown-up gate still asks the PIN | `guest-save.spec.ts`, `guest-save-screens.test.tsx`, `pin-flow.test.ts` |
- * | CS-G3 | a grown-up session open in the tab is closed by the site start and by the chooser's tile | `guest-first-quest.spec.ts` (Back to my quest, the other tabs told), `guest-run-grownup.web.test.ts` |
+ * | CS-G2 | the `SaveGuest` PIN opens the form only: no grown-up session marks, and in the same document (the fresh-PIN credit lives in memory only, so no reload) Account pages still asks the PIN after the save | `guest-save.spec.ts`, `guest-save-screens.test.tsx`, `pin-flow.test.ts` |
+ * | CS-G3 | the tab's grown-up session marks are closed, and the other tabs told (`hr-grownup` lock), by the site start and by the chooser's tile; a plain boot (which also drops the marks) tells nobody, the control. The in-memory credit's close is unit-checked | `guest-first-quest.spec.ts` (Back to my quest), `guest-run-grownup.web.test.ts` |
  * | CS-G4 | the try intent selects and creates nobody, keeps the chooser, and loses to `gate=grown-up` and to a join link | `who-guest.spec.ts`, `boot-intent.test.ts`, `guest-launch.test.ts` |
  * | CS-G5 | the guest's tile carries its label only | `who-guest.spec.ts`, `WhoGuestTiles.test.tsx` |
  * | CS-G6 | a live guest on an empty device writes the gate marker `nopin`, never `none` | `device-gate.test.ts`, `guest-gates.test.ts` |
- * | CS-G7 | no request to `/api/sync` or `/api/spaces`, no backup of the guest, no `profileId` in telemetry (API build) | `guest-first-quest.spec.ts`, `telemetry-guest.test.ts`, `guest-sync.test.ts` |
+ * | CS-G7 | no request to `/api/sync` or `/api/spaces`, no backup of the guest; on the API build, guest events are sent and none names a profile | `guest-first-quest.spec.ts`, `telemetry-guest.test.ts`, `guest-sync.test.ts` |
+ *
+ * In CI the PWA shards run the release build, which has no API base: there a guest run sends nothing at all, so the
+ * telemetry half of CS-G7 (and `guest-save.spec.ts`'s registration checks) is checked by `telemetry-guest.test.ts` and
+ * by a local run of the API build above, not by a CI e2e job (adding one is a workflow change, the owner's).
  * | CS-G8 | the save's who question starts unanswered, the agreement unticked, the under-13 latch, the PIN for someone looked after, the email folded and cleared | `guest-save-form.test.ts`, `guest-save-screens.test.tsx` |
  * | CS-G9 | `verify`: Cancel on the PIN saves nothing; `owner`: no save from the guest path | `guest-save.spec.ts`, `guest-model.test.ts` |
  * | CS-G10 | `owner`: no PIN pad and the PIN stays unset; `verify`: no PIN row and the hash unchanged | `guest-save.spec.ts`, `who-guest.spec.ts`, `PinEntryGuestOnly.test.tsx` |
@@ -54,6 +58,22 @@ const guestTile = (page: Page) => page.getByRole('button', { name: en.a11y.who.g
 const keep = (page: Page) => page.getByRole('button', { name: g.results.keep, exact: true });
 const notNow = (page: Page) => page.getByRole('button', { name: g.results.notNow, exact: true });
 const cont = (page: Page) => page.getByRole('button', { name: c.cta, exact: true });
+
+/**
+ * The taps of G1 (section 1: a tap is a press on a control), counted in the page from its first script: every trusted
+ * click the document receives. The site's Start learning is the one tap before the learner app's document exists.
+ */
+async function countTaps(page: Page): Promise<() => Promise<number>> {
+  await page.addInitScript(() => {
+    const box = window as Window & { __taps?: number };
+    box.__taps = 0;
+    window.addEventListener('click', (event) => {
+      if (event.isTrusted) box.__taps = (box.__taps ?? 0) + 1;
+    }, true);
+  });
+  return () => page.evaluate(() => (window as Window & { __taps?: number }).__taps ?? 0);
+}
+const SITE_TAP = 1;
 
 /** Every request the page makes, and every route name the app shows (React Navigation writes it to the title). */
 async function watch(page: Page): Promise<{ requests: Request[]; routes: () => Promise<string[]> }> {
@@ -105,10 +125,28 @@ function expectAnonymousRun(requests: readonly Request[]): void {
     return;
   }
   const events = api.filter((r) => new URL(r.url()).pathname === '/api/telemetry' && r.method() === 'POST');
+  // The run's own events were sent, so the check below reads real bodies (zero events would pass it vacuously).
+  const names = events.map((request) => String((JSON.parse(request.postData() ?? '{}') as { name?: unknown }).name));
+  expect(names.filter((name) => name.startsWith('guest.')), names.join(', ')).not.toEqual([]);
   for (const request of events) {
     const body = JSON.parse(request.postData() ?? '{}') as { name?: string; profileId?: unknown };
     expect(body.profileId ?? null, String(body.name)).toBeNull();
   }
+}
+
+/**
+ * A second tab of the same browser, listening on `hr-grownup` for the lock message a closed grown-up session posts
+ * (OA-D5). Returns what it heard so far.
+ */
+async function lockListener(context: BrowserContext): Promise<() => Promise<unknown[]>> {
+  const other = await context.newPage();
+  await other.goto('/');
+  await other.evaluate(() => {
+    const heard: unknown[] = [];
+    (window as Window & { __heard?: unknown[] }).__heard = heard;
+    new BroadcastChannel('hr-grownup').onmessage = (event) => heard.push(event.data);
+  });
+  return () => other.evaluate(() => (window as Window & { __heard?: unknown[] }).__heard ?? []);
 }
 
 /** The grown-up session of this tab (the unlock and the console session marks). */
@@ -182,38 +220,34 @@ for (const size of [
 
     test('G1: the first letter in 2 taps on an empty device (Start learning, Continue)', async ({ page, context }) => {
       if (WITH_API) await mockApi(context);
-      let taps = 0;
+      const taps = await countTaps(page);
       // Tap 1: the site's Start learning, whose href is the learner app with try=1 (apps/web landing-layout e2e).
-      taps += 1;
       await page.goto('/?try=1');
       await expect(hello(page)).toBeVisible();
       await expectNoSidewaysScroll(page);
       await shot(page, `guest-cs-g1-hello-${tag}`);
       // Tap 2: Continue on Hoya's hello. Discover page 1 shows ㅏ.
-      taps += 1;
       await continueButton(page).click();
       await expect(letterA(page)).toBeVisible();
       await shot(page, `guest-cs-g1-discover-${tag}`);
-      expect(taps).toBe(2);
+      expect(SITE_TAP + (await taps())).toBe(2);
     });
 
     test('G1: the first letter in 3 taps on a device with learner profiles and the chooser (Start learning, Try the first quest, Continue)', async ({ page, context }) => {
       if (WITH_API) await mockApi(context);
       await twoProfiles(page);
-      let taps = 0;
-      taps += 1;
+      // The counter starts with the learner app's document that the site's tap opens.
+      const taps = await countTaps(page);
       await page.goto('/?try=1');
       await expect(whoTitle(page)).toBeVisible();
       await expect(tryTile(page)).toBeVisible();
       await expectNoSidewaysScroll(page);
       await shot(page, `guest-cs-g1-chooser-${tag}`);
-      taps += 1;
       await tryTile(page).click();
       await expect(hello(page)).toBeVisible();
-      taps += 1;
       await continueButton(page).click();
       await expect(letterA(page)).toBeVisible();
-      expect(taps).toBe(3);
+      expect(SITE_TAP + (await taps())).toBe(3);
     });
 
     test('CS-G1, CS-G7: a whole run reaches only the 7.1 routes, draws no grown-up control, stays on / in one tab and sends nothing that names the guest', async ({ page, context }) => {
@@ -264,32 +298,56 @@ for (const size of [
       await cont(page).click();
       await expect(page.getByTestId('home-guest-saved')).toBeVisible();
       expect(await grownUpSession(page)).toEqual([null, null]);
-      // No fresh-PIN credit: the grown-up gate asks the PIN as on any device with one.
-      await page.goto('/?gate=grown-up&next=%2Fparent');
+      // No fresh-PIN credit and no open gate, in this same document: both live in memory only (ui-store), so a reload
+      // would wipe a wrong credit before the check. Account pages hands off at once after a fresh PIN
+      // (`decideHandoff`) and asks the PIN otherwise.
+      const documents: string[] = [];
+      page.on('framenavigated', (frame) => {
+        if (frame === page.mainFrame()) documents.push(frame.url());
+      });
+      await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await openForGrownUps(page);
+      await page.getByTestId('profile-grown-up-home').click();
       await expect(page.getByText(PIN_LINE)).toBeVisible();
+      expect(new URL(page.url()).pathname).toBe('/');
+      expect(documents.filter((url) => new URL(url).pathname !== '/')).toEqual([]);
+      expect(await grownUpSession(page)).toEqual([null, null]);
       await shot(page, `guest-cs-g2-gate-after-save-${tag}`);
     });
 
     test('CS-G3: a grown-up session open in the tab is closed by the site start and by the chooser\'s Try the first quest', async ({ page, context, browser }) => {
       if (WITH_API) await mockApi(context);
+      const heard = await lockListener(context);
       await page.goto('/');
       await expect(page.getByRole('button', { name: en.learner.welcome.cta })).toBeVisible();
+      // The control: every boot of a learner root drops the tab's marks too (F-APP-001 3.9), but a plain boot tells
+      // no other tab. Only a guest start closes the session (and posts the lock).
+      await openSession(page);
+      await page.reload();
+      await expect(page.getByRole('button', { name: en.learner.welcome.cta })).toBeVisible();
+      expect(await heard()).toEqual([]);
       await openSession(page);
       await page.goto('/?try=1');
       await expect(hello(page)).toBeVisible();
       expect(await grownUpSession(page)).toEqual([null, null]);
+      await expect.poll(heard).toContainEqual({ v: 1, kind: 'lock' });
 
       // A device of its own (its own storage): two learners and the chooser.
       const sharedContext = await browser.newContext({ viewport: { width: size.width, height: size.height }, serviceWorkers: 'block' });
       if (WITH_API) await mockApi(sharedContext);
       const shared = await sharedContext.newPage();
       await twoProfiles(shared);
+      const sharedHeard = await lockListener(sharedContext);
       await shared.goto('/?try=1');
       await expect(tryTile(shared)).toBeVisible();
+      // Opened in this document after the chooser drew, so only the tile can close it.
       await openSession(shared);
+      expect(await grownUpSession(shared)).toEqual(['{"v":1}', '{"v":1}']);
+      const heardBefore = (await sharedHeard()).length;
       await tryTile(shared).click();
       await expect(hello(shared)).toBeVisible();
       expect(await grownUpSession(shared)).toEqual([null, null]);
+      await expect.poll(async () => (await sharedHeard()).slice(heardBefore)).toContainEqual({ v: 1, kind: 'lock' });
       await sharedContext.close();
     });
 
