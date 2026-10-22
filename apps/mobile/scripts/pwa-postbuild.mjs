@@ -37,6 +37,7 @@ import {
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
 import {
+  LEARNER_CHUNKS,
   LOCALE_CHUNKS,
   MEMORY_CHUNKS,
   QUEST_REVIEW_CHUNKS,
@@ -249,10 +250,10 @@ const bundles = existsSync(jsDir)
 const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest];
 const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
 // The locale chunks (the es / ko UI messages and content text, one per locale) and the grown-up roots, under the same rules.
-chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS], bundles, precached: manifestUrls }));
+chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS], bundles, precached: manifestUrls }));
 // A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
 const headersFile = join(dist, '_headers');
-for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS], bundles))) {
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS], bundles))) {
   chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
 }
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, locale and root chunks:\n  ${chunkProblems.join('\n  ')}`);

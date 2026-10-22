@@ -117,6 +117,14 @@ describe('POST /api/telemetry, F-CURR-002 section 11.3 names (CM-3, Worker first
     expect(r.body.data?.event.payload).toBeUndefined();
   });
 
+  it("stores week.goal_met with a weekly plan's days a week as its target (CM-17, F-PLAN-002 paces 2 and 4)", async () => {
+    for (const target of [2, 4]) {
+      const r = await post({ name: 'week.goal_met', profileId: 'profile:suni', payload: { days: target, target } });
+      expect(r.status).toBe(201);
+      expect(r.body.data?.event.payload).toEqual({ days: target, target });
+    }
+  });
+
   it('records space.goal.* on the Worker side with its metric and target, no profile id, and the same strict filter', () => {
     expect(recordServerEvent('space.goal.set', { metric: 'stories', target: 20 })).toMatchObject({ name: 'space.goal.set', payload: { metric: 'stories', target: 20 } });
     expect(recordServerEvent('space.goal.met', { metric: 'quests', target: 12 })).toMatchObject({ name: 'space.goal.met', payload: { metric: 'quests', target: 12 } });

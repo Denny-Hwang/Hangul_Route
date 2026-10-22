@@ -1,6 +1,6 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
-Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3) · [theme glyphs](theme-glyphs.md) (the Heritage Journey grid: `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top`)
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3) · [`rest`](#rest-a-granted-rest-day-f-curr-002-cm-17) (F-CURR-002 CM-17) · [theme glyphs](theme-glyphs.md) (the Heritage Journey grid: `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top`)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
@@ -119,6 +119,22 @@ backspace: stroke M9 5.5 H20.5 V18.5 H9 L3 12 Z (2.2) + stroke M12 9.5 L16.5 14.
 - **Never alone, never a miss mark.** The glyphs are key faces: each key carries its accessible name (`a11y.minigame.keyboard`), and Shift's state is also its `selected` state and its fill, never the glyph alone. The cross inside `backspace` sits in a key cap, so it never reads as the red X of a miss (the game never shows one).
 - **Tokens only.** `text.primary` on the key; Shift on uses `brand.secondaryDark`.
 - **Tests.** The set-wide tests in `Icon/__tests__/glyphs.test.ts` (names, path data, distinct, inside the box, stroke band).
+
+## `rest`: a granted rest day (F-CURR-002 CM-17)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §7.4 · wireframe `design/wireframes/home/goal-ring-weekly-dots.md` · mock `design/screens/goal-ring-weekly-dots/mock/goal-ring-weekly-dots.html` (the same path)
+
+| Name | Means | Where | Geometry (24 x 24) |
+|---|---|---|---|
+| `rest` | A rest day the app granted (up to 2 a local week) | a dot of the Home week strip | a crescent outline, stroke 2.2, no fill |
+
+```
+rest: stroke M15.5 3.5 A8.5 8.5 0 1 0 20.5 15.5 A7 7 0 0 1 15.5 3.5 Z (2.2)
+```
+
+- **Never a miss mark.** It marks a granted rest day only; a quiet day that is not a rest day has no glyph at all.
+- **Tokens only.** `text.secondary` on `surface.sunken`.
+- **Tests.** The `rest` case and the set-wide tests in `Icon/__tests__/glyphs.test.ts`.
 
 ## Theme glyphs: the Heritage Journey grid
 

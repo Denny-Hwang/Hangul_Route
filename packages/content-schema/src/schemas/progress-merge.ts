@@ -163,8 +163,11 @@ export function latestLocalDay(now: Date): string {
 /** How far ahead of the Worker's clock a sent `goals.setAt` may be and still count as a real change made now (a fast clock). */
 export const GOALS_CLOCK_SKEW_MS = 10 * 60_000;
 
-type TimedFields = Pick<ProgressSnapshot, 'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt'>;
-const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps'] as const;
+type TimedFields = Pick<
+  ProgressSnapshot,
+  'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt' | 'steadyWeeks'
+>;
+const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps', 'steadyWeeks'] as const;
 
 /**
  * The time guard the Worker applies to a sent snapshot before it merges
@@ -174,7 +177,9 @@ const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps'] as con
  * - a `dayLog` day later than `latestLocalDay(now)` is dropped;
  * - a `streakLocal` whose `lastDay` is later than that reads as absent, so the
  *   stored run is kept;
- * - a latch time or `memSeededAt` later than `now` is read as `now` (the
+ * - a `steadyWeeks` week whose Monday is later than that is dropped (row
+ *   CM-17): no time zone has reached that week yet;
+ * - a latch time (a `steadyWeeks` time too) or `memSeededAt` later than `now` is read as `now` (the
  *   `PATCH /learners` rule for `at`); the earliest wins, so a stored earlier
  *   time still wins;
  * - a `goals.setAt` later than `now` but within `GOALS_CLOCK_SKEW_MS` (a
@@ -197,8 +202,11 @@ export function boundToNow<T extends Partial<TimedFields>>(snapshot: T, now: Dat
   const next: Partial<TimedFields> = {};
   for (const key of LATCH_KEYS) {
     const latch = snapshot[key];
-    if (latch && Object.values(latch).some(future)) {
-      next[key] = Object.fromEntries(Object.entries(latch).map(([id, at]) => [id, future(at) ? nowIso : at]));
+    // A week no time zone has reached yet cannot have latched: a wrong clock wrote it.
+    const kept = key === 'steadyWeeks' && latch ? Object.entries(latch).filter(([week]) => week <= lastDay) : undefined;
+    const entries = kept ?? (latch ? Object.entries(latch) : []);
+    if (latch && (entries.length !== Object.keys(latch).length || entries.some(([, at]) => future(at)))) {
+      next[key] = Object.fromEntries(entries.map(([id, at]) => [id, future(at) ? nowIso : at]));
     }
   }
   const farGoals = snapshot.goals !== undefined && Date.parse(snapshot.goals.setAt) > nowMs + GOALS_CLOCK_SKEW_MS;

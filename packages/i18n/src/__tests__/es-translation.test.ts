@@ -133,6 +133,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'a11y.myRoute.routeCard',
   'a11y.minigame.keyboard.key', // "{letter}, {sound}" on a keyboard key (F-CURR-001 G-3)
   'a11y.minigame.writeFrame.tile', // "{block}, {sound}" on a name-round tile (F-CURR-001 G-5)
+  'learner.goals.daily.label', // "{tier}, {time}": a daily goal with its time words (F-CURR-002 CM-17)
   'learner.journey.countMark',
   'learner.journey.cellStories.title',
   'learner.quest.progress',

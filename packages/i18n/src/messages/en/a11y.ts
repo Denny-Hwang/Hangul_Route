@@ -451,4 +451,24 @@ export const a11y = {
     /** The result's stars, in words and never against a total. */
     stars: (n: number) => plural('en', n, { one: '1 star', other: `${n} stars` }),
   },
+  /**
+   * The Home week strip and the goals sheet (F-CURR-002 row CM-17; design/wireframes/home/goal-ring-weekly-dots.md
+   * Accessibility). The strip is one button read as one sentence; a part with nothing to say is left out with its
+   * full stop, never read as an empty pause. Day names come in from `formatDate(locale, day, 'weekdayLong')`.
+   */
+  goals: {
+    strip: (parts: { days: string; steadyWeeks: string; streak: string | null; goal: string | null }) =>
+      [`This week: ${parts.days}.`, `${parts.steadyWeeks}.`, parts.streak === null ? null : `${parts.streak}.`, parts.goal === null ? null : `Daily goal: ${parts.goal}.`, 'Change goals.']
+        .filter((part): part is string => part !== null)
+        .join(' '),
+    day: {
+      learned: (day: string) => `${day} learned`,
+      learnedToday: (day: string) => `${day} learned today`,
+      rest: (day: string) => `${day} rest day`,
+      today: (day: string) => `${day} today`,
+    },
+    /** The daily goal's state after its tier and time words. */
+    state: { empty: 'ready to start', more: 'a little more to go', met: 'done' },
+    close: 'Close',
+  },
 } as const;

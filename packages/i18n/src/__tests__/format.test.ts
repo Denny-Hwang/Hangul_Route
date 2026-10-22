@@ -58,6 +58,18 @@ describe('formatDate: Intl path', () => {
     expect(formatDate('en', 'not a date', 'weekdayLong')).toBe('');
   });
 
+  it('weekdayNarrow is one letter from the table in every locale, Intl or not (the Home week strip, F-CURR-002 CM-17)', () => {
+    // 2026-10-19 is a Monday: the strip's week, Monday first.
+    const week = Array.from({ length: 7 }, (_, i) => new Date(2026, 9, 19 + i, 12));
+    expect(week.map((d) => formatDate('en', d, 'weekdayNarrow'))).toEqual(['M', 'T', 'W', 'T', 'F', 'S', 'S']);
+    expect(week.map((d) => formatDate('es', d, 'weekdayNarrow'))).toEqual(['L', 'M', 'X', 'J', 'V', 'S', 'D']);
+    expect(week.map((d) => formatDate('ko', d, 'weekdayNarrow'))).toEqual(['월', '화', '수', '목', '금', '토', '일']);
+    expect(formatDate('en', '2026-10-19T23:30:00.000Z', 'weekdayNarrow', { utc: true })).toBe('M');
+    vi.stubGlobal('Intl', undefined);
+    expect(formatDate('es', week[2] as Date, 'weekdayNarrow')).toBe('X');
+    expect(formatDate('en', 'not a date', 'weekdayNarrow')).toBe('');
+  });
+
   it('returns an empty string for an invalid date (never throws)', () => {
     expect(formatDate('en', 'not a date', 'monthYear')).toBe('');
     expect(formatDate('en', 'not a date', 'monthDay')).toBe('');

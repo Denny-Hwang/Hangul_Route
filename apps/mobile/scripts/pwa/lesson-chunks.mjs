@@ -162,6 +162,13 @@ export const REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'daily-review-
 export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-review-chunk', marker: 'quest-review-chunk:session' })]);
 
 /**
+ * The learner chunks a switch loads (F-CURR-002 §10): the daily and weekly goals (row CM-17,
+ * `src/screens/goals/goals-chunk.ts`) are a bundle of their own, reached only through the literal `import()` of
+ * `src/store/goals-entry.ts`, so a learner with `goals` off never loads them and the start bundle does not grow.
+ */
+export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
+
+/**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
