@@ -69,11 +69,15 @@ describe('privacy policy', () => {
     expect(labels.length).toBeGreaterThan(0);
     // AMENDMENTS-SITE-NEWUSER SN-2: or the short level check suggests it, and its answers go up as usage events.
     expect(privacy).toContain(`starting level the learner picks or a short level check suggests (${labels.join(' / ')})`);
-    expect(privacy).toContain('If the learner takes the level check, each answer is sent to us as a usage event');
-    // placement.item_answered carries the outcome (with skipped as "not sure"), `assisted` (the sound guide) and `ms`;
-    // placement.complete carries the suggested level.
-    expect(privacy).toContain('how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took.');
-    expect(privacy).toContain('When the check ends, the level it suggests is sent too.');
+    expect(privacy).toContain('If the learner takes the level check, it sends us usage events.');
+    // placement.start carries the test locale, mode and profile level; placement.item_answered the outcome (with
+    // skipped as "not sure"), `assisted` (the sound guide), `noSound` and `ms`; placement.complete the suggested
+    // level, `asked` and `stopReason`; placement.skipped and placement.override_applied are noted too.
+    expect(privacy).toContain(
+      'how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took;',
+    );
+    expect(privacy).toContain('when it ends, the level it suggests, how many questions were asked and why it stopped.');
+    expect(privacy).toContain('We also note when the check is skipped or a grown-up picks a different start.');
     expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
     expect(privacy).not.toMatch(/age group/i);
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);
@@ -81,7 +85,7 @@ describe('privacy policy', () => {
   });
 
   it('says the privacy page was last updated 2026-10-21 (the SN-2 fact fixes, the draft banner removed)', () => {
-    expect(privacy).toContain('Effective October 21, 2026');
+    expect(privacy).toContain('Effective October 22, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -417,10 +421,10 @@ describe('payment facts (F-SITE-002 S-7)', () => {
     });
 
     it('both documents move to 2026-10-21 with the SN-2 fact fixes and the banner removed (the merge date)', () => {
-      expect(terms).toContain('Effective October 21, 2026');
+      expect(terms).toContain('Effective October 22, 2026');
       expect(terms).not.toContain('Effective October 20, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 21, 2026');
+      expect(privacy).toContain('Effective October 22, 2026');
       expect(privacy).not.toContain('Effective October 20, 2026');
     });
 

@@ -1,4 +1,4 @@
-import { getMessages } from '@hangul-route/i18n';
+import { getMessages, LOCALE_META, LOCALES } from '@hangul-route/i18n';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -56,10 +56,15 @@ test.describe('locale routes', () => {
       expect(order).toEqual([t.home, t.start]);
       await expect(main.locator('svg[data-pose="waving"]')).toHaveCount(1);
       // §3.2 and §8: the language links of the 404 point at each locale's home (the unknown path would be another 404).
+      // Each link goes to the home of the language it names: `sitePath(target, '/')`, so `/` for English and
+      // `/<locale>` otherwise (a link with hreflang="es" pointing at `/ko` fails here).
       const languageLinks = page.locator('footer a[hreflang]');
       expect(await languageLinks.count()).toBeGreaterThanOrEqual(2);
-      for (const href of await languageLinks.evaluateAll((links) => links.map((a) => a.getAttribute('href')))) {
-        expect(['/', '/es', '/ko']).toContain(href);
+      const homeOf = new Map(LOCALES.map((target) => [LOCALE_META[target].htmlLang, target === 'en' ? '/' : `/${target}`]));
+      const pairs = await languageLinks.evaluateAll((links) => links.map((a) => [a.getAttribute('hreflang'), a.getAttribute('href')] as const));
+      for (const [hreflang, href] of pairs) {
+        expect(homeOf.has(hreflang ?? ''), `hreflang ${hreflang}`).toBe(true);
+        expect(href, `hreflang ${hreflang}`).toBe(homeOf.get(hreflang ?? ''));
       }
     });
   }

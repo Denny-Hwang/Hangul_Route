@@ -477,10 +477,10 @@ export const landing = {
     privacy: {
       title: 'Privacy Policy',
       /**
-       * October 21, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
+       * October 22, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
        * removed (owner decision 2026-10-21 (c)); the date the fixes merge.
        */
-      effective: 'Effective October 21, 2026',
+      effective: 'Effective October 22, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -501,18 +501,19 @@ export const landing = {
           heading: 'What we collect',
           bullets: {
             /**
-             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level, and each of its
-             * answers goes up as a `placement.item_answered` usage event (question id, outcome, sound guide, time); the
-             * suggested level goes up in `placement.complete`.
+             * SN-2: the level check (F-PLC-001, on for every platform) can suggest the starting level. Its usage events
+             * (apps/mobile/src/logic/placement/events.ts): `placement.start` (test language, mode, profile level),
+             * `placement.item_answered` (question id, outcome, sound guide, `noSound`, time), `placement.complete`
+             * (suggested level, questions asked, stop reason), `placement.skipped` and `placement.override_applied`.
              */
             profile: ({ levels }: LegalValues) =>
-              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took. When the check ends, the level it suggests is sent too. A real name is optional and only stored if a parent enters it.`,
+              `Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (${levels}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, it sends us usage events. They include, when it starts, the language and kind of check and the learner's starting level; for each answer, which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took; and when it ends, the level it suggests, how many questions were asked and why it stopped. We also note when the check is skipped or a grown-up picks a different start. A real name is optional and only stored if a parent enters it.`,
             progress:
               "Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress. For progress reports we also keep: for the last 35 days, which days were practiced, with minutes, quests, cards and words for each day; monthly totals for up to 24 months; all-time totals since the first practice day; the day each stage was finished; the letters that became strong each day; the next lesson and one lesson to revisit; and the device's time zone, so days are counted in the learner's local time.",
             /**
              * F-REPORT-001 section 3.10: who can see the progress above and the reports built from it. [TV] Rewritten for
              * AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D1 to TV-D5 and TV-D12, the owner's decision of 2026-10-14 (not
-             * reviewed by counsel; the draft banner above the document stays).
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)).
              */
             progressWho:
               "Who can see progress and reports: the learner's family caregivers, who can also recover the full saved progress, see all of it, words included. Once the family has read a short update about classes in the app or the console, the teacher of a class the learner joined, and the owner and admins of that class's school, see the same progress, words included, and whether the learner gets notes from the class. We record when that update was read and whether it was read in the console or on the learner's device. Until then a class sees what it saw before: day-by-day history only from the day the learner joined, all-time totals without the first practice day, and no words.",
@@ -528,7 +529,7 @@ export const landing = {
               "Class moves: a teacher may move a learner from one class to another without asking the family first. When the teacher runs both classes, or is an admin of their school, the move happens at once; otherwise the receiving class has to accept it. Until it accepts, the receiving class sees only the learner's initials, picture and level. The family then sees a one-time notice in the app and in the console. Cards, stars and finished lessons always stay with the learner. A family can also start a move itself, and a learner can leave a class from Profile at any time. We keep a record of each move (which classes, which teacher account moved the learner and when, never a name) for 90 days after it happens.",
             /**
              * [SA] AMENDMENTS-SEATS-ADMINS section 6.7 (SA-4; SA-D10 to SA-D12, the owner's request of 2026-10-20, not
-             * reviewed by counsel; the draft banner stays): what a school's administrators see, the verified email an
+             * reviewed by counsel; the draft banner was removed by owner decision 2026-10-21 (c)): what a school's administrators see, the verified email an
              * accept needs, and the school history the owner sees (400 days). Family and stand-alone class renames keep
              * no such history.
              */
@@ -637,8 +638,8 @@ export const landing = {
     },
     terms: {
       title: 'Terms of Service',
-      /** October 21, 2026: the SN-2 fact fixes and the draft banner removed (owner decision 2026-10-21 (c)), as the Privacy Policy. */
-      effective: 'Effective October 21, 2026',
+      /** October 22, 2026: the SN-2 fact fixes and the draft banner removed (owner decision 2026-10-21 (c)), as the Privacy Policy. */
+      effective: 'Effective October 22, 2026',
       otherDocument: 'Privacy Policy',
       sections: {
         accepting: {

@@ -78,8 +78,9 @@ describe('landing: sentences that take a value render the former text', () => {
   it('privacy and terms: the address and the level labels are passed in', () => {
     const values = { email: 'hello@example.com', levels: 'A / B' };
     expect(l.legal.privacy.sections.collect.bullets.profile(values)).toBe(
-      // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level, and its answers go up as usage events.
-      'Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, each answer is sent to us as a usage event: which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, and how long it took. When the check ends, the level it suggests is sent too. A real name is optional and only stored if a parent enters it.',
+      // AMENDMENTS-SITE-NEWUSER SN-2: the level check can suggest the level; placement.start, item_answered, complete,
+      // skipped and override_applied go up as usage events (apps/mobile/src/logic/placement/events.ts).
+      "Learner profile: a display nickname and a starting level the learner picks or a short level check suggests (A / B). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. If the learner takes the level check, it sends us usage events. They include, when it starts, the language and kind of check and the learner's starting level; for each answer, which question it was, how it was answered (right, wrong or not sure), whether the sound guide was used, whether the sound could play, and how long it took; and when it ends, the level it suggests, how many questions were asked and why it stopped. We also note when the check is skipped or a grown-up picks a different start. A real name is optional and only stored if a parent enters it.",
     );
     expect(l.legal.privacy.sections.emailList.paragraphs.removal(values)).toBe(
       'Removal and erasure: to be taken off the list, or to have your address erased, email hello@example.com from the address you signed up with and we will remove it.',
@@ -135,7 +136,7 @@ describe('legal: payment facts (F-SITE-002 S-7, OD-13; English-authoritative, fl
   const SPONSORED =
     'A Group License started with a code that makes its first year free needs no card; it ends when that year does unless a card is added under Manage subscription.';
   // [SA] AMENDMENTS-SEATS-ADMINS section 4 (SA-6): the learners each plan holds, before Stripe Live.
-  // SN-2: then what a free space holds and the school administrators an owner can invite.
+  // SN-2: then the school administrators an owner can invite (owner decision 2026-10-21 (b): no free seat numbers).
   const SIZES =
     'The Family Plan covers one family with up to 4 learners. The Group License covers one class or one school with up to 50 students; a school also holds up to 10 teachers. A School Contract can cover more. When a family, class or school already has the most learners its plan holds, new learners cannot join until a place opens; nobody already in it is removed because of the limit. A school owner can also invite up to 2 administrators.';
   const privacy = l.legal.privacy.sections;
@@ -272,13 +273,13 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the legal effective dates (#149)', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
-    // October 21, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
-    expect(l.legal.privacy.effective).toBe('Effective October 21, 2026');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
+    expect(l.legal.privacy.effective).toBe('Effective October 22, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
-    // October 21, 2026 (SN-2): the fact fixes and the draft banner removed, as the Privacy Policy.
-    expect(l.legal.terms.effective).toBe('Effective October 21, 2026');
+    // October 22, 2026 (SN-2): the fact fixes and the draft banner removed, as the Privacy Policy.
+    expect(l.legal.terms.effective).toBe('Effective October 22, 2026');
     expect('draft' in l.legal).toBe(false);
   });
 });
