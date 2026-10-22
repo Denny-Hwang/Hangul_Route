@@ -3,7 +3,7 @@ import { hasSoundChange, normalizeKo, pronunciationKey } from '../lesson-lint-it
 import { romanize } from '../romanization/rr';
 import { SLOT_MARKER } from '../schemas/quest';
 import { ThemeKeySchema } from '../schemas/heritage-card';
-import type { ItemOccurrence, KoLine } from './extract';
+import type { ItemOccurrence, KoLine, ReviewSymbol } from './extract';
 import {
   ReviewItemIdSchema,
   type ReviewFormat,
@@ -264,16 +264,24 @@ const TILE_COUNT = (ko: string): number => normalizeKo(ko).split(' ').length;
 const TYPEABLE = /^[가-힣]+( [가-힣]+)*$/;
 const BUILDABLE = /^[가-힣]{1,6}$/;
 
-/** The formats an item allows (§4.3 rungs by kind, §4.5 `dictation-unambiguous`). */
-export function allowedFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'picture' | 'soundChange' | 'homophoneOf' | 'reply'>): ReviewFormat[] {
+/**
+ * The formats an item allows (§4.3 rungs by kind, §4.5 `dictation-unambiguous`). Dictation (Type
+ * Hangul `hear`, the "hear mode" of §4.5) needs one spelling for the sound and no sound change. A
+ * heard round with spelling options (`hear-pick`) needs one spelling too, unless its prompt can show
+ * the item's picture or gloss, which settles it: an item with a homophone and neither is never
+ * asked by ear. The review engine (row CM-13) shows that picture or gloss in such an item's heard
+ * round.
+ */
+export function allowedFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'en' | 'picture' | 'soundChange' | 'homophoneOf' | 'reply'>): ReviewFormat[] {
   const ko = normalizeKo(item.ko);
+  const heard: ReviewFormat[] = item.homophoneOf.length > 0 && item.picture === undefined && item.en === undefined ? [] : ['hear-pick'];
   switch (item.kind) {
     case 'sym':
       return ['hear-pick', 'read-pick', 'syllable-build', 'match-shape'];
     case 'syl':
-      return ['hear-pick', 'read-pick', 'syllable-build'];
+      return [...heard, 'read-pick', 'syllable-build'];
     case 'lex': {
-      const out: ReviewFormat[] = ['hear-pick', 'read-pick'];
+      const out: ReviewFormat[] = [...heard, 'read-pick'];
       if (TYPEABLE.test(ko) && ko.length <= 12) {
         out.push('type-see');
         if (item.picture !== undefined) out.push('type-picture');
@@ -287,7 +295,7 @@ export function allowedFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'picture' 
       // A frame (with ___) is read and filled, never heard or built whole.
       if (ko.includes(SLOT_MARKER)) return ['read-pick', 'cloze-pick'];
       const tiles = TILE_COUNT(ko);
-      const out: ReviewFormat[] = ['hear-pick', 'read-pick'];
+      const out: ReviewFormat[] = [...heard, 'read-pick'];
       if (tiles >= 2) out.push('cloze-pick');
       if (tiles >= 2 && tiles <= 6) out.push('sentence-builder');
       return out;
@@ -301,9 +309,34 @@ export function allowedFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'picture' 
   }
 }
 
+/** A retired item as the chunk keeps it for reports (§4.2): its id and the Korean its frozen key names. */
+export interface RetiredItem {
+  id: string;
+  ko: string;
+  romanization: string;
+}
+
+/**
+ * The Korean a frozen key names, with its romanization: the text of a word, block, sentence or
+ * exchange line (without a homograph's sense), a symbol's character (from the symbol table), and
+ * for a realia card's reading skill, whose key is its realia ref, that ref.
+ */
+export function labelOfKey(key: string, symbols: readonly ReviewSymbol[]): { ko: string; romanization: string } {
+  const [kind = '', text = ''] = key.split('|');
+  if (kind === 'sym') {
+    const symbol = symbols.find((s) => s.id === text);
+    return symbol === undefined ? { ko: text, romanization: text } : { ko: symbol.char, romanization: symbol.romanization };
+  }
+  if (kind === 'rea' || text === '') return { ko: text || key, romanization: text || key };
+  const ko = text.replace(/~[a-z0-9-]+$/, '');
+  return { ko, romanization: romanize(ko).text };
+}
+
 export interface ReviewItemsBuild {
   /** The items, in route order of the first cell that teaches each. */
   items: ReviewItem[];
+  /** The retired items, by id, for the chunk's retired table. */
+  retired: RetiredItem[];
   issues: StableIdIssue[];
   /** Every occurrence with the id it went to (the coverage test reads it). */
   placed: { occ: ItemOccurrence; id: string }[];
@@ -315,7 +348,12 @@ export interface ReviewItemsBuild {
  * The review items of all occurrences, with their frozen ids, and every issue the
  * `items-stable-id` rule reports (an empty list: the snapshot holds exactly what is taught).
  */
-export function buildReviewItems(occurrences: readonly ItemOccurrence[], snapshot: StableIdSnapshot, vocab: VocabIndex): ReviewItemsBuild {
+export function buildReviewItems(
+  occurrences: readonly ItemOccurrence[],
+  snapshot: StableIdSnapshot,
+  vocab: VocabIndex,
+  symbols: readonly ReviewSymbol[] = [],
+): ReviewItemsBuild {
   const issues: StableIdIssue[] = [];
   // A round's bare word is a pattern when a Discover page teaches the same Korean as one.
   const taughtPatterns = new Set(occurrences.filter((o) => o.kind === 'pat' && o.source === 'discover').map((o) => normalizeKo(o.ko)));
@@ -389,14 +427,29 @@ export function buildReviewItems(occurrences: readonly ItemOccurrence[], snapsho
     });
   }
 
+  // Where a text is glossed: its Korean and English -> the first overlay field that holds that English.
+  const glossAt = new Map<string, string>();
+  for (const occ of occs) {
+    for (const line of [occ, occ.reply]) {
+      if (line?.en === undefined || line.glossKey === undefined) continue;
+      const k = glossText(line.ko, line.en);
+      if (!glossAt.has(k)) glossAt.set(k, line.glossKey);
+    }
+  }
+  for (const word of vocab.byId.values()) {
+    const k = glossText(word.ko, word.en);
+    if (!glossAt.has(k)) glossAt.set(k, `${word.id}#gloss`);
+  }
   const items: ReviewItem[] = [];
   const placed: { occ: ItemOccurrence; id: string }[] = [];
   for (const [key, { identity, list }] of groups) {
     const id = ids.get(key);
     if (id === undefined) continue;
     for (const occ of list) placed.push({ occ, id });
-    items.push(mergeGroup(id, identity, list, vocab));
+    items.push(mergeGroup(id, identity, list, vocab, glossAt));
   }
+  const keyOfId = new Map(Object.entries(snapshot.ids).map(([key, id]) => [id, key]));
+  const retiredItems = [...retired].sort().map((id): RetiredItem => ({ id, ...labelOfKey(keyOfId.get(id) ?? id, symbols) }));
   homophones(items);
   for (const item of items) item.formats = allowedFormats(item);
 
@@ -408,35 +461,61 @@ export function buildReviewItems(occurrences: readonly ItemOccurrence[], snapsho
     alias: snapshot.alias,
     retired: snapshot.retired,
   };
-  return { items, issues, placed, frozen };
+  return { items, retired: retiredItems, issues, placed, frozen };
 }
 
-/** One item from the occurrences of its key, the first (in route order) Discover one leading. */
-function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrence[], vocab: VocabIndex): ReviewItem {
+const glossText = (ko: string, en: string): string => `${normalizeKo(ko)}|${en}`;
+
+/**
+ * One item from the occurrences of its key (in route order), the first Discover one leading. Its
+ * cells are the first cell that asks it, the first grid cell that asks it (when a story came
+ * first: a story has no mastery ring), and every cell whose Discover page shows it; a later cell
+ * that only asks it again is `asked` (§4.4: its denominator does not hold the item). Its English and
+ * its gloss key come from one occurrence, so the overlay translates that English; when that one has
+ * no key, the first field anywhere that glosses the same Korean with the same English.
+ */
+function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrence[], vocab: VocabIndex, glossAt: ReadonlyMap<string, string>): ReviewItem {
   const first = list[0] as ItemOccurrence;
   const lead = list.find((o) => o.source === 'discover') ?? first;
   const glossed = list.find((o) => o.en !== undefined && o.source === 'discover') ?? list.find((o) => o.en !== undefined);
   const word = identity.vocabId === undefined ? undefined : vocab.byId.get(identity.vocabId);
+  const inOrder = [...new Set(list.map((o) => o.cell))];
+  const discovered = new Set(list.filter((o) => o.source === 'discover').map((o) => o.cell));
+  const firstEpisode = inOrder.find((cell) => cell.startsWith('episode:'));
+  const cells = inOrder.filter((cell, i) => i === 0 || cell === firstEpisode || discovered.has(cell));
+  const teaching = list.filter((o) => cells.includes(o.cell));
   const item: ReviewItem = {
     id,
     kind: identity.kind,
     ko: lead.ko,
     romanization: lead.romanization !== '' ? lead.romanization : (list.find((o) => o.romanization !== '')?.romanization ?? romanize(lead.ko).text),
     home: first.home,
-    stage: Math.min(...list.map((o) => o.stage)),
-    volume: Math.min(...list.map((o) => o.volume)),
-    cells: [...new Set(list.map((o) => o.cell))],
+    stage: Math.min(...teaching.map((o) => o.stage)),
+    volume: Math.min(...teaching.map((o) => o.volume)),
+    cells,
+    asked: inOrder.filter((cell) => !cells.includes(cell)),
     formats: [],
     soundChange: list.some((o) => o.soundChange === true) || (identity.kind !== 'sym' && identity.kind !== 'rea' && hasSoundChange(lead.ko)),
     homophoneOf: [],
   };
   const en = word?.en ?? glossed?.en;
   if (en !== undefined) item.en = en;
-  const glossKey = word !== undefined ? `${word.id}#gloss` : list.find((o) => o.glossKey !== undefined)?.glossKey;
+  const sameEnglish = (o: { en?: string; glossKey?: string }): boolean => o.glossKey !== undefined && o.en === glossed?.en;
+  const glossKey =
+    word !== undefined
+      ? `${word.id}#gloss`
+      : glossed === undefined
+        ? undefined
+        : (glossed.glossKey ?? list.find(sameEnglish)?.glossKey ?? glossAt.get(glossText(lead.ko, glossed.en as string)));
   if (glossKey !== undefined) item.glossKey = glossKey;
   const picture = list.find((o) => o.picture !== undefined)?.picture ?? (word?.visual !== undefined && !word.visual.startsWith('swatch:') ? word.visual : undefined);
   if (picture !== undefined) item.picture = picture;
-  if (identity.kind === 'exc') item.reply = (list.find((o) => o.reply?.glossKey !== undefined) ?? lead).reply as KoLine;
+  if (identity.kind === 'exc') {
+    const reply = { ...((list.find((o) => o.reply?.glossKey !== undefined) ?? lead).reply as KoLine) };
+    const replyKey = reply.en === undefined || reply.glossKey !== undefined ? undefined : glossAt.get(glossText(reply.ko, reply.en));
+    if (replyKey !== undefined) reply.glossKey = replyKey;
+    item.reply = reply;
+  }
   return item;
 }
 
