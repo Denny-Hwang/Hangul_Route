@@ -1,7 +1,7 @@
 import { devices, type Page, type Playwright } from '@playwright/test';
 import { en } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, typeDigits, unlockWithPin, headerBack } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, openGrownUpZone, readStored, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -86,6 +86,59 @@ async function expectPracticed(page: Page, day: string): Promise<void> {
   await expect(cell).toBeVisible();
   await expect(cell.locator('svg')).toHaveCount(1);
 }
+
+/**
+ * F-CURR-002 row CM-16: a family device whose learner records (`memoryRecord` on, the stored remote copy) with one
+ * answered word due today in the memory store; ends on the report's More detail, open.
+ */
+async function memoryReport(page: Page, record: boolean): Promise<void> {
+  await onboardChild(page, { name: 'Mina' });
+  const id = await profileIdOf(page, 'Mina');
+  const today = await localToday(page);
+  const yesterday = await localToday(page, 1);
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { memoryRecord: { on: record, pct: 100 } } });
+  await seedStored(page, `memory:${id}`, {
+    v: 1,
+    rows: { 'lex:jeotgarak': { sh: 'stage2', st: { b: 2, d: today, c: 1, r: 3, n: 2, f: yesterday, s: 2, at: new Date().toISOString() } } },
+    vf: {},
+    pending: [],
+    cursor: 0,
+    seededFrom: null,
+    day: null,
+    dailySent: null,
+  });
+  await openGrownUpZone(page, 'Mina');
+  await unlockWithPin(page);
+  await page.getByTestId(`dashboard-see-report-${id}`).click();
+  const toggle = page.getByTestId('learner-report-more-detail-toggle');
+  await toggle.scrollIntoViewIfNeeded();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
+test.describe('F-CURR-002 CM-16: the memory counts in the in-app report', () => {
+  test('memoryRecord on: More detail shows words known and the items ready to refresh; no sideways scroll at 320', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await memoryReport(page, true);
+    const block = page.getByTestId('learner-report-detail-memory');
+    await expect(block).toContainText(r.detail.memory);
+    await expect(block).toContainText(r.detail.wordsKnown(1));
+    await expect(block).toContainText(/ready to refresh/);
+    await expect(block).not.toContainText(/%|lex:/);
+    await expectNoHorizontalOverflow(page, 'memory block at 320');
+    await block.scrollIntoViewIfNeeded();
+    await shot(page, 'learner-report-memory-320');
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await shot(page, 'learner-report-memory-wide');
+  });
+
+  test('memoryRecord off: no block, never a zero', async ({ page }) => {
+    await memoryReport(page, false);
+    await expect(page.getByTestId('learner-report-detail-totals')).toBeVisible();
+    await expect(page.getByTestId('learner-report-detail-memory')).toHaveCount(0);
+    await expect(page.getByText(/Words known|ready to refresh/)).toHaveCount(0);
+  });
+});
 
 test.describe('the in-app report on a family device', () => {
   test('dashboard -> See report: the title, the week headline, today marked; no sideways scroll at 320, More detail closed or open', async ({ page }) => {

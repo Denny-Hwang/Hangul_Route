@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { CATALOG, storyIsReady } from '@hangul-route/content-schema';
 import { touchTarget } from '@hangul-route/design-system/tokens';
-import { EMPTY, LEGACY, PARTIAL, SESSION_KEY, classUrl, mockClass, mockReport, reportUrl, spaceId } from './report-fixtures';
+import { EMPTY, LEGACY, MEMORY, PARTIAL, SESSION_KEY, STEADY, classUrl, mockClass, mockReport, reportUrl, spaceId } from './report-fixtures';
 
 /**
  * F-REPORT-001 section 5, `web/e2e/reports.spec.ts`: the learner report, the class report and the parent chooser on
@@ -134,6 +134,27 @@ test.describe('the learner report (RP-7a2)', () => {
     await button.click();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByText('Letters Mina knows well')).toBeVisible();
+  });
+
+  test('F-CURR-002 CM-16: More detail shows words known, ready to refresh and the episodes per level; none without the block', async ({ page }, testInfo) => {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(viewport);
+      await mockReport(page, { kind: 'class', role: 'teacher', summary: { ...STEADY, memory: MEMORY } });
+      await page.goto(reportUrl('class', 'period=week&from=roster'));
+      await page.getByTestId('report-more-button').click();
+      const block = page.getByTestId('report-detail').locator('.hr-report-detail-block', { has: page.getByRole('heading', { level: 3, name: 'Words and review' }) });
+      await expect(block.getByRole('listitem')).toHaveText(['Words known: 42', '6 items are ready to refresh', 'Episodes: 5 done, 2 practiced, 1 mastered', 'Stage Checks passed: 1']);
+      await expect(page.getByTestId('report-detail')).not.toContainText(/lex:|%/);
+      await noSidewaysScroll(page);
+      await block.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: testInfo.outputPath(`learner-report-memory-${viewport.width}.png`), fullPage: true });
+    }
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    await mockReport(page, { kind: 'family' });
+    await page.goto(reportUrl('family'));
+    await page.getByTestId('report-more-button').click();
+    await expect(page.getByText('Letters Mina knows well')).toBeVisible();
+    await expect(page.getByTestId('report-detail')).not.toContainText(/Words and review|Words known|ready to refresh/);
   });
 
   test('tabs: arrow keys move focus, Enter selects; the period is in the URL and focus stays on the selected tab', async ({ page }) => {
@@ -463,6 +484,27 @@ test.describe('the class report (RP-8)', () => {
       await noSidewaysScroll(page);
     });
   }
+
+  test('F-CURR-002 CM-16: More detail opens with the memory totals and how many learners they come from; none without them', async ({ page }, testInfo) => {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(viewport);
+      await mockClass(page, { memory: { learners: 3, wordsKnown: 120, readyToRefresh: 14, levels: [9, 3, 1], stageChecks: 0 } });
+      await page.goto(classUrl());
+      await page.getByTestId('report-more-button').click();
+      const block = page.getByTestId('class-memory');
+      await expect(block.getByRole('heading', { level: 3 })).toHaveText('Words and review');
+      await expect(block.getByRole('listitem')).toHaveText(['Words known, added together: 120', 'Items ready to refresh, added together: 14', 'Episodes: 9 done, 3 practiced, 1 mastered']);
+      await expect(block).toContainText('From 3 learners whose apps share these counts.');
+      await noSidewaysScroll(page);
+      await block.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: testInfo.outputPath(`class-report-memory-${viewport.width}.png`), fullPage: true });
+    }
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    await mockClass(page);
+    await page.goto(classUrl());
+    await page.getByTestId('report-more-button').click();
+    await expect(page.getByTestId('class-memory')).toHaveCount(0);
+  });
 
   test('first screen at 390 x 844: the headline without scrolling; no learner name anywhere; generic title', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });

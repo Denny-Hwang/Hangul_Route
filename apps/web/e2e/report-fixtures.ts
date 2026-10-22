@@ -110,6 +110,9 @@ export const EMPTY = {
 
 export type Kind = 'family' | 'class';
 
+/** F-CURR-002 CM-16: the memory block of a learner whose app records it. */
+export const MEMORY = { wordsKnown: 42, readyToRefresh: 6, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa', 'lex:bae~pear'] };
+
 export interface ReportMock {
   kind?: Kind;
   summary?: unknown;
@@ -234,6 +237,8 @@ export const CLASS_REPORT = {
 export interface ClassMock {
   /** A status for the class route instead of a body (409 for a family). */
   status?: number;
+  /** The class's memory totals (F-CURR-002 CM-16); none by default. */
+  memory?: unknown;
   spaces?: { id: string; kind: Kind; name: string }[];
 }
 
@@ -255,7 +260,7 @@ export async function mockClass(page: Page, mock: ClassMock = {}): Promise<{ cal
       if (mock.status) return json(route, mock.status, null);
       const period = url.searchParams.get('period') ?? 'week';
       const bands = period === 'month' ? [{ band: '0', learners: 3 }, { band: '1-4', learners: 8 }] : period === 'day' ? [{ band: 'practiced', learners: 3 }, { band: 'not_yet', learners: 8 }] : CLASS_REPORT.practice.dayBands;
-      const report = { ...CLASS_REPORT, period, practice: period === 'all' ? {} : { dayBands: bands, notSaved: 0 } };
+      const report = { ...CLASS_REPORT, period, practice: period === 'all' ? {} : { dayBands: bands, notSaved: 0 }, ...(mock.memory ? { memory: mock.memory } : {}) };
       return json(route, 200, { space: space('space:sunflower', 'class', 'Sunflower'), period, at: url.searchParams.get('at'), serverTime: NOW, report });
     }
     if (url.pathname === '/api/spaces') {
