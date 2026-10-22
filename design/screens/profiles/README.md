@@ -195,3 +195,14 @@ Independent multi-agent review, round 2 (CLAUDE.md section 5), 2026-10-21, two r
 - es/ko consistency notes from the language review (minor): ko `join.who.notNow` is now 지금은 안 함, the transfer consent's words; ko `consentTitle`, `consentLine` and `consentYes` use the shipped Join verb 참여 (참여할까요?, 참여하면, 네, 참여하기); `joined(name)` keeps 들어갔어요, which mirrors the shipped `bubble.done` 들어왔어요; es `classOnly` is "En este dispositivo, solo es para su clase." (43, inside the 51 budget). Spec 17.4 and this README carry them.
 - Rejected: none.
 - es/ko language review: the reviewer passed every new and changed es/ko draft against the F-I18N-001 section 3.10 style guide and glossary. The round-2 changes reuse shipped values word for word (지금은 안 함 / Ahora no, 참여, Perfil / 프로필) or follow the reviewer's own wording (es `classOnly`). No `packages/i18n` file changes in this row, so the review ledger is untouched; OA-7b, OA-3 and OA-5 land the rows and sign their own ledger entries.
+
+## [GU] The guest tiles, the first-quest row and the guest-only gate (GU-0b)
+
+`AMENDMENTS-GUEST-FIRST-LESSON.md` design row GU-0b adds three mocks here, notes in `who-is-using-guest.md` (decisions D11 to D15), with the pass's strings, lengths and review in `../onboarding/README.md`. Built by GU-5. Every board above is unchanged.
+
+| File | What it fixes |
+|---|---|
+| `who-is-using-guest.md` | the Try the first quest tile and the guest's own tile (9.1), the 320 two-column check at Largest (14), People on this device's first-quest row and its ConfirmSheet, the guest-only gate line on PIN setup (9.2) |
+| `mock/who-is-using-guest.html` | boards 1 to 9: triggers try, a live guest and join, in en, es, ko |
+| `mock/who-is-using-guest-largest.html` | boards 1 to 9: the stress check at 320 in two columns and the shipped one-column grid, at Largest, in en, es, ko |
+| `mock/people-on-device-guest.html` | boards 1 to 15: the row with the switch on and off, the ConfirmSheet, the PIN setup box and its ConfirmSheet, in en, es, ko |

@@ -1,0 +1,210 @@
+/*
+ * AMENDMENTS-GUEST-FIRST-LESSON design row GU-0b: static design mocks of the guest first quest (Hoya's hello, Discover
+ * page 1, the storage-blocked line), Welcome's waiting card, the Results save card in its three cases, the two save
+ * steps, Not now (GuestLater), the first Home bubble, the chooser's two guest tiles, People on this device's guest row
+ * and the guest-only gate line on PIN setup. Design mock, not shipped code.
+ *
+ * Loaded after ../../app-shell/mock/app-shell.css (whose first :root block holds the token custom properties),
+ * ../../app-shell/mock/display-nav.css (text size, ScreenHeader, Display control, ConfirmSheet) and
+ * ../../profiles/mock/profiles.css (WhoTile, People rows, PIN pad, sheets). The first block below copies, once, the
+ * one token of packages/design-system/src/tokens.ts that those three sheets do not carry, named after it. Nothing here
+ * redefines a token. The second block names the few numbers that are not tokens; ../README.md "Constants" says what
+ * each one derives from.
+ */
+:root {
+  --colors-feedback-nudge: #F2B33D;   /* colors.feedback.nudge: the filled star (StarRow) */
+}
+:root {
+  --hoya-step: 120px;          /* QuestPlayerView NarrativeStepBody Hoya size (unchanged) */
+  --hoya-results: 140px;       /* ResultsScreen Hoya size (unchanged); GuestLater uses the same */
+  --hoya-bubble: 72px;         /* HoyaBubble's Hoya (unchanged) */
+  --hoya-card: 56px;           /* CreateProfile "Ready to go!" card Hoya (unchanged); the save card's Hoya */
+  --star-results: 48px;        /* ResultsScreen StarRow size (unchanged) */
+  --card-thumb: 96px;          /* CardArtThumb CARD_THUMB = touchTarget.hero (unchanged) */
+  --checkbox: 28px;            /* CreateProfileScreen CHECKBOX_SIZE = spacing.xl + spacing.xs (unchanged) */
+  --frame-320: 322px;          /* design board only: a 320 window plus the frame's two hairlines, not UI */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Board helpers (design board only, not UI)                                                    */
+/* ------------------------------------------------------------------------------------------ */
+.board-row > .board-item.w320 { flex: 0 0 var(--frame-320); max-width: var(--frame-320); }
+.w320 .sample { width: var(--frame-320); }
+.locale-tag { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Shared learner pieces drawn as HTML (react-native, in rem so the text size reaches them)     */
+/* ------------------------------------------------------------------------------------------ */
+.gu-screen { gap: var(--spacing-lg); background: var(--colors-surface-canvas); }
+.gu-col { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.gu-center { align-items: center; text-align: center; }
+.gu-grow { flex: 1; }
+.rn-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.rn-btn.full, .rn-hero { max-width: 100%; overflow-wrap: anywhere; }
+.rn-btn .icon { flex: none; }
+.gu-pill { align-self: flex-start; display: inline-flex; align-items: center; padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); font-size: var(--size-caption); font-weight: var(--weight-semibold); background: var(--colors-surface-sunken); color: var(--colors-text-primary); }
+.gu-pill.tone-brand { background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); }
+.gu-pill.tone-success { background: var(--colors-feedback-successLight); color: var(--colors-text-primary); align-self: center; }
+.gu-dots-row { display: flex; align-items: center; gap: var(--spacing-md); }
+.gu-dots { flex: 1; display: flex; gap: var(--spacing-xs); }
+.gu-dots span { flex: 1; height: var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); }
+.gu-dots span.on { background: var(--colors-brand-primary); }
+.gu-title { font-size: calc(var(--size-title) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.gu-prompt { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.gu-display { font-size: calc(var(--size-display) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; text-align: center; }
+.gu-semibold { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.gu-bold-lg { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.gu-secondary { color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.gu-small { font-size: var(--size-bodySm); }
+.gu-caption { font-size: var(--size-caption); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.gu-caption.is-muted { color: var(--colors-text-muted); }
+.gu-muted-sm { font-size: var(--size-bodySm); color: var(--colors-text-muted); text-align: center; overflow-wrap: anywhere; }
+
+/* Card (design-system Card): paper, sunken, brand (primaryLight), success; radii.lg; the card shadow on paper. */
+.gu-card { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); overflow-wrap: anywhere; }
+.gu-card.pad-md { padding: var(--spacing-md); }
+.gu-card.tone-sunken { background: var(--colors-surface-sunken); box-shadow: none; }
+.gu-card.tone-brand { background: var(--colors-brand-primaryLight); }
+.gu-card.tone-success { background: var(--colors-feedback-successLight); }
+.gu-card .rn-btn { max-width: 100%; }
+
+/* HoyaBubble: the cub beside one semibold bodyLg line, radii.xl, a 2-wide tone border. */
+.gu-bubble { display: flex; align-items: flex-start; gap: var(--spacing-md); padding: var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); box-shadow: var(--shadow-card); }
+.gu-bubble.cheering { background: var(--colors-feedback-successLight); border-color: var(--colors-feedback-success); }
+.gu-bubble.thinking { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); } /* anti-shame: amber, never red */
+.gu-bubble .hoya-svg { width: var(--hoya-bubble); height: var(--hoya-bubble); flex: none; }
+.gu-bubble p { flex: 1; min-width: 0; font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.hoya-step { width: var(--hoya-step); height: var(--hoya-step); }
+.hoya-results { width: var(--hoya-results); height: var(--hoya-results); }
+.hoya-card { width: var(--hoya-card); height: var(--hoya-card); flex: none; }
+.hoya-min { width: var(--touch-min); height: var(--touch-min); flex: none; }
+.hoya-home { width: var(--avatar-home); height: var(--avatar-home); flex: none; } /* the Home Profile entry ring size (profiles.css) */
+.gu-hoya-row { display: flex; align-items: center; gap: var(--spacing-md); }
+.gu-hoya-row > p, .gu-hoya-row > div { flex: 1; min-width: 0; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Quest player: Hoya's hello (intro) and Discover page 1                                        */
+/* ------------------------------------------------------------------------------------------ */
+.gu-intro { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md); }
+.gu-intro .gu-bubble { align-self: stretch; }
+/* The storage-blocked line (spec 7.2): plain text in reading order, text.secondary, never a warning colour. */
+.gu-memory-line { color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.gu-kt { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xxs); text-align: center; }
+.gu-kt .ko { font-size: calc(var(--size-hero) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--colors-text-primary); }
+.gu-kt .ko.sm { font-size: calc(var(--size-title) * var(--hr-head-ratio)); }
+.gu-kt .rom { font-size: var(--size-bodyLg); color: var(--colors-text-secondary); font-style: italic; }
+.gu-kt .rom.sm { font-size: var(--size-bodySm); }
+.gu-kt .gloss { font-size: var(--size-bodySm); color: var(--colors-text-secondary); }
+.gu-item { align-items: center; text-align: center; gap: var(--spacing-md); }
+.gu-item .example { align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Welcome with the waiting card                                                                */
+/* ------------------------------------------------------------------------------------------ */
+.gu-welcome { gap: var(--spacing-md); }
+.gu-welcome .welcome-top { padding-block: var(--spacing-lg); }
+.gu-welcome .hoya { width: var(--hoya-welcome); height: var(--hoya-welcome); }
+.gu-wait { align-self: stretch; display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-md); border-radius: var(--radii-lg); background: var(--colors-surface-sunken); }
+.gu-wait p { font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.gu-keeps { max-width: var(--welcome-copy); color: var(--colors-text-secondary); font-size: var(--size-bodySm); text-align: center; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--spacing-sm); }
+.chip-btn { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); font-weight: var(--weight-semibold); }
+.chip-btn[aria-checked="true"] { border-color: var(--colors-brand-primary); background: var(--colors-brand-primaryLight); }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Results, guest variant, and the save card                                                    */
+/* ------------------------------------------------------------------------------------------ */
+.gu-results-top { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); padding-top: var(--spacing-lg); }
+.gu-stars { display: flex; gap: var(--spacing-xs); }
+.gu-stars svg { width: var(--star-results); height: var(--star-results); }
+.gu-newcard .gu-hoya-row { align-items: center; }
+.gu-thumb { flex: none; width: var(--card-thumb); height: var(--card-thumb); border-radius: var(--radii-md); border: var(--border-width-thick) solid var(--colors-surface-paper); background: var(--colors-surface-sunken); display: inline-flex; align-items: center; justify-content: center; }
+.gu-thumb svg { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+.gu-ko-brand { font-size: calc(var(--size-title) * var(--hr-head-ratio)); font-weight: var(--weight-bold); color: var(--colors-brand-primary); line-height: var(--leading-tight); }
+.gu-rom { font-size: var(--size-caption); color: var(--colors-text-secondary); font-style: italic; }
+/* The save card: Hoya's line in a brand-outlined card is its heading (accessibilityRole header); under it, at the screen's */
+/* full width like Results' action column, the one primary, the gate caption, Not now. */
+.gu-save-sec { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.gu-save { padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-lg); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-brand-primary); }
+.gu-save h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+.gu-save-sec .gu-gate { color: var(--colors-text-secondary); font-size: var(--size-bodySm); text-align: center; overflow-wrap: anywhere; }
+.gu-not-drawn { padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-md); color: var(--colors-text-muted); font-family: var(--family-mono); font-size: var(--size-caption); overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The save form (CreateProfile { from: 'guest' }): two steps                                   */
+/* ------------------------------------------------------------------------------------------ */
+.gu-step-head { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.gu-field { min-height: var(--touch-min); width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-lg); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodyLg); }
+.gu-field::placeholder { color: var(--colors-text-muted); }
+.gu-field.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.gu-opt { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-child); width: 100%; padding: var(--spacing-md) var(--spacing-lg); border: var(--border-width-base) solid var(--colors-border-subtle); border-radius: var(--radii-lg); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.gu-opt[aria-checked="true"] { background: var(--colors-brand-primaryLight); border-color: var(--colors-brand-primary); }
+.gu-opt .mark { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--spacing-xl); height: var(--spacing-xl); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); }
+.gu-opt[aria-checked="true"] .mark { border-color: var(--colors-brand-primary); background: var(--colors-brand-primary); }
+.gu-opt .o-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.gu-opt .o-label { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.gu-opt .o-sub { font-size: var(--size-caption); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.gu-group { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+/* A row toggle inside the agreement card: Add an email (optional) and the optional PIN row. At least touchTarget.min. */
+.gu-disclosure { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); width: 100%; padding: 0; border: none; background: transparent; color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodySm); text-align: left; cursor: pointer; }
+.gu-disclosure span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.gu-disclosure.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); border-radius: var(--radii-sm); }
+.gu-check { display: flex; align-items: center; gap: var(--spacing-sm); min-height: var(--touch-min); width: 100%; padding: 0; border: none; background: transparent; color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodySm); text-align: left; cursor: pointer; }
+.gu-check .box { flex: none; width: var(--checkbox); height: var(--checkbox); border-radius: var(--radii-sm); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); display: inline-flex; align-items: center; justify-content: center; }
+.gu-check[aria-checked="true"] .box { border-color: var(--colors-brand-primary); background: var(--colors-brand-primary); }
+.gu-check span:last-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.gu-link-row { display: flex; align-items: center; min-height: var(--touch-min); padding-left: calc(var(--checkbox) + var(--spacing-sm)); color: var(--colors-brand-primary); font-size: var(--size-bodySm); text-decoration: underline; text-underline-offset: var(--spacing-xs); }
+.gu-text-btn { display: inline-flex; align-items: center; align-self: flex-start; min-height: var(--touch-min); padding: 0; border: none; background: transparent; color: var(--colors-text-secondary); font: inherit; font-size: var(--size-bodySm); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.gu-email { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.gu-ready { flex-direction: row; align-items: center; gap: var(--spacing-md); }
+.gu-ready > div { flex: 1; min-width: 0; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Not now (GuestLater) and the first Home                                                       */
+/* ------------------------------------------------------------------------------------------ */
+.gu-later { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md); text-align: center; }
+.gu-later h1 { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.gu-later h1:focus { outline: none; }
+.gu-later .rn-btn { width: 100%; }
+.gu-home-greet { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
+.gu-home-greet .hoya-min { flex: none; }
+.gu-home-greet .g-text { flex: 1 1 8rem; min-width: 0; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Chooser: the Try the first quest tile and the guest's own tile                               */
+/* ------------------------------------------------------------------------------------------ */
+/* Try the first quest: the Add tile's dashed outline and canvas fill, the play glyph in its 48 circle. */
+.wt-try .wt-plus { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+.wt-try .wt-line { font-size: var(--size-bodySm); color: var(--colors-text-secondary); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+/* The guest's tile: the learner tile (plate, default cub, idle), its label and the caption, nothing else (CS-G5). */
+.wt-guest .wt-plate { background: var(--colors-surface-sunken); }
+/* The stress board of spec 14: two columns at 320 whatever the text size (the shipped grid takes a column away first). */
+.wt-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wt-grid.two .wt { min-width: var(--touch-hero); }
+.fit-note { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); overflow-wrap: anywhere; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* People on this device: the guest row; PIN setup: the guest-only gate box                     */
+/* ------------------------------------------------------------------------------------------ */
+.gu-guest-row { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-sm) 0 var(--spacing-xs); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.gu-guest-row .g-head { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); }
+.gu-guest-row .g-head p { flex: 1; min-width: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.gu-guest-row .rn-btn { width: 100%; }
+.gu-gate-box { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); padding: var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-surface-sunken); }
+.gu-gate-box p { overflow-wrap: anywhere; }
+
+/* Board fidelity: a 320 frame keeps the phone gutter (the viewport media query of app-shell.css would widen it). */
+.w320 .app-screen { padding-left: var(--gutter-compact); padding-right: var(--gutter-compact); }
+.board-row > .board-item.w320 { max-width: 100%; }
+.w320 .sample { max-width: 100%; }
+/* The example word of a Discover card is a press target of its own (KoreanText onPress): at least touchTarget.min. */
+.gu-kt-btn { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-sm); border: none; border-radius: var(--radii-md); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.gu-welcome .display, .gu-screen .display { overflow-wrap: anywhere; }
+/* Board only: in a phone-sized window the frames lose the board's side padding and hairlines, so a 320 shot draws a true 320 window. */
+@media (max-width: 400px) {
+  .board { padding-left: var(--spacing-none); padding-right: var(--spacing-none); }
+  .board > .board-title, .board > .annot, .board-label { margin-left: var(--gutter-compact); margin-right: var(--gutter-compact); }
+  .board-row { gap: var(--spacing-xl) var(--spacing-none); }
+  .board-row > .board-item, .board-row > .board-item.w320 { flex: 1 1 100%; max-width: 100%; }
+  .sample, .w320 .sample { width: 100%; border-left: none; border-right: none; border-radius: var(--spacing-none); }
+}
