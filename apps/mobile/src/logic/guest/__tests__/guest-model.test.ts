@@ -17,6 +17,9 @@ import {
   promotionPlan,
   storedGuestAction,
   storedGuestMayLive,
+  storedIdStatus,
+  storedRuleProfiles,
+  unreadableGuestId,
 } from '../guest-model';
 
 /**
@@ -275,5 +278,45 @@ describe('guestEntry (section 6.1, CS-G4)', () => {
     expect(guestEntry({ intent: 'try', profiles: [self], guest: null, flags: on, chooserOn: true })).toEqual({ kind: 'chooser', trigger: 'try' });
     expect(guestEntry({ intent: 'try', profiles: [child], guest: guest(), flags: on, chooserOn: true })).toEqual({ kind: 'chooser', trigger: 'try' });
     expect(guestEntry({ intent: 'try', profiles: [child], guest: null, flags: on, chooserOn: false })).toEqual({ kind: 'launch' });
+  });
+});
+
+describe('the stored lists, read exactly (5.4 step 4, GU-D13)', () => {
+  const ID = 'profile:guest001';
+  const tomb = (ids: unknown[]): unknown => ({ v: 1, ids, at: {} });
+
+  it('storedIdStatus: saved on the list (parsing or not), removed when tombstoned, unknown in neither', () => {
+    expect(storedIdStatus(ID, [{ id: ID, displayName: '' }], null)).toBe('saved');
+    expect(storedIdStatus(ID, [{ id: ID }], tomb([ID]))).toBe('saved');
+    expect(storedIdStatus(ID, null, tomb([ID]))).toBe('removed');
+    expect(storedIdStatus(ID, [null, 'x', { id: 'profile:mina0001' }], tomb(['profile:other01']))).toBe('unknown');
+    expect(storedIdStatus(ID, null, null)).toBe('unknown');
+  });
+
+  it('storedIdStatus: a list or a tombstone record without its shape decides nothing', () => {
+    expect(storedIdStatus(ID, { not: 'a list' }, null)).toBeNull();
+    expect(storedIdStatus(ID, [], 'damaged')).toBeNull();
+    expect(storedIdStatus(ID, [], { v: 2, ids: [] })).toBeNull();
+    expect(storedIdStatus(ID, [], { v: 1, ids: 'x' })).toBeNull();
+    expect(storedIdStatus(ID, [], [ID])).toBeNull();
+  });
+
+  it('storedRuleProfiles: every entry with a string id, with its role when it names one', () => {
+    expect(storedRuleProfiles([{ id: 'profile:a', role: 'parent' }, { id: 'profile:b', role: 'boss' }, { id: 'profile:c' }, { id: 3 }, null, 'x'])).toEqual([
+      { id: 'profile:a', role: 'parent' },
+      { id: 'profile:b' },
+      { id: 'profile:c' },
+    ]);
+    expect(storedRuleProfiles({ not: 'a list' })).toEqual([]);
+    expect(storedRuleProfiles(null)).toEqual([]);
+  });
+
+  it('unreadableGuestId: a profile id that is no profile here, else none', () => {
+    expect(unreadableGuestId({ v: 9, id: ID }, [])).toBe(ID);
+    expect(unreadableGuestId({ v: 9, id: ID }, [{ id: ID }])).toBeNull();
+    expect(unreadableGuestId({ v: 9, id: 'not-a-profile-id' }, [])).toBeNull();
+    expect(unreadableGuestId({ v: 9, id: 7 }, [])).toBeNull();
+    expect(unreadableGuestId('text', [])).toBeNull();
+    expect(unreadableGuestId(null, [])).toBeNull();
   });
 });

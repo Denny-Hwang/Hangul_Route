@@ -47,7 +47,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
   // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
   // [GU] Row GU-2 adds the always-on guest rules (the gates, the marker, the anonymous telemetry, the boot sweep):
-  // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line was that plus 5,766 B.
+  // 4,744,234 B raw / 1,246,930 B gzip (release `build:web`; 4,734,519 B raw on GU-1), so the line was that plus 5,766 B;
+  // 4,747,423 B raw / 1,247,894 B gzip with its review fixes.
   // [GU] Row GU-3 adds what must run before the first screen (the try intent, the launch's guest step, Welcome's waiting
   // card, the 16.1 strings); the guest's screens are a chunk of their own (SCREEN_CHUNKS, 7,281 B raw): 4,754,165 B raw /
   // 1,249,824 B gzip (release `build:web`), so the line is that plus 5,835 B.

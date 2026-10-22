@@ -163,8 +163,17 @@ export function storedGuestAction(raw: unknown, now: number, profiles: readonly 
   const fields = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
   const last = lastPlayOf(fields);
   if (last !== null && now - last <= GUEST_TTL_MS) return { kind: 'unreadable' };
-  const id = typeof fields.id === 'string' && PROFILE_ID.test(fields.id) && !profiles.some((p) => p.id === fields.id) ? fields.id : null;
-  return { kind: 'sweep', id, questDone: fields.questDone === true };
+  return { kind: 'sweep', id: unreadableGuestId(raw, profiles), questDone: fields.questDone === true };
+}
+
+/**
+ * The id a stored `hr:guest` that does not parse still names: a profile id (`profile:` and the suffix) that is not a
+ * profile here, else null. Its keys are the ones a sweep, or a start that writes over the record, removes; a saved
+ * learner's id is never given.
+ */
+export function unreadableGuestId(raw: unknown, profiles: readonly GuestRuleProfile[]): string | null {
+  const id = typeof raw === 'object' && raw !== null ? (raw as { id?: unknown }).id : undefined;
+  return typeof id === 'string' && PROFILE_ID.test(id) && !profiles.some((p) => p.id === id) ? id : null;
 }
 
 /**
@@ -180,6 +189,50 @@ export function storedGuestMayLive(rawGuest: unknown, rawProfiles: unknown): boo
     ? rawProfiles.flatMap((entry: unknown) => (typeof entry === 'object' && entry !== null && typeof (entry as { id?: unknown }).id === 'string' ? [{ id: (entry as { id: string }).id }] : []))
     : [];
   return isLiveGuest(parsed.data, ids);
+}
+
+/** What the stored lists, read exactly, say about an id (section 5.4 step 4, GU-D13). */
+export type StoredIdStatus =
+  /** On `hr:profiles`: a saved learner (the guest record is only to be deleted). */
+  | 'saved'
+  /** On `hr:profiles:tombstones`: a removed learner (its keys go with the OA-7a launch sweep; the record only goes). */
+  | 'removed'
+  /** In neither: a never-saved guest, whose keys a sweep may remove. */
+  | 'unknown';
+
+/**
+ * The status of `id` on the stored profile list and tombstones, both read exactly (`null` when missing). `null` when
+ * either does not have its shape (a list; a `{ v: 1, ids: [] }` record), so damaged data never lets a sweep delete a
+ * learner's keys. Every entry with a string id counts, whether or not it parses as a profile.
+ */
+export function storedIdStatus(id: string, rawProfiles: unknown, rawTombstones: unknown): StoredIdStatus | null {
+  if (rawProfiles !== null && !Array.isArray(rawProfiles)) return null;
+  let removed: unknown[] = [];
+  if (rawTombstones !== null) {
+    const record = typeof rawTombstones === 'object' ? (rawTombstones as { v?: unknown; ids?: unknown }) : {};
+    if (record.v !== 1 || !Array.isArray(record.ids)) return null;
+    removed = record.ids;
+  }
+  const list: unknown[] = Array.isArray(rawProfiles) ? rawProfiles : [];
+  const listed = list.some((entry) => typeof entry === 'object' && entry !== null && (entry as { id?: unknown }).id === id);
+  if (listed) return 'saved';
+  return removed.includes(id) ? 'removed' : 'unknown';
+}
+
+const ROLES: readonly ProfileRole[] = ['learner', 'parent', 'teacher', 'admin'];
+
+/**
+ * The entries of a raw `hr:profiles` read as these rules read them: every entry with a string id (whether or not it
+ * parses as a profile) and its role when it names one. Anything that is not a list gives none.
+ */
+export function storedRuleProfiles(raw: unknown): GuestRuleProfile[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as unknown[]).flatMap((entry) => {
+    const fields = typeof entry === 'object' && entry !== null ? (entry as { id?: unknown; role?: unknown }) : {};
+    if (typeof fields.id !== 'string') return [];
+    const role = ROLES.find((r) => r === fields.role);
+    return [role === undefined ? { id: fields.id } : { id: fields.id, role }];
+  });
 }
 
 /** A new record for a run that starts now (section 5.1); `id` is a fresh ordinary profile id (GU-D2). */

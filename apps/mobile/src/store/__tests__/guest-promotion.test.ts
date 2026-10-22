@@ -8,20 +8,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * and backups never see the guest. Storage is an in-memory map; nothing may reach the network.
  */
 const disk = vi.hoisted(() => new Map<string, string>());
+/** Every storage write and delete, in order; and the keys whose reads (`read`) or writes (`write`) fail. */
+const ops = vi.hoisted(() => [] as string[]);
+const failing = vi.hoisted(() => ({ read: new Set<string>(), write: new Set<string>(), readAfterWrite: new Set<string>() }));
 const parse = (key: string): unknown => (disk.has(key) ? JSON.parse(disk.get(key)!) : null);
+const strict = (key: string): unknown => {
+  if (failing.read.has(key) || (failing.readAfterWrite.has(key) && ops.includes(`write:${key}`))) throw new Error('read failed');
+  return parse(key);
+};
 vi.mock('../../platform/storage', () => ({
-  readJson: vi.fn(async (key: string) => parse(key)),
-  readJsonStrict: vi.fn(async (key: string) => parse(key)),
-  readJsonExact: vi.fn(async (key: string) => parse(key)),
-  readJsonExactFresh: vi.fn(async (key: string) => parse(key)),
-  writeJson: vi.fn(async (key: string, value: unknown) => void disk.set(key, JSON.stringify(value))),
+  readJson: vi.fn(async (key: string) => (failing.read.has(key) ? null : parse(key))),
+  readJsonStrict: vi.fn(async (key: string) => strict(key)),
+  readJsonExact: vi.fn(async (key: string) => strict(key)),
+  readJsonExactFresh: vi.fn(async (key: string) => strict(key)),
+  writeJson: vi.fn(async (key: string, value: unknown) => {
+    // The list write takes a while (an IndexedDB transaction), so a delete that does not wait for it lands first.
+    await new Promise((resolve) => setTimeout(resolve, key === 'profiles' ? 5 : 0));
+    if (failing.write.has(key)) throw new Error('QuotaExceededError');
+    ops.push(`write:${key}`);
+    disk.set(key, JSON.stringify(value));
+  }),
   updateJson: vi.fn(async (key: string, next: (current: unknown) => unknown) => {
     const value = next(parse(key));
     if (value === undefined) return false;
     disk.set(key, JSON.stringify(value));
     return true;
   }),
-  removeKey: vi.fn(async (key: string) => void disk.delete(key)),
+  removeKey: vi.fn(async (key: string) => {
+    ops.push(`remove:${key}`);
+    disk.delete(key);
+  }),
   listKeys: vi.fn(async () => [...disk.keys()]),
   setWriteFence: vi.fn(),
   requestPersistence: vi.fn(async () => false),
@@ -48,7 +64,7 @@ import { encodeBackup } from '../../logic/sync/backup';
 import { track } from '../../platform/telemetry';
 import { useGuestStore } from '../guest-store';
 import { saveGuestAsProfile } from '../guest-promotion';
-import { hydrateGuest } from '../guest-sweep';
+import { GUEST_LOCK_WAIT_MS, hydrateGuest } from '../guest-sweep';
 import { PER_PROFILE_KEYS } from '../profile-keys';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -66,7 +82,28 @@ const FORM = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue
 const Q1 = 'quest:stage1-letters-q1';
 const LETTERS = 'episode:stage1-letters';
 
+/** A Web Locks double that grants each name in request order, one step at a time (as browsers do). */
+function fifoLocks(): { request: <T>(name: string, step: () => Promise<T>) => Promise<T> } {
+  const tails = new Map<string, Promise<unknown>>();
+  return {
+    request: <T>(name: string, step: () => Promise<T>): Promise<T> => {
+      const run = (tails.get(name) ?? Promise.resolve()).then(() => step());
+      tails.set(name, run.catch(() => undefined));
+      return run;
+    },
+  };
+}
+
+/** The next boot: memory empty, the stores read storage again. */
+async function reboot(): Promise<void> {
+  useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+  useGuestStore.setState({ record: null, running: false, hydrated: false, memoryOnly: false });
+  await useProfileStore.getState().hydrate();
+}
+
 async function settle(): Promise<void> {
+  // Past the slow list write, then the steps queued behind it.
+  for (let i = 0; i < 3; i += 1) await new Promise((resolve) => setTimeout(resolve, 10));
   for (let i = 0; i < 10; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
@@ -99,6 +136,11 @@ const storedProgress = (): ProgressSnapshot => parse(`progress:${GUEST.id}`) as 
 
 beforeEach(async () => {
   disk.clear();
+  ops.length = 0;
+  failing.read.clear();
+  failing.write.clear();
+  failing.readAfterWrite.clear();
+  vi.unstubAllGlobals();
   sent.length = 0;
   fetchSpy.mockClear();
   vi.stubGlobal('fetch', fetchSpy);
@@ -144,6 +186,8 @@ describe('[GU] quest 1 for an id with no profile record (5.3)', () => {
     const mina = useProfileStore.getState().createProfile(FORM);
     useProgressStore.getState().beginSession(mina.id, { owner: 'quest', streak: true });
     expect(sent.filter((e) => e.name === 'session.start')).toHaveLength(1);
+    // Its list write lands here, not over the next test's storage.
+    await settle();
   });
 });
 
@@ -155,9 +199,11 @@ describe('[GU] the save keeps the id (5.4, G2)', () => {
     await settle();
     const before = useProgressStore.getState().byProfile[GUEST.id]!;
 
-    const created = await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()));
+    const outcome = await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()));
     await settle();
 
+    expect(outcome).toMatchObject({ kind: 'saved', confirmed: true });
+    const created = outcome.kind === 'saved' ? outcome.profile : null;
     expect(created).toMatchObject({ id: GUEST.id, displayName: 'Mina', createdAt: STARTED, learnerType: 'child', role: 'learner' });
     expect(useProfileStore.getState().activeId).toBe(GUEST.id);
     expect((parse('profiles') as { id: string }[]).map((p) => p.id)).toEqual([GUEST.id]);
@@ -210,15 +256,85 @@ describe('[GU] the save keeps the id (5.4, G2)', () => {
     const theirs = { id: other.id, displayName: 'Jun', ageGroup: '8-9', avatar: 'hoya-green', role: 'learner', createdAt: STARTED, lastActiveAt: STARTED };
     disk.set('profiles', JSON.stringify([theirs]));
 
-    expect(await useProfileStore.getState().promoteGuest(other, FORM)).toBeNull();
+    expect(await useProfileStore.getState().promoteGuest(other, FORM)).toEqual({ kind: 'duplicate' });
     await settle();
     expect(useProfileStore.getState().profiles.map((p) => [p.id, p.displayName])).toEqual([[other.id, 'Jun']]);
 
-    expect(await saveGuestAsProfile(other, promotionPlan(other, FORM, Date.now()))).toBeNull();
+    expect(await saveGuestAsProfile(other, promotionPlan(other, FORM, Date.now()))).toEqual({ kind: 'duplicate' });
     await settle();
     expect((parse('profiles') as unknown[]).length).toBe(1);
     expect(disk.has('guest')).toBe(false);
     expect(useGuestStore.getState()).toMatchObject({ record: null, running: false });
+  });
+
+  it.each([
+    ['without Web Locks (native, Safari before 15.4)', null],
+    ['with Web Locks granted in order', 'fifo'],
+  ] as const)('the profile is on disk before hr:guest is deleted, %s', async (_label, locks) => {
+    if (locks === 'fifo') vi.stubGlobal('navigator', { locks: fifoLocks() });
+    liveGuest();
+    const outcome = await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()));
+    expect(outcome).toMatchObject({ kind: 'saved', confirmed: true });
+    // Already on disk when the save resolves.
+    expect((parse('profiles') as { id: string }[]).map((p) => p.id)).toEqual([GUEST.id]);
+    await settle();
+    expect(ops.indexOf('write:profiles')).toBeGreaterThanOrEqual(0);
+    expect(ops.indexOf('write:profiles')).toBeLessThan(ops.indexOf('remove:guest'));
+  });
+
+  it('a list write that fails changes nothing: hr:guest stays, the profile is not in memory, and the next boot keeps the guest', async () => {
+    liveGuest();
+    await useProgressStore.getState().hydrate(GUEST.id);
+    playQuestOne(3);
+    await settle();
+    failing.write.add('profiles');
+
+    expect(await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()))).toEqual({ kind: 'failed' });
+    await settle();
+    expect(disk.has('guest')).toBe(true);
+    expect(ops).not.toContain('remove:guest');
+    expect(useProfileStore.getState()).toMatchObject({ profiles: [], activeId: null });
+    expect(useGuestStore.getState()).toMatchObject({ record: GUEST, running: true });
+    // Nothing waits to write it later either.
+    failing.write.clear();
+    await useProfileStore.getState().refresh();
+    await settle();
+    expect(parse('profiles')).toBeNull();
+    for (const id of welcomeCardIds) expect(cardsOf(storedProgress())).not.toContain(id);
+
+    await reboot();
+    expect(await hydrateGuest(Date.parse(STARTED) + 60_000)).toBe('keep');
+    expect(useGuestStore.getState().record).toEqual(GUEST);
+    expect(cardsOf(storedProgress())).toEqual(['card:book']);
+  });
+
+  it('a list that cannot be read first changes nothing', async () => {
+    liveGuest();
+    failing.read.add('profiles');
+    expect(await useProfileStore.getState().promoteGuest(GUEST, FORM)).toEqual({ kind: 'failed' });
+    expect(useProfileStore.getState().profiles).toEqual([]);
+    expect(ops).toEqual([]);
+  });
+
+  it('a write that cannot be read back keeps hr:guest for the boot repair, and gives no welcome card yet', async () => {
+    liveGuest();
+    await useProgressStore.getState().hydrate(GUEST.id);
+    playQuestOne(3);
+    await settle();
+    failing.readAfterWrite.add('profiles');
+
+    expect(await saveGuestAsProfile(GUEST, promotionPlan(GUEST, FORM, Date.now()))).toMatchObject({ kind: 'saved', confirmed: false });
+    await settle();
+    expect(disk.has('guest')).toBe(true);
+    expect(useGuestStore.getState().running).toBe(false);
+    expect(useProfileStore.getState().activeId).toBe(GUEST.id);
+    for (const id of welcomeCardIds) expect(cardsOf(storedProgress())).not.toContain(id);
+
+    failing.readAfterWrite.clear();
+    await reboot();
+    expect(await hydrateGuest(Date.parse(STARTED) + 60_000)).toBe('repair');
+    expect(disk.has('guest')).toBe(false);
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual([GUEST.id]);
   });
 
   it('the reducer\'s name rule is unchanged: an invalid name throws and nothing is written', async () => {
@@ -230,8 +346,8 @@ describe('[GU] the save keeps the id (5.4, G2)', () => {
 
   it('a start time that does not read as a time dates the profile now', async () => {
     const odd = { ...GUEST, startedAt: 'not a time' };
-    const created = await useProfileStore.getState().promoteGuest(odd, FORM);
-    expect(Number.isFinite(Date.parse(created!.createdAt))).toBe(true);
+    const outcome = await useProfileStore.getState().promoteGuest(odd, FORM);
+    expect(outcome.kind === 'saved' && Number.isFinite(Date.parse(outcome.profile.createdAt))).toBe(true);
   });
 });
 
@@ -267,6 +383,102 @@ describe('[GU] the hydrate repair (5.4 step 4)', () => {
     expect(await hydrateGuest()).toBe('unread');
     expect(disk.has('guest')).toBe(true);
     expect(useGuestStore.getState().hydrated).toBe(true);
+  });
+
+  const DAY = 24 * 60 * 60 * 1000;
+  const seedKeys = (): void => {
+    for (const template of Object.values(PER_PROFILE_KEYS)) disk.set(template(GUEST.id), JSON.stringify({ seeded: true }));
+  };
+  const guestKeys = (): string[] => [...disk.keys()].filter((k) => k.endsWith(`:${GUEST.id}`));
+
+  it('a sweep never deletes keys when hr:profiles cannot be read again (the list in memory may be a failed read)', async () => {
+    disk.set('guest', JSON.stringify(GUEST));
+    disk.set('profiles', JSON.stringify([{ id: GUEST.id, displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-blue', role: 'learner', createdAt: STARTED }]));
+    seedKeys();
+    const before = guestKeys().length;
+    failing.read.add('profiles');
+    await reboot();
+    expect(useProfileStore.getState().profiles).toEqual([]);
+
+    expect(await hydrateGuest(Date.parse(STARTED) + 40 * DAY)).toBe('unread');
+    expect(guestKeys()).toHaveLength(before);
+    expect(disk.has('guest')).toBe(true);
+    expect(sent.map((e) => e.name)).not.toContain('guest.expired');
+  });
+
+  it('a saved learner the list in memory missed (an entry that does not parse) is repaired, never swept', async () => {
+    disk.set('guest', JSON.stringify(GUEST));
+    disk.set('profiles', JSON.stringify([{ id: GUEST.id, displayName: '' }]));
+    seedKeys();
+    const before = guestKeys().length;
+    await reboot();
+    expect(await hydrateGuest(Date.parse(STARTED) + 40 * DAY)).toBe('repair');
+    expect(guestKeys()).toHaveLength(before);
+    expect(disk.has('guest')).toBe(false);
+  });
+
+  it('a record naming a removed (tombstoned) learner is deleted with no key touched, whether fresh or past its days', async () => {
+    for (const at of [Date.parse(STARTED) + 60_000, Date.parse(STARTED) + 40 * DAY]) {
+      disk.clear();
+      disk.set('guest', JSON.stringify(GUEST));
+      disk.set('profiles:tombstones', JSON.stringify({ v: 1, ids: [GUEST.id], at: { [GUEST.id]: at } }));
+      disk.set(`plans:${GUEST.id}`, JSON.stringify({ seeded: true }));
+      await reboot();
+      expect(await hydrateGuest(at)).toBe('repair');
+      expect(disk.has('guest')).toBe(false);
+      expect(useGuestStore.getState().record).toBeNull();
+    }
+    expect(sent.map((e) => e.name)).not.toContain('guest.expired');
+  });
+
+  it('damaged tombstones decide nothing', async () => {
+    disk.set('guest', JSON.stringify(GUEST));
+    disk.set('profiles:tombstones', JSON.stringify('damaged'));
+    seedKeys();
+    const before = guestKeys().length;
+    expect(await hydrateGuest(Date.parse(STARTED) + 40 * DAY)).toBe('unread');
+    expect(guestKeys()).toHaveLength(before);
+  });
+
+  it('a never-saved record past its days goes with every key of its id', async () => {
+    disk.set('guest', JSON.stringify(GUEST));
+    seedKeys();
+    expect(await hydrateGuest(Date.parse(STARTED) + 31 * DAY)).toBe('sweep');
+    expect(guestKeys()).toEqual([]);
+    expect(disk.has('guest')).toBe(false);
+    expect(sent).toEqual([{ name: 'guest.expired', payload: { questDone: false } }]);
+  });
+
+  describe('the boot never waits on a held hr:profiles lock', () => {
+    const held = { request: vi.fn(() => new Promise<never>(() => undefined)) };
+
+    it('no guest, a live guest, or a record that does not parse: the lock is never asked for', async () => {
+      vi.stubGlobal('navigator', { locks: held });
+      expect(await hydrateGuest()).toBe('none');
+      disk.set('guest', JSON.stringify(GUEST));
+      expect(await hydrateGuest(Date.parse(STARTED) + 60_000)).toBe('keep');
+      disk.set('guest', JSON.stringify({ ...GUEST, v: 2 }));
+      expect(await hydrateGuest(Date.parse(STARTED) + 60_000)).toBe('unreadable');
+      expect(held.request).not.toHaveBeenCalled();
+    });
+
+    it('a repair or a sweep waits at most the lock wait, then the first screen comes with no guest', async () => {
+      vi.stubGlobal('navigator', { locks: held });
+      disk.set('guest', JSON.stringify(GUEST));
+      expect(await hydrateGuest(Date.parse(STARTED) + 40 * DAY, 20)).toBe('unread');
+      expect(useGuestStore.getState()).toMatchObject({ record: null, hydrated: true });
+      expect(disk.has('guest')).toBe(true);
+    });
+
+    it('hydrateLearnerData settles with the lock held and a sweep due', async () => {
+      vi.stubGlobal('navigator', { locks: held });
+      disk.set('guest', JSON.stringify(GUEST));
+      const { hydrateLearnerData } = await import('../bootstrap');
+      const started = Date.now();
+      await hydrateLearnerData().catch(() => undefined);
+      expect(Date.now() - started).toBeLessThan(GUEST_LOCK_WAIT_MS + 1_500);
+      expect(useGuestStore.getState().hydrated).toBe(true);
+    }, 10_000);
   });
 
   it('a record that does not parse is no guest, kept until 30 days have passed', async () => {

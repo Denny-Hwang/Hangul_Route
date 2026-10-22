@@ -33,6 +33,7 @@ import { TELEMETRY_EVENT_NAMES, type GuestRecord, type Profile } from '@hangul-r
 import { useGuestStore } from '../../store/guest-store';
 import { hydrateGuest } from '../../store/guest-sweep';
 import { useProfileStore } from '../../store/profile-store';
+import { onProfileRemoved } from '../../store/profile-removal';
 import { setTelemetryProfileFilter } from '../telemetry-filter';
 import { addTelemetryListener, track } from '../telemetry';
 
@@ -96,6 +97,23 @@ describe('[GU] the entries that use the guest id without a run (section 12)', ()
     expect(await hydrateGuest(Date.parse(GUEST.lastAt) + 8 * 24 * 60 * 60 * 1000)).toBe('sweep');
     await vi.waitFor(() => expect(heard).toEqual([{ name: 'guest.expired', payload: { questDone: true } }]));
     stop();
+  });
+
+  it('during the sweep (the record already out of the store) a removal listener that tracks with the id sends none', async () => {
+    useGuestStore.setState({ record: null, hydrated: false });
+    mem.set('guest', GUEST);
+    const stop = onProfileRemoved((id) => {
+      void track({ name: 'session.end', profileId: id }, { endpoint, fetchImpl });
+      void track({ name: 'exp.exposure', profileId: id, payload: {} }, { endpoint, fetchImpl });
+    });
+    expect(await hydrateGuest(Date.parse(GUEST.lastAt) + 8 * 24 * 60 * 60 * 1000)).toBe('sweep');
+    stop();
+    await vi.waitFor(() => expect(bodies().map((b) => b.name)).toContain('session.end'));
+    expect(bodies().filter((b) => b.name === 'exp.exposure')).toEqual([]);
+    expect(bodies().filter((b) => 'profileId' in b)).toEqual([]);
+    // After the sweep the id is no one's: the filter no longer holds it.
+    await track({ name: 'session.end', profileId: MINA.id }, { endpoint, fetchImpl });
+    expect(bodies().at(-1)).toMatchObject({ profileId: MINA.id });
   });
 
   it('once the guest is saved its id is an ordinary learner\'s again', async () => {
