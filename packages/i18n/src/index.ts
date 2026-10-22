@@ -24,9 +24,12 @@ export {
   ENGLISH_AUTHORITATIVE_PREFIXES,
   fallbackPaths,
   getMessages,
+  hasMessageOverlay,
   isEnglishAuthoritative,
+  registerMessageOverlay,
   resolveLocale,
   type MessageLocale,
+  type OverlayMessageLocale,
 } from './resolve';
 export { lookup } from './tree';
 export { plural, type PluralForms } from './plural';

@@ -35,14 +35,28 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
   // measurement plus an 8,835 B rounding margin. [OA] The one-account integration (#801: OA-0b to OA-9 on main
   // 34e8f85d5) adds the chooser, PIN v2, people-on-this-device and the face or fingerprint shortcut to the shell:
-  // 6,487,010 B raw / 1,616,887 B gzip, so the line is that measurement plus a 7,990 B rounding margin. SN-2 (#804) adds
+  // 6,487,010 B raw / 1,616,887 B gzip, so the line was that measurement plus a 7,990 B rounding margin. SN-2 (#804) adds
   // the site page titles and descriptions, the share-card caption, the 404 lines and the longer privacy text to the
   // bundled `landing` messages: 6,495,681 B raw / 1,618,867 B gzip (release) and 6,495,837 B raw / 1,618,965 B gzip
-  // (app-host) on 8eba8de96, against 6,491,702 B raw on main 52403c87b, so the line is 6,495,837 B plus an 8,163 B margin.
+  // (app-host) on 8eba8de96, against 6,491,702 B raw on main 52403c87b, so the line was 6,495,837 B plus an 8,163 B margin.
   // The final integration (integrate/final-oa-site: OA-7b #798, SN-1 #813 and SN-2 #804 on main 7eb5bad61) adds Who is
   // joining? to the shell and the site-entry strings to the bundled `landing` messages: 6,518,688 B raw / 1,624,797 B
-  // gzip (release `build:web`), so the line is that measurement plus a 6,312 B rounding margin (#814 shrinks it).
-  startBundleRaw: 6_525_000,
+  // gzip (release `build:web`), so the line was that measurement plus a 6,312 B rounding margin (6,525,000 B).
+  // The start bundle shrink (F-CURR-002 §10 decision record) makes the es / ko messages and content overlays a precached
+  // chunk per locale and the presenter and All lessons chunks of their own: 4,712,987 B raw / 1,237,660 B gzip on main
+  // 7eb5bad61 (6,491,546 B before; 4,713,416 B raw after its review fixes); merged onto the final integration (main fc580beed, release `build:web`) it measures
+  // 4,732,797 B raw / 1,243,089 B gzip, so the line is that measurement plus a 7,203 B rounding margin.
+  startBundleRaw: 4_740_000,
+  // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
+  // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
+  // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
+  // strings, main fc580beed). The line leaves about 94 KB for the stories and strings
+  // ahead (CM-46a, CM-46); a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves
+  // text out (CM-8b's story overlay split).
+  localeChunkRaw: 1_000_000,
+  // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
+  // BrowseApp 111,404 B raw. The line is the presenter plus about 54 KB.
+  rootChunkRaw: 300_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
@@ -92,6 +106,58 @@ export function lessonChunkProblems({ manifest, bundles, precached }) {
 }
 
 /**
+ * The locale chunks of the learner PWA (F-CURR-002 §10): one web bundle per UI locale but English, holding that
+ * locale's UI messages and content overlays (`src/content/locale-chunks/locale-<locale>.ts`), reached only through
+ * the literal `import()`s of `src/platform/locale-packs.web.ts`. Each exports its marker (`LOCALE_PACK`), which
+ * the start bundle must never carry.
+ */
+export const LOCALE_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'locale-es', marker: 'locale-pack:es' }),
+  Object.freeze({ name: 'locale-ko', marker: 'locale-pack:ko' }),
+]);
+
+/**
+ * The grown-up roots of the learner web build (F-CURR-002 §10): the presenter (`/present`) and All lessons
+ * (`/browse`) are bundles of their own, reached only through the literal `import()`s of `index.ts`, so a
+ * learner's start bundle carries neither. Each root module exports its marker (`ROOT_CHUNK`).
+ */
+export const ROOT_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'PresenterApp', marker: 'root-chunk:presenter' }),
+  Object.freeze({ name: 'BrowseApp', marker: 'root-chunk:browse' }),
+]);
+
+/**
+ * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
+ * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
+ * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
+ * an empty bundle behind).
+ * @param {{ chunks?: readonly { name: string, marker: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
+ */
+export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS], bundles, precached }) {
+  const problems = [];
+  const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
+  const starts = bundles.filter((b) => isStartBundle(b.url));
+  for (const { name, marker } of chunks) {
+    const quoted = [`"${marker}"`, `'${marker}'`];
+    for (const start of starts) {
+      if (quoted.some((q) => start.text.includes(q))) problems.push(`${name} is in the start bundle ${start.url}: a static import pulled it in`);
+    }
+    const own = bundles.filter((b) => !isStartBundle(b.url) && NAMED.exec(b.url)?.[1] === name);
+    if (own.length === 0) {
+      problems.push(`${name} has no web bundle: the chunk is missing from the build`);
+      continue;
+    }
+    if (own.length > 1) problems.push(`${name} has ${own.length} web bundles: ${own.map((b) => b.url).join(', ')}`);
+    for (const bundle of own) {
+      if (!quoted.some((q) => bundle.text.includes(q))) problems.push(`${bundle.url} does not carry ${marker}: it is not ${name}'s chunk (or it is empty)`);
+      if (NAMED.exec(bundle.url)?.[2] !== md5(bundle.text)) problems.push(`${bundle.url}: its file name is not the md5 of its content`);
+      if (!listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
+    }
+  }
+  return problems;
+}
+
+/**
  * Lesson chunk bundles that the host's `_headers` rules would serve with `X-Content-Type-Options: nosniff`
  * (empty = none). A page of an older build that asks for a chunk the host no longer has gets the app's HTML
  * page (the single-page fallback, 200); without nosniff the browser runs it, Metro finds no module in it and
@@ -127,15 +193,18 @@ function chunkTotals(manifest, bundles) {
 }
 
 /**
- * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8) and the whole learner precache.
- * @param {{ manifest: { name: string }[], stories?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
+ * root chunks and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
     lessonChunks: chunkTotals(manifest, bundles),
     storyChunks: chunkTotals(stories, bundles),
+    localeChunks: chunkTotals(locales, bundles),
+    rootChunks: chunkTotals(roots, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -149,6 +218,16 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   lines.push(`  lesson chunks  ${report.lessonChunks.count} bundles  ${report.lessonChunks.raw} B raw  ${report.lessonChunks.gzip} B gzip`);
   if (report.storyChunks !== undefined) {
     lines.push(`  story chunks  ${report.storyChunks.count} bundles  ${report.storyChunks.raw} B raw  ${report.storyChunks.gzip} B gzip`);
+  }
+  if (report.localeChunks !== undefined && report.localeChunks.count > 0) {
+    lines.push(
+      `  locale chunks  ${report.localeChunks.count} bundles  ${report.localeChunks.raw} B raw  ${report.localeChunks.gzip} B gzip  (largest ${report.localeChunks.largest?.raw ?? 0} B raw, ceiling ${budget.localeChunkRaw} B each)`,
+    );
+  }
+  if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
+    lines.push(
+      `  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip  (largest ${report.rootChunks.largest?.raw ?? 0} B raw, ceiling ${budget.rootChunkRaw} B each)`,
+    );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
   return lines;
@@ -183,6 +262,19 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
     }
     if (stories.gzip > budget.storiesGzip) {
       problems.push(`the story bundles are ${stories.gzip} B gzip, over the stories ceiling of ${budget.storiesGzip} B gzip ${raise}`);
+    }
+  }
+  const ceilings = [
+    [report.localeChunks, budget.localeChunkRaw, 'locale', 'localeChunkRaw'],
+    [report.rootChunks, budget.rootChunkRaw, 'grown-up root', 'rootChunkRaw'],
+  ];
+  for (const [chunks, ceiling, kind, line] of ceilings) {
+    const largest = chunks?.largest;
+    if (largest !== null && largest !== undefined && largest.raw > ceiling) {
+      problems.push(
+        `the ${kind} bundle ${largest.url} is ${largest.raw} B raw, over the per-${kind} ceiling of ${ceiling} B ` +
+          `(raise PRECACHE_BUDGET.${line} in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)`,
+      );
     }
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {

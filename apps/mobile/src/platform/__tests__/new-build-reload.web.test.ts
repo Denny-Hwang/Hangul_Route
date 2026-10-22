@@ -155,6 +155,25 @@ describe('isNewBuildAnswer (F-CURR-002 §10: a chunk script error is asked again
     expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/storybook-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
   });
 
+  it('asks a locale chunk (the UI messages and content text of one locale) again the same way', async () => {
+    const chunk = `${ORIGIN}/_expo/static/js/web/locale-ko-0123456789abcdef0123456789abcdef.js`;
+    const p = probe();
+    expect(await isNewBuildAnswer(scriptError(chunk), p.env)).toBe(true);
+    expect(p.asked).toEqual([chunk]);
+    expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/locale-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
+    expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/locale-pack-ko-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
+  });
+
+  it('asks a grown-up root\'s own chunk (the presenter, All lessons) again the same way', async () => {
+    for (const name of ['PresenterApp', 'BrowseApp']) {
+      const chunk = `${ORIGIN}/_expo/static/js/web/${name}-0123456789abcdef0123456789abcdef.js`;
+      const p = probe();
+      expect(await isNewBuildAnswer(scriptError(chunk), p.env)).toBe(true);
+      expect(p.asked).toEqual([chunk]);
+    }
+    expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/App-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
+  });
+
   it('is never a newer build on native, where the chunks are in the one bundle', async () => {
     expect(await nativeAnswer()).toBe(false);
   });

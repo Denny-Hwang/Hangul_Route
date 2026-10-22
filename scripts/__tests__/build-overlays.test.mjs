@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-overlays.mjs");
 const OUT_REL = join("packages", "content-schema", "src", "i18n-overlays.generated.ts");
 
-const { GENERATED_HEADER, buildOverlays, isLessonOverlay, renderOverlays } = await import(SCRIPT);
+const { GENERATED_HEADER, buildOverlays, isLessonOverlay, localeOut, renderLocaleOverlays, renderOverlays } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -100,6 +100,19 @@ describe("build-overlays.mjs: merging (pure)", () => {
     assert.ok(source.endsWith("};\n"));
     assert.equal(renderOverlays(model), source);
   });
+
+  test("renders each locale's table as its own module, for the learner PWA's locale chunks (F-CURR-002 §10)", () => {
+    const model = buildOverlays([
+      file("content/i18n/es/a.json", overlay("es", "a", { "card:a": { title: "Á" } })),
+      file("content/i18n/ko/a.json", overlay("ko", "a", { "card:a": { title: "가" } })),
+    ]);
+    const es = renderLocaleOverlays(model, "es");
+    assert.ok(es.startsWith(GENERATED_HEADER));
+    assert.match(es, /export const OVERLAYS_ES: Overlays\['es'\] = \{\n {2}"card:a": \{\n {4}"title": "Á"\n {2}\}\n\};\n$/);
+    assert.doesNotMatch(es, /가/);
+    assert.match(renderLocaleOverlays(model, "ko"), /export const OVERLAYS_KO: Overlays\['ko'\] = \{/);
+    assert.equal(localeOut("ko"), join("packages", "content-schema", "src", "i18n-overlays-ko.generated.ts"));
+  });
 });
 
 describe("build-overlays.mjs: CLI", () => {
@@ -118,6 +131,12 @@ describe("build-overlays.mjs: CLI", () => {
     assert.match(out, /"title": "A"/);
     assert.match(out, /"title": "가 카드"/);
     assert.doesNotMatch(out, /nope/);
+    // The one-locale modules hold the same tables, one locale each.
+    const es = readFileSync(join(root, localeOut("es")), "utf8");
+    const ko = readFileSync(join(root, localeOut("ko")), "utf8");
+    assert.match(es, /"title": "A"/);
+    assert.doesNotMatch(es, /가 카드/);
+    assert.match(ko, /"title": "가 카드"/);
   });
 
   test("leaves lesson glosses (lessons-stage<n>-<theme>.json) to build-lessons.mjs (F-CURR-001 §3.10)", () => {
@@ -155,6 +174,12 @@ describe("build-overlays.mjs: CLI", () => {
     const drift = run(root, ["--check"]);
     assert.equal(drift.status, 1);
     assert.match(drift.stdout, /out of date with content\/i18n.*run pnpm generate/);
+    // A one-locale module that drifted on its own fails too.
+    assert.equal(run(root).status, 0);
+    writeFileSync(join(root, localeOut("ko")), "// edited\n");
+    const koDrift = run(root, ["--check"]);
+    assert.equal(koDrift.status, 1);
+    assert.match(koDrift.stdout, /::error file=.*i18n-overlays-ko\.generated\.ts::generated overlays are out of date/);
   });
 
   test("malformed JSON fails with an annotation naming the file; an unknown argument exits 2", () => {

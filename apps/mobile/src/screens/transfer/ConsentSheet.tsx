@@ -4,6 +4,7 @@ import { TRANSFER_CONSENT_LOCALES, type TransferConsentLocale } from '@hangul-ro
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
+import { useLocalePacks } from '../../i18n/use-messages';
 import { FocusTitle } from './FocusTitle';
 import { consentLines, identityLines, readToEndOpen, type ConsentSheetData } from '../../logic/transfers/consent-sheet';
 
@@ -40,10 +41,13 @@ export function ConsentSheet({ data, initialLocale, self, notice, error, busy, o
   const [read, setRead] = useState(false);
   const scrollY = useRef(0);
   const scroller = useRef<ScrollView | null>(null);
+  // The sheet switches between its languages in place: on the web each one's text is a chunk of its own
+  // (F-CURR-002 §10), so the sheet loads them all and its lines follow each in.
+  const packs = useLocalePacks(TRANSFER_CONSENT_LOCALES);
   const frame = getMessages(locale);
   const c = frame.console.transfer.consent;
-  const lines = useMemo(() => consentLines(data, locale) ?? [], [data, locale]);
-  const identity = useMemo(() => identityLines(data.destination, locale), [data.destination, locale]);
+  const lines = useMemo(() => consentLines(data, locale) ?? [], [data, locale, packs]);
+  const identity = useMemo(() => identityLines(data.destination, locale), [data.destination, locale, packs]);
 
   // D2: checked once both the viewport and the end marker are measured (whichever layout comes last), and on
   // every scroll. A sheet shorter than the window therefore starts with Yes enabled; the layout callbacks never

@@ -14,6 +14,7 @@ import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import type { MissionCard } from './homework/mission-builder';
 import type { MinigameScope } from './minigame-config';
 import { lessonContent } from '../content/lessons';
+import { localePacks } from '../content/locale-packs';
 import { mergeOverlaysInto } from './lessons/lesson-store';
 
 /**
@@ -30,10 +31,16 @@ export const localizeCard = (card: HeritageCard, locale: UiLocale, overlays?: Ov
  * The shipped overlays plus the glosses of the generated lesson cells (F-CURR-001 §3.10): each
  * lesson chunk's glosses join as it loads, the titles of the active locale's title chunk and the
  * steps and game glosses of each loaded cell (F-CURR-002 §10). One table, filled in place, so every
- * default below reads what is loaded at the time of the call.
+ * default below reads what is loaded at the time of the call. On the web the shipped overlays of a
+ * locale join when its locale chunk arrives (`content/locale-packs.ts`; `OVERLAYS` is empty until then),
+ * under any lesson gloss already in.
  */
 const contentOverlays = { es: { ...OVERLAYS.es }, ko: { ...OVERLAYS.ko } };
 lessonContent.onOverlays((extra) => mergeOverlaysInto(contentOverlays, extra));
+localePacks.onContent((locale, table) => {
+  const into = contentOverlays[locale];
+  for (const [id, entry] of Object.entries(table)) into[id] = { ...entry, ...into[id] };
+});
 export const CONTENT_OVERLAYS: Overlays = contentOverlays;
 
 export const localizeEpisode = (episode: Episode, locale: UiLocale, overlays: Overlays = CONTENT_OVERLAYS): Episode =>

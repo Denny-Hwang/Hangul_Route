@@ -4,12 +4,15 @@ import { readFileSync } from 'node:fs';
 import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
 import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
+  LOCALE_CHUNKS,
   PRECACHE_BUDGET,
+  ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
   isStartBundle,
   lessonChunkProblems,
   lessonChunkUrls,
+  markedChunkProblems,
   md5,
   nosniffLessonChunks,
   precacheBudgetProblems,
@@ -146,6 +149,112 @@ describe('the story chunks of row CM-8 (the same checks)', () => {
   });
 });
 
+describe('markedChunkProblems (the locale chunks and the grown-up roots)', () => {
+  const localeChunk = (name, marker) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.LOCALE_PACK="${marker}";e.LOCALE_MESSAGES={}});`;
+    return { url: `${WEB_JS_DIR}/${name}-${md5(text)}.js`, text };
+  };
+  const build = () => [{ url: START, text: 'var p=function(l){return"locale-pack:"+l};' }, ...LOCALE_CHUNKS.map((c) => localeChunk(c.name, c.marker))];
+
+  it('names the chunks the app loads', () => {
+    expect(LOCALE_CHUNKS).toEqual([
+      { name: 'locale-es', marker: 'locale-pack:es' },
+      { name: 'locale-ko', marker: 'locale-pack:ko' },
+    ]);
+    expect(ROOT_CHUNKS).toEqual([
+      { name: 'PresenterApp', marker: 'root-chunk:presenter' },
+      { name: 'BrowseApp', marker: 'root-chunk:browse' },
+    ]);
+  });
+
+  it('the markers are the ones the chunk modules export', async () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('PresenterApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[0].marker}';`);
+    expect(read('BrowseApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[1].marker}';`);
+    expect(read('src/content/locale-chunks/locale-es.ts')).toContain(`= '${LOCALE_CHUNKS[0].marker}';`);
+    expect(read('src/content/locale-chunks/locale-ko.ts')).toContain(`= '${LOCALE_CHUNKS[1].marker}';`);
+  });
+
+  it('passes a build where each locale is its own precached bundle carrying its marker', () => {
+    const bundles = build();
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles, precached: all(bundles).map((u) => `/${u}`) })).toEqual([]);
+  });
+
+  it('fails a missing, doubled, renamed, emptied or unprecached chunk, and a marker in the start bundle', () => {
+    const [start, es, ko] = build();
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es], precached: all([start, es]) })).toEqual(['locale-ko has no web bundle: the chunk is missing from the build']);
+    // By default the grown-up roots are checked too.
+    expect(markedChunkProblems({ bundles: [start, es, ko], precached: all([start, es, ko]) })).toEqual([
+      'PresenterApp has no web bundle: the chunk is missing from the build',
+      'BrowseApp has no web bundle: the chunk is missing from the build',
+    ]);
+    const other = localeChunk('locale-ko', 'locale-pack:ko ');
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
+      `locale-ko has 2 web bundles: ${ko.url}, ${other.url}`,
+      `${other.url} does not carry locale-pack:ko: it is not locale-ko's chunk (or it is empty)`,
+    ]);
+    const empty = { url: `${WEB_JS_DIR}/locale-ko-${md5('')}.js`, text: '' };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, empty], precached: all([start, es, empty]) })).toEqual([
+      `${empty.url} does not carry locale-pack:ko: it is not locale-ko's chunk (or it is empty)`,
+    ]);
+    const renamed = { ...ko, url: `${WEB_JS_DIR}/locale-ko-${'0'.repeat(32)}.js` };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, renamed], precached: all([start, es, renamed]) })).toEqual([`${renamed.url}: its file name is not the md5 of its content`]);
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko], precached: all([start, es]) })).toEqual([`${ko.url} is missing from the precache`]);
+    const pulled = { url: START, text: `${start.text}e.LOCALE_PACK='locale-pack:es';` };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [pulled, es, ko], precached: all([pulled, es, ko]) })).toEqual([
+      `locale-es is in the start bundle ${START}: a static import pulled it in`,
+    ]);
+  });
+
+  it('the report counts the locale chunks on a line of their own', () => {
+    const bundles = build();
+    const root = localeChunk('PresenterApp', 'root-chunk:presenter');
+    const report = precacheReport({ manifest: [], locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, bundles: [...bundles, root], precache: { count: 3, size: 99 } });
+    expect(report.localeChunks.count).toBe(2);
+    expect(report.localeChunks.raw).toBe(bundles[1].text.length + bundles[2].text.length);
+    expect(report.rootChunks.count).toBe(1);
+    const lines = reportLines(report);
+    const largestLocale = Math.max(bundles[1].text.length, bundles[2].text.length);
+    expect(lines[4]).toMatch(
+      new RegExp(`^ {2}locale chunks {2}2 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(largest ${largestLocale} B raw, ceiling ${PRECACHE_BUDGET.localeChunkRaw} B each\\)$`),
+    );
+    expect(lines[5]).toMatch(
+      new RegExp(`^ {2}grown-up root chunks {2}1 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(largest ${root.text.length} B raw, ceiling ${PRECACHE_BUDGET.rootChunkRaw} B each\\)$`),
+    );
+    expect(lines[6]).toContain('learner precache  3 files  99 B');
+    expect(lessonChunkUrls(LOCALE_CHUNKS, bundles)).toEqual([bundles[1].url, bundles[2].url]);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+  });
+
+  it('holds each locale chunk and each grown-up root chunk to its own line, which a Spanish or Korean first screen waits on', () => {
+    const lines = { ...PRECACHE_BUDGET, localeChunkRaw: 100, rootChunkRaw: 50 };
+    const ko = `${WEB_JS_DIR}/locale-ko-${md5('ko')}.js`;
+    const presenter = `${WEB_JS_DIR}/PresenterApp-${md5('p')}.js`;
+    const report = {
+      start: { url: START, raw: 1, gzip: 1 },
+      lessonChunks: { count: 0, raw: 0, gzip: 0, largest: null },
+      localeChunks: { count: 2, raw: 180, gzip: 20, largest: { url: ko, raw: 101 } },
+      rootChunks: { count: 2, raw: 90, gzip: 10, largest: { url: presenter, raw: 51 } },
+      precache: { count: 5, raw: 272 },
+    };
+    expect(precacheBudgetProblems(report, lines)).toEqual([
+      expect.stringMatching(new RegExp(`^the locale bundle ${ko} is 101 B raw, over the per-locale ceiling of 100 B .*raise PRECACHE_BUDGET\\.localeChunkRaw`)),
+      expect.stringMatching(new RegExp(`^the grown-up root bundle ${presenter} is 51 B raw, over the per-grown-up root ceiling of 50 B .*raise PRECACHE_BUDGET\\.rootChunkRaw`)),
+    ]);
+    const atLine = { ...report, localeChunks: { ...report.localeChunks, largest: { url: ko, raw: 100 } }, rootChunks: { ...report.rootChunks, largest: { url: presenter, raw: 50 } } };
+    expect(precacheBudgetProblems(atLine, lines)).toEqual([]);
+  });
+
+  it('the locale chunk line sits over the largest measured chunk (ko, 905,927 B) and the root line over the presenter (245,964 B)', () => {
+    // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (ko 901,191 B, es 527,438 B, BrowseApp
+    // 111,404 B raw) and again on the final integration's strings (main fc580beed: ko 905,927 B, es 530,463 B raw).
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_000_000);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(905_927);
+    expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
+    expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
+  });
+});
+
 describe('precacheReport and its budget lines', () => {
   it('measures the start bundle, the lesson chunks and the learner precache', () => {
     const bundles = sound();
@@ -181,18 +290,20 @@ describe('precacheReport and its budget lines', () => {
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is its size after CM-8 with a small margin, under the CM-5 size, so it shrank; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+  it('the start bundle line is its size after the start bundle shrink with a small margin, under every earlier size; the precache line is the CM-5 measurement plus 2.5 MB', () => {
     // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
     // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801),
     // 6,495,837 B with the SN-2 site strings in the bundled `landing` messages (#804, app-host build), 6,518,688 B on
-    // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build).
-    // The margin stays under 10 KB, so the stories (or anything else) cannot come back into the start bundle.
-    // This pins the line only; `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the
-    // real start bundle against it.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(6_525_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 6_518_688).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 6_518_688).toBeLessThan(10_000);
-    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(7_337_815);
+    // the final integration of OA-7b (#798), SN-1 (#813) and SN-2 (#804) (integrate/final-oa-site, release build),
+    // 4,712,987 B after the start bundle shrink on main 7eb5bad61 (the es / ko text and the grown-up roots became
+    // precached chunks; 6,491,546 B on its main), 4,732,797 B with that shrink merged onto the final integration
+    // (main fc580beed, release build). The margin stays under 10 KB, so the stories, the locale text, the grown-up
+    // roots (or anything else) cannot come back into the start bundle unseen. This pins the line only;
+    // `build:web --budget` (pwa-postbuild.mjs, run by CI's web-app job) measures the real start bundle against it.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_740_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_732_797).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
 

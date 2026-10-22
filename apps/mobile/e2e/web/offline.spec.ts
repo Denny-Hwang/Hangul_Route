@@ -152,6 +152,14 @@ test('grown-up pages are never cached, show the offline page without a network, 
     await expect(page.locator('link[rel="manifest"]'), url).toBeAttached();
     expect(await page.evaluate(() => typeof (window as Window & { __hrApplyUpdate?: unknown }).__hrApplyUpdate), url).toBe('function');
     await expect(page.getByRole('heading', { name: "You're offline" }), url).toHaveCount(0);
+    // The presenter and All lessons are chunks of their own (F-CURR-002 §10): offline each loads from the
+    // precache and mounts its own screen, never the waiting or crash screen.
+    const root = { '/present': 'PresenterApp', '/browse': 'BrowseApp' }[url];
+    if (root === undefined) continue;
+    if (url === '/present') await expect(page.getByTestId('presenter-home'), url).toBeVisible();
+    else await expect(page.getByTestId('browse-access').or(page.getByTestId('browse-route')).first(), url).toBeVisible();
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => new RegExp(`/_expo/static/js/web/${root}-[0-9a-f]{32}\\.js$`).test(p)), url).toHaveLength(1);
   }
   // /teacher is a plain learner path: the learner home itself.
   await expect(page.getByText('Hi, Suni!')).toBeVisible();
@@ -290,6 +298,39 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
     await expect(page.getByText('Word Builder')).toHaveCount(0);
     await expect(page.getByText('Vowel Pairs ae and e')).toHaveCount(0);
     expect((await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-titles-es-[0-9a-f]{32}\.js$/)]);
+    expect(errors).toEqual([]);
+  });
+});
+
+/**
+ * F-CURR-002 §10: the es / ko UI messages and content text left the start bundle, one chunk per locale. Both are
+ * precached after one online visit, and a Korean browser offline starts in Korean from its chunk: the menus and
+ * the welcome speak Korean, never English.
+ */
+test.describe('in Korean, offline (the locale chunk of the active locale)', () => {
+  test.use({ locale: 'ko-KR' });
+
+  const LOCALE_BUNDLE = /^\/_expo\/static\/js\/web\/locale-(es|ko)-[0-9a-f]{32}\.js$/;
+
+  test('both locale chunks are precached, and offline the app starts in Korean from the ko chunk', async ({ page, context }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await expect(page.getByRole('button', { name: nameIn('ko', (m) => m.learner.welcome.cta) })).toBeVisible();
+    await controlledBySw(page);
+    expect((await cachedPaths(page)).filter((p) => LOCALE_BUNDLE.test(p)).sort()).toEqual([
+      expect.stringMatching(/\/locale-es-[0-9a-f]{32}\.js$/),
+      expect.stringMatching(/\/locale-ko-[0-9a-f]{32}\.js$/),
+    ]);
+
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
+    await expect(page.getByRole('button', { name: nameIn('ko', (m) => m.learner.welcome.cta) })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => /\/locale-ko-[0-9a-f]{32}\.js$/.test(p))).toHaveLength(1);
     expect(errors).toEqual([]);
   });
 });

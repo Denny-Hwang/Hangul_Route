@@ -60,8 +60,12 @@ export function reloadForNewBuild(env: ReloadEnv = webEnv()): boolean {
   return true;
 }
 
-/** A lesson or story chunk bundle of this host (`/_expo/static/js/web/lessons-<name>-<md5>.js`, `story-<slug>-<md5>.js`, row CM-8). */
-const CHUNK_PATH = /^\/_expo\/static\/js\/web\/(?:lessons|story)-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
+/**
+ * A lesson or story chunk bundle of this host (`/_expo/static/js/web/lessons-<name>-<md5>.js`, `story-<slug>-<md5>.js`, row CM-8),
+ * a locale chunk (`locale-es-<md5>.js`, the UI messages and content text of one locale) or a grown-up root's own code
+ * (`PresenterApp-<md5>.js`, `BrowseApp-<md5>.js`).
+ */
+const CHUNK_PATH = /^\/_expo\/static\/js\/web\/(?:(?:lessons|story)-[a-z0-9-]+|locale-[a-z]{2}|PresenterApp|BrowseApp)-[0-9a-f]{32}\.js$/;
 
 interface ProbeAnswer {
   status: number;
