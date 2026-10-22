@@ -75,12 +75,30 @@ const settle = async (): Promise<void> => {
   });
 };
 
-function bindings(over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean> } = {}) {
+function bindings(
+  over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean>; locales?: { ensureAll: () => Promise<void> }; rootTimeoutMs?: number } = {},
+) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
   const answer = vi.fn(over.answer ?? (async () => false));
-  const b = lessonContentBindings({ store: cold.store, locale: () => 'en', reloadForNewBuild: reload, isNewBuildAnswer: answer });
-  return { ...cold, ...b, reload, answer };
+  const abandon = vi.fn();
+  const b = lessonContentBindings({
+    store: cold.store,
+    locale: () => 'en',
+    reloadForNewBuild: reload,
+    isNewBuildAnswer: answer,
+    abandon,
+    ...(over.locales === undefined ? {} : { locales: over.locales }),
+    ...(over.rootTimeoutMs === undefined ? {} : { rootTimeoutMs: over.rootTimeoutMs }),
+  });
+  return { ...cold, ...b, reload, answer, abandon };
+}
+
+/** Every lesson chunk of the cold store, in. */
+async function loadCells(t: ReturnType<typeof bindings>): Promise<void> {
+  const loading = t.store.ensureAll();
+  for (const id of Object.keys(manifest.cells)) t.pending[id]?.resolve(chunkOf(id));
+  await loading;
 }
 
 /** What Metro's web loader rejects with when a chunk's script tag fires `error` (a network failure, or HTML refused under nosniff). */
@@ -277,6 +295,104 @@ describe('withLessonContent (All lessons and the presenter)', () => {
     const Wrapped = t.withLessonContent(Root);
     const r = await render(<Wrapped />);
     expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+});
+
+describe('withLessonContent with a lazy root (the presenter and All lessons are chunks of their own)', () => {
+  function Root(): React.ReactElement {
+    return <Text testID="root">root</Text>;
+  }
+  /** A root whose code arrives when the test says. */
+  function lazyRoot(name = 'PresenterApp') {
+    const loads: Deferred<{ default: React.ComponentType<object> }>[] = [];
+    return {
+      loads,
+      root: {
+        name,
+        load: () => {
+          const d = deferred<{ default: React.ComponentType<object> }>();
+          loads.push(d);
+          return d.promise;
+        },
+      },
+    };
+  }
+
+  it('waits for the content and the root\'s own code, then mounts it; a second mount needs no load', async () => {
+    const t = bindings();
+    await loadCells(t);
+    const lazy = lazyRoot();
+    const Wrapped = t.withLessonContent(lazy.root);
+    expect(Wrapped.displayName).toBe('WithLessonContent(PresenterApp)');
+    const r = await render(<Wrapped />);
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+    expect(lazy.loads).toHaveLength(1);
+    await act(async () => lazy.loads[0]?.resolve({ default: Root }));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+    const again = await render(<Wrapped />);
+    expect(byTestId(again.root, 'root')).toHaveLength(1);
+    expect(lazy.loads).toHaveLength(1);
+  });
+
+  it('waits for the locale chunks too, and a failed one does not stop the root', async () => {
+    let finish!: () => void;
+    const t = bindings({ locales: { ensureAll: () => new Promise<void>((_, reject) => (finish = () => reject(new Error('offline')))) } });
+    await loadCells(t);
+    const lazy = lazyRoot();
+    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    await act(async () => lazy.loads[0]?.resolve({ default: Root }));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+    await act(async () => finish());
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('root code that fails shows the crash screen; Try again asks for it again and mounts it', async () => {
+    const t = bindings();
+    await loadCells(t);
+    const lazy = lazyRoot('BrowseApp');
+    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    await act(async () => lazy.loads[0]?.reject(new Error('offline')));
+    await settle();
+    expect(t.reload).not.toHaveBeenCalled();
+    const retry = buttonsNamed(r.root, TRY_AGAIN);
+    expect(retry).toHaveLength(1);
+    await press(retry[0]!);
+    expect(lazy.loads).toHaveLength(2);
+    await act(async () => lazy.loads[1]?.resolve({ default: Root }));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('root code of a newer build reloads the page', async () => {
+    const t = bindings({ reload: () => true, answer: async () => true });
+    await loadCells(t);
+    const lazy = lazyRoot();
+    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    await act(async () => lazy.loads[0]?.reject(scriptError()));
+    await settle();
+    expect(t.answer).toHaveBeenCalledTimes(1);
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+  });
+
+  it('root code that hangs past its timeout gives up its pending script and shows the crash screen', async () => {
+    const t = bindings({ rootTimeoutMs: 20 });
+    await loadCells(t);
+    const lazy = lazyRoot('PresenterApp');
+    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    });
+    await settle();
+    expect(t.abandon).toHaveBeenCalledWith('PresenterApp');
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(1);
+    // A late answer of the given-up load changes nothing.
+    await act(async () => lazy.loads[0]?.resolve({ default: Root }));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
   });
 });
 

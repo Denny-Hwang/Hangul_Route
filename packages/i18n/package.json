@@ -9,7 +9,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./banned-words.json": "./src/banned-words.json",
-    "./note-text": "./src/note-text.ts"
+    "./note-text": "./src/note-text.ts",
+    "./messages-es": "./messages-es.ts",
+    "./messages-ko": "./messages-ko.ts"
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/i18n)'",

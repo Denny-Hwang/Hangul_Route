@@ -4,12 +4,15 @@ import { readFileSync } from 'node:fs';
 import { GROWN_UP_PREFIXES } from '@hangul-route/content-schema';
 import { grownUpHeadersBlock } from '../app-host/headers.mjs';
 import {
+  LOCALE_CHUNKS,
   PRECACHE_BUDGET,
+  ROOT_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
   isStartBundle,
   lessonChunkProblems,
   lessonChunkUrls,
+  markedChunkProblems,
   md5,
   nosniffLessonChunks,
   precacheBudgetProblems,
@@ -143,6 +146,78 @@ describe('the story chunks of row CM-8 (the same checks)', () => {
     expect(PRECACHE_BUDGET.storyChunkRaw).toBe(BUDGET.perStoryRaw);
     expect(PRECACHE_BUDGET.storiesRaw).toBe(BUDGET.totalRaw);
     expect(PRECACHE_BUDGET.storiesGzip).toBe(BUDGET.totalGzip);
+  });
+});
+
+describe('markedChunkProblems (the locale chunks and the grown-up roots)', () => {
+  const localeChunk = (name, marker) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.LOCALE_PACK="${marker}";e.LOCALE_MESSAGES={}});`;
+    return { url: `${WEB_JS_DIR}/${name}-${md5(text)}.js`, text };
+  };
+  const build = () => [{ url: START, text: 'var p=function(l){return"locale-pack:"+l};' }, ...LOCALE_CHUNKS.map((c) => localeChunk(c.name, c.marker))];
+
+  it('names the chunks the app loads', () => {
+    expect(LOCALE_CHUNKS).toEqual([
+      { name: 'locale-es', marker: 'locale-pack:es' },
+      { name: 'locale-ko', marker: 'locale-pack:ko' },
+    ]);
+    expect(ROOT_CHUNKS).toEqual([
+      { name: 'PresenterApp', marker: 'root-chunk:presenter' },
+      { name: 'BrowseApp', marker: 'root-chunk:browse' },
+    ]);
+  });
+
+  it('the markers are the ones the chunk modules export', async () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(read('PresenterApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[0].marker}';`);
+    expect(read('BrowseApp.tsx')).toContain(`export const ROOT_CHUNK = '${ROOT_CHUNKS[1].marker}';`);
+    expect(read('src/content/locale-chunks/locale-es.ts')).toContain(`= '${LOCALE_CHUNKS[0].marker}';`);
+    expect(read('src/content/locale-chunks/locale-ko.ts')).toContain(`= '${LOCALE_CHUNKS[1].marker}';`);
+  });
+
+  it('passes a build where each locale is its own precached bundle carrying its marker', () => {
+    const bundles = build();
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles, precached: all(bundles).map((u) => `/${u}`) })).toEqual([]);
+  });
+
+  it('fails a missing, doubled, renamed, emptied or unprecached chunk, and a marker in the start bundle', () => {
+    const [start, es, ko] = build();
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es], precached: all([start, es]) })).toEqual(['locale-ko has no web bundle: the chunk is missing from the build']);
+    // By default the grown-up roots are checked too.
+    expect(markedChunkProblems({ bundles: [start, es, ko], precached: all([start, es, ko]) })).toEqual([
+      'PresenterApp has no web bundle: the chunk is missing from the build',
+      'BrowseApp has no web bundle: the chunk is missing from the build',
+    ]);
+    const other = localeChunk('locale-ko', 'locale-pack:ko ');
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
+      `locale-ko has 2 web bundles: ${ko.url}, ${other.url}`,
+      `${other.url} does not carry locale-pack:ko: it is not locale-ko's chunk (or it is empty)`,
+    ]);
+    const empty = { url: `${WEB_JS_DIR}/locale-ko-${md5('')}.js`, text: '' };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, empty], precached: all([start, es, empty]) })).toEqual([
+      `${empty.url} does not carry locale-pack:ko: it is not locale-ko's chunk (or it is empty)`,
+    ]);
+    const renamed = { ...ko, url: `${WEB_JS_DIR}/locale-ko-${'0'.repeat(32)}.js` };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, renamed], precached: all([start, es, renamed]) })).toEqual([`${renamed.url}: its file name is not the md5 of its content`]);
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko], precached: all([start, es]) })).toEqual([`${ko.url} is missing from the precache`]);
+    const pulled = { url: START, text: `${start.text}e.LOCALE_PACK='locale-pack:es';` };
+    expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [pulled, es, ko], precached: all([pulled, es, ko]) })).toEqual([
+      `locale-es is in the start bundle ${START}: a static import pulled it in`,
+    ]);
+  });
+
+  it('the report counts the locale chunks on a line of their own', () => {
+    const bundles = build();
+    const root = localeChunk('PresenterApp', 'root-chunk:presenter');
+    const report = precacheReport({ manifest: [], locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, bundles: [...bundles, root], precache: { count: 3, size: 99 } });
+    expect(report.localeChunks.count).toBe(2);
+    expect(report.localeChunks.raw).toBe(bundles[1].text.length + bundles[2].text.length);
+    expect(report.rootChunks.count).toBe(1);
+    const lines = reportLines(report);
+    expect(lines[4]).toMatch(/^ {2}locale chunks {2}2 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    expect(lines[5]).toMatch(/^ {2}grown-up root chunks {2}1 bundles {2}\d+ B raw {2}\d+ B gzip$/);
+    expect(lines[6]).toContain('learner precache  3 files  99 B');
+    expect(lessonChunkUrls(LOCALE_CHUNKS, bundles)).toEqual([bundles[1].url, bundles[2].url]);
   });
 });
 

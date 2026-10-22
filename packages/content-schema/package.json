@@ -10,6 +10,8 @@
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
     "./overlays": "./overlays.ts",
+    "./overlays-es": "./overlays-es.ts",
+    "./overlays-ko": "./overlays-ko.ts",
     "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts",
     "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts"
   },

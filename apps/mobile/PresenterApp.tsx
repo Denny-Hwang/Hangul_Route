@@ -206,6 +206,9 @@ function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
 }
 
 /** The presenter root: the gesture and safe-area providers, then the presenter (`useSafeAreaInsets` needs the provider above it). */
+/** The marker of this root's own web bundle (F-CURR-002 §10): the post-build check fails a start bundle that carries it. */
+export const ROOT_CHUNK = 'root-chunk:presenter';
+
 export default function PresenterApp(): React.ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

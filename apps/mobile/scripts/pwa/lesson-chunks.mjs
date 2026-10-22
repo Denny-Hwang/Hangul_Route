@@ -86,6 +86,58 @@ export function lessonChunkProblems({ manifest, bundles, precached }) {
 }
 
 /**
+ * The locale chunks of the learner PWA (F-CURR-002 §10): one web bundle per UI locale but English, holding that
+ * locale's UI messages and content overlays (`src/content/locale-chunks/locale-<locale>.ts`), reached only through
+ * the literal `import()`s of `src/platform/locale-packs.web.ts`. Each exports its marker (`LOCALE_PACK`), which
+ * the start bundle must never carry.
+ */
+export const LOCALE_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'locale-es', marker: 'locale-pack:es' }),
+  Object.freeze({ name: 'locale-ko', marker: 'locale-pack:ko' }),
+]);
+
+/**
+ * The grown-up roots of the learner web build (F-CURR-002 §10): the presenter (`/present`) and All lessons
+ * (`/browse`) are bundles of their own, reached only through the literal `import()`s of `index.ts`, so a
+ * learner's start bundle carries neither. Each root module exports its marker (`ROOT_CHUNK`).
+ */
+export const ROOT_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'PresenterApp', marker: 'root-chunk:presenter' }),
+  Object.freeze({ name: 'BrowseApp', marker: 'root-chunk:browse' }),
+]);
+
+/**
+ * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
+ * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
+ * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
+ * an empty bundle behind).
+ * @param {{ chunks?: readonly { name: string, marker: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
+ */
+export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS], bundles, precached }) {
+  const problems = [];
+  const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
+  const starts = bundles.filter((b) => isStartBundle(b.url));
+  for (const { name, marker } of chunks) {
+    const quoted = [`"${marker}"`, `'${marker}'`];
+    for (const start of starts) {
+      if (quoted.some((q) => start.text.includes(q))) problems.push(`${name} is in the start bundle ${start.url}: a static import pulled it in`);
+    }
+    const own = bundles.filter((b) => !isStartBundle(b.url) && NAMED.exec(b.url)?.[1] === name);
+    if (own.length === 0) {
+      problems.push(`${name} has no web bundle: the chunk is missing from the build`);
+      continue;
+    }
+    if (own.length > 1) problems.push(`${name} has ${own.length} web bundles: ${own.map((b) => b.url).join(', ')}`);
+    for (const bundle of own) {
+      if (!quoted.some((q) => bundle.text.includes(q))) problems.push(`${bundle.url} does not carry ${marker}: it is not ${name}'s chunk (or it is empty)`);
+      if (NAMED.exec(bundle.url)?.[2] !== md5(bundle.text)) problems.push(`${bundle.url}: its file name is not the md5 of its content`);
+      if (!listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
+    }
+  }
+  return problems;
+}
+
+/**
  * Lesson chunk bundles that the host's `_headers` rules would serve with `X-Content-Type-Options: nosniff`
  * (empty = none). A page of an older build that asks for a chunk the host no longer has gets the app's HTML
  * page (the single-page fallback, 200); without nosniff the browser runs it, Metro finds no module in it and
@@ -121,15 +173,18 @@ function chunkTotals(manifest, bundles) {
 }
 
 /**
- * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8) and the whole learner precache.
- * @param {{ manifest: { name: string }[], stories?: { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
+ * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
+ * root chunks and the whole learner precache.
+ * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
     lessonChunks: chunkTotals(manifest, bundles),
     storyChunks: chunkTotals(stories, bundles),
+    localeChunks: chunkTotals(locales, bundles),
+    rootChunks: chunkTotals(roots, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -143,6 +198,12 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   lines.push(`  lesson chunks  ${report.lessonChunks.count} bundles  ${report.lessonChunks.raw} B raw  ${report.lessonChunks.gzip} B gzip`);
   if (report.storyChunks !== undefined) {
     lines.push(`  story chunks  ${report.storyChunks.count} bundles  ${report.storyChunks.raw} B raw  ${report.storyChunks.gzip} B gzip`);
+  }
+  if (report.localeChunks !== undefined && report.localeChunks.count > 0) {
+    lines.push(`  locale chunks  ${report.localeChunks.count} bundles  ${report.localeChunks.raw} B raw  ${report.localeChunks.gzip} B gzip`);
+  }
+  if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
+    lines.push(`  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip`);
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
   return lines;

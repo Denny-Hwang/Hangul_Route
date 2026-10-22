@@ -295,6 +295,39 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
 });
 
 /**
+ * F-CURR-002 §10: the es / ko UI messages and content text left the start bundle, one chunk per locale. Both are
+ * precached after one online visit, and a Korean browser offline starts in Korean from its chunk: the menus and
+ * the welcome speak Korean, never English.
+ */
+test.describe('in Korean, offline (the locale chunk of the active locale)', () => {
+  test.use({ locale: 'ko-KR' });
+
+  const LOCALE_BUNDLE = /^\/_expo\/static\/js\/web\/locale-(es|ko)-[0-9a-f]{32}\.js$/;
+
+  test('both locale chunks are precached, and offline the app starts in Korean from the ko chunk', async ({ page, context }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await expect(page.getByRole('button', { name: nameIn('ko', (m) => m.learner.welcome.cta) })).toBeVisible();
+    await controlledBySw(page);
+    expect((await cachedPaths(page)).filter((p) => LOCALE_BUNDLE.test(p)).sort()).toEqual([
+      expect.stringMatching(/\/locale-es-[0-9a-f]{32}\.js$/),
+      expect.stringMatching(/\/locale-ko-[0-9a-f]{32}\.js$/),
+    ]);
+
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
+    await expect(page.getByRole('button', { name: nameIn('ko', (m) => m.learner.welcome.cta) })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Let's start" })).toHaveCount(0);
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => /\/locale-ko-[0-9a-f]{32}\.js$/.test(p))).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+});
+
+/**
  * F-CURR-002 §10: a page with no worker in control (the iOS 14 home-screen app, a first visit) loads each chunk
  * from the network. A chunk URL that answers with the app's HTML page (a deploy landed: the host's single-page
  * fallback) reloads the page once, onto the new build, and the lesson then plays; a chunk that cannot load at all

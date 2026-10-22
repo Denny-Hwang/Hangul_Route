@@ -93,6 +93,9 @@ function currentRoute(): BrowseRouteName | null {
   return (navigation.getCurrentRoute()?.name as BrowseRouteName | undefined) ?? null;
 }
 
+/** The marker of this root's own web bundle (F-CURR-002 §10): the post-build check fails a start bundle that carries it. */
+export const ROOT_CHUNK = 'root-chunk:browse';
+
 export default function BrowseApp(): React.ReactElement {
   const start = useMemo(startBrowse, []);
   useDocumentLang();

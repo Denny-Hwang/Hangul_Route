@@ -2,10 +2,17 @@
 import './src/async-bundles';
 import { registerRootComponent } from 'expo';
 import App from './App';
-import BrowseApp from './BrowseApp';
-import PresenterApp from './PresenterApp';
 import { bootRoot } from './src/platform/app-root';
-import { withLessonContent } from './src/screens/lesson-content';
+import { withLessonContent, type LazyRoot } from './src/screens/lesson-content';
+
+/**
+ * The grown-up roots are chunks of their own (F-CURR-002 §10): a learner's start bundle carries neither the
+ * presenter nor All lessons, and the web build emits each as a precached bundle (`PresenterApp-<md5>.js`,
+ * `BrowseApp-<md5>.js`) that `withLessonContent` loads with the content the root reads. Literal `import()`s
+ * only: a static import would pull a root back into the start bundle (the post-build check fails on its marker).
+ */
+const PresenterRoot: LazyRoot<object> = { name: 'PresenterApp', load: () => import('./PresenterApp') };
+const BrowseRoot: LazyRoot<object> = { name: 'BrowseApp', load: () => import('./BrowseApp') };
 
 /**
  * The root is chosen, and its boot step run, before anything mounts (F-APP-001 sections 3.4 and
@@ -22,13 +29,13 @@ function GrownUpBounce(): null {
 
 const root = bootRoot();
 // The grown-up roots read the whole lesson catalogue (decks, lesson facts), so they mount once every
-// lesson chunk is in (F-CURR-002 §10); the learner app loads a lesson's chunk when it opens.
+// lesson chunk and their own code are in (F-CURR-002 §10); the learner app loads a lesson's chunk when it opens.
 registerRootComponent(
   root === 'grown-up-bounce'
     ? GrownUpBounce
     : root === 'presenter'
-      ? withLessonContent(PresenterApp)
+      ? withLessonContent(PresenterRoot)
       : root === 'browse'
-        ? withLessonContent(BrowseApp)
+        ? withLessonContent(BrowseRoot)
         : App,
 );

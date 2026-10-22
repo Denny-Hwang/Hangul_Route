@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import * as barrel from '../index';
-import { OVERLAYS } from '../../overlays';
+import { installContentOverlay, OVERLAYS } from '../../overlays';
+import { OVERLAYS_ES } from '../../overlays-es';
+import { OVERLAYS_KO } from '../../overlays-ko';
+import * as webTwin from '../../overlays.web';
 import { OVERLAYS as GENERATED } from '../i18n-overlays.generated';
 
 /**
@@ -20,10 +23,13 @@ import { OVERLAYS as GENERATED } from '../i18n-overlays.generated';
  * A fully translated catalogue is estimated at about 650 KB of JSON per locale, so each
  * locale may hold up to 1 MiB and the generated module up to 2.25 MiB. Past that, split the
  * module per locale and load the viewer's locale on demand instead of raising the budget.
+ * The learner PWA already does that for its start bundle: it reads the one-locale modules
+ * (`overlays-es`, `overlays-ko`) as a precached chunk per locale (F-CURR-002 §10).
  */
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGE = resolve(SRC, '..');
 const GENERATED_FILE = join(SRC, 'i18n-overlays.generated.ts');
+const localeFile = (locale: 'es' | 'ko'): string => join(SRC, `i18n-overlays-${locale}.generated.ts`);
 
 const LOCALE_BUDGET_BYTES = 1024 * 1024;
 const MODULE_BUDGET_BYTES = 2.25 * 1024 * 1024;
@@ -118,6 +124,33 @@ describe('content overlays stay out of the package barrel (F-I18N-001 open item 
     expect(Object.keys(OVERLAYS).sort()).toEqual(['es', 'ko']);
   });
 
+  it('the one-locale subpaths serve each table on its own, for the learner PWA\'s locale chunks (F-CURR-002 §10)', () => {
+    const manifest = JSON.parse(readFileSync(join(PACKAGE, 'package.json'), 'utf8')) as { exports: Record<string, string> };
+    expect(OVERLAYS_ES).toEqual(GENERATED.es);
+    expect(OVERLAYS_KO).toEqual(GENERATED.ko);
+    for (const [locale, other] of [
+      ['es', 'ko'],
+      ['ko', 'es'],
+    ] as const) {
+      expect(manifest.exports[`./overlays-${locale}`]).toBe(`./overlays-${locale}.ts`);
+      const { files } = valueGraph(join(PACKAGE, `overlays-${locale}.ts`));
+      expect(files.has(localeFile(locale))).toBe(true);
+      expect(files.has(localeFile(other))).toBe(false);
+      expect(files.has(GENERATED_FILE)).toBe(false);
+    }
+  });
+
+  it('the web twin of the subpath starts empty and holds what is installed; the eager one keeps its text', () => {
+    const { files } = valueGraph(join(PACKAGE, 'overlays.web.ts'));
+    expect([...files].filter((file) => file.endsWith('.generated.ts'))).toEqual([]);
+    expect(webTwin.OVERLAYS).toEqual({ es: {}, ko: {} });
+    webTwin.installContentOverlay('ko', { 'card:test': { title: '시험' } });
+    expect(webTwin.OVERLAYS).toEqual({ es: {}, ko: { 'card:test': { title: '시험' } } });
+    const before = JSON.stringify(OVERLAYS);
+    installContentOverlay('es', OVERLAYS_ES);
+    expect(JSON.stringify(OVERLAYS)).toBe(before);
+  });
+
   it('the scanner follows value imports and skips type-only ones (self-check on the package)', () => {
     const { files } = valueGraph(join(SRC, 'localize.ts'));
     expect(files.has(join(SRC, 'schemas', 'locale-overlay.ts'))).toBe(true);
@@ -172,4 +205,10 @@ describe('content overlays size budget', () => {
   it(`the generated module stays within ${MODULE_BUDGET_BYTES / 1024} KiB`, () => {
     expect(statSync(GENERATED_FILE).size).toBeLessThanOrEqual(MODULE_BUDGET_BYTES);
   });
+
+  for (const locale of ['es', 'ko'] as const) {
+    it(`the ${locale} module (the learner PWA's ${locale} chunk) stays within ${LOCALE_BUDGET_BYTES / 1024} KiB plus its header`, () => {
+      expect(statSync(localeFile(locale)).size).toBeLessThanOrEqual(LOCALE_BUDGET_BYTES + 4096);
+    });
+  }
 });

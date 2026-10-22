@@ -28,6 +28,7 @@ import { bindDeviceGateMarker } from './src/store/device-gate';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { lessonContent } from './src/content/lessons';
+import { localePacks } from './src/content/locale-packs';
 import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
@@ -45,9 +46,13 @@ const queryClient = new QueryClient({
 /** The root navigator's container, for the web history bridge (AMENDMENTS-DISPLAY-NAV section 7.2). */
 const navigation = createNavigationContainerRef<RootStackParamList>();
 
-/** Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8); a failed one is left for the screen that needs it. */
+/**
+ * Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8) and every locale chunk (the language tiles,
+ * a language change and the level check's test language then find theirs in); a failed one is left for the
+ * screen that needs it.
+ */
 const prefetchContent = async (): Promise<void> => {
-  await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll()]);
+  await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll(), localePacks.ensureAll()]);
 };
 
 export default function App(): React.ReactElement {
@@ -123,7 +128,12 @@ export default function App(): React.ReactElement {
       .catch(() => undefined)
       // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
       // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
-      .then(() => lessonContent.untilTitlesSettled(activeLocale(useLocaleStore.getState())))
+      // On the web the locale's messages and content text are a chunk of their own too, waited for until in or failed
+      // (a failed one keeps the screens in English until its next try, back online).
+      .then(() => {
+        const locale = activeLocale(useLocaleStore.getState());
+        return Promise.all([lessonContent.untilTitlesSettled(locale), localePacks.untilSettled(locale)]);
+      })
       .then(async () => {
         if (!live) return;
         setReady(true);
@@ -144,6 +154,7 @@ export default function App(): React.ReactElement {
         void useSyncStore.getState().syncAll();
         // Lesson chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
         lessonContent.ensureTitles(activeLocale(useLocaleStore.getState())).catch(() => undefined);
+        localePacks.ensure(activeLocale(useLocaleStore.getState())).catch(() => undefined);
         stopPrefetch();
         stopPrefetch = prefetchWhenIdle(prefetchContent);
       }

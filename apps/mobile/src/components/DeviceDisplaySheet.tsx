@@ -2,7 +2,7 @@ import { DisplaySheet, textSizeOptions, type DisplayOption } from '@hangul-route
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { TextSize } from '@hangul-route/content-schema';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocale, useMessages } from '../i18n/use-messages';
+import { useLocale, useLocalePacks, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
 import { useHistorySheet } from '../platform/history-bridge';
 import { useLocaleStore } from '../store/locale-store';
@@ -47,7 +47,9 @@ export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = tr
     () => languageOptions(availableLocales()).map((o) => ({ value: o.locale, label: o.endonym, lang: o.htmlLang })),
     [],
   );
-  // The step speaks the language being chosen, so the person sees at once whether they can read it.
+  // The step speaks the language being chosen, so the person sees at once whether they can read it. On the web
+  // each language's text is a chunk of its own (F-CURR-002 §10): the open sheet loads every one it lists.
+  useLocalePacks(visible ? availableLocales() : []);
   const confirm = pending === null ? null : getMessages(dictionaryLocale(pending)).common.display.confirm;
 
   return (
