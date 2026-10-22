@@ -63,11 +63,27 @@ export function removeTombstone(record: ProfileTombstones, id: string): ProfileT
 
 /**
  * The stored `hr:profiles` value as a list to merge: anything that is not an array is none, and an item that is not
- * an object with a string id is left out (a damaged item never stops every later write). Never mutates its input.
+ * an object with a string id is left out (a damaged item never stops every later write). [OA] Row OA-10 (section
+ * 13.1): an item that still carries the legacy per-profile `parentPinHash` (written by an older bundle; the grown-up
+ * PIN lives in `account:parentPinHash`) comes back without it, so the next list write leaves it off the device. Never
+ * mutates its input.
  */
 export function storedProfileItems<T extends { id: string }>(raw: unknown): T[] {
   if (!Array.isArray(raw)) return [];
-  return raw.filter((item): item is T => typeof item === 'object' && item !== null && typeof (item as { id?: unknown }).id === 'string' && (item as { id: string }).id !== '');
+  return raw
+    .filter((item): item is T => typeof item === 'object' && item !== null && typeof (item as { id?: unknown }).id === 'string' && (item as { id: string }).id !== '')
+    .map(withoutLegacyPinHash);
+}
+
+/** [OA] Row OA-10: whether a stored `hr:profiles` value still holds the legacy per-profile `parentPinHash`. */
+export function holdsLegacyPinHash(raw: unknown): boolean {
+  return Array.isArray(raw) && raw.some((item) => typeof item === 'object' && item !== null && 'parentPinHash' in item);
+}
+
+function withoutLegacyPinHash<T extends object>(item: T): T {
+  if (!('parentPinHash' in item)) return item;
+  const { parentPinHash: _legacy, ...rest } = item as T & { parentPinHash?: unknown };
+  return rest as T;
 }
 
 /**

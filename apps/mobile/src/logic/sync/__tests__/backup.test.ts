@@ -37,7 +37,8 @@ describe('backup file (F-SYNC-001 §3.6)', () => {
   // a legacy profile record that still carries the old per-profile hash never takes it into a backup file, and a file
   // written before this change never brings one back onto the device.
   it('[OA] strips the legacy parentPinHash from the exported profile; every other field is kept', () => {
-    const legacy: Profile = { ...profile, learnerType: 'self', lastActiveAt: 'u', parentPinHash: 'salt:digest' };
+    // A record an older bundle wrote: the field is no longer in `Profile` (row OA-10), but such a record can still be read.
+    const legacy = { ...profile, learnerType: 'self', lastActiveAt: 'u', parentPinHash: 'salt:digest' } as Profile & { parentPinHash: string };
     const text = encodeBackup(legacy, snapshot, new Date('2026-09-21T00:00:00Z'));
     expect(text).not.toContain('parentPinHash');
     expect(text).not.toContain('salt:digest');

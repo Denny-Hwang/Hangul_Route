@@ -70,13 +70,60 @@ describe('profile-store', () => {
     expect(seen).toEqual([a.id]);
   });
 
-  it('setParentPin sets the hash on every profile', () => {
-    useProfileStore.getState().createProfile(input);
-    useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
-    useProfileStore.getState().setParentPin('hash123');
-    for (const p of useProfileStore.getState().profiles) {
-      expect(p.parentPinHash).toBe('hash123');
-    }
+  it('[OA] has no setParentPin: the grown-up PIN lives in account:parentPinHash, never in a profile (row OA-10)', () => {
+    expect('setParentPin' in useProfileStore.getState()).toBe(false);
+  });
+
+  describe('[OA] the legacy per-profile parentPinHash (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 13.1, row OA-10)', () => {
+    const legacy = (id: string, name: string) => ({
+      id,
+      displayName: name,
+      ageGroup: '5-7',
+      avatar: 'hoya-orange',
+      role: 'learner',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      parentPinHash: 'salt:digest',
+    });
+
+    it('a stored hr:profiles record loses the key on hydrate, and the list is written back without it', async () => {
+      let stored: unknown = [legacy('profile:old1', 'Mina'), legacy('profile:old2', 'Joon')];
+      vi.mocked(readJson).mockImplementation(async (key: string) => {
+        if (key === 'profiles') return stored;
+        if (key === 'profiles:active') return 'profile:old1';
+        return null;
+      });
+      vi.mocked(writeJson).mockImplementation(async (key: string, value: unknown) => {
+        if (key === 'profiles') stored = value;
+      });
+      await useProfileStore.getState().hydrate();
+      const s = useProfileStore.getState();
+      expect(s.profiles.map((p) => p.displayName)).toEqual(['Mina', 'Joon']);
+      for (const p of s.profiles) expect('parentPinHash' in p).toBe(false);
+      await vi.waitFor(() => expect(writeJson).toHaveBeenCalledWith('profiles', expect.any(Array)));
+      expect(JSON.stringify(stored)).not.toContain('parentPinHash');
+      expect((stored as Array<{ id: string }>).map((p) => p.id)).toEqual(['profile:old1', 'profile:old2']);
+      vi.mocked(writeJson).mockImplementation(async () => undefined);
+    });
+
+    it('a list without the key is not written back at hydrate', async () => {
+      const { parentPinHash: _pin, ...clean } = legacy('profile:old1', 'Mina');
+      vi.mocked(readJson).mockImplementation(async (key: string) => (key === 'profiles' ? [clean] : null));
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState().profiles).toEqual([clean]);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('a copy another tab (an older bundle) wrote with the key is merged and written without it', async () => {
+      useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+      const p = useProfileStore.getState().createProfile(input);
+      vi.mocked(readJson).mockImplementation(async (key: string) => (key === 'profiles' ? [{ ...p, parentPinHash: 'salt:digest' }, legacy('profile:old2', 'Joon')] : null));
+      vi.mocked(writeJson).mockClear();
+      useProfileStore.getState().updateProfile(p.id, { displayName: 'Mimi' });
+      await vi.waitFor(() => expect(writeJson).toHaveBeenCalledWith('profiles', expect.any(Array)));
+      const written = vi.mocked(writeJson).mock.calls.filter(([key]) => key === 'profiles').at(-1)?.[1];
+      expect(JSON.stringify(written)).not.toContain('parentPinHash');
+      expect(JSON.stringify(useProfileStore.getState().profiles)).not.toContain('parentPinHash');
+    });
   });
 
   describe('learnerType (F-LEARN-001)', () => {

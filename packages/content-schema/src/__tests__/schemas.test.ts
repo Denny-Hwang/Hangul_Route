@@ -329,9 +329,26 @@ describe('ProfileSchema', () => {
     expect(ProfileSchema.parse({ ...base, role: 'parent' }).role).toBe('parent');
     expect(() => ProfileSchema.parse({ ...base, role: 'robot' })).toThrow();
   });
+
+  it('[OA] has no parentPinHash: a legacy per-profile hash is not kept (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 13.1, OA-10)', () => {
+    const parsed = ProfileSchema.parse({
+      id: 'profile:abc',
+      displayName: 'Suni',
+      ageGroup: '5-7',
+      avatar: 'hoya-orange',
+      createdAt: new Date().toISOString(),
+      parentPinHash: 'salt:digest',
+    });
+    expect('parentPinHash' in parsed).toBe(false);
+  });
 });
 
 describe('FamilySchema', () => {
+  it('[OA] keeps no parentPinHash (row OA-10)', () => {
+    const parsed = FamilySchema.parse({ id: 'family:abc', profiles: [], createdAt: new Date().toISOString(), parentPinHash: 'salt:digest' });
+    expect('parentPinHash' in parsed).toBe(false);
+  });
+
   it('accepts a family with no profiles', () => {
     expect(() =>
       FamilySchema.parse({

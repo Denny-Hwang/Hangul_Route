@@ -14,7 +14,7 @@ import {
  */
 function withoutPinHash(profile: Profile): Profile {
   if (!('parentPinHash' in profile)) return profile;
-  const { parentPinHash: _dropped, ...rest } = profile;
+  const { parentPinHash: _dropped, ...rest } = profile as Profile & { parentPinHash?: unknown };
   return rest;
 }
 

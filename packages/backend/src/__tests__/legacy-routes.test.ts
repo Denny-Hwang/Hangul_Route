@@ -33,7 +33,7 @@ describe('legacy v1 routes are gone', () => {
     // Data the old routes would have handed out (several without any auth).
     store.reset();
     const at = '2026-10-01T00:00:00.000Z';
-    store.families.set('family:x', { id: 'family:x', email: 'parent@example.com', parentPinHash: 'pinhash', ownerId: 'user_owner', createdAt: at });
+    store.families.set('family:x', { id: 'family:x', email: 'parent@example.com', ownerId: 'user_owner', createdAt: at });
     store.profiles.set('profile:x', { id: 'profile:x', familyId: 'family:x', displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya', createdAt: at, lastActiveAt: at });
     store.progress.set('profile:x', { profileId: 'profile:x', updatedAt: at, payload: { cards: [{ cardId: 'card:tiger', unlockedAt: at }] } });
     store.events.push({ id: 'event:1', name: 'session.start', profileId: 'profile:x', at });
