@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
+    "./review-items": "./src/review-items/review-item.ts",
     "./overlays": "./overlays.ts",
     "./overlays-es": "./overlays-es.ts",
     "./overlays-ko": "./overlays-ko.ts",

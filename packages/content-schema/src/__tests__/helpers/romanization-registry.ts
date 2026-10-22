@@ -126,6 +126,10 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/design-system/src/scene-art/props/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },
   { path: 'packages/design-system/src/scene-art/settings/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },
   { path: 'apps/web/src/data/catalogue-titles.generated.ts', reason: 'the ko UI-language titles of catalogue ids, generated from content/i18n/ko (AMENDMENTS-LECTURE-V2 LV-3): interface titles in the Korean UI, never taught Korean; the overlay files themselves are checked by the locale overlay rules' },
+  // Review items (F-CURR-002 §4.2, row CM-10): every Korean string and romanization is copied from a source another suite checks.
+  { path: 'packages/content-schema/src/review-items/review-item.ts', reason: 'doc examples of review-item ids in comments (F-CURR-002 CM-10)' },
+  { path: 'packages/content-schema/src/review-items/extract.ts', reason: 'doc examples in comments and a Hangul character-class regex (F-CURR-002 CM-10)' },
+  { path: 'packages/content-schema/src/review-items/stable-ids.ts', reason: 'doc examples in comments and the Hangul character classes of the typing and building checks (F-CURR-002 CM-10)' },
 ];
 
 /** The directories the content scan skips; kept equal to SKIPPED_DIRS in scripts/validate-content.mjs. */
