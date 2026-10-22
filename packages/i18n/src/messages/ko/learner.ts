@@ -1842,4 +1842,14 @@ export const learner = {
       signIn: '어른으로 로그인',
     },
   },
+  warmUp: {
+    pill: '준비 운동',
+    intro: '시작하기 전에 잠깐 되짚어 봐요.',
+    skip: { cta: '준비 운동 건너뛰기' },
+    done: '준비 운동 끝',
+  },
+  tryAgain: {
+    cta: '한 번 더 해 보기',
+    intro: '헷갈렸던 것을 한 번 더 살펴봐요.',
+  },
 } satisfies DeepPartial<Messages['learner']>;

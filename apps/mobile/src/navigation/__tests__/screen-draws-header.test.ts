@@ -41,6 +41,14 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
 };
 
+/**
+ * Components a screen draws from a chunk it loads on demand, so no static import names them: the file the scan reads
+ * each one in. The quest player's warm-up and Try these again sessions (F-CURR-002 row CM-15).
+ */
+const LAZY_COMPONENTS: Readonly<Record<string, string>> = {
+  QuestReviewSession: 'screens/quest/quest-review-chunk.tsx',
+};
+
 /** Host components that only lay out what they hold: they pass when one of their children draws a `Screen`. */
 const LAYOUT_TAGS = new Set(['', 'React.Fragment', 'Fragment', 'View', 'ErrorBoundary', 'PreviewFrame', 'SafeAreaProvider']);
 
@@ -265,7 +273,8 @@ function jsxVerdict(node: ts.JsxElement | ts.JsxSelfClosingElement | ts.JsxFragm
   if (/\.Navigator$/.test(tag)) return ok();
   if (LAYOUT_TAGS.has(tag) || /(^|\.)\w*Provider$/.test(tag)) return childrenVerdict(node, tag, src, scope, via);
   if (/^[A-Z]/.test(tag) && !tag.includes('.')) {
-    const decl = declarationOf(src, tag);
+    const lazy = LAZY_COMPONENTS[tag];
+    const decl = declarationOf(src, tag) ?? (lazy === undefined ? null : declarationOf(source(lazy), tag));
     if (decl === null) return fail(`${via}: <${tag}> is not declared where this scan can see it`);
     // A component that only wraps what it is given (a context override around a game): what it holds decides.
     if (!ts.isJsxSelfClosingElement(node) && decl.kind === 'function' && rendersChildren(decl)) return childrenVerdict(node, tag, src, scope, via);
