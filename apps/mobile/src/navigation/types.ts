@@ -162,6 +162,10 @@ export type RootStackParamList = {
   DailyReview: undefined;
   /** F-CURR-002 row CM-21: the Cell Check of a grid cell, or its test-out (a content id and a mode; nothing about the learner). */
   CellCheck: { cellId: string; mode: 'check' | 'testout' };
+  /** F-CURR-002 row CM-22: the Stage Check of a Stage 2-7 (a stage key; nothing about the learner). */
+  StageCheck: { stageKey: StageKey };
+  /** F-CURR-002 row CM-22: the one retroactive summary of the stages finished earlier (no params). */
+  StageRecap: undefined;
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {

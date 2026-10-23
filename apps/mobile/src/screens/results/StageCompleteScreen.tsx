@@ -25,6 +25,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
 import {
+  PRIZE_STAGES,
   ownsStagePrize,
   stageCompleteActions,
   stagePrizeCards,
@@ -36,6 +37,7 @@ import {
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { UpperStageCompleteRoute } from '../stage-check/stage-check-entry';
 import { CardArtThumb } from './CardArtThumb';
 
 /**
@@ -55,7 +57,15 @@ type TileState = PressableStateCallbackType & { focused?: boolean };
 /** A wall tile is not a target; the nearest size token keeps the glyph and its sound value roomy. */
 const WALL_TILE = touchTarget.min;
 
-export function StageCompleteScreen({ route, navigation }: Props): React.ReactElement {
+/**
+ * The `StageComplete` route: Stage 1's ceremony below, unchanged; a Stage 2-7's is the stage ceremony of the Stage
+ * Check's chunk (F-CURR-002 section 7.3, row CM-22), by the one prize table.
+ */
+export function StageCompleteScreen(props: Props): React.ReactElement {
+  return PRIZE_STAGES[props.route.params.stageKey]?.ceremony === 'stage' ? <UpperStageCompleteRoute {...props} /> : <HangulCompleteScreen {...props} />;
+}
+
+function HangulCompleteScreen({ route, navigation }: Props): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageComplete;
   const locale = useLocale();

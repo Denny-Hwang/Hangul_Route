@@ -176,6 +176,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'guest-chunk', marker: 'screen-chunk:guest' },
       { name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' },
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
+      { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
     ]);
   });
 
@@ -193,6 +194,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-21: the Cell Check's chunk, reached only through the entry's literal import().
     expect(read('src/screens/cell-check/cell-check-chunk.tsx')).toContain(`export const CELL_CHECK_CHUNK = '${SCREEN_CHUNKS[2].marker}';`);
     expect(read('src/screens/cell-check/cell-check-entry.tsx')).toContain("import('./cell-check-chunk')");
+    // Row CM-22: the Stage Check's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
+    expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -243,6 +247,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'guest-chunk has no web bundle: the chunk is missing from the build',
       'guest-keep-chunk has no web bundle: the chunk is missing from the build',
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
+      'stage-check-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

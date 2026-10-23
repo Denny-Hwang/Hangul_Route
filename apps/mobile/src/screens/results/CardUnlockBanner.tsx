@@ -169,3 +169,4 @@ function SparkleStar({ size }: { size: number }): React.ReactElement {
     </Svg>
   );
 }
+export { Sparkles as CeremonySparkles };

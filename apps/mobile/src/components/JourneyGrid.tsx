@@ -128,6 +128,11 @@ export interface JourneyGridProps {
   onOpenHangulCheck?: () => void;
   /** One learner's mastery rings (row CM-20); omitted: none. */
   mastery?: JourneyMastery;
+  /**
+   * A Stage 2-7 header's extras (F-CURR-002 row CM-22): `actions` beside the pill (See your prize, Stage Check),
+   * `caption` under the one-liner (the tested-out line); omitted: none.
+   */
+  renderStageExtras?: (stage: StageKey, place: 'actions' | 'caption', complete: boolean) => React.ReactNode;
 }
 
 export function JourneyGrid({
@@ -147,6 +152,7 @@ export function JourneyGrid({
   onOpenStagePrize,
   onOpenHangulCheck,
   mastery,
+  renderStageExtras,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -239,6 +245,7 @@ export function JourneyGrid({
                   {stage.titleEn}
                 </Body>
                 <Caption tone="muted">{stage.oneLinerEn}</Caption>
+                {renderStageExtras?.(row.stage, 'caption', pill === 'complete')}
               </View>
               <View style={{ alignItems: 'flex-end', gap: spacing.xs }}>
                 <Pill
@@ -255,6 +262,8 @@ export function JourneyGrid({
                 {row.stage === 'stage1' && pill === 'complete' && onOpenHangulCheck ? (
                   <Button label={m.hangulCheck.cta} tone="ghost" size="sm" onPress={onOpenHangulCheck} testID="journey-hangul-check" />
                 ) : null}
+                {/* Stages 2-7 (F-CURR-002 row CM-22): See your prize and the Stage Check, behind `stageChecks`. */}
+                {renderStageExtras?.(row.stage, 'actions', pill === 'complete')}
               </View>
             </View>
 

@@ -84,6 +84,7 @@ import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
 import type { RootStackParamList } from '../../navigation/types';
+import { useStageRecapOnHome } from '../stage-check/stage-check-entry';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
@@ -377,6 +378,8 @@ export function HomeScreen(): React.ReactElement {
   const switchShown = switchOffered(learnerProfiles(useProfileStore((s) => s.profiles)).length);
   const greetingMin = GREETING_MIN_REM * REM * useEffectiveFontScale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once.
+  useStageRecapOnHome(profile?.id ?? null, navigation);
   const ensure = useProgressStore((s) => s.ensure);
   // The Display (Aa) sheet (AMENDMENTS-DISPLAY-NAV section 3.6): not behind the grown-up gate.
   const [displayOpen, setDisplayOpen] = useState(false);

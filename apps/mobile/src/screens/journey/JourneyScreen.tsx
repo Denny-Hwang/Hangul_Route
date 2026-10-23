@@ -24,7 +24,8 @@ import { cursorEntitlement } from '../../logic/cursor-context';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { learnerCellMarks, type JourneyAccessInput } from '../../logic/journey-grid';
 import { completeStages } from '../../logic/my-route/latch';
-import { PRIZE_STAGE, ownsStagePrize } from '../../logic/stage1/stage-complete';
+import { HANGUL_PRIZE_STAGE, PRIZE_STAGES, ownsStagePrize } from '../../logic/stage1/stage-complete';
+import { StageHeaderSlot } from '../stage-check/stage-check-entry';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
@@ -109,7 +110,7 @@ export function JourneyScreen(): React.ReactElement {
   const doneStages = useMemo(() => (snap === undefined ? undefined : completeStages(snap, episodesAll)), [snap]);
   // The ceremony stays reachable from the Stage 1 header once its prize cards are held (§3.8).
   const snapCards = snap?.cards;
-  const hasPrize = useMemo(() => (snapCards === undefined ? false : ownsStagePrize(snapCards, PRIZE_STAGE)), [snapCards]);
+  const hasPrize = useMemo(() => (snapCards === undefined ? false : ownsStagePrize(snapCards, HANGUL_PRIZE_STAGE)), [snapCards]);
   const marksOf = useMemo(
     () => learnerCellMarks({ quests: snapQuests ?? [], marks, catalog: ROUTE_CATALOG, completedIds }),
     [snapQuests, marks, completedIds],
@@ -186,7 +187,21 @@ export function JourneyScreen(): React.ReactElement {
         storyEntries={STORY_ENTRIES}
         quests={snapQuests}
         completeStages={doneStages}
-        onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) : undefined}
+        onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: HANGUL_PRIZE_STAGE }) : undefined}
+        // Stages 2-7 (F-CURR-002 row CM-22): See your prize and the Stage Check beside the pill, and the tested-out
+        // caption, from the Stage Check's chunk while their switches are on.
+        renderStageExtras={(stage, place, complete) =>
+          PRIZE_STAGES[stage].ceremony === 'stage' ? (
+            <StageHeaderSlot
+              place={place}
+              profileId={profile?.id ?? null}
+              stage={stage}
+              complete={complete}
+              onOpenPrize={() => navigation.navigate('StageComplete', { stageKey: stage })}
+              onOpenCheck={() => navigation.navigate('StageCheck', { stageKey: stage })}
+            />
+          ) : null
+        }
         onOpenHangulCheck={() => navigation.navigate('StageReview', { stageKey: 'stage1' })}
         // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}

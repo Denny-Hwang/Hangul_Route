@@ -217,6 +217,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // reached only through the literal `import()` of `src/screens/cell-check/cell-check-entry.tsx`); the session logic is
   // the memory chunk's and the rounds the Daily Review chunk's, each reached at run time.
   Object.freeze({ name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' }),
+  // F-CURR-002 row CM-22: the Stages 2-7 ceremony, the Stage Check, the one retroactive summary and the Journey header's
+  // extras (`src/screens/stage-check/stage-check-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/stage-check/stage-check-entry.tsx`); the session logic is the memory chunk's.
+  Object.freeze({ name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' }),
 ]);
 
 /**
