@@ -218,6 +218,11 @@ describe('rows per event', () => {
       { metric: 'session.end.questLeft', dim: '', bucket: '1' },
       { metric: 'session.end.questLeft', dim: 'order-it', bucket: '1' },
     ]);
+    // F-CURR-002 row CM-38: My Story's kind code is a dimension like any other kind (only the code, never its text).
+    expect(rollupKeysFor('session.end', { questLeft: 1, leftAtKind: 'my-story' })).toEqual([
+      { metric: 'session.end.questLeft', dim: '', bucket: '1' },
+      { metric: 'session.end.questLeft', dim: 'my-story', bucket: '1' },
+    ]);
   });
 
   it('session.end: a game kind is written only for a quit, so its rate has the reporting sessions as denominator', () => {

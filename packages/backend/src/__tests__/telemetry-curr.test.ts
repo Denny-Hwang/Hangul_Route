@@ -150,6 +150,13 @@ describe('POST /api/telemetry, session.end with the three optional CM-3 fields',
     expect((await post({ name: 'session.end', payload: { ...older, questLeft: 0, afterWrongStreak: 0 } })).body.data?.event.payload).toEqual({ ...older, questLeft: 0, afterWrongStreak: 0 });
   });
 
+  it('keeps leftAtKind my-story, the F-CURR-002 row CM-38 kind code (Worker first: the code list is the kind enum)', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'my-story', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', profileId: 'profile:suni', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+
   it('drops a new field off its codes and keeps the rest of the payload', async () => {
     const r = await post({ name: 'session.end', profileId: 'profile:suni', payload: { ...older, questLeft: 'yes', leftAtKind: 'Suni', afterWrongStreak: 5 } });
     expect(r.status).toBe(201);

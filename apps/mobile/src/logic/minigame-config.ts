@@ -2,6 +2,7 @@ import type {
   KoText,
   ListenPickRound,
   MinigameKind,
+  MyStoryFrame,
   OrderItRound,
   PicWordRound,
   Realia,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** My Story (F-CURR-002 row CM-38): the chain's 3-5 frames, each a Write Frame round with one neutral option per bank. */
+  myStory?: { frames: MyStoryFrame[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

@@ -250,6 +250,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
+  Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
 ]);
 
 /**

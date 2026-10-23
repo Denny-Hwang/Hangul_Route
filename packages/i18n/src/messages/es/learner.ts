@@ -667,6 +667,13 @@ export const learner = {
         finishBlock: 'Termina el último bloque.',
       },
     },
+    myStory: {
+      heading: 'Escribe tu historia',
+      soFar: 'Mi historia hasta ahora',
+      soFarFolded: (lines: number) => plural('es', lines, { one: '1 línea hasta ahora', other: `${lines} líneas hasta ahora` }),
+      done: '¡Escribiste toda una historia!',
+      donePartial: 'Aquí está tu historia hasta ahora.',
+    },
   },
 
   audio: {
@@ -1179,6 +1186,7 @@ export const learner = {
       typeHangul: 'Teclea en hangul',
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
+      myStory: 'Escribe una historia corta',
       sentenceBuilder: 'Arma una oración',
     },
     legend: {

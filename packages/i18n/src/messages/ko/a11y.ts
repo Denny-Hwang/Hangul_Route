@@ -145,6 +145,9 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    myStory: {
+      soFar: (lines: number) => `지금까지 쓴 내 이야기, ${lines}줄`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

@@ -1,11 +1,12 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
+import { gameFlagOf, playedScope } from '../../logic/game-fallback';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
@@ -15,6 +16,7 @@ import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -35,6 +37,7 @@ import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
+import { MyStoryRoute } from './my-story-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 
@@ -75,12 +78,18 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const locale = useLocale();
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
-  const scope = useMemo(() => {
+  const ownScope = useMemo(() => {
     // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     return source && ref ? localizeScope(source, ref, locale) : source;
   }, [ref, locale, questId, stepIndex]);
+  // A new format's `game.<kind>` switch (F-CURR-002 §12.2): off, the step plays its fallback round of a shipped kind
+  // (My Story: Write Frame on the first frame, row CM-38), and `minigame.finished` names the kind that was played.
+  // The step decides once, when it opens: a remote copy that lands mid-step never swaps the game under the learner.
+  const gameOnNow = useCurrFlag(gameFlagOf(ownScope?.kind ?? 'write-frame'));
+  const [gameOn] = useState(gameOnNow);
+  const scope = useMemo(() => (ownScope ? playedScope(ownScope, () => gameOn) : undefined), [ownScope, gameOn]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
@@ -172,6 +181,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
+    case 'my-story':
+      return <MyStoryRoute scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

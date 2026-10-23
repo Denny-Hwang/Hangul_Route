@@ -647,6 +647,13 @@ export const learner = {
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
+    myStory: {
+      heading: '내 이야기를 써 봐요',
+      soFar: '지금까지 쓴 내 이야기',
+      soFarFolded: (lines: number) => `지금까지 ${lines}줄`,
+      done: '이야기를 끝까지 다 썼어요!',
+      donePartial: '지금까지 쓴 이야기예요.',
+    },
   },
 
   audio: {
@@ -1150,6 +1157,7 @@ export const learner = {
       typeHangul: '한글 자판으로 쓰기',
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
+      myStory: '짧은 이야기 쓰기',
       sentenceBuilder: '문장 만들기',
     },
     legend: {

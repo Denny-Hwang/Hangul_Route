@@ -991,4 +991,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // F-CURR-002 row CM-38: My Story's sentences so far (a chain has 3-5 frames, so 1-4 lines while writing).
+  'learner.minigame.myStory.soFarFolded': [[1], [2], [4]],
+  'a11y.minigame.myStory.soFar': [[1], [2], [4]],
 };

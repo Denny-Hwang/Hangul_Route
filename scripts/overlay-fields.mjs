@@ -67,6 +67,9 @@ export const OVERLAY_FIELDS = Object.freeze({
     "traceWord.rounds.<roundId>.word.gloss",
     "writeFrame.rounds.<roundId>.frame.gloss",
     "writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss",
+    // F-CURR-002 row CM-38: My Story's frames (the Write Frame shape under `myStory.frames`).
+    "myStory.frames.<roundId>.frame.gloss",
+    "myStory.frames.<roundId>.slots.<slot>.bank.<word>.gloss",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],
