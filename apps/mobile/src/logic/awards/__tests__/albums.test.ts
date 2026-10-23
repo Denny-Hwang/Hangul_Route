@@ -1,27 +1,29 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { heritageCardsAll } from '../../../content/heritage-cards';
+import { albumCardSets } from '../../../content/award-world';
+import { albumLegendCards, heritageCardsAll } from '../../../content/heritage-cards';
 import { ALBUM_STAGES, ALBUM_THEMES } from '../../../content/album-order';
 import { UPPER_CELL_CARDS } from '../../../content/upper-cell-cards';
 import { albumSetId, albumSets, albumViews } from '../albums';
 
-/** The five category albums (F-CURR-002 §7.2, row CM-23): progress that only fills, and the legendary hook for CM-23c. */
+/** The five category albums (F-CURR-002 §7.2, row CM-23): progress that only fills, and the legendary card of each (part 3). */
 const views = (owned: Iterable<string>) => albumViews(UPPER_CELL_CARDS, heritageCardsAll, new Set(owned), ALBUM_THEMES, ALBUM_STAGES);
 
 describe('albumViews', () => {
-  it('five albums in theme order, one slot per album stage; Stages 2-4 hold the cards of parts 1 and 2, Stages 6-7 wait for part 3', () => {
+  it('five albums in theme order, one slot per album stage, every slot with its card (part 3 ships Stages 6-7)', () => {
     const albums = views([]);
     expect(albums.map((a) => a.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
     expect(albums.map((a) => a.slots.map((s) => s.card?.id ?? null))).toEqual([
-      ['card:norae', 'card:hangeul', 'card:mwoyeyo', null, null],
-      ['card:dosirak', 'card:tteok', 'card:masisseoyo', null, null],
-      ['card:bokjumeoni', 'card:full-moon', 'card:insa', null, null],
-      ['card:byeol', 'card:gom', 'card:biga-wayo', null, null],
-      ['card:swing', 'card:yut', 'card:gachi', null, null],
+      ['card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:won', 'card:ireum'],
+      ['card:dosirak', 'card:tteok', 'card:masisseoyo', 'card:yeogiyo', 'card:achim'],
+      ['card:bokjumeoni', 'card:full-moon', 'card:insa', 'card:gichapyo', 'card:saengil'],
+      ['card:byeol', 'card:gom', 'card:biga-wayo', 'card:jeongsang', 'card:tokki'],
+      ['card:swing', 'card:yut', 'card:gachi', 'card:deom', 'card:bihaenggi'],
     ]);
-    // Lunch Box Words' other three shipped cards are not album cards.
+    // Lunch Box Words' other three shipped cards are not album cards, and no legendary card is a slot.
     expect(albums[1]!.slots.some((s) => s.card?.id === 'card:sagwa')).toBe(false);
-    for (const a of albums) expect([a.canComplete, a.complete, a.held]).toEqual([false, false, []]);
+    expect(albums.flatMap((a) => a.slots).some((s) => s.card?.rarity === 'legendary')).toBe(false);
+    for (const a of albums) expect([a.canComplete, a.complete, a.held]).toEqual([true, false, []]);
   });
 
   it('fills with the cards held, in stage order; never lists what is left', () => {
@@ -31,15 +33,18 @@ describe('albumViews', () => {
     expect(letters!.slots.filter((s) => s.held).map((s) => s.stage)).toEqual(['stage2', 'stage3']);
   });
 
-  it('album progress across Stages 2-4 (row CM-23 part 2): Stage 4 fills the third slot; Greeting Dialogues counts its q1 card only', () => {
-    const owned = ['card:mwoyeyo', 'card:norae', 'card:hangeul', 'card:annyeong', 'card:gamsa', 'card:insa', 'card:gachi'];
+  it('album progress across Stages 2-7: an album completes only with all five of its cards, held in any order', () => {
+    const owned = ['card:mwoyeyo', 'card:norae', 'card:hangeul', 'card:annyeong', 'card:gamsa', 'card:insa', 'card:gachi', 'card:ireum'];
     const [letters, , rites, nature, crafts] = views(owned);
-    expect(letters!.held.map((c) => c.id)).toEqual(['card:norae', 'card:hangeul', 'card:mwoyeyo']);
+    expect(letters!.held.map((c) => c.id)).toEqual(['card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:ireum']);
     expect(rites!.held.map((c) => c.id)).toEqual(['card:insa']);
     expect(nature!.held).toEqual([]);
     expect(crafts!.slots.map((s) => s.held)).toEqual([false, false, true, false, false]);
-    // Still no album can complete: Stages 6-7 ship in part 3.
-    for (const a of views(owned)) expect(a.canComplete, a.theme).toBe(false);
+    // Four of five is not complete; the fifth (Read the Menu's won) completes it.
+    expect(letters!.complete).toBe(false);
+    expect(views([...owned, 'card:won'])[0]!.complete).toBe(true);
+    // Holding the album's legendary card, or another theme's cards, never fills a slot.
+    expect(views(['card:hunminjeongeum', 'card:tteok', 'card:yut'])[0]!.held).toEqual([]);
   });
 
   it('an album whose every slot has a card can complete, and is complete once all are held', () => {
@@ -53,8 +58,11 @@ describe('albumViews', () => {
 });
 
 describe('albumSets (the legendary hook, row CM-23c)', () => {
-  it('names no set today: no album can complete and no legendary card ships yet', () => {
-    expect(albumSets(views([]), () => 'card:legend', (t) => t)).toEqual([]);
+  it('with the legendary cards of part 3, every album is a set of its five cards: the sets the award world reads', () => {
+    const legendOf = (t: string): string | undefined => albumLegendCards.find((c) => c.theme === t)?.id;
+    expect(albumSets(views([]), legendOf, (t) => t)).toEqual(albumCardSets);
+    // An album with no legendary card named has no set.
+    expect(albumSets(views([]), () => undefined, (t) => t)).toEqual([]);
   });
 
   it('an album that can complete, with a legendary card named, is a set of its five cards', () => {

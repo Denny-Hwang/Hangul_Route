@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { Body, Caption, Card, Spacer, borderWidth, colors, radii, spacing, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import { CardArtThumb } from './CardArtThumb';
@@ -59,7 +59,7 @@ export function ExtraCardsBanner({
   announcement,
   reducedMotion,
   onOpenCard,
-}: ExtraCardsBannerProps): React.ReactElement {
+}: ExtraCardsBannerProps): ReactElement {
   const [settled, setSettled] = useState(reducedMotion);
   const translateY = useSharedValue(reducedMotion ? 0 : -80);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);

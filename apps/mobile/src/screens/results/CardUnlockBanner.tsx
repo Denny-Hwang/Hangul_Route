@@ -30,12 +30,20 @@ export function CardUnlockBanner({
   showSparkles,
   reducedMotion,
   onSeeCard,
+  title = m.newCard.title,
+  line,
+  testID,
 }: {
   m: ResultsMessages;
   card: HeritageCard;
   showSparkles: boolean;
   reducedMotion: boolean;
   onSeeCard: () => void;
+  /** The banner's heading: "New card for your library!", or an album's "Album complete!" (F-CURR-002 row CM-23 part 3). */
+  title?: string;
+  /** A line under the heading (the album that was filled). */
+  line?: string;
+  testID?: string;
 }): ReactElement {
   const translateY = useSharedValue(reducedMotion ? 0 : -80);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);
@@ -79,9 +87,10 @@ export function CardUnlockBanner({
 
   return (
     <View>
-      <Animated.View style={bannerStyle}>
+      <Animated.View style={bannerStyle} testID={testID}>
         <Card padding="md" tone="brand">
-          <Body weight="semibold">{m.newCard.title}</Body>
+          <Body weight="semibold">{title}</Body>
+          {line ? <Body size="sm">{line}</Body> : null}
           <Spacer size="sm" />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <CardArtThumb card={card} />
@@ -115,6 +124,7 @@ export function CardUnlockBanner({
       {showSparkles && !reducedMotion ? (
         <Animated.View
           pointerEvents="none"
+          testID="card-unlock-sparkles"
           style={[
             {
               position: 'absolute',

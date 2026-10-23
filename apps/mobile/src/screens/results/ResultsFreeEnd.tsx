@@ -1,6 +1,6 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Card, Heading, Hoya, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { useMessages } from '../../i18n/use-messages';
@@ -44,7 +44,7 @@ export function ResultsFreeEndCelebration({
   onAsk: () => void;
   /** See your Stage 1 prize, when this run completed Stage 1; null otherwise. */
   stagePrize?: StagePrizeAction | null;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const access = m.learner.access;
   const [fit, setFit] = useState<number | null>(null);
@@ -153,7 +153,7 @@ export function ResultsOpenForYou({
   onEpisode: () => void;
   /** See your Stage 1 prize, when this run completed Stage 1; null otherwise (then it is the one primary). */
   stagePrize?: StagePrizeAction | null;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   // One primary: the Stage 1 prize when this run earned it, else Practice words, else Back home.
   const homePrimary = !practiceLabel && !stagePrize;
@@ -198,7 +198,7 @@ export interface StagePrizeAction {
   onPress: () => void;
 }
 
-function StagePrizeButton({ stagePrize }: { stagePrize: StagePrizeAction | null }): React.ReactElement | null {
+function StagePrizeButton({ stagePrize }: { stagePrize: StagePrizeAction | null }): ReactElement | null {
   if (!stagePrize) return null;
   return (
     <>

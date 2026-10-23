@@ -1,7 +1,7 @@
 import { layout, spacing, useLayoutClass } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -144,7 +144,7 @@ export function StoryTileGrid({
   tiles: Pick<StoryTiles, 'items' | 'openTile' | 'romanizationShown' | 'askHint'>;
   grid: ReturnType<typeof useTileGridWidth>;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const cellWidth = gridCellWidth(grid.gridWidth, grid.columns, GRID_GAP);
   return (

@@ -91,6 +91,31 @@ describe('the upperCards switch in the store (row CM-23)', () => {
   });
 });
 
+describe('the album legendary card in the store (row CM-23 part 3)', () => {
+  const CELLS = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].map((st) => episodesAll.find((e) => e.id === `episode:${st}-letters`)!);
+  const allLetters = (): ProgressSnapshot => {
+    const quests = CELLS.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, startedAt: AT, completedAt: AT, stars: 2 as const, attempts: 1, accuracy: 1 })));
+    return { ...snapshot(), quests, questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, AT])) };
+  };
+
+  it('on: one reconcile brings a finished album\u2019s five cards and its legendary card, once; off again, it stays', () => {
+    useProgressStore.setState({ byProfile: { [ID]: allLetters() } });
+    setUpperCardsSwitch(() => true);
+    const added = useProgressStore.getState().reconcileAwards(ID).map((a) => a.cardId);
+    expect(added).toEqual(expect.arrayContaining(['card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:won', 'card:ireum', 'card:hunminjeongeum']));
+    expect(useProgressStore.getState().reconcileAwards(ID)).toEqual([]);
+    setUpperCardsSwitch(() => false);
+    useProgressStore.getState().reconcileAwards(ID);
+    expect(held().filter((c) => c === 'card:hunminjeongeum')).toHaveLength(1);
+  });
+
+  it('off: a finished album brings no card at all', () => {
+    useProgressStore.setState({ byProfile: { [ID]: allLetters() } });
+    useProgressStore.getState().reconcileAwards(ID);
+    expect(held()).not.toContain('card:hunminjeongeum');
+  });
+});
+
 describe('wireUpperCards (App start)', () => {
   it('a remote copy that turns the switch on after launch brings the card then; pct 0 brings none', () => {
     const unwire = wireUpperCards();

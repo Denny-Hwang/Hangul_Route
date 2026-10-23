@@ -41,6 +41,27 @@ describe('AlbumsSection', () => {
   });
 });
 
+describe('AlbumsSection, a finished album (row CM-23 part 3)', () => {
+  const LETTERS = ['card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:won', 'card:ireum'];
+
+  it('four of five is still a count; all five says Album complete, and the held legendary card leads the row', async () => {
+    const four = await render(<AlbumsSection owned={new Set(LETTERS.slice(0, 4))} onOpenCard={() => undefined} />);
+    expect(screenTexts(four.root)).toContain(EN.count(4));
+    expect(screenTexts(four.root)).not.toContain(EN.complete);
+    cleanup();
+    const onOpen = vi.fn();
+    const all = await render(<AlbumsSection owned={new Set([...LETTERS, 'card:hunminjeongeum'])} onOpenCard={onOpen} />);
+    const texts = screenTexts(all.root);
+    expect(texts.filter((t) => t === EN.complete)).toHaveLength(1);
+    expect(texts.join(' ')).not.toMatch(/%|\d+\s*(\/|of)\s*\d+/);
+    const row = byTestId(all.root, 'library-album-letters')[0]!;
+    expect(byTestId(row, 'library-album-card-card:hunminjeongeum')).toHaveLength(1);
+    const [legend] = buttonsNamed(all.root, 'Hangeul Book');
+    await press(legend!);
+    expect(onOpen).toHaveBeenCalledWith(cardById('card:hunminjeongeum'));
+  });
+});
+
 describe('AlbumsSlot', () => {
   it('draws nothing while upperCards is off', async () => {
     const r = await render(<AlbumsSlot on={false} owned={new Set()} onOpenCard={() => undefined} />);

@@ -111,33 +111,81 @@ const upper = (id: string, titleEn: string, ko: string, theme: ThemeKey, stage: 
   unlockedBy: `episode:${stage}-${theme}`,
 });
 
+/** The five albums in the Journey's theme order (row CM-23 part 3): each stage row of cards and the legendary cards follow it. */
+export const ALBUM_ORDER: readonly ThemeKey[] = ['letters', 'life', 'rites', 'nature', 'crafts'];
+
 /**
- * The upper-cell cards of Stages 2 to 4 (row CM-23 parts 1 and 2): one per upper cell. Lunch Box Words, Outdoor Words and
+ * One stage's upper-cell cards in theme order, `[id, titleEn, ko, romanization?]` per cell; `0` for a taste cell whose
+ * album card is its shipped q1 card (row CM-23 part 3: a row per stage keeps the start bundle under its line).
+ */
+const row = (stage: StageKey, cards: readonly (readonly [string, string, string, string?] | 0)[]): HeritageCard[] =>
+  cards.flatMap((c, i) => (c ? [upper(c[0], c[1], c[2], ALBUM_ORDER[i]!, stage, c[3])] : []));
+
+/**
+ * The upper-cell cards of Stages 2 to 7 (row CM-23 parts 1 to 3): one per upper cell. Lunch Box Words, Outdoor Words and
  * Greeting Dialogues keep their shipped four cards (F-CURR-001 "Cards"); their album card is their q1 card
- * (`content/upper-cell-cards.ts`), so these twelve are the other cells'. Gated on `upperCards` (logic/awards/upper-cards.ts).
+ * (`content/upper-cell-cards.ts`), so these twenty-two are the other cells'. Gated on `upperCards` (logic/awards/upper-cards.ts).
  */
 export const upperCellCards: HeritageCard[] = [
-  upper('norae', 'Song', '노래', 'letters', 'stage2'),
-  upper('bokjumeoni', 'Lucky Pouch', '복주머니', 'rites', 'stage2'),
-  upper('swing', 'Swing', '그네', 'crafts', 'stage2', 'geune'),
-  upper('hangeul', 'Hangeul', '한글', 'letters', 'stage3'),
-  upper('tteok', 'Rice Cake', '떡', 'life', 'stage3'),
-  upper('full-moon', 'Full Moon', '보름달', 'rites', 'stage3', 'boreumdal'),
-  upper('gom', 'Bear', '곰', 'nature', 'stage3'),
-  upper('yut', 'Yut Sticks', '윷', 'crafts', 'stage3'),
+  ...row('stage2', [['norae', 'Song', '노래'], 0, ['bokjumeoni', 'Lucky Pouch', '복주머니'], 0, ['swing', 'Swing', '그네', 'geune']]),
+  ...row('stage3', [
+    ['hangeul', 'Hangeul', '한글'],
+    ['tteok', 'Rice Cake', '떡'],
+    ['full-moon', 'Full Moon', '보름달', 'boreumdal'],
+    ['gom', 'Bear', '곰'],
+    ['yut', 'Yut Sticks', '윷'],
+  ]),
   // Stage 4 (row CM-23 part 2): a polite line of each cell's talk. Greeting Dialogues keeps its four shipped cards; its
   // album card is its q1 card, `card:insa` (content/upper-cell-cards.ts).
-  upper('mwoyeyo', 'What Is This?', '이게 뭐예요?', 'letters', 'stage4', 'ige mwoyeyo'),
-  upper('masisseoyo', 'It Is Tasty', '맛있어요', 'life', 'stage4'),
-  upper('biga-wayo', 'It Is Raining', '비가 와요', 'nature', 'stage4', 'biga wayo'),
-  upper('gachi', 'Play Together?', '같이 할까요?', 'crafts', 'stage4', 'gachi halkkayo'),
+  ...row('stage4', [
+    ['mwoyeyo', 'What Is This?', '이게 뭐예요?', 'ige mwoyeyo'],
+    ['masisseoyo', 'It Is Tasty', '맛있어요'],
+    0,
+    ['biga-wayo', 'It Is Raining', '비가 와요', 'biga wayo'],
+    ['gachi', 'Play Together?', '같이 할까요?', 'gachi halkkayo'],
+  ]),
+  // Stages 6 and 7 (row CM-23 part 3): every cell gives a new card. Stage 6 cards are things read out in the world (a
+  // price, a call to the server, a ticket, a trail sign, a market extra); Stage 7 cards are words the cell's word bank
+  // writes with.
+  ...row('stage6', [
+    ['won', 'Won', '원'],
+    ['yeogiyo', 'Over Here!', '여기요'],
+    ['gichapyo', 'Train Ticket', '기차표'],
+    ['jeongsang', 'Summit', '정상'],
+    ['deom', 'A Little Extra', '덤'],
+  ]),
+  ...row('stage7', [
+    ['ireum', 'Name', '이름'],
+    ['achim', 'Morning', '아침'],
+    ['saengil', 'Birthday', '생일'],
+    ['tokki', 'Rabbit', '토끼'],
+    ['bihaenggi', 'Plane', '비행기'],
+  ]),
 ];
 
+/**
+ * The legendary card of each category album (F-CURR-002 §7.2, row CM-23c), in album order: it arrives once the learner
+ * holds every card of its album (`set:album-<theme>`, the set rule; content/award-world.ts builds the sets). Never
+ * random, never sold. Their backs are in the upper-cards chunk, like the album cards'.
+ */
+export const albumLegendCards: HeritageCard[] = (
+  [
+    ['hunminjeongeum', 'Hangeul Book', '훈민정음'],
+    ['jang', 'Jang Making', '장 담그기', 'jang damgeugi'],
+    ['hangawi', 'Hangawi', '한가위'],
+    ['jirisan', 'Jirisan', '지리산'],
+    ['ssireum', 'Ssireum', '씨름'],
+  ] as const
+).map(([id, titleEn, ko, romanization], i): HeritageCard => {
+  const theme = ALBUM_ORDER[i]!;
+  return { ...upper(id, titleEn, ko, theme, 'stage7', romanization), rarity: 'legendary', unlockedBy: `set:album-${theme}` };
+});
+
 /** The cards row CM-23 adds: awarded, listed and drawn only while `upperCards` is on (held ones always stay). */
-export const UPPER_CARD_GATED_IDS: ReadonlySet<string> = new Set(upperCellCards.map((c) => c.id));
+export const UPPER_CARD_GATED_IDS: ReadonlySet<string> = new Set([...upperCellCards, ...albumLegendCards].map((c) => c.id));
 
 /** The hand-written cards, then the heritage story cards and their collection cards (F-STORY-006 §3.8). */
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards, ...storyCards];
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards, ...albumLegendCards, ...storyCards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);

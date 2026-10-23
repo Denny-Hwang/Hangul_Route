@@ -192,17 +192,21 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const newCardSource = award?.isNew ? cardById(award.cardId) : undefined;
   const newCard = newCardSource && localizeCard(newCardSource, locale);
   const showSparkles = !!newCard && stars >= 3;
+  // An album this run filled (F-CURR-002 §7.2, row CM-23 part 3): its legendary card gets the F-MOTION-003 celebration
+  // of its own, so the extras row below leaves it out.
+  const albumSource = outcome?.extras.map((e) => cardById(e.cardId)).find((c) => c?.unlockedBy.startsWith('set:album-'));
+  const albumCard = albumSource && localizeCard(albumSource, locale);
 
   // The cards an episode, stage or set completion brought besides the quest card (F-STORY-006 §3.7).
   const extras = useMemo(() => {
     const view = extraCardsView(outcome, (id) => {
-      const card = cardById(id);
+      const card = id === albumSource?.id ? undefined : cardById(id);
       return card && localizeCard(card, locale);
     });
     if (!view) return null;
     const finished = view.episodeId ? episodeById(view.episodeId) : undefined;
     return { ...view, episodeTitle: finished && localizeEpisode(finished, locale).titleEn };
-  }, [outcome, locale, titles]);
+  }, [outcome, albumSource, locale, titles]);
 
   // The mastery moments (F-CURR-002 section 4.4, row CM-20): once the score is written, one read latches what this run
   // reached, a Words known milestone first and then one level up (this quest's own cell when it rose, else the highest).
@@ -225,7 +229,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const extrasAnnouncement = extras
     ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle)
     : null;
-  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, extrasAnnouncement]
+  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, albumCard ? `${m.albumDone.title} ${albumCard.titleEn}` : null, extrasAnnouncement]
     .filter((line): line is string => line !== null)
     .join(' ');
   useEffect(() => {
@@ -495,6 +499,21 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
               showSparkles={showSparkles}
               reducedMotion={reducedMotion}
               onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
+            />
+          </>
+        ) : null}
+        {albumCard ? (
+          <>
+            <Spacer size="lg" />
+            <CardUnlockBanner
+              m={m}
+              card={albumCard}
+              title={m.albumDone.title}
+              line={m.albumDone.line(albumCard.theme)}
+              showSparkles
+              reducedMotion={reducedMotion}
+              testID="results-album-done"
+              onSeeCard={() => navigation.navigate('CardDetail', { cardId: albumCard.id })}
             />
           </>
         ) : null}
