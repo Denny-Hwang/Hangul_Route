@@ -193,18 +193,30 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
-    expect(LEARNER_CHUNKS).toEqual([{ name: 'goals-chunk', marker: 'goals-chunk:goals' }]);
+    expect(LEARNER_CHUNKS[0]).toEqual({ name: 'goals-chunk', marker: 'goals-chunk:goals' });
     expect(read('src/screens/goals/goals-chunk.ts')).toContain(`export const GOALS_CHUNK = '${LEARNER_CHUNKS[0].marker}';`);
     // Reached only through the entry's literal import(): a static import would fold it back into the start bundle.
     expect(read('src/store/goals-entry.ts')).toContain("import('../screens/goals/goals-chunk')");
     const start = { url: START, text: 'var g=1;' };
     const text = `__d(function(){var m="${LEARNER_CHUNKS[0].marker}"})`;
     const goals = { url: `${WEB_JS_DIR}/goals-chunk-${md5(text)}.js`, text };
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
       `goals-chunk is in the start bundle ${START}: a static import pulled it in`,
       'goals-chunk has no web bundle: the chunk is missing from the build',
     ]);
+  });
+
+  it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[1]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });
+    expect(read('src/screens/quest/quest-pacing-chunk.tsx')).toContain(`export const QUEST_PACING_CHUNK = '${LEARNER_CHUNKS[1].marker}';`);
+    // Reached only through the gate's literal import(): a static import would fold it back into the start bundle.
+    expect(read('src/screens/quest/quest-pacing.ts')).toContain("import('./quest-pacing-chunk')");
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[1].marker}"})`;
+    const pacing = { url: `${WEB_JS_DIR}/quest-pacing-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[1]], bundles: [start, pacing], precached: all([start, pacing]) })).toEqual([]);
   });
 
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {

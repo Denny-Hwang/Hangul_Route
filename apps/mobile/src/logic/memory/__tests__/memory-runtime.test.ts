@@ -152,6 +152,17 @@ describe('recording from a quest round', () => {
     expect(d.store.has(MEMORY_KEY('p1'))).toBe(true);
   });
 
+  it('a round answered with the hint showing (the scaffold round, row CM-24) records as recordAnswers does with hinted', async () => {
+    const a = device();
+    const b = device();
+    await a.rt.recordRound('p1', { ...round(WORD.ko, true, a.clock.now), hinted: true });
+    await b.rt.recordAnswers('p1', [{ itemId: WORD.id, correct: true, hinted: true, rung: 'recognize' }], b.clock.now);
+    expect(await stateOf(a, WORD.id)).toEqual(await stateOf(b, WORD.id));
+    const plain = device();
+    await plain.rt.recordRound('p1', round(WORD.ko, true, plain.clock.now));
+    expect(await stateOf(a, WORD.id)).not.toEqual(await stateOf(plain, WORD.id));
+  });
+
   it('a round that asks no known item records nothing', async () => {
     const d = device();
     await d.rt.recordRound('p1', round('없는말입니다', true, d.clock.now));

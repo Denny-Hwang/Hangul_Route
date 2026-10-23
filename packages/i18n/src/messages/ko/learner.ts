@@ -494,6 +494,10 @@ export const learner = {
         readingNow: { pill: '지금 읽는 중' },
         lineLabel: (line: number, total: number, speaker: string) => `${total}줄 중 ${line}번째 줄, ${speaker}`,
       },
+      compactLine: '한 카드에 두 개가 있어요. 하나씩 들어 보기를 눌러요.',
+    },
+    adapt: {
+      scaffoldHint: '힌트를 보며 하나 더 해요. 듣고 강조된 카드를 눌러요.',
     },
   },
 

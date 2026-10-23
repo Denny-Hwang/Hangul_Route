@@ -715,6 +715,12 @@ export const learner = {
         /** Screen-reader line as a line lights; `speaker` is the line's speaker name in the UI language. */
         lineLabel: (line: number, total: number, speaker: string) => `Line ${line} of ${total}, ${speaker}`,
       },
+      /** The compact page's line (F-CURR-002 section 4.6, row CM-24): two words on one card, each with its own Hear it. */
+      compactLine: 'Two on one card. Tap Hear it for each.',
+    },
+    /** Adaptive pacing (F-CURR-002 section 4.6, row CM-24): the scaffold round's line over the highlighted card. Never about speed. */
+    adapt: {
+      scaffoldHint: 'One more, with a hint. Hear it, then tap the highlighted card.',
     },
   },
 

@@ -193,7 +193,13 @@ export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-r
  * `src/screens/goals/goals-chunk.ts`) are a bundle of their own, reached only through the literal `import()` of
  * `src/store/goals-entry.ts`, so a learner with `goals` off never loads them and the start bundle does not grow.
  */
-export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
+export const LEARNER_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' }),
+  // Adaptive pacing in quests (row CM-24, `src/screens/quest/quest-pacing-chunk.tsx`): the rules, the shorter Apply and
+  // the scaffold round, reached only through the literal `import()` of `src/screens/quest/quest-pacing.ts` while
+  // `questAdapt` is on.
+  Object.freeze({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' }),
+]);
 
 /**
  * [GU] The learner screens that are chunks of their own (F-CURR-002 §10, row GU-3): the guest's first quest stack

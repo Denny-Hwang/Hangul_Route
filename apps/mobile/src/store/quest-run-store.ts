@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { tallyAnswer } from '../logic/first-try';
 import type { RoundAsked } from '../logic/memory/asked';
+import type { MinigameScope } from '../logic/minigame-config';
+import type { StepTry } from '../logic/quest-flow/quest-adapt';
 import { starsForAccuracy } from '../logic/score';
 
 /** The first (scored) answer of a round, with what it asked (F-CURR-002 row CM-12). */
@@ -10,6 +12,8 @@ export interface FirstRoundAnswer {
   correct: boolean;
   asked: RoundAsked;
   at: Date;
+  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24). */
+  hinted?: boolean;
 }
 
 let firstAnswerListener: ((answer: FirstRoundAnswer) => void) | null = null;
@@ -38,6 +42,10 @@ interface State {
   pendingAdvance: boolean;
   /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
   missed: readonly RoundAsked[];
+  /** Every first answer with its step, and what a miss asked: the adaptive pacing rules (F-CURR-002 section 4.6, row CM-24). */
+  tries: readonly (StepTry & { asked?: RoundAsked })[];
+  /** The Apply step that plays one round shorter in this run (a strong round earlier in the cell) and its scope, or null. */
+  short: { step: number; scope: MinigameScope } | null;
 }
 
 interface Actions {
@@ -69,6 +77,8 @@ const blankRun = {
   scoredRounds: [],
   pendingAdvance: false,
   missed: [],
+  tries: [],
+  short: null,
 } satisfies State;
 
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
@@ -97,6 +107,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
         retryCount: next.retries,
         scoredRounds: next.scored,
         ...(first && !correct && asked ? { missed: [...s.missed, asked] } : {}),
+        ...(first ? { tries: [...s.tries, { step: s.stepIndex, correct, ...(correct || !asked ? {} : { asked }) }] } : {}),
       };
     });
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
@@ -124,3 +135,17 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   stars: () => starsForAccuracy(get().correctCount, Math.max(1, get().totalCount)),
 }));
+
+/**
+ * A round played beside the steps (the scaffold round, F-CURR-002 section 4.6): its first answer goes to the memory
+ * store with the hint flag, as every round's does, and is not scored, so the quest's stars are its own.
+ */
+export function answerAside(asked: RoundAsked, correct: boolean): void {
+  const { questId, episodeId } = useQuestRunStore.getState();
+  if (!firstAnswerListener || !questId || !episodeId) return;
+  try {
+    firstAnswerListener({ questId, episodeId, correct, asked, at: new Date(), hinted: true });
+  } catch {
+    // Only the memory store misses the answer.
+  }
+}

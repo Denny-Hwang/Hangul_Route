@@ -17,7 +17,13 @@ import {
   type QuestStepKind,
   type StageKey,
 } from '@hangul-route/content-schema';
+import { getMessages as getMessagesEn } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import type { RoundAsked } from '../../logic/memory/asked';
+import { compactSource, shortenScope } from '../../logic/quest-flow/quest-adapt';
+import { compactView, discoverCards } from '../../logic/quest-flow/pacing-view';
+import { scaffoldScope } from '../../logic/quest-flow/quest-scaffold';
+import { buildDiscover } from '../../logic/stage1/discover-flow';
 import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -846,6 +852,111 @@ describe('U-8 distractors (F-CURR-001 §3.5)', () => {
     });
     it(`${cell.id}: the right Tap to Respond reply is not always in the same place`, () => {
       expect(fixedReplyPlace(cell)).toBeUndefined();
+    });
+  }
+});
+
+/**
+ * U-11 (F-CURR-001 section 5, added by F-CURR-002 section 4.6; row CM-24): every adapted path of a quest (the compact
+ * Discover, the shorter Apply, the scaffold round, and both at once) shows each new item of the quest on a Discover
+ * surface before it is first asked. A path is what the learner meets in order: the Discover cards the step draws
+ * (`discoverCards`, the function DiscoverStep renders), then the scored rounds. Every Discover item is a new item, and
+ * Discover comes first, so the rule holds when the adapted Discover still draws every item and no adapted round asks
+ * Korean the quest's own standard rounds do not (the scaffold asks the Practice's items, the shorter Apply drops one).
+ */
+interface PacedPath {
+  name: string;
+  /** The Korean on the Discover cards, in order. */
+  surfaces: string[];
+  /** The Korean the scored rounds ask, in order. */
+  asked: string[];
+}
+
+/** Every Korean text a runtime scope carries (prompts, options, targets, lines): what its rounds can ask. */
+function scopeKo(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(scopeKo);
+  if (typeof value !== 'object' || value === null) return [];
+  return Object.entries(value).flatMap(([key, v]) => (typeof v === 'string' && /^(ko|npcKo|labelKo)$/.test(key) ? [v] : scopeKo(v)));
+}
+
+/** U-11 for one path: each new item drawn on Discover, and every new item a round asks drawn before it. */
+export function u11Problems(questId: string, newItems: readonly string[], path: PacedPath): string[] {
+  const out: string[] = [];
+  const shown = new Set(path.surfaces);
+  for (const item of newItems) if (!shown.has(item)) out.push(`U-11 ${questId} ${path.name}: ${item} is not on Discover`);
+  const fresh = new Set(newItems);
+  for (const ko of path.asked) if (fresh.has(ko) && !shown.has(ko)) out.push(`U-11 ${questId} ${path.name}: ${ko} is asked before Discover shows it`);
+  return out;
+}
+
+const DISCOVER_COPY = getMessagesEn('en').learner.quest.discover;
+const DISCOVER_A11Y = getMessagesEn('en').a11y;
+
+/** The Discover cards of a quest, standard or with its second page compact. */
+function surfacesOf(quest: LessonQuest, compact: boolean): string[] {
+  const pages = quest.steps.find((s) => s.kind === 'discover')?.discover?.pages ?? [];
+  const model = buildDiscover(pages, DISCOVER_COPY, DISCOVER_A11Y);
+  return model.pages.flatMap((page, i) => [
+    ...(page.exchange?.lines.map((l) => l.ko) ?? []),
+    ...discoverCards(page, compact && i === 1).flatMap((card) => card.flatMap((item) => [item.glyph, ...(item.example ? [item.example.ko] : [])])),
+  ]);
+}
+
+/** How a game reports each of its rounds' misses (what the run store keeps): a host game by id, the older ones by their Korean. */
+function missesOf(scope: MinigameScope): RoundAsked[] {
+  const ids = (list: ReadonlyArray<{ id: string }> | undefined): RoundAsked[] => (list ?? []).map((r) => ({ scope, itemId: r.id }));
+  switch (scope.kind) {
+    case 'pic-word-match':
+      return [...new Set(scope.picWord?.boards.flatMap((b) => b.pairs.map((p) => p.id)))].map((itemId) => ({ scope, itemId }));
+    case 'tap-respond':
+      return (scope.dialogue ?? []).map((t) => ({ texts: [t.npcKo] }));
+    default:
+      return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
+  }
+}
+
+describe('U-11 every adapted path shows each new item on Discover before it is asked (F-CURR-002 section 4.6, row CM-24)', () => {
+  it('the check catches a path that leaves an item off Discover, or asks one before it', () => {
+    expect(u11Problems('quest:x', ['하늘', '별'], { name: 'compact', surfaces: ['하늘'], asked: ['별'] })).toEqual([
+      'U-11 quest:x compact: 별 is not on Discover',
+      'U-11 quest:x compact: 별 is asked before Discover shows it',
+    ]);
+    expect(u11Problems('quest:x', ['하늘'], { name: 'standard', surfaces: ['하늘'], asked: ['하늘', '물'] })).toEqual([]);
+  });
+
+  const QUESTS = READY.flatMap(({ cell }) => cell.quests);
+  it('runs over every shipped lesson quest', () => {
+    expect(QUESTS.length).toBeGreaterThanOrEqual(78);
+  });
+
+  for (const quest of QUESTS) {
+    it(`${quest.id}: the standard, compact, scaffold and compact-with-scaffold paths`, () => {
+      const before = structuredClone(quest);
+      const scopeOf = (kind: QuestStepKind): MinigameScope => scopeFor(quest.steps.find((s) => s.kind === kind)!.minigameRef!)!;
+      const [practice, apply, check] = [scopeOf('practice'), scopeOf('apply'), scopeOf('check')];
+      const shorter = shortenScope(apply);
+      const newItems = discoverTexts(quest);
+      const pagesOf = quest.steps.find((s) => s.kind === 'discover')!.discover!.pages;
+      // The compact rule on the authored page (the telemetry's) is the rule on the drawn page (the render's).
+      expect(compactSource(pagesOf[1])).toBe(compactView(buildDiscover(pagesOf, DISCOVER_COPY, DISCOVER_A11Y).pages[1]));
+      // The shorter Apply asks nothing its full Apply does not; the Apply rounds it keeps are the first ones.
+      const applyKo = new Set(scopeKo(apply));
+      for (const ko of scopeKo(shorter ?? apply)) expect(applyKo.has(ko), ko).toBe(true);
+      // Every scaffold a pair of first-try misses can bring asks only the Practice's own Korean.
+      const practiceKo = new Set(scopeKo(practice));
+      const misses = missesOf(practice);
+      const scaffolds = misses.flatMap((a, i) => misses.slice(i + 1).map((b) => scaffoldScope(practice, [a, b]))).filter((s): s is MinigameScope => s !== null);
+      for (const s of scaffolds) for (const ko of scopeKo(s)) expect(practiceKo.has(ko), ko).toBe(true);
+      const scaffoldKo = [...new Set(scaffolds.flatMap(scopeKo))];
+      const paths: PacedPath[] = [
+        { name: 'standard', surfaces: surfacesOf(quest, false), asked: [...scopeKo(practice), ...scopeKo(apply), ...scopeKo(check)] },
+        { name: 'compact', surfaces: surfacesOf(quest, true), asked: [...scopeKo(practice), ...scopeKo(shorter ?? apply), ...scopeKo(check)] },
+        { name: 'scaffold', surfaces: surfacesOf(quest, false), asked: [...scopeKo(practice), ...scaffoldKo, ...scopeKo(apply), ...scopeKo(check)] },
+        { name: 'compact+scaffold', surfaces: surfacesOf(quest, true), asked: [...scopeKo(practice), ...scaffoldKo, ...scopeKo(shorter ?? apply), ...scopeKo(check)] },
+      ];
+      expect(paths.flatMap((p) => u11Problems(quest.id, newItems, p))).toEqual([]);
+      // No path changes the quest: its six steps, their durationSeconds (U-5 checks the standard path) and its scopes.
+      expect(quest).toEqual(before);
     });
   }
 });

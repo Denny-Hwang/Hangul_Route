@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useQuestRunStore } from '../quest-run-store';
+import { answerAside, setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../quest-run-store';
 
 describe('quest-run-store', () => {
   beforeEach(() => {
@@ -201,6 +201,45 @@ describe('quest-run-store', () => {
     expect(useQuestRunStore.getState().totalCount).toBe(4);
     store.beginQuest('quest:z', 'episode:y');
     expect(useQuestRunStore.getState().missed).toEqual([]);
+  });
+
+  it('keeps every first try with its step, and what a miss asked, for adaptive pacing (F-CURR-002 row CM-24)', () => {
+    const store = useQuestRunStore.getState();
+    store.beginQuest('quest:x', 'episode:y', 2);
+    store.answerRound(1, false, { texts: ['배'] });
+    store.answerRound(1, true, { texts: ['배'] });
+    store.answerRound(2, true, { texts: ['사과'] });
+    store.answerRound(3, false);
+    useQuestRunStore.getState().goNextStep();
+    useQuestRunStore.getState().answerRound(1, true);
+    expect(useQuestRunStore.getState().tries).toEqual([
+      { step: 2, correct: false, asked: { texts: ['배'] } },
+      { step: 2, correct: true },
+      { step: 2, correct: false },
+      { step: 3, correct: true },
+    ]);
+    useQuestRunStore.setState({ short: { step: 3, scope: { kind: 'listen-pick' } } });
+    store.beginQuest('quest:z', 'episode:y');
+    expect(useQuestRunStore.getState()).toMatchObject({ tries: [], short: null });
+  });
+
+  it('answerAside hands a round beside the steps to the memory store, hinted and unscored', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      answerAside({ texts: ['배'] }, true);
+      expect(heard).toEqual([]);
+      useQuestRunStore.getState().beginQuest('quest:x', 'episode:y');
+      answerAside({ texts: ['배'] }, true);
+      expect(heard).toMatchObject([{ questId: 'quest:x', episodeId: 'episode:y', correct: true, hinted: true, asked: { texts: ['배'] } }]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 0, correctCount: 0, tries: [] });
+      setFirstRoundAnswerListener(() => {
+        throw new Error('store down');
+      });
+      expect(() => answerAside({ texts: ['배'] }, false)).not.toThrow();
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
   });
 });
 
