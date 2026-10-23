@@ -103,7 +103,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s3-life-q1-check",
           "durationSeconds": 40
         },
@@ -350,65 +350,62 @@
         },
         {
           "ref": "minigame:s3-life-q1-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "우유를 마셔요.",
-                "romanization": "uyureul masyeoyo",
-                "en": "I drink milk."
+              "sentence": {
+                "ko": "___을 먹어요.",
+                "romanization": "___eul meogeoyo",
+                "en": "I eat bread."
               },
-              "options": [
+              "gapKind": "word",
+              "tiles": [
                 {
-                  "id": "o1",
-                  "pictureRef": "word:food-milk"
+                  "ko": "빵",
+                  "romanization": "ppang",
+                  "en": "bread"
                 },
                 {
-                  "id": "o2",
-                  "pictureRef": "word:food-water"
+                  "ko": "떡",
+                  "romanization": "tteok",
+                  "en": "rice cake"
                 },
                 {
-                  "id": "o3",
-                  "pictureRef": "word:food-bread"
+                  "ko": "밥",
+                  "romanization": "bap",
+                  "en": "rice"
                 }
               ],
-              "answerId": "o1"
+              "answerIndex": 0
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "빵을 먹어요.",
-                "romanization": "ppangeul meogeoyo",
-                "en": "I eat bread."
+              "sentence": {
+                "ko": "사과___ 먹어요.",
+                "romanization": "sagwa___ meogeoyo",
+                "en": "I eat an apple."
               },
-              "options": [
+              "gapKind": "particle",
+              "tiles": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "빵을 먹어요.",
-                    "romanization": "ppangeul meogeoyo",
-                    "en": "I eat bread."
-                  }
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
                 },
                 {
-                  "id": "o2",
-                  "text": {
-                    "ko": "물을 마셔요.",
-                    "romanization": "mureul masyeoyo",
-                    "en": "I drink water."
-                  }
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
                 },
                 {
-                  "id": "o3",
-                  "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
-                  }
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
                 }
               ],
-              "answerId": "o1"
+              "answerIndex": 0,
+              "filledRomanization": "sagwareul meogeoyo"
             }
           ]
         }
@@ -506,7 +503,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s3-life-q2-check",
           "durationSeconds": 40
         },
@@ -753,65 +750,48 @@
         },
         {
           "ref": "minigame:s3-life-q2-check",
-          "kind": "listen-pick",
+          "kind": "order-it",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "라면이 뜨거워요.",
-                "romanization": "ramyeoni tteugeowoyo",
-                "en": "The ramyeon is hot."
+              "sentence": {
+                "ko": "김치가 맛있어요.",
+                "romanization": "gimchiga masisseoyo",
+                "en": "The kimchi is tasty."
               },
-              "options": [
-                {
-                  "id": "o1",
-                  "pictureRef": "word:food-ramyeon"
-                },
-                {
-                  "id": "o2",
-                  "pictureRef": "word:food-apple"
-                },
-                {
-                  "id": "o3",
-                  "pictureRef": "card:kimbap"
-                }
-              ],
-              "answerId": "o1"
+              "pictureRef": "card:kimchi",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "사과가 맛있어요.",
-                "romanization": "sagwaga masisseoyo",
-                "en": "The apple is tasty."
+              "sentence": {
+                "ko": "우유가 좋아요.",
+                "romanization": "uyuga joayo",
+                "en": "I like milk."
               },
-              "options": [
+              "pictureRef": "word:food-milk",
+              "distractors": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "사과가 맛있어요.",
-                    "romanization": "sagwaga masisseoyo",
-                    "en": "The apple is tasty."
-                  }
-                },
-                {
-                  "id": "o2",
-                  "text": {
-                    "ko": "사과가 뜨거워요.",
-                    "romanization": "sagwaga tteugeowoyo",
-                    "en": "The apple is hot."
-                  }
-                },
-                {
-                  "id": "o3",
-                  "text": {
-                    "ko": "빵이 좋아요.",
-                    "romanization": "ppangi joayo",
-                    "en": "I like bread."
-                  }
+                  "ko": "뜨거워요",
+                  "romanization": "tteugeowoyo",
+                  "en": "is hot"
                 }
-              ],
-              "answerId": "o1"
+              ]
             }
           ]
         }
@@ -908,7 +888,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s3-life-q3-check",
           "durationSeconds": 40
         },
@@ -1139,65 +1119,62 @@
         },
         {
           "ref": "minigame:s3-life-q3-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "바다에 가요.",
-                "romanization": "badae gayo",
-                "en": "I go to the sea."
+              "sentence": {
+                "ko": "엄마가 집에 ___.",
+                "romanization": "eommaga jibe ___",
+                "en": "Mom comes home."
               },
-              "options": [
+              "gapKind": "word",
+              "tiles": [
                 {
-                  "id": "o1",
-                  "pictureRef": "card:sea"
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come"
                 },
                 {
-                  "id": "o2",
-                  "pictureRef": "card:mountain"
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
                 },
                 {
-                  "id": "o3",
-                  "pictureRef": "word:school-school"
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
                 }
               ],
-              "answerId": "o1"
+              "answerIndex": 0
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "친구가 와요.",
-                "romanization": "chinguga wayo",
-                "en": "My friend comes."
+              "sentence": {
+                "ko": "동생___ 학교에 가요.",
+                "romanization": "dongsaeng___ hakgyoe gayo",
+                "en": "My little sibling goes to school."
               },
-              "options": [
+              "gapKind": "particle",
+              "tiles": [
                 {
-                  "id": "o1",
-                  "text": {
-                    "ko": "친구가 와요.",
-                    "romanization": "chinguga wayo",
-                    "en": "My friend comes."
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
                 },
                 {
-                  "id": "o2",
-                  "text": {
-                    "ko": "엄마가 와요.",
-                    "romanization": "eommaga wayo",
-                    "en": "Mom comes."
-                  }
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
                 },
                 {
-                  "id": "o3",
-                  "text": {
-                    "ko": "친구가 가요.",
-                    "romanization": "chinguga gayo",
-                    "en": "My friend goes."
-                  }
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
                 }
               ],
-              "answerId": "o1"
+              "answerIndex": 0,
+              "filledRomanization": "dongsaengi hakgyoe gayo"
             }
           ]
         }
@@ -1373,11 +1350,12 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-23",
     "notes": [
       "Pass 4 and 7 language review (MAR, 2026-10-14; Korean naturalness and register, spelling, pedagogy, en / es / ko glosses): q3 particle rounds became word-order rounds, 좋아요 reads 'I like ...', plain non-echo ko glosses, no distractor builds a sentence in q1-q2, the q2 caption names 뜨거워요, es 'Vengo a casa'; findings and outcomes in PR #651.",
-      "Pass 5 and 7 culture review (MAR, 2026-10-14; heritage accuracy against the sources, sensitivity, audience any age): five language notes, no culture claim; n5 says where someone goes or comes to and keeps the source's 'or the person in mind', n3 covers the thing you like, n2's 를 quote has its own page; verification line 3 on every note."
+      "Pass 5 and 7 culture review (MAR, 2026-10-14; heritage accuracy against the sources, sensitivity, audience any age): five language notes, no culture claim; n5 says where someone goes or comes to and keeps the source's 'or the person in mind', n3 covers the thing you like, n2's 를 quote has its own page; verification line 3 on every note.",
+      "Check rotation pass (MAR, row CM-3A S3, 2026-10-23): the Checks rotate Cloze Pick, Sentence Builder and Dictation (F-CURR-002 section 7.1); every Check has a produce round; tiles, endings and sentences are taught in the cell; Dictation words have no sound change or homophone; es and ko glosses follow the cell's overlays."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -97,8 +97,14 @@
       "picWord.boards.3.pairs.p3.word.gloss": "쌀로 지은 음식을 먹는다는 뜻"
     },
     "minigame:s3-life-q1-check": {
-      "listenPick.rounds.c1.prompt": "소의 젖을 마신다는 뜻",
-      "listenPick.rounds.c2.prompt": "밀가루 반죽을 구운 음식을 먹는다는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "밀가루 반죽을 구운 음식을 먹는다는 뜻",
+      "clozePick.rounds.c1.tiles.ppang.gloss": "밀가루 반죽을 구운 음식",
+      "clozePick.rounds.c1.tiles.tteok.gloss": "곡식 가루를 쪄서 만든 음식",
+      "clozePick.rounds.c1.tiles.bap.gloss": "쌀로 지은 음식",
+      "clozePick.rounds.c2.sentence.gloss": "아삭하고 둥근 과일을 먹는다는 뜻",
+      "clozePick.rounds.c2.tiles.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-life-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "김으로 만 밥의 맛이 좋다는 뜻",
@@ -129,8 +135,11 @@
       "picWord.boards.3.pairs.p3.word.gloss": "쌀로 지은 음식의 맛이 좋다는 뜻"
     },
     "minigame:s3-life-q2-check": {
-      "listenPick.rounds.c1.prompt": "꼬불꼬불한 국수의 온도가 높다는 뜻",
-      "listenPick.rounds.c2.prompt": "아삭하고 둥근 과일의 맛이 좋다는 뜻"
+      "orderIt.rounds.c1.sentence.gloss": "채소를 절여 양념한 반찬의 맛이 좋다는 뜻",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "orderIt.rounds.c1.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시",
+      "orderIt.rounds.c2.sentence.gloss": "소의 젖이 마음에 든다는 뜻",
+      "orderIt.rounds.c2.distractors.tteugeowoyo.gloss": "온도가 높다"
     },
     "minigame:s3-life-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가깝게 지내는 사람이 공부하는 곳으로 간다는 뜻",
@@ -159,8 +168,14 @@
       "picWord.boards.3.pairs.p3.word.gloss": "나보다 어린 형제자매가 사는 곳으로 온다는 뜻"
     },
     "minigame:s3-life-q3-check": {
-      "listenPick.rounds.c1.prompt": "넓고 짠 물이 있는 곳으로 간다는 뜻",
-      "listenPick.rounds.c2.prompt": "가깝게 지내는 사람이 온다는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "어머니가 사는 곳으로 온다는 뜻",
+      "clozePick.rounds.c1.tiles.wayo.gloss": "말하는 사람이나 마음에 둔 사람 쪽으로 움직이다",
+      "clozePick.rounds.c1.tiles.gayo.gloss": "여기에서 다른 곳으로 움직이다",
+      "clozePick.rounds.c1.tiles.masyeoyo.gloss": "물 같은 것을 목으로 넘기다",
+      "clozePick.rounds.c2.sentence.gloss": "나보다 어린 형제자매가 공부하는 곳으로 간다는 뜻",
+      "clozePick.rounds.c2.tiles.i.gloss": "받침 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시"
     }
   }
 }

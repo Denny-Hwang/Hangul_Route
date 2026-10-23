@@ -51,8 +51,11 @@
       "listenPick.rounds.r4.prompt": "저는 엄마와 할머니가 있어요."
     },
     "minigame:s3-rites-q1-check": {
-      "listenPick.rounds.r1.prompt": "저는 할머니와 할아버지가 있어요.",
-      "listenPick.rounds.r2.prompt": "송편과 사과를 먹어요."
+      "orderIt.rounds.c1.sentence.gloss": "저는 할아버지와 할머니가 있어요.",
+      "orderIt.rounds.c1.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
+      "orderIt.rounds.c2.sentence.gloss": "사과와 송편을 먹어요.",
+      "orderIt.rounds.c2.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
+      "orderIt.rounds.c2.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시"
     },
     "quest:stage3-rites-q2": {
       "title": "예쁘고 맛있어요",
@@ -103,8 +106,10 @@
       "listenPick.rounds.r4.prompt": "떡 맛이 좋아요."
     },
     "minigame:s3-rites-q2-check": {
-      "listenPick.rounds.r1.prompt": "송편 맛이 좋아요.",
-      "listenPick.rounds.r2.prompt": "한복이 고와요."
+      "typeHangul.rounds.d1.prompt": "한국의 전통 옷을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d1.target.gloss": "한국의 전통 옷",
+      "typeHangul.rounds.d2.prompt": "반달 모양으로 빚은 떡을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d2.target.gloss": "반달 모양으로 빚은 떡"
     },
     "quest:stage3-rites-q3": {
       "title": "명절날",
@@ -154,8 +159,14 @@
       "listenPick.rounds.r4.prompt": "엄마와 아빠가 둥근 달을 바라봐요."
     },
     "minigame:s3-rites-q3-check": {
-      "listenPick.rounds.r1.prompt": "윷을 던지며 놀아요.",
-      "listenPick.rounds.r2.prompt": "둥근 달을 바라봐요."
+      "clozePick.rounds.c1.sentence.gloss": "밤하늘에 뜬 둥근 달을 바라본다는 뜻",
+      "clozePick.rounds.c1.tiles.bwayo.gloss": "눈으로 바라보다",
+      "clozePick.rounds.c1.tiles.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
+      "clozePick.rounds.c1.tiles.haeyo.gloss": "어떤 일을 하다",
+      "clozePick.rounds.c2.sentence.gloss": "새해에 웃어른께 절을 드려요.",
+      "clozePick.rounds.c2.tiles.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시"
     }
   }
 }
