@@ -2,6 +2,8 @@ import {
   AssessmentResponseSchema,
   FAMILY_LIFETIME_LEARNERS,
   GROUP_LICENSE_LEARNERS,
+  GUEST_TELEMETRY_NAMES,
+  GUEST_TELEMETRY_PAYLOADS,
   LEARNER_LEVELS,
   PLACEMENT_KEEP,
   PlacementResultSchema,
@@ -286,6 +288,9 @@ describe('privacy policy', () => {
     const off = textOf(renderToStaticMarkup(<PrivacyDocument locale="en" claims={OFF} />));
     const SENTENCES = [
       'Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers.',
+      'The app also sends us usage events about this quest, with no learner id and no device id.',
+      'They are the usual events of a quest, such as starting a game, and these: when the quest starts (from our site, the screen that asks who is learning or the welcome screen, and whether it was picked up again); roughly how long it took to reach the first letter; when the quest is finished and how many stars it earned; when it is left (during the quest or at the save step); when it is saved as a learner (from which screen, whether the grown-up PIN was asked and whether consent was given then or was already on file); and when a quest that was never saved is deleted and whether it was finished.',
+      'Each event carries the time it happened, and we count them by day.',
       "When a name is added, they become that learner's progress and are backed up like any other.",
       "A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
     ];
@@ -304,6 +309,31 @@ describe('privacy policy', () => {
       const opening = SENTENCES[0] ?? '';
       expect(collect).toContain(opening);
       expect(collect.indexOf(opening)).toBeGreaterThan(collect.indexOf('Basic device and diagnostic data'));
+    });
+
+    /**
+     * The usage-events sentence (AMENDMENTS-GUEST-FIRST-LESSON section 12): one phrase per `guest.*` name, each naming
+     * every field the Worker keeps for it (`GUEST_TELEMETRY_PAYLOADS`, the source of `GUEST_PAYLOAD_RULES`), so a new
+     * name or field fails here until the Policy says it.
+     */
+    it('with the claim on: names every guest.* event and every field the Worker keeps, with no learner or device id', () => {
+      const sentence = SENTENCES.slice(1, 4).join(' ');
+      const PHRASES: Record<string, Record<string, string>> = {
+        'guest.started': { via: 'from our site, the screen that asks who is learning or the welcome screen', resumed: 'whether it was picked up again' },
+        'guest.first_letter': { secondsIn: 'roughly how long it took to reach the first letter' },
+        'guest.quest_done': { stars: 'how many stars it earned' },
+        'guest.left': { at: 'during the quest or at the save step' },
+        'guest.saved': { via: 'from which screen', gated: 'whether the grown-up PIN was asked', consent: 'whether consent was given then or was already on file' },
+        'guest.expired': { questDone: 'a quest that was never saved is deleted and whether it was finished' },
+      };
+      expect(Object.keys(PHRASES)).toEqual([...GUEST_TELEMETRY_NAMES]);
+      for (const name of GUEST_TELEMETRY_NAMES) {
+        expect(Object.keys(PHRASES[name] ?? {}).sort()).toEqual(Object.keys(GUEST_TELEMETRY_PAYLOADS[name].shape).sort());
+        for (const phrase of Object.values(PHRASES[name] ?? {})) expect(sentence).toContain(phrase);
+      }
+      expect(sentence).toContain('with no learner id and no device id');
+      expect(sentence).toContain('we count them by day');
+      expect(on).toContain(sentence);
     });
 
     it('with the claim on: the Policy carries its effective date (GU-7\'s merge day, a merge gate), and the rest of the Policy is the claim-off Policy', () => {

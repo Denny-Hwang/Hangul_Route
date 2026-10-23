@@ -386,7 +386,7 @@ The chooser shows **at most one** guest tile, after **Add a learner** in the Lea
 
 - No cookie, no new storage outside the learner namespace, no fingerprint of the device.
 - Learner backups (`logic/sync/backup.ts`) never contain `hr:guest`: they export profiles, and a guest is not one until it is saved.
-- The site's Privacy Policy gains one bullet (row GU-6, shown from GU-7, section 13.3). It is English-authoritative like the rest of the Policy (decision L10): no es or ko value; `/es` and `/ko` show the English under the existing `legal.englishAuthoritative` notice. Its effective date (`landing.legal.privacy.effective`, English only, L10) moves to GU-7's merge date. No wording says that a legal review happened or is pending.
+- The site's Privacy Policy gains one bullet (row GU-6, shown from GU-7, section 13.3). The bullet also says, in one sentence, that a guest run sends usage events with no learner id and no device id (every event of the run, and each `guest.*` name of section 12 with every field the Worker keeps), each with the time it happened, counted by day in `telemetry_daily`; a web test (`legal-copy.test.tsx`) fails when a `guest.*` name or kept field is added without the Policy naming it. It is English-authoritative like the rest of the Policy (decision L10): no es or ko value; `/es` and `/ko` show the English under the existing `legal.englishAuthoritative` notice. Its effective date (`landing.legal.privacy.effective`, English only, L10) moves to GU-7's merge date. No wording says that a legal review happened or is pending.
 
 ---
 
