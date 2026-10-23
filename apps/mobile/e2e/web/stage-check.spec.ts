@@ -27,6 +27,8 @@ const AT = '2026-10-01T10:00:00.000Z';
 const cellsOf = (stage: number): string[] => CATALOG.cells.filter((c) => c.episodeId.startsWith(`episode:stage${stage}-`)).map((c) => c.episodeId);
 const questsOf = (cell: string): string[] => CATALOG.cells.find((c) => c.episodeId === cell)?.questIds ?? [];
 const STAGE2 = cellsOf(2);
+/** The summary opens once the sync has settled: the 4-second grace, the retry step and the chunk, with room. */
+const RECAP_WAIT = 15_000;
 
 type Flags = Record<string, { on: boolean; pct: number }>;
 const ON: Flags = { memoryRecord: { on: true, pct: 100 }, stageChecks: { on: true, pct: 100 }, mastery: { on: true, pct: 100 } };
@@ -154,7 +156,8 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
 
     // G: Home opens the one summary of the stages finished earlier.
     const recap = page.getByTestId('stage-recap');
-    await expect(recap).toBeVisible();
+    // It waits for this session's sync to settle (a 4-second grace when no sync starts).
+    await expect(recap).toBeVisible({ timeout: RECAP_WAIT });
     await expect(page.getByTestId('stage-recap-title')).toHaveText('You finished Stage 2 earlier');
     await expect(recap.getByText('Every stage you finished stays on your Journey.')).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -165,7 +168,7 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     // Never shown again: not on the next Home, not after a reload.
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
-    await page.waitForTimeout(1_500);
+    await page.waitForTimeout(6_000);
     await expect(page.getByTestId('stage-recap')).toHaveCount(0);
 
     // C: the Journey's Stage 2 header, Complete, with See your prize and Stage Check.
@@ -285,7 +288,8 @@ test.describe('text size Largest at 320 x 568 (the fit rule)', () => {
   test('the summary, the Journey header (its buttons under the header, wrapping) and the ceremony fit', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learner(page, ON, {}, { uiLocale: 'en', textSize: 'largest' });
-    await expect(page.getByTestId('stage-recap')).toBeVisible();
+    // The summary waits for this session's sync to settle (a 4-second grace when no sync starts).
+    await expect(page.getByTestId('stage-recap')).toBeVisible({ timeout: RECAP_WAIT });
     await expectTextFits(page, 'the retroactive summary');
     await expectNoHorizontalOverflow(page);
     await shot(page, 'stage-recap-largest-320');
@@ -312,7 +316,7 @@ test.describe('stageChecks off (section 12.2)', () => {
     await page.setViewportSize({ width: 320, height: 800 });
     const id = await learner(page, { ...ON, stageChecks: { on: true, pct: 0 } }, { stageCheckAt: { stage2: AT } });
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
-    await page.waitForTimeout(1_500);
+    await page.waitForTimeout(6_000);
     await expect(page.getByTestId('stage-recap')).toHaveCount(0);
     await page.getByText('Journey', { exact: true }).last().click();
     await expect(page.getByTestId('journey-stage-pill-stage2')).toHaveText('Complete');
