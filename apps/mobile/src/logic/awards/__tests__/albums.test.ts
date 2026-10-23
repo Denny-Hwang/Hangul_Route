@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../content/heritage-cards';
 import { ALBUM_STAGES, ALBUM_THEMES, UPPER_CELL_CARDS } from '../../../content/upper-cell-cards';
 import { albumSetId, albumSets, albumViews } from '../albums';
+import { derivedAwards } from '../derive';
+import type { AwardWorld } from '../types';
 
 /** The five category albums (F-CURR-002 §7.2, row CM-23): progress that only fills, and the legendary hook for CM-23c. */
 const views = (owned: Iterable<string>) => albumViews(UPPER_CELL_CARDS, heritageCardsAll, new Set(owned), ALBUM_THEMES, ALBUM_STAGES);
@@ -53,5 +55,30 @@ describe('albumSets (the legendary hook, row CM-23c)', () => {
       { id: 'set:album-nature', cardId: 'card:legend-nature', titleEn: 'nature album', memberCardIds: cards.map((c) => c.id) },
     ]);
     expect(albumSetId('rites')).toBe('set:album-rites');
+  });
+});
+
+describe('a finished album brings its legendary card through the set rule (row CM-23c hook)', () => {
+  it('derivedAwards: a complete synthetic Letters album awards the card naming set:album-letters, dated by its last member; one short, none', () => {
+    const member = (stage: HeritageCard['stage'], i: number): HeritageCard => ({ ...heritageCardsAll[0]!, id: `card:t-${stage}`, theme: 'letters', stage, unlockedBy: `episode:none-${i}` });
+    const cards = ALBUM_STAGES.map(member);
+    const legend: HeritageCard = { ...heritageCardsAll[0]!, id: 'card:legend-letters', theme: 'letters', rarity: 'legendary', unlockedBy: albumSetId('letters') };
+    const albums = albumViews(cards.map((c) => c.id), cards, new Set(), ['letters'], ALBUM_STAGES);
+    const world: AwardWorld = { cards: [...cards, legend], episodes: [], quests: [], sets: albumSets(albums, () => legend.id, () => 'Letters album') };
+    const at = (d: number): string => `2026-10-${String(10 + d).padStart(2, '0')}T10:00:00.000Z`;
+    const snap = (n: number) => ({
+      profileId: 'p',
+      updatedAt: at(9),
+      episodes: [],
+      quests: [],
+      cards: cards.slice(0, n).map((c, i) => ({ cardId: c.id, unlockedAt: at(i), newSinceLastView: false })),
+      sessions: [],
+      homework: [],
+      reviews: [],
+      streakDays: 0,
+    });
+    const profile = { createdAt: '2026-09-01T08:00:00.000Z' };
+    expect(derivedAwards(world, snap(5), profile).find((a) => a.cardId === legend.id)).toEqual({ cardId: legend.id, source: 'set', via: 'set:album-letters', unlockedAt: at(4) });
+    expect(derivedAwards(world, snap(4), profile).find((a) => a.cardId === legend.id)).toBeUndefined();
   });
 });

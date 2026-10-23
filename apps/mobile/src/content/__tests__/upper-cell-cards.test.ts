@@ -24,6 +24,24 @@ const cardOf = (id: string) => heritageCardsAll.find((c) => c.id === id);
 const cellFile = (stage: StageKey, theme: ThemeKey): string => join(REPO, `content/episodes/stage-${stage.slice(5)}/${theme}.json`);
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
 
+/** Every `ko` string a learner is taught in a cell's quests (discover items, rounds, pairs), never a culture note or source. */
+function taughtKo(node: unknown, out: string[] = [], key = ''): string[] {
+  if (key === 'culture' || key === 'sources' || key === 'citation') return out;
+  if (Array.isArray(node)) for (const x of node) taughtKo(x, out, key);
+  else if (node !== null && typeof node === 'object')
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'ko' && typeof v === 'string') out.push(v);
+      else taughtKo(v, out, k);
+    }
+  return out;
+}
+
+/** The word is taught in the cell: a taught item is the word, or a taught sentence has a word that starts with it (a particle may follow). */
+function taughtIn(stage: StageKey, theme: ThemeKey, ko: string): boolean {
+  const cell = JSON.parse(readFileSync(cellFile(stage, theme), 'utf8')) as { quests?: unknown };
+  return taughtKo(cell.quests).some((t) => t === ko || t.split(/[\s.,!?'"“”‘’…·]+/).some((w) => w.startsWith(ko)));
+}
+
 describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
   it('one card per upper cell of Stages 2 and 3, by stage then theme, each naming its own first-volume cell', () => {
     expect(UPPER_CELL_CARDS).toHaveLength(10);
@@ -68,9 +86,12 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
     for (const card of upperCellCards) {
       expect(card.rarity, card.id).toBe('rare');
       const ko = card.subtitleKo ?? '';
-      expect(readFileSync(cellFile(card.stage, card.theme), 'utf8'), `${card.id}: ${ko} taught in its cell`).toContain(`"${ko}`);
+      expect(taughtIn(card.stage, card.theme, ko), `${card.id}: ${ko} taught in its cell`).toBe(true);
       expect(checkRomanization(ko, card.romanization ?? ''), card.id).toEqual([]);
     }
+    // The check reads taught text only: a word from another cell, or only in a source title, is not taught here.
+    expect(taughtIn('stage2', 'letters', '윷')).toBe(false);
+    expect(taughtIn('stage3', 'letters', '맞춤법')).toBe(false);
   });
 
   it('the fronts carry no back; each back is in the upper-cards chunk, one per card', () => {

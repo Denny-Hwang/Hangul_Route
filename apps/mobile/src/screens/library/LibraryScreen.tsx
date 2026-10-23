@@ -198,8 +198,11 @@ export function LibraryScreen(): ReactElement {
   const openCard = (card: HeritageCard): void => {
     // Opening an owned card clears its New pill (wireframe library/earn-hints).
     if (unlockedIds.has(card.id) && profile) markCardsSeen(profile.id, [card.id]);
-    if (paneMode) setSelected(card.id);
-    else navigation.navigate('CardDetail', { cardId: card.id });
+    if (paneMode) {
+      // An album card of another theme than the filter's (the albums are not filtered): show every card, so the pane can hold it.
+      if (filter !== 'all' && card.theme !== filter) setFilter('all');
+      setSelected(card.id);
+    } else navigation.navigate('CardDetail', { cardId: card.id });
   };
 
   const thumb = (card: HeritageCard, cellStyle: ViewStyle): ReactElement => {

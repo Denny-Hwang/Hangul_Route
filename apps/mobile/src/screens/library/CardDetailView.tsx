@@ -67,15 +67,18 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // A story card's blurb, fact and citation come from its story's chunk (F-CURR-002 §10, row CM-8): until it is in,
   // the card shows its front only (no flip, no Share), so its back is never drawn or shared blank.
   // An upper-cell card's back comes from the upper-cards chunk (F-CURR-002 row CM-23), the same way.
-  const upper = useUpperCardBack(source);
-  const storyReady = useStoryLoaded(source?.storyId) && upper.ready;
-  const card = upper.card && localizeCard(upper.card, locale);
   // [GU] The active learner (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3): the guest's id in a guest run, which has no
   // profile record, so the card a guest just earned shows its earned face, flip and Share (7.1, See my card).
   const learnerId = useActiveLearnerId();
   // A preview reads no learner's cards: it shows every card as an earned one.
   const snap = useProgressStore((s) => (state === 'preview' || learnerId === null ? undefined : s.byProfile[learnerId]));
   const earned = snap?.cards.some((c) => c.cardId === cardId) ?? false;
+  // F-CURR-002 row CM-23: while `upperCards` is off for this learner, an upper-cell card they do not hold is not in this
+  // build's view: a link to it opens "not found", with no earn hint. A preview's cards are All lessons' (its bundle
+  // leaves them out while the switch is off for everyone).
+  const upper = useUpperCardBack(source, earned || state === 'preview');
+  const storyReady = useStoryLoaded(source?.storyId) && upper.ready;
+  const card = upper.card && localizeCard(upper.card, locale);
   // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
   const hint = useMemo(() => {
     if (!source) return null;
@@ -113,7 +116,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
     if (!canFlip) setFace('front');
   }, [canFlip]);
 
-  if (!card) {
+  if (!card || upper.hidden) {
     return (
       <Screen>
         <Body>{m.notFound}</Body>
@@ -161,7 +164,8 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
 
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
-      {face === 'front' && unlocked ? (
+      {/* Like the flip, it waits for the chunk that holds the back (a story's, or the upper cards'), so it is never drawn empty. */}
+      {face === 'front' && unlocked && storyReady ? (
         <>
           <Spacer size="lg" />
           <Card padding="md">
