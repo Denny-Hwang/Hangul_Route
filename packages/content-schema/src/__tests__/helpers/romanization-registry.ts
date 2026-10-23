@@ -68,6 +68,10 @@ export interface ScanIgnore {
 export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/design-system/src/tokens.ts', reason: 'comments naming colours (단청, 한지)' },
   { path: 'packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx', reason: 'comments on the SVG glyph paths' },
+  {
+    path: 'apps/mobile/src/content/upper-cell-card-sources.ts',
+    reason: 'test-only source records of the upper-cell card backs (F-CURR-002 row CM-23): Korean page titles, publishers and quoted source words, never shown; the cards they cite carry their Korean and romanization in heritage-cards.ts (registered, B1)',
+  },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },

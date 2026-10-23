@@ -142,6 +142,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'goals',
   // The Stages 2-7 ceremony that leads into the Stage Check (row CM-22).
   'upperStageComplete',
+  // The Library, whose category albums count the cards held (row CM-23): only fills, never "n of m" or a percentage.
+  'library',
 ];
 
 export interface ReviewStringFinding {
