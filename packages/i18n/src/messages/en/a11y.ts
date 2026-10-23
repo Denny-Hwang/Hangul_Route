@@ -479,4 +479,14 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => plural('en', stars, { one: 'Stage Check, best 1 star', other: `Stage Check, best ${stars} stars` }),
   },
+  /**
+   * Yut Review (F-CURR-002 row CM-39; design/wireframes/minigame/yut-review.md, Accessibility): the board is one image,
+   * and each throw is described once in a polite live region. `ko` is the throw's Korean name, tagged Korean where it is
+   * read; never a station number out of a total.
+   */
+  yutReview: {
+    board: 'Yut board',
+    throw: (ko: string, romanization: string, n: number) =>
+      plural('en', n, { one: `Throw: ${ko}, ${romanization}. Your piece moved 1 station.`, other: `Throw: ${ko}, ${romanization}. Your piece moved ${n} stations.` }),
+  },
 } as const;

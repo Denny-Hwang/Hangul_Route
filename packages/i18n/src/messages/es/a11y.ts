@@ -321,4 +321,9 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => plural('es', stars, { one: 'Repaso de etapa, mejor: 1 estrella', other: `Repaso de etapa, mejor: ${stars} estrellas` }),
   },
+  yutReview: {
+    board: 'Tablero de yut',
+    throw: (ko: string, romanization: string, n: number) =>
+      plural('es', n, { one: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó 1 casilla.`, other: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó ${n} casillas.` }),
+  },
 } satisfies DeepPartial<Messages['a11y']>;
