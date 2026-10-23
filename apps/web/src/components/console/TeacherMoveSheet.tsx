@@ -8,6 +8,7 @@ import { moveError, type ClassMoveDestination, type MoveError, type MoveErrorKey
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { ClassCodeField, MoveButton, TransferSheet } from './TransferParts';
 import { rem } from '@/lib/console/rem';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
 
 /**
  * [TV] The teacher's Move sheet (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D7, TV-D8; wireframe
@@ -33,6 +34,11 @@ export interface TeacherMoveSheetProps {
   onDone: (move: OutgoingMove) => void;
   /** A page state the sheet cannot show: the lock (the entry points hide), a sign-out, a class this account no longer manages. */
   onPageState: (state: 'locked' | 'signIn' | 'forbidden') => void;
+  /**
+   * The learner is already in the destination (`already_member`): the page's own remove flow for this class, offered
+   * beside the line so the learner ends up in one class (owner report 2026-10-23). Left out, the plain line shows.
+   */
+  onRemoveHere?: () => void;
 }
 
 type Target = { kind: 'own'; destination: ClassMoveDestination } | { kind: 'code'; destination: ClassMoveDestination; code: string; direct: boolean };
@@ -54,8 +60,16 @@ const radioRow: CSSProperties = {
 };
 const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center', marginTop: spacing.lg };
 const lineStyle: CSSProperties = { margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.body), color: colors.text.primary, lineHeight: typography.leading.relaxed };
+const noop = (): void => undefined;
 
-export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDone, onPageState }: TeacherMoveSheetProps): JSX.Element {
+/**
+ * How long Move now holds the sheet open. A POST that never answers (flaky classroom Wi-Fi, a captive portal) must not
+ * trap the teacher in the sheet: after this, Close, Escape, the scrim and Cancel work again. Closing is safe then,
+ * because the page reads its members again on close, so a move that lands late still leaves the class.
+ */
+export const MOVE_LOCK_MS = 25_000;
+
+export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDone, onPageState, onRemoveHere }: TeacherMoveSheetProps): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.teacherMove;
   const legendId = useId();
@@ -67,6 +81,13 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
   const [busy, setBusy] = useState<null | 'loading' | 'looking' | 'moving'>('loading');
   const [error, setError] = useState<MoveErrorKey | null>(null);
   const [done, setDone] = useState<OutgoingMove | null>(null);
+  const [lockExpired, setLockExpired] = useState(false);
+
+  useEffect(() => {
+    if (busy !== 'moving') return undefined;
+    const timer = setTimeout(() => setLockExpired(true), MOVE_LOCK_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
 
   /** Handles a failed answer; true when the sheet should look the code up again. */
   const fail = useCallback(
@@ -131,11 +152,14 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
     if (!target) return;
     setError(null);
     if (!online) return setError('offline');
+    setLockExpired(false);
     setBusy('moving');
     const body = target.kind === 'code' ? { learnerId: learner.id, destinationSpaceId: target.destination.id, code: target.code } : { learnerId: learner.id, destinationSpaceId: target.destination.id };
     const r = await api.createClassMove(spaceId, body);
     setBusy(null);
     if (r.ok) {
+      // An open roster in another console tab reads again at once (a direct move left this class already).
+      announceRosterChange();
       setDone(r.data);
       setStep('done');
       return;
@@ -157,7 +181,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
       case 'capLearner':
         return t.errors.capLearner(name);
       case 'alreadyMember':
-        return t.errors.alreadyMember(name, cls);
+        return removeHere ? t.errors.alreadyMemberKeepOne(name, cls) : t.errors.alreadyMember(name, cls);
       case 'alreadyOpen':
         return t.errors.alreadyOpen(name);
       case 'sameSpace':
@@ -166,7 +190,21 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
         return t.errors[key];
     }
   };
+  // Remove here needs the destination's name for its line (a code looked up again has none): only then is it offered.
+  const removeHere = error === 'alreadyMember' && onRemoveHere && target ? onRemoveHere : null;
   const errorLine = errorText(error);
+  const removeHereButton = removeHere ? (
+    <div style={{ display: 'flex', marginBottom: spacing.sm }}>
+      <MoveButton onClick={removeHere} testId="teacher-move-remove-here">
+        {messages.console.settings.learners.remove.class.cta}
+      </MoveButton>
+    </div>
+  ) : null;
+  // While Move now is under way the sheet stays open (Close, Escape, the scrim and Cancel do nothing): a sheet closed
+  // then never told the page, which kept listing a learner the server had already moved (owner report 2026-10-23).
+  // The hold ends after MOVE_LOCK_MS, so an answer that never comes cannot trap the teacher.
+  const held = busy === 'moving' && !lockExpired;
+  const closeUnlessMoving = held ? noop : onClose;
 
   if (step === 'done' && done) {
     return (
@@ -185,7 +223,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
 
   if (step === 'confirm' && target) {
     return (
-      <TransferSheet title={t.sheetTitle(learner.name)} onClose={onClose} testId="teacher-move-sheet">
+      <TransferSheet title={t.sheetTitle(learner.name)} onClose={closeUnlessMoving} testId="teacher-move-sheet">
         <section data-testid="teacher-move-confirm">
           <h3 style={{ margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {direct ? t.confirmDirect(learner.name, target.destination.name) : t.confirmAccept(learner.name, target.destination.name)}
@@ -198,6 +236,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
             {errorLine}
           </p>
         ) : null}
+        {removeHereButton}
         <div style={rowStyle}>
           <MoveButton onClick={() => setStep('pick')} disabled={busy === 'moving'} testId="teacher-move-back">
             {t.back.cta}
@@ -211,7 +250,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
   }
 
   return (
-    <TransferSheet title={t.sheetTitle(learner.name)} onClose={onClose} testId="teacher-move-sheet">
+    <TransferSheet title={t.sheetTitle(learner.name)} onClose={closeUnlessMoving} testId="teacher-move-sheet">
       {busy === 'loading' ? (
         <p role="status" style={{ ...lineStyle, color: colors.text.secondary }}>
           {t.loading}
@@ -286,8 +325,9 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
           {errorLine}
         </p>
       ) : null}
+      {removeHereButton}
       <div style={rowStyle}>
-        <MoveButton onClick={onClose} testId="teacher-move-cancel">
+        <MoveButton onClick={closeUnlessMoving} disabled={held} testId="teacher-move-cancel">
           {messages.console.transfer.actions.cancel.cta}
         </MoveButton>
         <MoveButton primary waiting={!target} onClick={() => setStep('confirm')} testId="teacher-move-continue">
