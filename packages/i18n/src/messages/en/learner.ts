@@ -963,6 +963,7 @@ export const learner = {
       /** The second miss on one round: the tile that fits is ringed. */
       lookHere: 'This one fits here.',
     },
+    /**
      * Role Play (F-CURR-002 row CM-35, design/wireframes/minigame/role-play.md): a short chat, read the partner's line
      * and tap a reply. The partner lines, replies, Hoya's why lines and the closing line are content; Continue is
      * `common.buttons.continue`. No speaking: the learner's turn is a tap.
