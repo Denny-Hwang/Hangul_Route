@@ -1,10 +1,11 @@
 import { mergeLatchRecord, type Episode, type ProgressSnapshot, type StageKey } from '@hangul-route/content-schema';
 import { completeStages } from '../my-route/latch';
-import { UPPER_PRIZE_STAGES } from '../stage1/stage-complete';
+import { PRIZE_STAGES } from '../stage1/stage-complete';
 
 /**
  * The `stageCeremonyAt` latch (F-CURR-002 sections 4.8 step 7 and 7.3, row CM-22; design/wireframes/reviews/
- * stage-check.md A and G). Pure; the start bundle carries it, because Results and Home write the latch.
+ * stage-check.md A and G). Pure; the Stage Check's chunk reads it (Results and Home reach its writer through the chunk), so
+ * the start bundle carries none of it.
  *
  * - **Results** writes the key of the stage a run finished when it offers that stage's ceremony (A), so a stage
  *   finished on this build is never in the summary.
@@ -12,6 +13,9 @@ import { UPPER_PRIZE_STAGES } from '../stage1/stage-complete';
  *   or on a device still on an older one), once, and writes a key for each. The keys merge as a union with the
  *   earliest time per stage, on every device and in the Worker, so no stage is summed up twice.
  */
+
+/** The stages whose prize is the stage ceremony (Stages 2-7), in stage order. */
+export const UPPER_PRIZE_STAGES: readonly StageKey[] = (Object.keys(PRIZE_STAGES) as StageKey[]).filter((s) => PRIZE_STAGES[s].ceremony === 'stage');
 
 /** The finished Stages 2-7 with no `stageCeremonyAt` key, in stage order: what the retroactive summary lists. */
 export function recapStages(snapshot: Pick<ProgressSnapshot, 'quests' | 'stageDoneAt' | 'stageCeremonyAt'>, episodes: readonly Episode[]): StageKey[] {
@@ -29,4 +33,18 @@ export function withStageCeremony(snapshot: ProgressSnapshot, stages: readonly S
   if (fresh.length === 0) return null;
   const merged = mergeLatchRecord(snapshot.stageCeremonyAt, Object.fromEntries(fresh.map((stage) => [stage, at]))) ?? {};
   return { ...snapshot, stageCeremonyAt: merged };
+}
+
+/** How long Home waits, with no sync running, before a learner whose sync has not settled counts as settled. */
+export const RECAP_SYNC_GRACE_MS = 4000;
+
+/**
+ * Whether the summary may open now (section 4.8 step 7, "shown ONCE"): only once this app session's sync of the learner
+ * has settled, so a key another device latched is pulled first. `synced` (a sync finished in this session), `error`
+ * (offline: the local copy is all there is) and `off` (no server) are settled; while `syncing`, never; `idle` or no
+ * record yet only after `graceOver` (no sync started within the grace).
+ */
+export function recapSyncSettled(status: 'off' | 'idle' | 'syncing' | 'synced' | 'error' | undefined, graceOver: boolean): boolean {
+  if (status === 'syncing') return false;
+  return status === 'off' || status === 'synced' || status === 'error' || graceOver;
 }

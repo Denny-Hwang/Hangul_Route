@@ -84,7 +84,7 @@ import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
 import type { RootStackParamList } from '../../navigation/types';
-import { useStageRecapOnHome } from '../stage-check/stage-check-entry';
+import { StageRecapSlot } from '../stage-check/stage-check-entry';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
@@ -378,8 +378,6 @@ export function HomeScreen(): ReactElement {
   const switchShown = switchOffered(learnerProfiles(useProfileStore((s) => s.profiles)).length);
   const greetingMin = GREETING_MIN_REM * REM * useEffectiveFontScale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once.
-  useStageRecapOnHome(profile?.id ?? null, navigation);
   const ensure = useProgressStore((s) => s.ensure);
   // The Display (Aa) sheet (AMENDMENTS-DISPLAY-NAV section 3.6): not behind the grown-up gate.
   const [displayOpen, setDisplayOpen] = useState(false);
@@ -952,6 +950,8 @@ export function HomeScreen(): ReactElement {
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
       {/* [OA] A refused sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): once, over the start. */}
       <PinResetExpiredNotice />
+      {/* F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once. */}
+      <StageRecapSlot profileId={profile?.id ?? null} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: switchShown ? 'wrap' : 'nowrap' }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}

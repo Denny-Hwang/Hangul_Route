@@ -2003,7 +2003,7 @@ export const learner = {
   },
   /** The Stages 2-7 ceremony (row CM-22): "N단계", as the Stage 1 prize says. */
   upperStageComplete: {
-    title: (stage: number) => `${stage}단계 완성!`,
+    title: (stage: number) => `${stage}단계 완료!`,
     cheer: '이 단계의 모든 곳을 끝냈어요. 호야가 정말 뿌듯해해요.',
     cardTitle: '나의 단계 카드',
   },
@@ -2016,7 +2016,12 @@ export const learner = {
     best: '가장 좋은 결과가 남아요.',
     notReady: '이 확인은 아직 열리지 않았어요. 퀘스트를 계속해 봐요.',
     retro: {
-      title: (stages: readonly number[]) => `${stages.map((n) => `${n}단계`).join(', ')}를 이미 끝냈어요`,
+      // The last two stages join with 와 (단계 ends in a vowel): "2단계와 3단계를", "2단계, 3단계와 4단계를".
+      title: (stages: readonly number[]) => {
+        const named = stages.map((n) => `${n}단계`);
+        const head = named.slice(0, -1).join(', ');
+        return `${head === '' ? '' : `${head}와 `}${named[named.length - 1] ?? ''}를 이미 끝냈어요`;
+      },
       body: '여기 나의 단계 카드가 있어요.',
       bodyNoCards: '끝낸 단계는 모두 여정에 남아 있어요.',
     },

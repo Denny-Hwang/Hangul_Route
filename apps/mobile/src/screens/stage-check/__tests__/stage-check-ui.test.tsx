@@ -1,4 +1,5 @@
 import type { Profile, ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
+import { TextSizeProvider } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
 import { act } from 'react-test-renderer';
@@ -6,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currBuiltInPct } from '../../../config/flags';
 import { episodesAll } from '../../../content';
 import { gridEpisodesOf } from '../../../logic/my-route/order';
-import { recapStages } from '../../../logic/reviews/stage-ceremony';
+import { RECAP_SYNC_GRACE_MS, recapStages } from '../../../logic/reviews/stage-ceremony';
 import { useProfileStore } from '../../../store/profile-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
@@ -53,7 +54,10 @@ vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => motion.redu
 const { StageHeaderExtras } = await import('../StageHeaderExtras');
 const { StageRecapScreen } = await import('../StageRecapScreen');
 const { UpperStageCompleteScreen } = await import('../UpperStageCompleteScreen');
-const { latchStageCeremony, useStageCeremonyOn, useStageRecapOnHome } = await import('../stage-check-entry');
+const { useStageCeremonyOn } = await import('../stage-check-entry');
+const { latchStageCeremony } = await import('../stage-ceremony-latch');
+const { StageRecapTrigger } = await import('../StageRecapTrigger');
+const { useSyncStore } = await import('../../../store/sync-store');
 const { useStageCheckOn } = await import('../use-stage-offer');
 
 const EN = getMessages('en');
@@ -136,25 +140,22 @@ describe('the Journey header (C)', () => {
     profileId: ID,
     stage: 'stage2',
     complete: true,
-    onOpenPrize: vi.fn(),
-    onOpenCheck: vi.fn(),
     ...over,
   });
 
   it('a finished Stage 2: See your prize and Stage Check; each opens its route', async () => {
     flags({ stageChecks: true, memoryRecord: true });
-    const p = props();
-    const r = await draw(<StageHeaderExtras {...p} />);
+    const r = await draw(<StageHeaderExtras {...props()} />);
     await press(buttonsNamed(r.root, EN.learner.journey.stagePrize.cta)[0]!);
-    expect(p.onOpenPrize).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('StageComplete', { stageKey: 'stage2' });
     await press(buttonsNamed(r.root, EN.learner.stageCheck.title)[0]!);
-    expect(p.onOpenCheck).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('StageCheck', { stageKey: 'stage2' });
     expect(offerable).toHaveBeenCalledWith(ID, 'stage2');
   });
 
   it('once taken, the button reads the best stars ("Stage Check, best 2 stars"), never a lower later one', async () => {
     flags({ stageChecks: true, memoryRecord: true });
-    const entry = (stars: 1 | 2) => ({ id: `stage-check:stage2:${stars}`, kind: 'stage-certificate' as const, generatedAt: AT, scope: 'stage2', itemIds: [], resultStars: stars });
+    const entry = (stars: 1 | 2) => ({ id: `stage-check:stage2-${stars}`, kind: 'stage-certificate' as const, generatedAt: AT, scope: 'stage2', itemIds: [], resultStars: stars });
     snapshot(['stage1', 'stage2'], { reviews: [entry(2), entry(1)] });
     const r = await draw(<StageHeaderExtras {...props()} />);
     expect(screenTexts(r.root)).toContain('Stage Check, best 2 stars');
@@ -170,6 +171,23 @@ describe('the Journey header (C)', () => {
     open.all = false;
     r = await draw(<StageHeaderExtras {...props()} />);
     expect(buttonsNamed(r.root, EN.learner.stageCheck.title)).toHaveLength(0);
+  });
+
+  it('at the Largest text the buttons sit under the header, wrapping (never beside the pill), and nowhere else', async () => {
+    flags({ stageChecks: true, memoryRecord: true });
+    const big = (place: 'actions' | 'below') => (
+      <TextSizeProvider step="largest">
+        <StageHeaderExtras {...props({ place })} />
+      </TextSizeProvider>
+    );
+    expect((await draw(big('actions'))).toJSON()).toBeNull();
+    await cleanup();
+    const r = await draw(big('below'));
+    expect(byTestId(r.root, 'journey-stage-actions-below-stage2').length).toBeGreaterThan(0);
+    expect(buttonsNamed(r.root, EN.learner.journey.stagePrize.cta)).toHaveLength(1);
+    await cleanup();
+    // At the standard size the 'below' place draws nothing.
+    expect((await draw(<StageHeaderExtras {...props({ place: 'below' })} />)).toJSON()).toBeNull();
   });
 
   it('nothing for a stage not finished, and nothing with stageChecks off (the results stay latched)', async () => {
@@ -259,46 +277,101 @@ describe('the one retroactive summary (G, section 4.8 step 7)', () => {
 
 describe("Home's trigger for the summary", () => {
   // A learner of its own: the summary marks a profile shown for the app session, and the tests above showed Mina's.
-  const JO = 'profile:jo';
-  function Home(): React.ReactElement {
-    useStageRecapOnHome(JO, { navigate } as never);
-    return <></>;
-  }
-  const settle = async (): Promise<void> => {
+  let next = 0;
+  const settle = async (ms = 500): Promise<void> => {
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, ms));
     });
   };
+  /** A fresh learner (the shown-once mark is per app session) with these stages finished, and its sync status. */
+  function learnerWith(stages: StageKey[], status: 'off' | 'idle' | 'syncing' | 'synced' | 'error' | null, over: Partial<ProgressSnapshot> = {}): string {
+    next += 1;
+    const id = `profile:jo-${next}`;
+    useProfileStore.setState({ profiles: [learner, { ...learner, id, displayName: 'Jo' }], activeId: id, hydrated: true });
+    snapshot(stages, over);
+    const snap = useProgressStore.getState().byProfile[ID]!;
+    useProgressStore.setState({ byProfile: { [id]: { ...snap, profileId: id } }, hydratedFor: new Set([id]) });
+    useSyncStore.setState({ byLearner: status === null ? {} : { [id]: { learnerId: id, secret: 's', rev: 1, lastSyncedAt: null, lastError: null, status, rescueCode: null, pendingProfile: null, profileAt: null } } });
+    return id;
+  }
 
-  it('opens the summary once while a finished Stage 2-7 has no key; never with stageChecks off or nothing to list', async () => {
-    useProfileStore.setState({ profiles: [learner, { ...learner, id: JO, displayName: 'Jo' }], activeId: JO, hydrated: true });
-    const as = (stages: StageKey[], over: Partial<ProgressSnapshot> = {}): void => {
-      snapshot(stages, over);
-      const snap = useProgressStore.getState().byProfile[ID]!;
-      useProgressStore.setState({ byProfile: { [JO]: { ...snap, profileId: JO } }, hydratedFor: new Set([JO]) });
-    };
-    flags({ stageChecks: false });
-    as(['stage1', 'stage2']);
-    await draw(<Home />);
-    await settle();
-    expect(navigate).not.toHaveBeenCalled();
-    await cleanup();
+  it('opens the summary once while a finished Stage 2-7 has no key; never with nothing to list', async () => {
     flags({ stageChecks: true });
-    as(['stage1', 'stage2'], { stageCeremonyAt: { stage2: AT } });
-    await draw(<Home />);
+    let id = learnerWith(['stage1', 'stage2'], 'synced', { stageCeremonyAt: { stage2: AT } });
+    await draw(<StageRecapTrigger profileId={id} />);
     await settle();
     expect(navigate).not.toHaveBeenCalled();
     await cleanup();
-    as(['stage1', 'stage2']);
-    await draw(<Home />);
+    id = learnerWith(['stage1', 'stage2'], 'synced');
+    await draw(<StageRecapTrigger profileId={id} />);
     await settle();
     expect(navigate).toHaveBeenCalledWith('StageRecap');
     // The summary marks itself shown (and latches the stage): Home never opens it again.
     await draw(<StageRecapScreen navigation={nav()} route={{ key: 'k', name: 'StageRecap', params: undefined }} />);
     await cleanup();
     navigate.mockClear();
-    await draw(<Home />);
+    await draw(<StageRecapTrigger profileId={id} />);
     await settle();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('waits for the sync: while a pull runs it never opens, and a pulled key from another device means it never shows here', async () => {
+    flags({ stageChecks: true });
+    const id = learnerWith(['stage1', 'stage2'], 'syncing');
+    await draw(<StageRecapTrigger profileId={id} />);
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
+    // The pull lands: device A already showed the summary and latched Stage 2.
+    await act(async () => {
+      const snap = useProgressStore.getState().byProfile[id]!;
+      useProgressStore.setState({ byProfile: { [id]: { ...snap, stageCeremonyAt: { stage2: AT } } } });
+      useSyncStore.setState({ byLearner: { [id]: { ...useSyncStore.getState().byLearner[id]!, status: 'synced' } } });
+    });
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('offline (error) or no server (off): the local copy is all there is, so it opens; idle with no sync: after the grace', async () => {
+    flags({ stageChecks: true });
+    for (const status of ['error', 'off'] as const) {
+      navigate.mockClear();
+      const id = learnerWith(['stage1', 'stage2'], status);
+      await draw(<StageRecapTrigger profileId={id} />);
+      await settle();
+      expect(navigate, status).toHaveBeenCalledWith('StageRecap');
+      await cleanup();
+    }
+    vi.useFakeTimers();
+    try {
+      navigate.mockClear();
+      const id = learnerWith(['stage1', 'stage2'], null);
+      await render(<StageRecapTrigger profileId={id} />);
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(navigate).not.toHaveBeenCalled();
+      await act(async () => {
+        vi.advanceTimersByTime(RECAP_SYNC_GRACE_MS);
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(navigate).toHaveBeenCalledWith('StageRecap');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("Home's slot draws nothing with stageChecks off, and never for a grown-up", async () => {
+    const { StageRecapSlot } = await import('../stage-check-entry');
+    flags({ stageChecks: false });
+    const id = learnerWith(['stage1', 'stage2'], 'synced');
+    expect((await draw(<StageRecapSlot profileId={id} />)).toJSON()).toBeNull();
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
+    await cleanup();
+    flags({ stageChecks: true });
+    expect((await draw(<StageRecapSlot profileId={grownUp.id} />)).toJSON()).toBeNull();
+    expect((await draw(<StageRecapSlot profileId={null} />)).toJSON()).toBeNull();
   });
 });

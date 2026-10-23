@@ -5,6 +5,7 @@ import * as chunk from '../../src/content/__generated__/review-item-chunks/revie
 import { expect, test } from './fixtures';
 import { onboardChild, readStored, seedStored } from './helpers';
 import { shot } from './shots';
+import { closeInstallGuide, expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -26,12 +27,14 @@ const AT = '2026-10-01T10:00:00.000Z';
 const cellsOf = (stage: number): string[] => CATALOG.cells.filter((c) => c.episodeId.startsWith(`episode:stage${stage}-`)).map((c) => c.episodeId);
 const questsOf = (cell: string): string[] => CATALOG.cells.find((c) => c.episodeId === cell)?.questIds ?? [];
 const STAGE2 = cellsOf(2);
+/** The summary opens once the sync has settled: the 4-second grace, the retry step and the chunk, with room. */
+const RECAP_WAIT = 15_000;
 
 type Flags = Record<string, { on: boolean; pct: number }>;
 const ON: Flags = { memoryRecord: { on: true, pct: 100 }, stageChecks: { on: true, pct: 100 }, mastery: { on: true, pct: 100 } };
 
 /** Dami: Stages 1 and 2 done (seeded on an older build: no stageCeremonyAt). */
-async function learner(page: Page, flags: Flags = ON, extra: Record<string, unknown> = {}): Promise<string> {
+async function learner(page: Page, flags: Flags = ON, extra: Record<string, unknown> = {}, settings?: { uiLocale: 'en'; textSize: 'largest' }): Promise<string> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -55,6 +58,7 @@ async function learner(page: Page, flags: Flags = ON, extra: Record<string, unkn
     ...extra,
   });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags });
+  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
   await page.reload();
   return id;
 }
@@ -152,7 +156,8 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
 
     // G: Home opens the one summary of the stages finished earlier.
     const recap = page.getByTestId('stage-recap');
-    await expect(recap).toBeVisible();
+    // It waits for this session's sync to settle (a 4-second grace when no sync starts).
+    await expect(recap).toBeVisible({ timeout: RECAP_WAIT });
     await expect(page.getByTestId('stage-recap-title')).toHaveText('You finished Stage 2 earlier');
     await expect(recap.getByText('Every stage you finished stays on your Journey.')).toBeVisible();
     await expectNoHorizontalOverflow(page);
@@ -163,7 +168,7 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     // Never shown again: not on the next Home, not after a reload.
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
-    await page.waitForTimeout(1_500);
+    await page.waitForTimeout(6_000);
     await expect(page.getByTestId('stage-recap')).toHaveCount(0);
 
     // C: the Journey's Stage 2 header, Complete, with See your prize and Stage Check.
@@ -247,10 +252,10 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     await shot(page, 'stage-check-round-wide');
   });
 
-  test('a stopped check keeps nothing but the answers: no entry and no latch; taken again with misses, the best stars stay', async ({ page }) => {
+  test('a stopped check keeps nothing but the answers: no entry and no latch; taken again with misses, one entry keeps the best stars', async ({ page }) => {
     test.setTimeout(180_000);
     await page.setViewportSize({ width: 320, height: 800 });
-    const best = { id: 'stage-check:stage2:2026-10-01:a', kind: 'stage-certificate', generatedAt: AT, scope: 'stage2', itemIds: [], resultStars: 3 };
+    const best = { id: 'stage-check:stage2', kind: 'stage-certificate', generatedAt: AT, scope: 'stage2', itemIds: [], resultStars: 3 };
     const id = await learner(page, ON, { stageCeremonyAt: { stage2: AT }, stageCheckAt: { stage2: AT }, reviews: [best] });
     await page.getByText('Journey', { exact: true }).last().click();
     await page.getByTestId('journey-stage-check-stage2').click();
@@ -260,7 +265,7 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     await expect(page.getByText('Stop the check?')).toBeVisible();
     await shot(page, 'stage-check-stop-320');
     await page.getByRole('button', { name: 'Stop', exact: true }).click();
-    let snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string }> }>(page, `progress:${id}`);
+    let snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string; id: string; resultStars: number }> }>(page, `progress:${id}`);
     expect(snap?.reviews.filter((r) => r.kind === 'stage-certificate')).toHaveLength(1);
     expect(snap?.stageCheckAt?.stage2).toBe(AT);
     // Again, with 8 misses: 2 stars on the result, 3 stars kept on the header.
@@ -269,12 +274,40 @@ test.describe('the one retroactive summary, the Stage 2 ceremony and the Stage C
     await play(page, 8);
     await expect(page.getByTestId('stage-check-stars')).toHaveAccessibleName(/[12] stars?/);
     await expect(page.getByTestId('stage-check-tricky')).toBeVisible();
-    snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string }> }>(page, `progress:${id}`);
-    expect(snap?.reviews.filter((r) => r.kind === 'stage-certificate')).toHaveLength(2);
+    snap = await readStored<{ stageCheckAt?: Record<string, string>; reviews: Array<{ kind: string; id: string; resultStars: number }> }>(page, `progress:${id}`);
+    // One entry per stage: the retake merged into it, keeping the best stars.
+    expect(snap?.reviews.filter((r) => r.kind === 'stage-certificate')).toEqual([expect.objectContaining({ id: 'stage-check:stage2', resultStars: 3 })]);
     expect(snap?.stageCheckAt?.stage2).toBe(AT);
     await page.getByTestId('stage-check-home').click();
     await page.getByText('Journey', { exact: true }).last().click();
     await expect(page.getByTestId('journey-stage-check-stage2')).toHaveAccessibleName('Stage Check, best 3 stars');
+  });
+});
+
+test.describe('text size Largest at 320 x 568 (the fit rule)', () => {
+  test('the summary, the Journey header (its buttons under the header, wrapping) and the ceremony fit', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learner(page, ON, {}, { uiLocale: 'en', textSize: 'largest' });
+    // The summary waits for this session's sync to settle (a 4-second grace when no sync starts).
+    await expect(page.getByTestId('stage-recap')).toBeVisible({ timeout: RECAP_WAIT });
+    await expectTextFits(page, 'the retroactive summary');
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'stage-recap-largest-320');
+    await page.getByTestId('stage-recap-home').click();
+    await closeInstallGuide(page);
+    await page.getByText('Journey', { exact: true }).last().click();
+    const below = page.getByTestId('journey-stage-actions-below-stage2');
+    await below.scrollIntoViewIfNeeded();
+    await expect(below.getByTestId('journey-stage-prize-stage2')).toBeVisible();
+    await expect(below.getByTestId('journey-stage-check-stage2')).toBeVisible();
+    await expectTextFits(page, 'the Stage 2 header');
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'stage-check-header-largest-320');
+    await below.getByTestId('journey-stage-prize-stage2').click();
+    await expect(page.getByTestId('upper-stage-complete')).toBeVisible();
+    await expectTextFits(page, 'the Stage 2 ceremony');
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'stage-complete-stage2-largest-320');
   });
 });
 
@@ -283,7 +316,7 @@ test.describe('stageChecks off (section 12.2)', () => {
     await page.setViewportSize({ width: 320, height: 800 });
     const id = await learner(page, { ...ON, stageChecks: { on: true, pct: 0 } }, { stageCheckAt: { stage2: AT } });
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
-    await page.waitForTimeout(1_500);
+    await page.waitForTimeout(6_000);
     await expect(page.getByTestId('stage-recap')).toHaveCount(0);
     await page.getByText('Journey', { exact: true }).last().click();
     await expect(page.getByTestId('journey-stage-pill-stage2')).toHaveText('Complete');

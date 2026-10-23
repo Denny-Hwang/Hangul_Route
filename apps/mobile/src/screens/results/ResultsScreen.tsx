@@ -49,7 +49,8 @@ import { awardWorldFor } from '../../content/award-world';
 import { currFlagOn } from '../../store/remote-config-store';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
-import { PRIZE_STAGES, prizeStageOf, stageNumber } from '../../logic/stage1/stage-complete';
+import { prizeStageOf } from '../../logic/stage1/stage-complete';
+import { stageNumber } from '../../logic/story/story-fit';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
@@ -81,7 +82,7 @@ import { samplerStoryOf } from '../home/free-end-inputs';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { clearTryAgainHandoff, peekTryAgainHandoff } from '../quest/quest-reviews';
 import { useBackGuard } from '../use-back-guard';
-import { latchStageCeremony, useStageCeremonyOn } from '../stage-check/stage-check-entry';
+import { latchStageCeremonyLater, useStageCeremonyOn } from '../stage-check/stage-check-entry';
 
 type ResultsMessages = Messages['learner']['results'];
 
@@ -295,14 +296,15 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const prizeStage = prizeStageOf(outcome, upperOn);
   const stagePrize = prizeStage !== null;
   const actions = resultsActions(teaser, stagePrize);
-  const prizeLabel = prizeStage !== null && PRIZE_STAGES[prizeStage].ceremony === 'stage' ? m.upperStagePrize.cta(stageNumber(prizeStage)) : m.stagePrize.cta;
+  const upperPrize = prizeStage === 'stage1' ? null : prizeStage;
+  const prizeLabel = upperPrize === null ? m.stagePrize.cta : m.upperStagePrize.cta(stageNumber(upperPrize));
   const openPrize = (): void => {
     if (prizeStage !== null) navigation.navigate('StageComplete', { stageKey: prizeStage });
   };
   // The ceremony offered here latches `stageCeremonyAt` (stage-check.md A), so this stage is never in the summary.
   useEffect(() => {
-    if (prizeStage !== null && PRIZE_STAGES[prizeStage].ceremony === 'stage' && profile) latchStageCeremony(profile.id, [prizeStage]);
-  }, [prizeStage, profile]);
+    if (upperPrize !== null && profile) latchStageCeremonyLater(profile.id, [upperPrize]);
+  }, [upperPrize, profile]);
 
   // The end of the free lessons (F-ENT-003 section 3.8): the celebration once per profile and device
   // after a scored quest, then the calm line. The seen key is read once, when Results opens.

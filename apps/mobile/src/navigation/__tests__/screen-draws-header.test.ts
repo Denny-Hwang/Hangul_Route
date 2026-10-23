@@ -58,7 +58,7 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-22: the Stage Check's chunk.
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
-  'screens/stage-check/stage-check-entry.tsx#UpperStageCompleteScreen': 'screens/stage-check/UpperStageCompleteScreen.tsx#UpperStageCompleteScreen',
+  'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
 };
 
 /**

@@ -37,7 +37,7 @@ import {
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { UpperStageCompleteRoute } from '../stage-check/stage-check-entry';
+import { UpperStageCompleteScreen } from '../stage-check/UpperStageCompleteScreen';
 import { CardArtThumb } from './CardArtThumb';
 
 /**
@@ -58,11 +58,12 @@ type TileState = PressableStateCallbackType & { focused?: boolean };
 const WALL_TILE = touchTarget.min;
 
 /**
- * The `StageComplete` route: Stage 1's ceremony below, unchanged; a Stage 2-7's is the stage ceremony of the Stage
- * Check's chunk (F-CURR-002 section 7.3, row CM-22), by the one prize table.
+ * The `StageComplete` route, by the one prize table (F-CURR-002 section 7.3, row CM-22): Stage 1's ceremony below,
+ * unchanged; a Stage 2-7's is the stage ceremony. Both are the Stage Check's chunk (`stage-check-entry.tsx`'s
+ * `StageCompleteRoute`), so the start bundle carries neither.
  */
 export function StageCompleteScreen(props: Props): ReactElement {
-  return PRIZE_STAGES[props.route.params.stageKey]?.ceremony === 'stage' ? <UpperStageCompleteRoute {...props} /> : <HangulCompleteScreen {...props} />;
+  return PRIZE_STAGES[props.route.params.stageKey]?.ceremony === 'stage' ? <UpperStageCompleteScreen {...props} /> : <HangulCompleteScreen {...props} />;
 }
 
 function HangulCompleteScreen({ route, navigation }: Props): ReactElement {

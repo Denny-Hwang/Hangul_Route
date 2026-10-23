@@ -90,3 +90,11 @@ export function stageCardOpenedEvent(profileId: string, stage: StageKey): Teleme
   const payload = CURR_TELEMETRY_PAYLOADS['stage.card_opened'].safeParse({ stage });
   return payload.success ? { name: 'stage.card_opened', profileId, payload: payload.data } : null;
 }
+
+/** The text scale from which a Stage 2-7 header's buttons sit under the header (the Larger and Largest settings, or OS text as large). */
+export const HEADER_BELOW_SCALE = 1.3;
+
+/** Whether a Stage 2-7 header's buttons sit under the whole header, wrapping, instead of beside the pill (C at 320 px). */
+export function headerActionsBelow(fontScale: number): boolean {
+  return fontScale >= HEADER_BELOW_SCALE;
+}
