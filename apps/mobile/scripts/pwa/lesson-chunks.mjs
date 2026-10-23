@@ -76,7 +76,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 1,772 B over that sum. The line is that measurement plus a 5,809 B rounding margin.
   // CM-21 (the Cell Check: the cell page's slot, the route, the Tested out pill, routeNext's skip and 21 English strings;
   // block, screen and logic in chunks) measures 4,812,510 B raw / 1,269,005 B gzip on CM-20's 4,808,758 B.
-  startBundleRaw: 4_815_000,
+  // CM-22 (Stages 2-7: the prize table, the Results prize and stageCeremonyAt latch, the routes, Home's summary trigger,
+  // the Journey header slot and 16 English strings; ceremony, check and summary in chunks) measures 4,819,932 B raw /
+  // 1,270,759 B gzip on CM-21's 4,813,264 B.
+  startBundleRaw: 4_825_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

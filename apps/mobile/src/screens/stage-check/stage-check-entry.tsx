@@ -3,7 +3,6 @@ import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { episodesAll } from '../../content';
-import { memoryRecordsFor } from '../../logic/memory/boot';
 import { recapStages, withStageCeremony } from '../../logic/reviews/stage-ceremony';
 import { notifyProgressPersisted } from '../../logic/sync/persist-hook';
 import type { RootStackParamList } from '../../navigation/types';
@@ -50,13 +49,6 @@ export function useStageCeremonyOn(profileId: string | null): boolean {
   return on && learnerOf(profileId);
 }
 
-/** `stageChecks` and `memoryRecord` on for this learner: the Stage Check itself (answers are recorded). */
-export function useStageCheckOn(profileId: string | null): boolean {
-  const ceremony = useStageCeremonyOn(profileId);
-  const record = useCurrFlag('memoryRecord');
-  return ceremony && record && memoryRecordsFor(profileId);
-}
-
 /**
  * Writes a `stageCeremonyAt` key for each stage on the hydrated snapshot (earliest wins), saved and synced like any
  * write; nothing when every stage already holds one. Results calls it for the stage whose ceremony it offers, the
@@ -89,8 +81,17 @@ function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: (
   return { chunk: on ? chunk : null, failed, retry: () => setFailed(false) };
 }
 
-/** Profiles whose summary this app session already opened: Home never opens it twice, even if a write fails. */
+/** How long Home waits before it opens the summary, and between tries (a dropped navigation is asked again). */
+const RECAP_RETRY_MS = 400;
+const RECAP_TRIES = 5;
+
+/** Profiles whose summary this app session already showed: Home never opens it twice, even if a write fails. */
 const recapOpened = new Set<string>();
+
+/** The summary marks itself shown when it mounts (a navigation that a reset dropped is tried again on the next focus). */
+export function markStageRecapShown(profileId: string): void {
+  recapOpened.add(profileId);
+}
 
 /**
  * Home's trigger for the one retroactive summary (section 4.8 step 7, panel G): when Home is in front for a learner
@@ -104,15 +105,19 @@ export function useStageRecapOnHome(profileId: string | null, navigation: Native
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
   const pending = on && hydrated && snap !== undefined && profileId !== null && !recapOpened.has(profileId) ? recapStages(snap, episodesAll).length > 0 : false;
   useEffect(() => {
-    if (!pending || !focused || profileId === null) return;
-    recapOpened.add(profileId);
-    navigation.navigate('StageRecap');
+    if (!pending || !focused || profileId === null) return undefined;
+    // A navigation asked while the app is still settling its first screen can be dropped, so it is asked again,
+    // a few times, until the summary marks itself shown.
+    let tries = 0;
+    const ask = (): void => {
+      if (recapOpened.has(profileId) || tries >= RECAP_TRIES) return;
+      tries += 1;
+      navigation.navigate('StageRecap');
+      timer = setTimeout(ask, RECAP_RETRY_MS);
+    };
+    let timer = setTimeout(ask, RECAP_RETRY_MS);
+    return () => clearTimeout(timer);
   }, [pending, focused, profileId, navigation]);
-}
-
-/** Tests only. */
-export function resetStageRecapForTests(): void {
-  recapOpened.clear();
 }
 
 export interface StageHeaderSlotProps {
@@ -133,7 +138,7 @@ export function StageHeaderSlot(props: StageHeaderSlotProps): React.ReactElement
   return ui === null ? null : <ui.StageHeaderExtras {...props} />;
 }
 
-/** The `StageCheck` route (panels D to F, H). */
+/** The `StageCheck` route (panels D to F, H): the chunk's screen once it is in; one that cannot load shows Try again. */
 export function StageCheckRoute(props: NativeStackScreenProps<RootStackParamList, 'StageCheck'>): React.ReactElement {
   const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;

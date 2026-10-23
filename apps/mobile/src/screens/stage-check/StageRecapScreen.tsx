@@ -15,7 +15,7 @@ import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useCurrFlag } from '../../store/remote-config-store';
-import { latchStageCeremony, useStageCeremonyOn } from './stage-check-entry';
+import { latchStageCeremony, markStageRecapShown, useStageCeremonyOn } from './stage-check-entry';
 import { StageCards } from './StageCards';
 
 /**
@@ -45,7 +45,9 @@ export function StageRecapScreen({ navigation }: Props): React.ReactElement {
   );
 
   useEffect(() => {
-    if (profileId !== null && stages.length > 0) latchStageCeremony(profileId, stages);
+    if (profileId === null) return;
+    markStageRecapShown(profileId);
+    if (stages.length > 0) latchStageCeremony(profileId, stages);
   }, [profileId, stages]);
 
   const goHome = (): void => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Main' }] }));

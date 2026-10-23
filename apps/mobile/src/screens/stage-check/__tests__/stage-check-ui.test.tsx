@@ -53,7 +53,8 @@ vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => motion.redu
 const { StageHeaderExtras } = await import('../StageHeaderExtras');
 const { StageRecapScreen } = await import('../StageRecapScreen');
 const { UpperStageCompleteScreen } = await import('../UpperStageCompleteScreen');
-const { latchStageCeremony, useStageCeremonyOn, useStageCheckOn } = await import('../stage-check-entry');
+const { latchStageCeremony, useStageCeremonyOn, useStageRecapOnHome } = await import('../stage-check-entry');
+const { useStageCheckOn } = await import('../use-stage-offer');
 
 const EN = getMessages('en');
 const ID = 'profile:mina';
@@ -253,5 +254,51 @@ describe('the one retroactive summary (G, section 4.8 step 7)', () => {
     useProgressStore.setState({ hydratedFor: new Set() });
     latchStageCeremony(ID, ['stage4']);
     expect(useProgressStore.getState().byProfile[ID]?.stageCeremonyAt?.stage4).toBeUndefined();
+  });
+});
+
+describe("Home's trigger for the summary", () => {
+  // A learner of its own: the summary marks a profile shown for the app session, and the tests above showed Mina's.
+  const JO = 'profile:jo';
+  function Home(): React.ReactElement {
+    useStageRecapOnHome(JO, { navigate } as never);
+    return <></>;
+  }
+  const settle = async (): Promise<void> => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    });
+  };
+
+  it('opens the summary once while a finished Stage 2-7 has no key; never with stageChecks off or nothing to list', async () => {
+    useProfileStore.setState({ profiles: [learner, { ...learner, id: JO, displayName: 'Jo' }], activeId: JO, hydrated: true });
+    const as = (stages: StageKey[], over: Partial<ProgressSnapshot> = {}): void => {
+      snapshot(stages, over);
+      const snap = useProgressStore.getState().byProfile[ID]!;
+      useProgressStore.setState({ byProfile: { [JO]: { ...snap, profileId: JO } }, hydratedFor: new Set([JO]) });
+    };
+    flags({ stageChecks: false });
+    as(['stage1', 'stage2']);
+    await draw(<Home />);
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
+    await cleanup();
+    flags({ stageChecks: true });
+    as(['stage1', 'stage2'], { stageCeremonyAt: { stage2: AT } });
+    await draw(<Home />);
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
+    await cleanup();
+    as(['stage1', 'stage2']);
+    await draw(<Home />);
+    await settle();
+    expect(navigate).toHaveBeenCalledWith('StageRecap');
+    // The summary marks itself shown (and latches the stage): Home never opens it again.
+    await draw(<StageRecapScreen navigation={nav()} route={{ key: 'k', name: 'StageRecap', params: undefined }} />);
+    await cleanup();
+    navigate.mockClear();
+    await draw(<Home />);
+    await settle();
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

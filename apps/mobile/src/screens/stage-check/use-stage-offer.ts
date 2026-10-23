@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { episodesAll } from '../../content';
 import { useLocale } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
-import { memoryChunk } from '../../logic/memory/boot';
 import { completeStages } from '../../logic/my-route/latch';
 import { gridEpisodesOf } from '../../logic/my-route/order';
 import { bestStageStars, shownStageCards, stageOffer, type StageOffer } from '../../logic/reviews/stage-check-offer';
@@ -11,7 +10,15 @@ import { stagePrizeCards } from '../../logic/stage1/stage-complete';
 import { useProgressStore } from '../../store/progress-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { useQuestAccess } from '../../store/tier-store';
-import { useStageCeremonyOn, useStageCheckOn } from './stage-check-entry';
+import { memoryChunk, memoryRecordsFor } from '../../logic/memory/boot';
+import { useStageCeremonyOn } from './stage-check-entry';
+
+/** `stageChecks` and `memoryRecord` on for this learner: the Stage Check itself (answers are recorded). */
+export function useStageCheckOn(profileId: string | null): boolean {
+  const ceremony = useStageCeremonyOn(profileId);
+  const record = useCurrFlag('memoryRecord');
+  return ceremony && record && memoryRecordsFor(profileId);
+}
 
 export interface StageOfferView {
   snapshot: ProgressSnapshot | undefined;

@@ -23,27 +23,28 @@ export interface StagePrize {
   flag: 'stageChecks' | null;
 }
 
-const UPPER: StagePrize = Object.freeze({ ceremony: 'stage', check: 'StageCheck', needsPrizeCards: false, flag: 'stageChecks' });
+const HANGUL: StagePrize = { ceremony: 'hangul', check: 'StageReview', needsPrizeCards: true, flag: null };
+const UPPER: StagePrize = { ceremony: 'stage', check: 'StageCheck', needsPrizeCards: false, flag: 'stageChecks' };
 
 /**
  * The one prize table (F-CURR-002 section 7.3, row CM-22; it replaces `PRIZE_STAGE = 'stage1'`). Stage 1 keeps its
  * ceremony exactly as it was; Stages 2-7 get the stage ceremony, a stage card slot and the Stage Check.
  */
-export const PRIZE_STAGES: Readonly<Record<StageKey, StagePrize>> = Object.freeze({
-  stage1: Object.freeze({ ceremony: 'hangul', check: 'StageReview', needsPrizeCards: true, flag: null }),
+export const PRIZE_STAGES: Readonly<Record<StageKey, StagePrize>> = {
+  stage1: HANGUL,
   stage2: UPPER,
   stage3: UPPER,
   stage4: UPPER,
   stage5: UPPER,
   stage6: UPPER,
   stage7: UPPER,
-});
+};
 
 /** The stages whose prize is the stage ceremony (Stages 2-7), in stage order. */
 export const UPPER_PRIZE_STAGES: readonly StageKey[] = (Object.keys(PRIZE_STAGES) as StageKey[]).filter((s) => PRIZE_STAGES[s].ceremony === 'stage');
 
 /** The stage whose prize is the Hangul ceremony (Stage 1): its Journey header and Results keep their own buttons. */
-export const HANGUL_PRIZE_STAGE: StageKey = (Object.keys(PRIZE_STAGES) as StageKey[]).find((s) => PRIZE_STAGES[s].ceremony === 'hangul') ?? 'stage1';
+export const HANGUL_PRIZE_STAGE: StageKey = 'stage1';
 
 /** The stage number the copy shows: `stage2` is 2. */
 export function stageNumber(stage: StageKey): number {

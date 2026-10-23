@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../content/heritage-cards';
 import { jamoAll } from '../../../content/jamo';
 import {
+  HANGUL_PRIZE_STAGE,
   PRIZE_STAGES,
   UPPER_PRIZE_STAGES,
   opensStagePrize,
@@ -48,6 +49,7 @@ describe('PRIZE_STAGES: one prize table for every stage (F-CURR-002 section 7.3,
       expect(PRIZE_STAGES[stage]).toEqual({ ceremony: 'stage', check: 'StageCheck', needsPrizeCards: false, flag: 'stageChecks' });
     }
     expect(UPPER_PRIZE_STAGES).toEqual(['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+    expect(PRIZE_STAGES[HANGUL_PRIZE_STAGE].ceremony).toBe('hangul');
   });
 
   it('prizeStageOf: Results offers a Stage 2-7 prize only on the run that finished it, and only while stageChecks is on', () => {
