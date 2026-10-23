@@ -100,8 +100,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
   // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
-  // the game and each scene are chunks) measures 4,749,697 B raw (release) and 4,749,853 B (app-host): the line stays.
-  startBundleRaw: 4_750_000,
+  // the game and each scene are chunks) measured 4,749,697 B raw (release) and 4,749,853 B (app-host) on main
+  // 8dfb8a43c. Merged onto main e31bc3b33 (4,749,283 B raw / 1,265,555 B gzip, 717 B under the line) it measures
+  // 4,756,289 B raw / 1,267,788 B gzip (release `build:web`), 7,006 B over main: by module, the round schema 1,613 B,
+  // the fixture-only e2e hook 927 B (imported like the other e2e hooks), the lecture codec's unknown_kind 491 B, the
+  // deck builder 357 B, the English strings 273 B, the root navigator 196 B; the entry, the scene loader, the fallback
+  // board and the wiring of MinigameScreen, My Route and the slide shell the other 3,149 B. The line is that
+  // measurement plus a 3,711 B rounding margin.
+  startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
