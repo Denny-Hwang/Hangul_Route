@@ -318,4 +318,7 @@ export const a11y = {
     state: { empty: 'lista para empezar', more: 'falta un poco', met: 'lograda' },
     close: 'Cerrar',
   },
+  stageCheck: {
+    best: (stars: number) => plural('es', stars, { one: 'Repaso de etapa, mejor: 1 estrella', other: `Repaso de etapa, mejor: ${stars} estrellas` }),
+  },
 } satisfies DeepPartial<Messages['a11y']>;

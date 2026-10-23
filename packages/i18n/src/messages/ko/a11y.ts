@@ -318,4 +318,7 @@ export const a11y = {
     state: { empty: '시작 전', more: '조금 더 하면 돼요', met: '완료' },
     close: '닫기',
   },
+  stageCheck: {
+    best: (stars: number) => `단계 확인, 가장 좋은 결과 별 ${stars}개`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

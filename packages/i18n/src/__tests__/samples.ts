@@ -981,4 +981,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.wordsKnown.pill': [[1], [120], [2000, '2,000']],
   'learner.wordsKnown.route': [['1'], ['120'], ['1,200']],
   'learner.wordsKnown.milestone': [['100'], ['1,000']],
+  // F-CURR-002 row CM-22: a stage number (2-7); the stages the one summary lists; the best stars (1 to 3).
+  'learner.results.upperStagePrize.cta': [[2], [7]],
+  'learner.upperStageComplete.title': [[2], [7]],
+  'learner.stageCheck.retro.title': [[[2]], [[2, 3]], [[2, 3, 4]], [[2, 3, 4, 6, 7]]],
+  'a11y.stageCheck.best': [[1], [2], [3]],
 };

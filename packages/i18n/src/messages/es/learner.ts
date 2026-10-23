@@ -415,6 +415,7 @@ export const learner = {
     backHome: { cta: 'Ir al inicio' },
     episodePage: { cta: 'Ver episodio' },
     stagePrize: { cta: 'Ver tu premio de la Etapa 1' },
+    upperStagePrize: { cta: (stage: number) => `Ver tu premio de la Etapa ${stage}` },
     nextUp: {
       title: 'Ahora sigue',
       next: { cta: 'Siguiente misión' },
@@ -2059,5 +2060,29 @@ export const learner = {
     next: 'Ir a tu próxima lección',
     first: 'Empezar la primera misión',
     pill: 'Ya lo sabes',
+    stageHint: 'Juega las misiones que adelantaste para terminar esta etapa.',
+  },
+  /** The Stages 2-7 ceremony (row CM-22). "Etapa N", as the Stage 1 prize says. */
+  upperStageComplete: {
+    title: (stage: number) => `¡Etapa ${stage} completa!`,
+    cheer: 'Terminaste todos los lugares de esta etapa. Hoya está muy orgulloso de ti.',
+    cardTitle: 'Tu tarjeta de etapa',
+  },
+  /** The Stage Check (row CM-22): "Repaso de etapa", beside "Repaso de hangul" and "Repaso a fondo"; never "examen" or "prueba". */
+  stageCheck: {
+    title: 'Repaso de etapa',
+    offer: { cta: 'Hacer el repaso de etapa', body: 'Unos 7 minutos. Puedes saltarlo.' },
+    intro: 'Unos 7 minutos. Palabras, sonidos y frases de los cinco lugares. Sin reloj. Hazlo otra vez cuando quieras. Se guarda tu mejor resultado.',
+    pause: '¡Qué bien lees! ¿Seguimos?',
+    best: 'Se guarda tu mejor resultado.',
+    notReady: 'Este repaso aún no está abierto. Sigue jugando tus misiones.',
+    retro: {
+      title: (stages: readonly number[]) =>
+        stages.length === 1
+          ? `Ya terminaste la Etapa ${stages[0]}`
+          : `Ya terminaste las etapas ${stages.slice(0, -1).join(', ')} y ${stages[stages.length - 1]}`,
+      body: 'Aquí están tus tarjetas de etapa.',
+      bodyNoCards: 'Cada etapa que terminaste queda en tu Recorrido.',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

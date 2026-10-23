@@ -475,4 +475,8 @@ export const a11y = {
     state: { empty: 'ready to start', more: 'a little more to go', met: 'done' },
     close: 'Close',
   },
+  /** F-CURR-002 row CM-22: the Journey header's Stage Check button once one was finished, with the best stars only. */
+  stageCheck: {
+    best: (stars: number) => plural('en', stars, { one: 'Stage Check, best 1 star', other: `Stage Check, best ${stars} stars` }),
+  },
 } as const;
