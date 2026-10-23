@@ -38,6 +38,7 @@ import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { NextLessons } from './NextLessons';
 import { useToday } from '../route/use-today';
+import { useMastery } from '../../store/mastery-entry';
 import { RouteCard } from './RouteCard';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
@@ -198,6 +199,8 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // Today's UTC day, read again at midnight, on focus and on foreground (F-ROUTE-001 R-7e), so the plan line and
   // the card's one next move to the new day on a page left open across the boundary.
   const today = useToday();
+  // Words known (F-CURR-002 section 4.4, row CM-20): the learner's own card only, while `mastery` is on and they record.
+  const wordsKnown = useMastery(readOnly ? null : profileId, snap, useToday('local'))?.read?.wordsKnown ?? 0;
   // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
   const lessonsLoaded = useLessonContentVersion();
   const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string> } | { error: true } => {
@@ -418,6 +421,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         focusToken={focusKey}
         // The tab's next lessons name the card's lesson first (owner decision 2026-10-17), so the card does not repeat it.
         showNext={variant !== 'tab' || nextRows.length === 0}
+        wordsKnown={wordsKnown >= 1 ? messages.learner.wordsKnown.route(wordsKnown) : null}
       />
 
       {view.planLine !== null ? (

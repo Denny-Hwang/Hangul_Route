@@ -256,7 +256,8 @@ describe('JourneyGrid sources', () => {
 
   it('labels every cell with cellLabel and keeps the count mark out of the screen reader (F-STORY-005 PR 5.5a)', () => {
     expect(grid).toMatch(/design\/wireframes\/journey\/grid-with-stories\.md/);
-    expect(grid).toMatch(/accessibilityLabel=\{withAccessWords\(\s*cellLabel\(model,[^)]*messages\.a11y\.journeyCell/);
+    // Row CM-20 adds the mastery words after the access words (`withWords`, only while `mastery` is on).
+    expect(grid).toMatch(/accessibilityLabel=\{(?:withWords\(\s*)?withAccessWords\(\s*cellLabel\(model,[^)]*messages\.a11y\.journeyCell/);
     expect(grid).not.toMatch(/a11y\.gridCell/);
     expect(grid).toMatch(/aria-hidden\s+importantForAccessibility="no-hide-descendants"\s+accessibilityElementsHidden/);
   });
@@ -566,8 +567,9 @@ describe('JourneyGrid sources (F-ENT-003 E3-5)', () => {
     expect(grid.indexOf('<RouteLegend')).toBeLessThan(grid.indexOf('journey-col-${t.key}'));
     expect(grid).toContain('<NextMarker');
     // The tip is placed from the cell's outer edge: the cell's border comes off the offset.
-    expect(grid).toMatch(/<NextMarker[^>]*edge=\{cell\.selected \? borderWidth\.thick : CELL_EDGE\}/);
-    expect(grid).toMatch(/borderWidth: cell\.selected \? borderWidth\.thick : CELL_EDGE/);
+    expect(grid).toMatch(/<NextMarker[^>]*edge=\{edge\}/);
+    expect(grid).toContain('const edge = cell.selected ? borderWidth.thick : CELL_EDGE;');
+    expect(grid).toMatch(/borderWidth: edge,/);
     expect(grid).toMatch(/cellLabel\(model, stage, theme, messages\.a11y\.journeyCell, labelMarksOf\(cell\)\)/);
     expect(grid).toContain('<RouteRing');
     expect(grid).toContain('row.tasteNote');

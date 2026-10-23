@@ -422,7 +422,8 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
 
   it('the card is one summary for screen readers with its glyphs, Hoya and pips hidden; one button only when not read-only', () => {
     expect(card).toContain('accessibilityRole="summary"');
-    expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
+    // Row CM-20 appends the learner's Words known line, when there is one.
+    expect(card).toContain('accessibilityLabel={wordsKnown === null ? copy.a11yLabel : ');
     expect(card).toMatch(/<Icon name=\{name\}/);
     expect(card.match(/<Button /g)).toHaveLength(1);
     expect(card).toContain('cta !== null ?');
@@ -461,7 +462,8 @@ describe('the narrow-width route card (Learning Route LR-11)', () => {
     expect(card).toContain('copy.canDo !== null && look.showCanDo');
     expect(card).toMatch(/<PipRow groups=\{\[\[\.\.\.pips\]\]\}[^>]*bandsPerLine/);
     // The summary label is the same at every width; it never included the can-do lines (spec section 10).
-    expect(card).toContain('accessibilityLabel={copy.a11yLabel}');
+    // Row CM-20 appends the learner's Words known line, when there is one.
+    expect(card).toContain('accessibilityLabel={wordsKnown === null ? copy.a11yLabel : ');
   });
 });
 

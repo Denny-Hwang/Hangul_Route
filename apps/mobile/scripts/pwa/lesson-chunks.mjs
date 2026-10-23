@@ -193,7 +193,12 @@ export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-r
  * `src/screens/goals/goals-chunk.ts`) are a bundle of their own, reached only through the literal `import()` of
  * `src/store/goals-entry.ts`, so a learner with `goals` off never loads them and the start bundle does not grow.
  */
-export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
+export const LEARNER_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' }),
+  // Row CM-20: the mastery ring and the Results banners (`src/screens/mastery/mastery-chunk.ts`), reached only through
+  // the literal `import()` of `src/store/mastery-entry.ts` while `mastery` is on; the level derivation is the memory chunk's.
+  Object.freeze({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' }),
+]);
 
 /**
  * [GU] The learner screens that are chunks of their own (F-CURR-002 §10, row GU-3): the guest's first quest stack
