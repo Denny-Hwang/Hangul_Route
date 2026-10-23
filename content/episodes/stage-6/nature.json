@@ -1430,6 +1430,13 @@
       "textEn": "Hiking means going up a mountain for exercise, fun or exploring. From the 1960s it became a pastime for ordinary people in Korea, and the national parks now count many millions of visits a year.",
       "sources": [
         {
+          "title": "우리나라 국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000665",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "‘국가 최대의 휴식공간으로 자리매김한 국립공원을 찾는 탐방객수는 연간 4천 3백만 명에 달합니다.(2025년 기준)’"
+        },
+        {
           "title": "등산",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0017142",
@@ -1448,7 +1455,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200; encykorea 등산 (definition; 1960-1980 section, 일반인의 레저화) and the 2026-02-24 korea.kr release (4,331만 명) found as quoted. The q2 intro line ('a popular day out') stays within the note and makes no 'all Koreans' claim. Outcome: pass, no change."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'going up a mountain for exercise, fun or exploring' = encykorea 등산 정의 (운동·놀이·탐험 등의 목적으로 산에 오르는 행위); 'from the 1960s a pastime for ordinary people' = encykorea 등산, 1960-1980 section (등산이 일반인의 레저화가 되면서); 'many millions of visits a year' = Ministry press release title (2025년 4,331만 명). The note says 'ordinary people', never 'all Koreans'; the exact number stays out of learner copy. Both pages fetched 2026-10-14, HTTP 200. Used in: q2 intro Hoya line.\npass 2b (independent fact check, 2026-10-14): both pages re-fetched 2026-10-14 HTTP 200. encykorea 등산 gives the definition as climbing a mountain for exercise, play or exploration, and its 1960-1980 section says hiking became leisure for the general public; the Ministry release (2026-02-24) reports 43.31 million national park visitors in 2025, which supports 'many millions of visits a year' (visitor counts are visit counts). Quotes match the pages. No 'all Koreans' claim; the q2 intro line ('a popular day out') stays within this note. No copied wording. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): both pages re-opened, HTTP 200; encykorea 등산 (definition; 1960-1980 section, 일반인의 레저화) and the 2026-02-24 korea.kr release (4,331만 명) found as quoted. The q2 intro line ('a popular day out') stays within the note and makes no 'all Koreans' claim. Outcome: pass, no change.\nCM-3C (2026-10-23): culture-source fix. The Korea National Park Service page 우리나라 국립공원 added first: about 43 million visitors a year (2025), the 'many millions of visits' of the note. The note's words are unchanged; the definition and the 1960s stay with the Encyclopedia of Korean Culture entry 등산."
       }
     },
     {
@@ -1456,6 +1463,13 @@
       "kind": "culture",
       "textEn": "Trail information for Korea's national parks gives the length of a trail section and the time it takes one way, and the parks set a start time for each trail with the distance and walking time in mind.",
       "sources": [
+        {
+          "title": "입산시간지정제",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000198",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "입산시간지정제는 무엇인가요?: ‘산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정ㆍ운영하는 제도입니다.’"
+        },
         {
           "title": "[오맞! 이 정책] 이번 주말 ‘야생화 꽃길’ 걸을래?",
           "publisher": "대한민국 정책브리핑 (korea.kr), 자료: 환경부·국립공원공단",
@@ -1469,20 +1483,13 @@
           "url": "https://www.korea.kr/multi/visualNewsView.do?newsId=148921631",
           "accessed": "2026-10-14",
           "quoteOrLocator": "‘탐방코스 정보 : 난이도, 안전지수, 거리 ,소요시간, 대중교통 관련 정보 제공’"
-        },
-        {
-          "title": "입산시간지정제",
-          "publisher": "국립공원공단 (Korea National Park Service)",
-          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000198",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "입산시간지정제는 무엇인가요?: ‘산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정ㆍ운영하는 제도입니다.’"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): all three pages re-opened, HTTP 200; 거리/소요시간(편도) 3.1km / 1시간 30분, the app's 거리 and 소요시간, and KNPS 거리와 산행시간 등을 고려하여 found as quoted. The drawn signs copy no real sign; the q1 reward line no longer calls the drawn sign real, and the q1 Discover captions no longer state what real signs show. The time sign spells hours in Hangul (두 시간) on purpose, for decoding; real trail guides write numerals (n3 source 1). Outcome: pass, no change to the note."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'gives the length of a section and the time it takes one way' = korea.kr wildflower trails list (거리/소요시간(편도): 3.1km / 1시간 30분) and korea.kr park trail app (탐방코스 정보: 거리, 소요시간); 'a start time per trail set with distance and walking time in mind' = KNPS 입산시간지정제 (산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정). The drawn trail signs of the cell are made for the app and copy no real sign. All three pages fetched 2026-10-14, HTTP 200. Used in: q3 intro Hoya line, q3 Discover page 2 (the time sign).\npass 2b (independent fact check, 2026-10-14): all three pages re-fetched 2026-10-14 HTTP 200. The korea.kr wildflower list gives each trail section with distance and one-way time (3.1km / 1h30 for the first); the korea.kr app page lists distance and time per course; KNPS 입산시간지정제 sets entry and closing times per trail by destination, distance and hiking time. Quotes match the pages. 'Start time' reads the 입산 time correctly. No copied wording; no real sign is reproduced. Outcome: pass, no change.\npass 3 (MAR pass 5 culture review, 2026-10-14): all three pages re-opened, HTTP 200; 거리/소요시간(편도) 3.1km / 1시간 30분, the app's 거리 and 소요시간, and KNPS 거리와 산행시간 등을 고려하여 found as quoted. The drawn signs copy no real sign; the q1 reward line no longer calls the drawn sign real, and the q1 Discover captions no longer state what real signs show. The time sign spells hours in Hangul (두 시간) on purpose, for decoding; real trail guides write numerals (n3 source 1). Outcome: pass, no change to the note.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
