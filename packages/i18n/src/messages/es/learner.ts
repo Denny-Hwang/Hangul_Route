@@ -2022,4 +2022,15 @@ export const learner = {
     saved: (name: string) => `${name}, tu tarjeta ya está en la colección.`,
     savedNoCard: (name: string) => `${name}, tu primera misión está guardada.`,
   },
+  mastery: {
+    level: { done: 'Terminado', practiced: 'Practicado', mastered: 'Dominado' },
+    readyToRefresh: 'Listo para repasar',
+    newVolume: 'Volumen nuevo',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  wordsKnown: {
+    pill: (count: number) => plural('es', count, { one: '1 palabra conocida', other: `${count} palabras conocidas` }),
+    route: (count: number) => `Palabras que conoces: ${count}`,
+    milestone: (count: string) => `¡${count} palabras! Hoya está muy orgulloso de ti.`,
+  },
 } satisfies DeepPartial<Messages['learner']>;

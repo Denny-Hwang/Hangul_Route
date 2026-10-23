@@ -202,4 +202,6 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.lecture.presets.length.option',
   // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4 (OA-7b): a refused seat, the name and the cap line joined by ": ".
   'caregiver.join.who.refused',
+  // F-CURR-002 row CM-20: a level up, the cell's title and its level word joined by ": ".
+  'learner.mastery.levelUp',
 ];
