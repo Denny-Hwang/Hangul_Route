@@ -44,6 +44,7 @@ import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
+import { QuestCultureTip } from './culture-tip-entry';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
 
@@ -399,6 +400,8 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
             ) : undefined
           }
           note={stepIndex === 0 ? introNote : undefined}
+          // The Did you know? tip (F-CURR-002 row CM-3C): the quest's note of its cell, behind `upperCards`.
+          tip={onReward ? <QuestCultureTip questId={questId} /> : undefined}
         />
       )}
     </Screen>
@@ -412,6 +415,7 @@ function NarrativeStepBody({
   isReward,
   actions,
   note,
+  tip,
 }: {
   copy: QuestMessages;
   line: NarrativeLine;
@@ -421,6 +425,8 @@ function NarrativeStepBody({
   actions?: ReactNode;
   /** [GU] A plain line between Hoya's card and Continue (the guest run's storage-blocked line, section 7.2). */
   note?: string;
+  /** Under Hoya's card on the reward step: the Did you know? tip (F-CURR-002 row CM-3C), which draws nothing while off. */
+  tip?: ReactNode;
 }): ReactElement {
   return (
     <View style={{ flex: 1 }}>
@@ -442,6 +448,7 @@ function NarrativeStepBody({
           </>
         ) : null}
       </Card>
+      {tip}
       {note !== undefined ? (
         <>
           <Spacer size="md" />

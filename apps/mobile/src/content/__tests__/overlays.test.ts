@@ -59,8 +59,10 @@ const JSON_ONLY_CARD_IDS: ReadonlySet<string> = new Set(
     .map((card) => card.id)
     .filter((id) => !SHIPPED.card!.has(id)),
 );
+/** A lesson cell's note (`culture.<id>.text`, F-CURR-002 row CM-3C): its English is the cell file's `culture[]` (checked by culture-notes.test.ts and the validator), not the runtime episode. */
+const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
 const jsonBaseField = (id: string, field?: string): boolean =>
-  JSON_ONLY_CARD_IDS.has(id) || (field === 'gloss' && overlayPrefix(id) === 'jamo');
+  JSON_ONLY_CARD_IDS.has(id) || (field === 'gloss' && overlayPrefix(id) === 'jamo') || (field !== undefined && overlayPrefix(id) === 'episode' && CELL_NOTE_FIELD.test(field));
 
 type Rec = Record<string | number, unknown>;
 const getIn = (root: unknown, path: ReadonlyArray<string | number>): unknown =>

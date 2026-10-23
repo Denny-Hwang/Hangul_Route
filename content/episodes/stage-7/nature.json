@@ -1053,12 +1053,27 @@
       "id": "n5",
       "kind": "culture",
       "textEn": "In the folk tale of the brother and sister who became the sun and the moon, a tiger stops their mother on her way home and asks for her rice cakes.",
-      "factRef": "story:sun-and-moon#f2",
+      "sources": [
+        {
+          "title": "해와 달이 된 오누이 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "줄거리: ‘호랑이가 이웃 부잣집에 품일을 갔다 오던 늙은 어머니를 잡아먹고는 …’ (a shorter version of the same opening: the mother is returning from working at a neighbor's house)"
+        },
+        {
+          "title": "해와 달이 된 오누이",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "내용: ‘옛날에 한 어머니가 삼 남매를 집에 두고 품일을 나갔다가 돌아오는 길에 호랑이를 만났다. 호랑이는 고개마다 나타나서 어머니에게 떡, 옷, 팔, 다리, 몸통을 차례로 요구한 뒤 …’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f2 of the reviewed story sun-and-moon (ready, MAR-signed 2026-10-13), whose sources are the Encyclopedia of Korean Culture article E0062663 and the National Folk Museum folk-literature entry 6006. The AKS article re-opened (HTTP 200): its 내용 says a mother on her way home from day work meets a tiger at the hill passes, and it asks for rice cakes first. No new fact, no new source (section 3.9 Reuse). Carried by: q2 intro hoyaLineEn ('In an old Korean tale, a tiger asks for rice cakes'). No 'all Koreans' claim, no living person.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:sun-and-moon#f2 resolves (story review: culture-reviewed, MAR, 2026-10-13). Both f2 sources re-fetched: the Encyclopedia of Korean Culture article E0062663, 내용, has the mother meet the tiger on her way home from day work, with rice cakes the first thing it demands at the hill passes; the National Folk Museum entry 6006 (via its content API), 줄거리, has her returning from day work at a neighbour's house when the tiger catches her. The note keeps only the rice cakes and says nothing past f2. The English is the author's own; no wording is copied; no 'all Koreans' claim, no living person. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:sun-and-moon#f2 resolves to a culture-reviewed story (MAR, 2026-10-13); Encyclopedia of Korean Culture E0062663 (내용) re-opened: the mother, on her way home from day work, meets the tiger at the hill passes and rice cakes are its first demand. The National Folk Museum entry 6006 renders only with JavaScript and was carried by f2's earlier review and pass 2b's content-API read. The note and the q2 Hoya line keep only the rice cakes, with no peril; no 'all Koreans' claim, no living person. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f2 of the reviewed story sun-and-moon (ready, MAR-signed 2026-10-13), whose sources are the Encyclopedia of Korean Culture article E0062663 and the National Folk Museum folk-literature entry 6006. The AKS article re-opened (HTTP 200): its 내용 says a mother on her way home from day work meets a tiger at the hill passes, and it asks for rice cakes first. No new fact, no new source (section 3.9 Reuse). Carried by: q2 intro hoyaLineEn ('In an old Korean tale, a tiger asks for rice cakes'). No 'all Koreans' claim, no living person.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:sun-and-moon#f2 resolves (story review: culture-reviewed, MAR, 2026-10-13). Both f2 sources re-fetched: the Encyclopedia of Korean Culture article E0062663, 내용, has the mother meet the tiger on her way home from day work, with rice cakes the first thing it demands at the hill passes; the National Folk Museum entry 6006 (via its content API), 줄거리, has her returning from day work at a neighbour's house when the tiger catches her. The note keeps only the rice cakes and says nothing past f2. The English is the author's own; no wording is copied; no 'all Koreans' claim, no living person. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:sun-and-moon#f2 resolves to a culture-reviewed story (MAR, 2026-10-13); Encyclopedia of Korean Culture E0062663 (내용) re-opened: the mother, on her way home from day work, meets the tiger at the hill passes and rice cakes are its first demand. The National Folk Museum entry 6006 renders only with JavaScript and was carried by f2's earlier review and pass 2b's content-API read. The note and the q2 Hoya line keep only the rice cakes, with no peril; no 'all Koreans' claim, no living person. Outcome: pass, no change.\nCM-3C (2026-10-23): the note now carries its own sources, the two sources of story:sun-and-moon#f2 with the National Folk Museum of Korea entry first, so the on-screen tip can name an allowlisted source (a note shown on screen has its own sources[]). The words and the fact are unchanged; the rice cakes stay with the Encyclopedia of Korean Culture article."
       }
     }
   ],

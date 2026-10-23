@@ -5,7 +5,9 @@
     "episode:stage7-letters": {
       "title": "Escribe tu nombre",
       "subtitle": "Escribe nombres en hangul: primero el de Hoya, luego el tuyo.",
-      "hoyaIntro": "¡Escribir nombres es divertido! Primero el mío y luego el tuyo."
+      "hoyaIntro": "¡Escribir nombres es divertido! Primero el mío y luego el tuyo.",
+      "culture.n1.text": "Los nombres de otros idiomas se escriben con las propias letras del hangul, así que algunos sonidos comparten letra: la f y la p son {ko:ㅍ}, y la l y la r son {ko:ㄹ}.",
+      "culture.n2.text": "El Instituto Nacional de la Lengua Coreana publica las reglas para escribir palabras extranjeras, pero en el uso real una misma palabra se ha escrito de más de una manera. Un nombre puede tener más de una escritura en hangul."
     },
     "quest:stage7-letters-q1": {
       "title": "El nombre de Hoya",

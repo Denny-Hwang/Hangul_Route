@@ -250,6 +250,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-3C: the Did you know? tip at the reward step and on the card back
+  // (`src/screens/quest/culture-tip-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/quest/culture-tip-entry.tsx` while `upperCards` is on).
+  Object.freeze({ name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' }),
 ]);
 
 /**

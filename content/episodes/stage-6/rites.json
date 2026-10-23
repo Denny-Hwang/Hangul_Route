@@ -1352,6 +1352,13 @@
       "textEn": "Chuseok is a public holiday. Many people travel to their hometowns then, so roads and trains get busy and extra trains and buses run. In some families, the parents travel the other way, to where their children live.",
       "sources": [
         {
+          "title": "역귀성",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%AD%EA%B7%80%EC%84%B1",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 역귀성 (逆歸省) 「명사」, the only sense: “명절 때에 자식이 고향의 부모를 찾아가는 것에 대하여 거꾸로 부모가 객지에 있는 자식들을 찾아감.”"
+        },
+        {
           "title": "추석(秋夕)",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0057862",
@@ -1371,20 +1378,13 @@
           "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148783701",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Policy news of 2014-09-04, survey of Chuseok travel: “역귀성하는 비율은 약 2배(8.6%→13.8%) 각각 늘었다.”"
-        },
-        {
-          "title": "역귀성",
-          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%AD%EA%B7%80%EC%84%B1",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 역귀성 (逆歸省) 「명사」, the only sense: “명절 때에 자식이 고향의 부모를 찾아가는 것에 대하여 거꾸로 부모가 객지에 있는 자식들을 찾아감.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all cited pages reopened. 'Public holiday' and 'many people travel to their hometowns, so roads get busy': Encyclopedia of Korean Culture, 추석, 개설 - passes. 'Trains get busy and extra trains and buses run': MOLIT 2024-09-10 (버스·철도 운행 횟수와 좌석을 늘리고; 특별교통대책기간) - passes; no figure in the note. 'Some families travel the other way, to the city': FAILED as worded; the MOLIT 2014 survey gives only the rising 역귀성 share (8.6% to 13.8%) and names no destination. Fixed: 'In some families, the parents travel the other way, to where their children live.', with the Standard Korean Language Dictionary entry 역귀성 added as a source; 'some' stays supported by the 2014 share. No number, no everyone claim, no rite, no living person, shop, brand or price, no copied wording; all hosts in SOURCE_HOST_ALLOWLIST. No es/ko overlay carries this note.\nLine 3 (passes: 3, MAR culture review, 2026-10-14): all four cited pages re-checked. Encyclopedia 추석 개설 (holiday, return home, congestion), MOLIT 2024 (extra bus and rail runs and seats), MOLIT 2014 (역귀성 share 8.6% to 13.8%, supports 'some') and the dictionary 역귀성 (parents go to the children living away) each say what the note says - passes. The ancestral-rite reason stays out (OD-9). The trip is Hoya's own story; no question asks about the learner's holiday; 'many' and 'some' only; no rite, real person, shop, brand or price; no copied wording. Outcome: passes."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): all three pages opened and each quoteOrLocator found on its page. 'Public holiday' and 'many people travel to their hometowns, so roads get busy' = encykorea 추석, 개설 (공휴일로 제정, 많은 사람들이 고향으로 돌아가기 때문에 교통혼잡); 'trains get busy and extra trains and buses run' = MOLIT 2024 special transport measures (버스·철도 운행 횟수와 좌석을 평시 대비 늘리고); 'some families travel the other way, to the city' = MOLIT 2014 survey (역귀성 share rising; 역귀성 is the trip from the hometown to where the children live). The note says 'many' and 'some', never everyone; it names no ancestral rite (OD-9, the encyclopedia's reason for the trip is left out), no number, no living person, shop, brand or price, and copies no source wording (English restatement of Korean sources). Carried by: q1 intro Hoya line (the holiday trip, Hoya's own story), q3 Discover page 1 caption.\nLine 2 (passes: 2, independent fact-check, 2026-10-14): all cited pages reopened. 'Public holiday' and 'many people travel to their hometowns, so roads get busy': Encyclopedia of Korean Culture, 추석, 개설 - passes. 'Trains get busy and extra trains and buses run': MOLIT 2024-09-10 (버스·철도 운행 횟수와 좌석을 늘리고; 특별교통대책기간) - passes; no figure in the note. 'Some families travel the other way, to the city': FAILED as worded; the MOLIT 2014 survey gives only the rising 역귀성 share (8.6% to 13.8%) and names no destination. Fixed: 'In some families, the parents travel the other way, to where their children live.', with the Standard Korean Language Dictionary entry 역귀성 added as a source; 'some' stays supported by the 2014 share. No number, no everyone claim, no rite, no living person, shop, brand or price, no copied wording; all hosts in SOURCE_HOST_ALLOWLIST. No es/ko overlay carries this note.\nLine 3 (passes: 3, MAR culture review, 2026-10-14): all four cited pages re-checked. Encyclopedia 추석 개설 (holiday, return home, congestion), MOLIT 2024 (extra bus and rail runs and seats), MOLIT 2014 (역귀성 share 8.6% to 13.8%, supports 'some') and the dictionary 역귀성 (parents go to the children living away) each say what the note says - passes. The ancestral-rite reason stays out (OD-9). The trip is Hoya's own story; no question asks about the learner's holiday; 'many' and 'some' only; no rite, real person, shop, brand or price; no copied wording. Outcome: passes.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {

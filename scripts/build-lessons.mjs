@@ -54,7 +54,8 @@
 // content gates are the zod schema (`LessonCellSchema`) run by the `lesson-*` rules of
 // validate-content.mjs, and apps/mobile/src/content/__tests__/upper-stage-curriculum.test.ts
 // (U-1 .. U-10); the literals are typed by contextual typing, so `tsc --noEmit` is a
-// further gate. Culture-note sources never reach the bundle (§3.10).
+// further gate. Culture-note sources never reach the bundle (§3.10), but for each quest's Did you know? note its
+// source line, the first source's publisher and title (F-CURR-002 row CM-3C): never a URL, a quote or a review record.
 //
 // Usage:
 //   node scripts/build-lessons.mjs            write the modules (and remove the ones no longer built)
@@ -294,7 +295,36 @@ export function shapeCell(cell, rel) {
     pillarTags: need(cell, "pillarTags", rel, "array"),
     status: "shipped",
   };
-  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes, stamps, file: rel };
+  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes, stamps, notes: questNotes(cell, shapedQuests, rel), file: rel };
+}
+
+/** The kinds of note a quest's Did you know? tip draws from, in this order (F-CURR-002 §5.7, row CM-3C). */
+const NOTE_KINDS = ["culture", "language"];
+
+/**
+ * Each quest's Did you know? note (F-CURR-002 §5.7, row CM-3C), by quest id: the cell's notes with its culture notes
+ * first, then its language notes, each kind in file order, and quest k takes note k (mod the count), so a quest always
+ * shows the same note. A note carries its English text and its source line (`citation`: the first entry of its
+ * `sources[]`, which the content test holds to the §6.6 allowlist, and how many others it has); never a URL. A note
+ * with only a `factRef` cannot give one, so a ready cell may not show it. A cell with no notes gives none.
+ */
+export function questNotes(cell, quests, rel) {
+  const notes = Array.isArray(cell.culture) ? cell.culture.filter(isObject) : [];
+  const ordered = NOTE_KINDS.flatMap((kind) => notes.filter((n) => n.kind === kind));
+  if (ordered.length === 0) return {};
+  const shaped = ordered.map((note) => {
+    const where = `${rel} culture ${note.id}`;
+    if (!Array.isArray(note.sources) || note.sources.length === 0 || !isObject(note.sources[0])) {
+      throw new ContentError(`culture ${note.id} has no sources[] of its own: a note shown on screen names its source (F-CURR-002 row CM-3C), so restate the fact's sources on the note`, rel);
+    }
+    const [first] = note.sources;
+    return {
+      id: need(note, "id", where),
+      textEn: need(note, "textEn", where),
+      citation: { title: need(first, "title", where), publisher: need(first, "publisher", where), more: note.sources.length - 1 },
+    };
+  });
+  return Object.fromEntries(quests.map((q, qi) => [q.id, shaped[qi % shaped.length]]));
 }
 
 /** The ids an overlay of this cell may name: its episode, its quests and its scope refs. */
@@ -332,8 +362,12 @@ const sortedKeys = (obj) => Object.fromEntries(Object.keys(obj).sort().map((k) =
 /** The quest fields the start-loaded manifest keeps; `steps` goes to the cell's body chunk. */
 const QUEST_HEADER = PICK_QUEST.filter((k) => k !== "steps");
 
-/** A quest overlay field of the body chunk (`steps.<stepId>....`); every other episode or quest field is a title. */
-const isBodyField = (id, field) => overlayPrefix(id) === "minigame" || field.startsWith("steps.");
+/**
+ * A field of the body chunk: a quest's `steps.<stepId>....`, a game's glosses and a cell's notes (`culture.<noteId>.text`,
+ * row CM-3C); every other episode or quest field is a title.
+ */
+const isBodyField = (id, field) =>
+  overlayPrefix(id) === "minigame" || field.startsWith("steps.") || (overlayPrefix(id) === "episode" && field.startsWith("culture."));
 
 /**
  * The jamo ids a quest's Discover step introduces, in page order: `questTeaches`
@@ -364,7 +398,8 @@ const overlaysLiteral = (o) => literal(Object.fromEntries(OVERLAY_LOCALES.map((l
 /**
  * Pure: ready shaped cells -> what each chunk holds and its hash.
  *   manifest  the episodes and the quest headers (no steps), English only
- *   cells     one body per cell: steps by quest id, scopes by ref, the es / ko glosses of both
+ *   cells     one body per cell: steps by quest id, scopes by ref, the es / ko glosses of both, and each
+ *             quest's Did you know? note (row CM-3C)
  *   titles    one table per locale: the episode and quest titles, subtitles, intros, blurbs, teasers
  */
 export function planChunks(cells) {
@@ -383,12 +418,13 @@ export function planChunks(cells) {
     const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
     const scopes = literal(sortedKeys(cell.scopes));
     const glosses = overlaysLiteral(overlays);
+    const notes = literal(cell.notes ?? {});
     return {
       id: cell.episode.id,
       stageNo: cell.stageNo,
       name: cellChunkName(cell.episode.id),
-      hash: chunkHash(steps + scopes + glosses),
-      literals: { steps, scopes, glosses },
+      hash: chunkHash(steps + scopes + glosses + notes),
+      literals: { steps, scopes, glosses, notes },
     };
   });
   const titleChunks = OVERLAY_LOCALES.map((locale) => {
@@ -462,7 +498,8 @@ export function buildModules(cells) {
       `export const CHUNK_HASH = ${q(c.hash)};\n\n` +
       `export const LESSON_STEPS: LessonCellChunk['LESSON_STEPS'] = ${c.literals.steps};\n\n` +
       `export const LESSON_SCOPES: LessonCellChunk['LESSON_SCOPES'] = ${c.literals.scopes};\n\n` +
-      `export const LESSON_OVERLAYS: LessonCellChunk['LESSON_OVERLAYS'] = ${c.literals.glosses};\n`;
+      `export const LESSON_OVERLAYS: LessonCellChunk['LESSON_OVERLAYS'] = ${c.literals.glosses};\n\n` +
+      `export const LESSON_NOTES: LessonCellChunk['LESSON_NOTES'] = ${c.literals.notes};\n`;
   }
   for (const t of plan.titles) {
     modules[`${CHUNK_DIR}/${t.name}.ts`] =

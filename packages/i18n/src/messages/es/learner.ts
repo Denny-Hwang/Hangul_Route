@@ -2103,4 +2103,8 @@ export const learner = {
     extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
   },
+  cultureTip: {
+    title: '¿Sabías que…?',
+    region: 'Nota de lección',
+  },
 } satisfies DeepPartial<Messages['learner']>;
