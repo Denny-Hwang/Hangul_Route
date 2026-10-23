@@ -250,6 +250,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-32: Syllable Build (the quest game, its board, the review round at the produce rung and the Listen &
+  // Pick fallback) and the Block Sprint (`src/screens/minigames/syllable-build-chunk.tsx`, reached only through the
+  // literal `import()` of `src/screens/minigames/syllable-build-entry.tsx`); the Daily Review chunk reaches its round at
+  // run time through the entry.
+  Object.freeze({ name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' }),
 ]);
 
 /**

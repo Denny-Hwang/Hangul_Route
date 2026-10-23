@@ -29,11 +29,12 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
-import type { OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
+import type { BuildRound, OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { PictureArt } from '../minigames/PictureArt';
+import { useSyllableBuildChunk } from '../minigames/syllable-build-entry';
 
 /**
  * The rounds of the Daily Review and Keep going (F-CURR-002 sections 4.3 and 4.5, row CM-14; design
@@ -393,10 +394,25 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   );
 }
 
+// ---- build (row CM-32) -------------------------------------------------------------------------------------
+
+/**
+ * Syllable Build at the produce rung: its board is the Syllable Build chunk's, loaded here at run time through the
+ * entry's `syllableBuildChunk()` (a chunk never imports a module of another chunk). The engine asks it only while
+ * `game.syllable-build` is on. While the chunk loads (it is precached, so a frame or two) the round shows its heading.
+ */
+export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildRound>): ReactElement {
+  const m = useMessages();
+  const { chunk } = useSyllableBuildChunk();
+  if (chunk === null) return <Heading level="prompt">{m.learner.minigame.syllableBuild.heading}</Heading>;
+  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
+}
+
 /** The round for its type. */
 export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   const { round } = props;
   if (round.type === 'pick') return <PickRoundView {...props} round={round} />;
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;
+  if (round.type === 'build') return <BuildRoundLoader {...props} round={round} />;
   return <OrderRoundView {...props} round={round} />;
 }

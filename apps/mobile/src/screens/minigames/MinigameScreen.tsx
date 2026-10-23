@@ -1,4 +1,5 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
+import type { MinigameKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo } from 'react';
 import type { ReactElement } from 'react';
@@ -29,6 +30,7 @@ import { SentenceBuilderGame } from './SentenceBuilderGame';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
+import { SyllableBuildStep } from './syllable-build-entry';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { TraceWordGame } from './TraceWordGame';
@@ -105,6 +107,12 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     }
     exits.back();
   };
+  // Row CM-32: a switched-off format's step reports the game it played (its fallback, Listen & Pick on the block).
+  const closeAs = (played: MinigameKind): void => {
+    if (played === scope?.kind) return close();
+    void track(minigameFinishedEvent(played, questId, stepIndex, activeProfileId));
+    exits.back();
+  };
 
   // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
   const fallback = (message: string): ReactElement => (
@@ -121,16 +129,20 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
   // (first answer per round scores), `complete` ends the step as the older games do.
-  const host: MinigameHost = {
+  // `played` is the scope the game plays: the step's own, or a fallback's (row CM-32), whose rounds name what was asked.
+  const hostFor = (played: typeof scope): MinigameHost => ({
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }),
+      useQuestRunStore
+        .getState()
+        .answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope: played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) }),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
-      close();
+      closeAs(played.kind);
     },
-  };
+  });
+  const host = hostFor(scope);
 
   switch (scope.kind) {
     case 'match-sound':
@@ -172,6 +184,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
+    // F-CURR-002 row CM-32: from its own chunk; Listen & Pick on the block while `game.syllable-build` is off.
+    case 'syllable-build':
+      return <SyllableBuildStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

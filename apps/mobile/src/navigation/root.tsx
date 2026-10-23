@@ -35,6 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
 import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
+import { DecodingSprintRoute } from '../screens/minigames/syllable-build-entry';
 import { StageCheckRoute, StageCompleteRoute, StageRecapRoute } from '../screens/stage-check/stage-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
@@ -161,6 +162,8 @@ export function RootNavigator(): ReactElement {
         {/* F-CURR-002 row CM-22: a chunk of its own, behind `stageChecks` (the check also needs `memoryRecord`). */}
         <Stack.Screen name="StageCheck" component={StageCheckRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="StageRecap" component={StageRecapRoute} />
+        {/* F-CURR-002 row CM-32: the Syllable Build chunk's Block Sprint, behind `decodingSprint`. */}
+        <Stack.Screen name="DecodingSprint" component={DecodingSprintRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />

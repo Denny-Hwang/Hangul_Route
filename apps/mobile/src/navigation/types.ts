@@ -169,6 +169,8 @@ export type RootStackParamList = {
   StageCheck: { stageKey: StageKey };
   /** F-CURR-002 row CM-22: the one retroactive summary of the stages finished earlier (no params). */
   StageRecap: undefined;
+  /** F-CURR-002 row CM-32: the Block Sprint, the optional one-minute bonus after Stage 1 (no params: nothing about the learner). */
+  DecodingSprint: undefined;
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {
