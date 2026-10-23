@@ -1,4 +1,5 @@
 import type {
+  HiddenHeritageRound,
   KoText,
   ListenPickRound,
   MinigameKind,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes to search, filled by build-lessons from a lesson cell. */
+  hiddenHeritage?: { rounds: HiddenHeritageRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

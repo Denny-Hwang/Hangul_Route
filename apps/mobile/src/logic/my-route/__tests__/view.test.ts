@@ -371,6 +371,10 @@ describe('the pieces', () => {
     expect(gamesFor('read', games, all)).toContain('Read a menu, sign or ticket');
     expect(gamesFor('read', games, all)).toContain('Match the shapes');
     expect(gamesFor('write', games, all)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
+    // Hidden Heritage (row CM-36) merges dark: named only once it is passed in as playable (the row that ramps it).
+    expect(gamesFor('read', games, all)).toContain('Find a thing in a picture');
+    expect(gamesFor('listen', games, all)).toContain('Find a thing in a picture');
+    expect(gamesFor('read', games)).not.toContain('Find a thing in a picture');
   });
 });
 

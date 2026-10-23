@@ -122,7 +122,7 @@ export function checkHiddenHeritageScene(scene: HiddenHeritageScene, base: Regis
 
   const alt = scene.art.altEn.trim();
   if (alt.length === 0 || scene.art.altEn.length > LIMITS.altChars) err('H-alt', `altEn must be 1 to ${LIMITS.altChars} characters`);
-  if (/[ᄀ-ᇿ㄰-㆏가-힣]/.test(alt) || /^image of\b/i.test(alt)) err('H-alt', 'altEn holds no Hangul and never starts with "Image of"');
+  if (/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/.test(alt) || /^image of\b/i.test(alt)) err('H-alt', 'altEn holds no Hangul and never starts with "Image of"');
   if (scene.round.sceneId !== scene.id) err('H-round', `the reference round names ${scene.round.sceneId}`);
 
   const bytes = serializedBytes(scene);

@@ -507,30 +507,18 @@ export const HiddenHeritageRoundSchema = z
     others: z.array(HiddenHeritageThingSchema).min(3).max(6),
   })
   .superRefine((round, ctx) => {
-    const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+    // Short messages: this schema is in the app's start bundle (F-CURR-002 §10).
+    const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
     const things = [...round.targets, ...round.others];
-    const ids = new Set<string>();
-    const words = new Set<string>();
-    things.forEach((t) => {
-      if (ids.has(t.id)) issue(['others'], `thing ids are unique in a scene (${t.id})`);
-      if (words.has(t.word.ko)) issue(['others'], `two things of a scene share the word ${t.word.ko}`);
-      ids.add(t.id);
-      words.add(t.word.ko);
-    });
-    if (round.others.length < round.targets.length) {
-      issue(['others'], `a scene has at least as many other things as targets (${round.targets.length} targets, ${round.others.length} others)`);
-    }
-    things.forEach((a, i) => {
-      for (const b of things.slice(i + 1)) {
-        const gap = spotGap(a.spot, b.spot);
-        if (gap < HIDDEN_HERITAGE_SPOT.gap) issue(['targets'], `spots ${a.id} and ${b.id} are ${gap} units apart, at least ${HIDDEN_HERITAGE_SPOT.gap}`);
-      }
-    });
-    const half = ART_CANVAS.width / 2;
-    const centres = round.targets.map((t) => t.spot.x + t.spot.w / 2);
-    if (!centres.some((c) => c < half) || !centres.some((c) => c > half)) issue(['targets'], 'at least one target sits in each half of the scene (left and right)');
-    if (/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/.test(round.altEn)) issue(['altEn'], 'altEn holds no Hangul');
-    if (/^image of\b/i.test(round.altEn.trim())) issue(['altEn'], 'altEn names the setting and never starts with "Image of"');
+    const ids = new Set(things.map((t) => t.id));
+    const words = new Set(things.map((t) => t.word.ko));
+    if (ids.size < things.length) issue('thing ids repeat');
+    if (words.size < things.length) issue('two things share a word');
+    if (round.others.length < round.targets.length) issue('fewer other things than targets');
+    things.forEach((a, i) => things.slice(i + 1).forEach((b) => spotGap(a.spot, b.spot) < HIDDEN_HERITAGE_SPOT.gap && issue(`spots ${a.id} and ${b.id} too close`)));
+    const c = round.targets.map((t) => t.spot.x + t.spot.w / 2 - ART_CANVAS.width / 2);
+    if (!c.some((x) => x < 0) || !c.some((x) => x > 0)) issue('a target in each half');
+    if (/[\u3130-\u318F\uAC00-\uD7A3]|^\s*image of\b/i.test(round.altEn)) issue('altEn: no Hangul, no "Image of"');
   });
 export type HiddenHeritageRound = z.infer<typeof HiddenHeritageRoundSchema>;
 

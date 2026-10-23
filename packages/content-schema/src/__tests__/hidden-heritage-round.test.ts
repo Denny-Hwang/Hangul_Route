@@ -71,7 +71,7 @@ describe('HiddenHeritageRoundSchema', () => {
     const fourTargets = { ...r, targets: [...r.targets, { id: 'jeotgarak', word: word('젓가락', 'jeotgarak', 'chopsticks'), spot: spot(300, 50 + 0), picture: 'word:jeotgarak' }] };
     // Moved clear of the basket so only the count rule speaks.
     fourTargets.targets[3]!.spot = spot(170, 50);
-    expect(issues(fourTargets)).toContain('a scene has at least as many other things as targets (4 targets, 3 others)');
+    expect(issues(fourTargets)).toContain('fewer other things than targets');
   });
 
   it('needs a picture for every target, the Pic-Word Match fallback board (wireframe "States")', () => {
@@ -82,8 +82,8 @@ describe('HiddenHeritageRoundSchema', () => {
 
   it('keeps every thing id unique and never asks one word twice', () => {
     const r = round();
-    expect(issues({ ...r, others: [{ ...r.others[0]!, id: 'bap' }, ...r.others.slice(1)] })).toContain('thing ids are unique in a scene (bap)');
-    expect(issues({ ...r, others: [{ ...r.others[0]!, word: word('국', 'guk', 'soup') }, ...r.others.slice(1)] })).toContain('two things of a scene share the word 국');
+    expect(issues({ ...r, others: [{ ...r.others[0]!, id: 'bap' }, ...r.others.slice(1)] })).toContain('thing ids repeat');
+    expect(issues({ ...r, others: [{ ...r.others[0]!, word: word('국', 'guk', 'soup') }, ...r.others.slice(1)] })).toContain('two things share a word');
   });
 
   it('H-1: every spot is at least 75 x 75 canvas units', () => {
@@ -105,19 +105,19 @@ describe('HiddenHeritageRoundSchema', () => {
     expect(spotGap(spot(0, 0), spot(40, 40))).toBe(0);
     const r = round();
     r.targets[1]!.spot = spot(100, 170);
-    expect(issues(r)).toContain('spots bap and guk are 10 units apart, at least 11');
+    expect(issues(r)).toContain('spots bap and guk too close');
   });
 
   it('has no focal point: at least one target in each half of the scene', () => {
     const r = round();
     r.targets[2]!.spot = spot(10, 50);
     r.others[1]!.spot = spot(300, 170);
-    expect(issues(r)).toContain('at least one target sits in each half of the scene (left and right)');
+    expect(issues(r)).toContain('a target in each half');
   });
 
   it('describes the setting in the alt text, never the things, with no Hangul and no "Image of"', () => {
-    expect(issues({ ...round(), altEn: 'Image of a market.' })).toContain('altEn names the setting and never starts with "Image of"');
-    expect(issues({ ...round(), altEn: '시장 A market.' })).toContain('altEn holds no Hangul');
+    expect(issues({ ...round(), altEn: 'Image of a market.' })).toContain('altEn: no Hangul, no "Image of"');
+    expect(issues({ ...round(), altEn: '시장 A market.' })).toContain('altEn: no Hangul, no "Image of"');
     expect(issues({ ...round(), altEn: 'x'.repeat(141) }).length).toBeGreaterThan(0);
   });
 });
