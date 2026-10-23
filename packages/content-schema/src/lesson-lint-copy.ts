@@ -140,6 +140,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'packCheck',
   // The Home goals strip, sheet and goal moments (row CM-17): no percentage, no "n of m" (section 7.4).
   'goals',
+  // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
+  'stageJump',
 ];
 
 export interface ReviewStringFinding {

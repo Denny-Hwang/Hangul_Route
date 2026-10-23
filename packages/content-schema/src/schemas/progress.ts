@@ -379,7 +379,7 @@ export const ProgressSnapshotSchema = z.object({
   cellCheckAt: LatchRecordSchema,
   /** Stage key -> first Stage Check; earliest wins. */
   stageCheckAt: LatchRecordSchema,
-  /** Cell id -> first test-out; earliest wins. */
+  /** Cell id -> first test-out; earliest wins. A Stage Jump (row CM-25) also latches its stage key ('stage4'). */
   testedOut: LatchRecordSchema,
   /** Daily and weekly goals; the later `setAt` wins. */
   goals: GoalsSchema,
