@@ -989,4 +989,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-23: an album's card count (from 1; an album with none says New), and an album row's name with its status.
   'learner.library.albums.count': [[1], [2], [12]],
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
+  // F-CURR-002 row CM-23 part 3: an album named by its theme, the legendary card's earn hint and the album-complete lines.
+  'learner.library.albums.named': [['letters'], ['nature'], ['crafts']],
+  'learner.library.earnHint.album': [['letters'], ['nature'], ['rites']],
+  'learner.results.albumDone.line': [['letters'], ['nature'], ['rites']],
 };
