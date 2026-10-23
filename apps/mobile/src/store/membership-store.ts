@@ -1,4 +1,4 @@
-import type { DeviceTransferConsent, DeviceTransferCreateBody, InboxTransfer, LearnerMembership, LookupSeat, SyncInbox } from '@hangul-route/content-schema';
+import type { DeviceTransferConsent, DeviceTransferCreateBody, InboxClassMove, InboxTransfer, LearnerMembership, LookupMoveWaiting, LookupMoved, LookupSeat, MoveSpaceRef, SyncInbox } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { routeGoalInputsChanged } from '../logic/my-route/summary';
@@ -68,9 +68,12 @@ export const TRANSFERS_ON_KEY = (learnerId: string): string => `transfers-on:${l
  */
 export const TRANSFER_SELF_SET_KEY = (learnerId: string): string => `transfer-self-set:${learnerId}`;
 
-/** [SA] `seat`: the learner-aware answer (AMENDMENTS-SEATS-ADMINS section 3.4); null from an older Worker. */
+/**
+ * [SA] `seat`: the learner-aware answer (AMENDMENTS-SEATS-ADMINS section 3.4); null from an older Worker. `moved` /
+ * `moveWaiting` (owner report 2026-10-23): a move out of this class stands, or one into it waits; absent otherwise.
+ */
 export type LookupOutcome =
-  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; seat: LookupSeat | null; roster: RosterName[] }
+  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; seat: LookupSeat | null; roster: RosterName[]; moved?: LookupMoved; moveWaiting?: LookupMoveWaiting }
   | { ok: false; error: JoinErrorCode };
 
 export type RelinkError = 'code_not_found' | 'code_expired' | 'learner_not_found' | 'already_bound' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off';
@@ -80,8 +83,11 @@ export type RelinkPoll =
   | { state: 'approved'; plan: RestorePlan }
   | { state: 'error'; error: 'network' | 'not_found' | 'unknown' | 'off' };
 
-/** [SA] `cap`: the Worker's cap on a seat refusal (`cap_family`, `cap_class`, `cap_school`), when it sent one. */
-export type JoinOutcome = { ok: true; alreadyMember: boolean; membership: LearnerMembership } | { ok: false; error: JoinErrorCode; cap?: number };
+/**
+ * [SA] `cap`: the Worker's cap on a seat refusal (`cap_family`, `cap_class`, `cap_school`), when it sent one. `to`: the
+ * class a `moved_out` learner is in now; `from`: the class a `move_waiting` move starts from (owner report 2026-10-23).
+ */
+export type JoinOutcome = { ok: true; alreadyMember: boolean; membership: LearnerMembership } | { ok: false; error: JoinErrorCode; cap?: number; to?: MoveSpaceRef; from?: MoveSpaceRef };
 
 interface Actions {
   hydrate: (learnerId: string) => Promise<LearnerMembership[]>;
@@ -173,12 +179,32 @@ async function scopeOf(learnerId: string, creds: DeviceCredentials): Promise<'fu
 const membershipsBeforeMove = (t: InboxTransfer, rows: readonly LearnerMembership[], seenOpen: boolean): boolean =>
   rows.some((m) => m.spaceId === t.from.spaceId) && (seenOpen || !rows.some((m) => m.spaceId === t.to.spaceId));
 
+/**
+ * Owner report 2026-10-23: the newest teacher move of an inbox (`classMoves`), when its own memberships do not show it
+ * yet: the destination missing, or the source (sent by a current Worker) still there. Then the memberships were read
+ * before the move, and one more read is due. Only the newest move counts: an older one a later move undid is no sign.
+ */
+function staleClassMove(moves: readonly InboxClassMove[], rows: readonly LearnerMembership[]): InboxClassMove | null {
+  const newest = moves.reduce<InboxClassMove | null>((best, m) => (best === null || m.executedAt > best.executedAt ? m : best), null);
+  if (!newest) return null;
+  const has = (spaceId: string): boolean => rows.some((r) => r.spaceId === spaceId);
+  return !has(newest.to.spaceId) || (newest.from !== undefined && has(newest.from.spaceId)) ? newest : null;
+}
+
 function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _drop, ...rest } = record;
   return rest;
 }
 
 export const useMembershipStore = create<State & Actions>((set, get) => {
+  /**
+   * Owner report 2026-10-23: one counter per learner, taken by every inbox read before it asks and bumped by a join or
+   * a leave when it writes. A read whose number is no longer the latest when its answer arrives was overtaken (a
+   * newer read, a join, a leave), so its answer is dropped whole: an older [A] never writes over a newer [B].
+   */
+  const gen: Record<string, number> = {};
+  const bump = (learnerId: string): number => (gen[learnerId] = (gen[learnerId] ?? 0) + 1);
+
   const put = (learnerId: string, rows: LearnerMembership[]): LearnerMembership[] => {
     const sorted = [...rows].sort((a, b) => a.name.localeCompare(b.name));
     set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: sorted } }));
@@ -206,7 +232,10 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     // Queued note reads, reactions and reports go first, so this inbox already reflects them (F-FEEDBACK-001 section 6.9).
     // A notes problem never holds up the inbox: tier, memberships and plans still apply.
     if (flags.notesEnabled) await useNotesStore.getState().flush(learnerId, client, creds).catch(() => undefined);
+    const seq = bump(learnerId);
     const result = await client.getInbox(learnerId, creds);
+    // Overtaken while it was asked (see `gen`): nothing of this answer applies, the rows a newer write put stand.
+    if (gen[learnerId] !== seq) return get().byLearner[learnerId] ?? null;
     if (result.status !== 'ok') {
       // After a move the old class's tablet is revoked (section 4.6): its classes are gone until it joins again.
       // Only while the inbox says moves are on, so nothing changes for a learner while transfers are locked.
@@ -307,6 +336,15 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       } else {
         await noteScopeLimited(learnerId, creds, sent);
       }
+    }
+
+    // Owner report 2026-10-23: a teacher move the memberships of this answer do not show yet (read before the move).
+    // Once per move in a session, so a learner who later left the class it moved to is not read twice every time.
+    const classMove = staleClassMove((inbox as Partial<Pick<SyncInbox, 'classMoves'>>).classMoves ?? [], rows);
+    const classMoveKey = classMove ? `${learnerId}|class-move-reread|${classMove.id}` : null;
+    if (classMoveKey !== null && !get().executedSeen[classMoveKey]) {
+      set((s) => ({ executedSeen: { ...s.executedSeen, [classMoveKey]: true } }));
+      reread = true;
     }
 
     if (!reread || again) return null;
@@ -432,7 +470,16 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       // A lookup never registers a device: a learner with no credentials yet takes no seat anywhere, so it is new.
       const creds = learnerId === undefined ? null : await credentialsFor(learnerId, false);
       const result = await client.lookupSpace(code, learnerId !== undefined && creds ? { learnerId, creds } : undefined);
-      return result.status === 'ok' ? { ok: true, space: result.space, full: result.full, seat: result.seat ?? null, roster: result.roster } : { ok: false, error: result.code };
+      if (result.status !== 'ok') return { ok: false, error: result.code };
+      return {
+        ok: true,
+        space: result.space,
+        full: result.full,
+        seat: result.seat ?? null,
+        roster: result.roster,
+        ...(result.moved ? { moved: result.moved } : {}),
+        ...(result.moveWaiting ? { moveWaiting: result.moveWaiting } : {}),
+      };
     },
 
     join: async (learnerId, spaceId, code, displayName) => {
@@ -449,10 +496,22 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       if (result.status !== 'ok') {
         // [SA] The reason codes gain cap_family and cap_school (AMENDMENTS-SEATS-ADMINS section 8); codes only.
         void track({ name: 'space.join.failed', profileId: learnerId, payload: { reason: result.code } });
-        return 'cap' in result && result.cap !== undefined ? { ok: false, error: result.code, cap: result.cap } : { ok: false, error: result.code };
+        const out: JoinOutcome = { ok: false, error: result.code };
+        if ('cap' in result && result.cap !== undefined) out.cap = result.cap;
+        if ('to' in result && result.to) out.to = result.to;
+        if ('from' in result && result.from) out.from = result.from;
+        return out;
       }
-      const current = await get().hydrate(learnerId);
-      put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
+      // Owner report 2026-10-23: a Worker that sends the inbox list is the truth, so it replaces the cache (a merge
+      // into a stale cache kept a class the learner had moved out of). An older Worker sends one row: merged as before.
+      if (result.memberships) {
+        bump(learnerId);
+        put(learnerId, result.memberships);
+      } else {
+        const current = await get().hydrate(learnerId);
+        bump(learnerId);
+        put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
+      }
       void track({ name: 'space.join.succeeded', profileId: learnerId, payload: { kind: result.membership.kind, alreadyMember: result.alreadyMember } });
       adoptJoinName(learnerId, namePlan.rename);
       // The join changes the server's tier and plans for this learner: read them now, not at the next sync
@@ -493,6 +552,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const result = await client.leaveSpace(spaceId, learnerId, creds);
       if (result.status !== 'ok') return false;
       const current = await get().hydrate(learnerId);
+      bump(learnerId);
       put(learnerId, current.filter((m) => m.spaceId !== spaceId));
       void track({ name: 'space.left', profileId: learnerId });
       return true;

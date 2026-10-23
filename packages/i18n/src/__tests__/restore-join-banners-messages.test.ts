@@ -156,7 +156,7 @@ describe('caregiver.join (sync/join-space)', () => {
   });
 
   it('keeps the calm error lines (the shared ones live in `retry` and `audience`)', () => {
-    const { familyFull, ...lines } = j.errors;
+    const { familyFull, movedOut, movedOutElsewhere, moveWaiting, ...lines } = j.errors;
     expect(lines).toEqual({
       codeNotFound: "That code didn't work. Check it with your teacher.",
       codeExpired: 'That code is too old. Ask for a new one.',
@@ -169,6 +169,10 @@ describe('caregiver.join (sync/join-space)', () => {
       off: 'Joining a class is not set up on this build.',
     });
     expect(familyFull(4)).toBe('This family already has 4 learners. Ask a grown-up in your family.');
+    // Owner report 2026-10-23: a move out of the class stands, or one into it waits.
+    expect(movedOut('Suni', 'Class B', 'Class A')).toBe('Suni moved to Class B. To be in Class A too, ask the teacher.');
+    expect(movedOutElsewhere('Suni', 'Class A')).toBe('Suni moved to another class. To be in Class A too, ask the teacher.');
+    expect(moveWaiting('Class B')).toBe('A move to Class B is waiting for the teacher. It finishes when they say yes.');
   });
 
   it('[SA] the full-family and full-school lines in es and ko (AMENDMENTS-SEATS-ADMINS section 9.1): the cap as an argument, no number typed', () => {
