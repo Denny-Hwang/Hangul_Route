@@ -1072,6 +1072,14 @@ export const consoleMsgs = {
     },
     backToConsole: { cta: 'Volver a la consola' },
     ownerOnly: 'Solo quien creó la escuela puede cambiar estos ajustes.',
+    learnerGone: (name: string) => `${name} ya no está en esta clase.`,
+    unarchiveOverCap: (n: number | null, cap: number) =>
+      n === null
+        ? `Hay estudiantes que ya están en ${cap} clases. Antes de desarchivar, muévelos a otra clase o quítalos.`
+        : plural('es', n, {
+            one: `${n} estudiante ya está en ${cap} clases. Antes de desarchivar, mueve o quita a ese estudiante.`,
+            other: `${n} estudiantes ya están en ${cap} clases. Antes de desarchivar, mueve o quita a esos estudiantes.`,
+          }),
   },
   school: {
     title: 'Escuela',
@@ -1648,6 +1656,7 @@ export const consoleMsgs = {
       full: (cls: string) => `${cls} no tiene lugar ahora.`,
       capLearner: (name: string) => `${name} ya está en todas las clases que se permiten.`,
       alreadyMember: (name: string, cls: string) => `${name} ya está en ${cls}.`,
+      alreadyMemberKeepOne: (name: string, cls: string) => `${name} ya está en ${cls}. Si debe quedar solo en ${cls}, quita a ${name} de esta clase.`,
       alreadyOpen: (name: string) => `Ya hay un cambio pendiente para ${name}.`,
       sameSpace: (name: string) => `${name} ya está en esta clase.`,
       codeRequired: 'Primero escribe el código de la clase.',

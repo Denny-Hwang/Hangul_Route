@@ -29,10 +29,12 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size after CM-8 moved the stories out (6,345,469 B raw / 1,573,399 B gzip, the
-  // release build of CM-8's final code on CM-5's head, no recorded clips; 7,337,815 B after CM-5, 8,321,783 B before
-  // CM-5) plus a 4,531 B rounding margin. A row that adds to it raises this line with its measurement; the es / ko story
-  // overlays still in the start bundle leave it with row CM-8b, before CM-46a adds narration. The phase-0 integration
+  // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
+  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
+  // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
+  // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
+  // before CM-46a adds narration. The phase-0 integration
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
   // measurement plus an 8,835 B rounding margin. [OA] The one-account integration (#801: OA-0b to OA-9 on main
   // 34e8f85d5) adds the chooser, PIN v2, people-on-this-device and the face or fingerprint shortcut to the shell:
@@ -103,12 +105,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
-  // strings, main fc580beed). The line leaves about 94 KB for the stories and strings
-  // ahead (CM-46a, CM-46); a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves
-  // text out (CM-8b's story overlay split).
+  // strings, main fc580beed; ko 925,171 B, es 542,657 B on main 8dfb8a43c). The line left about 99 KB for the stories
+  // and strings ahead (CM-46a, CM-46) at the shrink, about 94 KB on the final integration and about 75 KB on main
+  // 8dfb8a43c; a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves text out
+  // (CM-8b's story overlay split).
   localeChunkRaw: 1_000_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
-  // BrowseApp 111,404 B raw. The line is the presenter plus about 54 KB.
+  // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
+  // PresenterApp 232,574 B, BrowseApp 104,116 B, about 67 KB under the line.
   rootChunkRaw: 300_000,
   // [GU] Each learner screen chunk (row GU-3: the guest's first quest stack, `src/navigation/guest-chunk.tsx`), loaded
   // the first time its screens open. Measured when GU-3 landed (see SCREEN_CHUNKS); the line leaves room for GU-4's
@@ -118,7 +122,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // scene's description, the setting and props it adds, its reference round and its note, as built.
   sceneChunkRaw: 25_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
-  // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
+  // crossing it triggers CM-5B (Save for offline). On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
+  // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
   // The story lines of scripts/build-stories.mjs `BUDGET` (perStoryRaw, totalRaw, totalGzip), held on the built story
   // bundles too, which are what the service worker caches: a built bundle is about 13% larger than its generated
@@ -128,8 +133,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   storiesGzip: 510_000,
   // The review-item index (F-CURR-002 §4.2, §10 ceilings table, row CM-10): one content-hashed chunk of
   // scripts/build-review-items.mjs, lazy and precached, held here on its built bundle and there on its module
-  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10: 728 items, 94,162 B raw / 19,597 B
-  // gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`).
+  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10's first cut: 728 items, 94,162 B raw /
+  // 19,597 B gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`); with CM-10's review
+  // fixes (the Stage 1 Discover words) 733 items, 97,670 B raw / 20,024 B gzip as generated, 105,189 B raw /
+  // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   reviewItemsRaw: 150_000,
   reviewItemsGzip: 30_000,
 });

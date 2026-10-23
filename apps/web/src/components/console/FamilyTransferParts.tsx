@@ -11,6 +11,7 @@ import { canCancel, daysSince, isOpenTransfer, slotLabel, startError, startError
 import { consentLines, consentRecord, identityLines, type ConsentLine, type ConsentSheetData } from '@/lib/console/transfer-consent';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
 
 /**
  * The family side of class moves (F-SPACE-002 section 4.8 "Family page" and 4.11, PR T-6d): the consent sheet, the
@@ -737,6 +738,8 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
     setBusy(true);
     setNote(null);
     const result = await run();
+    // A cancelled or declined move changes what an open class roster may show: other console tabs read again at once.
+    if (result.ok) announceRosterChange();
     setBusy(false);
     if (!result.ok) {
       const f = familyFailure(result);
@@ -758,6 +761,8 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
     const result = await api.approveTransfer(familyId, view.id, { slots: ['learner'], consent: consentRecord(sheetLocale, view.termsDigest), introduce });
     setBusy(false);
     if (result.ok) {
+      // The family's yes can move the learner at once: an open class roster in another console tab reads again now.
+      announceRosterChange();
       setReviewing(null);
       await load();
       return;
