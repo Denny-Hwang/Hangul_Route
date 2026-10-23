@@ -1,12 +1,12 @@
 import React from 'react';
-import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../../tokens';
-import { upperCellCardArtIds } from './upper-card-ids';
+import { albumLegendArtIds, upperCellCardArtIds } from './upper-card-ids';
 import type { HeritageCardArtProps } from './types';
 
 /**
  * The upper-cell card art (F-CURR-002 §7.2, row CM-23; F-CARD-S2-001 and F-CARD-S3-001 as amended): one drawing per
- * album card of Stages 2 to 4, in the shipped geometric minhwa language of `HeritageCardArt`
+ * album card of Stages 2 to 7 and per album legendary card, in the shipped geometric minhwa language of `HeritageCardArt`
  * (design/brief/illustrations/heritage-card-art.md): rounded primitives, a ~3 px stroke, at most five colours from
  * the theme tint, the brand and cream, every face smiling, theme tokens only. A sibling of `HeritageCardArt.tsx`,
  * never exported by the package barrel: the app loads it in its own chunk by this file's path
@@ -400,10 +400,257 @@ function GachiArt(p: ArtProps): React.ReactElement {
   );
 }
 
-/** True for a card id this module draws. */
-export const hasUpperCellArt = (cardId: string): boolean => upperCellCardArtIds.includes(cardId);
+// ---- Stages 6-7 ----------------------------------------------------------------------------------------
+// F-CARD-S6-001 and F-CARD-S7-001 as amended (row CM-23 part 3): a Stage 6 card is a thing read in the world, with its
+// Korean drawn in it (a menu, a call, a ticket, a sign, a price card; amounts are round practice amounts in won); a
+// Stage 7 card is writing: the word as a word-bank tile over a ruled page with a sentence the cell builds from its bank.
 
-/** The drawings by card id; `upperCellCardArtIds` lists the same fifteen. */
+/** Korean (or a sign) drawn in a picture, centred on `x`. */
+const word = (x: number, y: number, text: string, size = 18, fill: string = colors.text.primary): React.ReactElement => (
+  <SvgText x={x} y={y} fontSize={size} fontWeight="700" fill={fill} textAnchor="middle">
+    {text}
+  </SvgText>
+);
+
+function WonArt(p: ArtProps): React.ReactElement {
+  // Won: a menu board of two dishes and their prices, a won coin at its corner.
+  return (
+    <Card theme="letters" p={p}>
+      {shadow(178, 70)}
+      <Rect x={30} y={36} width={140} height={132} rx={12} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
+      <Rect x={30} y={36} width={140} height={26} rx={12} fill={colors.theme.letters} />
+      {word(100, 98, '김밥 이천 원')}
+      {word(100, 132, '라면 삼천 원')}
+      <Circle cx={160} cy={160} r={20} fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2.5} />
+      {word(160, 167, '₩', 20, colors.hoya.furDark)}
+    </Card>
+  );
+}
+
+function YeogiyoArt(p: ArtProps): React.ReactElement {
+  // Over here!: a friend at a table raises a paw and calls the server.
+  return (
+    <Card theme="life" p={p}>
+      <Pal x={64} fur={colors.hoya.fur} />
+      <Circle cx={100} cy={96} r={10} fill={colors.hoya.fur} />
+      <Rect x={20} y={166} width={160} height={14} rx={6} fill={colors.hoya.furDark} />
+      <Path d="M120 166 H164 Q162 146 142 146 Q122 146 120 166 Z" fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
+      <Bubble x={96} w={88} tx={112}>{word(140, 54, '여기요!')}</Bubble>
+    </Card>
+  );
+}
+
+function GichapyoArt(p: ArtProps): React.ReactElement {
+  // Train ticket: a ticket with its stations and its time, a notch at each side.
+  return (
+    <Card theme="rites" p={p}>
+      {shadow(160, 74)}
+      <Path
+        d="M26 54 H174 V86 A12 12 0 0 0 174 110 V146 H26 V110 A12 12 0 0 0 26 86 Z"
+        fill={colors.surface.paper}
+        stroke={colors.theme.rites}
+        strokeWidth={3}
+        strokeLinejoin="round"
+      />
+      {word(100, 82, '기차표', 16, colors.theme.rites)}
+      {word(100, 112, '서울 → 부산', 20)}
+      {word(100, 136, '두 시', 16, colors.text.secondary)}
+    </Card>
+  );
+}
+
+function JeongsangArt(p: ArtProps): React.ReactElement {
+  // Summit: a trail sign before a green mountain, its board pointing up to the top.
+  return (
+    <Card theme="nature" p={p}>
+      <Path d="M0 170 L84 52 L130 108 L150 86 L200 150 V192 Q200 200 192 200 H8 Q0 200 0 192 Z" fill={colors.theme.nature} opacity={0.8} />
+      <Rect x={96} y={96} width={8} height={90} rx={3} fill={colors.hoya.furDark} />
+      <Path d="M44 104 H140 L156 120 L140 136 H44 Z" fill={colors.surface.paper} stroke={colors.hoya.furDark} strokeWidth={3} strokeLinejoin="round" />
+      {word(94, 127, '정상 ↑', 20)}
+      {word(56, 176, '한 시간', 16, colors.surface.canvas)}
+    </Card>
+  );
+}
+
+function DeomArt(p: ArtProps): React.ReactElement {
+  // A little extra: a market price card for three apples, and one more apple added beside them.
+  return (
+    <Card theme="crafts" p={p}>
+      {shadow(176, 70)}
+      <Rect x={30} y={30} width={140} height={64} rx={10} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
+      {word(100, 58, '사과 세 개')}
+      {word(100, 84, '이천 원', 18, colors.brand.primary)}
+      {[56, 92, 128].map((x) => (
+        <Circle key={x} cx={x} cy={146} r={17} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} />
+      ))}
+      <Circle cx={164} cy={150} r={13} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} />
+      {word(164, 126, '덤', 16, colors.feedback.success)}
+    </Card>
+  );
+}
+
+/** Stage 7: the word as a word-bank tile, over a ruled page with the cell's sentence written on it. */
+function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps; tile: string; line: string; children?: React.ReactNode }): React.ReactElement {
+  return (
+    <Card theme={theme} p={p}>
+      {shadow(184, 72)}
+      <Rect x={14} y={88} width={172} height={90} rx={8} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
+      <G stroke={colors.brand.secondaryLight} strokeWidth={2}>
+        <Line x1={26} y1={136} x2={174} y2={136} />
+        <Line x1={26} y1={162} x2={174} y2={162} />
+      </G>
+      {/* A Hangul syllable is about one font size wide: a long sentence gets a smaller size so it stays on the page. */}
+      {word(100, 130, line, Math.min(16, Math.floor(150 / line.length)), colors.brand.secondaryDark)}
+      <Rect x={58} y={30} width={84} height={40} rx={12} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={3} />
+      {word(100, 57, tile, 20)}
+      {children}
+    </Card>
+  );
+}
+
+function IreumArt(p: ArtProps): React.ReactElement {
+  // Name: Hoya's name, written the way the cell's word bank builds it.
+  return <Page theme="letters" p={p} tile="이름" line="제 이름은 호야예요." />;
+}
+
+function AchimArt(p: ArtProps): React.ReactElement {
+  // Morning: the sun rises at the tile's side; Hoya's morning written below.
+  return (
+    <Page theme="life" p={p} tile="아침" line="아침에 빵을 먹어요.">
+      <Circle cx={168} cy={44} r={14} fill={colors.feedback.nudge} />
+    </Page>
+  );
+}
+
+function SaengilArt(p: ArtProps): React.ReactElement {
+  // Birthday: a small cake with a candle beside the tile; the day written below.
+  return (
+    <Page theme="rites" p={p} tile="생일" line="생일에 케이크를 먹었어요.">
+      <Rect x={152} y={48} width={34} height={22} rx={5} fill={colors.brand.primaryLight} stroke={colors.brand.primary} strokeWidth={2} />
+      <Path d="M169 48 V38" stroke={colors.brand.primary} strokeWidth={3} strokeLinecap="round" />
+    </Page>
+  );
+}
+
+function TokkiArt(p: ArtProps): React.ReactElement {
+  // Rabbit: two long ears peek over the tile; the sentence about it below.
+  return (
+    <Page theme="nature" p={p} tile="토끼" line="토끼는 작아요.">
+      <G fill={colors.surface.canvas} stroke={colors.text.muted} strokeWidth={2.5}>
+        <Ellipse cx={86} cy={22} rx={7} ry={16} />
+        <Ellipse cx={114} cy={22} rx={7} ry={16} />
+      </G>
+    </Page>
+  );
+}
+
+function BihaenggiArt(p: ArtProps): React.ReactElement {
+  // Plane: a folded paper plane flies past the tile; the folding step written below.
+  return (
+    <Page theme="crafts" p={p} tile="비행기" line="비행기를 접어요.">
+      <Path d="M150 52 L192 36 L168 74 L162 60 Z" fill={colors.surface.paper} stroke={colors.brand.secondary} strokeWidth={2.5} strokeLinejoin="round" />
+    </Page>
+  );
+}
+
+// ---- The album legendary cards (row CM-23 part 3) --------------------------------------------------------
+// Each in a gold frame of the legendary rarity token, its Korean name on a label, one emblem of its album.
+
+function Legend({ theme, p, name, children }: { theme: ThemeKey; p: ArtProps; name: string; children: React.ReactNode }): React.ReactElement {
+  return (
+    <Card theme={theme} p={p}>
+      <Rect x={8} y={8} width={184} height={184} rx={12} fill="none" stroke={colors.rarity.legendary} strokeWidth={4} />
+      {children}
+      <Rect x={44} y={150} width={112} height={32} rx={10} fill={colors.surface.paper} stroke={colors.rarity.legendary} strokeWidth={2.5} />
+      {word(100, 172, name, 18)}
+    </Card>
+  );
+}
+
+function HunminjeongeumArt(p: ArtProps): React.ReactElement {
+  // Hunminjeongeum: a stitch-bound book with its title strip, a ㅎ on its cover.
+  return (
+    <Legend theme="letters" p={p} name="훈민정음">
+      <Rect x={58} y={26} width={84} height={114} rx={6} fill={colors.brand.secondaryLight} stroke={colors.brand.secondaryDark} strokeWidth={3} />
+      <G fill={colors.brand.secondaryDark}>
+        {[40, 62, 84, 106, 126].map((y) => (
+          <Circle key={y} cx={68} cy={y} r={2.5} />
+        ))}
+      </G>
+      <Rect x={98} y={36} width={30} height={60} rx={3} fill={colors.surface.paper} stroke={colors.brand.secondaryDark} strokeWidth={2} />
+      <G stroke={colors.brand.primary} strokeWidth={4} strokeLinecap="round" fill="none">
+        <Path d="M108 48 H118 M104 56 H122" />
+        <Circle cx={113} cy={74} r={8} />
+      </G>
+    </Legend>
+  );
+}
+
+function JangArt(p: ArtProps): React.ReactElement {
+  // Jang making: three round onggi jars in a row on a stone terrace, lids on.
+  return (
+    <Legend theme="life" p={p} name="장 담그기">
+      <Rect x={22} y={124} width={156} height={14} rx={5} fill={colors.surface.sunken} stroke={colors.text.muted} strokeWidth={2} />
+      {(
+        [
+          [52, 20],
+          [100, 26],
+          [148, 20],
+        ] as const
+      ).map(([x, r]) => (
+        <G key={x}>
+          <Ellipse cx={x} cy={124 - r} rx={r} ry={r} fill={colors.hoya.furDark} stroke={colors.text.secondary} strokeWidth={2.5} />
+          <Ellipse cx={x} cy={124 - 2 * r + 2} rx={r * 0.6} ry={5} fill={colors.text.secondary} />
+        </G>
+      ))}
+    </Legend>
+  );
+}
+
+function HangawiArt(p: ArtProps): React.ReactElement {
+  // Hangawi: a full harvest moon over a plate of half-moon songpyeon.
+  return (
+    <Legend theme="rites" p={p} name="한가위">
+      <Circle cx={100} cy={64} r={40} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={3} />
+      <Ellipse cx={100} cy={128} rx={52} ry={12} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
+      {[74, 100, 126].map((x, i) => (
+        <Path key={x} d={`M${x - 12} 124 Q${x} 104 ${x + 12} 124 Z`} fill={i === 1 ? colors.theme.nature : colors.surface.canvas} stroke={colors.text.muted} strokeWidth={2} />
+      ))}
+    </Legend>
+  );
+}
+
+function JirisanArt(p: ArtProps): React.ReactElement {
+  // Jirisan: long ridges one behind another, the sun over the highest peak.
+  return (
+    <Legend theme="nature" p={p} name="지리산">
+      <Circle cx={140} cy={44} r={14} fill={colors.feedback.nudge} />
+      <Path d="M12 120 Q56 52 100 92 Q136 40 188 110 V140 H12 Z" fill={colors.theme.nature} opacity={0.55} />
+      <Path d="M12 140 Q60 92 108 124 Q150 92 188 128 V148 H12 Z" fill={colors.feedback.success} />
+    </Legend>
+  );
+}
+
+function SsireumArt(p: ArtProps): React.ReactElement {
+  // Ssireum: two friends lean in and hold each other's cloth belt in a round sand ring.
+  return (
+    <Legend theme="crafts" p={p} name="씨름">
+      <Ellipse cx={100} cy={136} rx={82} ry={14} fill={colors.feedback.nudgeLight} />
+      <G transform="rotate(10 58 186) translate(0 -46)">
+        <Pal x={64} fur={colors.hoya.fur} />
+      </G>
+      <G transform="rotate(-10 142 186) translate(0 -46)">
+        <Pal x={136} fur={colors.hoya.furBlue} />
+      </G>
+      <Rect x={58} y={112} width={84} height={8} rx={4} fill={colors.brand.primary} />
+    </Legend>
+  );
+}
+
+/** True for a card id this module draws. */
+export const hasUpperCellArt = (cardId: string): boolean => upperCellCardArtIds.includes(cardId) || albumLegendArtIds.includes(cardId);
+
+/** The drawings by card id; `upperCellCardArtIds` and `albumLegendArtIds` list the same thirty. */
 export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabel }: HeritageCardArtProps): React.ReactElement | null {
   const p: ArtProps = { size, testID, accessibilityLabel: accessibilityLabel ?? `Card art for ${cardId}` };
   switch (cardId) {
@@ -422,6 +669,21 @@ export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabe
     case 'card:insa': return <InsaArt {...p} />;
     case 'card:biga-wayo': return <BigaWayoArt {...p} />;
     case 'card:gachi': return <GachiArt {...p} />;
+    case 'card:won': return <WonArt {...p} />;
+    case 'card:yeogiyo': return <YeogiyoArt {...p} />;
+    case 'card:gichapyo': return <GichapyoArt {...p} />;
+    case 'card:jeongsang': return <JeongsangArt {...p} />;
+    case 'card:deom': return <DeomArt {...p} />;
+    case 'card:ireum': return <IreumArt {...p} />;
+    case 'card:achim': return <AchimArt {...p} />;
+    case 'card:saengil': return <SaengilArt {...p} />;
+    case 'card:tokki': return <TokkiArt {...p} />;
+    case 'card:bihaenggi': return <BihaenggiArt {...p} />;
+    case 'card:hunminjeongeum': return <HunminjeongeumArt {...p} />;
+    case 'card:jang': return <JangArt {...p} />;
+    case 'card:hangawi': return <HangawiArt {...p} />;
+    case 'card:jirisan': return <JirisanArt {...p} />;
+    case 'card:ssireum': return <SsireumArt {...p} />;
     default: return null;
   }
 }
