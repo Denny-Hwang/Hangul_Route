@@ -188,11 +188,11 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const cheerMessage = resultsCheerMessage(stars, played, m.cheer);
   const newCardSource = award?.isNew ? cardById(award.cardId) : undefined;
   const newCard = newCardSource && localizeCard(newCardSource, locale);
-  const showSparkles = !!newCard && stars >= 3;
   // An album this run filled (F-CURR-002 §7.2, row CM-23 part 3): its legendary card gets the F-MOTION-003 celebration
-  // of its own, so the extras row below leaves it out.
+  // of its own, so the extras row below leaves it out, and the new-card banner leaves the sparkles to it (one at a time).
   const albumSource = outcome?.extras.map((e) => cardById(e.cardId)).find((c) => c?.unlockedBy.startsWith('set:album-'));
   const albumCard = albumSource && localizeCard(albumSource, locale);
+  const showSparkles = !!newCard && stars >= 3 && !albumCard;
 
   // The cards an episode, stage or set completion brought besides the quest card (F-STORY-006 §3.7).
   const extras = useMemo(() => {

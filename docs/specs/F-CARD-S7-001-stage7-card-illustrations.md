@@ -44,7 +44,7 @@ Stage 7 is also where the five category albums can first be finished, so the fiv
 
 | Album | Card | Korean | Source |
 |---|---|---|---|
-| Letters | Hangeul Book (`card:hunminjeongeum`) | 훈민정음 | UNESCO Memory of the World, Hunminjeongum Manuscript (inscribed 1997) |
+| Letters | Hangul Book (`card:hunminjeongeum`) | 훈민정음 | UNESCO Memory of the World, Hunminjeongum Manuscript (inscribed 1997) |
 | Food | Jang Making (`card:jang`) | 장 담그기 | UNESCO, Knowledge, beliefs and practices related to jang making in the Republic of Korea (inscribed 2024) |
 | Holidays | Hangawi (`card:hangawi`) | 한가위 | National Institute of Korean Language |
 | Nature | Jirisan (`card:jirisan`) | 지리산 | Korea National Park Service |

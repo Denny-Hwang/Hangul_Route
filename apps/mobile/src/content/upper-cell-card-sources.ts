@@ -208,14 +208,14 @@ export const UPPER_CARD_SOURCES: Readonly<Record<string, readonly UpperCardSourc
       publisher: '국립국어원 (National Institute of Korean Language)',
       url: 'https://www.korean.go.kr/front/page/pageView.do?page_id=P000104&mn_id=97',
       accessed: '2026-10-14',
-      quoteOrLocator: 'Chapter 1, articles 1-5: article 1, loanwords are written with the current 24 letters only (as recorded by Write Your Name, note n1)',
+      quoteOrLocator: '제1장 표기의 원칙, 제1항: "외래어는 국어의 현용 24 자모만으로 적는다."',
     },
     {
       title: '외래어 표기법의 이해 (새국어소식, 2002년 3월)',
       publisher: '국립국어원 (National Institute of Korean Language)',
       url: 'https://www.korean.go.kr/nkview/nknews/200203/44_4.html',
       accessed: '2026-10-14',
-      quoteOrLocator: 'Opening paragraphs: the rules spell [p] and [f] both with ㅍ, and [l] and [r] both with ㄹ (as recorded by Write Your Name, note n1)',
+      quoteOrLocator: '"즉 [p]와 [f] 소리를 똑같이 \'ㅍ\'으로 적거나, [l]과 [r] 소리를 똑같이 \'ㄹ\'로 적도록 하는 외래어 표기법 탓에 한국 사람들이 이 소리들을 제대로 발음하지 못한다는 것이다."',
     },
   ],
   'card:achim': [
@@ -367,12 +367,13 @@ export const UPPER_CARD_REVIEW_S67 = {
   status: 'ready' as 'draft' | 'ready',
   reviewedBy: 'MAR' as const,
   reviewedAt: '2026-10-23',
-  passes: 4,
+  passes: 5,
   notes: [
     "Part 3 pass 1 author (2026-10-23): one card per Stage 6-7 cell, its word taught in the cell (원 S6 letters, 여기요 S6 life, 기차표 S6 rites, 정상 S6 nature, 덤 S6 crafts; 이름, 아침, 생일, 토끼 and 비행기 from the Stage 7 word banks), Stage 6 pictures drawing the cell's own Korean with round practice amounts in won, Stage 7 pages a word-bank sentence with the neutral cast (Hoya); one legendary card per album; facts from sources the cells' MAR already recorded (access dates kept) or pages opened again on 2026-10-23 (UNESCO Memory of the World and Intangible Cultural Heritage, the Korea National Park Service, the Standard Korean Language Dictionary entries 돌, 토끼 and 한가위).",
     "Part 3 pass 2a language: the travel fact first read 'families often travel home to the parents', now 'many people travel home to their parents' in en, es and ko; the trail fact's 'set times to start up it' now 'set hours to begin the climb'; the letters legendary title 'Hunminjeongeum' overflowed the card page at 320 and is now 'Hangeul Book' (es 'Libro del hangeul'; its Korean stays 훈민정음); the travel fact says 'sons and daughters', since 'children' is age wording in the card check; the es jang fact was cut under the 180-character line; no age wording, no Hangul in an English field.",
     "Part 3 pass 2b culture and facts: each claim matched to its quoted words; UNESCO is claimed only for the exact elements under their UNESCO names with the inscription year on the page (Hunminjeongum Manuscript 1997, jang making 2024, Ssirum/Ssireum 2018 on the joint application of the DPR Korea and the Republic of Korea); the jang fact claims the inscription only and no origin for fermented sauces Korea shares with its neighbours; the Hangawi fact leaves out the dictionary's origin note; the World Heritage page for Getbol could not be opened (HTTP 403), so the Nature legendary card rests on the Korea National Park Service instead; no native-speaker or expert-review claim.",
     'Part 3 pass 2c learning design: every card word appears in its cell file (test), the Stage 7 words in its word bank; facts 76-179 characters; no lyrics, artists or brands; the Library albums only fill, a finished album says Album complete, the legendary earn hint says what to do and never how many are left (7.7); cards come only from finishing cells and albums (never random, never sold).',
     'Part 3 pass 3 reviser and third pass: the fixes applied and the fifteen cards re-read in en, es and ko against their sources; no two of the 97 cards share a Korean word (T-AWARD-5).',
+    "Part 3 pass 4 independent MAR (2026-10-23, a separate reviewer of part 3's own commits): ko PASS on every string (the particles after the embedded English UNESCO names, no age wording); es PASS on the five album UI messages, es NOT PASS on two card strings. Fixed in the fix stage with the reviewer's wording: card:gichapyo is 'Boleto de tren' with 'Un boleto…', the word its Stage 6 rites cell teaches in es (the es overlays say boleto, never billete); its fact opens 'En las fiestas tradicionales', since 'En una fiesta' reads as a party and the source means 명절. Nits applied: the es jang and ssireum facts read 'La UNESCO inscribió «…» en 2024 / 2018', naming the inscribing body as the Arirang fact does; the new strings spell 한글 one way, Hangul (en 'Hangul Book', es 'Libro del hangul'), as the shipped Hangul Day card, the ireum back and the Stage 7 es glosses do, while part 1's shipped title Hangeul is not this part's to change; the two ireum source locators now quote the pages' own Korean words. Kept, as the rule requires: the exact English UNESCO element names inside the es and ko facts, with the Korean title of each card on its face (훈민정음, 장 담그기, 씨름) as the localized name.",
   ],
 } as const;

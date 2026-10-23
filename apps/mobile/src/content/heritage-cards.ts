@@ -170,7 +170,7 @@ export const upperCellCards: HeritageCard[] = [
  */
 export const albumLegendCards: HeritageCard[] = (
   [
-    ['hunminjeongeum', 'Hangeul Book', '훈민정음'],
+    ['hunminjeongeum', 'Hangul Book', '훈민정음'],
     ['jang', 'Jang Making', '장 담그기', 'jang damgeugi'],
     ['hangawi', 'Hangawi', '한가위'],
     ['jirisan', 'Jirisan', '지리산'],

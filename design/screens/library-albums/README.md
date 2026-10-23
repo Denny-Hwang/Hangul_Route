@@ -36,7 +36,7 @@ with its legendary card.
 | Shot | What it shows |
 |---|---|
 | `shots/upper-cards-s67-albums-320.png` | The albums at 320 px, each "Album complete": the legendary card first (in its legendary border), then the five album cards, wrapping to a second line. Still no count of what is left. |
-| `shots/upper-cards-legendary-card-320.png` | `card:hunminjeongeum` (Hangeul Book) at 320 px: the legendary drawing in its gold frame with 훈민정음 on its label, the blurb, the UNESCO fact and its source line. |
+| `shots/upper-cards-legendary-card-320.png` | `card:hunminjeongeum` (Hangul Book) at 320 px: the legendary drawing in its gold frame with 훈민정음 on its label, the blurb, the UNESCO fact and its source line. |
 | `shots/upper-cards-s6-card-320.png` | `card:won` at 320 px: the menu board with 김밥 이천 원 and 라면 삼천 원, the fact and its National Institute of Korean Language source line. |
 | `shots/upper-cards-s67-albums-wide.png` | The complete albums on a wide window. |
 

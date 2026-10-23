@@ -388,9 +388,9 @@
       "fact": "Para llamar a quien atiende en un restaurante o una tienda, se suele decir yeogiyo. No marca quién atiende y quién es atendido, así que va bien para ambos."
     },
     "card:gichapyo": {
-      "title": "Billete de tren",
-      "blurb": "Un billete con las estaciones y la hora del tren.",
-      "fact": "En una fiesta, mucha gente viaja a casa de sus padres. Yeokgwiseong es al revés: los padres viajan a donde viven sus hijos e hijas."
+      "title": "Boleto de tren",
+      "blurb": "Un boleto con las estaciones y la hora del tren.",
+      "fact": "En las fiestas tradicionales, mucha gente viaja a casa de sus padres. Yeokgwiseong es al revés: los padres viajan a donde viven sus hijos e hijas."
     },
     "card:jeongsang": {
       "title": "Cima",
@@ -428,14 +428,14 @@
       "fact": "Jongijeopgi es doblar papel para darle formas como una grulla, un barco o un avión."
     },
     "card:hunminjeongeum": {
-      "title": "Libro del hangeul",
+      "title": "Libro del hangul",
       "blurb": "El libro que dio a conocer las nuevas letras.",
       "fact": "El «Hunminjeongum Manuscript» de 1446 dio a conocer las nuevas letras del rey Sejong. Se inscribió en el Registro Memoria del Mundo de la UNESCO en 1997."
     },
     "card:jang": {
       "title": "Elaboración de jang",
       "blurb": "Salsas que se hacen y se guardan con cuidado.",
-      "fact": "Los jang son salsas fermentadas, como la salsa de soya. «Knowledge, beliefs and practices related to jang making in the Republic of Korea» se inscribió en la UNESCO en 2024."
+      "fact": "Los jang son salsas fermentadas, como la salsa de soya. La UNESCO inscribió «Knowledge, beliefs and practices related to jang making in the Republic of Korea» en 2024."
     },
     "card:hangawi": {
       "title": "Hangawi",
@@ -450,7 +450,7 @@
     "card:ssireum": {
       "title": "Ssireum",
       "blurb": "Dos jugadores, dos cinturones de tela y un gran empujón.",
-      "fact": "«Traditional Korean wrestling (Ssirum/Ssireum)» se inscribió en la UNESCO en 2018, por una candidatura conjunta de la RPD de Corea y la República de Corea."
+      "fact": "La UNESCO inscribió «Traditional Korean wrestling (Ssirum/Ssireum)» en 2018, por una candidatura conjunta de la RPD de Corea y la República de Corea."
     }
   }
 }

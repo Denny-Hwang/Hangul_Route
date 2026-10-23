@@ -226,9 +226,10 @@ describe('upper-cell cards, Stages 2-7 (row CM-23)', () => {
     expect(UPPER_CARD_REVIEW.notes.join(' ')).not.toMatch(/Part 2/);
     expect(UPPER_CARD_REVIEW_S4.notes.every((n) => n.startsWith('Part 2'))).toBe(true);
     expect(UPPER_CARD_REVIEW_S4.notes.some((n) => /independent MAR/.test(n))).toBe(true);
-    // Part 3's record is its own: author, the three checkers, reviser and third pass.
+    // Part 3's record is its own: author, the three checkers, reviser and third pass, then the independent es and ko pass.
     expect(UPPER_CARD_REVIEW_S67.notes.every((n) => n.startsWith('Part 3'))).toBe(true);
-    expect(UPPER_CARD_REVIEW_S67.notes.map((n) => /^Part 3 pass (\w+)/.exec(n)?.[1])).toEqual(['1', '2a', '2b', '2c', '3']);
+    expect(UPPER_CARD_REVIEW_S67.notes.map((n) => /^Part 3 pass (\w+)/.exec(n)?.[1])).toEqual(['1', '2a', '2b', '2c', '3', '4']);
+    expect(UPPER_CARD_REVIEW_S67.notes.some((n) => /independent MAR/.test(n))).toBe(true);
   });
 
   it('the backs are imported by the upper-cards chunk only, so the start bundle never carries them', () => {

@@ -36,17 +36,17 @@ describe('the album-complete banner (row CM-23 part 3)', () => {
     const onSee = vi.fn();
     const r = await draw(false, onSee);
     const texts = screenTexts(r.root);
-    expect(texts).toEqual(expect.arrayContaining(['Album complete!', 'Your Letters album is full. Here is its legendary card.', 'Hangeul Book']));
+    expect(texts).toEqual(expect.arrayContaining(['Album complete!', 'Your Letters album is full. Here is its legendary card.', 'Hangul Book']));
     expect(texts).not.toContain(EN.newCard.title);
     expect(byTestId(r.root, 'card-unlock-sparkles').length).toBeGreaterThan(0);
-    const [see] = buttonsNamed(r.root, EN.newCard.seeA11y('Hangeul Book'));
+    const [see] = buttonsNamed(r.root, EN.newCard.seeA11y('Hangul Book'));
     await press(see!);
     expect(onSee).toHaveBeenCalledTimes(1);
   });
 
   it('reduced motion: the same banner and words at once, no sparkles', async () => {
     const r = await draw(true);
-    expect(screenTexts(r.root)).toEqual(expect.arrayContaining(['Album complete!', 'Hangeul Book']));
+    expect(screenTexts(r.root)).toEqual(expect.arrayContaining(['Album complete!', 'Hangul Book']));
     expect(byTestId(r.root, 'results-album-done').length).toBeGreaterThan(0);
     expect(byTestId(r.root, 'card-unlock-sparkles')).toHaveLength(0);
   });

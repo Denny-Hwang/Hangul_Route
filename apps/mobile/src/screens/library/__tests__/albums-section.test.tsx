@@ -56,7 +56,7 @@ describe('AlbumsSection, a finished album (row CM-23 part 3)', () => {
     expect(texts.join(' ')).not.toMatch(/%|\d+\s*(\/|of)\s*\d+/);
     const row = byTestId(all.root, 'library-album-letters')[0]!;
     expect(byTestId(row, 'library-album-card-card:hunminjeongeum')).toHaveLength(1);
-    const [legend] = buttonsNamed(all.root, 'Hangeul Book');
+    const [legend] = buttonsNamed(all.root, 'Hangul Book');
     await press(legend!);
     expect(onOpen).toHaveBeenCalledWith(cardById('card:hunminjeongeum'));
   });

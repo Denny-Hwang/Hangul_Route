@@ -263,6 +263,24 @@ describe('album legendary cards (row CM-23 part 3)', () => {
     expect(awardOf(noDosirak, 'card:jang')).toBeUndefined();
   });
 
+  it('two devices that hold the Food album’s quest-reward card at different times end with one legendary entry at the earliest time', () => {
+    const LIFE_CELLS = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].map((s) => episodesAll.find((e) => e.id === `episode:${s}-life`)!);
+    // card:dosirak comes from a quest, so each device dates it by its own unlock, both after every first finish.
+    const dosirakAt = (at: string): ProgressSnapshot['cards'] => [{ cardId: 'card:dosirak', unlockedAt: at, newSinceLastView: false }];
+    const a = finishedAll(LIFE_CELLS, T(29), dosirakAt('2026-10-21T10:00:00.000Z'));
+    const b = finishedAll(LIFE_CELLS, null, dosirakAt('2026-10-22T10:00:00.000Z'));
+    const ra = applyAwards(a, missingAwards(awardWorld, a, PROFILE), NOW);
+    const rb = applyAwards(b, missingAwards(awardWorld, b, PROFILE), '2026-10-24T09:00:00.000Z');
+    expect(ra.cards.filter((c) => c.cardId === 'card:jang')).toHaveLength(1);
+    expect(rb.cards.filter((c) => c.cardId === 'card:jang')).toHaveLength(1);
+    const merged = mergeSnapshots(ra, rb, { now: new Date(NOW) });
+    expect(merged.cards.filter((c) => c.cardId === 'card:jang').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+    expect(merged.cards.filter((c) => c.cardId === 'card:dosirak').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+    expect(missingAwards(awardWorld, merged, PROFILE)).toEqual([]);
+    // The merge reads the same in either order.
+    expect(mergeSnapshots(rb, ra, { now: new Date(NOW) }).cards.filter((c) => c.cardId === 'card:jang').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+  });
+
   it('upperCards off: a full album brings no legendary card and lists none; a held one stays', () => {
     const snap = finishedAll(LETTERS_CELLS, null);
     const off = awardWorldFor(false, new Set());
