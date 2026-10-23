@@ -352,13 +352,13 @@ const upperCells = episodesAll.filter((e) => (e.stage === 'stage2' || e.stage ==
 const NEW_UPPER = ['card:norae', 'card:bokjumeoni', 'card:swing', 'card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut'];
 const TASTE_HELD = ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak', 'card:haneul', 'card:kkot', 'card:namu', 'card:byeol', 'card:tiger'];
 
-async function upperLearner(page: Page, upperPct: number): Promise<string> {
+async function upperLearner(page: Page, upperPct: number, cells = upperCells, held = TASTE_HELD): Promise<string> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
-  const quests = upperCells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
-  const snap = record(profileId, quests, 2, TASTE_HELD);
+  const quests = cells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+  const snap = record(profileId, quests, 2, held);
   await seedStored(page, `progress:${profileId}`, {
     ...snap,
     quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
@@ -437,5 +437,73 @@ test.describe('upper-cell cards and albums (F-CURR-002 row CM-23, release bundle
     const saved = await storedCards(page, profileId);
     expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
     for (const id of TASTE_HELD) expect(saved.some((c) => c.cardId === id), id).toBe(true);
+  });
+});
+
+/**
+ * F-CURR-002 §4.8 step 7 and §7.2 (row CM-23 part 2): Stage 4's cards. A learner who finished Stages 2-4 before this
+ * build, holding the cards of parts 1 and the shipped ones, gets the four new Stage 4 cards once; Greeting Dialogues
+ * keeps its four shipped cards and its album card is `card:insa`, so every album shows three cards.
+ */
+const s4Cells = episodesAll.filter((e) => ['stage2', 'stage3', 'stage4'].includes(e.stage) && (e.placement ?? 'grid') === 'grid' && e.questIds.length > 0);
+const NEW_S4 = ['card:mwoyeyo', 'card:masisseoyo', 'card:biga-wayo', 'card:gachi'];
+const S4_HELD = [...TASTE_HELD, ...NEW_UPPER, 'card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+
+test.describe('Stage 4 upper-cell cards (F-CURR-002 row CM-23 part 2, release bundle)', () => {
+  test.skip(FIXTURE_BUILD, 'the release content: run on the release build');
+  test.use({ timezoneId: 'UTC' });
+
+  test('320: Stage 4 cells finished earlier bring their four cards once; each album holds three; a talk card opens with its fact', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 800 });
+    const profileId = await upperLearner(page, 100, s4Cells, S4_HELD);
+
+    await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => NEW_S4.includes(c.cardId)).length).toBe(NEW_S4.length);
+    const saved = await storedCards(page, profileId);
+    for (const id of NEW_S4) expect(saved.find((c) => c.cardId === id)?.unlockedAt, id).toBe(UPPER_AT);
+    for (const id of S4_HELD) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    for (const theme of ['letters', 'life', 'rites', 'nature', 'crafts']) {
+      await expect(page.getByTestId(`library-album-${theme}-status`), theme).toHaveText('3 cards');
+    }
+    await expect(page.getByTestId('library-album-card-card:insa')).toHaveCount(1);
+    await expect(page.getByTestId('library-album-card-card:annyeong')).toHaveCount(0);
+    expect(await albums.innerText()).not.toMatch(FRACTION);
+    await shot(page, 'upper-cards-s4-albums-320');
+
+    await page.getByTestId('library-album-card-card:mwoyeyo').click();
+    await expect(page.getByText(/ige for igeosi/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('이게 뭐예요?', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    await expect(shown(page, 'card-detail-citation').first()).toContainText('National Institute of Korean Language');
+    await shot(page, 'upper-cards-s4-card-320');
+
+    await page.goto('/');
+    await expect(page.getByText('Today with Hoya')).toBeVisible();
+    const again = await storedCards(page, profileId);
+    expect(new Set(again.map((c) => c.cardId)).size).toBe(again.length);
+    expect(errors).toEqual([]);
+  });
+
+  test('wide: the albums with Stage 4', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100, s4Cells, S4_HELD);
+    await openLibraryCards(page);
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-crafts-status')).toHaveText('3 cards');
+    await shot(page, 'upper-cards-s4-albums-wide');
+  });
+
+  test('upperCards off: no Stage 4 card arrives; Greeting Dialogues keeps its four shipped cards', async ({ page }) => {
+    const held = [...TASTE_HELD, 'card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+    const profileId = await upperLearner(page, 0, s4Cells, held);
+    await openLibraryCards(page);
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    const saved = await storedCards(page, profileId);
+    expect(saved.filter((c) => NEW_S4.includes(c.cardId))).toEqual([]);
+    for (const id of held) expect(saved.some((c) => c.cardId === id), id).toBe(true);
   });
 });
