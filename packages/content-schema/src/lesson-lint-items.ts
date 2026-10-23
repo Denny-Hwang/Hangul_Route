@@ -179,8 +179,11 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   }
   if (typeof value !== 'object' || value === null) return out;
   const record = value as Record<string, unknown>;
+  if (isClozeRound(record)) return clozeAskedKo(record, out);
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
+    // A Role Play scene's title and partner name the place and the role (row CM-35); the chat asks its lines.
+    if ((key === 'title' || key === 'partner') && Array.isArray(record.nodes)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
       askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
     } else if (key === 'replies' && Array.isArray(child)) {
@@ -190,6 +193,26 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
       if (ko !== '') out.push(ko);
     } else askedKo(child, out);
   }
+  return out;
+}
+
+/** A Cloze Pick round (row CM-30): one sentence with its gap, its tiles and the tile that fills it. */
+function isClozeRound(record: Record<string, unknown>): boolean {
+  return Array.isArray(record.tiles) && typeof record.answerIndex === 'number' && typeof record.sentence === 'object' && record.sentence !== null;
+}
+
+/**
+ * What a Cloze Pick round asks, as the review-item build reads it (row CM-3A, the first content to ship one): a word
+ * or particle gap asks its completed sentence, and a word gap its answer tile; a value gap asks the card it is read
+ * from (the `rea` item), so no Korean of its own. The other tiles are shown, not taught, like a wrong option.
+ */
+function clozeAskedKo(round: Record<string, unknown>, out: string[]): string[] {
+  if (round.gapKind === 'value') return out;
+  const answer = (round.tiles as unknown[])[round.answerIndex as number];
+  const tile = typeof answer === 'object' && answer !== null ? String((answer as Record<string, unknown>).ko ?? '') : '';
+  const filled = normalizeKo(String((round.sentence as Record<string, unknown>).ko ?? '').replace('___', tile));
+  if (filled !== '') out.push(filled);
+  if (round.gapKind !== 'particle' && normalizeKo(tile) !== '') out.push(normalizeKo(tile));
   return out;
 }
 

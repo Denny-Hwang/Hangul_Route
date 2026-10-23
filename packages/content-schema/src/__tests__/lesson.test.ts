@@ -148,6 +148,8 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(CHECK_ROUNDS).toBe(2);
     expect(checkKindsFor('stage3')).toEqual(['listen-pick']);
     expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it']);
+    // Row CM-3A S6: a Stage 6 Check is a realia question (Realia Read, Cloze Pick on a value) or Dictation.
+    expect(checkKindsFor('stage6')).toEqual(['listen-pick', 'realia-read', 'cloze-pick', 'type-hangul']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');
