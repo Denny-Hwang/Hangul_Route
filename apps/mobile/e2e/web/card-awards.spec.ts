@@ -9,7 +9,7 @@ import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
 import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 
@@ -366,14 +366,17 @@ async function upperLearner(
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
   const quests = cells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
   const snap = record(profileId, quests, 2, held);
-  await seedStored(page, `progress:${profileId}`, {
-    ...snap,
-    quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
-    questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
+  // One write and one launch: seeded one key at a time, a launch between the writes reads the record with the switch
+  // on, awards and saves the eight cards, and the launch the test looks at has nothing left to catch up on.
+  await seedStoredAll(page, {
+    [`progress:${profileId}`]: {
+      ...snap,
+      quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
+      questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
+    },
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } },
+    ...(settings ? { 'device:settings': { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
   });
-  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } });
-  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
-  await page.reload();
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await closeInstallGuide(page);
   return profileId;

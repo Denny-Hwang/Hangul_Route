@@ -624,10 +624,12 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         // baseline. It latches the levels reached before, but they are history, not rises: no `mastery.level_up` and
         // no banner, as the Words known count it sets brings no milestone.
         const baseline = file.wk === undefined;
-        let cellBest: Readonly<Record<string, CellLevel>> = snapshot.cellBest ?? {};
         // Before the one-time seeding (section 4.8 step 6) has latched Done for the cells finished earlier, nothing is
-        // latched here: those are history too.
-        let rises = snapshot.memSeededAt === undefined ? [] : latchCellBest(cellBest, derived).rises;
+        // latched here: those are history too. Such a read does not take the baseline either (it sets no Words known
+        // count), so the first read after the seeding is still the silent one and the levels reached before stay history.
+        const seeded = snapshot.memSeededAt !== undefined;
+        let cellBest: Readonly<Record<string, CellLevel>> = snapshot.cellBest ?? {};
+        let rises = seeded ? latchCellBest(cellBest, derived).rises : [];
         if (rises.length > 0) {
           const latched = deps.applyCellBest(profileId, rises);
           if (latched === null) rises = [];
@@ -651,7 +653,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
           }
         }
         const wordsKnown = wordsKnownOf(file.rows, snapshot);
-        if (file.wk === undefined || wordsKnown > file.wk) {
+        if (seeded && (file.wk === undefined || wordsKnown > file.wk)) {
           const crossed = file.wk === undefined ? null : wordsMilestoneCrossed(file.wk, wordsKnown);
           if (crossed !== null && crossed > (moments.words ?? 0)) moments.words = crossed;
           file.wk = wordsKnown;
