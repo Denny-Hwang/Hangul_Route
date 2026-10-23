@@ -1,5 +1,7 @@
 import { CATALOG, CURR_TELEMETRY_PAYLOADS, ReviewEntrySchema } from '@hangul-route/content-schema';
+import { lintReviewMessages } from '@hangul-route/content-schema/lint';
 import { FORMAT_RUNG } from '@hangul-route/content-schema/review-items';
+import { bannedWordsFor, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { INDEX } from '../../memory/__tests__/fixtures';
 import {
@@ -145,5 +147,21 @@ describe('the entry and the telemetry (section 11.3)', () => {
     expect(CURR_TELEMETRY_PAYLOADS['testout.finished'].safeParse(finished?.payload).success).toBe(true);
     // A cell id the schema does not take is never sent.
     expect(testOutFinishedEvent('p1', 'episode:pack-numbers-s2', result)).toBeNull();
+  });
+});
+
+describe('the strings (section 7.7, section 9.3 review-copy)', () => {
+  it.each(['en', 'es', 'ko'] as const)('%s: pass review-copy and the anti-shame list: no score, no exam framing, no failure word', (locale) => {
+    const m = getMessages(locale);
+    expect(lintReviewMessages(m.learner, ['cellCheck', 'testOut'], locale)).toEqual([]);
+    const texts = [...Object.values(m.learner.cellCheck).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v))), ...Object.values(m.learner.testOut)];
+    expect(texts.length).toBe(21);
+    for (const text of texts) {
+      expect(text.trim().length, text).toBeGreaterThan(0);
+      expect(text, text).not.toMatch(/%|\bexam|\bquiz|\bscore|\bpass(ed)?\b|\bfail|examen|prueba|puntaje|시험|점수|통과|실패|탈락/i);
+      for (const word of bannedWordsFor(locale, 'learner')) expect(text.toLowerCase(), `${text} has ${word}`).not.toContain(word.toLowerCase());
+    }
+    // "Test out" is the spec's name for the way in (section 4.5); no other string frames the check as a test.
+    expect(texts.filter((t) => /\btest/i.test(t))).toEqual(locale === 'en' ? ['Test out', 'You tested out!', 'Tested out'] : []);
   });
 });

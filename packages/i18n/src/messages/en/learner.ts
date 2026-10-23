@@ -2672,4 +2672,40 @@ export const learner = {
     route: (count: string) => `Words you know: ${count}`,
     milestone: (count: string) => `${count} words! Hoya is so proud of you.`,
   },
+  /**
+   * The Cell Check and its test-out (F-CURR-002 sections 4.4, 4.5 and 7.7, row CM-21; design/wireframes/reviews/
+   * cell-check.md). Stars only: never a percentage, an "n of m", a pass mark, a timer or "failed". The UI says
+   * "Cell Check"; "Test out" is the way in from an unstarted cell. Star headlines reuse `dailyReview.result.headline`,
+   * the stop sheet `stageReview.leave`, the intro buttons `stageReview.intro`. Read by the `review-copy` rule.
+   */
+  cellCheck: {
+    title: 'Cell Check',
+    body: 'About 3 minutes. Show what you know from this place. No timer.',
+    cta: 'Take the Cell Check',
+    done: 'Cell Check done',
+    again: 'Take it again',
+    tricky: 'Hoya will bring the tricky ones back in your reviews.',
+    kept: 'Your best result is kept. You can take the check again any time.',
+    toPlace: 'Back to this place',
+    toMap: 'Back to the map',
+    /** The mastery block's hint for the next level (journey/mastery-ring.md E): levels 1 and 2 only. */
+    hint: {
+      practiced: 'Keep reviewing to reach Practiced.',
+      check: 'Take the Cell Check to reach Mastered.',
+      mastered: 'Keep reviewing to reach Mastered.',
+    },
+  },
+  testOut: {
+    /** One quiet line under an unstarted cell's quests; it is the Test out button's description. */
+    prompt: 'Already know this?',
+    title: 'Test out',
+    intro: 'If it goes well, this place is marked Done and you can skip ahead. Every quest stays open to play.',
+    passed: 'You tested out!',
+    start: 'Good start!',
+    startBody: 'Start with the first quest. Hoya will help with the rest.',
+    next: 'Go to your next lesson',
+    first: 'Start the first quest',
+    /** On each quest of a tested-out cell, with 2 stars; every quest stays playable. */
+    pill: 'Tested out',
+  },
 } as const;
