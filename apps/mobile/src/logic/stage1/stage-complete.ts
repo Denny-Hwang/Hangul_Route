@@ -11,12 +11,58 @@ import { jamoAll } from '../../content/jamo';
  * Premium pill and no purchase anywhere here (D5).
  */
 
-/** The one stage with a ceremony today. */
-export const PRIZE_STAGE: StageKey = 'stage1';
+/** One stage's prize: its ceremony, the check the ceremony offers, and what opens it (F-CURR-002 section 7.3). */
+export interface StagePrize {
+  /** `hangul`: the Stage 1 wall and legendary cards (F-QUEST-002 section 3.8); `stage`: the Stages 2-7 ceremony and its stage card. */
+  ceremony: 'hangul' | 'stage';
+  /** The route of the check the ceremony offers: the Hangul Check or the Stage Check (never required, OD-1). */
+  check: 'StageReview' | 'StageCheck';
+  /** Stage 1 opens only for a learner who holds every prize card; a Stage 2-7 card is CM-23's, so it opens with or without one. */
+  needsPrizeCards: boolean;
+  /** The switch the ceremony hides behind (section 12.2): none for Stage 1, `stageChecks` for Stages 2-7. */
+  flag: 'stageChecks' | null;
+}
+
+const UPPER: StagePrize = Object.freeze({ ceremony: 'stage', check: 'StageCheck', needsPrizeCards: false, flag: 'stageChecks' });
+
+/**
+ * The one prize table (F-CURR-002 section 7.3, row CM-22; it replaces `PRIZE_STAGE = 'stage1'`). Stage 1 keeps its
+ * ceremony exactly as it was; Stages 2-7 get the stage ceremony, a stage card slot and the Stage Check.
+ */
+export const PRIZE_STAGES: Readonly<Record<StageKey, StagePrize>> = Object.freeze({
+  stage1: Object.freeze({ ceremony: 'hangul', check: 'StageReview', needsPrizeCards: true, flag: null }),
+  stage2: UPPER,
+  stage3: UPPER,
+  stage4: UPPER,
+  stage5: UPPER,
+  stage6: UPPER,
+  stage7: UPPER,
+});
+
+/** The stages whose prize is the stage ceremony (Stages 2-7), in stage order. */
+export const UPPER_PRIZE_STAGES: readonly StageKey[] = (Object.keys(PRIZE_STAGES) as StageKey[]).filter((s) => PRIZE_STAGES[s].ceremony === 'stage');
+
+/** The stage whose prize is the Hangul ceremony (Stage 1): its Journey header and Results keep their own buttons. */
+export const HANGUL_PRIZE_STAGE: StageKey = (Object.keys(PRIZE_STAGES) as StageKey[]).find((s) => PRIZE_STAGES[s].ceremony === 'hangul') ?? 'stage1';
+
+/** The stage number the copy shows: `stage2` is 2. */
+export function stageNumber(stage: StageKey): number {
+  return Number(stage.slice('stage'.length));
+}
 
 /** Results offers "See your Stage 1 prize" only on the run that completed Stage 1 (`QuestResultOutcome.stageCompleted`). */
 export function opensStagePrize(outcome: { stageCompleted: StageKey | null } | null): boolean {
-  return outcome?.stageCompleted === PRIZE_STAGE;
+  return outcome?.stageCompleted !== undefined && outcome.stageCompleted !== null && PRIZE_STAGES[outcome.stageCompleted].ceremony === 'hangul';
+}
+
+/**
+ * The stage whose prize Results offers as its one primary: the stage the run completed, when its prize is open now.
+ * Stage 1 always (unchanged); a Stage 2-7 prize only while its switch is on (`upperOn`: `stageChecks` for the learner).
+ */
+export function prizeStageOf(outcome: { stageCompleted: StageKey | null } | null, upperOn: boolean): StageKey | null {
+  const stage = outcome?.stageCompleted ?? null;
+  if (stage === null) return null;
+  return PRIZE_STAGES[stage].flag === null || upperOn ? stage : null;
 }
 
 /**
@@ -87,7 +133,8 @@ export function ownsStagePrize(
   stage: StageKey,
   cards: readonly HeritageCard[] = heritageCardsAll,
 ): boolean {
-  const prize = stagePrizeCards(stage, cards);
+  // The table names the cards a stage's ceremony needs held; a stage whose card is optional still reads them here.
+  const prize = PRIZE_STAGES[stage] ? stagePrizeCards(stage, cards) : [];
   if (prize.length === 0) return false;
   const have = new Set(owned.map((c) => c.cardId));
   return prize.every((c) => have.has(c.id));

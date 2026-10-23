@@ -4,8 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../content/heritage-cards';
 import { jamoAll } from '../../../content/jamo';
 import {
-  PRIZE_STAGE,
+  PRIZE_STAGES,
+  UPPER_PRIZE_STAGES,
   opensStagePrize,
+  prizeStageOf,
+  stageNumber,
   ownsStagePrize,
   stageCompleteActions,
   stagePrizeCards,
@@ -27,8 +30,37 @@ describe('opensStagePrize: when Results offers the Stage 1 prize', () => {
     expect(opensStagePrize({ stageCompleted: 'stage2' })).toBe(false);
   });
 
-  it('names Stage 1 as the one stage with a ceremony', () => {
-    expect(PRIZE_STAGE).toBe('stage1');
+  it('stays the Stage 1 rule whatever the upper switch says', () => {
+    expect(opensStagePrize({ stageCompleted: 'stage2' })).toBe(false);
+    expect(prizeStageOf({ stageCompleted: 'stage1' }, false)).toBe('stage1');
+    expect(prizeStageOf({ stageCompleted: 'stage1' }, true)).toBe('stage1');
+  });
+});
+
+describe('PRIZE_STAGES: one prize table for every stage (F-CURR-002 section 7.3, row CM-22)', () => {
+  it('holds every stage, Stage 1 with its Hangul ceremony, Hangul Check and legendary cards, as before', () => {
+    expect(Object.keys(PRIZE_STAGES)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+    expect(PRIZE_STAGES.stage1).toEqual({ ceremony: 'hangul', check: 'StageReview', needsPrizeCards: true, flag: null });
+  });
+
+  it('gives Stages 2-7 the stage ceremony and the Stage Check, behind stageChecks, with the stage card optional (CM-23)', () => {
+    for (const stage of ['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'] as const) {
+      expect(PRIZE_STAGES[stage]).toEqual({ ceremony: 'stage', check: 'StageCheck', needsPrizeCards: false, flag: 'stageChecks' });
+    }
+    expect(UPPER_PRIZE_STAGES).toEqual(['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+  });
+
+  it('prizeStageOf: Results offers a Stage 2-7 prize only on the run that finished it, and only while stageChecks is on', () => {
+    expect(prizeStageOf({ stageCompleted: 'stage2' }, true)).toBe('stage2');
+    expect(prizeStageOf({ stageCompleted: 'stage7' }, true)).toBe('stage7');
+    expect(prizeStageOf({ stageCompleted: 'stage2' }, false)).toBeNull();
+    expect(prizeStageOf({ stageCompleted: null }, true)).toBeNull();
+    expect(prizeStageOf(null, true)).toBeNull();
+  });
+
+  it('stageNumber reads the number the copy shows', () => {
+    expect(stageNumber('stage1')).toBe(1);
+    expect(stageNumber('stage6')).toBe(6);
   });
 });
 
