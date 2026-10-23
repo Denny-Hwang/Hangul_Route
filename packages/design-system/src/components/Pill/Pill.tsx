@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
@@ -23,7 +23,7 @@ const fg: Record<PillTone, string> = {
   info: '#2E5BC7',
 };
 
-export function Pill({ label, tone = 'neutral', size = 'md', testID }: PillProps): React.ReactElement {
+export function Pill({ label, tone = 'neutral', size = 'md', testID }: PillProps): ReactElement {
   const padY = size === 'sm' ? spacing.xxs : spacing.xs;
   const padX = size === 'sm' ? spacing.sm : spacing.md;
   const scale = useTypeScale().size;

@@ -1,4 +1,4 @@
-import * as Crypto from 'expo-crypto';
+import { CryptoDigestAlgorithm, digestStringAsync, getRandomBytesAsync } from 'expo-crypto';
 import type { PinHasher } from '../logic/profiles/pin-hash';
 
 /**
@@ -19,8 +19,8 @@ function toHex(bytes: Uint8Array): string {
 }
 
 async function digest(saltHex: string, pin: string): Promise<string> {
-  return Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
+  return digestStringAsync(
+    CryptoDigestAlgorithm.SHA256,
     `${saltHex}${SEPARATOR}${pin}`,
   );
 }
@@ -37,7 +37,7 @@ function constantTimeEquals(a: string, b: string): boolean {
 
 export const pinHasher: PinHasher = {
   async hash(pin: string): Promise<string> {
-    const saltHex = toHex(await Crypto.getRandomBytesAsync(SALT_BYTES));
+    const saltHex = toHex(await getRandomBytesAsync(SALT_BYTES));
     return `${saltHex}${SEPARATOR}${await digest(saltHex, pin)}`;
   },
 

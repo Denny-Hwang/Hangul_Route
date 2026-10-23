@@ -15,11 +15,12 @@ import {
   useLayoutClass,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
@@ -72,7 +73,7 @@ export function TraceStrokeGame({
   scope,
   onFinish,
   strictMode = false,
-}: Props): React.ReactElement {
+}: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const rounds = useMemo<TraceStrokeRound[]>(
@@ -520,7 +521,7 @@ function TraceFeedback({
   message: string;
   lines: number;
   showHoya: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <View

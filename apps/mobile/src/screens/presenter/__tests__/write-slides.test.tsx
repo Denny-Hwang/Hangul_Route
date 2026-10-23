@@ -1,7 +1,7 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { colors } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
@@ -38,7 +38,7 @@ function slidesOf(blocks: LectureBlock[], locale: UiLocale = 'en', romanization:
   return expandDeck(deck, lectureBundle(locale), { canPlayKorean: true }).slides;
 }
 
-function inView(child: React.ReactElement, locale: UiLocale = 'en'): React.ReactElement {
+function inView(child: ReactElement, locale: UiLocale = 'en'): ReactElement {
   return <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: true }}>{child}</PresenterViewProvider>;
 }
 

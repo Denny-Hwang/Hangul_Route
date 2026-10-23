@@ -1,6 +1,6 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import TestRenderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { buildsFor, type BuildName } from '../../../logic/lecture/build-steps';
@@ -33,7 +33,7 @@ function slidesOf(blocks: LectureBlock[], canPlayKorean = true): Slide[] {
   return expandDeck(deck, lectureBundle('en'), { canPlayKorean }).slides;
 }
 
-function inView(child: React.ReactElement, locale: UiLocale = 'en'): React.ReactElement {
+function inView(child: ReactElement, locale: UiLocale = 'en'): ReactElement {
   return <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: true }}>{child}</PresenterViewProvider>;
 }
 
@@ -217,13 +217,13 @@ describe('the question slides fit themselves like the reading slides (V8, useFit
    * hook measures it again through `contentRef` (react-native-web's `offsetHeight`).
    */
   async function mount(
-    body: (rows: true) => React.ReactElement,
+    body: (rows: true) => ReactElement,
     contentId: string,
     roomId: string,
     measured: { height: number },
     unitOf: () => number,
   ): Promise<{ r: ReactTestRenderer; fit: () => string; layout: (id: string, height: number) => void; rerender: () => Promise<void> }> {
-    const tree = (): React.ReactElement => (
+    const tree = (): ReactElement => (
       <PresenterViewProvider value={{ messages: en, locale: 'en', unit: unitOf(), reducedMotion: true }}>{body(true)}</PresenterViewProvider>
     );
     let r!: ReactTestRenderer;

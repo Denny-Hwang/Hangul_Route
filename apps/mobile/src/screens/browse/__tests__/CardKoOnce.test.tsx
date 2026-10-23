@@ -1,7 +1,6 @@
 import type { UiLocale } from '@hangul-route/i18n';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cardById } from '../../../content/heritage-cards';

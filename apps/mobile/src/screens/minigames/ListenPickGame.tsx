@@ -19,7 +19,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -69,6 +70,8 @@ interface Props {
   host: MinigameHost;
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
+  /** The scaffold round (F-CURR-002 section 4.6, row CM-24): the right card is ringed from the start, under this line. */
+  hint?: string;
 }
 
 /**
@@ -82,7 +85,7 @@ interface Focusable {
   focus?: () => void;
 }
 
-export function ListenPickGame({ scope, host, onBack }: Props): React.ReactElement {
+export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
 
@@ -98,7 +101,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   const speakerIcon = useMediaSize(spacing.xxxl);
   const pictureSize = useMediaSize(touchTarget.hero);
 
-  const [state, setState] = useState<ListenPickFlowState>(() => startFlow(rounds.length));
+  const [state, setState] = useState<ListenPickFlowState>(() => ({ ...startFlow(rounds.length), hint: hint !== undefined }));
   const stateRef = useRef(state);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -250,6 +253,11 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
         prompt={
           <>
             <Heading level="prompt">{copy.listenPick.heading}</Heading>
+            {hint ? (
+              <Body tone="secondary" testID="listen-pick-hint">
+                {hint}
+              </Body>
+            ) : null}
             <Spacer size="md" />
 
             <View style={{ alignItems: 'center', gap: spacing.md }}>

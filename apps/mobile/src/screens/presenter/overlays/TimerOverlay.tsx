@@ -1,5 +1,6 @@
 import { Hoya, colors, motion, presenter, radii, shadows, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { HOYA_STAGE, RING_STAGE, units } from '../../../logic/lecture/stage-constants';
 import { TIMER_PRESETS_MS, type TimerState } from '../../../logic/lecture/timer';
@@ -27,7 +28,7 @@ export interface TimerControls {
   onToggleNumbers: () => void;
 }
 
-export function TimerOverlay({ mode, timer, showNumbers, controls }: { mode: 'corner' | 'full'; timer: TimerState; showNumbers: boolean; controls: TimerControls }): React.ReactElement {
+export function TimerOverlay({ mode, timer, showNumbers, controls }: { mode: 'corner' | 'full'; timer: TimerState; showNumbers: boolean; controls: TimerControls }): ReactElement {
   const view = timerView(timer);
   return mode === 'corner' ? <CornerTimer view={view} timer={timer} showNumbers={showNumbers} controls={controls} /> : <FullTimer view={view} timer={timer} showNumbers={showNumbers} controls={controls} />;
 }
@@ -49,7 +50,7 @@ function useDonePulse(done: boolean): Animated.Value {
   return pulse;
 }
 
-function RunButton({ view, timer, controls }: { view: View_; timer: TimerState; controls: TimerControls }): React.ReactElement | null {
+function RunButton({ view, timer, controls }: { view: View_; timer: TimerState; controls: TimerControls }): ReactElement | null {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.timer;
   // Nothing to run yet (choose a preset) or the run is over (+30 s starts another).
@@ -61,7 +62,7 @@ function RunButton({ view, timer, controls }: { view: View_; timer: TimerState; 
   );
 }
 
-function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): React.ReactElement {
+function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.timer;
@@ -109,7 +110,7 @@ function CornerTimer({ view, timer, showNumbers, controls }: { view: View_; time
   );
 }
 
-function FullTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): React.ReactElement {
+function FullTimer({ view, timer, showNumbers, controls }: { view: View_; timer: TimerState; showNumbers: boolean; controls: TimerControls }): ReactElement {
   const textScale = useTypeScale();
   const { unit, messages } = usePresenterView();
   const size = useStageText();

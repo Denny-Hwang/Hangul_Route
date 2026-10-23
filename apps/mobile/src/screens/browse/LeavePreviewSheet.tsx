@@ -1,5 +1,6 @@
 import { Button, Heading, Spacer, colors, radii, shadows, spacing, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Modal, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
@@ -17,7 +18,7 @@ import { BROWSE_DIALOG_MAX } from '../../logic/browse/layout';
 
 const DIALOG_MAX = BROWSE_DIALOG_MAX;
 
-export function LeavePreviewSheet({ visible, onKeep, onLeave }: { visible: boolean; onKeep: () => void; onLeave: () => void }): React.ReactElement {
+export function LeavePreviewSheet({ visible, onKeep, onLeave }: { visible: boolean; onKeep: () => void; onLeave: () => void }): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.preview.leaveConfirm;
   const dialog = useLayoutClass().width !== 'compact';

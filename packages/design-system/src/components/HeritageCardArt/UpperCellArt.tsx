@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import type { ReactNode, ReactElement } from 'react';
+import { Svg, Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../../tokens';
 import { albumLegendArtIds, upperCellCardArtIds } from './upper-card-ids';
 import type { HeritageCardArtProps } from './types';
@@ -23,7 +23,7 @@ interface ArtProps {
   accessibilityLabel: string;
 }
 
-function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: React.ReactNode }): React.ReactElement {
+function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: ReactNode }): ReactElement {
   return (
     <Svg width={p.size} height={p.size} viewBox="0 0 200 200" testID={p.testID} accessibilityLabel={p.accessibilityLabel}>
       <Rect x={0} y={0} width={200} height={200} fill={colors.theme[theme]} opacity={0.08} rx={8} />
@@ -32,13 +32,13 @@ function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: 
   );
 }
 
-const shadow = (cy: number, rx: number): React.ReactElement => (
+const shadow = (cy: number, rx: number): ReactElement => (
   <Ellipse cx={100} cy={cy} rx={rx} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
 );
 
 // ---- Stage 2 ------------------------------------------------------------------------------------------
 
-function NoraeArt(p: ArtProps): React.ReactElement {
+function NoraeArt(p: ArtProps): ReactElement {
   // Song: two beamed notes rising over three soft sound waves.
   return (
     <Card theme="letters" p={p}>
@@ -56,7 +56,7 @@ function NoraeArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function DosirakArt(p: ArtProps): React.ReactElement {
+function DosirakArt(p: ArtProps): ReactElement {
   // Lunch box: an open box with rice, a rolled egg and greens, the lid leaning behind.
   return (
     <Card theme="life" p={p}>
@@ -76,7 +76,7 @@ function DosirakArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function BokjumeoniArt(p: ArtProps): React.ReactElement {
+function BokjumeoniArt(p: ArtProps): ReactElement {
   // Lucky pouch: a round silk pouch gathered at the top with a tie cord, a few grains beside it.
   return (
     <Card theme="rites" p={p}>
@@ -100,7 +100,7 @@ function BokjumeoniArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function ByeolArt(p: ArtProps): React.ReactElement {
+function ByeolArt(p: ArtProps): ReactElement {
   // Star: one big rounded five-point star with two small twinkles on a dusk sky.
   return (
     <Card theme="nature" p={p}>
@@ -123,7 +123,7 @@ function ByeolArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function SwingArt(p: ArtProps): React.ReactElement {
+function SwingArt(p: ArtProps): ReactElement {
   // Swing: a seat on two ropes hung from a willow branch, swung forward.
   return (
     <Card theme="crafts" p={p}>
@@ -149,7 +149,7 @@ function SwingArt(p: ArtProps): React.ReactElement {
 
 // ---- Stage 3 ------------------------------------------------------------------------------------------
 
-function HangeulArt(p: ArtProps): React.ReactElement {
+function HangeulArt(p: ArtProps): ReactElement {
   // Hangeul: an open page with the shapes of ㅎ, ㄱ and ㅡ drawn as bold strokes.
   return (
     <Card theme="letters" p={p}>
@@ -173,7 +173,7 @@ function HangeulArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function TteokArt(p: ArtProps): React.ReactElement {
+function TteokArt(p: ArtProps): ReactElement {
   // Rice cake: a plate of soft rounded tteok, white, green and amber.
   return (
     <Card theme="life" p={p}>
@@ -195,7 +195,7 @@ function TteokArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function FullMoonArt(p: ArtProps): React.ReactElement {
+function FullMoonArt(p: ArtProps): ReactElement {
   // Full moon: a big round moon rising over two low hills on a holiday night.
   return (
     <Card theme="rites" p={p}>
@@ -213,7 +213,7 @@ function FullMoonArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function GomArt(p: ArtProps): React.ReactElement {
+function GomArt(p: ArtProps): ReactElement {
   // Bear: a round black bear, smiling, with the white half-moon mark on its chest.
   return (
     <Card theme="nature" p={p}>
@@ -231,7 +231,7 @@ function GomArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function YutArt(p: ArtProps): React.ReactElement {
+function YutArt(p: ArtProps): ReactElement {
   // Yut sticks: four sticks standing in a fan, three flat faces and one round back.
   return (
     <Card theme="crafts" p={p}>
@@ -260,7 +260,7 @@ function YutArt(p: ArtProps): React.ReactElement {
 // bubbles in the HoyaBubble language (cream fill, sky-blue border, never red).
 
 /** A round friend standing at `x`: ears, a head with a smiling face, and a body in its `fur` colour. */
-function Pal({ x, fur }: { x: number; fur: string }): React.ReactElement {
+function Pal({ x, fur }: { x: number; fur: string }): ReactElement {
   return (
     <G>
       <Ellipse cx={x} cy={164} rx={26} ry={22} fill={fur} />
@@ -275,7 +275,7 @@ function Pal({ x, fur }: { x: number; fur: string }): React.ReactElement {
 }
 
 /** A speech bubble at `x`, `w` wide, its tail pointing down at `tx`; `children` is the drawn word inside. */
-function Bubble({ x, w, tx, children }: { x: number; w: number; tx: number; children?: React.ReactNode }): React.ReactElement {
+function Bubble({ x, w, tx, children }: { x: number; w: number; tx: number; children?: ReactNode }): ReactElement {
   return (
     <G>
       <Path d={`M${tx - 7} 66 L${tx} 84 L${tx + 8} 66 Z`} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={2.5} strokeLinejoin="round" />
@@ -294,14 +294,14 @@ const pair = (
 );
 
 /** A question mark drawn in a bubble centred on `x`. */
-const ask = (x: number): React.ReactElement => (
+const ask = (x: number): ReactElement => (
   <G>
     <Path d={`M${x - 9} 37 Q${x - 9} 29 ${x} 29 Q${x + 9} 29 ${x + 9} 37 Q${x + 9} 44 ${x} 47 V52`} stroke={colors.brand.primary} strokeWidth={4} fill="none" strokeLinecap="round" />
     <Circle cx={x} cy={60} r={2.5} fill={colors.brand.primary} />
   </G>
 );
 
-function MwoyeyoArt(p: ArtProps): React.ReactElement {
+function MwoyeyoArt(p: ArtProps): ReactElement {
   // What is this?: one friend asks, the other names a thing; the answer bubble holds an eraser.
   return (
     <Card theme="letters" p={p}>
@@ -315,7 +315,7 @@ function MwoyeyoArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function MasisseoyoArt(p: ArtProps): React.ReactElement {
+function MasisseoyoArt(p: ArtProps): ReactElement {
   // It is tasty: a steaming bowl between the friends; one asks how it tastes, the other answers with a heart.
   return (
     <Card theme="life" p={p}>
@@ -330,7 +330,7 @@ function MasisseoyoArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function InsaArt(p: ArtProps): React.ReactElement {
+function InsaArt(p: ArtProps): ReactElement {
   // Greeting: the two friends bow a little toward each other, a warm hello in each bubble.
   return (
     <Card theme="rites" p={p}>
@@ -356,11 +356,11 @@ function InsaArt(p: ArtProps): React.ReactElement {
 }
 
 /** A raindrop with its tip at (x, y). */
-const drop = (x: number, y: number, fill: string): React.ReactElement => (
+const drop = (x: number, y: number, fill: string): ReactElement => (
   <Path key={`${x}-${y}`} d={`M${x} ${y} Q${x + 6} ${y + 9} ${x} ${y + 12} Q${x - 6} ${y + 9} ${x} ${y} Z`} fill={fill} />
 );
 
-function BigaWayoArt(p: ArtProps): React.ReactElement {
+function BigaWayoArt(p: ArtProps): ReactElement {
   // It is raining: rain falls behind the friends; one says it rains, the other answers with a little house.
   return (
     <Card theme="nature" p={p}>
@@ -385,7 +385,7 @@ function BigaWayoArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function GachiArt(p: ArtProps): React.ReactElement {
+function GachiArt(p: ArtProps): ReactElement {
   // Shall we do it together?: a ball between the friends; one asks, the other answers with a bright star.
   return (
     <Card theme="crafts" p={p}>
@@ -406,13 +406,13 @@ function GachiArt(p: ArtProps): React.ReactElement {
 // Stage 7 card is writing: the word as a word-bank tile over a ruled page with a sentence the cell builds from its bank.
 
 /** Korean (or a sign) drawn in a picture, centred on `x`. */
-const word = (x: number, y: number, text: string, size = 18, fill: string = colors.text.primary): React.ReactElement => (
+const word = (x: number, y: number, text: string, size = 18, fill: string = colors.text.primary): ReactElement => (
   <SvgText x={x} y={y} fontSize={size} fontWeight="700" fill={fill} textAnchor="middle">
     {text}
   </SvgText>
 );
 
-function WonArt(p: ArtProps): React.ReactElement {
+function WonArt(p: ArtProps): ReactElement {
   // Won: a menu board of two dishes and their prices, a won coin at its corner.
   return (
     <Card theme="letters" p={p}>
@@ -427,7 +427,7 @@ function WonArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function YeogiyoArt(p: ArtProps): React.ReactElement {
+function YeogiyoArt(p: ArtProps): ReactElement {
   // Over here!: a friend at a table raises a paw and calls the server.
   return (
     <Card theme="life" p={p}>
@@ -440,7 +440,7 @@ function YeogiyoArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function GichapyoArt(p: ArtProps): React.ReactElement {
+function GichapyoArt(p: ArtProps): ReactElement {
   // Train ticket: a ticket with its stations and its time, a notch at each side.
   return (
     <Card theme="rites" p={p}>
@@ -459,7 +459,7 @@ function GichapyoArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function JeongsangArt(p: ArtProps): React.ReactElement {
+function JeongsangArt(p: ArtProps): ReactElement {
   // Summit: a trail sign before a green mountain, its board pointing up to the top.
   return (
     <Card theme="nature" p={p}>
@@ -472,7 +472,7 @@ function JeongsangArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function DeomArt(p: ArtProps): React.ReactElement {
+function DeomArt(p: ArtProps): ReactElement {
   // A little extra: a market price card for three apples, and one more apple added beside them.
   return (
     <Card theme="crafts" p={p}>
@@ -490,7 +490,7 @@ function DeomArt(p: ArtProps): React.ReactElement {
 }
 
 /** Stage 7: the word as a word-bank tile, over a ruled page with the cell's sentence written on it. */
-function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps; tile: string; line: string; children?: React.ReactNode }): React.ReactElement {
+function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps; tile: string; line: string; children?: ReactNode }): ReactElement {
   return (
     <Card theme={theme} p={p}>
       {shadow(184, 72)}
@@ -508,12 +508,12 @@ function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps
   );
 }
 
-function IreumArt(p: ArtProps): React.ReactElement {
+function IreumArt(p: ArtProps): ReactElement {
   // Name: Hoya's name, written the way the cell's word bank builds it.
   return <Page theme="letters" p={p} tile="이름" line="제 이름은 호야예요." />;
 }
 
-function AchimArt(p: ArtProps): React.ReactElement {
+function AchimArt(p: ArtProps): ReactElement {
   // Morning: the sun rises at the tile's side; Hoya's morning written below.
   return (
     <Page theme="life" p={p} tile="아침" line="아침에 빵을 먹어요.">
@@ -522,7 +522,7 @@ function AchimArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function SaengilArt(p: ArtProps): React.ReactElement {
+function SaengilArt(p: ArtProps): ReactElement {
   // Birthday: a small cake with a candle beside the tile; the day written below.
   return (
     <Page theme="rites" p={p} tile="생일" line="생일에 케이크를 먹었어요.">
@@ -532,7 +532,7 @@ function SaengilArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function TokkiArt(p: ArtProps): React.ReactElement {
+function TokkiArt(p: ArtProps): ReactElement {
   // Rabbit: two long ears peek over the tile; the sentence about it below.
   return (
     <Page theme="nature" p={p} tile="토끼" line="토끼는 작아요.">
@@ -544,7 +544,7 @@ function TokkiArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function BihaenggiArt(p: ArtProps): React.ReactElement {
+function BihaenggiArt(p: ArtProps): ReactElement {
   // Plane: a folded paper plane flies past the tile; the folding step written below.
   return (
     <Page theme="crafts" p={p} tile="비행기" line="비행기를 접어요.">
@@ -556,7 +556,7 @@ function BihaenggiArt(p: ArtProps): React.ReactElement {
 // ---- The album legendary cards (row CM-23 part 3) --------------------------------------------------------
 // Each in a gold frame of the legendary rarity token, its Korean name on a label, one emblem of its album.
 
-function Legend({ theme, p, name, children }: { theme: ThemeKey; p: ArtProps; name: string; children: React.ReactNode }): React.ReactElement {
+function Legend({ theme, p, name, children }: { theme: ThemeKey; p: ArtProps; name: string; children: ReactNode }): ReactElement {
   return (
     <Card theme={theme} p={p}>
       <Rect x={8} y={8} width={184} height={184} rx={12} fill="none" stroke={colors.rarity.legendary} strokeWidth={4} />
@@ -567,7 +567,7 @@ function Legend({ theme, p, name, children }: { theme: ThemeKey; p: ArtProps; na
   );
 }
 
-function HunminjeongeumArt(p: ArtProps): React.ReactElement {
+function HunminjeongeumArt(p: ArtProps): ReactElement {
   // Hunminjeongeum: a stitch-bound book with its title strip, a ㅎ on its cover.
   return (
     <Legend theme="letters" p={p} name="훈민정음">
@@ -586,7 +586,7 @@ function HunminjeongeumArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function JangArt(p: ArtProps): React.ReactElement {
+function JangArt(p: ArtProps): ReactElement {
   // Jang making: three round onggi jars in a row on a stone terrace, lids on.
   return (
     <Legend theme="life" p={p} name="장 담그기">
@@ -607,7 +607,7 @@ function JangArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function HangawiArt(p: ArtProps): React.ReactElement {
+function HangawiArt(p: ArtProps): ReactElement {
   // Hangawi: a full harvest moon over a plate of half-moon songpyeon.
   return (
     <Legend theme="rites" p={p} name="한가위">
@@ -620,7 +620,7 @@ function HangawiArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function JirisanArt(p: ArtProps): React.ReactElement {
+function JirisanArt(p: ArtProps): ReactElement {
   // Jirisan: long ridges one behind another, the sun over the highest peak.
   return (
     <Legend theme="nature" p={p} name="지리산">
@@ -631,7 +631,7 @@ function JirisanArt(p: ArtProps): React.ReactElement {
   );
 }
 
-function SsireumArt(p: ArtProps): React.ReactElement {
+function SsireumArt(p: ArtProps): ReactElement {
   // Ssireum: two friends lean in and hold each other's cloth belt in a round sand ring.
   return (
     <Legend theme="crafts" p={p} name="씨름">
@@ -651,7 +651,7 @@ function SsireumArt(p: ArtProps): React.ReactElement {
 export const hasUpperCellArt = (cardId: string): boolean => upperCellCardArtIds.includes(cardId) || albumLegendArtIds.includes(cardId);
 
 /** The drawings by card id; `upperCellCardArtIds` and `albumLegendArtIds` list the same thirty. */
-export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabel }: HeritageCardArtProps): React.ReactElement | null {
+export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabel }: HeritageCardArtProps): ReactElement | null {
   const p: ArtProps = { size, testID, accessibilityLabel: accessibilityLabel ?? `Card art for ${cardId}` };
   switch (cardId) {
     case 'card:norae': return <NoraeArt {...p} />;

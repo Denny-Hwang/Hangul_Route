@@ -1,5 +1,5 @@
 import { Body, Button, Icon, Spacer, colors, radii, shadows, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { homeLineView } from '../../logic/transfers/transfer-views';
@@ -11,7 +11,7 @@ import { useLearnerTransfers, useMoveDate, useOpenMove, useTransferDevice } from
  * planned. No number, no timer, no red. Review opens the sheet (a yes always follows the consent lines);
  * Cancel opens the planned sheet. Draws nothing while the inbox says transfers are off.
  */
-export function TransferHomeLine({ profileId, learnerName }: { profileId: string; learnerName: string }): React.ReactElement | null {
+export function TransferHomeLine({ profileId, learnerName }: { profileId: string; learnerName: string }): ReactElement | null {
   const messages = useMessages();
   const t = messages.caregiver.transfer;
   const transfers = useLearnerTransfers(profileId);

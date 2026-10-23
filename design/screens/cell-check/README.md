@@ -12,3 +12,5 @@ Decisions drawn here:
 - The 80 % rule is the 3-star tier of F-RVW-001 §3.1, so the learner sees only stars; no result says pass or fail.
 - Test out never sits above the first quest's Start; it is hidden in E3's hidden arm, on a not-open-yet cell and with `cellCheck` off.
 - A result under 3 stars changes nothing on the map.
+
+**Stage Jump Ahead (F-CURR-002 row CM-25), built.** The Test out rule over a whole stage: "Already know this stage?" and a secondary Jump ahead button under the cells of the Journey stage the route has reached (the stage-wide twin of panel B), then panels C, D, F and G of the Cell Check screen with the jump's words ("Jump ahead", "You jumped ahead!"). Built shots from the e2e at 320: `shots/stage-jump-built-line-320.png` (the line) and `shots/stage-jump-built-result-320.png` (F).

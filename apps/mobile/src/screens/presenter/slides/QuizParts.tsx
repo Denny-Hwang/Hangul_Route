@@ -1,6 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
 import { markerFor } from '../../../logic/lecture/slide-view';
@@ -40,7 +41,7 @@ export function QuizOptions({
    * shape marker: the slide gives the grid more room.
    */
   onCrowded?: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit } = usePresenterView();
   const romOn = optionRomShown(romanization, revealed);
   const rows = [options.slice(0, 2), options.slice(2, 4)].filter((row) => row.length > 0);
@@ -116,7 +117,7 @@ function OptionCard({
   glossSmall: boolean;
   onGlossOverflow: () => void;
   onCrowded?: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const correct = revealed && option.correct;
@@ -230,7 +231,7 @@ function OptionCard({
  * (a realia question's key row, narrower than a question row): Hoya at `touchTarget.min` units and the
  * words at `presenter.size.caption`, taking the width of the slot it sits in.
  */
-export function AnswerLine({ shown, compact = false }: { shown: boolean; compact?: boolean }): React.ReactElement {
+export function AnswerLine({ shown, compact = false }: { shown: boolean; compact?: boolean }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   return (
@@ -273,7 +274,7 @@ export function OptionRows({
   romanization: RomanizationMode;
   compact?: boolean;
   small?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const { unit } = usePresenterView();
   const romOn = optionRomShown(romanization, revealed);
   // The answer's row draws its thicker border outward (a negative margin, so no row moves); the list keeps that
@@ -293,7 +294,7 @@ function pictureTile(unit: number): { padding: number; border: number; radius: n
   return { padding: units(unit, spacing.xs), border: Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base)), radius: units(unit, radii.md), minArt: units(unit, spacing.xxxl) };
 }
 
-function OptionRow({ option, index, revealed, romOn, compact, small }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; compact: boolean; small: boolean }): React.ReactElement {
+function OptionRow({ option, index, revealed, romOn, compact, small }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; compact: boolean; small: boolean }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const correct = revealed && option.correct;

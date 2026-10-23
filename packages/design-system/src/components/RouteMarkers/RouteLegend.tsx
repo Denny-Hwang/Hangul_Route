@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import Svg from 'react-native-svg';
 import { colors, spacing, typography } from '../../tokens';
@@ -13,7 +13,7 @@ export interface TagMarkProps {
 }
 
 /** One 16 dp mark (the legend, and the chips of later rows). Decorative: its word sits next to it. */
-export function TagMark({ kind, testID }: TagMarkProps): React.ReactElement {
+export function TagMark({ kind, testID }: TagMarkProps): ReactElement {
   return (
     <View
       testID={testID}
@@ -46,7 +46,7 @@ export interface RouteLegendProps {
  * word, in the order Next, In your plan, Not open yet, so the words are on the page. Not a
  * control and no background. Hidden from screen readers, because every cell label carries them.
  */
-export function RouteLegend({ items, testID }: RouteLegendProps): React.ReactElement | null {
+export function RouteLegend({ items, testID }: RouteLegendProps): ReactElement | null {
   const textScale = useTypeScale();
   if (items.length === 0) return null;
   const ordered = [...items].sort((a, b) => ROUTE_MARK_ORDER.indexOf(a.kind) - ROUTE_MARK_ORDER.indexOf(b.kind));

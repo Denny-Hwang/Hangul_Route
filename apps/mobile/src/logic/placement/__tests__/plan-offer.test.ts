@@ -192,6 +192,27 @@ describe('planOfferOf (F-PLC-001 section 3.1 step 7, AM-1, AM-2, AM-5)', () => {
     expect(planOfferOf(offerInput({ context: raised, active: planAtBand0(), keptFor: '2026-10-11T09:00:00.000Z' }))?.kind).toBe('update');
   });
 
+  it('Stage Jump (row CM-25): with no level check, Keep my plan holds; a jump after an earlier kept change is offered', () => {
+    const allStage1 = routeCatalogOf(CATALOG).quests.filter((q) => q.grid && q.stage === 'stage1').map((q) => q.id);
+    const stage2Cells = [...new Set(routeCatalogOf(CATALOG).quests.filter((q) => q.grid && q.stage === 'stage2').map((q) => q.episodeId))];
+    const jumpAt = '2026-10-12T08:30:00.000Z';
+    const testedOut = { ...Object.fromEntries(stage2Cells.map((c) => [c, jumpAt])), stage2: jumpAt };
+    const unlockedStages = ['stage1', 'stage2'] as ProposalContext['unlockedStages'];
+    // A learner on the "I am new to Korean" path: no level check, Stage 1 done, then a passed Stage 2 jump.
+    const jumped = context({ placements: undefined, completedQuestIds: allStage1, unlockedStages, testedOut });
+    const active = planAtBand0();
+    expect(planOfferOf(offerInput({ context: jumped, active }))?.kind).toBe('update');
+    expect(planChangeAt(undefined, testedOut)).toBe(jumpAt);
+    expect(planOfferOf(offerInput({ context: jumped, active, keptFor: jumpAt }))).toBeNull();
+    // A retake kept earlier, then a jump: the jump's update is offered, and Keep my plan answers the jump.
+    const both = context({ completedQuestIds: allStage1, unlockedStages, testedOut });
+    expect(planChangeAt(both.placements, testedOut)).toBe(jumpAt);
+    expect(planOfferOf(offerInput({ context: both, active, keptFor: '2026-10-11T09:00:00.000Z' }))?.kind).toBe('update');
+    expect(planOfferOf(offerInput({ context: both, active, keptFor: jumpAt }))).toBeNull();
+    // A cell's own test-out (no stage key) is not a start change.
+    expect(planChangeAt(undefined, { [stage2Cells[0] as string]: jumpAt })).toBeUndefined();
+  });
+
   it('a first check after a plan made from Home: the update is read from the plan, not from a previous result', () => {
     const first = context({ placements: [result({ level: { stage: 'stage1', band: 2 }, placedOutQuestIds: PLACED_AT_BAND_2 })] });
     const offer = planOfferOf(offerInput({ context: first, active: planAtBand0() }));

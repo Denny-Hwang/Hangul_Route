@@ -1,5 +1,6 @@
 import { Icon, colors, motion, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Animated, Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { syllableView } from '../../../logic/lecture/slide-view';
@@ -33,7 +34,7 @@ export function SyllableSlide({
   /** The room cannot hear the Korean: the speaker becomes the "Say it:" box (section 3.7, PR 9). */
   sayIt?: boolean;
   onPlaySound: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit, reducedMotion } = usePresenterView();
   const size = useStageText();
   const view = syllableView(slide, reveal);
@@ -67,14 +68,14 @@ export function SyllableSlide({
         const sign = i === 0 ? 1 : -1;
         const shift = slideTogether && twoParts ? [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [0, sign * travel] }) }] : [];
         return (
-          <React.Fragment key={`${i}-${part}`}>
+          <Fragment key={`${i}-${part}`}>
             {i > 0 ? <Icon name="plus" size={units(unit, plus)} color={colors.text.secondary} /> : null}
             <Animated.View style={{ transform: shift }}>
               <TaughtKo size={fontSize} style={{ lineHeight: fontSize }}>
                 {part}
               </TaughtKo>
             </Animated.View>
-          </React.Fragment>
+          </Fragment>
         );
       })}
     </>

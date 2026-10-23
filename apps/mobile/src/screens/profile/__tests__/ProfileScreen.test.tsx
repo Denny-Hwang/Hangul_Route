@@ -1,6 +1,5 @@
 import type { Profile, TierSource } from '@hangul-route/content-schema';
 import { LOCALES, LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { planCardView } from '../../../logic/paywall';

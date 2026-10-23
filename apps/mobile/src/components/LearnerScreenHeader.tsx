@@ -1,6 +1,7 @@
 import { ScreenHeader, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
 import { NavigationContext, NavigationRouteContext } from '@react-navigation/native';
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { useMessages } from '../i18n/use-messages';
 import { missingWayBack, screenHeaderDecision } from '../logic/navigation/screen-header';
 import { isScreenHeaderException, screenHeaderVariant } from '../navigation/screen-header-variants';
@@ -27,7 +28,7 @@ export function LearnerScreenHeader({
   inLayout?: boolean;
   /** Whether a language chosen on the header's Display sheet is reported as `locale.changed`; All lessons passes false (`BrowseScreenHeader`). */
   reportLocale?: boolean;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const route = useContext(NavigationRouteContext);
   const navigation = useContext(NavigationContext);
   const messages = useMessages();
@@ -95,7 +96,7 @@ export function LearnerScreenHeader({
  * other tabs but reports nothing. All lessons sends only `browse.*` events and none for a display choice
  * (AMENDMENTS-DISPLAY-NAV section 11), as its own header row's sheet did before the route drew the header.
  */
-export function BrowseScreenHeader(props: ScreenHeaderSlotProps): React.ReactElement | null {
+export function BrowseScreenHeader(props: ScreenHeaderSlotProps): ReactElement | null {
   return <LearnerScreenHeader {...props} reportLocale={false} />;
 }
 

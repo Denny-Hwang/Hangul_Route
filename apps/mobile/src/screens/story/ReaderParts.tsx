@@ -25,7 +25,8 @@ import {
 } from '@hangul-route/design-system';
 import type { KoText, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { recapLayout, type CultureNoteView, type RecapScene } from '../../logic/story/reader-extras';
 import type { NarrationPartView, SceneKorean } from '../../logic/story/scene-view';
@@ -63,7 +64,7 @@ export function ReaderTopBar({
   /** What a screen reader says for the page number ("Scene 3 of 8"), not "three slash eight". */
   positionLabel: string;
   onSources?: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
       {/* The dots carry no value a screen reader can say; the labelled page number does (§3.10). */}
@@ -130,7 +131,7 @@ export function NarrationText({
   copy: ReaderCopy;
   chipState: (keywordId: string) => TermChipState;
   onTerm: (keywordId: string) => void;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <Text {...KOREAN_LINE_BREAK}
@@ -178,7 +179,7 @@ export function SpeakerButton({
   label: string;
   onPress: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       onPress={onPress}
@@ -216,7 +217,7 @@ export function GlossCard({
   romanizationShown: boolean;
   onHear: () => void;
   onClose: () => void;
-}): React.ReactElement {
+}): ReactElement {
   // Wireframe C: the card pushes the text down and scrolls into view (web: the node is the DOM element).
   const ref = useRef<View | null>(null);
   useEffect(() => {
@@ -273,7 +274,7 @@ export function KoreanBlock({
   wordState: (index: number) => TermChipState;
   onHear: () => void;
   onWord: (index: number) => void;
-}): React.ReactElement {
+}): ReactElement {
   const { text, words } = korean;
   if (!words || words.length === 0) {
     // One tap target: hear the word or the whole line (and reveal its romanization in tap mode),
@@ -353,7 +354,7 @@ export function CultureNoteChip({
   label: string;
   open: boolean;
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View style={{ borderBottomWidth: borderWidth.thick, borderBottomColor: open ? colors.brand.secondaryDark : 'transparent' }}>
       <Button
@@ -396,7 +397,7 @@ export function CultureNoteCard({
   onClose: () => void;
   /** Window height < `layout.compactHeight`: a smaller card picture leaves the short text area more room. */
   compact?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const ref = useRef<View | null>(null);
   useEffect(() => {
     const node = ref.current as unknown as { scrollIntoView?: (o: { block: 'nearest' }) => void } | null;
@@ -479,7 +480,7 @@ export function AdvisoryRow({
    * screen reader reads, and Sources always shows it (§3.7).
    */
   compact?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <View testID="story-reader-advisory" style={{ marginTop: spacing.xs }}>
@@ -534,7 +535,7 @@ export function ReadToMeSwitch({
   label: string;
   value: boolean;
   onChange: (next: boolean) => void;
-}): React.ReactElement {
+}): ReactElement {
   const track = spacing.xxxl;
   const knob = spacing.xl;
   return (
@@ -597,10 +598,10 @@ export function ReaderBottomBar({
   /** A checkpoint card still waiting for its answer (its Skip is the way on, §3.7). */
   nextDisabled?: boolean;
   /** Focus lands here once a checkpoint is answered. */
-  nextRef?: React.Ref<View>;
+  nextRef?: Ref<View>;
   onBack: () => void;
   onNext: () => void;
-}): React.ReactElement {
+}): ReactElement {
   // Back and Next stay together; the switch takes its own line when the row is narrow.
   return (
     <View
@@ -667,7 +668,7 @@ export function ReaderEndPage({
   compact?: boolean;
   /** Window wider than tall: with `compact`, the recap sits beside Hoya in one row. */
   landscape?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const hoya = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xxl);
   const maxThumb = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xl);
   // Start from the window width (the reading column is never wider), so the pictures are drawn on the first
@@ -764,7 +765,7 @@ export function ReaderFallback({
   onBack: () => void;
   /** Quest mode only: a content error never traps a quest. */
   onContinue?: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View testID="story-reader-unavailable" style={{ flexGrow: 1, justifyContent: 'center', gap: spacing.lg }}>
       <Body size="lg" align="center">
@@ -781,6 +782,6 @@ export function ReaderFallback({
 }
 
 /** "In English" above the narration on the read-along level (§3.3 level table). */
-export function InEnglishLabel({ label }: { label: string }): React.ReactElement {
+export function InEnglishLabel({ label }: { label: string }): ReactElement {
   return <Caption tone="muted">{label}</Caption>;
 }

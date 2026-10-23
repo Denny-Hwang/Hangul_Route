@@ -1,6 +1,6 @@
 import type { Profile, TierSource } from '@hangul-route/content-schema';
 import { LOCALES, findBannedWord, getMessages, type UiLocale } from '@hangul-route/i18n';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAccountStore } from '../../../store/account-store';

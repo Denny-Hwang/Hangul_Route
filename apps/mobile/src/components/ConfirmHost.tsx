@@ -1,5 +1,6 @@
 import { ConfirmSheet } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { setConfirmPresenter, type ConfirmOptions } from '../platform/dialog';
 import { useHistorySheet } from '../platform/history-bridge';
 
@@ -16,7 +17,7 @@ interface Request {
  * holds one entry, so the browser or phone back answers Cancel. On native the host registers nothing
  * (the platform `Alert` stays).
  */
-export function ConfirmHost(): React.ReactElement {
+export function ConfirmHost(): ReactElement {
   const [current, setCurrent] = useState<Request | null>(null);
   const waiting = useRef<Request[]>([]);
   const showing = useRef<Request | null>(null);

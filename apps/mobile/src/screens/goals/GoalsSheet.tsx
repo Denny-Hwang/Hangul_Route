@@ -1,5 +1,6 @@
 import { Body, Button, Heading, Icon, Spacer, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { DAILY_TIERS, WEEKLY_DAYS, type DailyGoal, type WeeklyDays } from '../../logic/goals/points';
@@ -38,9 +39,9 @@ function Radio({
   label: string;
   onPress: () => void;
   testID: string;
-  children: React.ReactNode;
+  children: ReactNode;
   refFn?: (node: Focusable) => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       ref={refFn ? (node: unknown) => refFn(node as Focusable) : undefined}
@@ -70,7 +71,7 @@ function Radio({
 }
 
 /** The radio mark: a ring, filled with a dot when chosen (the outline and the dot, never colour alone). */
-function Mark({ selected }: { selected: boolean }): React.ReactElement {
+function Mark({ selected }: { selected: boolean }): ReactElement {
   return (
     <View
       aria-hidden
@@ -89,7 +90,7 @@ function Mark({ selected }: { selected: boolean }): React.ReactElement {
   );
 }
 
-export function GoalsSheet({ visible, daily, weeklyGoal, planDays, onSave, onSeePlan }: GoalsSheetProps): React.ReactElement {
+export function GoalsSheet({ visible, daily, weeklyGoal, planDays, onSave, onSeePlan }: GoalsSheetProps): ReactElement {
   const messages = useMessages();
   const g = messages.learner.goals;
   const dialog = useLayoutClass().width !== 'compact';

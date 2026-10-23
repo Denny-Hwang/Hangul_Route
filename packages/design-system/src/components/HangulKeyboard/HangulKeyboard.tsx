@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { borderWidth, colors, radii, spacing, typography } from '../../tokens';
 import { Icon } from '../Icon';
@@ -24,7 +25,7 @@ export function HangulKeyboard({
   labels,
   disabled = false,
   testID,
-}: HangulKeyboardProps): React.ReactElement {
+}: HangulKeyboardProps): ReactElement {
   const [shift, setShift] = useState(false);
   const kb = keyboardLayout(width, layoutClass);
   const tablet = layoutClass.mediaScale > 1;
@@ -51,7 +52,7 @@ export function HangulKeyboard({
     onKey(jamo);
   };
 
-  const renderFace = (key: KeyboardKey): React.ReactElement => {
+  const renderFace = (key: KeyboardKey): ReactElement => {
     if (key.kind === 'shift') {
       return <Icon name={shift ? 'shift-on' : 'shift'} size={spacing.xl} color={shift ? colors.brand.secondaryDark : colors.text.primary} />;
     }

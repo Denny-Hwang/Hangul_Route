@@ -85,7 +85,19 @@ export const PRECACHE_BUDGET = Object.freeze({
   // first-finish dating, the reconcile wiring and the album strings; the card backs, the ten drawings and the Library's
   // albums are the upper-cards chunk) measures 4,809,851 B raw / 1,270,481 B gzip on CM-22's 4,806,089 B, with the
   // touched start-bundle modules importing React's hooks by name: the line stays.
-  startBundleRaw: 4_810_000,
+  // The F-CURR-002 phase-2 integration (integrate/curr-phase2: CM-20 #837, CM-21 #840, CM-22 #842, CM-23a #843,
+  // CM-23b #844, CM-25 #841 and CM-24 #838 on main 836bfcd6f) measures 4,812,581 B raw / 1,272,017 B gzip (release
+  // `build:web`, Metro cache cleared), 2,581 B over the 4,810,000 B line, so the line is that measurement plus a
+  // 419 B rounding margin (4,813,000 B); the app-host build (grown-up home on, API base set) measures 4,812,737 B.
+  // Named React imports (perf(mobile,design-system), the helper the CM-21 decision record left open): the app's and
+  // the design system's modules import React's hooks and types by name, react-native-svg's root as the named `Svg`
+  // and expo-crypto by name, so 142 of the 153 first-party start-bundle modules that inlined Babel's wildcard interop
+  // helper (about 464 B each) no longer do; of the 11 left, 10 import react-native-reanimated's default `Animated`
+  // beside its hooks and one (content/stories.ts) reads the generated story index as a namespace
+  // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
+  // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
+  // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
+  startBundleRaw: 4_750_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -209,6 +221,10 @@ export const LEARNER_CHUNKS = Object.freeze([
   // Row CM-20: the mastery ring and the Results banners (`src/screens/mastery/mastery-chunk.ts`), reached only through
   // the literal `import()` of `src/store/mastery-entry.ts` while `mastery` is on; the level derivation is the memory chunk's.
   Object.freeze({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' }),
+  // Adaptive pacing in quests (row CM-24, `src/screens/quest/quest-pacing-chunk.tsx`): the rules, the shorter Apply and
+  // the scaffold round, reached only through the literal `import()` of `src/screens/quest/quest-pacing.ts` while
+  // `questAdapt` is on.
+  Object.freeze({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' }),
 ]);
 
 /**

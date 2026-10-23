@@ -1,7 +1,8 @@
 import type { KoText, TraceWordRound } from '@hangul-route/content-schema';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { strokesForJamo, type JamoStrokePoint } from '../content/jamo-strokes';
 import type { MinigameScope } from '../logic/minigame-config';
 import { placeWordStrokes } from '../logic/trace-word/block-strokes';
@@ -54,7 +55,7 @@ export function TraceWordE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TraceWordE2e'>;
 
-export function TraceWordE2eScreen({ route, navigation }: Props): React.ReactElement {
+export function TraceWordE2eScreen({ route, navigation }: Props): ReactElement {
   const scope = useMemo<MinigameScope>(
     () => ({ kind: 'trace-word', rounds: route.params.rounds.length, traceWord: { rounds: route.params.rounds } }),
     [route.params],

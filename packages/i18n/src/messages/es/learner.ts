@@ -533,6 +533,10 @@ export const learner = {
         readingNow: { pill: 'Leyendo ahora' },
         lineLabel: (line: number, total: number, speaker: string) => `Línea ${line} de ${total}, ${speaker}`,
       },
+      compactLine: 'Dos en una tarjeta. Toca Escuchar en cada una.',
+    },
+    adapt: {
+      scaffoldHint: 'Una más, con una pista. Escucha y toca la tarjeta resaltada.',
     },
   },
 
@@ -2100,5 +2104,13 @@ export const learner = {
       body: 'Aquí están tus tarjetas de etapa.',
       bodyNoCards: 'Cada etapa que terminaste queda en tu Recorrido.',
     },
+  },
+  stageJump: {
+    prompt: '¿Ya conoces esta etapa?',
+    cta: 'Adelantar etapa',
+    label: (stage: number, title: string) => `Adelantar etapa: Etapa ${stage}, ${title}`,
+    intro: 'Unos 7 minutos. Muestra lo que sabes de todos los lugares de esta etapa. Sin reloj.',
+    extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
+    passed: '¡Adelantaste la etapa!',
   },
 } satisfies DeepPartial<Messages['learner']>;

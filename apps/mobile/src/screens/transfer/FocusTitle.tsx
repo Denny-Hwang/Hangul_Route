@@ -1,5 +1,6 @@
 import { Heading } from '@hangul-route/design-system';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { focusForScreenReader } from '../../platform/screen-reader';
 
@@ -8,7 +9,7 @@ import { focusForScreenReader } from '../../platform/screen-reader';
  * Accessibility): a screen-reader user starts at the title, not at the Back button or the top of the page.
  * `lang` marks the sheet's own language when it differs from the UI's.
  */
-export function FocusTitle({ text, lang }: { text: string; lang?: string }): React.ReactElement {
+export function FocusTitle({ text, lang }: { text: string; lang?: string }): ReactElement {
   const ref = useRef<object | null>(null);
   useEffect(() => {
     focusForScreenReader(ref.current);

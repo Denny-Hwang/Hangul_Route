@@ -1,5 +1,6 @@
 import { Icon, borderWidth, colors, layout, motion, radii, shadows, spacing, touchTarget, typography, z, type IconName, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+import type { Ref, ReactElement } from 'react';
 import { Animated, Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { BAR_SHOW_GRACE_MS, NO_INSETS, type StageInsets } from '../../logic/lecture/stage-constants';
 import type { StatusChip } from '../../logic/lecture/tools';
@@ -51,7 +52,7 @@ export interface ControlBarProps {
   /** The docked band's height: it grows when the controls wrap (the stage letterboxes). */
   onBandHeight?: (height: number) => void;
   /** The docked bar's Exit, or the compact bar's More (which holds Exit): Next on the End slide moves focus there. */
-  exitRef?: React.Ref<View>;
+  exitRef?: Ref<View>;
   /** A phone window: the compact bar over the stage (default: docked). */
   compact?: boolean;
   /** The safe-area insets the compact bar keeps clear of. */
@@ -152,7 +153,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
   );
 });
 
-export function ControlBar(props: ControlBarProps): React.ReactElement {
+export function ControlBar(props: ControlBarProps): ReactElement {
   const { reducedMotion } = usePresenterView();
   const opacity = useRef(new Animated.Value(props.hidden ? 0 : 1)).current;
   useEffect(() => {
@@ -182,7 +183,7 @@ export function ControlBar(props: ControlBarProps): React.ReactElement {
 
 type BarParts = ControlBarProps & { opacity: Animated.Value; live: boolean; focus: FocusTracker };
 
-function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusChip[]; onTurnSoundOn: () => void; focus: FocusTracker }): React.ReactElement | null {
+function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusChip[]; onTurnSoundOn: () => void; focus: FocusTracker }): ReactElement | null {
   if (chips.length === 0) return null;
   return (
     <>
@@ -193,7 +194,7 @@ function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusCh
   );
 }
 
-function DockedBar(props: BarParts): React.ReactElement {
+function DockedBar(props: BarParts): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const focus = props.focus;
@@ -231,7 +232,7 @@ function DockedBar(props: BarParts): React.ReactElement {
   );
 }
 
-function CompactBar(props: BarParts): React.ReactElement {
+function CompactBar(props: BarParts): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const focus = props.focus;
@@ -285,7 +286,7 @@ function CompactBar(props: BarParts): React.ReactElement {
  * chips, then the rest of the controls as `touchTarget.min` buttons; Tab stays inside and focus goes
  * back to More when it closes. A control runs its tool and closes the sheet.
  */
-function MoreSheet(props: BarParts & { insets: StageInsets }): React.ReactElement {
+function MoreSheet(props: BarParts & { insets: StageInsets }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
@@ -304,7 +305,7 @@ function MoreSheet(props: BarParts & { insets: StageInsets }): React.ReactElemen
     props.onMore?.(false);
     run();
   };
-  const button = (testID: string, label: string, onPress: () => void, pressed?: boolean): React.ReactElement => (
+  const button = (testID: string, label: string, onPress: () => void, pressed?: boolean): ReactElement => (
     <SheetButton key={testID} testID={testID} label={label} onPress={item(onPress)} {...(pressed !== undefined ? { pressed } : {})} />
   );
   return (
@@ -402,7 +403,7 @@ const SheetButton = forwardRef<View, { label: string; onPress: () => void; press
  * A status chip (stage-and-bar.md): a pill at `touchTarget.min`, `border.strong` on paper,
  * `text.primary` at 18 px. Sound is off carries a bordered Turn sound on button.
  */
-function Chip({ chip, onTurnSoundOn, focus }: { chip: StatusChip; onTurnSoundOn: () => void; focus: FocusTracker }): React.ReactElement {
+function Chip({ chip, onTurnSoundOn, focus }: { chip: StatusChip; onTurnSoundOn: () => void; focus: FocusTracker }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;

@@ -1,7 +1,8 @@
 import { APP_ROUTES, type StageKey, type StoryLevel } from '@hangul-route/content-schema';
 import { Body, Button, Card, Heading, Pill, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -40,7 +41,7 @@ type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseItem'>;
 const PRIMARY_MAX = BROWSE_ACTION_MAX_WIDTH;
 const LABEL_COLUMN = BROWSE_LABEL_COLUMN;
 
-export function BrowseItemScreen({ route, navigation }: Props): React.ReactElement {
+export function BrowseItemScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse;
   const locale = useLocale();
@@ -140,7 +141,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
     </View>
   );
 
-  const actionBar = (slot: PresentSlot | 'closed' | null): React.ReactElement | null =>
+  const actionBar = (slot: PresentSlot | 'closed' | null): ReactElement | null =>
     slot === 'closed' ? (
     <View testID="browse-item-closed" style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.sm, alignItems: 'flex-start' }}>
       <Body weight="semibold">{m.item.closed}</Body>
@@ -246,7 +247,7 @@ export function BrowseItemScreen({ route, navigation }: Props): React.ReactEleme
   );
 }
 
-function ItemHeader({ facts }: { facts: ItemFacts }): React.ReactElement {
+function ItemHeader({ facts }: { facts: ItemFacts }): ReactElement {
   const m = useMessages().caregiver.browse;
   const kindLabel = facts.kind === 'quest' ? m.item.kind.quest : facts.kind === 'story' ? m.item.kind.story : m.item.kind.vocabTopic;
   const title = facts.kind === 'story' ? facts.title.gloss : facts.title;
@@ -274,7 +275,7 @@ function ItemHeader({ facts }: { facts: ItemFacts }): React.ReactElement {
 }
 
 /** One row of "What this teaches": the label above its value on phones, an 8rem label column from the regular class. */
-function FactRow({ label, children, testID }: { label: string; children: React.ReactNode; testID?: string }): React.ReactElement {
+function FactRow({ label, children, testID }: { label: string; children: ReactNode; testID?: string }): ReactElement {
   const textScale = useTypeScale();
   const compact = useLayoutClass().width === 'compact';
   return (
@@ -287,11 +288,11 @@ function FactRow({ label, children, testID }: { label: string; children: React.R
   );
 }
 
-function Chips({ children }: { children: React.ReactNode }): React.ReactElement {
+function Chips({ children }: { children: ReactNode }): ReactElement {
   return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' }}>{children}</View>;
 }
 
-function QuestRows({ facts }: { facts: QuestFacts }): React.ReactElement {
+function QuestRows({ facts }: { facts: QuestFacts }): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse;
   return (
@@ -358,7 +359,7 @@ function StoryRows({
   onLevel: (level: StoryLevel) => void;
   /** [ See the sources ]: the sources page, copy-only links (section 4.7). */
   onSources: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages().caregiver.browse;
   const scenes = facts.levels.find((l) => l.level === level)?.scenes ?? 0;
@@ -415,7 +416,7 @@ function StoryRows({
   );
 }
 
-function WhereRow({ line, onSee }: { line: string; onSee: () => void }): React.ReactElement {
+function WhereRow({ line, onSee }: { line: string; onSee: () => void }): ReactElement {
   const m = useMessages().caregiver.browse;
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { colors } from '../../tokens';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -30,7 +30,7 @@ type PressState = { pressed: boolean; focused?: boolean };
  * (WCAG 2.5.3 Label in Name). ScreenHeader draws it at the top right; a root's own header (Home,
  * All lessons, the presenter) draws it beside its other controls.
  */
-export function DisplayControl({ label, a11y, onPress, testID = 'display-button' }: { label: string; a11y: string; onPress: () => void; testID?: string }): React.ReactElement {
+export function DisplayControl({ label, a11y, onPress, testID = 'display-button' }: { label: string; a11y: string; onPress: () => void; testID?: string }): ReactElement {
   const scale = useTypeScale();
   return (
     <Pressable
@@ -74,7 +74,7 @@ export function ScreenHeader({
   trailing,
   onHeight,
   testID = 'screen-header',
-}: ScreenHeaderProps): React.ReactElement {
+}: ScreenHeaderProps): ReactElement {
   const scale = useTypeScale();
   const { width } = useLayoutClass();
   const glyph = leadingIcon(leading);

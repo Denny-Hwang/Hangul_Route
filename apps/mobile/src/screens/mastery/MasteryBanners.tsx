@@ -1,9 +1,10 @@
 import type { ThemeKey } from '@hangul-route/content-schema';
 import { Body, Card, Hoya, borderWidth, colors, motion, spacing } from '@hangul-route/design-system';
 import { formatNumber } from '@hangul-route/i18n';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Animated, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { Svg, Circle } from 'react-native-svg';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { circleRing, segmentDash } from '../../logic/mastery-ring';
 
@@ -31,7 +32,7 @@ export interface MasteryBannersProps {
 export const LEVEL_RING_SIZE = spacing.xxxl;
 
 /** The 48 dp ring: the level-up banner's, and the cell page's mastery block (row CM-21, drawn full with `reducedMotion`). */
-export function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; theme: ThemeKey; reducedMotion: boolean }): React.ReactElement {
+export function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; theme: ThemeKey; reducedMotion: boolean }): ReactElement {
   const ring = circleRing(LEVEL_RING_SIZE, { gap: spacing.xs, track: borderWidth.thick });
   const fill = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   useEffect(() => {
@@ -45,7 +46,7 @@ export function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; t
   }, [fill, reducedMotion]);
   const c = LEVEL_RING_SIZE / 2;
   const tone = colors.theme[theme];
-  const arc = (count: number, color: string, width: number): React.ReactElement[] =>
+  const arc = (count: number, color: string, width: number): ReactElement[] =>
     level === 3 && count === 3
       ? [<Circle key="all" cx={c} cy={c} r={ring.r} stroke={color} strokeWidth={width} fill="none" />]
       : ring.segments.slice(0, count).map((s, i) => (
@@ -72,7 +73,7 @@ export function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; t
   );
 }
 
-export function MasteryBanners({ milestone, levelUp, reducedMotion }: MasteryBannersProps): React.ReactElement | null {
+export function MasteryBanners({ milestone, levelUp, reducedMotion }: MasteryBannersProps): ReactElement | null {
   const messages = useMessages();
   const locale = useLocale();
   const m = messages.learner.mastery;

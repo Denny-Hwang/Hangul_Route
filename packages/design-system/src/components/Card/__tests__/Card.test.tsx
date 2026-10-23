@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Card } from '../Card';
 
@@ -9,7 +9,7 @@ import { Card } from '../Card';
  */
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable' }));
 
-type El = React.ReactElement<Record<string, unknown>>;
+type El = ReactElement<Record<string, unknown>>;
 
 describe('Card accessibilityHint', () => {
   it('a pressable card passes the hint next to its label', () => {

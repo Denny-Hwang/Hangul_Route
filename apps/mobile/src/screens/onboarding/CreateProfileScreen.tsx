@@ -24,7 +24,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Linking, Platform, Pressable, TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { OptionCard } from '../../components/OptionCard';
@@ -108,7 +109,7 @@ const fieldStyle = (borderColor: string, fontSize: number) =>
  * GU-D11: a first run on a device whose only learner is a live guest (the switch on) keeps its three steps and the
  * fork, and promotes the guest instead of making a new profile (`guest.saved { via: 'setup' }`).
  */
-export function CreateProfileScreen({ navigation, route }: Props): React.ReactElement {
+export function CreateProfileScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.learner;
@@ -443,7 +444,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   );
 
   /** The name field with its hints; `description`: a line under it (the guest's save). */
-  const nameField = (label: string, description?: string): React.ReactElement => (
+  const nameField = (label: string, description?: string): ReactElement => (
     <>
       <Body weight="semibold">{label}</Body>
       <Spacer size="xs" />

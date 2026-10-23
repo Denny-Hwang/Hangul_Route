@@ -145,6 +145,65 @@ describe('fixed clocks in four time zones: the spread starts the day after the l
   }
 });
 
+describe('a Stage Jump (row CM-25): every cell of the stage and the stage key, one instant', () => {
+  const STAGE2 = CATALOG.cells.filter((c) => /^episode:stage2-[a-z]+$/.test(c.episodeId)).map((c) => c.episodeId);
+  const jump = (at: string, order: readonly string[] = STAGE2): Record<string, string> => Object.fromEntries([...order.map((c) => [c, at]), ['stage2', at]]);
+  const taught = [...new Set(STAGE2.flatMap((c) => cellStoreItems(ITEMS, RETIRED, c)))];
+
+  it('lays every unasked item of the stage at box 1, unanswered, from the day after, never over 15 seeded due a day', () => {
+    expect(STAGE2.length).toBeGreaterThanOrEqual(4);
+    const states = derive(jump(AT));
+    expect([...states.keys()].sort()).toEqual([...taught].sort());
+    for (const { state } of states.values()) expect(state).toMatchObject({ b: 1, s: 1, n: 0, r: 0, c: 0, f: DAY, at: AT });
+    const days = perDay(states.values());
+    for (const n of days.values()) expect(n).toBeLessThanOrEqual(SEED_PER_DAY);
+    expect([...days.keys()].sort()[0]).toBe(addDays(DAY, 1));
+    // A whole stage holds more than 3 x 15 items: the cap wins and the rest go to the next days, without a gap.
+    expect(states.size).toBeGreaterThan(SEED_PER_DAY * TEST_OUT_SPREAD_DAYS);
+    const sorted = [...days.keys()].sort();
+    sorted.forEach((d, i) => expect(d).toBe(addDays(DAY, i + 1)));
+  });
+
+  it('the stage key places nothing of its own: the same states as the cells alone', () => {
+    const cellsOnly = Object.fromEntries(STAGE2.map((c) => [c, AT]));
+    expect(derive(jump(AT))).toEqual(derive(cellsOnly));
+    expect(derive({ stage2: AT }).size).toBe(0);
+  });
+
+  it('derives the same on two devices, whatever the key order or the side that merges first', () => {
+    const a = jump(AT);
+    const b = jump(AT, [...STAGE2].reverse());
+    expect(derive(a)).toEqual(derive(b));
+    // Device B jumped the same stage later, offline: after the merge both hold the earliest instant and derive alike.
+    const later = jump('2026-10-24T10:00:00.000Z');
+    const m1 = mergeLatchRecord(a, later) ?? {};
+    const m2 = mergeLatchRecord(later, b) ?? {};
+    expect(m1).toEqual(m2);
+    expect(derive(m1)).toEqual(derive(m2));
+    expect(derive(m1)).toEqual(derive(a));
+  });
+
+  const cases: [string, string, string][] = [
+    ['Pacific/Kiritimati', '2026-10-22T10:30:00.000Z', '2026-10-23'],
+    ['Etc/GMT+12', '2026-10-22T10:30:00.000Z', '2026-10-21'],
+    ['Asia/Seoul', '2026-10-22T10:30:00.000Z', '2026-10-22'],
+    // Across the end of daylight time in Los Angeles (2026-11-01): the spread keeps one local day per step.
+    ['America/Los_Angeles', '2026-10-31T08:30:00.000Z', '2026-10-31'],
+  ];
+  for (const [zone, at, localDay] of cases) {
+    it(`fixed clock, ${zone}: the spread starts the day after the local day ${localDay}`, () => {
+      const dayOf = zoned(zone);
+      expect(dayOf(new Date(at))).toBe(localDay);
+      const states = derive(jump(at), dayOf);
+      const sorted = [...perDay(states.values()).keys()].sort();
+      expect(sorted[0]).toBe(addDays(localDay, 1));
+      sorted.forEach((d, i) => expect(d).toBe(addDays(localDay, i + 1)));
+      for (const { state } of states.values()) expect(state.f).toBe(localDay);
+      expect(derive(jump(at, [...STAGE2].reverse()), zoned(zone))).toEqual(states);
+    });
+  }
+});
+
 describe('across the US daylight-saving change (section 14 "across DST")', () => {
   it('America/Los_Angeles: a test-out at 23:30 on 30 October spreads over 31 October, 1 and 2 November (the change is 1 November)', () => {
     const dayOf = zoned('America/Los_Angeles');

@@ -16,7 +16,8 @@ import {
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
 import { localizedGloss, vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -42,7 +43,7 @@ const TILE_WIDTH = 2 * touchTarget.hero - spacing.xxl;
  * wrote every answer and its session before it opened this screen.
  * Design: design/screens/vocab/results.md.
  */
-export function VocabResultsScreen({ route, navigation }: Props): React.ReactElement {
+export function VocabResultsScreen({ route, navigation }: Props): ReactElement {
   const { topicKey, summary, newBest = false } = route.params;
   const messages = useMessages();
   const copy = messages.learner.vocab.speed;

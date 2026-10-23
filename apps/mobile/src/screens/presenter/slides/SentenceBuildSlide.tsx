@@ -1,5 +1,6 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import type { BuildTile } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -34,7 +35,7 @@ const MAX_LEVEL = 2;
  * Every swap is instant (nothing travels, reduced motion or not). A part not reached keeps its space.
  * Nothing here takes input; the room points and the teacher clicks.
  */
-export function SentenceBuildSlide({ slide, reveal }: { slide: SentenceBuildBody; reveal: number }): React.ReactElement {
+export function SentenceBuildSlide({ slide, reveal }: { slide: SentenceBuildBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const fit = useFitLevel(MAX_LEVEL, unit);
@@ -165,7 +166,7 @@ function tileLook(m: TileMetrics, line: 'solid' | 'dashed'): ViewStyle {
  * holds the tile's size; `set-back`: a distractor at the whole build, at `presenter.dimOpacity` in
  * `text.primary` (the pinned dimmed pair, never crossed out or coloured).
  */
-function Tile({ ko, metrics, place, look = 'tile', testID }: { ko: string; metrics: TileMetrics; place: ViewStyle; look?: BuildBankPlace; testID?: string }): React.ReactElement {
+function Tile({ ko, metrics, place, look = 'tile', testID }: { ko: string; metrics: TileMetrics; place: ViewStyle; look?: BuildBankPlace; testID?: string }): ReactElement {
   const ghost = look === 'ghost';
   return (
     <View
@@ -185,13 +186,13 @@ function Tile({ ko, metrics, place, look = 'tile', testID }: { ko: string; metri
  * A particle tile on the line before its ending is chosen (slide-sentence-build.md): the stem, then the
  * two endings in dashed `text.primary` boxes with a slash between them, smaller than the stem.
  */
-function ParticleTile({ tile, metrics, place }: { tile: BuildTile; metrics: TileMetrics; place: ViewStyle }): React.ReactElement {
+function ParticleTile({ tile, metrics, place }: { tile: BuildTile; metrics: TileMetrics; place: ViewStyle }): ReactElement {
   const particle = tile.particle!;
   return (
     <View testID="presenter-build-particle" style={[tileLook(metrics, 'solid'), place, { flexDirection: 'row', gap: metrics.inner }]}>
       <TaughtKo size={metrics.size}>{particle.stem}</TaughtKo>
       {particle.choices.map((choice, i) => (
-        <React.Fragment key={choice.ko}>
+        <Fragment key={choice.ko}>
           {i > 0 ? (
             <Text {...KOREAN_LINE_BREAK} aria-hidden style={{ fontSize: metrics.choiceSize, color: colors.text.secondary }}>
               /
@@ -203,7 +204,7 @@ function ParticleTile({ tile, metrics, place }: { tile: BuildTile; metrics: Tile
           >
             <TaughtKo size={metrics.choiceSize}>{choice.ko}</TaughtKo>
           </View>
-        </React.Fragment>
+        </Fragment>
       ))}
     </View>
   );

@@ -1,6 +1,6 @@
 import { Body, Button, Card, Heading, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { useMessages } from '../../i18n/use-messages';
 import { backOrHome } from '../../logic/navigation/screen-exits';
 import { vocabCopyOf } from '../../logic/vocab/copy';
@@ -16,7 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopics'>;
  * same grid inline (T1). No topic to show (dev builds only) -> "Words are on
  * their way." with a way back. Design: design/screens/vocab/topics.md.
  */
-export function VocabTopicsScreen({ navigation }: Props): React.ReactElement {
+export function VocabTopicsScreen({ navigation }: Props): ReactElement {
   const copy = vocabCopyOf(useMessages());
   const topics = pickerTopics();
   // With no history (a reload), Back lands on the Library's Words section (Cards when Words is not offered).

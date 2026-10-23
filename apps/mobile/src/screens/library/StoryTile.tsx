@@ -15,7 +15,7 @@ import {
   typography,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { storyCoverVariant, storyTileCoverWidth, type StoryTileView } from '../../logic/story/story-tile';
 
@@ -40,7 +40,7 @@ const FALLBACK_MAX_FONT_SCALE = 1.3;
  * scene has no art yet, or whose art does not resolve (§3.4 error state). The
  * type steps down on a narrow cover so a long title stays inside the 4:3 box.
  */
-export function CoverFallback({ ko, coverWidth }: { ko: string; coverWidth: number }): React.ReactElement {
+export function CoverFallback({ ko, coverWidth }: { ko: string; coverWidth: number }): ReactElement {
   const size = storyCoverVariant(coverWidth) === 'thumb' ? typography.size.bodyLg : typography.size.title;
   return (
     <Text {...KOREAN_LINE_BREAK}
@@ -96,7 +96,7 @@ export function StoryTile({
   width: number;
   onPress: () => void;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const coverWidth = storyTileCoverWidth(width, TILE_CHROME);
   return (
     <Pressable

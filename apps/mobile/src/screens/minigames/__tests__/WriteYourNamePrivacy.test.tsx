@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { LessonCellSchema, keysFor, type WriteFrameRound } from '@hangul-route/content-schema';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
-import React from 'react';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';

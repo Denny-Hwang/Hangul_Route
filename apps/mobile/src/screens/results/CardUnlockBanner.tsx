@@ -4,7 +4,7 @@ import type { Messages } from '@hangul-route/i18n';
 import { useEffect, type ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import { cardKoLine } from '../../logic/card-art';
 import { CardArtThumb } from './CardArtThumb';
 

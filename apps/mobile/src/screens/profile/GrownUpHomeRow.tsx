@@ -1,5 +1,5 @@
 import { Body, Caption, Card, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
@@ -20,7 +20,7 @@ const DISABLED_OPACITY = 0.6;
  * gated device. Offline (Panel C) the row is disabled, its title and glyphs at 0.6, and the line
  * becomes "Needs the internet" at full contrast (so the name says it too).
  */
-export function GrownUpHomeRow({ onOpen }: { onOpen: () => void }): React.ReactElement {
+export function GrownUpHomeRow({ onOpen }: { onOpen: () => void }): ReactElement {
   const m = useMessages();
   const row = m.learner.profile.grownUpHome;
   const needsInternet = m.learner.welcome.grownUps.needsInternet;

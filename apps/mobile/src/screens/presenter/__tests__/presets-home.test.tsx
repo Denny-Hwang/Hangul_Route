@@ -1,6 +1,7 @@
 import { CATALOG, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type StageKey } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactTestInstance } from 'react-test-renderer';
@@ -38,7 +39,7 @@ interface HarnessProps extends Partial<PresenterHomeProps> {
   onPresetSpy?: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
 }
 
-function Harness({ initial = HOME_DEFAULT, onPresetSpy, ...over }: HarnessProps): React.ReactElement {
+function Harness({ initial = HOME_DEFAULT, onPresetSpy, ...over }: HarnessProps): ReactElement {
   const [state, setState] = useState<HomeSnapshot>(initial);
   const ctx = over.presetCtx ?? presenterPresetContext(null, NOW);
   return (
@@ -476,7 +477,7 @@ describe('Customize: the grouped chooser (section 18.3)', () => {
 });
 
 describe('the preview on the start screen (design presets.md V4)', () => {
-  function start(over: Partial<StartScreenProps> = {}): React.ReactElement {
+  function start(over: Partial<StartScreenProps> = {}): ReactElement {
     const props: StartScreenProps = {
       deckTitle: 'Hangul week 1',
       slides: 46,

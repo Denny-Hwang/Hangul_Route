@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ComponentType, ComponentProps, ReactElement } from 'react';
 import { GuestLaterScreen } from '../screens/guest/GuestLaterScreen';
 import { GuestQuestPlayer } from '../screens/guest/GuestQuestPlayer';
 import { GuestResults } from '../screens/guest/GuestResults';
@@ -35,13 +36,13 @@ type GuestScreenProps<K extends keyof GuestStackParamList> = NativeStackScreenPr
  * A learner screen this stack shares with the root stack (the card page, which navigates nowhere): the same
  * component, typed for this stack's route props.
  */
-function shared<K extends keyof GuestStackParamList, P>(screen: React.ComponentType<P>): React.ComponentType<GuestScreenProps<K>> {
-  return screen as unknown as React.ComponentType<GuestScreenProps<K>>;
+function shared<K extends keyof GuestStackParamList, P>(screen: ComponentType<P>): ComponentType<GuestScreenProps<K>> {
+  return screen as unknown as ComponentType<GuestScreenProps<K>>;
 }
 
 // A modal measures its own safe area, as in the root stack.
 const CardDetailModal = withOwnSafeArea(CardDetailScreen);
-const GuestCardDetailRoute = shared<'CardDetail', React.ComponentProps<typeof CardDetailScreen>>(CardDetailModal);
+const GuestCardDetailRoute = shared<'CardDetail', ComponentProps<typeof CardDetailScreen>>(CardDetailModal);
 
 /**
  * [GU] Row GU-4 review (CS-G1): the save's two screens are the learner's own and name routes outside this stack, so
@@ -56,7 +57,7 @@ function useGuardedNavigation<N extends object>(navigation: N): N {
  * [GU] Row GU-4 (section 8.3): the save form, the learner's CreateProfile screen with `{ firstRun, from: 'guest' }`: two
  * steps, then `promoteGuest` and Home of the new profile (the root reset in `screens/guest/guest-exits.ts`).
  */
-function GuestCreateProfileRoute({ route, navigation }: GuestScreenProps<'CreateProfile'>): React.ReactElement {
+function GuestCreateProfileRoute({ route, navigation }: GuestScreenProps<'CreateProfile'>): ReactElement {
   const guarded = useGuardedNavigation(navigation);
   // The learner screen's own props, typed for the onboarding stack: the same route params (`{ firstRun, from }`).
   return <CreateProfileScreen route={route as never} navigation={guarded as never} />;
@@ -67,13 +68,13 @@ function GuestCreateProfileRoute({ route, navigation }: GuestScreenProps<'Create
  * its own safe area as in the root stack. A correct PIN replaces it with the form; nothing else opens from it.
  */
 const GuestPinEntryModal = withOwnSafeArea(PinEntryScreen);
-function GuestPinEntryRoute({ route, navigation }: GuestScreenProps<'PinEntry'>): React.ReactElement {
+function GuestPinEntryRoute({ route, navigation }: GuestScreenProps<'PinEntry'>): ReactElement {
   const guarded = useGuardedNavigation(navigation);
   return <GuestPinEntryModal route={route as never} navigation={guarded as never} />;
 }
 
 /** A game of quest 1: Back returns to the player; the story step's Culture notes link is not drawn (not in this stack). */
-function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>): React.ReactElement {
+function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>): ReactElement {
   return <MinigameScreen route={route} navigation={{ goBack: () => navigation.goBack(), push: () => undefined }} onOpenCultureNote={null} />;
 }
 
@@ -84,7 +85,7 @@ function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>)
  * The root stack registers it only while `flags.guestLessonEnabled` is on; it opens at `QuestPlayer` or `GuestLater`
  * (the route's `screen` param).
  */
-export default function GuestStackNavigator(): React.ReactElement {
+export default function GuestStackNavigator(): ReactElement {
   // Section 6.4: a run another tab ended (saved, removed or replaced) resets the root (this is the root's `Guest` route).
   useLeaveWhenGuestRunLost(useNavigation());
   return (

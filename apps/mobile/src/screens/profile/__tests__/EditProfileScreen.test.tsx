@@ -1,6 +1,6 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { TextInput } from 'react-native';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -84,7 +84,7 @@ function seed(answer: () => Promise<'full' | 'class'>): void {
   });
 }
 
-function screen(): React.ReactElement {
+function screen(): ReactElement {
   return <EditProfileScreen navigation={navigation as never} route={{ key: 'EditProfile', name: 'EditProfile', params: { profileId: LEARNER_ID } } as never} />;
 }
 
@@ -194,7 +194,7 @@ describe('EditProfileScreen: a back with changes not saved yet asks first (AMEND
       },
     };
   }
-  const guarded = (nav: GuardedNavigation): React.ReactElement => (
+  const guarded = (nav: GuardedNavigation): ReactElement => (
     <EditProfileScreen navigation={nav as never} route={{ key: 'EditProfile', name: 'EditProfile', params: { profileId: LEARNER_ID } } as never} />
   );
 

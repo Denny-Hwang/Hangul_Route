@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, ConfirmSheet, Heading, Icon, KOREAN_LINE_BREAK, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View, type TextStyle } from 'react-native';
 import { ProfileLockCard } from '../../components/ProfileLockCard';
 import { reportsEnabledFor } from '../../config/flags';
@@ -40,7 +41,7 @@ const GLYPH = 20;
  * - The removal is local only (no server call, section 10.6 for a class-scoped learner too). Removing the active
  *   learner opens the chooser on its own (`trigger: 'manual'`, nothing under it); removing the last one opens Welcome.
  */
-export function PersonOnDeviceScreen({ navigation, route }: Props): React.ReactElement {
+export function PersonOnDeviceScreen({ navigation, route }: Props): ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const locale = useLocale();

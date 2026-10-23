@@ -17,7 +17,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Linking, Pressable, TextInput, View } from 'react-native';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
@@ -73,7 +74,7 @@ const CHECKBOX_SIZE = spacing.xl + spacing.xs;
  * when that PIN is right; without a PIN it is disabled with **Set a grown-up PIN first.** Shown only while
  * `EXPO_PUBLIC_WHO_CHOOSER` is on; the locks themselves are enforced either way. Nothing here is synced.
  */
-export function EditProfileScreen({ navigation, route }: Props): React.ReactElement {
+export function EditProfileScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.learner;

@@ -1,6 +1,7 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import React from 'react';
+import { Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName, KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -28,7 +29,7 @@ export function isStoryCheck(slide: Slide): slide is StoryCheckBody {
  * Nothing is collected or scored (TD6, D3). With `romanization: 'tap'` the options' romanization
  * waits for the reveal (D2); a pick-meaning target's gloss waits too, since it is the answer.
  */
-export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCheckBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): React.ReactElement {
+export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCheckBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const revealed = shown.has('answer');
@@ -68,7 +69,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
             testID="presenter-check-prompt"
             style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.normal) }}
           >
-            {parts.map((part, i) => ('target' in part ? <React.Fragment key={i}>{chip(part.target)}</React.Fragment> : <React.Fragment key={i}>{part.text}</React.Fragment>))}
+            {parts.map((part, i) => ('target' in part ? <Fragment key={i}>{chip(part.target)}</Fragment> : <Fragment key={i}>{part.text}</Fragment>))}
           </Text>
           {target !== undefined && !inline ? (
             <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, lineHeight: Math.round(promptSize * typography.leading.normal) }}>{chip(target)}</Text>

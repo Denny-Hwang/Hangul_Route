@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement, Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ScreenHeaderSlotContext } from '../../ScreenHeader/slot';
 import { Screen } from '../Screen';
@@ -19,12 +20,12 @@ vi.mock('react', async (importOriginal) => {
   return { ...actual, useContext, default: { ...actual, useContext } };
 });
 
-type El = React.ReactElement<Record<string, unknown>>;
+type El = ReactElement<Record<string, unknown>>;
 
-function all(node: React.ReactNode): El[] {
-  if (!React.isValidElement(node)) return [];
+function all(node: ReactNode): El[] {
+  if (!isValidElement(node)) return [];
   const el = node as El;
-  const kids = typeof el.props.children === 'function' ? [] : React.Children.toArray(el.props.children as React.ReactNode);
+  const kids = typeof el.props.children === 'function' ? [] : Children.toArray(el.props.children as ReactNode);
   return [el, ...kids.flatMap(all)];
 }
 

@@ -1,4 +1,5 @@
-import React, { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '../../tokens';
@@ -81,10 +82,10 @@ function RadioRow<T extends string>({
   onSelect: (value: T) => void;
   testID: string;
   layout: RowLayout;
-  renderOption: (option: DisplayOption<T>, isSelected: boolean) => React.ReactNode;
+  renderOption: (option: DisplayOption<T>, isSelected: boolean) => ReactNode;
   /** Focus the selected radio when the row mounts (the confirm step that held focus just closed). */
   focusSelectedOnMount?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const refs = useRef(new Map<T, Focusable>());
   const values = options.map((o) => o.value);
   // Roving focus (WAI-ARIA radio group, README D19): only the selected radio is a Tab stop; the
@@ -140,7 +141,7 @@ export function DisplaySheet({
   closeLabel,
   onClose,
   testID = 'display-sheet',
-}: DisplaySheetProps): React.ReactElement {
+}: DisplaySheetProps): ReactElement {
   const titleId = `${testID}-title-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const dialog = useLayoutClass().width !== 'compact';
   const scale = useTypeScale();
@@ -173,7 +174,7 @@ export function DisplaySheet({
     return () => doc.removeEventListener('keydown', onKey);
   }, [visible, onClose]);
 
-  const optionText = (text: string, isSelected: boolean, extra: Record<string, unknown> = {}): React.ReactElement => (
+  const optionText = (text: string, isSelected: boolean, extra: Record<string, unknown> = {}): ReactElement => (
     <Text
       {...KOREAN_LINE_BREAK}
       {...extra}

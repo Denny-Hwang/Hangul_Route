@@ -1,5 +1,5 @@
 import { Body, Caption, Icon, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 
 interface OptionCardProps {
@@ -34,7 +34,7 @@ export function OptionCard({
   lang,
   testID,
   disabled = false,
-}: OptionCardProps): React.ReactElement {
+}: OptionCardProps): ReactElement {
   const hasDescription = description !== undefined && description !== '';
   return (
     <Pressable

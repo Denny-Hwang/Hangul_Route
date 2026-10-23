@@ -1,6 +1,7 @@
 import { KOREAN_LANGUAGE, colors, presenter, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Text, type TextStyle } from 'react-native';
 import { stageText } from '../../logic/lecture/stage-scale';
 import { taughtKoreanFont } from '../../platform/presenter-font';
@@ -32,7 +33,7 @@ export function useStageControlFloor(): number {
 
 const PresenterViewContext = createContext<PresenterView | null>(null);
 
-export function PresenterViewProvider({ value, children }: { value: PresenterView; children: React.ReactNode }): React.ReactElement {
+export function PresenterViewProvider({ value, children }: { value: PresenterView; children: ReactNode }): ReactElement {
   return <PresenterViewContext.Provider value={value}>{children}</PresenterViewContext.Provider>;
 }
 
@@ -56,7 +57,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  * Taught Korean on the stage, in the presenter font on web (section 3.6), always `lang="ko"`. The
  * caller sizes it; romanization and gloss are the caller's own lines (UI text, system stack).
  */
-export function TaughtKo({ children, size, style, testID }: { children: string; size: number; style?: TextStyle; testID?: string }): React.ReactElement {
+export function TaughtKo({ children, size, style, testID }: { children: string; size: number; style?: TextStyle; testID?: string }): ReactElement {
   return (
     <Text {...KOREAN_LINE_BREAK}
       {...koreanSpeech}

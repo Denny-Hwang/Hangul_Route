@@ -1,5 +1,5 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { SoundCheckOutcome, VoiceCheck } from '../../../logic/lecture/shell';
 import { byTestId, press, render, screenTexts, textOf } from '../../../test-support/render';
@@ -15,7 +15,7 @@ import { StartScreen, type StartScreenProps } from '../StartScreen';
 const en = getMessages('en');
 const m = en.learner.presenter.start;
 
-function screen(over: Partial<StartScreenProps> = {}, locale: UiLocale = 'en'): React.ReactElement {
+function screen(over: Partial<StartScreenProps> = {}, locale: UiLocale = 'en'): ReactElement {
   const props: StartScreenProps = {
     deckTitle: 'Week 3 letters',
     slides: 12,

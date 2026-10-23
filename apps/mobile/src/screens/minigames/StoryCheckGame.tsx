@@ -17,7 +17,8 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -101,7 +102,7 @@ function announce(line: string, queue: boolean): void {
  * word recap (`StoryWordRecap`, §3.6, PR 3.4b) when the story has words to
  * recap; its Done (or Close) ends the step. Without words, Next ends the step at once.
  */
-export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
+export function StoryCheckGame({ scope, onFinish }: Props): ReactElement {
   const locale = useLocale();
   const m = useMessages();
   const copy = m.learner.story.check;

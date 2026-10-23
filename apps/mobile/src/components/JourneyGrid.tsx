@@ -134,6 +134,8 @@ export interface JourneyGridProps {
    * omitted: none.
    */
   renderStageExtras?: (stage: StageKey, place: 'actions' | 'caption' | 'below', complete: boolean) => ReactNode;
+  /** Drawn under a stage's cells (row CM-25: Stage Jump Ahead's line); omitted: nothing. */
+  stageFooter?: (stage: StageDef) => ReactNode;
 }
 
 export function JourneyGrid({
@@ -154,6 +156,7 @@ export function JourneyGrid({
   onOpenHangulCheck,
   mastery,
   renderStageExtras,
+  stageFooter,
 }: JourneyGridProps): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -304,6 +307,7 @@ export function JourneyGrid({
                 </View>
               </View>
             ) : null}
+            {stageFooter?.(stage)}
           </View>
         );
       })}

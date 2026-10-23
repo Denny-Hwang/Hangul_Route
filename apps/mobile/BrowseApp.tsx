@@ -1,7 +1,8 @@
 import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -98,7 +99,7 @@ function currentRoute(): BrowseRouteName | null {
 /** The marker of this root's own web bundle (F-CURR-002 §10): the post-build check fails a start bundle that carries it. */
 export const ROOT_CHUNK = 'root-chunk:browse';
 
-export default function BrowseApp(): React.ReactElement {
+export default function BrowseApp(): ReactElement {
   const start = useMemo(startBrowse, []);
   useDocumentLang();
   const messages = useMessages();

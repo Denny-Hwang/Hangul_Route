@@ -14,7 +14,8 @@ import {
 import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, View, type TextStyle } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -57,7 +58,7 @@ const AVATAR_SIZE = 40;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
-export function ParentDashboardScreen({ navigation, route }: Props): React.ReactElement {
+export function ParentDashboardScreen({ navigation, route }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.dashboard;
   const locale = useLocale();
@@ -292,7 +293,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): React.React
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }): React.ReactElement {
+function Stat({ label, value }: { label: string; value: string }): ReactElement {
   return (
     <View style={{ alignItems: 'center' }}>
       <Body weight="bold" size="lg">
@@ -323,7 +324,7 @@ function StartingSpot({
   levelLine: (spot: SpotRow) => string;
   onOpen: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View testID={testID} style={{ marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle }}>
       <Caption tone="muted">{m.row.label}</Caption>

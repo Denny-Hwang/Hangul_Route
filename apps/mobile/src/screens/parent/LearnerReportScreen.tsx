@@ -21,9 +21,10 @@ import {
 } from '@hangul-route/design-system';
 import { CATALOG, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode, ReactElement, Ref } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
-import Svg, { Polyline } from 'react-native-svg';
+import { Svg, Polyline } from 'react-native-svg';
 import { flags, reportsEnabledFor } from '../../config/flags';
 import { jamoAll, questsAll, stages } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
@@ -99,7 +100,7 @@ const WEEK_COLUMNS = 7;
 const koreanSpeech = { lang: KOREAN_LANGUAGE, accessibilityLanguage: KOREAN_LANGUAGE };
 const headingLevel = (level: 1 | 2 | 3): Record<string, string | number> => ({ role: 'heading', 'aria-level': level });
 
-function ReportHeading({ level, children, testID }: { level: 1 | 2 | 3; children: React.ReactNode; testID?: string }): React.ReactElement {
+function ReportHeading({ level, children, testID }: { level: 1 | 2 | 3; children: ReactNode; testID?: string }): ReactElement {
   const textScale = useTypeScale();
   const size = level === 1 ? textScale.size.title : level === 2 ? textScale.size.prompt : textScale.size.body;
   return (
@@ -134,15 +135,15 @@ function OutlineButton({
   label: string;
   onPress: () => void;
   accessibilityLabel?: string;
-  leading?: React.ReactNode;
-  trailing?: React.ReactNode;
+  leading?: ReactNode;
+  trailing?: ReactNode;
   expanded?: boolean;
   /** The id of the region this button changes (web `aria-controls`). */
   controls?: string;
   block?: boolean;
-  pressableRef?: React.Ref<View>;
+  pressableRef?: Ref<View>;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const disclosure = {
     ...(expanded === undefined ? {} : { 'aria-expanded': expanded }),
     ...(controls === undefined ? {} : { 'aria-controls': controls }),
@@ -178,7 +179,7 @@ function OutlineButton({
   );
 }
 
-export function LearnerReportScreen({ route, navigation }: Props): React.ReactElement {
+export function LearnerReportScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const profileId = route.params.profileId;
@@ -226,7 +227,7 @@ type BodyProps = {
   messages: ReturnType<typeof useMessages>;
 };
 
-function ReportBody({ profileId, name, voice, navigation, locale, messages }: BodyProps): React.ReactElement {
+function ReportBody({ profileId, name, voice, navigation, locale, messages }: BodyProps): ReactElement {
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
   const textScale = useTypeScale();
@@ -531,7 +532,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
   );
 }
 
-function SentenceText({ sentence }: { sentence: ReportSentence }): React.ReactElement {
+function SentenceText({ sentence }: { sentence: ReportSentence }): ReactElement {
   return (
     <Body>
       {sentence.parts.map((part, k) => {
@@ -549,7 +550,7 @@ function SentenceText({ sentence }: { sentence: ReportSentence }): React.ReactEl
   );
 }
 
-function InsightSection({ section, marker, testID, children }: { section: ReportSectionView; marker: string; testID: string; children?: React.ReactNode }): React.ReactElement {
+function InsightSection({ section, marker, testID, children }: { section: ReportSectionView; marker: string; testID: string; children?: ReactNode }): ReactElement {
   return (
     <View testID={testID}>
       <Spacer size="lg" />
@@ -576,7 +577,7 @@ function InsightSection({ section, marker, testID, children }: { section: Report
   );
 }
 
-function CalendarBlock({ calendar, period }: { calendar: ReportCalendarView; period: ReportPeriod }): React.ReactElement {
+function CalendarBlock({ calendar, period }: { calendar: ReportCalendarView; period: ReportPeriod }): ReactElement {
   const cells: (ReportCalendarView['cells'][number] | null)[] = [...Array.from({ length: calendar.lead }, () => null), ...calendar.cells];
   const columnWidth = `${100 / WEEK_COLUMNS}%` as const;
   return (
@@ -618,14 +619,14 @@ function CalendarBlock({ calendar, period }: { calendar: ReportCalendarView; per
   );
 }
 
-function GrowthBlock({ growth }: { growth: ReportGrowthView }): React.ReactElement {
+function GrowthBlock({ growth }: { growth: ReportGrowthView }): ReactElement {
   const [tableOpen, setTableOpen] = useState(false);
   const count = growth.rows.length;
   // Points sit at the centres of equal columns, so a month label sits under its point (design README).
   const point = (k: number, value: number): string =>
     `${((k + 0.5) / Math.max(1, count)) * GROWTH_BOX.width},${GROWTH_BOX.height - (value / growth.max) * (GROWTH_BOX.height - spacing.lg) - spacing.xs}`;
   const line = (key: 'quests' | 'cards'): string => growth.rows.map((row, k) => point(k, row[key])).join(' ');
-  const legend = (label: string, color: string, dashed: boolean): React.ReactElement => (
+  const legend = (label: string, color: string, dashed: boolean): ReactElement => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
       <View style={{ width: spacing.xl, height: 0, borderTopWidth: borderWidth.thick, borderStyle: dashed ? 'dashed' : 'solid', borderColor: color }} />
       <Caption tone="secondary">{label}</Caption>
@@ -698,7 +699,7 @@ function GrowthBlock({ growth }: { growth: ReportGrowthView }): React.ReactEleme
   );
 }
 
-function DetailBlock({ block }: { block: ReportDetailBlock }): React.ReactElement {
+function DetailBlock({ block }: { block: ReportDetailBlock }): ReactElement {
   if (block.kind === 'totals') return <Body testID="learner-report-detail-totals">{block.line}</Body>;
   if (block.kind === 'letters') {
     return (
@@ -722,7 +723,7 @@ function DetailBlock({ block }: { block: ReportDetailBlock }): React.ReactElemen
  * Letter tiles that expand (design: "a letter tile tapped"): each tile is a disclosure button named by its visible
  * letter and romanization; the expansion under the row shows the letter large with its content romanization and gloss.
  */
-function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLetterTile[]; id: string }): React.ReactElement {
+function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLetterTile[]; id: string }): ReactElement {
   const textScale = useTypeScale();
   const [open, setOpen] = useState<string | null>(null);
   const expansionId = `learner-report-letters-${id}-detail`;
@@ -788,7 +789,7 @@ function LetterTiles({ heading, tiles, id }: { heading: string; tiles: ReportLet
 }
 
 /** The device-only skills rows (OD-8), drawn as the Learning Route's SkillsCard rows, read-only. */
-function SkillsBlock({ skills }: { skills: ReportSkillsView }): React.ReactElement {
+function SkillsBlock({ skills }: { skills: ReportSkillsView }): ReactElement {
   return (
     <View testID="learner-report-skills">
       <ReportHeading level={3}>{skills.title}</ReportHeading>

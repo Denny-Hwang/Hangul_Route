@@ -13,7 +13,8 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import type { KoText, SpeechLang, Story, StoryLevel, StoryTier } from '@hangul-route/content-schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -120,7 +121,7 @@ export interface StoryReaderViewProps {
   sourceStory?: Story;
 }
 
-export function StoryReaderView(props: StoryReaderViewProps): React.ReactElement {
+export function StoryReaderView(props: StoryReaderViewProps): ReactElement {
   const { story, level, mode, onClose, onFinish } = props;
   const m = useMessages();
   const availability = readerAvailability(story, level);
@@ -162,7 +163,7 @@ function ReaderBody({
   narrationLangs,
   onOpenCultureNote,
   sourceStory,
-}: StoryReaderViewProps & { story: Story; tier: StoryTier }): React.ReactElement {
+}: StoryReaderViewProps & { story: Story; tier: StoryTier }): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const copy = m.learner.story.reader;
@@ -547,7 +548,7 @@ function ReaderBody({
     </View>
   );
 
-  const block = (b: SceneBlock): React.ReactNode => {
+  const block = (b: SceneBlock): ReactNode => {
     if (b === 'narration') {
       return (
         <View key="narration" style={{ gap: spacing.xs }}>

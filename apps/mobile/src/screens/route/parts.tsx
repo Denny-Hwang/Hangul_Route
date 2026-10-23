@@ -1,7 +1,7 @@
 import { Body, Caption, Card, Heading, Icon, Pill, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { CATALOG, type DateKey, type WeekExtra } from '@hangul-route/content-schema';
 import { formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
@@ -37,7 +37,7 @@ export function rowTitle(row: WeekRow, locale: UiLocale, t: Pick<ProposalMessage
   return quest ? localizeQuest(quest, locale).titleEn : fallback;
 }
 
-export function WeekList({ rows, locale, testID }: { rows: readonly WeekRow[]; locale: UiLocale; testID: string }): React.ReactElement {
+export function WeekList({ rows, locale, testID }: { rows: readonly WeekRow[]; locale: UiLocale; testID: string }): ReactElement {
   const m = useMessages();
   const t = m.learner.weeklyPlan.proposal;
   return (
@@ -64,7 +64,7 @@ export function WeekList({ rows, locale, testID }: { rows: readonly WeekRow[]; l
 }
 
 /** One weekday under "Change days and time": a checkbox with a visible state (fill and check), at least 64 dp. */
-export function DayChip({ label, checked, onPress, testID }: { label: string; checked: boolean; onPress: () => void; testID: string }): React.ReactElement {
+export function DayChip({ label, checked, onPress, testID }: { label: string; checked: boolean; onPress: () => void; testID: string }): ReactElement {
   return (
     <Pressable
       testID={testID}
@@ -105,7 +105,7 @@ export function StepButton({
   disabled: boolean;
   onPress: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}
@@ -158,7 +158,7 @@ export function PlanWeekCard({
   locale: UiLocale;
   onOpenTopic?: (topicKey: string) => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;
   const story = week.storyQuestId === null ? undefined : questsAll.find((q) => q.id === week.storyQuestId);

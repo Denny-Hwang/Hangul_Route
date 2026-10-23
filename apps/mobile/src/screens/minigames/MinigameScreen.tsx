@@ -1,6 +1,7 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -57,7 +58,7 @@ type Props = {
   inPreview?: boolean;
 } & ScreenExitProps;
 
-export function MinigameScreen(props: Props): React.ReactElement {
+export function MinigameScreen(props: Props): ReactElement {
   // A lesson game's scope and its quest's steps come from the cell's chunk, and a story game's story from the
   // story's chunk (F-CURR-002 §10): until it is in, the screen draws only its header (and a calm status line if it
   // takes longer), so the way back is always there.
@@ -66,7 +67,7 @@ export function MinigameScreen(props: Props): React.ReactElement {
   return lessonReady && storyReady ? <MinigameBody {...props} /> : <LessonWaiting />;
 }
 
-function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): React.ReactElement {
+function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): ReactElement {
   const { questId, stepIndex } = route.params;
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
@@ -75,9 +76,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const scope = useMemo(() => {
-    const source = ref ? scopeFor(ref) : undefined;
+    // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
+    const { questId: running, short } = useQuestRunStore.getState();
+    const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     return source && ref ? localizeScope(source, ref, locale) : source;
-  }, [ref, locale]);
+  }, [ref, locale, questId, stepIndex]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
@@ -104,7 +107,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   };
 
   // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
-  const fallback = (message: string): React.ReactElement => (
+  const fallback = (message: string): ReactElement => (
     <Screen>
       <Body>{message}</Body>
       <Spacer size="lg" />

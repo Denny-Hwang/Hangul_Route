@@ -513,6 +513,10 @@ export const learner = {
         readingNow: { pill: '지금 읽는 중' },
         lineLabel: (line: number, total: number, speaker: string) => `${total}줄 중 ${line}번째 줄, ${speaker}`,
       },
+      compactLine: '카드 한 장에 두 개가 있어요. 하나씩 들어 보기를 눌러요.',
+    },
+    adapt: {
+      scaffoldHint: '힌트를 보며 하나 더 해요. 듣고 강조된 카드를 눌러요.',
     },
   },
 
@@ -2035,5 +2039,13 @@ export const learner = {
       body: '여기 나의 단계 카드가 있어요.',
       bodyNoCards: '끝낸 단계는 모두 여정에 남아 있어요.',
     },
+  },
+  stageJump: {
+    prompt: '이 단계를 이미 알고 있나요?',
+    cta: '단계 넘어가기',
+    label: (stage: number, title: string) => `${stage}단계 넘어가기: ${title}`,
+    intro: '7분쯤 걸려요. 이 단계의 모든 곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
+    extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
+    passed: '단계를 건너뛰었어요!',
   },
 } satisfies DeepPartial<Messages['learner']>;

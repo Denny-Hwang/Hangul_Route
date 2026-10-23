@@ -1,7 +1,8 @@
 import { Body, Button, Icon, Spacer, colors, radii, shadows, spacing } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { classUpdateLines } from '../../logic/class-update/class-update';
@@ -20,7 +21,7 @@ import { useGateOpen } from '../transfer/use-transfer';
  * waits: a child profile reads that a grown-up has an update and Open goes through the grown-up gate; a self profile
  * opens it directly where the device needs no PIN. No number, no timer, no red.
  */
-export function ClassUpdateHomeLines({ profileId, learnerName, learnerType }: { profileId: string; learnerName: string; learnerType?: LearnerType }): React.ReactElement | null {
+export function ClassUpdateHomeLines({ profileId, learnerName, learnerType }: { profileId: string; learnerName: string; learnerType?: LearnerType }): ReactElement | null {
   const messages = useMessages();
   const t = messages.learner.classUpdate;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -50,7 +51,7 @@ export function ClassUpdateHomeLines({ profileId, learnerName, learnerType }: { 
   return (
     <>
       {lines.moves.map((move) => (
-        <React.Fragment key={move.id}>
+        <Fragment key={move.id}>
           <Spacer size="md" />
           <View testID="class-move-notice" style={row}>
             <Body>{t.moved(learnerName, move.to.name)}</Body>
@@ -58,7 +59,7 @@ export function ClassUpdateHomeLines({ profileId, learnerName, learnerType }: { 
               <Button label={t.ok.cta} tone="ghost" size="sm" onPress={() => void markSeen(profileId, move.id)} testID="class-move-notice-ok" />
             </View>
           </View>
-        </React.Fragment>
+        </Fragment>
       ))}
       {lines.scope ? (
         <>

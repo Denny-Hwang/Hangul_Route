@@ -1,5 +1,5 @@
 import { Body, Button, Caption, Card, Icon, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { missionCardText, type MissionCard } from '../../logic/homework/mission-builder';
@@ -25,9 +25,9 @@ export function VocabMissionCard({
 }: {
   card: MissionCard;
   /** Home's `ICON_FOR.vocab`, the one map from a card kind to its icon. */
-  icon: React.ComponentProps<typeof Icon>['name'];
+  icon: ComponentProps<typeof Icon>['name'];
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const { title, subtitle } = missionCardText(card, m.learner);
   return (

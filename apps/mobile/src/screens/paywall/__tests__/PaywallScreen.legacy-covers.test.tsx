@@ -1,6 +1,6 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { LOCALES, findBannedWord, getMessages, type UiLocale } from '@hangul-route/i18n';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SubscriptionState } from '../../../logic/entitlement';
 import { useAccountStore } from '../../../store/account-store';

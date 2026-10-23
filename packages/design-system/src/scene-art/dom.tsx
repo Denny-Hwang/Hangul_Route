@@ -5,7 +5,7 @@
  * root. What to draw is decided in `draw.ts` and `story-scene-model.ts`; this
  * only maps each item onto an svg element.
  */
-import React from 'react';
+import type { ReactElement } from 'react';
 import { borderWidth, colors, radii } from '../tokens';
 import { drawScene, type DrawItem } from './draw';
 import { HOYA_BOX, HOYA_POSES, type HoyaPose } from './hoya';
@@ -19,7 +19,7 @@ export interface SceneSvgProps extends StorySceneModelInput {
   registry?: Registry;
 }
 
-function Item({ item }: { item: DrawItem }): React.ReactElement {
+function Item({ item }: { item: DrawItem }): ReactElement {
   if (item.tag === 'card') {
     // Card pictures are JSX in the app; the sheet shows where one sits.
     const dash = `${borderWidth.thick} ${borderWidth.thick}`;
@@ -33,7 +33,7 @@ function Item({ item }: { item: DrawItem }): React.ReactElement {
   return <Tag {...item.geometry} {...item.paint} transform={item.transform} />;
 }
 
-export function SceneSvg({ registry = SCENE_ART_REGISTRY, ...input }: SceneSvgProps): React.ReactElement {
+export function SceneSvg({ registry = SCENE_ART_REGISTRY, ...input }: SceneSvgProps): ReactElement {
   const model = storySceneModel(input, registry);
   const { width, height } = model;
   const viewBox = model.scene?.viewBox ?? `0 0 ${SCENE_CANVAS.width} ${SCENE_CANVAS.height}`;
@@ -70,7 +70,7 @@ export interface HoyaSvgProps {
  * same `hoya:<pose>` scene-art item, placed at its anchor so his 128-unit box is
  * the viewBox. Tokens only, through the shared drawing list.
  */
-export function HoyaSvg({ pose: poseIn, size = HOYA_BOX.w, label }: HoyaSvgProps): React.ReactElement {
+export function HoyaSvg({ pose: poseIn, size = HOYA_BOX.w, label }: HoyaSvgProps): ReactElement {
   const pose: HoyaPose = HOYA_POSES.includes(poseIn) ? poseIn : 'idle';
   const { items } = drawScene({ setting: '', layers: [{ ref: `hoya:${pose}`, x: HOYA_BOX.w / 2, y: HOYA_BOX.h }], altEn: '' }, SCENE_ART_REGISTRY);
   return (

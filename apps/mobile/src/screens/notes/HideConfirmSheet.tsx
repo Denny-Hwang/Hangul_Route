@@ -1,5 +1,5 @@
 import { Body, Button, Heading, Spacer, colors, layout, radii, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Modal, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 
@@ -20,7 +20,7 @@ export function HideConfirmSheet({
   busy: boolean;
   onHide: () => void;
   onCancel: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const t = m.caregiver.notes.hide.confirm;
   return (

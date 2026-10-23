@@ -1,5 +1,6 @@
 import { motion } from '@hangul-route/design-system';
-import React, { useRef, type Ref } from 'react';
+import { useRef } from 'react';
+import type { Ref, ReactNode, ReactElement } from 'react';
 import { Pressable, type View } from 'react-native';
 import Animated, { Easing, interpolate, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { cubicBezierPoints, flipAction, swapAtEdge, type FlipFace } from '../logic/flip';
@@ -21,8 +22,8 @@ import { useReducedMotion } from '../platform/motion';
 export interface FlipCardProps {
   face: FlipFace;
   onFlip: () => void;
-  front: React.ReactNode;
-  back: React.ReactNode;
+  front: ReactNode;
+  back: ReactNode;
   disabled?: boolean;
   /** True while what the card needs is still loading (a story card's back, F-CURR-002 §10): assistive tech hears it is busy. */
   busy?: boolean;
@@ -50,7 +51,7 @@ export function FlipCard({
   accessibilityLabelBack,
   pressableRef,
   testID,
-}: FlipCardProps): React.ReactElement {
+}: FlipCardProps): ReactElement {
   const reducedMotion = useReducedMotion();
   // 0 = flat on the current face, 1 = edge-on at 90 degrees (the face swaps here).
   const progress = useSharedValue(0);

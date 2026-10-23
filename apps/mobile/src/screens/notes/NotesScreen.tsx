@@ -18,7 +18,8 @@ import {
 } from '@hangul-route/design-system';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { listViewedEvent } from '../../logic/notes/screens';
@@ -39,7 +40,7 @@ const REACTION_GLYPH = { thanks: 'heart', will_try: 'pencil', did_it: 'check-cir
  * note; on a wide window (two panes) the open note sits on the right and its row is marked. Empty
  * shows one calm line and no button. `notes.list_viewed` once per visit.
  */
-export function NotesScreen(): React.ReactElement {
+export function NotesScreen(): ReactElement {
   const m = useMessages();
   const t = m.learner.notes;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -173,7 +174,7 @@ function Group({
   openId: string | null;
   onOpen: (id: string) => void;
   testID: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   if (rows.length === 0) return null;
   return (
     <View style={{ gap: spacing.sm }} testID={testID}>
@@ -187,7 +188,7 @@ function Group({
   );
 }
 
-function NoteRow({ row, current, onPress }: { row: NoteRowView; current: boolean; onPress: () => void }): React.ReactElement {
+function NoteRow({ row, current, onPress }: { row: NoteRowView; current: boolean; onPress: () => void }): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const name = m.a11y.notes.row(row.sender, row.preset, row.date, row.isNew) + (row.reactionText === null ? '' : ` ${m.a11y.notes.answer(row.reactionText)}`);

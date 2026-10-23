@@ -2,7 +2,8 @@ import { Body, Button, Caption, Card, Heading, KoreanText, Spacer, StoryScene, s
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useMemo, useRef, type ReactElement } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { planOpenStory } from '../../logic/story/open-story';

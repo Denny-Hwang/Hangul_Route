@@ -1,6 +1,7 @@
 import type { Story } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { act } from 'react-test-renderer';
@@ -66,7 +67,7 @@ function bindings(over: { reload?: () => boolean; noteStoryIds?: readonly string
   return { ...cold, ...b, reload, answer };
 }
 
-function Reader({ hook, storyId }: { hook: (id: string | null) => boolean; storyId: string | null }): React.ReactElement {
+function Reader({ hook, storyId }: { hook: (id: string | null) => boolean; storyId: string | null }): ReactElement {
   return hook(storyId) ? <Text testID="body">{`scenes of ${storyId ?? 'none'}`}</Text> : <Text testID="waiting">waiting</Text>;
 }
 
@@ -149,7 +150,7 @@ describe('useStoryReady (the reader, its games, Sources)', () => {
   it('a host that reuses the screen for another story never shows the old story’s failure', async () => {
     const t = bindings();
     let show: (id: string) => void = () => undefined;
-    function Host(): React.ReactElement {
+    function Host(): ReactElement {
       const [storyId, setStoryId] = useState(sun.id);
       show = setStoryId;
       return (
@@ -242,7 +243,7 @@ describe('useStoriesLoaded and useStoryContentVersion (the shelf, Home, every st
 });
 
 describe('useNoteStoriesReady (Culture notes)', () => {
-  function Notes({ hook }: { hook: () => boolean }): React.ReactElement {
+  function Notes({ hook }: { hook: () => boolean }): ReactElement {
     return hook() ? <Text testID="notes">notes</Text> : <Text testID="waiting">waiting</Text>;
   }
 
@@ -304,7 +305,7 @@ describe('useNoteStoriesReady (Culture notes)', () => {
 });
 
 describe('withLessonContent with the story chunks (All lessons and the presenter)', () => {
-  function Root(): React.ReactElement {
+  function Root(): ReactElement {
     return <Text testID="root">root</Text>;
   }
   /** Lessons already in (an empty manifest); the stories from a cold store. */

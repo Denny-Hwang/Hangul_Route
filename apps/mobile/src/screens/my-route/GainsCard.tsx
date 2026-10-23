@@ -1,5 +1,5 @@
 import { Body, Caption, Heading, Icon, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import type { GainTileView } from '../../logic/my-route/view';
 
@@ -9,7 +9,7 @@ import type { GainTileView } from '../../logic/my-route/view';
  * number per tile, shown only when greater than zero, never a total. Cards and
  * stories open the Library.
  */
-export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onOpenLibrary: () => void }): React.ReactElement {
+export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onOpenLibrary: () => void }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="my-route-gains">
       {tiles.map((tile) => {
@@ -53,7 +53,7 @@ export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onO
 }
 
 /** The one muted stories line with its link (section 3.11). */
-export function StoriesNote({ text, cta, onOpen }: { text: string; cta: string; onOpen: () => void }): React.ReactElement {
+export function StoriesNote({ text, cta, onOpen }: { text: string; cta: string; onOpen: () => void }): ReactElement {
   return (
     <Pressable
       onPress={onOpen}

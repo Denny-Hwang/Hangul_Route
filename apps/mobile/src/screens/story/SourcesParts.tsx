@@ -15,7 +15,7 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { hasHangul } from '../../logic/story/source-link';
 import type { ApproximationView, CorrectionView, FactCardView, SourceView, SourcesCopy } from '../../logic/story/sources-view';
@@ -40,9 +40,9 @@ export function SourcesHeading({
   testID,
 }: {
   level: 1 | 2 | 3;
-  children: React.ReactNode;
+  children: ReactNode;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const size = level === 1 ? textScale.size.title : level === 2 ? textScale.size.prompt : textScale.size.body;
   return (
@@ -63,7 +63,7 @@ export function SourcesHeading({
 }
 
 /** The screen heading; stays above the scroll. The way back is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1). */
-export function SourcesHeader({ copy }: { copy: SourcesCopy }): React.ReactElement {
+export function SourcesHeader({ copy }: { copy: SourcesCopy }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}>
       <View style={{ flex: 1, minWidth: 0 }}>
@@ -87,8 +87,8 @@ export function Disclosure({
   open: boolean;
   onToggle: () => void;
   testID: string;
-  children: React.ReactNode;
-}): React.ReactElement {
+  children: ReactNode;
+}): ReactElement {
   return (
     <View style={{ gap: spacing.xs }}>
       <Pressable
@@ -133,7 +133,7 @@ export function CitationText({
   tone?: 'primary' | 'secondary';
   selectable?: boolean;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const fontSize = size === 'sm' ? textScale.size.bodySm : textScale.size.body;
   return (
@@ -155,7 +155,7 @@ export function CitationText({
   );
 }
 
-export function CorrectionsList({ copy, corrections }: { copy: SourcesCopy; corrections: readonly CorrectionView[] }): React.ReactElement {
+export function CorrectionsList({ copy, corrections }: { copy: SourcesCopy; corrections: readonly CorrectionView[] }): ReactElement {
   return (
     <View style={{ gap: spacing.sm }} testID="story-sources-corrections">
       <SourcesHeading level={2}>{copy.corrections}</SourcesHeading>
@@ -197,7 +197,7 @@ export function SourceBlock({
   onCopy: () => void;
   onOpen: (() => void) | null;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -242,7 +242,7 @@ export function SourceBlock({
   );
 }
 
-function Approximation({ item }: { item: ApproximationView }): React.ReactElement {
+function Approximation({ item }: { item: ApproximationView }): ReactElement {
   return (
     <View style={{ gap: spacing.xxs }}>
       <Body size="sm" tone="secondary">
@@ -277,7 +277,7 @@ export function FactCard({
   /** `null`: links are copy-only (All lessons, F-BROWSE-001 §4.7), so no Open action shows. */
   onOpen: ((source: SourceView, sourceIndex: number) => void) | null;
   onLayout: (e: LayoutChangeEvent) => void;
-}): React.ReactElement {
+}): ReactElement {
   const id = `story-sources-fact-${fact.id}`;
   return (
     <View onLayout={onLayout} style={{ gap: spacing.sm }}>
@@ -324,7 +324,7 @@ export function FactCard({
 }
 
 /** "See fact f3": a later citation is one row that jumps to the card. */
-export function SeeFactRow({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }): React.ReactElement {
+export function SeeFactRow({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }): ReactElement {
   return (
     <Pressable
       onPress={onPress}

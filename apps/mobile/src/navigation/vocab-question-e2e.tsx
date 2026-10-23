@@ -1,7 +1,8 @@
 import { Screen, Spacer } from '@hangul-route/design-system';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { localizedGloss, topicItems, vocabItem } from '../content/vocab';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { resolvePicture } from '../logic/picture-ref';
@@ -121,7 +122,7 @@ export function VocabE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabQuestionE2e'>;
 
-export function VocabQuestionE2eScreen({ route }: Props): React.ReactElement {
+export function VocabQuestionE2eScreen({ route }: Props): ReactElement {
   const { format, mode, optionCount = 4, romanizationShown = true, canPlay = true, topicChip = false, ring = false } = route.params;
   const m = useMessages();
   const locale = useLocale();

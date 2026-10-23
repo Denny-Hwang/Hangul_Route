@@ -1,6 +1,6 @@
 import { Hoya, borderWidth, colors, hoyaVariantColors, radii, spacing } from '@hangul-route/design-system';
 import type { HoyaPose } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { profileAvatarModel } from '../logic/profiles/profile-avatar';
 
@@ -24,7 +24,7 @@ interface ProfileAvatarProps {
  * (a labelled button, or the name beside it) says who it is (audit UX-33).
  * Design reference: design/components/ProfileAvatar/spec.md.
  */
-export function ProfileAvatar({ avatar, size, pose = 'idle', ring = false, testID }: ProfileAvatarProps): React.ReactElement {
+export function ProfileAvatar({ avatar, size, pose = 'idle', ring = false, testID }: ProfileAvatarProps): ReactElement {
   const m = profileAvatarModel(avatar, size, ring, { ringWidth: borderWidth.thick, padding: spacing.xs });
   // The ring is the variant's shade: the gold fur is 1.8:1 on canvas, its shade clears 3:1 (WCAG 1.4.11).
   const ringColor = ring ? hoyaVariantColors(m.variant).furDark : 'transparent';

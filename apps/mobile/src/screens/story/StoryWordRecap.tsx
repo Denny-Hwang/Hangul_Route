@@ -9,7 +9,8 @@ import {
   useLayoutClass,
   useEffectiveFontScale,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -54,7 +55,7 @@ interface Props {
  * speaker stays (F-AUDIO-004 §3.8) but records nothing. The rules live in
  * `logic/story/recap-view.ts`.
  */
-export function StoryWordRecap({ words, storyId, profileId, sayIt, play, onDone }: Props): React.ReactElement {
+export function StoryWordRecap({ words, storyId, profileId, sayIt, play, onDone }: Props): ReactElement {
   const romanizationMode = useRomanizationMode();
   const m = useMessages();
   const copy = m.learner.story.recap;

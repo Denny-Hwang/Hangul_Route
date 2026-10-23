@@ -1,6 +1,6 @@
 import { Body, Button, Heading, Hoya, Screen, Spacer, touchTarget, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { accessView, type AccessAction } from '../../logic/browse/access-view';
@@ -20,14 +20,14 @@ import { useBrowseSession } from './browse-session';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseAccess'>;
 
-export function BrowseAccessScreen({ route }: Props): React.ReactElement {
+export function BrowseAccessScreen({ route }: Props): ReactElement {
   const m = useMessages().caregiver.browse.access;
   const { lastPersona, online } = useBrowseSession();
   const { width } = useLayoutClass();
   const view = accessView({ source: route.params.source, lastPersona, online });
   // Full width on phones, capped at 26rem and centred from the regular class.
   const actionWidth = width === 'compact' ? undefined : BROWSE_ACTION_MAX_WIDTH;
-  const action = (a: AccessAction, tone: 'primary' | 'ghost'): React.ReactElement => (
+  const action = (a: AccessAction, tone: 'primary' | 'ghost'): ReactElement => (
     <View style={{ alignSelf: 'stretch', alignItems: 'center' }}>
       <View style={{ width: '100%', maxWidth: actionWidth }}>
         <Button

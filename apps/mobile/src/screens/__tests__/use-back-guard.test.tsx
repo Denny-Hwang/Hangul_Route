@@ -1,4 +1,3 @@
-import React from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, resetPlatform, setPlatform, unmount } from '../../test-support/render';

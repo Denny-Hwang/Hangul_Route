@@ -1,6 +1,7 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
@@ -71,7 +72,7 @@ export interface StageProps {
   playingLine?: number | null;
 }
 
-export function Stage(props: StageProps): React.ReactElement {
+export function Stage(props: StageProps): ReactElement {
   const { scale, slides, slideIdx, reveal } = props;
   const { unit, messages, locale } = usePresenterView();
   const size = useStageText();
@@ -214,7 +215,7 @@ export function Stage(props: StageProps): React.ReactElement {
  * `border.strong`, `radii.pill`) centred in the stage's bottom margin, where no slide draws, so it
  * covers nothing. Decorative: hidden from assistive tech and taking no touch.
  */
-function Grabber({ pad }: { pad: number }): React.ReactElement {
+function Grabber({ pad }: { pad: number }): ReactElement {
   return (
     <View
       testID="presenter-grabber"
@@ -250,7 +251,7 @@ const visuallyHidden = {
  * bottom, above the bar, for the End slide's "To finish, choose Exit." (slide-end.md). On a phone the
  * End hint sits at the top too, clear of the bar's strip.
  */
-export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): React.ReactElement {
+export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View

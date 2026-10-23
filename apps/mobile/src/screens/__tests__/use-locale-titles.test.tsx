@@ -1,6 +1,5 @@
 import type { OverlayLocale } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
-import React from 'react';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { LessonTitleChunk } from '../../logic/lessons/lesson-store';

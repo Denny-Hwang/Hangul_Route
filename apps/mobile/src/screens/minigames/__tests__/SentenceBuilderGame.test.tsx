@@ -1,6 +1,5 @@
 import type { OrderItRound } from '@hangul-route/content-schema';
 import { motion } from '@hangul-route/design-system';
-import React from 'react';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EAT_RICE, LIKE_TTEOKGUK } from '../../../logic/sentence-builder/__tests__/fixtures';

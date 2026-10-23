@@ -1,7 +1,8 @@
 import { useLayoutClass } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { questById } from '../../content';
 import { playerGuard } from '../../logic/episode-access';
 import { learnerQuestExits, learnerQuestSession, type QuestPlayerPorts } from '../../logic/quest-flow/quest-player-ports';
@@ -24,7 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
  * section 5.3). The `Guest` stack plays its quest with the guest ports instead (`screens/guest/GuestQuestPlayer.tsx`,
  * section 7.1), which name no route outside that stack.
  */
-export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElement | null {
+export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | null {
   const { questId, episodeId, resume } = route.params;
   const learnerId = useActiveLearnerId();
   const { panes } = useLayoutClass();

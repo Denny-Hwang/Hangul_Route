@@ -1,5 +1,5 @@
 import { act, type ReactTestInstance } from 'react-test-renderer';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UiLocale } from '@hangul-route/content-schema';
 import { LayoutProvider, ROUTE_RING_SIZE, borderWidth, colors, layoutClassFor, spacing, typography } from '@hangul-route/design-system';
@@ -32,7 +32,7 @@ function useUiLocale(locale: UiLocale): void {
   useLocaleStore.setState({ device: locale, byProfile: {} });
 }
 
-const grid = (episodes = gridEpisodes(episodesAll)): React.ReactElement => (
+const grid = (episodes = gridEpisodes(episodesAll)): ReactElement => (
   <JourneyGrid
     stages={stages}
     themes={themes}

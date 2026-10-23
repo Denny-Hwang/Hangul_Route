@@ -1,6 +1,7 @@
 import { Screen, Spacer, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { useMessages } from '../../i18n/use-messages';
 import { episodeOutline } from '../../logic/browse/facts';
 import { accessOf, itemViewedEvent } from '../../logic/browse/home-view';
@@ -18,7 +19,7 @@ import { useBrowseSession } from './browse-session';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'BrowseEpisode'>;
 
-export function BrowseEpisodeScreen({ route, navigation }: Props): React.ReactElement {
+export function BrowseEpisodeScreen({ route, navigation }: Props): ReactElement {
   const m = useMessages().caregiver.browse;
   const { bundle, pass, gatingEnabled } = useBrowseSession();
   const { episodeId } = route.params;

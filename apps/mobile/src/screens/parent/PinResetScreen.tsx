@@ -13,7 +13,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Pressable, TextInput, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { flags } from '../../config/flags';
@@ -57,7 +58,7 @@ const CODE_BORDER = 2;
  * Its Sign in opens `/signin?next=/account/pin-reset` in this tab and writes no unlock; the console checks that the
  * PIN owner signed in with a password or a code and sends the tab back with a ticket (`gate=pin-reset`).
  */
-export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
+export function PinResetScreen({ route, navigation }: Props): ReactElement {
   const textScale = useTypeScale();
   const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
   const { next, profileId, lockedFrom } = route.params;

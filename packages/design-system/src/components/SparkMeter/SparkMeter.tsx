@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { Svg, Circle, Path } from 'react-native-svg';
 import { borderWidth, colors, radii, spacing } from '../../tokens';
 import { useMediaSize } from '../Layout/LayoutProvider';
 import { SPARK_DEFAULT_MAX_ROWS, SPARK_FILL_MS, isNewlyLit, sparkCount, sparkEntrance, sparkLayout, type SparkLayout } from '../../spark';
@@ -26,7 +27,7 @@ const START_SCALE = 0.6;
  * passes the accessible name, and the slots themselves are hidden from
  * assistive technology.
  */
-export function SparkMeter({ value, slots, maxRows, reserveRows = false, accessibilityLabel, testID }: SparkMeterProps): React.ReactElement {
+export function SparkMeter({ value, slots, maxRows, reserveRows = false, accessibilityLabel, testID }: SparkMeterProps): ReactElement {
   const layout = sparkLayout(value, slots, maxRows);
   const size = useMediaSize(SLOT);
   const gap = useMediaSize(GAP);
@@ -76,7 +77,7 @@ export function SparkMeterBody({
   reservedRows,
   accessibilityLabel,
   testID,
-}: SparkMeterBodyProps): React.ReactElement {
+}: SparkMeterBodyProps): ReactElement {
   const heldRows = Math.max(layout.rows.length, reservedRows ?? 0);
   return (
     <View
@@ -122,7 +123,7 @@ export function SparkMeterBody({
 }
 
 /** An empty slot: a quiet circle whose outline is `borderWidth.thin` on screen at any slot size. */
-export function EmptySlot({ size }: { size: number }): React.ReactElement {
+export function EmptySlot({ size }: { size: number }): ReactElement {
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
       <Circle
@@ -143,7 +144,7 @@ export function EmptySlot({ size }: { size: number }): React.ReactElement {
  * newly lit spark starts hidden and fades in once, under reduced motion it is
  * simply there, and a spark lit when the meter appears is drawn as it is.
  */
-export function LitSpark({ size, newlyLit, reducedMotion }: { size: number; newlyLit: boolean; reducedMotion: boolean }): React.ReactElement {
+export function LitSpark({ size, newlyLit, reducedMotion }: { size: number; newlyLit: boolean; reducedMotion: boolean }): ReactElement {
   const entrance = sparkEntrance(newlyLit, reducedMotion);
   const progress = useSharedValue<number>(entrance.from);
   useEffect(() => {

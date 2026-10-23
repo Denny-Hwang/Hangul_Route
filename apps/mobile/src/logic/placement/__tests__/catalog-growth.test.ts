@@ -111,6 +111,30 @@ describe('a stage3 result stored at version 8, then Word Builder ships', () => {
   });
 });
 
+describe('a Stage Jump on top of the stored stage3 result (F-CURR-002 row CM-25)', () => {
+  const at = '2026-10-21T09:00:00.000Z';
+  const catalog = appRouteCatalog(QUESTS_9, EPISODES_9);
+  const opts = { isEntitled: () => true, completedQuestIds: new Set<string>(), catalogHistory: HISTORY_9 };
+
+  it('a jump of Stage 3 raises the level above the placement ceiling and moves the start past First Sentences, never back', () => {
+    const before = effectiveRoute([stored], catalog, opts) as RouteSeed;
+    const after = effectiveRoute([stored], catalog, { ...opts, testedOut: { 'episode:stage3-letters': at, stage3: at } }) as RouteSeed;
+    expect(before.level).toEqual(STAGE3);
+    expect(after.level).toEqual({ stage: 'stage4', band: 0 });
+    for (const id of FS) expect(after.placedOutQuestIds).toContain(id);
+    expect(after.placedOutQuestIds).toEqual(expect.arrayContaining(before.placedOutQuestIds));
+    const order = QUESTS_9.map((q) => q.id);
+    expect(order.indexOf(after.startQuestId as string)).toBeGreaterThan(order.indexOf(before.startQuestId as string));
+  });
+
+  it('a lower jump (Stage 2) under the stage3 result changes neither the level nor the start', () => {
+    const before = effectiveRoute([stored], catalog, opts) as RouteSeed;
+    const after = effectiveRoute([stored], catalog, { ...opts, testedOut: { 'episode:stage2-letters': at, stage2: at } }) as RouteSeed;
+    expect(after.level).toEqual(before.level);
+    expect(after.startQuestId).toBe(before.startQuestId);
+  });
+});
+
 describe('a plan made at version 8: Change the plan after Word Builder ships', () => {
   /** The catalogue at version 8: today's catalogue without the quests later versions added (Read Along, Playground Words). */
   const V8 = new Set(CATALOG_QUEST_IDS_V8);

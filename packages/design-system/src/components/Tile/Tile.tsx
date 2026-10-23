@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
@@ -36,7 +36,7 @@ export function Tile({
   dimension,
   accessibilityLabel,
   testID,
-}: TileProps): React.ReactElement {
+}: TileProps): ReactElement {
   // The glyph is part of the tile's picture, so it grows with the tile (type tokens themselves are unchanged).
   const scale = useTypeScale().size;
   const { dim, glyph } = tileMetrics(size, dimension, scale);

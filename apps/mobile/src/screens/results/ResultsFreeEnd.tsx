@@ -1,6 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Card, Heading, Hoya, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
-import { useState, type ReactElement } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { useMessages } from '../../i18n/use-messages';

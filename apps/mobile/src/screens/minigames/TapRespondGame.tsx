@@ -13,7 +13,8 @@ import {
   colors,
   spacing,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -33,7 +34,7 @@ interface Props {
   onFinish: () => void;
 }
 
-export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
+export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const turns = useMemo(() => scope.dialogue ?? [], [scope]);

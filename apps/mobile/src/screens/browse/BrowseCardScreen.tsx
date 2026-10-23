@@ -1,6 +1,7 @@
 import { colors } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { itemViewedEvent } from '../../logic/browse/home-view';
 import type { BrowseStackParamList } from '../../navigation/browse';
@@ -18,10 +19,10 @@ import { useItemViewed } from './browse-ui';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'CardDetail'>;
 
-export function BrowseCardScreen({ route, navigation }: Props): React.ReactElement {
+export function BrowseCardScreen({ route, navigation }: Props): ReactElement {
   const { cardId } = route.params;
   useItemViewed(itemViewedEvent('card', cardId, 'open'));
-  const close = React.useCallback((): void => {
+  const close = useCallback((): void => {
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate('BrowseHome', { section: 'library' });
   }, [navigation]);

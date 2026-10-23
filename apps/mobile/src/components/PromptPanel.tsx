@@ -1,5 +1,5 @@
 import { Body, Button, Caption, Card, KoreanText, Spacer, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { FallbackAction } from '../logic/audio/prompt-state';
 import type { PromptPanelView } from '../logic/audio/prompt-view';
@@ -50,7 +50,7 @@ interface StatusProps extends CommonProps {
 
 type Props = TextProps | StatusProps;
 
-export function PromptPanel(props: Props): React.ReactElement {
+export function PromptPanel(props: Props): ReactElement {
   const { view, onAction, onHelp, testID = 'prompt-panel' } = props;
   const status = props.variant === 'status';
   const shown = status ? view.statusShown : view.textShown;

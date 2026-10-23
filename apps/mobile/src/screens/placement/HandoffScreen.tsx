@@ -1,5 +1,6 @@
 import { Body, Heading, Hoya, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { controlsFor } from '../../logic/placement/flow';
 import { usePlacement } from './context';
@@ -12,7 +13,7 @@ import { usePlacement } from './context';
  * once on open; with a screen reader on nothing auto-plays. The exit (the
  * route's ScreenHeader Close) leaves with nothing recorded: no run has begun.
  */
-export function HandoffScreen(): React.ReactElement {
+export function HandoffScreen(): ReactElement {
   const { m, flow, dispatch, say, screenReader } = usePlacement();
   const copy = m.learner.placement.handoff;
   const [hoya] = controlsFor(flow);

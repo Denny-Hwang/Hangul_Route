@@ -1,5 +1,4 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cardById } from '../../../content';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';

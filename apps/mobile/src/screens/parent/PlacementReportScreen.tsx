@@ -18,7 +18,8 @@ import {
 import { RUNG_TABLE, type PlacementStrand, type StageKey } from '@hangul-route/content-schema';
 import { LOCALE_META, formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Fragment } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { episodesAll, jamoAll, questsAll, stages } from '../../content';
@@ -67,7 +68,7 @@ import { SuggestedPlanCard } from './SuggestedPlanCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PlacementReport'>;
 type ReportMessages = Messages['caregiver']['placementReport'];
-type PillTone = NonNullable<React.ComponentProps<typeof Pill>['tone']>;
+type PillTone = NonNullable<ComponentProps<typeof Pill>['tone']>;
 
 const CATALOG = placementRouteCatalog(questsAll, episodesAll);
 const LOOKUP = bankLookup(PLACEMENT_BANK);
@@ -107,7 +108,7 @@ function rungLine(m: ReportMessages, rung: ReportRung): string {
   return `${name}: ${parts.join(', ')}`;
 }
 
-export function PlacementReportScreen({ route, navigation }: Props): React.ReactElement {
+export function PlacementReportScreen({ route, navigation }: Props): ReactElement {
   const { profileId } = route.params;
   const messages = useMessages();
   const m = messages.caregiver.placementReport;
@@ -236,7 +237,7 @@ interface ReportBodyProps {
   onRetake: (mode?: 'standard' | 'deep') => void;
 }
 
-function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageTitle, onChooseStart, onRetake }: ReportBodyProps): React.ReactElement {
+function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageTitle, onChooseStart, onRetake }: ReportBodyProps): ReactElement {
   const { view } = page;
   return (
     <>
@@ -288,12 +289,12 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
           </>
         ) : null}
         {view.notTested.map((reason) => (
-          <React.Fragment key={reason}>
+          <Fragment key={reason}>
             <Spacer size="sm" />
             <Body size="sm" tone="secondary" testID={`placement-report-not-tested-${reason}`}>
               {m.notTestedReason[reason]}
             </Body>
-          </React.Fragment>
+          </Fragment>
         ))}
         <Spacer size="sm" />
         <Caption tone="muted">{messages.caregiver.skillsNote}</Caption>
@@ -355,8 +356,8 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
   );
 }
 
-function ExampleRows({ example, m, messages }: { example: StrandExample; m: ReportMessages; messages: Messages }): React.ReactElement {
-  const row = (label: string, keys: readonly string[], testID: string): React.ReactElement | null => {
+function ExampleRows({ example, m, messages }: { example: StrandExample; m: ReportMessages; messages: Messages }): ReactElement {
+  const row = (label: string, keys: readonly string[], testID: string): ReactElement | null => {
     const letters = keys.flatMap((key) => {
       const text = symbolText(key, jamoAll);
       return text === undefined ? [] : [{ key, ...text }];
@@ -398,7 +399,7 @@ interface SheetProps {
 }
 
 /** "Choose a different start": the learner's quests in order; everything before the pick is skipped. */
-function ChooseStartSheet({ visible, choices, m, messages, questTitle, onCancel, onSave }: SheetProps): React.ReactElement {
+function ChooseStartSheet({ visible, choices, m, messages, questTitle, onCancel, onSave }: SheetProps): ReactElement {
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const layout = useLayoutClass();

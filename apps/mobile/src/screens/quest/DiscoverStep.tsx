@@ -23,7 +23,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, RefObject } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -45,6 +46,7 @@ import {
   type DiscoverState,
   type HearAction,
 } from '../../logic/stage1/discover-flow';
+import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { hasClip, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
@@ -77,11 +79,13 @@ interface Props {
   hoyaLine?: string;
   /** Continue on the last page: the player advances and reports `quest.discover_completed`. */
   onDone: (result: { pages: number; heard: number }) => void;
+  /** A strong round earlier in the cell: the second page, when it holds two words, draws both on one card (F-CURR-002 section 4.6). */
+  compact?: boolean;
 }
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
-export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactElement {
+export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
   const locale = useLocale();
@@ -211,6 +215,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
   }, [state.page]);
 
   const render = pageRender(model, state, romanizationMode, copy);
+  const page = model.pages[state.page];
+  const cards = page ? discoverCards(page, compact && state.page === 1) : [];
   /** The card's panel action: play the button it played last again (the main Hear it before any). */
   const replay = useCallback((card: string, fallbackId: string): void => {
     dispatchRef.current({ type: 'hear', id: lastPlayed.current.get(card) ?? fallbackId });
@@ -264,16 +270,32 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
                   audio={{ register: registerSlot, replay, onHelp: openHelp }}
                 />
               ) : null}
-              {render.items.map((r) => (
-                <DiscoverItemCard
-                  key={r.item.key}
-                  render={r}
-                  dispatch={dispatch}
-                  copy={copy}
-                  a11y={m.a11y}
-                  audio={{ register: registerSlot, replay, onHelp: openHelp }}
-                />
-              ))}
+              {cards.map((card) => {
+                const rows = render.items
+                  .filter((r) => card.includes(r.item))
+                  .map((r, i) => (
+                    <DiscoverItemCard
+                      key={r.item.key}
+                      render={r}
+                      dispatch={dispatch}
+                      copy={copy}
+                      a11y={m.a11y}
+                      audio={{ register: registerSlot, replay, onHelp: openHelp }}
+                      bare={card.length > 1}
+                      divided={i > 0}
+                    />
+                  ));
+                // The compact page (section 4.6): both words on one card, each with its own Hear it.
+                return card.length > 1 ? (
+                  <Card key="compact" padding="lg" tone="paper" testID="discover-compact">
+                    <Caption tone="secondary">{copy.compactLine}</Caption>
+                    <Spacer size="sm" />
+                    {rows}
+                  </Card>
+                ) : (
+                  rows
+                );
+              })}
             </View>
           </>
         )}
@@ -334,7 +356,7 @@ function HearButton({
   pulse?: boolean;
   tone: 'secondary' | 'ghost';
   dispatch: (event: DiscoverEvent) => void;
-}): React.ReactElement {
+}): ReactElement {
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
   useEffect(() => {
@@ -367,13 +389,19 @@ function DiscoverItemCard({
   copy,
   a11y,
   audio,
+  bare = false,
+  divided = false,
 }: {
   render: DiscoverItemRender;
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   a11y: Messages['a11y'];
   audio: CardAudio;
-}): React.ReactElement {
+  /** One of the compact card's two rows: no card of its own; everything a card shows, the picture smaller. */
+  bare?: boolean;
+  /** A row under another row: a thin line above it. */
+  divided?: boolean;
+}): ReactElement {
   const { item } = render;
   const slot = useCardSlot(item.key, [item.hear, item.letterName?.action, item.example?.hear], audio);
   const example = item.example;
@@ -382,140 +410,152 @@ function DiscoverItemCard({
   const itemPicture = item.kind === 'word' && hasPicture(item.picture, itemGloss, PICTURE_CONTEXT);
   const examplePicture = example !== undefined && hasPicture(item.picture, example.gloss, PICTURE_CONTEXT);
 
-  return (
-    <Card padding="lg" tone="paper" testID={`discover-item-${item.key}`}>
-      <View style={{ alignItems: 'center', gap: spacing.md }}>
-        {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
+  const body = (
+    <View
+      testID={bare ? `discover-item-${item.key}` : undefined}
+      style={[
+        { alignItems: 'center', gap: spacing.md },
+        divided ? { borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle, marginTop: spacing.md, paddingTop: spacing.md } : null,
+      ]}
+    >
+      {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
 
-        <KoreanText
-          ko={item.glyph}
-          romanization={item.romanization}
-          {...(item.gloss === undefined ? {} : { gloss: item.gloss })}
-          size={item.kind === 'symbol' ? 'lg' : 'md'}
-          accessibilityLabel={item.accessibilityLabel}
-        />
-        {item.soundHint ? (
-          <Body tone="secondary" align="center">
-            {item.soundHint}
-          </Body>
-        ) : null}
-        {item.note ? (
-          <Body tone="secondary" align="center">
-            {item.note}
-          </Body>
-        ) : null}
-        {/* Decorative: the KoreanText line above already names the word (F-VOC-002 §3.7). */}
-        {itemPicture ? <PictureArt pictureRef={item.picture} gloss={itemGloss} size={touchTarget.hero} decorative /> : null}
+      <KoreanText
+        ko={item.glyph}
+        romanization={item.romanization}
+        {...(item.gloss === undefined ? {} : { gloss: item.gloss })}
+        size={item.kind === 'symbol' ? 'lg' : 'md'}
+        accessibilityLabel={item.accessibilityLabel}
+      />
+      {item.soundHint ? (
+        <Body tone="secondary" align="center">
+          {item.soundHint}
+        </Body>
+      ) : null}
+      {item.note ? (
+        <Body tone="secondary" align="center">
+          {item.note}
+        </Body>
+      ) : null}
+      {/* Decorative: the KoreanText line above already names the word (F-VOC-002 §3.7). */}
+      {/* On the compact card each row keeps its picture, smaller, so the card only regroups the page (section 4.6). */}
+      {itemPicture ? <PictureArt pictureRef={item.picture} gloss={itemGloss} size={bare ? touchTarget.min : touchTarget.hero} decorative testID={`discover-picture-${item.key}`} /> : null}
 
-        <HearButton
-          action={item.hear}
-          label={copy.hearIt.cta}
-          accessibilityLabel={a11y.hearItLabel(item.accessibilityLabel)}
-          size="lg"
-          tone="secondary"
-          pulse={render.pulse}
-          dispatch={dispatch}
-        />
+      <HearButton
+        action={item.hear}
+        label={copy.hearIt.cta}
+        accessibilityLabel={a11y.hearItLabel(item.accessibilityLabel)}
+        size="lg"
+        tone="secondary"
+        pulse={render.pulse}
+        dispatch={dispatch}
+      />
 
-        {item.letterName ? (
-          <View style={{ alignItems: 'center', gap: spacing.sm }}>
-            <HearButton
-              action={item.letterName.action}
-              label={copy.letterName.cta}
-              accessibilityLabel={copy.letterName.cta}
-              size="md"
-              tone="ghost"
-              dispatch={dispatch}
-            />
-            {render.nameShown ? (
-              <KoreanText ko={item.letterName.ko} romanization={item.letterName.romanization} size="sm" />
-            ) : null}
-          </View>
-        ) : null}
-
-        {item.block ? (
-          <View style={{ alignItems: 'center', gap: spacing.sm }}>
-            <SyllableBlock
-              vowel={item.block.vowel}
-              hasFinal={item.block.hasFinal}
-              highlight={item.block.highlight}
-              parts={item.block.parts}
-              size="sm"
-              accessibilityLabel={`${item.batchimLine ?? ''} ${item.accessibilityLabel}`.trim()}
-              testID={`discover-block-${item.key}`}
-            />
-            {item.batchimLine ? <Body tone="secondary" align="center">{item.batchimLine}</Body> : null}
-          </View>
-        ) : null}
-
-        {render.sayLines.length > 0 ? (
-          <View accessibilityLiveRegion="polite" style={{ alignItems: 'center' }}>
-            {render.sayLines.map((line) => (
-              <Body key={line} tone="secondary" align="center" weight="semibold">
-                {line}
-              </Body>
-            ))}
-          </View>
-        ) : null}
-        <View style={{ alignSelf: 'stretch' }}>
-          <PromptPanel
-            variant="status"
-            view={slot.view}
-            onAction={(action) => slot.act(action, () => audio.replay(item.key, item.hear.id))}
-            onHelp={audio.onHelp}
-            testID={`discover-sound-${item.key}`}
+      {item.letterName ? (
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <HearButton
+            action={item.letterName.action}
+            label={copy.letterName.cta}
+            accessibilityLabel={copy.letterName.cta}
+            size="md"
+            tone="ghost"
+            dispatch={dispatch}
           />
+          {render.nameShown ? (
+            <KoreanText ko={item.letterName.ko} romanization={item.letterName.romanization} size="sm" />
+          ) : null}
         </View>
+      ) : null}
 
-        {example ? (
-          <View
-            style={{
-              alignSelf: 'stretch',
-              alignItems: 'center',
-              gap: spacing.sm,
-              borderTopWidth: borderWidth.thin,
-              borderTopColor: colors.border.subtle,
-              paddingTop: spacing.md,
-            }}
-          >
-            {example.blocks.length > 1 ? (
-              <ExampleBlocks blocks={example.blocks} />
-            ) : null}
-            <KoreanText
-              ko={example.ko}
-              romanization={example.romanization}
-              gloss={example.gloss}
-              size="sm"
-              romanizationShown={render.exampleRomanizationShown}
-              onPress={() => dispatch({ type: 'hear', id: example.hear.id })}
-              accessibilityLabel={a11y.hearExample(
-                render.exampleRomanizationShown
-                  ? `${example.ko}, ${example.romanization}, ${example.gloss}`
-                  : `${example.ko}, ${example.gloss}`,
-              )}
-              testID={`discover-hear-${example.hear.id}`}
-            />
-            {/* Decorative: the example's KoreanText line already names it. */}
-            {examplePicture ? (
-              <PictureArt pictureRef={item.picture} gloss={example.gloss} size={touchTarget.hero} decorative />
-            ) : null}
-            {render.showReveal ? (
-              <Button
-                label={copy.showHowToSay.cta}
-                tone="ghost"
-                size="md"
-                onPress={() => dispatch({ type: 'reveal', key: item.key })}
-              />
-            ) : null}
-          </View>
-        ) : null}
+      {item.block ? (
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <SyllableBlock
+            vowel={item.block.vowel}
+            hasFinal={item.block.hasFinal}
+            highlight={item.block.highlight}
+            parts={item.block.parts}
+            size="sm"
+            accessibilityLabel={`${item.batchimLine ?? ''} ${item.accessibilityLabel}`.trim()}
+            testID={`discover-block-${item.key}`}
+          />
+          {item.batchimLine ? <Body tone="secondary" align="center">{item.batchimLine}</Body> : null}
+        </View>
+      ) : null}
+
+      {render.sayLines.length > 0 ? (
+        <View accessibilityLiveRegion="polite" style={{ alignItems: 'center' }}>
+          {render.sayLines.map((line) => (
+            <Body key={line} tone="secondary" align="center" weight="semibold">
+              {line}
+            </Body>
+          ))}
+        </View>
+      ) : null}
+      <View style={{ alignSelf: 'stretch' }}>
+        <PromptPanel
+          variant="status"
+          view={slot.view}
+          onAction={(action) => slot.act(action, () => audio.replay(item.key, item.hear.id))}
+          onHelp={audio.onHelp}
+          testID={`discover-sound-${item.key}`}
+        />
       </View>
+
+      {example ? (
+        <View
+          style={{
+            alignSelf: 'stretch',
+            alignItems: 'center',
+            gap: spacing.sm,
+            borderTopWidth: borderWidth.thin,
+            borderTopColor: colors.border.subtle,
+            paddingTop: spacing.md,
+          }}
+        >
+          {example.blocks.length > 1 ? (
+            <ExampleBlocks blocks={example.blocks} />
+          ) : null}
+          <KoreanText
+            ko={example.ko}
+            romanization={example.romanization}
+            gloss={example.gloss}
+            size="sm"
+            romanizationShown={render.exampleRomanizationShown}
+            onPress={() => dispatch({ type: 'hear', id: example.hear.id })}
+            accessibilityLabel={a11y.hearExample(
+              render.exampleRomanizationShown
+                ? `${example.ko}, ${example.romanization}, ${example.gloss}`
+                : `${example.ko}, ${example.gloss}`,
+            )}
+            testID={`discover-hear-${example.hear.id}`}
+          />
+          {/* Decorative: the example's KoreanText line already names it. */}
+          {examplePicture ? (
+            <PictureArt pictureRef={item.picture} gloss={example.gloss} size={touchTarget.hero} decorative />
+          ) : null}
+          {render.showReveal ? (
+            <Button
+              label={copy.showHowToSay.cta}
+              tone="ghost"
+              size="md"
+              onPress={() => dispatch({ type: 'reveal', key: item.key })}
+            />
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+  return bare ? (
+    body
+  ) : (
+    <Card padding="lg" tone="paper" testID={`discover-item-${item.key}`}>
+      {body}
     </Card>
   );
 }
 
 /** The example's syllable blocks, the one that holds the symbol lit. Decorative: the word itself is read by KoreanText. */
-function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: boolean }> }): React.ReactElement {
+function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: boolean }> }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -574,9 +614,9 @@ function ExchangeCard({
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   m: Messages;
-  scrollRef: React.RefObject<ScrollView | null>;
+  scrollRef: RefObject<ScrollView | null>;
   audio: CardAudio;
-}): React.ReactElement {
+}): ReactElement {
   const ex = copy.exchange;
   const first = render.item.lines[0];
   // One slot for the exchange: Read along and each line's own speaker. When a line cannot play, its panel
@@ -624,8 +664,8 @@ function ExchangeLine({
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   a11y: Messages['a11y'];
-  scrollRef: React.RefObject<ScrollView | null>;
-}): React.ReactElement {
+  scrollRef: RefObject<ScrollView | null>;
+}): ReactElement {
   const { line, lit } = render;
   const reducedMotion = useReducedMotion();
   const ref = useRef<View | null>(null);

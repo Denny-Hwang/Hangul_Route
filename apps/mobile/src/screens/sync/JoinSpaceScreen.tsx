@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, Heading, HoyaBubble, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { TextInput, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, lookupRefusal } from '../../logic/spaces/join-code';
@@ -60,7 +61,7 @@ export const RELINK_POLL_MS = 4000;
  * it turn out to be a class code, it is held and the chooser asks who is joining (OA-D20), never joining as whoever
  * played last.
  */
-export function JoinSpaceScreen({ navigation, route }: Props): React.ReactElement {
+export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const locale = useLocale();
   const [codeFieldWidth, setCodeFieldWidth] = useState(0);

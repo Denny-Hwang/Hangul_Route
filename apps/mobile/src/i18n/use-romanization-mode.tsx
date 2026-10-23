@@ -1,5 +1,6 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { resolveRomanizationMode } from '../logic/locale/romanization-mode';
 import { useLocaleStore } from '../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../store/profile-store';
@@ -24,8 +25,8 @@ export function RomanizationModeOverride({
   children,
 }: {
   mode: RomanizationMode;
-  children: React.ReactNode;
-}): React.ReactElement {
+  children: ReactNode;
+}): ReactElement {
   return <OverrideContext.Provider value={mode}>{children}</OverrideContext.Provider>;
 }
 

@@ -24,7 +24,8 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Platform, Pressable, Text, View, type TextStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -102,7 +103,7 @@ const wholeWord = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}) as unk
 /** Read by assistive tech, not drawn (a 1 px clipped box), as NotePage's live line. */
 const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
-export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props): React.ReactElement {
+export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => buildRounds(scope.orderIt?.rounds, seed), [scope, seed]);
@@ -354,7 +355,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
 }
 
 /** The Korean of a tile (or a placed word) with its romanization line under it. */
-function TileFace({ ko, romanization }: { ko: string; romanization: string }): React.ReactElement {
+function TileFace({ ko, romanization }: { ko: string; romanization: string }): ReactElement {
   const textScale = useTypeScale();
   return (
     <>
@@ -392,7 +393,7 @@ const tileBox = (min: number) =>
   }) as const;
 
 /** A small status glyph in the tile's top corner: colour is never the only cue. */
-function Mark({ name, color }: { name: 'check' | 'dash'; color: string }): React.ReactElement {
+function Mark({ name, color }: { name: 'check' | 'dash'; color: string }): ReactElement {
   return (
     <View style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Icon name={name} size={spacing.lg} color={color} />
@@ -410,7 +411,7 @@ interface LineUnitProps {
 }
 
 /** A placed tile slides up from the tray into its place (`motion.duration.base`, `easing.standard`); reduced motion places it at once. */
-function SlideIn({ reducedMotion, children }: { reducedMotion: boolean; children: React.ReactNode }): React.ReactElement {
+function SlideIn({ reducedMotion, children }: { reducedMotion: boolean; children: ReactNode }): ReactElement {
   const offset = useSharedValue(reducedMotion ? 0 : RISE);
   useEffect(() => {
     offset.value = reducedMotion ? 0 : withTiming(0, { duration: SLIDE_MS, easing: EASE });
@@ -419,7 +420,7 @@ function SlideIn({ reducedMotion, children }: { reducedMotion: boolean; children
   return <Animated.View style={style}>{children}</Animated.View>;
 }
 
-function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion }: LineUnitProps): React.ReactElement {
+function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion }: LineUnitProps): ReactElement {
   if (unit.kind !== 'slot') {
     const placed = unit.kind === 'placed';
     const box = (
@@ -485,7 +486,7 @@ function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion 
   );
 }
 
-function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; tileMin: number; reducedMotion: boolean; onPress: () => void }): React.ReactElement {
+function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; tileMin: number; reducedMotion: boolean; onPress: () => void }): ReactElement {
   const rise = useSharedValue(0);
   useEffect(() => {
     if (!tile.returning || reducedMotion) return;
@@ -531,7 +532,7 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
  * The Discover note under a particle miss: one line of UI text in which each `{ko:}` token is taught
  * Korean (Hangul on a sunken chip) followed by its romanization, so the line wraps like a sentence.
  */
-function NoteLine({ parts }: { parts: NotePart[] }): React.ReactElement {
+function NoteLine({ parts }: { parts: NotePart[] }): ReactElement {
   const textScale = useTypeScale();
   return (
     <Text {...KOREAN_LINE_BREAK}

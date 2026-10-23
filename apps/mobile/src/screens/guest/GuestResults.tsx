@@ -1,6 +1,7 @@
 import { Body, Button, Heading, Hoya, HoyaBubble, Screen, Spacer, StarRow, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { LinkButton } from '../../components/LinkButton';
 import { cardById, questById } from '../../content';
@@ -46,7 +47,7 @@ export type GuestResultsProps = NativeStackScreenProps<GuestStackParamList, 'Res
  * card is drawn. The first
  * focus stays on the tier word (section 14).
  */
-export function GuestResults({ route, navigation }: GuestResultsProps): React.ReactElement {
+export function GuestResults({ route, navigation }: GuestResultsProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.results;
   const locale = useLocale();

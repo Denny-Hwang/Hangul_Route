@@ -1,5 +1,5 @@
 import { Hoya, colors, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
@@ -17,7 +17,7 @@ type TitleBody = Extract<Slide, { kind: 'title' }>;
  * A story title shows its cover scene instead of Hoya, and the "Story" kind label (PR 11).
  * A topic title carries the "Word topics" kind label (slide-topic.md, PR 12).
  */
-export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deckTitle?: string; cover?: LectureSceneView | undefined }): React.ReactElement {
+export function TitleSlide({ slide, deckTitle, cover }: { slide: TitleBody; deckTitle?: string; cover?: LectureSceneView | undefined }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const pose = slide.source === 'topic' ? 'idle' : 'waving';

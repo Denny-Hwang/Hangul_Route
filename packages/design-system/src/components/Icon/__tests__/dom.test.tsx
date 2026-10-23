@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { colors } from '../../../tokens';
 import { IconSvg } from '../dom';
@@ -14,9 +15,9 @@ import { iconGlyphs, iconNames, iconPartProps } from '../glyphs';
  * live in one place.
  */
 type Props = Record<string, unknown>;
-const svgOf = (node: React.ReactElement): React.ReactElement<Props> => node as React.ReactElement<Props>;
-const pathsOf = (svg: React.ReactElement<Props>): Props[] =>
-  (React.Children.toArray(svg.props.children as React.ReactNode) as React.ReactElement<Props>[]).map((p) => p.props);
+const svgOf = (node: ReactElement): ReactElement<Props> => node as ReactElement<Props>;
+const pathsOf = (svg: ReactElement<Props>): Props[] =>
+  (Children.toArray(svg.props.children as ReactNode) as ReactElement<Props>[]).map((p) => p.props);
 
 describe('iconPartProps (the shared stroke rules)', () => {
   it('fills a solid part in the tint and nothing else', () => {

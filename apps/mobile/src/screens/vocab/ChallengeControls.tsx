@@ -14,7 +14,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { ClockScale } from '@hangul-route/content-schema';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { scaleOptions, type ChallengeCopy, type ClockView } from '../../logic/vocab/challenge';
 import { focusForScreenReader } from '../../platform/screen-reader';
@@ -44,7 +45,7 @@ export function ChoiceChips<T extends string | number>({
   onSelect: (value: T) => void;
   groupLabel: string;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View
       testID={testID}
@@ -101,7 +102,7 @@ export function ScaleChips({
   copy: ChallengeCopy;
   groupLabel: string;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const choices = scaleOptions(copy).map((o) => ({ value: o.scale, label: o.label }));
   return <ChoiceChips choices={choices} selected={scale} onSelect={onSelect} groupLabel={groupLabel} testID={testID} />;
 }
@@ -123,7 +124,7 @@ export function SwitchRow({
   offLabel: string;
   onToggle: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}
@@ -153,7 +154,7 @@ export function SwitchRow({
  * last ten seconds. The digits are plain text at the title size, not a
  * heading, so heading navigation never lands on a ticking clock.
  */
-export function ClockDigits({ view }: { view: ClockView }): React.ReactElement {
+export function ClockDigits({ view }: { view: ClockView }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View accessible accessibilityRole="timer" accessibilityLabel={view.label} testID="vocab-speed-clock">
@@ -167,7 +168,7 @@ export function ClockDigits({ view }: { view: ClockView }): React.ReactElement {
   );
 }
 
-export function ClockBar({ view }: { view: ClockView }): React.ReactElement {
+export function ClockBar({ view }: { view: ClockView }): ReactElement {
   return (
     <View style={{ gap: spacing.xs }}>
       <View
@@ -208,7 +209,7 @@ export function PausedPanel({
   focusKey: number;
   onResume: () => void;
   onStop: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const resumeRef = useRef<View>(null);
   useEffect(() => {
     if (focusResume) focusForScreenReader(resumeRef.current);

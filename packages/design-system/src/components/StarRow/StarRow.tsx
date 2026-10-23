@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
 import Animated, {
   Easing,
@@ -8,7 +9,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import { colors, spacing } from '../../tokens';
 import { starRowLabel } from '../../labels';
 import type { StarRowProps } from './types';
@@ -26,7 +27,7 @@ const starPath =
  * Reduced-motion path: instant, no pop. Same-count rerenders no-op.
  */
 
-export function StarRow({ stars, size = 32, accessibilityLabel, testID }: StarRowProps): React.ReactElement {
+export function StarRow({ stars, size = 32, accessibilityLabel, testID }: StarRowProps): ReactElement {
   return (
     <View
       testID={testID}
@@ -59,7 +60,7 @@ function StarCell({
   index: number;
   filled: boolean;
   size: number;
-}): React.ReactElement {
+}): ReactElement {
   const scale = useSharedValue(filled ? 0 : 1);
   const prevFilledRef = useRef(filled);
 

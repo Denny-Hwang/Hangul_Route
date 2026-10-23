@@ -1,5 +1,4 @@
 import type { Profile } from '@hangul-route/content-schema';
-import React from 'react';
 import { Pressable, Text } from 'react-native';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

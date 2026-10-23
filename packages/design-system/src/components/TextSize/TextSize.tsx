@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { STANDARD_TYPE_SCALE, cappedFont, effectiveFontScale, scaledFontCap, textSizeFactor, typeScale, type CappedFont, type TextSizeStep, type TypeScale, type TypeSizeName } from '../../text-size';
 
@@ -14,10 +15,10 @@ const TextSizeContext = createContext<TypeScale>(STANDARD_TYPE_SCALE);
 export interface TextSizeProviderProps {
   /** The device record's step; null, missing or unknown is standard. */
   step: TextSizeStep | string | null | undefined;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
-export function TextSizeProvider({ step, children }: TextSizeProviderProps): React.ReactElement {
+export function TextSizeProvider({ step, children }: TextSizeProviderProps): ReactElement {
   // `typeScale` is memoised per factor, so the context value only changes with the step.
   return <TextSizeContext.Provider value={typeScale(textSizeFactor(step))}>{children}</TextSizeContext.Provider>;
 }

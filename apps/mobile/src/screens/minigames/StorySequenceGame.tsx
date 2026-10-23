@@ -26,7 +26,8 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -109,7 +110,7 @@ type Note = 'hint' | 'wrong' | 'look';
  * shows it full width; a card without art shows its words alone on the paper
  * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/sequence.md (F, G).
  */
-export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
+export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): ReactElement {
   const textScale = useTypeScale();
   const locale = useLocale();
   // Captions and narration in the UI language (F-I18N-001 §3.6, `story:` overlays).

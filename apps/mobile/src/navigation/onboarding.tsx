@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { CreateProfileScreen } from '../screens/onboarding/CreateProfileScreen';
 import { FirstQuestPreviewScreen } from '../screens/onboarding/FirstQuestPreviewScreen';
 import { PlacementInviteScreen } from '../screens/onboarding/PlacementInviteScreen';
@@ -8,7 +8,7 @@ import type { OnboardingStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
-export function OnboardingStack(): React.ReactElement {
+export function OnboardingStack(): ReactElement {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Welcome" component={WelcomeScreen} />

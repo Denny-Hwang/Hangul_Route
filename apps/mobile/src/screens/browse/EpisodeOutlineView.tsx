@@ -15,7 +15,7 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { cardById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -47,7 +47,7 @@ export interface EpisodeOutlineViewProps {
   asPane?: boolean;
 }
 
-export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane = false }: EpisodeOutlineViewProps): React.ReactElement | null {
+export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane = false }: EpisodeOutlineViewProps): ReactElement | null {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;
@@ -195,7 +195,7 @@ export function EpisodeOutlineView({ episodeId, onOpenItem, onOpenCard, asPane =
   );
 }
 
-function LessonRow({ row, number, closed, onOpen }: { row: OutlineQuestRow; number: number; closed: boolean; onOpen: () => void }): React.ReactElement {
+function LessonRow({ row, number, closed, onOpen }: { row: OutlineQuestRow; number: number; closed: boolean; onOpen: () => void }): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;

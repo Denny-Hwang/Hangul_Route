@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import Svg from 'react-native-svg';
 import { colors, spacing } from '../../tokens';
@@ -30,7 +31,7 @@ export interface PipRowGaps {
  * the two native props and on web through `aria-hidden` (react-native-web
  * maps only that one to the DOM).
  */
-export function PipRow({ groups, context = 'stage', accent = colors.border.shape, bandsPerLine = false, testID }: PipRowProps): React.ReactElement {
+export function PipRow({ groups, context = 'stage', accent = colors.border.shape, bandsPerLine = false, testID }: PipRowProps): ReactElement {
   const size = useMediaSize(PIP_SIZE[context]);
   // The gaps scale with the pips, so the group gap still reads as a gap on wide windows (wireframe C5).
   const gaps = { pip: useMediaSize(GAPS.pip), group: useMediaSize(GAPS.group) };
@@ -44,7 +45,7 @@ type BodyProps = Pick<PipRowProps, 'groups' | 'testID'> & { size: number; accent
  * The row that measures its width and reserves the marker bands per line
  * (`bandsPerLine`, LR-11). Until the first layout it draws the one wrapping row.
  */
-export function PipRowFitted(props: BodyProps): React.ReactElement {
+export function PipRowFitted(props: BodyProps): ReactElement {
   const [width, setWidth] = useState<number | undefined>(undefined);
   const onLayout = (event: LayoutChangeEvent): void => {
     const next = event.nativeEvent.layout.width;
@@ -58,7 +59,7 @@ export function PipRowFitted(props: BodyProps): React.ReactElement {
 }
 
 /** One pip with the bands of its line (or of the whole row); a plain call, so the body stays one element tree. */
-function pipCell(cell: PipCell, size: number, accent: string, bands: { top: boolean; bottom: boolean }, trailing: number): React.ReactElement {
+function pipCell(cell: PipCell, size: number, accent: string, bands: { top: boolean; bottom: boolean }, trailing: number): ReactElement {
   const top = bands.top ? markerBand(size) : 0;
   const height = top + size + (bands.bottom ? startBand(size) : 0);
   return (
@@ -78,7 +79,7 @@ function pipCell(cell: PipCell, size: number, accent: string, bands: { top: bool
  * bands its pips use (`pipRowLines`); without one, the row wraps by itself and
  * every line reserves the bands any pip uses.
  */
-export function PipRowBody({ groups, size, accent, gaps = GAPS, testID, width }: BodyProps & { width?: number }): React.ReactElement {
+export function PipRowBody({ groups, size, accent, gaps = GAPS, testID, width }: BodyProps & { width?: number }): ReactElement {
   const cells = pipRowCells(groups, gaps);
   const trailing = (cell: PipCell): number => Math.max(0, cell.trailingGap - gaps.pip);
   if (width !== undefined) {

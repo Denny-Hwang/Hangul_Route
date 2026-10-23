@@ -2,7 +2,8 @@ import { Body, Button, borderWidth, colors, radii, spacing, touchTarget } from '
 import type { BrowseTarget } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { gateLessonsStep } from '../../logic/browse/gate-entry';
@@ -40,7 +41,7 @@ export function GateLessonsButton({
   target?: BrowseTarget;
   testID: string;
   initialBlocked?: boolean;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const m = useMessages().caregiver.dashboard.browse;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [blocked, setBlocked] = useState(initialBlocked);

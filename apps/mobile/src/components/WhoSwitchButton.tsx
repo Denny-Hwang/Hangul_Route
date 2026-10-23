@@ -1,5 +1,5 @@
 import { Caption, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { canSwitchProfileFrom } from '../logic/profiles/session';
@@ -16,7 +16,7 @@ const GLYPH = 32;
  * hint. Shown only with the chooser flag on and 2 or more learner profiles (the known uses join with OA-4b), and only
  * where a switch is offered (Home, `canSwitchProfileFrom('home')`); nothing otherwise.
  */
-export function WhoSwitchButton({ onPress }: { onPress: () => void }): React.ReactElement | null {
+export function WhoSwitchButton({ onPress }: { onPress: () => void }): ReactElement | null {
   const w = useMessages().learner.who;
   const profiles = useProfileStore((s) => s.profiles);
   if (!canSwitchProfileFrom('home') || !switchOffered(learnerProfiles(profiles).length)) return null;

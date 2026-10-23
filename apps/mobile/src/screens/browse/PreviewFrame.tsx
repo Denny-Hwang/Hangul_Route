@@ -1,6 +1,7 @@
 import { borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useCappedFont } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../../i18n/use-messages';
@@ -28,12 +29,12 @@ const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow
 type FocusState = PressableStateCallbackType & { focused?: boolean };
 
 export interface PreviewFrameProps {
-  children: React.ReactNode;
+  children: ReactNode;
   /** Inside a lesson: [ Leave preview ] (BR-8 opens the leave confirm). Absent on the end screen. */
   onLeave?: () => void;
 }
 
-export function PreviewFrame({ children, onLeave }: PreviewFrameProps): React.ReactElement {
+export function PreviewFrame({ children, onLeave }: PreviewFrameProps): ReactElement {
   const m = useMessages().caregiver.browse.preview;
   const { gutter } = useLayoutClass();
   // Drawn at the chosen text size; the native cap stays a budget for the step and the OS together.

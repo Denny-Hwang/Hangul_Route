@@ -17,7 +17,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -71,7 +72,7 @@ interface Props {
 interface TileFrameProps {
   selected: boolean;
   badge: number | undefined;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**
@@ -80,7 +81,7 @@ interface TileFrameProps {
  * number sits on both tiles of a matched pair next to the card's check mark,
  * so a match never relies on colour alone.
  */
-function TileFrame({ selected, badge, children }: TileFrameProps): React.ReactElement {
+function TileFrame({ selected, badge, children }: TileFrameProps): ReactElement {
   return (
     <View
       style={{
@@ -100,7 +101,7 @@ function TileFrame({ selected, badge, children }: TileFrameProps): React.ReactEl
   );
 }
 
-export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Props): React.ReactElement {
+export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const boards = useMemo(() => validBoards(scope), [scope]);
   const orders = useMemo(() => boards.map((board, i) => shuffleBoard(board, seed + i)), [boards, seed]);

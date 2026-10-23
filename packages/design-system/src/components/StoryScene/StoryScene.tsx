@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, memo } from 'react';
+import type { ReactElement, ComponentType } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
+import { Svg, Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { borderWidth, colors, radii } from '../../tokens';
 import type { DrawItem } from '../../scene-art/draw';
 import { SCENE_ART_REGISTRY } from '../../scene-art/registry';
@@ -18,7 +19,7 @@ import type { StorySceneProps } from './types';
 
 const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: Path, polygon: Polygon } as const;
 
-function Item({ item }: { item: DrawItem }): React.ReactElement {
+function Item({ item }: { item: DrawItem }): ReactElement {
   if (item.tag === 'card') {
     return (
       <G transform={item.transform}>
@@ -26,11 +27,11 @@ function Item({ item }: { item: DrawItem }): React.ReactElement {
       </G>
     );
   }
-  const Tag = TAGS[item.tag] as React.ComponentType<Record<string, unknown>>;
+  const Tag = TAGS[item.tag] as ComponentType<Record<string, unknown>>;
   return <Tag {...item.geometry} {...item.paint} transform={item.transform} />;
 }
 
-function StorySceneBase({ art, theme, variant, width, fallback, decorative, accessibilityLabel, onResolveIssue, testID }: StorySceneProps): React.ReactElement {
+function StorySceneBase({ art, theme, variant, width, fallback, decorative, accessibilityLabel, onResolveIssue, testID }: StorySceneProps): ReactElement {
   const model = useMemo(
     () => storySceneModel({ art, theme, variant, width, decorative, accessibilityLabel }, SCENE_ART_REGISTRY),
     [art, theme, variant, width, decorative, accessibilityLabel],
@@ -75,4 +76,4 @@ function StorySceneBase({ art, theme, variant, width, fallback, decorative, acce
 }
 
 /** Memoised by `art` identity: a scene is data and never changes while it is shown. */
-export const StoryScene = React.memo(StorySceneBase);
+export const StoryScene = memo(StorySceneBase);

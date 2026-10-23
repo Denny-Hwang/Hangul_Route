@@ -1,5 +1,6 @@
 import type { AdultPersona } from '@hangul-route/content-schema';
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import type { BrowseBundle } from '../../logic/browse/bundle';
 import type { ResolvedPass } from '../../logic/browse/pass';
 
@@ -22,7 +23,7 @@ export interface BrowseSession {
 
 const BrowseSessionContext = createContext<BrowseSession | null>(null);
 
-export function BrowseSessionProvider({ value, children }: { value: BrowseSession; children: React.ReactNode }): React.ReactElement {
+export function BrowseSessionProvider({ value, children }: { value: BrowseSession; children: ReactNode }): ReactElement {
   return <BrowseSessionContext.Provider value={value}>{children}</BrowseSessionContext.Provider>;
 }
 

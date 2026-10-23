@@ -1,6 +1,6 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 
@@ -18,7 +18,7 @@ const CARD_THUMB_FACE = CARD_THUMB - 2 * borderWidth.thick;
  * A card's face (`CardArt`) in its rarity frame. Shared by the quest card
  * banner and the extra-cards banner on Results (F-MOTION-003, F-STORY-006 §3.7, §3.8).
  */
-export function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
+export function CardArtThumb({ card }: { card: HeritageCard }): ReactElement {
   return (
     <View
       accessibilityElementsHidden

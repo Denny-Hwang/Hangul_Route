@@ -1,5 +1,5 @@
 import type { ReactTestInstance } from 'react-test-renderer';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { borderWidth, colors, spacing } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
@@ -42,7 +42,7 @@ const MASTERY: JourneyMastery = {
   newVolume: new Set([RITES, NATURE]),
 };
 
-const grid = (mastery?: JourneyMastery, access?: JourneyAccessInput): React.ReactElement => (
+const grid = (mastery?: JourneyMastery, access?: JourneyAccessInput): ReactElement => (
   <JourneyGrid
     stages={stages}
     themes={themes}

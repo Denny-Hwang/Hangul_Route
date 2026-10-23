@@ -128,6 +128,8 @@ export interface ProposalContext {
   ageGroup: string;
   /** `unlockedStagesFor(now, profileId)`: the access tier, so stage and quest access agree. */
   unlockedStages: readonly StageKey[];
+  /** The snapshot's `testedOut`: a Stage Jump (F-CURR-002 row CM-25) raises the level and places out its cells. */
+  testedOut?: Readonly<Record<string, string>> | undefined;
   today: DateKey;
   pace?: PaceId;
   startDate?: DateKey;
@@ -143,12 +145,14 @@ export interface ProposalContext {
 export function proposalInputOf(c: ProposalContext): ProposeInput {
   const catalog = c.catalog ?? CATALOG;
   const unlocked = new Set<string>(c.unlockedStages);
+  // A Stage Jump counts without a level check too (`effectiveRoute` is null only with neither).
   const seed =
-    c.placements === undefined
+    c.placements === undefined && c.testedOut === undefined
       ? null
-      : effectiveRoute(c.placements, routeCatalogOf(catalog), {
+      : effectiveRoute(c.placements ?? [], routeCatalogOf(catalog), {
           isEntitled: (stage) => unlocked.has(stage),
           completedQuestIds: new Set(c.completedQuestIds),
+          testedOut: c.testedOut,
         });
   return {
     audience: 'self',

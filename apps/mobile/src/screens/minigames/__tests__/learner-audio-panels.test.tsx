@@ -1,5 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactNode } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
@@ -63,7 +63,7 @@ vi.mock('react-native-gesture-handler', () => {
   };
   return {
     Gesture: { Pan },
-    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    GestureDetector: ({ children }: { children: ReactNode }) => children,
   };
 });
 // The native navigation package has no build that loads in Node.

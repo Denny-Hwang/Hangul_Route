@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement, cloneElement, Children, createElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { TextSizeStep } from '../../../text-size';
 import { DisplaySheet } from '../DisplaySheet';
@@ -43,30 +44,30 @@ vi.mock('react', async (importOriginal) => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
+type El = ReactElement<Props>;
 
 /** Calls local function components so the whole tree is plain tags. */
-function expand(node: React.ReactNode): React.ReactNode {
+function expand(node: ReactNode): ReactNode {
   if (Array.isArray(node)) return node.map(expand);
-  if (!React.isValidElement(node)) return node;
+  if (!isValidElement(node)) return node;
   const el = node as El;
-  if (typeof el.type === 'function') return expand((el.type as (p: Props) => React.ReactNode)(el.props));
+  if (typeof el.type === 'function') return expand((el.type as (p: Props) => ReactNode)(el.props));
   const children = el.props.children;
   if (children === undefined || typeof children === 'function') return el;
-  return React.cloneElement(el, undefined, ...React.Children.toArray(children as React.ReactNode).map(expand));
+  return cloneElement(el, undefined, ...Children.toArray(children as ReactNode).map(expand));
 }
 
-function all(node: React.ReactNode): El[] {
-  if (!React.isValidElement(node)) return [];
+function all(node: ReactNode): El[] {
+  if (!isValidElement(node)) return [];
   const el = node as El;
-  const kids = typeof el.props.children === 'function' ? [] : React.Children.toArray(el.props.children as React.ReactNode);
+  const kids = typeof el.props.children === 'function' ? [] : Children.toArray(el.props.children as ReactNode);
   return [el, ...kids.flatMap(all)];
 }
 
 const byTestId = (tree: El[], id: string): El | undefined => tree.find((e) => e.props.testID === id);
 const textOf = (el: El): string =>
-  React.Children.toArray(el.props.children as React.ReactNode)
-    .map((c) => (typeof c === 'string' ? c : React.isValidElement(c) ? textOf(c as El) : ''))
+  Children.toArray(el.props.children as ReactNode)
+    .map((c) => (typeof c === 'string' ? c : isValidElement(c) ? textOf(c as El) : ''))
     .join('');
 
 const LABELS: Record<TextSizeStep, string> = { standard: 'Standard', large: 'Large', larger: 'Larger', largest: 'Largest' };
@@ -375,6 +376,6 @@ describe('DisplaySheet element tree', () => {
   });
 });
 
-function Body2(): React.ReactElement {
-  return React.createElement('Extra');
+function Body2(): ReactElement {
+  return createElement('Extra');
 }

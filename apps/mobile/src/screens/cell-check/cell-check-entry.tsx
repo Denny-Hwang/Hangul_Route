@@ -1,3 +1,4 @@
+import type { StageDef } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
 import { memoryRecordsFor } from '../../logic/memory/boot';
@@ -74,6 +75,19 @@ export function CellCheckSlot(props: CellCheckSlotProps): ReactElement | null {
   const [checkOn, masteryOn] = useSwitches(props.profileId);
   const ui = useChunk(checkOn || (props.place === 'top' && masteryOn)).chunk;
   return ui === null ? null : <ui.CellCheckBlock {...props} checkOn={checkOn} masteryOn={masteryOn} />;
+}
+
+export interface StageJumpSlotProps {
+  profileId: string | null;
+  /** The stage in the UI locale (its number and title name the button for screen readers). */
+  stage: Pick<StageDef, 'key' | 'order' | 'titleEn'>;
+}
+
+/** Row CM-25: Stage Jump Ahead's line under a Journey stage's cells; nothing while `cellCheck` is off or the chunk loads. */
+export function StageJumpSlot(props: StageJumpSlotProps): ReactElement | null {
+  const [checkOn] = useSwitches(props.profileId);
+  const ui = useChunk(checkOn).chunk;
+  return ui === null ? null : <ui.StageJumpLine {...props} checkOn={checkOn} />;
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CellCheck'>;

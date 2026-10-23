@@ -1,5 +1,5 @@
 import { borderWidth, colors, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { PictureArt } from '../../../components/PictureArt';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -19,7 +19,7 @@ type SentenceBody = Extract<Slide, { kind: 'sentence' }>;
  * 300-unit stage tile) when it has one, else the text takes the width. Builds `ko` (with the
  * romanization), `gloss`, `art`; with `romanization: 'tap'` the romanization is its own build.
  */
-export function SentenceSlide({ slide, reveal }: { slide: SentenceBody; reveal: number }): React.ReactElement {
+export function SentenceSlide({ slide, reveal }: { slide: SentenceBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const view = sentenceView(slide, reveal);

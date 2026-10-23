@@ -1,7 +1,8 @@
 import { Button, Caption, Icon, colors, spacing, useEffectiveFontScale } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
@@ -20,7 +21,7 @@ import { useStageOffer } from './use-stage-offer';
  * the whole header and wrapping, so they never squeeze the title at 320 px. `caption`: under a stage not finished whose
  * every cell is done or tested out, one calm line. Nothing here gates the next stage (OD-1).
  */
-export function StageHeaderExtras({ place, profileId, stage, complete }: StageHeaderSlotProps): React.ReactElement | null {
+export function StageHeaderExtras({ place, profileId, stage, complete }: StageHeaderSlotProps): ReactElement | null {
   const messages = useMessages();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const below = headerActionsBelow(useEffectiveFontScale());

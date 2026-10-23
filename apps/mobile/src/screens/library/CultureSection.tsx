@@ -1,7 +1,8 @@
 import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useMemo, type ReactElement } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';

@@ -1,5 +1,14 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { RomanizationModeOverride } from '../../i18n/use-romanization-mode';
 import { homeLines } from '../../logic/browse/home-view';
 import type { BrowsePrefs } from '../../logic/browse/prefs';
@@ -29,7 +38,7 @@ export interface BrowseSettings {
 
 const BrowseSettingsContext = createContext<BrowseSettings | null>(null);
 
-export function BrowseSettingsProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+export function BrowseSettingsProvider({ children }: { children: ReactNode }): ReactElement {
   const { pass, gatingEnabled, online } = useBrowseSession();
   // The learner default with no profile (`resolveRomanizationMode`).
   const [romanization, setMode] = useState<RomanizationMode>('always');

@@ -1,6 +1,6 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import TestRenderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
@@ -43,7 +43,7 @@ function first<K extends Slide['kind']>(slides: Slide[], kind: K): Extract<Slide
 
 const tap = <S extends Slide>(slide: S): S => ({ ...slide, builds: buildsFor(slide, { romanization: 'tap', strokeGuide: true }) });
 
-function inView(child: React.ReactElement, locale: UiLocale = 'en'): React.ReactElement {
+function inView(child: ReactElement, locale: UiLocale = 'en'): ReactElement {
   return <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: true }}>{child}</PresenterViewProvider>;
 }
 
@@ -216,7 +216,7 @@ describe('useFitLevel: a reading slide that fits itself', () => {
     vi.useFakeTimers();
     try {
       let level = -1;
-      function Probe(): React.ReactElement {
+      function Probe(): ReactElement {
         const fit = useFitLevel(3);
         level = fit.level;
         return (
@@ -259,7 +259,7 @@ describe('useFitLevel: a reading slide that fits itself', () => {
   /** A probe whose content box reports `measured.height` when the hook measures it again (react-native-web's `offsetHeight`). */
   async function probe(measured: { height: number }, unitOf: () => number): Promise<{ r: ReactTestRenderer; level: () => number; layout: (id: string, height: number) => void; rerender: () => Promise<void> }> {
     let level = -1;
-    function Probe(): React.ReactElement {
+    function Probe(): ReactElement {
       const fit = useFitLevel(3, unitOf());
       level = fit.level;
       return (

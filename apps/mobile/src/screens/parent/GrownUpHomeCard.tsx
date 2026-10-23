@@ -1,5 +1,5 @@
 import { Body, Button, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
@@ -15,7 +15,7 @@ import { useAudience } from '../../store/audience';
  * It calls `openGrownUpArea({ via: 'dashboard' })` through `onOpen`. Offline (Panel C): the row is disabled with
  * "Needs the internet" under it as its description. The local dashboard below is unchanged and still works offline.
  */
-export function GrownUpHomeCard({ onOpen }: { onOpen: () => void }): React.ReactElement {
+export function GrownUpHomeCard({ onOpen }: { onOpen: () => void }): ReactElement {
   const messages = useMessages();
   const needsInternet = messages.learner.welcome.grownUps.needsInternet;
   const online = useOnline();

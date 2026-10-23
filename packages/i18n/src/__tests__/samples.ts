@@ -993,4 +993,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.named': [['letters'], ['nature'], ['crafts']],
   'learner.library.earnHint.album': [['letters'], ['nature'], ['rites']],
   'learner.results.albumDone.line': [['letters'], ['nature'], ['rites']],
+  // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
+  'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
 };

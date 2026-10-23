@@ -1,5 +1,6 @@
 import { Icon, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale, KOREAN_LINE_BREAK, type IconName } from '@hangul-route/design-system';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type TextStyle, type ViewStyle } from 'react-native';
 import { radioAfter } from '../../logic/lecture/home-view';
 
@@ -28,7 +29,7 @@ export const text = (size: number, weight: keyof typeof typography.weight, color
   lineHeight: Math.round(size * typography.leading.normal),
 });
 
-export function H({ level, children, style, testID }: { level: 1 | 2 | 3; children: string; style: TextStyle; testID?: string }): React.ReactElement {
+export function H({ level, children, style, testID }: { level: 1 | 2 | 3; children: string; style: TextStyle; testID?: string }): ReactElement {
   return (
     <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={level} style={style} testID={testID}>
       {children}
@@ -37,7 +38,7 @@ export function H({ level, children, style, testID }: { level: 1 | 2 | 3; childr
 }
 
 /** A plain line of the page (`text.secondary` by default). */
-export function Line({ children, testID, primary, bold }: { children: string; testID?: string; primary?: boolean; bold?: boolean }): React.ReactElement {
+export function Line({ children, testID, primary, bold }: { children: string; testID?: string; primary?: boolean; bold?: boolean }): ReactElement {
   const ts = useTypeScale().size;
   return (
     <Text {...KOREAN_LINE_BREAK} testID={testID} style={text(ts.body, bold ? 'bold' : 'regular', primary ? colors.text.primary : colors.text.secondary)}>
@@ -88,9 +89,9 @@ export function HomeButton({
   minWidth?: number;
   /** The width of its row up to this many pixels, in place of `minWidth` (a narrow window: never wider than the row). */
   upTo?: number;
-  buttonRef?: React.Ref<View>;
+  buttonRef?: Ref<View>;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const ts = useTypeScale().size;
   const fill = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.surface.paper;
   const edge = disabled ? colors.surface.sunken : primary ? colors.brand.primaryDark : colors.border.strong;
@@ -153,7 +154,7 @@ export function ChipGroup<T extends string | number>({
   onChange: (next: T) => void;
   name: (option: T) => string;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const ts = useTypeScale().size;
   const refs = useRef(new Map<T, View | null>());
   const onKey = (e: { key: string; preventDefault?: () => void }): void => {
@@ -229,12 +230,12 @@ export function CheckRow({
   disabled: boolean;
   onToggle: () => void;
   testID?: string;
-  rowRef?: React.Ref<View>;
+  rowRef?: Ref<View>;
   /** An id for the title's text (an episode's "lessons inside" button is named by it). */
   titleId?: string;
   /** The width the row asks for before it shares a line (a row beside its disclosure wraps under 2 x this). */
   basis?: number;
-}): React.ReactElement {
+}): ReactElement {
   const ts = useTypeScale().size;
   const on = checked === 'true';
   const glyph: IconName | null = checked === 'true' ? 'check' : checked === 'mixed' ? 'dash' : null;

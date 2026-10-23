@@ -17,9 +17,10 @@ import {
   useMediaSize,
   type PipState,
 } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Animated, Pressable, View, type PressableStateCallbackType } from 'react-native';
-import Svg, { Circle, Line } from 'react-native-svg';
+import { Svg, Circle, Line } from 'react-native-svg';
 import { useMessages } from '../../i18n/use-messages';
 import type { Connector, LaterRowView, RouteIcon, StageRowView, TagView } from '../../logic/my-route/view';
 import { LetterWall } from './LetterWall';
@@ -37,7 +38,7 @@ import { BADGE_SIZE, StageBadge } from './StageBadge';
 const CONNECTOR_WIDTH = spacing.xs;
 
 /** The trail line below a badge, down to the next row: solid in the stage colour, or round dots in `border.shape`. */
-function TrailConnector({ look, color, badge }: { look: Exclude<Connector, null>; color: string; badge: number }): React.ReactElement {
+function TrailConnector({ look, color, badge }: { look: Exclude<Connector, null>; color: string; badge: number }): ReactElement {
   const box = { position: 'absolute', left: badge / 2 - CONNECTOR_WIDTH / 2, top: badge, bottom: 0, width: CONNECTOR_WIDTH } as const;
   if (look === 'solid') return <View aria-hidden importantForAccessibility="no" style={{ ...box, backgroundColor: color, borderRadius: radii.pill }} />;
   return (
@@ -70,7 +71,7 @@ const chip = {
 } as const;
 
 /** "You are here" on the brand tint; "Your goal" with the flag and "You started here" with the pin on sunken. */
-export function TagChip({ tag }: { tag: TagView }): React.ReactElement {
+export function TagChip({ tag }: { tag: TagView }): ReactElement {
   return (
     <View style={{ ...chip, backgroundColor: tag.glyph === null ? colors.brand.primaryLight : colors.surface.sunken }}>
       {tag.glyph !== null ? <Icon name={tag.glyph} size={spacing.lg} color={colors.text.primary} /> : null}
@@ -82,7 +83,7 @@ export function TagChip({ tag }: { tag: TagView }): React.ReactElement {
 }
 
 /** The 16 dp solid ring of "In your plan" (RouteMarkers spec, "Tag marks"): a chip mark, never a bare ring in a pip row. */
-function PlanRing(): React.ReactElement {
+function PlanRing(): ReactElement {
   const size = spacing.lg;
   const stroke = borderWidth.base;
   return (
@@ -95,7 +96,7 @@ function PlanRing(): React.ReactElement {
 }
 
 /** "In your plan" on a cell row (F-ENT-003 E3-D): the solid ring plus the word on a sunken chip. */
-export function InPlanChip({ label }: { label: string }): React.ReactElement {
+export function InPlanChip({ label }: { label: string }): ReactElement {
   return (
     <View style={{ ...chip, alignSelf: 'flex-start', backgroundColor: colors.surface.sunken }} testID="my-route-in-plan">
       <PlanRing />
@@ -106,7 +107,7 @@ export function InPlanChip({ label }: { label: string }): React.ReactElement {
   );
 }
 
-function BuildChips({ builds }: { builds: { label: string; icon: RouteIcon }[] }): React.ReactElement {
+function BuildChips({ builds }: { builds: { label: string; icon: RouteIcon }[] }): ReactElement {
   const m = useMessages().learner.myRoute;
   return (
     <View>
@@ -137,7 +138,7 @@ const LEGEND_AFTER: readonly PipState[] = ['later'];
  * "Not open yet" with the same dotted ring, just before "Coming later" (amendment section 4.5, LR-5b;
  * mock `design/screens/learning-route/mock/route-card.html` state D): the word tells them apart.
  */
-function PipLegend({ accent, notOpen }: { accent: string; notOpen: boolean }): React.ReactElement {
+function PipLegend({ accent, notOpen }: { accent: string; notOpen: boolean }): ReactElement {
   const m = useMessages().learner.myRoute.legend;
   const [open, setOpen] = useState(false);
   return (
@@ -179,7 +180,7 @@ const FRESH_FROM = 0.3;
  * Fades a row's pips in once when a quest was finished since the last open; never when motion is reduced.
  * It restarts from faded each time `fresh` turns on, so it also plays on a later open of a mounted Route tab.
  */
-function FreshFill({ fresh, reducedMotion, children }: { fresh: boolean; reducedMotion: boolean; children: React.ReactNode }): React.ReactElement {
+function FreshFill({ fresh, reducedMotion, children }: { fresh: boolean; reducedMotion: boolean; children: ReactNode }): ReactElement {
   const animate = fresh && !reducedMotion;
   const opacity = useRef(new Animated.Value(animate ? FRESH_FROM : 1)).current;
   useEffect(() => {
@@ -207,10 +208,10 @@ export interface StageRowItemProps {
    * A control under the row header, outside its button: the grown-up read-only page's [ Preview lessons ]
    * (F-BROWSE-001 BR-12a; the slot of `design/screens/learning-route/stage-list.md`). None by default.
    */
-  action?: React.ReactNode;
+  action?: ReactNode;
 }
 
-export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode, expandable = true, action }: StageRowItemProps): React.ReactElement {
+export function StageRowItem({ row, open, look, reducedMotion, onToggle, onOpenEpisode, expandable = true, action }: StageRowItemProps): ReactElement {
   const badge = useMediaSize(BADGE_SIZE);
   const accent = colors.stage[row.stage];
   return (
@@ -363,7 +364,7 @@ export interface LaterRowItemProps {
 }
 
 /** A compact coming-later row: no pips; a run of them is one row ("Stages 5 to 7") that opens on tap. */
-export function LaterRowItem({ row, open, onToggle, expandable = true }: LaterRowItemProps): React.ReactElement {
+export function LaterRowItem({ row, open, onToggle, expandable = true }: LaterRowItemProps): ReactElement {
   const badge = useMediaSize(BADGE_SIZE);
   if (!expandable) {
     return (

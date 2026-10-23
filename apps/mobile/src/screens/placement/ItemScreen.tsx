@@ -17,7 +17,8 @@ import {
   useEffectiveFontScale,
 } from '@hangul-route/design-system';
 import { currentQuestion, type AssessmentQuestion } from '@hangul-route/content-schema';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { cheerLine } from '../../logic/placement/copy';
 import { acknowledgement, choicesEnableAtMs, choicesEnabled, pauseSheet, promptPlayback, speaksInstruction } from '../../logic/placement/flow';
@@ -61,7 +62,7 @@ const ACK_MS = 900;
  * play asks for a tap first and is skipped (kept out of scoring) only when
  * that fails too (section 3.11).
  */
-export function ItemScreen(): React.ReactElement | null {
+export function ItemScreen(): ReactElement | null {
   const { run } = usePlacement();
   // "Got it" outlives the question it acknowledges (the next one is already showing).
   const [ack, setAck] = useState(false);
@@ -75,7 +76,7 @@ export function ItemScreen(): React.ReactElement | null {
   return <ItemView key={`${question.id}:${run.responses.length}`} question={question} ack={ack} onAck={() => setAck(true)} />;
 }
 
-function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack: boolean; onAck: () => void }): React.ReactElement {
+function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack: boolean; onAck: () => void }): ReactElement {
   const { m, flow, run, applyRun, say, screenReader, needsGesture, markGesture } = usePlacement();
   const copy = m.learner.placement.item;
   const state = run as NonNullable<typeof run>;
@@ -220,7 +221,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const speakerSize = useMediaSize(touchTarget.hero);
 
   /** Focus lands here on each question: "Question, 4 choices" and the instruction. */
-  const announced = (children: React.ReactNode): React.ReactElement => (
+  const announced = (children: ReactNode): ReactElement => (
     <View
       ref={(node) => {
         promptRef.current = node;

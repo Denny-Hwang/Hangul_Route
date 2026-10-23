@@ -1,6 +1,7 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Card, Spacer, spacing } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { backupFileName, encodeBackup } from '../logic/sync/backup';
@@ -20,7 +21,7 @@ export interface BackupCardProps {
   onSaveProgress: () => void;
 }
 
-export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): React.ReactElement {
+export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): ReactElement {
   const { copy, pinSet } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.backup;

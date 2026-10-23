@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import { useMemo, memo } from 'react';
+import type { ReactElement, ComponentType } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
+import { Svg, Circle, Ellipse, Path, Rect } from 'react-native-svg';
 import { borderWidth, colors } from '../../tokens';
 import { wordArtModel } from '../../word-art/model';
 import type { WordArtModel } from '../../word-art/model';
@@ -17,8 +18,8 @@ import type { WordArtProps } from './types';
 
 const TAGS = { circle: Circle, ellipse: Ellipse, rect: Rect, path: Path } as const;
 
-function Shape({ shape }: { shape: RenderShape }): React.ReactElement {
-  const Tag = TAGS[shape.tag] as React.ComponentType<Record<string, unknown>>;
+function Shape({ shape }: { shape: RenderShape }): ReactElement {
+  const Tag = TAGS[shape.tag] as ComponentType<Record<string, unknown>>;
   return (
     <Tag
       {...shape.geometry}
@@ -40,7 +41,7 @@ function Shape({ shape }: { shape: RenderShape }): React.ReactElement {
  * `flagged` (development builds only, like StoryScene) draws a dashed frame
  * round a picture that carries the meaning but was given a blank label.
  */
-export function WordArtView({ model, testID, flagged = false }: { model: WordArtModel; testID?: string; flagged?: boolean }): React.ReactElement {
+export function WordArtView({ model, testID, flagged = false }: { model: WordArtModel; testID?: string; flagged?: boolean }): ReactElement {
   const named = model.label !== undefined;
   return (
     <View
@@ -66,11 +67,11 @@ export function WordArtView({ model, testID, flagged = false }: { model: WordArt
   );
 }
 
-function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testID }: WordArtProps): React.ReactElement | null {
+function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testID }: WordArtProps): ReactElement | null {
   const model = useMemo(() => wordArtModel({ artKey, size, mono, decorative, accessibilityLabel }), [artKey, size, mono, decorative, accessibilityLabel]);
   if (model === null) return null;
   return <WordArtView model={model} testID={testID} flagged={__DEV__ && model.unlabelled} />;
 }
 
 /** Memoised: a glyph is data and never changes while it is shown. */
-export const WordArt = React.memo(WordArtBase);
+export const WordArt = memo(WordArtBase);

@@ -1,6 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -111,7 +111,7 @@ function navigationDouble() {
   };
 }
 
-function HeaderDouble({ options }: ScreenHeaderSlotProps): React.ReactElement | null {
+function HeaderDouble({ options }: ScreenHeaderSlotProps): ReactElement | null {
   const leading = options?.leading;
   if (leading?.onPress === undefined) return null;
   return (
@@ -120,7 +120,7 @@ function HeaderDouble({ options }: ScreenHeaderSlotProps): React.ReactElement | 
     </Pressable>
   );
 }
-const inGuest = (element: React.ReactElement): React.ReactElement => <ScreenHeaderSlotContext.Provider value={HeaderDouble}>{element}</ScreenHeaderSlotContext.Provider>;
+const inGuest = (element: ReactElement): ReactElement => <ScreenHeaderSlotContext.Provider value={HeaderDouble}>{element}</ScreenHeaderSlotContext.Provider>;
 
 /** A host node for react-test-renderer refs: react-native-web listens on it; `focus` records the focus moves. */
 const nodeMock = (focus: () => void) => ({ focus, addEventListener: () => undefined, removeEventListener: () => undefined, getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }) });

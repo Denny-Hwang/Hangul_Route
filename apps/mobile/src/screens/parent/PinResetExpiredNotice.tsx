@@ -1,5 +1,6 @@
 import { Body, colors, radii, spacing } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { expiredNoticeLive, usePinResetNotice } from '../../store/pin-reset-notice';
@@ -12,7 +13,7 @@ import { expiredNoticeLive, usePinResetNotice } from '../../store/pin-reset-noti
  * and is gone on the next visit. A line raised for a boot that started elsewhere has gone stale by the time Home first
  * renders (`expiredNoticeLive`): it is taken and not shown.
  */
-export function PinResetExpiredNotice(): React.ReactElement | null {
+export function PinResetExpiredNotice(): ReactElement | null {
   const m = useMessages().caregiver.pin.reset.signIn;
   const expiredAt = usePinResetNotice((s) => s.expiredAt);
   const [shown, setShown] = useState(false);

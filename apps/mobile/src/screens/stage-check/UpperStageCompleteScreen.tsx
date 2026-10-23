@@ -1,7 +1,8 @@
 import { Body, Button, Caption, Heading, Hoya, HoyaBubble, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useMessages } from '../../i18n/use-messages';
@@ -28,7 +29,7 @@ import { useStageOffer } from './use-stage-offer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StageComplete'>;
 
-export function UpperStageCompleteScreen({ route, navigation }: Props): React.ReactElement {
+export function UpperStageCompleteScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.learner;
   const { stageKey } = route.params;

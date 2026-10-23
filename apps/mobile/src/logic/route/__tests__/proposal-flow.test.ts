@@ -185,6 +185,24 @@ describe('the proposal input (section 3.1a, F-PLC-001 AM-4)', () => {
     expect(input).toMatchObject({ pace: 'brisk', startDate: '2026-10-13' });
   });
 
+  it('a Stage Jump (F-CURR-002 row CM-25) raises the level by the maximum and places out its cells, with or without a level check', () => {
+    const at = '2026-10-11T09:00:00.000Z';
+    const stage2 = CATALOG.cells.filter((c) => /^episode:stage2-[a-z]+$/.test(c.episodeId)).map((c) => c.episodeId);
+    const testedOut = { ...Object.fromEntries(stage2.map((c) => [c, at])), stage2: at };
+    const base = { completedQuestIds: [], ageGroup: '8-9', unlockedStages: ['stage1', 'stage2', 'stage3'] as const, today: TODAY };
+    const placed = proposalInputOf({ ...base, unlockedStages: [...base.unlockedStages], placements: [result({ level: { stage: 'stage2', band: 0 } })], testedOut });
+    expect(placed.seed?.level).toEqual({ stage: 'stage3', band: 0 });
+    const stage2Quests = CATALOG.quests.filter((q) => stage2.includes(q.episodeId)).map((q) => q.id);
+    expect(placed.seed?.placedOutQuestIds).toEqual(expect.arrayContaining(stage2Quests));
+    const alone = proposalInputOf({ ...base, unlockedStages: [...base.unlockedStages], placements: undefined, testedOut });
+    expect(alone.seed?.level).toEqual({ stage: 'stage3', band: 0 });
+    // Tested-out cells without a jump are no seed of their own.
+    expect(proposalInputOf({ ...base, unlockedStages: [...base.unlockedStages], placements: undefined, testedOut: { [stage2[0] as string]: at } }).seed).toBeNull();
+    // A higher level check is never lowered by a lower jump.
+    const higher = proposalInputOf({ ...base, unlockedStages: [...base.unlockedStages], placements: [result({ level: { stage: 'stage3', band: 0 } })], testedOut });
+    expect(higher.seed?.level).toEqual({ stage: 'stage3', band: 0 });
+  });
+
   it('reads a stage the tier lacks as not entitled', () => {
     const input = proposalInputOf({
       placements: [result({ level: { stage: 'stage2', band: 0 } })],

@@ -1,6 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Body, Button, Heading, Spacer, borderWidth, colors, radii, shadows, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { onEscape } from '../../platform/browse-env';
@@ -31,7 +32,7 @@ const DIALOG_MAX = BROWSE_DIALOG_MAX;
 
 const MODES: readonly RomanizationMode[] = ['always', 'tap'];
 
-export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onClose: () => void }): React.ReactElement {
+export function LessonDisplaySheet({ visible, onClose }: { visible: boolean; onClose: () => void }): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.display;
   const { romanization, setRomanization } = useBrowseSettings();

@@ -1,8 +1,9 @@
 import type { ThemeKey } from '@hangul-route/content-schema';
 import { Icon, borderWidth, colors, radii, spacing, useMediaSize } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import { GLOW_OPACITY, ringLayers, segmentDash, type RingLayers } from '../../logic/mastery-ring';
 
 /**
@@ -36,7 +37,7 @@ export interface MasteryRingProps {
 
 const TOKENS = { radius: radii.md, gap: spacing.xs, track: borderWidth.thick, keyline: borderWidth.thin, outside: borderWidth.base };
 
-function Segments({ layer, count, color, closed }: { layer: RingLayers['band']; count: number; color: string; closed: boolean }): React.ReactElement {
+function Segments({ layer, count, color, closed }: { layer: RingLayers['band']; count: number; color: string; closed: boolean }): ReactElement {
   if (closed) return <Path d={layer.d} stroke={color} strokeWidth={layer.width} fill="none" />;
   return (
     <>
@@ -47,7 +48,7 @@ function Segments({ layer, count, color, closed }: { layer: RingLayers['band']; 
   );
 }
 
-export function MasteryRing({ level, theme, edge, refresh, newVolume, selected, next, testID }: MasteryRingProps): React.ReactElement {
+export function MasteryRing({ level, theme, edge, refresh, newVolume, selected, next, testID }: MasteryRingProps): ReactElement {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const sticker = useMediaSize(spacing.lg);
   const marker = useMediaSize(spacing.md);

@@ -13,7 +13,8 @@ import { Screen } from '@hangul-route/design-system';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { AppState } from 'react-native';
 import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
@@ -111,7 +112,7 @@ const ROUTES = {
   PlacementSoundNeeded: flowRoute('PlacementSoundNeeded', SoundNeededScreen),
   PlacementItem: flowRoute('PlacementItem', ItemScreen),
   PlacementResult: flowRoute('PlacementResult', ResultScreen),
-} satisfies Record<PlacementRoute, React.ComponentType>;
+} satisfies Record<PlacementRoute, ComponentType>;
 
 type Phase = 'boot' | 'offer' | 'flow';
 
@@ -145,7 +146,7 @@ interface RootRoute {
   params?: object;
 }
 
-export function PlacementScreen({ route, navigation }: Props): React.ReactElement {
+export function PlacementScreen({ route, navigation }: Props): ReactElement {
   const { source, retakeMode } = route.params;
   const profile = useProfileStore(activeProfileSelector);
   const profiles = useProfileStore((s) => s.profiles);

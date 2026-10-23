@@ -22,7 +22,8 @@ import {
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { EventArg, NavigationAction } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MutableRefObject, ReactElement } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -108,7 +109,7 @@ const SUMMARY_PICTURE = touchTarget.min;
  * a locked one (gating on only, D5), goes to the topic page, which says "Topic
  * not found" or opens the grown-up gate.
  */
-export function VocabCardsScreen({ route, navigation }: Props): React.ReactElement {
+export function VocabCardsScreen({ route, navigation }: Props): ReactElement {
   const { topicKey } = route.params;
   const topic = pickerTopic(topicKey);
   const profile = useProfileStore(activeProfileSelector);
@@ -127,7 +128,7 @@ export function VocabCardsScreen({ route, navigation }: Props): React.ReactEleme
 }
 
 /** The learner's ports and exits: today's writes, telemetry and routes (`ACTIVITY_ROUTES`, the topic page). */
-function LearnerCards({ source, params, navigation }: { source: VocabTopic; params: RootStackParamList['VocabCards']; navigation: Navigation }): React.ReactElement {
+function LearnerCards({ source, params, navigation }: { source: VocabTopic; params: RootStackParamList['VocabCards']; navigation: Navigation }): ReactElement {
   const topicKey = source.key;
   const profileId = useProfileStore(activeProfileSelector)?.id ?? null;
   const ports = useMemo(
@@ -181,7 +182,7 @@ export interface CardsSessionProps {
   leavingRef?: MutableRefObject<boolean>;
 }
 
-export function CardsSession({ source, params, ports, exits, leavingRef }: CardsSessionProps): React.ReactElement {
+export function CardsSession({ source, params, ports, exits, leavingRef }: CardsSessionProps): ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages).cards;
   const locale = useLocale();
@@ -376,7 +377,7 @@ function CardsPhase({
   tint: string;
   /** The profile whose reading practice switch is offered, or `null` (no profile, or a preview: no switch). */
   readingPractice: { id: string } | null;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages).cards;
   const locale = useLocale();
@@ -580,7 +581,7 @@ function CardsPhase({
   );
 }
 
-function CheckQuestion({ question, host, onAdvance }: { question: VocabQuestion; host: MinigameHost; onAdvance: () => void }): React.ReactElement {
+function CheckQuestion({ question, host, onAdvance }: { question: VocabQuestion; host: MinigameHost; onAdvance: () => void }): ReactElement {
   const romanizationShown = showRomanization(useRomanizationMode(), false);
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
@@ -622,7 +623,7 @@ function Summary({
   onSpeed: (() => void) | null;
   onTopic: () => void;
   locale: ReturnType<typeof useLocale>;
-}): React.ReactElement {
+}): ReactElement {
   const vocabCopy = vocabCopyOf(useMessages());
   const copy = vocabCopy.cards;
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
@@ -676,7 +677,7 @@ function LeaveSheet({
   copy: { title: string; keep: string; stop: string };
   onKeep: () => void;
   onStop: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onKeep} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="vocab-cards-leave">

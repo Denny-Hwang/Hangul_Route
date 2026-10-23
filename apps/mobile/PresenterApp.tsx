@@ -14,7 +14,8 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -210,7 +211,7 @@ function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
 export const ROOT_CHUNK = 'root-chunk:presenter';
 
 /** The presenter root: the gesture and safe-area providers, then the presenter (`useSafeAreaInsets` needs the provider above it). */
-export default function PresenterApp(): React.ReactElement {
+export default function PresenterApp(): ReactElement {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -221,7 +222,7 @@ export default function PresenterApp(): React.ReactElement {
   );
 }
 
-function Presenter(): React.ReactElement {
+function Presenter(): ReactElement {
   const address = useMemo(readAddress, []);
   // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
   const [phase, setPhase] = useState<Phase>(() =>
@@ -1044,7 +1045,7 @@ function Presenter(): React.ReactElement {
     );
   }, [phase, run, slideMessages, bundle, slidesIn]);
 
-  let body: React.ReactElement;
+  let body: ReactElement;
   if (phase.kind === 'boot') {
     body = <StatePage testID="presenter-loading" pose="idle" status={messages.learner.presenter.state.loading} />;
   } else if (phase.kind === 'invalid') {
@@ -1392,7 +1393,7 @@ const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, ov
  * and on both bars after a Sound press with nothing to play, in a lesson with sound off, or a play
  * that failed (section 3.7). Drawn only (the `presenter-sound-live` region says it); it takes no touch.
  */
-function SoundFlash({ text, testID }: { text: string; testID: string }): React.ReactElement {
+function SoundFlash({ text, testID }: { text: string; testID: string }): ReactElement {
   // The bar's no-voice chip, shown over the stage: chrome, so it follows the chosen text size.
   const textScale = useTypeScale();
   // The presenter ends it after `presenter.autoHideMs`; the live region beside it says it, so the pill is not read twice.

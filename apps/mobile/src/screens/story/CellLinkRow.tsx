@@ -1,5 +1,5 @@
 import { Body, Icon, borderWidth, colors, radii, spacing, touchTarget, type IconName } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 
 /**
@@ -24,7 +24,7 @@ export function CellLinkRow({
   icon?: IconName;
   onPress: () => void;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       onPress={onPress}

@@ -17,7 +17,8 @@ import {
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -36,7 +37,7 @@ import { useQuestAccess } from '../../store/tier-store';
  * H): at most three Today rows and one neutral line when more are due, the
  * next seven days of Coming up, then one collapsed "later" row.
  */
-export function HomeworkScreen(): React.ReactElement {
+export function HomeworkScreen(): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const m = messages.learner.homework;
@@ -172,7 +173,7 @@ function AssignmentRow({
   onPress: (h: HomeworkAssignment) => void;
   /** The quest is not open for this learner: the row is text with Not open yet, never a button. */
   closed: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const m = messages.learner.homework;

@@ -2,7 +2,8 @@ import type { PaceId, PlacementEvent, PlacementResult, PlacementRunState, RouteC
 import type { Messages } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { createContext, useCallback, useContext } from 'react';
+import { createContext, useCallback, useContext } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import type { FlowCapability, FlowEvent, FlowState, ResumeOffer } from '../../logic/placement/flow';
 import type { PlanOffer } from '../../logic/placement/plan-offer';
 import type { ResultView } from '../../logic/placement/result-view';
@@ -87,8 +88,8 @@ export function usePlacement(): PlacementContextValue {
  * it, and replaces itself with the screen the flow moved to, so the stack
  * always holds the one screen the state machine names.
  */
-export function flowRoute(name: PlacementRoute, Screen: React.ComponentType): React.ComponentType {
-  function FlowRoute(): React.ReactElement | null {
+export function flowRoute(name: PlacementRoute, Screen: ComponentType): ComponentType {
+  function FlowRoute(): ReactElement | null {
     const { target } = usePlacement();
     const navigation = useNavigation<NativeStackNavigationProp<PlacementStackParamList>>();
     // On focus, not on mount: an action sent while the nested navigator is still mounting is dropped.

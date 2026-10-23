@@ -99,3 +99,24 @@ const coarseCovered = (level: PlacementLevel): Set<string> => {
  */
 export const questsPlacedOutAtLevel = (level: PlacementLevel, catalog: RouteCatalog): string[] =>
   placedOutQuestIds(level, coarseCovered(level), catalog);
+
+/**
+ * Stage Jump Ahead (F-CURR-002 row CM-25; F-PLC-001 section 3.6 "Ceilings by mode", as amended). The placement test
+ * measures no stage above `stage3` (`modeCeiling`); a passed jump of a whole stage is the only way above it. A pass
+ * latches the stage's key in the snapshot's `testedOut` record beside the key of every cell it marked, so the jump is
+ * read from a latch that only gains keys (earliest wins), never from a catalogue that can grow.
+ */
+export const STAGE_JUMP_STAGES: readonly StageKey[] = StageKeySchema.options.filter((stage) => stage !== 'stage1');
+
+/**
+ * The level a passed Stage Jump of `stage` stands for: the next stage's band 0 (the learner starts after it, as
+ * `stage2` band 0 means "starts after Stage 1"). The scale ends at Stage 7, so a Stage 7 jump stands for `stage7` band 0.
+ */
+export const jumpLevelOf = (stage: StageKey): PlacementLevel => {
+  const options = StageKeySchema.options;
+  return { stage: options[Math.min(options.indexOf(stage) + 1, options.length - 1)] as StageKey, band: 0 };
+};
+
+/** The stages a `testedOut` record holds as jumped (its keys that are stage keys; a cell's key is an episode id). */
+export const jumpedStagesOf = (testedOut: Readonly<Record<string, string>> | undefined): StageKey[] =>
+  testedOut === undefined ? [] : STAGE_JUMP_STAGES.filter((stage) => testedOut[stage] !== undefined);

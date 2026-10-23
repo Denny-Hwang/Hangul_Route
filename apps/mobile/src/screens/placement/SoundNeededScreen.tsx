@@ -1,5 +1,6 @@
 import { Button, Heading, Icon, Screen, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { usePlacement } from './context';
 import { LinkButton } from '../../components/LinkButton';
@@ -12,7 +13,7 @@ import { LinkButton } from '../../components/LinkButton';
  * choice of a Standard run with listen-first off (back to the full options,
  * the sound guide unanswered; the warm-up is not repeated).
  */
-export function SoundNeededScreen(): React.ReactElement {
+export function SoundNeededScreen(): ReactElement {
   const { m, dispatch, say, screenReader } = usePlacement();
   const copy = m.learner.placement.soundNeeded;
 
