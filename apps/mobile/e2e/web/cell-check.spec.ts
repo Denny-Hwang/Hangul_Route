@@ -65,7 +65,7 @@ async function openCell(page: Page, theme: string): Promise<void> {
   await page.getByRole('button', { name: journeyCellName(2, theme) }).click();
 }
 
-const cellItems = (cell: string) => ITEMS.filter((i) => i.cells.includes(cell));
+const cellItems = (cell: string | readonly string[]) => ITEMS.filter((i) => (typeof cell === 'string' ? [cell] : cell).some((c) => i.cells.includes(c)));
 const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
 const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
 
@@ -80,7 +80,7 @@ async function typeKorean(page: Page, text: string): Promise<void> {
 }
 
 /** Answers the round on screen from the cell's items: right on the first try, or wrong first and then right. */
-async function answer(page: Page, cell: string, right: boolean): Promise<void> {
+async function answer(page: Page, cell: string | readonly string[], right: boolean): Promise<void> {
   const round = page.getByTestId('daily-review-round');
   await expect(round).toBeVisible();
   const items = cellItems(cell);
@@ -128,13 +128,13 @@ async function answer(page: Page, cell: string, right: boolean): Promise<void> {
 }
 
 /** Plays every round, missing the first `misses` (each wrong first, then right). */
-async function play(page: Page, cell: string, misses = 0): Promise<number> {
+async function play(page: Page, cell: string | readonly string[], misses = 0, max = 10): Promise<number> {
   await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
   let n = 0;
   while ((await page.getByTestId('cell-check-result').count()) === 0) {
     await answer(page, cell, n >= misses);
     n += 1;
-    expect(n).toBeLessThanOrEqual(10);
+    expect(n).toBeLessThanOrEqual(max);
   }
   return n;
 }
@@ -298,3 +298,96 @@ test.describe('cellCheck off (section 12.2)', () => {
     expect((await readStored<{ testedOut?: Record<string, string> }>(page, `progress:${id}`))?.testedOut?.[OPEN_CELL]).toBe(AT);
   });
 });
+
+/**
+ * Row CM-25: Stage Jump Ahead, the test-out rule over a whole stage, from the Journey stage header of the stage the
+ * route has reached. A pass latches `testedOut` for every cell of the stage and the stage key (never `questDoneAt` or
+ * `cellCheckAt`), every quest shows Tested out, and the next lesson is past the stage.
+ */
+test.describe('Stage Jump Ahead (row CM-25)', () => {
+  const STAGE2 = CATALOG.cells.filter((c) => /^episode:stage2-[a-z]+$/.test(c.episodeId) && c.questIds.length > 0 && (c.status === 'shipped' || c.status === 'ready')).map((c) => c.episodeId);
+
+  /** Sora: every Stage 1 quest done (seeded), Stage 2 not started. */
+  async function jumper(page: Page, flags: Flags = ON): Promise<string> {
+    await onboardChild(page, { name: 'Sora', startJourney: false });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Sora!')).toBeVisible();
+    const id = (await readStored<string>(page, 'profiles:active')) as string;
+    const questDoneAt = Object.fromEntries(stage1.flatMap(questsOf).map((q) => [q, AT]));
+    const quests = stage1.flatMap((cell) => questsOf(cell).map((questId) => ({ questId, episodeId: cell, startedAt: AT, completedAt: AT, stars: 2, attempts: 1, accuracy: 0.9 })));
+    await seedStored(page, `progress:${id}`, { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt, memSeededAt: AT });
+    await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags });
+    await page.reload();
+    await expect(page.getByText('Hi, Sora!')).toBeVisible();
+    return id;
+  }
+
+  const journey = async (page: Page): Promise<void> => {
+    await page.getByText('Journey', { exact: true }).last().click();
+    await expect(page.getByTestId('journey-stage-stage2')).toBeVisible();
+  };
+
+  test('320: the line on the reached stage only, 20 rounds, You jumped ahead!, every cell tested out, the next lesson past the stage', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    const id = await jumper(page);
+    await journey(page);
+    const line = page.getByTestId('journey-stage-jump-stage2');
+    await expect(line).toBeVisible();
+    await expect(line).toContainText('Already know this stage?');
+    await expect(page.getByTestId('journey-stage-jump')).toHaveAccessibleName(/^Jump ahead past Stage 2: /);
+    // Not ahead of the route: Stage 3 has no line while Stage 2 is not covered.
+    await expect(page.getByTestId('journey-stage-jump-stage3')).toHaveCount(0);
+    await line.scrollIntoViewIfNeeded();
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'stage-jump-line-320');
+    await page.getByTestId('journey-stage-jump').click();
+    await expect(page.getByTestId('cell-check-title')).toHaveText('Jump ahead');
+    await expect(page.getByText(/every place in this stage is marked Done/)).toBeVisible();
+    await shot(page, 'stage-jump-intro-320');
+    await page.getByTestId('cell-check-go').click();
+    const rounds = await play(page, STAGE2, 0, 20);
+    expect(rounds).toBe(20);
+    await expect(page.getByTestId('cell-check-headline')).toHaveText('You jumped ahead!');
+    await expect(page.getByTestId('cell-check-stars')).toHaveAccessibleName('3 stars');
+    expect(await page.getByTestId('cell-check-result').innerText()).not.toMatch(/%|\d+\s*(of|\/)\s*\d+|fail|test|exam/i);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'stage-jump-result-320');
+    // The latch: every cell of the stage and the stage key; never a quest's done mark or cellCheckAt.
+    await expect.poll(async () => (await readStored<{ testedOut?: Record<string, string> }>(page, `progress:${id}`))?.testedOut?.stage2).toBeTruthy();
+    const snap = await readStored<{ testedOut?: Record<string, string>; cellCheckAt?: Record<string, string>; questDoneAt?: Record<string, string>; reviews: Array<{ kind: string; scope: string }> }>(page, `progress:${id}`);
+    for (const cell of STAGE2) expect(snap?.testedOut?.[cell], cell).toBe(snap?.testedOut?.stage2);
+    expect(snap?.cellCheckAt).toBeUndefined();
+    for (const q of STAGE2.flatMap(questsOf)) expect(snap?.questDoneAt?.[q]).toBeUndefined();
+    expect(snap?.reviews.filter((r) => r.kind === 'cell-check')).toEqual([expect.objectContaining({ scope: 'stage2' })]);
+    // The next lesson is past the jumped stage.
+    await page.getByTestId('cell-check-next').click();
+    await expect(page.locator('[data-testid^="episode-quest-quest:stage3-"]').first()).toBeVisible();
+    // Back on the map: Stage 2 has no line any more; Stage 3, now reached, offers its own.
+    await page.goto('/');
+    await journey(page);
+    await expect(page.getByTestId('journey-stage-jump-stage2')).toHaveCount(0);
+    await expect(page.getByTestId('journey-stage-jump-stage3')).toBeVisible();
+    // A jumped cell's quests show Tested out with 2 stars.
+    await page.getByRole('button', { name: journeyCellName(2, 'Holidays & Traditions') }).click();
+    await expect(page.getByTestId('episode-tested-out')).toHaveCount(questsOf(OPEN_CELL).length);
+    await shot(page, 'stage-jump-tested-out-320');
+  });
+
+  test('wide: the line under the stage on the bigger layout', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await jumper(page);
+    await journey(page);
+    await expect(page.getByTestId('journey-stage-jump-stage2')).toBeVisible();
+    await page.getByTestId('journey-stage-jump-stage2').scrollIntoViewIfNeeded();
+    await shot(page, 'stage-jump-line-wide');
+  });
+
+  test('cellCheck off (section 12.2): no Jump ahead line', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await jumper(page, { ...ON, cellCheck: { on: true, pct: 0 } });
+    await journey(page);
+    await expect(page.getByTestId('journey-stage-stage2')).toBeVisible();
+    await expect(page.getByTestId('journey-stage-jump')).toHaveCount(0);
+  });
+});
+
