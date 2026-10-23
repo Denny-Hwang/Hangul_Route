@@ -35,6 +35,7 @@ import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
+import { useSwitchedScope } from './dictation-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 
@@ -75,12 +76,16 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const locale = useLocale();
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
-  const scope = useMemo(() => {
+  const localized = useMemo(() => {
     // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     return source && ref ? localizeScope(source, ref, locale) : source;
   }, [ref, locale, questId, stepIndex]);
+  // The `game.<kind>` switches, decided as the step opens, and the dictation chunk when a round plays from it (row CM-31).
+  const switched = useSwitchedScope(localized);
+  const scope = switched?.kind === 'ready' ? switched.scope : undefined;
+  const kit = switched?.kind === 'ready' ? switched.kit : null;
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
@@ -115,6 +120,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     </Screen>
   );
 
+  if (switched?.kind === 'loading') return <LessonWaiting />;
   if (!quest || !step || !scope) {
     return fallback(copy.notFound);
   }
@@ -125,7 +131,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }),
+      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted === true),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();
@@ -153,7 +159,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     case 'culture-quiz':
       return <CultureQuizGame scope={scope} onFinish={close} />;
     case 'listen-pick':
-      return <ListenPickGame scope={scope} host={host} onBack={exits.back} />;
+      return <ListenPickGame scope={scope} host={host} onBack={exits.back} spelling={kit} />;
     case 'pic-word-match':
       return <PicWordMatchGame scope={scope} host={host} onBack={exits.back} />;
     case 'tap-respond':
@@ -167,7 +173,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     case 'realia-read':
       return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     case 'type-hangul':
-      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} />;
+      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} hear={kit} />;
     case 'trace-word':
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':

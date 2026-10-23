@@ -1,3 +1,4 @@
+import { isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -49,6 +50,7 @@ import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
+import type { DictationKit } from './dictation-entry';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -72,6 +74,12 @@ interface Props {
   onBack?: () => void;
   /** The scaffold round (F-CURR-002 section 4.6, row CM-24): the right card is ringed from the start, under this line. */
   hint?: string;
+  /**
+   * The dictation chunk, when the scope has spelling rounds with `game.spelling-pick` on (F-CURR-002 section 4.5, row
+   * CM-31): their picture and meaning, and option labels spelled by letter name. Without it a spelling round plays as
+   * its Listen & Pick fallback.
+   */
+  spelling?: DictationKit | null;
 }
 
 /**
@@ -85,9 +93,12 @@ interface Focusable {
   focus?: () => void;
 }
 
-export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactElement {
+export function ListenPickGame({ scope, host, onBack, hint, spelling = null }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
-  const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
+  const rounds = useMemo(
+    () => validRounds(scope).map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i)),
+    [scope, seed, spelling],
+  );
 
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -112,8 +123,15 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   roundsRef.current = rounds;
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
-  // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot.
-  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef) });
+  // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot. The spelling round
+  // prints its meaning, never its Korean (the answer), so it shows only the status panel (W11).
+  const current = rounds[state.roundIdx];
+  const spellingNow = spelling !== null && current !== undefined && isSpellingRound(current);
+  const slot = usePromptSlot({
+    source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
+    hasClip: hasClip(current?.prompt.audioRef),
+    textOnScreen: spellingNow,
+  });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
@@ -217,7 +235,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   }
 
   const header = headerView(host.mode, state, copy);
-  const prompt = promptView(round, state, host.mode, slot.view.textShown);
+  const spellingKit = spellingNow ? spelling : null;
+  const prompt = promptView(round, state, host.mode, spellingKit === null ? slot.view.textShown : false);
   const hear = (): void => dispatch({ type: 'hear' });
   // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
@@ -232,6 +251,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
       ? 1
       : optionColumns(round, width);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
+  const optionContext = { mode: host.mode, romanizationMode, ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }) };
 
   return (
     <Screen tone="canvas">
@@ -252,7 +272,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         arrangement={arrangement}
         prompt={
           <>
-            <Heading level="prompt">{copy.listenPick.heading}</Heading>
+            <Heading level="prompt">{spellingKit === null ? copy.listenPick.heading : copy.spellingPick.heading}</Heading>
             {hint ? (
               <Body tone="secondary" testID="listen-pick-hint">
                 {hint}
@@ -261,6 +281,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             <Spacer size="md" />
 
             <View style={{ alignItems: 'center', gap: spacing.md }}>
+              {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
                 <Pressable
                   ref={(node) => {
@@ -308,12 +329,22 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
               </View>
               {/* The Korean is drawn just above, so the panel carries the read line, why and the one action. */}
               <View style={{ alignSelf: 'stretch' }}>
-                <PromptPanel
-                  view={slot.view}
-                  onAction={(action) => slot.act(action, hear)}
-                  onHelp={() => setHelpOpen(true)}
-                  testID="listen-pick-prompt"
-                />
+                {spellingKit === null ? (
+                  <PromptPanel
+                    view={slot.view}
+                    onAction={(action) => slot.act(action, hear)}
+                    onHelp={() => setHelpOpen(true)}
+                    testID="listen-pick-prompt"
+                  />
+                ) : (
+                  <PromptPanel
+                    view={slot.view}
+                    variant="status"
+                    onAction={(action) => slot.act(action, hear)}
+                    onHelp={() => setHelpOpen(true)}
+                    testID="listen-pick-prompt"
+                  />
+                )}
               </View>
               <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
             </View>
@@ -322,7 +353,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         answers={
           <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
             {round.options.map((option) => {
-              const view = optionView(round, option, state, { mode: host.mode, romanizationMode }, m.a11y.minigame);
+              const view = optionView(round, option, state, optionContext, m.a11y.minigame);
               return (
                 <View
                   key={option.id}
@@ -352,7 +383,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             {showMissHoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
+                <HoyaBubble tone="thinking" message={spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss} />
               </>
             ) : null}
           </View>
