@@ -128,6 +128,11 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const round = scope.writeFrame?.rounds.find((r) => r.id === itemId);
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
     }
+    case 'syllable-build': {
+      // Row CM-32: the block built, at the produce rung (a bare block is a `syl` item; a word block keeps its cell's item).
+      const round = scope.syllableBuild?.rounds.find((r) => r.id === itemId);
+      return round ? { texts: texts(text(round.target, round.target.en === undefined ? 'syl' : undefined)), jamoIds: [], rung: 'produce' } : undefined;
+    }
     default:
       return undefined;
   }

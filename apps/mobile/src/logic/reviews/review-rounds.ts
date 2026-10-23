@@ -1,3 +1,4 @@
+import { blockParts, REPRESENTATIVE_FINALS, type SyllableZone } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { jitter, type EngineContext, type ReviewQuestion } from './engine';
 
@@ -30,13 +31,34 @@ export const MAX_ORDER_TILES = 8;
 const HAS_SLOT = /_/;
 
 /**
+ * The section 7.1 formats a surface may add while their `game.<kind>` switch is on (row CM-32: Syllable Build, the
+ * produce rung of `sym`, `syl` and one-block `lex` items). Off, the engine never picks them, so it asks the item
+ * another way or at the read rung.
+ */
+export type GameFormats = ReadonlySet<ReviewFormat>;
+export const NO_GAME_FORMATS: GameFormats = new Set<ReviewFormat>();
+
+/**
+ * Row CM-32: an item Syllable Build can ask: one block whose final, if any, is one of the seven final sounds, or another
+ * final when the round shows the item's meaning (a `lex` item with its gloss); a symbol goes in its own zone of a
+ * block the build finds among the taught blocks (`buildRound`).
+ */
+function buildable(item: Pick<ReviewItem, 'kind' | 'ko' | 'en'>): boolean {
+  if (item.kind === 'sym') return true;
+  const parts = blockParts(item.ko);
+  if (parts === null) return false;
+  return parts.final === null || REPRESENTATIVE_FINALS.includes(parts.final) || (item.kind === 'lex' && item.en !== undefined);
+}
+
+/**
  * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'>): ReviewFormat[] {
+export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'> & { en?: string | undefined }, games: GameFormats = NO_GAME_FORMATS): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   return item.formats.filter((f) => {
+    if (f === 'syllable-build') return games.has(f) && buildable(item);
     if (!SURFACE_FORMATS.has(f)) return false;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
@@ -46,19 +68,22 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' 
 }
 
 type SurfaceIndex = EngineContext['index'];
-const surfaceCache = new WeakMap<object, SurfaceIndex>();
+const surfaceCache = new WeakMap<object, Map<string, SurfaceIndex>>();
 
-/** The item index with each item's formats cut to this surface's; an item left with none is not askable here. */
-export function surfaceIndex(index: SurfaceIndex): SurfaceIndex {
-  const held = surfaceCache.get(index);
+/** The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none is not askable here. */
+export function surfaceIndex(index: SurfaceIndex, games: GameFormats = NO_GAME_FORMATS): SurfaceIndex {
+  const key = [...games].sort().join('|');
+  const byGames = surfaceCache.get(index) ?? new Map<string, SurfaceIndex>();
+  surfaceCache.set(index, byGames);
+  const held = byGames.get(key);
   if (held) return held;
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item);
+    const formats = surfaceFormats(item, games);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  surfaceCache.set(index, out);
+  byGames.set(key, out);
   return out;
 }
 
@@ -137,7 +162,21 @@ export interface OrderRound extends RoundBase {
   words: string[];
 }
 
-export type ReviewRound = PickRound | TypeRound | OrderRound;
+/**
+ * Syllable Build at the produce rung (row CM-32): hear the block and build it. The tiles are chosen by the round's
+ * screen (the Syllable Build chunk) from the target, so no tile logic sits in this chunk. A symbol item builds a taught
+ * block with the symbol already in its zone (`fixed`).
+ */
+export interface BuildRound extends RoundBase {
+  type: 'build';
+  /** The block to build. */
+  target: KoText;
+  /** The item's meaning when it is a word (a bare block or a symbol has none). */
+  gloss?: string;
+  fixed?: SyllableZone;
+}
+
+export type ReviewRound = PickRound | TypeRound | OrderRound | BuildRound;
 
 /** The meaning of an item (or a reply) in the UI language; undefined when it has none. */
 export type GlossOf = (key: string | undefined, en: string | undefined) => string | undefined;
@@ -275,6 +314,34 @@ function orderRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   };
 }
 
+/** Where a symbol sits in a block: a vowel in the vowel zone, a `-batchim` symbol in the final zone, else the first. */
+function symbolZone(item: Pick<ReviewItem, 'id' | 'ko'>): SyllableZone {
+  if (item.id.endsWith('-batchim')) return 'final';
+  return /^[ㅏ-ㅣ]$/.test(item.ko) ? 'vowel' : 'first';
+}
+
+function buildRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): BuildRound | null {
+  if (item.kind === 'sym') {
+    // A taught block (a `syl` item, or a one-block word) with the symbol in its zone, chosen by the seed.
+    const zone = symbolZone(item);
+    const letter = item.ko;
+    const hosts = [...itemsOfKind(input.index, 'syl'), ...itemsOfKind(input.index, 'lex')].filter((i) => {
+      const p = blockParts(i.ko);
+      if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) return false;
+      return zone === 'first' ? p.first === letter : zone === 'vowel' ? p.vowel === letter : p.final === letter;
+    });
+    const host = seededOrder(hosts, `${input.seed}|${item.id}|host`, (i) => i.id)[0];
+    if (host === undefined) return null;
+    return { type: 'build', question, target: koOf(host), fixed: zone, answer: { ko: koOf(host) } };
+  }
+  if (!buildable(item)) return null;
+  const gloss = itemGloss(item, input);
+  // A final heard as another (붓 [붇]) is asked only with the meaning on screen; without it in this UI language, not built.
+  const final = blockParts(item.ko)?.final ?? null;
+  if (final !== null && !REPRESENTATIVE_FINALS.includes(final) && gloss === undefined) return null;
+  return { type: 'build', question, target: koOf(item), ...(gloss ? { gloss } : {}), answer: { ko: koOf(item), ...(gloss ? { gloss } : {}) } };
+}
+
 /** The round for an engine question, or null when the item cannot be played this way (it is then skipped). */
 export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRound | null {
   const item = input.index.byId.get(question.itemId);
@@ -290,6 +357,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       return typeRound(question, item, input, 'picture');
     case 'sentence-builder':
       return orderRound(question, item, input);
+    case 'syllable-build':
+      return buildRound(question, item, input);
     default:
       return null;
   }

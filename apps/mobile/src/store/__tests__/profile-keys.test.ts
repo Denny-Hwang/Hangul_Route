@@ -44,7 +44,7 @@ describe('[OA] the per-profile key registry (row OA-7a, CS-20)', () => {
     // Any template literal joining a lowercase prefix with an id-like expression (`${p.id}`, `${PREFIX_ID}`, ...).
     const ANY_ID = /`([a-z][a-zA-Z-]*(?::[a-zA-Z-]+)*):\$\{([^}]*[iI][dD])\}`/g;
     // Prefixes that name content, rows or React keys, never a stored value.
-    const NOT_STORED = new Set(['jamo', 'check', 'cp', 'lp:sym', 'quest', 'episode', 'set', 'kw', 'note', 'card', 'title', 'line', 'option', 'row', 'story', 'cell-check']);
+    const NOT_STORED = new Set(['jamo', 'check', 'cp', 'lp:sym', 'quest', 'episode', 'set', 'kw', 'note', 'card', 'title', 'line', 'option', 'row', 'story', 'cell-check', 'lp:syl']);
     const listed = new Set(Object.values(PER_PROFILE_KEYS).map((template) => template('ID').replace(/:ID$/, '')));
     const unknown: string[] = [];
     for (const file of sources(SRC)) {

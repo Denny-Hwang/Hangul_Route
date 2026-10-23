@@ -21,7 +21,7 @@ import {
   type RoundAnswer,
 } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
-import { glossFrom, surfaceIndex } from './review-rounds';
+import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 
 /**
@@ -42,6 +42,8 @@ export interface DailyReviewDeps {
   /** `dailyReview` and `memoryRecord` for the profile (a learner, not a grown-up persona). */
   on(profileId: string): boolean;
   visibility(profileId: string): SourceVisibility;
+  /** Row CM-32: the section 7.1 formats switched on for the profile (`game.syllable-build`); none when absent. */
+  games?(profileId: string): GameFormats;
   /** A Korean voice and the sound on (F-AUDIO-004): without it the ladder has two rungs. */
   voice(): boolean;
   hydrate(profileId: string): Promise<void>;
@@ -108,7 +110,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       const today = localDay(now);
       const vocab = deps.vocab(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index),
+        index: surfaceIndex(index, deps.games?.(profileId)),
         states: engineStates(file.rows, vocab ? vocabOf(vocab) : undefined),
         today,
         voice: deps.voice(),

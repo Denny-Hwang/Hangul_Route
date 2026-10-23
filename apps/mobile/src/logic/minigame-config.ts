@@ -7,6 +7,7 @@ import type {
   Realia,
   RealiaReadRound,
   StoryLevel,
+  SyllableBuildRound,
   TraceWordRound,
   TypeHangulRound,
   WriteFrameRound,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Syllable Build rounds (F-CURR-002 section 7.1 F3, row CM-32); Listen & Pick on the block while `game.syllable-build` is off. */
+  syllableBuild?: { rounds: SyllableBuildRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

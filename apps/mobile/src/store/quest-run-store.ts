@@ -113,7 +113,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
     if (first && asked && firstAnswerListener && before.questId && before.episodeId) {
       try {
-        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date() });
+        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date(), ...(correct && asked.hinted === true ? { hinted: true } : {}) });
       } catch {
         // The round is scored; only the memory store misses the answer.
       }
