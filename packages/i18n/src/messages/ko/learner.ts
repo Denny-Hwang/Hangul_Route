@@ -1993,4 +1993,12 @@ export const learner = {
     first: '첫 퀘스트 시작하기',
     pill: '이미 알아요',
   },
+  stageJump: {
+    prompt: '이 단계를 이미 알고 있나요?',
+    cta: '단계 넘어가기',
+    label: (stage: number, title: string) => `${stage}단계 넘어가기: ${title}`,
+    intro: '7분쯤 걸려요. 이 단계의 모든 곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
+    extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 계속 할 수 있어요.',
+    passed: '단계를 넘어갈 수 있어요!',
+  },
 } satisfies DeepPartial<Messages['learner']>;
