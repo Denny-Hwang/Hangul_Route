@@ -39,6 +39,8 @@ export const MinigameKindSchema = z.enum([
   'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
   'trace-word', // Construction · trace a whole syllable block or a two-syllable word
   'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
+  // F-CURR-002 §7.1 (row CM-34), additive.
+  'story-order', // Discovery · put 3-5 Korean captions (with or without pictures) in order; fallback Story Sequence
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -467,6 +469,76 @@ export const WriteFrameRoundSchema = z
   });
 export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
 
+/**
+ * Story Order (F-CURR-002 §7.1 F5, row CM-34; design/wireframes/minigame/story-order.md): 3-5 panels, each
+ * a Korean caption (one short line of taught words, with romanization and gloss) and, on an illustrated
+ * round, its picture, listed in the RIGHT order (the game deranges them). The cards show the Korean and
+ * its romanization only while the learner orders them; the gloss shows on Show meanings and in the replay.
+ */
+export const StoryOrderPanelSchema = z.object({
+  id: z.string().min(1),
+  caption: KoTextSchema,
+  pictureRef: PictureRefSchema.optional(),
+});
+export type StoryOrderPanel = z.infer<typeof StoryOrderPanelSchema>;
+
+export const StoryOrderRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    panels: z.array(StoryOrderPanelSchema).min(3).max(5),
+    /** Drawn without its pictures (a panel may still name one): the order comes from the Korean alone. */
+    captionsOnly: z.boolean().optional(),
+    /**
+     * Illustrated, with captions that settle the order on their own (sequence or time words such as
+     * 먼저 and 마지막에, or cause and result), as the MAR confirms. Read by the lint `story-order-text`.
+     */
+    captionsSettleOrder: z.boolean().optional(),
+  })
+  .superRefine((round, ctx) => {
+    const ids = new Set<string>();
+    const lines = new Set<string>();
+    round.panels.forEach((panel, i) => {
+      if (ids.has(panel.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['panels', i, 'id'], message: 'panel ids must be unique' });
+      ids.add(panel.id);
+      if (lines.has(panel.caption.ko)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['panels', i, 'caption', 'ko'], message: 'two panels share the same caption' });
+      }
+      lines.add(panel.caption.ko);
+    });
+  });
+export type StoryOrderRound = z.infer<typeof StoryOrderRoundSchema>;
+
+/** Whether a Story Order round draws its pictures: not captions only, and at least one panel has one. */
+export function storyOrderPictures(round: StoryOrderRound): boolean {
+  return round.captionsOnly !== true && round.panels.some((p) => p.pictureRef !== undefined);
+}
+
+/**
+ * Whether the round's order comes from its text (the rule of the lint `story-order-text`, which
+ * reads the same fields off raw JSON): captions only, no picture at all, or marked as settled by its captions.
+ */
+export function storyOrderTextSettled(round: StoryOrderRound): boolean {
+  return !storyOrderPictures(round) || round.captionsSettleOrder === true;
+}
+
+/**
+ * The Story Sequence round a Story Order round falls back to while `game.story-order` is off
+ * (§7.1, §12.2): the same panels in the same order, the caption's gloss as the step label (Story
+ * Sequence shows it), its Korean and romanization, and the picture unless the round is captions only.
+ */
+export function storyOrderToSequence(round: StoryOrderRound): z.infer<typeof StorySequenceRoundSchema> {
+  const pictures = round.captionsOnly !== true;
+  return {
+    steps: round.panels.map((p) => ({
+      id: p.id,
+      labelEn: p.caption.en,
+      labelKo: p.caption.ko,
+      romanization: p.caption.romanization,
+      ...(pictures && p.pictureRef !== undefined ? { illustrationRef: p.pictureRef } : {}),
+    })),
+  };
+}
+
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
   z.object({ kind: z.literal('build-letter'), data: BuildLetterRoundSchema }),
@@ -481,6 +553,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('story-order'), data: StoryOrderRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 
