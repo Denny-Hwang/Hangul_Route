@@ -99,6 +99,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
   // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
   // the game and each scene are chunks) measures 4,749,697 B raw (release) and 4,749,853 B (app-host): the line stays.
+  // CM-37 part 1 (the Letters scene's loader entry and the `scene:` overlay fields; the scene is a chunk) measures
+  // 4,749,984 B raw / 1,266,150 B gzip (release): the line stays, 16 B under it.
   startBundleRaw: 4_750_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -266,7 +268,11 @@ export const SCREEN_CHUNKS = Object.freeze([
  * (`src/screens/minigames/scenes/scene-<key>.ts`), reached only through the literal `import()`s of
  * `src/screens/minigames/hidden-heritage-scenes.ts`, each held to `sceneChunkRaw`. Each module exports its marker (`SCENE_CHUNK`).
  */
-export const SCENE_CHUNKS = Object.freeze([Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' })]);
+export const SCENE_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' }),
+  // F-CURR-002 row CM-37 part 1: the Letters school room.
+  Object.freeze({ name: 'scene-letters-school', marker: 'scene-chunk:letters-school' }),
+]);
 
 /**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
