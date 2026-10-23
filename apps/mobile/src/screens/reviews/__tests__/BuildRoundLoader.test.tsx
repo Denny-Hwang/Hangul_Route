@@ -32,7 +32,7 @@ async function mount(): Promise<ReactTestRenderer> {
   await act(async () => {
     r = TestRenderer.create(
       <LayoutProvider value={layoutClassFor({ width: 320, height: 568 })}>
-        <BuildRoundLoader round={ROUND} onFirst={() => undefined} onSolved={() => undefined} />
+        <BuildRoundLoader round={ROUND} reducedMotion onFirst={() => undefined} onSolved={() => undefined} grade={() => 'miss'} />
       </LayoutProvider>,
     );
   });
