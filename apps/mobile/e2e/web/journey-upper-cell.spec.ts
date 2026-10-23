@@ -256,6 +256,12 @@ async function typeAnswer(page: Page, text: string): Promise<void> {
 }
 
 /** Realia Read: tap the option until the game marks it right (a tap inside its double-touch window is dropped). */
+/** A Realia Read Check (F-CURR-002 row CM-3A S6): the Check card's Go, then the two questions by option id. */
+async function playRealiaCheck(page: Page, ids: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await pickRealia(page, ids);
+}
+
 async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
   for (const [i, id] of ids.entries()) {
     await expect(page.getByTestId('realia-read-question')).toBeVisible();
@@ -766,7 +772,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         await page.getByTestId('type-hangul-done').click();
         await expect(page.getByText('You typed it!')).toBeVisible();
       }
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the menu (김밥 by its meaning, then 라면 by its picture).
+      await playRealiaCheck(page, ['b', 'c']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -787,7 +794,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeAnswer(page, '여기요');
       await typeAnswer(page, '김밥 주세요');
       await typeAnswer(page, '물 주세요');
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      // Row CM-3A S6: the Check reads the table menu (라면 by its meaning, then 우유 by its picture).
+      await playRealiaCheck(page, ['c', 'b']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -812,7 +820,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       ]);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await typeWords(page, ['기차', '출발', '도착']);
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the ticket (서울 goes with 출발, 부산 with 도착).
+      await playRealiaCheck(page, ['b', 'c']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -822,7 +831,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
-  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Check by id (정상, then 출구).
+  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Realia Read Check (강, then 출구; row CM-3A S6).
   'episode:stage6-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -833,7 +842,9 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await pickRealia(page, ['jeongsang', 'chulgu', 'ipgu', 'hwajangsil']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       for (const word of ['산길', '정상', '입구', '출구']) await typeAnswer(page, word);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the sign (the board to the river, then the way out).
+      await playRealiaCheck(page, ['b', 'c']);
+      await shot(page, 's6-4-q1-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -854,7 +865,9 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await pickRealia(page, ['hanji', 'buchae', 'apple', 'cheon']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       for (const word of ['한지', '부채', '오일장']) await typeAnswer(page, word);
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'c' }]);
+      // Row CM-3A S6: the Check is Cloze Pick on the price cards (부채는 ___ 원이에요, 한지는 ___ 원이에요); with
+      // game.cloze-pick at its built-in pct 0 it plays as Listen & Pick with a text prompt, on the same tiles.
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t2' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {

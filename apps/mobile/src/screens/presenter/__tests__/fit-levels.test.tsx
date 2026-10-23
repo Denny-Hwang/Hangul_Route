@@ -134,11 +134,15 @@ describe('pictureCrowded: a picture card never draws below its marker (QuizOptio
 
 describe('RealiaSheetStage tight: the same lines at the same width, less room around them (slide-realia.md "Fit")', () => {
   const menu = REALIA_ALL.find((s) => s.prompt.sheet.kind === 'menu')!;
-  const sheetsByKind = [...new Map(REALIA_ALL.map((s) => [s.prompt.sheet.kind, s] as const)).values()];
+  const shippedKinds = [...new Map(REALIA_ALL.map((s) => [s.prompt.sheet.kind, s] as const)).values()];
+  // Since row CM-3A S6 every shipped realia has a kind (F-CURR-002 section 5.7), so the plain sheet, the layout of a
+  // realia with none, is drawn from the menu's slide with its kind left out.
+  const sheetsByKind: RealiaQuestionBody[] = [...shippedKinds, { ...menu, prompt: { ...menu.prompt, sheet: { ...menu.prompt.sheet, kind: 'plain' } } }];
   const draw = (slide: RealiaQuestionBody, tight: boolean): Promise<ReactTestRenderer> =>
     render(atOneUnit(<RealiaSheetStage sheet={slide.prompt.sheet} rom width={512} answer={{ entryId: slide.prompt.answerEntryId, shown: false }} tight={tight} />));
 
-  it('the shipped Stage 6 realia questions carry every kind of sheet: a menu, a ticket, a trail sign, price cards and the plain sheet', () => {
+  it('the shipped Stage 6 realia questions carry every kind of sheet: a menu, a ticket, a trail sign and price cards, none plain', () => {
+    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card']));
     expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'plain']));
   });
 

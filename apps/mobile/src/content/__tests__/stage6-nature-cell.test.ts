@@ -84,14 +84,16 @@ describe('Hike & Ask (F-CURR-001 S6-4)', () => {
     expect(taught[2]).toEqual(expect.arrayContaining(['얼마나', '걸려요', '한', '시간']));
   });
 
-  it('Stage 6 shape: Realia Read of 4-5 questions, then Type Hangul or Tap to Respond, then a 2-round Listen & Pick', () => {
+  it('Stage 6 shape: Realia Read of 4-5 questions, then Type Hangul or Tap to Respond, then a 2-round Check that rotates (F-CURR-002 row CM-3A S6)', () => {
     for (const quest of cell.quests) {
       const [practice, apply, check] = quest.scopes;
       expect(practice?.kind, quest.id).toBe('realia-read');
       expect(['type-hangul', 'tap-respond'], quest.id).toContain(apply?.kind);
-      expect(check?.kind, quest.id).toBe('listen-pick');
+      expect(['realia-read', 'type-hangul'], quest.id).toContain(check?.kind);
     }
     expect(cell.quests.map((q) => q.scopes[1]?.kind)).toEqual(['type-hangul', 'tap-respond', 'type-hangul']);
+    // The sign questions of q1 and q3, and Dictation of the two ways in q2 (section 7.1 Check rotation).
+    expect(cell.quests.map((q) => q.scopes[2]?.kind)).toEqual(['realia-read', 'type-hangul', 'realia-read']);
   });
 
   it('rule 4: every word a quest asks was shown in its Discover, an earlier Discover of the cell, or an earlier stage', () => {
@@ -128,7 +130,8 @@ describe('Hike & Ask (F-CURR-001 S6-4)', () => {
     for (const quest of cell.quests) {
       for (const scope of quest.scopes) {
         if (scope.kind !== 'realia-read') continue;
-        expect(scope.rounds.length, scope.ref).toBeGreaterThanOrEqual(4);
+        // A Practice asks 4-5 questions; a Check asks 2 (U-1).
+        expect(scope.rounds.length, scope.ref).toBeGreaterThanOrEqual(scope.ref.endsWith('-check') ? 2 : 4);
         expect(scope.realia.kind, scope.ref).toBe('sign');
         for (const round of scope.rounds) {
           const entry = scope.realia.entries.find((e) => e.id === round.answerEntryId);
@@ -181,7 +184,8 @@ describe('Hike & Ask (F-CURR-001 S6-4)', () => {
         }
       }
     }
-    expect(replies).toBe(6);
+    // The four Tap to Respond turns of q2; the Checks no longer ask a reply by ear (row CM-3A S6).
+    expect(replies).toBe(4);
   });
 
   it('the right Tap to Respond reply moves between turns', () => {

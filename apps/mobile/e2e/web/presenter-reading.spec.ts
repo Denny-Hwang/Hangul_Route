@@ -11,7 +11,7 @@ import { shot } from './shots';
  * 844 x 390. Every sentence, sentence pattern, read along and realia slide, every build revealed: the live
  * region names its kind, the kind label is drawn (the realia page has none, V5), its Korean is not empty,
  * nothing leaves the content area (the stage on a phone), no text spills out of the box that holds it, and
- * no text is below the stage caption size or 18 px. Every realia layout is among them (menu, ticket, trail sign, price cards, the plain sheet), and
+ * no text is below the stage caption size or 18 px. Every shipped realia layout is among them (menu, ticket, trail sign, price cards; since row CM-3A S6 none is the plain sheet), and
  * a two-slot frame. The same deck with Spanish and with Korean slides (`options.uiLocale`: longer notes,
  * captions and glosses) is walked at 1280 x 720 and 568 x 320. Sound on a read along plays the current line
  * and lights it while it plays; on a realia page it reads the sheet. Screenshots with `HR_SHOTS=1`.
@@ -28,7 +28,7 @@ const DECK: LectureDeckInput = {
     { kind: 'quest', id: 'quest:stage3-life-q3' }, // a sentence with no picture
     { kind: 'quest', id: 'quest:stage4-life-q1' }, // exchanges
     { kind: 'quest', id: 'quest:stage6-life-q1' }, // a menu with its title
-    { kind: 'quest', id: 'quest:stage6-life-q2' }, // the plain sheet (an order slip)
+    { kind: 'quest', id: 'quest:stage6-life-q2' }, // an order slip, on the menu sheet (row CM-3A S6 gave it a kind)
     { kind: 'quest', id: 'quest:stage6-nature-q1' }, // a five-board trail sign
     { kind: 'quest', id: 'quest:stage6-rites-q1' }, // a train ticket
     { kind: 'quest', id: 'quest:stage6-crafts-q1' }, // price cards
