@@ -654,7 +654,7 @@ export const learner = {
       },
     },
     spellingPick: {
-      heading: '¿Qué escritura va con esta palabra?',
+      heading: '¿Cómo se escribe esta palabra?',
       miss: 'Mira el significado otra vez.',
     },
     writeFrame: {
