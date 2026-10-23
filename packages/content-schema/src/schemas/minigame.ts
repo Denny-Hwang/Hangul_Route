@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { isOneKeyFinal } from '../hangul/compose-typed';
-import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { syllableBuildIssues } from '../hangul/syllable-build';
+import { KoTextSchema, KoTextShape, PictureRefSchema, refineKoText } from './ko-text';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -467,6 +468,29 @@ export const WriteFrameRoundSchema = z
   });
 export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
 
+/**
+ * Syllable Build (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md): hear one real
+ * block, then tap its first letter, vowel and final (or No final, implicit) into the zones of a block. Tiles are
+ * compatibility jamo, 3-4 first letters, 3-4 vowels and 2-3 finals; the tile faces show the jamo only. The target is a
+ * block of the Stage 1 table or of a taught word, never a pseudo-word (section 19 assumption 5). Its `en` is the word's
+ * meaning, shown under the speaker; a block that is not a word has none, so no meaning line (and no "the sound ga" line,
+ * which would read out the answer). `fixedZone`: that zone is filled and locked (a symbol item at the produce rung, 4.3).
+ */
+export const SyllableBuildTargetSchema = KoTextShape.extend({ en: z.string().min(1).optional() }).superRefine(refineKoText);
+export const SyllableBuildRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    target: SyllableBuildTargetSchema,
+    firstTiles: z.array(z.string().min(1)).min(3).max(4),
+    vowelTiles: z.array(z.string().min(1)).min(3).max(4),
+    finalTiles: z.array(z.string().min(1)).min(2).max(3),
+    fixedZone: z.enum(['first', 'vowel', 'final']).optional(),
+  })
+  .superRefine((round, ctx) => {
+    for (const { path, message } of syllableBuildIssues(round)) ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+  });
+export type SyllableBuildRound = z.infer<typeof SyllableBuildRoundSchema>;
+
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
   z.object({ kind: z.literal('build-letter'), data: BuildLetterRoundSchema }),
@@ -481,6 +505,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('syllable-build'), data: SyllableBuildRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 
