@@ -11,6 +11,7 @@ import { useAudioStore } from '../../store/audio-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
+import { DICTATION_SWITCH } from '../game-switches';
 import { useSyncStore } from '../../store/sync-store';
 import { questOpenFor, useTierStore } from '../../store/tier-store';
 import { episodesAll } from '../../content';
@@ -117,6 +118,8 @@ export function dailyReviewApi(): DailyReviewApi {
       return audio.tts.state === 'ready' && !audio.muted;
     },
     clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     reviews: (profileId) => useProgressStore.getState().byProfile[profileId]?.reviews,
     vocab: (profileId) => useProgressStore.getState().byProfile[profileId],
@@ -149,6 +152,8 @@ export function cellCheckApi(): CellCheckApi {
       return audio.tts.state === 'ready' && !audio.muted;
     },
     clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
@@ -203,6 +208,8 @@ export function stageCheckApi(): StageCheckApi {
       return audio.tts.state === 'ready' && !audio.muted;
     },
     clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),

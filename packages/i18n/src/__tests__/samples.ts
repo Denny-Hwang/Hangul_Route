@@ -994,4 +994,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-30: Cloze Pick's prompt card, the romanization with its gap read as a word and the meaning.
   'a11y.minigame.clozePick.sentence': [['chaegeul blank', 'I read a book.'], ['mulblank masyeoyo', 'I drink water.']],
   'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],
+  // F-CURR-002 row CM-31: Dictation's meaning line, a gloss in the UI locale.
+  'learner.minigame.typeHangul.hear.meaning': [['apple'], ['rice cake soup']],
 };

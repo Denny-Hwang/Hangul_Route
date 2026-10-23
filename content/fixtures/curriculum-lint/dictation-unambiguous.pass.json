@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a word with one spelling for its sound, of a homophone settled by a picture or by its gloss in the prompt, and heard picks with spelling options whose prompt shows the settling picture (pictureRef) or the gloss (promptEn). Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7; spelling rounds row CM-31): Dictation of a word with one spelling for its sound, of a homophone settled by a picture or by its gloss in the prompt, a heard pick between spellings of one sound as the spelling round (promptKind: spelling) with its picture or its meaning, whose Listen & Pick fallback options are taught words that sound different, and a heard pick whose options sound different. Not real content.",
   "rule": "dictation-unambiguous",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -199,6 +199,7 @@
               "rounds": [
                 {
                   "id": "r1",
+                  "promptKind": "spelling",
                   "prompt": {
                     "ko": "낮",
                     "romanization": "nat",
@@ -223,11 +224,21 @@
                       }
                     }
                   ],
-                  "answerId": "a"
+                  "answerId": "a",
+                  "fallbackOptions": [
+                    {
+                      "id": "c",
+                      "text": {
+                        "ko": "사과",
+                        "romanization": "sagwa",
+                        "en": "apple"
+                      }
+                    }
+                  ]
                 },
                 {
                   "id": "r3",
-                  "promptEn": "Which spelling means sickle?",
+                  "promptKind": "spelling",
                   "prompt": {
                     "ko": "낫",
                     "romanization": "nat",
@@ -251,7 +262,17 @@
                       }
                     }
                   ],
-                  "answerId": "a"
+                  "answerId": "a",
+                  "fallbackOptions": [
+                    {
+                      "id": "c",
+                      "text": {
+                        "ko": "사과",
+                        "romanization": "sagwa",
+                        "en": "apple"
+                      }
+                    }
+                  ]
                 },
                 {
                   "id": "r2",

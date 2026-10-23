@@ -16,9 +16,12 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  *   meaning shown, and 3 or 4 word tiles; the left-out word fits.
  *
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
- * section 7.1 (Dictation, Syllable Build, Match Shape, Cloze Pick) join with their own rows behind
- * `game.<kind>`. `surfaceIndex` gives the engine the item index with only these formats, so an item it
- * cannot ask that way falls back to another way, or to the read rung, inside the engine, never here.
+ * section 7.1 join with their own rows behind `game.<kind>`: Dictation (Type Hangul `hear`, row CM-31) when
+ * `game.type-hangul-hear` is on (`SurfaceOptions.dictation`), Cloze Pick (row CM-30) when `game.cloze-pick` is on
+ * (`SurfaceOptions.clozePick`), Syllable Build and Match Shape later.
+ * `surfaceIndex` gives the engine the item index with only these formats, so an item it cannot ask that way falls
+ * back to another way, or to the read rung, inside the engine, never here. The engine itself keeps Dictation to an
+ * item that passes `dictation-unambiguous` (no homophone, no sound change) on a device with a voice.
  */
 
 /** The formats this surface draws (section 7.1 formats come with their own rows). */
@@ -44,9 +47,24 @@ const HAS_SLOT = /_/;
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'>, formats: ReadonlySet<ReviewFormat> = SURFACE_FORMATS): ReviewFormat[] {
+/** What this surface draws beyond the shipped formats: Dictation with `game.type-hangul-hear` on (row CM-31). */
+export interface SurfaceOptions extends SurfaceGames {
+  dictation?: boolean;
+}
+
+/** The formats a surface allows for these switches (Cloze Pick with `game.cloze-pick` on). */
+const allowedFormats = (options: SurfaceOptions): ReadonlySet<ReviewFormat> => (options.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS);
+
+export function surfaceFormats(
+  item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'>,
+  allowed: ReadonlySet<ReviewFormat> | SurfaceOptions = {},
+): ReviewFormat[] {
   if (item.kind === 'rea') return [];
+  const options: SurfaceOptions = allowed instanceof Set ? {} : (allowed as SurfaceOptions);
+  const formats = allowed instanceof Set ? (allowed as ReadonlySet<ReviewFormat>) : allowedFormats(options);
   return item.formats.filter((f) => {
+    // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
+    if (f === 'dictation') return options.dictation === true && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
     if (!formats.has(f)) return false;
     // A Cloze Pick round leaves out one word of a sentence, so its words and their romanization must line up.
     if (f === 'cloze-pick') return item.kind === 'pat' && clozeWords(item) !== null;
@@ -58,21 +76,25 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'romanizat
 }
 
 type SurfaceIndex = EngineContext['index'];
-const surfaceCache = new WeakMap<object, SurfaceIndex>();
-const clozeSurfaceCache = new WeakMap<object, SurfaceIndex>();
+/** One cache per switch combination (Cloze Pick, Dictation), so a surface index is built once per index. */
+const surfaceCaches = new Map<string, WeakMap<object, SurfaceIndex>>();
 
 /**
  * The item index with each item's formats cut to this surface's; an item left with none is not askable here. With
  * `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the engine falls back).
  */
-export function surfaceIndex(index: SurfaceIndex, games: SurfaceGames = {}): SurfaceIndex {
-  const cache = games.clozePick === true ? clozeSurfaceCache : surfaceCache;
-  const allowed = games.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS;
+export function surfaceIndex(index: SurfaceIndex, options: SurfaceOptions = {}): SurfaceIndex {
+  const key = `${options.clozePick === true ? 'c' : ''}${options.dictation === true ? 'd' : ''}`;
+  let cache = surfaceCaches.get(key);
+  if (cache === undefined) {
+    cache = new WeakMap();
+    surfaceCaches.set(key, cache);
+  }
   const held = cache.get(index);
   if (held) return held;
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item, allowed);
+    const formats = surfaceFormats(item, options);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
@@ -143,7 +165,8 @@ export interface PickRound extends RoundBase {
 
 export interface TypeRound extends RoundBase {
   type: 'type';
-  mode: 'see' | 'picture';
+  /** `hear` is Dictation (row CM-31): the word is played and its Korean and romanization stay hidden until Done. */
+  mode: 'see' | 'picture' | 'hear';
   /** The Korean to type. */
   target: string;
   picture?: string;
@@ -281,7 +304,7 @@ function pickRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput
   return round;
 }
 
-function typeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput, mode: 'see' | 'picture'): TypeRound | null {
+function typeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput, mode: TypeRound['mode']): TypeRound | null {
   if (mode === 'picture' && item.picture === undefined) return null;
   const gloss = itemGloss(item, input);
   return {
@@ -399,6 +422,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       return typeRound(question, item, input, 'see');
     case 'type-picture':
       return typeRound(question, item, input, 'picture');
+    case 'dictation':
+      return typeRound(question, item, input, 'hear');
     case 'sentence-builder':
       return orderRound(question, item, input);
     case 'cloze-pick':
