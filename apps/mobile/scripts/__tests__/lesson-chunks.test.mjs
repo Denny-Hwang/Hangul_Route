@@ -182,7 +182,11 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
-    expect(SCENE_CHUNKS).toEqual([{ name: 'scene-food-market', marker: 'scene-chunk:food-market' }]);
+    expect(SCENE_CHUNKS).toEqual([
+      { name: 'scene-food-market', marker: 'scene-chunk:food-market' },
+      // Row CM-37 part 2: the Holidays & Traditions scene.
+      { name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' },
+    ]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -210,16 +214,23 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./hidden-heritage-chunk')");
     expect(read('src/screens/minigames/scenes/scene-food-market.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[0].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-food-market')");
+    // Row CM-37 part 2: the Seollal room scene, its own chunk through its own literal import().
+    expect(read('src/screens/minigames/scenes/scene-seollal-room.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-seollal-room')");
   });
 
   it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
     expect(PRECACHE_BUDGET.sceneChunkRaw).toBe(25_000);
     const start = { url: START, text: 'var s=1;' };
-    const text = `__d(function(){var m="${SCENE_CHUNKS[0].marker}"})`;
-    const scene = { url: `${WEB_JS_DIR}/scene-food-market-${md5(text)}.js`, text };
-    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, scene], precached: all([start, scene]) })).toEqual([]);
-    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, scene], precache: { count: 2, size: 10 } });
-    expect(reportLines(report).some((l) => l.startsWith('  hidden heritage scene chunks  1 bundles') && l.endsWith('ceiling 25000 B each)'))).toBe(true);
+    // One bundle per scene (rows CM-36 and CM-37); `text` is the largest, for the ceiling check below.
+    const scenes = SCENE_CHUNKS.map(({ name, marker }) => {
+      const body = `__d(function(){var m="${marker}"})`;
+      return { url: `${WEB_JS_DIR}/${name}-${md5(body)}.js`, text: body };
+    });
+    const text = scenes.reduce((a, b) => (b.text.length > a.length ? b.text : a), '');
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, ...scenes], precached: all([start, ...scenes]) })).toEqual([]);
+    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, ...scenes], precache: { count: 1 + scenes.length, size: 10 } });
+    expect(reportLines(report).some((l) => l.startsWith(`  hidden heritage scene chunks  ${SCENE_CHUNKS.length} bundles`) && l.endsWith('ceiling 25000 B each)'))).toBe(true);
     expect(precacheBudgetProblems(report)).toEqual([]);
     const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: text.length - 1 };
     expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
