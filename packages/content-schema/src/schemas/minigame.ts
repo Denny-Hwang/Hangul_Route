@@ -485,12 +485,15 @@ export const MY_STORY_BANK_MIN = 3;
 export const MY_STORY_BANK_MAX = 5;
 
 /**
- * Slot topics a My Story frame may never ask about (F-CURR-002 §6.6 and §13, personal disclosure): a real
- * name, an address or where the learner lives, a school, an age or birthday, a phone or email, health and
- * religion. Read in the frame's English gloss, whole words, any case; the MAR checks every frame as well.
+ * Slot topics a My Story frame may never ask of the learner (F-CURR-002 §6.6 and §13, personal disclosure;
+ * design/wireframes/minigame/my-story.md: no home address, school name, real name, age, health or religion). Read
+ * in the frame's English gloss, any case, and only where the frame asks about the learner ("my" or "your" before the
+ * topic, or "I" or "you" with the fact): a frame about Hoya or the cast ("Her name is ___", "Hoya's grandmother
+ * lives in ___", "After school I ___") is not a disclosure and parses. The learner's own family is a topic too
+ * (§6.6: content never requires it). The MAR still checks every frame.
  */
 export const MY_STORY_PRIVATE_TOPICS =
-  /\b(names?|address(es)?|live|lives|street|school|age|years? old|birthday|phone|e-?mail|password|health|sick|ill|illness|doctor|hospital|medicine|religion|religious|pray|church|mosque)\b/i;
+  /\b(?:(?:my|your)\s+(?:(?:real|full|first|last|home|e-?mail|phone)\s+)?(?:names?|address(?:es)?|street|school|class|grade|teachers?|age|birthday|phone|e-?mail|password|home|city|town|country|health|illness|medicine|religion|doctor|hospital|church|mosque|temple|family|mom|mum|dad|mother|father|parents?|brothers?|sisters?|grand(?:ma|pa|mother|father|parents?))|(?:I|you)\s+(?:live|lives|lived|am from|are from|was born|were born|pray)|(?:I am|I'm|you are|you're)\s+(?:\S+\s+)?years?\s+old|(?:I am|I'm|I feel|you are|you're|you feel)\s+(?:sick|ill)|(?:I|you)\s+go\s+to\s+(?:church|mosque|temple)|where\s+(?:do\s+)?(?:I|you)\s+live)\b/i;
 
 /** A bank word of a My Story slot: taught Korean, and `neutral: true` on the one option that tells nothing about the learner. */
 export const MyStoryBankWordSchema = KoTextShape.extend({ neutral: z.literal(true).optional() }).superRefine(refineKoText);

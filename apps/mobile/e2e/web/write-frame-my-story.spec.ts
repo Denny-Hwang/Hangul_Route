@@ -33,13 +33,13 @@ interface TelemetryEvent {
   payload?: Record<string, unknown>;
 }
 type E2eWindow = Window & {
-  __hrWriteFrameE2E?: { open(params: { rounds: string[]; story?: 'on' | 'off' }): void; log(): Log; events(): TelemetryEvent[] };
+  __hrWriteFrameE2E?: { open(params: { rounds: string[]; story?: 'on' | 'off' | 'long' }): void; log(): Log; events(): TelemetryEvent[] };
 };
 
-async function open(page: Page, off = false): Promise<void> {
+async function open(page: Page, off: boolean | 'long' = false): Promise<void> {
   await page.goto('/');
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrWriteFrameE2E), undefined, { timeout: 10_000 });
-  await page.evaluate((o) => (window as E2eWindow).__hrWriteFrameE2E?.open({ rounds: [], story: o ? 'off' : 'on' }), off);
+  await page.evaluate((o) => (window as E2eWindow).__hrWriteFrameE2E?.open({ rounds: [], story: o === 'long' ? 'long' : o ? 'off' : 'on' }), off);
   await expect(page.getByTestId('write-frame')).toBeVisible({ timeout: 10_000 });
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
 }
@@ -160,6 +160,8 @@ test.describe('My Story: a short text from word-bank frames, shown as My page an
     const sent = await events(page);
     expect(sent.filter((e) => e.name === 'minigame.finished').map((e) => e.payload)).toEqual([{ kind: 'my-story', questId: 'e2e-my-story', stepIndex: 0 }]);
     expect(JSON.stringify(sent)).not.toMatch(HANGUL);
+    // Nor the sentences' romanization or meaning.
+    expect(JSON.stringify(sent)).not.toMatch(/gongwon|hoyawa|gwaenchanayo|jumare|gibuni|the park|with Hoya|feel okay/i);
     expect(await stored(page)).not.toMatch(/공원|호야와|괜찮아요|gongwone|hoyawa/);
     expect(decodeURIComponent(page.url())).not.toMatch(HANGUL);
     await expect(page.getByTestId('my-story-page')).toHaveCount(0);
@@ -184,6 +186,46 @@ test.describe('My Story: a short text from word-bank frames, shown as My page an
     await expect(page.getByText('You wrote a whole story!')).toHaveCount(0);
     await page.getByTestId('my-story-done').click();
     await expect.poll(async () => (await log(page)).completes).toBe(1);
+  });
+
+  test('320 x 568, five frames: from 3 lines the story so far folds while picking, and the frame and bank stay in view', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, 'long');
+    await expect(page.getByText('1 / 5')).toBeVisible();
+    await page.getByTestId('write-frame-word-2').click();
+    await typeText(page, '공원');
+    await page.getByTestId('write-frame-done').click();
+    await expect(page.getByText('2 / 5')).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId('write-frame-word-2').click();
+    await typeText(page, '호야');
+    await page.getByTestId('write-frame-done').click();
+    await expect(page.getByText('3 / 5')).toBeVisible({ timeout: 5_000 });
+    // Two lines: still the list.
+    await expect(page.getByTestId('my-story-so-far')).toBeVisible();
+    await page.getByTestId('write-frame-word-2').click();
+    await expect(page.getByText('4 / 5')).toBeVisible({ timeout: 5_000 });
+    // Three lines: the folded line, the frame card and the first bank card in view.
+    await expect(page.getByTestId('my-story-so-far-folded')).toHaveText('3 lines so far');
+    await expect(page.getByTestId('my-story-so-far')).toHaveCount(0);
+    await expect(page.getByTestId('write-frame-card')).toBeInViewport();
+    await expect(page.getByTestId('write-frame-word-0')).toBeInViewport();
+    expect((await box(page, 'my-story-so-far-folded')).height).toBeGreaterThanOrEqual(FLOOR);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'my-story-320-long-folded');
+    // A tap opens it; the list has every line.
+    await page.getByTestId('my-story-so-far-folded').click();
+    await expect(page.getByTestId('my-story-so-far-line')).toHaveCount(3);
+    await page.getByTestId('write-frame-word-2').click();
+    await expect(page.getByText('5 / 5')).toBeVisible({ timeout: 5_000 });
+    // The next frame starts folded again.
+    await expect(page.getByTestId('my-story-so-far-folded')).toHaveText('4 lines so far');
+    await expect(page.getByTestId('write-frame-card')).toBeInViewport();
+    await expect(page.getByTestId('write-frame-word-0')).toBeInViewport();
+    await page.getByTestId('write-frame-word-2').click();
+    await expect(page.getByTestId('my-story-page')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId('my-story-page-line')).toHaveCount(5);
+    await expect(page.getByText('You wrote a whole story!')).toBeVisible();
+    await expect(freeText(page)).toHaveCount(0);
   });
 
   test('768 x 1024: the story so far beside the frame card, three-column bank', async ({ page }) => {

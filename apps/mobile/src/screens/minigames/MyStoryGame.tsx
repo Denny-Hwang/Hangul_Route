@@ -13,6 +13,8 @@ import {
   spacing,
   touchTarget,
   typography,
+  useEffectiveFontScale,
+  useLayoutClass,
   useTypeScale,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
@@ -24,7 +26,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { pageLine, storyLines, type StoryLine } from '../../logic/my-story/page';
+import { pageLine, soFarFolds, storyLines, type StoryLine } from '../../logic/my-story/page';
 import type { WrittenFrame } from '../../logic/write-frame/flow';
 import { playPrompt } from '../../platform/audio';
 import { focusForScreenReader } from '../../platform/screen-reader';
@@ -100,7 +102,8 @@ export function MyStoryGame({ scope, host, onBack }: Props): ReactElement {
     soFar: (written, writing) => (
       <SoFar
         lines={storyLines(frames, written)}
-        folded={writing && !open}
+        writing={writing}
+        open={open}
         onOpen={() => setOpen(true)}
         onNewFrame={() => setOpen(false)}
       />
@@ -131,18 +134,24 @@ export function MyStoryGame({ scope, host, onBack }: Props): ReactElement {
 
 interface SoFarProps {
   lines: readonly StoryLine[];
-  /** While the learner writes: one line ("2 lines so far") that opens the list on a tap. */
-  folded: boolean;
+  /** While the learner writes it folds to one line ("2 lines so far") that opens the list on a tap. */
+  writing: boolean;
+  /** The learner opened the folded line in this frame. */
+  open: boolean;
   onOpen: () => void;
   /** A new frame starts folded again. */
   onNewFrame: () => void;
 }
 
 /** "My story so far": read-only, no button on a line, so a stray tap cannot leave the current frame. */
-function SoFar({ lines, folded, onOpen, onNewFrame }: SoFarProps): ReactElement | null {
+function SoFar({ lines, writing, open, onOpen, onNewFrame }: SoFarProps): ReactElement | null {
   const m = useMessages();
   const textScale = useTypeScale();
+  const lc = useLayoutClass();
+  const fontScale = useEffectiveFontScale();
   const count = lines.length;
+  // On a phone it also folds while the learner picks, from 3 lines or at large text, so the frame and bank stay in view.
+  const folded = !open && soFarFolds({ writing, compact: lc.width === 'compact', lines: count, fontScale });
   const newFrame = useRef(onNewFrame);
   newFrame.current = onNewFrame;
   useEffect(() => newFrame.current(), [count]);

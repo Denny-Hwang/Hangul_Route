@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { myStoryToWriteFrame } from '../../logic/my-story/fallback';
 import { LessonWaiting } from '../lesson-content';
-import { OopsScreen } from '../system/OopsScreen';
 import type { MinigameHost } from './host';
+import { WriteFrameGame } from './WriteFrameGame';
 
 /*
  * The start bundle's door to My Story (F-CURR-002 §7.1 F8 and §10, row CM-38): the game is a chunk of its own
@@ -33,7 +34,11 @@ export interface MyStoryRouteProps {
   onBack?: () => void;
 }
 
-/** My Story once its chunk is in; the calm waiting state while it loads, and the crash screen's Try again if it cannot. */
+/**
+ * My Story once its chunk is in, and the calm waiting state while it loads. If the chunk cannot load (offline before
+ * the precache filled), the step is never a dead end: it plays the switch-off fallback, Write Frame on the first frame,
+ * which is in the start bundle.
+ */
 export function MyStoryRoute(props: MyStoryRouteProps): ReactElement {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
@@ -48,7 +53,7 @@ export function MyStoryRoute(props: MyStoryRouteProps): ReactElement {
       live = false;
     };
   }, [chunk, failed]);
-  if (failed) return <OopsScreen onRetry={() => setFailed(false)} />;
+  if (failed) return <WriteFrameGame scope={myStoryToWriteFrame(props.scope)} host={props.host} onBack={props.onBack} />;
   if (chunk === null) return <LessonWaiting />;
   const { MyStoryGame } = chunk;
   return <MyStoryGame {...props} />;

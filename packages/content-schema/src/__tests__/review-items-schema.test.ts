@@ -168,6 +168,7 @@ describe('the chunk rows', () => {
       'minigame:s4-life-q1-play#dialogue.0.npc',
       'minigame:s7-life-q1-play#typeHangul.rounds.t1.target.gloss',
       'minigame:s7-life-q2-play#traceWord.rounds.t1.word.gloss',
+      'minigame:s7-life-q3-apply#myStory.frames.f1.slots.where.bank.gongwon.gloss',
     ];
     for (const key of keys) {
       const packed = packGlossKey(key, 'lex:x');

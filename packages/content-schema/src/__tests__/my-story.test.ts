@@ -134,6 +134,12 @@ describe('my-story-private-topic: no frame asks for a private fact', () => {
     ['I feel sick in my ___.'],
     ['My religion is ___.'],
     ['My phone number is ___.'],
+    ['I am from ___.'],
+    ['What is your name?'],
+    ['Where do you live?'],
+    ['My mom likes ___.'],
+    ['I go to ___ with my family.'],
+    ['My teacher is ___.'],
   ])('refuses "%s"', (en) => {
     expect(messages(MyStoryFrameSchema, { ...place, frame: { ...place.frame, en } }).some((m) => m.startsWith('my-story-private-topic'))).toBe(true);
   });
@@ -141,6 +147,22 @@ describe('my-story-private-topic: no frame asks for a private fact', () => {
   it('allows everyday frames: a place, a companion, a feeling, a season, a food', () => {
     for (const en of ['On the weekend I go to ___.', 'I go with ___.', 'I feel ___.', 'My favourite season is ___.', 'I like ___.', 'Happy New Year, ___!']) {
       expect(MY_STORY_PRIVATE_TOPICS.test(en), en).toBe(false);
+    }
+  });
+
+  it('asks only about the learner: frames about Hoya, the cast or a daily routine parse (S7, pack L5)', () => {
+    // People & Family L5 (a Hoya-family introduction), Day & Study L5 (school and work words), Rites S7.
+    for (const en of [
+      "This is Hoya's grandmother. Her name is ___.",
+      "Hoya's grandmother lives in ___.",
+      'After school I ___.',
+      'At school we read ___.',
+      'Hoya is ___ years old.',
+      'The doctor says ___.',
+      'Hoya goes to the hospital with ___.',
+    ]) {
+      expect(MY_STORY_PRIVATE_TOPICS.test(en), en).toBe(false);
+      expect(messages(MyStoryFrameSchema, { ...place, frame: { ...place.frame, en } }), en).toEqual([]);
     }
   });
 });

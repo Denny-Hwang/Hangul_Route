@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FIXTURE_CHAIN } from '../e2e-chain';
-import { pageLine, storyLines } from '../page';
+import { pageLine, soFarFolds, SO_FAR_FOLD_FONT_SCALE, SO_FAR_FOLD_LINES, storyLines } from '../page';
 
 describe('My Story page lines (row CM-38)', () => {
   it('each written frame is one line: Korean with the fitted ending, the converter romanization, the meaning', () => {
@@ -29,5 +29,17 @@ describe('My Story page lines (row CM-38)', () => {
     expect(pageLine(3, 3)).toBe('done');
     expect(pageLine(2, 3)).toBe('donePartial');
     expect(pageLine(1, 5)).toBe('donePartial');
+  });
+
+  it('the story so far folds while writing, and on a phone while picking from 3 lines or at large text', () => {
+    const at = (p: Partial<Parameters<typeof soFarFolds>[0]>) => soFarFolds({ writing: false, compact: true, lines: 1, fontScale: 1, ...p });
+    expect(at({ writing: true, compact: false })).toBe(true);
+    expect(at({})).toBe(false);
+    expect(at({ lines: SO_FAR_FOLD_LINES - 1 })).toBe(false);
+    expect(at({ lines: SO_FAR_FOLD_LINES })).toBe(true);
+    expect(at({ fontScale: SO_FAR_FOLD_FONT_SCALE })).toBe(true);
+    expect(at({ fontScale: 1.5 })).toBe(true);
+    // From regular width the story so far sits beside the frame card: it never folds while picking.
+    expect(at({ compact: false, lines: 4, fontScale: 2 })).toBe(false);
   });
 });

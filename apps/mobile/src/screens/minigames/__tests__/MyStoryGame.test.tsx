@@ -1,5 +1,5 @@
 import { keysFor } from '@hangul-route/content-schema';
-import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
+import { LayoutProvider, TextSizeProvider, layoutClassFor, type TextSizeStep } from '@hangul-route/design-system';
 import { View } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,15 +44,17 @@ const host = (): Host => {
 
 const scope: MinigameScope = { kind: 'my-story', rounds: FIXTURE_CHAIN.length, myStory: { frames: [...FIXTURE_CHAIN] } };
 const mounted: ReactTestRenderer[] = [];
-async function play(h: Host = host(), size = { width: 375, height: 667 }): Promise<{ r: ReactTestRenderer; h: Host }> {
+async function play(h: Host = host(), size = { width: 375, height: 667 }, step: TextSizeStep = 'standard'): Promise<{ r: ReactTestRenderer; h: Host }> {
   let r!: ReactTestRenderer;
   await act(async () => {
     r = TestRenderer.create(
-      <LayoutProvider value={layoutClassFor(size)}>
-        <RomanizationModeOverride mode="always">
-          <MyStoryGame scope={scope} host={h} />
-        </RomanizationModeOverride>
-      </LayoutProvider>,
+      <TextSizeProvider step={step}>
+        <LayoutProvider value={layoutClassFor(size)}>
+          <RomanizationModeOverride mode="always">
+            <MyStoryGame scope={scope} host={h} />
+          </RomanizationModeOverride>
+        </LayoutProvider>
+      </TextSizeProvider>,
       { createNodeMock: () => ({ focus: vi.fn(), addEventListener: () => undefined, removeEventListener: () => undefined }) },
     );
   });
@@ -159,6 +161,27 @@ describe('My Story: a short text from chained word-bank frames (row CM-38)', () 
     expect(byTestId(r.root, 'my-story-so-far')).toHaveLength(0);
     await tap(r, 'my-story-so-far-folded');
     expect(texts(r, 'my-story-so-far')).toContain('저는 주말에 공원에 가요.');
+    expect(freeTextFields(r)).toEqual([]);
+  });
+
+  it('large text (150 %) on a phone: the story so far folds while picking too, and opens on a tap', async () => {
+    const { r } = await play(host(), { width: 320, height: 568 }, 'largest');
+    await tap(r, 'write-frame-word-2');
+    await typeWord(r, '공원');
+    await tap(r, 'write-frame-done');
+    await advance(SENTENCE_PAUSE_MS);
+    // Frame 2's pick: the folded line above the frame card, so the frame and the bank keep their place.
+    expect(texts(r, 'my-story-so-far-folded')).toContain('1 line so far');
+    expect(byTestId(r.root, 'my-story-so-far')).toHaveLength(0);
+    expect(byTestId(r.root, 'write-frame-word-0').length).toBeGreaterThan(0);
+    await tap(r, 'my-story-so-far-folded');
+    expect(texts(r, 'my-story-so-far')).toContain('저는 주말에 공원에 가요.');
+    // The next frame starts folded again.
+    await tap(r, 'write-frame-word-2');
+    await typeWord(r, '호야');
+    await tap(r, 'write-frame-done');
+    await advance(SENTENCE_PAUSE_MS);
+    expect(texts(r, 'my-story-so-far-folded')).toContain('2 lines so far');
     expect(freeTextFields(r)).toEqual([]);
   });
 

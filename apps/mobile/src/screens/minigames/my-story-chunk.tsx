@@ -14,4 +14,4 @@ export { MyStoryGame } from './MyStoryGame';
  * start bundle, which every build carries (the e2e hosts are registered only in the fixture build, but their modules
  * ship in every bundle). Test data: no lesson reads it.
  */
-export { FIXTURE_CHAIN } from '../../logic/my-story/e2e-chain';
+export { FIXTURE_CHAIN, FIXTURE_CHAIN_LONG } from '../../logic/my-story/e2e-chain';

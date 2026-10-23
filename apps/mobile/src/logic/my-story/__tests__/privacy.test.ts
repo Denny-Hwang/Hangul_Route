@@ -1,6 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CURR_TELEMETRY_PAYLOADS, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
+import {
+  CURR_TELEMETRY_PAYLOADS,
+  GUEST_TELEMETRY_PAYLOADS,
+  OA_TELEMETRY_PAYLOADS,
+  ONBOARDING_TELEMETRY_PAYLOADS,
+  SHELL_TELEMETRY_PAYLOADS,
+  TELEMETRY_EVENT_NAMES,
+} from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -59,8 +66,28 @@ describe('My Story keeps what is written in the step (test P-1, OD-13)', () => {
 
   it('no telemetry name or payload carries a My Story text: the kind code is the only trace', () => {
     expect(TELEMETRY_EVENT_NAMES.filter((n) => /story/i.test(n) && /my|text|page|frame/i.test(n))).toEqual([]);
-    for (const [name, schema] of Object.entries(CURR_TELEMETRY_PAYLOADS)) {
-      expect(JSON.stringify(Object.keys((schema as { shape?: object }).shape ?? {})), name).not.toMatch(/text|sentence|word|pick|story/i);
+    // Every payload registry the client sends against: the zod ones (their shape's keys) and the shell's key lists.
+    // A key that could hold a written text or a pick (OA's `picked` is a count of profiles, a whole number).
+    const TEXT_KEY = /text|sentence|word|story|^picks?$|^pickedWords?$/i;
+    const registries = { CURR_TELEMETRY_PAYLOADS, ONBOARDING_TELEMETRY_PAYLOADS, OA_TELEMETRY_PAYLOADS, GUEST_TELEMETRY_PAYLOADS };
+    for (const [registry, payloads] of Object.entries(registries)) {
+      expect(Object.keys(payloads).length, registry).toBeGreaterThan(0);
+      for (const [name, schema] of Object.entries(payloads)) {
+        const keys = Object.keys((schema as { shape?: object }).shape ?? {});
+        expect(keys.filter((k) => TEXT_KEY.test(k)), `${registry} ${name}`).toEqual([]);
+      }
     }
+    for (const [name, keys] of Object.entries(SHELL_TELEMETRY_PAYLOADS)) {
+      expect(Object.keys(keys).filter((k) => TEXT_KEY.test(k)), name).toEqual([]);
+    }
+  });
+
+  it('the core events My Story sends carry codes only: minigame.finished and audio.fallback_shown', () => {
+    // The payloads are typed in the app, not in a registry: read them where they are built.
+    const finished = read('logic/minigame-finished.ts');
+    expect(finished).toMatch(/payload: \{ kind, questId, stepIndex \}/);
+    const controller = read('logic/audio/controller.ts');
+    expect(controller).toMatch(/name: 'audio\.fallback_shown'; payload: \{ source: string; reason: FallbackReason \}/);
+    expect(controller).toMatch(/deps\.emit\(\{ name: 'audio\.fallback_shown', payload: \{ source, reason \} \}\)/);
   });
 });

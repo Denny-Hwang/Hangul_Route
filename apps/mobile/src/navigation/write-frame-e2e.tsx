@@ -31,9 +31,10 @@ export interface WriteFrameE2eParams {
   mode?: Extract<HostMode, 'quest' | 'preview'>;
   /**
    * F-CURR-002 row CM-38: play My Story's fixture chain instead of `rounds`, through the switch and fallback of
-   * MinigameScreen (`playedScope`) with `game.my-story` on or off, and the game's own chunk (which holds the chain).
+   * MinigameScreen (`playedScope`) with `game.my-story` on or off, and the game's own chunk (which holds the chain);
+   * `long` plays the 5-frame chain with the switch on.
    */
-  story?: 'on' | 'off';
+  story?: 'on' | 'off' | 'long';
 }
 
 export interface WriteFrameE2eHandle {
@@ -76,11 +77,11 @@ export function WriteFrameE2eScreen({ route, navigation }: Props): ReactElement 
   const { story } = route.params;
   const [chain, setChain] = useState<readonly MyStoryFrame[] | null>(null);
   useEffect(() => {
-    if (story !== undefined) void loadMyStoryChunk().then((c) => setChain(c.FIXTURE_CHAIN));
+    if (story !== undefined) void loadMyStoryChunk().then((c) => setChain(story === 'long' ? c.FIXTURE_CHAIN_LONG : c.FIXTURE_CHAIN));
   }, [story]);
   const scope = useMemo<MinigameScope | null>(() => {
     if (story !== undefined) {
-      return chain === null ? null : playedScope({ kind: 'my-story', rounds: chain.length, myStory: { frames: [...chain] } }, () => story === 'on');
+      return chain === null ? null : playedScope({ kind: 'my-story', rounds: chain.length, myStory: { frames: [...chain] } }, () => story !== 'off');
     }
     const rounds = route.params.rounds.map((key) => FIXTURE_ROUNDS[key] as WriteFrameRound);
     return { kind: 'write-frame', rounds: rounds.length, writeFrame: { rounds } };

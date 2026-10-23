@@ -56,3 +56,43 @@ export const FIXTURE_CHAIN: readonly MyStoryFrame[] = [
     freeEntry: false,
   },
 ];
+
+/**
+ * The longest chain (5 frames): the wireframe's three, then two pick-only frames, for the large-text and long-chain
+ * cases (the story so far folds on a phone from 3 lines). Test data, like `FIXTURE_CHAIN`.
+ */
+export const FIXTURE_CHAIN_LONG: readonly MyStoryFrame[] = [
+  ...FIXTURE_CHAIN,
+  {
+    id: 'e2e-weather',
+    frame: { ko: '날씨가 ___.', romanization: 'nalssiga ___', en: 'The weather is ___.' },
+    slots: [
+      {
+        id: 'weather',
+        bank: [
+          { ko: '맑아요', romanization: 'malgayo', en: 'clear' },
+          { ko: '추워요', romanization: 'chuwoyo', en: 'cold' },
+          { ko: '좋아요', romanization: 'joayo', en: 'nice', neutral: true },
+        ],
+      },
+    ],
+    entry: 'pick',
+    freeEntry: false,
+  },
+  {
+    id: 'e2e-tomorrow',
+    frame: { ko: '내일은 ___에 가요.', romanization: 'naeireun ___e gayo', en: 'Tomorrow I go to ___.' },
+    slots: [
+      {
+        id: 'where',
+        bank: [
+          { ko: '바다', romanization: 'bada', en: 'the sea' },
+          { ko: '산', romanization: 'san', en: 'the mountain' },
+          { ko: '공원', romanization: 'gongwon', en: 'the park', neutral: true },
+        ],
+      },
+    ],
+    entry: 'pick',
+    freeEntry: false,
+  },
+];

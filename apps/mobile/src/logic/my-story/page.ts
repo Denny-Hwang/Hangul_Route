@@ -37,3 +37,15 @@ export type PageLine = 'done' | 'donePartial';
 export function pageLine(written: number, total: number): PageLine {
   return written >= total ? 'done' : 'donePartial';
 }
+
+/**
+ * When "My story so far" draws as its one folded line ("3 lines so far", which opens on a tap) instead of the list
+ * (design/wireframes/minigame/my-story.md, states: large text folds it earlier). While the learner writes it always
+ * folds. While they pick, a phone (compact width) folds it from `SO_FAR_FOLD_LINES` lines or at
+ * `SO_FAR_FOLD_FONT_SCALE` text (OS text size x the chosen step), so the frame card and the bank stay in view.
+ */
+export const SO_FAR_FOLD_LINES = 3;
+export const SO_FAR_FOLD_FONT_SCALE = 1.3;
+export function soFarFolds(at: { writing: boolean; compact: boolean; lines: number; fontScale: number }): boolean {
+  return at.writing || (at.compact && (at.lines >= SO_FAR_FOLD_LINES || at.fontScale >= SO_FAR_FOLD_FONT_SCALE));
+}
