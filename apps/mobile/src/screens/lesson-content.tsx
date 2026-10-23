@@ -1,6 +1,6 @@
 import type { UiLocale } from '@hangul-route/i18n';
 import { Body, Screen } from '@hangul-route/design-system';
-import React, { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore, type ComponentType, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { lessonContent } from '../content/lessons';
 import { useMessages } from '../i18n/use-messages';
@@ -59,7 +59,7 @@ export interface LessonContentDeps {
  */
 export interface LazyRoot<P extends object> {
   name: string;
-  load: () => Promise<{ default: React.ComponentType<P> }>;
+  load: () => Promise<{ default: ComponentType<P> }>;
 }
 
 /** A root chunk that did not arrive in time (a hung request); Try again asks again. */
@@ -73,7 +73,7 @@ export class RootChunkTimeout extends Error {
   }
 }
 
-const isLazyRoot = <P extends object>(root: React.ComponentType<P> | LazyRoot<P>): root is LazyRoot<P> =>
+const isLazyRoot = <P extends object>(root: ComponentType<P> | LazyRoot<P>): root is LazyRoot<P> =>
   typeof root === 'object' && root !== null && 'load' in root && typeof root.load === 'function';
 
 const NO_STORIES: Pick<StoryStore, 'isAllReady' | 'ensureAll'> = { isAllReady: () => true, ensureAll: () => Promise.resolve() };
@@ -83,7 +83,7 @@ const NO_LOCALES = { ensureAll: () => Promise.resolve() };
 export const LESSON_WAITING_LINE_MS = 500;
 
 /** The screen while its lesson chunk loads: the header (the way back), then a calm status line. */
-export function LessonWaiting(): React.ReactElement {
+export function LessonWaiting(): ReactElement {
   const m = useMessages();
   const [late, setLate] = useState(false);
   useEffect(() => {
@@ -153,11 +153,11 @@ export function lessonContentBindings({
   }
 
   /** Loads a lazy root's code once, within `rootTimeoutMs`; a failed or hung load is forgotten, so Try again asks again. */
-  const loadedRoots = new WeakMap<object, React.ComponentType<never>>();
-  function loadRoot<P extends object>(root: LazyRoot<P>): Promise<React.ComponentType<P>> {
-    const hit = loadedRoots.get(root) as React.ComponentType<P> | undefined;
+  const loadedRoots = new WeakMap<object, ComponentType<never>>();
+  function loadRoot<P extends object>(root: LazyRoot<P>): Promise<ComponentType<P>> {
+    const hit = loadedRoots.get(root) as ComponentType<P> | undefined;
     if (hit !== undefined) return Promise.resolve(hit);
-    return new Promise<React.ComponentType<P>>((resolve, reject) => {
+    return new Promise<ComponentType<P>>((resolve, reject) => {
       const timer = setTimeout(() => {
         reject(new RootChunkTimeout(root.name, rootTimeoutMs));
         abandon?.(root.name);
@@ -165,7 +165,7 @@ export function lessonContentBindings({
       root.load().then(
         (mod) => {
           clearTimeout(timer);
-          loadedRoots.set(root, mod.default as React.ComponentType<never>);
+          loadedRoots.set(root, mod.default as ComponentType<never>);
           resolve(mod.default);
         },
         (error: unknown) => {
@@ -180,12 +180,12 @@ export function lessonContentBindings({
    * Mounts `Root` once every lesson chunk, every story chunk, the device locale's titles and the locale chunks are
    * in, and, for a lazy root (`LazyRoot`), its own code; the crash screen if a lesson, story or root chunk fails.
    */
-  function withLessonContent<P extends object>(Root: React.ComponentType<P> | LazyRoot<P>): React.ComponentType<P> {
+  function withLessonContent<P extends object>(Root: ComponentType<P> | LazyRoot<P>): ComponentType<P> {
     const lazy = isLazyRoot(Root) ? Root : null;
     const eager = isLazyRoot(Root) ? null : Root;
     const contentIn = (): boolean => store.isAllReady() && stories.isAllReady();
-    function LessonContentRoot(props: P): React.ReactElement {
-      const [Loaded, setLoaded] = useState<React.ComponentType<P> | null>(() => eager ?? ((lazy === null ? undefined : loadedRoots.get(lazy)) as React.ComponentType<P> | undefined) ?? null);
+    function LessonContentRoot(props: P): ReactElement {
+      const [Loaded, setLoaded] = useState<ComponentType<P> | null>(() => eager ?? ((lazy === null ? undefined : loadedRoots.get(lazy)) as ComponentType<P> | undefined) ?? null);
       const [state, setState] = useState<'loading' | 'ready' | 'failed'>(() => (contentIn() && Loaded !== null ? 'ready' : 'loading'));
       useEffect(() => {
         if (state !== 'loading') return undefined;
