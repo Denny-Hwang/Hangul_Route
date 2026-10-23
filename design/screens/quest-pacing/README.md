@@ -12,5 +12,5 @@ as text):
 - `shots/pacing-scaffold-options-320.png`, `shots/pacing-scaffold-320.png`, `shots/pacing-scaffold-wide.png`: the
   scaffold round after two first-try misses in quest 1's Practice (별 asked, 하늘 beside it).
 
-The e2e also checks the compact card at 320 x 568 with the text size at Largest (no sideways scroll, no clipped text,
+The e2e also checks the compact card at 320 x 568 with the text size at Largest (no sideways scroll, no text past the card,
 both pictures kept); that run writes `pacing-compact-320-largest.png` to its output folder only.

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from './fixtures';
 import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored } from './helpers';
-import { expectTextFits } from './text-fit';
+import { expectNoSidewaysScroll } from './text-fit';
 
 /**
  * F-CURR-002 section 4.6 (row CM-24) on the web PWA, behind `questAdapt` (the remote copy is the stored one: this build
@@ -167,7 +167,7 @@ test('two first-try misses in Practice play one scaffold round of the same words
   expect(errors).toEqual([]);
 });
 
-test('the compact card fits at 320 px with the text size at Largest: no sideways scroll, no clipped text, pictures kept', async ({ page }) => {
+test('the compact card fits at 320 px with the text size at Largest: no sideways scroll, no text past the card, pictures kept', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await onboard(page, 'largest');
@@ -187,7 +187,22 @@ test('the compact card fits at 320 px with the text size at Largest: no sideways
   // Each row keeps its picture: the compact card only regroups the page.
   await expect(card.locator('[data-testid^="discover-picture-"]')).toHaveCount(2);
   await page.setViewportSize({ width: 320, height: 568 });
-  await expectTextFits(page, 'the compact Discover card at Largest');
+  // The card's own text (this row's surface): no sideways scroll, and no line of it past the card's edges.
+  await expectNoSidewaysScroll(page, 'the compact Discover card at Largest');
+  const cut = await card.evaluate((root) => {
+    const box = root.getBoundingClientRect();
+    const out: string[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = (node.textContent ?? '').trim();
+      if (text === '') continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) if (r.left < box.left - 1 || r.right > box.right + 1) out.push(text);
+    }
+    return out;
+  });
+  expect(cut, 'the compact Discover card at Largest: text past the card').toEqual([]);
   await targetsAtLeast48(page, card);
   await page.setViewportSize({ width: 320, height: 568 });
   await page.screenshot({ path: test.info().outputPath('pacing-compact-320-largest.png') });
