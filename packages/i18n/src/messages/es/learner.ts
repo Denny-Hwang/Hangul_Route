@@ -2058,7 +2058,7 @@ export const learner = {
     start: '¡Buen comienzo!',
     startBody: 'Empieza con la primera misión. Hoya te ayuda con lo demás.',
     pill: 'Ya lo sabes',
-    stageHint: 'Juega las misiones que adelantaste para terminar esta etapa.',
+    stageHint: 'Juega las misiones que te saltaste para terminar esta etapa.',
   },
   /** The Stages 2-7 ceremony (row CM-22). "Etapa N", as the Stage 1 prize says. */
   upperStageComplete: {
@@ -2078,7 +2078,7 @@ export const learner = {
       title: (stages: readonly number[]) =>
         stages.length === 1
           ? `Ya terminaste la Etapa ${stages[0]}`
-          : `Ya terminaste las etapas ${stages.slice(0, -1).join(', ')} y ${stages[stages.length - 1]}`,
+          : `Ya terminaste las Etapas ${stages.slice(0, -1).join(', ')} y ${stages[stages.length - 1]}`,
       body: 'Aquí están tus tarjetas de etapa.',
       bodyNoCards: 'Cada etapa que terminaste queda en tu Recorrido.',
     },
