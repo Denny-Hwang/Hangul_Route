@@ -2103,4 +2103,10 @@ export const learner = {
     extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
   },
+  storyOrder: {
+    title: 'Ordena las frases',
+    hint: 'Lee cada frase. Toca la que va primero.',
+    showMeanings: 'Ver significados',
+    meaningsShown: 'Significados visibles',
+  },
 } satisfies DeepPartial<Messages['learner']>;
