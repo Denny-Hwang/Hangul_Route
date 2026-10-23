@@ -991,6 +991,15 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // Owner report 2026-10-23: the Join screen's move lines (the learner, then the classes) and the classes a join keeps.
+  'caregiver.join.errors.movedOut': [['Suni', 'Sunday Class B', 'Sunday Class A']],
+  'caregiver.join.errors.movedOutElsewhere': [['Suni', 'Sunday Class A']],
+  'caregiver.join.errors.moveWaiting': [['Sunday Class B']],
+  'caregiver.join.confirm.staysIn': [['Suni', ['Sunday Class A']], ['Mina', ['Sunday Class A', 'Art club']], ['Jo Ann', ['A', 'B', 'C']]],
+  // Owner report 2026-10-23: the class settings lines after a move and an unarchive the class cap refused.
+  'console.settings.learnerGone': [['Mina']],
+  'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
+  'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
   // F-CURR-002 row CM-35: a Role Play bubble: the partner's role (UI language), the line, its romanization and meaning; a sent reply.
   // The Korean line is passed in at run time; the samples stand in with romanization, as the other games' rows do.
   'a11y.minigame.rolePlay.partner': [['librarian', 'museun chaegeul chajayo?', 'museun chaegeul chajayo', 'What book are you looking for?']],

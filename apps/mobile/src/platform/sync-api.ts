@@ -4,6 +4,10 @@ import {
   InboxTransferSchema,
   LookupSeatSchema,
   InboxVisibleSpaceSchema,
+  LearnerMembershipSchema,
+  LookupMoveWaitingSchema,
+  LookupMovedSchema,
+  MoveSpaceRefSchema,
   SyncInboxSchema,
   lenientArray,
   readSnapshotCopy,
@@ -15,7 +19,10 @@ import {
   type InboxVisibleSpace,
   type LearnerLevelId,
   type LearnerMembership,
+  type LookupMoveWaiting,
+  type LookupMoved,
   type LookupSeat,
+  type MoveSpaceRef,
   type NoteDevicePrefsPut,
   type NoteReport,
   type NoteStatePut,
@@ -99,13 +106,29 @@ export interface RosterName {
  * new one) finds room, and which cap is full; null from a Worker older than SA-1 or a value this app cannot read.
  */
 export type LookupResult =
-  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean; seat: LookupSeat | null; roster: RosterName[] }
+  | {
+      status: 'ok';
+      space: { id: string; kind: SpaceKind; name: string };
+      full: boolean;
+      seat: LookupSeat | null;
+      roster: RosterName[];
+      /** Owner report 2026-10-23, vouched learner only: a move out of this class stands (left out when absent or unreadable). */
+      moved?: LookupMoved;
+      /** Owner report 2026-10-23, vouched learner only: a move into this class waits (left out when absent or unreadable). */
+      moveWaiting?: LookupMoveWaiting;
+    }
   | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
-/** [SA] A seat refusal carries the Worker's `details.cap` when it sent a readable one. */
+/**
+ * [SA] A seat refusal carries the Worker's `details.cap` when it sent a readable one. `memberships` (owner report
+ * 2026-10-23): the list the inbox would send now, from a Worker that sends it; the store replaces its cache with it.
+ * `moved_out` / `move_waiting`: a move out of this class stands (`to`), or one into it waits (`from`).
+ */
 export type JoinResult =
-  | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership }
+  | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership; memberships?: LearnerMembership[] }
   | { status: 'error'; code: 'cap_family' | 'cap_class' | 'cap_school'; cap?: number }
+  | { status: 'error'; code: 'moved_out'; to?: MoveSpaceRef }
+  | { status: 'error'; code: 'move_waiting'; from?: MoveSpaceRef }
   | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'forbidden' };
 
 export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
@@ -262,15 +285,27 @@ function errorDetails(body: Record<string, unknown>): Record<string, unknown> {
 /**
  * [SA] A `/join` 409 (AMENDMENTS-SEATS-ADMINS section 3.4). `cap_family` is its own code; the Worker answers a school
  * cap as `cap_class` with `details.reason: 'cap_school'` (so shipped apps show the class line), read here as
- * `cap_school`. Any other 409 stays the three-classes code, as before.
+ * `cap_school`. Owner report 2026-10-23: `moved_out` (`details.to`) and `move_waiting` (`details.from`) keep their
+ * code; a class this app cannot read is left out. Any other 409 stays the three-classes code, as before.
  */
 function seatRefusal(code: string | null, body: Record<string, unknown>): JoinResult & { status: 'error' } {
   const details = errorDetails(body);
+  if (code === 'moved_out') {
+    const to = MoveSpaceRefSchema.safeParse(details.to);
+    return to.success ? { status: 'error', code, to: to.data } : { status: 'error', code };
+  }
+  if (code === 'move_waiting') {
+    const from = MoveSpaceRefSchema.safeParse(details.from);
+    return from.success ? { status: 'error', code, from: from.data } : { status: 'error', code };
+  }
   const seat = code === 'cap_family' ? 'cap_family' : code === 'cap_school' || (code === 'cap_class' && details.reason === 'cap_school') ? 'cap_school' : code === 'cap_class' ? 'cap_class' : null;
   if (seat === null) return { status: 'error', code: 'cap_learner' };
   const cap = details.cap;
   return typeof cap === 'number' && Number.isInteger(cap) && cap >= 0 ? { status: 'error', code: seat, cap } : { status: 'error', code: seat };
 }
+
+/** The `/join` answer's `memberships`: read whole or not at all (a partial list must never replace the cache). */
+const JOIN_MEMBERSHIPS = z.array(LearnerMembershipSchema);
 
 async function call(
   fetchImpl: typeof fetch,
@@ -380,9 +415,20 @@ export function createSyncApi(opts: SyncApiOptions) {
       const r = await call(fetchImpl, `${spaces}/lookup`, init);
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status === 200) {
-        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean; seat?: unknown; roster?: RosterName[] };
+        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean; seat?: unknown; roster?: RosterName[]; moved?: unknown; moveWaiting?: unknown };
         const seat = LookupSeatSchema.safeParse(data.seat);
-        return { status: 'ok', space: data.space, full: data.full, seat: seat.success ? seat.data : null, roster: data.roster ?? [] };
+        // Owner report 2026-10-23: both optional (older Workers send neither); a shape this app cannot read is left out.
+        const moved = LookupMovedSchema.safeParse(data.moved);
+        const moveWaiting = LookupMoveWaitingSchema.safeParse(data.moveWaiting);
+        return {
+          status: 'ok',
+          space: data.space,
+          full: data.full,
+          seat: seat.success ? seat.data : null,
+          roster: data.roster ?? [],
+          ...(moved.success ? { moved: moved.data } : {}),
+          ...(moveWaiting.success ? { moveWaiting: moveWaiting.data } : {}),
+        };
       }
       if (r.status === 404) return { status: 'error', code: errorCode(r.body) === 'code_expired' ? 'code_expired' : 'code_not_found' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
@@ -395,11 +441,15 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === -1) return { status: 'error', code: 'network' };
       const code = errorCode(r.body);
       if (r.status === 200 || r.status === 201) {
-        const data = r.body.data as { alreadyMember: boolean; membership: { role: LearnerMembership['role']; joinedAt: string }; space: { id: string; kind: SpaceKind; name: string } };
+        const data = r.body.data as { alreadyMember: boolean; membership: { role: LearnerMembership['role']; joinedAt: string }; space: { id: string; kind: SpaceKind; name: string }; memberships?: unknown };
+        // Owner report 2026-10-23: the inbox list as it is now, when this Worker sends it; a list this app cannot read
+        // is left out, so the store falls back to merging the one row as before.
+        const list = JOIN_MEMBERSHIPS.safeParse(data.memberships);
         return {
           status: 'ok',
           alreadyMember: data.alreadyMember,
           membership: { spaceId: data.space.id, kind: data.space.kind, name: data.space.name, role: data.membership.role, joinedAt: data.membership.joinedAt },
+          ...(list.success ? { memberships: list.data } : {}),
         };
       }
       if (r.status === 404) return { status: 'error', code: code === 'code_expired' ? 'code_expired' : 'code_not_found' };
