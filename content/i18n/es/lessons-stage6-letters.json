@@ -56,8 +56,19 @@
       "typeHangul.rounds.t3.target.gloss": "arroz mezclado"
     },
     "minigame:s6-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "fideos instantáneos",
-      "listenPick.rounds.c2.prompt": "pasteles de arroz picantes"
+      "realiaRead.realia.alt": "Un menú de cafetería con cuatro platillos",
+      "realiaRead.realia.entries.e1.text.gloss": "rollos de arroz con alga",
+      "realiaRead.realia.entries.e2.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.realia.entries.e3.text.gloss": "fideos instantáneos",
+      "realiaRead.realia.entries.e4.text.gloss": "arroz mezclado",
+      "realiaRead.rounds.c1.question": "¿Qué platillo son los rollos de arroz con alga?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "fideos instantáneos",
+      "realiaRead.rounds.c1.options.b.text.gloss": "rollos de arroz con alga",
+      "realiaRead.rounds.c1.options.c.text.gloss": "arroz mezclado",
+      "realiaRead.rounds.c2.question": "Busca este platillo en el menú. ¿Qué imagen lo muestra?",
+      "realiaRead.rounds.c2.options.a.label": "rollos de arroz con alga",
+      "realiaRead.rounds.c2.options.b.label": "pasteles de arroz picantes",
+      "realiaRead.rounds.c2.options.c.label": "fideos instantáneos"
     },
     "quest:stage6-letters-q2": {
       "title": "¿Cuánto cuesta?",
@@ -106,8 +117,15 @@
       "typeHangul.rounds.t3.target.gloss": "3000 wones"
     },
     "minigame:s6-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "5000 wones",
-      "listenPick.rounds.c2.prompt": "2000 wones"
+      "clozePick.realia.alt": "Un menú de cafetería con cuatro platillos y sus precios en wones",
+      "clozePick.rounds.c1.sentence.gloss": "Los fideos instantáneos cuestan ___ wones.",
+      "clozePick.rounds.c1.tiles.sacheon.gloss": "cuatro mil",
+      "clozePick.rounds.c1.tiles.icheon.gloss": "dos mil",
+      "clozePick.rounds.c1.tiles.ocheon.gloss": "cinco mil",
+      "clozePick.rounds.c2.sentence.gloss": "El arroz mezclado cuesta ___ wones.",
+      "clozePick.rounds.c2.tiles.samcheon.gloss": "tres mil",
+      "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil",
+      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil"
     },
     "quest:stage6-letters-q3": {
       "title": "¿Picante o no?",
@@ -155,8 +173,10 @@
       "typeHangul.rounds.t3.target.gloss": "té"
     },
     "minigame:s6-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "sabor picante",
-      "listenPick.rounds.c2.prompt": "7000 wones"
+      "typeHangul.rounds.c1.prompt": "Escribe el precio que oyes.",
+      "typeHangul.rounds.c1.target.gloss": "2000 wones",
+      "typeHangul.rounds.c2.prompt": "Escribe el precio que oyes.",
+      "typeHangul.rounds.c2.target.gloss": "7000 wones"
     }
   }
 }

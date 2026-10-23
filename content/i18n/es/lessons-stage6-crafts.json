@@ -112,8 +112,15 @@
       "typeHangul.rounds.t3.target.gloss": "mercado de cada cinco días"
     },
     "minigame:s6-crafts-q1-check": {
-      "listenPick.rounds.c1.prompt": "abanico",
-      "listenPick.rounds.c2.prompt": "papel coreano"
+      "clozePick.realia.alt": "Tres carteles de precios en un puesto de mercado de cada cinco días: un abanico plegable, papel coreano y un manojo de manzanas",
+      "clozePick.rounds.c1.sentence.gloss": "El abanico cuesta ___ wones.",
+      "clozePick.rounds.c1.tiles.ocheon.gloss": "cinco mil",
+      "clozePick.rounds.c1.tiles.cheon.gloss": "mil",
+      "clozePick.rounds.c1.tiles.icheon.gloss": "dos mil",
+      "clozePick.rounds.c2.sentence.gloss": "El papel coreano cuesta ___ wones.",
+      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil",
+      "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil",
+      "clozePick.rounds.c2.tiles.cheon.gloss": "mil"
     },
     "minigame:s6-crafts-q2-practice": {
       "realiaRead.realia.alt": "Tres carteles de precios en un puesto de mercado de cada cinco días: manzanas, un abanico plegable y papel coreano, con precios",
@@ -140,8 +147,21 @@
       "typeHangul.rounds.t3.target.gloss": "cuánto cuesta"
     },
     "minigame:s6-crafts-q2-check": {
-      "listenPick.rounds.c1.prompt": "Tres manzanas, por favor.",
-      "listenPick.rounds.c2.prompt": "¿Cuánto cuesta esto?"
+      "realiaRead.realia.alt": "Tres carteles de precios en un puesto de mercado de cada cinco días: manzanas, un abanico plegable y papel coreano, con precios",
+      "realiaRead.realia.entries.apple.text.gloss": "manzana",
+      "realiaRead.realia.entries.fan.text.gloss": "abanico",
+      "realiaRead.realia.entries.hanji.text.gloss": "papel coreano",
+      "realiaRead.realia.entries.apple.value.gloss": "3 por 2000 wones",
+      "realiaRead.realia.entries.fan.value.gloss": "5000 wones",
+      "realiaRead.realia.entries.hanji.value.gloss": "1000 wones",
+      "realiaRead.rounds.c1.question": "¿Cuál cuesta esto?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "papel coreano",
+      "realiaRead.rounds.c1.options.b.text.gloss": "abanico",
+      "realiaRead.rounds.c1.options.c.text.gloss": "manzana",
+      "realiaRead.rounds.c2.question": "¿Cuál cuesta esto?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "manzana",
+      "realiaRead.rounds.c2.options.b.text.gloss": "abanico",
+      "realiaRead.rounds.c2.options.c.text.gloss": "papel coreano"
     },
     "minigame:s6-crafts-q3-practice": {
       "realiaRead.realia.alt": "Carteles de precios en un puesto de mercado de cada cinco días: manzanas, un cartel de una manzana de regalo y un abanico plegable",
@@ -163,26 +183,44 @@
       "realiaRead.rounds.r2.options.hanji.text.gloss": "papel coreano"
     },
     "minigame:s6-crafts-q3-apply": {
-      "dialogue.0.npc": "Estas son manzanas.",
-      "dialogue.1.npc": "Son 2000 wones.",
-      "dialogue.2.npc": "Bien, son 2000 wones.",
-      "dialogue.3.npc": "Esto es un poquito de regalo.",
-      "dialogue.0.options.buchaeyeyo.gloss": "Es un abanico.",
-      "dialogue.0.options.igeo-eolmayeyo.gloss": "¿Cuánto cuesta esto?",
-      "dialogue.0.options.igeon-deomieyo.gloss": "Esto es un poquito de regalo.",
-      "dialogue.1.options.sagwa-se-gae-juseyo.gloss": "Tres manzanas, por favor.",
-      "dialogue.1.options.hanjiyeyo.gloss": "Es papel coreano.",
-      "dialogue.1.options.igeon-deomieyo.gloss": "Esto es un poquito de regalo.",
-      "dialogue.2.options.buchaeyeyo.gloss": "Es un abanico.",
-      "dialogue.2.options.igeon-deomieyo.gloss": "Esto es un poquito de regalo.",
-      "dialogue.2.options.ne-yeogi-isseoyo.gloss": "Sí, aquí está.",
-      "dialogue.3.options.hanjiyeyo.gloss": "Es papel coreano.",
-      "dialogue.3.options.gamsahamnida.gloss": "Gracias.",
-      "dialogue.3.options.buchaeyeyo.gloss": "Es un abanico."
+      "rolePlay.scene.title.gloss": "mercado de cada cinco días",
+      "rolePlay.scene.partner.gloss": "abuela",
+      "rolePlay.scene.nodes.t1.line.gloss": "Estas son manzanas.",
+      "rolePlay.scene.nodes.t1.replies.fan.text.gloss": "Es un abanico.",
+      "rolePlay.scene.nodes.t1.replies.price.text.gloss": "¿Cuánto cuesta esto?",
+      "rolePlay.scene.nodes.t1.replies.extra.text.gloss": "Esto es un poquito de regalo.",
+      "rolePlay.scene.nodes.t1.replies.fan.why": "Te muestra manzanas, no un abanico. Pregunta cuánto cuestan.",
+      "rolePlay.scene.nodes.t1.replies.extra.why": "Quien vende dice «igeon deomieyo» cuando regala algo de más. Primero pregunta por las manzanas.",
+      "rolePlay.scene.nodes.t2.line.gloss": "Son 2000 wones.",
+      "rolePlay.scene.nodes.t2.replies.apples.text.gloss": "Tres manzanas, por favor.",
+      "rolePlay.scene.nodes.t2.replies.hanji.text.gloss": "Es papel coreano.",
+      "rolePlay.scene.nodes.t2.replies.extra.text.gloss": "Esto es un poquito de regalo.",
+      "rolePlay.scene.nodes.t2.replies.hanji.why": "Te acaba de decir el precio de las manzanas. Ahora pide algunas.",
+      "rolePlay.scene.nodes.t2.replies.extra.why": "Es quien vende quien regala un poquito de más. Pide las manzanas.",
+      "rolePlay.scene.nodes.t3.line.gloss": "Bien, son 2000 wones.",
+      "rolePlay.scene.nodes.t3.replies.fan.text.gloss": "Es un abanico.",
+      "rolePlay.scene.nodes.t3.replies.extra.text.gloss": "Esto es un poquito de regalo.",
+      "rolePlay.scene.nodes.t3.replies.pay.text.gloss": "Sí, aquí está.",
+      "rolePlay.scene.nodes.t3.replies.fan.why": "Espera el dinero de las manzanas. Dáselo.",
+      "rolePlay.scene.nodes.t3.replies.extra.why": "Es hora de pagar. Da el dinero con una frase corta.",
+      "rolePlay.scene.nodes.t4.line.gloss": "Esto es un poquito de regalo.",
+      "rolePlay.scene.nodes.t4.replies.hanji.text.gloss": "Es papel coreano.",
+      "rolePlay.scene.nodes.t4.replies.thanks.text.gloss": "Gracias.",
+      "rolePlay.scene.nodes.t4.replies.fan.text.gloss": "Es un abanico.",
+      "rolePlay.scene.nodes.t4.replies.hanji.why": "Te da algo gratis. ¿Qué dices entonces?",
+      "rolePlay.scene.nodes.t4.replies.fan.why": "«Buchaeyeyo» nombra un abanico. Te acaba de regalar un poquito de más.",
+      "rolePlay.scene.nodes.done.closing": "Compraste manzanas y diste las gracias por el regalo."
     },
     "minigame:s6-crafts-q3-check": {
-      "listenPick.rounds.c1.prompt": "Esto es un poquito de regalo.",
-      "listenPick.rounds.c2.prompt": "Una manzana, por favor."
+      "clozePick.realia.alt": "Carteles de precios en un puesto de mercado de cada cinco días: manzanas, un cartel de una manzana de regalo y un abanico plegable",
+      "clozePick.rounds.c1.sentence.gloss": "El regalo es ___ manzana.",
+      "clozePick.rounds.c1.tiles.han.gloss": "una",
+      "clozePick.rounds.c1.tiles.du.gloss": "dos",
+      "clozePick.rounds.c1.tiles.se.gloss": "tres",
+      "clozePick.rounds.c2.sentence.gloss": "Tres manzanas cuestan ___ wones.",
+      "clozePick.rounds.c2.tiles.cheon.gloss": "mil",
+      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil",
+      "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil"
     }
   }
 }

@@ -113,8 +113,21 @@
       "typeHangul.rounds.t4.target.gloss": "나가는 곳"
     },
     "minigame:s6-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "산의 가장 높은 곳",
-      "listenPick.rounds.c2.prompt": "나가는 곳"
+      "realiaRead.realia.alt": "기둥에 달린 산길 표지판: 꼭대기와 강 방향판은 오른쪽, 들어가는 곳, 나가는 곳, 화장실 방향판은 왼쪽을 가리켜요",
+      "realiaRead.realia.title.gloss": "산에 나 있는 길",
+      "realiaRead.realia.entries.summit.text.gloss": "산의 가장 높은 곳",
+      "realiaRead.realia.entries.river.text.gloss": "길게 흐르는 큰 물줄기",
+      "realiaRead.realia.entries.entrance.text.gloss": "들어가는 곳",
+      "realiaRead.realia.entries.exit.text.gloss": "나가는 곳",
+      "realiaRead.realia.entries.restroom.text.gloss": "볼일 보는 곳",
+      "realiaRead.rounds.c1.question": "길게 흐르는 큰 물줄기로 가는 방향판은 어느 것일까요?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "산의 가장 높은 곳",
+      "realiaRead.rounds.c1.options.b.text.gloss": "길게 흐르는 큰 물줄기",
+      "realiaRead.rounds.c1.options.c.text.gloss": "들어가는 곳",
+      "realiaRead.rounds.c2.question": "밖으로 나가는 길을 가리키는 방향판은 어느 것일까요?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "들어가는 곳",
+      "realiaRead.rounds.c2.options.b.text.gloss": "볼일 보는 곳",
+      "realiaRead.rounds.c2.options.c.text.gloss": "나가는 곳"
     },
     "minigame:s6-nature-q2-practice": {
       "realiaRead.realia.alt": "갈림길의 산길 표지판: 꼭대기와 나가는 곳은 오른쪽, 화장실과 들어가는 곳은 왼쪽을 가리켜요",
@@ -156,8 +169,10 @@
       "dialogue.3.options.jeongsangieyo.gloss": "산의 가장 높은 곳이라고 알려 주는 말"
     },
     "minigame:s6-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "산꼭대기로 가는 길을 묻는 말",
-      "listenPick.rounds.c2.prompt": "왼손이 있는 방향"
+      "typeHangul.rounds.c1.prompt": "들리는 방향을 쳐 봐요.",
+      "typeHangul.rounds.c1.target.gloss": "왼손이 있는 방향",
+      "typeHangul.rounds.c2.prompt": "들리는 방향을 쳐 봐요.",
+      "typeHangul.rounds.c2.target.gloss": "오른손이 있는 방향"
     },
     "minigame:s6-nature-q3-practice": {
       "realiaRead.realia.alt": "시간이 적힌 산길 표지판: 오른쪽에 꼭대기 두 시간, 강 세 시간, 왼쪽에 나가는 곳 한 시간과 화장실이 있어요",
@@ -196,8 +211,23 @@
       "typeHangul.rounds.t4.target.gloss": "오른손이 있는 방향"
     },
     "minigame:s6-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "가는 데 시간이 얼마큼 드는지 묻는 말",
-      "listenPick.rounds.c2.prompt": "120분 동안"
+      "realiaRead.realia.alt": "시간이 적힌 산길 표지판: 오른쪽에 꼭대기 두 시간, 강 세 시간, 왼쪽에 나가는 곳 한 시간과 화장실이 있어요",
+      "realiaRead.realia.title.gloss": "산에 나 있는 길",
+      "realiaRead.realia.entries.summit.text.gloss": "산의 가장 높은 곳",
+      "realiaRead.realia.entries.river.text.gloss": "길게 흐르는 큰 물줄기",
+      "realiaRead.realia.entries.exit.text.gloss": "나가는 곳",
+      "realiaRead.realia.entries.restroom.text.gloss": "볼일 보는 곳",
+      "realiaRead.realia.entries.summit.value.gloss": "120분 동안",
+      "realiaRead.realia.entries.river.value.gloss": "180분 동안",
+      "realiaRead.realia.entries.exit.value.gloss": "60분 동안",
+      "realiaRead.rounds.c1.question": "길게 흐르는 큰 물줄기까지 얼마나 걸릴까요?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "60분 동안",
+      "realiaRead.rounds.c1.options.b.text.gloss": "120분 동안",
+      "realiaRead.rounds.c1.options.c.text.gloss": "180분 동안",
+      "realiaRead.rounds.c2.question": "60분 걸리는 곳은 어디일까요?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "산의 가장 높은 곳",
+      "realiaRead.rounds.c2.options.b.text.gloss": "나가는 곳",
+      "realiaRead.rounds.c2.options.c.text.gloss": "길게 흐르는 큰 물줄기"
     }
   }
 }

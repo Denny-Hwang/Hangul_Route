@@ -56,8 +56,19 @@
       "typeHangul.rounds.t3.target.gloss": "밥에 나물을 넣고 섞어 먹는 음식"
     },
     "minigame:s6-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "금방 끓여 먹는 꼬불꼬불한 국수",
-      "listenPick.rounds.c2.prompt": "가래떡을 매콤하게 익힌 음식"
+      "realiaRead.realia.alt": "음식 네 가지가 적힌 분식집 메뉴판",
+      "realiaRead.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
+      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
+      "realiaRead.realia.entries.e4.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
+      "realiaRead.rounds.c1.question": "김에 밥을 말아 썬 음식은 어느 것일까요?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
+      "realiaRead.rounds.c1.options.b.text.gloss": "김에 밥을 말아 썬 음식",
+      "realiaRead.rounds.c1.options.c.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
+      "realiaRead.rounds.c2.question": "메뉴판에서 이 음식을 찾아요. 어느 그림일까요?",
+      "realiaRead.rounds.c2.options.a.label": "김에 밥을 말아 썬 음식",
+      "realiaRead.rounds.c2.options.b.label": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.rounds.c2.options.c.label": "금방 끓여 먹는 꼬불꼬불한 국수"
     },
     "quest:stage6-letters-q2": {
       "title": "얼마예요?",
@@ -106,8 +117,15 @@
       "typeHangul.rounds.t3.target.gloss": "3,000원"
     },
     "minigame:s6-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "5,000원",
-      "listenPick.rounds.c2.prompt": "2,000원"
+      "clozePick.realia.alt": "음식 네 가지와 가격이 원으로 적힌 분식집 메뉴판",
+      "clozePick.rounds.c1.sentence.gloss": "금방 끓여 먹는 꼬불꼬불한 국수는 ___원이에요.",
+      "clozePick.rounds.c1.tiles.sacheon.gloss": "4,000",
+      "clozePick.rounds.c1.tiles.icheon.gloss": "2,000",
+      "clozePick.rounds.c1.tiles.ocheon.gloss": "5,000",
+      "clozePick.rounds.c2.sentence.gloss": "밥에 나물을 넣고 섞어 먹는 음식은 ___원이에요.",
+      "clozePick.rounds.c2.tiles.samcheon.gloss": "3,000",
+      "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000",
+      "clozePick.rounds.c2.tiles.icheon.gloss": "2,000"
     },
     "quest:stage6-letters-q3": {
       "title": "매울까요, 안 매울까요?",
@@ -155,8 +173,10 @@
       "typeHangul.rounds.t3.target.gloss": "잎을 뜨거운 물에 우려낸 마실 것"
     },
     "minigame:s6-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "혀가 얼얼하고 화끈한 맛",
-      "listenPick.rounds.c2.prompt": "7,000원"
+      "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요",
+      "typeHangul.rounds.c1.target.gloss": "2,000원",
+      "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요",
+      "typeHangul.rounds.c2.target.gloss": "7,000원"
     }
   }
 }
