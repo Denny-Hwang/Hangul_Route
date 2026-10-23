@@ -534,6 +534,9 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
     case 'sentence-build':
       // The whole sentence at every build, as the learner's Sentence Builder plays it (Hear it) before it is built.
       return { spoken: slide.sentence.spoken, kind: 'sentence' };
+    case 'hidden-heritage':
+      // The word to find, as the learner's game plays it.
+      return { spoken: slide.word.spoken, kind: 'word' };
     case 'write-together':
       return writeSound(slide, reveal ?? slide.builds.length - 1);
     case 'title':

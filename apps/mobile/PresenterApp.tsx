@@ -6,6 +6,7 @@ import {
   CATALOG,
   decodeDeck,
   encodeDeck,
+  isNewerDeckFailure,
   presetBlockMinutes,
   type LectureBlock,
   type LectureDeck,
@@ -203,7 +204,8 @@ type Phase =
 function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
   if (result.kind === 'deck') return readyFromBoot(result, address?.fresh === true);
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
-  if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
+  // A block kind or preset this build does not know (`unknown_kind`, F-CURR-002 §8) is from a newer console too.
+  if (result.kind === 'invalid') return isNewerDeckFailure(result.reason) ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
 }
 

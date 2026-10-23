@@ -12,6 +12,7 @@ import {
   type DiscoverItem,
   type Episode,
   type HeritageCard,
+  type HiddenHeritageRound,
   type Jamo,
   type KoText,
   type LectureBlock,
@@ -593,8 +594,22 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'write-frame':
         writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
         return;
+      // A whole-class scene hunt (F-CURR-002 §8, row CM-36): one slide per target, in content order.
+      case 'hidden-heritage':
+        hiddenHeritageStep(path, ref, listOf(scope.hiddenHeritage?.rounds));
+        return;
       default:
         skip(ref, 'unsupported-step');
+    }
+  };
+
+  const hiddenHeritageStep = (path: string, ref: string, rounds: readonly HiddenHeritageRound[]): void => {
+    if (rounds.length === 0) skip(ref, 'scope-too-small');
+    for (const round of rounds) {
+      for (const t of round.targets) {
+        teachWord({ ko: t.word.ko, romanization: t.word.romanization, gloss: t.word.en });
+        push(`${path}/${round.id}/${t.id}`, { kind: 'hidden-heritage', sceneId: round.sceneId, alt: round.altEn, word: spokenLine(t.word), spot: t.spot, picture: t.picture });
+      }
     }
   };
 

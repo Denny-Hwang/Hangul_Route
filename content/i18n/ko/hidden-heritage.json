@@ -1,0 +1,20 @@
+{
+  "locale": "ko",
+  "domain": "hidden-heritage",
+  "entries": {
+    "scene:letters-school": {
+      "art.alt": "마당 쪽 문이 열려 있는 옛날 서당의 방.",
+      "round.alt": "마당 쪽 문이 열려 있는 옛날 서당의 방.",
+      "round.targets.chaek.word.gloss": "글이나 그림을 묶어 만든 읽을거리",
+      "round.targets.but.word.gloss": "털에 먹이나 물감을 묻혀 쓰는 도구",
+      "round.targets.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "round.others.san.word.gloss": "땅이 높이 솟은 곳",
+      "round.others.sae.word.gloss": "날개가 있어 하늘을 나는 동물",
+      "round.others.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "note.subject": "옛날의 사설 학교인 서당은 조선 풍속화의 소재예요. 낮은 책상, 실로 묶은 책, 붓이 있어요.",
+      "note.facts.f1.claim": "국립중앙박물관의 조선 풍속화첩 《단원 풍속도첩》은 일과 놀이 등 생활의 여러 모습을 보여 줘요. 첫 번째 그림은 〈서당〉이에요.",
+      "note.facts.f2.claim": "서당은 예전에 한문을 사사로이 가르치던 곳이에요.",
+      "note.facts.f3.claim": "붓은 주로 가는 대나무나 나무 자루 끝에 짐승의 털을 꽂아 만들고, 먹이나 물감을 찍어 써요."
+    }
+  }
+}

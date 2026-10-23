@@ -59,6 +59,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-36: the Hidden Heritage game's chunk.
+  'screens/minigames/hidden-heritage-entry.tsx#HiddenHeritageGame': 'screens/minigames/HiddenHeritageGame.tsx#HiddenHeritageGame',
+  'navigation/hidden-heritage-e2e.tsx#HiddenHeritageE2eBody': 'navigation/hidden-heritage-e2e-screen.tsx#HiddenHeritageE2eBody',
 };
 
 /**

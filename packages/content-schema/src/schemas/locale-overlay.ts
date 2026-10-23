@@ -82,6 +82,10 @@ export const OVERLAY_FIELDS = {
     'traceWord.rounds.<roundId>.word.gloss',
     'writeFrame.rounds.<roundId>.frame.gloss',
     'writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss',
+    // F-CURR-002 row CM-36: a Hidden Heritage scene's alt text and the meanings that name its spots.
+    'hiddenHeritage.rounds.<roundId>.alt',
+    'hiddenHeritage.rounds.<roundId>.targets.<thing>.word.gloss',
+    'hiddenHeritage.rounds.<roundId>.others.<thing>.word.gloss',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],
@@ -112,6 +116,16 @@ export const OVERLAY_FIELDS = {
   vocab: ['gloss', 'senseNote'],
   'vocab-topic': ['title', 'blurb', 'hoyaIntro'],
   pitem: ['gloss', 'options.<optionId>.gloss'],
+  // F-CURR-002 row CM-37: a Hidden Heritage scene (packages/design-system/src/scene-art/hidden-heritage/): its alt
+  // text, the meanings that name its spots in the reference round, its subject and the facts of its card back.
+  scene: [
+    'art.alt',
+    'round.alt',
+    'round.targets.<thing>.word.gloss',
+    'round.others.<thing>.word.gloss',
+    'note.subject',
+    'note.facts.<factId>.claim',
+  ],
 } as const satisfies Record<string, readonly string[]>;
 export type OverlayPrefix = keyof typeof OVERLAY_FIELDS;
 

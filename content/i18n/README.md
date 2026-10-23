@@ -55,6 +55,7 @@ entries by area (`stage1-cards`, `vocab-food`, `placement`, `stories`, ...).
 | `vocab:` | `gloss`, `senseNote` |
 | `vocab-topic:` | `title`, `blurb`, `hoyaIntro` |
 | `pitem:` | `gloss`, `options.<optionId>.gloss` |
+| `scene:` | `art.alt`, `round.alt`, `round.targets.<thing>.word.gloss`, `round.others.<thing>.word.gloss`, `note.subject`, `note.facts.<factId>.claim` (a Hidden Heritage scene, F-CURR-002 row CM-37: TypeScript-resident in `packages/design-system/src/scene-art/hidden-heritage/`, checked by `apps/mobile/src/content/__tests__/overlays.test.ts`; the content row that copies a scene's round into a cell copies these glosses into its `minigame:` overlay) |
 
 The table lives in `packages/content-schema/src/schemas/locale-overlay.ts` and, for the Node
 scripts, in `scripts/overlay-fields.mjs` (a test keeps them equal). **Never** translatable:

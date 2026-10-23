@@ -120,6 +120,7 @@ export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'realia',
   'sentence-build',
   'write-together',
+  'hidden-heritage',
 ]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
@@ -367,6 +368,9 @@ export function slideDetail(
       }
     case 'sentence':
       return `${slide.sentence.ko}, ${slide.sentence.romanization}, ${slide.sentence.gloss}`;
+    case 'hidden-heritage':
+      // The scene and the word to find, never its meaning (it names the thing; its build says it).
+      return `${slide.alt}, ${slide.word.ko}, ${slide.word.romanization}`;
     case 'pattern': {
       // Each gap says its name ("gap", `a11y.presenter.slot`), never "underscore".
       const gap = (text: string): string => text.split(SLOT_MARKER).join(` ${names?.slot ?? SLOT_MARKER} `).replace(/\s+/g, ' ').replace(/ ([.,!?])/g, '$1').trim();
