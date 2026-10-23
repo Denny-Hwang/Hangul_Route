@@ -39,6 +39,8 @@ export const MinigameKindSchema = z.enum([
   'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
   'trace-word', // Construction · trace a whole syllable block or a two-syllable word
   'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
+  // F-CURR-002 §7.1 F1 (row CM-30), additive: read a sentence with one gap, pick the tile that fills it.
+  'cloze-pick', // Recognition · Cloze Pick (fallback: Listen & Pick with a text prompt)
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -467,6 +469,60 @@ export const WriteFrameRoundSchema = z
   });
 export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
 
+// ---- Cloze Pick (F-CURR-002 §7.1 F1, row CM-30) ------------------------------------------------
+
+/** The gap of a Cloze Pick sentence; the same `___` as `SLOT_MARKER` in `schemas/quest` (a test checks). */
+export const CLOZE_GAP = '___';
+const gapsIn = (text: string): number => text.split(CLOZE_GAP).length - 1;
+
+/**
+ * What the gap holds (design/wireframes/minigame/cloze-pick.md): a taught word, a particle or ending
+ * (`물___ 마셔요.` with 을 / 를 / 이), or a value read from the scope's realia card (`___ 원이에요.`,
+ * the produce rung of a `rea` item, §4.3).
+ */
+export const CLOZE_GAP_KINDS = ['word', 'particle', 'value'] as const;
+export const ClozeGapKindSchema = z.enum(CLOZE_GAP_KINDS);
+export type ClozeGapKind = z.infer<typeof ClozeGapKindSchema>;
+
+/**
+ * Cloze Pick: one Korean sentence with one gap (`___` in `ko` and in `romanization`) and 3 or 4
+ * tiles; exactly the tile at `answerIndex` fills it. `en` is the sentence's meaning in full (a word
+ * or particle gap: the meaning is the input the round reads from, D3), or with the gap kept for a
+ * value gap (`It is ___ won.`), whose value is read from the card. `filledRomanization` is the
+ * completed sentence's romanization when it is not the gap's text filled with the tile's (a
+ * particle links to the word before it: `mul___` with `eul` reads `mureul`); a particle gap needs it.
+ * Tiles show Korean and romanization only; their `en` is the content gloss every Korean item carries.
+ */
+export const ClozePickRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    sentence: KoTextSchema,
+    gapKind: ClozeGapKindSchema.default('word'),
+    tiles: z.array(KoTextSchema).min(3).max(4),
+    answerIndex: z.number().int().min(0),
+    filledRomanization: z.string().trim().min(1).optional(),
+  })
+  .superRefine((round, ctx) => {
+    const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+    const { sentence: s, tiles, gapKind } = round;
+    if (gapsIn(s.ko) !== 1 || gapsIn(s.romanization) !== 1) issue(['sentence'], 'one gap (___) in the Korean and one in the romanization');
+    if (gapsIn(s.en) !== (gapKind === 'value' ? 1 : 0)) issue(['sentence', 'en'], 'the meaning keeps the gap for a value gap only (It is ___ won.)');
+    if (round.answerIndex >= tiles.length) issue(['answerIndex'], 'answerIndex must point at a tile');
+    if (new Set(tiles.map((t) => t.ko)).size !== tiles.length || tiles.some((t) => gapsIn(t.ko) > 0)) issue(['tiles'], 'tiles differ and carry no gap');
+    if (gapKind !== 'particle') return;
+    if (round.filledRomanization === undefined) issue(['filledRomanization'], 'a particle gap gives the completed romanization (the particle links)');
+    // The word before the gap picks the particle: `사과___` takes 를, so a round whose answer is 을 is caught here.
+    const stem = (s.ko.split(CLOZE_GAP)[0] ?? '').split(' ').pop() ?? '';
+    const answer = tiles[round.answerIndex]?.ko ?? '';
+    const pair = ALLOMORPH_PAIRS.find((p) => p.split('/').includes(answer));
+    if (!/[가-힣]$/.test(stem)) issue(['sentence', 'ko'], 'a particle gap follows its word (물___ 마셔요.)');
+    else if (pair !== undefined && allomorph(stem, pair) !== answer) issue(['answerIndex'], `"${stem}" takes ${allomorph(stem, pair)}, not ${answer}`);
+  });
+export type ClozePickRound = z.infer<typeof ClozePickRoundSchema>;
+
+/** The text with its one gap filled (`책을 ___.` with 읽어요 is `책을 읽어요.`). */
+export const fillClozeGap = (text: string, fill: string): string => text.replace(CLOZE_GAP, fill);
+
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
   z.object({ kind: z.literal('build-letter'), data: BuildLetterRoundSchema }),
@@ -481,6 +537,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('cloze-pick'), data: ClozePickRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

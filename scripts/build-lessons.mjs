@@ -221,6 +221,13 @@ export function runtimeScope(scope, where) {
       return { kind, rounds: scope.rounds.length, traceWord: { rounds: scope.rounds } };
     case "write-frame":
       return { kind, rounds: scope.rounds.length, writeFrame: { rounds: scope.rounds } };
+    case "cloze-pick":
+      // F-CURR-002 row CM-30; ClozePickRoundSchema's default: a round with no gapKind is a word gap.
+      return {
+        kind,
+        rounds: scope.rounds.length,
+        clozePick: { rounds: scope.rounds.map((r) => ({ ...r, gapKind: r.gapKind ?? "word" })), ...(scope.realia ? { realia: scope.realia } : {}) },
+      };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }

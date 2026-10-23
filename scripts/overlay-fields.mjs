@@ -67,6 +67,10 @@ export const OVERLAY_FIELDS = Object.freeze({
     "traceWord.rounds.<roundId>.word.gloss",
     "writeFrame.rounds.<roundId>.frame.gloss",
     "writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss",
+    // F-CURR-002 row CM-30: Cloze Pick's sentence meaning, its tiles' content glosses and a value gap's card.
+    "clozePick.rounds.<roundId>.sentence.gloss",
+    "clozePick.rounds.<roundId>.tiles.<tile>.gloss",
+    "clozePick.realia.alt",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],

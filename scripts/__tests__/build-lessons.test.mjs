@@ -274,6 +274,15 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],
       [{ kind: "write-frame", rounds: [1] }, { kind: "write-frame", rounds: 1, writeFrame: { rounds: [1] } }],
+      // Row CM-30: a round with no gapKind is a word gap (the schema default); a value gap's card rides along.
+      [
+        { kind: "cloze-pick", rounds: [{ id: "c1" }, { id: "c2", gapKind: "particle" }] },
+        { kind: "cloze-pick", rounds: 2, clozePick: { rounds: [{ id: "c1", gapKind: "word" }, { id: "c2", gapKind: "particle" }] } },
+      ],
+      [
+        { kind: "cloze-pick", rounds: [{ id: "c1", gapKind: "value" }], realia },
+        { kind: "cloze-pick", rounds: 1, clozePick: { rounds: [{ id: "c1", gapKind: "value" }], realia } },
+      ],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });
