@@ -54,6 +54,7 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
  */
 const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/reviews/DailyReviewRoute.tsx#DailyReviewScreen': 'screens/reviews/DailyReviewScreen.tsx#DailyReviewScreen',
+  'screens/cell-check/cell-check-entry.tsx#CellCheckScreen': 'screens/cell-check/CellCheckScreen.tsx#CellCheckScreen',
 };
 
 /**

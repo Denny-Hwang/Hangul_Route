@@ -30,7 +30,8 @@ export interface MasteryBannersProps {
 /** The level-up banner's ring. */
 export const LEVEL_RING_SIZE = spacing.xxxl;
 
-function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; theme: ThemeKey; reducedMotion: boolean }): React.ReactElement {
+/** The 48 dp ring: the level-up banner's, and the cell page's mastery block (row CM-21, drawn full with `reducedMotion`). */
+export function LevelRing({ level, theme, reducedMotion }: { level: 1 | 2 | 3; theme: ThemeKey; reducedMotion: boolean }): React.ReactElement {
   const ring = circleRing(LEVEL_RING_SIZE, { gap: spacing.xs, track: borderWidth.thick });
   const fill = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   useEffect(() => {

@@ -19,7 +19,8 @@ describe('the episode page (E3-6)', () => {
 
   it('a tagged row still reads its blurb, builds-on line and stars (the group hides them otherwise)', () => {
     expect(src).toMatch(/messages\.a11y\.access\.row\(/);
-    expect(src).toMatch(/\[q\.blurbEn, buildsOn \? buildsOnLine\(buildsOn, m\) : null, messages\.a11y\.stars\(stars\)\]/);
+    // A tested-out quest (F-CURR-002 row CM-21) reads its pill and its 2 stars instead.
+    expect(src).toMatch(/\[q\.blurbEn, buildsOn \? buildsOnLine\(buildsOn, m\) : null, testedOut && stars === 0 \? `\$\{messages\.learner\.testOut\.pill\}\. \$\{messages\.a11y\.stars\(2\)\}` : messages\.a11y\.stars\(stars\)\]/);
   });
 
   it('draws no lock glyph in any state (D7: the waiting card tile has no glyph)', () => {

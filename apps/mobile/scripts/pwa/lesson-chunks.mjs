@@ -74,7 +74,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // ece5eee02 with the phase-1 integration) measures 4,804,191 B raw / 1,265,853 B gzip (release `build:web`, Metro cache
   // cleared): main's 4,760,960 B plus the guest rows' 41,459 B (4,774,256 B on GU-5 against 4,732,797 B on its main),
   // 1,772 B over that sum. The line is that measurement plus a 5,809 B rounding margin.
-  startBundleRaw: 4_810_000,
+  // CM-21 (the Cell Check: the cell page's slot, the route, the Tested out pill, routeNext's skip and 21 English strings;
+  // block, screen and logic in chunks) measures 4,812,510 B raw / 1,269,005 B gzip on CM-20's 4,808,758 B.
+  startBundleRaw: 4_815_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -211,6 +213,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/screens/parent/guest-keep.tsx`): People on this device's first-quest row and
   // the guest-only gate on PIN setup.
   Object.freeze({ name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' }),
+  // F-CURR-002 row CM-21: the Cell Check's block, Test out line and screen (`src/screens/cell-check/cell-check-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/cell-check/cell-check-entry.tsx`); the session logic is
+  // the memory chunk's and the rounds the Daily Review chunk's, each reached at run time.
+  Object.freeze({ name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' }),
 ]);
 
 /**

@@ -7,4 +7,4 @@
  */
 export const MASTERY_CHUNK = 'mastery-chunk:ui';
 export { MasteryRing } from './MasteryRing';
-export { MasteryBanners } from './MasteryBanners';
+export { LevelRing, MasteryBanners } from './MasteryBanners';

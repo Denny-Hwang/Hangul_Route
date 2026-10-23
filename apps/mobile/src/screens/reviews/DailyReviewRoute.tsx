@@ -20,7 +20,8 @@ const loadChunk = (): Promise<Chunk> =>
     return chunk;
   });
 
-function dailyReviewChunk(): Promise<Chunk> {
+/** The Daily Review chunk, loaded once; the Cell Check's chunk reaches its rounds here (row CM-21). */
+export function dailyReviewChunk(): Promise<Chunk> {
   return loaded === null ? loadChunk() : Promise.resolve(loaded);
 }
 

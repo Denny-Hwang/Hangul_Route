@@ -35,6 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageCompleteScreen } from '../screens/results/StageCompleteScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
+import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
@@ -155,6 +156,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="StageReview" component={StageReviewScreen} options={{ gestureEnabled: false }} />
         {/* F-CURR-002 row CM-14: a chunk of its own; off (`dailyReview` or `memoryRecord`), it shows All refreshed today. */}
         <Stack.Screen name="DailyReview" component={DailyReviewRoute} options={{ gestureEnabled: false }} />
+        <Stack.Screen name="CellCheck" component={CellCheckRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
