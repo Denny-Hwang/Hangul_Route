@@ -216,7 +216,6 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   dispatchRef.current = dispatch;
 
   useEffect(() => {
-    dispatchRef.current({ type: 'start' });
     const t = timers.current;
     return () => {
       if (t.clear) clearTimeout(t.clear);
@@ -224,6 +223,30 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
       stop();
     };
   }, []);
+
+  const fit =
+    contentWidth === null
+      ? undefined
+      : sceneLayout({ contentWidth, maxWidth: layout.maxWidth.reading, short, heightForScene: windowHeight - SHORT_CHROME, columnMin: COLUMN_MIN, gap: spacing.lg });
+  // The first word is spoken once the scene is known to fit: never before the layout, and never when the step turns out
+  // to be the Pic-Word Match fallback (that game speaks its own prompts). A step that later narrows into the fallback
+  // stops this game's voice and timers, since this component stays mounted under it.
+  const sceneFits = fit !== undefined && fit !== null;
+  const narrowed = fit === null;
+  const started = useRef(false);
+  useEffect(() => {
+    if (sceneFits && !started.current) {
+      started.current = true;
+      dispatchRef.current({ type: 'start' });
+    } else if (narrowed && started.current) {
+      const t = timers.current;
+      if (t.clear) clearTimeout(t.clear);
+      if (t.advance) clearTimeout(t.advance);
+      t.clear = null;
+      t.advance = null;
+      stop();
+    }
+  }, [sceneFits, narrowed]);
 
   const round = rounds[state.roundIdx];
   const scene = round ? scenes.get(round.sceneId) : undefined;
@@ -242,10 +265,6 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   }
 
   const measure = (e: LayoutChangeEvent): void => setContentWidth(Math.floor(e.nativeEvent.layout.width));
-  const fit =
-    contentWidth === null
-      ? undefined
-      : sceneLayout({ contentWidth, maxWidth: layout.maxWidth.reading, short, heightForScene: windowHeight - SHORT_CHROME, columnMin: COLUMN_MIN, gap: spacing.lg });
   // Too narrow for a 256 dp scene (a split screen): the same targets as a Pic-Word Match board.
   if (fit === null) return <PicWordMatchGame scope={picWordFallback(scope)} host={host} onBack={onBack} />;
 

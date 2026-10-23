@@ -358,3 +358,62 @@ describe('an open console tab shows a renamed learner (F-LEARN-001 section 3.11)
     expect(text()).not.toContain('Test');
   });
 });
+
+describe('a roster change in another console tab (owner report 2026-10-23)', () => {
+  /** A BroadcastChannel stub: every channel of one name hears what another posts (never its own post). */
+  const channels = new Set<{ name: string; onmessage: ((event: { data: unknown }) => void) | null; listeners: Set<(event: { data: unknown }) => void> }>();
+  class FakeChannel {
+    onmessage: ((event: { data: unknown }) => void) | null = null;
+    listeners = new Set<(event: { data: unknown }) => void>();
+    constructor(readonly name: string) {
+      channels.add(this);
+    }
+    postMessage(data: unknown): void {
+      for (const other of channels) {
+        if (other === this || other.name !== this.name) continue;
+        other.onmessage?.({ data });
+        for (const l of other.listeners) l({ data });
+      }
+    }
+    addEventListener(type: string, l: (event: { data: unknown }) => void): void {
+      if (type === 'message') this.listeners.add(l);
+    }
+    removeEventListener(type: string, l: (event: { data: unknown }) => void): void {
+      if (type === 'message') this.listeners.delete(l);
+    }
+    close(): void {
+      channels.delete(this);
+    }
+  }
+  const post = async (data: unknown): Promise<void> => {
+    const sender = new FakeChannel('hr-roster');
+    await act(async () => sender.postMessage(data));
+    sender.close();
+  };
+
+  it('the teacher roster reads again at once on a roster-changed message, inside the 30-second gap', async () => {
+    vi.stubGlobal('BroadcastChannel', FakeChannel);
+    const text = await render(TeachSpacePage, 'id=space%3Asunflower');
+    const first = count('roster');
+    state.name = 'Sungjoo';
+    await post({ type: 'roster-changed' });
+    expect(count('roster')).toBe(first + 1);
+    expect(text()).toContain('Sungjoo');
+    // Anything else on the channel is ignored; an unmounted page stops listening.
+    await post({ type: 'something-else' });
+    await post('roster-changed');
+    expect(count('roster')).toBe(first + 1);
+    act(() => mounted?.unmount());
+    mounted = null;
+    await post({ type: 'roster-changed' });
+    expect(count('roster')).toBe(first + 1);
+    expect(channels.size).toBe(0);
+    channels.clear();
+  });
+
+  it('a browser without BroadcastChannel still draws the roster', async () => {
+    vi.stubGlobal('BroadcastChannel', undefined);
+    const text = await render(TeachSpacePage, 'id=space%3Asunflower');
+    expect(text()).toContain('Test');
+  });
+});

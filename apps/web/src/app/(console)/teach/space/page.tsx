@@ -21,6 +21,7 @@ import { useTransfersShown } from '@/components/console/TransferParts';
 import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
+import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
 import { appUrl, contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
@@ -127,6 +128,9 @@ function SpaceInner(): JSX.Element {
   // An open roster shows a renamed learner, a new practice day or a new member without a reload.
   // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
   useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
+  // A move, an accepted or cancelled ask or a removed learner in another console tab: read again at once, so this
+  // roster never keeps a learner who moved to another class (owner report 2026-10-23).
+  useRosterChanges(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone');
 
   // [SA] The inline rename (AMENDMENTS-SEATS-ADMINS section 5.3): the new name shows at once in the title, the Back
   // labels and the frame, all read from this roster. A read still under way would hold the old name, so the name is

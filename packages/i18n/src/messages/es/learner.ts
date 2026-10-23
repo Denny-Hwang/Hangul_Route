@@ -1739,7 +1739,7 @@ export const learner = {
         realia: 'Mira y lee',
         build: 'Arma una oración',
         write: 'Escribir en grupo',
-        hiddenHeritage: 'Búsquenlo en grupo',
+        hiddenHeritage: 'Buscar en grupo',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
