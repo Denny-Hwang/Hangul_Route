@@ -436,7 +436,7 @@ describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)'
   const k = m.a11y.minigame.keyboard;
 
   it('keeps the wireframe wording', () => {
-    expect(t.heading).toEqual({ see: 'Type this word', picture: 'Type the word for the picture' });
+    expect(t.heading).toEqual({ see: 'Type this word', picture: 'Type the word for the picture', hear: 'Type the word you hear' });
     expect([t.pass, t.near, t.far]).toEqual([
       'You typed it!',
       'Almost! Check the marked block.',
@@ -458,10 +458,43 @@ describe('Type Hangul and the Hangul keyboard (F-CURR-001 G-3, English wording)'
     for (const locale of LOCALES) {
       const msgs = getMessages(locale);
       for (const path of leafPaths(m.learner.minigame.typeHangul)) {
-        expect(typeof lookup(msgs.learner.minigame.typeHangul, path), `${locale}:${path}`).toBe('string');
+        const value = lookup(msgs.learner.minigame.typeHangul, path);
+        expect(typeof value === 'function' ? typeof value('apple') : typeof value, `${locale}:${path}`).toBe('string');
       }
       expect(JSON.stringify(msgs.learner.minigame.typeHangul)).not.toMatch(NO_AGE_OR_FAILURE);
       expect(msgs.a11y.minigame.keyboard.different(1)).not.toMatch(NO_AGE_OR_FAILURE);
+    }
+  });
+});
+
+describe('Dictation and the spelling round (F-CURR-002 row CM-31, design/wireframes/minigame/type-hangul.md)', () => {
+  const t = m.learner.minigame.typeHangul;
+
+  it('keeps the wireframe wording, and Show how it sounds is the placement hint in every locale', () => {
+    expect([t.heading.hear, t.hear.meaning('apple'), t.hear.showSound]).toEqual(['Type the word you hear', 'Meaning: apple', 'Show how it sounds']);
+    expect(m.learner.minigame.spellingPick).toEqual({ heading: 'Which spelling matches this word?', miss: 'Look at the meaning again.' });
+    expect(m.a11y.minigame.dictation.speaker).toBe('Hear the word');
+    for (const locale of LOCALES) {
+      const msgs = getMessages(locale);
+      expect(msgs.learner.minigame.typeHangul.hear.showSound, locale).toBe(msgs.learner.placement.item.showSound);
+      expect(msgs.learner.minigame.typeHangul.hear.meaning('X'), locale).toContain('X');
+    }
+  });
+
+  it('has every key in es and ko, never the English, with no age word, failure word, speaking line or emoji', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      const msgs = getMessages(locale);
+      const values = [
+        msgs.learner.minigame.typeHangul.heading.hear,
+        msgs.learner.minigame.typeHangul.hear.meaning('X'),
+        msgs.learner.minigame.spellingPick.heading,
+        msgs.learner.minigame.spellingPick.miss,
+        msgs.a11y.minigame.dictation.speaker,
+      ];
+      const english = [t.heading.hear, t.hear.meaning('X'), m.learner.minigame.spellingPick.heading, m.learner.minigame.spellingPick.miss, m.a11y.minigame.dictation.speaker];
+      values.forEach((v, i) => expect(v, `${locale}:${i}`).not.toBe(english[i]));
+      expect(JSON.stringify(values)).not.toMatch(NO_AGE_OR_FAILURE);
+      expect(JSON.stringify(values)).not.toMatch(/\b(say|speak|record)\b/i);
     }
   });
 });

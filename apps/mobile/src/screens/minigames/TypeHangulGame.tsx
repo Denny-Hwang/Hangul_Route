@@ -1,4 +1,4 @@
-import { a11yRomanization, romanize, type TypeHangulRound } from '@hangul-route/content-schema';
+import { a11yRomanization, composeTyped, romanize, typeHangulMode, type TypeHangulRound } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -40,6 +40,9 @@ import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
+import { switchedFromHear } from '../../logic/game-switches';
+import type { DictationKit } from './dictation-entry';
+import type { HearRound } from './dictation-chunk';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -57,7 +60,16 @@ interface Props {
   host: MinigameHost;
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
+  /**
+   * The dictation chunk, when the scope plays `hear` rounds with `game.type-hangul-hear` on (F-CURR-002 row CM-31,
+   * `dictation-entry.ts`). It is fixed for the game's life: the step loads it before the game mounts. Without it every
+   * round is a `see` (or picture) round.
+   */
+  hear?: DictationKit | null;
 }
+
+/** No dictation chunk: no round is heard. */
+const useNoHear = (): HearRound | null => null;
 
 /** Typed Korean is read with the Korean voice; react-native-web forwards `lang` (spread: native Text props lack it). */
 export const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
@@ -81,7 +93,7 @@ export function focusPanel(node: Focusable | null): void {
   else focusForScreenReader(node);
 }
 
-export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
+export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -113,12 +125,20 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
   const [revealed, setRevealed] = useState(false);
   const pictureSize = useMediaSize(compactRow ? spacing.xxxl : touchTarget.hero);
   const fieldFont = lc.mediaScale > 1 ? textScale.size.display : textScale.size.title;
+  // Dictation (row CM-31): how this round opens, its sound and its hint, from the chunk; null with no chunk.
+  const useHear = hear?.useHearRound ?? useNoHear;
+  const heard = useHear(rounds[state.roundIdx], state.roundIdx);
+  const heardRef = useRef(heard);
+  heardRef.current = heard;
 
   const runEffect = useCallback((effect: TypeHangulEffect): void => {
     switch (effect.type) {
       case 'answer': {
         const round = rounds[effect.roundIdx];
-        hostRef.current.answer(effect.roundIdx, effect.correct, round ? { itemId: round.id } : undefined);
+        // A hear round's first Done after the hint, or one letter off, is a hinted answer for the memory store (section 4.3).
+        const h = heardRef.current;
+        const hinted = round !== undefined && h !== null && hear !== null && h.mode === 'hear' && hear.hearAnswerIsHinted(round, composeTyped(stateRef.current.keys), h.revealed);
+        hostRef.current.answer(effect.roundIdx, effect.correct, round ? { itemId: round.id, ...(hinted ? { hinted: true } : {}) } : undefined);
         return;
       }
       case 'haptic':
@@ -134,7 +154,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
         advanceTimer.current = null;
         hostRef.current.complete();
     }
-  }, [rounds]);
+  }, [rounds, hear]);
 
   const dispatch = useCallback(
     (event: TypeHangulEvent): void => {
@@ -191,7 +211,15 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
   }
 
   const field = fieldView(state);
-  const mode = round.pictureRef ? 'picture' : 'see';
+  // A hear round is heard while the chunk says so (holding, then hear); it otherwise reads as a `see` round of the word.
+  const hearRound = typeHangulMode(round) === 'hear';
+  const hearing = hearRound && heard !== null && heard.mode !== 'see';
+  const holding = hearing && heard.mode === 'hold';
+  // A word written as Dictation that plays as `see` (no voice, sound off, its switch off, or no chunk) is an ordinary
+  // `see` round of the word: the Korean shows, and its line is the `see` heading, never "Type the word you hear".
+  const seenFromHear = (hearRound && !hearing) || switchedFromHear(round);
+  const mode = hearing ? 'hear' : round.pictureRef && !hearRound && !seenFromHear ? 'picture' : 'see';
+  const promptLine = seenFromHear ? t.heading.see : round.promptEn;
   const instruction = t.heading[mode];
   const skip = (): void => dispatch({ type: 'skip' });
   const done = (): void => dispatch({ type: 'done' });
@@ -199,12 +227,16 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
   // shows it, because with the Korean hidden the romanization and gloss are the cue.
   const romanizationVisible = mode === 'picture' || romanizationShown(romanizationMode, revealed);
   const reveal = (): void => setRevealed(true);
+  const kit = hearing ? hear : null;
+  const notice = hearRound && heard !== null && hear !== null && heard.mode === 'see' ? <hear.SeeNotice hear={heard} /> : null;
 
   // The word to type, with its romanization and gloss (taught Korean always carries both). A compact
   // window (under 640 tall) draws it inline in the top row, as the mock does; a picture round hides the Korean.
-  const prompt = compactRow ? (
+  const prompt = kit !== null && heard !== null ? (
+    <kit.HearPrompt hear={heard} round={round} compact={compactRow} first={state.roundIdx === 0} />
+  ) : compactRow ? (
     <View style={{ flexShrink: 1, gap: spacing.xxs }}>
-      <Caption tone="secondary">{round.promptEn}</Caption>
+      <Caption tone="secondary">{promptLine}</Caption>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {mode === 'picture' ? <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} /> : null}
         {mode === 'see' ? (
@@ -243,11 +275,15 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
   );
 
   const header = compactRow ? (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-      <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
-      <View style={{ flex: 1, minWidth: 0 }}>{prompt}</View>
-      {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
-    </View>
+    <>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        {/* Hear mode's one row has no room for the count pill (type-hangul.md, below 640 tall). */}
+        {kit === null ? <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" /> : null}
+        <View style={{ flex: 1, minWidth: 0 }}>{prompt}</View>
+        {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+      </View>
+      {notice}
+    </>
   ) : (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -258,9 +294,10 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
         {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
       </View>
       <Spacer size="md" />
-      <Heading level="prompt">{round.promptEn}</Heading>
+      <Heading level="prompt">{promptLine}</Heading>
       <Spacer size="sm" />
       {prompt}
+      {notice}
     </>
   );
 
@@ -317,7 +354,7 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
       tone="primary"
       size="md"
       fullWidth={!inlineDone}
-      disabled={field.empty || state.phase !== 'typing'}
+      disabled={field.empty || state.phase !== 'typing' || holding}
       onPress={done}
       testID="type-hangul-done"
     />
@@ -341,12 +378,15 @@ export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
           soundOf={keySound}
           speakSound={a11yRomanization}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
-          onKey={(jamo) => dispatch({ type: 'key', jamo })}
-          onDelete={() => dispatch({ type: 'delete' })}
-          onSpace={() => dispatch({ type: 'space' })}
+          // While a hear round holds its opening (at most 1.5 s) a key types nothing and is not queued.
+          onKey={(jamo) => (holding ? undefined : dispatch({ type: 'key', jamo }))}
+          onDelete={() => (holding ? undefined : dispatch({ type: 'delete' }))}
+          onSpace={() => (holding ? undefined : dispatch({ type: 'space' }))}
         />
       ) : (
         <ResultPanel
+          // The word is added after a pass only when it was hidden before Done (a round that opened as `see` shows it already).
+          showWord={hearing}
           state={state}
           round={round}
           width={kbWidth}
@@ -396,10 +436,12 @@ export interface ResultPanelProps {
   /** Hoya's line, focused when the panel opens. */
   panelRef: MutableRefObject<Focusable | null>;
   onFix: () => void;
+  /** A hear round (row CM-31): the word, with its romanization and meaning, is shown after a pass too (never drawn before). */
+  showWord?: boolean;
 }
 
 /** After Done: Hoya's line, and on a miss the block compare, the word and Fix it (type-hangul.md "After Done"). */
-export function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: ResultPanelProps): ReactElement {
+export function ResultPanel({ state, round, width, height, gutter, panelRef, onFix, showWord = false }: ResultPanelProps): ReactElement {
   const m = useMessages();
   const t = m.learner.minigame.typeHangul;
   const k = m.a11y.minigame.keyboard;
@@ -443,6 +485,7 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
             <Body weight="bold">{line}</Body>
           </View>
         </View>
+        {passed && showWord ? <WordLine round={round} romanizationVisible testID="type-hangul-word" /> : null}
         {passed ? null : (
           <>
             <View accessible accessibilityLabel={readout} style={{ gap: spacing.xs }} testID="type-hangul-compare">

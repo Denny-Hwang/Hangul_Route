@@ -30,7 +30,7 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  */
 export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
-  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // 4,760,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
   // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
   // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
   // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
@@ -99,7 +99,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  startBundleRaw: 4_750_000,
+  // F-CURR-002 CM-31 (Dictation and the spelling round, #850): main e31bc3b33 measures 4,749,283 B (release build, CI);
+  // the row adds 6,122 B (its switch step, the props and branches in Type Hangul and Listen & Pick, the round fields and
+  // the English strings; the rounds themselves are the precached dictation chunk), 4,755,405 B raw / 1,267,694 B gzip
+  // merged, so the line is that measurement plus a 4,595 B rounding margin (4,760,000 B).
+  startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

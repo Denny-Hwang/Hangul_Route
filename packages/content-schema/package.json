@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
     "./review-items": "./src/review-items/review-item.ts",
+    "./letter-names": "./src/hangul/letter-names.ts",
     "./memory": "./src/memory/memory-sync.ts",
     "./learning-summary": "./src/schemas/learning-summary.ts",
     "./overlays": "./overlays.ts",

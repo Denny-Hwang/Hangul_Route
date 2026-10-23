@@ -103,6 +103,7 @@ export const a11y = {
       close: (description: string) => `${description} 눌러서 닫기.`,
     },
     hearAgain: '소리 다시 듣기',
+    dictation: { speaker: '낱말 듣기' },
     picture: '그림',
     option: {
       correct: (label: string) => `정답: ${label}`,

@@ -13,9 +13,11 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  * - **order**: Sentence Builder (produce): the sentence's words, or an exchange's reply, in order.
  *
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
- * section 7.1 (Dictation, Syllable Build, Match Shape, Cloze Pick) join with their own rows behind
- * `game.<kind>`. `surfaceIndex` gives the engine the item index with only these formats, so an item it
- * cannot ask that way falls back to another way, or to the read rung, inside the engine, never here.
+ * section 7.1 join with their own rows behind `game.<kind>`: Dictation (Type Hangul `hear`, row CM-31) when
+ * `game.type-hangul-hear` is on (`SurfaceOptions.dictation`), Syllable Build, Match Shape and Cloze Pick later.
+ * `surfaceIndex` gives the engine the item index with only these formats, so an item it cannot ask that way falls
+ * back to another way, or to the read rung, inside the engine, never here. The engine itself keeps Dictation to an
+ * item that passes `dictation-unambiguous` (no homophone, no sound change) on a device with a voice.
  */
 
 /** The formats this surface draws (section 7.1 formats come with their own rows). */
@@ -34,9 +36,16 @@ const HAS_SLOT = /_/;
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'>): ReviewFormat[] {
+/** What this surface draws beyond the shipped formats: Dictation with `game.type-hangul-hear` on (row CM-31). */
+export interface SurfaceOptions {
+  dictation?: boolean;
+}
+
+export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'>, options: SurfaceOptions = {}): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   return item.formats.filter((f) => {
+    // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
+    if (f === 'dictation') return options.dictation === true && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
     if (!SURFACE_FORMATS.has(f)) return false;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
@@ -47,18 +56,20 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' 
 
 type SurfaceIndex = EngineContext['index'];
 const surfaceCache = new WeakMap<object, SurfaceIndex>();
+const dictationCache = new WeakMap<object, SurfaceIndex>();
 
 /** The item index with each item's formats cut to this surface's; an item left with none is not askable here. */
-export function surfaceIndex(index: SurfaceIndex): SurfaceIndex {
-  const held = surfaceCache.get(index);
+export function surfaceIndex(index: SurfaceIndex, options: SurfaceOptions = {}): SurfaceIndex {
+  const cache = options.dictation === true ? dictationCache : surfaceCache;
+  const held = cache.get(index);
   if (held) return held;
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item);
+    const formats = surfaceFormats(item, options);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  surfaceCache.set(index, out);
+  cache.set(index, out);
   return out;
 }
 
@@ -113,7 +124,8 @@ export interface PickRound extends RoundBase {
 
 export interface TypeRound extends RoundBase {
   type: 'type';
-  mode: 'see' | 'picture';
+  /** `hear` is Dictation (row CM-31): the word is played and its Korean and romanization stay hidden until Done. */
+  mode: 'see' | 'picture' | 'hear';
   /** The Korean to type. */
   target: string;
   picture?: string;
@@ -240,7 +252,7 @@ function pickRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput
   return round;
 }
 
-function typeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput, mode: 'see' | 'picture'): TypeRound | null {
+function typeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput, mode: TypeRound['mode']): TypeRound | null {
   if (mode === 'picture' && item.picture === undefined) return null;
   const gloss = itemGloss(item, input);
   return {
@@ -288,6 +300,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       return typeRound(question, item, input, 'see');
     case 'type-picture':
       return typeRound(question, item, input, 'picture');
+    case 'dictation':
+      return typeRound(question, item, input, 'hear');
     case 'sentence-builder':
       return orderRound(question, item, input);
     default:

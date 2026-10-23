@@ -39,6 +39,7 @@ describe('Type Hangul keeps what is typed in the round (test P-1)', () => {
       effects.push(...step.effects);
     }
     expect(JSON.stringify(effects)).not.toMatch(/[ㄱ-ㆎ가-힣]/);
-    expect(screen).toMatch(/hostRef\.current\.answer\(effect\.roundIdx, effect\.correct, round \? \{ itemId: round\.id \} : undefined\)/);
+    // The host hears the index, right or not, the round id and (Dictation, row CM-31) a hinted flag: never the text.
+    expect(screen).toMatch(/hostRef\.current\.answer\(effect\.roundIdx, effect\.correct, round \? \{ itemId: round\.id, \.\.\.\(hinted \? \{ hinted: true \} : \{\}\) \} : undefined\)/);
   });
 });

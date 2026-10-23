@@ -894,6 +894,8 @@ export const learner = {
       heading: {
         see: 'Type this word',
         picture: 'Type the word for the picture',
+        /** Dictation (F-CURR-002 section 7.1 F2, row CM-31): the empty field's line in `hear` mode. */
+        hear: 'Type the word you hear',
       },
       pass: 'You typed it!',
       /** One block different, missing or extra. */
@@ -905,6 +907,22 @@ export const learner = {
       fixIt: { cta: 'Fix it' },
       /** The romanization of the word to type, when the learner's setting hides it until a tap (F-BROWSE-001 BR-5c). */
       showRomanization: { cta: 'Show how to say it' },
+      /**
+       * Dictation (row CM-31, design/wireframes/minigame/type-hangul.md): the word's meaning on the prompt, and the hint
+       * that shows its romanization (the same words as `learner.placement.item.showSound`). A hint, never a penalty.
+       */
+      hear: {
+        meaning: (gloss: string) => `Meaning: ${gloss}`,
+        showSound: 'Show how it sounds',
+      },
+    },
+    /**
+     * The spelling round of Letters S2 (F-CURR-002 section 4.5, row CM-31): hear the word, see its meaning, pick its
+     * spelling. Its two options may sound the same, so a miss points back to the meaning.
+     */
+    spellingPick: {
+      heading: 'Which spelling matches this word?',
+      miss: 'Look at the meaning again.',
     },
     /**
      * Write Frame (F-CURR-001 G-5, design/wireframes/minigame/write-frame.md): pick a word for the blank, write it,

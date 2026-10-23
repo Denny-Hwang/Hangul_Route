@@ -991,6 +991,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // F-CURR-002 row CM-31: Dictation's meaning line, a gloss in the UI locale.
+  'learner.minigame.typeHangul.hear.meaning': [['apple'], ['rice cake soup']],
   // Owner report 2026-10-23: the Join screen's move lines (the learner, then the classes) and the classes a join keeps.
   'caregiver.join.errors.movedOut': [['Suni', 'Sunday Class B', 'Sunday Class A']],
   'caregiver.join.errors.movedOutElsewhere': [['Suni', 'Sunday Class A']],
