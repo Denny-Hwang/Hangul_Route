@@ -17,6 +17,7 @@ import {
   radii,
   spacing,
   touchTarget,
+  layout,
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
@@ -92,6 +93,9 @@ const CARD_CHROME = 2 * spacing.lg + 2 * borderWidth.thick + spacing.xl + spacin
 interface Focusable {
   focus?: () => void;
 }
+
+/** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
+const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
 export function ListenPickGame({ scope, host, onBack, hint, spelling = null }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
@@ -249,7 +253,14 @@ export function ListenPickGame({ scope, host, onBack, hint, spelling = null }: P
     arrangement === 'side' &&
     !twoUpFits(answersColumnWidth(layoutClass, arrangement, spacing.xl), spacing.md, art + CARD_CHROME)
       ? 1
-      : optionColumns(round, width);
+      : spellingKit !== null && round.options.every((o) => [...(o.text?.ko ?? '')].length <= SPELLING_SIDE_BY_SIDE_GLYPHS)
+        ? // The spelling round's options are short spellings to compare: side by side even on a 320 phone, so both
+          // are on the first screen (row CM-31).
+          2
+        : optionColumns(round, width);
+  // Below 640 tall the spelling round's speaker is its one sound control (it replays on every tap), as the design's
+  // single [ (speaker) Hear it ] reads, so the meaning, the speaker and both spellings fit the first screen.
+  const hearAgainShown = spellingKit === null || !(layoutClass.windowHeight > 0 && layoutClass.windowHeight < layout.compactHeight);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
   const optionContext = { mode: host.mode, romanizationMode, ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }) };
 
@@ -306,15 +317,17 @@ export function ListenPickGame({ scope, host, onBack, hint, spelling = null }: P
                   <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
                 </Pressable>
               </Animated.View>
-              <View style={{ alignSelf: 'center' }}>
-                <Button
-                  label={copy.listenPick.hearAgain.cta}
-                  tone="secondary"
-                  size="md"
-                  onPress={hear}
-                  testID="listen-pick-hear-again"
-                />
-              </View>
+              {hearAgainShown ? (
+                <View style={{ alignSelf: 'center' }}>
+                  <Button
+                    label={copy.listenPick.hearAgain.cta}
+                    tone="secondary"
+                    size="md"
+                    onPress={hear}
+                    testID="listen-pick-hear-again"
+                  />
+                </View>
+              ) : null}
 
               <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
                 {prompt.content ? (

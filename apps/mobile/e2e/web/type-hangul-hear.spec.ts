@@ -204,6 +204,8 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     await expect(page.getByText('1 / 1')).toBeVisible();
     await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
     await expect(page.getByTestId('dictation-notice')).toHaveCount(0);
+    // An ordinary see round: the see line, never the hear line the round was written with.
+    await expect(page.getByText('Type the word you hear.')).toHaveCount(0);
     await shot(page, 'dictation-320-switch-off');
     await typeKeys(page, 'ㅅㅏㄱㅗㅏ');
     await page.getByTestId('type-hangul-done').click();
@@ -219,11 +221,18 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     await expect(page.getByTestId('spelling-cue-gloss')).toHaveText('book');
     await expect(page.getByTestId('listen-pick-option-a')).toHaveAttribute('aria-label', '치읓 애 기역, 이응 이. chaegi');
     await expect(page.getByTestId('listen-pick-option-b')).toHaveAttribute('aria-label', '치읓 애, 기역 이. chaegi');
-    for (const id of ['listen-pick-speaker', 'listen-pick-hear-again', 'listen-pick-option-a', 'listen-pick-option-b']) {
+    // Below 640 tall the speaker is the one sound control (it replays on every tap), so both spellings fit the first
+    // screen side by side, with the meaning and the speaker above them: nothing to scroll to compare them.
+    await expect(page.getByTestId('listen-pick-hear-again')).toHaveCount(0);
+    for (const id of ['spelling-cue-gloss', 'listen-pick-speaker', 'listen-pick-option-a', 'listen-pick-option-b']) {
       const b = await page.getByTestId(id).boundingBox();
-      expect(Math.min(b!.width, b!.height), id).toBeGreaterThanOrEqual(MIN_TARGET - 0.5);
+      if (id !== 'spelling-cue-gloss') expect(Math.min(b!.width, b!.height), id).toBeGreaterThanOrEqual(MIN_TARGET - 0.5);
       expect(b!.x + b!.width, id).toBeLessThanOrEqual(320.5);
+      expect(b!.y, id).toBeGreaterThanOrEqual(-0.5);
+      expect(b!.y + b!.height, id).toBeLessThanOrEqual(568.5);
     }
+    const [optA, optB] = [await page.getByTestId('listen-pick-option-a').boundingBox(), await page.getByTestId('listen-pick-option-b').boundingBox()];
+    expect(Math.abs(optA!.y - optB!.y)).toBeLessThanOrEqual(1);
     await expectNoHorizontalOverflow(page);
     await shot(page, 'spelling-320');
     await page.getByTestId('listen-pick-option-b').click();
