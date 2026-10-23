@@ -351,7 +351,8 @@ describe('the pieces', () => {
     const games = EN.learner.myRoute.games;
     // Only kinds the app can play are named: match-shape and the F-CURR-001 games still without a
     // screen are left out (none are now); Sentence Builder (order-it, G-1), Realia Read (G-2), Type Hangul (G-3),
-    // Trace a Word (G-4) and Write Frame (G-5) have one.
+    // Trace a Word (G-4) and Write Frame (G-5) have one; Cloze Pick (F-CURR-002 row CM-30) plays as itself or as its
+    // Listen & Pick fallback, so it is playable either way.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
@@ -360,6 +361,7 @@ describe('the pieces', () => {
       'Read a story',
       'Build a sentence',
       'Read a menu, sign or ticket',
+      'Fill the gap in a sentence',
     ]);
     expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);

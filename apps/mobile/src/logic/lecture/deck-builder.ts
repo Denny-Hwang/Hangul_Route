@@ -61,6 +61,9 @@ import {
   type WriteTogether,
 } from './build-steps';
 
+/** A Cloze Pick question (row CM-30) is its sentence: the check prompt is the target alone, drawn as its chip. */
+const CLOZE_PROMPT = '{target}';
+
 /**
  * Deck builder (F-TCH-004 §3.3): expands a deck (ids, a seed, options) into
  * slides against this device's own bundle. Slides are never stored or sent.
@@ -593,6 +596,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'write-frame':
         writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
         return;
+      // Cloze Pick (F-CURR-002 section 8, row CM-30): the existing question slides, no new slide kind.
+      case 'cloze-pick':
+        clozeStep(path, ref, scope.clozePick);
+        return;
       default:
         skip(ref, 'unsupported-step');
     }
@@ -742,6 +749,39 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         options: shuffleSeeded(options, seed()),
         textPrompt: false,
       });
+    });
+  };
+
+  /**
+   * Cloze Pick (F-CURR-002 section 8, row CM-30): one question slide per round, on the slides that already exist, so
+   * the deck shape and its `v` are unchanged and an older presenter that meets the scope skips it as an unsupported
+   * step. A word or particle gap is a `check` question: the sentence with its gap is the target (its Korean and
+   * romanization; its meaning shows from the start, it is the input the room reads from), the tiles are the options.
+   * A value gap is a `realia` question beside its card (shown once before the questions, as Realia Read): the question
+   * is the meaning with its gap ("It is ___ won.") and the key is the sentence with its gap. Nothing is said before
+   * the answer build (a gap read aloud would say "underscore", and the sentence would answer the round).
+   */
+  const clozeStep = (path: string, ref: string, cloze: MinigameScope['clozePick']): void => {
+    const rounds = cloze?.rounds ?? [];
+    if (rounds.length === 0) skip(ref, 'scope-too-small');
+    const sheet = cloze?.realia && sheetView(cloze.realia);
+    rounds.forEach((round, i) => {
+      const { sentence: s } = round;
+      const key = `${path}/q${i + 1}`;
+      const options = shuffleSeeded(
+        round.tiles.map((t, ti): QuizOption => ({ ko: t.ko, romanization: t.romanization, correct: ti === round.answerIndex })),
+        seed(),
+      );
+      if (round.gapKind !== 'value') {
+        push(key, { kind: 'quiz', prompt: { ask: 'check', text: CLOZE_PROMPT, target: { ko: s.ko, romanization: s.romanization, gloss: s.en } }, options, textPrompt: false });
+        return;
+      }
+      if (!sheet) return skip(ref, 'scope-too-small');
+      if (!seenRealia.has(cloze.realia!.ref)) {
+        seenRealia.add(cloze.realia!.ref);
+        push(`${path}/sheet`, { kind: 'realia', sheet, keyWords: [] });
+      }
+      push(key, { kind: 'quiz', prompt: { ask: 'realia', text: s.en, sheet, key: { ko: s.ko, romanization: s.romanization, spoken: sheet.spoken } }, options, textPrompt: false });
     });
   };
 

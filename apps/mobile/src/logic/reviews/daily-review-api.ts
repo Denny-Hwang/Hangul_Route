@@ -44,6 +44,8 @@ export interface DailyReviewDeps {
   visibility(profileId: string): SourceVisibility;
   /** A Korean voice and the sound on (F-AUDIO-004): without it the ladder has two rungs. */
   voice(): boolean;
+  /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
+  clozePick?(profileId: string): boolean;
   hydrate(profileId: string): Promise<void>;
   reviews(profileId: string): readonly ReviewEntry[] | undefined;
   vocab(profileId: string): Parameters<typeof vocabOf>[0] | undefined;
@@ -108,7 +110,7 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       const today = localDay(now);
       const vocab = deps.vocab(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index),
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true }),
         states: engineStates(file.rows, vocab ? vocabOf(vocab) : undefined),
         today,
         voice: deps.voice(),

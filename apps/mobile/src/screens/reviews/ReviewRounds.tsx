@@ -29,7 +29,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
-import type { OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
+import type { ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
@@ -39,7 +39,8 @@ import { PictureArt } from '../minigames/PictureArt';
  * The rounds of the Daily Review and Keep going (F-CURR-002 sections 4.3 and 4.5, row CM-14; design
  * design/wireframes/reviews/daily-review.md panels B and B2, design/screens/daily-review/). Each round is one of the
  * shipped ways of asking, drawn from the review item: Listen and pick, a read pick, Type Hangul and Sentence Builder,
- * with their own instructions, sound lines and Hoya lines. Reading, listening and writing only.
+ * with their own instructions, sound lines and Hoya lines, and Cloze Pick while `game.cloze-pick` is on (row CM-30).
+ * Reading, listening and writing only.
  *
  * - The first answer of a round is the scored one (`onFirst`); later taps are retries and never counted.
  * - A miss is never red: the tapped option takes the amber nudge with its mark, Hoya shows the right answer with its
@@ -393,10 +394,88 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   );
 }
 
+// ---- cloze -----------------------------------------------------------------------------------------------
+
+/**
+ * Cloze Pick in a review (row CM-30): the sentence with its gap, its romanization and its meaning; word tiles in
+ * Korean and romanization only. Nothing is said before the answer (it would answer the round); the right tile
+ * completes the sentence, which is said once. A miss nudges in amber, rings the tile that fits and shows Hoya's line.
+ */
+/** The sentence in the card's label: its gap read as a word, no closing mark (the label adds its own). */
+const clozeLabel = (text: string, blank: string): string => text.split('___').join(blank).replace(/[.?!]+$/, '');
+
+export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<ClozeRound>): ReactElement {
+  const m = useMessages();
+  const copy = m.learner.minigame;
+  const a11y = m.a11y.minigame.clozePick;
+  const [wrong, setWrong] = useState<readonly string[]>([]);
+  const [solved, setSolved] = useState(false);
+  const answered = useRef(false);
+  const advance = useAdvance(onSolved, reducedMotion);
+  const lc = useLayoutClass();
+  const { slot, hear } = useRoundSound(solved ? round.answer.ko.ko : null, solved);
+
+  const tap = (option: PickOption): void => {
+    if (solved) return;
+    const right = option.id === round.answerId;
+    if (!answered.current) {
+      answered.current = true;
+      onFirst({ correct: right });
+    }
+    if (right) {
+      success();
+      setSolved(true);
+      advance();
+    } else if (!wrong.includes(option.id)) {
+      nudge();
+      setWrong([...wrong, option.id]);
+    }
+  };
+  const stateOf = (option: PickOption): ChoiceCardState => {
+    if (option.id === round.answerId) return solved ? 'correct' : wrong.length > 0 ? 'hint' : 'idle';
+    return wrong.includes(option.id) ? 'wrong' : solved ? 'disabled' : 'idle';
+  };
+  const shown = solved ? round.answer.ko : round.gapped;
+  const meaning = round.meaning ?? '';
+  const label = solved ? a11y.sentenceDone(clozeLabel(round.answer.ko.romanization, a11y.blank), meaning) : a11y.sentence(clozeLabel(round.gapped.romanization, a11y.blank), meaning);
+
+  return (
+    <View testID="daily-review-round" style={{ gap: spacing.md }}>
+      <Heading level="prompt">{copy.clozePick.heading}</Heading>
+      <View accessible accessibilityLabel={label} style={{ alignItems: 'center' }} testID="daily-review-cloze-sentence">
+        <KoreanText ko={shown.ko} romanization={shown.romanization} gloss={round.meaning} size="lg" testID="daily-review-prompt" />
+      </View>
+      {solved ? <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
+      <Body tone="secondary">{copy.clozePick.instruction.word}</Body>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+        {round.tiles.map((option) => (
+          <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '100%' : OPTION_MIN, minWidth: 0 }}>
+            <ChoiceCard
+              layout="row"
+              state={stateOf(option)}
+              ko={option.ko?.ko ?? ''}
+              romanization={option.ko?.romanization ?? ''}
+              onPress={() => tap(option)}
+              accessibilityLabel={optionLabel(option, true)}
+              testID={`daily-review-option-${option.id}`}
+            />
+          </View>
+        ))}
+      </View>
+      {wrong.length > 0 && !solved ? (
+        <View accessibilityLiveRegion="polite" testID="daily-review-miss">
+          <HoyaBubble tone="thinking" message={copy.clozePick.miss} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 /** The round for its type. */
 export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   const { round } = props;
   if (round.type === 'pick') return <PickRoundView {...props} round={round} />;
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;
+  if (round.type === 'cloze') return <ClozeRoundView {...props} round={round} />;
   return <OrderRoundView {...props} round={round} />;
 }

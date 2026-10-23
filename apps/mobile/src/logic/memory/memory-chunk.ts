@@ -116,6 +116,7 @@ export function dailyReviewApi(): DailyReviewApi {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     reviews: (profileId) => useProgressStore.getState().byProfile[profileId]?.reviews,
     vocab: (profileId) => useProgressStore.getState().byProfile[profileId],
@@ -147,6 +148,7 @@ export function cellCheckApi(): CellCheckApi {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
@@ -200,6 +202,7 @@ export function stageCheckApi(): StageCheckApi {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
