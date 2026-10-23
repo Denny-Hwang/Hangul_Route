@@ -159,6 +159,24 @@ export const LookupSeatSchema = z.object({
 });
 export type LookupSeat = z.infer<typeof LookupSeatSchema>;
 
+/** A class a learner move names (owner report 2026-10-23): its id and live name. */
+export const MoveSpaceRefSchema = z.object({ spaceId: z.string().min(1), name: z.string() });
+export type MoveSpaceRef = z.infer<typeof MoveSpaceRefSchema>;
+
+/**
+ * POST /api/spaces/lookup `moved`, for a vouched learner only: the learner moved out of this class and is still in
+ * `to`. Also the `details` of `/join`'s `409 moved_out`.
+ */
+export const LookupMovedSchema = z.object({ to: MoveSpaceRefSchema });
+export type LookupMoved = z.infer<typeof LookupMovedSchema>;
+
+/**
+ * POST /api/spaces/lookup `moveWaiting`, for a vouched learner only: a move into this class is waiting for the
+ * learner, from `from`. Also the `details` of `/join`'s `409 move_waiting`.
+ */
+export const LookupMoveWaitingSchema = z.object({ from: MoveSpaceRefSchema });
+export type LookupMoveWaiting = z.infer<typeof LookupMoveWaitingSchema>;
+
 /** POST /api/spaces body. `email` / `displayName` seed the account row on first use. */
 export const SpaceCreateSchema = z.object({
   kind: SpaceKindSchema,
@@ -199,6 +217,34 @@ export const LearnerMembershipSchema = z.object({
   joinedAt: z.string(),
 });
 export type LearnerMembership = z.infer<typeof LearnerMembershipSchema>;
+
+/**
+ * POST /api/spaces/lookup answer. `full` is always false (the atomic `/join` refuses); `seat` is learner-aware for a
+ * vouched learner; `moved` / `moveWaiting` (optional, vouched learner only) name a move that stands or waits. Older
+ * Workers send neither, so both stay optional.
+ */
+export const SpaceLookupResponseSchema = z.object({
+  space: z.object({ id: z.string(), kind: SpaceKindSchema, name: z.string() }),
+  full: z.boolean(),
+  seat: LookupSeatSchema,
+  roster: z.array(z.object({ learnerId: z.string(), name: z.string() })),
+  moved: LookupMovedSchema.optional(),
+  moveWaiting: LookupMoveWaitingSchema.optional(),
+});
+export type SpaceLookupResponse = z.infer<typeof SpaceLookupResponseSchema>;
+
+/**
+ * POST /api/spaces/:id/join answer (`201` joined, `200` already a member). On the learner path `memberships` is the
+ * list the sync inbox would send now, so the app replaces its cached list instead of merging into it; optional, as
+ * the account path and older Workers leave it out.
+ */
+export const SpaceJoinResponseSchema = z.object({
+  alreadyMember: z.boolean(),
+  membership: MembershipSchema.nullable(),
+  space: z.object({ id: z.string(), kind: SpaceKindSchema, name: z.string() }),
+  memberships: z.array(LearnerMembershipSchema).optional(),
+});
+export type SpaceJoinResponse = z.infer<typeof SpaceJoinResponseSchema>;
 
 /** Caps until entitlements arrive (F-ENT-001): a learner's classes, a free class's students. */
 export const LEARNER_CLASS_CAP = 3;

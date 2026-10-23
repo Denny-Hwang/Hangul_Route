@@ -991,6 +991,15 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // Owner report 2026-10-23: the Join screen's move lines (the learner, then the classes) and the classes a join keeps.
+  'caregiver.join.errors.movedOut': [['Suni', 'Sunday Class B', 'Sunday Class A']],
+  'caregiver.join.errors.movedOutElsewhere': [['Suni', 'Sunday Class A']],
+  'caregiver.join.errors.moveWaiting': [['Sunday Class B']],
+  'caregiver.join.confirm.staysIn': [['Suni', ['Sunday Class A']], ['Mina', ['Sunday Class A', 'Art club']], ['Jo Ann', ['A', 'B', 'C']]],
+  // Owner report 2026-10-23: the class settings lines after a move and an unarchive the class cap refused.
+  'console.settings.learnerGone': [['Mina']],
+  'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
+  'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
   // F-CURR-002 row CM-32: Syllable Build's labels (a jamo and its RR letter name; a row caption and a tile's name; the
   // built block) and the Block Sprint's count and the learner's own best.
   'a11y.minigame.syllableBuild.tile': [['x', 'bieup'], ['x', 'a']],
