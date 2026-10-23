@@ -15,8 +15,8 @@ import { roundFor, type ReviewRound, type RoundInput } from './review-rounds';
  *   asked again without it, as the Daily Review does.
  * - **Result**: stars only (F-RVW-001 section 3.1, first try, unhinted). 80% or more right on the first try is the
  *   3-star tier, so "passed" is never shown as anything but 3 stars: never a percentage, an "n of m" or a timer.
- * - **Entry**: one `reviews[]` entry of kind `cell-check`, scope the cell id. The kind is gated (`?cap=cell-check`) and
- *   never pruned. No `mode` field (`ReviewEntrySchema` would strip it); `testout.finished` carries the test-out.
+ * - **Entry**: one `reviews[]` entry of kind `cell-check` per cell (scope and id the cell), holding the best result. The
+ *   kind is gated (`?cap=cell-check`) and never pruned. No `mode` field (`ReviewEntrySchema` would strip it); `testout.finished` carries the test-out.
  */
 
 /** Rounds of a Cell Check when the cell has them (section 4.5: 8-10 items, about 3 minutes). */
@@ -25,6 +25,13 @@ export const CELL_CHECK_SIZE = 10;
 export const CELL_CHECK_MIN_ROUNDS = 5;
 /** First-try right share that latches `cellCheckAt`, or passes a test-out (section 4.4): the 3-star tier. */
 export const CELL_CHECK_PASS_SHARE = 80;
+/**
+ * The largest share of topic words (`vocab:`, percent of the cell's items) a cell may hold and still offer Test out. A
+ * topic word is recorded only once it is collected (F-VOC-005 P7), so the memory store can neither place nor derive
+ * one a learner skipped; above this share a passed test-out would mark Done a cell most of whose words no review ever
+ * brings back. A narrowing of section 4.5 (row CM-21 decision record): today it leaves Test out on Stage 3 up only.
+ */
+export const TEST_OUT_MAX_TOPIC_SHARE = 30;
 /** How many times the engine is asked again without the items that cannot be played. */
 const REBUILD_TRIES = 4;
 
@@ -41,6 +48,30 @@ export interface PlannedCheck {
 /** The items a Check of the cell may ask: those the cell teaches (its own `cells`), topic words included. */
 export function cellCheckItemIds(index: EngineContext['index'], cellId: string): string[] {
   return index.items.filter((i) => i.cells.includes(cellId) && !index.retired.has(i.id)).map((i) => i.id);
+}
+
+/** Whether the cell's topic words are few enough for Test out (`TEST_OUT_MAX_TOPIC_SHARE`). */
+export function testOutFits(index: EngineContext['index'], cellId: string): boolean {
+  const ids = cellCheckItemIds(index, cellId);
+  const topic = ids.filter((id) => id.startsWith('vocab:')).length;
+  return ids.length > 0 && topic * 100 <= TEST_OUT_MAX_TOPIC_SHARE * ids.length;
+}
+
+export interface TestOutCell {
+  stage: string;
+  /** May the learner start each quest of the cell (F-ENT-003 section 3.4, the same as playing it)? */
+  open: readonly boolean[];
+  /** Any quest of the cell done, or the cell already tested out. */
+  started: boolean;
+}
+
+/**
+ * May the cell be tested out now (section 4.5; cell-check.md B): not in Stage 1, nobody started it, and every quest is
+ * open to the learner. The screen chunk's offer applies the same rules; the session checks them again at its start and
+ * before its latch, so a plan that lapsed or a switch turned off meanwhile latches nothing.
+ */
+export function testOutAllowed(cell: TestOutCell | null): boolean {
+  return cell !== null && cell.stage !== 'stage1' && !cell.started && cell.open.length > 0 && cell.open.every(Boolean);
 }
 
 /**
@@ -95,12 +126,16 @@ export function checkAnswers(rounds: readonly ReviewRound[], answers: ReadonlyMa
   });
 }
 
-/** The `reviews[]` entry of a finished Check: kind `cell-check`, scope the cell. A random id: never a profile id or a name. */
-export function cellCheckEntry(input: { cellId: string; result: CheckResult; day: string; now: Date; nonce: string }): ReviewEntry {
+/**
+ * The `reviews[]` entry of a finished Check: kind `cell-check`, scope the cell, one per cell (`cell-check:<cell id>`,
+ * never a profile id or a name). Retakes merge into it (`mergeReview`: the best stars, then the earliest time at that
+ * best), so the kind, which is never pruned, holds at most one entry per cell however often a Check is taken.
+ */
+export function cellCheckEntry(input: { cellId: string; result: CheckResult; at: string }): ReviewEntry {
   return {
-    id: `cell-check:${input.day}:${input.nonce}`,
+    id: `cell-check:${input.cellId}`,
     kind: 'cell-check',
-    generatedAt: input.now.toISOString(),
+    generatedAt: input.at,
     scope: input.cellId,
     itemIds: input.result.itemIds,
     resultStars: input.result.stars,

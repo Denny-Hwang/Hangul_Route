@@ -1,7 +1,7 @@
 import type { ProgressSnapshot, ReviewEntry, UiLocale } from '@hangul-route/content-schema';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import type { MemoryFile } from '../memory/memory-file';
-import type { MemoryAnswer } from '../memory/memory-runtime';
+import { stampOf, type MemoryAnswer } from '../memory/memory-runtime';
 import { localDay, vocabOf } from '../vocab/progress';
 import {
   cellCheckCompleteEvent,
@@ -12,7 +12,10 @@ import {
   checkLatch,
   checkResult,
   planCellCheck,
+  type TestOutCell,
+  testOutAllowed,
   testOutFinishedEvent,
+  testOutFits,
   type CheckMode,
   type PlannedCheck,
 } from './cell-check';
@@ -27,7 +30,13 @@ import type { ReviewItemIndex } from './review-items-store';
  * module's `memoryChunk()`.
  *
  * - **Gate**: `cellCheck` (which covers the test-out) and `memoryRecord` for a learner profile (`on`): with answers
- *   not recorded a Check could latch a result while no memory state moved.
+ *   not recorded a Check could latch a result while no memory state moved. It is read when the session starts and
+ *   again when it finishes: a switch turned off meanwhile writes nothing. A test-out also checks the cell again at both
+ *   ends (`testOutCell`: not Stage 1, not started, every quest open under F-ENT-003), so a plan that lapsed while it
+ *   played latches nothing, and needs a cell whose topic words are few (`testOutFits`).
+ * - **Stamps**: the entry and the latches carry the guarded stamp of the memory store (`stampOf`, row CM-12's
+ *   wrong-clock cap), never a device clock far ahead.
+ * - **Telemetry**: `review.start` when the learner taps Let's go (`started`), never for an intro left with Maybe later.
  * - **A Cell Check** records each round's first answer as it is given (`recordAnswers`, the spacing rule), so a stopped
  *   Check keeps them; it writes the entry and, at 3 stars, `cellCheckAt` only when it is finished.
  * - **A test-out** records nothing until it is finished (a stopped test-out writes nothing: the cell has not been
@@ -48,12 +57,15 @@ export interface CellCheckDeps {
   recordReview(profileId: string, entry: ReviewEntry): void;
   recordAnswers(profileId: string, answers: readonly MemoryAnswer[]): Promise<void>;
   recordTestOut(profileId: string, answers: readonly MemoryAnswer[], passed: boolean, at: Date): Promise<void>;
+  /** The cell's test-out facts for the learner now (its stage, each quest open, started), or null for an unknown cell. */
+  testOutCell(profileId: string, cellId: string): TestOutCell | null;
+  /** The server time of the learner's last snapshot sync, or null (the stamp cap). */
+  serverTime(profileId: string): string | null;
   /** Latches `cellCheckAt` or `testedOut` for the cell on the hydrated snapshot (earliest wins), saved and synced. */
   latch(profileId: string, field: 'cellCheckAt' | 'testedOut', cellId: string, at: string): void;
   track(event: TelemetryEvent): void;
   overlays(locale: 'es' | 'ko'): Readonly<Record<string, Readonly<Record<string, string>>>>;
   ensureCell(cell: string): Promise<void>;
-  random(): number;
 }
 
 export interface CheckWorld {
@@ -63,6 +75,13 @@ export interface CheckWorld {
 
 export type CheckWorldRead = { kind: 'off' } | { kind: 'unreadable' } | { kind: 'ready'; world: CheckWorld };
 
+export interface CellOffers {
+  check: boolean;
+  testOut: boolean;
+}
+
+const NO_OFFERS: CellOffers = { check: false, testOut: false };
+
 export interface CheckFinished {
   stars: 1 | 2 | 3;
   passed: boolean;
@@ -70,12 +89,19 @@ export interface CheckFinished {
 
 export interface CellCheckApi {
   readWorld(profileId: string | null, now?: Date): Promise<CheckWorldRead>;
-  /** Whether the cell has a Check to offer (5 or more playable rounds); false while off or unreadable. */
-  offerable(profileId: string | null, cellId: string): Promise<boolean>;
+  /**
+   * Whether the cell has a Check to offer (5 or more playable rounds) and whether its topic words leave room for Test
+   * out; both false while off or unreadable.
+   */
+  offerable(profileId: string | null, cellId: string): Promise<CellOffers>;
+  /** The plan; null when there is none, or for a test-out the cell may not take now. */
   startSession(world: CheckWorld, cellId: string, mode: CheckMode, locale: UiLocale): Promise<PlannedCheck | null>;
+  /** The learner tapped Let's go: `review.start { kind: 'cell-check' }`. */
+  started(world: CheckWorld): void;
   /** A Cell Check records a round's first answer now; a test-out holds it until the end. */
   recordRound(world: CheckWorld, plan: PlannedCheck, index: number, answer: RoundAnswer): Promise<void>;
-  finishSession(world: CheckWorld, plan: PlannedCheck, answers: ReadonlyMap<number, RoundAnswer>, recorded: readonly Promise<void>[], now?: Date): Promise<CheckFinished>;
+  /** The result; null, with nothing written, when the switch went off or the test-out's cell closed while it played. */
+  finishSession(world: CheckWorld, plan: PlannedCheck, answers: ReadonlyMap<number, RoundAnswer>, recorded: readonly Promise<void>[], now?: Date): Promise<CheckFinished | null>;
   gradeTyped(target: string, typed: string): TypedGrade;
 }
 
@@ -126,14 +152,17 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
 
     async offerable(profileId, cellId) {
       const read = await readWorld(profileId);
-      if (read.kind !== 'ready') return false;
+      if (read.kind !== 'ready') return NO_OFFERS;
       const { ctx } = read.world;
       // The English plan says whether 5 rounds can play (a missing meaning in es or ko only changes which ones).
-      return cellCheckItemIds(ctx.index, cellId).length > 0 && planCellCheck(ctx, cellId, 'check', { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
+      const check = cellCheckItemIds(ctx.index, cellId).length > 0 && planCellCheck(ctx, cellId, 'check', { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
+      return { check, testOut: check && testOutFits(ctx.index, cellId) };
     },
 
     async startSession(world, cellId, mode, locale) {
       const { ctx, profileId } = world;
+      if (!deps.on(profileId)) return null;
+      if (mode === 'testout' && !(testOutFits(ctx.index, cellId) && testOutAllowed(deps.testOutCell(profileId, cellId)))) return null;
       const seed = `${ctx.seed ?? ''}|${cellId}`;
       let plan = planCellCheck(ctx, cellId, mode, { gloss: glossFrom(undefined), seed });
       if (plan !== null && locale !== 'en') {
@@ -148,8 +177,11 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
         plan = planCellCheck(ctx, cellId, mode, { gloss: gloss(), seed }, out);
         if (plan !== null && (await loadCells(planItems(plan, true), ctx, tried))) plan = planCellCheck(ctx, cellId, mode, { gloss: gloss(), seed }, out);
       }
-      if (plan !== null) deps.track(cellCheckStartEvent(profileId));
       return plan;
+    },
+
+    started(world) {
+      deps.track(cellCheckStartEvent(world.profileId));
     },
 
     recordRound(world, plan, index, answer) {
@@ -159,13 +191,17 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
     },
 
     async finishSession(world, plan, answers, recorded, now = new Date()) {
-      const { profileId, ctx } = world;
+      const { profileId } = world;
       await Promise.all(recorded);
+      // The switch, and for a test-out the cell's access, read again: either gone meanwhile writes nothing.
+      if (!deps.on(profileId) || (plan.mode === 'testout' && !testOutAllowed(deps.testOutCell(profileId, plan.cellId)))) return null;
       const result = checkResult(plan.rounds, answers);
+      const file = await deps.file(profileId);
+      const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
       if (plan.mode === 'testout') await deps.recordTestOut(profileId, checkAnswers(plan.rounds, answers), result.passed, now);
-      deps.recordReview(profileId, cellCheckEntry({ cellId: plan.cellId, result, day: ctx.today, now, nonce: Math.floor(deps.random() * 0x7fffffff).toString(36) }));
+      deps.recordReview(profileId, cellCheckEntry({ cellId: plan.cellId, result, at }));
       const latch = checkLatch(plan.mode, result);
-      if (latch !== null) deps.latch(profileId, latch, plan.cellId, now.toISOString());
+      if (latch !== null) deps.latch(profileId, latch, plan.cellId, at);
       // The unasked items of a passed test-out are derived from `testedOut` (laid by the seeding pass).
       if (latch === 'testedOut') await deps.ensureSeeded(profileId).catch(() => undefined);
       deps.track(cellCheckCompleteEvent(profileId, result.stars));

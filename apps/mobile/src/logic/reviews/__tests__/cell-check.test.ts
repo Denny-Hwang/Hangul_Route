@@ -15,7 +15,10 @@ import {
   checkLatch,
   checkResult,
   planCellCheck,
+  TEST_OUT_MAX_TOPIC_SHARE,
+  testOutAllowed,
   testOutFinishedEvent,
+  testOutFits,
 } from '../cell-check';
 import type { RoundAnswer } from '../daily-review';
 import { MAX_FORMAT_RUN, type EngineContext } from '../engine';
@@ -95,6 +98,37 @@ describe('the plan: the cell items, at least 30% at produce, interleaved', () =>
   });
 });
 
+describe('Test out: which cells may take it (section 4.5, the CM-21 decision record)', () => {
+  const lessonCells = CATALOG.cells.filter((c) => /^episode:stage[1-7]-/.test(c.episodeId)).map((c) => c.episodeId);
+  const share = (cellId: string): number => {
+    const ids = cellCheckItemIds(ctx().index, cellId);
+    return (100 * ids.filter((id) => id.startsWith('vocab:')).length) / ids.length;
+  };
+
+  it('topic words at most 30% of the cell: no Stage 2 cell today (Nature 12 of 14), every Stage 3, 4, 6 and 7 cell', () => {
+    expect(TEST_OUT_MAX_TOPIC_SHARE).toBe(30);
+    expect(testOutFits(ctx().index, 'episode:stage2-nature')).toBe(false);
+    for (const cellId of lessonCells) {
+      if (cellCheckItemIds(ctx().index, cellId).length === 0) continue;
+      expect(testOutFits(ctx().index, cellId), `${cellId} ${share(cellId)}`).toBe(share(cellId) <= TEST_OUT_MAX_TOPIC_SHARE);
+      if (cellId.startsWith('episode:stage2-')) expect(testOutFits(ctx().index, cellId), cellId).toBe(false);
+      if (/^episode:stage[3467]-/.test(cellId)) expect(testOutFits(ctx().index, cellId), cellId).toBe(true);
+    }
+    // A cell with no review items (a Stage 5 book) never.
+    expect(testOutFits(ctx().index, 'episode:stage5-life')).toBe(false);
+  });
+
+  it('entitlement and state (F-ENT-003): not Stage 1, nobody started it, every quest open; an unknown cell never', () => {
+    const cell = { stage: 'stage3', open: [true, true, true], started: false };
+    expect(testOutAllowed(cell)).toBe(true);
+    expect(testOutAllowed({ ...cell, open: [true, false, true] })).toBe(false);
+    expect(testOutAllowed({ ...cell, open: [] })).toBe(false);
+    expect(testOutAllowed({ ...cell, started: true })).toBe(false);
+    expect(testOutAllowed({ ...cell, stage: 'stage1' })).toBe(false);
+    expect(testOutAllowed(null)).toBe(false);
+  });
+});
+
 describe('the result: stars only, 80% first try passes', () => {
   const plan = planCellCheck(ctx(), 'episode:stage2-letters', 'check', rounds);
   const rs = plan?.rounds ?? [];
@@ -133,9 +167,9 @@ describe('the result: stars only, 80% first try passes', () => {
 describe('the entry and the telemetry (section 11.3)', () => {
   const result = { stars: 3 as const, itemIds: ['lex:a', 'lex:b'], missedItemIds: ['lex:b'], firstTryCorrect: 1, passed: false };
 
-  it('one cell-check entry, scope the cell, a random id with no profile id, that parses', () => {
-    const entry = cellCheckEntry({ cellId: 'episode:stage2-life', result, day: TODAY, now: new Date('2026-10-22T10:00:00.000Z'), nonce: 'k3' });
-    expect(entry).toEqual({ id: 'cell-check:2026-10-22:k3', kind: 'cell-check', generatedAt: '2026-10-22T10:00:00.000Z', scope: 'episode:stage2-life', itemIds: ['lex:a', 'lex:b'], resultStars: 3, missedItemIds: ['lex:b'] });
+  it('one cell-check entry per cell, id and scope the cell (no profile id), that parses', () => {
+    const entry = cellCheckEntry({ cellId: 'episode:stage2-life', result, at: '2026-10-22T10:00:00.000Z' });
+    expect(entry).toEqual({ id: 'cell-check:episode:stage2-life', kind: 'cell-check', generatedAt: '2026-10-22T10:00:00.000Z', scope: 'episode:stage2-life', itemIds: ['lex:a', 'lex:b'], resultStars: 3, missedItemIds: ['lex:b'] });
     expect(ReviewEntrySchema.parse(entry)).toEqual(entry);
   });
 
@@ -155,7 +189,7 @@ describe('the strings (section 7.7, section 9.3 review-copy)', () => {
     const m = getMessages(locale);
     expect(lintReviewMessages(m.learner, ['cellCheck', 'testOut'], locale)).toEqual([]);
     const texts = [...Object.values(m.learner.cellCheck).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v))), ...Object.values(m.learner.testOut)];
-    expect(texts.length).toBe(21);
+    expect(texts.length).toBe(19);
     for (const text of texts) {
       expect(text.trim().length, text).toBeGreaterThan(0);
       expect(text, text).not.toMatch(/%|\bexam|\bquiz|\bscore|\bpass(ed)?\b|\bfail|examen|prueba|puntaje|시험|점수|통과|실패|탈락/i);
