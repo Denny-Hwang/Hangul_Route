@@ -666,6 +666,12 @@ export const learner = {
       miss: '문장을 다시 읽어 봐요. 어느 것이 알맞을까요?',
       lookHere: '여기에는 이게 알맞아요.',
     },
+    rolePlay: {
+      tapReply: '대답을 눌러요',
+      showMeanings: { cta: '뜻 보기' },
+      meaningsShown: '뜻이 보여요',
+      moreReplies: '아래에 대답이 더 있어요',
+    },
   },
 
   audio: {
@@ -1171,6 +1177,7 @@ export const learner = {
       writeFrame: '나만의 문장 완성하기',
       sentenceBuilder: '문장 만들기',
       clozePick: '문장의 빈칸 채우기',
+      rolePlay: '대화 읽고 대답 누르기',
     },
     legend: {
       title: '모양의 뜻',

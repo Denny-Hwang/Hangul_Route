@@ -17,7 +17,8 @@
     "./overlays-es": "./overlays-es.ts",
     "./overlays-ko": "./overlays-ko.ts",
     "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts",
-    "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts"
+    "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts",
+    "./testing/role-play": "./src/__tests__/fixtures/role-play-scenes.ts"
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/content-schema)'",

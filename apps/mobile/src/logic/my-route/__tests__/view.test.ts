@@ -362,8 +362,10 @@ describe('the pieces', () => {
       'Build a sentence',
       'Read a menu, sign or ticket',
       'Fill the gap in a sentence',
+      // Row CM-35: Role Play reads and listens.
+      'Read a chat, tap a reply',
     ]);
-    expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
+    expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick', 'Read a chat, tap a reply']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
   });
 

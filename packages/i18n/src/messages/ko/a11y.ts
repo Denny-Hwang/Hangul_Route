@@ -151,6 +151,11 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    rolePlay: {
+      log: '대화',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role}의 말: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `내 대답: ${line}, ${romanization}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

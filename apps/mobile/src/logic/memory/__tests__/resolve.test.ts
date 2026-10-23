@@ -144,3 +144,47 @@ describe('what a round asked', () => {
     expect(resolveRound({ scope: pic, itemId: 'p1' })?.rung).toBe('read');
   });
 });
+
+describe('Role Play: a turn asks its exchange (row CM-35)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const scope: MinigameScope = {
+    kind: 'role-play',
+    rolePlay: {
+      scene: {
+        title: kt('도서관', 'doseogwan', 'At the library'),
+        partner: kt('사서', 'saseo', 'librarian'),
+        start: 't2',
+        nodes: [
+          {
+            id: 't2',
+            line: kt('무슨 책을 찾아요?', 'museun chaegeul chajayo', 'What book are you looking for?'),
+            replies: [
+              { id: 'storybook', text: kt('동화책을 찾아요.', 'donghwachaegeul chajayo', 'I am looking for a storybook.'), kind: 'natural', next: 'end' },
+              { id: 'hangeul', text: kt('한글 책을 찾아요.', 'hangeul chaegeul chajayo', 'I am looking for a Hangul book.'), kind: 'natural', next: 'end' },
+              { id: 'fine', text: kt('괜찮아요.', 'gwaenchanayo', 'It is okay.'), kind: 'lessNatural', whyEn: 'Tell them the book you want.' },
+            ],
+          },
+          { id: 'end', end: true, closingEn: 'You found your book!' },
+        ],
+      },
+    },
+  };
+  const STORY = item({ id: 'exc:museun-chaegeul-chajayo', kind: 'exc', ko: '무슨 책을 찾아요?', cells: ['episode:stage4-letters'], reply: { ko: '동화책을 찾아요.', romanization: 'donghwachaegeul chajayo' } });
+  const HANGEUL = item({ id: 'exc:museun-chaegeul-chajayo~2', kind: 'exc', ko: '무슨 책을 찾아요?', cells: ['episode:stage4-letters'], reply: { ko: '한글 책을 찾아요.', romanization: 'hangeul chaegeul chajayo' } });
+  const exchanges = buildLookup([STORY, HANGEUL], new Set());
+
+  it('reads the line with the natural reply named by `<node>/<reply>`, at the read rung', () => {
+    expect(askedOfScope(scope, 't2/hangeul')).toEqual({ texts: [{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }], jamoIds: [], rung: 'read' });
+    // A less natural reply, a missing node or reply, or a scope with no scene asks nothing.
+    for (const id of ['t2/fine', 't2/gone', 'end/x', 'gone/storybook', 't2']) expect(askedOfScope(scope, id), id).toBeUndefined();
+    expect(askedOfScope({ kind: 'role-play' }, 't2/hangeul')).toBeUndefined();
+  });
+
+  it('of two exchanges with the same line, resolves the one with the reply the turn was about', () => {
+    const ask = (id: string) => resolveItems(exchanges, 'episode:stage4-letters', askedOfScope(scope, id)!);
+    expect(ask('t2/storybook')).toEqual([STORY]);
+    expect(ask('t2/hangeul')).toEqual([HANGEUL]);
+    // Through a host answer: `{ scope, itemId }` (hinted goes beside it, to answerRound).
+    expect(resolveRound({ scope, itemId: 't2/hangeul' })?.texts).toEqual([{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }]);
+  });
+});

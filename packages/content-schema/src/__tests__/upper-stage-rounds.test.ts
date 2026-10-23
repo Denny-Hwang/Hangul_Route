@@ -25,7 +25,7 @@ const ok = (schema: { safeParse: (v: unknown) => { success: boolean } }, v: unkn
 
 describe('minigame kinds (F-CURR-001 §3.10)', () => {
   it('adds realia-read, type-hangul, trace-word and write-frame without removing any kind', () => {
-    // F-CURR-002 kinds (row CM-34 and on) follow these four.
+    // F-CURR-002 kinds (rows CM-30, CM-34, CM-35 and on) follow these four.
     const at = MinigameKindSchema.options.indexOf('realia-read');
     expect(MinigameKindSchema.options.slice(at, at + 4)).toEqual(['realia-read', 'type-hangul', 'trace-word', 'write-frame']);
     expect(MinigameKindSchema.options).toContain('order-it');

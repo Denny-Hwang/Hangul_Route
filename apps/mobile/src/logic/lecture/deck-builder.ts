@@ -29,6 +29,7 @@ import {
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
+import { rolePlayToTapRespond } from '../role-play/fallback';
 import { validRounds } from '../listen-pick';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
@@ -580,6 +581,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       case 'tap-respond':
         replyStep(path, ref, listOf(scope.dialogue));
+        return;
+      // Role Play (F-CURR-002 section 8, row CM-35): the reply slides of its main path, as the learner fallback plays it,
+      // until row CM-63 adds the read-together Role Play slide (the class picks the reply).
+      case 'role-play':
+        replyStep(path, ref, scope.rolePlay ? rolePlayToTapRespond(scope.rolePlay.scene) : []);
         return;
       case 'realia-read':
         realiaReadStep(path, ref, scope.realiaRead);
