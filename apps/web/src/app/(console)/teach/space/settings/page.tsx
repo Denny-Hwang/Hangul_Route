@@ -33,6 +33,12 @@ type SettingsNote = keyof Messages['console']['settings']['notes'];
 /** F-BILL-002 B-12: how long the archive confirm waits for a billing read still under way. */
 const ARCHIVE_PLAN_WAIT_MS = 1500;
 
+/**
+ * What a read of the class found: its members, or why it drew nothing (`gone`: the space no longer reads). A read that
+ * a newer one replaced answers the newer one's outcome.
+ */
+type LoadOutcome = { members: MemberView[] } | { failed: 'forbidden' | 'gone' | 'cantReach' };
+
 /** console/space-settings — F-TCH-001 §10.3. Housekeeping only; never progress data. */
 function SettingsInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
@@ -75,42 +81,53 @@ function SettingsInner(): JSX.Element {
   // Which read may still draw (the roster page's pattern, owner report 2026-10-23): every read takes a new number, and a
   // read that ends after a newer one started draws nothing, so an older list never puts back a learner who moved out.
   const loadSeq = useRef(0);
+  // The newest read: a read that a newer one replaced answers what the newer one found, never "failed".
+  const latestRead = useRef<Promise<LoadOutcome> | null>(null);
+  // Whether a list has been drawn yet: until then a quiet read is a first load, so a failure shows the retry panel.
+  const drawn = useRef(false);
   // `quiet`: a read after the move sheet closes, or when the tab comes back into view. It keeps what is drawn while it
   // reads, and one that cannot reach the Worker changes nothing; a removed teacher or a deleted space still shows.
-  // Answers the members it drew, or null when it drew nothing.
   const load = useCallback(
-    async (quiet = false): Promise<MemberView[] | null> => {
-      if (!api) return null;
+    (quiet = false): Promise<LoadOutcome> => {
+      if (!api) return Promise.resolve({ failed: 'cantReach' });
       const call = ++loadSeq.current;
-      if (!quiet) setError(null);
-      const read = names.begin();
-      const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
-      if (call !== loadSeq.current) return null;
-      if (!r.ok) {
-        if (!quiet || r.error === 'forbidden' || r.error === 'not_found') setError(loadErrorKey(r.error));
-        return null;
-      }
-      // A space kind this bundle cannot word (a newer Worker) reads as a failed load, never a blank page.
-      if (!mem.ok || !isKnownSpaceKind(r.data.space.kind)) {
-        if (!quiet) setError('cantReach');
-        return null;
-      }
-      if (quiet) setError(null);
-      setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, read) } });
-      setMembers(mem.data);
-      if (r.data.space.kind === 'family' && movesShown) {
-        // The move options are extra: a failed read leaves them empty and never breaks the settings page.
-        const moves = await Promise.resolve()
-          .then(() => api.transferRequests(spaceId))
-          .catch(() => null);
-        if (call === loadSeq.current) setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
-      }
-      return mem.data;
+      const loud = !quiet || !drawn.current;
+      const read = (async (): Promise<LoadOutcome> => {
+        if (loud) setError(null);
+        const started = names.begin();
+        const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
+        if (call !== loadSeq.current) return latestRead.current ?? { failed: 'cantReach' };
+        if (!r.ok) {
+          const failed = r.error === 'forbidden' ? 'forbidden' : r.error === 'not_found' ? 'gone' : 'cantReach';
+          if (loud || failed !== 'cantReach') setError(loadErrorKey(r.error));
+          return { failed };
+        }
+        // A space kind this bundle cannot word (a newer Worker) reads as a failed load, never a blank page.
+        if (!mem.ok || !isKnownSpaceKind(r.data.space.kind)) {
+          if (loud) setError('cantReach');
+          return { failed: 'cantReach' };
+        }
+        if (!loud) setError(null);
+        drawn.current = true;
+        setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, started) } });
+        setMembers(mem.data);
+        if (r.data.space.kind === 'family' && movesShown) {
+          // The move options are extra: a failed read leaves them empty and never breaks the settings page.
+          const moves = await Promise.resolve()
+            .then(() => api.transferRequests(spaceId))
+            .catch(() => null);
+          if (call === loadSeq.current) setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+        }
+        return { members: mem.data };
+      })();
+      latestRead.current = read;
+      return read;
     },
     [api, spaceId, movesShown, names],
   );
 
   useEffect(() => {
+    drawn.current = false;
     void load();
   }, [load]);
 
@@ -178,7 +195,7 @@ function SettingsInner(): JSX.Element {
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {teacherMoveLine ? <Notice tone="success">{teacherMoveLine}</Notice> : null}
-      {moveGone ? <Notice tone="info">{moveGone === 'still' ? c.teacherMove.errors.failed : s.learnerGone(moveGone.name)}</Notice> : null}
+      {moveGone === 'still' ? <Notice tone="nudge">{c.teacherMove.errors.failed}</Notice> : moveGone ? <Notice tone="info">{s.learnerGone(moveGone.name)}</Notice> : null}
       {overCap ? <Notice tone="nudge">{s.unarchiveOverCap(overCap.learners, LEARNER_CLASS_CAP)}</Notice> : null}
       {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
       {moveNote === 'forbidden' ? <Notice tone="nudge">{c.transfer.states.forbidden}</Notice> : null}
@@ -283,12 +300,20 @@ function SettingsInner(): JSX.Element {
                 const learner = moving;
                 setMoving(null);
                 void load(true).then((read) => {
-                  // A not-found move while this class still reads: the caller still manages it, so never the forbidden
-                  // line. Most often the learner already left (another tab, another teacher, the family).
-                  if (state === 'forbidden' && read) {
-                    const still = read.some((mb) => mb.memberKind === 'learner' && mb.memberId === learner.memberId);
-                    setMoveGone(still ? 'still' : { name: learner.name });
-                    return;
+                  if (state === 'forbidden') {
+                    // A not-found move while this class still reads: the caller still manages it, so never the forbidden
+                    // line. Most often the learner already left (another tab, another teacher, the family).
+                    if ('members' in read) {
+                      const still = read.members.some((mb) => mb.memberKind === 'learner' && mb.memberId === learner.memberId);
+                      setMoveGone(still ? 'still' : { name: learner.name });
+                      return;
+                    }
+                    // The read could not tell (the Worker did not answer): the plain "did not work" line. The forbidden
+                    // line only when the class itself no longer reads.
+                    if (read.failed === 'cantReach') {
+                      setMoveGone('still');
+                      return;
+                    }
                   }
                   setMoveNote(state);
                 });

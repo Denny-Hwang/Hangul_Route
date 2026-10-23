@@ -62,6 +62,13 @@ const rowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: spacin
 const lineStyle: CSSProperties = { margin: `0 0 ${spacing.sm}px`, fontSize: rem(typography.size.body), color: colors.text.primary, lineHeight: typography.leading.relaxed };
 const noop = (): void => undefined;
 
+/**
+ * How long Move now holds the sheet open. A POST that never answers (flaky classroom Wi-Fi, a captive portal) must not
+ * trap the teacher in the sheet: after this, Close, Escape, the scrim and Cancel work again. Closing is safe then,
+ * because the page reads its members again on close, so a move that lands late still leaves the class.
+ */
+export const MOVE_LOCK_MS = 25_000;
+
 export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDone, onPageState, onRemoveHere }: TeacherMoveSheetProps): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.teacherMove;
@@ -74,6 +81,13 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
   const [busy, setBusy] = useState<null | 'loading' | 'looking' | 'moving'>('loading');
   const [error, setError] = useState<MoveErrorKey | null>(null);
   const [done, setDone] = useState<OutgoingMove | null>(null);
+  const [lockExpired, setLockExpired] = useState(false);
+
+  useEffect(() => {
+    if (busy !== 'moving') return undefined;
+    const timer = setTimeout(() => setLockExpired(true), MOVE_LOCK_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
 
   /** Handles a failed answer; true when the sheet should look the code up again. */
   const fail = useCallback(
@@ -138,6 +152,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
     if (!target) return;
     setError(null);
     if (!online) return setError('offline');
+    setLockExpired(false);
     setBusy('moving');
     const body = target.kind === 'code' ? { learnerId: learner.id, destinationSpaceId: target.destination.id, code: target.code } : { learnerId: learner.id, destinationSpaceId: target.destination.id };
     const r = await api.createClassMove(spaceId, body);
@@ -185,9 +200,11 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
       </MoveButton>
     </div>
   ) : null;
-  // While Move now is under way the sheet stays open (Close, Escape and the scrim do nothing): a sheet closed then
-  // never told the page, which kept listing a learner the server had already moved (owner report 2026-10-23).
-  const closeUnlessMoving = busy === 'moving' ? noop : onClose;
+  // While Move now is under way the sheet stays open (Close, Escape, the scrim and Cancel do nothing): a sheet closed
+  // then never told the page, which kept listing a learner the server had already moved (owner report 2026-10-23).
+  // The hold ends after MOVE_LOCK_MS, so an answer that never comes cannot trap the teacher.
+  const held = busy === 'moving' && !lockExpired;
+  const closeUnlessMoving = held ? noop : onClose;
 
   if (step === 'done' && done) {
     return (
@@ -310,7 +327,7 @@ export function TeacherMoveSheet({ spaceId, learner, api, online, onClose, onDon
       ) : null}
       {removeHereButton}
       <div style={rowStyle}>
-        <MoveButton onClick={closeUnlessMoving} disabled={busy === 'moving'} testId="teacher-move-cancel">
+        <MoveButton onClick={closeUnlessMoving} disabled={held} testId="teacher-move-cancel">
           {messages.console.transfer.actions.cancel.cta}
         </MoveButton>
         <MoveButton primary waiting={!target} onClick={() => setStep('confirm')} testId="teacher-move-continue">

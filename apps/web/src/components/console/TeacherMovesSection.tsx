@@ -100,11 +100,12 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
     setBusy(id);
     setFailed(null);
     const r = await run();
+    // An ask answered (an accept moves a learner): an open roster in another console tab reads again at once, even when
+    // this section has gone meanwhile (the teacher left the page while the answer was on its way).
+    if (r.ok) announceRosterChange();
     if (!live.current) return;
     setBusy(null);
     if (r.ok) {
-      // An ask answered (an accept moves a learner): an open roster in another console tab reads again at once.
-      announceRosterChange();
       setNoRoom((prev) => {
         const next = new Set(prev);
         next.delete(id);

@@ -34,7 +34,7 @@ const state = vi.hoisted(() => ({
   archivedAt: null as string | null,
   rosterOk: true,
   /** Each members read takes the next gate when one is queued (a slow network), so reads can end out of order. */
-  gates: [] as { wait: Promise<void>; list: unknown[] }[],
+  gates: [] as { wait: Promise<void>; list: unknown[]; fail?: boolean }[],
   create: null as unknown,
   archive: null as unknown,
   calls: [] as string[],
@@ -62,6 +62,7 @@ vi.mock('@/components/console/use-console', async () => {
       const gate = state.gates.shift();
       if (gate) {
         await gate.wait;
+        if (gate.fail) return { ok: false, error: 'network', status: -1 };
         return { ok: true, data: [OWNER, ...gate.list] };
       }
       return { ok: true, data: [OWNER, ...state.learners] };
@@ -183,6 +184,51 @@ describe('class settings after a teacher move (owner report 2026-10-23)', () => 
     expect(textOf(root())).not.toContain(en.settings.learnerGone('Mina'));
   });
 
+  it('a not_found move whose read is overtaken by a newer one answers what the newer read found, never the forbidden notice', async () => {
+    await renderPage();
+    await openMoveToB();
+    state.create = { ok: false, error: 'not_found', status: 404, code: 'not_found' };
+    let releaseMoveRead: () => void = () => undefined;
+    let releaseVisibleRead: () => void = () => undefined;
+    state.gates.push({ wait: new Promise<void>((r) => (releaseMoveRead = r)), list: [] }, { wait: new Promise<void>((r) => (releaseVisibleRead = r)), list: [] });
+    await press(button('teacher-move-go'));
+    // The tab comes back into view while the move's read is still on its way: a newer read replaces it.
+    vi.setSystemTime(NOW.getTime() + 31_000);
+    await act(async () => {
+      for (const l of [...listeners]) l();
+    });
+    await act(async () => releaseMoveRead());
+    await act(async () => releaseVisibleRead());
+    expect(moveRows()).toHaveLength(0);
+    expect(textOf(root())).toContain(en.settings.learnerGone('Mina'));
+    expect(textOf(root())).not.toContain(en.transfer.states.forbidden);
+  });
+
+  it('a not_found move whose read cannot reach the Worker shows the plain line, not the forbidden notice', async () => {
+    await renderPage();
+    await openMoveToB();
+    state.create = { ok: false, error: 'not_found', status: 404, code: 'not_found' };
+    state.gates.push({ wait: Promise.resolve(), list: [], fail: true });
+    await press(button('teacher-move-go'));
+    expect(textOf(root())).toContain(tm.errors.failed);
+    expect(textOf(root())).not.toContain(en.transfer.states.forbidden);
+  });
+
+  it('a quiet read that overtakes the first load and fails still shows the load error with Retry, never an endless loading page', async () => {
+    let releaseFirst: () => void = () => undefined;
+    state.gates.push({ wait: new Promise<void>((r) => (releaseFirst = r)), list: [MINA] }, { wait: Promise.resolve(), list: [], fail: true });
+    await act(async () => {
+      renderer = create(<SettingsPage />);
+    });
+    vi.setSystemTime(NOW.getTime() + 31_000);
+    await act(async () => {
+      for (const l of [...listeners]) l();
+    });
+    await act(async () => releaseFirst());
+    expect(membersReads()).toBe(2);
+    expect(textOf(root())).toContain(en.cantReach);
+  });
+
   it('closing the sheet reads the members again', async () => {
     await renderPage();
     await press(moveRows()[0] as ReactTestInstance);
@@ -267,6 +313,6 @@ describe('class settings after a teacher move (owner report 2026-10-23)', () => 
     await renderPage();
     await press(root().find((n) => n.type === 'button' && textOf(n) === en.settings.learners.remove.class.cta));
     await press(button('confirm-sheet-confirm'));
-    expect(posted).toEqual([['hr-roster', { type: 'roster-changed' }]]);
+    expect(posted).toEqual([['hr-roster', { type: 'roster-changed', from: expect.any(String) }]]);
   });
 });

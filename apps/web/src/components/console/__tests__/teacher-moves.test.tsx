@@ -19,7 +19,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 
 import { FamilyClassCards, type FamilyClassCardsApi } from '@/components/console/FamilyClassCards';
 import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
-import { TeacherMoveSheet, type TeacherMoveApi } from '@/components/console/TeacherMoveSheet';
+import { MOVE_LOCK_MS, TeacherMoveSheet, type TeacherMoveApi } from '@/components/console/TeacherMoveSheet';
 import { TeacherMovesSection, type TeacherMovesApi } from '@/components/console/TeacherMovesSection';
 
 const en = getMessages('en').console;
@@ -181,6 +181,31 @@ describe('TeacherMoveSheet (screen 1)', () => {
     expect(calls.closed).toBe(0);
   });
 
+  it('a Move now that never answers holds the sheet only for a while: after MOVE_LOCK_MS, Escape closes it again', async () => {
+    const a = api({ createClassMove: vi.fn(() => new Promise<ApiResult<OutgoingMove>>(() => undefined)) });
+    const calls = await sheet(a);
+    await act(async () => one('teacher-move-own').findByType('input').props.onChange());
+    await click('teacher-move-continue');
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await click('teacher-move-go');
+      const dialog = (): ReactTestInstance => root().find((n) => n.type === 'div' && n.props.role === 'dialog');
+      const escape = { key: 'Escape', stopPropagation: () => undefined, preventDefault: () => undefined, shiftKey: false };
+      act(() => {
+        vi.advanceTimersByTime(MOVE_LOCK_MS - 1);
+      });
+      await act(async () => dialog().props.onKeyDown(escape));
+      expect(calls.closed).toBe(0);
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      await act(async () => dialog().props.onKeyDown(escape));
+      expect(calls.closed).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('before Move now (and after it answered) Close still closes the sheet', async () => {
     const calls = await sheet(api());
     const close = root().find((n) => n.type === 'button' && n.props['aria-label'] === en.transfer.a11y.close);
@@ -241,7 +266,7 @@ describe('TeacherMoveSheet (screen 1)', () => {
       await act(async () => one('teacher-move-own').findByType('input').props.onChange());
       await click('teacher-move-continue');
       await click('teacher-move-go');
-      expect(posted).toEqual([['hr-roster', { type: 'roster-changed' }]]);
+      expect(posted).toEqual([['hr-roster', { type: 'roster-changed', from: expect.any(String) }]]);
     } finally {
       vi.unstubAllGlobals();
     }
@@ -288,7 +313,7 @@ describe('TeacherMovesSection (screen 2)', () => {
       const a = api({ outgoing: [outgoing({ kind: 'accept', status: 'waiting', learner: { name: 'Jun', avatar: 'tiger' } })], incoming: [incoming()] });
       await section(a);
       await click('teacher-move-accept');
-      expect(posted).toEqual([['hr-roster', { type: 'roster-changed' }]]);
+      expect(posted).toEqual([['hr-roster', { type: 'roster-changed', from: expect.any(String) }]]);
       await click('teacher-move-cancel-ask');
       expect(posted).toHaveLength(2);
       act(() => renderer?.unmount());
