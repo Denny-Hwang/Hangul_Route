@@ -116,6 +116,16 @@ export const OVERLAY_FIELDS = {
   vocab: ['gloss', 'senseNote'],
   'vocab-topic': ['title', 'blurb', 'hoyaIntro'],
   pitem: ['gloss', 'options.<optionId>.gloss'],
+  // F-CURR-002 row CM-37: a Hidden Heritage scene (packages/design-system/src/scene-art/hidden-heritage/): its alt
+  // text, the meanings that name its spots in the reference round, its subject and the facts of its card back.
+  scene: [
+    'art.alt',
+    'round.alt',
+    'round.targets.<thing>.word.gloss',
+    'round.others.<thing>.word.gloss',
+    'note.subject',
+    'note.facts.<factId>.claim',
+  ],
 } as const satisfies Record<string, readonly string[]>;
 export type OverlayPrefix = keyof typeof OVERLAY_FIELDS;
 
