@@ -14,9 +14,11 @@ import { expectNoHorizontalOverflow } from './viewport';
  * that wants the game turns it on through the stored remote copy, and off it plays Story Sequence with text cards.
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-order-game
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-checks-story-order
  *
- * In the production build the suite is skipped. Speech is the silent engine of ./fixtures (no Korean voice).
+ * The file name starts with `story-checks` so the fixture run's whole-file filter of that name (web-app.yml, "A file
+ * filter matches by name") selects it, as `story-reader` covers every story-reader-*.spec.ts. In the production
+ * build the suite is skipped. Speech is the silent engine of ./fixtures (no Korean voice).
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
