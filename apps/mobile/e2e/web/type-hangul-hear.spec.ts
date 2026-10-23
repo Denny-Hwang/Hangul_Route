@@ -95,13 +95,15 @@ async function typeKeys(page: Page, jamo: string): Promise<void> {
   for (const j of jamo) await key(page, j).click();
 }
 
-/** Every visible button and key: at least 48 x 48 and inside the window's width. */
-async function expectTargets(page: Page, width: number): Promise<void> {
+/** Every visible button and key of the game (the screen under `root`): at least 48 x 48 and inside the window's width. */
+async function expectTargets(page: Page, width: number, root = 'type-hangul'): Promise<void> {
   const boxes = await page
+    .getByTestId(root)
     .locator('[role="button"]:visible, button:visible')
     .evaluateAll((els) => els.map((el) => ({ label: el.getAttribute('aria-label') ?? el.textContent ?? '', ...el.getBoundingClientRect().toJSON() }) as { label: string; width: number; height: number; left: number; right: number }));
   expect(boxes.length).toBeGreaterThan(0);
-  for (const b of boxes) {
+  // The screen header's Close and Display buttons are the shell's (game-sizing.spec.ts measures them), not the game's.
+  for (const b of boxes.filter((x) => !/^(Close|Aa, Display\b)/.test(x.label))) {
     expect(Math.min(b.width, b.height), b.label).toBeGreaterThanOrEqual(MIN_TARGET - 0.5);
     expect(b.left, b.label).toBeGreaterThanOrEqual(-0.5);
     expect(b.right, b.label).toBeLessThanOrEqual(width + 0.5);
@@ -217,7 +219,11 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     await expect(page.getByTestId('spelling-cue-gloss')).toHaveText('book');
     await expect(page.getByTestId('listen-pick-option-a')).toHaveAttribute('aria-label', '치읓 애 기역, 이응 이. chaegi');
     await expect(page.getByTestId('listen-pick-option-b')).toHaveAttribute('aria-label', '치읓 애, 기역 이. chaegi');
-    await expectTargets(page, 320);
+    for (const id of ['listen-pick-speaker', 'listen-pick-hear-again', 'listen-pick-option-a', 'listen-pick-option-b']) {
+      const b = await page.getByTestId(id).boundingBox();
+      expect(Math.min(b!.width, b!.height), id).toBeGreaterThanOrEqual(MIN_TARGET - 0.5);
+      expect(b!.x + b!.width, id).toBeLessThanOrEqual(320.5);
+    }
     await expectNoHorizontalOverflow(page);
     await shot(page, 'spelling-320');
     await page.getByTestId('listen-pick-option-b').click();
