@@ -321,4 +321,9 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => plural('es', stars, { one: 'Repaso de etapa, mejor: 1 estrella', other: `Repaso de etapa, mejor: ${stars} estrellas` }),
   },
+  hiddenHeritage: {
+    foundLive: (gloss: string) => `Lo encontraste: ${gloss}`,
+    spotFound: (gloss: string) => `${gloss}, ya lo encontraste`,
+    slotEmpty: 'Aún sin encontrar',
+  },
 } satisfies DeepPartial<Messages['a11y']>;
