@@ -42,22 +42,3 @@ export const supportedCardIds: readonly string[] = [
   'card:gayageum',
 ];
 
-/**
- * The album card ids `UpperCellCardArt` draws (F-CURR-002 §7.2, row CM-23): the upper-cell cards of Stages 2 and 3,
- * Lunch Box Words' and Outdoor Words' album cards included. Their drawings are a module of their own
- * (`UpperCellArt.tsx`, which reads this list; both are reached by the file's path, never the barrel), which the app loads in a chunk while `upperCards` is on.
- */
-export const upperCellCardArtIds: readonly string[] = [
-  // Stage 2
-  'card:norae',
-  'card:dosirak',
-  'card:bokjumeoni',
-  'card:byeol',
-  'card:swing',
-  // Stage 3
-  'card:hangeul',
-  'card:tteok',
-  'card:full-moon',
-  'card:gom',
-  'card:yut',
-];

@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors } from '../../../tokens';
-import { upperCellCardArtIds } from '../card-ids';
+import { upperCellCardArtIds } from '../upper-card-ids';
 import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
 
 /**
