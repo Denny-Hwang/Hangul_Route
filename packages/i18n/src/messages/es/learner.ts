@@ -352,7 +352,7 @@ export const learner = {
     },
     albums: {
       title: 'Álbumes',
-      line: 'Cada tema tiene un álbum. Termina una casilla desde la Etapa 2 para añadir su tarjeta.',
+      line: 'Cada tema tiene un álbum. Termina una casilla a partir de la Etapa 2 para añadir su tarjeta.',
       names: ALBUM_NAMES,
       count: (n: number) => plural('es', n, { one: '1 tarjeta', other: `${n} tarjetas` }),
       fresh: 'Nuevo',

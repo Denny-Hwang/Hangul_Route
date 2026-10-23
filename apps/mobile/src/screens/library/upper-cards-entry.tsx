@@ -28,20 +28,28 @@ function loadChunk(): Promise<Chunk> {
   return loading;
 }
 
-/** The chunk while `on`, once it is in; null before, when off, or after a failed load (the caller keeps its fallback). */
+/**
+ * The chunk while `on`, once it is in; null before, when off, or while a failed load waits for its retry (the caller
+ * keeps its fallback). A failed load (a cold cache on a flaky network) is tried again every 5 s while mounted.
+ */
 function useChunk(on: boolean): Chunk | null {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
+  const [tries, setTries] = useState(0);
   useEffect(() => {
     if (!on || chunk !== null) return undefined;
     let live = true;
+    let retry: ReturnType<typeof setTimeout> | undefined;
     loadChunk().then(
       (c) => live && setChunk(c),
-      () => undefined,
+      () => {
+        if (live) retry = setTimeout(() => setTries(tries + 1), 5000);
+      },
     );
     return () => {
       live = false;
+      clearTimeout(retry);
     };
-  }, [on, chunk]);
+  }, [on, chunk, tries]);
   return on ? chunk : null;
 }
 
@@ -62,12 +70,15 @@ export function UpperCardArtSlot({ cardId, size, fallback }: { cardId: string; s
 /**
  * An upper-cell card with its back (blurb, fact, source line) once the chunk is in, and whether it is in; any other card
  * as it is, ready. The card page waits for it before the card flips or shares, as it does for a story card's chunk.
+ * `hidden`: `upperCards` is off for the learner and the card is not `held`, so the page shows "not found".
  */
-export function useUpperCardBack(card: HeritageCard | undefined): { card: HeritageCard | undefined; ready: boolean } {
+export function useUpperCardBack(card: HeritageCard | undefined, held: boolean): { card: HeritageCard | undefined; ready: boolean; hidden: boolean } {
+  const on = useCurrFlag('upperCards');
   const upper = card !== undefined && UPPER_CARD_GATED_IDS.has(card.id);
-  const ui = useChunk(upper);
-  if (!upper) return { card, ready: true };
-  return ui === null ? { card, ready: false } : { card: ui.withUpperBack(card), ready: true };
+  const hidden = upper && !held && !on;
+  // The chunk is asked for (and so non-null) only for a shown upper-cell card.
+  const ui = useChunk(upper && !hidden);
+  return { card: ui && card ? ui.withUpperBack(card) : card, ready: !upper || ui !== null, hidden };
 }
 
 export interface AlbumsSlotProps {

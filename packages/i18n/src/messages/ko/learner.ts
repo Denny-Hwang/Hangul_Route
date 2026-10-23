@@ -341,7 +341,7 @@ export const learner = {
       line: '테마마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
       names: ALBUM_NAMES,
       count: (n: number) => `카드 ${n}장`,
-      fresh: '새 앨범',
+      fresh: '새로 시작',
       complete: '앨범 완성',
       named: (theme: AlbumTheme) => `${ALBUM_NAMES[theme]} 앨범`,
       a11y: (name: string, status: string) => `${name} 앨범: ${status}`,

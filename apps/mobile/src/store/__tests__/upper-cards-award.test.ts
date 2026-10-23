@@ -133,11 +133,20 @@ describe('wireUpperCards (App start)', () => {
     expect(held()).not.toContain('card:norae');
   });
 
-  it('a change that leaves the copy as it was runs nothing', () => {
+  it('a change that leaves the copy as it was runs nothing, even with the switch on', () => {
+    const copy = flags(100);
+    useRemoteConfigStore.setState({ cache: copy, hydrated: true });
     const unwire = wireUpperCards();
-    const spy = vi.spyOn(useProgressStore.getState(), 'reconcileAwards');
-    useRemoteConfigStore.setState({ cache: null, hydrated: false });
-    expect(spy).not.toHaveBeenCalled();
+    const original = useProgressStore.getState().reconcileAwards;
+    const reconcile = vi.fn(() => []);
+    useProgressStore.setState({ reconcileAwards: reconcile });
+    // Another field changes; the copy and the hydration stay as they were.
+    useRemoteConfigStore.setState({ cache: copy, hydrated: true });
+    expect(reconcile).not.toHaveBeenCalled();
+    // The guard is what stops it: a new copy with the switch on does run it.
+    useRemoteConfigStore.setState({ cache: flags(100) });
+    expect(reconcile).toHaveBeenCalledWith(ID);
     unwire();
+    useProgressStore.setState({ reconcileAwards: original });
   });
 });

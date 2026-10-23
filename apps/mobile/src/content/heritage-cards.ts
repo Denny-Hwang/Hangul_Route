@@ -142,7 +142,7 @@ export const upperCellCards: HeritageCard[] = [
     ['masisseoyo', 'It Is Tasty', '맛있어요'],
     0,
     ['biga-wayo', 'It Is Raining', '비가 와요', 'biga wayo'],
-    ['gachi', 'Play Together?', '같이 할까요?', 'gachi halkkayo'],
+    ['gachi', 'Do It Together?', '같이 할까요?', 'gachi halkkayo'],
   ]),
   // Stages 6 and 7 (row CM-23 part 3): every cell gives a new card. Stage 6 cards are things read out in the world (a
   // price, a call to the server, a ticket, a trail sign, a market extra); Stage 7 cards are words the cell's word bank

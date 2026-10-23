@@ -11,6 +11,7 @@ import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
 import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-STORY-006 PR 6.9: the card award model end to end, on the release bundle (§5 test table, the
@@ -352,7 +353,13 @@ const upperCells = episodesAll.filter((e) => (e.stage === 'stage2' || e.stage ==
 const NEW_UPPER = ['card:norae', 'card:bokjumeoni', 'card:swing', 'card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut'];
 const TASTE_HELD = ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak', 'card:haneul', 'card:kkot', 'card:namu', 'card:byeol', 'card:tiger'];
 
-async function upperLearner(page: Page, upperPct: number, cells = upperCells, held = TASTE_HELD): Promise<string> {
+async function upperLearner(
+  page: Page,
+  upperPct: number,
+  settings?: { uiLocale: 'en'; textSize: 'largest' },
+  cells = upperCells,
+  held = TASTE_HELD,
+): Promise<string> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -365,6 +372,7 @@ async function upperLearner(page: Page, upperPct: number, cells = upperCells, he
     questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
   });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } });
+  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
   await page.reload();
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await closeInstallGuide(page);
@@ -429,11 +437,39 @@ test.describe('upper-cell cards and albums (F-CURR-002 row CM-23, release bundle
     await shot(page, 'upper-cards-albums-wide');
   });
 
+  test('wide: with a theme filter on, an album card of another theme opens in the pane (the filter clears)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100);
+    await openLibraryCards(page);
+    await page.getByRole('button', { name: 'Letters', exact: true }).first().click();
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await page.getByTestId('library-album-card-card:gom').click();
+    await expect(page.getByText(/The bandalgaseumgom is a black bear/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('곰', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  });
+
+  test('320 at the Largest text size: the album rows wrap and fit, with no sideways scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await upperLearner(page, 100, { uiLocale: 'en', textSize: 'largest' });
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-letters-status')).toHaveText('2 cards');
+    await expectTextFits(page, 'the Library albums at Largest');
+    const box = await albums.boundingBox();
+    expect(box && box.x >= 0 && box.x + box.width <= 320).toBe(true);
+  });
+
   test('upperCards off: no new card arrives, no album is drawn, and the shipped taste cards stay', async ({ page }) => {
     const profileId = await upperLearner(page, 0);
     await openLibraryCards(page);
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    // A settled state first: the held taste cards are drawn (progress read), then past the launch reconcile and the
+    // remote copy's read, so an award that comes late would be caught.
+    await expect(libraryTile(page, 'card:dosirak', false).or(libraryTile(page, 'card:dosirak', true)).first()).toBeVisible();
+    await page.waitForTimeout(2000);
     await expect(page.getByTestId('library-albums')).toHaveCount(0);
+    await expect(page.getByTestId('library-album-card-card:norae')).toHaveCount(0);
     const saved = await storedCards(page, profileId);
     expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
     for (const id of TASTE_HELD) expect(saved.some((c) => c.cardId === id), id).toBe(true);
@@ -457,7 +493,7 @@ test.describe('Stage 4 upper-cell cards (F-CURR-002 row CM-23 part 2, release bu
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.setViewportSize({ width: 320, height: 800 });
-    const profileId = await upperLearner(page, 100, s4Cells, S4_HELD);
+    const profileId = await upperLearner(page, 100, undefined, s4Cells, S4_HELD);
 
     await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => NEW_S4.includes(c.cardId)).length).toBe(NEW_S4.length);
     const saved = await storedCards(page, profileId);
@@ -490,21 +526,29 @@ test.describe('Stage 4 upper-cell cards (F-CURR-002 row CM-23 part 2, release bu
 
   test('wide: the albums with Stage 4', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await upperLearner(page, 100, s4Cells, S4_HELD);
+    await upperLearner(page, 100, undefined, s4Cells, S4_HELD);
     await openLibraryCards(page);
     await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('library-album-crafts-status')).toHaveText('3 cards');
     await shot(page, 'upper-cards-s4-albums-wide');
   });
 
-  test('upperCards off: no Stage 4 card arrives; Greeting Dialogues keeps its four shipped cards', async ({ page }) => {
-    const held = [...TASTE_HELD, 'card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
-    const profileId = await upperLearner(page, 0, s4Cells, held);
+  test('upperCards off: Greeting Dialogues still awards its four shipped cards; no Stage 4 card arrives, no album is drawn', async ({ page }) => {
+    // Seeded without the rites cards: the launch reconcile has to award them with the switch off, which is the point
+    // that proves it ran before the checks that nothing else arrived.
+    const RITES = ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+    const profileId = await upperLearner(page, 0, undefined, s4Cells, TASTE_HELD);
+    await expect
+      .poll(async () => (await storedCards(page, profileId)).filter((c) => RITES.includes(c.cardId)).map((c) => c.cardId).sort())
+      .toEqual([...RITES].sort());
     await openLibraryCards(page);
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    await expect(libraryTile(page, 'card:insa', false).or(libraryTile(page, 'card:insa', true)).first()).toBeVisible();
+    await expect(page.getByTestId('library-albums')).toHaveCount(0);
     const saved = await storedCards(page, profileId);
     expect(saved.filter((c) => NEW_S4.includes(c.cardId))).toEqual([]);
-    for (const id of held) expect(saved.some((c) => c.cardId === id), id).toBe(true);
+    expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
+    for (const id of [...TASTE_HELD, ...RITES]) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
   });
 });
 
@@ -527,7 +571,7 @@ test.describe('Stages 6-7 cards and the album legendary cards (F-CURR-002 row CM
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.setViewportSize({ width: 320, height: 800 });
-    const profileId = await upperLearner(page, 100, allUpperCells, S67_HELD);
+    const profileId = await upperLearner(page, 100, undefined, allUpperCells, S67_HELD);
 
     const wanted = [...NEW_S67, ...LEGENDS];
     await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => wanted.includes(c.cardId)).length).toBe(wanted.length);
@@ -573,7 +617,7 @@ test.describe('Stages 6-7 cards and the album legendary cards (F-CURR-002 row CM
 
   test('wide: the complete albums with their legendary cards', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await upperLearner(page, 100, allUpperCells, S67_HELD);
+    await upperLearner(page, 100, undefined, allUpperCells, S67_HELD);
     await openLibraryCards(page);
     await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('library-album-nature-status')).toHaveText('Album complete');
@@ -581,7 +625,7 @@ test.describe('Stages 6-7 cards and the album legendary cards (F-CURR-002 row CM
   });
 
   test('upperCards off: no Stage 6-7 card and no legendary card arrives; the held cards stay', async ({ page }) => {
-    const profileId = await upperLearner(page, 0, allUpperCells, S67_HELD);
+    const profileId = await upperLearner(page, 0, undefined, allUpperCells, S67_HELD);
     await openLibraryCards(page);
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     await expect(page.getByTestId('library-albums')).toHaveCount(0);
