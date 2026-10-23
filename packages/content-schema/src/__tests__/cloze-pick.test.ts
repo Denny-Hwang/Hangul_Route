@@ -9,6 +9,7 @@ import {
   SLOT_MARKER,
   clozePickIssues,
   fillClozeGap,
+  isOverlayFieldAllowed,
   type ClozePickRound,
 } from '../index';
 import { lessonOccurrences } from '../review-items/extract';
@@ -119,6 +120,19 @@ describe('the cloze-pick lesson scope', () => {
     expect(clozePickIssues(scope({ realia }))).toEqual([{ path: ['realia'], message: 'a realia card goes with a value gap' }]);
     expect(clozePickIssues(scope({ rounds: [value()], realia: { ...realia, entries: [realia.entries[0], realia.entries[0]] } }))).toEqual([{ path: ['realia', 'entries'], message: 'realia entry ids must be unique' }]);
     expect(clozePickIssues(scope({ rounds: [value()], realia }))).toEqual([]);
+    expect(clozePickIssues(scope({}))).toEqual([]);
+  });
+
+  it('a value gap answer is read on the card (a card of 5,000 won never accepts 3,000)', () => {
+    const scope = (over: object) => LessonScopeSchema.parse({ ref, kind: 'cloze-pick', rounds: [word()], ...over }) as Extract<ReturnType<typeof LessonScopeSchema.parse>, { kind: 'cloze-pick' }>;
+    expect(clozePickIssues(scope({ rounds: [word(), value({ answerIndex: 1 })], realia }))).toEqual([
+      { path: ['rounds', 1, 'answerIndex'], message: 'a value gap answer "삼천" is on the realia card' },
+    ]);
+    // The answer may sit in an entry's text as well as its value (a ticket's time, a sign's place).
+    const onText = { ...realia, entries: [{ id: 'e1', text: kt('삼천 원', 'samcheon won', '3,000 won') }] };
+    expect(clozePickIssues(scope({ rounds: [value({ answerIndex: 1 })], realia: onText }))).toEqual([]);
+    // A round whose answer points past its tiles is the round schema's issue, never a crash here.
+    expect(clozePickIssues({ ...scope({ rounds: [value()], realia }), rounds: [{ ...value(), answerIndex: 9 } as ClozePickRound] })).toHaveLength(0);
   });
 
   it('a quest carries the issues at the scope path', () => {
@@ -167,5 +181,23 @@ describe('review items of a cloze-pick scope', () => {
   it('a value gap with no card asks nothing', () => {
     const bare = { ...cell, quests: [{ ...cell.quests[0], scopes: [{ ref: 'minigame:s3-life-q1-apply', kind: 'cloze-pick', rounds: [value()] }] }] };
     expect(lessonOccurrences({ ...source, body: bare }, [])).toEqual([]);
+  });
+});
+
+describe('the overlay fields of a cloze-pick scope', () => {
+  it('lets es and ko translate everything the value card draws, as Realia Read does', () => {
+    const id = 'minigame:s3-life-q1-apply';
+    for (const field of [
+      'clozePick.rounds.c1.sentence.gloss',
+      'clozePick.rounds.c1.tiles.ilgeoyo.gloss',
+      'clozePick.realia.alt',
+      'clozePick.realia.title.gloss',
+      'clozePick.realia.entries.e1.text.gloss',
+      'clozePick.realia.entries.e1.value.gloss',
+    ]) {
+      expect(isOverlayFieldAllowed(id, field), field).toBe(true);
+    }
+    // The taught Korean is never overridden.
+    expect(isOverlayFieldAllowed(id, 'clozePick.realia.entries.e1.value.ko')).toBe(false);
   });
 });

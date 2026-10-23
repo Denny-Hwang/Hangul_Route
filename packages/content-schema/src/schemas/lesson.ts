@@ -128,7 +128,8 @@ export function scopeRoundCount(scope: LessonScope): number {
 
 /**
  * Cross-checks of a Cloze Pick scope (row CM-30): a value gap needs the card it reads from, and a card
- * goes with a value gap (it would be read for nothing); the card's entry ids are unique.
+ * goes with a value gap (it would be read for nothing); the card's entry ids are unique; and a value gap's answer is
+ * written on the card (an entry's text or value), so a round never shows 5,000 won and accepts 3,000.
  */
 export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick' }>): Array<{ path: (string | number)[]; message: string }> {
   const { realia, rounds } = scope;
@@ -137,7 +138,16 @@ export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick'
   if (realia === undefined) return [];
   if (!values) return [{ path: ['realia'], message: 'a realia card goes with a value gap' }];
   const ids = realia.entries.map((e) => e.id);
-  return new Set(ids).size === ids.length ? [] : [{ path: ['realia', 'entries'], message: 'realia entry ids must be unique' }];
+  if (new Set(ids).size !== ids.length) return [{ path: ['realia', 'entries'], message: 'realia entry ids must be unique' }];
+  const onCard = realia.entries.flatMap((e) => [e.text.ko, e.value?.ko ?? '']);
+  const out: Array<{ path: (string | number)[]; message: string }> = [];
+  rounds.forEach((r, i) => {
+    const answer = r.tiles[r.answerIndex]?.ko ?? '';
+    if (r.gapKind === 'value' && !onCard.some((text) => text.includes(answer))) {
+      out.push({ path: ['rounds', i, 'answerIndex'], message: `a value gap answer "${answer}" is on the realia card` });
+    }
+  });
+  return out;
 }
 
 // ---- quests ----------------------------------------------------------------------------------------

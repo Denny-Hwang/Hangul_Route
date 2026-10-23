@@ -19,6 +19,7 @@ import { scopeFor } from '../minigame-config';
 import { storiesAll } from '../../content/stories';
 import { buildSequenceCards } from '../story/sequence-cards';
 import { REALIA_FIXTURES } from '../../navigation/realia-read-e2e-fixture';
+import { clozeFixtureScope } from '../cloze-pick/e2e-rounds';
 
 /**
  * F-I18N-001 §3.6: the screens show content titles, blurbs and glosses through
@@ -118,6 +119,35 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(ramyeon.text.ko).toBe('라면');
     expect(ramyeon.text.romanization).toBe('ramyeon');
     expect(localizeScope(scope, ref, 'en', ko)).toBe(scope);
+  });
+
+  it('localizes a Cloze Pick scope: the meaning, a tile gloss and the value card (F-CURR-002 row CM-30)', () => {
+    const base = clozeFixtureScope(['word', 'value']);
+    const realia = { ...base.clozePick!.realia!, title: { ko: '시장', romanization: 'sijang', en: 'market' } };
+    const scope = { ...base, clozePick: { ...base.clozePick!, realia } };
+    const ref = 'minigame:e2e-cloze';
+    const es: Overlays = {
+      es: {
+        [ref]: {
+          'clozePick.rounds.e2e-cloze-word.sentence.gloss': 'Leo un libro.',
+          'clozePick.realia.alt': 'Un cartel de precios de manzanas',
+          'clozePick.realia.title.gloss': 'mercado',
+          'clozePick.realia.entries.apples.text.gloss': 'manzanas',
+          'clozePick.realia.entries.apples.value.gloss': '3.000 wones',
+        },
+      },
+      ko: {},
+    };
+    const out = localizeScope(scope, ref, 'es', es).clozePick!;
+    expect(out.rounds.find((r) => r.id === 'e2e-cloze-word')!.sentence.en).toBe('Leo un libro.');
+    expect(out.realia!.altEn).toBe('Un cartel de precios de manzanas');
+    expect(out.realia!.title?.en).toBe('mercado');
+    const apples = out.realia!.entries.find((e) => e.id === 'apples')!;
+    expect(apples.text.en).toBe('manzanas');
+    expect(apples.value?.en).toBe('3.000 wones');
+    // The taught Korean and its romanization never change.
+    expect(apples.value?.ko).toBe('삼천 원');
+    expect(localizeScope(scope, ref, 'en', es)).toBe(scope);
   });
 
   it('localizes a story by its id: the story-sequence cards show the overlay caption (F-STORY-001 §3.12 row)', () => {
