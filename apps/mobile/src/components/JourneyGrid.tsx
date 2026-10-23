@@ -128,6 +128,8 @@ export interface JourneyGridProps {
   onOpenHangulCheck?: () => void;
   /** One learner's mastery rings (row CM-20); omitted: none. */
   mastery?: JourneyMastery;
+  /** Drawn under a stage's cells (row CM-25: Stage Jump Ahead's line); omitted: nothing. */
+  stageFooter?: (stage: StageDef) => React.ReactNode;
 }
 
 export function JourneyGrid({
@@ -147,6 +149,7 @@ export function JourneyGrid({
   onOpenStagePrize,
   onOpenHangulCheck,
   mastery,
+  stageFooter,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -293,6 +296,7 @@ export function JourneyGrid({
                 </View>
               </View>
             ) : null}
+            {stageFooter?.(stage)}
           </View>
         );
       })}

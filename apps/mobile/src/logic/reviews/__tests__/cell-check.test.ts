@@ -15,6 +15,11 @@ import {
   checkLatch,
   checkResult,
   planCellCheck,
+  planStageJump,
+  STAGE_JUMP_MIN_ROUNDS,
+  STAGE_JUMP_SIZE,
+  stageJumpItemIds,
+  testedOutKeys,
   testOutFinishedEvent,
 } from '../cell-check';
 import type { RoundAnswer } from '../daily-review';
@@ -95,6 +100,52 @@ describe('the plan: the cell items, at least 30% at produce, interleaved', () =>
   });
 });
 
+describe('Stage Jump Ahead (row CM-25): one Check over the stage, the CM-13 selector, at least 30% produce, interleaved', () => {
+  const stageCells = (stage: string): string[] =>
+    CATALOG.cells.filter((c) => c.episodeId.startsWith(`episode:${stage}-`) && /^episode:stage[1-7]-[a-z]+$/.test(c.episodeId)).map((c) => c.episodeId);
+
+  it.each(['stage2', 'stage3', 'stage4', 'stage6', 'stage7'])('%s: 10 to 20 rounds of the stage cells, every cell with items asked, no item twice', (stage) => {
+    const cells = stageCells(stage);
+    for (const voice of [true, false]) {
+      const plan = planStageJump(ctx(voice), stage, cells, rounds);
+      expect(plan, stage).not.toBeNull();
+      if (plan === null) continue;
+      expect(plan.mode).toBe('jump');
+      expect(plan.cellId).toBe(stage);
+      expect(plan.cells).toEqual(cells);
+      expect(plan.rounds.length).toBeGreaterThanOrEqual(STAGE_JUMP_MIN_ROUNDS);
+      expect(plan.rounds.length).toBeLessThanOrEqual(STAGE_JUMP_SIZE);
+      const ids = plan.rounds.map((r) => r.question.itemId);
+      expect(new Set(ids).size).toBe(ids.length);
+      const allowed = new Set(stageJumpItemIds(ctx().index, cells));
+      for (const id of ids) expect(allowed.has(id), id).toBe(true);
+      // Round robin over the cells: every cell that has a playable item is asked (a big cell cannot crowd one out).
+      for (const cell of cells) {
+        const own = cellCheckItemIds(ctx().index, cell);
+        const single = planCellCheck(ctx(voice), cell, 'testout', rounds);
+        if (single !== null) expect(ids.some((id) => own.includes(id)), `${stage} ${cell}`).toBe(true);
+      }
+      const produce = plan.rounds.filter((r) => r.question.rung === 'produce').length;
+      const canProduce = [...new Set(ids)].filter((id) => ctx(voice).index.byId.get(id)?.formats.some((f) => FORMAT_RUNG[f] === 'produce')).length;
+      expect(produce).toBeGreaterThanOrEqual(Math.min(Math.ceil(0.3 * plan.rounds.length), canProduce));
+    }
+  });
+
+  it('a stage of books (Stage 5) or no cells has no jump; the same seed gives the same plan', () => {
+    expect(planStageJump(ctx(), 'stage5', stageCells('stage5'), rounds)).toBeNull();
+    expect(planStageJump(ctx(), 'stage2', [], rounds)).toBeNull();
+    const a = planStageJump(ctx(), 'stage3', stageCells('stage3'), rounds);
+    const b = planStageJump(ctx(), 'stage3', stageCells('stage3'), rounds);
+    expect(a?.rounds.map((r) => r.question.itemId)).toEqual(b?.rounds.map((r) => r.question.itemId));
+  });
+
+  it('an excluded item is never asked', () => {
+    const cells = stageCells('stage2');
+    const first = planStageJump(ctx(), 'stage2', cells, rounds)?.rounds[0]?.question.itemId as string;
+    expect(planStageJump(ctx(), 'stage2', cells, rounds, new Set([first]))?.rounds.map((r) => r.question.itemId)).not.toContain(first);
+  });
+});
+
 describe('the result: stars only, 80% first try passes', () => {
   const plan = planCellCheck(ctx(), 'episode:stage2-letters', 'check', rounds);
   const rs = plan?.rounds ?? [];
@@ -127,6 +178,15 @@ describe('the result: stars only, 80% first try passes', () => {
     expect(checkLatch('testout', { passed: true })).toBe('testedOut');
     expect(checkLatch('check', { passed: false })).toBeNull();
     expect(checkLatch('testout', { passed: false })).toBeNull();
+    // Row CM-25: a passed Stage Jump latches testedOut too, never cellCheckAt.
+    expect(checkLatch('jump', { passed: true })).toBe('testedOut');
+    expect(checkLatch('jump', { passed: false })).toBeNull();
+  });
+
+  it('the testedOut keys: a test-out its cell; a Stage Jump every cell of the stage and the stage key', () => {
+    expect(testedOutKeys({ cellId: 'episode:stage2-life', mode: 'testout' })).toEqual(['episode:stage2-life']);
+    expect(testedOutKeys({ cellId: 'stage3', mode: 'jump', cells: ['episode:stage3-life', 'episode:stage3-rites'] })).toEqual(['episode:stage3-life', 'episode:stage3-rites', 'stage3']);
+    expect(testedOutKeys({ cellId: 'stage3', mode: 'jump' })).toEqual(['stage3']);
   });
 });
 
@@ -163,5 +223,22 @@ describe('the strings (section 7.7, section 9.3 review-copy)', () => {
     }
     // "Test out" is the spec's name for the way in (section 4.5); no other string frames the check as a test.
     expect(texts.filter((t) => /\btest/i.test(t))).toEqual(locale === 'en' ? ['Test out', 'You tested out!', 'Tested out'] : []);
+  });
+});
+
+describe('the Stage Jump strings (row CM-25; section 7.7, section 9.3 review-copy)', () => {
+  it.each(['en', 'es', 'ko'] as const)('%s: pass review-copy and the anti-shame list: no percentage, no exam framing, no age wording', (locale) => {
+    const m = getMessages(locale);
+    expect(lintReviewMessages(m.learner, ['stageJump'], locale)).toEqual([]);
+    const j = m.learner.stageJump;
+    const texts = [j.prompt, j.cta, j.label(3, 'First Sentences'), j.intro, j.extra, j.passed];
+    for (const text of texts) {
+      expect(text.trim().length, text).toBeGreaterThan(0);
+      expect(text, text).not.toMatch(/%|\bexam|\bquiz|\bscore|\btest|\bpass(ed)?\b|\bfail|\bkids?\b|\bages?\b|examen|prueba|puntaje|niños|edad|시험|점수|통과|실패|탈락|어린이|나이/i);
+      for (const word of bannedWordsFor(locale, 'learner')) expect(text.toLowerCase(), `${text} has ${word}`).not.toContain(word.toLowerCase());
+    }
+    // The label names the stage by number and title.
+    expect(j.label(3, 'First Sentences')).toContain('3');
+    expect(j.label(3, 'First Sentences')).toContain('First Sentences');
   });
 });

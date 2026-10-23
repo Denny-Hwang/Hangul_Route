@@ -820,3 +820,52 @@ describe('a test-out (row CM-21, section 4.5)', () => {
     expect(Object.keys(await derived(one))).toContain(third.id);
   });
 });
+
+describe('a Stage Jump (row CM-25): asked items by their result across the stage, the rest derived, alike on two devices', () => {
+  const STAGE3 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage3-${t}`);
+  const own = (cell: string) => ITEMS.filter((i) => i.cells.includes(cell) && !i.id.startsWith('vocab:'));
+  const [lifeRight, lifeMiss] = own('episode:stage3-life') as [(typeof ITEMS)[number], (typeof ITEMS)[number]];
+  const ritesRight = own('episode:stage3-rites')[0] as (typeof ITEMS)[number];
+  const unasked = own('episode:stage3-nature')[0] as (typeof ITEMS)[number];
+  const jumped = (at: string): Record<string, string> => Object.fromEntries([...STAGE3, 'stage3'].map((k) => [k, at]));
+
+  it('right to box 2 due in 3 days, a miss to box 1 due tomorrow, in any cell; every unasked item at box 1, never uploaded', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordTestOut(
+      'p1',
+      [
+        { itemId: lifeRight.id, rung: 'read', correct: true },
+        { itemId: lifeMiss.id, rung: 'read', correct: false },
+        { itemId: ritesRight.id, rung: 'produce', correct: true },
+      ],
+      true,
+      d.clock.now,
+    );
+    const snap = d.snapshots.get('p1') as ProgressSnapshot;
+    d.snapshots.set('p1', { ...snap, testedOut: jumped(d.clock.now.toISOString()) });
+    await d.rt.ensureSeeded('p1');
+    expect(await stateOf(d, lifeRight.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1 });
+    expect(await stateOf(d, ritesRight.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1, c: 3 });
+    expect(await stateOf(d, lifeMiss.id)).toMatchObject({ b: 1, d: '2026-10-23', n: 1 });
+    expect(await stateOf(d, unasked.id)).toMatchObject({ b: 1, n: 0, s: 1, f: '2026-10-22' });
+    const due = new Map<string, number>();
+    for (const row of Object.values((await d.rt.file('p1'))?.rows ?? {})) if (row.st.n === 0 && row.st.d) due.set(row.st.d, (due.get(row.st.d) ?? 0) + 1);
+    for (const n of due.values()) expect(n).toBeLessThanOrEqual(15);
+    expect([...((await d.rt.file('p1'))?.pending ?? [])].sort()).toEqual([lifeRight.id, lifeMiss.id, ritesRight.id].sort());
+  });
+
+  it('two devices derive the same unasked states from the same synced jump', async () => {
+    const one = device();
+    const two = device({ dayOf: utcDay });
+    const snap = { ...finished(3), testedOut: jumped('2026-10-22T08:00:00.000Z') };
+    for (const dv of [one, two]) {
+      dv.snapshots.set('p1', snap);
+      await dv.rt.ensureSeeded('p1');
+    }
+    const derived = async (dv: Device) => Object.fromEntries(Object.entries((await dv.rt.file('p1'))?.rows ?? {}).filter(([, r]) => r.st.n === 0).map(([id, r]) => [id, r.st]));
+    expect(await derived(one)).toEqual(await derived(two));
+    expect(Object.keys(await derived(one))).toContain(unasked.id);
+  });
+});

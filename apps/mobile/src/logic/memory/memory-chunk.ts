@@ -148,13 +148,14 @@ export function cellCheckApi(): CellCheckApi {
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
     recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
     recordTestOut: (profileId, answers, passed, at) => (memoryRecordsFor(profileId) ? memoryRuntime().recordTestOut(profileId, answers, passed, at) : Promise.resolve()),
-    latch: (profileId, field, cellId, at) => {
+    latch: (profileId, field, keys, at) => {
       // On the hydrated snapshot only, merged earliest-wins (a latch never moves later); saved and synced like any write.
+      // A Stage Jump's keys (its cells and the stage key, row CM-25) go in one write.
       const progress = useProgressStore.getState();
       const snap = progress.hydratedFor.has(profileId) ? progress.byProfile[profileId] : undefined;
       if (!snap) return;
-      const merged = mergeLatchRecord(snap[field], { [cellId]: at }) ?? {};
-      if (snap[field]?.[cellId] === merged[cellId]) return;
+      const merged = mergeLatchRecord(snap[field], Object.fromEntries(keys.map((key) => [key, at]))) ?? {};
+      if (keys.every((key) => snap[field]?.[key] === merged[key])) return;
       progress.replaceSnapshot(profileId, { ...snap, [field]: merged });
       notifyProgressPersisted(profileId);
     },

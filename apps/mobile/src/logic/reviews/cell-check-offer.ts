@@ -1,4 +1,5 @@
-import type { CellLevel } from '@hangul-route/content-schema';
+import type { CellLevel, Episode } from '@hangul-route/content-schema';
+import { playableEpisodes } from '../next-quest';
 
 /**
  * What a cell's page offers (F-CURR-002 sections 4.4, 4.5, 11.4 and 12.2, row CM-21; design/wireframes/reviews/
@@ -70,4 +71,61 @@ export function cellOffer(i: CellOfferInput): CellOffer {
   if (level === 1) hint = 'practiced';
   else if (level === 2) hint = i.checkOn && !i.checkPassed ? 'check' : 'mastered';
   return { check, done, testOut, level, hint, block: level !== null || check !== null || done };
+}
+
+/** The stages a Stage Jump is offered on (row CM-25): every stage after Stage 1, as `STAGE_JUMP_STAGES` of F-PLC-001. */
+const JUMP_STAGES: readonly string[] = ['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'];
+
+/** A grid cell as the jump offer reads it: its stage, its quests and, for the stage's own cells, their stars and access. */
+export interface JumpCell {
+  id: string;
+  stage: string;
+  questIds: readonly string[];
+}
+
+/** The route's grid cells a jump reads: the playable grid episodes with quests (a preview placeholder is not one). */
+export function jumpCells(episodes: readonly Episode[]): JumpCell[] {
+  return playableEpisodes(episodes)
+    .filter((e) => e.questIds.length > 0)
+    .map((e) => ({ id: e.id, stage: e.stage, questIds: e.questIds }));
+}
+
+export interface StageJumpOfferInput {
+  stage: string;
+  /** Every grid cell of the route (`gridEpisodes`), any stage. */
+  cells: readonly JumpCell[];
+  /** The learner's done quests. */
+  done: ReadonlySet<string>;
+  /** The quests the level check placed out (`placedOutSkipSet`). */
+  placedOut: ReadonlySet<string> | undefined;
+  testedOut: Readonly<Record<string, string>> | undefined;
+  /** May the learner start this quest (`useQuestAccess`, F-ENT-003 section 3.4)? */
+  open: (questId: string) => boolean;
+  checkOn: boolean;
+  arm: TestOutArm;
+  /** The stage has 10 or more playable rounds (unknown while the plan is read: nothing is offered yet). */
+  playable: boolean;
+}
+
+const stageNumber = (stage: string): number => Number(stage.replace('stage', ''));
+
+/**
+ * Stage Jump Ahead (F-CURR-002 row CM-25): the Test out rule of a cell, over a whole stage. Offered on the Journey stage
+ * header of the stage the route has reached, before it is started:
+ * - a stage after Stage 1 (placement covers Stage 1, and its prize and Hangul Check need its quests), not jumped yet;
+ * - every quest of every stage before it done, placed out or in a tested-out cell, so the level a jump stands for
+ *   (the next stage's band 0, F-PLC-001 section 3.6 as amended) never claims a stage the learner has not covered;
+ * - nobody started it: no quest of the stage done and no cell of it tested out;
+ * - every quest of the stage open to the learner (F-ENT-003: the same access as playing them; a locked stage offers no
+ *   jump), in E3's offered arm, with `cellCheck` (and `memoryRecord`) on and 10 or more playable rounds.
+ */
+export function stageJumpOffer(i: StageJumpOfferInput): boolean {
+  if (!i.checkOn || !i.playable || i.arm !== 'offered' || !JUMP_STAGES.includes(i.stage) || i.testedOut?.[i.stage] !== undefined) return false;
+  const tested = (cell: JumpCell): boolean => i.testedOut?.[cell.id] !== undefined;
+  const own = i.cells.filter((c) => c.stage === i.stage);
+  const quests = own.flatMap((c) => c.questIds);
+  if (own.length === 0 || quests.length === 0 || own.some(tested) || quests.some((q) => i.done.has(q) || !i.open(q))) return false;
+  return i.cells
+    .filter((c) => stageNumber(c.stage) < stageNumber(i.stage))
+    .every((c) => tested(c) || c.questIds.every((q) => i.done.has(q) || i.placedOut?.has(q) === true));
 }

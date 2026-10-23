@@ -34,6 +34,7 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useMastery } from '../../store/mastery-entry';
+import { StageJumpSlot } from '../cell-check/cell-check-entry';
 import { useToday } from '../route/use-today';
 import { useProgressStore } from '../../store/progress-store';
 import { usePlanStore } from '../../store/plan-store';
@@ -192,6 +193,8 @@ export function JourneyScreen(): React.ReactElement {
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
         access={access}
         mastery={mastery}
+        // Row CM-25: Stage Jump Ahead's line, from the Cell Check's chunk while `cellCheck` is on.
+        stageFooter={(stage) => <StageJumpSlot profileId={profile?.id ?? null} stage={stage} />}
       />
 
       <Card padding="md" tone="sunken">

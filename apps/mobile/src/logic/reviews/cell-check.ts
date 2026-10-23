@@ -28,19 +28,50 @@ export const CELL_CHECK_PASS_SHARE = 80;
 /** How many times the engine is asked again without the items that cannot be played. */
 const REBUILD_TRIES = 4;
 
-export type CheckMode = 'check' | 'testout';
+/** `jump`: Stage Jump Ahead (row CM-25), the test-out rule over a whole stage; its `cellId` is the stage key. */
+export type CheckMode = 'check' | 'testout' | 'jump';
+
+/** Rounds of a Stage Jump (row CM-25): the Stage Check's length (section 4.5: about 20 items, 6-8 minutes). */
+export const STAGE_JUMP_SIZE = 20;
+/** The fewest playable rounds a Stage Jump is offered with: a full Cell Check's 10, over the whole stage. */
+export const STAGE_JUMP_MIN_ROUNDS = 10;
 
 export interface PlannedCheck {
+  /** The cell, or for a Stage Jump the stage key. */
   cellId: string;
   mode: CheckMode;
   rounds: ReviewRound[];
   /** The engine's sound notice (F-AUDIO-004). */
   soundNotice: boolean;
+  /** A Stage Jump's cells (the stage's grid cells), each latched `testedOut` on a pass; absent on a cell's own Check. */
+  cells?: readonly string[];
 }
 
 /** The items a Check of the cell may ask: those the cell teaches (its own `cells`), topic words included. */
 export function cellCheckItemIds(index: EngineContext['index'], cellId: string): string[] {
   return index.items.filter((i) => i.cells.includes(cellId) && !index.retired.has(i.id)).map((i) => i.id);
+}
+
+/** Plays the engine's Check of the items `idsOf` gives, leaving out those that cannot be played; null below `min` rounds. */
+function planRounds(
+  ctx: EngineContext,
+  idsOf: (skipped: ReadonlySet<string>) => string[],
+  size: number,
+  min: number,
+  rounds: Omit<RoundInput, 'index'>,
+  exclude: ReadonlySet<string>,
+): ReviewRound[] | null {
+  const skipped = new Set<string>(exclude);
+  let best: ReviewRound[] = [];
+  for (let attempt = 0; attempt < REBUILD_TRIES; attempt += 1) {
+    const session = buildCheck(ctx, { itemIds: idsOf(skipped), size });
+    if (session.questions.length === 0) break;
+    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index }) }));
+    best = built.flatMap((b) => (b.round ? [b.round] : []));
+    if (best.length === session.questions.length) break;
+    for (const b of built) if (b.round === null) skipped.add(b.q.itemId);
+  }
+  return best.length < min ? null : best;
 }
 
 /**
@@ -50,23 +81,44 @@ export function cellCheckItemIds(index: EngineContext['index'], cellId: string):
 export function planCellCheck(
   ctx: EngineContext,
   cellId: string,
-  mode: CheckMode,
+  mode: Exclude<CheckMode, 'jump'>,
   rounds: Omit<RoundInput, 'index'>,
   exclude: ReadonlySet<string> = new Set(),
 ): PlannedCheck | null {
   const all = cellCheckItemIds(ctx.index, cellId);
-  const skipped = new Set<string>(exclude);
-  let best: ReviewRound[] = [];
-  for (let attempt = 0; attempt < REBUILD_TRIES; attempt += 1) {
-    const session = buildCheck(ctx, { itemIds: all.filter((id) => !skipped.has(id)), size: CELL_CHECK_SIZE });
-    if (session.questions.length === 0) break;
-    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index }) }));
-    best = built.flatMap((b) => (b.round ? [b.round] : []));
-    if (best.length === session.questions.length) break;
-    for (const b of built) if (b.round === null) skipped.add(b.q.itemId);
-  }
-  if (best.length < CELL_CHECK_MIN_ROUNDS) return null;
-  return { cellId, mode, rounds: best, soundNotice: best.some((r) => r.question.voiceFallback) };
+  const best = planRounds(ctx, (skipped) => all.filter((id) => !skipped.has(id)), CELL_CHECK_SIZE, CELL_CHECK_MIN_ROUNDS, rounds, exclude);
+  return best === null ? null : { cellId, mode, rounds: best, soundNotice: best.some((r) => r.question.voiceFallback) };
+}
+
+/** The items a Stage Jump of these cells may ask: each cell's own, in the order of `cells`, each item once. */
+export function stageJumpItemIds(index: EngineContext['index'], cells: readonly string[]): string[] {
+  return [...new Set(cells.flatMap((cell) => cellCheckItemIds(index, cell)))];
+}
+
+/**
+ * Stage Jump Ahead (F-CURR-002 row CM-25): the test-out rule over a whole stage, one Check over its cells. Each cell's
+ * items go through the engine's Check selector on their own (box first), and the stage's 20 are taken round robin from
+ * those orders, so every cell is asked when it can be and a cell of many words cannot crowd out a small one; the
+ * engine's Check over the 20 then sets the produce share (at least 30%) and interleaves them across the themes. Null
+ * with fewer than 10 playable rounds (Stage 5's books teach no review items, so it offers none).
+ */
+export function planStageJump(
+  ctx: EngineContext,
+  stage: string,
+  cells: readonly string[],
+  rounds: Omit<RoundInput, 'index'>,
+  exclude: ReadonlySet<string> = new Set(),
+): PlannedCheck | null {
+  const idsOf = (skipped: ReadonlySet<string>): string[] => {
+    const orders = cells.map((cell) => buildCheck(ctx, { itemIds: cellCheckItemIds(ctx.index, cell).filter((id) => !skipped.has(id)), size: STAGE_JUMP_SIZE }).questions.map((q) => q.itemId));
+    const picked = new Set<string>();
+    for (let i = 0; picked.size < STAGE_JUMP_SIZE && orders.some((o) => i < o.length); i += 1) {
+      for (const order of orders) if (i < order.length && picked.size < STAGE_JUMP_SIZE) picked.add(order[i] as string);
+    }
+    return [...picked];
+  };
+  const best = planRounds(ctx, idsOf, STAGE_JUMP_SIZE, STAGE_JUMP_MIN_ROUNDS, rounds, exclude);
+  return best === null ? null : { cellId: stage, mode: 'jump', rounds: best, soundNotice: best.some((r) => r.question.voiceFallback), cells: [...cells] };
 }
 
 export interface CheckResult {
@@ -110,11 +162,20 @@ export function cellCheckEntry(input: { cellId: string; result: CheckResult; day
 
 /**
  * The latches a finished Check writes (section 4.4, cell-check.md States): a passed Cell Check `cellCheckAt` (toward
- * Mastered); a passed test-out `testedOut` only (Done), never `cellCheckAt`, so "Cell Check done" keeps one meaning.
+ * Mastered); a passed test-out or Stage Jump `testedOut` only (Done), never `cellCheckAt`, so "Cell Check done" keeps
+ * one meaning.
  */
 export function checkLatch(mode: CheckMode, result: Pick<CheckResult, 'passed'>): 'cellCheckAt' | 'testedOut' | null {
   if (!result.passed) return null;
-  return mode === 'testout' ? 'testedOut' : 'cellCheckAt';
+  return mode === 'check' ? 'cellCheckAt' : 'testedOut';
+}
+
+/**
+ * The `testedOut` keys a passed test-out writes: its cell; for a Stage Jump (row CM-25) every cell of the stage and the
+ * stage key, the latch F-PLC-001's `effectiveRoute` reads as the jump (section 3.6 as amended).
+ */
+export function testedOutKeys(plan: Pick<PlannedCheck, 'cellId' | 'mode' | 'cells'>): string[] {
+  return plan.mode === 'jump' ? [...(plan.cells ?? []), plan.cellId] : [plan.cellId];
 }
 
 // ---- telemetry (section 11.3) ----------------------------------------------------------------------------

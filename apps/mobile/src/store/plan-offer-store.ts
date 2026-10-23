@@ -27,6 +27,7 @@ export function proposalContextFor(profileId: string, now: Date): ProposalContex
     ageGroup: profile.ageGroup,
     unlockedStages: unlockedStagesFor(now, profileId) as StageKey[],
     today: dayKey(now.toISOString()),
+    ...(snapshot.testedOut === undefined ? {} : { testedOut: snapshot.testedOut }),
   };
 }
 
