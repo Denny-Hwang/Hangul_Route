@@ -274,6 +274,11 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],
       [{ kind: "write-frame", rounds: [1] }, { kind: "write-frame", rounds: 1, writeFrame: { rounds: [1] } }],
+      // F-CURR-002 row CM-36: a Hidden Heritage scene plays one round per target found (`scopeRoundCount`).
+      [
+        { kind: "hidden-heritage", rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] },
+        { kind: "hidden-heritage", rounds: 7, hiddenHeritage: { rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] } },
+      ],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });

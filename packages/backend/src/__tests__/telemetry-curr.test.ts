@@ -150,6 +150,14 @@ describe('POST /api/telemetry, session.end with the three optional CM-3 fields',
     expect((await post({ name: 'session.end', payload: { ...older, questLeft: 0, afterWrongStreak: 0 } })).body.data?.event.payload).toEqual({ ...older, questLeft: 0, afterWrongStreak: 0 });
   });
 
+  // Worker first (F-CURR-002 §11.1 rule 1, row CM-36): the Hidden Heritage kind code is kept before any client sends it.
+  it('keeps leftAtKind hidden-heritage, the kind code of row CM-36', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'hidden-heritage', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+
   it('drops a new field off its codes and keeps the rest of the payload', async () => {
     const r = await post({ name: 'session.end', profileId: 'profile:suni', payload: { ...older, questLeft: 'yes', leftAtKind: 'Suni', afterWrongStreak: 5 } });
     expect(r.status).toBe(201);
