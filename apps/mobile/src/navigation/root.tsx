@@ -67,6 +67,7 @@ import { RealiaE2eHook, RealiaReadE2eScreen } from './realia-read-e2e';
 import { TypeHangulE2eHook, TypeHangulE2eScreen } from './type-hangul-e2e';
 import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
 import { WriteFrameE2eHook, WriteFrameE2eScreen } from './write-frame-e2e';
+import { StoryOrderE2eHook, StoryOrderE2eScreen } from './story-order-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -132,6 +133,7 @@ export function RootNavigator(): ReactElement {
       {STORY_FIXTURES_BUILD ? <TypeHangulE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <TraceWordE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <StoryOrderE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
@@ -211,6 +213,7 @@ export function RootNavigator(): ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="StoryOrderE2e" component={StoryOrderE2eScreen} /> : null}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
         {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}

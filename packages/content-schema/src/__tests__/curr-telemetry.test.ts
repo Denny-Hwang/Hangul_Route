@@ -284,6 +284,8 @@ describe('session.end payload (TELEMETRY-NAMES-2 section A, three optional field
     }
     expect(SessionEndPayloadSchema.safeParse({ ...older, questLeft: 1 }).success).toBe(true);
     expect(SessionEndPayloadSchema.safeParse({ ...older, leftAtKind: 'listen-pick' }).success).toBe(true);
+    // Row CM-34: the Story Order kind code, accepted before any client sends it (Worker first).
+    expect(SessionEndPayloadSchema.safeParse({ ...older, questLeft: 1, leftAtKind: 'story-order' }).success).toBe(true);
   });
 
   it('rejects values off the documented codes', () => {

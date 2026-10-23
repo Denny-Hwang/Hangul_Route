@@ -59,6 +59,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-34: Story Order's game, the minigame step's chunk while `game.story-order` is on.
+  'screens/minigames/story-order/StoryOrderStep.tsx#StoryOrderGame': 'screens/minigames/story-order/StoryOrderGame.tsx#StoryOrderGame',
 };
 
 /**

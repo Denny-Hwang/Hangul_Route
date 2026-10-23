@@ -99,7 +99,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  startBundleRaw: 4_750_000,
+  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
+  // the game is the order-game chunk) on main e31bc3b33, whose release build measures 4,749,283 B (6,592 B over
+  // 150c07383, 717 B under the line): 4,755,885 B raw / 1,267,451 B gzip (release `build:web`, Metro cache cleared),
+  // 6,602 B over that main, so the line is that measurement plus a 4,115 B rounding margin (4,760,000 B).
+  startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -257,6 +261,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
 ]);
 
 /**

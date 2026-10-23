@@ -13,9 +13,10 @@ export interface MinigameHost {
   mode: HostMode;
   /**
    * Report an answer. The first answer for a `roundKey` is scored; later ones
-   * are retries (`logic/first-try.ts`).
+   * are retries (`logic/first-try.ts`). `hinted`: given with a hint showing (Story Order's Show meanings, F-CURR-002
+   * row CM-34), still scored as usual; a right one reaches the memory store as hinted.
    */
-  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string }): void;
+  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string; hinted?: boolean }): void;
   /** The game is over. A quest host marks the step complete, then closes. */
   complete(): void;
 }

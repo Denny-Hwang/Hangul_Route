@@ -2038,4 +2038,10 @@ export const learner = {
     extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
     passed: '단계를 건너뛰었어요!',
   },
+  storyOrder: {
+    title: '문장 순서 맞추기',
+    hint: '문장을 하나씩 읽어요. 처음에 오는 문장을 눌러요.',
+    showMeanings: '뜻 보기',
+    meaningsShown: '뜻이 보여요',
+  },
 } satisfies DeepPartial<Messages['learner']>;

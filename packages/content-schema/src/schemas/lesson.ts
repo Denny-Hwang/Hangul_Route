@@ -9,6 +9,7 @@ import {
   PicWordRoundSchema,
   RealiaReadRoundSchema,
   RealiaSchema,
+  StoryOrderRoundSchema,
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
@@ -89,6 +90,16 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('type-hangul'), rounds: z.array(TypeHangulRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('trace-word'), rounds: z.array(TraceWordRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('write-frame'), rounds: z.array(WriteFrameRoundSchema).min(1).max(4) }),
+  /** Story Order (F-CURR-002 §7.1 F5, row CM-34): 1 or 2 rounds a step, each with its own id. */
+  z.object({
+    ref: ScopeRefSchema,
+    kind: z.literal('story-order'),
+    rounds: z
+      .array(StoryOrderRoundSchema)
+      .min(1)
+      .max(2)
+      .refine((rounds) => new Set(rounds.map((r) => r.id)).size === rounds.length, 'round ids must be unique'),
+  }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
