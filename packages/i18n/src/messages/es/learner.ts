@@ -523,6 +523,10 @@ export const learner = {
         readingNow: { pill: 'Leyendo ahora' },
         lineLabel: (line: number, total: number, speaker: string) => `Línea ${line} de ${total}, ${speaker}`,
       },
+      compactLine: 'Dos en una tarjeta. Toca Escuchar en cada una.',
+    },
+    adapt: {
+      scaffoldHint: 'Una más, con una pista. Escucha y toca la tarjeta resaltada.',
     },
   },
 

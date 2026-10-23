@@ -426,7 +426,7 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       if (asked.length === 0) return;
       await recordAnswersNow(
         profileId,
-        asked.map((item) => ({ itemId: item.id, correct: answer.correct, rung: round.rung })),
+        asked.map((item) => ({ itemId: item.id, correct: answer.correct, rung: round.rung, ...(answer.hinted ? { hinted: true } : {}) })),
         answer.at,
       );
     },

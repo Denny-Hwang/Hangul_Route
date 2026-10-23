@@ -20,6 +20,7 @@ import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
+import type { MinigameScope } from '../../logic/minigame-config';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import {
   checkCompletedPayload,
@@ -43,6 +44,7 @@ import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
+import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
 
 type QuestMessages = Messages['learner']['quest'];
 
@@ -162,6 +164,24 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // run may start.
   useEffect(() => runQuestStart({ start, end }, begin, questId, episodeId), [questId, episodeId, start, end, begin]);
 
+  // Adaptive pacing (F-CURR-002 section 4.6, row CM-24): a learner's lesson quest with `questAdapt` on loads the pacing
+  // chunk as the run begins, which sets the run's pace (a compact second Discover page, a shorter Apply). Off, or before
+  // the chunk is in, the quest plays its standard path.
+  const [pacing, setPacing] = useState<{ chunk: QuestPacingChunk; plan: ReturnType<QuestPacingChunk['planPacing']> } | null>(null);
+  useEffect(() => {
+    if (!pacingWanted(reviewsFor, episodeId)) return undefined;
+    let live = true;
+    questPacingChunk().then(
+      (chunk) => {
+        if (live) setPacing({ chunk, plan: chunk.planPacing({ profileId: reviewsFor, episodeId, questId, track: (e) => portsRef.current.track(e) }) });
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [reviewsFor, episodeId, questId, start, end]);
+
   // The warm-up (F-CURR-002 section 4.5): before the first step of a Stage 2+ quest, outside the six steps, so the
   // quest's steps, timing and stars are as they always were. Planned once per mount; with nothing due it is skipped.
   const [warmup, setWarmup] = useState<ReviewPhase>(() => (warmupWanted(reviewsFor, episodeId, 0) ? DECIDING : NO_REVIEW));
@@ -192,6 +212,18 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   );
 
   const step = quest?.steps[stepIndex];
+
+  // Past Practice, once: the chunk notes a strong round for the cell and, after a hard one, gives the scaffold round,
+  // played before Apply outside the steps and the score. Before paint, so Apply's card never flashes under it.
+  const [scaffold, setScaffold] = useState<MinigameScope | null>(null);
+  const practiceAt = quest?.steps.findIndex((s) => s.kind === 'practice') ?? -1;
+  const pastPractice = practiceAt >= 0 && stepIndex === practiceAt + 1;
+  const practiceRead = useRef(false);
+  useLayoutEffect(() => {
+    if (!pacing || !pastPractice || practiceRead.current || reviewsFor === null) return;
+    practiceRead.current = true;
+    setScaffold(pacing.chunk.afterPractice({ profileId: reviewsFor, episodeId, questId, plan: pacing.plan, practiceAt, locale, track: (e) => portsRef.current.track(e) }));
+  }, [pacing, pastPractice, practiceAt, reviewsFor, episodeId, questId, locale]);
 
   // Try these again (F-CURR-002 section 4.5, F-QUEST-002 L13 as amended): on the reward step, the default suggestion
   // when this play had first-try misses; See results stays right under it. Planned once the reward step shows.
@@ -309,6 +341,11 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     return <QuestReviewSession plan={warmup.plan} profileId={reviewsFor} onDone={() => setWarmup(NO_REVIEW)} />;
   }
 
+  if (scaffold && pacing) {
+    const { ScaffoldRound } = pacing.chunk;
+    return <ScaffoldRound scope={scaffold} onDone={() => setScaffold(null)} />;
+  }
+
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
     <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={ownClose ? { leading: { kind: 'close', onPress: askLeave } } : undefined}>
@@ -331,6 +368,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           pages={step.discover.pages}
           hoyaLine={step.hoyaLineEn}
           onDone={discoverDone}
+          compact={pacing?.plan.compact === true}
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher

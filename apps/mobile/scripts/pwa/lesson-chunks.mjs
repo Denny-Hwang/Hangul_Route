@@ -209,6 +209,10 @@ export const LEARNER_CHUNKS = Object.freeze([
   // Row CM-20: the mastery ring and the Results banners (`src/screens/mastery/mastery-chunk.ts`), reached only through
   // the literal `import()` of `src/store/mastery-entry.ts` while `mastery` is on; the level derivation is the memory chunk's.
   Object.freeze({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' }),
+  // Adaptive pacing in quests (row CM-24, `src/screens/quest/quest-pacing-chunk.tsx`): the rules, the shorter Apply and
+  // the scaffold round, reached only through the literal `import()` of `src/screens/quest/quest-pacing.ts` while
+  // `questAdapt` is on.
+  Object.freeze({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' }),
 ]);
 
 /**

@@ -168,6 +168,14 @@ describe('a wrong tap', () => {
     expect(second.wrongIds).toEqual(['b', 'c']);
   });
 
+  it('keeps a ring that is on from the start through a miss (the scaffold round, F-CURR-002 section 4.6)', () => {
+    const ringed = { ...startFlow(1), hint: true };
+    const missed = run(ringed, [tap('b', 100)]).state;
+    expect(missed.hint).toBe(true);
+    expect(missed.wrongIds).toEqual(['b']);
+    expect(run(missed, [tap('c', 900)]).state.hint).toBe(true);
+  });
+
   it('replays the prompt when the replay timer fires while still asking', () => {
     const asking = run(startFlow(2), [tap('b', 100)]).state;
     expect(stepFlow(asking, { type: 'replay-due' }).effects).toEqual([{ type: 'play', why: 'replay' }]);

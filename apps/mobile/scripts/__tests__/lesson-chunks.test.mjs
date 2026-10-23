@@ -236,6 +236,18 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     ]);
   });
 
+  it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });
+    expect(read('src/screens/quest/quest-pacing-chunk.tsx')).toContain(`export const QUEST_PACING_CHUNK = '${LEARNER_CHUNKS[2].marker}';`);
+    // Reached only through the gate's literal import(): a static import would fold it back into the start bundle.
+    expect(read('src/screens/quest/quest-pacing.ts')).toContain("import('./quest-pacing-chunk')");
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[2].marker}"})`;
+    const pacing = { url: `${WEB_JS_DIR}/quest-pacing-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[2]], bundles: [start, pacing], precached: all([start, pacing]) })).toEqual([]);
+  });
+
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {
     const bundles = build();
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles, precached: all(bundles).map((u) => `/${u}`) })).toEqual([]);

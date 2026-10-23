@@ -13,7 +13,7 @@ import type { HostMode } from '../screens/minigames/host';
  * Rules in one place: round 1 never autoplays (first audio needs a gesture),
  * round 2 on does; replay is unlimited; a wrong tap locks that option, ends
  * nothing, nudges, and replays the prompt after 800 ms unless the learner acts
- * first; a second miss rings the right option; the right tap resolves the
+ * first; a second miss rings the right option (a ring once on stays for the round); the right tap resolves the
  * round and the next one opens 700 ms later; the first answer in a round is
  * the scored one (the run store keeps later ones as retries, `first-try.ts`);
  * only the first touch in a 50 ms window counts (F-001 §3.4).
@@ -106,7 +106,8 @@ function tapStep(state: ListenPickFlowState, event: Extract<FlowEvent, { type: '
 
   const wrongIds = [...state.wrongIds, event.optionId];
   return {
-    state: { ...state, wrongIds, hint: wrongIds.length >= 2, lastTapAt: event.at },
+    // Once on, the ring stays for the round (the scaffold round starts with it on, F-CURR-002 section 4.6).
+    state: { ...state, wrongIds, hint: state.hint || wrongIds.length >= 2, lastTapAt: event.at },
     effects: [
       { type: 'answer', roundKey: state.roundIdx, correct: false },
       { type: 'haptic', kind: 'nudge' },

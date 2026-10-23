@@ -75,9 +75,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const scope = useMemo(() => {
-    const source = ref ? scopeFor(ref) : undefined;
+    // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
+    const { questId: running, short } = useQuestRunStore.getState();
+    const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     return source && ref ? localizeScope(source, ref, locale) : source;
-  }, [ref, locale]);
+  }, [ref, locale, questId, stepIndex]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).

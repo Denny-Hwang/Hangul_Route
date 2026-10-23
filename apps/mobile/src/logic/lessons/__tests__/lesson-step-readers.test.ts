@@ -35,6 +35,7 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'screens/minigames/MinigameScreen.tsx': 'behind useLessonQuestReady',
   'screens/presenter/slides/SequenceSlide.tsx': 'not a quest: a lecture slide',
   'screens/quest/QuestPlayerView.tsx': 'behind useLessonQuestReady',
+  'screens/quest/quest-pacing-chunk.tsx': 'called by QuestPlayerView once its run began, behind useLessonQuestReady (row CM-24)',
   'screens/story/use-reader-audio.ts': 'not a quest: a story reader step list',
 };
 
