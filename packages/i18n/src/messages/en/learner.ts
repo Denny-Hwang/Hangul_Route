@@ -929,6 +929,29 @@ export const learner = {
         finishBlock: 'Finish the last block.',
       },
     },
+    /**
+     * Syllable Build (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md): hear a block,
+     * tap its first letter, vowel and final into the block. The tiles show the jamo only; the romanization waits until
+     * the block is built, or a tap on `showSound` (a hint, never a penalty line). A miss says where to listen, never
+     * that it was wrong.
+     */
+    syllableBuild: {
+      heading: 'Build the block you hear',
+      row: { first: 'First letter', vowel: 'Vowel', final: 'Final' },
+      /** The final row's last tile: the block has no final letter. */
+      noFinal: 'No final',
+      showSound: 'Show how it sounds',
+      miss: {
+        first: 'Listen to how it starts.',
+        vowel: 'Listen to the middle sound.',
+        final: 'Listen to how it ends.',
+        /** No final picked where there is one, or a final where there is none. */
+        finalOrNone: 'Listen to the end: is there a final sound?',
+      },
+      /** After a second miss on one zone: the right tile of that row is ringed. */
+      lookHere: 'This one goes here.',
+      built: 'You built it!',
+    },
   },
 
   /**
@@ -2781,5 +2804,25 @@ export const learner = {
     intro: 'About 7 minutes. Show what you know from every place in this stage. No timer.',
     extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
     passed: 'You jumped ahead!',
+  },
+  /**
+   * The Block Sprint (F-CURR-002 section 7.1 F9 "Decoding Sprint", OD-8, row CM-32): an optional one-minute bonus after
+   * Stage 1, like the vocab Speed round. One clock for the minute, then a few blocks with no clock. The count is the
+   * learner's own, beside their own best, never compared with anyone. Pause, Resume, Stop, the stop sheet, Start, Play
+   * again and New best! reuse `vocab.speed`. Read by the `review-copy` rule: no percentage, no "n of m".
+   */
+  decodingSprint: {
+    title: 'Block Sprint',
+    /** The bonus line on the Journey's Stage 1 header and on the Hangul Check results, above the button. */
+    offer: 'Bonus round: read as many blocks as you can in one minute.',
+    intro: 'One minute on the clock. Hear a block, then pick it or build it.',
+    introProbe: 'Then a few more blocks, with no clock.',
+    /** The probe starts: the clock is gone. */
+    probe: 'A few more blocks. No clock now.',
+    /** The result: the blocks read right on the first try in the minute. */
+    read: (n: number) => count(n, 'block read', 'blocks read'),
+    /** From the second sprint on: the learner's own best, kept on this device. */
+    best: (n: number) => `Your best: ${n}`,
+    done: 'Done',
   },
 } as const;

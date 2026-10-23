@@ -991,4 +991,14 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // F-CURR-002 row CM-32: Syllable Build's labels (a jamo and its RR letter name; a row caption and a tile's name; the
+  // built block) and the Block Sprint's count and the learner's own best.
+  'a11y.minigame.syllableBuild.tile': [['x', 'bieup'], ['x', 'a']],
+  'a11y.minigame.syllableBuild.finalTile': [['x', 'bieup'], ['x', 'ieung']],
+  'a11y.minigame.syllableBuild.zone': [['First letter'], ['Final', 'No final letter'], ['Vowel', 'x, letter a']],
+  'a11y.minigame.syllableBuild.marked': [['Final, x, letter nieun, as a final']],
+  'a11y.minigame.syllableBuild.block': [['x', 'bap']],
+  'a11y.minigame.syllableBuild.meaning': [['rice, a meal']],
+  'learner.decodingSprint.read': [[0], [1], [14]],
+  'learner.decodingSprint.best': [[1], [16]],
 };
