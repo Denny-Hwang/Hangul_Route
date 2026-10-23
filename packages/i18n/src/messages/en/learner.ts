@@ -2782,4 +2782,20 @@ export const learner = {
     extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
     passed: 'You jumped ahead!',
   },
+  /**
+   * Yut Review (F-CURR-002 section 7.1 F10, row CM-39; design/wireframes/minigame/yut-review.md): a board band over the
+   * Daily Review and Keep going. Every finished item throws the yut sticks; the board is play only and gives nothing.
+   * The throw's name (do, gae, geol, yut, mo) is taught Korean, drawn with its romanization, never inside these strings. Never
+   * a station number out of a total, a count of the tray against four or a score. Read by the `review-copy` rule.
+   */
+  yutReview: {
+    /** How far the piece moved, beside the throw's name. */
+    stations: (n: number) => plural('en', n, { one: '1 station', other: `${n} stations` }),
+    /** Under yut or mo: another throw follows by itself (not a button). */
+    throwAgain: 'Throw again',
+    /** A piece reached home: one line, once. */
+    pieceHome: 'A piece went home!',
+    /** The home tray's label; the tray draws only the pieces that went home. */
+    home: 'Home',
+  },
 } as const;

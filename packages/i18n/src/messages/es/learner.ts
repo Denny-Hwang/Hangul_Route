@@ -2103,4 +2103,10 @@ export const learner = {
     extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
   },
+  yutReview: {
+    stations: (n: number) => plural('es', n, { one: '1 casilla', other: `${n} casillas` }),
+    throwAgain: 'Otra tirada',
+    pieceHome: '¡Una ficha llegó a la meta!',
+    home: 'Meta',
+  },
 } satisfies DeepPartial<Messages['learner']>;

@@ -991,4 +991,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
+  'learner.yutReview.stations': [[1], [2], [5]],
+  'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
 };

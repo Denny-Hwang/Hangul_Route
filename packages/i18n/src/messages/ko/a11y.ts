@@ -321,4 +321,8 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => `단계 확인, 가장 좋은 결과 별 ${stars}개`,
   },
+  yutReview: {
+    board: '윷판',
+    throw: (ko: string, romanization: string, n: number) => `던진 결과: ${ko}, ${romanization}. 말이 ${n}칸 움직였어요.`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;
