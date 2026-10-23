@@ -2,7 +2,7 @@ import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { AppState } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -34,6 +34,7 @@ import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
 import { startRemoteConfig } from './src/store/remote-config-store';
+import { wireUpperCards } from './src/store/upper-cards-wiring';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
@@ -57,7 +58,7 @@ const prefetchContent = async (): Promise<void> => {
   await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll(), localePacks.ensureAll()]);
 };
 
-export default function App(): React.ReactElement {
+export default function App(): ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
   useDocumentLang();
 
@@ -119,6 +120,8 @@ export default function App(): React.ReactElement {
     const unfollowGuest = followGuestChanges();
     void countVisit();
     // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
+    // F-CURR-002 row CM-23: the award reconcile reads `upperCards`, and runs again when the copy turns it on.
+    const unwireUpperCards = wireUpperCards();
     const stopRemoteConfig = startRemoteConfig();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -189,6 +192,7 @@ export default function App(): React.ReactElement {
       offInbox();
       foreground.remove();
       stopRemoteConfig();
+      unwireUpperCards();
       stopMemory();
       setProgressPersistListener(null);
     };

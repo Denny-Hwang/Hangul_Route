@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CURR_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema';
-import { bestStageStars, ceremonyMotion, headerActionsBelow, shownStageCards, stageCardOpenedEvent, stageOffer, testedOutHint, type StageOfferInput } from '../stage-check-offer';
+import { heritageCardsAll } from '../../../content/heritage-cards';
+import { UPPER_CELL_CARDS } from '../../../content/upper-cell-cards';
+import { bestStageStars, ceremonyMotion, headerActionsBelow, shownStageCards, stageCardOpenedEvent, stageCeremonyCards, stageOffer, testedOutHint, type StageOfferInput } from '../stage-check-offer';
 
 /**
  * F-CURR-002 sections 4.5, 7.3, 12.2 and OD-1 (row CM-22): what a Stage 2-7 header and ceremony offer. The Stage Check
@@ -75,6 +77,21 @@ describe('shownStageCards: the stage card slot (CM-23 ships the cards)', () => {
     expect(shownStageCards(prize, [{ cardId: 'card:b' }], true)).toEqual([{ id: 'card:b' }]);
     expect(shownStageCards(prize, [{ cardId: 'card:b' }], false)).toEqual([]);
     expect(shownStageCards([], [{ cardId: 'card:b' }], true)).toEqual([]);
+  });
+});
+
+describe('stageCeremonyCards: the cards a Stage 2-7 ceremony and the summary show (row CM-23)', () => {
+  it("the stage's prize cards first, then its upper-cell cards in album order, never twice", () => {
+    const ids = (stage: 'stage2' | 'stage3' | 'stage4') => stageCeremonyCards(stage, [], UPPER_CELL_CARDS, heritageCardsAll).map((c) => c.id);
+    expect(ids('stage2')).toEqual(['card:norae', 'card:dosirak', 'card:bokjumeoni', 'card:byeol', 'card:swing']);
+    expect(ids('stage3')).toEqual(['card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut']);
+    expect(ids('stage4')).toEqual([]);
+    const prize = [{ id: 'card:x', stage: 'stage2' as const }, { id: 'card:norae', stage: 'stage2' as const }];
+    expect(stageCeremonyCards('stage2', prize, ['card:norae', 'card:swing'], [...prize, { id: 'card:swing', stage: 'stage2' as const }]).map((c) => c.id)).toEqual([
+      'card:x',
+      'card:norae',
+      'card:swing',
+    ]);
   });
 });
 

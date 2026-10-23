@@ -177,6 +177,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' },
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
+      { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
     ]);
   });
 
@@ -197,6 +198,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-22: the Stage Check's chunk, reached only through the entry's literal import().
     expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
     expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
+    // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
+    expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
+    expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -248,6 +252,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'guest-keep-chunk has no web bundle: the chunk is missing from the build',
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
+      'upper-cards-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -397,6 +402,8 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_810_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_809_323).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_806_089).toBeGreaterThanOrEqual(0);
+    // CM-23 part 1 (the upper-cell cards of Stages 2-3, on CM-22; backs, drawings and albums in a chunk) measures 4,809,851 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_851).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

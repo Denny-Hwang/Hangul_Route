@@ -90,8 +90,46 @@ export const stage4Cards: HeritageCard[] = [
   make('insa', 'Greeting', '인사', 'insa', 'A bow or a hello — a greeting.', 'A small bow is a polite Korean greeting.', 'rites', 'stage4', 'rare', 'episode:stage4-rites'),
 ];
 
+/**
+ * An upper-cell card's front (F-CURR-002 §7.2, row CM-23): the rare card of a Stage 2-7 cell, earned by finishing the
+ * cell's first volume. Its back (blurb, fact and source line) is in the upper-cards chunk (`content/upper-card-backs.ts`),
+ * which the card page loads, so the start bundle carries only what the Library, Results and the catch-up show.
+ */
+const upper = (id: string, titleEn: string, ko: string, romanization: string, theme: ThemeKey, stage: StageKey): HeritageCard => ({
+  id: `card:${id}`,
+  titleEn,
+  subtitleKo: ko,
+  romanization,
+  // Empty until the back is merged in; the es and ko overlays land on these fields.
+  blurbEn: '',
+  factEn: '',
+  theme,
+  stage,
+  rarity: 'rare',
+  unlockedBy: `episode:${stage}-${theme}`,
+});
+
+/**
+ * The upper-cell cards of Stages 2 and 3 (row CM-23 part 1): one per upper cell. Lunch Box Words and Outdoor Words keep
+ * their shipped four cards (F-CURR-001 "Cards"); their album card is their q1 card (`content/upper-cell-cards.ts`), so
+ * these eight are the other cells'. Gated on `upperCards` (logic/awards/upper-cards.ts).
+ */
+export const upperCellCards: HeritageCard[] = [
+  upper('norae', 'Song', '노래', 'norae', 'letters', 'stage2'),
+  upper('bokjumeoni', 'Lucky Pouch', '복주머니', 'bokjumeoni', 'rites', 'stage2'),
+  upper('swing', 'Swing', '그네', 'geune', 'crafts', 'stage2'),
+  upper('hangeul', 'Hangeul', '한글', 'hangeul', 'letters', 'stage3'),
+  upper('tteok', 'Rice Cake', '떡', 'tteok', 'life', 'stage3'),
+  upper('full-moon', 'Full Moon', '보름달', 'boreumdal', 'rites', 'stage3'),
+  upper('gom', 'Bear', '곰', 'gom', 'nature', 'stage3'),
+  upper('yut', 'Yut Sticks', '윷', 'yut', 'crafts', 'stage3'),
+];
+
+/** The cards row CM-23 adds: awarded, listed and drawn only while `upperCards` is on (held ones always stay). */
+export const UPPER_CARD_GATED_IDS: ReadonlySet<string> = new Set(upperCellCards.map((c) => c.id));
+
 /** The hand-written cards, then the heritage story cards and their collection cards (F-STORY-006 §3.8). */
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...storyCards];
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards, ...storyCards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);

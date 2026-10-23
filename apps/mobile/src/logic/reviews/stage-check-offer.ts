@@ -68,6 +68,15 @@ export function shownStageCards<C extends { id: string }>(prize: readonly C[], o
 }
 
 /**
+ * The cards a Stage 2-7 ceremony and the summary can show (row CM-23): the stage's prize cards (`stage<N>-complete`,
+ * none yet), then its upper-cell cards, one per cell in the album table's order. `shownStageCards` keeps the held ones.
+ */
+export function stageCeremonyCards<C extends { id: string; stage: StageKey }>(stage: StageKey, prize: readonly C[], albumIds: readonly string[], cards: readonly C[]): C[] {
+  const album = albumIds.flatMap((id) => cards.filter((c) => c.id === id && c.stage === stage && !prize.some((p) => p.id === id)));
+  return [...prize, ...album];
+}
+
+/**
  * The ceremony's motion (F-MOTION-003, stage-check.md States): the title and the card drop in with a spring after
  * 400 ms, then five amber sparkles fade over about 600 ms. Reduced motion: everything is there at once, no drop and no
  * sparkles. No confetti, no sound (F-MOTION-003 section 4).

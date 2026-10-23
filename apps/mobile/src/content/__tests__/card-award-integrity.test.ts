@@ -35,7 +35,7 @@ import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
 import { awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
-import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards } from '../heritage-cards';
+import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { heldStoryCards, storiesAll, storyById } from '../stories';
 import { heldSetCardIds, heldStoryCardIds, storyCards, storySets } from '../story-cards';
@@ -188,7 +188,8 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
 
 // ---- the heritage story cards (F-STORY-006 §3.8, PR 6.7) -------------------------------------
 
-const handWritten: readonly HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards];
+// F-CURR-002 row CM-23 adds the eight upper-cell cards of Stages 2 and 3 (one per cell; the two taste cells keep theirs).
+const handWritten: readonly HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards];
 const slugOf = (storyId: string): string => storyId.replace(/^story:/, '');
 
 /**
@@ -420,14 +421,14 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       }
     });
 
-    it('T-AWARD-7: 70 cards (25 common, 21 uncommon, 16 rare, 8 legendary) and 4 sets', () => {
-      expect(handWritten).toHaveLength(42);
-      expect(all).toHaveLength(70);
+    it('T-AWARD-7: 78 cards (25 common, 21 uncommon, 24 rare, 8 legendary) and 4 sets', () => {
+      expect(handWritten).toHaveLength(50);
+      expect(all).toHaveLength(78);
       const byRarity = (r: HeritageCard['rarity']): number => all.filter((c) => c.rarity === r).length;
       expect({ common: byRarity('common'), uncommon: byRarity('uncommon'), rare: byRarity('rare'), legendary: byRarity('legendary') }).toEqual({
         common: 25,
         uncommon: 21,
-        rare: 16,
+        rare: 24,
         legendary: 8,
       });
       expect(sets.map((s) => s.id)).toEqual(['set:records-joseon', 'set:hangul-printing', 'set:science-art-life', 'set:seasons-tales']);
@@ -435,7 +436,7 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(() => HeritageCardListSchema.parse(all)).not.toThrow();
     });
 
-    it('T-AWARD-5: no two of the 70 cards share a Korean word, and the corpus lint agrees', () => {
+    it('T-AWARD-5: no two of the 78 cards share a Korean word, and the corpus lint agrees', () => {
       const words = all.flatMap((c) => (c.subtitleKo === undefined ? [] : [c.subtitleKo]));
       expect(new Set(words).size).toBe(words.length);
       expect(lintStoryCorpus(stories, { cards: [...handWritten, ...setHeadwords] }).filter((f) => f.rule === 'card-korean-duplicate')).toEqual([]);
@@ -459,7 +460,7 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       sets: cardsOf.sets,
     });
 
-    it('T-AWARD-1 with the 70 cards: every one, set cards included, is listed and earned by finishing every quest', () => {
+    it('T-AWARD-1 with the 78 cards: every one, set cards included, is listed and earned by finishing every quest', () => {
       const w = shelfWorld(stories, { cards, sets });
       expectEarnable(w, w.cards);
     });

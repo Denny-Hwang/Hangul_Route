@@ -333,6 +333,14 @@ export const learner = {
       a11y: (title: string) => `${title}: 찾을 카드`,
       nextA11y: (hint: string) => `다음 카드. ${hint}`,
     },
+    albums: {
+      title: '앨범',
+      line: '테마마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
+      names: { letters: '글자', life: '음식', rites: '명절', nature: '자연', crafts: '놀이' },
+      count: (n: number) => `카드 ${n}장`,
+      fresh: '새로 시작',
+      a11y: (name: string, status: string) => `${name} 앨범: ${status}`,
+    },
     earnHint: {
       episode: (title: string) => `에피소드 끝내기: ${title}`,
       story: (title: string) => `이야기 끝내기: ${title}`,

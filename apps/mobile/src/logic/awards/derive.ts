@@ -58,6 +58,26 @@ export function completedEpisodes(world: Pick<AwardWorld, 'episodes'>, snapshot:
   return out;
 }
 
+/**
+ * When an episode was first finished on every quest (F-CURR-002 §4.8 step 7): each quest's first finish is its
+ * `questDoneAt` latch, or its `completedAt` when the latch has no entry yet (earlier of the two when both exist); the
+ * episode's time is the latest of those. Undefined while a quest has neither, or for a preview or draft episode. The
+ * latch is synced as the earliest time per quest, so every device derives the same instant.
+ */
+export function firstFinishedAt(episode: Episode | undefined, snapshot: Pick<ProgressSnapshot, 'quests' | 'questDoneAt'>): string | undefined {
+  if (!episode || !isPlayable(episode) || episode.questIds.length === 0) return undefined;
+  const latch: Readonly<Record<string, string>> = snapshot.questDoneAt ?? {};
+  const times: string[] = [];
+  for (const questId of episode.questIds) {
+    const done = Object.prototype.hasOwnProperty.call(latch, questId) ? latch[questId] : undefined;
+    const run = snapshot.quests.find((q) => q.questId === questId && q.episodeId === episode.id)?.completedAt;
+    const first = done !== undefined && run ? (isBefore(run, done) ? run : done) : (done ?? run);
+    if (!first) return undefined;
+    times.push(first);
+  }
+  return latest(times);
+}
+
 /** The grid episodes of a stage, in content order (story shelves never count toward a stage). */
 export function gridEpisodes(stage: StageKey, world: Pick<AwardWorld, 'episodes'>): Episode[] {
   return world.episodes.filter((e) => e.stage === stage && isGrid(e));
@@ -120,7 +140,9 @@ export function derivedAwards(world: AwardWorld, snapshot: ProgressSnapshot, pro
   for (const card of world.cards) {
     const rule = parseUnlockedBy(card.unlockedBy);
     if (rule.kind === 'episode') {
-      const at = completed.get(rule.episodeId);
+      const at = world.firstFinishCardIds?.has(card.id)
+        ? firstFinishedAt(world.episodes.find((e) => e.id === rule.episodeId), snapshot)
+        : completed.get(rule.episodeId);
       if (at) add({ cardId: card.id, source: 'episode', via: rule.episodeId, unlockedAt: at });
     } else if (rule.kind === 'stage') {
       const { at } = isStageComplete(rule.stage, world, completed);

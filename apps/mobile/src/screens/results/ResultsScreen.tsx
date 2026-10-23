@@ -65,7 +65,7 @@ import { useMembershipStore } from '../../store/membership-store';
 import { usePlanStore } from '../../store/plan-store';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { useProfileStore } from '../../store/profile-store';
-import { useProgressStore } from '../../store/progress-store';
+import { awardWorldOf, useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
@@ -165,6 +165,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         retries,
       },
       {
+        // F-CURR-002 row CM-23: a cell's upper-cell card arrives on this run only while `upperCards` is on.
+        world: awardWorldOf(profile.id, useProgressStore.getState().byProfile[profile.id]?.cards),
         isHydrated: (id) => useProgressStore.getState().hydratedFor.has(id),
         snapshot: (id) => useProgressStore.getState().byProfile[id],
         recordQuestComplete,

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { impureImports } from '../../../__tests__/impure-imports';
-import { supportedCardIds } from '../card-ids';
+import { supportedCardIds, upperCellCardArtIds } from '../card-ids';
 
 /**
  * `supportedCardIds` lives in a pure module (F-VOC-002 §3.9, PR W-1a) so node
@@ -53,5 +53,51 @@ describe('supportedCardIds (card-ids.ts)', () => {
   it('every listed id has a drawing in the HeritageCardArt dispatcher', () => {
     const component = readFileSync(join(HERE, 'HeritageCardArt.tsx'), 'utf8');
     for (const id of supportedCardIds) expect(component, id).toContain(`case '${id}'`);
+  });
+});
+
+/**
+ * The upper-cell card art (F-CURR-002 §7.2, row CM-23): its own module, so the app's start bundle never carries it, and
+ * an art budget per drawing and for the module (the app measures the chunk on the built bundle, lesson-chunks.mjs).
+ */
+describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
+  const art = readFileSync(join(HERE, 'UpperCellArt.tsx'), 'utf8');
+
+  it('lists the ten album cards of Stages 2 and 3, unique, none of them a Stage 1 drawing', () => {
+    expect(upperCellCardArtIds).toHaveLength(10);
+    expect(new Set(upperCellCardArtIds).size).toBe(10);
+    for (const id of upperCellCardArtIds) {
+      expect(id).toMatch(/^card:[a-z0-9-]+$/);
+      expect(supportedCardIds).not.toContain(id);
+    }
+  });
+
+  it('every listed id has a drawing in the UpperCellCardArt dispatcher, and the dispatcher draws nothing else', () => {
+    for (const id of upperCellCardArtIds) expect(art, id).toContain(`case '${id}'`);
+    expect([...art.matchAll(/case '(card:[a-z0-9-]+)'/g)].map((m) => m[1])).toEqual([...upperCellCardArtIds]);
+  });
+
+  it('stays out of the start bundle: not in the barrel, not imported by HeritageCardArt, reached by its file path', () => {
+    const index = readFileSync(join(HERE, 'index.ts'), 'utf8');
+    const root = readFileSync(join(HERE, '../../index.ts'), 'utf8');
+    const component = readFileSync(join(HERE, 'HeritageCardArt.tsx'), 'utf8');
+    for (const source of [index, root, component]) expect(source).not.toMatch(/UpperCellArt|upperCellCardArtIds/);
+    // The drawings and their ids are reached by the file's own path, which Metro resolves without reading `exports`
+    // (Expo SDK 52), while TypeScript and vitest read the matching `exports` entry.
+    expect(index).not.toMatch(/upperCellCardArtIds/);
+    const pkg = JSON.parse(readFileSync(join(HERE, '../../../package.json'), 'utf8')) as { exports: Record<string, string> };
+    expect(pkg.exports['./src/components/HeritageCardArt/UpperCellArt']).toBe('./src/components/HeritageCardArt/UpperCellArt.tsx');
+  });
+
+  it('uses theme tokens only: no colour literal and no new token', () => {
+    expect(art).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
+    expect(art).toMatch(/from '\.\.\/\.\.\/tokens'/);
+  });
+
+  it('art budget: each drawing at most 2,000 B of source, the module at most 16,000 B', () => {
+    const fns = [...art.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1], bytes: Buffer.byteLength(m[0]) }));
+    expect(fns).toHaveLength(10);
+    for (const f of fns) expect(f.bytes, f.name).toBeLessThanOrEqual(2_000);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(16_000);
   });
 });

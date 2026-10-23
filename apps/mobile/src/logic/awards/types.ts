@@ -29,6 +29,11 @@ export interface AwardWorld {
   episodes: readonly Episode[];
   quests: readonly Pick<Quest, 'id' | 'rewardCardId'>[];
   sets: readonly CardSet[];
+  /**
+   * Episode cards dated by the cell's first finishes (`questDoneAt`, F-CURR-002 §4.8 step 7, row CM-23): the upper-cell
+   * cards, awarded retroactively when they ship, so two devices derive the same time whatever replays each holds.
+   */
+  firstFinishCardIds?: ReadonlySet<string>;
 }
 
 export interface DerivedAward {

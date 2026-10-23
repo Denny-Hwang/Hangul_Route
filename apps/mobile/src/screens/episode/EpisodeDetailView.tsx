@@ -25,6 +25,9 @@ import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
+import { UPPER_CARD_GATED_IDS } from '../../content/heritage-cards';
+import { shownRewardCardIds } from '../../logic/awards/upper-cards';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { askFor, askGate, helpAskedEvent, isClassOnly, type AskGate } from '../../logic/access-copy';
 import {
@@ -164,6 +167,12 @@ export function EpisodeDetailView({
 
   // Reward cards are revealed only once earned (F-CARD-002 §3.6 spirit).
   const unlockedCardIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
+  // F-CURR-002 row CM-23: a cell's upper-cell card shows while `upperCards` is on, or once it is held.
+  const upperCards = useCurrFlag('upperCards');
+  const rewardCardIds = useMemo(
+    () => shownRewardCardIds(episode?.rewardCardIds ?? [], upperCards, UPPER_CARD_GATED_IDS, unlockedCardIds),
+    [episode, upperCards, unlockedCardIds],
+  );
 
   const questProgress = useMemo(() => {
     if (!episode || !snap) return new Map<string, number>();
@@ -455,7 +464,7 @@ export function EpisodeDetailView({
             <Heading level="prompt">{m.cards.heading}</Heading>
             <Spacer size="sm" />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-              {episode.rewardCardIds.map((cid) => {
+              {rewardCardIds.map((cid) => {
                 const source = cardById(cid);
                 if (!source) return null;
                 const c = localizeCard(source, locale);
