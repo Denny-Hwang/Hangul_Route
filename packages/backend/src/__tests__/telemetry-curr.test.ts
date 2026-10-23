@@ -53,7 +53,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
   ['goal.set', { daily: 3, weeklyDays: 3 }],
   ['goal.met', { points: 4, target: 3 }],
   ['week.goal_met', { days: 3, target: 3 }],
-  ['decode.sprint.finished', { rateBucket: '30-39', probeRateBucket: '20-29', sprintIndexBucket: '1' }],
+  ['decode.sprint.finished', { rateBucket: '30-34', probeRateBucket: '18-20', sprintIndexBucket: '1' }],
   ['stamp.earned', { stampId: 'stamp:first-cell' }],
   ['weekly_quest.complete', { questKind: 'finish-stories' }],
   ['pack.opened', { packId: 'pack:numbers-time' }],

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ROLLUP_DECODE_RATE_EDGES,
   ROLLUP_ITEM_COUNT_EDGES,
   ROLLUP_SEEDED_COUNT_EDGES,
   ROLLUP_SPREAD_DAYS_EDGES,
+  ROLLUP_SPRINT_INDEX_EDGES,
   ROLLUP_STUDY_MINUTES_EDGES,
   TelemetryBucketSchema,
   rollupBucketCode,
@@ -13,7 +15,7 @@ import {
  * F-CURR-002 section 11.2 (row CM-70a): the fixed bucket edges shared by the emitting rows and
  * the Worker, so only these codes can land in `learning_rollups`.
  */
-const ALL = [ROLLUP_ITEM_COUNT_EDGES, ROLLUP_SEEDED_COUNT_EDGES, ROLLUP_SPREAD_DAYS_EDGES, ROLLUP_STUDY_MINUTES_EDGES];
+const ALL = [ROLLUP_ITEM_COUNT_EDGES, ROLLUP_SEEDED_COUNT_EDGES, ROLLUP_SPREAD_DAYS_EDGES, ROLLUP_STUDY_MINUTES_EDGES, ROLLUP_DECODE_RATE_EDGES, ROLLUP_SPRINT_INDEX_EDGES];
 
 describe('rollup bucket edges', () => {
   it('start at 0 and rise', () => {
@@ -48,5 +50,22 @@ describe('rollup bucket edges', () => {
     ]);
     expect([0, 59, 60, 1440].map((v) => rollupBucketCode(v, ROLLUP_STUDY_MINUTES_EDGES))).toEqual(['0', '45-59', '60-89', '120+']);
     expect(rollupBucketCode(1500, ROLLUP_SEEDED_COUNT_EDGES)).toBe('1000-1999');
+  });
+
+  it('[CM-32] the Decoding Sprint rate and sprint index buckets', () => {
+    expect([0, 1, 2, 8, 15, 17, 29, 30, 49, 50, 240].map((v) => rollupBucketCode(v, ROLLUP_DECODE_RATE_EDGES))).toEqual([
+      '0',
+      '1-2',
+      '1-2',
+      '7-8',
+      '15-17',
+      '15-17',
+      '27-29',
+      '30-34',
+      '40-49',
+      '50+',
+      '50+',
+    ]);
+    expect(rollupBucketCodes(ROLLUP_SPRINT_INDEX_EDGES)).toEqual(['0', '1', '2', '3', '4', '5-9', '10-19', '20+']);
   });
 });
