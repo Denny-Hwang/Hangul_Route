@@ -1,4 +1,4 @@
-import * as Crypto from 'expo-crypto';
+import { randomUUID } from 'expo-crypto';
 import { readJson, writeJson } from './storage';
 
 /*
@@ -26,7 +26,7 @@ export function loadInstallKey(): Promise<void> {
 /** This device's install key, made once (in memory at once, saved for the next start). */
 export function goalInstallKey(): string {
   if (key !== null) return key;
-  key = `ik-${Crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+  key = `ik-${randomUUID().replace(/-/g, '').slice(0, 16)}`;
   void writeJson(KEY, key).catch(() => undefined);
   return key;
 }

@@ -1,6 +1,21 @@
-import * as Crypto from 'expo-crypto';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
+import { getRandomBytesAsync } from 'expo-crypto';
+import {
+  AuthenticationType,
+  SecurityLevel,
+  getEnrolledLevelAsync,
+  hasHardwareAsync,
+  isEnrolledAsync,
+  supportedAuthenticationTypesAsync,
+} from 'expo-local-authentication';
+import {
+  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
+  canUseBiometricAuthentication,
+  deleteItemAsync,
+  getItemAsync,
+  isAvailableAsync,
+  setItemAsync,
+  type SecureStoreOptions,
+} from 'expo-secure-store';
 import { Platform } from 'react-native';
 import {
   BIOMETRIC_SHORTCUT_ITEM_KEY,
@@ -31,34 +46,34 @@ import {
  * - The item has its own keychain service (`hr.biometric`), so no other SecureStore item can stand in for it.
  */
 
-function options(prompt: string): SecureStore.SecureStoreOptions {
+function options(prompt: string): SecureStoreOptions {
   return {
     requireAuthentication: true,
-    keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
+    keychainAccessible: WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
     keychainService: BIOMETRIC_SHORTCUT_SERVICE,
     authenticationPrompt: prompt,
   };
 }
 
-const STRONG_TYPES: ReadonlySet<LocalAuthentication.AuthenticationType> = new Set([
-  LocalAuthentication.AuthenticationType.FINGERPRINT,
-  LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION,
-  LocalAuthentication.AuthenticationType.IRIS,
+const STRONG_TYPES: ReadonlySet<AuthenticationType> = new Set([
+  AuthenticationType.FINGERPRINT,
+  AuthenticationType.FACIAL_RECOGNITION,
+  AuthenticationType.IRIS,
 ]);
 
 async function strongClass(): Promise<boolean> {
   if (Platform.OS === 'android') {
-    return (await LocalAuthentication.getEnrolledLevelAsync()) >= LocalAuthentication.SecurityLevel.BIOMETRIC_STRONG;
+    return (await getEnrolledLevelAsync()) >= SecurityLevel.BIOMETRIC_STRONG;
   }
-  return SecureStore.canUseBiometricAuthentication();
+  return canUseBiometricAuthentication();
 }
 
 export const biometric: BiometricPort = {
   available: async () => {
     try {
-      if (!(await LocalAuthentication.hasHardwareAsync())) return false;
-      if (!(await LocalAuthentication.isEnrolledAsync())) return false;
-      const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+      if (!(await hasHardwareAsync())) return false;
+      if (!(await isEnrolledAsync())) return false;
+      const types = await supportedAuthenticationTypesAsync();
       if (!types.some((t) => STRONG_TYPES.has(t))) return false;
       return await strongClass();
     } catch {
@@ -68,9 +83,9 @@ export const biometric: BiometricPort = {
 
   write: async (prompt) => {
     try {
-      if (!(await SecureStore.isAvailableAsync())) return 'unavailable';
-      const token = tokenOf(await Crypto.getRandomBytesAsync(SHORTCUT_TOKEN_BYTES));
-      await SecureStore.setItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, token, options(prompt));
+      if (!(await isAvailableAsync())) return 'unavailable';
+      const token = tokenOf(await getRandomBytesAsync(SHORTCUT_TOKEN_BYTES));
+      await setItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, token, options(prompt));
       return 'written';
     } catch {
       // A cancelled prompt (Android asks on the write), a missing Face ID permission string: nothing is on.
@@ -85,7 +100,7 @@ export const biometric: BiometricPort = {
       return 'cancelled';
     }
     try {
-      return classifyShortcutRead({ value: await SecureStore.getItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, options(prompt)) });
+      return classifyShortcutRead({ value: await getItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, options(prompt)) });
     } catch (error) {
       return classifyShortcutRead({ error });
     }
@@ -93,7 +108,7 @@ export const biometric: BiometricPort = {
 
   remove: async () => {
     try {
-      await SecureStore.deleteItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, { keychainService: BIOMETRIC_SHORTCUT_SERVICE });
+      await deleteItemAsync(BIOMETRIC_SHORTCUT_ITEM_KEY, { keychainService: BIOMETRIC_SHORTCUT_SERVICE });
     } catch {
       // Already gone, or the store is unavailable: the account record is what turns the shortcut off.
     }
