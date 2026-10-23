@@ -396,7 +396,7 @@ function DiscoverItemCard({
   copy: DiscoverMessages;
   a11y: Messages['a11y'];
   audio: CardAudio;
-  /** One of the compact card's two rows: no card of its own and no picture (the picture only repeats the word). */
+  /** One of the compact card's two rows: no card of its own; everything a card shows, the picture smaller. */
   bare?: boolean;
   /** A row under another row: a thin line above it. */
   divided?: boolean;
@@ -406,7 +406,7 @@ function DiscoverItemCard({
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
-  const itemPicture = !bare && item.kind === 'word' && hasPicture(item.picture, itemGloss, PICTURE_CONTEXT);
+  const itemPicture = item.kind === 'word' && hasPicture(item.picture, itemGloss, PICTURE_CONTEXT);
   const examplePicture = example !== undefined && hasPicture(item.picture, example.gloss, PICTURE_CONTEXT);
 
   const body = (
@@ -437,7 +437,8 @@ function DiscoverItemCard({
         </Body>
       ) : null}
       {/* Decorative: the KoreanText line above already names the word (F-VOC-002 §3.7). */}
-      {itemPicture ? <PictureArt pictureRef={item.picture} gloss={itemGloss} size={touchTarget.hero} decorative /> : null}
+      {/* On the compact card each row keeps its picture, smaller, so the card only regroups the page (section 4.6). */}
+      {itemPicture ? <PictureArt pictureRef={item.picture} gloss={itemGloss} size={bare ? touchTarget.min : touchTarget.hero} decorative testID={`discover-picture-${item.key}`} /> : null}
 
       <HearButton
         action={item.hear}

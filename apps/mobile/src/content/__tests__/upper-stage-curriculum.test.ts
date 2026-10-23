@@ -925,6 +925,8 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   });
 
   const QUESTS = READY.flatMap(({ cell }) => cell.quests);
+  const scaffolding = new Set<string>();
+  const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
     expect(QUESTS.length).toBeGreaterThanOrEqual(78);
   });
@@ -947,6 +949,14 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
       const misses = missesOf(practice);
       const scaffolds = misses.flatMap((a, i) => misses.slice(i + 1).map((b) => scaffoldScope(practice, [a, b]))).filter((s): s is MinigameScope => s !== null);
       for (const s of scaffolds) for (const ko of scopeKo(s)) expect(practiceKo.has(ko), ko).toBe(true);
+      // U-8 on every scaffold: a heard round never offers two options that sound the same (soundKey, F-CURR-001 section 3.5).
+      for (const s of scaffolds) {
+        const options = s.listenPick!.rounds[0]!.options.map((o) => o.text!.ko);
+        expect(new Set(options.map(soundKey)).size, `${quest.id} scaffold ${options.join(' / ')}`).toBe(options.length);
+      }
+      if (scaffolds.length > 0) scaffolding.add(quest.id);
+      // The shorter Apply keeps two rounds or more, the first ones of the full Apply.
+      if (shorter) shortened.set(quest.id, [apply, shorter]);
       const scaffoldKo = [...new Set(scaffolds.flatMap(scopeKo))];
       const paths: PacedPath[] = [
         { name: 'standard', surfaces: surfacesOf(quest, false), asked: [...scopeKo(practice), ...scopeKo(apply), ...scopeKo(check)] },
@@ -959,4 +969,22 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
       expect(quest).toEqual(before);
     });
   }
+
+  // After the per-quest checks above (vitest runs a describe's tests in order).
+  it('every shipped Practice with a listed word can scaffold, Trace a Word and keyed Realia Read included', () => {
+    const left = QUESTS.filter((q) => !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
+    expect(left).toEqual([]);
+  });
+
+  it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
+    expect(shortened.size).toBeGreaterThan(0);
+    const roundsOf = (s: MinigameScope): unknown[] =>
+      s.listenPick?.rounds ?? s.picWord?.boards ?? s.orderIt?.rounds ?? s.typeHangul?.rounds ?? s.writeFrame?.rounds ?? s.cardPairs ?? s.dialogue ?? [];
+    for (const [id, [full, short]] of shortened) {
+      const [a, b] = [roundsOf(full), roundsOf(short)];
+      expect(b.length, id).toBeGreaterThanOrEqual(2);
+      expect(b, id).toEqual(a.slice(0, -1));
+      expect(short.kind, id).toBe(full.kind);
+    }
+  });
 });

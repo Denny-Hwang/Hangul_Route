@@ -46,7 +46,13 @@ function adaptOn(on: boolean): void {
   useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { questAdapt: { on, pct: 100 } } } });
 }
 
-async function player(questId: string, step: number, reviewsFor: string | null = PROFILE) {
+/** Waits for the screen to reach a state (the Listen & Pick advance runs on a real timer), at most 2 s. */
+const until = async (done: () => boolean): Promise<void> => {
+  for (let i = 0; i < 40 && !done(); i += 1) await settle(50);
+  expect(done()).toBe(true);
+};
+
+async function player(questId: string, step: number | null, reviewsFor: string | null = PROFILE) {
   const ports = { start: () => step, end: vi.fn(), finish: vi.fn(), leave: vi.fn(), track: vi.fn() };
   const r = await render(<QuestPlayerView questId={questId} episodeId={CELL} ports={ports} onOpenGame={() => undefined} onBack={() => undefined} reviewsFor={reviewsFor} />);
   // The chunk loads as the run begins (a moment in the app, a module transform here).
@@ -103,6 +109,9 @@ describe('a strong Practice: the next quest of the cell is compact', () => {
     for (const item of page2.items) expect(shown.join(' ')).toContain(item.type === 'word' ? item.word.ko : '');
     const hears = card!.findAll((n) => typeof n.type === 'string' && /^discover-hear-.*\|sound$/.test(String(n.props['data-testid'] ?? '')));
     expect(hears).toHaveLength(2);
+    // Each row keeps its picture (smaller): the compact card only regroups the page.
+    const pictures = card!.findAll((n) => typeof n.type === 'string' && /^discover-picture-/.test(String(n.props['data-testid'] ?? '')));
+    expect(new Set(pictures.map((n) => String(n.props['data-testid']))).size).toBe(2);
     const [cont] = byTestId(second.r.root, 'discover-continue');
     expect(cont!.props['aria-disabled']).not.toBe(true);
     // The step counter is the quest's own, and the compact pace is reported once.
@@ -118,6 +127,19 @@ describe('a strong Practice: the next quest of the cell is compact', () => {
     const short = useQuestRunStore.getState().short;
     expect(short?.step).toBe(apply);
     expect(short?.scope.cardPairs).toHaveLength(3);
+  });
+
+  it('a run resumed past Apply, or no run at all, is not reported compact and marks no shorter Apply', async () => {
+    await player(Q1.id, PRACTICE);
+    await playPractice(0);
+    const apply = Q2.steps.findIndex((s) => s.kind === 'apply');
+    const resumed = await player(Q2.id, apply + 1);
+    expect(useQuestRunStore.getState().short).toBeNull();
+    expect(adaptEvents(resumed.ports.track)).toEqual([]);
+    useQuestRunStore.getState().reset();
+    const none = await player(Q2.id, null);
+    expect(useQuestRunStore.getState().short).toBeNull();
+    expect(adaptEvents(none.ports.track)).toEqual([]);
   });
 
   it('never makes the quest itself, an earlier quest, another learner or the off switch compact', async () => {
@@ -179,12 +201,37 @@ describe('a hard Practice: one scaffold round before Apply', () => {
 
     const ringed = options.find((o) => String(o.props['aria-label']).startsWith('Look here'))!;
     await press(ringed);
-    await settle(800);
+    await until(() => !screenTexts(r.root).includes(EN.learner.quest.adapt.scaffoldHint));
     // Recorded with the hint, as the memory store records every round; the quest's score and steps are untouched.
     expect(heard).toMatchObject([{ questId: Q1.id, episodeId: CELL, correct: true, hinted: true, asked: { itemId: 'scaffold:1' } }]);
     const after = useQuestRunStore.getState();
     expect([after.correctCount, after.totalCount, after.stepIndex, after.tries.length]).toEqual([before.correctCount, before.totalCount, before.stepIndex, before.tries.length]);
     expect(screenTexts(r.root)).not.toContain(EN.learner.quest.adapt.scaffoldHint);
+    expect(counter(screenTexts(r.root))).toBe(`${PRACTICE + 2} / ${Q1.steps.length}`);
+  });
+
+  it('a miss in the scaffold round keeps the ring on the right card; the miss is recorded once, unhinted, and unscored', async () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    const { r } = await player(Q1.id, PRACTICE);
+    await playPractice(2);
+    const before = { ...useQuestRunStore.getState() };
+    heard.length = 0;
+    const options = () => r.root.findAll((n) => typeof n.type === 'string' && /^listen-pick-option-o\d$/.test(String(n.props['data-testid'] ?? '')));
+    const ringed = () => options().filter((o) => String(o.props['aria-label']).startsWith('Look here'));
+    const other = options().find((o) => !String(o.props['aria-label']).startsWith('Look here'))!;
+    await press(other);
+    await settle(60);
+    // Still ringed after the miss, under the same hint line ("nothing is ever taken away").
+    expect(ringed()).toHaveLength(1);
+    expect(screenTexts(r.root)).toContain(EN.learner.quest.adapt.scaffoldHint);
+    await press(ringed()[0]!);
+    await until(() => !screenTexts(r.root).includes(EN.learner.quest.adapt.scaffoldHint));
+    expect(heard).toHaveLength(1);
+    expect(heard[0]).toMatchObject({ correct: false, asked: { itemId: 'scaffold:1' } });
+    expect(heard[0]).not.toHaveProperty('hinted');
+    const after = useQuestRunStore.getState();
+    expect([after.correctCount, after.totalCount, after.stars()]).toEqual([before.correctCount, before.totalCount, before.stars()]);
     expect(counter(screenTexts(r.root))).toBe(`${PRACTICE + 2} / ${Q1.steps.length}`);
   });
 

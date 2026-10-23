@@ -233,6 +233,10 @@ describe('quest-run-store', () => {
       answerAside({ texts: ['배'] }, true);
       expect(heard).toMatchObject([{ questId: 'quest:x', episodeId: 'episode:y', correct: true, hinted: true, asked: { texts: ['배'] } }]);
       expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 0, correctCount: 0, tries: [] });
+      // A wrong answer is a plain miss: a hinted answer is never wrong (logic/memory/spacing.ts).
+      answerAside({ texts: ['배'] }, false);
+      expect(heard[1]).toMatchObject({ correct: false });
+      expect(heard[1]).not.toHaveProperty('hinted');
       setFirstRoundAnswerListener(() => {
         throw new Error('store down');
       });

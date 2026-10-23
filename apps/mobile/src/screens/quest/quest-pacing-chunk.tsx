@@ -35,22 +35,27 @@ export interface PacingPlan {
 }
 
 /**
- * The run's pace, once the run has begun: a compact quest puts its shorter Apply scope in the run store (the game
- * screen plays it) and sends `quest.adapt { dir: 'compact' }` when something changes (a two-word second page, or an
- * Apply of 3 rounds or more).
+ * The run's pace, once this quest's run has begun (no run, or another quest's in the store: the standard path). A
+ * compact quest puts its shorter Apply scope in the run store (the game screen plays it) when the run is not yet past
+ * Apply, and sends `quest.adapt { dir: 'compact' }` only when the run will reach what changes: a two-word second
+ * Discover page the run is not past, or the shorter Apply. A run resumed past both sends nothing.
  */
 export function planPacing(input: { profileId: string; episodeId: string; questId: string; track: Track }): PacingPlan {
   const { profileId, episodeId, questId } = input;
   const index = episodeById(episodeId)?.questIds.indexOf(questId) ?? -1;
+  const run = useQuestRunStore.getState();
+  if (run.questId !== questId || run.episodeId !== episodeId) return { index, compact: false };
   const compact = compactFor(profileId, episodeId, index);
   const quest = questById(questId);
   if (compact && quest) {
     const apply = quest.steps.findIndex((s) => s.kind === 'apply');
+    const discover = quest.steps.findIndex((s) => s.kind === 'discover');
     const ref = quest.steps[apply]?.minigameRef;
-    const source = ref ? scopeFor(ref) : undefined;
+    const source = ref && run.stepIndex <= apply ? scopeFor(ref) : undefined;
     const shorter = source ? shortenScope(source) : null;
     if (shorter) useQuestRunStore.setState({ short: { step: apply, scope: shorter } });
-    if (shorter || compactSource(quest.steps.find((s) => s.kind === 'discover')?.discover?.pages[1])) sendAdapt(input.track, questId, 'compact');
+    const page2 = discover >= 0 && run.stepIndex <= discover && compactSource(quest.steps[discover]?.discover?.pages[1]);
+    if (shorter || page2) sendAdapt(input.track, questId, 'compact');
   }
   return { index, compact };
 }

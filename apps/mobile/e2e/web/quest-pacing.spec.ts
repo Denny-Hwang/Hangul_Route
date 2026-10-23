@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from './fixtures';
 import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored } from './helpers';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-CURR-002 section 4.6 (row CM-24) on the web PWA, behind `questAdapt` (the remote copy is the stored one: this build
@@ -18,7 +19,7 @@ interface Cell {
 const NATURE = JSON.parse(readFileSync(join(__dirname, '../../../../content/episodes/stage-2/nature.json'), 'utf8')) as Cell;
 const BOARDS = (NATURE.quests[0]?.scopes.find((s) => s.kind === 'pic-word-match')?.boards ?? []).map((b) => b.pairs.map((p) => p.id));
 
-async function onboard(page: Page): Promise<void> {
+async function onboard(page: Page, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
@@ -28,6 +29,7 @@ async function onboard(page: Page): Promise<void> {
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
   expect(profiles?.[0]?.id).toBeTruthy();
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { questAdapt: { on: true, pct: 100 } } });
+  if (textSize) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
@@ -162,5 +164,32 @@ test('two first-try misses in Practice play one scaffold round of the same words
   await expect(page.getByText(/^4 \/ 6$/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Play minigame' })).toBeVisible();
   await expect(page.getByTestId('listen-pick-hint')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('the compact card fits at 320 px with the text size at Largest: no sideways scroll, no clipped text, pictures kept', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await onboard(page, 'largest');
+  await openNature(page);
+  await startQuest(page, 0);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
+  await playPractice(page, 0);
+  await expect(page.getByText(/^4 \/ 6$/)).toBeVisible();
+  await headerClose(page).click();
+  await page.getByTestId('confirm-sheet-confirm').click();
+  await startQuest(page, 1);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByTestId('discover-continue').click();
+  const card = page.getByTestId('discover-compact');
+  await expect(card).toBeVisible();
+  // Each row keeps its picture: the compact card only regroups the page.
+  await expect(card.locator('[data-testid^="discover-picture-"]')).toHaveCount(2);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expectTextFits(page, 'the compact Discover card at Largest');
+  await targetsAtLeast48(page, card);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.screenshot({ path: test.info().outputPath('pacing-compact-320-largest.png') });
   expect(errors).toEqual([]);
 });

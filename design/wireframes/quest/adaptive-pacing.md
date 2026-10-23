@@ -32,12 +32,14 @@ C. Compact Discover page (page 2 of a later quest in the cell)
 | | it for each.               | |
 | |          [ 구름 ]          | |  <- KoreanText: romanization + gloss, as on every card
 | |          gu-reum, cloud    | |
+| |          [cloud pic]       | |  <- each row keeps its picture, smaller (touchTarget.min)
 | |      ( (speaker) Hear it ) | |  <- size lg (>= 48 dp; 64 at the touchTarget floor)
 | | -------------------------- | |  <- border.subtle, thin: the second row
 | |          [ 바람 ]          | |
 | |          ba-ram, wind      | |
+| |          [wind pic]        | |
 | |      ( (speaker) Hear it ) | |
-| +----------------------------+ |  <- no picture in a row (it only repeats the word, decorative)
+| +----------------------------+ |  <- the card only regroups the page: nothing is left out
 | [         Continue           ] |  <- enabled at once, as on every Discover page
 +--------------------------------+
 
@@ -52,7 +54,8 @@ S. Scaffold round (after Practice, before Apply; outside the steps)
 |          ( (speaker) )         |  <- the shipped Listen & Pick prompt (round 1 never autoplays)
 |        ( Hear it again )       |
 | +----------------------------+ |  <- the right card ringed from the start (ChoiceCard `hint`:
-| | 별  byeol                  | |     border.focus, thick); its name reads "Look here: ..."
+| | 별  byeol                  | |     border.focus, thick); its name reads "Look here: ...";
+|                                |     the ring stays on after a miss
 | +----------------------------+ |
 | | 하늘 haneul                | |  <- the other words of this Practice, missed ones first
 | +----------------------------+ |
@@ -64,6 +67,6 @@ S. Scaffold round (after Practice, before Apply; outside the steps)
 ## States and rules
 
 - **No mention of speed, no timer, no red.** The compact card says only how to use it; a miss in the scaffold round is the shipped amber nudge (`colors.feedback.nudge`) and Hoya `thinking`.
-- **Nothing is taken away.** Every Discover item still shows (U-11); the scaffold round adds, it never replaces Apply; stars count the quest's own rounds only (the scaffold round is recorded for review, marked hinted, never scored).
+- **Nothing is taken away.** Every Discover item still shows (U-11); the scaffold round adds, it never replaces Apply; stars count the quest's own rounds only (the scaffold round is recorded for review, never scored: a right answer marked hinted, a miss as a plain miss). The scaffold's options never include two that sound the same (U-8).
 - **Off** (`questAdapt` off, a guest run, the All lessons preview, a Stage 1 or story quest): the standard path, nothing loads.
 - **320 px**: the compact card stacks its two rows; each Hear it is a full button; the options stack in one column.

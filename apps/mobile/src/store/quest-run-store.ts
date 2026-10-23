@@ -138,13 +138,14 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
 /**
  * A round played beside the steps (the scaffold round, F-CURR-002 section 4.6): its first answer goes to the memory
- * store with the hint flag, as every round's does, and is not scored, so the quest's stars are its own.
+ * store as every round's does, and is not scored, so the quest's stars are its own. A right answer carries the hint
+ * flag; a wrong one is a plain miss (a hinted answer is never wrong, `logic/memory/spacing.ts`).
  */
 export function answerAside(asked: RoundAsked, correct: boolean): void {
   const { questId, episodeId } = useQuestRunStore.getState();
   if (!firstAnswerListener || !questId || !episodeId) return;
   try {
-    firstAnswerListener({ questId, episodeId, correct, asked, at: new Date(), hinted: true });
+    firstAnswerListener({ questId, episodeId, correct, asked, at: new Date(), ...(correct ? { hinted: true } : {}) });
   } catch {
     // Only the memory store misses the answer.
   }

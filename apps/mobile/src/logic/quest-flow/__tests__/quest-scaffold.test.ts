@@ -42,9 +42,24 @@ describe('the Practice items a scaffold may ask', () => {
     expect(scopeItems({ kind: 'tap-respond', dialogue: turns })).toEqual([{ ko: '안녕?', romanization: 'annyeong?', en: 'Hi?', audioRef: 'clip:x' }]);
   });
 
-  it('has nothing for a Practice whose rounds ask a card or a copied word', () => {
+  it('reads Trace a Word targets, and Realia Read key words or word answers (never a picture or a figure)', () => {
+    const trace: MinigameScope = { kind: 'trace-word', traceWord: { rounds: [{ id: 'w1', word: k('물', 'water') }, { id: 'w2', word: SEA }] } };
+    expect(scopeItems(trace).map((t) => t.ko)).toEqual(['물', '바다']);
+    expect(scaffoldScope(trace, [{ scope: trace, itemId: 'w1' }, { scope: trace, itemId: 'w2' }])?.listenPick?.rounds[0]?.prompt.ko).toBe('바다');
+    const realia: MinigameScope = {
+      kind: 'realia-read',
+      realiaRead: {
+        realia: { ref: 'realia:menu', kind: 'menu', entries: [{ id: 'e1', text: SKY }], altEn: 'A menu' },
+        rounds: [
+          { id: 'r1', questionEn: 'How much?', key: TREE, options: [{ id: 'a', figure: '5,000' }, { id: 'b', figure: '3,000' }], answerId: 'a' },
+          { id: 'r2', questionEn: 'Which one?', options: [{ id: 'a', text: STAR }, { id: 'b', text: SKY }], answerId: 'b' },
+          { id: 'r3', questionEn: 'Which picture?', options: [{ id: 'a', pictureRef: 'word:nature-sky', labelEn: 'sky' }, { id: 'b', pictureRef: 'word:nature-star', labelEn: 'star' }], answerId: 'a' },
+        ],
+      },
+    };
+    expect(scopeItems(realia).map((t) => t.ko)).toEqual(['나무', '하늘']);
+    expect(scaffoldScope(realia, [{ scope: realia, itemId: 'r2' }, { scope: realia, itemId: 'r3' }])?.listenPick?.rounds[0]?.prompt.ko).toBe('하늘');
     expect(scopeItems({ kind: 'realia-read' })).toEqual([]);
-    expect(scopeItems({ kind: 'trace-word', traceWord: { rounds: [{ id: 'w1', word: k('물', 'water') }] } })).toEqual([]);
   });
 });
 

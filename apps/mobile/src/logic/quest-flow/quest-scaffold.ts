@@ -1,4 +1,4 @@
-import type { KoText, ListenPickRound } from '@hangul-route/content-schema';
+import type { KoText, ListenPickRound, RealiaReadRound } from '@hangul-route/content-schema';
 import type { RoundAsked } from '../memory/asked';
 import type { MinigameScope } from '../minigame-config';
 
@@ -7,7 +7,8 @@ import type { MinigameScope } from '../minigame-config';
  * easier format (hear it, then pick it), over the Practice's own items, with the hint showing (the right card ringed
  * from the start). The prompt is the last item missed on the first try; the options are the missed items first,
  * then the Practice's other items, three at most. Nothing new is asked: every text is the Practice scope's own.
- * A Practice whose rounds ask no listed word (Realia Read asks a card, Trace a Word copies a word) has no scaffold.
+ * Trace a Word lists its traced words; Realia Read each round's key word (shown under its question) or, with none,
+ * its answer when the answer is a word (a picture or a figure answer lists nothing).
  */
 
 /** The Korean a scope's rounds ask, each once, in order. */
@@ -25,6 +26,15 @@ export function scopeItems(scope: MinigameScope): KoText[] {
       break;
     case 'listen-pick':
       all = (scope.listenPick?.rounds ?? []).filter((r) => !r.id.startsWith('lp:sym:')).map((r) => r.prompt);
+      break;
+    case 'trace-word':
+      all = (scope.traceWord?.rounds ?? []).map((r) => r.word);
+      break;
+    case 'realia-read':
+      all = (scope.realiaRead?.rounds ?? []).flatMap((r) => {
+        const word = realiaWord(r);
+        return word ? [word] : [];
+      });
       break;
     case 'tap-respond':
       all = (scope.dialogue ?? []).flatMap((t) =>
@@ -50,8 +60,15 @@ function askedKo(asked: RoundAsked): string | undefined {
     scope.picWord?.boards.flatMap((b) => b.pairs).find((p) => p.id === itemId)?.word.ko ??
     byId(scope.orderIt?.rounds)?.sentence.ko ??
     byId(scope.typeHangul?.rounds)?.target.ko ??
-    byId(scope.listenPick?.rounds)?.prompt.ko
+    byId(scope.listenPick?.rounds)?.prompt.ko ??
+    byId(scope.traceWord?.rounds)?.word.ko ??
+    realiaWord(byId(scope.realiaRead?.rounds))?.ko
   );
+}
+
+/** A Realia Read round's word: its key word, else its answer when that is a word. */
+function realiaWord(round: RealiaReadRound | undefined): KoText | undefined {
+  return round ? (round.key ?? round.options.find((o) => o.id === round.answerId)?.text) : undefined;
 }
 
 export const SCAFFOLD_ROUND_ID = 'scaffold:1';
