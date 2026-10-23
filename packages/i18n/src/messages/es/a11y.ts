@@ -102,6 +102,7 @@ export const a11y = {
       close: (description: string) => `${description} Toca para cerrar.`,
     },
     hearAgain: 'Escuchar el sonido otra vez',
+    dictation: { speaker: 'Escuchar la palabra' },
     picture: 'Imagen',
     option: {
       correct: (label: string) => `Respuesta correcta: ${label}`,
