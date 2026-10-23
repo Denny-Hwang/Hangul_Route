@@ -59,7 +59,8 @@ function lettersOf(text: string): string[] {
   for (const ch of text.normalize('NFC').replace(/\s+/g, '')) {
     const parts = decomposeSyllable(ch);
     if (parts === null) {
-      if (/[가-힣ㄱ-ㅣ]/.test(ch)) out.push(ch);
+      // A lone letter typed on its own (a compatibility jamo, U+3131 to U+3163) is a letter too.
+      if (/[\u3131-\u3163]/.test(ch)) out.push(ch);
       continue;
     }
     out.push(parts.initial, `v${parts.medial}`);

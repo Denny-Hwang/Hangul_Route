@@ -9,6 +9,7 @@ import {
   type ListenPickRound,
   type TypeHangulRound,
 } from '../index';
+import { spellingRoundIssues } from '../lesson-lint';
 import { kt } from './helpers/lesson-fixtures';
 
 /**
@@ -80,22 +81,22 @@ describe('the spelling round (Listen & Pick, promptKind spelling)', () => {
     expect(ListenPickRoundSchema.safeParse(glossOnly).success).toBe(true);
   });
 
-  it('needs spelling options only, the prompt word as the answer, and fallback options that are new and spelled', () => {
-    const issues = (round: unknown): string[] => {
-      const r = ListenPickRoundSchema.safeParse(round);
-      return r.success ? [] : r.error.issues.map((i) => i.path.join('.'));
-    };
-    expect(issues({ ...spelling, options: [{ id: 'a', text: book }, { id: 'b', pictureRef: 'word:book' }] })).toContain('options.1.text');
-    expect(issues({ ...spelling, answerId: 'b' })).toContain('answerId');
+  it('keeps its shape rules in the lint, not the start bundle: spelling options, the prompt word, new fallback spellings', () => {
+    const issues = (round: Record<string, unknown>): string[] => spellingRoundIssues(round).map((i) => i.path);
+    expect(issues(spelling)).toEqual([]);
+    expect(issues({ ...spelling, options: [{ id: 'a', text: book }, { id: 'b', pictureRef: 'word:book' }, 'x'] })).toEqual(['options[1].text']);
+    expect(issues({ ...spelling, answerId: 'b' })).toEqual(['answerId']);
     const { fallbackOptions: _f, ...noFallback } = spelling;
-    expect(issues(noFallback)).toContain('fallbackOptions');
-    expect(issues({ ...spelling, fallbackOptions: [{ id: 'a', text: kt('학교', 'hakgyo', 'school') }] })).toContain('fallbackOptions.0.id');
-    expect(issues({ ...spelling, fallbackOptions: [{ id: 'c', text: kt('채기', 'chaegi', 'book') }] })).toContain('fallbackOptions.0.text.ko');
-    expect(issues({ ...spelling, fallbackOptions: [{ id: 'c', pictureRef: 'word:school' }] })).toContain('fallbackOptions.0.text');
+    expect(issues(noFallback)).toEqual(['fallbackOptions']);
+    expect(issues({ ...spelling, fallbackOptions: [] })).toEqual(['fallbackOptions']);
+    expect(issues({ ...spelling, fallbackOptions: [{ id: 'a', text: kt('학교', 'hakgyo', 'school') }] })).toEqual(['fallbackOptions[0].id']);
+    expect(issues({ ...spelling, fallbackOptions: [{ id: 'c', text: kt('채기', 'chaegi', 'book') }] })).toEqual(['fallbackOptions[0].text.ko']);
+    expect(issues({ ...spelling, fallbackOptions: [{ id: 'c', pictureRef: 'word:school' }, 7] })).toEqual(['fallbackOptions[0].text', 'fallbackOptions[1].text']);
+    expect(issues({ ...spelling, prompt: 'x', options: 'x' })).toEqual([]);
     // A plain round carries no spelling-round fields.
     const plain = { id: 'lp', prompt: book, options: spelling.options, answerId: 'a' };
-    expect(issues({ ...plain, fallbackOptions: spelling.fallbackOptions })).toContain('fallbackOptions');
-    expect(issues({ ...plain, pictureRef: 'word:book' })).toContain('pictureRef');
+    expect(issues(plain)).toEqual([]);
+    expect(issues({ ...plain, fallbackOptions: spelling.fallbackOptions, pictureRef: 'word:book' })).toEqual(['pictureRef', 'fallbackOptions']);
   });
 });
 
@@ -111,6 +112,11 @@ describe('spellingPickToListenPick (the game.spelling-pick fallback)', () => {
     });
     expect(ListenPickRoundSchema.safeParse(out).success).toBe(true);
     expect(isSpellingRound(out)).toBe(false);
+  });
+
+  it('keeps what it can of a malformed spelling round (no answer among its options, no fallback options)', () => {
+    const odd = { ...spelling, answerId: 'z', fallbackOptions: undefined } as unknown as ListenPickRound;
+    expect(spellingPickToListenPick(odd)).toEqual({ id: 'sp1', prompt: book, options: [], answerId: 'z' });
   });
 
   it('leaves a round that is not a spelling round as it is', () => {

@@ -512,6 +512,7 @@ function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add:
           const flagged = round.soundChange === true || target.soundChange === true || hasSoundChange(ko);
           if (flagged && !SOUND_CHANGE_RECORDINGS_READY) add('dictation-unambiguous', at, `${ko} has a sound change; it stays out of Dictation until recordings A-9 and A-10 exist`);
         }
+        if (scope.kind === 'listen-pick') for (const issue of spellingRoundIssues(round)) add('dictation-unambiguous', `${at}.${issue.path}`, issue.message);
         if (scope.kind === 'listen-pick' && Array.isArray(round.options)) {
           const options = round.options.filter(isRecord);
           const answer = options.find((o) => o.id === round.answerId);
@@ -534,6 +535,47 @@ function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add:
       });
     });
   });
+}
+
+/**
+ * The spelling round's shape (row CM-31; kept in the lint, not the round schema, so the start bundle does not carry
+ * it): only a spelling round has a prompt picture and fallback options; its options are spellings; the right one is the
+ * prompt word; it names its fallback options, which are new spellings with new ids. Read from the content as written.
+ */
+export function spellingRoundIssues(round: Record<string, unknown>): Array<{ path: string; message: string }> {
+  const out: Array<{ path: string; message: string }> = [];
+  if (round.promptKind !== 'spelling') {
+    if (round.pictureRef !== undefined) out.push({ path: 'pictureRef', message: 'only a spelling round (promptKind: spelling) shows a picture on its prompt' });
+    if (round.fallbackOptions !== undefined) out.push({ path: 'fallbackOptions', message: 'only a spelling round has fallback options' });
+    return out;
+  }
+  const options = Array.isArray(round.options) ? round.options.filter(isRecord) : [];
+  const koOf = (o: Record<string, unknown>): string | undefined => (isRecord(o.text) && typeof o.text.ko === 'string' ? o.text.ko : undefined);
+  options.forEach((o, i) => {
+    if (koOf(o) === undefined || o.pictureRef !== undefined) out.push({ path: `options[${i}].text`, message: "a spelling round's options are spellings: text only" });
+  });
+  const answer = options.find((o) => o.id === round.answerId);
+  const promptKo = isRecord(round.prompt) ? round.prompt.ko : undefined;
+  if (answer !== undefined && koOf(answer) !== undefined && koOf(answer) !== promptKo) out.push({ path: 'answerId', message: 'the right spelling is the prompt word' });
+  if (!Array.isArray(round.fallbackOptions) || round.fallbackOptions.length === 0) {
+    out.push({ path: 'fallbackOptions', message: 'a spelling round names the other options of its Listen & Pick fallback' });
+    return out;
+  }
+  const ids = new Set(options.map((o) => o.id));
+  const spelled = new Set(options.flatMap((o) => koOf(o) ?? []));
+  round.fallbackOptions.forEach((o, i) => {
+    const option = isRecord(o) ? o : {};
+    if (ids.has(option.id)) out.push({ path: `fallbackOptions[${i}].id`, message: 'fallback option ids are new and unique' });
+    ids.add(option.id);
+    const ko = koOf(option);
+    if (ko === undefined || option.pictureRef !== undefined) {
+      out.push({ path: `fallbackOptions[${i}].text`, message: 'a fallback option is a spelling: text only' });
+      return;
+    }
+    if (spelled.has(ko)) out.push({ path: `fallbackOptions[${i}].text.ko`, message: 'a fallback option is a word the round does not already offer' });
+    spelled.add(ko);
+  });
+  return out;
 }
 
 /**

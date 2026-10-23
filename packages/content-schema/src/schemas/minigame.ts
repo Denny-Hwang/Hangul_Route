@@ -118,13 +118,13 @@ export const ListenPickRoundSchema = z
     pictureRef: PictureRefSchema.optional(),
     /**
      * A spelling round's other options for its `game.spelling-pick` fallback (`spellingPickToListenPick`): taught words
-     * that sound different from the answer, so every option left has one right answer by sound alone (the lint's
-     * `dictation-unambiguous` checks it).
+     * that sound different from the answer, so every option left has one right answer by sound alone. The lint's
+     * `dictation-unambiguous` checks the spelling round's shape (`spellingRoundIssues`, lesson-lint.ts), so these
+     * rules stay out of the start bundle.
      */
     fallbackOptions: z.array(ListenPickOptionSchema).min(1).max(3).optional(),
   })
   .superRefine((round, ctx) => {
-    spellingRoundIssues(round).forEach(({ path, message }) => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message }));
     const ids = new Set<string>();
     const texts = new Set<string>();
     const pictures = new Set<string>();
@@ -159,49 +159,6 @@ export const ListenPickRoundSchema = z
     }
   });
 export type ListenPickRound = z.infer<typeof ListenPickRoundSchema>;
-
-type ListenPickShape = {
-  prompt: { ko: string };
-  options: ReadonlyArray<{ id: string; text?: { ko: string } | undefined; pictureRef?: string | undefined }>;
-  answerId: string;
-  promptKind?: 'spelling' | undefined;
-  pictureRef?: string | undefined;
-  fallbackOptions?: ReadonlyArray<{ id: string; text?: { ko: string } | undefined; pictureRef?: string | undefined }> | undefined;
-};
-
-/** The spelling round's own rules (row CM-31); a plain round carries none of its fields. */
-function spellingRoundIssues(round: ListenPickShape): Array<{ path: (string | number)[]; message: string }> {
-  const out: Array<{ path: (string | number)[]; message: string }> = [];
-  if (round.promptKind !== 'spelling') {
-    if (round.pictureRef !== undefined) out.push({ path: ['pictureRef'], message: 'only a spelling round (promptKind: spelling) shows a picture on its prompt' });
-    if (round.fallbackOptions !== undefined) out.push({ path: ['fallbackOptions'], message: 'only a spelling round has fallback options' });
-    return out;
-  }
-  round.options.forEach((o, i) => {
-    if (o.text === undefined || o.pictureRef !== undefined) out.push({ path: ['options', i, 'text'], message: 'a spelling round\'s options are spellings: text only' });
-  });
-  const answer = round.options.find((o) => o.id === round.answerId);
-  if (answer?.text !== undefined && answer.text.ko !== round.prompt.ko) {
-    out.push({ path: ['answerId'], message: 'the right spelling is the prompt word' });
-  }
-  if (round.fallbackOptions === undefined) {
-    out.push({ path: ['fallbackOptions'], message: 'a spelling round names the other options of its Listen & Pick fallback' });
-    return out;
-  }
-  const ids = new Set(round.options.map((o) => o.id));
-  const spelled = new Set(round.options.flatMap((o) => (o.text ? [o.text.ko] : [])));
-  round.fallbackOptions.forEach((o, i) => {
-    if (ids.has(o.id)) out.push({ path: ['fallbackOptions', i, 'id'], message: 'fallback option ids are new and unique' });
-    ids.add(o.id);
-    if (o.text === undefined || o.pictureRef !== undefined) {
-      out.push({ path: ['fallbackOptions', i, 'text'], message: 'a fallback option is a spelling: text only' });
-      return;
-    }
-    if (spelled.has(o.text.ko)) out.push({ path: ['fallbackOptions', i, 'text', 'ko'], message: 'a fallback option is a word the round does not already offer' });
-    spelled.add(o.text.ko);
-  });
-  return out;
-}
 
 /** Whether a Listen & Pick round is the spelling round of section 4.5 (row CM-31). */
 export function isSpellingRound(round: Pick<ListenPickRound, 'promptKind'>): boolean {

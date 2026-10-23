@@ -71,6 +71,10 @@ describe('dictation-unambiguous: the spelling round (책이 / 채기)', () => {
     expect(rows(lint(v2([taught, pick('quest:p', [spelling({ pictureRef: 'word:book' })])])))).toEqual([]);
   });
 
+  it('names its fallback options', () => {
+    expect(rows(lint(v2([taught, pick('quest:p', [spelling({ fallbackOptions: undefined })])])))).toEqual([`error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions`]);
+  });
+
   it('needs the picture or a meaning that is not blank', () => {
     expect(rows(lint(v2([taught, pick('quest:p', [spelling({ prompt: kt('책이', 'chaegi', '  ') })])])))).toEqual([`error ${V2} quests[1].scopes[0].rounds[0]`]);
   });
@@ -83,6 +87,11 @@ describe('dictation-unambiguous: the spelling round (책이 / 채기)', () => {
       { id: 'f', pictureRef: 'word:x' },
     ];
     expect(rows(lint(v2([taught, pick('quest:p', [spelling({ fallbackOptions })])])))).toEqual([
+      // The shape: 채기 is already an option, 우유 is offered twice, and a picture is not a spelling.
+      `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[0].text.ko`,
+      `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[2].text.ko`,
+      `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[3].text`,
+      // The sound: 채기 sounds like the answer and is not taught; the second 우유 sounds like the first.
       `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[0]`,
       `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[0]`,
       `error ${V2} quests[1].scopes[0].rounds[0].fallbackOptions[2]`,
@@ -91,6 +100,10 @@ describe('dictation-unambiguous: the spelling round (책이 / 채기)', () => {
 
   it('a plain heard pick between two spellings of one sound is not settled, even with a picture or a gloss line', () => {
     const plain = { id: 'lp', prompt: kt('낮', 'nat', 'daytime'), pictureRef: 'word:daytime', promptEn: 'daytime', options: [{ id: 'a', text: kt('낮', 'nat', 'daytime') }, { id: 'b', text: kt('낫', 'nat', 'sickle') }], answerId: 'a' };
-    expect(rows(lint(v2([teach('quest:t', ...NAT), pick('quest:p', [plain])])))).toEqual([`error ${V2} quests[1].scopes[0].rounds[0]`]);
+    expect(rows(lint(v2([teach('quest:t', ...NAT), pick('quest:p', [plain])])))).toEqual([
+      // A picture on a plain round is not drawn, so it is refused as well.
+      `error ${V2} quests[1].scopes[0].rounds[0].pictureRef`,
+      `error ${V2} quests[1].scopes[0].rounds[0]`,
+    ]);
   });
 });

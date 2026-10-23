@@ -284,7 +284,7 @@ export function SpellingCue({ round, testID = 'spelling-cue' }: { round: Pick<Li
 }
 
 /**
- * A spelling option's screen-reader name: its Hangul block by block with the letter names (책이: "치읓 애 기역, 이응 이"),
+ * A spelling option's screen-reader name: its Hangul block by block with the letter names (`spellByLetterNames`),
  * then its romanization, so two options that sound the same never read the same.
  */
 export function spellingOptionLabel(text: Pick<KoText, 'ko' | 'romanization'>): string {
