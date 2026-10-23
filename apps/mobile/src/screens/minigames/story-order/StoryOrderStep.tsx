@@ -9,18 +9,18 @@ import { StorySequenceGame } from '../StorySequenceGame';
 
 /*
  * The start bundle's door to Story Order (F-CURR-002 sections 7.1, 10 and 12.2, row CM-34). With `game.story-order`
- * on, the game loads from its chunk (`./story-order-chunk.tsx`, marker `screen-chunk:story-order`), reached only
+ * on, the game loads from its chunk (`./order-game-chunk.tsx`, marker `screen-chunk:story-order`), reached only
  * through the literal `import()` below. Off (its built-in pct is 0, so it merges dark), every round plays as the
  * shipped Story Sequence with text cards, one after the other, and nothing loads. The switch is read once, when the
  * step opens, so a remote copy that lands mid-step never swaps the game under the learner.
  */
 
-type Chunk = typeof import('./story-order-chunk');
+type Chunk = typeof import('./order-game-chunk');
 let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= import('./story-order-chunk').then(
+  loading ??= import('./order-game-chunk').then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

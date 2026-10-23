@@ -257,10 +257,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
-  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/story-order-chunk.tsx`, reached only
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
-  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
-  Object.freeze({ name: 'story-order-chunk', marker: 'screen-chunk:story-order' }),
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
 ]);
 
 /**

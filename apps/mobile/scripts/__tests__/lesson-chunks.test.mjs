@@ -178,8 +178,12 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
-      { name: 'story-order-chunk', marker: 'screen-chunk:story-order' },
+      { name: 'order-game-chunk', marker: 'screen-chunk:story-order' },
     ]);
+  });
+
+  it('no screen chunk takes the story- prefix of the story chunks (row CM-8 counts story-*.js bundles as stories)', () => {
+    expect(SCREEN_CHUNKS.filter((c) => c.name.startsWith('story-'))).toEqual([]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -203,8 +207,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
     // Row CM-34: Story Order's chunk, reached only through the step's literal import().
-    expect(read('src/screens/minigames/story-order/story-order-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
-    expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./story-order-chunk')");
+    expect(read('src/screens/minigames/story-order/order-game-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./order-game-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -269,7 +273,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
-      'story-order-chunk has no web bundle: the chunk is missing from the build',
+      'order-game-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

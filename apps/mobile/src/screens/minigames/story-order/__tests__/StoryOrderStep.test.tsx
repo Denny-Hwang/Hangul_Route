@@ -18,7 +18,7 @@ import { StoryOrderStep } from '../StoryOrderStep';
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 // The chunk's import fails while `chunk.fail` is set (offline before the service worker cached it).
 const chunk = vi.hoisted(() => ({ fail: false }));
-vi.mock('../story-order-chunk', async (importOriginal) => {
+vi.mock('../order-game-chunk', async (importOriginal) => {
   if (chunk.fail) throw new Error('offline');
   return importOriginal<object>();
 });
