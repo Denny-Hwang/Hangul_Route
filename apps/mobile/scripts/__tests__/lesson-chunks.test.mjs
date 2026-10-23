@@ -193,17 +193,34 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
-    expect(LEARNER_CHUNKS).toEqual([{ name: 'goals-chunk', marker: 'goals-chunk:goals' }]);
+    expect(LEARNER_CHUNKS[0]).toEqual({ name: 'goals-chunk', marker: 'goals-chunk:goals' });
     expect(read('src/screens/goals/goals-chunk.ts')).toContain(`export const GOALS_CHUNK = '${LEARNER_CHUNKS[0].marker}';`);
     // Reached only through the entry's literal import(): a static import would fold it back into the start bundle.
     expect(read('src/store/goals-entry.ts')).toContain("import('../screens/goals/goals-chunk')");
     const start = { url: START, text: 'var g=1;' };
     const text = `__d(function(){var m="${LEARNER_CHUNKS[0].marker}"})`;
     const goals = { url: `${WEB_JS_DIR}/goals-chunk-${md5(text)}.js`, text };
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
       `goals-chunk is in the start bundle ${START}: a static import pulled it in`,
       'goals-chunk has no web bundle: the chunk is missing from the build',
+    ]);
+  });
+
+  it('the mastery ring and banners are a learner chunk of their own (row CM-20), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[1]).toEqual({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' });
+    expect(read('src/screens/mastery/mastery-chunk.ts')).toContain(`export const MASTERY_CHUNK = '${LEARNER_CHUNKS[1].marker}';`);
+    // Reached only through the entry's literal import(), and sharing no module with the memory chunk.
+    expect(read('src/store/mastery-entry.ts')).toContain("import('../screens/mastery/mastery-chunk')");
+    expect(read('src/logic/memory/memory-chunk.ts')).not.toContain('screens/mastery');
+    const start = { url: START, text: 'var g=1;' };
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[1].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/mastery-chunk-${md5(text)}.js`, text };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[1]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[1]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+      `mastery-chunk is in the start bundle ${START}: a static import pulled it in`,
+      'mastery-chunk has no web bundle: the chunk is missing from the build',
     ]);
   });
 

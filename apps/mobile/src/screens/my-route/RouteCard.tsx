@@ -51,6 +51,11 @@ export interface RouteCardProps {
    * (owner decision 2026-10-17). The summary label still reads it. Absent reads as true.
    */
   showNext?: boolean;
+  /**
+   * The learner's Words known line (F-CURR-002 section 4.4, row CM-20), read in the summary after its other words;
+   * null or absent: not drawn (`mastery` off, a grown-up's read-only card, or no word known yet).
+   */
+  wordsKnown?: string | null;
   testID?: string;
 }
 
@@ -90,7 +95,7 @@ function Decorative({ children }: { children: React.ReactNode }): React.ReactEle
   );
 }
 
-export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, showNext = true, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
+export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, showNext = true, wordsKnown = null, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
   const { windowWidth } = useLayoutClass();
   // Below 360 the compact card (LR-11): Continue (or Start) stays above the tab bar at 320 x 568.
   const look = routeCardLook(windowWidth, cta !== null);
@@ -112,7 +117,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
         accessible
         focusable
         accessibilityRole="summary"
-        accessibilityLabel={copy.a11yLabel}
+        accessibilityLabel={wordsKnown === null ? copy.a11yLabel : `${copy.a11yLabel}${/[.!?]$/.test(copy.a11yLabel) ? '' : '.'} ${wordsKnown}.`}
         style={{ gap: spacing[look.gap] }}
         testID={`${testID}-summary`}
       >
@@ -165,6 +170,7 @@ export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusTok
           </View>
         ) : null}
         {copy.tasteLine !== null ? <Body>{copy.tasteLine}</Body> : null}
+        {wordsKnown !== null ? <Body testID={`${testID}-words-known`}>{wordsKnown}</Body> : null}
 
         {copy.showPips && where !== null && goalStage !== null && pips.length > 0 ? (
           <PipRow groups={[[...pips]]} context="stage" accent={colors.stage[goalStage]} bandsPerLine testID={`${testID}-pips`} />

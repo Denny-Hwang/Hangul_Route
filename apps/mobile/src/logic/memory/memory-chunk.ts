@@ -1,3 +1,4 @@
+import { mergeCellBest } from '@hangul-route/content-schema';
 import { lessonContent } from '../../content/lessons';
 import { reviewItemsChunk } from '../../content/review-items';
 import { flags } from '../../config/flags';
@@ -58,6 +59,16 @@ export function memoryRuntime(): MemoryRuntime {
         notifyProgressPersisted(profileId);
       }
       return useProgressStore.getState().byProfile[profileId]?.memSeededAt ?? null;
+    },
+    applyCellBest: (profileId, rises) => {
+      // Row CM-20: the derived levels latched on the hydrated snapshot, merged by max (a level never drops).
+      const progress = useProgressStore.getState();
+      const snap = progress.hydratedFor.has(profileId) ? progress.byProfile[profileId] : undefined;
+      if (!snap || !useProfileStore.getState().profiles.some((p) => p.id === profileId)) return null;
+      const cellBest = mergeCellBest(snap.cellBest, Object.fromEntries(rises.map((r) => [r.cellId, r.level]))) ?? {};
+      progress.replaceSnapshot(profileId, { ...snap, cellBest });
+      notifyProgressPersisted(profileId);
+      return useProgressStore.getState().byProfile[profileId]?.cellBest ?? cellBest;
     },
     recordVocab: (profileId, events, now) => useProgressStore.getState().recordVocab(profileId, events, now),
     serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,

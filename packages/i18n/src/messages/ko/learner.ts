@@ -1955,4 +1955,15 @@ export const learner = {
     saved: (name: string) => `${name}, 카드가 라이브러리에 있어요.`,
     savedNoCard: (name: string) => `${name}, 첫 퀘스트를 저장했어요.`,
   },
+  mastery: {
+    level: { done: '완료', practiced: '연습함', mastered: '익힘' },
+    readyToRefresh: '다시 볼 때예요',
+    newVolume: '새 묶음이 있어요',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  wordsKnown: {
+    pill: (count: number, shown: string = `${count}`) => `아는 낱말 ${shown}개`,
+    route: (count: string) => `내가 아는 낱말: ${count}개`,
+    milestone: (count: string) => `낱말 ${count}개! 호야가 정말 뿌듯해해요.`,
+  },
 } satisfies DeepPartial<Messages['learner']>;

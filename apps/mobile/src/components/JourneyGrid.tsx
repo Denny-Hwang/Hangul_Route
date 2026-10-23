@@ -1,4 +1,4 @@
-import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
+import type { CellLevel, Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -37,6 +37,7 @@ import {
 } from '../logic/journey-grid';
 import { journeyCellSize, journeyGridMaxWidth } from '../logic/layout/pane-sizes';
 import type { StoryIndexEntry } from '../logic/story/story-index';
+import type { MasteryRingProps } from '../screens/mastery/MasteryRing';
 
 /**
  * The Journey grid: theme column labels, then per stage its header row (number ring, title, one-liner,
@@ -64,6 +65,33 @@ const STAGE_RING = 32;
 const CELL = journeyCellMetrics({ spacing, borderWidth, typography });
 /** A cell's border (`border.focus` at `borderWidth.thick` when selected in two panes). */
 const CELL_EDGE = CELL.edge;
+
+/**
+ * One learner's mastery (F-CURR-002 section 4.4, row CM-20; `design/wireframes/journey/mastery-ring.md`), passed only
+ * while `mastery` is on for them (`store/mastery-entry.ts`): the ring from the mastery chunk, each cell's latched level
+ * (`cellBest`), the mastered cells with items due and the cells with a new volume. Omitted: no ring, today's cells.
+ */
+export interface JourneyMastery {
+  Ring: React.ComponentType<MasteryRingProps>;
+  levelOf: (episodeId: string) => CellLevel;
+  refresh: ReadonlySet<string>;
+  newVolume: ReadonlySet<string>;
+}
+
+/** The mastery words a cell's label reads after its other words (wireframe Accessibility): level, then the marks. */
+export function masteryWords(level: CellLevel, refresh: boolean, newVolume: boolean, m: { level: { done: string; practiced: string; mastered: string }; readyToRefresh: string; newVolume: string }): string[] {
+  const out: string[] = [];
+  if (level === 1) out.push(m.level.done);
+  else if (level === 2) out.push(m.level.practiced);
+  else if (level === 3) out.push(m.level.mastered);
+  // Ready to refresh only on a mastered cell; New volume only on a started one.
+  if (level === 3 && refresh) out.push(m.readyToRefresh);
+  if (level >= 1 && newVolume) out.push(m.newVolume);
+  return out;
+}
+
+const withWords = (label: string, words: readonly string[]): string =>
+  words.length === 0 ? label : `${label}${label.endsWith('.') ? '' : '.'} ${words.map((w) => `${w}.`).join(' ')}`;
 
 export interface JourneyGridProps {
   /** Stage definitions in the UI locale. */
@@ -98,6 +126,8 @@ export interface JourneyGridProps {
   onOpenStagePrize?: () => void;
   /** Opens the Hangul Check from a complete Stage 1's header (F-QUEST-002 §3.9); omitted: no button. */
   onOpenHangulCheck?: () => void;
+  /** One learner's mastery rings (row CM-20); omitted: none. */
+  mastery?: JourneyMastery;
 }
 
 export function JourneyGrid({
@@ -116,6 +146,7 @@ export function JourneyGrid({
   completeStages,
   onOpenStagePrize,
   onOpenHangulCheck,
+  mastery,
 }: JourneyGridProps): React.ReactElement {
   const messages = useMessages();
   const locale = useLocale();
@@ -185,7 +216,9 @@ export function JourneyGrid({
               learner screen (F-ROUTE-001 R-J, OD-8; section 3.3). A screen reader reads the title, the
               one-liner and the same availability word the pill shows. Plans live in the grown-up area.
             */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+            {/* While the rings are on, the sparkle (8 dp above a cell) and the marker (6 dp below) need room: a fixed rule,
+                never per cell, so rows never jump when a glow comes or goes (mastery-ring.md, No extra width). */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: mastery ? spacing.md : spacing.sm }}>
               <View
                 style={{
                   width: STAGE_RING,
@@ -239,19 +272,20 @@ export function JourneyGrid({
                   onOpenStories={onOpenStories}
                   // A closed cell's label names its episode in the UI locale (a11y.access.notOpen).
                   episodeTitle={cell.access.notOpen ? episodeTitleOf(cell.episodeId) : ''}
+                  mastery={mastery}
                 />
               ))}
             </View>
 
             {row.tasteNote ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: mastery ? spacing.sm : spacing.xs }}>
                 <Caption tone="muted">{m.tasteNote}</Caption>
               </View>
             ) : null}
             {row.cells.some((c) => c.model.kind === 'stories-only') ? (
               <View
                 testID={`journey-stories-note-${row.stage}`}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: mastery ? spacing.sm : spacing.xs }}
               >
                 <Icon name="library" size={MARK_SIZE} color={colors.text.muted} />
                 <View style={{ flex: 1 }}>
@@ -280,9 +314,10 @@ interface GridCellProps {
   onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
   /** The episode title in the UI locale, for a closed cell's label; empty otherwise. */
   episodeTitle: string;
+  mastery?: JourneyMastery;
 }
 
-function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, onOpenStories, episodeTitle }: GridCellProps): React.ReactElement {
+function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, onOpenStories, episodeTitle, mastery }: GridCellProps): React.ReactElement {
   const messages = useMessages();
   const { completed, placedOut, isStart } = cell.marks;
   const { next, inPlan, notOpen } = cell.access;
@@ -302,6 +337,14 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
     deepBand ? { placedOut: true, isStart: true } : { placedOut, isStart },
   );
   const countSlot = countMarkSlot(CELL, { placedOut, isStart });
+  // The mastery ring (row CM-20): a lesson cell at level 1 or more. Its 3 dp track is drawn over the cell's outer edge in
+  // place of the border (which keeps its width, in a transparent colour), inside the thickest border the cell layout
+  // reserves (`maxEdge`), so the cell keeps its width and height and the glyph its place.
+  const level: CellLevel = mastery && !isLater && !storiesOnly && episodeId !== null ? mastery.levelOf(episodeId) : 0;
+  const ringed = mastery !== undefined && level >= 1;
+  const refresh = ringed && level === 3 && episodeId !== null && mastery.refresh.has(episodeId);
+  const newVolume = ringed && episodeId !== null && mastery.newVolume.has(episodeId);
+  const edge = cell.selected ? borderWidth.thick : CELL_EDGE;
 
   const press = (): void => {
     if (disabled) return;
@@ -315,11 +358,9 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
       disabled={disabled}
       accessibilityRole="button"
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
-      accessibilityLabel={withAccessWords(
-        cellLabel(model, stage, theme, messages.a11y.journeyCell, labelMarksOf(cell)),
-        cell.access,
-        episodeTitle,
-        messages.a11y.access,
+      accessibilityLabel={withWords(
+        withAccessWords(cellLabel(model, stage, theme, messages.a11y.journeyCell, labelMarksOf(cell)), cell.access, episodeTitle, messages.a11y.access),
+        mastery ? masteryWords(level, refresh, newVolume, messages.learner.mastery) : [],
       )}
       testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
@@ -329,9 +370,12 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
         ...(cellWidth === null ? { aspectRatio: 1 } : { height: Math.max(cellWidth, cellLayout.minHeight) }),
         borderRadius: radii.md,
         backgroundColor: isLater ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
-        borderStyle: placedOut && !cell.selected ? 'dashed' : 'solid',
-        borderWidth: cell.selected ? borderWidth.thick : CELL_EDGE,
-        borderColor: cell.selected
+        // A placed-out cell keeps its dashed border only while it is level 0; from level 1 the track replaces it.
+        borderStyle: placedOut && !cell.selected && !ringed ? 'dashed' : 'solid',
+        borderWidth: edge,
+        borderColor: ringed
+          ? 'transparent'
+          : cell.selected
           ? colors.border.focus
           : isLater || storiesOnly
             ? colors.border.subtle
@@ -452,7 +496,19 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
       ) : null}
       {/* The Next triangle over the top edge, the top layer (E3-D D1: the pip rows' cursor, not the pin).
           Its tip is placed from the cell's outer edge, so the cell's own border comes off the offset. */}
-      {next ? <NextMarker edge={cell.selected ? borderWidth.thick : CELL_EDGE} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
+      {ringed && mastery ? (
+        <mastery.Ring
+          level={level as 1 | 2 | 3}
+          theme={cell.theme}
+          edge={edge}
+          refresh={refresh}
+          newVolume={newVolume}
+          selected={paneMode && cell.selected}
+          next={next}
+          testID={`journey-mastery-${cell.stage}-${cell.theme}`}
+        />
+      ) : null}
+      {next ? <NextMarker edge={edge} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
     </Pressable>
   );
 }

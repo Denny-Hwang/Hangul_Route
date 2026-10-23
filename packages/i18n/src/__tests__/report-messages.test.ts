@@ -639,13 +639,15 @@ describe('the mastery line names only the levels above 0 (F-CURR-002 CM-16: neve
   it('in every locale', () => {
     for (const locale of [...LOCALES, PSEUDO_LOCALE] as MessageLocale[]) {
       const d = getMessages(locale).report.detail;
-      // Until row CM-20 derives levels 2 and 3, only Done has a count.
+      // Each level has a part only when its count is above 0 (row CM-20 latches levels 2 and 3).
       expect(d.mastery(5, 0, 0), locale).not.toMatch(/\b0\b|,/);
       expect(d.mastery(0, 2, 0), locale).not.toMatch(/\b0\b|,/);
       expect(d.mastery(3, 0, 1).split(',').length, locale).toBe(2);
       expect(d.mastery(35, 12, 4).split(',').length, locale).toBe(3);
     }
     expect(en.report.detail.mastery(5, 0, 0)).toBe('Episodes: 5 done');
+    expect(en.report.detail.mastery(5, 2, 1)).toBe('Episodes: 5 done, 2 practiced, 1 mastered');
+    expect(en.report.detail.mastery(0, 0, 3)).toBe('Episodes: 3 mastered');
     expect(es.report.detail.mastery(1, 0, 2)).toBe('Episodios: 1 terminado, 2 dominados');
     expect(ko.report.detail.mastery(5, 2, 0)).toBe('에피소드: 완료 5개, 연습함 2개');
   });

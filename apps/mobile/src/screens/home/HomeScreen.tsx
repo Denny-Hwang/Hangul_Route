@@ -33,6 +33,7 @@ import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
+import { formatNumber } from '@hangul-route/i18n';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
@@ -111,6 +112,7 @@ import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
 import { missionDailyReviewOf, useDailyReviewHome } from './use-daily-review-home';
+import { useMastery } from '../../store/mastery-entry';
 import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
@@ -419,6 +421,8 @@ export function HomeScreen(): React.ReactElement {
   const homeworkDue = dueTodayCount(snap?.homework, today);
   // The Daily Review (F-CURR-002 row CM-14): slot 3 from 3 due items, first on a review-first day; off, today's slot 3.
   const dailyReview = useDailyReviewHome(profile?.id ?? null, localToday, snap?.reviews);
+  // Words known (F-CURR-002 section 4.4, row CM-20): the pill only while `mastery` is on and the learner records, from 1.
+  const wordsKnown = useMastery(profile?.id ?? null, snap, localToday)?.read?.wordsKnown ?? 0;
   const dailyReviewInput = missionDailyReviewOf(dailyReview);
   // The day's plan waits for the first read (at most DAILY_REVIEW_HOME_WAIT_MS), so a fresh pin never misses the card it should hold.
   const awaitReview = dailyReview.state === 'loading' && profile !== undefined && profile !== null && pinnedMission(profile.id, today) === null;
@@ -993,6 +997,7 @@ export function HomeScreen(): React.ReactElement {
         {/* The streak pill waits for the first day: never "Streak 0 days". Once the goals strip is drawn, the streak is its line;
             while its chunk loads or cannot load (offline before the precache), the pill stays. */}
         {!(goals && profile) && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
+        {wordsKnown >= 1 ? <Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown, formatNumber(locale, wordsKnown))} testID="home-words-known" /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>

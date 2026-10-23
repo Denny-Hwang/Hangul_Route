@@ -17,7 +17,7 @@ import {
   spacing,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import type { Messages } from '@hangul-route/i18n';
+import { formatNumber, type Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -71,6 +71,7 @@ import { passGate } from '../../store/gate-telemetry';
 import { CardUnlockBanner } from './CardUnlockBanner';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { recordActivityPointsLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
+import { useMasteryMoment } from '../../store/mastery-entry';
 import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
 import { samplerStoryOf } from '../home/free-end-inputs';
@@ -196,6 +197,22 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     return { ...view, episodeTitle: finished && localizeEpisode(finished, locale).titleEn };
   }, [outcome, locale, titles]);
 
+  // The mastery moments (F-CURR-002 section 4.4, row CM-20): once the score is written, one read latches what this run
+  // reached, a Words known milestone first and then one level up (this quest's own cell when it rose, else the highest).
+  const masteryMoment = useMasteryMoment(profile?.id ?? null, outcome !== null && played);
+  const levelUp = useMemo(() => {
+    const rises = masteryMoment?.read.rises ?? [];
+    const rise = rises.find((r) => r.cellId === episodeId) ?? [...rises].sort((a, b) => b.level - a.level)[0];
+    const cell = rise ? episodeById(rise.cellId) : undefined;
+    return rise && cell ? { title: localizeEpisode(cell, locale).titleEn, level: rise.level, theme: cell.theme } : null;
+  }, [masteryMoment, episodeId, locale, titles]);
+  const milestone = masteryMoment?.read.milestone ?? null;
+  const masteryWordsOf = messages.learner.mastery.level;
+  const masteryAnnouncement = [
+    milestone !== null ? messages.learner.wordsKnown.milestone(formatNumber(locale, milestone)) : null,
+    levelUp !== null ? messages.learner.mastery.levelUp(levelUp.title, levelUp.level === 3 ? masteryWordsOf.mastered : levelUp.level === 2 ? masteryWordsOf.practiced : masteryWordsOf.done) : null,
+  ];
+
   // Android/web read the live region below (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets one explicit announcement for both banners.
   const extrasAnnouncement = extras
@@ -208,6 +225,13 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (!announcement || Platform.OS !== 'ios' || tryAgain !== null) return;
     AccessibilityInfo.announceForAccessibility(announcement);
   }, [announcement, tryAgain]);
+  // The mastery lines land after the card lines (an async read), so iOS gets them in an announcement of their own and
+  // the card lines are never read twice. Android and the web read them in the live region below.
+  const masteryLines = masteryAnnouncement.filter((line): line is string => line !== null).join(' ');
+  useEffect(() => {
+    if (!masteryLines || Platform.OS !== 'ios' || tryAgain !== null) return;
+    AccessibilityInfo.announceForAccessibility(masteryLines);
+  }, [masteryLines, tryAgain]);
 
   // The one next (F-ENT-003 sections 3.5 and 3.8): due today, then the leading plan source, then the
   // default route, with this quest counted as done (`resultsTeaser` passes it as `justCompleted`), so Home,
@@ -458,6 +482,12 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           <>
             <Spacer size="lg" />
             <goals.GoalMomentBanner moment={goalMoment} />
+          </>
+        ) : null}
+        {masteryMoment && (milestone !== null || levelUp !== null) ? (
+          <>
+            <Spacer size="lg" />
+            <masteryMoment.ui.MasteryBanners milestone={milestone} levelUp={levelUp} reducedMotion={reducedMotion} />
           </>
         ) : null}
         {extras ? (

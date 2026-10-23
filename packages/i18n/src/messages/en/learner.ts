@@ -2648,4 +2648,28 @@ export const learner = {
     saved: (name: string) => `${name}, your card is in your Library.`,
     savedNoCard: (name: string) => `${name}, your first quest is saved.`,
   },
+  /**
+   * Mastery (F-CURR-002 section 4.4, row CM-20; design/wireframes/journey/mastery-ring.md). `level.*`: the three
+   * level words a Journey cell's ring stands for, read after the cell's other words in its label ("... Mastered.");
+   * level 0 says nothing. `readyToRefresh`: a mastered cell with items due (drawn as a glow, never as decay).
+   * `newVolume`: a later volume of the cell to open. `levelUp`: the Results banner, the cell's title and its new level
+   * word. Words and segments only, never a percentage (section 7.7).
+   */
+  mastery: {
+    level: { done: 'Done', practiced: 'Practiced', mastered: 'Mastered' },
+    readyToRefresh: 'Ready to refresh',
+    newVolume: 'New volume',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  /**
+   * Words known (section 4.4, row CM-20): Home's pill, drawn from 1 (never "0 words known"), the Learning Route card's
+   * line, and the banner on the Results of the activity that crossed a milestone (100, 250, 500, 1,000, 2,000). The
+   * screen passes the number formatted for the locale (`shown`, `count`: "1,200"); the pill also takes the plain count,
+   * which picks the plural form.
+   */
+  wordsKnown: {
+    pill: (count: number, shown: string = `${count}`) => plural('en', count, { one: '1 word known', other: `${shown} words known` }),
+    route: (count: string) => `Words you know: ${count}`,
+    milestone: (count: string) => `${count} words! Hoya is so proud of you.`,
+  },
 } as const;
