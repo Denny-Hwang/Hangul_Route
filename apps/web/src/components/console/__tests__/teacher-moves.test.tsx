@@ -153,6 +153,99 @@ describe('TeacherMoveSheet (screen 1)', () => {
     expect(a.previewClassMove).toHaveBeenCalledTimes(2);
     expect(byTestId('teacher-move-confirm')).toHaveLength(0);
   });
+
+  // Owner report 2026-10-23: a sheet closed while Move now was still under way never told the page, so class A kept
+  // listing a learner the server had already moved to B.
+  it('while Move now is under way the scrim, Escape and Close never close the sheet; the answer still reaches onDone once', async () => {
+    let answer: (r: ApiResult<OutgoingMove>) => void = () => undefined;
+    const a = api({ createClassMove: vi.fn(() => new Promise<ApiResult<OutgoingMove>>((resolve) => (answer = resolve))) });
+    const calls = await sheet(a);
+    await act(async () => one('teacher-move-own').findByType('input').props.onChange());
+    await click('teacher-move-continue');
+    await click('teacher-move-go');
+    expect(text(one('teacher-move-go'))).toBe(tm.moving.cta);
+    const scrim = root().find((n) => n.type === 'div' && n.props.className === 'hr-move-scrim');
+    const dialog = root().find((n) => n.type === 'div' && n.props.role === 'dialog');
+    const close = root().find((n) => n.type === 'button' && n.props['aria-label'] === en.transfer.a11y.close);
+    await act(async () => {
+      scrim.props.onClick();
+      dialog.props.onKeyDown({ key: 'Escape', stopPropagation: () => undefined, preventDefault: () => undefined, shiftKey: false });
+      close.props.onClick();
+    });
+    expect(calls.closed).toBe(0);
+    expect(byTestId('teacher-move-confirm')).toHaveLength(1);
+    await act(async () => answer(ok(outgoing())));
+    expect(text(one('teacher-move-done'))).toBe(tm.moved('Mina', 'Evening Class D'));
+    await click('teacher-move-finish');
+    expect(calls.done).toHaveLength(1);
+    expect(calls.closed).toBe(0);
+  });
+
+  it('before Move now (and after it answered) Close still closes the sheet', async () => {
+    const calls = await sheet(api());
+    const close = root().find((n) => n.type === 'button' && n.props['aria-label'] === en.transfer.a11y.close);
+    await act(async () => close.props.onClick());
+    expect(calls.closed).toBe(1);
+  });
+
+  it('already in the destination: one line says how to keep them in one class, and Remove asks the page to remove them here', async () => {
+    let removed = 0;
+    const a = api({ createClassMove: vi.fn(async () => fail('already_member')) });
+    await render(
+      <TeacherMoveSheet
+        spaceId="space:a"
+        learner={{ id: 'profile:mina', name: 'Mina' }}
+        api={a}
+        online
+        onClose={() => undefined}
+        onDone={() => undefined}
+        onPageState={() => undefined}
+        onRemoveHere={() => {
+          removed += 1;
+        }}
+      />,
+    );
+    await act(async () => one('teacher-move-own').findByType('input').props.onChange());
+    await click('teacher-move-continue');
+    await click('teacher-move-go');
+    expect(text(one('teacher-move-error'))).toBe(tm.errors.alreadyMemberKeepOne('Mina', 'Evening Class D'));
+    expect(text(one('teacher-move-remove-here'))).toBe(en.settings.learners.remove.class.cta);
+    await click('teacher-move-remove-here');
+    expect(removed).toBe(1);
+  });
+
+  it('already in the destination without a remove path: the plain line, no Remove button', async () => {
+    const a = api({ createClassMove: vi.fn(async () => fail('already_member')) });
+    await sheet(a);
+    await act(async () => one('teacher-move-own').findByType('input').props.onChange());
+    await click('teacher-move-continue');
+    await click('teacher-move-go');
+    expect(text(one('teacher-move-error'))).toBe(tm.errors.alreadyMember('Mina', 'Evening Class D'));
+    expect(byTestId('teacher-move-remove-here')).toHaveLength(0);
+  });
+
+  it('a move that went through tells other console tabs to read their rosters again', async () => {
+    const posted: unknown[] = [];
+    class FakeChannel {
+      constructor(readonly name: string) {}
+      postMessage(message: unknown): void {
+        posted.push([this.name, message]);
+      }
+      close(): void {}
+      addEventListener(): void {}
+      removeEventListener(): void {}
+    }
+    vi.stubGlobal('BroadcastChannel', FakeChannel);
+    try {
+      await sheet(api());
+      await act(async () => one('teacher-move-own').findByType('input').props.onChange());
+      await click('teacher-move-continue');
+      await click('teacher-move-go');
+      expect(posted).toEqual([['hr-roster', { type: 'roster-changed' }]]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe('TeacherMovesSection (screen 2)', () => {
@@ -177,6 +270,35 @@ describe('TeacherMovesSection (screen 2)', () => {
     await click('teacher-move-accept');
     expect(a.acceptClassMove).toHaveBeenCalledWith('space:b', 'move:2');
     expect(a.classMoves).toHaveBeenCalledTimes(2);
+  });
+
+  it('an accepted or cancelled ask tells other console tabs to read their rosters again; a refused one does not', async () => {
+    const posted: unknown[] = [];
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class {
+        constructor(readonly name: string) {}
+        postMessage(message: unknown): void {
+          posted.push([this.name, message]);
+        }
+        close(): void {}
+      },
+    );
+    try {
+      const a = api({ outgoing: [outgoing({ kind: 'accept', status: 'waiting', learner: { name: 'Jun', avatar: 'tiger' } })], incoming: [incoming()] });
+      await section(a);
+      await click('teacher-move-accept');
+      expect(posted).toEqual([['hr-roster', { type: 'roster-changed' }]]);
+      await click('teacher-move-cancel-ask');
+      expect(posted).toHaveLength(2);
+      act(() => renderer?.unmount());
+      const refused = api({ outgoing: [], incoming: [incoming()] }, { acceptClassMove: vi.fn(async () => fail('move_blocked', 409, { reason: 'cap_class' })) });
+      await section(refused);
+      await click('teacher-move-accept');
+      expect(posted).toHaveLength(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('no room: an amber line and Try again, the ask stays', async () => {

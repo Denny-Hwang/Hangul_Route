@@ -14,7 +14,9 @@ import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
 import { useNotesApi } from '@/components/console/use-notes-api';
-import type { MemberView, Roster, TransferOption } from '@/lib/console/api';
+import { useRosterChanges } from '@/components/console/use-roster-changes';
+import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
+import { unarchiveOverCap, type ApiResult, type MemberView, type Roster, type TransferOption } from '@/lib/console/api';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
 import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
@@ -22,7 +24,8 @@ import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/l
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { capState, familyCountLine, seatLine } from '@/lib/console/rollup';
 import { RenameStyles, SettingsNameRow, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
-import type { BillingSummary } from '@hangul-route/content-schema';
+import { LEARNER_CLASS_CAP, type BillingSummary } from '@hangul-route/content-schema';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
 import type { Messages } from '@hangul-route/i18n';
 
 type SettingsNote = keyof Messages['console']['settings']['notes'];
@@ -53,6 +56,11 @@ function SettingsInner(): JSX.Element {
   const [moveNote, setMoveNote] = useState<'sent' | 'locked' | 'signIn' | 'forbidden' | 'familyTooNew' | 'conflicted' | null>(null);
   // [TV] A teacher move's outcome line (TV-D7: moved now; TV-D8: sent to the other class).
   const [teacherMoveLine, setTeacherMoveLine] = useState<string | null>(null);
+  // Owner report 2026-10-23: a move the server could not find, read again: the learner already left this class (their
+  // name), or is still listed (`still`: the plain "did not work" line). Never the forbidden line while the class reads.
+  const [moveGone, setMoveGone] = useState<{ name: string } | 'still' | null>(null);
+  // An unarchive the class cap refused (`409 unarchive_over_cap`): how many learners, when the answer said.
+  const [overCap, setOverCap] = useState<{ learners: number | null } | null>(null);
   const movesShown = useTransfersShown();
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
@@ -64,34 +72,52 @@ function SettingsInner(): JSX.Element {
 
   // [SA] A read that began before a rename settled may hold the old name: the renamed name is laid over it (section 5.3).
   const names = useNameOverrides();
-  const load = useCallback(async (): Promise<void> => {
-    if (!api) return;
-    setError(null);
-    const read = names.begin();
-    const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
-    if (!r.ok) {
-      setError(loadErrorKey(r.error));
-      return;
-    }
-    // A space kind this bundle cannot word (a newer Worker) reads as a failed load, never a blank page.
-    if (!mem.ok || !isKnownSpaceKind(r.data.space.kind)) {
-      setError('cantReach');
-      return;
-    }
-    setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, read) } });
-    setMembers(mem.data);
-    if (r.data.space.kind === 'family' && movesShown) {
-      // The move options are extra: a failed read leaves them empty and never breaks the settings page.
-      const moves = await Promise.resolve()
-        .then(() => api.transferRequests(spaceId))
-        .catch(() => null);
-      setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
-    }
-  }, [api, spaceId, movesShown, names]);
+  // Which read may still draw (the roster page's pattern, owner report 2026-10-23): every read takes a new number, and a
+  // read that ends after a newer one started draws nothing, so an older list never puts back a learner who moved out.
+  const loadSeq = useRef(0);
+  // `quiet`: a read after the move sheet closes, or when the tab comes back into view. It keeps what is drawn while it
+  // reads, and one that cannot reach the Worker changes nothing; a removed teacher or a deleted space still shows.
+  // Answers the members it drew, or null when it drew nothing.
+  const load = useCallback(
+    async (quiet = false): Promise<MemberView[] | null> => {
+      if (!api) return null;
+      const call = ++loadSeq.current;
+      if (!quiet) setError(null);
+      const read = names.begin();
+      const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
+      if (call !== loadSeq.current) return null;
+      if (!r.ok) {
+        if (!quiet || r.error === 'forbidden' || r.error === 'not_found') setError(loadErrorKey(r.error));
+        return null;
+      }
+      // A space kind this bundle cannot word (a newer Worker) reads as a failed load, never a blank page.
+      if (!mem.ok || !isKnownSpaceKind(r.data.space.kind)) {
+        if (!quiet) setError('cantReach');
+        return null;
+      }
+      if (quiet) setError(null);
+      setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, read) } });
+      setMembers(mem.data);
+      if (r.data.space.kind === 'family' && movesShown) {
+        // The move options are extra: a failed read leaves them empty and never breaks the settings page.
+        const moves = await Promise.resolve()
+          .then(() => api.transferRequests(spaceId))
+          .catch(() => null);
+        if (call === loadSeq.current) setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+      }
+      return mem.data;
+    },
+    [api, spaceId, movesShown, names],
+  );
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // An open settings page never keeps a learner who moved to another class: it reads again when the tab comes back
+  // into view (no slow poll: a settings page is not a classroom screen) and when another console tab changed a roster.
+  useVisibleRefresh(() => void load(true), !!api && !error);
+  useRosterChanges(() => void load(true), !!api && !error);
 
   // [SA] The Name block (AMENDMENTS-SEATS-ADMINS section 5.3): the title and the Back label read the new name at once.
   const { announce, region: renameLive } = useAnnouncer();
@@ -114,14 +140,29 @@ function SettingsInner(): JSX.Element {
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
 
-  const run = async (action: () => Promise<{ ok: boolean }>, okNote: SettingsNote, failNote: SettingsNote): Promise<void> => {
-    if (!api) return;
+  const run = async (action: () => Promise<ApiResult<unknown>>, okNote: SettingsNote, failNote: SettingsNote): Promise<boolean> => {
+    if (!api) return false;
     setBusy(true);
     setNote(null);
+    setOverCap(null);
     const result = await action();
     setBusy(false);
-    setNote(result.ok ? okNote : failNote);
+    // An unarchive the class cap refused says why, not just "Didn't save." (owner report 2026-10-23).
+    const refused = unarchiveOverCap(result);
+    if (refused) setOverCap(refused);
+    else setNote(result.ok ? okNote : failNote);
     if (result.ok) await load();
+    return result.ok;
+  };
+
+  // The one remove flow for a learner of this space: the settings row and the move sheet's Remove here both use it.
+  const removeLearner = (member: MemberView, spaceName: string): void => {
+    if (!api) return;
+    void confirm({ title: s.learners.removeAsk(member.name, spaceName), confirmLabel: c.confirm.remove }).then(async (yes) => {
+      if (!yes) return;
+      // Who is in this class changed: an open roster in another console tab reads again at once.
+      if (await run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed')) announceRosterChange();
+    });
   };
 
   const space = roster?.space ?? null;
@@ -137,6 +178,8 @@ function SettingsInner(): JSX.Element {
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {teacherMoveLine ? <Notice tone="success">{teacherMoveLine}</Notice> : null}
+      {moveGone ? <Notice tone="info">{moveGone === 'still' ? c.teacherMove.errors.failed : s.learnerGone(moveGone.name)}</Notice> : null}
+      {overCap ? <Notice tone="nudge">{s.unarchiveOverCap(overCap.learners, LEARNER_CLASS_CAP)}</Notice> : null}
       {moveNote === 'locked' ? <Notice tone="nudge">{c.transfer.states.locked}</Notice> : null}
       {moveNote === 'forbidden' ? <Notice tone="nudge">{c.transfer.states.forbidden}</Notice> : null}
       {moveNote === 'signIn' ? <Notice tone="nudge">{c.start.signInAgain}</Notice> : null}
@@ -171,11 +214,7 @@ function SettingsInner(): JSX.Element {
                 if (yes) void run(() => api.removeMember(spaceId, 'account', member.memberId), 'removed', 'removeFailed');
               });
             }}
-            onRemoveLearner={(member) => {
-              void confirm({ title: s.learners.removeAsk(member.name, space.name), confirmLabel: c.confirm.remove }).then((yes) => {
-                if (yes) void run(() => api.removeMember(spaceId, 'learner', member.memberId), 'removed', 'removeFailed');
-              });
-            }}
+            onRemoveLearner={(member) => removeLearner(member, space.name)}
             onArchive={() => {
               if (archived) {
                 void run(() => api.archiveSpace(spaceId, false), 'unarchived', 'saveFailed');
@@ -203,6 +242,7 @@ function SettingsInner(): JSX.Element {
                     onMove: (member) => {
                       setMoveNote(null);
                       setTeacherMoveLine(null);
+                      setMoveGone(null);
                       setMoving(member);
                     },
                   }
@@ -227,17 +267,36 @@ function SettingsInner(): JSX.Element {
               learner={{ id: moving.memberId, name: moving.name }}
               api={api}
               online={online}
-              onClose={() => setMoving(null)}
+              // Every way out of the sheet reads the members again (owner report 2026-10-23): a move may have landed even
+              // when the sheet did not say so, and the list below must never keep a learner who left this class.
+              onClose={() => {
+                setMoving(null);
+                void load(true);
+              }}
               onDone={(move) => {
                 const name = moving.name;
                 setMoving(null);
                 setTeacherMoveLine(move.status === 'moved' ? c.teacherMove.moved(name, move.to.name) : c.teacherMove.sent(move.to.name));
-                // The learner left this class: the list below reads the new roster.
-                if (move.status === 'moved') void load();
+                void load(true);
               }}
               onPageState={(state) => {
+                const learner = moving;
                 setMoving(null);
-                setMoveNote(state);
+                void load(true).then((read) => {
+                  // A not-found move while this class still reads: the caller still manages it, so never the forbidden
+                  // line. Most often the learner already left (another tab, another teacher, the family).
+                  if (state === 'forbidden' && read) {
+                    const still = read.some((mb) => mb.memberKind === 'learner' && mb.memberId === learner.memberId);
+                    setMoveGone(still ? 'still' : { name: learner.name });
+                    return;
+                  }
+                  setMoveNote(state);
+                });
+              }}
+              onRemoveHere={() => {
+                const learner = moving;
+                setMoving(null);
+                removeLearner(learner, space.name);
               }}
             />
           ) : null}

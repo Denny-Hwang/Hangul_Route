@@ -46,8 +46,10 @@ interface Call {
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
 const json = (route: Route, status: number, data: unknown) => route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify(status < 300 ? { data } : { error: { code: 'mocked' } }) });
 
-async function mockConsole(page: Page, kind: 'class' | 'family', over: { incoming?: unknown[]; scopeNeeded?: boolean; report?: unknown } = {}): Promise<Call[]> {
+async function mockConsole(page: Page, kind: 'class' | 'family', over: { incoming?: unknown[]; scopeNeeded?: boolean; report?: unknown; moveGate?: Promise<void> } = {}): Promise<Call[]> {
   const calls: Call[] = [];
+  // With `moveGate`: the direct move answers only once the gate opens, and from then on class A no longer lists Mina.
+  let movedOut = false;
   const mine = kind === 'class' ? A : FAMILY;
   const role = kind === 'class' ? 'owner' : 'owner';
   let incoming = over.incoming ?? [];
@@ -68,12 +70,16 @@ async function mockConsole(page: Page, kind: 'class' | 'family', over: { incomin
       return json(route, 200, {
         members: [
           { memberKind: 'account', memberId: 'acct-e2e', role: 'owner', joinedAt: '2026-09-01T00:00:00.000Z', name: 'Ms Kim', isOwner: true },
-          { memberKind: 'learner', memberId: 'profile:mina', role: 'student', joinedAt: '2026-09-02T00:00:00.000Z', name: 'Mina', isOwner: false },
+          ...(movedOut ? [] : [{ memberKind: 'learner', memberId: 'profile:mina', role: 'student', joinedAt: '2026-09-02T00:00:00.000Z', name: 'Mina', isOwner: false }]),
         ],
       });
     }
     if (path.endsWith('/class-moves/destinations')) return json(route, 200, { destinations: [{ id: D.id, name: D.name }] });
     if (path.endsWith('/class-moves') && method === 'POST') {
+      if (over.moveGate) {
+        await over.moveGate;
+        movedOut = true;
+      }
       return json(route, 200, { move: { id: 'move:1', kind: 'direct', status: 'moved', to: { spaceId: D.id, name: D.name }, learner: null, createdAt: NOW, expiresAt: NOW, at: NOW } });
     }
     if (/\/class-moves\/[^/]+\/accept$/.test(path)) {
@@ -125,6 +131,34 @@ test.describe('a teacher moves a student between two classes they teach (TV-D7)'
     expect(create?.body).toEqual({ learnerId: 'profile:mina', destinationSpaceId: 'space:d' });
     // no name in any URL the console asked for
     for (const c of calls) expect(c.path).not.toMatch(/Mina/);
+  });
+
+  // Owner report 2026-10-23: a learner moved from A to B still showed in A. While Move now is under way the sheet
+  // cannot be closed, and once it answers, class A's settings read the members again and Mina's row is gone.
+  test('the sheet stays open while moving; after the move class A no longer lists the student', async ({ page }) => {
+    let open!: () => void;
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    const calls = await mockConsole(page, 'class', { moveGate: gate });
+    await page.goto('/teach/space/settings?id=space%3Aa');
+    const moveRow = page.getByRole('button', { name: en.console.transfer.a11y.moveRow('Mina') });
+    await moveRow.click();
+    const sheet = page.getByRole('dialog', { name: tm.sheetTitle('Mina') });
+    await sheet.getByRole('radio', { name: D.name }).check();
+    await sheet.getByRole('button', { name: tm.continue.cta }).click();
+    await sheet.getByRole('button', { name: tm.moveNow.cta }).click();
+    await expect(sheet.getByRole('button', { name: tm.moving.cta })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.mouse.click(4, 4);
+    await sheet.getByRole('button', { name: en.console.transfer.a11y.close }).click();
+    await expect(sheet).toBeVisible();
+    const before = calls.filter((c) => c.path.endsWith('/members')).length;
+    open();
+    await expect(sheet.getByText(tm.moved('Mina', D.name))).toBeVisible();
+    await sheet.getByRole('button', { name: tm.done.cta }).click();
+    await expect(sheet).toHaveCount(0);
+    await expect(moveRow).toHaveCount(0);
+    expect(calls.filter((c) => c.path.endsWith('/members')).length).toBeGreaterThan(before);
+    await page.screenshot({ path: 'test-results/class-moves-after-move.png' });
   });
 });
 

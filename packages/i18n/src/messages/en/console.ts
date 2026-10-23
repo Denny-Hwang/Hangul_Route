@@ -1330,6 +1330,19 @@ export const consoleMsgs = {
     backToConsole: { cta: 'Back to console' },
     /** [SA] section 6.6: under the read-only consent mode and privacy values a school administrator sees. */
     ownerOnly: "Only the school's owner can change these settings.",
+    /** A move the server could not find, and the members read again no longer list the learner (owner report 2026-10-23). */
+    learnerGone: (name: string) => `${name} is no longer in this class.`,
+    /**
+     * Unarchive refused (`409 unarchive_over_cap`): `n` learners of this class are already in `cap` other classes, so the
+     * class stays archived. `n` is null when the answer carried no count this build can read.
+     */
+    unarchiveOverCap: (n: number | null, cap: number) =>
+      n === null
+        ? `Some learners are already in ${cap} classes. Move or remove them before unarchiving.`
+        : plural('en', n, {
+            one: `${n} learner is already in ${cap} classes. Move or remove them before unarchiving.`,
+            other: `${n} learners are already in ${cap} classes. Move or remove them before unarchiving.`,
+          }),
   },
   /**
    * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
@@ -2049,6 +2062,8 @@ export const consoleMsgs = {
       full: (cls: string) => `${cls} is full right now.`,
       capLearner: (name: string) => `${name} is in as many classes as one learner can be.`,
       alreadyMember: (name: string, cls: string) => `${name} is already in ${cls}.`,
+      /** The same answer when the settings page offers Remove beside it (owner report 2026-10-23). */
+      alreadyMemberKeepOne: (name: string, cls: string) => `${name} is already in ${cls}. To keep them only in ${cls}, remove them from this class.`,
       alreadyOpen: (name: string) => `A move for ${name} is already waiting.`,
       sameSpace: (name: string) => `${name} is already in this class.`,
       codeRequired: 'Type the class code first.',
