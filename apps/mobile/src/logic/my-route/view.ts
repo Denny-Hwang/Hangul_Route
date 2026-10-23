@@ -299,6 +299,7 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'trace-word': 'traceWord',
   'write-frame': 'writeFrame',
   'order-it': 'sentenceBuilder',
+  'role-play': 'rolePlay',
 };
 
 /**

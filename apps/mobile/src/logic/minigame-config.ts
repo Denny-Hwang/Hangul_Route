@@ -6,6 +6,7 @@ import type {
   PicWordRound,
   Realia,
   RealiaReadRound,
+  RolePlayScene,
   StoryLevel,
   TraceWordRound,
   TypeHangulRound,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Role Play (F-CURR-002 row CM-35): one branching chat, filled by scripts/build-lessons.mjs. */
+  rolePlay?: { scene: RolePlayScene };
 }
 
 const J = (id: string): string => `jamo:${id}`;

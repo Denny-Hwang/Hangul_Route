@@ -15,6 +15,8 @@ import type { Rung } from './spacing';
 export interface AskedText {
   ko: string;
   kind?: ReviewItemKind;
+  /** An exchange's reply: of two `exc` items with the same line (two natural replies), the one with this reply. */
+  reply?: string;
 }
 
 export interface ResolvedRound {
@@ -61,8 +63,10 @@ export function buildLookup(items: readonly ReviewItem[], retired: ReadonlySet<s
 }
 
 /** The best of several items with the same Korean: one the round's own cell teaches or asks again, the kind it asks, an initial symbol before a final, then the id. */
-function pick(candidates: readonly ReviewItem[], cell: string, kind: ReviewItemKind | undefined): ReviewItem | undefined {
-  const score = (i: ReviewItem): number => (i.cells.includes(cell) || i.asked.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
+function pick(candidates: readonly ReviewItem[], cell: string, kind: ReviewItemKind | undefined, reply?: string): ReviewItem | undefined {
+  const replyFits = (i: ReviewItem): boolean => reply !== undefined && i.reply !== undefined && normalizeAskedKo(i.reply.ko) === normalizeAskedKo(reply);
+  const score = (i: ReviewItem): number =>
+    (replyFits(i) ? 8 : 0) + (i.cells.includes(cell) || i.asked.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
   let best: ReviewItem | undefined;
   for (const item of candidates) {
     if (best === undefined || score(item) > score(best) || (score(item) === score(best) && item.id < best.id)) best = item;
@@ -79,7 +83,7 @@ export function resolveItems(lookup: ItemLookup, cell: string, round: Pick<Resol
   for (const jamoId of round.jamoIds) add(lookup.byId.get(`sym:${jamoId.replace(/^jamo:/, '')}`));
   for (const text of round.texts) {
     const candidates = (lookup.byKo.get(normalizeAskedKo(text.ko)) ?? []).filter((i) => !lookup.retired.has(i.id));
-    add(pick(candidates, cell, text.kind));
+    add(pick(candidates, cell, text.kind, text.reply));
   }
   return out;
 }
@@ -93,7 +97,7 @@ const text = (value: { ko?: unknown } | undefined, kind?: ReviewItemKind): Asked
 
 /**
  * What a host game's round asked, read from its scope by the answered round's id (Listen & Pick,
- * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame). Trace a Word copies a
+ * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame, Role Play). Trace a Word copies a
  * word shown on screen, so it asks no item; an unknown kind or id asks nothing.
  */
 export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRound | undefined {
@@ -127,6 +131,15 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
     case 'write-frame': {
       const round = scope.writeFrame?.rounds.find((r) => r.id === itemId);
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
+    }
+    case 'role-play': {
+      // `<node>/<reply>` (row CM-35): the turn's exchange, its line with the natural reply it is about, at the read rung
+      // (section 4.3: read the line, pick the reply). The memory store credits the words inside it.
+      const [nodeId, replyId] = itemId.split('/');
+      const node = scope.rolePlay?.scene.nodes.find((n) => n.id === nodeId);
+      const reply = node && 'replies' in node ? node.replies.find((r) => r.id === replyId && r.kind === 'natural') : undefined;
+      const line = node && 'line' in node ? text(node.line, 'exc') : undefined;
+      return line && reply ? { texts: [{ ...line, reply: reply.text.ko }], jamoIds: [], rung: 'read' } : undefined;
     }
     default:
       return undefined;

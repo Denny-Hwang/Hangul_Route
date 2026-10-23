@@ -17,6 +17,7 @@ import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
 import type { TraceWordE2eParams } from './trace-word-e2e';
 import type { WriteFrameE2eParams } from './write-frame-e2e';
+import type { RolePlayE2eParams } from './role-play-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -338,6 +339,7 @@ export type RootStackParamList = {
   TraceWordE2e: TraceWordE2eParams;
   /** Fixture builds only (`navigation/write-frame-e2e.tsx`): Write Frame on fixture rounds (F-CURR-001 G-5). */
   WriteFrameE2e: WriteFrameE2eParams;
+  RolePlayE2e: RolePlayE2eParams;
   /**
    * [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): what a teacher sees and
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.
