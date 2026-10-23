@@ -57,21 +57,43 @@ async function spaceRef(db: Db, spaceId: string): Promise<MoveSpaceRef> {
 }
 
 /**
- * The destination of the latest executed move OUT of `sourceSpaceId` that still stands: the learner is still in that
- * destination and it is a live class. Null when there is none, and when a later executed move brought the learner
- * back INTO the source (what happened before that no longer stands). A learner who left the destination, or whose
- * destination was archived, may join the source again with its code.
+ * The class a move OUT of `sourceSpaceId` still holds the learner in: the latest executed move out of it whose line
+ * the learner is still on. The line follows later executed moves on from that destination (A -> B, then B -> C: the
+ * move out of A stands while the learner is in C), and it stands only while the class the learner ends in holds them
+ * and is a live class. Null when there is none, and when a later executed move brought the learner back INTO the
+ * source (what happened before that no longer stands). A learner who left that class, or whose class there was
+ * archived, may join the source again with its code.
  */
 export async function standingMoveOut(db: Db, learnerId: string, sourceSpaceId: string, now: Date): Promise<MoveSpaceRef | null> {
-  for (const edge of newestFirstFor(await executedEdges(db, learnerId, now), sourceSpaceId)) {
+  const edges = await executedEdges(db, learnerId, now);
+  for (const edge of newestFirstFor(edges, sourceSpaceId)) {
     if (edge.dest === sourceSpaceId) return null;
     if (edge.source !== sourceSpaceId) continue;
-    if (!(await db.membership(edge.dest, 'learner', learnerId))) continue;
-    const dest = await db.getSpace(edge.dest);
-    if (!dest || dest.kind !== 'class' || dest.archivedAt) continue;
-    return { spaceId: dest.id, name: dest.name };
+    const held = await classAtEndOfLine(db, learnerId, edge, edges);
+    if (held) return held;
   }
   return null;
+}
+
+/**
+ * Follows the learner from `first.dest` along later executed moves out of each class they left, and answers the live
+ * class at the end that still holds them, or null. Each edge is taken at most once, so a loop in the records ends.
+ */
+async function classAtEndOfLine(db: Db, learnerId: string, first: ExecutedEdge, edges: ExecutedEdge[]): Promise<MoveSpaceRef | null> {
+  const unused = new Set(edges);
+  unused.delete(first);
+  let at = first;
+  for (;;) {
+    if (await db.membership(at.dest, 'learner', learnerId)) {
+      const dest = await db.getSpace(at.dest);
+      return dest && dest.kind === 'class' && !dest.archivedAt ? { spaceId: dest.id, name: dest.name } : null;
+    }
+    const from = at;
+    const next = [...unused].filter((e) => e.source === from.dest && e.at >= from.at).sort((a, b) => a.at.localeCompare(b.at))[0];
+    if (!next) return null;
+    unused.delete(next);
+    at = next;
+  }
 }
 
 /**

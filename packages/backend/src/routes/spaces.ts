@@ -1,4 +1,5 @@
 import {
+  LEARNER_CLASS_CAP,
   SpaceCreateSchema,
   SpaceJoinSchema,
   SpaceLookupSchema,
@@ -21,7 +22,7 @@ import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-co
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
-import { learnersAtClassCap, lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
+import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
 import { standingMoveOut, waitingMoveInto } from '../lib/moves';
 import type { TransferEnv } from '../lib/transfer';
 import { recordServerEvent } from '../lib/server-events';
@@ -292,28 +293,26 @@ spacesRoutes.post('/:id/unarchive', async (c) => {
   if (!('id' in space)) return space;
   const account = await requireCan(c, db, space, 'space.archive');
   if (!('id' in account)) return account;
-  const wasArchivedAt = space.archivedAt;
-  // A class comes back with every membership it kept, so it must not take a learner past the class cap: a learner
-  // who joined 3 other classes while it was archived keeps them, and the class stays archived (nothing is dropped).
-  const overCap = (): Promise<number> => learnersAtClassCap(db, space.id);
-  if (space.kind === 'class' && wasArchivedAt) {
-    const learners = await overCap();
-    if (learners > 0) return fail(c, 'unarchive_over_cap', 'Some learners of this class are already in the most classes', 409, { learners });
+  if (space.kind === 'class' && space.archivedAt) {
+    // A class comes back with every membership it kept, so it must not take a learner past the class cap: a learner
+    // who joined 3 other classes while it was archived keeps them, and the class stays archived (nothing is dropped).
+    // One guarded statement whatever the class size: a join that committed before it is counted, and a join after it
+    // counts this class live and is refused by its own atomic cap. A refusal is then counted once; when that count
+    // finds no learner at the cap (one left in between, or the class came back meanwhile) the statement runs again.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if ((await db.unarchiveClassWithinCap(space.id, LEARNER_CLASS_CAP)) === 1) {
+        space.archivedAt = null;
+        return ok(c, { space: publicSpace(space) });
+      }
+      const fresh = await db.getSpace(space.id);
+      if (!fresh?.archivedAt) return ok(c, { space: publicSpace(fresh ?? { ...space, archivedAt: null }) });
+      const learners = await db.learnersAtClassCapOf(space.id, LEARNER_CLASS_CAP);
+      if (learners > 0) return fail(c, 'unarchive_over_cap', 'Some learners of this class are already in the most classes', 409, { learners });
+    }
+    return fail(c, 'conflict', 'The class changed meanwhile; try again', 409);
   }
   space.archivedAt = null;
   await db.putSpace(space);
-  if (space.kind === 'class' && wasArchivedAt) {
-    // Read again after the write: a join that committed while the class was still archived is seen now, and any join
-    // after the write counts this class live and is refused by its own atomic cap. Best effort: between the write and
-    // the rollback below the class is briefly live, and the rollback rewrites the whole row (a settings change landing
-    // in between is lost); two classes unarchived at once both roll back (the safe side).
-    const learners = await overCap();
-    if (learners > 0) {
-      space.archivedAt = wasArchivedAt;
-      await db.putSpace(space);
-      return fail(c, 'unarchive_over_cap', 'Some learners of this class are already in the most classes', 409, { learners });
-    }
-  }
   return ok(c, { space: publicSpace(space) });
 });
 
