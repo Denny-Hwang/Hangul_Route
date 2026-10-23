@@ -243,6 +243,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
         // Only the transition is news: once the classes and plans are gone, later 401s change nothing and the
         // one-off "Join your new class again." line stays dismissed.
         const held = (get().byLearner[learnerId] ?? (await readJson<LearnerMembership[]>(key(learnerId))) ?? []).length > 0 || (usePlanStore.getState().byLearner[learnerId] ?? []).length > 0;
+        // The reads above wait too: a join or a leave that wrote meanwhile is newer than this 401, so it stands.
+        if (gen[learnerId] !== seq) return offline();
         if (held) {
           put(learnerId, []);
           // Its class plans go with the classes: this device gets no other inbox to clear them.
@@ -340,7 +342,9 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
 
     // Owner report 2026-10-23: a teacher move the memberships of this answer do not show yet (read before the move).
     // Once per move in a session, so a learner who later left the class it moved to is not read twice every time.
-    const classMove = staleClassMove((inbox as Partial<Pick<SyncInbox, 'classMoves'>>).classMoves ?? [], rows);
+    // Marked only by a read that can still read again: a move first found stale during the one extra read (which a
+    // transfer started) keeps its own read for the next refresh.
+    const classMove = again ? null : staleClassMove((inbox as Partial<Pick<SyncInbox, 'classMoves'>>).classMoves ?? [], rows);
     const classMoveKey = classMove ? `${learnerId}|class-move-reread|${classMove.id}` : null;
     if (classMoveKey !== null && !get().executedSeen[classMoveKey]) {
       set((s) => ({ executedSeen: { ...s.executedSeen, [classMoveKey]: true } }));

@@ -39,13 +39,13 @@ export function staysInLine(learner: string, classes: readonly string[], m: Join
 }
 
 /**
- * A class tablet the move left without its class (the Worker refuses its old class-scoped credential, and `/join`
- * refuses a class-scoped device anyway) can only come back through the roster pick, which the teacher approves; so
- * "I'm new" is hidden there. `rejoin` is the store's `rejoinByLearner` value: true while the "Join your new class
- * again." line waits, false once shown, undefined when this session never saw it (then a tablet with no class left
- * counts too).
+ * A class tablet the move left without its class (the Worker refuses its old class-scoped credential) comes back
+ * through the roster pick, which the teacher approves; so "I'm new" is hidden there. `rejoin` is the store's
+ * `rejoinByLearner` value: true while the "Join your new class again." line waits, false once shown, undefined when
+ * this session never saw it. Hidden while the line waits, or while the tablet holds no class at all; a tablet that
+ * relinked and holds a class again keeps "I'm new" (the shown flag stays false for the session).
  */
 export function rosterPickOnly(i: { classDevice: boolean; kind: SpaceKind; rosterSize: number; rejoin: boolean | undefined; classRows: number }): boolean {
   if (!i.classDevice || i.kind !== 'class' || i.rosterSize === 0) return false;
-  return i.rejoin !== undefined || i.classRows === 0;
+  return i.rejoin === true || i.classRows === 0;
 }

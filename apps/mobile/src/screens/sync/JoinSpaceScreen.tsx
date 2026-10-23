@@ -185,13 +185,13 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
       navigation.navigate('WhoIsUsing', { trigger: 'join' });
       return;
     }
-    const rows = await batchRowsFor(result.space.kind);
+    const batchRows = await batchRowsFor(result.space.kind);
     setBusy(false);
     // [SA] The line comes from `seat.reason` (else the old `full`). At a class with a roster, a returning student can
     // still pick their name (relink takes no seat), so the roster stays and the line sits above "I'm new".
     // [OA] Who is joining? reads each learner's seat from its own `/join` (a member keeps its place), so the lookup's
     // line for the active learner does not stop the checklist (section 10.2).
-    const refusal = rows !== null ? null : lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
+    const refusal = batchRows !== null ? null : lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
     if (refusal !== null) {
       const line = joinErrorMessage(refusal.code, messages.caregiver, refusal.cap);
       if (result.space.kind !== 'class' || result.roster.length === 0) {
@@ -202,13 +202,13 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
       setPicking(true);
     }
     // Owner report 2026-10-23: the move line goes on the confirm step, in place of the Join for this learner.
-    if (rows === null && profile) setMoveLine(lookupMoveLine(result, profile.displayName, messages.caregiver)?.line ?? null);
+    if (batchRows === null && profile) setMoveLine(lookupMoveLine(result, profile.displayName, messages.caregiver)?.line ?? null);
     // A class tablet the move left without its class comes back through the roster pick only (the teacher approves).
     const classRows = (useMembershipStore.getState().byLearner[profile?.id ?? ''] ?? []).filter((r) => r.kind === 'class').length;
     if (rosterPickOnly({ classDevice, kind: result.space.kind, rosterSize: result.roster.length, rejoin, classRows })) setPicking(true);
     setFound(result.space);
     setRoster(result.roster);
-    setBatch(rows);
+    setBatch(batchRows);
   };
 
   // [OA] The launch's family hand-off code is looked up at once, so the checklist opens (OA-D20).

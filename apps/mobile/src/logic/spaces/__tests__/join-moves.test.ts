@@ -94,10 +94,16 @@ describe('rosterPickOnly', () => {
   const base = { classDevice: true, kind: 'class' as const, rosterSize: 2, rejoin: true, classRows: 0 };
   it('a class tablet a move left without its class picks from the roster only', () => {
     expect(rosterPickOnly(base)).toBe(true);
-    // Also once the "Join your new class again." line was shown (the flag is then false, still known), or after a
-    // restart (no flag) when the tablet holds no class at all.
+    // Also once the "Join your new class again." line was shown (the flag is then false) while the tablet still holds
+    // no class, or after a restart (no flag) when the tablet holds no class at all.
     expect(rosterPickOnly({ ...base, rejoin: false })).toBe(true);
     expect(rosterPickOnly({ ...base, rejoin: undefined })).toBe(true);
+    // The line still waits: the roster pick stays the only path even if a class row is cached.
+    expect(rosterPickOnly({ ...base, rejoin: true, classRows: 1 })).toBe(true);
+  });
+
+  it('a class tablet that relinked and holds a class again keeps "I\'m new" (the shown flag stays false)', () => {
+    expect(rosterPickOnly({ ...base, rejoin: false, classRows: 1 })).toBe(false);
   });
 
   it('every other case keeps "I\'m new"', () => {

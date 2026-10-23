@@ -22,6 +22,8 @@ vi.mock('../../config/flags', () => ({
 }));
 
 import { apiBaseUrl } from '../../platform/sync-api';
+import { readJson } from '../../platform/storage';
+import { TRANSFER_SCOPE_KEY, classScopeMarker } from '../../logic/transfers/device-scope';
 import { useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useTierStore } from '../tier-store';
@@ -154,6 +156,38 @@ describe('membership-store refresh: an overtaken inbox read is dropped (owner re
     expect(ids(useMembershipStore.getState().byLearner['profile:a'])).toEqual(['space:b']);
   });
 
+  it('a revoked class tablet: a join that lands while the 401 read is still checking the device is not wiped', async () => {
+    // The 401 branch reads the device scope after the answer; a join that lands in that window bumps the counter.
+    mem.set(TRANSFER_SCOPE_KEY('profile:a'), classScopeMarker('sec'));
+    useMembershipStore.setState({
+      byLearner: { 'profile:a': [rowA] },
+      transfersByLearner: { 'profile:a': { enabled: true, deviceConsent: false, selfManaged: false, scope: 'class', requests: [] } },
+    });
+    const gate = deferred<void>();
+    let gated = false;
+    vi.mocked(readJson).mockImplementation(async (k: string) => {
+      if (k === TRANSFER_SCOPE_KEY('profile:a') && !gated) {
+        gated = true;
+        await gate.promise;
+      }
+      return (mem.get(k) ?? null) as never;
+    });
+    try {
+      const getInbox = vi.fn().mockResolvedValueOnce({ status: 'error', code: 'http_401' }).mockResolvedValue(inbox([rowB]));
+      setSyncApiForTests(fakeApi({ getInbox }) as never);
+      const pending = useMembershipStore.getState().refresh('profile:a');
+      await vi.waitFor(() => expect(gated).toBe(true));
+      await useMembershipStore.getState().join('profile:a', 'space:b', 'K7M2X9');
+      expect(ids(useMembershipStore.getState().byLearner['profile:a'])).toEqual(['space:b']);
+      gate.resolve();
+      await pending;
+      expect(ids(useMembershipStore.getState().byLearner['profile:a'])).toEqual(['space:b']);
+      expect(useMembershipStore.getState().rejoinByLearner['profile:a']).toBeUndefined();
+    } finally {
+      vi.mocked(readJson).mockImplementation(async (k: string) => (mem.get(k) ?? null) as never);
+    }
+  });
+
   it('a read nothing overtook still applies as before', async () => {
     setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => inbox([rowA])) }) as never);
     expect(ids(await useMembershipStore.getState().refresh('profile:a'))).toEqual(['space:a']);
@@ -187,6 +221,25 @@ describe('membership-store refresh: a teacher move the memberships do not show y
     expect(getInbox).toHaveBeenCalledTimes(2);
     await useMembershipStore.getState().refresh('profile:a');
     expect(getInbox).toHaveBeenCalledTimes(3);
+  });
+
+  it('a move first seen stale during the extra read a transfer started gets its own read at the next refresh', async () => {
+    const t = { id: 'tr:1', status: 'executed', from: { spaceId: 'space:a', name: 'Class A' }, to: { spaceId: 'space:b', name: 'Class B' }, createdAt: 't', expiresAt: '2099-01-01T00:00:00.000Z' };
+    const toC = { id: 'move:c', to: { spaceId: 'space:c', name: 'Class C' }, from: { spaceId: 'space:b', name: 'Class B' }, executedAt: '2026-10-23T00:00:00.000Z' };
+    const rowC: LearnerMembership = { ...rowA, spaceId: 'space:c', name: 'Class C' };
+    const getInbox = vi
+      .fn()
+      // The transfer is stale here (still in A): one extra read, which shows B but not yet the teacher move to C.
+      .mockResolvedValueOnce(inbox([rowA], { transfers: [t] }))
+      .mockResolvedValueOnce(inbox([rowB], { transfers: [t], classMoves: [toC] }))
+      // The next refresh still sees the move to C stale: it gets its one read now.
+      .mockResolvedValueOnce(inbox([rowB], { transfers: [t], classMoves: [toC] }))
+      .mockResolvedValue(inbox([rowC], { transfers: [t], classMoves: [toC] }));
+    setSyncApiForTests(fakeApi({ getInbox }) as never);
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(getInbox).toHaveBeenCalledTimes(2);
+    expect(ids(await useMembershipStore.getState().refresh('profile:a'))).toEqual(['space:c']);
+    expect(getInbox).toHaveBeenCalledTimes(4);
   });
 
   it('memberships that already show the newest move: no extra read; an older move is not looked at', async () => {
