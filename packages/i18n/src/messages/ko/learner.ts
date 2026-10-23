@@ -2038,4 +2038,8 @@ export const learner = {
     extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
     passed: '단계를 건너뛰었어요!',
   },
+  cultureTip: {
+    title: '알고 있었나요?',
+    region: '레슨 노트',
+  },
 } satisfies DeepPartial<Messages['learner']>;

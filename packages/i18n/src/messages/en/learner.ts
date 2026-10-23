@@ -2782,4 +2782,13 @@ export const learner = {
     extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
     passed: 'You jumped ahead!',
   },
+  /**
+   * The Did you know? tip (F-CURR-002 §5.7, row CM-3C): one sourced note of the lesson cell at a quest's reward step and
+   * on the back of the cell's cards, behind `upperCards`. The note and its source line are content (the cell's
+   * `culture[]` and `cardDetail.citation`); `region` names the tip for screen readers (a landmark on the web).
+   */
+  cultureTip: {
+    title: 'Did you know?',
+    region: 'Lesson note',
+  },
 } as const;

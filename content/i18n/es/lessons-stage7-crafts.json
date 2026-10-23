@@ -5,7 +5,10 @@
     "episode:stage7-crafts": {
       "title": "Crea y comparte",
       "subtitle": "Escribe los pasos para hacer una manualidad de papel.",
-      "hoyaIntro": "¡Dobla, corta y dibuja conmigo, y luego escribe cómo lo hicimos!"
+      "hoyaIntro": "¡Dobla, corta y dibuja conmigo, y luego escribe cómo lo hicimos!",
+      "culture.n1.text": "{ko:종이접기} es doblar papel a mano para formar figuras como una grulla, un barco o un avión, con papel normal o de colores.",
+      "culture.n2.text": "{ko:한지} es el papel coreano hecho a mano de forma tradicional, sobre todo con la corteza de la morera de papel.",
+      "culture.n3.text": "La terminación {ko:고} une una acción con la siguiente en una sola oración; tras una palabra de acción puede mostrar un paso y luego el siguiente, como en {ko:접고 잘라요}."
     },
     "quest:stage7-crafts-q1": {
       "title": "Dobla, corta, dibuja",

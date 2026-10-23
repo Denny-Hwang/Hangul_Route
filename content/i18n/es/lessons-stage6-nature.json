@@ -5,7 +5,11 @@
     "episode:stage6-nature": {
       "title": "Caminar y preguntar",
       "subtitle": "Lee letreros del sendero y pregunta el camino y cuánto se tarda.",
-      "hoyaIntro": "La mayoría de los parques nacionales de Corea son de montaña. ¡Vamos a leer los letreros del sendero!"
+      "hoyaIntro": "La mayoría de los parques nacionales de Corea son de montaña. ¡Vamos a leer los letreros del sendero!",
+      "culture.n1.text": "Los parques nacionales de Corea son áreas protegidas que el Estado designa y cuida, para conservar su naturaleza y su paisaje y ofrecer al público un lugar de descanso. La mayoría son parques de montaña.",
+      "culture.n2.text": "Subir montañas es ir a la montaña para hacer ejercicio, divertirse o explorar. Desde los años sesenta se volvió un pasatiempo de la gente común en Corea, y hoy los parques nacionales cuentan muchos millones de visitas al año.",
+      "culture.n3.text": "La información de los senderos de los parques nacionales de Corea da la longitud de cada tramo y el tiempo que lleva de ida, y los parques fijan una hora de inicio para cada sendero según la distancia y el tiempo de marcha.",
+      "culture.n4.text": "Para pocas horas, el coreano cuenta con números nativos, y delante de la palabra hora toman las formas han, du, se (compara con hana, dul, set)."
     },
     "quest:stage6-nature-q1": {
       "title": "Letreros del sendero",

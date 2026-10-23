@@ -5,7 +5,12 @@
     "episode:stage7-nature": {
       "title": "Mi animal favorito",
       "subtitle": "Escribe sobre los animales que te gustan, con tus propias oraciones.",
-      "hoyaIntro": "Soy un tigre y me encantan los animales. ¡Vamos a escribir sobre ellos!"
+      "hoyaIntro": "Soy un tigre y me encantan los animales. ¡Vamos a escribir sobre ellos!",
+      "culture.n1.text": "Con {ko:좋아요}, lo que te gusta lleva {ko:이} tras consonante final o {ko:가} tras vocal: {ko:곰이 좋아요}, {ko:고양이가 좋아요}.",
+      "culture.n2.text": "{ko:은} tras consonante final y {ko:는} tras vocal marcan de qué trata la oración: {ko:곰은 커요}, {ko:호랑이는 커요}.",
+      "culture.n3.text": "La terminación {ko:이에요} va tras una palabra que acaba en consonante final, y {ko:예요} tras una que acaba en vocal: {ko:곰이에요}, {ko:토끼예요}.",
+      "culture.n4.text": "{ko:제가} es la palabra cortés para yo, {ko:저}, en la forma que toma delante de {ko:가}.",
+      "culture.n5.text": "En el cuento popular del hermano y la hermana que se convirtieron en el sol y la luna, un tigre detiene a su madre cuando vuelve a casa y le pide sus pasteles de arroz."
     },
     "quest:stage7-nature-q1": {
       "title": "Animales que me gustan",
