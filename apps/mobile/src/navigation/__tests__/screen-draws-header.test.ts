@@ -54,14 +54,22 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
  */
 const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/reviews/DailyReviewRoute.tsx#DailyReviewScreen': 'screens/reviews/DailyReviewScreen.tsx#DailyReviewScreen',
+  'screens/cell-check/cell-check-entry.tsx#CellCheckScreen': 'screens/cell-check/CellCheckScreen.tsx#CellCheckScreen',
+  // Row CM-22: the Stage Check's chunk.
+  'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
+  'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
+  'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
 };
 
 /**
  * Components a screen draws from a chunk it loads on demand, so no static import names them: the file the scan reads
- * each one in. The quest player's warm-up and Try these again sessions (F-CURR-002 row CM-15).
+ * each one in. The quest player's warm-up and Try these again sessions (F-CURR-002 row CM-15) and the scaffold round
+ * (row CM-24).
  */
 const LAZY_COMPONENTS: Readonly<Record<string, string>> = {
   QuestReviewSession: 'screens/quest/quest-review-chunk.tsx',
+  // The scaffold round of adaptive pacing (row CM-24): the pacing chunk's Listen & Pick round.
+  ScaffoldRound: 'screens/quest/quest-pacing-chunk.tsx',
 };
 
 /** Host components that only lay out what they hold: they pass when one of their children draws a `Screen`. */

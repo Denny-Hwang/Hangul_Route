@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../heritage-cards';
+import { withUpperBack } from '../upper-card-backs';
 
 /**
  * Heritage card copy has no age wording (CLAUDE.md section 1, owner decision D1, issue #589):
@@ -55,7 +56,8 @@ describe('heritage card copy has no age words (#589)', () => {
   });
 
   it('no hand-written English card title, blurb or fact carries an age word', () => {
-    const handWritten = heritageCardsAll.filter((c) => c.storyId === undefined && !c.unlockedBy.startsWith('set:'));
+    // The upper-cell cards' backs live in the upper-cards chunk (F-CURR-002 row CM-23): checked with their cards.
+    const handWritten = heritageCardsAll.filter((c) => c.storyId === undefined && !c.unlockedBy.startsWith('set:')).map(withUpperBack);
     expect(handWritten.map((c) => c.id)).toEqual(expect.arrayContaining(['card:book', 'card:seollal']));
     const entries = handWritten.flatMap((c): Array<[string, string | undefined]> => [
       [`${c.id} title`, c.titleEn],

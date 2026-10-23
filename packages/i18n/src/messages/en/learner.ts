@@ -501,6 +501,19 @@ export const learner = {
       /** The Next card row's name: "Next card" and how to earn it (the earn hint). */
       nextA11y: (hint: string) => `Next card. ${hint}`,
     },
+    /**
+     * The category albums (F-CURR-002 §7.2, row CM-23): one per theme, filled by the upper-cell cards of Stages 2 to 7.
+     * An album shows the cards held and how many (it only fills), never what is left (D3); one with none says New.
+     */
+    albums: {
+      title: 'Albums',
+      line: 'Each theme has an album. Finish a cell from Stage 2 on to add its card.',
+      names: { letters: 'Letters', life: 'Food', rites: 'Holidays', nature: 'Nature', crafts: 'Play' },
+      count: (n: number) => plural('en', n, { one: '1 card', other: `${n} cards` }),
+      fresh: 'New',
+      /** An album row's name: the album and its count, or that it is new. */
+      a11y: (name: string, status: string) => `${name} album: ${status}`,
+    },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
     earnHint: {
       /** `title` is the episode's title (content). */
@@ -591,6 +604,8 @@ export const learner = {
     episodePage: { cta: 'Episode page' },
     /** The one primary on the run that completed Stage 1: opens the ceremony (F-QUEST-002 §3.8). */
     stagePrize: { cta: 'See your Stage 1 prize' },
+    /** The run that finishes a Stage 2-7 (F-CURR-002 section 7.3, row CM-22): the one primary into its ceremony. */
+    upperStagePrize: { cta: (stage: number) => `See your Stage ${stage} prize` },
     /** The "Next up" teaser (F-QUEST-002 §3.5); the letters after `newLetters` are taught content. */
     nextUp: {
       title: 'Next up',
@@ -715,6 +730,12 @@ export const learner = {
         /** Screen-reader line as a line lights; `speaker` is the line's speaker name in the UI language. */
         lineLabel: (line: number, total: number, speaker: string) => `Line ${line} of ${total}, ${speaker}`,
       },
+      /** The compact page's line (F-CURR-002 section 4.6, row CM-24): two words on one card, each with its own Hear it. */
+      compactLine: 'Two on one card. Tap Hear it for each.',
+    },
+    /** Adaptive pacing (F-CURR-002 section 4.6, row CM-24): the scaffold round's line over the highlighted card. Never about speed. */
+    adapt: {
+      scaffoldHint: 'One more, with a hint. Hear it, then tap the highlighted card.',
     },
   },
 
@@ -2647,5 +2668,118 @@ export const learner = {
     },
     saved: (name: string) => `${name}, your card is in your Library.`,
     savedNoCard: (name: string) => `${name}, your first quest is saved.`,
+  },
+  /**
+   * Mastery (F-CURR-002 section 4.4, row CM-20; design/wireframes/journey/mastery-ring.md). `level.*`: the three
+   * level words a Journey cell's ring stands for, read after the cell's other words in its label ("... Mastered.");
+   * level 0 says nothing. `readyToRefresh`: a mastered cell with items due (drawn as a glow, never as decay).
+   * `newVolume`: a later volume of the cell to open. `levelUp`: the Results banner, the cell's title and its new level
+   * word. Words and segments only, never a percentage (section 7.7).
+   */
+  mastery: {
+    level: { done: 'Done', practiced: 'Practiced', mastered: 'Mastered' },
+    readyToRefresh: 'Ready to refresh',
+    newVolume: 'New volume',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  /**
+   * Words known (section 4.4, row CM-20): Home's pill, drawn from 1 (never "0 words known"), the Learning Route card's
+   * line, and the banner on the Results of the activity that crossed a milestone (100, 250, 500, 1,000, 2,000). The
+   * screen passes the number formatted for the locale (`shown`, `count`: "1,200"); the pill also takes the plain count,
+   * which picks the plural form.
+   */
+  wordsKnown: {
+    pill: (count: number, shown: string = `${count}`) => plural('en', count, { one: '1 word known', other: `${shown} words known` }),
+    route: (count: string) => `Words you know: ${count}`,
+    milestone: (count: string) => `${count} words! Hoya is so proud of you.`,
+  },
+  /**
+   * The Cell Check and its test-out (F-CURR-002 sections 4.4, 4.5 and 7.7, row CM-21; design/wireframes/reviews/
+   * cell-check.md). Stars only: never a percentage, an "n of m", a pass mark, a timer or "failed". The UI says
+   * "Cell Check"; "Test out" is the way in from an unstarted cell. Star headlines reuse `dailyReview.result.headline`,
+   * the stop sheet `stageReview.leave`, the intro buttons `stageReview.intro`, the test-out's next lesson
+   * `home.next.heading` and its first quest `episode.quests.start`. Read by the `review-copy` rule.
+   */
+  cellCheck: {
+    title: 'Cell Check',
+    body: 'About 3 minutes. Show what you know from this place. No timer.',
+    cta: 'Take the Cell Check',
+    done: 'Cell Check done',
+    again: 'Take it again',
+    tricky: 'Hoya will bring the tricky ones back in your reviews.',
+    kept: 'Your best result is kept. You can take the check again any time.',
+    toPlace: 'Back to this place',
+    toMap: 'Back to the map',
+    /** The mastery block's hint for the next level (journey/mastery-ring.md E): levels 1 and 2 only. */
+    hint: {
+      practiced: 'Keep reviewing to reach Practiced.',
+      check: 'Take the Cell Check to reach Mastered.',
+      mastered: 'Keep reviewing to reach Mastered.',
+    },
+  },
+  testOut: {
+    /** One quiet line under an unstarted cell's quests; it is the Test out button's description. */
+    prompt: 'Already know this?',
+    title: 'Test out',
+    intro: 'If it goes well, this place is marked Done and you can skip ahead. Every quest stays open to play.',
+    passed: 'You tested out!',
+    start: 'Good start!',
+    startBody: 'Start with the first quest. Hoya will help with the rest.',
+    /** On each quest of a tested-out cell, with 2 stars; every quest stays playable. */
+    pill: 'Tested out',
+    /** Row CM-22: under the header of a stage whose every cell is done or tested out, until the stage latches. */
+    stageHint: 'Play the quests you tested out of to finish this stage.',
+  },
+  /**
+   * The Stages 2-7 ceremony (F-CURR-002 section 7.3, row CM-22; design/wireframes/reviews/stage-check.md B). Its own
+   * namespace: `stageComplete` is the live Stage 1 ceremony and stays as it is. See my cards and Back home reuse
+   * `stageComplete.seeCards` / `.backHome`; the Journey header button reuses `journey.stagePrize`.
+   */
+  upperStageComplete: {
+    title: (stage: number) => `Stage ${stage} complete!`,
+    cheer: 'You finished every place in this stage. Hoya is so proud of you.',
+    cardTitle: 'Your stage card',
+  },
+  /**
+   * The Stage Check of Stages 2-7 (F-CURR-002 sections 4.5, 7.3 and 7.7, OD-1, row CM-22; design/wireframes/reviews/
+   * stage-check.md). Offered, never required; stars only, never a percentage, an "n of m", a score, a timer, "exam",
+   * "test", "pass", "fail" or a certificate. The stop sheet reuses `stageReview.leave`, the intro buttons and the
+   * romanization switch `stageReview.intro`, the pauses `stageReview.pause.second` / `.fourth` and `keepGoing`, the
+   * star headlines `dailyReview.result.headline`, the tricky line `cellCheck.tricky`. Read by the `review-copy` rule.
+   */
+  stageCheck: {
+    title: 'Stage Check',
+    offer: { cta: 'Take the Stage Check', body: 'About 7 minutes. You can skip it.' },
+    intro: 'About 7 minutes. Words, sounds and sentences from all five places. No timer. Take it again any time. Your best result is kept.',
+    /** The first pause between parts; the later ones reuse the Hangul Check's. */
+    pause: 'Lovely reading! Ready for more?',
+    best: 'Your best result is kept.',
+    notReady: 'This check is not open yet. Keep playing your quests.',
+    /** The one retroactive summary (section 4.8 step 7, panel G): every stage it lists, once. */
+    retro: {
+      title: (stages: readonly number[]) =>
+        stages.length === 1
+          ? `You finished Stage ${stages[0]} earlier`
+          : `You finished Stages ${stages.slice(0, -1).join(', ')} and ${stages[stages.length - 1]} earlier`,
+      body: 'Here are your stage cards.',
+      /** Before the stage cards ship (row CM-23), or with them switched off. */
+      bodyNoCards: 'Every stage you finished stays on your Journey.',
+    },
+  },
+  /**
+   * Stage Jump Ahead (F-CURR-002 row CM-25): the Test out rule over a whole stage, offered on the Journey stage header of
+   * the stage the route has reached, before it is started. The Check's star headlines, stop sheet, intro buttons and the
+   * not-passed result reuse `dailyReview`, `stageReview` and `testOut`. Stars only: never a percentage, an "n of m", a
+   * pass mark, a timer or "failed". Read by the `review-copy` rule.
+   */
+  stageJump: {
+    /** One quiet line under the stage's cells; it is the Jump ahead button's description. */
+    prompt: 'Already know this stage?',
+    cta: 'Jump ahead',
+    /** The button's label for screen readers: the stage's number and title. */
+    label: (stage: number, title: string) => `Jump ahead past Stage ${stage}: ${title}`,
+    intro: 'About 7 minutes. Show what you know from every place in this stage. No timer.',
+    extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
+    passed: 'You jumped ahead!',
   },
 } as const;

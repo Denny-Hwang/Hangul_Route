@@ -23,7 +23,7 @@ const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
   streakDays: 0,
   ...over,
 });
-const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks'] as const;
+const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks', 'stageCeremonyAt'] as const;
 const phone: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 2, 'life-s3': 1 },
   cellCheckAt: { 'letters-s2': '2026-10-20T09:00:00.000Z' },
@@ -36,6 +36,7 @@ const phone: Partial<ProgressSnapshot> = {
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
   steadyWeeks: { '2026-10-12': '2026-10-15T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-20T09:00:00.000Z' },
 };
 const tablet: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 1, 'nature-s2': 3 },
@@ -46,6 +47,7 @@ const tablet: Partial<ProgressSnapshot> = {
   streakBest: 6,
   memSeededAt: '2026-10-16T09:00:00.000Z',
   steadyWeeks: { '2026-10-12': '2026-10-16T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-21T09:00:00.000Z' },
 };
 
 describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
@@ -62,6 +64,8 @@ describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
     expect(m.stamps).toEqual(phone.stamps);
     expect(m.memSeededAt).toBe('2026-10-14T09:00:00.000Z');
     expect(m.steadyWeeks).toEqual({ '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' });
+    // Row CM-22: union of stages, the earliest time per stage.
+    expect(m.stageCeremonyAt).toEqual({ stage2: '2026-10-20T09:00:00.000Z', stage3: '2026-10-21T09:00:00.000Z' });
   });
 
   it('is commutative and idempotent on the new fields', () => {
@@ -174,6 +178,7 @@ describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () =>
       stamps: latch,
       memSeededAt: opt(instant),
       steadyWeeks: opt(fc.dictionary(fc.integer({ min: 0, max: 12 }).map((n) => new Date(Date.UTC(2026, 6, 6) + n * 7 * 86_400_000).toISOString().slice(0, 10)), instant)),
+      stageCeremonyAt: opt(fc.dictionary(fc.constantFrom('stage2', 'stage3', 'stage4', 'stage7'), instant)),
     })
     .map((fields) => ProgressSnapshotSchema.parse(JSON.parse(JSON.stringify(base(fields as Partial<ProgressSnapshot>)))) as ProgressSnapshot);
   const pick = (s: ProgressSnapshot) => Object.fromEntries(NEW_KEYS.filter((k) => s[k] !== undefined).map((k) => [k, s[k]]));
@@ -257,5 +262,55 @@ describe('mergeSnapshots: `daily` retention of 14 local days (section 4.8, row C
     const fresh = mergeSnapshots(base({ reviews: [dailyOn('2026-10-21', 0)] }), base({ reviews: [dailyOn('2026-09-01', 0)] }), { now: NOW });
     expect(fresh.reviews.map((r) => r.id)).toEqual(['daily:2026-10-21:0']);
     expect(mergeSnapshots(fresh, base({ reviews: [dailyOn('2026-09-01', 0)] }), { now: NOW }).reviews.map((r) => r.id)).toEqual(['daily:2026-10-21:0']);
+  });
+});
+
+describe('mergeSnapshots: the Cell Check entry, one per cell (row CM-21)', () => {
+  type Entry = ProgressSnapshot['reviews'][number];
+  const check = (cell: string, stars: 1 | 2 | 3, at: string, missed: string[] = []): Entry => ({
+    id: `cell-check:${cell}`,
+    kind: 'cell-check',
+    generatedAt: at,
+    scope: cell,
+    itemIds: ['lex:a', 'lex:b'],
+    resultStars: stars,
+    missedItemIds: missed,
+  });
+  const CELLS = Array.from({ length: 30 }, (_, i) => `episode:stage${(i % 6) + 2}-c${i}`);
+
+  it('two devices converge on the best stars, then the earliest time at that best, whichever side merges', () => {
+    const phone = base({ reviews: [check('episode:stage3-life', 3, '2026-10-21T09:00:00.000Z'), check('episode:stage3-crafts', 2, '2026-10-20T09:00:00.000Z', ['lex:a'])] });
+    const tablet = base({ reviews: [check('episode:stage3-life', 3, '2026-10-20T09:00:00.000Z'), check('episode:stage3-crafts', 3, '2026-10-21T09:00:00.000Z')] });
+    const a = mergeSnapshots(phone, tablet, { now: NOW }).reviews;
+    const b = mergeSnapshots(tablet, phone, { now: NOW }).reviews;
+    const byId = (list: readonly Entry[]) => Object.fromEntries(list.map((r) => [r.id, r]));
+    expect(byId(a)).toEqual(byId(b));
+    expect(byId(a)['cell-check:episode:stage3-life']?.generatedAt).toBe('2026-10-20T09:00:00.000Z');
+    expect(byId(a)['cell-check:episode:stage3-crafts']).toMatchObject({ resultStars: 3, generatedAt: '2026-10-21T09:00:00.000Z' });
+  });
+
+  it('many retakes on two devices across 30 cells keep 30 entries: the never-pruned kind does not grow with retakes', () => {
+    let phone = base();
+    let tablet = base();
+    for (let day = 1; day <= 60; day += 1) {
+      const at = new Date(Date.UTC(2026, 8, day, 9)).toISOString();
+      for (const [i, cell] of CELLS.entries()) {
+        const stars = (((day + i) % 3) + 1) as 1 | 2 | 3;
+        const side = day % 2 === 0 ? phone : tablet;
+        const kept = side.reviews.find((r) => r.id === `cell-check:${cell}`);
+        const next = check(cell, stars, at);
+        const reviews = kept ? side.reviews.map((r) => (r.id === next.id ? mergeSnapshots(base({ reviews: [r] }), base({ reviews: [next] }), { now: NOW }).reviews[0]! : r)) : [...side.reviews, next];
+        if (day % 2 === 0) phone = base({ reviews }); else tablet = base({ reviews });
+      }
+      if (day % 10 === 0) {
+        phone = mergeSnapshots(phone, tablet, { now: NOW });
+        tablet = mergeSnapshots(tablet, phone, { now: NOW });
+      }
+    }
+    const merged = mergeSnapshots(phone, tablet, { now: NOW });
+    expect(merged.reviews.filter((r) => r.kind === 'cell-check')).toHaveLength(CELLS.length);
+    expect(merged.reviews.every((r) => r.resultStars === 3)).toBe(true);
+    // Each entry is a few hundred bytes, so the kind stays a small, fixed part of the synced snapshot.
+    expect(JSON.stringify(merged.reviews).length).toBeLessThan(CELLS.length * 250);
   });
 });

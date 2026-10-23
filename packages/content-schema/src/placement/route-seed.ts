@@ -3,7 +3,7 @@ import type { StageKey, ThemeKey } from '../schemas/heritage-card';
 import { ThemeKeySchema } from '../schemas/heritage-card';
 import type { GateResult, Motivation, PlacementLevel, PlacementResult } from '../schemas/placement';
 import { placedOutGrowth, type CatalogHistory } from '../catalog/versions';
-import { inRouteOrder, placementLevelRank, placementStageNumber, type TagLookup } from './level-map';
+import { inRouteOrder, jumpLevelOf, jumpedStagesOf, placementLevelRank, placementStageNumber, type TagLookup } from './level-map';
 import { modeCeiling, modeOf } from './rungs';
 import { rowsPassed } from './scoring';
 
@@ -48,6 +48,11 @@ export interface RouteOptions {
   completedQuestIds: ReadonlySet<string>;
   /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
   catalogHistory?: CatalogHistory;
+  /**
+   * The snapshot's `testedOut` latches, read by `effectiveRoute` for Stage Jump Ahead (F-CURR-002 row CM-25): a jumped
+   * stage's key raises the level and places out the quests of the cells the jump marked. Omitted: no jump is read.
+   */
+  testedOut?: Readonly<Record<string, string>> | undefined;
 }
 
 const MAX_PRIORITY_TOKENS = 3;
@@ -150,6 +155,10 @@ export const seedRoute = (result: PlacementResult, catalog: RouteCatalog, opts: 
 const rank = placementLevelRank;
 const higher = (a: PlacementLevel, b: PlacementLevel): PlacementLevel => (rank(b) > rank(a) ? b : a);
 
+/** The grown-up override in force (F-PLC-001 section 3.9): the one on the newest result that carries one. */
+export const overrideInForce = (placements: readonly PlacementResult[]): PlacementResult['override'] =>
+  placements.reduce<PlacementResult | undefined>((top, r) => (r.override !== undefined && (top === undefined || r.completedAt >= top.completedAt) ? r : top), undefined)?.override;
+
 /**
  * The route in force, folded from every stored result in `completedAt` order.
  * The placed-out set is the union of all results (results never remove an id)
@@ -163,14 +172,16 @@ const higher = (a: PlacementLevel, b: PlacementLevel): PlacementLevel => (rank(b
  * A parent override
  * on the newest result that carries one places out every grid quest before the
  * chosen one and puts back the chosen one and all after it; later retakes cannot
- * re-place them. Returns null when there is no result.
+ * re-place them. A Stage Jump (`opts.testedOut`, row CM-25) is folded in by the maximum; the newer of a jump and the
+ * override wins for the placed-out set. Returns null when there is no result and no jump.
  */
 export const effectiveRoute = (
   placements: readonly PlacementResult[],
   catalog: RouteCatalog,
   opts: RouteOptions,
 ): RouteSeed | null => {
-  if (placements.length === 0) return null;
+  const jumped = jumpedStagesOf(opts.testedOut);
+  if (placements.length === 0 && jumped.length === 0) return null;
   const sorted = [...placements].sort((a, b) => (a.completedAt < b.completedAt ? -1 : a.completedAt > b.completedAt ? 1 : 0));
   const newestFirst = [...sorted].reverse();
 
@@ -183,17 +194,29 @@ export const effectiveRoute = (
     }
   }
 
-  const override = newestFirst.find((r) => r.override !== undefined)?.override;
-  if (override !== undefined) {
-    const grid = inRouteOrder(catalog).filter((quest) => quest.grid);
-    const chosen = grid.findIndex((quest) => quest.id === override.startQuestId);
-    if (chosen >= 0) {
-      grid.forEach((quest, index) => {
-        if (index < chosen) placedOut.add(quest.id);
-        else placedOut.delete(quest.id);
-      });
+  const override = overrideInForce(placements);
+  const grid = inRouteOrder(catalog).filter((quest) => quest.grid);
+  const chosen = override === undefined ? -1 : grid.findIndex((quest) => quest.id === override.startQuestId);
+  // Stage Jump Ahead (F-CURR-002 row CM-25, F-PLC-001 section 3.6 as amended): each jumped stage adds the grid quests of
+  // the cells it marked (a cell shipped later in that stage is not one). The newer of a jump and a grown-up override
+  // wins: a jump latched before the override in force is folded in before it, so the grown-up's put-back covers it; a
+  // jump latched after it is folded in after it, so it moves past the grown-up's chosen start.
+  const testedOut = opts.testedOut ?? {};
+  const cut = chosen >= 0 ? (override?.at ?? '') : '';
+  const foldJumps = (before: boolean): void => {
+    for (const quest of catalog.quests) {
+      const latched = testedOut[quest.stage];
+      if (quest.grid && latched !== undefined && testedOut[quest.episodeId] !== undefined && quest.stage !== 'stage1' && latched < cut === before) placedOut.add(quest.id);
     }
+  };
+  foldJumps(true);
+  if (chosen >= 0) {
+    grid.forEach((quest, index) => {
+      if (index < chosen) placedOut.add(quest.id);
+      else placedOut.delete(quest.id);
+    });
   }
+  foldJumps(false);
 
   let reached: PlacementLevel | null = null;
   let priorityTokens: readonly string[] = [];
@@ -201,6 +224,10 @@ export const effectiveRoute = (
     if (reached === null || rank(modeCeiling(modeOf(result))) > rank(reached)) priorityTokens = result.priorityTokens;
     reached = reached === null ? result.level : higher(reached, result.level);
   }
+
+  // Each jump's level is folded in by the maximum, as a result's is (an override moves the start, never the level). So a
+  // jump never lowers the route, a result never lowers a jump, and nothing but a jump goes above `stage3`.
+  for (const stage of jumped) reached = reached === null ? jumpLevelOf(stage) : higher(reached, jumpLevelOf(stage));
   const heard = sorted.map((r) => r.oralStage).filter((s): s is StageKey => s !== null);
   const oralStage = heard.length === 0 ? null : heard.reduce((a, b) => (placementStageNumber(b) > placementStageNumber(a) ? b : a));
 

@@ -11,6 +11,7 @@ import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
 import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-STORY-006 PR 6.9: the card award model end to end, on the release bundle (§5 test table, the
@@ -339,3 +340,214 @@ async function playRitesLastQuest(page: Page, questId: string, firstTime: boolea
   await playCheckByIds(page, [{ answer: 'jamo:yo' }, firstTime ? { answer: '\uD55C\uBCF5', missWith: '\uD55C\uAD6D' } : { answer: '\uD55C\uBCF5' }]);
   await page.getByRole('button', { name: 'See results' }).click();
 }
+
+/**
+ * F-CURR-002 §4.8 step 7, §7.2 and §12.2 (row CM-23 part 1): the upper-cell cards of Stages 2-3. A learner who
+ * finished Stages 2 and 3 before the row shipped gets the eight new cards once (the taste cells' cards they already
+ * hold stay), on the release build with `upperCards` turned on through the stored remote copy (built-in pct 0). The
+ * Library shows the five albums filling, an album card opens its page with the sourced fact, and with `upperCards` off
+ * nothing new arrives.
+ */
+const UPPER_AT = '2026-10-02T10:00:00.000Z';
+const upperCells = episodesAll.filter((e) => (e.stage === 'stage2' || e.stage === 'stage3') && (e.placement ?? 'grid') === 'grid' && e.questIds.length > 0);
+const NEW_UPPER = ['card:norae', 'card:bokjumeoni', 'card:swing', 'card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut'];
+const TASTE_HELD = ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak', 'card:haneul', 'card:kkot', 'card:namu', 'card:byeol', 'card:tiger'];
+
+async function upperLearner(
+  page: Page,
+  upperPct: number,
+  settings?: { uiLocale: 'en'; textSize: 'largest' },
+  cells = upperCells,
+  held = TASTE_HELD,
+): Promise<string> {
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  const quests = cells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+  const snap = record(profileId, quests, 2, held);
+  await seedStored(page, `progress:${profileId}`, {
+    ...snap,
+    quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
+    questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
+  });
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } });
+  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+  await page.reload();
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+  await closeInstallGuide(page);
+  return profileId;
+}
+
+test.describe('upper-cell cards and albums (F-CURR-002 row CM-23, release bundle)', () => {
+  test.skip(FIXTURE_BUILD, 'the release content: run on the release build');
+  test.use({ timezoneId: 'UTC' });
+
+  test('320: cells finished before the row shipped bring their eight cards once, dated by the first finishes; the albums fill', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 800 });
+    const profileId = await upperLearner(page, 100);
+
+    // Saved once: the eight new cards, each dated by its cell's first finishes; the cards held before untouched.
+    await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => NEW_UPPER.includes(c.cardId)).length).toBe(NEW_UPPER.length);
+    const saved = await storedCards(page, profileId);
+    for (const id of NEW_UPPER) expect(saved.find((c) => c.cardId === id)?.unlockedAt, id).toBe(UPPER_AT);
+    for (const id of TASTE_HELD) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+    // Home names the batch once, as a catch-up, with no count of what is left.
+    const card = catchUp(page);
+    await expect(card).toBeVisible();
+    expect(await card.innerText()).not.toMatch(FRACTION);
+
+    // The Library: the albums, each filling with the cards held, a count and never "n of m".
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    await expect(albums.getByText('Albums', { exact: true })).toBeVisible();
+    for (const theme of ['letters', 'life', 'rites', 'nature', 'crafts']) {
+      await expect(page.getByTestId(`library-album-${theme}-status`), theme).toHaveText('2 cards');
+    }
+    expect(await albums.innerText()).not.toMatch(FRACTION);
+    expect(await albums.innerText()).not.toMatch(EMOJI);
+    await expect(page.getByTestId('library-album-card-card:sagwa')).toHaveCount(0);
+    await shot(page, 'upper-cards-albums-320');
+
+    // An album card opens its page: the drawing, the Korean word, and the fact with its source line.
+    await page.getByTestId('library-album-card-card:hangeul').click();
+    await expect(page.getByText(/King Sejong created 28 letters in 1443/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('한글', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    await expect(shown(page, 'card-detail-citation').first()).toContainText('National Institute of Korean Language');
+    await shot(page, 'upper-cards-card-320');
+
+    // A second launch adds nothing: one entry per card.
+    await page.goto('/');
+    await expect(page.getByText('Today with Hoya')).toBeVisible();
+    const again = await storedCards(page, profileId);
+    expect(new Set(again.map((c) => c.cardId)).size).toBe(again.length);
+    expect(again.filter((c) => NEW_UPPER.includes(c.cardId))).toHaveLength(NEW_UPPER.length);
+    expect(errors).toEqual([]);
+  });
+
+  test('wide: the albums beside the card pane', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100);
+    await openLibraryCards(page);
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-letters-status')).toHaveText('2 cards');
+    await shot(page, 'upper-cards-albums-wide');
+  });
+
+  test('wide: with a theme filter on, an album card of another theme opens in the pane (the filter clears)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100);
+    await openLibraryCards(page);
+    await page.getByRole('button', { name: 'Letters', exact: true }).first().click();
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await page.getByTestId('library-album-card-card:gom').click();
+    await expect(page.getByText(/The bandalgaseumgom is a black bear/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('곰', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  });
+
+  test('320 at the Largest text size: the album rows wrap and fit, with no sideways scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await upperLearner(page, 100, { uiLocale: 'en', textSize: 'largest' });
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-letters-status')).toHaveText('2 cards');
+    await expectTextFits(page, 'the Library albums at Largest');
+    const box = await albums.boundingBox();
+    expect(box && box.x >= 0 && box.x + box.width <= 320).toBe(true);
+  });
+
+  test('upperCards off: no new card arrives, no album is drawn, and the shipped taste cards stay', async ({ page }) => {
+    const profileId = await upperLearner(page, 0);
+    await openLibraryCards(page);
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    // A settled state first: the held taste cards are drawn (progress read), then past the launch reconcile and the
+    // remote copy's read, so an award that comes late would be caught.
+    await expect(libraryTile(page, 'card:dosirak', false).or(libraryTile(page, 'card:dosirak', true)).first()).toBeVisible();
+    await page.waitForTimeout(2000);
+    await expect(page.getByTestId('library-albums')).toHaveCount(0);
+    await expect(page.getByTestId('library-album-card-card:norae')).toHaveCount(0);
+    const saved = await storedCards(page, profileId);
+    expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
+    for (const id of TASTE_HELD) expect(saved.some((c) => c.cardId === id), id).toBe(true);
+  });
+});
+
+/**
+ * F-CURR-002 §4.8 step 7 and §7.2 (row CM-23 part 2): Stage 4's cards. A learner who finished Stages 2-4 before this
+ * build, holding the cards of parts 1 and the shipped ones, gets the four new Stage 4 cards once; Greeting Dialogues
+ * keeps its four shipped cards and its album card is `card:insa`, so every album shows three cards.
+ */
+const s4Cells = episodesAll.filter((e) => ['stage2', 'stage3', 'stage4'].includes(e.stage) && (e.placement ?? 'grid') === 'grid' && e.questIds.length > 0);
+const NEW_S4 = ['card:mwoyeyo', 'card:masisseoyo', 'card:biga-wayo', 'card:gachi'];
+const S4_HELD = [...TASTE_HELD, ...NEW_UPPER, 'card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+
+test.describe('Stage 4 upper-cell cards (F-CURR-002 row CM-23 part 2, release bundle)', () => {
+  test.skip(FIXTURE_BUILD, 'the release content: run on the release build');
+  test.use({ timezoneId: 'UTC' });
+
+  test('320: Stage 4 cells finished earlier bring their four cards once; each album holds three; a talk card opens with its fact', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 800 });
+    const profileId = await upperLearner(page, 100, undefined, s4Cells, S4_HELD);
+
+    await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => NEW_S4.includes(c.cardId)).length).toBe(NEW_S4.length);
+    const saved = await storedCards(page, profileId);
+    for (const id of NEW_S4) expect(saved.find((c) => c.cardId === id)?.unlockedAt, id).toBe(UPPER_AT);
+    for (const id of S4_HELD) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    for (const theme of ['letters', 'life', 'rites', 'nature', 'crafts']) {
+      await expect(page.getByTestId(`library-album-${theme}-status`), theme).toHaveText('3 cards');
+    }
+    await expect(page.getByTestId('library-album-card-card:insa')).toHaveCount(1);
+    await expect(page.getByTestId('library-album-card-card:annyeong')).toHaveCount(0);
+    expect(await albums.innerText()).not.toMatch(FRACTION);
+    await shot(page, 'upper-cards-s4-albums-320');
+
+    await page.getByTestId('library-album-card-card:mwoyeyo').click();
+    await expect(page.getByText(/ige for igeosi/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('이게 뭐예요?', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    await expect(shown(page, 'card-detail-citation').first()).toContainText('National Institute of Korean Language');
+    await shot(page, 'upper-cards-s4-card-320');
+
+    await page.goto('/');
+    await expect(page.getByText('Today with Hoya')).toBeVisible();
+    const again = await storedCards(page, profileId);
+    expect(new Set(again.map((c) => c.cardId)).size).toBe(again.length);
+    expect(errors).toEqual([]);
+  });
+
+  test('wide: the albums with Stage 4', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100, undefined, s4Cells, S4_HELD);
+    await openLibraryCards(page);
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-crafts-status')).toHaveText('3 cards');
+    await shot(page, 'upper-cards-s4-albums-wide');
+  });
+
+  test('upperCards off: Greeting Dialogues still awards its four shipped cards; no Stage 4 card arrives, no album is drawn', async ({ page }) => {
+    // Seeded without the rites cards: the launch reconcile has to award them with the switch off, which is the point
+    // that proves it ran before the checks that nothing else arrived.
+    const RITES = ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'];
+    const profileId = await upperLearner(page, 0, undefined, s4Cells, TASTE_HELD);
+    await expect
+      .poll(async () => (await storedCards(page, profileId)).filter((c) => RITES.includes(c.cardId)).map((c) => c.cardId).sort())
+      .toEqual([...RITES].sort());
+    await openLibraryCards(page);
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    await expect(libraryTile(page, 'card:insa', false).or(libraryTile(page, 'card:insa', true)).first()).toBeVisible();
+    await expect(page.getByTestId('library-albums')).toHaveCount(0);
+    const saved = await storedCards(page, profileId);
+    expect(saved.filter((c) => NEW_S4.includes(c.cardId))).toEqual([]);
+    expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
+    for (const id of [...TASTE_HELD, ...RITES]) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+  });
+});

@@ -61,6 +61,11 @@ export const HeritageCardSchema = z
     setId: z.string().regex(/^set:[a-z0-9-]+$/).optional(),
     /** Resolves into the story's `facts[]`; `factEn` is that fact's claim, verbatim. */
     factId: z.string().optional(),
+    /**
+     * The source line under the back-face fact. A story card's comes with its `factId` (F-STORY-006 §3.2); an
+     * upper-cell card (F-CURR-002 §7.2, row CM-23) cites the first allowlisted entry of its `sources[]`, which the
+     * app keeps out of the bundle (`content/upper-cell-card-sources.ts`, held by the `culture-source` card check).
+     */
     citation: CardCitationSchema.optional(),
   })
   .refine(
@@ -71,10 +76,10 @@ export const HeritageCardSchema = z
     if (card.factId !== undefined && card.citation === undefined) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['citation'], message: 'factId requires citation (F-STORY-006 §3.2)' });
     }
-    if (card.citation !== undefined && card.factId === undefined) {
+    if (card.citation !== undefined && card.factId === undefined && card.storyId !== undefined) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['factId'], message: 'citation requires factId (F-STORY-006 §3.2)' });
     }
-    if ((card.factId !== undefined || card.citation !== undefined) && card.storyId === undefined) {
+    if (card.factId !== undefined && card.storyId === undefined) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['storyId'], message: 'factId and citation appear only on a story card (F-STORY-006 §3.2)' });
     }
   });

@@ -140,6 +140,12 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'packCheck',
   // The Home goals strip, sheet and goal moments (row CM-17): no percentage, no "n of m" (section 7.4).
   'goals',
+  // The Stages 2-7 ceremony that leads into the Stage Check (row CM-22).
+  'upperStageComplete',
+  // The Library, whose category albums count the cards held (row CM-23): only fills, never "n of m" or a percentage.
+  'library',
+  // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
+  'stageJump',
 ];
 
 export interface ReviewStringFinding {

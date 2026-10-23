@@ -428,6 +428,38 @@ function lintCultureSource(entry: LessonEntry, tree: ReadonlyMap<string, unknown
   });
 }
 
+/** A card's back-face sources, as the card check reads them (F-CURR-002 §7.2, row CM-23). */
+export interface CardSources {
+  cardId: string;
+  sources: readonly LessonBodySource[];
+}
+
+/**
+ * `culture-source` on the back-face facts of the upper-cell cards (F-CURR-002 §5.1, §6.6, §7.2, row CM-23): each card
+ * names at least one source from the §6.6 allowlist, on a host the institution runs, under the name the institution
+ * had on the source's access date. Always errors: every such card is new.
+ */
+export function lintCardSources(cards: readonly CardSources[], file: string): CurriculumFinding[] {
+  const out: CurriculumFinding[] = [];
+  const add = (path: string, message: string): void => {
+    out.push({ rule: 'culture-source', severity: 'error', file, path, message });
+  };
+  for (const { cardId, sources } of cards) {
+    const matches = sources.map((s) => allowlistedInstitution(s.publisher, s.accessed, s.url));
+    if (!matches.some((m) => m !== undefined)) {
+      add(`${cardId}.sources`, 'no source is from the F-CURR-002 §6.6 allowlist of public institutions, on a host the institution runs');
+    }
+    matches.forEach((m, si) => {
+      if (m === undefined || m.nameAsOfAccess) return;
+      const s = sources[si] as LessonBodySource;
+      const { formerly } = m.institution;
+      const expected = formerly !== undefined && s.accessed < formerly.until ? formerly : m.institution;
+      add(`${cardId}.sources[${si}].publisher`, `on ${s.accessed} the institution was called the ${expected.name} (${expected.ko})`);
+    });
+  }
+  return out;
+}
+
 /** Spellings of the taught items, by pronunciation key. */
 type Homophones = Map<string, Set<string>>;
 

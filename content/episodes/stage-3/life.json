@@ -8,7 +8,7 @@
   "hoyaIntroEn": "Eat, drink, go and come: let's build little sentences about a day!",
   "order": 2,
   "pillarTags": [],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:tteok"],
   "quests": [
     {
       "id": "quest:stage3-life-q1",

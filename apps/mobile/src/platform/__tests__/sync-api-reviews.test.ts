@@ -83,7 +83,7 @@ describe('platform/sync-api reads review kinds per entry', () => {
     expect(got.status === 'ok' && got.snapshot.streakBest).toBe(7);
   });
 
-  it('declares the review kinds it reads (`?cap=warmup`) on the snapshot read and write and the Rescue Code claim (F-CURR-002 section 13, row CM-15)', async () => {
+  it('declares the review kinds it reads (`?cap=warmup,cell-check`) on the snapshot read and write and the Rescue Code claim (F-CURR-002 section 13, rows CM-15 and CM-21)', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: { rev: 3, snapshot: fromServer, summary: null } }))
@@ -94,9 +94,9 @@ describe('platform/sync-api reads review kinds per entry', () => {
     await api.putSnapshot('profile:a', { baseRev: 3, snapshot: fromServer as unknown as ProgressSnapshot, summary: {} as never }, creds);
     await api.claimRescueCode('TIGER-MOON-4821', 'device-x');
     expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
-      'https://api.example.com/api/sync/learners/profile%3Aa/snapshot?cap=warmup',
-      'https://api.example.com/api/sync/learners/profile%3Aa/snapshot?cap=warmup',
-      'https://api.example.com/api/recovery/claim?cap=warmup',
+      'https://api.example.com/api/sync/learners/profile%3Aa/snapshot?cap=warmup,cell-check',
+      'https://api.example.com/api/sync/learners/profile%3Aa/snapshot?cap=warmup,cell-check',
+      'https://api.example.com/api/recovery/claim?cap=warmup,cell-check',
     ]);
   });
 });

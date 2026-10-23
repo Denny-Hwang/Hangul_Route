@@ -23,6 +23,8 @@
     "./icon-glyphs/dom": "./src/components/Icon/dom.tsx",
     "./pip-geometry": "./src/components/PipRow/geometry.ts",
     "./heritage-card-ids": "./src/components/HeritageCardArt/card-ids.ts",
+    "./upper-card-ids": "./src/components/HeritageCardArt/upper-card-ids.ts",
+    "./src/components/HeritageCardArt/UpperCellArt": "./src/components/HeritageCardArt/UpperCellArt.tsx",
     "./hangul-keyboard-layout": "./src/components/HangulKeyboard/layout.ts",
     "./components/*": "./src/components/*/index.ts"
   },

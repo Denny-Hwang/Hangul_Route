@@ -347,6 +347,14 @@ export const learner = {
       a11y: (title: string) => `${title}: tarjetas por encontrar`,
       nextA11y: (hint: string) => `Siguiente tarjeta. ${hint}`,
     },
+    albums: {
+      title: 'Álbumes',
+      line: 'Cada tema tiene un álbum. Termina una casilla a partir de la Etapa 2 para añadir su tarjeta.',
+      names: { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos' },
+      count: (n: number) => plural('es', n, { one: '1 tarjeta', other: `${n} tarjetas` }),
+      fresh: 'Nuevo',
+      a11y: (name: string, status: string) => `Álbum ${name}: ${status}`,
+    },
     earnHint: {
       episode: (title: string) => `Termina el episodio: ${title}`,
       story: (title: string) => `Termina la historia: ${title}`,
@@ -415,6 +423,7 @@ export const learner = {
     backHome: { cta: 'Ir al inicio' },
     episodePage: { cta: 'Ver episodio' },
     stagePrize: { cta: 'Ver tu premio de la Etapa 1' },
+    upperStagePrize: { cta: (stage: number) => `Ver tu premio de la Etapa ${stage}` },
     nextUp: {
       title: 'Ahora sigue',
       next: { cta: 'Siguiente misión' },
@@ -514,6 +523,10 @@ export const learner = {
         readingNow: { pill: 'Leyendo ahora' },
         lineLabel: (line: number, total: number, speaker: string) => `Línea ${line} de ${total}, ${speaker}`,
       },
+      compactLine: 'Dos en una tarjeta. Toca Escuchar en cada una.',
+    },
+    adapt: {
+      scaffoldHint: 'Una más, con una pista. Escucha y toca la tarjeta resaltada.',
     },
   },
 
@@ -2021,5 +2034,73 @@ export const learner = {
     },
     saved: (name: string) => `${name}, tu tarjeta ya está en la colección.`,
     savedNoCard: (name: string) => `${name}, tu primera misión está guardada.`,
+  },
+  mastery: {
+    level: { done: 'Terminado', practiced: 'Practicado', mastered: 'Dominado' },
+    readyToRefresh: 'Listo para repasar',
+    newVolume: 'Nuevo volumen',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  wordsKnown: {
+    pill: (count: number, shown: string = `${count}`) => plural('es', count, { one: '1 palabra conocida', other: `${shown} palabras conocidas` }),
+    route: (count: string) => `Palabras que conoces: ${count}`,
+    milestone: (count: string) => `¡${count} palabras! Hoya está muy orgulloso de ti.`,
+  },
+  cellCheck: {
+    title: 'Repaso a fondo',
+    body: 'Unos 3 minutos. Muestra lo que sabes de este lugar. Sin reloj.',
+    cta: 'Hacer el repaso a fondo',
+    done: 'Repaso a fondo hecho',
+    again: 'Hacerlo otra vez',
+    tricky: 'Hoya volverá a traer a tus repasos las que más te costaron.',
+    kept: 'Se guarda tu mejor resultado. Puedes hacer el repaso otra vez cuando quieras.',
+    toPlace: 'Volver a este lugar',
+    toMap: 'Volver al mapa',
+    hint: {
+      practiced: 'Sigue repasando para llegar a Practicado.',
+      check: 'Haz el repaso a fondo para llegar a Dominado.',
+      mastered: 'Sigue repasando para llegar a Dominado.',
+    },
+  },
+  testOut: {
+    prompt: '¿Ya sabes esto?',
+    title: 'Avanzar ya',
+    intro: 'Si sale bien, este lugar queda como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
+    passed: '¡Ya puedes avanzar!',
+    start: '¡Buen comienzo!',
+    startBody: 'Empieza con la primera misión. Hoya te ayuda con lo demás.',
+    pill: 'Ya lo sabes',
+    stageHint: 'Juega las misiones que te saltaste para terminar esta etapa.',
+  },
+  /** The Stages 2-7 ceremony (row CM-22). "Etapa N", as the Stage 1 prize says. */
+  upperStageComplete: {
+    title: (stage: number) => `¡Etapa ${stage} completa!`,
+    cheer: 'Terminaste todos los lugares de esta etapa. Hoya está muy orgulloso de ti.',
+    cardTitle: 'Tu tarjeta de etapa',
+  },
+  /** The Stage Check (row CM-22): "Repaso de etapa", beside "Repaso de hangul" and "Repaso a fondo"; never "examen" or "prueba". */
+  stageCheck: {
+    title: 'Repaso de etapa',
+    offer: { cta: 'Hacer el repaso de etapa', body: 'Unos 7 minutos. Puedes saltarlo.' },
+    intro: 'Unos 7 minutos. Palabras, sonidos y frases de los cinco lugares. Sin reloj. Hazlo otra vez cuando quieras. Se guarda tu mejor resultado.',
+    pause: '¡Qué bien lees! ¿Seguimos?',
+    best: 'Se guarda tu mejor resultado.',
+    notReady: 'Este repaso aún no está abierto. Sigue jugando tus misiones.',
+    retro: {
+      title: (stages: readonly number[]) =>
+        stages.length === 1
+          ? `Ya terminaste la Etapa ${stages[0]}`
+          : `Ya terminaste las Etapas ${stages.slice(0, -1).join(', ')} y ${stages[stages.length - 1]}`,
+      body: 'Aquí están tus tarjetas de etapa.',
+      bodyNoCards: 'Cada etapa que terminaste queda en tu Recorrido.',
+    },
+  },
+  stageJump: {
+    prompt: '¿Ya conoces esta etapa?',
+    cta: 'Adelantar etapa',
+    label: (stage: number, title: string) => `Adelantar etapa: Etapa ${stage}, ${title}`,
+    intro: 'Unos 7 minutos. Muestra lo que sabes de todos los lugares de esta etapa. Sin reloj.',
+    extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
+    passed: '¡Adelantaste la etapa!',
   },
 } satisfies DeepPartial<Messages['learner']>;

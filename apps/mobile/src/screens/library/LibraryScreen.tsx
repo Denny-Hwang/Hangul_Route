@@ -27,11 +27,11 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
-import { awardWorld } from '../../content/award-world';
+import { awardWorld, awardWorldFor } from '../../content/award-world';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { libraryShelves } from '../../logic/library/shelves';
@@ -55,6 +55,8 @@ import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
+import { AlbumsSlot } from './upper-cards-entry';
 import { CardDetailView } from './CardDetailView';
 import { CultureSection } from './CultureSection';
 import { StoryShelf } from './StoryShelf';
@@ -72,7 +74,7 @@ const ROW_CELL: ViewStyle = { flex: 1 };
 /** The section body the tabs control (`role="tabpanel"`). */
 const SECTION_PANEL_ID = 'library-section-panel';
 
-export function LibraryScreen(): React.ReactElement {
+export function LibraryScreen(): ReactElement {
   const messages = useMessages();
   const m = messages.learner.library;
   const locale = useLocale();
@@ -109,7 +111,7 @@ export function LibraryScreen(): React.ReactElement {
     setTabFocus(true);
     setSection(id);
   };
-  const panel = (body: React.ReactNode): React.ReactNode =>
+  const panel = (body: ReactNode): ReactNode =>
     tabsShown ? (
       <View role="tabpanel" id={SECTION_PANEL_ID} aria-labelledby={sectionTabId(SECTION_PANEL_ID, active)}>
         {body}
@@ -139,7 +141,9 @@ export function LibraryScreen(): React.ReactElement {
   const newIds = useMemo(() => new Set((snap?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId)), [snap]);
 
   // Only cards the learner holds or can still earn (F-STORY-006 §3.7): a card no rule can award is never a lock.
-  const listed = useMemo(() => obtainableCards(awardWorld, unlockedIds), [unlockedIds]);
+  // F-CURR-002 row CM-23: an upper-cell card is listed while `upperCards` is on, or once it is held.
+  const upperCards = useCurrFlag('upperCards');
+  const listed = useMemo(() => obtainableCards(awardWorldFor(upperCards, unlockedIds), unlockedIds), [upperCards, unlockedIds]);
   const collected = listed.filter((c) => unlockedIds.has(c.id)).length;
   const explainer = libraryExplainer(awardWorld, listed, m.how);
   // Earn hints name episodes in the UI language.
@@ -194,11 +198,14 @@ export function LibraryScreen(): React.ReactElement {
   const openCard = (card: HeritageCard): void => {
     // Opening an owned card clears its New pill (wireframe library/earn-hints).
     if (unlockedIds.has(card.id) && profile) markCardsSeen(profile.id, [card.id]);
-    if (paneMode) setSelected(card.id);
-    else navigation.navigate('CardDetail', { cardId: card.id });
+    if (paneMode) {
+      // An album card of another theme than the filter's (the albums are not filtered): show every card, so the pane can hold it.
+      if (filter !== 'all' && card.theme !== filter) setFilter('all');
+      setSelected(card.id);
+    } else navigation.navigate('CardDetail', { cardId: card.id });
   };
 
-  const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => {
+  const thumb = (card: HeritageCard, cellStyle: ViewStyle): ReactElement => {
     const unlocked = unlockedIds.has(card.id);
     return (
       <CardThumb
@@ -217,7 +224,7 @@ export function LibraryScreen(): React.ReactElement {
   };
 
   /** A grid of cards: two to a row on a phone, rows of `columns` equal cells elsewhere (the last row padded). */
-  const cardGrid = (cards: readonly HeritageCard[], testID: string, measure = false): React.ReactElement =>
+  const cardGrid = (cards: readonly HeritageCard[], testID: string, measure = false): ReactElement =>
     phoneGallery ? (
       <View testID={testID} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
         {cards.map((card) => thumb(card, PHONE_CELL))}
@@ -267,6 +274,9 @@ export function LibraryScreen(): React.ReactElement {
               {m.yours.empty}
             </Body>
           )}
+
+          {/* The category albums (F-CURR-002 §7.2, row CM-23): a chunk of their own, drawn while `upperCards` is on. */}
+          <AlbumsSlot on={upperCards} owned={unlockedIds} onOpenCard={openCard} />
 
           {shelves.toFind.length > 0 ? (
             <View testID="library-to-find">
@@ -327,12 +337,12 @@ export function LibraryScreen(): React.ReactElement {
             <Heading level="prompt">{m.how.title}</Heading>
             {/* One line per award rule this build can fire, so the explainer never promises more. */}
             {explainer.map((line) => (
-              <React.Fragment key={line}>
+              <Fragment key={line}>
                 <Spacer size="xs" />
                 <Body tone="secondary" size="sm">
                   {line}
                 </Body>
-              </React.Fragment>
+              </Fragment>
             ))}
           </Card>
           <Spacer size="xl" />
@@ -383,7 +393,7 @@ export function LibraryScreen(): React.ReactElement {
   );
 }
 
-function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }): React.ReactElement {
+function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }): ReactElement {
   return (
     <Pressable
       onPress={onPress}
@@ -427,7 +437,7 @@ function CardThumb({
   /** Two panes only: the card shown in the detail pane (focus border, `aria-selected`). */
   selected?: boolean;
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
@@ -484,7 +494,7 @@ function CardThumb({
  * A card still to find: the card's outline, dashed, with the card glyph faint inside (owner request 2026-10-16,
  * item 8). Decorative; the caller's label says what it is.
  */
-function CardSilhouette({ size }: { size: number }): React.ReactElement {
+function CardSilhouette({ size }: { size: number }): ReactElement {
   return (
     <View
       aria-hidden
@@ -508,7 +518,7 @@ function CardSilhouette({ size }: { size: number }): React.ReactElement {
 }
 
 /** The one Next card hint of the Cards to find shelf: a silhouette, "Next card" and how to earn it. */
-function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint: string; a11yLabel: string; onPress: () => void }): React.ReactElement {
+function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint: string; a11yLabel: string; onPress: () => void }): ReactElement {
   return (
     <Pressable
       testID="library-next-card"

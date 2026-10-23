@@ -10,3 +10,7 @@
 export const DAILY_REVIEW_CHUNK = 'review-chunk:daily';
 
 export { DailyReviewScreen } from './DailyReviewScreen';
+// Row CM-21: the Cell Check's screen (a chunk of its own) draws the same rounds, top row and headline, reached at run
+// time through `dailyReviewChunk()` of the route, so no module sits in two chunks.
+export { DisplayHeadline, TopRow } from './DailyReviewScreen';
+export { RoundView } from './ReviewRounds';

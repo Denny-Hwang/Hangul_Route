@@ -124,9 +124,10 @@ export function withKnownReviews<T extends { reviews: unknown }>(snapshot: T): T
  * gated kind declares the capability of the same name (`?cap=warmup` on its snapshot read, its snapshot write and
  * its Rescue Code claim); the Worker serves these entries only to a caller that declares them and keeps the stored
  * ones when a caller that does not re-uploads (`packages/backend/src/lib/review-kinds.ts`), and a backup file never
- * holds one, as any build may restore a file. Row CM-21 appends `cell-check`.
+ * holds one, as any build may restore a file. Row CM-21 appends `cell-check` (the Cell Check and its test-out, Worker
+ * first): its best result also lives in the snapshot's `cellCheckAt` and `testedOut` latches, which every build keeps.
  */
-export const GATED_REVIEW_KINDS = ['warmup'] as const satisfies readonly ReviewKind[];
+export const GATED_REVIEW_KINDS = ['warmup', 'cell-check'] as const satisfies readonly ReviewKind[];
 
 /** The reviews a reader may receive: without the gated kinds it does not declare. The list itself when nothing drops. */
 export function reviewsForReader<T extends { kind: unknown }>(reviews: readonly T[], caps: ReadonlySet<string>): readonly T[] {
@@ -378,7 +379,7 @@ export const ProgressSnapshotSchema = z.object({
   cellCheckAt: LatchRecordSchema,
   /** Stage key -> first Stage Check; earliest wins. */
   stageCheckAt: LatchRecordSchema,
-  /** Cell id -> first test-out; earliest wins. */
+  /** Cell id -> first test-out; earliest wins. A Stage Jump (row CM-25) also latches its stage key ('stage4'). */
   testedOut: LatchRecordSchema,
   /** Daily and weekly goals; the later `setAt` wins. */
   goals: GoalsSchema,
@@ -394,6 +395,12 @@ export const ProgressSnapshotSchema = z.object({
   memSeededAt: IsoInstantSchema.optional().catch(undefined),
   /** Week Monday -> when that week reached its weekly goal; union of keys, earliest per key (row CM-17). */
   steadyWeeks: SteadyWeeksSchema,
+  /**
+   * Stage key -> when its ceremony was offered (Results on the run that finished it) or when the one retroactive
+   * summary listed it (row CM-22, sections 4.8 step 7 and 7.3). Union of keys, earliest per key, so no stage is summed
+   * up twice on any device or after a restore.
+   */
+  stageCeremonyAt: LatchRecordSchema,
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
@@ -420,6 +427,7 @@ export const CURR_002_SNAPSHOT_KEYS = [
   'stamps',
   'memSeededAt',
   'steadyWeeks',
+  'stageCeremonyAt',
 ] as const;
 
 /**

@@ -1,7 +1,10 @@
-# F-CARD-S2-001 — Stage 2 Card Illustrations (deferred)
+# F-CARD-S2-001 — Stage 2 Card Illustrations
 
-**Status**: `draft` — implementation **deferred** until Stage 2 content (60 Korean words) is authored. Spec exists to plan the visual contract.
-**Scope**: `packages/design-system/src/components/HeritageCardArt/` extension · `apps/mobile/src/content/` · Stage 2 cards
+**Status**: `ready` — amended 2026-10-23 by F-CURR-002 row CM-23 part 1: one card per upper cell, shipped behind the `upperCards` switch (the note below). Was `draft`, waiting on the stage's content, which now exists.
+
+> **Amended 2026-10-23 by F-CURR-002 row CM-23 part 1 (section 7.2, which settles F-CURR-001 OD-7):** its row ships the cards behind the `upperCards` switch (built-in pct 0; the owner ramps it). The scope is now **one card per upper cell**, earned by finishing the cell's first volume, not the earlier plan of about 30 cards for the stage: Word Builder 노래 (card:norae), Holiday Words 복주머니 (card:bokjumeoni), Playground Words 그네 (card:swing); Lunch Box Words and Outdoor Words keep their shipped four cards each, their q1 cards card:dosirak and card:byeol being their album cards. Each card's back-face fact cites a public institution from F-CURR-002 section 6.6 (`apps/mobile/src/content/upper-cell-card-sources.ts`). The cards fill the five category albums of the Library. Sections 2, 3.1, 3.2 (rarity mix and per-theme legendary), 5, 6 and 7 below are superseded by F-CURR-002 section 7.2 and its decision record; the visual contract of 3.2 (geometric minhwa, theme tokens, at most five colours) still holds. The drawings are `UpperCellCardArt` (`HeritageCardArt/UpperCellArt.tsx`), loaded in the app's upper-cards chunk.
+
+**Scope**: `packages/design-system/src/components/HeritageCardArt/` extension · `apps/mobile/src/content/` · Stage 2 cards · amended (row CM-23): `packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx` and `upper-card-ids.ts` (`upperCellCardArtIds`; in `card-ids.ts` until row CM-23 part 2), `apps/mobile/src/content/heritage-cards.ts` (`upperCellCards`), `content/upper-cell-cards.ts`, the Library albums
 **Owner**: solo dev
 **Rollout**: Stage 2 unlock (after Stage 1 alpha + Word content authoring)
 

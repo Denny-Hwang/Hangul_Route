@@ -3,7 +3,7 @@ import { CATALOG } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { movedLineVisible } from '../../logic/route/home-slot';
@@ -33,7 +33,7 @@ import { useToday } from './use-today';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RouteOverview'>;
 
-export function RouteOverviewScreen({ route, navigation }: Props): React.ReactElement {
+export function RouteOverviewScreen({ route, navigation }: Props): ReactElement {
   const { profileId } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.overview;

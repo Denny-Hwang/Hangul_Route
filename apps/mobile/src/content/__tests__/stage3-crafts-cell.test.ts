@@ -92,11 +92,12 @@ const discoverKorean = (quest: LessonQuest): string[] =>
   quest.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((i) => discoverItemTexts(i).map((t) => t.ko))) ?? []);
 
 describe('Game Sentences (F-CURR-001 S3-5)', () => {
-  it('is the stage3 crafts cell with three quests and no card', () => {
+  it('is the stage3 crafts cell with three quests; its one card is the album card of row CM-23, on no quest', () => {
     expect(CELL.id).toBe('episode:stage3-crafts');
     expect(CELL.titleEn).toBe('Game Sentences');
     expect(CELL.quests.map((q) => q.id)).toEqual(['quest:stage3-crafts-q1', 'quest:stage3-crafts-q2', 'quest:stage3-crafts-q3']);
-    expect(CELL.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(CELL.rewardCardIds).toEqual(['card:yut']);
     expect(CELL.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 

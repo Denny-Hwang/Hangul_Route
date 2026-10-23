@@ -316,6 +316,66 @@
       "title": "Ibul",
       "blurb": "En muchos hogares coreanos, la gente duerme en un piso cálido bajo mantas acolchadas y de colores llamadas ibul.",
       "fact": "Las abuelas y los abuelos doblan los ibul en pilas ordenadas cada mañana."
+    },
+    "card:norae": {
+      "title": "Canción",
+      "blurb": "Una canción para cantar juntos.",
+      "fact": "Arirang es una canción popular coreana muy conocida. «Arirang, lyrical folk song in the Republic of Korea» se inscribió en la Lista Representativa de la UNESCO en 2012."
+    },
+    "card:bokjumeoni": {
+      "title": "Bolsita de la suerte",
+      "blurb": "Una bolsita pequeña que guarda un deseo de buena suerte.",
+      "fact": "Al empezar el año, se ataba a la ropa un bokjumeoni con unos granos dentro, como deseo de buena suerte."
+    },
+    "card:swing": {
+      "title": "Columpio",
+      "blurb": "Un columpio que sube muy alto.",
+      "fact": "Columpiarse es una costumbre antigua de Dano, la fiesta del quinto día del quinto mes lunar. Lo cuentan escritos de las épocas Goryeo y Joseon."
+    },
+    "card:hangeul": {
+      "title": "Hangeul",
+      "blurb": "Las letras que estás aprendiendo a leer.",
+      "fact": "El rey Sejong creó 28 letras en 1443 y las llamó Hunminjeongeum. Hoy se llaman hangeul."
+    },
+    "card:tteok": {
+      "title": "Pastel de arroz",
+      "blurb": "Un pastel de arroz suave y elástico para compartir.",
+      "fact": "Hacer y compartir tteok, el pastel de arroz, fue declarado Patrimonio Inmaterial Nacional de Corea en 2021."
+    },
+    "card:full-moon": {
+      "title": "Luna llena",
+      "blurb": "Una luna grande y redonda en una noche de fiesta.",
+      "fact": "Chuseok cae el día quince del octavo mes lunar, cuando la luna está llena. Esa luna significa abundancia."
+    },
+    "card:gom": {
+      "title": "Oso",
+      "blurb": "Un oso grande y fuerte.",
+      "fact": "El bandalgaseumgom es un oso negro con una mancha blanca en forma de media luna en el pecho. Duerme todo el invierno y en Corea es un monumento natural."
+    },
+    "card:yut": {
+      "title": "Palitos de yut",
+      "blurb": "Cuatro palitos para lanzar en el yunnori.",
+      "fact": "El yunnori se juega con cuatro palitos llamados yut. Dos equipos los lanzan, y según cómo caen se mueven sus fichas."
+    },
+    "card:mwoyeyo": {
+      "title": "¿Qué es esto?",
+      "blurb": "Señala algo nuevo y pregunta qué es.",
+      "fact": "Ige mwoyeyo usa dos formas cortas: ige por igeosi, «esta cosa», y mwo por mueo, «qué»."
+    },
+    "card:masisseoyo": {
+      "title": "Está rico",
+      "blurb": "Lo que dices cuando la comida sabe bien.",
+      "fact": "Las normas de pronunciación estándar dan a masitda dos formas de decirse: con un sonido d en medio o con un sonido s. Las dos son correctas."
+    },
+    "card:biga-wayo": {
+      "title": "Está lloviendo",
+      "blurb": "Llueve, así que es hora de volver a casa.",
+      "fact": "Jangma es la palabra para el tiempo de verano en que llueve muchos días seguidos."
+    },
+    "card:gachi": {
+      "title": "¿Lo hacemos juntos?",
+      "blurb": "Una forma cortés de invitar a alguien a participar.",
+      "fact": "Sin yo, gachi halkka es banmal, una forma de hablar entre personas muy cercanas. No eleva ni rebaja a la otra persona."
     }
   }
 }

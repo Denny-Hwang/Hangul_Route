@@ -18,6 +18,11 @@ import type { DayFacts } from './spacing';
  * - `cursor`: the server `seq` of the last pull.
  * - `seededFrom`: the `memSeededAt` the seeded states here were derived from.
  * - `day`: today's counts for `memory.daily`; `dailySent` the last local day sent.
+ * - `wk`: the Words known count this device last read (row CM-20); absent until the first mastery read, which sets it
+ *   (and latches the levels reached before) without a celebration or a `mastery.level_up`.
+ * - `mc`: the mastery moments this device reached and has not celebrated yet (row CM-20): the levels it latched and the
+ *   highest Words known milestone crossed, kept for their local day. Any read adds to it; only the Results of an
+ *   activity takes it, so a read on Home or the Journey never takes a banner away from the Results.
  */
 
 export interface MemoryRow extends DayFacts {
@@ -47,6 +52,17 @@ export interface MemoryFile {
   seededFrom: string | null;
   day: DayCounts | null;
   dailySent: string | null;
+  wk?: number;
+  mc?: MasteryMoments;
+}
+
+/** The mastery moments waiting for a Results (`mc`, row CM-20). */
+export interface MasteryMoments {
+  day: string;
+  /** Cell id -> the level this device latched it at. */
+  rises: Record<string, 1 | 2 | 3>;
+  /** The highest Words known milestone crossed, or null. */
+  words: number | null;
 }
 
 export function emptyMemoryFile(): MemoryFile {
@@ -80,6 +96,16 @@ function dayCountsOf(v: unknown): DayCounts | null {
   return { day, hist, lapses: count(v.lapses), items, newHeld: count(v.newHeld), due: count(v.due) };
 }
 
+function momentsOf(v: unknown): MasteryMoments | undefined {
+  if (!isRec(v)) return undefined;
+  const day = dayOrUndefined(v.day);
+  if (day === undefined) return undefined;
+  const rises: MasteryMoments['rises'] = {};
+  if (isRec(v.rises)) for (const [cell, level] of Object.entries(v.rises)) if (level === 1 || level === 2 || level === 3) rises[cell] = level;
+  const words = typeof v.words === 'number' && Number.isInteger(v.words) && v.words > 0 ? v.words : null;
+  return { day, rises, words };
+}
+
 /**
  * The stored value, read leniently: a row whose state does not parse drops on its own (as a shard
  * entry does on the wire), anything else unreadable reads as empty. Never throws.
@@ -100,6 +126,9 @@ export function readMemoryFile(raw: unknown): MemoryFile {
   file.seededFrom = typeof raw.seededFrom === 'string' ? raw.seededFrom : null;
   file.day = dayCountsOf(raw.day);
   file.dailySent = dayOrUndefined(raw.dailySent) ?? null;
+  if (typeof raw.wk === 'number' && Number.isInteger(raw.wk) && raw.wk >= 0) file.wk = raw.wk;
+  const mc = momentsOf(raw.mc);
+  if (mc !== undefined) file.mc = mc;
   return file;
 }
 

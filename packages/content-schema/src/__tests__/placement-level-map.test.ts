@@ -188,6 +188,15 @@ describe('placedOutQuestIds on the 15-quest fixture (spec 3.6 table)', () => {
     expect(atStage2).not.toContain('quest:stage2-life-q1');
   });
 
+  it('a level above stage3 (only a Stage Jump reaches one, F-CURR-002 row CM-25) places out every lower stage, never its own', () => {
+    const out = placedOutQuestIds({ stage: 'stage4', band: 0 }, new Set(), FULL_ROUTE);
+    expect(out).toContain('quest:stage2-life-q1');
+    expect(out).toContain(q(1));
+    expect(out).not.toContain('quest:stage4-life-q1');
+    expect(out).not.toContain('quest:shelf-tiger-q1');
+    expect(placedOutQuestIds({ stage: 'stage5', band: 0 }, new Set(), FULL_ROUTE)).toContain('quest:stage4-life-q1');
+  });
+
   it('keeps catalog order between quests with the same order', () => {
     const [a, b, c] = STAGE1_15.quests as [(typeof STAGE1_15.quests)[number], (typeof STAGE1_15.quests)[number], (typeof STAGE1_15.quests)[number]];
     const tied = { quests: [{ ...c, order: 1 }, { ...a, order: 1 }, { ...b, order: 1 }] };

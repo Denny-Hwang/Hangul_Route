@@ -4,6 +4,7 @@ import {
   ROLLUP_SEEDED_COUNT_EDGES,
   ROLLUP_SPREAD_DAYS_EDGES,
   rollupBucketCode,
+  type CellLevel,
   type MemoryBackup,
   type MemorySummary,
   type ProgressSnapshot,
@@ -17,11 +18,13 @@ import { engineStates, withSentenceCredit } from '../reviews/engine';
 import { applyVocabEvents, vocabOf, type VocabEvent } from '../vocab/progress';
 import { daysBetween, isDue } from '../vocab/srs';
 import { countAnswer, durableWeek, memoryDailyPayload, openDay, studyMinutes } from './daily';
-import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, readableStore, sameState, storedFile, type MemoryFile } from './memory-file';
+import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, readableStore, sameState, storedFile, type MasteryMoments, type MemoryFile } from './memory-file';
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
 import { deriveSeed, seedInputKey } from './seed';
-import { memorySummaryOf } from './summary';
+import { deriveTestedOut, testOutPlacement } from './test-out';
+import { deriveMastery, latchCellBest, selectDueCellIds, wordsMilestoneCrossed, type LevelRise } from './mastery';
+import { memorySummaryOf, wordsKnownOf } from './summary';
 import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
 
 /**
@@ -73,6 +76,11 @@ export interface MemoryRuntimeDeps {
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
   applySeed(profileId: string, seed: { memSeededAt: string; cellBest: Readonly<Record<string, 1>> }): string | null;
+  /**
+   * Raises the hydrated snapshot's `cellBest` to these levels (max: never lower), saved and synced like any write
+   * (row CM-20). Returns the `cellBest` held after it, or null when the snapshot is not there.
+   */
+  applyCellBest(profileId: string, rises: readonly LevelRise[]): Readonly<Record<string, CellLevel>> | null;
   recordVocab(profileId: string, events: readonly VocabEvent[], now: Date): void;
   /** The server time of the learner's last snapshot sync (the inbox's `serverTime`), or null: the stamp cap of CM-11's hand-off. */
   serverTime?(profileId: string): string | null;
@@ -89,6 +97,12 @@ export interface MemoryRuntimeDeps {
 export interface MemoryRuntime {
   recordRound(profileId: string, answer: FirstRoundAnswer): Promise<void>;
   recordAnswers(profileId: string, answers: readonly MemoryAnswer[], at: Date): Promise<void>;
+  /**
+   * A finished test-out's answers (row CM-21, section 4.5): an item not met yet is placed by its result
+   * (`testOutPlacement`: right to box 2 due in 3 days; on a passed test-out a miss to box 1 due tomorrow, else it stays
+   * unmet); a met item, and a topic word, follow the spacing rule as `recordAnswers` does.
+   */
+  recordTestOut(profileId: string, answers: readonly MemoryAnswer[], passed: boolean, at: Date): Promise<void>;
   countVocab(profileId: string, before: VocabProgress, events: readonly VocabEvent[], clock: Date): Promise<void>;
   ensureSeeded(profileId: string): Promise<void>;
   sendDailyIfDue(profileId: string): Promise<void>;
@@ -108,6 +122,14 @@ export interface MemoryRuntime {
    * undefined while the store or the snapshot cannot be read. `reviewOn`: the profile has the review surface.
    */
   summary(profileId: string, opts?: { reviewOn?: boolean }): Promise<MemorySummary | undefined>;
+  /**
+   * The mastery levels and Words known today (row CM-20, `./mastery.ts`), after every earlier operation on the
+   * profile: derives each cell's level, latches the rises into `cellBest` (one `mastery.level_up` each, none on this
+   * device's first read, a silent baseline) and reads Words known. Every read keeps the rises it latched and a Words
+   * known milestone crossed as moments in the store (`mc`, for their local day); only `celebrate` (the Results of an
+   * activity) returns them and takes them, so each is celebrated at most once and no other read takes one away.
+   */
+  mastery(profileId: string, opts: MasteryOptions): Promise<MasteryRead | undefined>;
 }
 
 const VOCAB_ID = /^vocab:/;
@@ -122,6 +144,29 @@ const STAMP_CLAMP_MS = 24 * 60 * 60 * 1000;
  * every merge for long (CM-11's `boundMemoryStateToNow` holds the server side, also when nothing has
  * been seen yet). The local day of the answer is never clamped.
  */
+export interface MasteryOptions {
+  /** `volumes` is on for the profile: the New volume marker shows. */
+  volumesOn: boolean;
+  /** The review surface is on (`dailyReview`): Ready to refresh shows only then, as in reports (row CM-16). */
+  reviewOn: boolean;
+  /** The Results of an activity: return the rises and the milestone. */
+  celebrate: boolean;
+}
+
+export interface MasteryRead {
+  /** The latched levels (`cellBest`) after this read. */
+  cellBest: Readonly<Record<string, CellLevel>>;
+  /** Mastered cells with items due today ("Ready to refresh"). */
+  refresh: string[];
+  /** Started cells whose later volume has shipped and is not started ("New volume"). */
+  newVolume: string[];
+  wordsKnown: number;
+  /** With `celebrate`: the levels this device latched today and has not celebrated, in cell id order; else empty. */
+  rises: LevelRise[];
+  /** With `celebrate`: the highest Words known milestone crossed today and not celebrated; else null. */
+  milestone: number | null;
+}
+
 export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date, serverTime: string | null = null): string {
   let latest = serverTime === null ? Number.NEGATIVE_INFINITY : Date.parse(serverTime);
   if (!Number.isFinite(latest)) latest = Number.NEGATIVE_INFINITY;
@@ -176,7 +221,10 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     const key = seedInputKey(inputs);
     if (laid.get(profileId) === key && file.seededFrom === seededAt) return false;
     const moved = file.seededFrom !== seededAt;
-    laySeed(file, deriveSeed({ ...inputs, cells: CATALOG.cells }).states, seededAt);
+    const seeded = deriveSeed({ ...inputs, cells: CATALOG.cells }).states;
+    // Row CM-21: a tested-out cell's unasked items are derived like the seeding (never uploaded); the seeding keeps its own.
+    const testedOut = deriveTestedOut({ testedOut: snap.testedOut, items: index.items, retired: index.retired, seeded, dayOf: deps.dayOf });
+    laySeed(file, testedOut.size === 0 ? seeded : new Map([...testedOut, ...seeded]), seededAt);
     laid.set(profileId, key);
     return moved;
   }
@@ -378,12 +426,43 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
       if (asked.length === 0) return;
       await recordAnswersNow(
         profileId,
-        asked.map((item) => ({ itemId: item.id, correct: answer.correct, rung: round.rung })),
+        asked.map((item) => ({ itemId: item.id, correct: answer.correct, rung: round.rung, ...(answer.hinted ? { hinted: true } : {}) })),
         answer.at,
       );
     },
 
     recordAnswers: (profileId, answers, at) => recordAnswersNow(profileId, answers, at),
+
+    async recordTestOut(profileId, answers, passed, at) {
+      const placed = new Set<string>();
+      await run(profileId, async () => {
+        const file = await load(profileId);
+        if (!file) return;
+        const { index } = await items();
+        const day = deps.dayOf(at);
+        const iso = stampOf(file, at, deps.serverTime?.(profileId) ?? null);
+        const counts = today(profileId, file, day, index.retired);
+        const pending = new Set(file.pending);
+        for (const a of answers) {
+          const item = index.byId.get(a.itemId);
+          const row = file.rows[a.itemId];
+          if (VOCAB_ID.test(a.itemId) || !item || index.retired.has(item.id) || (row !== undefined && row.st.b >= 1)) continue;
+          // Not met yet: placed by the result, never by "met today, box 1" (section 4.5).
+          placed.add(a.itemId);
+          const state = testOutPlacement(a, passed, day, iso, row?.st);
+          if (state === null) continue;
+          file.rows[item.id] = { sh: row?.sh ?? shardOf(item), st: state, l: day };
+          countAnswer(counts, { id: item.id, kind: item.kind, rung: a.rung, spaced: false, lagDays: null, right: a.correct && !a.hinted, lapse: false, newHeld: false });
+          pending.add(item.id);
+        }
+        file.pending = [...pending];
+        markDirty(profileId);
+      });
+      // The met items and the topic words: the spacing rule, with the credit inside sentences.
+      const rest = answers.filter((a) => !placed.has(a.itemId));
+      if (rest.length > 0) await recordAnswersNow(profileId, rest, at);
+      else if (placed.size > 0) deps.requestSync(profileId);
+    },
 
     countVocab(profileId, before, events, clock) {
       return run(profileId, async () => {
@@ -529,6 +608,81 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         if (!file || !snapshot) return undefined;
         const { index } = await items();
         return memorySummaryOf({ rows: file.rows, retired: index.retired, snapshot, today: deps.dayOf(deps.now()), reviewOn: opts?.reviewOn === true });
+      });
+    },
+
+    mastery(profileId, opts) {
+      return run(profileId, async () => {
+        await deps.hydrate(profileId);
+        const file = await load(profileId);
+        const snapshot = deps.snapshot(profileId);
+        if (!file || !snapshot) return undefined;
+        const { index } = await items();
+        const derived = deriveMastery({ cells: CATALOG.cells, quests: CATALOG.quests, items: index.items, retired: index.retired, rows: file.rows, snapshot });
+        const today = deps.dayOf(deps.now());
+        // This device's first mastery read for the profile (the day `mastery` is ramped, or a new device): a silent
+        // baseline. It latches the levels reached before, but they are history, not rises: no `mastery.level_up` and
+        // no banner, as the Words known count it sets brings no milestone.
+        const baseline = file.wk === undefined;
+        let cellBest: Readonly<Record<string, CellLevel>> = snapshot.cellBest ?? {};
+        // Before the one-time seeding (section 4.8 step 6) has latched Done for the cells finished earlier, nothing is
+        // latched here: those are history too.
+        let rises = snapshot.memSeededAt === undefined ? [] : latchCellBest(cellBest, derived).rises;
+        if (rises.length > 0) {
+          const latched = deps.applyCellBest(profileId, rises);
+          if (latched === null) rises = [];
+          else cellBest = latched;
+          // Sent once, by the device that latched the rise; no PII, the cell id and the level only.
+          if (!baseline) {
+            for (const rise of rises) {
+              const payload = CURR_TELEMETRY_PAYLOADS['mastery.level_up'].safeParse({ cellId: rise.cellId, level: rise.level });
+              if (payload.success) deps.track({ name: 'mastery.level_up', profileId, payload: payload.data });
+            }
+          }
+        }
+        // The moments wait in the store for the Results (`mc`), whichever read latched them: a read on Home or the
+        // Journey, which stay mounted under the Results, adds to them and never takes them. Kept for their local day.
+        const moments: MasteryMoments = file.mc !== undefined && file.mc.day === today ? { ...file.mc, rises: { ...file.mc.rises } } : { day: today, rises: {}, words: null };
+        let changed = file.mc !== undefined && file.mc.day !== today;
+        if (!baseline) {
+          for (const rise of rises) {
+            if (rise.level > (moments.rises[rise.cellId] ?? 0)) moments.rises[rise.cellId] = rise.level;
+            changed = true;
+          }
+        }
+        const wordsKnown = wordsKnownOf(file.rows, snapshot);
+        if (file.wk === undefined || wordsKnown > file.wk) {
+          const crossed = file.wk === undefined ? null : wordsMilestoneCrossed(file.wk, wordsKnown);
+          if (crossed !== null && crossed > (moments.words ?? 0)) moments.words = crossed;
+          file.wk = wordsKnown;
+          changed = true;
+        }
+        let shown: LevelRise[] = [];
+        let milestone: number | null = null;
+        let taken = false;
+        if (opts.celebrate) {
+          shown = Object.entries(moments.rises)
+            .map(([cellId, level]) => ({ cellId, level }))
+            .sort((a, b) => (a.cellId < b.cellId ? -1 : a.cellId > b.cellId ? 1 : 0));
+          milestone = moments.words;
+          taken = file.mc !== undefined || shown.length > 0 || milestone !== null;
+          delete file.mc;
+        } else if (Object.keys(moments.rises).length > 0 || moments.words !== null) {
+          file.mc = moments;
+        } else {
+          delete file.mc;
+        }
+        // Moments shown are saved at once, so a reload right after the Results never shows them again.
+        if (taken) await saveNow(profileId);
+        else if (changed) markDirty(profileId);
+        return {
+          cellBest,
+          refresh: opts.reviewOn ? [...selectDueCellIds(cellBest, derived, file.rows, vocabOf(snapshot).items, today)] : [],
+          newVolume: opts.volumesOn ? [...derived].filter(([, m]) => m.newVolume).map(([cell]) => cell) : [],
+          wordsKnown,
+          rises: shown,
+          milestone,
+        };
       });
     },
   };

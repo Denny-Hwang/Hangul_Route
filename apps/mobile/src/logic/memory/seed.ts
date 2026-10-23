@@ -97,7 +97,11 @@ export function seedInputKey(input: Pick<SeedInput, 'snapshot' | 'items' | 'reti
     .map(([questId, at]) => `${questId}@${time(at)}${stars.get(questId) === 3 ? '*' : ''}`)
     .sort();
   const route = effectiveRoute(snapshot.placements ?? [], { quests: [] }, { isEntitled: () => true, completedQuestIds: new Set() });
-  const text = [input.dayOf(new Date(seededAt)), `${input.items.length}/${input.retired.size}`, (route?.priorityTokens ?? []).join(','), ...done].join('|');
+  // Row CM-21: the tested-out cells derive their unasked items the same way (`./test-out.ts`), so they are inputs too.
+  const testedOut = Object.entries(snapshot.testedOut ?? {})
+    .map(([cell, at]) => `t:${cell}@${time(at)}`)
+    .sort();
+  const text = [input.dayOf(new Date(seededAt)), `${input.items.length}/${input.retired.size}`, (route?.priorityTokens ?? []).join(','), ...done, ...testedOut].join('|');
   // FNV-1a, 32 bits: a short key held beside the store in memory.
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i += 1) {

@@ -74,7 +74,22 @@ export const PRECACHE_BUDGET = Object.freeze({
   // ece5eee02 with the phase-1 integration) measures 4,804,191 B raw / 1,265,853 B gzip (release `build:web`, Metro cache
   // cleared): main's 4,760,960 B plus the guest rows' 41,459 B (4,774,256 B on GU-5 against 4,732,797 B on its main),
   // 1,772 B over that sum. The line is that measurement plus a 5,809 B rounding margin.
-  startBundleRaw: 4_810_000,
+  // CM-21 (the Cell Check: the cell page's slot, the route, the Tested out pill, routeNext's skip and 19 English strings;
+  // block, screen and logic in chunks) measures 4,809,323 B raw / 1,268,690 B gzip (release `build:web`), 189 B under
+  // main with CM-20 (4,809,512 B): its cost is paid by importing React's hooks by name in the start-bundle modules it
+  // touches (no `import React, {...}` wildcard helper), so the line stays.
+  // CM-22 (Stages 2-7: the prize table, the Results prize, the gate, three routes and two slots, 16 English strings;
+  // every stage's prize ceremony, Stage 1's included, the check, the summary and its trigger in the stage-check chunk)
+  // measures 4,806,089 B raw / 1,268,793 B gzip (release `build:web`), 3,234 B under CM-21's 4,809,323 B: the line stays.
+  // CM-23 part 1 (the eight upper-cell cards of Stages 2-3: their fronts, the `upperCards` gate on the award world, the
+  // first-finish dating, the reconcile wiring and the album strings; the card backs, the ten drawings and the Library's
+  // albums are the upper-cards chunk) measures 4,809,851 B raw / 1,270,481 B gzip on CM-22's 4,806,089 B, with the
+  // touched start-bundle modules importing React's hooks by name: the line stays.
+  // The F-CURR-002 phase-2 integration (integrate/curr-phase2: CM-20 #837, CM-21 #840, CM-22 #842, CM-23a #843,
+  // CM-23b #844, CM-25 #841 and CM-24 #838 on main 836bfcd6f) measures 4,812,581 B raw / 1,272,017 B gzip (release
+  // `build:web`, Metro cache cleared), 2,581 B over the 4,810,000 B line, so the line is that measurement plus a
+  // 419 B rounding margin (4,813,000 B); the app-host build (grown-up home on, API base set) measures 4,812,737 B.
+  startBundleRaw: 4_813_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -193,7 +208,16 @@ export const QUEST_REVIEW_CHUNKS = Object.freeze([Object.freeze({ name: 'quest-r
  * `src/screens/goals/goals-chunk.ts`) are a bundle of their own, reached only through the literal `import()` of
  * `src/store/goals-entry.ts`, so a learner with `goals` off never loads them and the start bundle does not grow.
  */
-export const LEARNER_CHUNKS = Object.freeze([Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' })]);
+export const LEARNER_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'goals-chunk', marker: 'goals-chunk:goals' }),
+  // Row CM-20: the mastery ring and the Results banners (`src/screens/mastery/mastery-chunk.ts`), reached only through
+  // the literal `import()` of `src/store/mastery-entry.ts` while `mastery` is on; the level derivation is the memory chunk's.
+  Object.freeze({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' }),
+  // Adaptive pacing in quests (row CM-24, `src/screens/quest/quest-pacing-chunk.tsx`): the rules, the shorter Apply and
+  // the scaffold round, reached only through the literal `import()` of `src/screens/quest/quest-pacing.ts` while
+  // `questAdapt` is on.
+  Object.freeze({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' }),
+]);
 
 /**
  * [GU] The learner screens that are chunks of their own (F-CURR-002 §10, row GU-3): the guest's first quest stack
@@ -206,6 +230,18 @@ export const SCREEN_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/screens/parent/guest-keep.tsx`): People on this device's first-quest row and
   // the guest-only gate on PIN setup.
   Object.freeze({ name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' }),
+  // F-CURR-002 row CM-21: the Cell Check's block, Test out line and screen (`src/screens/cell-check/cell-check-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/cell-check/cell-check-entry.tsx`); the session logic is
+  // the memory chunk's and the rounds the Daily Review chunk's, each reached at run time.
+  Object.freeze({ name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' }),
+  // F-CURR-002 row CM-22: every stage's prize ceremony (Stage 1's included), the Stage Check, the one retroactive
+  // summary and Home's trigger for it, and the Journey header's extras (`src/screens/stage-check/stage-check-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/stage-check/stage-check-entry.tsx`); the session logic is the memory chunk's.
+  Object.freeze({ name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' }),
+  // F-CURR-002 row CM-23: the upper-cell card drawings, their backs and the Library's category albums
+  // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/library/upper-cards-entry.tsx`).
+  Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
 ]);
 
 /**

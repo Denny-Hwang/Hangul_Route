@@ -1,6 +1,7 @@
 import {
   addDays,
   HORIZON_DAYS,
+  overrideInForce,
   type DateKey,
   type Episode,
   type HomeworkAssignment,
@@ -33,7 +34,7 @@ import { nextQuestAfter, offerableQuests } from './next-quest';
  *    `targetDate`, then by the source's list order) is next. Dates never
  *    filter: nothing is early or late;
  * 3. else the default route: the one cursor (`nextQuestAfter`, F-ROUTE-001
- *    M4), with today's placed-out fallback, except that a free learner with
+ *    M4), skipping the quests of a tested-out cell (F-CURR-002 section 4.5), with today's placed-out fallback, except that a free learner with
  *    the switch on goes to step 4 with `placedOut`;
  * 4. else `free-end` (switch on, free, a playable grid lesson is closed) or
  *    `rest`.
@@ -174,6 +175,20 @@ function endOf(i: RouteNextInput, placedOut: boolean): RouteNext {
   return { kind: 'rest' };
 }
 
+/**
+ * The quests of the cells the learner tested out of (`testedOut`, keyed by the cell's episode id); undefined when none.
+ * A grown-up override newer than a cell's test-out (or a Stage Jump's) wins (F-CURR-002 row CM-25, F-PLC-001 section
+ * 3.9): that cell is not skipped here, so the override's put-back reaches it; a cell before the override's start stays
+ * skipped through the placed-out set. The latch itself stays, and so does its Tested out pill.
+ */
+function testedOutQuestIds(i: RouteNextInput): ReadonlySet<string> | undefined {
+  const cells = i.snapshot.testedOut;
+  if (cells === undefined) return undefined;
+  const overrideAt = overrideInForce(i.snapshot.placements ?? [])?.at ?? '';
+  const ids = i.episodes.filter((e) => (cells[e.id] ?? '') >= overrideAt && cells[e.id] !== undefined).flatMap((e) => e.questIds);
+  return ids.length === 0 ? undefined : new Set(ids);
+}
+
 export function routeNext(i: RouteNextInput): RouteNext {
   const f = factsOf(i);
 
@@ -200,10 +215,13 @@ export function routeNext(i: RouteNextInput): RouteNext {
     isQuestOpen: i.isQuestOpen,
     ...(i.justCompleted === undefined ? {} : { justCompleted: i.justCompleted }),
   };
-  const fresh = nextQuestAfter({ ...cursor, skipQuestIds: i.cursor.skipQuestIds });
+  // F-CURR-002 section 4.5 (row CM-21): the cursor skips a tested-out cell's quests, which stay playable.
+  const tested = testedOutQuestIds(i);
+  const skip = tested === undefined ? i.cursor.skipQuestIds : new Set([...(i.cursor.skipQuestIds ?? []), ...tested]);
+  const fresh = nextQuestAfter({ ...cursor, skipQuestIds: skip });
   if (fresh) return questNext(fresh.id, f.episodeOf.get(fresh.id) as Episode, 'cursor', null);
-  // Only placed-out quests are left (F-ROUTE-001 section 3.5 fallback).
-  const fallback = i.cursor.skipQuestIds === undefined ? undefined : nextQuestAfter(cursor);
+  // Only placed-out quests are left (F-ROUTE-001 section 3.5 fallback); a tested-out quest is never the fallback.
+  const fallback = i.cursor.skipQuestIds === undefined ? undefined : nextQuestAfter({ ...cursor, ...(tested === undefined ? {} : { skipQuestIds: tested }) });
   if (fallback) {
     if (i.gating.active && i.gating.tier === 'free') return endOf(i, true);
     return questNext(fallback.id, f.episodeOf.get(fallback.id) as Episode, 'cursor', null);

@@ -7,7 +7,10 @@ import { applyVocabEvents, type VocabEvent } from '../../vocab/progress';
 import { addDays } from '../../vocab/srs';
 import { MEMORY_KEY } from '../keys';
 import { createMemoryRuntime, stampOf, type MemoryRuntime, type MemoryRuntimeDeps } from '../memory-runtime';
+import { CATALOG } from '@hangul-route/content-schema';
 import { INDEX, ITEMS, finished, utcDay } from './fixtures';
+
+const CATALOG_QUESTS_OF = (cell: string): string[] => CATALOG.cells.find((c) => c.episodeId === cell)?.questIds ?? [];
 import { wordsInside } from '../../reviews/engine';
 
 /**
@@ -100,6 +103,14 @@ function device(
       snapshots.set(id, { ...snap, memSeededAt, cellBest: { ...(snap.cellBest ?? {}), ...seed.cellBest } });
       return memSeededAt;
     },
+    applyCellBest: (id, rises) => {
+      const snap = snapshots.get(id);
+      if (!snap) return null;
+      const cellBest = { ...(snap.cellBest ?? {}) };
+      for (const r of rises) cellBest[r.cellId] = Math.max(cellBest[r.cellId] ?? 0, r.level) as 0 | 1 | 2 | 3;
+      snapshots.set(id, { ...snap, cellBest });
+      return cellBest;
+    },
     recordVocab: (id, events, now) => {
       vocabCalls.push({ profileId: id, events });
       const snap = snapshots.get(id) as ProgressSnapshot;
@@ -150,6 +161,17 @@ describe('recording from a quest round', () => {
     expect(d.syncs).toEqual(['p1']);
     await d.runTimers();
     expect(d.store.has(MEMORY_KEY('p1'))).toBe(true);
+  });
+
+  it('a round answered with the hint showing (the scaffold round, row CM-24) records as recordAnswers does with hinted', async () => {
+    const a = device();
+    const b = device();
+    await a.rt.recordRound('p1', { ...round(WORD.ko, true, a.clock.now), hinted: true });
+    await b.rt.recordAnswers('p1', [{ itemId: WORD.id, correct: true, hinted: true, rung: 'recognize' }], b.clock.now);
+    expect(await stateOf(a, WORD.id)).toEqual(await stateOf(b, WORD.id));
+    const plain = device();
+    await plain.rt.recordRound('p1', round(WORD.ko, true, plain.clock.now));
+    expect(await stateOf(a, WORD.id)).not.toEqual(await stateOf(plain, WORD.id));
   });
 
   it('a round that asks no known item records nothing', async () => {
@@ -592,5 +614,269 @@ describe('the summary memory block (row CM-16)', () => {
     const broken = device({ failRead: true });
     broken.snapshots.set('p1', finished(0));
     expect(await broken.rt.summary('p1')).toBeUndefined();
+  });
+});
+
+describe('mastery: levels latched into cellBest, Ready to refresh, New volume and Words known (row CM-20)', () => {
+  const MASTERY_OFF = { volumesOn: false, reviewOn: false, celebrate: false } as const;
+  /** A cell of this build that teaches no topic words, and its items (all lesson items). */
+  const CELL = 'episode:stage3-life';
+  const CELL_ITEMS = ITEMS.filter((i) => i.cells.includes(CELL));
+  const held = (s: number, over: Partial<MemoryItemState> = {}): MemoryItemState => ({ b: s, d: '2026-11-30', c: 1, r: 3, n: 3, f: '2026-10-01', s, at: '2026-10-20T10:00:00.000Z', ...over });
+  /**
+   * p1 with every quest of the cell done, and `rows` laid in the stored file. `wk`: the Words known count this device
+   * last read (0: a device that has read mastery before; null: its first mastery read, the silent baseline).
+   */
+  async function learner(rows: Record<string, MemoryItemState> = {}, over: Partial<ProgressSnapshot> = {}, wk: number | null = 0): Promise<Device> {
+    const store = new Map<string, unknown>();
+    store.set(MEMORY_KEY('p1'), { v: 1, rows: Object.fromEntries(Object.entries(rows).map(([id, st]) => [id, { sh: 'stage3', st }])), vf: {}, pending: [], cursor: 0, seededFrom: null, day: null, dailySent: null, ...(wk === null ? {} : { wk }) });
+    const d = device({ store });
+    const snap = { ...finished(0), memSeededAt: '2026-10-01T12:00:00.000Z' };
+    const quests = CATALOG_QUESTS_OF(CELL).map((q) => ({ questId: q, episodeId: CELL, startedAt: '2026-10-01T10:00:00.000Z', completedAt: '2026-10-01T10:00:00.000Z', stars: 3 as const, attempts: 1, accuracy: 1 }));
+    d.snapshots.set('p1', { ...snap, quests, ...over });
+    return d;
+  }
+
+  it('latches a derived level into cellBest once, with one mastery.level_up parsed by its schema', async () => {
+    expect(CELL_ITEMS.length).toBeGreaterThan(4);
+    const rows = Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)]));
+    const d = await learner(rows);
+    const read = await d.rt.mastery('p1', MASTERY_OFF);
+    expect(read?.cellBest[CELL]).toBe(2);
+    expect(d.snapshots.get('p1')?.cellBest?.[CELL]).toBe(2);
+    const ups = d.tracked.filter((e) => e.name === 'mastery.level_up');
+    expect(ups).toEqual([{ name: 'mastery.level_up', profileId: 'p1', payload: { cellId: CELL, level: 2 } }]);
+    expect(CURR_TELEMETRY_PAYLOADS['mastery.level_up'].safeParse(ups[0]?.payload).success).toBe(true);
+    // A silent read reports no rise; a second read latches nothing and sends nothing, and the Results still gets it.
+    expect(read?.rises).toEqual([]);
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true }))?.rises).toEqual([{ cellId: CELL, level: 2 }]);
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up')).toHaveLength(1);
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true }))?.rises).toEqual([]);
+  });
+
+  it('never lowers a latched level when boxes fall, and the Results read returns its rises', async () => {
+    const d = await learner(Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(1, { s: 1 })])), { cellBest: { [CELL]: 2 } });
+    const read = await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true });
+    expect(read?.cellBest[CELL]).toBe(2);
+    expect(read?.rises).toEqual([]);
+    const fresh = await learner(Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])));
+    expect((await fresh.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true }))?.rises).toEqual([{ cellId: CELL, level: 2 }]);
+  });
+
+  it('Ready to refresh: a mastered cell with an item due, only while the review surface is on', async () => {
+    const [first, ...rest] = CELL_ITEMS;
+    const rows = { ...Object.fromEntries(rest.map((i) => [i.id, held(5)])), [first?.id as string]: held(5, { b: 2, d: '2026-10-22' }) };
+    const d = await learner(rows, { cellBest: { [CELL]: 3 } });
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, reviewOn: true }))?.refresh).toEqual([CELL]);
+    expect((await d.rt.mastery('p1', MASTERY_OFF))?.refresh).toEqual([]);
+  });
+
+  it('New volume only with volumes on (this build ships no later volume: none)', async () => {
+    const d = await learner();
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, volumesOn: true }))?.newVolume).toEqual([]);
+  });
+
+  it('Words known: the first read sets the baseline quietly; the Results read that crosses 100 celebrates it once', async () => {
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:')).slice(0, 101);
+    expect(words).toHaveLength(101);
+    const rows = Object.fromEntries(words.slice(0, 99).map((i) => [i.id, held(2)]));
+    const d = await learner(rows, {}, null);
+    const first = await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true });
+    expect(first).toMatchObject({ wordsKnown: 99, milestone: null });
+    const file = await d.rt.file('p1');
+    for (const w of words.slice(99)) if (file) file.rows[w.id] = { sh: 'stage2', st: held(2) };
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ wordsKnown: 101, milestone: 100 });
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ wordsKnown: 101, milestone: null });
+    await d.runTimers();
+    expect((d.store.get(MEMORY_KEY('p1')) as { wk?: number }).wk).toBe(101);
+  });
+
+  it('a seeded box alone (n 0) never counts a word known', async () => {
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:')).slice(0, 5);
+    const d = await learner();
+    const file = await d.rt.file('p1');
+    for (const w of words) if (file) file.rows[w.id] = { sh: 'stage2', st: held(2, { n: 0, r: 0 }) };
+    expect((await d.rt.mastery('p1', MASTERY_OFF))?.wordsKnown).toBe(0);
+  });
+
+  it('a silent read (Home, the Journey: mounted under the Results) never takes the moments from the Results', async () => {
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:') && !i.cells.includes(CELL)).slice(0, 101);
+    const d = await learner(Object.fromEntries(words.slice(0, 99).map((i) => [i.id, held(2)])), { cellBest: { [CELL]: 1 } });
+    await d.rt.mastery('p1', MASTERY_OFF);
+    // The quest ends: its cell's items reach box 3 and two more words are known. Home reads first, silently.
+    const file = await d.rt.file('p1');
+    for (const w of words.slice(99)) if (file) file.rows[w.id] = { sh: 'stage2', st: held(2) };
+    for (const i of CELL_ITEMS) if (file) file.rows[i.id] = { sh: 'stage3', st: held(3) };
+    const home = await d.rt.mastery('p1', MASTERY_OFF);
+    expect(home).toMatchObject({ milestone: null, rises: [] });
+    expect(home?.cellBest[CELL]).toBe(2);
+    await d.runTimers();
+    expect((d.store.get(MEMORY_KEY('p1')) as { mc?: unknown }).mc).toMatchObject({ day: '2026-10-22', rises: { [CELL]: 2 }, words: 100 });
+    // The Results read still celebrates both, once.
+    const results = await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true });
+    expect(results?.milestone).toBe(100);
+    expect(results?.rises).toContainEqual({ cellId: CELL, level: 2 });
+    // Taken moments are saved at once (no save timer): a reload right after the Results never shows them again.
+    expect((d.store.get(MEMORY_KEY('p1')) as { mc?: unknown }).mc).toBeUndefined();
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ milestone: null, rises: [] });
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up' && (e.payload as { cellId: string }).cellId === CELL)).toHaveLength(1);
+  });
+
+  it('moments are kept for their local day: one left from an earlier day is dropped, never shown late', async () => {
+    const d = await learner(Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])));
+    const file = await d.rt.file('p1');
+    if (file) file.mc = { day: '2026-10-20', rises: { 'episode:stage4-life': 1 }, words: 250 };
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ milestone: null, rises: [{ cellId: CELL, level: 2 }] });
+  });
+
+  it("the device's first mastery read (the ramp day) latches the levels reached before silently: no level_up, no banner", async () => {
+    const d = await learner(Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])), {}, null);
+    const read = await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true });
+    expect(read?.cellBest[CELL]).toBe(2);
+    expect(d.snapshots.get('p1')?.cellBest?.[CELL]).toBe(2);
+    expect(read?.rises).toEqual([]);
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up')).toEqual([]);
+    // From then on a rise is live.
+    const file = await d.rt.file('p1');
+    for (const i of CELL_ITEMS) if (file) file.rows[i.id] = { sh: 'stage3', st: held(4) };
+    d.snapshots.set('p1', { ...(d.snapshots.get('p1') as ProgressSnapshot), cellCheckAt: { [CELL]: '2026-10-21T10:00:00.000Z' } });
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true }))?.rises).toEqual([{ cellId: CELL, level: 3 }]);
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up').map((e) => e.payload)).toEqual([{ cellId: CELL, level: 3 }]);
+  });
+
+  it('latches nothing and sends nothing before the one-time seeding (its Done levels are history, not rises)', async () => {
+    const d = await learner(Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])), { memSeededAt: undefined });
+    const read = await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true });
+    expect(read?.rises).toEqual([]);
+    expect(read?.cellBest[CELL]).toBeUndefined();
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up')).toEqual([]);
+  });
+
+  it('reads nothing without a snapshot', async () => {
+    const d = device();
+    expect(await d.rt.mastery('p1', MASTERY_OFF)).toBeUndefined();
+  });
+});
+
+describe('a test-out (row CM-21, section 4.5)', () => {
+  const CELL = 'episode:stage2-letters';
+  const cellItems = ITEMS.filter((i) => i.cells.includes(CELL) && !i.id.startsWith('vocab:'));
+  const [right, miss, third] = cellItems as [(typeof ITEMS)[number], (typeof ITEMS)[number], (typeof ITEMS)[number]];
+
+  it('places the asked items by their result, and a pass derives the unasked ones at box 1 over the next 3 days, never uploaded', async () => {
+    const server = fakeServer();
+    const d = device({ server });
+    d.snapshots.set('p1', finished(3));
+    // A learner registered for sync seeds after this device's first snapshot sync of the session.
+    await d.rt.sync('p1');
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }, { itemId: miss.id, rung: 'produce', correct: false }], true, d.clock.now);
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1, s: 2 });
+    expect(await stateOf(d, miss.id)).toMatchObject({ b: 1, d: '2026-10-23', n: 1, c: 1 });
+    // The pass latches testedOut on the snapshot (the API's latch); the seeding pass lays the unasked items.
+    const snap = d.snapshots.get('p1') as ProgressSnapshot;
+    d.snapshots.set('p1', { ...snap, testedOut: { [CELL]: d.clock.now.toISOString() } });
+    await d.rt.ensureSeeded('p1');
+    expect(await stateOf(d, third.id)).toMatchObject({ b: 1, n: 0, s: 1, f: '2026-10-22' });
+    // Due from the next day on, within the cap of 15 seeded items a day (the quest seeding of this learner counts too).
+    expect(((await stateOf(d, third.id))?.d ?? '') > '2026-10-22').toBe(true);
+    const due = new Map<string, number>();
+    for (const row of Object.values((await d.rt.file('p1'))?.rows ?? {})) if (row.st.n === 0 && row.st.d) due.set(row.st.d, (due.get(row.st.d) ?? 0) + 1);
+    for (const n of due.values()) expect(n).toBeLessThanOrEqual(15);
+    // The asked ones keep their own state over the derivation.
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 1 });
+    // Only answered states are queued and sent.
+    const file = await d.rt.file('p1');
+    expect([...(file?.pending ?? [])].sort()).toEqual([miss.id, right.id].sort());
+    await d.rt.sync('p1');
+    const sent = server.posted.flatMap((p) => Object.values(p.shards).flatMap((s) => Object.keys(s)));
+    expect(sent.sort()).toEqual([miss.id, right.id].sort());
+    // Words known grows only with items answered: the right word (box 2, n 1) at most, never a derived one.
+    await d.runTimers();
+    const stored = d.store.get(MEMORY_KEY('p1')) as { rows: Record<string, unknown> };
+    expect(Object.keys(stored.rows)).not.toContain(third.id);
+  });
+
+  it('a test-out that did not pass leaves a missed unmet item unmet and derives nothing', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }, { itemId: miss.id, rung: 'read', correct: false }], false, d.clock.now);
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 1 });
+    expect(await stateOf(d, miss.id)).toBeUndefined();
+    expect(await stateOf(d, third.id)).toBeUndefined();
+  });
+
+  it('an item already met follows the spacing rule (a seeded box 1 due tomorrow is not raised early)', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordAnswers('p1', [{ itemId: right.id, rung: 'read', correct: true }], new Date('2026-10-21T09:00:00.000Z'));
+    const before = await stateOf(d, right.id);
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }], true, d.clock.now);
+    // Met yesterday at box 1, due today: a spaced right answer raises it one step, as anywhere else.
+    expect(before).toMatchObject({ b: 1, d: '2026-10-22' });
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 2 });
+  });
+
+  it('two devices derive the same unasked states from the same synced testedOut', async () => {
+    const one = device();
+    const two = device({ dayOf: utcDay });
+    const snap = { ...finished(3), testedOut: { [CELL]: '2026-10-22T08:00:00.000Z' } };
+    for (const dv of [one, two]) {
+      dv.snapshots.set('p1', snap);
+      await dv.rt.ensureSeeded('p1');
+    }
+    const derived = async (dv: Device) => Object.fromEntries(Object.entries((await dv.rt.file('p1'))?.rows ?? {}).filter(([, r]) => r.st.n === 0).map(([id, r]) => [id, r.st]));
+    expect(await derived(one)).toEqual(await derived(two));
+    expect(Object.keys(await derived(one))).toContain(third.id);
+  });
+});
+
+describe('a Stage Jump (row CM-25): asked items by their result across the stage, the rest derived, alike on two devices', () => {
+  const STAGE3 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage3-${t}`);
+  const own = (cell: string) => ITEMS.filter((i) => i.cells.includes(cell) && !i.id.startsWith('vocab:'));
+  const [lifeRight, lifeMiss] = own('episode:stage3-life') as [(typeof ITEMS)[number], (typeof ITEMS)[number]];
+  const ritesRight = own('episode:stage3-rites')[0] as (typeof ITEMS)[number];
+  const unasked = own('episode:stage3-nature')[0] as (typeof ITEMS)[number];
+  const jumped = (at: string): Record<string, string> => Object.fromEntries([...STAGE3, 'stage3'].map((k) => [k, at]));
+
+  it('right to box 2 due in 3 days, a miss to box 1 due tomorrow, in any cell; every unasked item at box 1, never uploaded', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordTestOut(
+      'p1',
+      [
+        { itemId: lifeRight.id, rung: 'read', correct: true },
+        { itemId: lifeMiss.id, rung: 'read', correct: false },
+        { itemId: ritesRight.id, rung: 'produce', correct: true },
+      ],
+      true,
+      d.clock.now,
+    );
+    const snap = d.snapshots.get('p1') as ProgressSnapshot;
+    d.snapshots.set('p1', { ...snap, testedOut: jumped(d.clock.now.toISOString()) });
+    await d.rt.ensureSeeded('p1');
+    expect(await stateOf(d, lifeRight.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1 });
+    expect(await stateOf(d, ritesRight.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1, c: 3 });
+    expect(await stateOf(d, lifeMiss.id)).toMatchObject({ b: 1, d: '2026-10-23', n: 1 });
+    expect(await stateOf(d, unasked.id)).toMatchObject({ b: 1, n: 0, s: 1, f: '2026-10-22' });
+    const due = new Map<string, number>();
+    for (const row of Object.values((await d.rt.file('p1'))?.rows ?? {})) if (row.st.n === 0 && row.st.d) due.set(row.st.d, (due.get(row.st.d) ?? 0) + 1);
+    for (const n of due.values()) expect(n).toBeLessThanOrEqual(15);
+    expect([...((await d.rt.file('p1'))?.pending ?? [])].sort()).toEqual([lifeRight.id, lifeMiss.id, ritesRight.id].sort());
+  });
+
+  it('two devices derive the same unasked states from the same synced jump', async () => {
+    const one = device();
+    const two = device({ dayOf: utcDay });
+    const snap = { ...finished(3), testedOut: jumped('2026-10-22T08:00:00.000Z') };
+    for (const dv of [one, two]) {
+      dv.snapshots.set('p1', snap);
+      await dv.rt.ensureSeeded('p1');
+    }
+    const derived = async (dv: Device) => Object.fromEntries(Object.entries((await dv.rt.file('p1'))?.rows ?? {}).filter(([, r]) => r.st.n === 0).map(([id, r]) => [id, r.st]));
+    expect(await derived(one)).toEqual(await derived(two));
+    expect(Object.keys(await derived(one))).toContain(unasked.id);
   });
 });

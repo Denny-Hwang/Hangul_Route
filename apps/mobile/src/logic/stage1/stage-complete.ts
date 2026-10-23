@@ -11,12 +11,48 @@ import { jamoAll } from '../../content/jamo';
  * Premium pill and no purchase anywhere here (D5).
  */
 
-/** The one stage with a ceremony today. */
-export const PRIZE_STAGE: StageKey = 'stage1';
+/** One stage's prize: its ceremony, the check the ceremony offers, and the switch it hides behind (F-CURR-002 section 7.3). */
+export interface StagePrize {
+  /** `hangul`: the Stage 1 wall and legendary cards (F-QUEST-002 section 3.8); `stage`: the Stages 2-7 ceremony and its stage card. */
+  ceremony: 'hangul' | 'stage';
+  /** The route of the check the ceremony offers: the Hangul Check or the Stage Check (never required, OD-1). */
+  check: 'StageReview' | 'StageCheck';
+  /** The switch the ceremony hides behind (section 12.2): none for Stage 1, `stageChecks` for Stages 2-7. */
+  flag: 'stageChecks' | null;
+}
+
+const UPPER: StagePrize = { ceremony: 'stage', check: 'StageCheck', flag: 'stageChecks' };
+
+/**
+ * The one prize table (F-CURR-002 section 7.3, row CM-22; it replaces `PRIZE_STAGE = 'stage1'`). Stage 1 keeps its
+ * ceremony exactly as it was (it opens for a learner who holds every prize card, `ownsStagePrize`); Stages 2-7 get the
+ * stage ceremony, a stage card slot (row CM-23's cards, optional) and the Stage Check.
+ */
+export const PRIZE_STAGES: Readonly<Record<StageKey, StagePrize>> = {
+  stage1: { ceremony: 'hangul', check: 'StageReview', flag: null },
+  stage2: UPPER,
+  stage3: UPPER,
+  stage4: UPPER,
+  stage5: UPPER,
+  stage6: UPPER,
+  stage7: UPPER,
+};
+
+/** The stage whose prize is the Hangul ceremony (Stage 1): its Journey header and Results keep their own buttons. */
+export const HANGUL_PRIZE_STAGE: StageKey = 'stage1';
 
 /** Results offers "See your Stage 1 prize" only on the run that completed Stage 1 (`QuestResultOutcome.stageCompleted`). */
 export function opensStagePrize(outcome: { stageCompleted: StageKey | null } | null): boolean {
-  return outcome?.stageCompleted === PRIZE_STAGE;
+  return outcome?.stageCompleted === HANGUL_PRIZE_STAGE;
+}
+
+/**
+ * The stage whose prize Results offers as its one primary: the stage the run completed, when its prize is open now.
+ * Stage 1 always (unchanged); a Stage 2-7 prize only while its switch is on (`upperOn`: `stageChecks` for the learner).
+ */
+export function prizeStageOf(outcome: { stageCompleted: StageKey | null } | null, upperOn: boolean): StageKey | null {
+  const stage = outcome?.stageCompleted ?? null;
+  return stage !== null && (PRIZE_STAGES[stage].flag === null || upperOn) ? stage : null;
 }
 
 /**

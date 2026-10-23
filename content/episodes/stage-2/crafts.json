@@ -10,7 +10,7 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:swing"],
   "quests": [
     {
       "id": "quest:stage2-crafts-q1",

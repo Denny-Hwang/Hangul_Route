@@ -175,6 +175,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(SCREEN_CHUNKS).toEqual([
       { name: 'guest-chunk', marker: 'screen-chunk:guest' },
       { name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' },
+      { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
+      { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
+      { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
     ]);
   });
 
@@ -189,22 +192,60 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/navigation/guest.tsx')).toContain("import('./guest-chunk')");
     expect(read('src/screens/parent/guest-keep-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[1].marker}';`);
     expect(read('src/screens/parent/guest-keep.tsx')).toContain("import('./guest-keep-chunk')");
+    // Row CM-21: the Cell Check's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/cell-check/cell-check-chunk.tsx')).toContain(`export const CELL_CHECK_CHUNK = '${SCREEN_CHUNKS[2].marker}';`);
+    expect(read('src/screens/cell-check/cell-check-entry.tsx')).toContain("import('./cell-check-chunk')");
+    // Row CM-22: the Stage Check's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
+    expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
+    // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
+    expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
+    expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
-    expect(LEARNER_CHUNKS).toEqual([{ name: 'goals-chunk', marker: 'goals-chunk:goals' }]);
+    expect(LEARNER_CHUNKS[0]).toEqual({ name: 'goals-chunk', marker: 'goals-chunk:goals' });
     expect(read('src/screens/goals/goals-chunk.ts')).toContain(`export const GOALS_CHUNK = '${LEARNER_CHUNKS[0].marker}';`);
     // Reached only through the entry's literal import(): a static import would fold it back into the start bundle.
     expect(read('src/store/goals-entry.ts')).toContain("import('../screens/goals/goals-chunk')");
     const start = { url: START, text: 'var g=1;' };
     const text = `__d(function(){var m="${LEARNER_CHUNKS[0].marker}"})`;
     const goals = { url: `${WEB_JS_DIR}/goals-chunk-${md5(text)}.js`, text };
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
-    expect(markedChunkProblems({ chunks: LEARNER_CHUNKS, bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [start, goals], precached: all([start, goals]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[0]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
       `goals-chunk is in the start bundle ${START}: a static import pulled it in`,
       'goals-chunk has no web bundle: the chunk is missing from the build',
     ]);
+  });
+
+  it('the mastery ring and banners are a learner chunk of their own (row CM-20), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[1]).toEqual({ name: 'mastery-chunk', marker: 'mastery-chunk:ui' });
+    expect(read('src/screens/mastery/mastery-chunk.ts')).toContain(`export const MASTERY_CHUNK = '${LEARNER_CHUNKS[1].marker}';`);
+    // Reached only through the entry's literal import(), and sharing no module with the memory chunk.
+    expect(read('src/store/mastery-entry.ts')).toContain("import('../screens/mastery/mastery-chunk')");
+    expect(read('src/logic/memory/memory-chunk.ts')).not.toContain('screens/mastery');
+    const start = { url: START, text: 'var g=1;' };
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[1].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/mastery-chunk-${md5(text)}.js`, text };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[1]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[1]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+      `mastery-chunk is in the start bundle ${START}: a static import pulled it in`,
+      'mastery-chunk has no web bundle: the chunk is missing from the build',
+    ]);
+  });
+
+  it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });
+    expect(read('src/screens/quest/quest-pacing-chunk.tsx')).toContain(`export const QUEST_PACING_CHUNK = '${LEARNER_CHUNKS[2].marker}';`);
+    // Reached only through the gate's literal import(): a static import would fold it back into the start bundle.
+    expect(read('src/screens/quest/quest-pacing.ts')).toContain("import('./quest-pacing-chunk')");
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[2].marker}"})`;
+    const pacing = { url: `${WEB_JS_DIR}/quest-pacing-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[2]], bundles: [start, pacing], precached: all([start, pacing]) })).toEqual([]);
   });
 
   it('passes a build where each locale is its own precached bundle carrying its marker', () => {
@@ -221,6 +262,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'BrowseApp has no web bundle: the chunk is missing from the build',
       'guest-chunk has no web bundle: the chunk is missing from the build',
       'guest-keep-chunk has no web bundle: the chunk is missing from the build',
+      'cell-check-chunk has no web bundle: the chunk is missing from the build',
+      'stage-check-chunk has no web bundle: the chunk is missing from the build',
+      'upper-cards-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -365,8 +409,17 @@ describe('precacheReport and its budget lines', () => {
     // sessions are a chunk of their own), CM-16 4,742,801 B and CM-17 4,739,306 B, each on its own base. The phase-1
     // integration (integrate/curr-phase1: rows CM-10 to CM-17 together) measures 4,760,960 B (release build). [GU] The
     // guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6 on it, switch off) measures 4,804,191 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_810_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeGreaterThanOrEqual(0);
+    // CM-21 (the Cell Check, on main with CM-20 at 4,809,512 B) measures 4,809,323 B: the line stays. CM-22 (the Stage
+    // Checks, on CM-21, with every stage's prize ceremony moved into the stage-check chunk) measures 4,806,089 B.
+    // The phase-2 integration (integrate/curr-phase2: CM-20 to CM-25 together) measures 4,812,581 B (release build).
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_813_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_812_581).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_323).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_806_089).toBeGreaterThanOrEqual(0);
+    // CM-23 part 1 (the upper-cell cards of Stages 2-3, on CM-22; backs, drawings and albums in a chunk) measures 4,809,851 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_851).toBeGreaterThanOrEqual(0);
+    // CM-23 part 2 (Stage 4's cards on part 1; the album order and the art ids moved out of the start bundle) measures 4,809,875 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_875).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

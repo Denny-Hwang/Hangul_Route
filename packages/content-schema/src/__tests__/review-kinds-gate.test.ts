@@ -19,8 +19,20 @@ const entry = (id: string, kind: ReviewEntry['kind'], scope: string, extra: Part
   ReviewEntrySchema.parse({ id, kind, generatedAt: `${scope}T10:00:00.000Z`, scope, itemIds: ['lex:bap'], ...extra });
 
 describe('the gated review kinds', () => {
-  it('names warmup, the kind row CM-15 writes first', () => {
-    expect(GATED_REVIEW_KINDS).toEqual(['warmup']);
+  it('names warmup, the kind row CM-15 writes first, then cell-check (row CM-21, Worker first)', () => {
+    expect(GATED_REVIEW_KINDS).toEqual(['warmup', 'cell-check']);
+  });
+
+  it('keeps the Cell Check entries out of a copy for a reader that does not declare them (row CM-21)', () => {
+    const list = [
+      entry('daily:2026-10-20:a', 'daily', '2026-10-20', { resultStars: 3 }),
+      entry('cell-check:x', 'cell-check', 'episode:stage2-life', { resultStars: 3 }),
+      entry('warmup:2026-10-20', 'warmup', '2026-10-20'),
+    ];
+    // A build from CM-15 to CM-20 declares warmup only: it never sees a cell-check entry.
+    expect(reviewsForReader(list, new Set(['warmup'])).map((r) => r.id)).toEqual(['daily:2026-10-20:a', 'warmup:2026-10-20']);
+    expect(reviewsForReader(list, new Set<string>()).map((r) => r.id)).toEqual(['daily:2026-10-20:a']);
+    expect(reviewsForReader(list, new Set(['warmup', 'cell-check']))).toBe(list);
   });
 
   it('keeps the warm-up entries out of a copy for a reader that does not declare them, and returns the list itself otherwise', () => {

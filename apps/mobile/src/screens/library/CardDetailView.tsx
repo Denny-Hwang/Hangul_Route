@@ -18,7 +18,7 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { FlipCard } from '../../components/FlipCard';
@@ -41,6 +41,7 @@ import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryLoaded } from '../story-content';
+import { useUpperCardBack } from './upper-cards-entry';
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -56,7 +57,7 @@ export interface CardDetailViewProps {
   state?: CardDetailState;
 }
 
-export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): React.ReactElement {
+export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();
@@ -65,14 +66,19 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   const source = cardById(cardId);
   // A story card's blurb, fact and citation come from its story's chunk (F-CURR-002 §10, row CM-8): until it is in,
   // the card shows its front only (no flip, no Share), so its back is never drawn or shared blank.
-  const storyReady = useStoryLoaded(source?.storyId);
-  const card = source && localizeCard(source, locale);
+  // An upper-cell card's back comes from the upper-cards chunk (F-CURR-002 row CM-23), the same way.
   // [GU] The active learner (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3): the guest's id in a guest run, which has no
   // profile record, so the card a guest just earned shows its earned face, flip and Share (7.1, See my card).
   const learnerId = useActiveLearnerId();
   // A preview reads no learner's cards: it shows every card as an earned one.
   const snap = useProgressStore((s) => (state === 'preview' || learnerId === null ? undefined : s.byProfile[learnerId]));
   const earned = snap?.cards.some((c) => c.cardId === cardId) ?? false;
+  // F-CURR-002 row CM-23: while `upperCards` is off for this learner, an upper-cell card they do not hold is not in this
+  // build's view: a link to it opens "not found", with no earn hint. A preview's cards are All lessons' (its bundle
+  // leaves them out while the switch is off for everyone).
+  const upper = useUpperCardBack(source, earned || state === 'preview');
+  const storyReady = useStoryLoaded(source?.storyId) && upper.ready;
+  const card = upper.card && localizeCard(upper.card, locale);
   // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
   const hint = useMemo(() => {
     if (!source) return null;
@@ -110,7 +116,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
     if (!canFlip) setFace('front');
   }, [canFlip]);
 
-  if (!card) {
+  if (!card || upper.hidden) {
     return (
       <Screen>
         <Body>{m.notFound}</Body>
@@ -158,7 +164,8 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
 
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
-      {face === 'front' && unlocked ? (
+      {/* Like the flip, it waits for the chunk that holds the back (a story's, or the upper cards'), so it is never drawn empty. */}
+      {face === 'front' && unlocked && storyReady ? (
         <>
           <Spacer size="lg" />
           <Card padding="md">
@@ -249,8 +256,8 @@ function CardShell({
   card: HeritageCard;
   rarityLabel: string;
   flipHint: string | null;
-  children: React.ReactNode;
-}): React.ReactElement {
+  children: ReactNode;
+}): ReactElement {
   const rarityTone =
     card.rarity === 'legendary'
       ? 'nudge'
@@ -291,7 +298,7 @@ function CardShell({
  * (F-STORY-006 §3.7), or "later" for a rule this build cannot explain. Never how far along; no
  * paywall, no Premium pill (D5).
  */
-function HowToEarn({ hint }: { hint: string | null }): React.ReactElement {
+function HowToEarn({ hint }: { hint: string | null }): ReactElement {
   const m = useMessages().learner.cardDetail.earn;
   return (
     <>
@@ -311,7 +318,7 @@ function FrontFaceBody({
 }: {
   card: HeritageCard;
   unlocked: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const a11y = useMessages().a11y;
   return (
     <View style={{ alignItems: 'center' }}>
@@ -364,7 +371,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  * which a screen reader reads as one control, and is cut at two lines; the fact card under the
  * flip card repeats it in full, where assistive tech reaches it.
  */
-function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): React.ReactElement {
+function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 'fact-card' }): ReactElement {
   const textScale = useTypeScale();
   // Caption's style (muted, medium weight); a raw Text so the line can be cut at two lines and its Korean runs nested.
   const line = {
@@ -393,7 +400,7 @@ function CitationLines({ view, face }: { view: CardCitationView; face: 'back' | 
   );
 }
 
-function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
+function BackFaceBody({ card }: { card: HeritageCard }): ReactElement {
   const citation = cardCitationView(card, useMessages().learner.cardDetail.citation);
   return (
     <View style={{ alignItems: 'center', paddingVertical: spacing.lg }}>

@@ -52,6 +52,7 @@ const fields = {
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
   steadyWeeks: { '2026-10-19': '2026-10-21T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-21T09:00:00.000Z' },
 };
 const memory = { wordsKnown: 42, readyToRefresh: 7, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 18, topDue: ['lex:sagwa'] };
 
@@ -71,9 +72,9 @@ async function put(learnerId: string, auth: Record<string, string>, body: Record
 }
 
 type Stored = { snapshot: Record<string, unknown> & { reviews: Array<{ id: string }>; sessions: Array<Record<string, unknown>> }; summary: Record<string, unknown> };
-/** Read as a build that reads every CM-3b review kind (`?cap=warmup`, row CM-15; the gate itself is sync-review-gate.test.ts). */
+/** Read as a build that reads every CM-3b review kind (`?cap=warmup,cell-check`, row CM-15; the gate itself is sync-review-gate.test.ts). */
 async function get(learnerId: string, auth: Record<string, string>): Promise<Stored> {
-  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot?cap=warmup`, { headers: auth });
+  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot?cap=warmup,cell-check`, { headers: auth });
   return ((await res.json()) as { data: Stored }).data;
 }
 
@@ -224,8 +225,8 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const auth = await register(DEVICE_A, 'profile:suni');
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews: mixedReviews }), summary });
     const fewer = snapshotFor('profile:suni', { reviews: [review('review:a', 'daily')] });
-    // Sent by a build that reads every kind it holds (`?cap=warmup`); one that cannot read `warmup` keeps it (row CM-15).
-    const res = await app.request('/api/sync/learners/profile:suni/snapshot?cap=warmup', { method: 'PUT', headers: auth, body: JSON.stringify({ ...base, baseRev: 1, snapshot: fewer, summary }) });
+    // Sent by a build that reads every kind it holds (`?cap=warmup,cell-check`); one that cannot read `warmup` keeps it (row CM-15).
+    const res = await app.request('/api/sync/learners/profile:suni/snapshot?cap=warmup,cell-check', { method: 'PUT', headers: auth, body: JSON.stringify({ ...base, baseRev: 1, snapshot: fewer, summary }) });
     expect(res.status).toBe(200);
     expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:a']);
   });
@@ -235,7 +236,7 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { ...fields, reviews: mixedReviews }), summary });
     const issued = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId: 'profile:suni' }) });
     const code = ((await issued.json()) as { data: { code: string } }).data.code;
-    const res = await app.request('/api/recovery/claim?cap=warmup', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
+    const res = await app.request('/api/recovery/claim?cap=warmup,cell-check', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
     expect(res.status).toBe(200);
     const data = ((await res.json()) as { data: { snapshot: { snapshot: Stored['snapshot'] } } }).data;
     expect(data.snapshot.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);
@@ -253,6 +254,19 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     // An older build leaves the key out: the count never drops.
     await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
     expect(Object.keys((await get('profile:suni', auth)).snapshot.steadyWeeks as object)).toHaveLength(3);
+  });
+  it('stageCeremonyAt (row CM-22, Worker first): two devices union their stages, the earliest time per stage, a time past the Worker now reads as now', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const phone = { stage2: '2026-10-21T09:00:00.000Z' };
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { stageCeremonyAt: phone }), summary });
+    // A tablet that summed up Stage 2 later and Stage 3 with a clock that read 2099.
+    const tablet = { stage2: '2026-10-22T08:00:00.000Z', stage3: '2099-01-01T00:00:00.000Z' };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: snapshotFor('profile:suni', { stageCeremonyAt: tablet }), summary })).status).toBe(200);
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot.stageCeremonyAt).toEqual({ stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-22T12:00:00.000Z' });
+    // An older build leaves the key out: no stage is summed up again on any device.
+    await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
+    expect((await get('profile:suni', auth)).snapshot.stageCeremonyAt).toEqual({ stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-22T12:00:00.000Z' });
   });
 });
 

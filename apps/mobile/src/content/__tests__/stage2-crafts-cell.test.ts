@@ -77,10 +77,11 @@ const drawn = (ref: string): boolean =>
   ref.startsWith('card:') ? supportedCardIds.includes(ref) : ref.startsWith('word:') && WORD_ART_KEYS.includes(ref.slice('word:'.length));
 
 describe('Playground Words (F-CURR-001 S2-3)', () => {
-  it('is the crafts cell of Stage 2, three quests, no new cards (section 3.12)', () => {
+  it('is the crafts cell of Stage 2, three quests; its one card is the album card of row CM-23 (F-CURR-002 section 7.2), on no quest', () => {
     expect(cell.id).toBe('episode:stage2-crafts');
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage2-crafts-q1', 'quest:stage2-crafts-q2', 'quest:stage2-crafts-q3']);
-    expect(cell.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(cell.rewardCardIds).toEqual(['card:swing']);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 

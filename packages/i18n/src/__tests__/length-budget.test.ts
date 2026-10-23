@@ -99,6 +99,10 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'caregiver.people.removeAnyway': '"Quitar de todos modos" (21) against "Remove anyway" (13), one letter over: the idiom of the allow-listed console.confirm.copyAnyway; a quiet ConfirmSheet button that wraps',
   // F-CURR-002 row CM-14: the Daily Review result's stars, read aloud only.
   'a11y.dailyReview.stars': '"1 estrella" (10) against "1 star" (6): the one Spanish word for star; read aloud, never drawn',
+  // F-CURR-002 row CM-23: an album's name, drawn on its own line in an album row that wraps.
+  'learner.library.albums.names.nature': '"Naturaleza" (10) against "Nature" (6), one letter over the 9 the floor allows: the one Spanish word for nature (the themeNames form; the Journey cell word is Campo); drawn on its own line in an album row that wraps at 320',
+  // F-CURR-002 row CM-20: the level word of the mastery ring, the same word the grown-up report's mastery line uses.
+  'learner.mastery.level.done': '"Terminado" (9) against "Done" (4), one letter over the 8-character floor: the report\'s level word ("1 terminado"); drawn only in a line that wraps (the level-up banner) and read in a cell label',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

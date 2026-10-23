@@ -96,6 +96,13 @@ describe('backup file (F-SYNC-001 §3.6)', () => {
     expect(older.success && 'memory' in older.data).toBe(false);
     expect(JSON.parse(text)).toMatchObject({ format: 'hangul-route-backup', version: 1 });
   });
+  it('never writes a Cell Check review into a file either (row CM-21): its best result is the snapshot latch, which the file keeps', () => {
+    const check = { id: 'cell-check:a', kind: 'cell-check' as const, generatedAt: '2026-10-21T09:00:00.000Z', scope: 'episode:stage2-life', itemIds: ['lex:bap'], resultStars: 3 as const };
+    const held = { ...snapshot, reviews: [check], cellCheckAt: { 'episode:stage2-life': '2026-10-21T09:00:00.000Z' } };
+    const file = JSON.parse(encodeBackup(profile, held, new Date('2026-10-21T10:00:00Z'))) as { snapshot: ProgressSnapshot };
+    expect(file.snapshot.reviews).toEqual([]);
+    expect(file.snapshot.cellCheckAt).toEqual({ 'episode:stage2-life': '2026-10-21T09:00:00.000Z' });
+  });
   it('never writes a warm-up review into a file, so an app build from before CM-3b can still restore it (F-CURR-002 section 13, row CM-15)', () => {
     const entry = (id: string, kind: 'warmup' | 'feedback') => ({ id, kind, generatedAt: '2026-10-21T09:00:00.000Z', scope: '2026-10-21', itemIds: ['lex:bap'] });
     const held = { ...snapshot, reviews: [entry('warmup:2026-10-21', 'warmup'), entry('feedback:2026-10-21', 'feedback')] };

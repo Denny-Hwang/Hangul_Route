@@ -92,8 +92,8 @@ function RoundDots({ filled, total, current }: { filled: number; total: number; 
   );
 }
 
-/** [x] and the dots, at the top of a round and of the loading frame. */
-function TopRow({ onClose, filled, total, current }: { onClose: () => void; filled: number; total: number; current: number }): React.ReactElement {
+/** [x] and the dots, at the top of a round and of the loading frame (the Cell Check draws it too, row CM-21). */
+export function TopRow({ onClose, filled, total, current }: { onClose: () => void; filled: number; total: number; current: number }): React.ReactElement {
   const m = useMessages();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -111,7 +111,7 @@ function TopRow({ onClose, filled, total, current }: { onClose: () => void; fill
   );
 }
 
-function DisplayHeadline({ children, testID }: { children: string; testID?: string }): React.ReactElement {
+export function DisplayHeadline({ children, testID }: { children: string; testID?: string }): React.ReactElement {
   const capped = useCappedFont('display', DISPLAY_HEADLINE_MAX_SCALE);
   return (
     <Heading level="display" align="center" style={{ fontSize: capped.fontSize }} testID={testID}>

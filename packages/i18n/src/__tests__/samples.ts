@@ -976,4 +976,19 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.guest.savedNoCard': [['Sam'], ['Jo Ann']],
   // [GU] The Privacy Policy's first-quest bullet (AMENDMENTS-GUEST-FIRST-LESSON row GU-6): GUEST_TTL_DAYS and GUEST_TTL_SHARED_DAYS.
   'landing.legal.privacy.sections.collect.bullets.guest': [[{ email: 'hello@example.com', levels: 'New reader / Some reading', days: 30, sharedDays: 7 }]],
+  // F-CURR-002 row CM-20: a cell title and its level word; Words known counts (from 1), a milestone as the screen formats it.
+  'learner.mastery.levelUp': [['Lunch Box Words', 'Practiced'], ['Family at the Table', 'Mastered']],
+  'learner.wordsKnown.pill': [[1], [120], [2000, '2,000']],
+  'learner.wordsKnown.route': [['1'], ['120'], ['1,200']],
+  'learner.wordsKnown.milestone': [['100'], ['1,000']],
+  // F-CURR-002 row CM-22: a stage number (2-7); the stages the one summary lists; the best stars (1 to 3).
+  'learner.results.upperStagePrize.cta': [[2], [7]],
+  'learner.upperStageComplete.title': [[2], [7]],
+  'learner.stageCheck.retro.title': [[[2]], [[2, 3]], [[2, 3, 4]], [[2, 3, 4, 6, 7]]],
+  'a11y.stageCheck.best': [[1], [2], [3]],
+  // F-CURR-002 row CM-23: an album's card count (from 1; an album with none says New), and an album row's name with its status.
+  'learner.library.albums.count': [[1], [2], [12]],
+  'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
+  // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
+  'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
 };

@@ -352,6 +352,52 @@ function compose(tiers: readonly { cands: readonly Candidate[]; max?: number }[]
 
 const oneTheme = (cands: readonly Candidate[]): boolean => new Set(cands.map((c) => c.item.home)).size <= 1;
 
+/** The longest run of one format in a session. */
+const longestFormatRun = (qs: readonly ReviewQuestion[]): number => {
+  let max = 0;
+  let run = 0;
+  qs.forEach((q, i) => {
+    run = i > 0 && qs[i - 1]?.format === q.format ? run + 1 : 1;
+    max = Math.max(max, run);
+  });
+  return max;
+};
+
+/**
+ * Row CM-25: a Check's questions laid out again when `compose` left a run of one format longer than the cap. `compose`
+ * takes the selection order slot by slot, so a long Check whose produce picks come first (every item unmet, a 20-round
+ * Stage Jump, or no device voice so read is the only other way) can end on one format although the questions could be
+ * spread. Here each slot takes, among the questions that keep both caps (then the format cap, then the theme cap, then
+ * any), the one whose format has the most questions left, the first in order on a tie. The questions themselves do not
+ * change, only their order, so the produce share and the plan stay; deterministic.
+ */
+function spreadFormats(qs: readonly ReviewQuestion[], themeCapOn: boolean): ReviewQuestion[] {
+  if (longestFormatRun(qs) <= MAX_FORMAT_RUN) return [...qs];
+  const left = [...qs];
+  const out: ReviewQuestion[] = [];
+  const themes: string[] = [];
+  const formats: string[] = [];
+  const themeOk = (q: ReviewQuestion) => !themeCapOn || runOf(themes, q.theme) < MAX_THEME_RUN;
+  const formatOk = (q: ReviewQuestion) => runOf(formats, q.format) < MAX_FORMAT_RUN;
+  const passes: ((q: ReviewQuestion) => boolean)[] = [(q) => themeOk(q) && formatOk(q), formatOk, themeOk, () => true];
+  while (left.length > 0) {
+    const leftOf = new Map<string, number>();
+    for (const q of left) leftOf.set(q.format, (leftOf.get(q.format) ?? 0) + 1);
+    let at = -1;
+    for (const ok of passes) {
+      left.forEach((q, i) => {
+        if (ok(q) && (at < 0 || (leftOf.get(q.format) ?? 0) > (leftOf.get((left[at] as ReviewQuestion).format) ?? 0))) at = i;
+      });
+      if (at >= 0) break;
+    }
+    const [q] = left.splice(at, 1) as [ReviewQuestion];
+    out.push(q);
+    themes.push(q.theme);
+    formats.push(q.format);
+  }
+  return longestFormatRun(out) < longestFormatRun(qs) ? out : [...qs];
+}
+
 function session(kind: ReviewSessionKind, questions: ReviewQuestion[], endsEarly: boolean, capped = false): ReviewSession {
   return { kind, questions, endsEarly, soundNotice: questions.some((q) => q.voiceFallback), capped };
 }
@@ -474,8 +520,16 @@ export function buildCheck(ctx: EngineContext, req: CheckRequest): ReviewSession
     const st = ctx.states[id]?.st ?? { b: 0, d: null, c: 0, r: 0, n: 0, f: ctx.today, s: 0, at: '' };
     picked.push({ item, st });
   }
-  const chosen = picked.sort(bySelection(seed)).slice(0, Math.max(0, req.size));
+  const ordered = picked.sort(bySelection(seed));
+  const chosen = ordered.slice(0, Math.max(0, req.size));
   const produceWanted = Math.ceil(chosen.length * (req.produceShare ?? CHECK_PRODUCE_SHARE));
+  // Row CM-21: when the first `size` items cannot hold the produce share (a Stage 1 cell's symbols have no shipped
+  // produce round), the next items of the request that allow it take the places of the last ones that do not.
+  const producible = (e: { item: ReviewItem }): boolean => formatsAt(e.item, 'produce', ctx.voice, seed).length > 0;
+  const spare = ordered.slice(chosen.length).filter(producible);
+  for (let i = chosen.length - 1; i >= 0 && spare.length > 0 && chosen.filter(producible).length < produceWanted; i -= 1) {
+    if (!producible(chosen[i] as { item: ReviewItem })) chosen[i] = spare.shift() as (typeof chosen)[number];
+  }
   const canProduce = chosen
     .filter((e) => formatsAt(e.item, 'produce', ctx.voice, seed).length > 0)
     .sort((a, b) => b.st.s - a.st.s || jitter(seed, a.item.id) - jitter(seed, b.item.id));
@@ -485,8 +539,12 @@ export function buildCheck(ctx: EngineContext, req: CheckRequest): ReviewSession
     if (atProduce.size >= produceWanted) break;
     atProduce.add(e.item.id);
   }
-  const cands = chosen.map((e) => candidate(ctx, e.item, e.st, false, atProduce.has(e.item.id) ? 'produce' : rungToAsk(e.st)));
-  return session('check', compose([{ cands }], req.size, !oneTheme(cands)), false);
+  // Row CM-25: only the produce picks are pinned to a rung. The others keep the ladder's own rung and, in boxes 1-2, its
+  // second choice between recognize and read (section 4.3), so `compose` can keep the format cap on a long Check of
+  // unmet items (a 20-round Stage Jump) instead of a run of one heard format.
+  const cands = chosen.map((e) => candidate(ctx, e.item, e.st, false, atProduce.has(e.item.id) ? 'produce' : undefined));
+  const themeCapOn = !oneTheme(cands);
+  return session('check', spreadFormats(compose([{ cands }], req.size, themeCapOn), themeCapOn), false);
 }
 
 // ---- credit inside sentences (section 4.3) ----------------------------------------------------------------

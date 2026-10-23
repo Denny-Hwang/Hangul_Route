@@ -19,7 +19,7 @@ import {
   touchTarget,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -115,7 +115,7 @@ export function StoryEpisodeDetail({
   onOpenCellStories,
   cellStoryCount,
   onOpenCellStoriesRow,
-}: Props): React.ReactElement {
+}: Props): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const locale = useLocale();
@@ -180,7 +180,7 @@ export function StoryEpisodeDetail({
     if (last) void slotPlay(() => playPrompt(last.spec));
   };
   /** The panel at one place: quiet (nothing shown, the live region kept) unless the last tap was there. */
-  const soundPanel = (at: string, testID: string): React.ReactElement => (
+  const soundPanel = (at: string, testID: string): ReactElement => (
     <PromptPanel
       variant="status"
       view={soundAt === at ? slot.view : { ...slot.view, statusShown: false }}
@@ -425,9 +425,9 @@ function TaleRow({
   titleKo: EpisodeTitleKorean;
   onHearTitle: (title: EpisodeTitleKorean) => void;
   /** The page's status panel, drawn under this row's Korean title (shown when that title was tapped last). */
-  soundPanel: React.ReactElement;
+  soundPanel: ReactElement;
   onAction: (action: TaleRowAction) => void;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const id = row.entry.storyId;
   return (
@@ -487,7 +487,7 @@ function TaleRow({
 }
 
 /** An earned card (art, title, Korean, romanization; opens Card detail) or a silhouette with the rarity border and nothing else. */
-function RewardCard({ card, onOpen }: { card: EpisodeRewardCard; onOpen: () => void }): React.ReactElement {
+function RewardCard({ card, onOpen }: { card: EpisodeRewardCard; onOpen: () => void }): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   if (!card.earned) {

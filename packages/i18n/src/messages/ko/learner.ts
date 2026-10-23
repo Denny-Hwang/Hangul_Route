@@ -333,6 +333,14 @@ export const learner = {
       a11y: (title: string) => `${title}: 찾을 카드`,
       nextA11y: (hint: string) => `다음 카드. ${hint}`,
     },
+    albums: {
+      title: '앨범',
+      line: '테마마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
+      names: { letters: '글자', life: '음식', rites: '명절', nature: '자연', crafts: '놀이' },
+      count: (n: number) => `카드 ${n}장`,
+      fresh: '새로 시작',
+      a11y: (name: string, status: string) => `${name} 앨범: ${status}`,
+    },
     earnHint: {
       episode: (title: string) => `에피소드 끝내기: ${title}`,
       story: (title: string) => `이야기 끝내기: ${title}`,
@@ -397,6 +405,7 @@ export const learner = {
     backHome: { cta: '홈으로' },
     episodePage: { cta: '에피소드 페이지' },
     stagePrize: { cta: '1단계 선물 보기' },
+    upperStagePrize: { cta: (stage: number) => `${stage}단계 선물 보기` },
     nextUp: {
       title: '다음',
       next: { cta: '다음 퀘스트 하기' },
@@ -494,6 +503,10 @@ export const learner = {
         readingNow: { pill: '지금 읽는 중' },
         lineLabel: (line: number, total: number, speaker: string) => `${total}줄 중 ${line}번째 줄, ${speaker}`,
       },
+      compactLine: '카드 한 장에 두 개가 있어요. 하나씩 들어 보기를 눌러요.',
+    },
+    adapt: {
+      scaffoldHint: '힌트를 보며 하나 더 해요. 듣고 강조된 카드를 눌러요.',
     },
   },
 
@@ -1954,5 +1967,75 @@ export const learner = {
     },
     saved: (name: string) => `${name}, 카드가 라이브러리에 있어요.`,
     savedNoCard: (name: string) => `${name}, 첫 퀘스트를 저장했어요.`,
+  },
+  mastery: {
+    level: { done: '완료', practiced: '연습함', mastered: '익힘' },
+    readyToRefresh: '다시 볼 때예요',
+    newVolume: '새 묶음이 있어요',
+    levelUp: (title: string, level: string) => `${title}: ${level}`,
+  },
+  wordsKnown: {
+    pill: (count: number, shown: string = `${count}`) => `아는 낱말 ${shown}개`,
+    route: (count: string) => `내가 아는 낱말: ${count}개`,
+    milestone: (count: string) => `낱말 ${count}개! 호야가 정말 뿌듯해해요.`,
+  },
+  cellCheck: {
+    title: '칸 확인',
+    body: '3분쯤 걸려요. 이곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
+    cta: '칸 확인 시작하기',
+    done: '칸 확인 완료',
+    again: '다시 하기',
+    tricky: '어려웠던 것은 호야가 복습에서 다시 보여 줄게요.',
+    kept: '가장 좋은 결과가 남아요. 언제든지 다시 확인할 수 있어요.',
+    toPlace: '이곳으로 돌아가기',
+    toMap: '지도로 돌아가기',
+    hint: {
+      practiced: '계속 복습하면 ‘연습함’이 돼요.',
+      check: '칸 확인을 하면 ‘익힘’이 될 수 있어요.',
+      mastered: '계속 복습하면 ‘익힘’이 돼요.',
+    },
+  },
+  testOut: {
+    prompt: '이미 알고 있나요?',
+    title: '확인하고 넘어가기',
+    intro: '잘되면 이곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 계속 할 수 있어요.',
+    passed: '넘어갈 수 있어요!',
+    start: '좋은 시작이에요!',
+    startBody: '첫 퀘스트부터 시작해요. 나머지는 호야가 도와줄게요.',
+    pill: '이미 알아요',
+    stageHint: '확인하고 넘어간 퀘스트를 하면 이 단계를 끝낼 수 있어요.',
+  },
+  /** The Stages 2-7 ceremony (row CM-22): "N단계", as the Stage 1 prize says. */
+  upperStageComplete: {
+    title: (stage: number) => `${stage}단계 완료!`,
+    cheer: '이 단계의 모든 곳을 끝냈어요. 호야가 정말 뿌듯해해요.',
+    cardTitle: '나의 단계 카드',
+  },
+  /** The Stage Check (row CM-22): "단계 확인", beside "한글 확인" and "칸 확인"; never 시험 or 테스트. */
+  stageCheck: {
+    title: '단계 확인',
+    offer: { cta: '단계 확인해 보기', body: '7분쯤 걸려요. 건너뛰어도 돼요.' },
+    intro: '7분쯤 걸려요. 다섯 곳에서 배운 낱말, 소리, 문장이 나와요. 시간 제한은 없어요. 언제든지 다시 할 수 있어요. 가장 좋은 결과가 남아요.',
+    pause: '잘 읽었어요! 더 해 볼까요?',
+    best: '가장 좋은 결과가 남아요.',
+    notReady: '이 확인은 아직 열리지 않았어요. 퀘스트를 계속해 봐요.',
+    retro: {
+      // The last two stages join with 와 (단계 ends in a vowel): "2단계와 3단계를", "2단계, 3단계와 4단계를".
+      title: (stages: readonly number[]) => {
+        const named = stages.map((n) => `${n}단계`);
+        const head = named.slice(0, -1).join(', ');
+        return `${head === '' ? '' : `${head}와 `}${named[named.length - 1] ?? ''}를 이미 끝냈어요`;
+      },
+      body: '여기 나의 단계 카드가 있어요.',
+      bodyNoCards: '끝낸 단계는 모두 여정에 남아 있어요.',
+    },
+  },
+  stageJump: {
+    prompt: '이 단계를 이미 알고 있나요?',
+    cta: '단계 넘어가기',
+    label: (stage: number, title: string) => `${stage}단계 넘어가기: ${title}`,
+    intro: '7분쯤 걸려요. 이 단계의 모든 곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
+    extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
+    passed: '단계를 건너뛰었어요!',
   },
 } satisfies DeepPartial<Messages['learner']>;

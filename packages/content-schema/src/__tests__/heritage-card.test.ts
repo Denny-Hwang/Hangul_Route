@@ -95,6 +95,11 @@ describe('HeritageCardSchema story-card fields (F-STORY-006 §3.2)', () => {
     expect(issuePaths({ ...card, factId: 'f1' })).toContain('storyId');
   });
 
+  it('an upper-cell card (F-CURR-002 row CM-23) may carry a citation with no story and no factId', () => {
+    expect(parses({ ...card, citation: { title: '국가무형유산 추석', publisher: '국가유산청 (Korea Heritage Service)' } })).toBe(true);
+    expect(issuePaths({ ...card, citation: { title: 'T', publisher: '' } })).toContain('citation.publisher');
+  });
+
   it('a story card may carry storyId alone (before its fact is chosen)', () => {
     expect(parses({ ...card, storyId: 'story:sun-and-moon' })).toBe(true);
   });

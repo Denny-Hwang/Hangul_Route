@@ -41,3 +41,4 @@ export const supportedCardIds: readonly string[] = [
   'card:pottery',
   'card:gayageum',
 ];
+

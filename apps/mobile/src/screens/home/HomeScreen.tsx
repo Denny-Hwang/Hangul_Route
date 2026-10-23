@@ -24,7 +24,7 @@ import {
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -33,6 +33,7 @@ import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
+import { formatNumber } from '@hangul-route/i18n';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
@@ -83,6 +84,7 @@ import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
 import type { RootStackParamList } from '../../navigation/types';
+import { StageRecapSlot } from '../stage-check/stage-check-entry';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
@@ -111,6 +113,7 @@ import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
 import { missionDailyReviewOf, useDailyReviewHome } from './use-daily-review-home';
+import { useMastery } from '../../store/mastery-entry';
 import { VocabMissionCard } from './VocabMissionCard';
 import { ClassUpdateHomeLines } from '../class-update/ClassUpdateHomeLines';
 import { TransferHomeLine } from '../transfer/TransferHomeLine';
@@ -186,7 +189,7 @@ function MissionTile({
    */
   sameAsHero?: boolean;
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
@@ -286,7 +289,7 @@ function NextLessonCard({
   onStart: () => void;
   /** See your Learning Route (the Route tab); null while the Learning Route is off. */
   onRoute: (() => void) | null;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const copy = m.learner.home.next;
   const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
@@ -344,7 +347,7 @@ function CatchUpCard({
   count: number;
   hoyaSize: number;
   onSeeCards: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   return (
     <View testID="home-catch-up">
@@ -364,7 +367,7 @@ function CatchUpCard({
   );
 }
 
-export function HomeScreen(): React.ReactElement {
+export function HomeScreen(): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
@@ -419,6 +422,8 @@ export function HomeScreen(): React.ReactElement {
   const homeworkDue = dueTodayCount(snap?.homework, today);
   // The Daily Review (F-CURR-002 row CM-14): slot 3 from 3 due items, first on a review-first day; off, today's slot 3.
   const dailyReview = useDailyReviewHome(profile?.id ?? null, localToday, snap?.reviews);
+  // Words known (F-CURR-002 section 4.4, row CM-20): the pill only while `mastery` is on and the learner records, from 1.
+  const wordsKnown = useMastery(profile?.id ?? null, snap, localToday)?.read?.wordsKnown ?? 0;
   const dailyReviewInput = missionDailyReviewOf(dailyReview);
   // The day's plan waits for the first read (at most DAILY_REVIEW_HOME_WAIT_MS), so a fresh pin never misses the card it should hold.
   const awaitReview = dailyReview.state === 'loading' && profile !== undefined && profile !== null && pinnedMission(profile.id, today) === null;
@@ -934,7 +939,7 @@ export function HomeScreen(): React.ReactElement {
 
   // Row 2a (F-FEEDBACK-001 FB-8, F-ROUTE-001 section 6.4): a new note from a teacher or the family,
   // after the mission cards; in two columns it heads the right column. Nothing with the flag off.
-  const notesCard = (place: 'after' | 'top'): React.ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
+  const notesCard = (place: 'after' | 'top'): ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
 
   // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
   // with no mission cards: one column as always.
@@ -945,6 +950,8 @@ export function HomeScreen(): React.ReactElement {
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
       {/* [OA] A refused sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): once, over the start. */}
       <PinResetExpiredNotice />
+      {/* F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once. */}
+      <StageRecapSlot profileId={profile?.id ?? null} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: switchShown ? 'wrap' : 'nowrap' }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}
@@ -993,6 +1000,7 @@ export function HomeScreen(): React.ReactElement {
         {/* The streak pill waits for the first day: never "Streak 0 days". Once the goals strip is drawn, the streak is its line;
             while its chunk loads or cannot load (offline before the precache), the pill stays. */}
         {!(goals && profile) && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
+        {wordsKnown >= 1 ? <Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown, formatNumber(locale, wordsKnown))} testID="home-words-known" /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
