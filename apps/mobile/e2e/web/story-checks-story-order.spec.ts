@@ -182,9 +182,11 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
       await expect(page.getByTestId('story-order-replay')).toBeVisible();
       await expect(page.getByTestId('story-order-replay-pause')).toHaveCount(0);
       await page.waitForTimeout(3_500);
-      await expect(page.getByTestId('story-order-replay-line-up')).toHaveAttribute('aria-live', 'polite');
+      const live = page.getByTestId('story-order-replay-announce');
+      await expect(live).toHaveAttribute('aria-live', 'polite');
+      await expect(live).toHaveText(`${MORNING.panels[0]!.caption.ko} ${MORNING.panels[0]!.caption.en}`);
       await page.getByTestId('story-order-replay-next').click();
-      await expect(page.getByTestId('story-order-replay-line-wash')).toHaveAttribute('aria-live', 'polite');
+      await expect(live).toHaveText(`${MORNING.panels[1]!.caption.ko} ${MORNING.panels[1]!.caption.en}`);
     });
   });
 
@@ -195,7 +197,7 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
       await open(page, 'captions');
       for (const p of MORNING.panels) await card(page, p.id).click();
       await expect(page.getByTestId('story-order-replay-pause')).toBeVisible();
-      await expect(page.getByTestId('story-order-replay-line-wash')).toHaveAttribute('aria-live', 'polite', { timeout: 6_000 });
+      await expect(page.getByTestId('story-order-replay-announce')).toHaveText(`${MORNING.panels[1]!.caption.ko} ${MORNING.panels[1]!.caption.en}`, { timeout: 6_000 });
     });
   });
 

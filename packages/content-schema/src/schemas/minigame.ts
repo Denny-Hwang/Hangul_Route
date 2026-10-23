@@ -475,16 +475,24 @@ export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
  * round, its picture, listed in the RIGHT order (the game deranges them). The cards show the Korean and
  * its romanization only while the learner orders them; the gloss shows on Show meanings and in the replay.
  */
-export const StoryOrderPanelSchema = z.object({
-  id: z.string().min(1),
-  caption: KoTextSchema,
-  pictureRef: PictureRefSchema.optional(),
-});
+/**
+ * A slug: the memory item id is `<round>/<panel>` and the gloss overlay key joins ids with `.`, so neither may hold one.
+ */
+const StoryOrderIdSchema = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'a lowercase slug (letters, digits, hyphens)');
+
+/** Strict: an unknown key (such as an `art` the game never draws) fails the build instead of being dropped. */
+export const StoryOrderPanelSchema = z
+  .object({
+    id: StoryOrderIdSchema,
+    caption: KoTextSchema,
+    pictureRef: PictureRefSchema.optional(),
+  })
+  .strict();
 export type StoryOrderPanel = z.infer<typeof StoryOrderPanelSchema>;
 
 export const StoryOrderRoundSchema = z
   .object({
-    id: z.string().min(1),
+    id: StoryOrderIdSchema,
     panels: z.array(StoryOrderPanelSchema).min(3).max(5),
     /** Drawn without its pictures (a panel may still name one): the order comes from the Korean alone. */
     captionsOnly: z.boolean().optional(),

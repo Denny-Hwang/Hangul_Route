@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { renderedKind } from '../../../logic/game-switches';
 import type { MinigameScope } from '../../../logic/minigame-config';
-import { STORY_ORDER_FLAG, playableStoryOrder, storyOrderFallbackScopes, storyOrderKeyPrefix } from '../../../logic/story-order/fallback';
+import { STORY_ORDER_FLAG, playableStoryOrder, storyOrderFallbackItem, storyOrderFallbackScopes, storyOrderKeyPrefix } from '../../../logic/story-order/fallback';
 import { useCurrFlag } from '../../../store/remote-config-store';
 import { LessonWaiting } from '../../lesson-content';
-import { OopsScreen } from '../../system/OopsScreen';
 import type { MinigameHost } from '../host';
 import { StorySequenceGame } from '../StorySequenceGame';
 
@@ -42,15 +42,16 @@ interface Props {
 export function StoryOrderStep({ scope, host, sequenceId, onFallbackFinish }: Props): ReactElement {
   const live = useCurrFlag(STORY_ORDER_FLAG);
   const decided = useRef<boolean | null>(null);
-  decided.current ??= live;
+  // `GAME_SWITCHES` is the one table of switch and fallback (section 12.2); this step reads it.
+  decided.current ??= renderedKind('story-order', (name) => name === STORY_ORDER_FLAG && live) === 'story-order';
   return decided.current ? (
-    <StoryOrderLazy scope={scope} host={host} sequenceId={sequenceId} />
+    <StoryOrderLazy scope={scope} host={host} sequenceId={sequenceId} onFallbackFinish={onFallbackFinish} />
   ) : (
-    <StoryOrderFallback scope={scope} sequenceId={sequenceId} onFinish={onFallbackFinish} />
+    <StoryOrderFallback scope={scope} host={host} sequenceId={sequenceId} onFinish={onFallbackFinish} />
   );
 }
 
-function StoryOrderLazy({ scope, host, sequenceId }: Omit<Props, 'onFallbackFinish'>): ReactElement {
+function StoryOrderLazy({ scope, host, sequenceId, onFallbackFinish }: Props): ReactElement {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -64,14 +65,20 @@ function StoryOrderLazy({ scope, host, sequenceId }: Omit<Props, 'onFallbackFini
       on = false;
     };
   }, [chunk, failed]);
-  if (failed) return <OopsScreen onRetry={() => setFailed(false)} />;
+  // The chunk did not load (offline before the service worker cached it, a stale worker after a deploy): the rounds
+  // play as the fallback, which is in the start bundle, so the step is never a dead end.
+  if (failed) return <StoryOrderFallback scope={scope} host={host} sequenceId={sequenceId} onFinish={onFallbackFinish} />;
   if (chunk === null) return <LessonWaiting />;
   const { StoryOrderGame } = chunk;
   return <StoryOrderGame scope={scope} host={host} sequenceId={sequenceId} />;
 }
 
-/** Board O3: each round as Story Sequence with text cards, in order; its last round, or a skip, ends the step. */
-function StoryOrderFallback({ scope, sequenceId, onFinish }: { scope: MinigameScope; sequenceId: string; onFinish: () => void }): ReactElement {
+/**
+ * Board O3: each round as Story Sequence with text cards, in order; its last round, or a skip, ends the step. Each slot
+ * answers through the host with the line it asked, so the memory model records the round at the read rung (§12.2):
+ * hinted, since the fallback cards show each line's meaning, and nothing for the last slot (one card left).
+ */
+function StoryOrderFallback({ scope, host, sequenceId, onFinish }: { scope: MinigameScope; host: MinigameHost; sequenceId: string; onFinish: () => void }): ReactElement {
   const rounds = useMemo(() => playableStoryOrder(scope), [scope]);
   const scopes = useMemo(() => storyOrderFallbackScopes(scope), [scope]);
   const [index, setIndex] = useState(0);
@@ -87,7 +94,14 @@ function StoryOrderFallback({ scope, sequenceId, onFinish }: { scope: MinigameSc
       key={round.id}
       scope={current}
       sequenceId={`${sequenceId}#${round.id}`}
-      chain={{ keyPrefix: storyOrderKeyPrefix(round.id), last }}
+      chain={{
+        keyPrefix: storyOrderKeyPrefix(round.id),
+        last,
+        answer: (roundKey, slot, correct) => {
+          const itemId = storyOrderFallbackItem(round, slot);
+          host.answer(roundKey, correct, itemId === undefined ? undefined : { itemId, hinted: true });
+        },
+      }}
       onFinish={(skipped) => (last || skipped === true ? onFinish() : setIndex(index + 1))}
     />
   );

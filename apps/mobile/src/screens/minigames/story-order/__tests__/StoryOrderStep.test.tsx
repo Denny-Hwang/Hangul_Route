@@ -3,7 +3,7 @@ import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RomanizationModeOverride } from '../../../../i18n/use-romanization-mode';
 import { STORY_ORDER_FIXTURES } from '../../../../navigation/story-order-e2e-fixture';
-import { useQuestRunStore } from '../../../../store/quest-run-store';
+import { setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../../../../store/quest-run-store';
 import { useRemoteConfigStore } from '../../../../store/remote-config-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../../test-support/render';
 import type { MinigameHost } from '../../host';
@@ -16,6 +16,12 @@ import { StoryOrderStep } from '../StoryOrderStep';
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
+// The chunk's import fails while `chunk.fail` is set (offline before the service worker cached it).
+const chunk = vi.hoisted(() => ({ fail: false }));
+vi.mock('../story-order-chunk', async (importOriginal) => {
+  if (chunk.fail) throw new Error('offline');
+  return importOriginal<object>();
+});
 vi.mock('../../../../platform/audio', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   playPrompt: vi.fn(async () => ({ status: 'played' })),
@@ -32,10 +38,18 @@ function flag(on: boolean | null): void {
 
 async function open(fixture: keyof typeof STORY_ORDER_FIXTURES): Promise<{ r: ReactTestRenderer; host: MinigameHost; finished: () => number }> {
   let finished = 0;
-  const host: MinigameHost = { mode: 'quest', answer: vi.fn(), complete: vi.fn() };
+  const scope = STORY_ORDER_FIXTURES[fixture];
+  // As MinigameScreen's quest host: the answer goes to the run store with what it asked.
+  const host: MinigameHost = {
+    mode: 'quest',
+    answer: vi.fn((key: string | number, correct: boolean, meta?: { itemId?: string; hinted?: boolean }) =>
+      useQuestRunStore.getState().answerRound(key, correct, meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted),
+    ),
+    complete: vi.fn(),
+  };
   const r = await render(
     <RomanizationModeOverride mode="always">
-      <StoryOrderStep scope={STORY_ORDER_FIXTURES[fixture]} host={host} sequenceId="minigame:fixture" onFallbackFinish={() => (finished += 1)} />
+      <StoryOrderStep scope={scope} host={host} sequenceId="minigame:fixture" onFallbackFinish={() => (finished += 1)} />
     </RomanizationModeOverride>,
   );
   mounted.push(r);
@@ -88,6 +102,26 @@ describe('StoryOrderStep: game.story-order off (its built-in pct 0)', () => {
     expect(run).toMatchObject({ correctCount: 8, totalCount: 8 });
   });
 
+  it('each slot reaches the memory store at the read rung, hinted (the cards show the meanings); the last slot of a round records nothing', async () => {
+    flag(false);
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const { r } = await open('twoRounds');
+      for (const p of day!.panels) await press(pressable(r.root, `story-sequence-card-${p.id}`));
+      expect(heard.map((a) => [a.asked.itemId, a.correct, a.hinted])).toEqual([
+        ['day/sun', true, true],
+        ['day/bread', true, true],
+        ['day/rain', true, true],
+      ]);
+      expect(heard.every((a) => a.asked.scope === STORY_ORDER_FIXTURES.twoRounds)).toBe(true);
+      // The fourth (forced) slot still scores.
+      expect(useQuestRunStore.getState()).toMatchObject({ correctCount: 4, totalCount: 4 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+
   it('Skip this one in round 1 ends the step', async () => {
     flag(false);
     const { r, finished } = await open('twoRounds');
@@ -115,6 +149,23 @@ describe('StoryOrderStep: game.story-order off (its built-in pct 0)', () => {
 });
 
 describe('StoryOrderStep: game.story-order on', () => {
+  it('the chunk does not load: the rounds play as the fallback, never a dead end', async () => {
+    flag(true);
+    chunk.fail = true;
+    try {
+      const { r, finished } = await open('captions');
+      for (let i = 0; i < 100 && !screenTexts(r.root).includes(SEQ.title); i += 1) await settle();
+      expect(screenTexts(r.root)).toContain(SEQ.title);
+      expect(byTestId(r.root, 'story-order-cards')).toHaveLength(0);
+      for (const p of morning!.panels) await press(pressable(r.root, `story-sequence-card-${p.id}`));
+      await press(pressable(r.root, 'story-sequence-done'));
+      expect(finished()).toBe(1);
+    } finally {
+      chunk.fail = false;
+    }
+  });
+
+
   it('loads the game from its chunk', async () => {
     flag(true);
     const { r } = await open('captions');

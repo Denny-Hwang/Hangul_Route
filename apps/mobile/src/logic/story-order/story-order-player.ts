@@ -1,4 +1,5 @@
-import { storyOrderPictures, type KoText, type StoryOrderRound } from '@hangul-route/content-schema';
+import { storyOrderPictures, storyOrderTextSettled, type KoText, type StoryOrderRound } from '@hangul-route/content-schema';
+import { storyOrderItemId } from './fallback';
 import { initSequenceState, reduceSequence, type SequenceAction, type SequenceState } from '../story/sequence-player';
 
 /**
@@ -40,8 +41,11 @@ export interface StoryOrderState {
 export type StoryOrderAction = SequenceAction | { type: 'showMeanings' } | { type: 'skip' };
 
 export type StoryOrderEffect =
-  /** Every tap: the run keeps only the first answer per key; `itemId` names the line the slot asked for. */
-  | { type: 'answer'; roundKey: string; itemId: string; correct: boolean; hinted: boolean }
+  /**
+   * Every tap: the run keeps only the first answer per key. `itemId` names the line the slot asked for, absent on
+   * the last slot (one card left, so no retrieval: it scores, and the memory store hears nothing).
+   */
+  | { type: 'answer'; roundKey: string; itemId?: string; correct: boolean; hinted: boolean }
   | { type: 'placed'; cardId: string }
   | { type: 'miss'; cardId: string }
   | { type: 'highlight'; cardId: string }
@@ -50,8 +54,14 @@ export type StoryOrderEffect =
 
 /** One key per slot of a round, so two rounds never share one (`logic/round-keys.ts`). */
 export const storyOrderRoundKey = (roundId: string, slot: number): string => `so:${roundId}:${slot}`;
-/** The line a slot asked for, as the memory store reads it back from the scope (`memory/resolve.ts`). */
-export const storyOrderItemId = (roundId: string, panelId: string): string => `${roundId}/${panelId}`;
+export { storyOrderItemId };
+
+/**
+ * Whether a slot's answer reaches the memory store hinted (met, never promoted, F-CURR-002 §4.3): Show meanings is
+ * on, or the round's pictures alone can settle the order (F5 lets up to half the rounds do so), so a right answer
+ * is no evidence the caption was read.
+ */
+export const storyOrderHinted = (round: StoryOrderRound, meanings: boolean): boolean => meanings || !storyOrderTextSettled(round);
 
 function roundState(play: StoryOrderPlay, roundIndex: number): StoryOrderState {
   const round = play.rounds[roundIndex];
@@ -79,7 +89,14 @@ export function stepStoryOrder(play: StoryOrderPlay, state: StoryOrderState, act
   for (const effect of out.effects) {
     if (effect.type === 'answer') {
       const asked = state.seq.solution[slot] as string;
-      effects.push({ type: 'answer', roundKey: storyOrderRoundKey(round.id, slot), itemId: storyOrderItemId(round.id, asked), correct: effect.correct, hinted: state.meanings });
+      const forced = state.seq.solution.length - slot <= 1;
+      effects.push({
+        type: 'answer',
+        roundKey: storyOrderRoundKey(round.id, slot),
+        ...(forced ? {} : { itemId: storyOrderItemId(round.id, asked) }),
+        correct: effect.correct,
+        hinted: storyOrderHinted(round, state.meanings),
+      });
       if (action.type === 'tap') effects.push(effect.correct ? { type: 'placed', cardId: action.cardId } : { type: 'miss', cardId: action.cardId });
     } else if (effect.type === 'highlight') {
       effects.push(effect);

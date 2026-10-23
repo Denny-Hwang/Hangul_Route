@@ -9,9 +9,11 @@ import { PLAYABLE_KINDS } from '../minigame-renderers';
 import { STORY_ORDER_FLAG, playableStoryOrder, storyOrderFallbackScopes, storyOrderKeyPrefix } from '../story-order/fallback';
 
 /**
- * F-CURR-002 section 12.2: no `game.<kind>` switch bricks shipped content. A test turns each switch off and renders
- * every quest: each game step's kind, with every switch off, is a kind the app plays, and a Story Order step's
- * fallback has a Story Sequence to play for each of its rounds (row CM-34).
+ * F-CURR-002 section 12.2: no `game.<kind>` switch bricks shipped content. A table check over the whole catalogue: each
+ * game step's kind, with every switch off, is a kind the app plays, and a Story Order step's fallback has a Story
+ * Sequence to play for each of its rounds (row CM-34). `StoryOrderStep` reads the same table (`renderedKind`); the
+ * fallback itself is rendered, switch off, in `screens/minigames/story-order/__tests__/StoryOrderStep.test.tsx` and the
+ * fixture e2e, since no catalogue quest plays Story Order yet.
  */
 
 const OFF = (): boolean => false;
@@ -36,7 +38,7 @@ describe('GAME_SWITCHES', () => {
   });
 });
 
-describe('every quest renders with every game switch off', () => {
+describe('every quest step maps to a playable kind with every game switch off (table check)', () => {
   const steps = questsAll.flatMap((quest) => quest.steps.flatMap((step, i) => (step.minigameRef ? [{ quest: quest.id, i, ref: step.minigameRef }] : [])));
 
   it('walks the whole catalogue', () => {

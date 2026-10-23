@@ -25,6 +25,16 @@ vi.mock('../../../../platform/audio', async (importOriginal) => ({
   ...(await import('../../../../test-support/audio-rig')).rigAudio(() => rig.current!),
 }));
 vi.mock('../../../../platform/motion', () => ({ useReducedMotion: () => motion.reduced }));
+// iOS has no live regions: the game tells VoiceOver each line itself (`announceForScreenReader`), and focus moves.
+const reader = vi.hoisted(() => ({ announced: [] as string[], focused: 0 }));
+vi.mock('../../../../platform/screen-reader', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  announceForScreenReader: (text: string) => reader.announced.push(text),
+  // The test renderer mounts no host nodes (refs are null), so the call itself is counted.
+  focusForScreenReader: () => {
+    reader.focused += 1;
+  },
+}));
 
 const EN = getMessages('en').learner;
 const mounted: ReactTestRenderer[] = [];
@@ -33,6 +43,8 @@ beforeEach(() => {
   rig.current = createAudioRig({ voices: [KO_VOICE] });
   useAudioStore.setState({ muted: false });
   motion.reduced = true;
+  reader.announced = [];
+  reader.focused = 0;
 });
 afterEach(async () => {
   for (const r of mounted.splice(0)) await unmount(r);
@@ -103,6 +115,7 @@ describe('Story Order: ordering', () => {
     expect(byTestId(r.root, 'story-order-slot-1')[0]!.props['aria-label']).toBe('Place 1 of 4: 먼저 일어나요.');
     expect(textOf(byTestId(r.root, 'story-order-announce')[0]!)).toBe('Place 1 of 4: 먼저 일어나요.');
     expect(byTestId(r.root, 'story-order-announce')[0]!.props['aria-live']).toBe('polite');
+    expect(reader.announced).toEqual(['Place 1 of 4: 먼저 일어나요.']);
     expect(said()).toEqual(['먼저 일어나요.']);
     expect(log.answers).toEqual([{ key: 'so:morning:0', correct: true, itemId: 'morning/up' }]);
     expect(cardIds(r.root)).not.toContain('up');
@@ -127,6 +140,8 @@ describe('Story Order: ordering', () => {
     const { r, log } = await open('captions');
     await press(pressable(r.root, 'story-order-show-meanings'));
     expect(has(r.root, 'story-order-show-meanings')).toBe(false);
+    // The pressed button is gone: focus moves to the line that replaces it.
+    expect(reader.focused).toBe(1);
     expect(textOf(byTestId(r.root, 'story-order-meanings-shown')[0]!)).toBe(EN.storyOrder.meaningsShown);
     for (const p of MORNING.panels) expect(screenTexts(r.root)).toContain(p.caption.en);
     expect(byTestId(r.root, 'story-order-card-up')[0]!.props['aria-label']).toBe('먼저 일어나요., meonjeo ireonayo. First, I get up.');
@@ -152,10 +167,14 @@ describe('Story Order: replay and rounds', () => {
     for (const p of MORNING.panels) expect(textOf(replay)).toContain(p.caption.en);
     expect(has(r.root, 'story-order-replay-pause')).toBe(false);
     await settle();
-    expect(byTestId(r.root, 'story-order-replay-line-up')[0]!.props['aria-live']).toBe('polite');
+    // One persistent live line says the replayed line; the rows never turn live themselves.
+    const live = (): ReactTestInstance => byTestId(r.root, 'story-order-replay-announce')[0]!;
+    expect(live().props['aria-live']).toBe('polite');
+    expect(textOf(live())).toBe('먼저 일어나요. First, I get up.');
+    expect(byTestId(r.root, 'story-order-replay-line-up')[0]!.props['aria-live']).toBeUndefined();
     await press(pressable(r.root, 'story-order-replay-next'));
-    expect(byTestId(r.root, 'story-order-replay-line-wash')[0]!.props['aria-live']).toBe('polite');
-    expect(byTestId(r.root, 'story-order-replay-line-up')[0]!.props['aria-live']).toBe('off');
+    expect(textOf(live())).toBe('그다음에 세수해요. Next, I wash my face.');
+    expect(reader.announced.slice(-2)).toEqual(['먼저 일어나요. First, I get up.', '그다음에 세수해요. Next, I wash my face.']);
   });
 
   it('with motion allowed the replay has a Pause', async () => {
@@ -179,6 +198,8 @@ describe('Story Order: replay and rounds', () => {
     expect(log.completed).toBe(1);
     expect(log.answers.map((a) => a.key)).toEqual(['so:day:0', 'so:day:1', 'so:day:2', 'so:day:3', 'so:morning:0', 'so:morning:1', 'so:morning:2', 'so:morning:3']);
     expect(log.answers.map((a) => a.hinted === true)).toEqual([true, true, true, true, false, false, false, false]);
+    // Each round's last slot (one card left) scores but names no item: the memory store hears nothing of it.
+    expect(log.answers.map((a) => a.itemId)).toEqual(['day/sun', 'day/bread', 'day/rain', undefined, 'morning/up', 'morning/wash', 'morning/eat', undefined]);
   });
 
   it('Skip this one completes the step', async () => {

@@ -28,5 +28,18 @@ export function storyOrderFallbackScopes(scope: MinigameScope): MinigameScope[] 
   }));
 }
 
+/** The line a slot asked for, as the memory store reads it back from the scope (`memory/resolve.ts`). */
+export const storyOrderItemId = (roundId: string, panelId: string): string => `${roundId}/${panelId}`;
+
+/**
+ * What slot `slot` of round `round` asked, for the memory store while the fallback plays it: the line that comes
+ * next, at the read rung (`memory/resolve.ts`). None on the last slot (one card left: no retrieval). The fallback
+ * cards show each line's meaning, so its answers always reach the store hinted (met, never promoted).
+ */
+export function storyOrderFallbackItem(round: StoryOrderRound, slot: number): string | undefined {
+  const panel = round.panels[slot];
+  return panel === undefined || slot >= round.panels.length - 1 ? undefined : storyOrderItemId(round.id, panel.id);
+}
+
 /** The fallback's slot keys for round `roundId`: the game's own keys (`so:<round>:<slot>`), so two rounds never share one. */
 export const storyOrderKeyPrefix = (roundId: string): string => `so:${roundId}:`;

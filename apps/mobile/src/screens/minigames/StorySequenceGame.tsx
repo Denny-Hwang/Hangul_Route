@@ -87,9 +87,10 @@ interface Props {
   nonce?: number;
   /**
    * One round of a step that plays several (Story Order's fallback, F-CURR-002 row CM-34): its slot keys carry
-   * `keyPrefix`, so two rounds never share one, and only the `last` round, or a skip, completes the step.
+   * `keyPrefix`, so two rounds never share one, and only the `last` round, or a skip, completes the step. `answer`,
+   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked.
    */
-  chain?: { keyPrefix: string; last: boolean };
+  chain?: { keyPrefix: string; last: boolean; answer?: (roundKey: string, slot: number, correct: boolean) => void };
 }
 
 /** Column share of one card cell, by column count. */
@@ -186,6 +187,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
     [activeProfileId, scope.story?.storyId, sequenceId, markStepComplete, onFinish, chain],
   );
   const keyPrefix = chain?.keyPrefix;
+  const chainAnswer = chain?.answer;
 
   const dispatch = useCallback(
     (action: SequenceAction): void => {
@@ -203,7 +205,8 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
             nudge();
             setNote('wrong');
           }
-          answerRound(keyPrefix === undefined ? effect.roundKey : `${keyPrefix}${effect.roundKey}`, effect.correct);
+          if (keyPrefix !== undefined && chainAnswer !== undefined) chainAnswer(`${keyPrefix}${effect.roundKey}`, effect.roundKey, effect.correct);
+          else answerRound(keyPrefix === undefined ? effect.roundKey : `${keyPrefix}${effect.roundKey}`, effect.correct);
         } else if (effect.type === 'highlight') {
           setNote('look');
         } else {
@@ -219,7 +222,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
         flashTimer.current = setTimeout(() => setWrongFlash(null), SEQUENCE_WRONG_FLASH_MS);
       }
     },
-    [answerRound, finish, keyPrefix],
+    [answerRound, finish, keyPrefix, chainAnswer],
   );
 
   useEffect(

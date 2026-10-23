@@ -53,6 +53,15 @@ describe('StoryOrderRoundSchema (CM-34)', () => {
     expect(StoryOrderRoundSchema.safeParse(captions({ panels: twiceKo })).error?.issues[0]?.message).toMatch(/same caption/);
   });
 
+  it('ids are slugs (the memory item is <round>/<panel>, the overlay key joins with .) and a panel takes no unknown key', () => {
+    expect(StoryOrderRoundSchema.safeParse(captions({ id: 'a/b' })).success).toBe(false);
+    expect(StoryOrderRoundSchema.safeParse(captions({ id: 'a.b' })).success).toBe(false);
+    expect(StoryOrderRoundSchema.safeParse(captions({ panels: MORNING.map((p, i) => (i === 0 ? { ...p, id: 'Up' } : p)) })).success).toBe(false);
+    // An `art` the game never draws fails the build rather than being dropped (the lint reads it as a picture).
+    const withArt = MORNING.map((p, i) => (i === 0 ? { ...p, art: { kind: 'scene' } } : p));
+    expect(StoryOrderRoundSchema.safeParse(captions({ panels: withArt as never })).success).toBe(false);
+  });
+
   it('a round is text-settled when it has no picture, is captions only, or is marked as settled by its captions', () => {
     expect(storyOrderTextSettled(StoryOrderRoundSchema.parse(captions()))).toBe(true);
     expect(storyOrderTextSettled(StoryOrderRoundSchema.parse(captions({ captionsOnly: undefined })))).toBe(true);

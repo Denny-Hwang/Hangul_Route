@@ -26,7 +26,7 @@ export function storyOrderHeading(round: StoryOrderRound, copy: StoryOrderCopy):
 const SENTENCE_MARK = /[.?!,…~]+$/u;
 
 /**
- * What a filled slot shows: its line's first word with that word's romanization (`그다음에` `geudaeume`). The
+ * What a filled slot shows: its line's first word with that word's romanization under it (`geudaeume` for the line "Next, I wash my face"). The
  * content's romanization when it splits one word per Korean word, else that word romanized by rr.ts.
  */
 export function slotFace(line: KoText): { ko: string; romanization: string } {

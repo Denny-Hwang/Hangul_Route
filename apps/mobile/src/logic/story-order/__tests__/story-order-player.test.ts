@@ -8,6 +8,7 @@ import {
   startStoryOrder,
   stepStoryOrder,
   storyOrderCards,
+  storyOrderHinted,
   storyOrderItemId,
   storyOrderRoundKey,
   type StoryOrderAction,
@@ -161,6 +162,25 @@ describe('stepStoryOrder', () => {
     // Nothing moves once the step is done.
     expect(stepStoryOrder(p, out.state, { type: 'tap', cardId: solution(p)[1]! })).toEqual({ state: out.state, effects: [] });
     expect(stepStoryOrder(p, out.state, { type: 'skip' })).toEqual({ state: out.state, effects: [] });
+  });
+
+  it('the last slot (one card left) still scores but names no item, so the memory store hears nothing (§4.1)', () => {
+    const p = play('captions');
+    const ids = solution(p);
+    const answers = run(p, tapAll(ids)).effects.filter((e) => e.type === 'answer');
+    expect(answers).toHaveLength(ids.length);
+    expect(answers.slice(0, -1).every((e) => e.itemId !== undefined)).toBe(true);
+    expect(answers.at(-1)).toEqual({ type: 'answer', roundKey: storyOrderRoundKey('morning', ids.length - 1), correct: true, hinted: false });
+  });
+
+  it('an illustrated round its captions do not settle records every answer hinted (the pictures could order it)', () => {
+    const day = STORY_ORDER_FIXTURES.twoRounds.storyOrder!.rounds[0]!;
+    const unsettled = { ...day, id: 'pics', captionsSettleOrder: false };
+    expect(storyOrderHinted(unsettled, false)).toBe(true);
+    expect(storyOrderHinted(day, false)).toBe(false);
+    const p: StoryOrderPlay = { rounds: [unsettled], seeds: [7] };
+    const answers = run(p, tapAll(unsettled.panels.map((x) => x.id))).effects.filter((e) => e.type === 'answer');
+    expect(answers.map((e) => e.hinted)).toEqual([true, true, true, true]);
   });
 
   it('a tap on a placed card, or outside the cards, does nothing', () => {

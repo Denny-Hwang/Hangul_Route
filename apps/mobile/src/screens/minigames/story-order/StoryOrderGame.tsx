@@ -56,6 +56,7 @@ import { SEQUENCE_WRONG_FLASH_MS, autoAdvanceDue, replayAdvanceDelay, sequenceSe
 import { playPrompt, stop } from '../../../platform/audio';
 import { nudge, success } from '../../../platform/haptics';
 import { useReducedMotion } from '../../../platform/motion';
+import { announceForScreenReader, focusForScreenReader } from '../../../platform/screen-reader';
 import type { MinigameHost } from '../host';
 import { PictureArt } from '../PictureArt';
 
@@ -109,6 +110,12 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const [announce, setAnnounce] = useState('');
+  const [replayAnnounce, setReplayAnnounce] = useState('');
+  // Show meanings unmounts its button: focus moves to the line that replaces it, so it is never lost.
+  const meaningsRef = useRef<View | null>(null);
+  useEffect(() => {
+    if (state.meanings) focusForScreenReader(meaningsRef.current);
+  }, [state.meanings]);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const round = play.rounds[state.roundIndex];
@@ -137,7 +144,8 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
     (effect: StoryOrderEffect, next: StoryOrderState): void => {
       switch (effect.type) {
         case 'answer':
-          hostRef.current.answer(effect.roundKey, effect.correct, { itemId: effect.itemId, ...(effect.hinted ? { hinted: true } : {}) });
+          // The last slot names no item (one card left): it scores, and the memory store hears nothing.
+          hostRef.current.answer(effect.roundKey, effect.correct, { ...(effect.itemId === undefined ? {} : { itemId: effect.itemId }), ...(effect.hinted ? { hinted: true } : {}) });
           return;
         case 'placed': {
           success();
@@ -145,7 +153,10 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           setWrongFlash(null);
           const card = cardById.get(effect.cardId);
           if (card) {
-            setAnnounce(copy.sequence.slotLabel(next.seq.placed.length, next.seq.solution.length, card.line.ko));
+            const line = copy.sequence.slotLabel(next.seq.placed.length, next.seq.solution.length, card.line.ko);
+            // Android and the web read the polite live line below; iOS has no live regions, so VoiceOver is told.
+            setAnnounce(line);
+            announceForScreenReader(line);
             void say(card);
           }
           return;
@@ -205,6 +216,10 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       linePlay.current = null;
       return;
     }
+    // One persistent live line says the replayed line (a row that turns live with its text in place is not read); iOS is told.
+    const spoken = /[.?!]$/u.test(replayCard.line.ko) ? `${replayCard.line.ko} ${replayCard.line.en}` : `${replayCard.line.ko}. ${replayCard.line.en}`;
+    setReplayAnnounce(spoken);
+    announceForScreenReader(spoken);
     linePlay.current = { index: replayIndex, startedAt: Date.now(), settled: say(replayCard) };
     // The card is what starts a line; the index changes with it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,6 +278,9 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
         {header}
         <Spacer size="lg" />
         <Heading level="prompt">{copy.sequence.replay.title}</Heading>
+        <Text {...KOREAN_LINE_BREAK} testID="story-order-replay-announce" accessibilityLiveRegion="polite" aria-live="polite" style={VISUALLY_HIDDEN}>
+          {replayAnnounce}
+        </Text>
         <Spacer size="md" />
         <View role="list" testID="story-order-replay" style={{ gap: spacing.md }}>
           {state.seq.solution.map((id, i) => {
@@ -274,7 +292,6 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
                 key={id}
                 role="listitem"
                 testID={`story-order-replay-line-${id}`}
-                accessibilityLiveRegion={current ? 'polite' : 'none'}
                 style={{
                   flexDirection: 'row',
                   gap: spacing.md,
@@ -417,9 +434,11 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       </View>
       <Spacer size="lg" />
       {state.meanings ? (
-        <Body tone="muted" testID="story-order-meanings-shown">
-          {copy.storyOrder.meaningsShown}
-        </Body>
+        <View ref={meaningsRef} accessible focusable>
+          <Body tone="muted" testID="story-order-meanings-shown">
+            {copy.storyOrder.meaningsShown}
+          </Body>
+        </View>
       ) : (
         <Button label={copy.storyOrder.showMeanings} tone="secondary" size="md" onPress={() => dispatch({ type: 'showMeanings' })} testID="story-order-show-meanings" />
       )}
