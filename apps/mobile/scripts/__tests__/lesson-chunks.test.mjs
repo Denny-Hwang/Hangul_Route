@@ -202,7 +202,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
     expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
     // Row CM-35: Role Play's chunk, reached only through the entry's literal import().
-    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[7].marker}';`);
     expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
