@@ -400,11 +400,25 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
  * Syllable Build at the produce rung: its board is the Syllable Build chunk's, loaded here at run time through the
  * entry's `syllableBuildChunk()` (a chunk never imports a module of another chunk). The engine asks it only while
  * `game.syllable-build` is on. While the chunk loads (it is precached, so a frame or two) the round shows its heading.
+ * The session has already chosen this round, so a chunk that fails to load (a stale cache, a dropped asset) shows
+ * Hoya's oops line and Try again rather than leaving the round on its heading.
  */
 export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildRound>): ReactElement {
   const m = useMessages();
-  const { chunk } = useSyllableBuildChunk();
-  if (chunk === null) return <Heading level="prompt">{m.learner.minigame.syllableBuild.heading}</Heading>;
+  const { chunk, failed, retry } = useSyllableBuildChunk();
+  if (chunk === null) {
+    const heading = <Heading level="prompt">{m.learner.minigame.syllableBuild.heading}</Heading>;
+    if (!failed) return heading;
+    return (
+      <View>
+        {heading}
+        <Spacer size="sm" />
+        <HoyaBubble tone="thinking" message={m.learner.oops.bubble} />
+        <Spacer size="sm" />
+        <Button label={m.common.buttons.tryAgain} tone="primary" size="md" onPress={retry} testID="daily-review-build-retry" />
+      </View>
+    );
+  }
   return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
 }
 
