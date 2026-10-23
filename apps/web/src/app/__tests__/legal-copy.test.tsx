@@ -288,7 +288,9 @@ describe('privacy policy', () => {
     const off = textOf(renderToStaticMarkup(<PrivacyDocument locale="en" claims={OFF} />));
     const SENTENCES = [
       'Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers.',
-      'While the quest is being tried, the app sends us usage events with no learner id and no device id: the usual events of a quest, such as starting a game, and when the quest starts (from our site, the screen that asks who is learning or the welcome screen, and whether it was picked up again), roughly how long it took to reach the first letter, when the quest is finished and how many stars it earned, when it is left (during the quest or at the save step), when it is saved as a learner (from which screen, whether the grown-up PIN was asked and whether consent was given then or was already on file), and when a quest that was never saved is deleted and whether it was finished; each event carries the time it happened, and we count them by day.',
+      'The app also sends us usage events about this quest, with no learner id and no device id.',
+      'They are the usual events of a quest, such as starting a game, and these: when the quest starts (from our site, the screen that asks who is learning or the welcome screen, and whether it was picked up again); roughly how long it took to reach the first letter; when the quest is finished and how many stars it earned; when it is left (during the quest or at the save step); when it is saved as a learner (from which screen, whether the grown-up PIN was asked and whether consent was given then or was already on file); and when a quest that was never saved is deleted and whether it was finished.',
+      'Each event carries the time it happened, and we count them by day.',
       "When a name is added, they become that learner's progress and are backed up like any other.",
       "A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
     ];
@@ -315,7 +317,7 @@ describe('privacy policy', () => {
      * name or field fails here until the Policy says it.
      */
     it('with the claim on: names every guest.* event and every field the Worker keeps, with no learner or device id', () => {
-      const sentence = SENTENCES[1] ?? '';
+      const sentence = SENTENCES.slice(1, 4).join(' ');
       const PHRASES: Record<string, Record<string, string>> = {
         'guest.started': { via: 'from our site, the screen that asks who is learning or the welcome screen', resumed: 'whether it was picked up again' },
         'guest.first_letter': { secondsIn: 'roughly how long it took to reach the first letter' },
