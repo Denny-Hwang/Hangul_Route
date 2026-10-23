@@ -544,3 +544,36 @@ describe('upcomingLessons (owner decision 2026-10-17: the Route tab\'s next thre
     expect(i.isQuestOpen('quest:q2')).toBe(true);
   });
 });
+
+describe('routeNext: tested-out cells (F-CURR-002 section 4.5, row CM-21)', () => {
+  const at = '2026-10-11T09:00:00.000Z';
+  const testedOut = (...cells: string[]) => ({ ...snap(), testedOut: Object.fromEntries(cells.map((c) => [c, at])) });
+
+  it('the cursor skips every quest of a tested-out cell, which is never marked done', () => {
+    const next = routeNext(input({ snapshot: testedOut('episode:s1-letters') }));
+    expect(next).toMatchObject({ kind: 'quest', questId: 'quest:q4', episodeId: 'episode:s1-life', source: 'cursor' });
+    // Two cells tested out: the next untested one.
+    expect(routeNext(input({ snapshot: testedOut('episode:s1-letters', 'episode:s1-life') }))).toMatchObject({ questId: 'quest:q6' });
+    // The upcoming lessons skip them too, in order.
+    expect(upcomingLessons(input({ snapshot: testedOut('episode:s1-letters') }), 3).map((n) => n.questId)).toEqual(['quest:q4', 'quest:q5', 'quest:q6']);
+  });
+
+  it('an explicit assignment of a tested-out quest is still the one next (steps 1 and 2 never skip)', () => {
+    const s = { ...testedOut('episode:s1-letters'), homework: [hw(null, 'q2', TODAY)] };
+    expect(routeNext(input({ snapshot: s }))).toMatchObject({ questId: 'quest:q2', assignmentId: 'hw:q2' });
+  });
+
+  it('with only tested-out quests left, the cursor rests; a placed-out fallback never names a tested-out quest', () => {
+    const all = testedOut('episode:s1-letters', 'episode:s1-life', 'episode:s2-life', 'episode:s4-rites');
+    expect(routeNext(input({ snapshot: all }))).toEqual({ kind: 'rest' });
+    const placedOut: CursorContext = { isEntitled: () => true, skipQuestIds: new Set(['quest:q8']) };
+    const three = testedOut('episode:s1-letters', 'episode:s1-life', 'episode:s2-life');
+    // q8 is placed out (the fallback); the tested-out quests before it are never the fallback.
+    expect(routeNext(input({ snapshot: three, cursor: placedOut }))).toMatchObject({ questId: 'quest:q8' });
+    expect(routeNext(input({ snapshot: all, cursor: placedOut }))).toEqual({ kind: 'rest' });
+  });
+
+  it('a snapshot without testedOut, or with an empty one, is the plain cursor', () => {
+    expect(routeNext(input({ snapshot: { ...snap(), testedOut: {} } }))).toMatchObject({ questId: 'quest:q1' });
+  });
+});

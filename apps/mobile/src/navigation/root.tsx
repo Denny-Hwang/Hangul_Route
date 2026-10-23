@@ -1,6 +1,6 @@
 import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
 import { batchHandoffPending, chooserLaunchParams, chooserLaunchTrigger } from '../store/who-chooser';
@@ -35,6 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageCompleteScreen } from '../screens/results/StageCompleteScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
+import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
@@ -82,7 +83,7 @@ const cellStoriesRouteIdOf = ({ params }: { params: RootStackParamList['CellStor
 // route; any other root route taking focus ends a run still on, so no profile's quest is written under the guest's id.
 const guestRunGuard = ({ route }: { route: { name: string } }): { focus: () => void } => ({ focus: () => endGuestRunOutside(route.name) });
 
-export function RootNavigator(): React.ReactElement {
+export function RootNavigator(): ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const hydrated = useProfileStore((s) => s.hydrated);
   const hasProfile = profiles.length > 0;
@@ -155,6 +156,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="StageReview" component={StageReviewScreen} options={{ gestureEnabled: false }} />
         {/* F-CURR-002 row CM-14: a chunk of its own; off (`dailyReview` or `memoryRecord`), it shows All refreshed today. */}
         <Stack.Screen name="DailyReview" component={DailyReviewRoute} options={{ gestureEnabled: false }} />
+        <Stack.Screen name="CellCheck" component={CellCheckRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />

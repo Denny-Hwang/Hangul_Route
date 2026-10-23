@@ -3,8 +3,8 @@ import { GATED_REVIEW_KINDS, latestLocalDay, pruneReviews, reviewsForReader } fr
 /**
  * The minimum-app-version gate of the review kinds an app build from before row CM-3b cannot read
  * (F-CURR-002 section 13, "Older builds and rollbacks after a W→A row ships"; row CM-15 writes `warmup`
- * first). Such a build reads `reviews[]` strictly, so one entry of a newer kind fails its whole copy. A
- * build that reads a gated kind declares it with the capability of the same name (`?cap=warmup`) on its
+ * first, row CM-21 `cell-check`). Such a build reads `reviews[]` strictly, so one entry of a newer kind fails its whole copy. A
+ * build that reads a gated kind declares it with the capability of the same name (`?cap=warmup,cell-check`) on its
  * snapshot read and write and on its Rescue Code claim; no app version needs to be sent or compared.
  *
  * - **Served copies** (the GET, a 409, the Rescue Code claim) hold the gated kinds only for a caller that

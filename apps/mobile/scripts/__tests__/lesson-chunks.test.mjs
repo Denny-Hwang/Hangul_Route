@@ -175,6 +175,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(SCREEN_CHUNKS).toEqual([
       { name: 'guest-chunk', marker: 'screen-chunk:guest' },
       { name: 'guest-keep-chunk', marker: 'screen-chunk:guest-keep' },
+      { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
     ]);
   });
 
@@ -189,6 +190,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/navigation/guest.tsx')).toContain("import('./guest-chunk')");
     expect(read('src/screens/parent/guest-keep-chunk.tsx')).toContain(`export const SCREEN_CHUNK = '${SCREEN_CHUNKS[1].marker}';`);
     expect(read('src/screens/parent/guest-keep.tsx')).toContain("import('./guest-keep-chunk')");
+    // Row CM-21: the Cell Check's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/cell-check/cell-check-chunk.tsx')).toContain(`export const CELL_CHECK_CHUNK = '${SCREEN_CHUNKS[2].marker}';`);
+    expect(read('src/screens/cell-check/cell-check-entry.tsx')).toContain("import('./cell-check-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -238,6 +242,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'BrowseApp has no web bundle: the chunk is missing from the build',
       'guest-chunk has no web bundle: the chunk is missing from the build',
       'guest-keep-chunk has no web bundle: the chunk is missing from the build',
+      'cell-check-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -382,8 +387,9 @@ describe('precacheReport and its budget lines', () => {
     // sessions are a chunk of their own), CM-16 4,742,801 B and CM-17 4,739,306 B, each on its own base. The phase-1
     // integration (integrate/curr-phase1: rows CM-10 to CM-17 together) measures 4,760,960 B (release build). [GU] The
     // guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6 on it, switch off) measures 4,804,191 B.
+    // CM-21 (the Cell Check, on main with CM-20 at 4,809,512 B) measures 4,809,323 B: the line stays.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_810_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_323).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

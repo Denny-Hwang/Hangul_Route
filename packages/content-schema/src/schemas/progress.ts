@@ -124,9 +124,10 @@ export function withKnownReviews<T extends { reviews: unknown }>(snapshot: T): T
  * gated kind declares the capability of the same name (`?cap=warmup` on its snapshot read, its snapshot write and
  * its Rescue Code claim); the Worker serves these entries only to a caller that declares them and keeps the stored
  * ones when a caller that does not re-uploads (`packages/backend/src/lib/review-kinds.ts`), and a backup file never
- * holds one, as any build may restore a file. Row CM-21 appends `cell-check`.
+ * holds one, as any build may restore a file. Row CM-21 appends `cell-check` (the Cell Check and its test-out, Worker
+ * first): its best result also lives in the snapshot's `cellCheckAt` and `testedOut` latches, which every build keeps.
  */
-export const GATED_REVIEW_KINDS = ['warmup'] as const satisfies readonly ReviewKind[];
+export const GATED_REVIEW_KINDS = ['warmup', 'cell-check'] as const satisfies readonly ReviewKind[];
 
 /** The reviews a reader may receive: without the gated kinds it does not declare. The list itself when nothing drops. */
 export function reviewsForReader<T extends { kind: unknown }>(reviews: readonly T[], caps: ReadonlySet<string>): readonly T[] {

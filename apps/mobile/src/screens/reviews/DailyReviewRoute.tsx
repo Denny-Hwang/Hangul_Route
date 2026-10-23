@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import type { RootStackParamList } from '../../navigation/types';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
@@ -20,11 +20,12 @@ const loadChunk = (): Promise<Chunk> =>
     return chunk;
   });
 
-function dailyReviewChunk(): Promise<Chunk> {
+/** The Daily Review chunk, loaded once; the Cell Check's chunk reaches its rounds here (row CM-21). */
+export function dailyReviewChunk(): Promise<Chunk> {
   return loaded === null ? loadChunk() : Promise.resolve(loaded);
 }
 
-export function DailyReviewRoute(props: Props): React.ReactElement {
+export function DailyReviewRoute(props: Props): ReactElement {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
   useEffect(() => {

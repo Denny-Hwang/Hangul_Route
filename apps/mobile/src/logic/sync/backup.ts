@@ -31,7 +31,8 @@ const NO_CAPS: ReadonlySet<string> = new Set();
  */
 export function encodeBackup(profile: Profile, snapshot: ProgressSnapshot, exportedAt: Date, memory?: MemoryBackup): string {
   // Any build may restore a file, and one from before CM-3b reads reviews strictly: a gated kind (the quest
-  // warm-up) never goes in (F-CURR-002 section 13, row CM-15). It carries no result, so nothing is lost.
+  // warm-up, the Cell Check) never goes in (F-CURR-002 section 13, rows CM-15 and CM-21). A warm-up carries no
+  // result, and a Cell Check's best result is the snapshot's `cellCheckAt` / `testedOut` latch, so nothing is lost.
   const reviews = reviewsForReader(snapshot.reviews, NO_CAPS);
   const file: BackupFile = {
     format: BACKUP_FORMAT,

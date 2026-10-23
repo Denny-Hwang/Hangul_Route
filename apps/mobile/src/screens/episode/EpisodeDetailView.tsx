@@ -20,7 +20,7 @@ import {
   touchTarget,
 } from '@hangul-route/design-system';
 import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -59,6 +59,7 @@ import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { preloadQuestReviews } from '../quest/quest-reviews';
+import { CellCheckSlot } from '../cell-check/cell-check-entry';
 import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
 
 export interface EpisodeDetailViewProps {
@@ -112,7 +113,7 @@ export function EpisodeDetailView({
   from,
   onAsk: openAsk,
   onBackToOpenLessons,
-}: EpisodeDetailViewProps): React.ReactElement {
+}: EpisodeDetailViewProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
   const access = messages.learner.access;
@@ -242,6 +243,17 @@ export function EpisodeDetailView({
     .filter((q): q is NonNullable<typeof q> => Boolean(q))
     .map((q) => localizeQuest(q, locale));
   const isPreview = episode.status === 'preview';
+  // Row CM-21: a tested-out cell's quests show "Tested out" and 2 stars whatever `cellCheck` says, as `routeNext` keeps
+  // skipping the cell (a latched mark, like the levels in reports).
+  const testedOut = snap?.testedOut?.[episode.id] !== undefined;
+  const slot = {
+    profileId: learnerId,
+    episodeId: episode.id,
+    stage: episode.stage,
+    theme: episode.theme,
+    stars: quests.map((q) => questProgress.get(q.id) ?? 0),
+    open: quests.map((q) => questOpen(q.id)),
+  };
 
   const startQuest = (questId: string, questEpisodeId: string): void => {
     // Starting the one next from the lesson page (F-ENT-003 section 3.12).
@@ -317,6 +329,7 @@ export function EpisodeDetailView({
           </>
         ) : (
           <>
+            <CellCheckSlot place="top" {...slot} />
             <Spacer size="lg" />
             <Heading level="prompt">{m.quests.heading}</Heading>
             <Spacer size="sm" />
@@ -341,7 +354,7 @@ export function EpisodeDetailView({
                       tagWords.length > 0
                         ? messages.a11y.access.row(
                             q.titleEn,
-                            [q.blurbEn, buildsOn ? buildsOnLine(buildsOn, m) : null, messages.a11y.stars(stars)].filter(
+                            [q.blurbEn, buildsOn ? buildsOnLine(buildsOn, m) : null, testedOut && stars === 0 ? `${messages.learner.testOut.pill}. ${messages.a11y.stars(2)}` : messages.a11y.stars(stars)].filter(
                               (line): line is string => Boolean(line),
                             ),
                             tagWords,
@@ -377,7 +390,15 @@ export function EpisodeDetailView({
                         </View>
                       ) : null}
                       <Spacer size="xs" />
-                      <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} accessibilityLabel={messages.a11y.stars(stars)} />
+                      {testedOut && stars === 0 ? (
+                        // A tested-out quest (cell-check.md H): the words in a pill and 2 stars; it stays playable.
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} testID="episode-tested-out">
+                          <Pill tone="success" size="sm" label={messages.learner.testOut.pill} />
+                          <StarRow stars={2} size={18} accessibilityLabel={messages.a11y.stars(2)} />
+                        </View>
+                      ) : (
+                        <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} accessibilityLabel={messages.a11y.stars(stars)} />
+                      )}
                     </View>
                   </View>
                   {letters.length > 0 ? (
@@ -415,6 +436,7 @@ export function EpisodeDetailView({
               );
             })}
 
+            <CellCheckSlot place="bottom" {...slot} />
             {cellStoryCount > 0 ? (
               <>
                 <Spacer size="sm" />

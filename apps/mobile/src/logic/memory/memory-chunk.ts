@@ -1,4 +1,5 @@
-import { mergeCellBest } from '@hangul-route/content-schema';
+import { mergeCellBest, mergeLatchRecord } from '@hangul-route/content-schema';
+import { episodeById } from '../../content/episodes';
 import { lessonContent } from '../../content/lessons';
 import { reviewItemsChunk } from '../../content/review-items';
 import { flags } from '../../config/flags';
@@ -11,8 +12,9 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
 import { useSyncStore } from '../../store/sync-store';
-import { useTierStore } from '../../store/tier-store';
+import { questOpenFor, useTierStore } from '../../store/tier-store';
 import { CONTENT_OVERLAYS } from '../content-locale';
+import { createCellCheckApi, type CellCheckApi } from '../reviews/cell-check-api';
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
@@ -122,6 +124,57 @@ export function dailyReviewApi(): DailyReviewApi {
     random: () => Math.random(),
   });
   return dailyReview;
+}
+
+let cellCheck: CellCheckApi | null = null;
+
+/**
+ * The Cell Check and its test-out (F-CURR-002 row CM-21), here beside the Daily Review's API and the review engine, so
+ * the screen's chunk (`screens/cell-check/cell-check-chunk.tsx`) shares no module with this one.
+ */
+export function cellCheckApi(): CellCheckApi {
+  cellCheck ??= createCellCheckApi({
+    file: (profileId) => memoryRuntime().file(profileId),
+    ensureSeeded: (profileId) => memoryRuntime().ensureSeeded(profileId),
+    items: () => reviewItemStore.ensure(),
+    // With answers not recorded a Check could latch a result while no memory state moved (cell-check.md States).
+    on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('cellCheck', profileId),
+    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    voice: () => {
+      const audio = useAudioStore.getState();
+      return audio.tts.state === 'ready' && !audio.muted;
+    },
+    hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
+    snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
+    recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
+    recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
+    recordTestOut: (profileId, answers, passed, at) => (memoryRecordsFor(profileId) ? memoryRuntime().recordTestOut(profileId, answers, passed, at) : Promise.resolve()),
+    latch: (profileId, field, cellId, at) => {
+      // On the hydrated snapshot only, merged earliest-wins (a latch never moves later); saved and synced like any write.
+      const progress = useProgressStore.getState();
+      const snap = progress.hydratedFor.has(profileId) ? progress.byProfile[profileId] : undefined;
+      if (!snap) return;
+      const merged = mergeLatchRecord(snap[field], { [cellId]: at }) ?? {};
+      if (snap[field]?.[cellId] === merged[cellId]) return;
+      progress.replaceSnapshot(profileId, { ...snap, [field]: merged });
+      notifyProgressPersisted(profileId);
+    },
+    testOutCell: (profileId, cellId) => {
+      // The cell page's offer rules, read again by the session (F-ENT-003: the same access as playing the cell).
+      const episode = episodeById(cellId);
+      if (!episode) return null;
+      const snap = useProgressStore.getState().byProfile[profileId];
+      const open = questOpenFor(profileId, new Date(), snap);
+      const ids = new Set(episode.questIds);
+      const started = snap?.testedOut?.[cellId] !== undefined || (snap?.quests ?? []).some((q) => ids.has(q.questId) && (q.stars > 0 || Boolean(q.completedAt)));
+      return { stage: episode.stage, open: episode.questIds.map(open), started };
+    },
+    serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,
+    track: (event) => void track(event),
+    overlays: (locale) => CONTENT_OVERLAYS[locale],
+    ensureCell: (cell) => lessonContent.ensureCells([cell]),
+  });
+  return cellCheck;
 }
 
 /** A learner's stored rows and the review items, for the review surfaces; null when the store cannot be read. */

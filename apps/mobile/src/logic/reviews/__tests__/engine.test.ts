@@ -678,6 +678,23 @@ describe('the sessions', () => {
     const small = buildCheck(ctxOf(fewProduce, {}), { itemIds: fewProduce.map((i) => i.id), size: 10 });
     expect(small.questions.filter((q) => q.rung === 'produce').map((q) => q.itemId)).toEqual(['rea:c']);
   });
+
+  it('row CM-21: when the first items cannot hold the produce share, items of the request that allow it take the places of the last ones that do not', () => {
+    // Twelve symbols with no produce round sort first (box 1), four words that allow typing come after (box 3).
+    const syms = Array.from({ length: 12 }, (_, i) => mk(`sym:s${i}`, { formats: ['read-pick'] }));
+    const words = Array.from({ length: 4 }, (_, i) => mk(`lex:t${i}`));
+    const states: Record<string, EngineRow> = {};
+    syms.forEach((it) => (states[it.id] = { st: st({ b: 1, s: 1, d: '2026-11-30' }) }));
+    words.forEach((it) => (states[it.id] = { st: st({ b: 3, s: 3, d: '2026-11-30' }) }));
+    const all = [...syms, ...words];
+    const s = buildCheck(ctxOf(all, states), { itemIds: all.map((i) => i.id), size: 10 });
+    expect(s.questions).toHaveLength(10);
+    expect(s.questions.filter((q) => q.rung === 'produce').length).toBeGreaterThanOrEqual(3);
+    expect(ids(s.questions).filter((id) => id.startsWith('lex:')).length).toBe(3);
+    // The swap only replaces items that cannot produce, and never adds more than the share needs.
+    const enough = buildCheck(ctxOf(words, states), { itemIds: words.map((i) => i.id), size: 10 });
+    expect(enough.questions).toHaveLength(4);
+  });
 });
 
 describe('what the engine never selects', () => {
