@@ -11,6 +11,7 @@ import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
 import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-STORY-006 PR 6.9: the card award model end to end, on the release bundle (§5 test table, the
@@ -352,7 +353,7 @@ const upperCells = episodesAll.filter((e) => (e.stage === 'stage2' || e.stage ==
 const NEW_UPPER = ['card:norae', 'card:bokjumeoni', 'card:swing', 'card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut'];
 const TASTE_HELD = ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak', 'card:haneul', 'card:kkot', 'card:namu', 'card:byeol', 'card:tiger'];
 
-async function upperLearner(page: Page, upperPct: number): Promise<string> {
+async function upperLearner(page: Page, upperPct: number, settings?: { uiLocale: 'en'; textSize: 'largest' }): Promise<string> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -365,6 +366,7 @@ async function upperLearner(page: Page, upperPct: number): Promise<string> {
     questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
   });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } });
+  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
   await page.reload();
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await closeInstallGuide(page);
@@ -429,11 +431,39 @@ test.describe('upper-cell cards and albums (F-CURR-002 row CM-23, release bundle
     await shot(page, 'upper-cards-albums-wide');
   });
 
+  test('wide: with a theme filter on, an album card of another theme opens in the pane (the filter clears)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100);
+    await openLibraryCards(page);
+    await page.getByRole('button', { name: 'Letters', exact: true }).first().click();
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await page.getByTestId('library-album-card-card:gom').click();
+    await expect(page.getByText(/The bandalgaseumgom is a black bear/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('곰', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  });
+
+  test('320 at the Largest text size: the album rows wrap and fit, with no sideways scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await upperLearner(page, 100, { uiLocale: 'en', textSize: 'largest' });
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-letters-status')).toHaveText('2 cards');
+    await expectTextFits(page, 'the Library albums at Largest');
+    const box = await albums.boundingBox();
+    expect(box && box.x >= 0 && box.x + box.width <= 320).toBe(true);
+  });
+
   test('upperCards off: no new card arrives, no album is drawn, and the shipped taste cards stay', async ({ page }) => {
     const profileId = await upperLearner(page, 0);
     await openLibraryCards(page);
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    // A settled state first: the held taste cards are drawn (progress read), then past the launch reconcile and the
+    // remote copy's read, so an award that comes late would be caught.
+    await expect(libraryTile(page, 'card:dosirak', false).or(libraryTile(page, 'card:dosirak', true)).first()).toBeVisible();
+    await page.waitForTimeout(2000);
     await expect(page.getByTestId('library-albums')).toHaveCount(0);
+    await expect(page.getByTestId('library-album-card-card:norae')).toHaveCount(0);
     const saved = await storedCards(page, profileId);
     expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
     for (const id of TASTE_HELD) expect(saved.some((c) => c.cardId === id), id).toBe(true);
