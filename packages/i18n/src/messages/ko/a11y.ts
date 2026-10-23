@@ -145,6 +145,16 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    // A Korean screen reader names the jamo itself (ㅂ is read 비읍), so the RR name is not added.
+    syllableBuild: {
+      tile: (jamo: string, _name: string) => `글자 ${jamo}`,
+      finalTile: (jamo: string, _name: string) => `받침 ${jamo}`,
+      noFinal: '받침 없음',
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part} 자리, 비어 있음` : `${part} 자리: ${filled}`),
+      marked: (label: string) => `${label}, 다시 들어 봐요`,
+      block: (ko: string, romanization: string) => `글자 덩어리 ${ko}, ${romanization}, 완성`,
+      meaning: (gloss: string) => `뜻: ${gloss}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

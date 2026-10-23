@@ -15,7 +15,7 @@ export interface MinigameHost {
    * Report an answer. The first answer for a `roundKey` is scored; later ones
    * are retries (`logic/first-try.ts`).
    */
-  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string }): void;
+  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string; hinted?: boolean }): void;
   /** The game is over. A quest host marks the step complete, then closes. */
   complete(): void;
 }

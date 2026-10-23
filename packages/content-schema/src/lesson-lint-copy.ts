@@ -146,6 +146,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'library',
   // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
   'stageJump',
+  // The Block Sprint (row CM-32, the Decoding Sprint of section 7.1 F9): a count and the learner's own best, no percentage.
+  'decodingSprint',
 ];
 
 export interface ReviewStringFinding {

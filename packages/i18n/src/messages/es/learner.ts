@@ -667,6 +667,20 @@ export const learner = {
         finishBlock: 'Termina el último bloque.',
       },
     },
+    syllableBuild: {
+      heading: 'Arma el bloque que oyes',
+      row: { first: 'Primera letra', vowel: 'Vocal', final: 'Final' },
+      noFinal: 'Sin final',
+      showSound: 'Ver cómo suena',
+      miss: {
+        first: 'Escucha cómo empieza.',
+        vowel: 'Escucha el sonido del medio.',
+        final: 'Escucha cómo termina.',
+        finalOrNone: 'Escucha el final: ¿hay un sonido final?',
+      },
+      lookHere: 'Esta va aquí.',
+      built: '¡Lo armaste!',
+    },
   },
 
   audio: {
@@ -2102,5 +2116,15 @@ export const learner = {
     intro: 'Unos 7 minutos. Muestra lo que sabes de todos los lugares de esta etapa. Sin reloj.',
     extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
+  },
+  decodingSprint: {
+    title: 'Carrera de bloques',
+    offer: 'Ronda extra: lee todos los bloques que puedas en un minuto.',
+    intro: 'Un minuto en el reloj. Escucha un bloque y elígelo o ármalo.',
+    introProbe: 'Después, unos bloques más, sin reloj.',
+    probe: 'Unos bloques más. Ya no hay reloj.',
+    read: (n: number) => count(n, 'bloque leído', 'bloques leídos'),
+    best: (n: number) => `Tu mejor marca: ${n}`,
+    done: 'Listo',
   },
 } satisfies DeepPartial<Messages['learner']>;

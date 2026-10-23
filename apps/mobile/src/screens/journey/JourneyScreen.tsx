@@ -36,6 +36,7 @@ import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useMastery } from '../../store/mastery-entry';
 import { StageJumpSlot } from '../cell-check/cell-check-entry';
+import { DecodingSprintOffer } from '../minigames/syllable-build-entry';
 import { useToday } from '../route/use-today';
 import { useProgressStore } from '../../store/progress-store';
 import { usePlanStore } from '../../store/plan-store';
@@ -198,7 +199,13 @@ export function JourneyScreen(): ReactElement {
         access={access}
         mastery={mastery}
         // Row CM-25: Stage Jump Ahead's line, from the Cell Check's chunk while `cellCheck` is on.
-        stageFooter={(stage) => <StageJumpSlot profileId={profile?.id ?? null} stage={stage} />}
+        stageFooter={(stage) => (
+          <>
+            <StageJumpSlot profileId={profile?.id ?? null} stage={stage} />
+            {/* Row CM-32: the Block Sprint, the optional bonus after Stage 1, while `decodingSprint` is on. */}
+            {stage.key === 'stage1' && doneStages?.has('stage1') === true ? <DecodingSprintOffer testID="journey-decoding-sprint" onOpen={() => navigation.navigate('DecodingSprint')} /> : null}
+          </>
+        )}
       />
 
       <Card padding="md" tone="sunken">

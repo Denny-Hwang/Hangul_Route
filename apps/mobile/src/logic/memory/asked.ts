@@ -21,6 +21,8 @@ export interface RoundAsked {
   itemId?: string;
   /** A story check: the item is its Korean target and a Korean right answer, asked as reading. */
   check?: CheckView;
+  /** Answered after a hint was shown (Syllable Build's Show how it sounds, row CM-32): a right answer is recorded as hinted. */
+  hinted?: boolean;
   /** A reader checkpoint (`cp:<id>`) of a story tier, read like a check. */
   checkpoint?: { story: Story | undefined; level: StoryLevel; roundKey: string };
 }

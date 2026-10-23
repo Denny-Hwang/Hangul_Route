@@ -647,6 +647,20 @@ export const learner = {
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
+    syllableBuild: {
+      heading: '들리는 글자 덩어리를 만들어 봐요',
+      row: { first: '첫 글자', vowel: '모음', final: '받침' },
+      noFinal: '받침 없음',
+      showSound: '소리 보기',
+      miss: {
+        first: '시작하는 소리를 들어 봐요.',
+        vowel: '가운데 소리를 들어 봐요.',
+        final: '끝나는 소리를 들어 봐요.',
+        finalOrNone: '끝소리를 들어 봐요. 받침 소리가 있나요?',
+      },
+      lookHere: '이 글자가 여기에 와요.',
+      built: '다 만들었어요!',
+    },
   },
 
   audio: {
@@ -2037,5 +2051,15 @@ export const learner = {
     intro: '7분쯤 걸려요. 이 단계의 모든 곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
     extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
     passed: '단계를 건너뛰었어요!',
+  },
+  decodingSprint: {
+    title: '글자 덩어리 달리기',
+    offer: '보너스 라운드: 1분 동안 글자 덩어리를 되도록 많이 읽어 봐요.',
+    intro: '시계가 1분 동안 가요. 글자 덩어리를 듣고, 고르거나 만들어요.',
+    introProbe: '그다음에 시계 없이 글자 덩어리를 몇 개 더 해요.',
+    probe: '몇 개만 더 해요. 이제 시계는 없어요.',
+    read: (n: number) => `글자 덩어리 ${n}개를 읽었어요`,
+    best: (n: number) => `내 최고 기록: ${n}개`,
+    done: '다 했어요',
   },
 } satisfies DeepPartial<Messages['learner']>;

@@ -59,6 +59,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-32: the Syllable Build chunk's quest game and Block Sprint.
+  'screens/minigames/syllable-build-entry.tsx#SyllableBuildStepBody': 'screens/minigames/SyllableBuildStepBody.tsx#SyllableBuildStepBody',
+  'screens/minigames/syllable-build-entry.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',
 };
 
 /**

@@ -178,6 +178,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
     ]);
   });
 
@@ -201,6 +202,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-32: the Syllable Build chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/syllable-build-chunk.tsx')).toContain(`export const SYLLABLE_BUILD_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/syllable-build-entry.tsx')).toContain("import('./syllable-build-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +269,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'syllable-build-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -417,10 +422,14 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
+    // CM-32 (Syllable Build and the Block Sprint, their screens in syllable-build-chunk) measures 4,756,366 B on main
+    // e31bc3b33's 4,749,283 B (+7,083 B: the schema and its lean helper, the entry, the route, the slots and the
+    // English strings), so the line is raised to 4,760,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_366).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_366).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
