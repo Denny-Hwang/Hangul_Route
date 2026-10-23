@@ -1,10 +1,9 @@
 import type { AwardWorld } from '../logic/awards/types';
 import { withUpperCards } from '../logic/awards/upper-cards';
 import { episodesAll } from './episodes';
-import { heritageCardsAll } from './heritage-cards';
+import { UPPER_CARD_GATED_IDS, heritageCardsAll } from './heritage-cards';
 import { questsAll } from './quests';
 import { storySets } from './story-cards';
-import { UPPER_CARD_GATED_IDS } from './upper-cell-cards';
 
 /**
  * The shipped bundle as the award engine reads it (F-STORY-006 §3.2): every

@@ -69,6 +69,10 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/design-system/src/tokens.ts', reason: 'comments naming colours (단청, 한지)' },
   { path: 'packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx', reason: 'comments on the SVG glyph paths' },
   {
+    path: 'apps/mobile/src/content/upper-card-backs.ts',
+    reason: "the upper-cell card backs' source lines (F-CURR-002 row CM-23): Korean publisher names and page titles as printed, the way a story card's citation is; the cards' taught Korean and romanization are in heritage-cards.ts (registered, B1)",
+  },
+  {
     path: 'apps/mobile/src/content/upper-cell-card-sources.ts',
     reason: 'test-only source records of the upper-cell card backs (F-CURR-002 row CM-23): Korean page titles, publishers and quoted source words, never shown; the cards they cite carry their Korean and romanization in heritage-cards.ts (registered, B1)',
   },

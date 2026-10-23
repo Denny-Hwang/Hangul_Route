@@ -25,7 +25,7 @@ import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
-import { UPPER_CARD_GATED_IDS } from '../../content/upper-cell-cards';
+import { UPPER_CARD_GATED_IDS } from '../../content/heritage-cards';
 import { shownRewardCardIds } from '../../logic/awards/upper-cards';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';

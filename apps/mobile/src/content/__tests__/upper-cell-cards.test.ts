@@ -6,10 +6,11 @@ import { upperCellCardArtIds } from '@hangul-route/design-system/heritage-card-i
 import { describe, expect, it } from 'vitest';
 import { awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
-import { heritageCardsAll, stage2Cards, upperCellCards } from '../heritage-cards';
+import { UPPER_CARD_GATED_IDS, heritageCardsAll, stage2Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
+import { UPPER_CARD_BACKS, withUpperBack } from '../upper-card-backs';
 import { UPPER_CARD_REVIEW, UPPER_CARD_SOURCES } from '../upper-cell-card-sources';
-import { ALBUM_STAGES, ALBUM_THEMES, UPPER_CARD_GATED_IDS, UPPER_CARD_SHIPPED, UPPER_CELL_CARDS } from '../upper-cell-cards';
+import { ALBUM_STAGES, ALBUM_THEMES, UPPER_CARD_SHIPPED, UPPER_CELL_CARDS } from '../upper-cell-cards';
 
 /**
  * The upper-cell cards of Stages 2 and 3 (F-CURR-002 §5.1, §6.6, §7.2 and §9.2, row CM-23 part 1): one card per upper
@@ -72,8 +73,15 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
     }
   });
 
+  it('the fronts carry no back; each back is in the upper-cards chunk, one per card', () => {
+    expect(Object.keys(UPPER_CARD_BACKS).sort()).toEqual(upperCellCards.map((c) => c.id).sort());
+    for (const card of upperCellCards) expect([card.blurbEn, card.factEn, card.citation], card.id).toEqual(['', '', undefined]);
+    expect(withUpperBack(stage2Cards[0]!)).toBe(stage2Cards[0]);
+  });
+
   it('back faces: short, no Hangul in an English field, a source line from the first allowlisted source', () => {
-    for (const card of upperCellCards) {
+    for (const card of upperCellCards.map(withUpperBack)) {
+      expect(card.blurbEn.length, card.id).toBeGreaterThan(0);
       for (const text of [card.titleEn, card.blurbEn, card.factEn ?? '']) expect(text, card.id).not.toMatch(HANGUL);
       expect((card.factEn ?? '').length, card.id).toBeGreaterThan(0);
       expect((card.factEn ?? '').length, card.id).toBeLessThanOrEqual(STORY_CARD_FACT_MAX_CHARS);
@@ -94,6 +102,18 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
     expect(UPPER_CARD_REVIEW.passes).toBeGreaterThanOrEqual(3);
     expect(UPPER_CARD_REVIEW.notes.length).toBeGreaterThanOrEqual(3);
     expect(UPPER_CARD_REVIEW.notes.join(' ')).not.toMatch(/native[- ]speaker review|expert review|reviewed by (a|an) (native|expert)/i);
+  });
+
+  it('the backs are imported by the upper-cards chunk only, so the start bundle never carries them', () => {
+    const SRC = join(__dirname, '../..');
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((n) => {
+        const p = join(dir, n);
+        if (statSync(p).isDirectory()) return n === '__tests__' ? [] : files(p);
+        return /\.tsx?$/.test(n) ? [p] : [];
+      });
+    const importers = files(SRC).filter((f) => /from '[^']*upper-card-backs'/.test(readFileSync(f, 'utf8')));
+    expect(importers.map((f) => relative(SRC, f))).toEqual(['screens/library/upper-cards-chunk.tsx']);
   });
 
   it('the sources file is build and test data only: no app module imports it', () => {

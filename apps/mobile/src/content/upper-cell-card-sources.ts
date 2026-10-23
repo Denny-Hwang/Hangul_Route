@@ -1,7 +1,7 @@
 /**
  * The sources and the review record of the upper-cell card backs (F-CURR-002 §5.1, §6.6, §7.2 and §9.2, row CM-23).
  * Build and test data only: no app module imports this file (content/__tests__/upper-cell-cards.test.ts checks it), so
- * the start bundle carries none of it. Each card's `citation` (heritage-cards.ts) is the first allowlisted source here.
+ * the start bundle carries none of it. Each card's `citation` (content/upper-card-backs.ts) is the first allowlisted source here.
  *
  * A source is the §6.6 institution as named on its access date, the page title as printed, the page URL on a host the
  * institution runs, the access date, and the words of the page the claim rests on. The `culture-source` card check

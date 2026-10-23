@@ -81,6 +81,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-22 (Stages 2-7: the prize table, the Results prize, the gate, three routes and two slots, 16 English strings;
   // every stage's prize ceremony, Stage 1's included, the check, the summary and its trigger in the stage-check chunk)
   // measures 4,806,089 B raw / 1,268,793 B gzip (release `build:web`), 3,234 B under CM-21's 4,809,323 B: the line stays.
+  // CM-23 part 1 (the eight upper-cell cards of Stages 2-3: their fronts, the `upperCards` gate on the award world, the
+  // first-finish dating, the reconcile wiring and the album strings; the card backs, the ten drawings and the Library's
+  // albums are the upper-cards chunk) measures 4,809,851 B raw / 1,270,481 B gzip on CM-22's 4,806,089 B, with the
+  // touched start-bundle modules importing React's hooks by name: the line stays.
   startBundleRaw: 4_810_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -226,9 +230,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // summary and Home's trigger for it, and the Journey header's extras (`src/screens/stage-check/stage-check-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/stage-check/stage-check-entry.tsx`); the session logic is the memory chunk's.
   Object.freeze({ name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' }),
-  // F-CURR-002 row CM-23: the upper-cell card drawings and the Library's category albums
+  // F-CURR-002 row CM-23: the upper-cell card drawings, their backs and the Library's category albums
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
-  // `src/screens/library/upper-cards-entry.tsx` while `upperCards` is on).
+  // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
 ]);
 

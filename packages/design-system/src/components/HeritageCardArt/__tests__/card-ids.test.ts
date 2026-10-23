@@ -81,10 +81,10 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
     const index = readFileSync(join(HERE, 'index.ts'), 'utf8');
     const root = readFileSync(join(HERE, '../../index.ts'), 'utf8');
     const component = readFileSync(join(HERE, 'HeritageCardArt.tsx'), 'utf8');
-    for (const source of [index, root, component]) expect(source).not.toMatch(/UpperCellArt/);
-    // The ids (pure data) are in the barrel; the drawings are reached by the file's own path, which Metro resolves
-    // without reading `exports` (Expo SDK 52), while TypeScript and vitest read the matching `exports` entry.
-    expect(index).toMatch(/upperCellCardArtIds/);
+    for (const source of [index, root, component]) expect(source).not.toMatch(/UpperCellArt|upperCellCardArtIds/);
+    // The drawings and their ids are reached by the file's own path, which Metro resolves without reading `exports`
+    // (Expo SDK 52), while TypeScript and vitest read the matching `exports` entry.
+    expect(index).not.toMatch(/upperCellCardArtIds/);
     const pkg = JSON.parse(readFileSync(join(HERE, '../../../package.json'), 'utf8')) as { exports: Record<string, string> };
     expect(pkg.exports['./src/components/HeritageCardArt/UpperCellArt']).toBe('./src/components/HeritageCardArt/UpperCellArt.tsx');
   });

@@ -2,7 +2,7 @@ import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { AppState } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -58,7 +58,7 @@ const prefetchContent = async (): Promise<void> => {
   await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll(), localePacks.ensureAll()]);
 };
 
-export default function App(): React.ReactElement {
+export default function App(): ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
   useDocumentLang();
 

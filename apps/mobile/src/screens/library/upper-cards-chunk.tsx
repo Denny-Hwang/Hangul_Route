@@ -10,11 +10,12 @@ import { albumViews } from '../../logic/awards/albums';
 import { localizeCard } from '../../logic/content-locale';
 
 // The drawings, by the file's own path (Metro resolves it without `exports`; see logic/__tests__/metro-subpaths.test.ts).
-export { UpperCellCardArt } from '@hangul-route/design-system/src/components/HeritageCardArt/UpperCellArt';
+export { UpperCellCardArt, hasUpperCellArt } from '@hangul-route/design-system/src/components/HeritageCardArt/UpperCellArt';
+export { withUpperBack } from '../../content/upper-card-backs';
 
 /**
- * The upper-cell cards' chunk (F-CURR-002 §7.2 and §10, row CM-23; marker below): the card drawings and the Library's
- * category albums, loaded by `./upper-cards-entry.tsx` while `upperCards` is on.
+ * The upper-cell cards' chunk (F-CURR-002 §7.2 and §10, row CM-23; marker below): the card drawings, the card backs and
+ * the Library's category albums, loaded by `./upper-cards-entry.tsx`.
  *
  * Each album row shows its theme, how many of its cards the learner holds (or New), and those cards, each opening its
  * card page. It only fills: no empty slots, no count of what is left, no percentage (D3, §7.7).

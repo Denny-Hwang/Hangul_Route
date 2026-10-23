@@ -8,10 +8,9 @@ import {
   radii,
   supportedCardIds,
   typography,
-  upperCellCardArtIds,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import { awardWorld } from '../content/award-world';
 import { storyById } from '../content/stories';
@@ -42,7 +41,7 @@ const DEPS: CardArtDeps = {
 // Speech language for the Korean word; `lang` is forwarded to the DOM on the web.
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
-function CardWord({ word, size, fontFamily }: { word: string; size: number; fontFamily?: string }): React.ReactElement {
+function CardWord({ word, size, fontFamily }: { word: string; size: number; fontFamily?: string }): ReactElement {
   const fontSize = cardWordFontSize(size, word, typography.size.caption);
   return (
     <Text {...KOREAN_LINE_BREAK}
@@ -94,17 +93,17 @@ export function CardArt({
   testID?: string;
   /** The Korean word face's font family (the presenter's taught-Korean font); the system Korean stack when absent. */
   wordFontFamily?: string;
-}): React.ReactElement {
+}): ReactElement {
   // A story card's cover comes from its story's chunk (F-CURR-002 §10, row CM-8): the face redraws once that
   // story's chunk arrives (and not when another story's does).
   const coverReady = useStoryLoaded(card.storyId);
   const source = useMemo(() => cardArtSource(card, DEPS), [card, coverReady]);
   const labelled = accessibilityLabel !== undefined;
   // An upper-cell card's drawing comes from its chunk while `upperCards` is on (F-CURR-002 row CM-23); the Korean-word
-  // face stands in until it is in.
-  const upperArt = useCurrFlag('upperCards') && source.kind === 'word' && upperCellCardArtIds.includes(card.id);
+  // face stands in until it is in, and for a card the chunk does not draw.
+  const upperArt = useCurrFlag('upperCards') && source.kind === 'word';
   const background =
-    source.kind === 'heritage' || upperArt ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
+    source.kind === 'heritage' ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
   return (
     <View
       testID={testID}
@@ -143,7 +142,7 @@ function CoverCrop({
   source: Extract<ReturnType<typeof cardArtSource>, { kind: 'cover' }>;
   size: number;
   fontFamily?: string;
-}): React.ReactElement {
+}): ReactElement {
   const { sceneWidth, offsetX } = cardCoverCrop(size);
   return (
     <View style={{ position: 'absolute', top: 0, left: offsetX, width: sceneWidth, height: size }}>
@@ -169,7 +168,7 @@ function CollectionPlate({
   card: HeritageCard;
   size: number;
   fontFamily?: string;
-}): React.ReactElement {
+}): ReactElement {
   const plate = cardPlateLayout(size);
   const frame = plate.inset / 2;
   return (

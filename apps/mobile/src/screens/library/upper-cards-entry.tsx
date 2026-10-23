@@ -1,12 +1,16 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
+import { colors } from '@hangul-route/design-system';
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { View } from 'react-native';
+import { UPPER_CARD_GATED_IDS } from '../../content/heritage-cards';
 import { useCurrFlag } from '../../store/remote-config-store';
 
 /*
  * The start bundle's door to the upper-cell cards (F-CURR-002 §7.2, §10 and §12.2, row CM-23): the card drawings
- * (`UpperCellCardArt`) and the Library's albums are a chunk of their own (`./upper-cards-chunk.tsx`, marker
- * `screen-chunk:upper-cards`), reached only through the literal `import()` below, while `upperCards` is on. Off, nothing
- * loads: a held upper-cell card keeps its Korean-word face, and the albums are not drawn.
+ * (`UpperCellCardArt`), the card backs and the Library's albums are a chunk of their own (`./upper-cards-chunk.tsx`,
+ * marker `screen-chunk:upper-cards`), reached only through the literal `import()` below. The drawings and the albums
+ * load while `upperCards` is on; off, a held upper-cell card keeps its Korean-word face and no album is drawn. A card
+ * page loads the chunk for an upper-cell card's back whatever the switch, so a held card always shows its fact.
  */
 
 type Chunk = typeof import('./upper-cards-chunk');
@@ -41,10 +45,29 @@ function useChunk(on: boolean): Chunk | null {
   return on ? chunk : null;
 }
 
-/** An upper-cell card's drawing; `fallback` (the Korean-word face) while `upperCards` is off or the chunk is loading. */
+/**
+ * An upper-cell card's drawing on paper; `fallback` (the Korean-word face) while `upperCards` is off, the chunk is
+ * loading, or the chunk draws no such card.
+ */
 export function UpperCardArtSlot({ cardId, size, fallback }: { cardId: string; size: number; fallback: ReactNode }): ReactElement {
   const ui = useChunk(useCurrFlag('upperCards'));
-  return ui === null ? <>{fallback}</> : <ui.UpperCellCardArt cardId={cardId} size={size} accessibilityLabel="" />;
+  if (ui === null || !ui.hasUpperCellArt(cardId)) return <>{fallback}</>;
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, width: size, height: size, backgroundColor: colors.surface.paper }}>
+      <ui.UpperCellCardArt cardId={cardId} size={size} accessibilityLabel="" />
+    </View>
+  );
+}
+
+/**
+ * An upper-cell card with its back (blurb, fact, source line) once the chunk is in, and whether it is in; any other card
+ * as it is, ready. The card page waits for it before the card flips or shares, as it does for a story card's chunk.
+ */
+export function useUpperCardBack(card: HeritageCard | undefined): { card: HeritageCard | undefined; ready: boolean } {
+  const upper = card !== undefined && UPPER_CARD_GATED_IDS.has(card.id);
+  const ui = useChunk(upper);
+  if (!upper) return { card, ready: true };
+  return ui === null ? { card, ready: false } : { card: ui.withUpperBack(card), ready: true };
 }
 
 export interface AlbumsSlotProps {

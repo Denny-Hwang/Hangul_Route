@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors } from '../../../tokens';
 import { upperCellCardArtIds } from '../card-ids';
-import { UpperCellCardArt } from '../UpperCellArt';
+import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
 
 /**
  * The upper-cell drawings (F-CURR-002 §7.2, row CM-23), resolved to their svg element trees with the native hosts
@@ -64,5 +64,7 @@ describe('UpperCellCardArt (row CM-23)', () => {
     const tree = resolve(UpperCellCardArt({ cardId: 'card:norae' })) as Host;
     expect(tree.props).toMatchObject({ width: 200, accessibilityLabel: 'Card art for card:norae' });
     expect(UpperCellCardArt({ cardId: 'card:book' })).toBeNull();
+    expect(upperCellCardArtIds.every(hasUpperCellArt)).toBe(true);
+    expect(hasUpperCellArt('card:book')).toBe(false);
   });
 });

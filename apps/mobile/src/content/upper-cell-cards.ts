@@ -39,8 +39,6 @@ export const UPPER_CELL_CARDS: readonly string[] = [
   'card:yut',
 ];
 
-/** The two album cards that shipped before row CM-23 (the taste cells' q1 cards): never gated. */
+/** The two album cards that shipped before row CM-23 (the taste cells' q1 cards): never gated (heritage-cards.ts `UPPER_CARD_GATED_IDS`). */
 export const UPPER_CARD_SHIPPED: ReadonlySet<string> = new Set(['card:dosirak', 'card:byeol']);
 
-/** The cards row CM-23 adds: awarded, listed and drawn only while `upperCards` is on (held ones always stay). */
-export const UPPER_CARD_GATED_IDS: ReadonlySet<string> = new Set(UPPER_CELL_CARDS.filter((id) => !UPPER_CARD_SHIPPED.has(id)));

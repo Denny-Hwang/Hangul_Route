@@ -2,7 +2,7 @@ import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { awardWorld, awardWorldFor } from '../../../content/award-world';
 import { episodesAll } from '../../../content/episodes';
-import { UPPER_CARD_GATED_IDS } from '../../../content/upper-cell-cards';
+import { UPPER_CARD_GATED_IDS } from '../../../content/heritage-cards';
 import { mergeSnapshots } from '../../sync/merge';
 import { applyAwards } from '../apply';
 import { derivedAwards, firstFinishedAt, missingAwards } from '../derive';

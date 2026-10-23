@@ -1,6 +1,7 @@
 import React from 'react';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 import { colors } from '../../tokens';
+import { upperCellCardArtIds } from './card-ids';
 import type { HeritageCardArtProps } from './types';
 
 /**
@@ -253,6 +254,9 @@ function YutArt(p: ArtProps): React.ReactElement {
     </Card>
   );
 }
+
+/** True for a card id this module draws. */
+export const hasUpperCellArt = (cardId: string): boolean => upperCellCardArtIds.includes(cardId);
 
 /** The drawings by card id; `upperCellCardArtIds` lists the same ten. */
 export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabel }: HeritageCardArtProps): React.ReactElement | null {
