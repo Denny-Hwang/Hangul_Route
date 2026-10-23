@@ -10,7 +10,7 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:gachi"],
   "quests": [
     {
       "id": "quest:stage4-crafts-q1",

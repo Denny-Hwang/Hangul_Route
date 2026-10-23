@@ -356,6 +356,26 @@
       "title": "Palitos de yut",
       "blurb": "Cuatro palitos para lanzar en el yunnori.",
       "fact": "El yunnori se juega con cuatro palitos llamados yut. Dos equipos los lanzan, y según cómo caen se mueven sus fichas."
+    },
+    "card:mwoyeyo": {
+      "title": "¿Qué es esto?",
+      "blurb": "Señala algo nuevo y pregunta qué es.",
+      "fact": "Ige mwoyeyo usa dos formas cortas: ige por igeosi, «esta cosa», y mwo por mueo, «qué»."
+    },
+    "card:masisseoyo": {
+      "title": "Está rico",
+      "blurb": "Lo que dices cuando la comida sabe bien.",
+      "fact": "Las normas de pronunciación estándar dan a masitda dos formas de decirse: con un sonido d en medio o con un sonido s. Las dos son correctas."
+    },
+    "card:biga-wayo": {
+      "title": "Está lloviendo",
+      "blurb": "Llueve, así que es hora de volver a casa.",
+      "fact": "Jangma es la palabra para el tiempo de verano en que llueve muchos días seguidos."
+    },
+    "card:gachi": {
+      "title": "¿Lo hacemos en equipo?",
+      "blurb": "Una forma cortés de invitar a alguien a participar.",
+      "fact": "Sin yo, gachi halkka es banmal, una forma de hablar entre personas muy cercanas. No eleva ni rebaja a la otra persona."
     }
   }
 }

@@ -107,12 +107,65 @@ export const UPPER_CARD_SOURCES: Readonly<Record<string, readonly UpperCardSourc
         "''윷놀이'는 양편으로 나뉘어 윷가락 4개를 던져, 윷가락이 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로' (the description as recorded by story:seollal-new-year f7)",
     },
   ],
+  // ---- Stage 4 (row CM-23 part 2) ----
+  'card:mwoyeyo': [
+    {
+      title: '이게 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9D%B4%EA%B2%8C',
+      accessed: '2026-10-23',
+      quoteOrLocator: "이게: ''이것이'가 줄어든 말.'",
+    },
+    {
+      title: '뭐 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AD%90',
+      accessed: '2026-10-23',
+      quoteOrLocator: "뭐 「대명사」 「1」 ''무어'의 준말.' / 무어 「대명사」 「1」 '모르는 사실이나 사물을 가리키는 지시 대명사. =무엇.'",
+    },
+  ],
+  'card:masisseoyo': [
+    {
+      title: '표준어 규정 제2부 표준 발음법 제15항',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=325',
+      accessed: '2026-10-23',
+      quoteOrLocator:
+        "제15항: '받침 뒤에 모음 'ㅏ, ㅓ, ㅗ, ㅜ, ㅟ' 들로 시작되는 실질 형태소가 연결되는 경우에는, 대표음으로 바꾸어서 뒤 음절 첫소리로 옮겨 발음한다.' 다만: ''맛있다, 멋있다'는 [마싣따], [머싣따]로도 발음할 수 있다.'",
+    },
+  ],
+  'card:biga-wayo': [
+    {
+      title: '장마 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%A5%EB%A7%88',
+      accessed: '2026-10-23',
+      quoteOrLocator: "장마1 「명사」: '여름철에 여러 날을 계속해서 비가 내리는 현상이나 날씨. 또는 그 비.'",
+    },
+  ],
+  'card:gachi': [
+    {
+      title: '반말 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EB%A7%90',
+      accessed: '2026-10-23',
+      quoteOrLocator:
+        "반말 「명사」 「1」: '대화하는 사람의 관계가 분명치 아니하거나 매우 친밀할 때 쓰는, 높이지도 낮추지도 아니하는 말.' / ''이 책 재미있어?', '아주 재미있는걸'에서와 같이 종결 어미 '-아(어)', '-지', '-군', '-ㄴ걸' 따위가 쓰인다.'",
+    },
+  ],
 };
 
 /**
- * The multi-agent review of the eight card backs and their es and ko overlays (F-CURR-002 §9.2). Content stays draft
- * until every pass is recorded; `passes >= 3` and `reviewedBy: 'MAR'` as for a lesson cell. No pass claims native-
- * speaker or expert review. The independent MAR of the es and ko strings runs in the PR's fix stage.
+ * The album cards that shipped before row CM-23: the taste cells' q1 cards (Lunch Box Words, Outdoor Words, Greeting
+ * Dialogues), never gated by `upperCards` (heritage-cards.ts `UPPER_CARD_GATED_IDS`). Test data, like the rest of this
+ * file: no app code reads it (row CM-23 part 2 moved it here from content/upper-cell-cards.ts, out of the start bundle).
+ */
+export const UPPER_CARD_SHIPPED: ReadonlySet<string> = new Set(['card:dosirak', 'card:byeol', 'card:insa']);
+
+/**
+ * The multi-agent review of part 1's eight card backs and their es and ko overlays (F-CURR-002 §9.2). Content stays
+ * draft until every pass is recorded; `passes >= 3` and `reviewedBy: 'MAR'` as for a lesson cell. No pass claims
+ * native-speaker or expert review. Part 2's four Stage 4 cards have their own record, `UPPER_CARD_REVIEW_S4`.
  */
 export const UPPER_CARD_REVIEW = {
   status: 'ready' as 'draft' | 'ready',
@@ -126,5 +179,25 @@ export const UPPER_CARD_REVIEW = {
     'Pass 2c learning design: each Korean word is taught in its cell; no Hangul in an English field; facts at most 180 characters; culture-source, review-copy and the 7.7 list pass; cards come only from finishing a cell (never random, never sold).',
     'Pass 3 reviser and third pass: the fixes above applied and re-read in en, es and ko; the e2e fixture story card that took 한글 now takes its 한글날 축하해요 keyword, so no two cards share a Korean word.',
     "Pass 4 independent MAR (2026-10-23, a separate reviewer of the PR's own commits): es PASS and ko PASS on the 6 album UI messages and the 8 card title, blurb and fact overlays (natural, true to the en text and the sources; 'inscribed 2012' read as 등재되었어요 / se inscribió; 국가무형유산 as named on the access date; no age words, percentages, emoji, origin claims or expert claims). Its nits, applied: ko album 'fresh' is 새로 시작, so the row label no longer says 앨범 twice; the ko gom fact drops the repeated 겨울 (겨울잠을 자고); es 'a partir de la Etapa 2'; the es length allow-list reason names the themeNames form (the Journey cell word is Campo). Kept: the title Hangeul (Revised Romanization, as the stories spell it) beside the shipped Hangul Day card and the Hangul Check UI, whose names are shipped strings this row does not change. The heritage.go.kr words for 단오, 추석 and 윷놀이 are the ones the shipped story reviews recorded (access dates kept); the reviewer found they support the claims.",
+  ],
+} as const;
+
+/**
+ * The multi-agent review of row CM-23 part 2: the four Stage 4 card backs and their es and ko overlays (F-CURR-002
+ * §9.2), kept apart from part 1's record so each part's passes and dates read on their own. No pass claims
+ * native-speaker or expert review.
+ */
+export const UPPER_CARD_REVIEW_S4 = {
+  status: 'ready' as 'draft' | 'ready',
+  reviewedBy: 'MAR' as const,
+  reviewedAt: '2026-10-23',
+  passes: 5,
+  notes: [
+    'Part 2 pass 1 author (2026-10-23): one card per upper cell of Stage 4, each a polite (haeyo) line of its cell taught in its Discover (이게 뭐예요? S4 letters q1, 맛있어요 S4 life q2, 비가 와요 S4 nature q1, 같이 할까요? S4 crafts q3); Greeting Dialogues keeps its four shipped cards and its album card is its q1 card:insa, as part 1 chose for the two taste cells; every fact rests on a National Institute of Korean Language page re-opened on 2026-10-23 (이게, 뭐 and 무어, 장마 and 반말 in the Standard Korean Language Dictionary; Standard Pronunciation article 15 and its proviso); romanization through the F-CNT-002 converter.',
+    "Part 2 pass 2a language: the es blurb of 비가 와요 repeated its title ('Está lloviendo'), now 'Llueve, así que…'; titles in title case; es avoids a gendered 'juntos' in '¿Jugamos?'; the ko pronunciation fact names both standard forms and ends 'both are correct'; no age wording; every card line ends in the polite yo, as the row asks.",
+    "Part 2 pass 2b culture and facts: each claim matched to its quoted words; the banmal fact first read 'the plain talk of people who are very close', which narrows the dictionary's 'unclear or very close', and now reads 'a way of talking used between people who are very close' in en and es (ko already said 쓰는 말); the pronunciation fact says the rules allow two ways, as the article 15 proviso does; the rainy-season fact defines the Korean word only and claims no origin for a season Korea shares with its neighbours; no UNESCO claim in this part.",
+    'Part 2 pass 2c learning design: each line is taught in its own cell (test: the card Korean appears in the cell file); facts 89-139 characters, under the 180 cap; no Hangul in an English field; the facts teach about the line (short forms, two right pronunciations, a weather word, the polite ending) and never test the learner; review-copy, culture-source and the 7.7 list pass; cards come only from finishing a cell.',
+    'Part 2 pass 3 reviser and third pass: both fixes applied and the four cards re-read in en, es and ko against their sources; no two of the 82 cards share a Korean word (T-AWARD-5).',
+    "Part 2 pass 4 independent MAR (2026-10-23, a separate reviewer of part 2's own commits): ko PASS; es NOT PASS on one string. Language: '¿Jugamos?', and the English 'Play Together?' with it, read 같이 할까요? as 'play'; the cell glosses it 'shall we do it together? (polite)' and 할 is 'do', so the card would teach the wrong verb. Fixed in the fix stage with the reviewer's wording: en 'Do It Together?', es '¿Lo hacemos en equipo?' (keeps 'together' with no gendered plural). The en and es masisseoyo facts said the rules give 'this word' two ways; Standard Pronunciation article 15 and its proviso cover the headword 맛있다, so en and es now name masitda (converter romanization), as ko already did. The ko gachi fact's conditional now reads '요'를 빼고 '같이 할까?'라고 하면 반말이에요 (the reviewer's wording). The other es strings and every ko string passed as written: natural, polite, true to the en text and the NIKL sources, no age words, no origin, UNESCO or expert claims.",
   ],
 } as const;

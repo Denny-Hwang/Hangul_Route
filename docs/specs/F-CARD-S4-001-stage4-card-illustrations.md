@@ -1,7 +1,10 @@
-# F-CARD-S4-001 — Stage 4 Card Illustrations (deferred)
+# F-CARD-S4-001 — Stage 4 Card Illustrations
 
-**Status**: `draft` — implementation **blocked** on Stage 4 dialogue content being authored.
-**Scope**: `packages/design-system/src/components/HeritageCardArt/` + `apps/mobile/src/content/`
+**Status**: `ready` — amended 2026-10-23 by F-CURR-002 row CM-23 part 2: one card per upper cell, shipped behind the `upperCards` switch (the note below). Was `draft`, waiting on the stage's dialogue content, which now exists (F-CURR-001 Stage 4 cells).
+
+> **Amended 2026-10-23 by F-CURR-002 row CM-23 part 2 (section 7.2 and its decision record):** its row ships the cards behind the `upperCards` switch (built-in pct 0; the owner ramps it). The scope is now **one card per upper cell**, earned by finishing the cell's first volume, not the earlier plan of 30 cards for the stage: Read Along 이게 뭐예요? (card:mwoyeyo), Kitchen Talk 맛있어요 (card:masisseoyo), Park Conversations 비가 와요 (card:biga-wayo), Playdate Talk 같이 할까요? (card:gachi). Each card is a polite (haeyo) line its cell teaches. Greeting Dialogues keeps its shipped four cards exactly; its album card is its q1 card, card:insa, now drawn as a Stage 4 talk too. Each card's back-face fact cites a public institution from F-CURR-002 section 6.6 (`apps/mobile/src/content/upper-cell-card-sources.ts`), and the review is the multi-agent review recorded there, not an outside editorial review. The cards fill the five category albums of the Library. Sections 1 (the card count), 2, 3.1, 3.3, 3.4, 5, 6 and 7 below are superseded by F-CURR-002 section 7.2 and its decision record, and the audience is anyone learning Hangul (CLAUDE.md section 1). Of the visual contract in 3.2, these lines still hold: two figures facing each other, speech bubbles in the `HoyaBubble` language (cream fill, sky-blue border, never red), theme tint and theme tokens only. Its line raising the cap to 7 colours and its Stage 4 watermark line are superseded: the drawings keep the five-fill-colour cap of the earlier stages (besides the frame's theme tint), and the stage is named by the album and the card page, not by a glyph in the corner. The drawings are `UpperCellCardArt` (`HeritageCardArt/UpperCellArt.tsx`), loaded in the app's upper-cards chunk; built shots are in `design/screens/library-albums/`.
+
+**Scope**: `packages/design-system/src/components/HeritageCardArt/` + `apps/mobile/src/content/` · amended (row CM-23 part 2): `packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx` and `upper-card-ids.ts` (`upperCellCardArtIds`), `apps/mobile/src/content/heritage-cards.ts` (`upperCellCards`), `content/upper-cell-cards.ts`, the Stage 4 cell files' `rewardCardIds`, the Library albums
 **Owner**: solo dev
 **Rollout**: Stage 4 unlock
 
@@ -38,9 +41,9 @@ Card count target: 30 (6 per theme).
 
 - **Two figures minimum**, positioned facing each other or side-by-side
 - **One or two speech bubbles** per card — using `HoyaBubble` token language (warm cream + sky-blue border, NOT red)
-- Max colors per card raised to 7 (vs Stage 3's 6, Stage 1-2's 5) — dialogue scenes need more variety
+- Max colors per card raised to 7 (vs Stage 3's 6, Stage 1-2's 5) — dialogue scenes need more variety *(superseded by the amendment above: the five-colour cap holds)*
 - Theme tinting preserved
-- **Stage 4 watermark**: `4` glyph in corner
+- **Stage 4 watermark**: `4` glyph in corner *(superseded by the amendment above: no watermark)*
 
 ### 3.3 Rarity distribution
 

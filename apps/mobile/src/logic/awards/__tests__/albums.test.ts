@@ -1,7 +1,8 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../content/heritage-cards';
-import { ALBUM_STAGES, ALBUM_THEMES, UPPER_CELL_CARDS } from '../../../content/upper-cell-cards';
+import { ALBUM_STAGES, ALBUM_THEMES } from '../../../content/album-order';
+import { UPPER_CELL_CARDS } from '../../../content/upper-cell-cards';
 import { albumSetId, albumSets, albumViews } from '../albums';
 import { derivedAwards } from '../derive';
 import type { AwardWorld } from '../types';
@@ -10,15 +11,15 @@ import type { AwardWorld } from '../types';
 const views = (owned: Iterable<string>) => albumViews(UPPER_CELL_CARDS, heritageCardsAll, new Set(owned), ALBUM_THEMES, ALBUM_STAGES);
 
 describe('albumViews', () => {
-  it('five albums in theme order, one slot per album stage; Stages 2-3 hold this row’s cards, the rest wait for parts 2 and 3', () => {
+  it('five albums in theme order, one slot per album stage; Stages 2-4 hold the cards of parts 1 and 2, Stages 6-7 wait for part 3', () => {
     const albums = views([]);
     expect(albums.map((a) => a.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
     expect(albums.map((a) => a.slots.map((s) => s.card?.id ?? null))).toEqual([
-      ['card:norae', 'card:hangeul', null, null, null],
-      ['card:dosirak', 'card:tteok', null, null, null],
-      ['card:bokjumeoni', 'card:full-moon', null, null, null],
-      ['card:byeol', 'card:gom', null, null, null],
-      ['card:swing', 'card:yut', null, null, null],
+      ['card:norae', 'card:hangeul', 'card:mwoyeyo', null, null],
+      ['card:dosirak', 'card:tteok', 'card:masisseoyo', null, null],
+      ['card:bokjumeoni', 'card:full-moon', 'card:insa', null, null],
+      ['card:byeol', 'card:gom', 'card:biga-wayo', null, null],
+      ['card:swing', 'card:yut', 'card:gachi', null, null],
     ]);
     // Lunch Box Words' other three shipped cards are not album cards.
     expect(albums[1]!.slots.some((s) => s.card?.id === 'card:sagwa')).toBe(false);
@@ -30,6 +31,17 @@ describe('albumViews', () => {
     expect(letters!.held.map((c) => c.id)).toEqual(['card:norae', 'card:hangeul']);
     expect(life!.held.map((c) => c.id)).toEqual(['card:dosirak']);
     expect(letters!.slots.filter((s) => s.held).map((s) => s.stage)).toEqual(['stage2', 'stage3']);
+  });
+
+  it('album progress across Stages 2-4 (row CM-23 part 2): Stage 4 fills the third slot; Greeting Dialogues counts its q1 card only', () => {
+    const owned = ['card:mwoyeyo', 'card:norae', 'card:hangeul', 'card:annyeong', 'card:gamsa', 'card:insa', 'card:gachi'];
+    const [letters, , rites, nature, crafts] = views(owned);
+    expect(letters!.held.map((c) => c.id)).toEqual(['card:norae', 'card:hangeul', 'card:mwoyeyo']);
+    expect(rites!.held.map((c) => c.id)).toEqual(['card:insa']);
+    expect(nature!.held).toEqual([]);
+    expect(crafts!.slots.map((s) => s.held)).toEqual([false, false, true, false, false]);
+    // Still no album can complete: Stages 6-7 ship in part 3.
+    for (const a of views(owned)) expect(a.canComplete, a.theme).toBe(false);
   });
 
   it('an album whose every slot has a card can complete, and is complete once all are held', () => {

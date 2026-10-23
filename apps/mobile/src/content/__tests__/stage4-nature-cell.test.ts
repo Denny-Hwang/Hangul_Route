@@ -101,10 +101,11 @@ function heardAs(ko: string): string {
 }
 
 describe('Park Conversations (F-CURR-001 S4-3)', () => {
-  it('is the nature cell of Stage 4, three quests, no new cards (section 3.12)', () => {
+  it('is the nature cell of Stage 4, three quests, its one card the album card of row CM-23 (section 3.12)', () => {
     expect(cell.id).toBe('episode:stage4-nature');
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage4-nature-q1', 'quest:stage4-nature-q2', 'quest:stage4-nature-q3']);
-    expect(cell.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23 part 2: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(cell.rewardCardIds).toEqual(['card:biga-wayo']);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 

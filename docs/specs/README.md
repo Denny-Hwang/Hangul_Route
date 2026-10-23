@@ -138,7 +138,7 @@ F-XXX-<slug>.md
 - `F-VR-003-automated-screenshot-diff.md` — Argos/Chromatic CI diffing · **draft** (ships paired with F-VR-002)
 - `F-CARD-S2-001-stage2-card-illustrations.md` — Stage 2 cards · **ready** (amended by F-CURR-002 row CM-23: one card per upper cell, behind `upperCards`)
 - `F-CARD-S3-001-stage3-card-illustrations.md` — Stage 3 cards · **ready** (amended by F-CURR-002 row CM-23: one card per upper cell, behind `upperCards`)
-- `F-CARD-S4-001-stage4-card-illustrations.md` — Stage 4 dialogue-exchange cards · **draft** (blocked on Stage 4 dialogue content)
+- `F-CARD-S4-001-stage4-card-illustrations.md` — Stage 4 dialogue-exchange cards · **ready** (amended by F-CURR-002 row CM-23 part 2: one card per upper cell, behind `upperCards`)
 - `F-CARD-S5-001-stage5-card-illustrations.md` — Stage 5 story-scene cards · **draft** (blocked on Stage 5 folk-tale content)
 - `F-CARD-S6-001-stage6-card-illustrations.md` — Stage 6 real-world-artifact cards · **draft** (blocked on Stage 6 real-use content)
 - `F-CARD-S7-001-stage7-card-illustrations.md` — Stage 7 self-expression cards · **draft** (blocked on Stage 7 + privacy review)

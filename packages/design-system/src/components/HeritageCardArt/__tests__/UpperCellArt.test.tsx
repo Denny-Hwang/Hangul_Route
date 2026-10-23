@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors } from '../../../tokens';
-import { upperCellCardArtIds } from '../card-ids';
+import { upperCellCardArtIds } from '../upper-card-ids';
 import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
 
 /**
@@ -54,10 +54,14 @@ describe('UpperCellCardArt (row CM-23)', () => {
       }
     });
     for (const c of used) expect(TOKEN_COLOURS.has(c), `${cardId}: ${c}`).toBe(true);
-    // Five fill colours at most, besides the theme tint of the frame and the floor shadow.
+    // Five fill colours at most, besides the frame's own theme tint (the first rect) and the floor shadow. Only that one
+    // tint is set aside: hoya.fur and feedback.nudge share theme.life's value, so dropping every theme value would
+    // never count a gold fill.
+    const frame = (tree.props.children as unknown[]).flat(Infinity).find((n): n is Host => !!n && typeof n === 'object' && (n as Host).type === 'Rect');
+    expect(Object.values(colors.theme) as unknown[], cardId).toContain(frame?.props.fill);
+    fills.delete(frame?.props.fill as string);
     fills.delete(colors.hoya.furDark);
-    for (const tint of Object.values(colors.theme) as string[]) fills.delete(tint);
-    expect(fills.size, cardId).toBeLessThanOrEqual(5);
+    expect(fills.size, `${cardId}: ${[...fills].join(' ')}`).toBeLessThanOrEqual(5);
   });
 
   it('names a picture by its id when no label is given, and draws nothing for an id it does not know', () => {

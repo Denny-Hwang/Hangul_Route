@@ -404,6 +404,8 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw - 4_806_089).toBeGreaterThanOrEqual(0);
     // CM-23 part 1 (the upper-cell cards of Stages 2-3, on CM-22; backs, drawings and albums in a chunk) measures 4,809,851 B.
     expect(PRECACHE_BUDGET.startBundleRaw - 4_809_851).toBeGreaterThanOrEqual(0);
+    // CM-23 part 2 (Stage 4's cards on part 1; the album order and the art ids moved out of the start bundle) measures 4,809,875 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_809_875).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_804_191).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

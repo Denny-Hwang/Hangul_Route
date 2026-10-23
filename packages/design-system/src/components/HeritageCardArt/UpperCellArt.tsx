@@ -1,12 +1,12 @@
 import React from 'react';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 import { colors } from '../../tokens';
-import { upperCellCardArtIds } from './card-ids';
+import { upperCellCardArtIds } from './upper-card-ids';
 import type { HeritageCardArtProps } from './types';
 
 /**
  * The upper-cell card art (F-CURR-002 §7.2, row CM-23; F-CARD-S2-001 and F-CARD-S3-001 as amended): one drawing per
- * album card of Stages 2 and 3, in the shipped geometric minhwa language of `HeritageCardArt`
+ * album card of Stages 2 to 4, in the shipped geometric minhwa language of `HeritageCardArt`
  * (design/brief/illustrations/heritage-card-art.md): rounded primitives, a ~3 px stroke, at most five colours from
  * the theme tint, the brand and cream, every face smiling, theme tokens only. A sibling of `HeritageCardArt.tsx`,
  * never exported by the package barrel: the app loads it in its own chunk by this file's path
@@ -255,10 +255,155 @@ function YutArt(p: ArtProps): React.ReactElement {
   );
 }
 
+// ---- Stage 4 ------------------------------------------------------------------------------------------
+// F-CARD-S4-001 3.2 as amended: each card is a moment of a talk, two round friends facing each other with speech
+// bubbles in the HoyaBubble language (cream fill, sky-blue border, never red).
+
+/** A round friend standing at `x`: ears, a head with a smiling face, and a body in its `fur` colour. */
+function Pal({ x, fur }: { x: number; fur: string }): React.ReactElement {
+  return (
+    <G>
+      <Ellipse cx={x} cy={164} rx={26} ry={22} fill={fur} />
+      <Circle cx={x - 19} cy={92} r={9} fill={fur} />
+      <Circle cx={x + 19} cy={92} r={9} fill={fur} />
+      <Circle cx={x} cy={116} r={28} fill={fur} />
+      <Circle cx={x - 9} cy={112} r={3.5} fill={colors.text.primary} />
+      <Circle cx={x + 9} cy={112} r={3.5} fill={colors.text.primary} />
+      <Path d={`M${x - 8} 124 Q${x} 132 ${x + 8} 124`} stroke={colors.text.primary} strokeWidth={3} fill="none" strokeLinecap="round" />
+    </G>
+  );
+}
+
+/** A speech bubble at `x`, `w` wide, its tail pointing down at `tx`; `children` is the drawn word inside. */
+function Bubble({ x, w, tx, children }: { x: number; w: number; tx: number; children?: React.ReactNode }): React.ReactElement {
+  return (
+    <G>
+      <Path d={`M${tx - 7} 66 L${tx} 84 L${tx + 8} 66 Z`} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={2.5} strokeLinejoin="round" />
+      <Rect x={x} y={22} width={w} height={48} rx={16} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={2.5} />
+      {children}
+    </G>
+  );
+}
+
+/** The two friends of every Stage 4 card: Hoya's gold on the left, a blue friend on the right. */
+const pair = (
+  <>
+    <Pal x={58} fur={colors.hoya.fur} />
+    <Pal x={142} fur={colors.hoya.furBlue} />
+  </>
+);
+
+/** A question mark drawn in a bubble centred on `x`. */
+const ask = (x: number): React.ReactElement => (
+  <G>
+    <Path d={`M${x - 9} 37 Q${x - 9} 29 ${x} 29 Q${x + 9} 29 ${x + 9} 37 Q${x + 9} 44 ${x} 47 V52`} stroke={colors.brand.primary} strokeWidth={4} fill="none" strokeLinecap="round" />
+    <Circle cx={x} cy={60} r={2.5} fill={colors.brand.primary} />
+  </G>
+);
+
+function MwoyeyoArt(p: ArtProps): React.ReactElement {
+  // What is this?: one friend asks, the other names a thing; the answer bubble holds an eraser.
+  return (
+    <Card theme="letters" p={p}>
+      {pair}
+      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
+      <Bubble x={106} w={72} tx={144}>
+        <Rect x={124} y={36} width={36} height={20} rx={5} fill={colors.hoya.furBlue} stroke={colors.brand.secondary} strokeWidth={2.5} />
+        <Line x1={138} y1={36} x2={138} y2={56} stroke={colors.brand.secondary} strokeWidth={2.5} />
+      </Bubble>
+    </Card>
+  );
+}
+
+function MasisseoyoArt(p: ArtProps): React.ReactElement {
+  // It is tasty: a steaming bowl between the friends; one asks how it tastes, the other answers with a heart.
+  return (
+    <Card theme="life" p={p}>
+      {pair}
+      <Path d="M76 160 H124 Q122 184 100 184 Q78 184 76 160 Z" fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} strokeLinejoin="round" />
+      <Path d="M92 152 Q88 146 92 140 M108 152 Q104 146 108 140" stroke={colors.text.muted} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
+      <Bubble x={106} w={72} tx={144}>
+        <Path d="M142 60 L128 46 Q124 34 134 34 Q140 34 142 41 Q144 34 150 34 Q160 34 156 46 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinejoin="round" />
+      </Bubble>
+    </Card>
+  );
+}
+
+function InsaArt(p: ArtProps): React.ReactElement {
+  // Greeting: the two friends bow a little toward each other, a warm hello in each bubble.
+  return (
+    <Card theme="rites" p={p}>
+      <G transform="rotate(8 58 186)">
+        <Pal x={58} fur={colors.hoya.fur} />
+      </G>
+      <G transform="rotate(-8 142 186)">
+        <Pal x={142} fur={colors.hoya.furBlue} />
+      </G>
+      {(
+        [
+          [22, 62],
+          [106, 138],
+        ] as const
+      ).map(([x, tx]) => (
+        <Bubble key={x} x={x} w={72} tx={tx}>
+          <Circle cx={x + 36} cy={46} r={11} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={2.5} />
+          <Path d={`M${x + 31} 47 Q${x + 36} 52 ${x + 41} 47`} stroke={colors.hoya.furDark} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+        </Bubble>
+      ))}
+    </Card>
+  );
+}
+
+/** A raindrop with its tip at (x, y). */
+const drop = (x: number, y: number, fill: string): React.ReactElement => (
+  <Path key={`${x}-${y}`} d={`M${x} ${y} Q${x + 6} ${y + 9} ${x} ${y + 12} Q${x - 6} ${y + 9} ${x} ${y} Z`} fill={fill} />
+);
+
+function BigaWayoArt(p: ArtProps): React.ReactElement {
+  // It is raining: rain falls behind the friends; one says it rains, the other answers with a little house.
+  return (
+    <Card theme="nature" p={p}>
+      {(
+        [
+          [30, 88],
+          [100, 80],
+          [170, 92],
+          [100, 116],
+        ] as const
+      ).map(([x, y]) => drop(x, y, colors.brand.secondary))}
+      {pair}
+      <Bubble x={22} w={72} tx={56}>
+        {drop(44, 32, colors.brand.secondary)}
+        {drop(58, 40, colors.brand.secondary)}
+        {drop(72, 32, colors.brand.secondary)}
+      </Bubble>
+      <Bubble x={106} w={72} tx={144}>
+        <Path d="M128 44 L142 32 L156 44 M132 42 V58 H152 V42 M139 58 V50 H145 V58" stroke={colors.brand.primary} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </Bubble>
+    </Card>
+  );
+}
+
+function GachiArt(p: ArtProps): React.ReactElement {
+  // Shall we do it together?: a ball between the friends; one asks, the other answers with a bright star.
+  return (
+    <Card theme="crafts" p={p}>
+      {pair}
+      <Circle cx={100} cy={172} r={14} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2.5} />
+      <Path d="M88 166 Q100 174 112 166" stroke={colors.surface.canvas} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
+      <Bubble x={106} w={72} tx={144}>
+        <Path d="M142 31 L146 41 L157 42 L149 49 L151 60 L142 54 L133 60 L135 49 L127 42 L138 41 Z" fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2} strokeLinejoin="round" />
+      </Bubble>
+    </Card>
+  );
+}
+
 /** True for a card id this module draws. */
 export const hasUpperCellArt = (cardId: string): boolean => upperCellCardArtIds.includes(cardId);
 
-/** The drawings by card id; `upperCellCardArtIds` lists the same ten. */
+/** The drawings by card id; `upperCellCardArtIds` lists the same fifteen. */
 export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabel }: HeritageCardArtProps): React.ReactElement | null {
   const p: ArtProps = { size, testID, accessibilityLabel: accessibilityLabel ?? `Card art for ${cardId}` };
   switch (cardId) {
@@ -272,6 +417,11 @@ export function UpperCellCardArt({ cardId, size = 200, testID, accessibilityLabe
     case 'card:full-moon': return <FullMoonArt {...p} />;
     case 'card:gom': return <GomArt {...p} />;
     case 'card:yut': return <YutArt {...p} />;
+    case 'card:mwoyeyo': return <MwoyeyoArt {...p} />;
+    case 'card:masisseoyo': return <MasisseoyoArt {...p} />;
+    case 'card:insa': return <InsaArt {...p} />;
+    case 'card:biga-wayo': return <BigaWayoArt {...p} />;
+    case 'card:gachi': return <GachiArt {...p} />;
     default: return null;
   }
 }

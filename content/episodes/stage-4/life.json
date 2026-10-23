@@ -10,7 +10,7 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:masisseoyo"],
   "quests": [
     {
       "id": "quest:stage4-life-q1",

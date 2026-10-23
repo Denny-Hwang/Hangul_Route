@@ -73,6 +73,35 @@ export const UPPER_CARD_BACKS: Readonly<Record<string, UpperCardBack>> = {
     KHS,
     0,
   ),
+  // Stage 4 (row CM-23 part 2). Greeting Dialogues' album card, `card:insa`, keeps its shipped back.
+  'card:mwoyeyo': back(
+    'Point at something new and ask what it is.',
+    "Ige mwoyeyo uses two short forms: ige for igeosi, 'this thing', and mwo for mueo, 'what'.",
+    '이게 (표준국어대사전)',
+    NIKL,
+    1,
+  ),
+  'card:masisseoyo': back(
+    'What you say when the food tastes good.',
+    'The standard pronunciation rules give masitda two ways to be said: with a d sound in the middle, or with an s sound. Both are correct.',
+    '표준어 규정 제2부 표준 발음법 제15항',
+    NIKL,
+    0,
+  ),
+  'card:biga-wayo': back(
+    'Rain is falling, so it is time to head home.',
+    'Jangma is the word for summer weather when rain falls for many days in a row.',
+    '장마 (표준국어대사전)',
+    NIKL,
+    0,
+  ),
+  'card:gachi': back(
+    'A polite way to ask someone to join in.',
+    'Without yo, gachi halkka is banmal, a way of talking used between people who are very close. It neither raises nor lowers the other person.',
+    '반말 (표준국어대사전)',
+    NIKL,
+    0,
+  ),
 };
 
 /** A card with its back, when it has one here; the card itself otherwise. */
