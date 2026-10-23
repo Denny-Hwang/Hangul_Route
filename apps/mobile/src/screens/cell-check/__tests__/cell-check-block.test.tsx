@@ -9,7 +9,7 @@ import { useProgressStore } from '../../../store/progress-store';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
 import { buttonsNamed, byTestId, cleanup, press, render, screenTexts } from '../../../test-support/render';
 import { CellCheckBlock } from '../CellCheckBlock';
-import { useCellCheckOn } from '../cell-check-entry';
+import { useSwitches } from '../cell-check-entry';
 
 /**
  * F-CURR-002 row CM-21 (design/wireframes/reviews/cell-check.md A, A2, B, H and States): the gate (`cellCheck` with
@@ -28,7 +28,7 @@ vi.mock('@react-navigation/native', async () => {
     useNavigation: () => ({ navigate, goBack: () => undefined }),
   };
 });
-const offerable = vi.fn(async () => true);
+const offerable = vi.fn(async () => ({ check: true, testOut: true }));
 vi.mock('../../../logic/memory/boot', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   memoryChunk: async () => ({ cellCheckApi: () => ({ offerable }) }),
@@ -77,7 +77,7 @@ beforeEach(() => {
   resetRemoteConfigForTests();
   navigate.mockClear();
   offerable.mockClear();
-  offerable.mockImplementation(async () => true);
+  offerable.mockImplementation(async () => ({ check: true, testOut: true }));
   useProfileStore.setState({ profiles: [learner, grownUp], activeId: ID, hydrated: true });
   snapshot();
 });
@@ -87,7 +87,7 @@ afterEach(async () => {
 
 describe('the gate (section 12.2)', () => {
   function Probe({ id }: { id: string | null }): React.ReactElement {
-    return <>{String(useCellCheckOn(id))}</>;
+    return <>{String(useSwitches(id)[0])}</>;
   }
   const on = async (id: string | null): Promise<boolean> => {
     const r = await render(<Probe id={id} />);
@@ -130,10 +130,27 @@ describe('the block (A, A2)', () => {
     expect(buttonsNamed(r.root, EN.learner.cellCheck.again)).toHaveLength(1);
   });
 
+  it('a new cell offers nothing until its own plan is read (the earlier cell\'s offer never shows)', async () => {
+    let resolve: (v: { check: boolean; testOut: boolean }) => void = () => undefined;
+    const r = await draw(<CellCheckBlock {...props()} />);
+    expect(buttonsNamed(r.root, EN.learner.cellCheck.cta)).toHaveLength(1);
+    offerable.mockImplementation(() => new Promise((res) => (resolve = res)));
+    await act(async () => {
+      r.update(<CellCheckBlock {...props({ episodeId: 'episode:stage2-crafts' })} />);
+      await Promise.resolve();
+    });
+    expect(buttonsNamed(r.root, EN.learner.cellCheck.cta)).toHaveLength(0);
+    await act(async () => {
+      resolve({ check: true, testOut: true });
+      await Promise.resolve();
+    });
+    expect(buttonsNamed(r.root, EN.learner.cellCheck.cta)).toHaveLength(1);
+  });
+
   it('nothing before the first volume is done, nothing with too few rounds, nothing with cellCheck off', async () => {
     expect((await draw(<CellCheckBlock {...props({ stars: [3, 0, 0] })} />)).toJSON()).toBeNull();
     await cleanup();
-    offerable.mockImplementation(async () => false);
+    offerable.mockImplementation(async () => ({ check: false, testOut: false }));
     expect((await draw(<CellCheckBlock {...props()} />)).toJSON()).toBeNull();
     await cleanup();
     expect((await draw(<CellCheckBlock {...props({ checkOn: false })} />)).toJSON()).toBeNull();
@@ -158,5 +175,13 @@ describe('Test out (B)', () => {
     await cleanup();
     snapshot({ testedOut: { [CELL]: '2026-10-20T10:00:00.000Z' } });
     expect((await draw(<CellCheckBlock {...bottom()} />)).toJSON()).toBeNull();
+  });
+
+  it('a cell whose topic words are too many for Test out (testOutFits false) offers none; the Check stays', async () => {
+    offerable.mockImplementation(async () => ({ check: true, testOut: false }));
+    expect((await draw(<CellCheckBlock {...bottom()} />)).toJSON()).toBeNull();
+    await cleanup();
+    const r = await draw(<CellCheckBlock {...props()} />);
+    expect(buttonsNamed(r.root, EN.learner.cellCheck.cta)).toHaveLength(1);
   });
 });

@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Card, Heading, Spacer, colors, spacing } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
@@ -36,7 +36,7 @@ export function CardUnlockBanner({
   showSparkles: boolean;
   reducedMotion: boolean;
   onSeeCard: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const translateY = useSharedValue(reducedMotion ? 0 : -80);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);
   const sparkleOpacity = useSharedValue(0);
@@ -133,7 +133,7 @@ export function CardUnlockBanner({
   );
 }
 
-function Sparkles(): React.ReactElement {
+function Sparkles(): ReactElement {
   // 5 amber 4-point sparkle stars around the card.
   // Positions (top-left, top-right, top-center, bottom-left, bottom-right) as % of container.
   const positions: Array<{ left: string; top: string }> = [
@@ -161,7 +161,7 @@ function Sparkles(): React.ReactElement {
   );
 }
 
-function SparkleStar({ size }: { size: number }): React.ReactElement {
+function SparkleStar({ size }: { size: number }): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
       <Path d="M12 2 L14 12 L12 22 L10 12 Z" fill={colors.feedback.nudge} opacity={0.95} />

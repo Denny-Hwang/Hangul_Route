@@ -5,6 +5,7 @@ import * as chunk from '../../src/content/__generated__/review-item-chunks/revie
 import { expect, test } from './fixtures';
 import { journeyCellName, onboardChild, readStored, seedStored } from './helpers';
 import { shot } from './shots';
+import { closeInstallGuide, expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -12,7 +13,11 @@ import { expectNoHorizontalOverflow } from './viewport';
  * Check from a finished cell's page (a 3-star result latches `cellCheckAt` and shows "Cell Check done"; a lower one
  * writes the entry and latches nothing), Test out from an unstarted cell (a pass latches `testedOut`, the quests show
  * "Tested out" with 2 stars and the next lesson moves past the cell; a stopped test-out writes nothing), the plays
- * offline, and nothing with `cellCheck` off. `cellCheck` ships at built-in pct 0, so each case turns it on through the
+ * offline, text size Largest at 320 x 568 in English and Spanish, and with `cellCheck` off no Check and no Test out
+ * while the latched Tested out mark stays drawn (routeNext keeps skipping the cell). Test out needs a cell whose topic
+ * words are few (Stage 3 up today): Stage 3 Letters, the first cell of the route once Stage 2 is done. A lapsed plan
+ * (F-ENT-003) is covered by the unit tests (`cell-check-api.test.ts`: the cell checked again at the start and the
+ * finish; `cell-check-block.test.tsx`: a locked cell offers none), recorded in the wireframe. `cellCheck` ships at built-in pct 0, so each case turns it on through the
  * stored remote copy, with `memoryRecord`. This browser has no Korean voice (the fixture's silent engine): every heard
  * round is a read round.
  *
@@ -24,20 +29,22 @@ test.use({ timezoneId: 'UTC' });
 const ITEMS = decodeReviewItems(chunk);
 const AT = '2026-10-01T10:00:00.000Z';
 const DONE_CELL = 'episode:stage2-life';
-const OPEN_CELL = 'episode:stage2-rites';
+const OPEN_CELL = 'episode:stage3-letters';
+const OPEN_THEME = 'Letters & Books';
+const NEXT_CELL = 'episode:stage3-life';
 const questsOf = (cell: string): string[] => CATALOG.cells.find((c) => c.episodeId === cell)?.questIds ?? [];
-const stage1 = CATALOG.cells.filter((c) => c.episodeId.startsWith('episode:stage1-')).map((c) => c.episodeId);
+const doneBefore = CATALOG.cells.filter((c) => /^episode:stage[12]-/.test(c.episodeId)).map((c) => c.episodeId);
 
 type Flags = Record<string, { on: boolean; pct: number }>;
 const ON: Flags = { memoryRecord: { on: true, pct: 100 }, cellCheck: { on: true, pct: 100 }, mastery: { on: true, pct: 100 } };
 
-/** Dami: Stage 1 and Stage 2 Food done (seeded, Done latched), Stage 2 Holidays not started. */
-async function learner(page: Page, flags: Flags = ON): Promise<string> {
+/** Dami: Stages 1 and 2 done (seeded, Done latched), Stage 3 not started. */
+async function learner(page: Page, flags: Flags = ON, settings?: { uiLocale: 'en' | 'es'; textSize: 'largest' }): Promise<string> {
   await onboardChild(page, { name: 'Dami', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const id = (await readStored<string>(page, 'profiles:active')) as string;
-  const cells = [...stage1, DONE_CELL];
+  const cells = doneBefore;
   const questDoneAt = Object.fromEntries(cells.flatMap(questsOf).map((q) => [q, AT]));
   const quests = cells.flatMap((cell) => questsOf(cell).map((questId) => ({ questId, episodeId: cell, startedAt: AT, completedAt: AT, stars: 2, attempts: 1, accuracy: 0.9 })));
   await seedStored(page, `progress:${id}`, {
@@ -55,14 +62,15 @@ async function learner(page: Page, flags: Flags = ON): Promise<string> {
     cellBest: Object.fromEntries(cells.map((c) => [c, 1])),
   });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags });
+  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
   await page.reload();
-  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await expect(page.getByText(settings?.uiLocale === 'es' ? '¡Hola, Dami!' : 'Hi, Dami!')).toBeVisible();
   return id;
 }
 
-async function openCell(page: Page, theme: string): Promise<void> {
+async function openCell(page: Page, theme: string, stage = 2): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: journeyCellName(2, theme) }).click();
+  await page.getByRole('button', { name: journeyCellName(stage, theme) }).click();
 }
 
 const cellItems = (cell: string) => ITEMS.filter((i) => i.cells.includes(cell));
@@ -170,7 +178,7 @@ test.describe('the Cell Check', () => {
     const snap = await readStored<{ reviews: Array<{ kind: string; scope: string; resultStars: number }> }>(page, `progress:${id}`);
     expect(snap?.reviews.filter((r) => r.kind === 'cell-check')).toEqual([expect.objectContaining({ scope: DONE_CELL, resultStars: 3 })]);
     await expect.poll(async () => Object.keys((await readStored<{ rows: Record<string, unknown> }>(page, `memory:${id}`))?.rows ?? {}).length).toBeGreaterThan(0);
-    // Back to this place: Cell Check done and Take it again.
+    // Back to this place: Cell Check done and Take it again (its own words: each quest row has a Play again).
     await page.getByTestId('cell-check-to-place').click();
     await expect(page.getByTestId('cell-check-done')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Take it again' })).toBeVisible();
@@ -208,7 +216,7 @@ test.describe('Test out', () => {
   test('an unstarted cell: the line under the quests, a pass latches testedOut, Tested out with 2 stars, the next lesson moves on', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     const id = await learner(page);
-    await openCell(page, 'Holidays & Traditions');
+    await openCell(page, OPEN_THEME, 3);
     const line = page.getByTestId('cell-check-test-out-line');
     await expect(line).toBeVisible();
     await expect(line).toContainText('Already know this?');
@@ -229,14 +237,13 @@ test.describe('Test out', () => {
     // A passed test-out never writes cellCheckAt or a quest's done mark.
     expect(snap?.cellCheckAt?.[OPEN_CELL]).toBeUndefined();
     for (const q of questsOf(OPEN_CELL)) expect(snap?.questDoneAt?.[q]).toBeUndefined();
-    // The next lesson is past the tested-out cell.
+    // The next lesson is past the tested-out cell: Stage 3 Letters was the route's next, Stage 3 Food is now.
     await page.getByTestId('cell-check-next').click();
-    // The cursor's next is the first unfinished cell in route order that was not tested out: Stage 2 Letters.
-    await expect(page.getByTestId(`episode-quest-${questsOf('episode:stage2-letters')[0]}`)).toBeVisible();
+    await expect(page.getByTestId(`episode-quest-${questsOf(NEXT_CELL)[0]}`)).toBeVisible();
     await expect(page.getByTestId(`episode-quest-${questsOf(OPEN_CELL)[0]}`)).toBeHidden();
     // Back on the tested-out cell: every quest shows Tested out and 2 stars, and stays playable.
     await page.goto('/');
-    await openCell(page, 'Holidays & Traditions');
+    await openCell(page, OPEN_THEME, 3);
     await expect(page.getByTestId('episode-tested-out')).toHaveCount(questsOf(OPEN_CELL).length);
     await expect(page.getByTestId('cell-check-test-out-line')).toHaveCount(0);
     await shot(page, 'tested-out-quests-320');
@@ -246,7 +253,7 @@ test.describe('Test out', () => {
     await page.setViewportSize({ width: 320, height: 800 });
     const id = await learner(page);
     const memoryBefore = await readStored<{ rows: Record<string, unknown> }>(page, `memory:${id}`);
-    await openCell(page, 'Holidays & Traditions');
+    await openCell(page, OPEN_THEME, 3);
     await page.getByTestId('cell-check-test-out').click();
     await page.getByTestId('cell-check-go').click();
     await answer(page, OPEN_CELL, true);
@@ -267,7 +274,7 @@ test.describe('Test out', () => {
     const id = await learner(page);
     await expect.poll(() => page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.active && !!navigator.serviceWorker.controller), { timeout: 30_000 }).toBe(true);
     // One online visit loads the chunks the Check needs into the precache.
-    await openCell(page, 'Holidays & Traditions');
+    await openCell(page, OPEN_THEME, 3);
     await expect(page.getByTestId('cell-check-test-out')).toBeVisible();
     await context.setOffline(true);
     await page.getByTestId('cell-check-test-out').click();
@@ -280,7 +287,7 @@ test.describe('Test out', () => {
 });
 
 test.describe('cellCheck off (section 12.2)', () => {
-  test('no block button and no Test out line; a tested-out mark stays in the record and is not drawn', async ({ page }) => {
+  test('no block button and no Test out line; a tested-out mark stays in the record and stays drawn (the route skips it)', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 800 });
     const id = await learner(page, { ...ON, cellCheck: { on: true, pct: 0 }, mastery: { on: true, pct: 0 } });
     const snap = await readStored<Record<string, unknown>>(page, `progress:${id}`);
@@ -291,10 +298,48 @@ test.describe('cellCheck off (section 12.2)', () => {
     await expect(page.getByRole('heading', { name: /Quests/ })).toBeVisible();
     await expect(page.getByTestId('cell-check-block')).toHaveCount(0);
     await page.goto('/');
-    await openCell(page, 'Holidays & Traditions');
+    await openCell(page, OPEN_THEME, 3);
     await expect(page.getByRole('heading', { name: /Quests/ })).toBeVisible();
     await expect(page.getByTestId('cell-check-test-out-line')).toHaveCount(0);
-    await expect(page.getByTestId('episode-tested-out')).toHaveCount(0);
+    await expect(page.getByTestId('episode-tested-out')).toHaveCount(questsOf(OPEN_CELL).length);
     expect((await readStored<{ testedOut?: Record<string, string> }>(page, `progress:${id}`))?.testedOut?.[OPEN_CELL]).toBe(AT);
+  });
+});
+
+test.describe('text size Largest at 320 x 568 (the fit rule)', () => {
+  test('English: the block, the Test out line, the intro and the result fit', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learner(page, ON, { uiLocale: 'en', textSize: 'largest' });
+    await closeInstallGuide(page);
+    await openCell(page, 'Food & Daily Life');
+    await expect(page.getByTestId('cell-check-block')).toBeVisible();
+    await expectTextFits(page, 'the Cell Check block');
+    await page.goto('/');
+    await openCell(page, OPEN_THEME, 3);
+    await page.getByTestId('cell-check-test-out-line').scrollIntoViewIfNeeded();
+    await expectTextFits(page, 'the Test out line');
+    await page.getByTestId('cell-check-test-out').click();
+    await expect(page.getByTestId('cell-check-intro')).toBeVisible();
+    await expectTextFits(page, 'the test-out intro');
+    await page.getByTestId('cell-check-go').click();
+    await play(page, OPEN_CELL);
+    await expect(page.getByTestId('cell-check-result')).toBeVisible();
+    await expectTextFits(page, 'the test-out result');
+    await shot(page, 'cell-check-largest-result-320');
+  });
+
+  test('Spanish: the block, the Test out line and the intro fit', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await learner(page, ON, { uiLocale: 'es', textSize: 'largest' });
+    await closeInstallGuide(page);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    await page.getByText('Recorrido', { exact: true }).last().click();
+    await page.getByRole('button', { name: /^Etapa 2 [^,]+, Food & Daily Life/ }).click();
+    await expect(page.getByTestId('cell-check-block')).toBeVisible();
+    await expect(page.getByTestId('cell-check-block')).toContainText('Repaso a fondo');
+    await expectTextFits(page, 'the Cell Check block (es)');
+    await page.getByTestId('cell-check-start').click();
+    await expect(page.getByTestId('cell-check-intro')).toBeVisible();
+    await expectTextFits(page, 'the Cell Check intro (es)');
   });
 });

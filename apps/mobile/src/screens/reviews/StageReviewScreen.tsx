@@ -19,7 +19,7 @@ import {
 import { formatDate } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Modal, Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll, stage1Cards } from '../../content';
 import { RomanizationModeOverride, useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -65,7 +65,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'StageReview'>;
 /** react-native-web also reports keyboard focus to the style callback. */
 type PressState = PressableStateCallbackType & { focused?: boolean };
 
-export function StageReviewScreen({ route, navigation }: Props): React.ReactElement {
+export function StageReviewScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const profile = useProfileStore(activeProfileSelector);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -96,7 +96,7 @@ export function StageReviewScreen({ route, navigation }: Props): React.ReactElem
   return <HangulCheck navigation={navigation} />;
 }
 
-function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React.ReactElement {
+function HangulCheck({ navigation }: { navigation: Props['navigation'] }): ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageReview;
   const locale = useLocale();
@@ -339,7 +339,7 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
 }
 
 /** A labelled switch, one 64 dp target (the story reader's pattern). */
-function AttemptSwitch({ label, value, onChange }: { label: string; value: boolean; onChange: () => void }): React.ReactElement {
+function AttemptSwitch({ label, value, onChange }: { label: string; value: boolean; onChange: () => void }): ReactElement {
   const track = spacing.xxxl;
   const knob = spacing.xl;
   return (
@@ -394,7 +394,7 @@ function LeaveSheet({
   m: ReturnType<typeof useMessages>['learner']['stageReview']['leave'];
   onStay: () => void;
   onStop: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onStay} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="hangul-check-leave">

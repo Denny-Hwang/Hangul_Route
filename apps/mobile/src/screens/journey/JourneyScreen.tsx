@@ -14,7 +14,7 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { JourneyGrid, type JourneyMastery } from '../../components/JourneyGrid';
 import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
@@ -53,7 +53,7 @@ const STORY_ENTRIES = defaultStoryIndex();
 /** Any heritage story on the map: the explainer then says what the marks mean. */
 const MAP_HAS_STORIES = STORY_ENTRIES.some((e) => e.placement === 'shelf');
 
-export function JourneyScreen(): React.ReactElement {
+export function JourneyScreen(): ReactElement {
   const messages = useMessages();
   const m = messages.learner.journey;
   const locale = useLocale();
@@ -264,7 +264,7 @@ export function JourneyScreen(): React.ReactElement {
 }
 
 /** Nothing selectable (no episode at all): the coming-soon words, so the pane is never blank. */
-function ComingSoonPane(): React.ReactElement {
+function ComingSoonPane(): ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode.comingSoon;
   return (

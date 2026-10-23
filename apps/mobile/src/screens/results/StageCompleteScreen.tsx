@@ -18,7 +18,7 @@ import {
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType } from 'react-native';
 import { episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -61,11 +61,11 @@ const WALL_TILE = touchTarget.min;
  * The `StageComplete` route: Stage 1's ceremony below, unchanged; a Stage 2-7's is the stage ceremony of the Stage
  * Check's chunk (F-CURR-002 section 7.3, row CM-22), by the one prize table.
  */
-export function StageCompleteScreen(props: Props): React.ReactElement {
+export function StageCompleteScreen(props: Props): ReactElement {
   return PRIZE_STAGES[props.route.params.stageKey]?.ceremony === 'stage' ? <UpperStageCompleteRoute {...props} /> : <HangulCompleteScreen {...props} />;
 }
 
-function HangulCompleteScreen({ route, navigation }: Props): React.ReactElement {
+function HangulCompleteScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.learner.stageComplete;
   const locale = useLocale();
@@ -193,7 +193,7 @@ function HangulCompleteScreen({ route, navigation }: Props): React.ReactElement 
  * glyph alone). A final sits at the bottom of its block, so its tile has a heavier bottom edge (a
  * shape cue, never colour alone).
  */
-function WallTileView({ tile, label, width }: { tile: WallTile; label: string; width: number }): React.ReactElement {
+function WallTileView({ tile, label, width }: { tile: WallTile; label: string; width: number }): ReactElement {
   const textScale = useTypeScale();
   const final = tile.kind === 'batchim';
   return (

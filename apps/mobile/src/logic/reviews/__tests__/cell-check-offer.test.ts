@@ -7,7 +7,7 @@ import { cellOffer, type CellOfferInput } from '../cell-check-offer';
  * locked cell offers no test-out); E3's hidden arm; `cellCheck` off; the mastery hint.
  */
 
-const base: CellOfferInput = { stage: 'stage2', stars: [0, 0, 0], open: [true, true, true], testedOut: false, checkPassed: false, level: 0, checkOn: true, masteryOn: true, arm: 'offered', playable: true };
+const base: CellOfferInput = { stage: 'stage2', stars: [0, 0, 0], open: [true, true, true], testedOut: false, checkPassed: false, level: 0, checkOn: true, masteryOn: true, arm: 'offered', playable: true, testOutFits: true };
 const offer = (over: Partial<CellOfferInput>) => cellOffer({ ...base, ...over });
 
 describe('the Cell Check (block A)', () => {
@@ -46,6 +46,8 @@ describe('Test out (line B)', () => {
     expect(offer({ testedOut: true }).testOut).toBe(false);
     expect(offer({ arm: 'hidden' }).testOut).toBe(false);
     expect(offer({ playable: false }).testOut).toBe(false);
+    // Too many topic words for the memory store to schedule what a test-out skips (row CM-21 decision record).
+    expect(offer({ testOutFits: false }).testOut).toBe(false);
     expect(offer({ checkOn: false }).testOut).toBe(false);
   });
 

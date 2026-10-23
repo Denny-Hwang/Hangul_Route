@@ -15,6 +15,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { useMasteryMoment } from '../../store/mastery-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
+import { OopsScreen } from '../system/OopsScreen';
 import { useActiveRouteNext } from '../use-route-next';
 
 /**
@@ -38,7 +39,10 @@ const LOADING_DOTS = 10;
 
 type Phase =
   | { kind: 'loading' }
+  /** Too few rounds, the switch off, or a test-out the cell may not take now: the calm line. */
   | { kind: 'nothing' }
+  /** A chunk did not load (offline before it was cached) or the store failed: the crash screen's Try again. */
+  | { kind: 'failed' }
   | { kind: 'intro'; plan: PlannedCheck }
   | { kind: 'playing'; plan: PlannedCheck; index: number }
   | { kind: 'result'; stars: 1 | 2 | 3; passed: boolean };
@@ -57,6 +61,7 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   const [ui, setUi] = useState<Rounds | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [, setAnswered] = useState(0);
+  const [attempt, setAttempt] = useState(0);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const world = useRef<CheckWorld | null>(null);
@@ -73,27 +78,28 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
     let alive = true;
     dailyReviewChunk().then(
       (chunk) => alive && setUi(chunk),
-      () => alive && setPhase({ kind: 'nothing' }),
+      () => alive && setPhase({ kind: 'failed' }),
     );
     memoryChunk()
       .then(async (chunk) => {
         const a = chunk.cellCheckApi();
         api.current = a;
         const read = await a.readWorld(profileId);
+        if (read.kind === 'unreadable') throw new Error('unreadable');
         if (read.kind !== 'ready') return null;
         world.current = read.world;
         return a.startSession(read.world, cellId, mode, locale);
       })
       .then(
-        (plan) => alive && setPhase(plan ? { kind: 'intro', plan } : { kind: 'nothing' }),
-        () => alive && setPhase({ kind: 'nothing' }),
+        (plan) => alive && setPhase((p) => (p.kind === 'failed' ? p : plan ? { kind: 'intro', plan } : { kind: 'nothing' })),
+        () => alive && setPhase({ kind: 'failed' }),
       );
     return () => {
       alive = false;
     };
-    // One plan per visit; a new profile or cell is a new visit.
+    // One plan per visit; a new profile or cell is a new visit, and Try again a new attempt.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileId, cellId, mode]);
+  }, [profileId, cellId, mode, attempt]);
 
   // Every way back mid-round asks first: the [x], the browser and phone back, a swipe.
   useEffect(
@@ -141,8 +147,8 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
     void a
       .finishSession(w, p.plan, answers.current, recorded.current)
       .then(
-        (done) => setPhase({ kind: 'result', stars: done.stars, passed: done.passed }),
-        () => setPhase({ kind: 'nothing' }),
+        (done) => setPhase(done === null ? { kind: 'nothing' } : { kind: 'result', stars: done.stars, passed: done.passed }),
+        () => setPhase({ kind: 'failed' }),
       )
       .finally(() => {
         finishing.current = false;
@@ -153,6 +159,17 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
     if (phaseRef.current.kind === 'playing') setLeaving(true);
     else toPlace();
   };
+
+  if (phase.kind === 'failed') {
+    return (
+      <OopsScreen
+        onRetry={() => {
+          setPhase({ kind: 'loading' });
+          setAttempt((n) => n + 1);
+        }}
+      />
+    );
+  }
 
   if (phase.kind === 'loading' || phase.kind === 'playing' || (ui === null && phase.kind !== 'nothing')) {
     const total = phase.kind === 'playing' ? phase.plan.rounds.length : LOADING_DOTS;
@@ -211,6 +228,7 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
           onPress={() => {
             answers.current = new Map();
             recorded.current = [];
+            if (world.current !== null) api.current?.started(world.current);
             setPhase({ kind: 'playing', plan: phase.plan, index: 0 });
           }}
           testID="cell-check-go"
@@ -256,10 +274,10 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
         <Spacer size="xl" />
         <View style={{ gap: spacing.sm }}>
           {testOut && phase.passed && nextQuest !== null ? (
-            <Button label={out.next} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('EpisodeDetail', { episodeId: nextQuest.episodeId }))} testID="cell-check-next" />
+            <Button label={m.learner.home.next.heading} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('EpisodeDetail', { episodeId: nextQuest.episodeId }))} testID="cell-check-next" />
           ) : null}
           {testOut && !phase.passed && firstQuest !== undefined ? (
-            <Button label={out.first} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('QuestPlayer', { questId: firstQuest, episodeId: cellId }))} testID="cell-check-first" />
+            <Button label={m.learner.episode.quests.start.cta} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('QuestPlayer', { questId: firstQuest, episodeId: cellId }))} testID="cell-check-first" />
           ) : null}
           {!testOut && !phase.passed ? <Button label={copy.toPlace} tone="primary" size="hero" fullWidth onPress={toPlace} testID="cell-check-to-place" /> : null}
           <Button

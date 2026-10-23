@@ -392,11 +392,11 @@ describe('precacheReport and its budget lines', () => {
     // sessions are a chunk of their own), CM-16 4,742,801 B and CM-17 4,739,306 B, each on its own base. The phase-1
     // integration (integrate/curr-phase1: rows CM-10 to CM-17 together) measures 4,760,960 B (release build). [GU] The
     // guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6 on it, switch off) measures 4,804,191 B.
-    // CM-21 (the Cell Check, on CM-20's 4,808,758 B) measures 4,812,510 B; CM-22 (the Stage Checks, on CM-21 with main)
-    // measures 4,819,932 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_825_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_819_932).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_819_932).toBeLessThan(10_000);
+    // CM-21 (the Cell Check, on main with CM-20 at 4,809,512 B) measures 4,809,323 B; CM-22 (the Stage Checks, on CM-21)
+    // measures 4,813,015 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_815_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_813_015).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_813_015).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

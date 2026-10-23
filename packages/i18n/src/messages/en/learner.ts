@@ -2678,7 +2678,8 @@ export const learner = {
    * The Cell Check and its test-out (F-CURR-002 sections 4.4, 4.5 and 7.7, row CM-21; design/wireframes/reviews/
    * cell-check.md). Stars only: never a percentage, an "n of m", a pass mark, a timer or "failed". The UI says
    * "Cell Check"; "Test out" is the way in from an unstarted cell. Star headlines reuse `dailyReview.result.headline`,
-   * the stop sheet `stageReview.leave`, the intro buttons `stageReview.intro`. Read by the `review-copy` rule.
+   * the stop sheet `stageReview.leave`, the intro buttons `stageReview.intro`, the test-out's next lesson
+   * `home.next.heading` and its first quest `episode.quests.start`. Read by the `review-copy` rule.
    */
   cellCheck: {
     title: 'Cell Check',
@@ -2705,8 +2706,6 @@ export const learner = {
     passed: 'You tested out!',
     start: 'Good start!',
     startBody: 'Start with the first quest. Hoya will help with the rest.',
-    next: 'Go to your next lesson',
-    first: 'Start the first quest',
     /** On each quest of a tested-out cell, with 2 stars; every quest stays playable. */
     pill: 'Tested out',
     /** Row CM-22: under the header of a stage whose every cell is done or tested out, until the stage latches. */

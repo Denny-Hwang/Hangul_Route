@@ -20,7 +20,7 @@ import {
 import { formatNumber, type Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -95,7 +95,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
  * section 7.1: the stars, Hoya's line and the earned card with See my card, and none of the learner's next actions,
  * name row or hand-offs), with the same card celebration (`CardUnlockBanner`).
  */
-export function ResultsScreen({ route, navigation }: Props): React.ReactElement {
+export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.learner.results;
   const locale = useLocale();
@@ -623,7 +623,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
  * The quest title and one line; letters in the line are taught content, so
  * they go through `KoreanText` with their romanization, never a plain string.
  */
-function NextUpCard({ teaser, m, caption }: { teaser: ResultsTeaser; m: ResultsMessages; caption: string }): React.ReactElement {
+function NextUpCard({ teaser, m, caption }: { teaser: ResultsTeaser; m: ResultsMessages; caption: string }): ReactElement {
   const { line } = teaser;
   return (
     <Card padding="md" tone="paper" testID="next-up-card">

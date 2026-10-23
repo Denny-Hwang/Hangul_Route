@@ -1,4 +1,5 @@
 import { mergeCellBest, mergeLatchRecord } from '@hangul-route/content-schema';
+import { episodeById } from '../../content/episodes';
 import { lessonContent } from '../../content/lessons';
 import { reviewItemsChunk } from '../../content/review-items';
 import { flags } from '../../config/flags';
@@ -11,7 +12,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
 import { useSyncStore } from '../../store/sync-store';
-import { useTierStore } from '../../store/tier-store';
+import { questOpenFor, useTierStore } from '../../store/tier-store';
 import { episodesAll } from '../../content';
 import { CONTENT_OVERLAYS } from '../content-locale';
 import { gridEpisodesOf } from '../my-route/order';
@@ -161,10 +162,20 @@ export function cellCheckApi(): CellCheckApi {
       progress.replaceSnapshot(profileId, { ...snap, [field]: merged });
       notifyProgressPersisted(profileId);
     },
+    testOutCell: (profileId, cellId) => {
+      // The cell page's offer rules, read again by the session (F-ENT-003: the same access as playing the cell).
+      const episode = episodeById(cellId);
+      if (!episode) return null;
+      const snap = useProgressStore.getState().byProfile[profileId];
+      const open = questOpenFor(profileId, new Date(), snap);
+      const ids = new Set(episode.questIds);
+      const started = snap?.testedOut?.[cellId] !== undefined || (snap?.quests ?? []).some((q) => ids.has(q.questId) && (q.stars > 0 || Boolean(q.completedAt)));
+      return { stage: episode.stage, open: episode.questIds.map(open), started };
+    },
+    serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,
     track: (event) => void track(event),
     overlays: (locale) => CONTENT_OVERLAYS[locale],
     ensureCell: (cell) => lessonContent.ensureCells([cell]),
-    random: () => Math.random(),
   });
   return cellCheck;
 }

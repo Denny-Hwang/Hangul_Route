@@ -1,7 +1,7 @@
 import type { StageKey } from '@hangul-route/content-schema';
 import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { episodesAll } from '../../content';
 import { recapStages, withStageCeremony } from '../../logic/reviews/stage-ceremony';
 import { notifyProgressPersisted } from '../../logic/sync/persist-hook';
@@ -130,7 +130,7 @@ export interface StageHeaderSlotProps {
 }
 
 /** A Stage 2-7 header's buttons (See your prize, Stage Check) or its tested-out caption; nothing while off or loading. */
-export function StageHeaderSlot(props: StageHeaderSlotProps): React.ReactElement | null {
+export function StageHeaderSlot(props: StageHeaderSlotProps): ReactElement | null {
   const ceremonyOn = useStageCeremonyOn(props.profileId);
   const cellCheck = useCurrFlag('cellCheck');
   const want = props.place === 'actions' ? ceremonyOn && props.complete : cellCheck && !props.complete;
@@ -139,7 +139,7 @@ export function StageHeaderSlot(props: StageHeaderSlotProps): React.ReactElement
 }
 
 /** The `StageCheck` route (panels D to F, H): the chunk's screen once it is in; one that cannot load shows Try again. */
-export function StageCheckRoute(props: NativeStackScreenProps<RootStackParamList, 'StageCheck'>): React.ReactElement {
+export function StageCheckRoute(props: NativeStackScreenProps<RootStackParamList, 'StageCheck'>): ReactElement {
   const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (chunk === null) return <LessonWaiting />;
@@ -148,7 +148,7 @@ export function StageCheckRoute(props: NativeStackScreenProps<RootStackParamList
 }
 
 /** The `StageRecap` route: the one retroactive summary (panel G). */
-export function StageRecapRoute(props: NativeStackScreenProps<RootStackParamList, 'StageRecap'>): React.ReactElement {
+export function StageRecapRoute(props: NativeStackScreenProps<RootStackParamList, 'StageRecap'>): ReactElement {
   const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (chunk === null) return <LessonWaiting />;
@@ -157,7 +157,7 @@ export function StageRecapRoute(props: NativeStackScreenProps<RootStackParamList
 }
 
 /** The `StageComplete` route of a Stage 2-7: the stage ceremony (panel B). */
-export function UpperStageCompleteRoute(props: NativeStackScreenProps<RootStackParamList, 'StageComplete'>): React.ReactElement {
+export function UpperStageCompleteRoute(props: NativeStackScreenProps<RootStackParamList, 'StageComplete'>): ReactElement {
   const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (chunk === null) return <LessonWaiting />;

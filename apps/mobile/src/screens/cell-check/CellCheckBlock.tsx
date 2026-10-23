@@ -24,6 +24,8 @@ import type { CellCheckSlotProps } from './cell-check-entry';
  * - Nothing shows until the memory chunk says the cell has 5 or more playable rounds.
  */
 
+const NONE: { check: boolean; testOut: boolean } = { check: false, testOut: false };
+
 export interface CellCheckBlockProps extends CellCheckSlotProps {
   checkOn: boolean;
   masteryOn: boolean;
@@ -36,14 +38,16 @@ export function CellCheckBlock({ place, profileId, episodeId, stage, theme, star
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
   const today = useToday('local');
   const mastery = useMastery(place === 'top' && masteryOn ? profileId : null, snap, today);
-  const [playable, setPlayable] = useState(false);
+  const [offers, setOffers] = useState(NONE);
   useEffect(() => {
+    // A new cell or profile offers nothing until its own plan is read.
+    setOffers(NONE);
     if (!checkOn) return undefined;
     let live = true;
     memoryChunk()
       .then((chunk) => chunk.cellCheckApi().offerable(profileId, episodeId))
       .then(
-        (yes) => live && setPlayable(yes),
+        (read) => live && setOffers(read),
         () => undefined,
       );
     return () => {
@@ -61,7 +65,8 @@ export function CellCheckBlock({ place, profileId, episodeId, stage, theme, star
     checkOn,
     masteryOn: masteryOn && mastery !== null,
     arm: testOutArmFor(profileId),
-    playable,
+    playable: offers.check,
+    testOutFits: offers.testOut,
   });
   const go = (mode: 'check' | 'testout'): void => navigation.navigate('CellCheck', { cellId: episodeId, mode });
 

@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { memoryRecordsFor } from '../../logic/memory/boot';
 import type { RootStackParamList } from '../../navigation/types';
 import { useCurrFlag } from '../../store/remote-config-store';
@@ -29,18 +29,6 @@ function loadChunk(): Promise<Chunk> {
   return loading;
 }
 
-/** `cellCheck` and `memoryRecord` on for this learner (subscribed, so a remote turn re-renders). */
-export function useCellCheckOn(profileId: string | null): boolean {
-  const check = useCurrFlag('cellCheck');
-  const record = useRecords(profileId);
-  return check && record;
-}
-
-/** `memoryRecord` on for this learner. */
-function useRecords(profileId: string | null): boolean {
-  return useCurrFlag('memoryRecord') && memoryRecordsFor(profileId);
-}
-
 function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: () => void } {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
@@ -58,6 +46,17 @@ function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: (
   return { chunk: on ? chunk : null, failed, retry: () => setFailed(false) };
 }
 
+/**
+ * `cellCheck` and `mastery`, each with `memoryRecord`, for this learner (subscribed, so a remote turn re-renders): the
+ * Check's switch (which covers the test-out) and the mastery block's.
+ */
+export function useSwitches(profileId: string | null): [check: boolean, mastery: boolean] {
+  const record = useCurrFlag('memoryRecord') && memoryRecordsFor(profileId);
+  const check = useCurrFlag('cellCheck');
+  const mastery = useCurrFlag('mastery');
+  return [check && record, mastery && record];
+}
+
 export interface CellCheckSlotProps {
   /** `top`: the block under the header (A, A2, the mastery block); `bottom`: the Test out line under the quests (B). */
   place: 'top' | 'bottom';
@@ -71,11 +70,8 @@ export interface CellCheckSlotProps {
 }
 
 /** The cell page's Cell Check block or Test out line; nothing while every switch is off or the chunk is loading. */
-export function CellCheckSlot(props: CellCheckSlotProps): React.ReactElement | null {
-  const checkOn = useCellCheckOn(props.profileId);
-  const mastery = useCurrFlag('mastery');
-  const record = useRecords(props.profileId);
-  const masteryOn = mastery && record;
+export function CellCheckSlot(props: CellCheckSlotProps): ReactElement | null {
+  const [checkOn, masteryOn] = useSwitches(props.profileId);
   const ui = useChunk(checkOn || (props.place === 'top' && masteryOn)).chunk;
   return ui === null ? null : <ui.CellCheckBlock {...props} checkOn={checkOn} masteryOn={masteryOn} />;
 }
@@ -83,7 +79,7 @@ export function CellCheckSlot(props: CellCheckSlotProps): React.ReactElement | n
 type Props = NativeStackScreenProps<RootStackParamList, 'CellCheck'>;
 
 /** The `CellCheck` route: draws the chunk's screen once it is in; one that cannot load shows the crash screen's Try again. */
-export function CellCheckRoute(props: Props): React.ReactElement {
+export function CellCheckRoute(props: Props): ReactElement {
   const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (chunk === null) return <LessonWaiting />;
