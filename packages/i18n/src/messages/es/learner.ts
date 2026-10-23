@@ -1186,7 +1186,7 @@ export const learner = {
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
-      rolePlay: 'Lee un diálogo y responde',
+      rolePlay: 'Lee un diálogo y toca una respuesta',
     },
     legend: {
       title: 'Qué significan las formas',
