@@ -474,8 +474,16 @@ export function buildCheck(ctx: EngineContext, req: CheckRequest): ReviewSession
     const st = ctx.states[id]?.st ?? { b: 0, d: null, c: 0, r: 0, n: 0, f: ctx.today, s: 0, at: '' };
     picked.push({ item, st });
   }
-  const chosen = picked.sort(bySelection(seed)).slice(0, Math.max(0, req.size));
+  const ordered = picked.sort(bySelection(seed));
+  const chosen = ordered.slice(0, Math.max(0, req.size));
   const produceWanted = Math.ceil(chosen.length * (req.produceShare ?? CHECK_PRODUCE_SHARE));
+  // Row CM-21: when the first `size` items cannot hold the produce share (a Stage 1 cell's symbols have no shipped
+  // produce round), the next items of the request that allow it take the places of the last ones that do not.
+  const producible = (e: { item: ReviewItem }): boolean => formatsAt(e.item, 'produce', ctx.voice, seed).length > 0;
+  const spare = ordered.slice(chosen.length).filter(producible);
+  for (let i = chosen.length - 1; i >= 0 && spare.length > 0 && chosen.filter(producible).length < produceWanted; i -= 1) {
+    if (!producible(chosen[i] as { item: ReviewItem })) chosen[i] = spare.shift() as (typeof chosen)[number];
+  }
   const canProduce = chosen
     .filter((e) => formatsAt(e.item, 'produce', ctx.voice, seed).length > 0)
     .sort((a, b) => b.st.s - a.st.s || jitter(seed, a.item.id) - jitter(seed, b.item.id));

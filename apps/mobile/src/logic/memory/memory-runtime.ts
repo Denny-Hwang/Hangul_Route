@@ -22,6 +22,7 @@ import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pus
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
 import { deriveSeed, seedInputKey } from './seed';
+import { deriveTestedOut, testOutPlacement } from './test-out';
 import { deriveMastery, latchCellBest, selectDueCellIds, wordsMilestoneCrossed, type LevelRise } from './mastery';
 import { memorySummaryOf, wordsKnownOf } from './summary';
 import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
@@ -96,6 +97,12 @@ export interface MemoryRuntimeDeps {
 export interface MemoryRuntime {
   recordRound(profileId: string, answer: FirstRoundAnswer): Promise<void>;
   recordAnswers(profileId: string, answers: readonly MemoryAnswer[], at: Date): Promise<void>;
+  /**
+   * A finished test-out's answers (row CM-21, section 4.5): an item not met yet is placed by its result
+   * (`testOutPlacement`: right to box 2 due in 3 days; on a passed test-out a miss to box 1 due tomorrow, else it stays
+   * unmet); a met item, and a topic word, follow the spacing rule as `recordAnswers` does.
+   */
+  recordTestOut(profileId: string, answers: readonly MemoryAnswer[], passed: boolean, at: Date): Promise<void>;
   countVocab(profileId: string, before: VocabProgress, events: readonly VocabEvent[], clock: Date): Promise<void>;
   ensureSeeded(profileId: string): Promise<void>;
   sendDailyIfDue(profileId: string): Promise<void>;
@@ -214,7 +221,10 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     const key = seedInputKey(inputs);
     if (laid.get(profileId) === key && file.seededFrom === seededAt) return false;
     const moved = file.seededFrom !== seededAt;
-    laySeed(file, deriveSeed({ ...inputs, cells: CATALOG.cells }).states, seededAt);
+    const seeded = deriveSeed({ ...inputs, cells: CATALOG.cells }).states;
+    // Row CM-21: a tested-out cell's unasked items are derived like the seeding (never uploaded); the seeding keeps its own.
+    const testedOut = deriveTestedOut({ testedOut: snap.testedOut, items: index.items, retired: index.retired, seeded, dayOf: deps.dayOf });
+    laySeed(file, testedOut.size === 0 ? seeded : new Map([...testedOut, ...seeded]), seededAt);
     laid.set(profileId, key);
     return moved;
   }
@@ -422,6 +432,37 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
     },
 
     recordAnswers: (profileId, answers, at) => recordAnswersNow(profileId, answers, at),
+
+    async recordTestOut(profileId, answers, passed, at) {
+      const placed = new Set<string>();
+      await run(profileId, async () => {
+        const file = await load(profileId);
+        if (!file) return;
+        const { index } = await items();
+        const day = deps.dayOf(at);
+        const iso = stampOf(file, at, deps.serverTime?.(profileId) ?? null);
+        const counts = today(profileId, file, day, index.retired);
+        const pending = new Set(file.pending);
+        for (const a of answers) {
+          const item = index.byId.get(a.itemId);
+          const row = file.rows[a.itemId];
+          if (VOCAB_ID.test(a.itemId) || !item || index.retired.has(item.id) || (row !== undefined && row.st.b >= 1)) continue;
+          // Not met yet: placed by the result, never by "met today, box 1" (section 4.5).
+          placed.add(a.itemId);
+          const state = testOutPlacement(a, passed, day, iso, row?.st);
+          if (state === null) continue;
+          file.rows[item.id] = { sh: row?.sh ?? shardOf(item), st: state, l: day };
+          countAnswer(counts, { id: item.id, kind: item.kind, rung: a.rung, spaced: false, lagDays: null, right: a.correct && !a.hinted, lapse: false, newHeld: false });
+          pending.add(item.id);
+        }
+        file.pending = [...pending];
+        markDirty(profileId);
+      });
+      // The met items and the topic words: the spacing rule, with the credit inside sentences.
+      const rest = answers.filter((a) => !placed.has(a.itemId));
+      if (rest.length > 0) await recordAnswersNow(profileId, rest, at);
+      else if (placed.size > 0) deps.requestSync(profileId);
+    },
 
     countVocab(profileId, before, events, clock) {
       return run(profileId, async () => {

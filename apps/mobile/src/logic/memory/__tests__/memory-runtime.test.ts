@@ -746,3 +746,77 @@ describe('mastery: levels latched into cellBest, Ready to refresh, New volume an
     expect(await d.rt.mastery('p1', MASTERY_OFF)).toBeUndefined();
   });
 });
+
+describe('a test-out (row CM-21, section 4.5)', () => {
+  const CELL = 'episode:stage2-letters';
+  const cellItems = ITEMS.filter((i) => i.cells.includes(CELL) && !i.id.startsWith('vocab:'));
+  const [right, miss, third] = cellItems as [(typeof ITEMS)[number], (typeof ITEMS)[number], (typeof ITEMS)[number]];
+
+  it('places the asked items by their result, and a pass derives the unasked ones at box 1 over the next 3 days, never uploaded', async () => {
+    const server = fakeServer();
+    const d = device({ server });
+    d.snapshots.set('p1', finished(3));
+    // A learner registered for sync seeds after this device's first snapshot sync of the session.
+    await d.rt.sync('p1');
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }, { itemId: miss.id, rung: 'produce', correct: false }], true, d.clock.now);
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, d: '2026-10-25', n: 1, s: 2 });
+    expect(await stateOf(d, miss.id)).toMatchObject({ b: 1, d: '2026-10-23', n: 1, c: 1 });
+    // The pass latches testedOut on the snapshot (the API's latch); the seeding pass lays the unasked items.
+    const snap = d.snapshots.get('p1') as ProgressSnapshot;
+    d.snapshots.set('p1', { ...snap, testedOut: { [CELL]: d.clock.now.toISOString() } });
+    await d.rt.ensureSeeded('p1');
+    expect(await stateOf(d, third.id)).toMatchObject({ b: 1, n: 0, s: 1, f: '2026-10-22' });
+    // Due from the next day on, within the cap of 15 seeded items a day (the quest seeding of this learner counts too).
+    expect(((await stateOf(d, third.id))?.d ?? '') > '2026-10-22').toBe(true);
+    const due = new Map<string, number>();
+    for (const row of Object.values((await d.rt.file('p1'))?.rows ?? {})) if (row.st.n === 0 && row.st.d) due.set(row.st.d, (due.get(row.st.d) ?? 0) + 1);
+    for (const n of due.values()) expect(n).toBeLessThanOrEqual(15);
+    // The asked ones keep their own state over the derivation.
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 1 });
+    // Only answered states are queued and sent.
+    const file = await d.rt.file('p1');
+    expect([...(file?.pending ?? [])].sort()).toEqual([miss.id, right.id].sort());
+    await d.rt.sync('p1');
+    const sent = server.posted.flatMap((p) => Object.values(p.shards).flatMap((s) => Object.keys(s)));
+    expect(sent.sort()).toEqual([miss.id, right.id].sort());
+    // Words known grows only with items answered: the right word (box 2, n 1) at most, never a derived one.
+    await d.runTimers();
+    const stored = d.store.get(MEMORY_KEY('p1')) as { rows: Record<string, unknown> };
+    expect(Object.keys(stored.rows)).not.toContain(third.id);
+  });
+
+  it('a test-out that did not pass leaves a missed unmet item unmet and derives nothing', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }, { itemId: miss.id, rung: 'read', correct: false }], false, d.clock.now);
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 1 });
+    expect(await stateOf(d, miss.id)).toBeUndefined();
+    expect(await stateOf(d, third.id)).toBeUndefined();
+  });
+
+  it('an item already met follows the spacing rule (a seeded box 1 due tomorrow is not raised early)', async () => {
+    const d = device();
+    d.snapshots.set('p1', finished(3));
+    await d.rt.ensureSeeded('p1');
+    await d.rt.recordAnswers('p1', [{ itemId: right.id, rung: 'read', correct: true }], new Date('2026-10-21T09:00:00.000Z'));
+    const before = await stateOf(d, right.id);
+    await d.rt.recordTestOut('p1', [{ itemId: right.id, rung: 'read', correct: true }], true, d.clock.now);
+    // Met yesterday at box 1, due today: a spaced right answer raises it one step, as anywhere else.
+    expect(before).toMatchObject({ b: 1, d: '2026-10-22' });
+    expect(await stateOf(d, right.id)).toMatchObject({ b: 2, n: 2 });
+  });
+
+  it('two devices derive the same unasked states from the same synced testedOut', async () => {
+    const one = device();
+    const two = device({ dayOf: utcDay });
+    const snap = { ...finished(3), testedOut: { [CELL]: '2026-10-22T08:00:00.000Z' } };
+    for (const dv of [one, two]) {
+      dv.snapshots.set('p1', snap);
+      await dv.rt.ensureSeeded('p1');
+    }
+    const derived = async (dv: Device) => Object.fromEntries(Object.entries((await dv.rt.file('p1'))?.rows ?? {}).filter(([, r]) => r.st.n === 0).map(([id, r]) => [id, r.st]));
+    expect(await derived(one)).toEqual(await derived(two));
+    expect(Object.keys(await derived(one))).toContain(third.id);
+  });
+});
