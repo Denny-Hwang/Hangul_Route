@@ -85,7 +85,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // first-finish dating, the reconcile wiring and the album strings; the card backs, the ten drawings and the Library's
   // albums are the upper-cards chunk) measures 4,809,851 B raw / 1,270,481 B gzip on CM-22's 4,806,089 B, with the
   // touched start-bundle modules importing React's hooks by name: the line stays.
-  startBundleRaw: 4_810_000,
+  // The F-CURR-002 phase-2 integration (integrate/curr-phase2: CM-20 #837, CM-21 #840, CM-22 #842, CM-23a #843,
+  // CM-23b #844, CM-25 #841 and CM-24 #838 on main 836bfcd6f) measures 4,812,581 B raw / 1,272,017 B gzip (release
+  // `build:web`, Metro cache cleared), 2,581 B over the 4,810,000 B line, so the line is that measurement plus a
+  // 419 B rounding margin (4,813,000 B); the app-host build (grown-up home on, API base set) measures 4,812,737 B.
+  startBundleRaw: 4_813_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

@@ -411,7 +411,9 @@ describe('precacheReport and its budget lines', () => {
     // guest first quest integration (integrate/guest-gu1-6: GU-0b to GU-6 on it, switch off) measures 4,804,191 B.
     // CM-21 (the Cell Check, on main with CM-20 at 4,809,512 B) measures 4,809,323 B: the line stays. CM-22 (the Stage
     // Checks, on CM-21, with every stage's prize ceremony moved into the stage-check chunk) measures 4,806,089 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_810_000);
+    // The phase-2 integration (integrate/curr-phase2: CM-20 to CM-25 together) measures 4,812,581 B (release build).
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_813_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_812_581).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_809_323).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_806_089).toBeGreaterThanOrEqual(0);
     // CM-23 part 1 (the upper-cell cards of Stages 2-3, on CM-22; backs, drawings and albums in a chunk) measures 4,809,851 B.
