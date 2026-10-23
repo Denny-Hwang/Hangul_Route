@@ -109,7 +109,7 @@ describe('landing: sentences that take a value render the former text', () => {
   it('[GU] the Privacy Policy first-quest bullet is English only (L10) and takes its days as values', () => {
     const bullet = l.legal.privacy.sections.collect.bullets.guest({ email: 'hello@example.com', levels: 'New reader', days: 30, sharedDays: 7 });
     expect(bullet).toBe(
-      "Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
+      "Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. While the quest is being tried, the app sends us usage events with no learner id and no device id: the usual events of a quest, such as starting a game, and when the quest starts (from our site, the screen that asks who is learning or the welcome screen, and whether it was picked up again), roughly how long it took to reach the first letter, when the quest is finished and how many stars it earned, when it is left (during the quest or at the save step), when it is saved as a learner (from which screen, whether the grown-up PIN was asked and whether consent was given then or was already on file), and when a quest that was never saved is deleted and whether it was finished; each event carries the time it happened, and we count them by day. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after 30 days without play (7 days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.",
     );
     expect(isEnglishAuthoritative('landing.legal.privacy.sections.collect.bullets.guest')).toBe(true);
     for (const locale of ['es', 'ko'] as const) {
@@ -353,7 +353,7 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
     // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
-    // October 23, 2026 ([GU] GU-7, AMENDMENTS-GUEST-FIRST-LESSON 13.3): the first-quest bullet shows (the guestLesson claim on).
+    // October 23, 2026 ([GU] GU-7, AMENDMENTS-GUEST-FIRST-LESSON 13.3): the first-quest bullet shows (the guestLesson claim on), and the same UTC day its usage-events sentence (a later merge day moves this pin).
     expect(l.legal.privacy.effective).toBe('Effective October 23, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.

@@ -675,9 +675,16 @@ export const landing = {
              * learner's, backed up like any other (F-SYNC-002). The app's sweep removes a never-saved record on its next
              * open after `days` days without play (`sharedDays` on a device with learner profiles, GU-D13); the
              * browser's own clearing, or its storage limits, can remove it first. English only (L10).
+             * The usage-events sentence lists what a guest run sends (section 12): every event of the run without a
+             * `profileId` (`guestTelemetryAnonymous`, quest and game names included; the Worker forces it off every
+             * `guest.*` name, `GUEST_PAYLOAD_RULES` in packages/backend server-events.ts), and the six `guest.*` names
+             * with every kept field: `guest.started` (via site, chooser or welcome; resumed), `guest.first_letter`
+             * (secondsIn bucket), `guest.quest_done` (stars), `guest.left` (at quest or save), `guest.saved` (via,
+             * gated, consent new or existing) and `guest.expired` (questDone). The envelope is name, payload and the
+             * client `at` (no device id); `telemetry_daily` counts them per UTC day (telemetry-daily.ts).
              */
             guest: ({ days, sharedDays }: LegalValues) =>
-              `Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after ${days} days without play (${sharedDays} days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.`,
+              `Trying the first quest before making a profile: the results of that quest are saved in this browser with no nickname and are not backed up to our servers. While the quest is being tried, the app sends us usage events with no learner id and no device id: the usual events of a quest, such as starting a game, and when the quest starts (from our site, the screen that asks who is learning or the welcome screen, and whether it was picked up again), roughly how long it took to reach the first letter, when the quest is finished and how many stars it earned, when it is left (during the quest or at the save step), when it is saved as a learner (from which screen, whether the grown-up PIN was asked and whether consent was given then or was already on file), and when a quest that was never saved is deleted and whether it was finished; each event carries the time it happened, and we count them by day. When a name is added, they become that learner's progress and are backed up like any other. A quest that is never saved is deleted by the app the next time it opens after ${days} days without play (${sharedDays} days on a device that already has learner profiles); clearing this site's data in the browser removes it at once, and some browsers remove it sooner.`,
           },
         },
         never: {
