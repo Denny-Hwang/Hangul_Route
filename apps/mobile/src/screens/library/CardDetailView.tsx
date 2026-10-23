@@ -42,6 +42,7 @@ import { useActiveLearnerId } from '../../store/active-learner';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryLoaded } from '../story-content';
 import { useUpperCardBack } from './upper-cards-entry';
+import { CardCultureTip } from '../quest/culture-tip-entry';
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -182,6 +183,8 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
                 {citation ? <CitationLines view={citation} face="fact-card" /> : null}
               </>
             ) : null}
+            {/* The Did you know? tip of the card's lesson cell (F-CURR-002 row CM-3C), where a screen reader reaches it. */}
+            <CardCultureTip cardId={card.id} face="fact-card" />
           </Card>
         </>
       ) : null}
@@ -457,6 +460,9 @@ function BackFaceBody({ card }: { card: HeritageCard }): ReactElement {
           </View>
         </>
       ) : null}
+
+      {/* The Did you know? tip of the card's lesson cell (F-CURR-002 row CM-3C), behind `upperCards`. */}
+      <CardCultureTip cardId={card.id} face="back" />
     </View>
   );
 }

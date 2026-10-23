@@ -202,6 +202,53 @@ describe("build-lessons.mjs: cells", () => {
     assert.deepEqual(plan.titles.map((t) => t.locale), ["es", "ko"]);
   });
 
+  test("Did you know? (F-CURR-002 row CM-3C): each quest's note rides in its cell's chunk, culture notes first, with its source line", () => {
+    const root = makeRoot();
+    const src = (publisher, title) => ({ title, publisher, url: "https://folkency.nfm.go.kr/kr/topic/detail/1", accessed: "2026-10-01", quoteOrLocator: "q" });
+    const ver = { passes: 3, checkedAt: "2026-10-01", scope: "lesson", notes: "x" };
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", {
+      culture: [
+        { id: "n1", kind: "language", textEn: "A grammar tip.", sources: [src("국립국어원 (National Institute of Korean Language)", "사전")], verification: ver },
+        { id: "n2", kind: "culture", textEn: "Kites fly at {ko:설날}.", sources: [src("국립민속박물관 (National Folk Museum of Korea)", "연날리기"), src("b", "c")], verification: ver },
+      ],
+    }));
+    put(root, "content/i18n/es/lessons-stage2-rites.json", overlay("es", "lessons-stage2-rites", {
+      "episode:stage2-rites": { title: "Palabras de fiesta", "culture.n2.text": "Las cometas vuelan en {ko:설날}." },
+    }));
+    assert.equal(run(root).status, 0);
+    const body = chunk(root, "lessons-cell-stage2-rites");
+    const notes = JSON.parse(/export const LESSON_NOTES: LessonCellChunk\['LESSON_NOTES'\] = (.*);\n/.exec(body)?.[1] ?? "null");
+    // Three quests over two notes: the culture note first, then the language note, then round again.
+    assert.deepEqual(Object.keys(notes), ["quest:stage2-rites-q1", "quest:stage2-rites-q2", "quest:stage2-rites-q3"]);
+    assert.deepEqual(notes["quest:stage2-rites-q1"], {
+      id: "n2",
+      textEn: "Kites fly at {ko:설날}.",
+      citation: { title: "연날리기", publisher: "국립민속박물관 (National Folk Museum of Korea)", more: 1 },
+    });
+    assert.equal(notes["quest:stage2-rites-q2"].id, "n1");
+    assert.equal(notes["quest:stage2-rites-q3"].id, "n2");
+    // The note's es text is a body gloss of the cell's chunk, never in the title chunk or the manifest.
+    assert.match(body, /"episode:stage2-rites":\{"culture.n2.text":"Las cometas vuelan en \{ko:설날\}."\}/);
+    assert.doesNotMatch(chunk(root, "lessons-titles-es"), /cometas/);
+    assert.doesNotMatch(read(root, "lessons-index.ts"), /Kites|cometas|LESSON_NOTES =/);
+    // The notes are part of the chunk's content hash.
+    const plain = planChunks(readCellsOf(root)).cells[0].hash;
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    assert.notEqual(planChunks(readCellsOf(root)).cells[0].hash, plain);
+  });
+
+  test("Did you know?: a cell with no notes ships an empty table; a ready cell's note with only a factRef fails (row CM-3C)", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { culture: [] }));
+    assert.equal(run(root).status, 0);
+    assert.match(chunk(root, "lessons-cell-stage2-rites"), /export const LESSON_NOTES: LessonCellChunk\['LESSON_NOTES'\] = \{\};/);
+    const ver = { passes: 3, checkedAt: "2026-10-01", scope: "lesson", notes: "x" };
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { culture: [{ id: "n1", kind: "culture", textEn: "A fact.", factRef: "story:x#f1", verification: ver }] }));
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::culture n1 has no sources\[\] of its own/);
+  });
+
   test("an overlay naming an entity of another cell, or a malformed overlay file, fails", () => {
     const root = makeRoot();
     put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));

@@ -35,8 +35,9 @@ const rites: LessonCellChunk = {
   LESSON_STEPS: { 'quest:stage2-rites-q1': steps, 'quest:stage2-rites-q2': steps },
   LESSON_SCOPES: { [REF]: scope },
   LESSON_OVERLAYS: { es: { [REF]: { 'cardPairs.yeon.gloss': 'cometa' } }, ko: {} },
+  LESSON_NOTES: { 'quest:stage2-rites-q1': { id: 'n1', textEn: 'Kites fly at {ko:설날}.', citation: { title: '연날리기', publisher: 'National Folk Museum of Korea', more: 0 } } },
 };
-const life: LessonCellChunk = { CHUNK_HASH: 'h-life', LESSON_STEPS: { 'quest:stage3-life-q1': steps }, LESSON_SCOPES: {}, LESSON_OVERLAYS: { es: {}, ko: {} } };
+const life: LessonCellChunk = { CHUNK_HASH: 'h-life', LESSON_STEPS: { 'quest:stage3-life-q1': steps }, LESSON_SCOPES: {}, LESSON_OVERLAYS: { es: {}, ko: {} }, LESSON_NOTES: {} };
 const titles = (locale: OverlayLocale): LessonTitleChunk => ({ CHUNK_HASH: `h-${locale}`, LESSON_TITLE_OVERLAYS: { 'quest:stage2-rites-q1': { title: locale === 'es' ? 'Fiesta' : '명절' } } });
 
 /** A loader that records what it was asked for and resolves on `flush`, so a test sees the in-flight state. */
@@ -159,6 +160,16 @@ describe('createLessonStore (F-CURR-002 §10: chunks load on demand, once each)'
 
     const wrong = createLessonStore({ ...manifest, titles: { es: 'h-new', ko: 'h-ko' } }, loaders());
     await expect(wrong.ensureTitles('es')).rejects.toBeInstanceOf(LessonChunkMismatch);
+  });
+
+  it("noteOf gives a lesson quest's Did you know? note once its cell is in, and nothing before or for a cell with none (row CM-3C)", async () => {
+    const store = createLessonStore(manifest, loaders());
+    expect(store.noteOf('quest:stage2-rites-q1')).toBeUndefined();
+    await store.ensureCells(['episode:stage2-rites', 'episode:stage3-life']);
+    expect(store.noteOf('quest:stage2-rites-q1')?.id).toBe('n1');
+    expect(store.noteOf('quest:stage2-rites-q2')).toBeUndefined();
+    expect(store.noteOf('quest:stage3-life-q1')).toBeUndefined();
+    expect(store.noteOf('quest:stage1-letters-q1')).toBeUndefined();
   });
 
   it('onOverlays replays the glosses loaded so far, then each new chunk; titles land under their own locale', async () => {

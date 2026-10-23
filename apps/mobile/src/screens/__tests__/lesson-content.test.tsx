@@ -33,6 +33,7 @@ const chunkOf = (id: string): LessonCellChunk => ({
   LESSON_STEPS: Object.fromEntries((manifest.episodes.find((e) => e.id === id)?.questIds ?? []).map((q) => [q, steps])),
   LESSON_SCOPES: {},
   LESSON_OVERLAYS: { es: {}, ko: {} },
+  LESSON_NOTES: {},
 });
 
 interface Deferred<T> {
