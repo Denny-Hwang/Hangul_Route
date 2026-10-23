@@ -215,6 +215,15 @@ export const a11y = {
       /** A name-round tile: its block (or final letter) and its sound. */
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    /**
+     * Role Play (row CM-35): the chat log, a partner bubble (`role` is the partner's role in the UI language, `meaning`
+     * the line's meaning) and a reply the learner sent. `line` is the taught Korean, passed in.
+     */
+    rolePlay: {
+      log: 'Chat',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role} says: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `You said: ${line}, ${romanization}`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

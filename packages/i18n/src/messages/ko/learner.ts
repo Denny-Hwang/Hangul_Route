@@ -647,6 +647,12 @@ export const learner = {
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
+    rolePlay: {
+      tapReply: '대답을 눌러요',
+      showMeanings: { cta: '뜻 보기' },
+      meaningsShown: '뜻이 보여요',
+      moreReplies: '아래에 대답이 더 있어요',
+    },
   },
 
   audio: {
@@ -1151,6 +1157,7 @@ export const learner = {
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
       sentenceBuilder: '문장 만들기',
+      rolePlay: '대화 읽고 대답 누르기',
     },
     legend: {
       title: '모양의 뜻',

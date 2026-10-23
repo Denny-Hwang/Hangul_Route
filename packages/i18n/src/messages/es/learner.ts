@@ -667,6 +667,12 @@ export const learner = {
         finishBlock: 'Termina el último bloque.',
       },
     },
+    rolePlay: {
+      tapReply: 'Toca tu respuesta',
+      showMeanings: { cta: 'Ver significados' },
+      meaningsShown: 'Significados visibles',
+      moreReplies: 'Más respuestas abajo',
+    },
   },
 
   audio: {
@@ -1180,6 +1186,7 @@ export const learner = {
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
+      rolePlay: 'Lee un diálogo y responde',
     },
     legend: {
       title: 'Qué significan las formas',
