@@ -1,4 +1,5 @@
 import type {
+  ClozePickRound,
   KoText,
   ListenPickRound,
   MinigameKind,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Cloze Pick (F-CURR-002 row CM-30): its rounds, and the card a value gap is read from. */
+  clozePick?: { rounds: ClozePickRound[]; realia?: Realia };
 }
 
 const J = (id: string): string => `jamo:${id}`;

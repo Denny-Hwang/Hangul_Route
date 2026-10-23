@@ -48,6 +48,8 @@ export interface StageCheckDeps {
   cells(stage: StageKey): readonly string[];
   visibility(profileId: string): SourceVisibility;
   voice(): boolean;
+  /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
+  clozePick?(profileId: string): boolean;
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
   recordReview(profileId: string, entry: ReviewEntry): void;
@@ -113,7 +115,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index),
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true }),
         states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
         today,
         voice: deps.voice(),

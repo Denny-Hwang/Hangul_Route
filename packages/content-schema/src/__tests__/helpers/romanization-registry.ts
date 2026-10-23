@@ -80,6 +80,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },
   { path: 'apps/mobile/src/logic/type-hangul/e2e-rounds.ts', reason: 'test-only Type Hangul rounds played by the fixture-build e2e (F-CURR-001 G-3), never shipped; their romanization is still checked by apps/mobile/src/logic/type-hangul/__tests__/e2e-rounds.test.ts' },
+  { path: 'apps/mobile/src/logic/cloze-pick/e2e-rounds.ts', reason: 'test-only Cloze Pick rounds played by the fixture-build e2e and the component tests (F-CURR-002 row CM-30), never shipped; their romanization is still checked by apps/mobile/src/logic/cloze-pick/__tests__/round.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/e2e-rounds.ts', reason: 'test-only Write Frame rounds played by the fixture-build e2e and the component tests (F-CURR-001 G-5), never shipped; their romanization is still checked by apps/mobile/src/logic/write-frame/__tests__/e2e-rounds.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/flow.ts', reason: 'Hangul character-class regex and a comment naming the cast name (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/write-frame/view.ts', reason: 'Hangul character-class regex and doc examples of the fitted ending (F-CURR-001 G-5)' },

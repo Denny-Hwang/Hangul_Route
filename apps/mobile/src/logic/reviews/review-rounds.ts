@@ -1,4 +1,5 @@
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
+import { CLOZE_GAP } from '@hangul-route/content-schema';
 import { jitter, type EngineContext, type ReviewQuestion } from './engine';
 
 /**
@@ -11,6 +12,8 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  *   a spelling that sounds the same is never an option (section 4.5).
  * - **type**: Type Hangul `see` or `picture` (produce), graded by the engine's typing tolerance.
  * - **order**: Sentence Builder (produce): the sentence's words, or an exchange's reply, in order.
+ * - **cloze**: Cloze Pick (produce, row CM-30, behind `game.cloze-pick`): a sentence with one word left out, its
+ *   meaning shown, and 3 or 4 word tiles; the left-out word fits.
  *
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
  * section 7.1 (Dictation, Syllable Build, Match Shape, Cloze Pick) join with their own rows behind
@@ -20,6 +23,13 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
 
 /** The formats this surface draws (section 7.1 formats come with their own rows). */
 export const SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFormat>(['hear-pick', 'read-pick', 'type-see', 'type-picture', 'sentence-builder']);
+/** With `game.cloze-pick` on (row CM-30): the produce rung of a sentence (`pat`) can also be a Cloze Pick round. */
+export const CLOZE_SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFormat>([...SURFACE_FORMATS, 'cloze-pick']);
+
+/** What a surface may ask beyond the shipped formats: the section 7.1 formats whose `game.<kind>` is on. */
+export interface SurfaceGames {
+  clozePick?: boolean;
+}
 
 /** At most this many options a pick round shows (2 x 2 at 320). */
 export const MAX_OPTIONS = 4;
@@ -34,10 +44,12 @@ const HAS_SLOT = /_/;
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'>): ReviewFormat[] {
+export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'>, formats: ReadonlySet<ReviewFormat> = SURFACE_FORMATS): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   return item.formats.filter((f) => {
-    if (!SURFACE_FORMATS.has(f)) return false;
+    if (!formats.has(f)) return false;
+    // A Cloze Pick round leaves out one word of a sentence, so its words and their romanization must line up.
+    if (f === 'cloze-pick') return item.kind === 'pat' && clozeWords(item) !== null;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
     if (f === 'type-picture' && item.picture === undefined) return false;
@@ -47,20 +59,38 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' 
 
 type SurfaceIndex = EngineContext['index'];
 const surfaceCache = new WeakMap<object, SurfaceIndex>();
+const clozeSurfaceCache = new WeakMap<object, SurfaceIndex>();
 
-/** The item index with each item's formats cut to this surface's; an item left with none is not askable here. */
-export function surfaceIndex(index: SurfaceIndex): SurfaceIndex {
-  const held = surfaceCache.get(index);
+/**
+ * The item index with each item's formats cut to this surface's; an item left with none is not askable here. With
+ * `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the engine falls back).
+ */
+export function surfaceIndex(index: SurfaceIndex, games: SurfaceGames = {}): SurfaceIndex {
+  const cache = games.clozePick === true ? clozeSurfaceCache : surfaceCache;
+  const allowed = games.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS;
+  const held = cache.get(index);
   if (held) return held;
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item);
+    const formats = surfaceFormats(item, allowed);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  surfaceCache.set(index, out);
+  cache.set(index, out);
   return out;
 }
+
+/** The words of a sentence (edge punctuation off) beside their romanization, or null when the two do not line up. */
+export function clozeWords(item: Pick<ReviewItem, 'ko' | 'romanization'>): Array<{ ko: string; romanization: string }> | null {
+  if (HAS_SLOT.test(item.ko)) return null;
+  const words = item.ko.split(/\s+/).filter((w) => w !== '');
+  const roms = item.romanization.split(/\s+/).filter((w) => w !== '');
+  if (words.length < 2 || words.length !== roms.length) return null;
+  const out = words.map((w, i) => ({ ko: bareWord(w), romanization: bareWord(roms[i] as string) }));
+  return out.every((w) => w.ko !== '' && w.romanization !== '') ? out : null;
+}
+
+const bareWord = (word: string): string => word.replace(/^["'“”‘’(]+|[.!?~…,"'“”‘’)]+$/g, '');
 
 // ---- the rounds ---------------------------------------------------------------------------------------------
 
@@ -137,7 +167,18 @@ export interface OrderRound extends RoundBase {
   words: string[];
 }
 
-export type ReviewRound = PickRound | TypeRound | OrderRound;
+export interface ClozeRound extends RoundBase {
+  type: 'cloze';
+  /** The sentence with its one word left out (`___`), and its romanization the same way. */
+  gapped: KoText;
+  /** The sentence's meaning in the UI language: the input the round reads from. */
+  meaning?: string;
+  /** The word tiles (Korean and romanization, no meaning), in a seeded order. */
+  tiles: PickOption[];
+  answerId: string;
+}
+
+export type ReviewRound = PickRound | TypeRound | OrderRound | ClozeRound;
 
 /** The meaning of an item (or a reply) in the UI language; undefined when it has none. */
 export type GlossOf = (key: string | undefined, en: string | undefined) => string | undefined;
@@ -275,6 +316,76 @@ function orderRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   };
 }
 
+/**
+ * Cloze Pick (row CM-30): one word of the sentence left out. The tiles are that word and up to three words that
+ * stand at the same place, counted from the end, in other sentences (a Korean sentence ends with its verb), the same
+ * theme first. A tile is never one that differs only in its ending (책이 / 책은: the meaning would not decide), one
+ * already in the sentence, or one that makes another sentence with the same meaning. The left-out word is the first,
+ * in a seeded order, that has at least two such tiles; none has: the item is asked another way.
+ */
+function clozeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): ClozeRound | null {
+  const words = clozeWords(item);
+  if (words === null) return null;
+  const meaning = itemGloss(item, input);
+  const own = new Set(words.map((w) => w.ko));
+  const sameMeaning = new Set(itemsOfKind(input.index, 'pat').filter((i) => i.id !== item.id && i.en === item.en).map((i) => bareWord(i.ko)));
+  const others = itemsOfKind(input.index, 'pat').filter((i) => i.id !== item.id);
+  const seed = `${input.seed}|${item.id}`;
+  const places = seededOrder(
+    words.map((_, i) => i),
+    `${seed}|gap`,
+    (i) => String(i),
+  );
+  for (const at of places) {
+    const answer = words[at] as { ko: string; romanization: string };
+    const fromEnd = words.length - 1 - at;
+    const filledWith = (ko: string): string => words.map((w, i) => (i === at ? ko : w.ko)).join(' ');
+    const pool = (list: readonly ReviewItem[]) =>
+      seededOrder(list, `${seed}|${at}`, (i) => i.id).flatMap((other) => {
+        const theirs = clozeWords(other);
+        const word = theirs?.[theirs.length - 1 - fromEnd];
+        return word ? [{ word, home: other.home }] : [];
+      });
+    const near = pool(others.filter((o) => o.home === item.home));
+    const far = pool(others.filter((o) => o.home !== item.home));
+    const tiles: Array<{ ko: string; romanization: string }> = [];
+    const seen = new Set([answer.ko]);
+    for (const { word } of [...near, ...far]) {
+      if (tiles.length >= MAX_OPTIONS - 1) break;
+      if (seen.has(word.ko) || own.has(word.ko) || word.ko[0] === answer.ko[0] || sameMeaning.has(filledWith(word.ko))) continue;
+      seen.add(word.ko);
+      tiles.push(word);
+    }
+    if (tiles.length < 2) continue;
+    const answerId = `${item.id}#${at}`;
+    const options = seededOrder(
+      [{ id: answerId, ko: answer }, ...tiles.map((t, i) => ({ id: `${item.id}#${at}:${i}`, ko: t }))],
+      `${seed}|tiles`,
+      (o) => o.id,
+    );
+    const gapKo = item.ko
+      .split(/\s+/)
+      .filter((w) => w !== '')
+      .map((w, i) => (i === at ? w.replace(answer.ko, CLOZE_GAP) : w))
+      .join(' ');
+    const gapRom = item.romanization
+      .split(/\s+/)
+      .filter((w) => w !== '')
+      .map((w, i) => (i === at ? w.replace(answer.romanization, CLOZE_GAP) : w))
+      .join(' ');
+    return {
+      type: 'cloze',
+      question,
+      gapped: { ko: gapKo, romanization: gapRom },
+      ...(meaning ? { meaning } : {}),
+      tiles: options,
+      answerId,
+      answer: { ko: koOf(item), ...(meaning ? { gloss: meaning } : {}) },
+    };
+  }
+  return null;
+}
+
 /** The round for an engine question, or null when the item cannot be played this way (it is then skipped). */
 export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRound | null {
   const item = input.index.byId.get(question.itemId);
@@ -290,6 +401,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       return typeRound(question, item, input, 'picture');
     case 'sentence-builder':
       return orderRound(question, item, input);
+    case 'cloze-pick':
+      return clozeRound(question, item, input);
     default:
       return null;
   }

@@ -65,6 +65,8 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() !== '' ? v : undefined);
+/** A Cloze Pick text with its one gap filled (the `fillClozeGap` of the round schema, on unparsed content). */
+const fillGap = (text: string, fill: string): string => text.replace('___', fill);
 const HANGUL = /[ᄀ-ᇿㄱ-ㆎ가-힣]/;
 const COMPAT_JAMO = /^[ㄱ-ㆎ]$/;
 const SENTENCE_END = /[.?!]["'”’)]*$/;
@@ -336,6 +338,35 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
         });
       });
       return;
+    case 'cloze-pick': {
+      // Row CM-30: a word or particle gap asks the completed sentence (a `pat` item, produce rung) and a word gap
+      // its answer word; a value gap asks the card it is read from (the `rea` item, as Realia Read).
+      const realia = isRec(scope.realia) ? scope.realia : undefined;
+      rounds.forEach((round, ri) => {
+        const rid = key(round, ri);
+        const where = `${at}.rounds[${ri}]`;
+        const tiles = arr(round.tiles).filter(isRec);
+        const ti = typeof round.answerIndex === 'number' ? round.answerIndex : -1;
+        const answer = tiles[ti];
+        const sentence = isRec(round.sentence) ? round.sentence : undefined;
+        if (round.gapKind === 'value') {
+          if (realia !== undefined && typeof realia.ref === 'string') {
+            const shown = realia.title ?? arr(realia.entries).filter(isRec)[0]?.text;
+            c.realia(realia.ref, shown, { en: str(realia.altEn), glossKey: k('clozePick.realia.alt') }, 'round', `${at}.realia`);
+          }
+          return;
+        }
+        if (sentence === undefined || answer === undefined) return;
+        const filled = {
+          ko: fillGap(String(sentence.ko ?? ''), String(answer.ko ?? '')),
+          romanization: str(round.filledRomanization) ?? fillGap(String(sentence.romanization ?? ''), String(answer.romanization ?? '')),
+          en: sentence.en,
+        };
+        c.text(filled, 'pat', 'round', where, { glossKey: k(`clozePick.rounds.${rid}.sentence.gloss`) });
+        if (round.gapKind !== 'particle') c.text(answer, 'loose', 'round', `${where}.answer`, { glossKey: k(`clozePick.rounds.${rid}.tiles.${key(answer, ti)}.gloss`) });
+      });
+      return;
+    }
     default:
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);

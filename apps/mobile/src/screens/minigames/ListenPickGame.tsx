@@ -20,7 +20,7 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -44,6 +44,7 @@ import {
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
+import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
@@ -72,6 +73,23 @@ interface Props {
   onBack?: () => void;
   /** The scaffold round (F-CURR-002 section 4.6, row CM-24): the right card is ringed from the start, under this line. */
   hint?: string;
+  /** Text prompt mode (row CM-30); absent, the game is unchanged. */
+  textPrompt?: ListenPickTextPrompt;
+}
+
+/**
+ * Listen & Pick's text prompt mode (F-CURR-002 row CM-30, design/wireframes/minigame/cloze-pick.md "Fallback round"):
+ * the round Cloze Pick renders when `game.cloze-pick` is off (and Match Shape's Read Pick later). No speaker and no
+ * sound before the answer: `prompt` draws the round's prompt as text under `heading`, and the voice says the prompt's
+ * `spokenKo` once after the right answer (the status panel says why when it cannot). Same options, answer and scoring.
+ */
+export interface ListenPickTextPrompt {
+  /** Replaces "Listen, then pick". */
+  heading: string;
+  /** Hoya after a miss, in place of "Listen again". */
+  missLine: string;
+  /** The prompt as text; it receives focus from round 2 on. */
+  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void) => ReactNode;
 }
 
 /**
@@ -85,7 +103,7 @@ interface Focusable {
   focus?: () => void;
 }
 
-export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactElement {
+export function ListenPickGame({ scope, host, onBack, hint, textPrompt }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
 
@@ -113,7 +131,10 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
   // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot.
-  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef) });
+  const textMode = textPrompt !== undefined;
+  const textModeRef = useRef(textMode);
+  textModeRef.current = textMode;
+  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef), textOnScreen: textMode });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
@@ -125,6 +146,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         const current = stateRef.current;
         const round = roundsRef.current[current.roundIdx];
         if (!round) return;
+        // Text prompt mode: nothing is said before the answer (it would answer the round), only the completed prompt after it.
+        if (textModeRef.current && effect.why !== 'confirm') return;
         // The 800 ms replay after a wrong tap waits while the text stands in for a sound that is off or absent.
         if (effect.why === 'replay' && !shouldAutoReplay(viewRef.current)) return;
         // The autoplay opens a new round: a new prompt slot, so last round's text does not carry over.
@@ -217,7 +240,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   }
 
   const header = headerView(host.mode, state, copy);
-  const prompt = promptView(round, state, host.mode, slot.view.textShown);
+  const prompt = promptView(round, state, host.mode, slot.view.textShown || textMode);
+  const resolved = state.status === 'resolved' || state.status === 'done';
   const hear = (): void => dispatch({ type: 'hear' });
   // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
@@ -232,6 +256,17 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
       ? 1
       : optionColumns(round, width);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
+  const textContent = textPrompt ? (
+    <View style={{ gap: spacing.md }}>
+      {textPrompt.prompt(round, (node) => {
+        speakerRef.current = node as Focusable | null;
+      })}
+      {resolved ? (
+        <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} onHelp={() => setHelpOpen(true)} testID="listen-pick-prompt" />
+      ) : null}
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+    </View>
+  ) : null;
 
   return (
     <Screen tone="canvas">
@@ -252,7 +287,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         arrangement={arrangement}
         prompt={
           <>
-            <Heading level="prompt">{copy.listenPick.heading}</Heading>
+            <Heading level="prompt">{textPrompt ? textPrompt.heading : copy.listenPick.heading}</Heading>
             {hint ? (
               <Body tone="secondary" testID="listen-pick-hint">
                 {hint}
@@ -260,7 +295,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             ) : null}
             <Spacer size="md" />
 
-            <View style={{ alignItems: 'center', gap: spacing.md }}>
+            {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
                 <Pressable
                   ref={(node) => {
@@ -316,7 +351,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
                 />
               </View>
               <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
-            </View>
+            </View>}
           </>
         }
         answers={
@@ -352,7 +387,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             {showMissHoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
+                <HoyaBubble tone="thinking" message={textPrompt ? textPrompt.missLine : copy.listenPick.missHoya} />
               </>
             ) : null}
           </View>

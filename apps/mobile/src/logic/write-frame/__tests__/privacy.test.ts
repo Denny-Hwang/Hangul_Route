@@ -42,7 +42,8 @@ describe('Write Frame keeps what is written in the round (test P-1)', () => {
   });
 
   it('the quest host sends minigame.finished with the kind and ids only', () => {
-    expect(minigameScreen).toMatch(/track\(minigameFinishedEvent\(scope\.kind, questId, stepIndex, activeProfileId\)\)/);
+    // The kind is the scope's, or the one the step drew (a switched-off Cloze Pick plays Listen & Pick, row CM-30).
+    expect(minigameScreen).toMatch(/track\(minigameFinishedEvent\(renderedKind\.current \?\? scope\.kind, questId, stepIndex, activeProfileId\)\)/);
     expect(finished).toMatch(/payload: \{ kind, questId, stepIndex \}/);
   });
 

@@ -323,6 +323,7 @@ describe('LessonScopeSchema', () => {
       [
         'build-letter',
         'card-match',
+        'cloze-pick',
         'listen-pick',
         'order-it',
         'pic-word-match',

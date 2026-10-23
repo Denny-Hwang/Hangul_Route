@@ -929,6 +929,22 @@ export const learner = {
         finishBlock: 'Finish the last block.',
       },
     },
+    /**
+     * Cloze Pick (F-CURR-002 row CM-30, design/wireframes/minigame/cloze-pick.md): read a sentence with one gap, pick
+     * the tile that fills it. A particle miss is `sentenceBuilder.missParticle`, a miss on a menu, sign or ticket value
+     * `realia.missHoya`; Hear it is `audio.hearIt`. With the game switched off the round is Listen & Pick with this heading.
+     */
+    clozePick: {
+      heading: 'Fill the gap',
+      instruction: {
+        word: 'Pick the word that fits.',
+        particle: 'Pick the piece that fits.',
+        value: 'Read the menu, sign or ticket, then pick.',
+      },
+      miss: 'Read the sentence again. Which one fits?',
+      /** The second miss on one round: the tile that fits is ringed. */
+      lookHere: 'This one fits here.',
+    },
   },
 
   /**
@@ -1570,6 +1586,7 @@ export const learner = {
       writeFrame: 'Finish a sentence of your own',
       /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
       sentenceBuilder: 'Build a sentence',
+      clozePick: 'Fill the gap in a sentence',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {

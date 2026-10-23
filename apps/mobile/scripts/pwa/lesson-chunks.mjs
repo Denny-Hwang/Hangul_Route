@@ -99,7 +99,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  startBundleRaw: 4_750_000,
+  // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
+  // Pick's text prompt mode, the door and 10 English strings; the game, its fallback and its rules are the
+  // cloze-pick-chunk) measures 4,755,726 B raw / 1,267,335 B gzip (release `build:web`) on main e31bc3b33, whose own
+  // release build measures 4,749,283 B raw (717 B under the line): +6,443 B. The line is that measurement plus a
+  // 4,274 B rounding margin.
+  startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -257,6 +262,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-30: the Cloze Pick game, its flow and its prompt card (`src/screens/minigames/cloze-pick-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/cloze-pick-entry.tsx` while `game.cloze-pick`
+  // is on); its Listen & Pick fallback stays in the start bundle.
+  Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
 ]);
 
 /**

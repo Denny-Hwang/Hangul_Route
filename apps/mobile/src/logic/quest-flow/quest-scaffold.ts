@@ -1,4 +1,4 @@
-import type { KoText, ListenPickRound, RealiaReadRound } from '@hangul-route/content-schema';
+import { fillClozeGap, type ClozePickRound, type KoText, type ListenPickRound, type RealiaReadRound } from '@hangul-route/content-schema';
 import type { RoundAsked } from '../memory/asked';
 import type { MinigameScope } from '../minigame-config';
 
@@ -36,6 +36,13 @@ export function scopeItems(scope: MinigameScope): KoText[] {
         return word ? [word] : [];
       });
       break;
+    // Row CM-30: a Cloze Pick round asks its completed sentence (a value gap's card is not a heard round).
+    case 'cloze-pick':
+      all = (scope.clozePick?.rounds ?? []).flatMap((r) => {
+        const done = clozeSentence(r);
+        return done ? [done] : [];
+      });
+      break;
     case 'tap-respond':
       all = (scope.dialogue ?? []).flatMap((t) =>
         t.npcRomanization
@@ -62,8 +69,22 @@ function askedKo(asked: RoundAsked): string | undefined {
     byId(scope.typeHangul?.rounds)?.target.ko ??
     byId(scope.listenPick?.rounds)?.prompt.ko ??
     byId(scope.traceWord?.rounds)?.word.ko ??
-    realiaWord(byId(scope.realiaRead?.rounds))?.ko
+    realiaWord(byId(scope.realiaRead?.rounds))?.ko ??
+    clozeKo(byId(scope.clozePick?.rounds))
   );
+}
+
+/** A Cloze Pick round's completed sentence (a value gap asks its card, not a sentence). */
+function clozeKo(round: ClozePickRound | undefined): string | undefined {
+  return round ? clozeSentence(round)?.ko : undefined;
+}
+
+/** A word or particle gap's completed sentence, its gap filled with the answer tile; none for a value gap. */
+function clozeSentence(round: ClozePickRound): KoText | undefined {
+  const answer = round.tiles[round.answerIndex];
+  if (round.gapKind === 'value' || !answer) return undefined;
+  const { sentence: s } = round;
+  return { ko: fillClozeGap(s.ko, answer.ko), romanization: round.filledRomanization ?? fillClozeGap(s.romanization, answer.romanization), en: s.en };
 }
 
 /** A Realia Read round's word: its key word, else its answer when that is a word. */

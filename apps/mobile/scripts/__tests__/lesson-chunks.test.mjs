@@ -178,6 +178,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
     ]);
   });
 
@@ -201,6 +202,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-30: the Cloze Pick game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/cloze-pick-chunk.tsx')).toContain(`export const CLOZE_PICK_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/cloze-pick-entry.tsx')).toContain("import('./cloze-pick-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +269,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -417,10 +422,13 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
+    // CM-30 (Cloze Pick; the game, its fallback and its rules in the cloze-pick chunk) measures 4,755,726 B on main
+    // e31bc3b33 (4,749,283 B), so the line is 4,760,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_726).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_726).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

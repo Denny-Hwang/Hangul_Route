@@ -189,6 +189,15 @@ export const a11y = {
       dir: { left: 'to the left', right: 'to the right' },
     },
     /**
+     * Cloze Pick (row CM-30): the prompt card is one group. `sentence` is the romanization with its gap read as
+     * `blank`, `meaning` the sentence's meaning (content, in the UI language).
+     */
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `Sentence: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `Sentence complete: ${sentence}. ${meaning}`,
+      blank: 'blank',
+    },
+    /**
      * The in-app Hangul keyboard and the Type Hangul field (F-CURR-001 G-3). `jamo` and `text` are the taught
      * Korean as typed; `sound` and `romanization` are sound values read as words ("g or k").
      */

@@ -428,7 +428,8 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
     case 'meaning':
       return wordSound(prompt.ko, prompt.romanization);
     case 'check':
-      return prompt.target ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
+      // A Cloze Pick sentence with its gap (row CM-30) is not said: a gap read aloud says "underscore".
+      return prompt.target && !prompt.target.ko.includes(SLOT_MARKER) ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
     case 'odd-one-out':
       // Its letters are the answer.
       return undefined;
