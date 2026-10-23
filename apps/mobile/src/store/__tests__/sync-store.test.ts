@@ -28,6 +28,7 @@ import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { usePlanStore } from '../plan-store';
 import { onSynced, setSyncApiForTests, useSyncStore } from '../sync-store';
+import { setMemoryStoreHook } from '../../logic/sync/memory-hook';
 
 const snap = (quests: string[]): ProgressSnapshot => ({
   profileId: 'profile:a',
@@ -116,6 +117,26 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(activity?.revisit).toBe('quest:stage1-letters-q1');
     // Before F-ENT-003 E3-4 (routeNext) is on main, the report has no next.
     expect(activity).not.toHaveProperty('next');
+  });
+
+  it('uploads summary.memory as the memory store gives it right before the sync, and none without a block (F-CURR-002 CM-16)', async () => {
+    const memory = { wordsKnown: 7, readyToRefresh: 2, cellBestCounts: [3, 0, 0] as [number, number, number], stageChecks: 0, weekPoints: 4, topDue: ['lex:sagwa'] };
+    const summary = vi.fn(async (id: string) => (id === 'profile:a' ? memory : undefined));
+    setMemoryStoreHook({ backup: async () => undefined, restore: async () => undefined, pull: async () => undefined, summary });
+    try {
+      const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+      setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(summary).toHaveBeenCalledWith('profile:a');
+      expect(putSnapshot.mock.calls[0]?.[1].summary.memory).toEqual(memory);
+      expect(ProgressSummarySchema.parse(putSnapshot.mock.calls[0]?.[1].summary).memory).toEqual(memory);
+      // The store answers none (memoryRecord turned off): the next summary carries no block.
+      summary.mockResolvedValueOnce(undefined);
+      await useSyncStore.getState().syncNow('profile:a');
+      expect(putSnapshot.mock.calls[1]?.[1].summary).not.toHaveProperty('memory');
+    } finally {
+      setMemoryStoreHook(null);
+    }
   });
 
   it('summary.journey counts the quests a stored level check placed out as known (F-ROUTE-001 R-7a)', async () => {
@@ -569,6 +590,23 @@ describe('rescue code lifecycle (F-RESTORE-001)', () => {
     await useSyncStore.getState().syncNow('profile:z');
     expect(api.issueRescueCode).not.toHaveBeenCalled();
     expect(useSyncStore.getState().byLearner['profile:z']?.rescueCode).toBe('TIGER-MOON-4821');
+  });
+
+  it('claim starts the memory store pull for the adopted learner (F-CURR-002 section 4.8), and a claim without a store works as before', async () => {
+    const claim = vi.fn(async () => ({ status: 'ok', learner: { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' }, secret: 'as', snapshot: null }));
+    setSyncApiForTests({ ...fakeApi(), claimRescueCode: claim } as never);
+    expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+    const pull = vi.fn(async () => undefined);
+    setMemoryStoreHook({ backup: vi.fn(async () => undefined), restore: vi.fn(async () => undefined), pull });
+    try {
+      expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+      expect(pull).toHaveBeenCalledWith('profile:a');
+      // A pull that fails never fails the claim.
+      setMemoryStoreHook({ backup: vi.fn(async () => undefined), restore: vi.fn(async () => undefined), pull: vi.fn(async () => Promise.reject(new Error('network'))) });
+      expect((await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821')).ok).toBe(true);
+    } finally {
+      setMemoryStoreHook(null);
+    }
   });
 
   it('claim merges into an existing local profile and maps errors', async () => {

@@ -23,6 +23,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
+import type { RoundAsked } from '../../logic/memory/asked';
 import { pairRoundKey } from '../../logic/round-keys';
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { playPrompt } from '../../platform/audio';
@@ -38,6 +39,13 @@ interface Props {
  * CardMatch — present Korean words on the left, English meanings on the right.
  * Child taps matching pairs. Game completes when all pairs are matched.
  */
+
+/** The word a pair asks, read as Korean to meaning (F-CURR-002 row CM-12). */
+function askedPair(pairs: readonly { ko: string }[], idx: number): RoundAsked | undefined {
+  const ko = pairs[idx]?.ko;
+  return ko ? { texts: [ko], rung: 'read' } : undefined;
+}
+
 export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
@@ -92,12 +100,12 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     if (matched.has(selectedKo)) return;
     if (selectedKo === enIdx) {
       success();
-      answerRound(pairRoundKey(selectedKo), true);
+      answerRound(pairRoundKey(selectedKo), true, askedPair(pairs, selectedKo));
       setMatched(new Set([...matched, selectedKo]));
       setSelectedKo(null);
     } else {
       nudge();
-      answerRound(pairRoundKey(selectedKo), false);
+      answerRound(pairRoundKey(selectedKo), false, askedPair(pairs, selectedKo));
       setWrongFlash({ ko: selectedKo, en: enIdx });
       setTimeout(() => {
         setWrongFlash(null);

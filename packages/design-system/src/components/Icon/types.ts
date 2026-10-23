@@ -32,6 +32,7 @@ export type IconName =
   | 'shift'
   | 'shift-on'
   | 'backspace'
+  | 'rest'
   | 'hangul-tile'
   | 'rice-bowl'
   | 'lantern'

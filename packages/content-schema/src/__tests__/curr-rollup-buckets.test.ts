@@ -33,7 +33,7 @@ describe('rollup bucket edges', () => {
   });
 
   it('names a single value, a range and an open top', () => {
-    expect(rollupBucketCodes(ROLLUP_SPREAD_DAYS_EDGES)).toEqual(['0', '1', '2-3', '4-7', '8-14', '15-30', '31+']);
+    expect(rollupBucketCodes(ROLLUP_SPREAD_DAYS_EDGES)).toEqual(['0', '1', '2-3', '4-7', '8-14', '15-30', '31-45', '46-62', '63-90', '91+']);
     expect([0, 1, 2, 3, 4, 9, 10, 499, 500, 9999].map((v) => rollupBucketCode(v, ROLLUP_ITEM_COUNT_EDGES))).toEqual([
       '0',
       '1',

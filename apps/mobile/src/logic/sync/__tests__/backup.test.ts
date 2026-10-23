@@ -1,5 +1,6 @@
-import type { Profile, ProgressSnapshot } from '@hangul-route/content-schema';
+import { BackupFileSchema, ReviewEntrySchema, type MemoryBackup, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { backupFileName, decodeBackup, encodeBackup } from '../backup';
 
 const profile: Profile = { id: 'profile:a', displayName: 'Su Ni!', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' };
@@ -61,6 +62,50 @@ describe('backup file (F-SYNC-001 §3.6)', () => {
       expect('parentPinHash' in decoded.file.profile).toBe(false);
       expect(decoded.file.profile).toEqual(profile);
     }
+  });
+  // F-CURR-002 section 4.8 (row CM-11): the optional, lenient `memory` key; BACKUP_VERSION stays 1.
+  const memory: MemoryBackup = { stage2: { 'lex:sagwa': { b: 3, d: '2026-10-25', c: 2, r: 3, n: 4, f: '2026-10-01', s: 3, at: '2026-10-22T10:00:00.000Z' } } };
+  it('round-trips the memory key when the store holds states, and writes none when it holds none', () => {
+    const at = new Date('2026-10-22T00:00:00Z');
+    const withKey = decodeBackup(encodeBackup(profile, snapshot, at, memory));
+    expect(withKey.ok && withKey.file.memory).toEqual(memory);
+    expect(withKey.ok && withKey.file.version).toBe(1);
+    for (const none of [undefined, {}]) {
+      const text = encodeBackup(profile, snapshot, at, none);
+      expect(text).not.toContain('"memory"');
+      const decoded = decodeBackup(text);
+      expect(decoded.ok && decoded.file.memory).toBeUndefined();
+    }
+  });
+  it('an unreadable memory key never fails the file: it reads as absent, or keeps only the states that parse', () => {
+    const base = JSON.parse(encodeBackup(profile, snapshot, new Date('2026-10-22T00:00:00Z'))) as Record<string, unknown>;
+    for (const junk of ['x', 7, [], null]) {
+      const decoded = decodeBackup(JSON.stringify({ ...base, memory: junk }));
+      expect(decoded.ok).toBe(true);
+      expect(decoded.ok && decoded.file.memory).toBeUndefined();
+      expect(decoded.ok && decoded.file.snapshot.cards).toHaveLength(1);
+    }
+    const partial = decodeBackup(JSON.stringify({ ...base, memory: { ...memory, stage3: 'x', stage4: { 'lex:bad': { b: 'x' } } } }));
+    expect(partial.ok && partial.file.memory).toEqual({ ...memory, stage4: {} });
+  });
+  it('an older app ignores the key: the file still parses as a version 1 backup without it', () => {
+    const text = encodeBackup(profile, snapshot, new Date('2026-10-22T00:00:00Z'), memory);
+    // The file schema of a build from before the key, which strips keys it does not know.
+    const older = BackupFileSchema.omit({ memory: true }).safeParse(JSON.parse(text));
+    expect(older.success).toBe(true);
+    expect(older.success && 'memory' in older.data).toBe(false);
+    expect(JSON.parse(text)).toMatchObject({ format: 'hangul-route-backup', version: 1 });
+  });
+  it('never writes a warm-up review into a file, so an app build from before CM-3b can still restore it (F-CURR-002 section 13, row CM-15)', () => {
+    const entry = (id: string, kind: 'warmup' | 'feedback') => ({ id, kind, generatedAt: '2026-10-21T09:00:00.000Z', scope: '2026-10-21', itemIds: ['lex:bap'] });
+    const held = { ...snapshot, reviews: [entry('warmup:2026-10-21', 'warmup'), entry('feedback:2026-10-21', 'feedback')] };
+    const text = encodeBackup(profile, held, new Date('2026-10-21T10:00:00Z'));
+    expect((JSON.parse(text) as { snapshot: ProgressSnapshot }).snapshot.reviews.map((r) => r.id)).toEqual(['feedback:2026-10-21']);
+    // A build from before CM-3b read every entry against its three kinds, strictly: the file still reads there.
+    const preCm3b = z.array(ReviewEntrySchema.extend({ kind: z.enum(['daily', 'feedback', 'stage-certificate']) }));
+    expect(preCm3b.safeParse((JSON.parse(text) as { snapshot: ProgressSnapshot }).snapshot.reviews).success).toBe(true);
+    expect(preCm3b.safeParse(held.reviews).success).toBe(false);
+    expect(held.reviews).toHaveLength(2);
   });
   it('builds a safe file name', () => {
     expect(backupFileName('Su Ni!', new Date('2026-09-21T05:00:00Z'))).toBe('hangul-route-su-ni-2026-09-21.hangulroute.json');

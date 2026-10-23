@@ -37,7 +37,11 @@ import {
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
 import {
+  LEARNER_CHUNKS,
   LOCALE_CHUNKS,
+  MEMORY_CHUNKS,
+  QUEST_REVIEW_CHUNKS,
+  REVIEW_CHUNKS,
   ROOT_CHUNKS,
   SCREEN_CHUNKS,
   WEB_JS_DIR,
@@ -67,12 +71,13 @@ if (typeof nodeModule.register !== 'function') {
 }
 nodeModule.register(pathToFileURL(join(repo, 'scripts', 'ts-loader.mjs')));
 const importSource = (path) => import(pathToFileURL(join(repo, path)).href);
-const [tokens, appShell, i18n, lessonBuild, storyBuild] = await Promise.all([
+const [tokens, appShell, i18n, lessonBuild, storyBuild, reviewItemBuild] = await Promise.all([
   importSource('packages/design-system/src/tokens.ts'),
   importSource('packages/content-schema/src/schemas/app-shell.ts'),
   importSource('packages/i18n/src/index.ts'),
   importSource('scripts/build-lessons.mjs'),
   importSource('scripts/build-stories.mjs'),
+  importSource('scripts/build-review-items.mjs'),
 ]);
 const { GROWN_UP_PREFIXES, isGrownUpPath } = appShell;
 const canvas = tokens.colors.surface.canvas;
@@ -238,21 +243,23 @@ if (existsSync(jsDir)) {
 // build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline fixtures, never chunks).
 const lessonManifest = lessonBuild.chunkManifest(lessonBuild.readCells(repo));
 const storyManifest = storyBuild.readChunkManifest(repo);
+// The review-item index (F-CURR-002 §4.2, row CM-10): one chunk, under the same checks.
+const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);
 const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
-const chunkManifest = [...lessonManifest, ...storyManifest];
+const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest];
 const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
 // The locale chunks (the es / ko UI messages and content text, one per locale), the grown-up roots and the learner
 // screen chunks ([GU] the guest's first quest stack), under the same rules.
-chunkProblems.push(...markedChunkProblems({ bundles, precached: manifestUrls }));
+chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS], bundles, precached: manifestUrls }));
 // A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
 const headersFile = join(dist, '_headers');
-for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...SCREEN_CHUNKS], bundles))) {
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS], bundles))) {
   chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
 }
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, locale and root chunks:\n  ${chunkProblems.join('\n  ')}`);
-const report = precacheReport({ manifest: lessonManifest, stories: storyManifest, locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, screens: SCREEN_CHUNKS, bundles, precache: { count, size } });
+const report = precacheReport({ manifest: lessonManifest, stories: storyManifest, locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, reviewItems: reviewItemManifest, screens: SCREEN_CHUNKS, bundles, precache: { count, size } });
 for (const line of reportLines(report)) process.stdout.write(`${line}\n`);
 if (budget) {
   const over = precacheBudgetProblems(report);

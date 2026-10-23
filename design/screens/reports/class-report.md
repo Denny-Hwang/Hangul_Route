@@ -77,3 +77,23 @@ From 60em: layer 1 left, layer 2 right, More detail across. The class-level line
 - No count of learners per stage or level (OD-4); no percentages (OD-6); no red; nothing about speaking.
 - Up-only markers only on the headline, Total time and New quests; never a down marker.
 - **Small classes** (README, decisions): only the median is hidden under 3 learners who practiced (section 3.7). Bands, level-check counts and homework counts show in a class of 1 or 2 too; this is accepted for v1 because the page and its print are for viewers with `summary.read` on the class (teacher, co-teacher, school admin), each of whom can already open every learner's own report, and a suppression rule would change RP-2c's output.
+
+## Words and review totals (F-CURR-002 row CM-16)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` sections 4.8, 4.9 and 7.6 · Shots: `shots/class-report-memory-320.png`, `shots/class-report-memory-1280.png` (More detail open)
+
+The first block of More detail (layer 3), before Level check:
+
+```
+Words and review                                  (h3) report.detail.memory
+Words known, added together: 120                       report.class.wordsKnown
+Items ready to refresh, added together: 14             report.class.readyToRefresh
+Episodes: 9 done, 3 practiced, 1 mastered              report.detail.mastery
+Stage Checks passed, added together: 2                 report.class.stageChecks
+From 3 learners whose apps share these counts.         report.class.memoryFrom (the `hr-class-line` look: size.bodySm, text.muted)
+```
+
+- Totals over the members whose class copy carries `memory` (`ClassReport.memory`, computed by `classReport` on the Worker): never a mean, a maximum, a learner's own figure or a distribution of learners; the "from" line says how many learners the totals come from, as `withActivity` does for the day-by-day figures.
+- The mastery line names only the levels above 0 ("Episodes: 9 done" until row CM-20 derives levels 2 and 3). Items ready to refresh add up only the learners who have the review surface (`memory.reviewOn`), never the shadow period's seeded due items.
+- A total of 0 has no line; with no member carrying the block (or every total 0) there is no block, and More detail is drawn for it alone when there is no level check and no homework.
+- The same on every period (current counts).

@@ -70,10 +70,13 @@ import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
 import { CardUnlockBanner } from './CardUnlockBanner';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
+import { recordActivityPointsLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
 import { ResultsFreeEndCelebration, ResultsOpenForYou } from './ResultsFreeEnd';
 import { StoryResultsExtras, type StoryResultsChoice } from './StoryResultsExtras';
 import { samplerStoryOf } from '../home/free-end-inputs';
 import { firstFreeTopicKey } from '../vocab/topic-data';
+import { clearTryAgainHandoff, peekTryAgainHandoff } from '../quest/quest-reviews';
+import { useBackGuard } from '../use-back-guard';
 
 type ResultsMessages = Messages['learner']['results'];
 
@@ -119,8 +122,25 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // once when the score is written (F-STORY-006 §3.3): the quest card banner
   // and, under it, the extra-cards banner (§3.7).
   const [outcome, setOutcome] = useState<QuestResultOutcome | null>(null);
+  // What this finish reached toward the daily and weekly goals (F-CURR-002 row CM-17), for its one-line banner.
+  const [goalMoment, setGoalMoment] = useState<GoalMoment | null>(null);
+  const goals = useGoalsChunk(goalMoment !== null);
   const award = outcome?.award ?? null;
   const recordedRef = useRef(false);
+  // Try these again, chosen on the reward step (F-CURR-002 section 4.5, row CM-15), plays here over Results once the
+  // effect below has written the score and the card, so closing the app during it never loses the quest. A back
+  // during it, or its See results, shows Results.
+  const [tryAgain, setTryAgain] = useState(() => peekTryAgainHandoff(questId, profile?.id));
+  useEffect(() => clearTryAgainHandoff(), []);
+  useBackGuard(
+    navigation,
+    () => {
+      if (tryAgain === null) return false;
+      setTryAgain(null);
+      return true;
+    },
+    tryAgain !== null,
+  );
 
   useEffect(() => {
     if (!profile || !quest) return;
@@ -151,6 +171,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       },
     );
     setOutcome(earned);
+    // A finished quest or story earns its daily-goal points (section 7.4); a run with every game skipped finished nothing.
+    if (total > 0) void recordActivityPointsLater(profile.id, storyIdOfQuest(quest) === null ? 'quest' : 'story').then(setGoalMoment);
     // A finished story's bookmark goes with the score write (F-STORY-004 §3.8).
     const stories = useStoryStore.getState();
     const finishedStory = bookmarkClearedByResults(quest, total, (storyId) => stories.getBookmark(profile.id, storyId));
@@ -183,9 +205,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     .filter((line): line is string => line !== null)
     .join(' ');
   useEffect(() => {
-    if (!announcement || Platform.OS !== 'ios') return;
+    if (!announcement || Platform.OS !== 'ios' || tryAgain !== null) return;
     AccessibilityInfo.announceForAccessibility(announcement);
-  }, [announcement]);
+  }, [announcement, tryAgain]);
 
   // The one next (F-ENT-003 sections 3.5 and 3.8): due today, then the leading plan source, then the
   // default route, with this quest counted as done (`resultsTeaser` passes it as `justCompleted`), so Home,
@@ -375,6 +397,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     }
   };
 
+  if (tryAgain !== null && profile) {
+    const { QuestReviewSession } = tryAgain.chunk;
+    return <QuestReviewSession plan={tryAgain.plan} profileId={profile.id} onDone={() => setTryAgain(null)} />;
+  }
+
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ alignItems: 'center', paddingTop: spacing.xxl }}>
@@ -425,6 +452,12 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
               reducedMotion={reducedMotion}
               onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
             />
+          </>
+        ) : null}
+        {goals && goalMoment !== null && (goalMoment.dayMet || goalMoment.weekMet !== null) ? (
+          <>
+            <Spacer size="lg" />
+            <goals.GoalMomentBanner moment={goalMoment} />
           </>
         ) : null}
         {extras ? (

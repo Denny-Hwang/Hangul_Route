@@ -170,8 +170,11 @@ test.describe('the guest first quest (GU-3)', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await shot(page, 'guest-results-1280');
     await page.setViewportSize({ width: 360, height: 740 });
-    // See my card, then its Close returns to Results.
+    // See my card opens the card the guest just earned (5.3, 7.1): its earned face, which flips, and no earn hint.
     await page.getByRole('button', { name: /^See / }).click();
+    await expect(page.getByRole('button', { name: en.a11y.flipToBack, exact: true })).toBeVisible();
+    await expect(page.getByText(en.learner.cardDetail.earn.title, { exact: true })).toHaveCount(0);
+    // Its Close returns to Results.
     await headerClose(page).click();
     await expect(page.getByText(en.learner.results.newCard.title)).toBeVisible();
     // Results' Back opens the Not now card (GU-4 fills it), whose Close ends the run: Welcome asks for a name.
@@ -286,6 +289,40 @@ test.describe('the guest first quest (GU-3)', () => {
     await continueButton(page).click();
     await expect(letterA(page)).toBeVisible();
     await expect(line).toHaveCount(0);
+  });
+
+  test('6.4: another tab removes the record of the run on here (a save or a sweep): this tab leaves the Guest stack for Welcome', async ({ page, context }) => {
+    await page.goto('/?try=1');
+    await expect(hello(page)).toBeVisible();
+    await continueButton(page).click();
+    await expect(letterA(page)).toBeVisible();
+    const other = await context.newPage();
+    await other.goto('/');
+    // The other tab removes `hr:guest` and posts `hr-profiles` `changed`, as a save or a sweep there does.
+    await other.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open('keyval-store');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction('keyval', 'readwrite');
+            tx.objectStore('keyval').delete('hr:guest');
+            tx.oncomplete = () => {
+              db.close();
+              new BroadcastChannel('hr-profiles').postMessage({ v: 1, kind: 'changed' });
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+    );
+    await other.close();
+    // This tab's run ended there: the root leaves the guest's screens for Welcome, with no record and no waiting card.
+    await expect(page.getByRole('button', { name: en.learner.welcome.cta })).toBeVisible();
+    await expect(letterA(page)).toHaveCount(0);
+    await expect(page.getByTestId('welcome-guest')).toHaveCount(0);
+    expect(await readStored(page, 'guest')).toBeNull();
   });
 
   test('CS-G3: /?try=1 and Back to my quest each close the grown-up session of the tab and tell the other tabs', async ({ page, context }) => {

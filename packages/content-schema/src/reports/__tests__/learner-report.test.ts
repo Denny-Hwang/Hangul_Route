@@ -598,3 +598,35 @@ describe('codes and numbers only (OD-6: no percentage anywhere)', () => {
     }
   });
 });
+
+describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
+  const memory = { wordsKnown: 42, readyToRefresh: 6, cellBestCounts: [5, 2, 1] as [number, number, number], stageChecks: 1, weekPoints: 30, topDue: ['lex:sagwa'], reviewOn: true as const };
+
+  it('carries the current counts on every period, without item ids or points', () => {
+    for (const period of ['day', 'week', 'month', 'all'] as const) {
+      const detail = report({ summary: { ...STEADY, memory }, period }).detail;
+      expect(detail?.memory, period).toEqual({ wordsKnown: 42, readyToRefresh: 6, levels: [5, 2, 1], stageChecks: 1 });
+    }
+    expect(JSON.stringify(report({ summary: { ...STEADY, memory } }))).not.toMatch(/lex:|weekPoints|topDue/);
+  });
+
+  it('is absent without a block, and when every count is 0 (never a zero as a result)', () => {
+    expect(report({ summary: STEADY }).detail).not.toHaveProperty('memory');
+    const zero = { ...memory, wordsKnown: 0, readyToRefresh: 0, cellBestCounts: [0, 0, 0] as [number, number, number], stageChecks: 0 };
+    expect(report({ summary: { ...STEADY, memory: zero } }).detail).not.toHaveProperty('memory');
+    // Week points alone never make a block: reports do not show them.
+    expect(report({ summary: { ...STEADY, memory: { ...zero, weekPoints: 9 } } }).detail).not.toHaveProperty('memory');
+  });
+
+  it('items ready to refresh only while the learner has the review surface (not in the memoryRecord shadow period)', () => {
+    const shadow = { ...memory, reviewOn: undefined };
+    expect(report({ summary: { ...STEADY, memory: shadow } }).detail?.memory).toEqual({ wordsKnown: 42, readyToRefresh: 0, levels: [5, 2, 1], stageChecks: 1 });
+    // Only a due pool, in the shadow period: no block at all.
+    const dueOnly = { ...shadow, wordsKnown: 0, cellBestCounts: [0, 0, 0] as [number, number, number], stageChecks: 0 };
+    expect(report({ summary: { ...STEADY, memory: dueOnly } }).detail).not.toHaveProperty('memory');
+  });
+
+  it('a legacy summary (no day-by-day data) still shows them in More detail', () => {
+    expect(report({ summary: { ...LEGACY, memory } }).detail?.memory).toEqual({ wordsKnown: 42, readyToRefresh: 6, levels: [5, 2, 1], stageChecks: 1 });
+  });
+});

@@ -1,8 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { GuestLaterScreen } from '../screens/guest/GuestLaterScreen';
 import { GuestQuestPlayer } from '../screens/guest/GuestQuestPlayer';
 import { GuestResults } from '../screens/guest/GuestResults';
+import { useLeaveWhenGuestRunLost } from '../screens/guest/use-guest-run-lost';
 import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { CreateProfileScreen } from '../screens/onboarding/CreateProfileScreen';
@@ -83,6 +85,8 @@ function GuestMinigameRoute({ route, navigation }: GuestScreenProps<'Minigame'>)
  * (the route's `screen` param).
  */
 export default function GuestStackNavigator(): React.ReactElement {
+  // Section 6.4: a run another tab ended (saved, removed or replaced) resets the root (this is the root's `Guest` route).
+  useLeaveWhenGuestRunLost(useNavigation());
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}>
       <Stack.Screen name="QuestPlayer" component={GuestQuestPlayer} options={{ gestureEnabled: false }} />

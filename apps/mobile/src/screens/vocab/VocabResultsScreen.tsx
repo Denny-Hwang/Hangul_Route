@@ -16,7 +16,7 @@ import {
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { localizedGloss, vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -25,6 +25,8 @@ import { ACTIVITY_ROUTES, VOCAB_SCREENS } from '../../logic/vocab/caps';
 import { resultsView } from '../../logic/vocab/speed-round';
 import type { RootStackParamList } from '../../navigation/types';
 import { PictureArt } from '../minigames/PictureArt';
+import { takeGoalMomentLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
+import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabResults'>;
 
@@ -49,6 +51,13 @@ export function VocabResultsScreen({ route, navigation }: Props): React.ReactEle
   // `summary` is typed as required, but a restored or hand-built route may lack it: redirect, never throw.
   const view = summary ? resultsView(summary, newBest, copy) : null;
   const toTopic = (): void => navigation.navigate('VocabTopic', { topicKey });
+  // The goal this word set reached (F-CURR-002 row CM-17): left by the points logic when the session was written.
+  const profileId = useProfileStore(activeProfileSelector)?.id;
+  const [goalMoment, setGoalMoment] = useState<GoalMoment | null>(null);
+  useEffect(() => {
+    if (profileId) void takeGoalMomentLater(profileId).then(setGoalMoment);
+  }, [profileId]);
+  const goals = useGoalsChunk(goalMoment !== null);
 
   // A stale or broken route (nothing was played): back to the topic page, nothing written here.
   useEffect(() => {
@@ -85,6 +94,12 @@ export function VocabResultsScreen({ route, navigation }: Props): React.ReactEle
       </View>
       <Spacer size="lg" />
       <HoyaBubble tone={view.hoya.pose} message={view.hoya.line} testID="vocab-results-hoya" />
+      {goals && goalMoment ? (
+        <>
+          <Spacer size="lg" />
+          <goals.GoalMomentBanner moment={goalMoment} />
+        </>
+      ) : null}
 
       {tiles.length > 0 ? (
         <View testID="vocab-results-see-again">

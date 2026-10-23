@@ -167,6 +167,21 @@ export const report = {
       self: (done: number, ready: number) => `Own route: ${done} done, ${ready} ready to play`,
       device: (done: number, ready: number) => `Plans and homework: ${done} done, ${ready} ready to play`,
     },
+    /**
+     * The memory counts (F-CURR-002 sections 4.4 and 4.8, row CM-16): one block of More detail, drawn only when the
+     * summary carries `memory`, and each line only when its count is above 0 (never "0 words known"). Current counts,
+     * the same on every period. No line names the learner, so the second voice reads them as they are.
+     */
+    memory: 'Words and review',
+    wordsKnown: (count: number) => `Words known: ${count}`,
+    readyToRefresh: (count: number) => plural('en', count, { one: '1 item is ready to refresh', other: `${count} items are ready to refresh` }),
+    /**
+     * Episodes at mastery level 1, 2 and 3 (`cellBestCounts`); the level words are the mastery ring's. A level at 0 has
+     * no part ("Episodes: 5 done" while row CM-20 has not derived levels 2 and 3), so no zero reads as a result.
+     */
+    mastery: (done: number, practiced: number, mastered: number) =>
+      `Episodes: ${[done > 0 ? `${done} done` : '', practiced > 0 ? `${practiced} practiced` : '', mastered > 0 ? `${mastered} mastered` : ''].filter(Boolean).join(', ')}`,
+    stageChecks: (count: number) => `Stage Checks passed: ${count}`,
   },
   /**
    * "What went well" and "What to practice next" lines (section 3.6), keyed by insight code. `when` is a
@@ -350,6 +365,15 @@ export const report = {
     planRow: (assigned: number, started: number, finished: number) => `Assigned to ${assigned}, started by ${started}, finished by ${finished}`,
     empty: 'No learners yet.',
     afterUpdate: "Appears after learners' apps update.",
+    /**
+     * The memory counts of the class (F-CURR-002 row CM-16, `report.memory`): totals over the learners whose app
+     * shares them, under `report.detail.memory`, with `report.detail.mastery` for the episodes. Totals only, never
+     * a mean or a learner's own figure; a line with a total of 0 is not drawn.
+     */
+    memoryFrom: (count: number) => plural('en', count, { one: 'From 1 learner whose app shares these counts.', other: `From ${count} learners whose apps share these counts.` }),
+    wordsKnown: (count: number) => `Words known, added together: ${count}`,
+    readyToRefresh: (count: number) => `Items ready to refresh, added together: ${count}`,
+    stageChecks: (count: number) => `Stage Checks passed, added together: ${count}`,
   },
   /** Print or save as PDF (OD-7): the header button, its helper line and the printed footer. */
   print: {

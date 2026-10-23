@@ -289,8 +289,8 @@ describe('slot ③ chain: next → replay → again → explore', () => {
   });
 
   it('the daily test still owns slot ③ when it is available', () => {
-    const plan = build({ capabilities: { dailyTestAvailable: true } });
-    expect(plan.cards.map((c) => c.kind)).toEqual(['story', 'new', 'daily-test']);
+    const plan = build({ dailyReview: { due: 5, done: false, reviewFirst: false } });
+    expect(plan.cards.map((c) => c.kind)).toEqual(['story', 'new', 'daily-review']);
   });
 
   it('two story cards never show the same story', () => {
@@ -788,8 +788,8 @@ describe('pinned slots ① and ③ re-check access (F-STORY-004 PR 4.8d, F-ENT-0
   });
 
   it('never moves the daily test card', () => {
-    const first = build({ capabilities: { dailyTestAvailable: true } });
-    const after = build({ capabilities: { dailyTestAvailable: true }, pinned: first, isQuestOpen: () => false }, { isLocked: () => true });
+    const first = build({ dailyReview: { due: 5, done: false, reviewFirst: false } });
+    const after = build({ dailyReview: { due: 5, done: false, reviewFirst: false }, pinned: first, isQuestOpen: () => false }, { isLocked: () => true });
     expect(after.cards[2]).toEqual(first.cards[2]);
   });
 

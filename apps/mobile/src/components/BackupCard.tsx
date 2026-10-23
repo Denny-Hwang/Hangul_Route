@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { backupFileName, encodeBackup } from '../logic/sync/backup';
+import { memoryForBackup } from '../logic/sync/memory-hook';
 import { cloudStatusLine } from '../logic/sync/status-line';
 import { saveTextFile } from '../platform/file';
 import { useAudience } from '../store/audience';
@@ -35,7 +36,7 @@ export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardPro
   const exportFile = async (): Promise<void> => {
     if (!snap) return;
     const now = new Date();
-    const result = await saveTextFile(backupFileName(profile.displayName, now), encodeBackup(profile, snap, now));
+    const result = await saveTextFile(backupFileName(profile.displayName, now), encodeBackup(profile, snap, now, await memoryForBackup(profile.id)));
     setNote(result.ok ? m.note.ready : result.reason === 'unavailable' ? m.note.unavailable : m.note.failed);
   };
 

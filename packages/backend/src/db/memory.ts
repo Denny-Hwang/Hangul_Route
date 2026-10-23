@@ -23,6 +23,7 @@ import {
 import type { AcceptAdminInviteInput, CreateAdminInviteInput, EndAdminRoleInput, EndAdminRoleResult, RevokeAdminInviteInput, StoredAdminInvite } from './admin-types';
 import type { RemoteConfigRow } from './remote-config-types';
 import { rollupCellKey, uniqueRollupKeys, type RollupKey, type RollupRow } from './rollup-types';
+import type { MemoryShardWrite, MemoryShardWriteResult, StoredMemoryShard } from './memory-shard-types';
 import { assertNewClassMove, type ClassMoveDecider, type ClassMoveEndStatus, type ExecuteClassMoveInput, type ExecuteClassMoveResult, type StoredClassMove, type StoredClassScopeAck } from './class-move-types';
 import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferEventChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
@@ -76,6 +77,9 @@ const pairKey = (a: string, b: string): string => `${a}|${b}`;
 const newestMoveFirst = (a: StoredClassMove, b: StoredClassMove): number => (a.createdAt === b.createdAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.createdAt < b.createdAt ? 1 : -1);
 const EMPTY_LEARNER_SLOT: StoredTransfer['learner'] = { state: 'pending', at: null, basis: null, attest: null, evidence: null, role: null, textVersion: null, locale: null, shown: null, terms: null };
 
+/** Code-point order, as D1's BINARY collation sorts text. */
+const codePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 /**
  * In-memory `Db` — tests and `wrangler dev` without a D1 binding. Hands out
  * clones so a route that mutates without `put` fails here exactly as on D1.
@@ -119,6 +123,8 @@ export class MemoryDb implements Db {
   private promotedFromTeacher = new Set<string>();
   /** F-CURR-002 row CM-70a: `day` then `rollupCellKey`, as `learning_rollups` keys its rows. */
   private rollups = new Map<string, Map<string, RollupRow>>();
+  /** F-CURR-002 row CM-11, migration 0016: learner id, then shard. */
+  private memoryShards = new Map<string, Map<string, StoredMemoryShard>>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -186,6 +192,7 @@ export class MemoryDb implements Db {
     this.rateHits = this.rateHits.filter((h) => !rateKeys.has(h.key) && !h.key.startsWith(pairPrefix));
     for (const [k, d] of this.devices) if (d.learnerId === learnerId) this.devices.delete(k);
     this.snapshots.delete(learnerId);
+    this.memoryShards.delete(learnerId);
     for (const [k, m] of this.memberships) if (m.memberKind === 'learner' && m.memberId === learnerId) this.memberships.delete(k);
     for (const [k, r] of this.relinks) if (r.learnerId === learnerId) this.relinks.delete(k);
     return existed;
@@ -1242,7 +1249,41 @@ export class MemoryDb implements Db {
     return true;
   }
 
+  async memoryShardsOf(learnerId: string, shards: readonly string[]): Promise<StoredMemoryShard[]> {
+    const rows = this.memoryShards.get(learnerId);
+    const wanted = new Set(shards);
+    return [...(rows?.values() ?? [])].filter((r) => wanted.has(r.shard)).sort((a, b) => codePoint(a.shard, b.shard)).map((r) => ({ ...r }));
+  }
+  async memoryShardsSince(learnerId: string, since: number): Promise<StoredMemoryShard[]> {
+    return [...(this.memoryShards.get(learnerId)?.values() ?? [])]
+      .filter((r) => r.seq > since)
+      .sort((a, b) => a.seq - b.seq || codePoint(a.shard, b.shard))
+      .map((r) => ({ ...r }));
+  }
+  async memoryHighestSeq(learnerId: string): Promise<number> {
+    return Math.max(0, ...[...(this.memoryShards.get(learnerId)?.values() ?? [])].map((r) => r.seq));
+  }
+  async writeMemoryShards(learnerId: string, writes: readonly MemoryShardWrite[], updatedAt: string): Promise<MemoryShardWriteResult> {
+    // No await between the checks and the writes: one transaction on the single JS thread, as D1's batch.
+    const rows = this.memoryShards.get(learnerId) ?? new Map<string, StoredMemoryShard>();
+    const written: string[] = [];
+    const conflicts: string[] = [];
+    for (const w of writes) {
+      const current = rows.get(w.shard);
+      if ((current?.seq ?? null) !== w.baseSeq) {
+        conflicts.push(w.shard);
+        continue;
+      }
+      const seq = Math.max(0, ...[...rows.values()].map((r) => r.seq)) + 1;
+      rows.set(w.shard, { shard: w.shard, seq, states: w.states, updatedAt });
+      written.push(w.shard);
+    }
+    if (rows.size > 0) this.memoryShards.set(learnerId, rows);
+    return { written, conflicts };
+  }
+
   async reset(): Promise<void> {
+    this.memoryShards.clear();
     this.remoteConfigRows.clear();
     for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist, this.transfers, this.transferPrefs, this.billingEvents, this.notes, this.noteReports, this.senderHolds, this.notePrefs, this.senderBlocks, this.sendGrants, this.classScopeAcks, this.classMoves, this.spaceEvents, this.adminInvites, this.telemetryDaily]) m.clear();
     this.promotedFromTeacher.clear();

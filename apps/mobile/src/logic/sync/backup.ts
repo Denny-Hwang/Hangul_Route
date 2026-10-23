@@ -3,8 +3,10 @@ import {
   BACKUP_VERSION,
   BackupFileSchema,
   type BackupFile,
+  type MemoryBackup,
   type Profile,
   type ProgressSnapshot,
+  reviewsForReader,
 } from '@hangul-route/content-schema';
 
 /**
@@ -18,17 +20,26 @@ function withoutPinHash(profile: Profile): Profile {
   return rest;
 }
 
+/** A file declares no review kind: whoever restores it reads it. */
+const NO_CAPS: ReadonlySet<string> = new Set();
+
 /**
  * Server-less backup file — F-SYNC-001 §3.6. A parent can keep this file
  * anywhere; `decodeBackup` never throws. [OA] The exported profile carries no `parentPinHash`.
+ * F-CURR-002 section 4.8 (row CM-11): the memory store's states go in an optional `memory` key, only
+ * when there are any (`memoryForBackup`); `BACKUP_VERSION` stays 1 and an older app ignores the key.
  */
-export function encodeBackup(profile: Profile, snapshot: ProgressSnapshot, exportedAt: Date): string {
+export function encodeBackup(profile: Profile, snapshot: ProgressSnapshot, exportedAt: Date, memory?: MemoryBackup): string {
+  // Any build may restore a file, and one from before CM-3b reads reviews strictly: a gated kind (the quest
+  // warm-up) never goes in (F-CURR-002 section 13, row CM-15). It carries no result, so nothing is lost.
+  const reviews = reviewsForReader(snapshot.reviews, NO_CAPS);
   const file: BackupFile = {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: exportedAt.toISOString(),
     profile: withoutPinHash(profile),
-    snapshot,
+    snapshot: reviews === snapshot.reviews ? snapshot : { ...snapshot, reviews: [...reviews] },
+    ...(memory && Object.keys(memory).length > 0 ? { memory } : {}),
   };
   return JSON.stringify(file, null, 2);
 }

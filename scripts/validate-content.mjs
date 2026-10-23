@@ -285,7 +285,12 @@ if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.l
       violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });
     }
   }
-  const findings = lint.lintCurriculum(parsedByRel, { today: ctx.today });
+  // F-CURR-002 §4.2 (row CM-10): `items-stable-id` reads the frozen review-item files beside the content.
+  const curriculumTree = new Map(parsedByRel);
+  for (const rel of [lint.REVIEW_SNAPSHOT_FILE, lint.REVIEW_STAGE1_FILE]) {
+    if (existsSync(join(ROOT, rel))) curriculumTree.set(rel, JSON.parse(readFileSync(join(ROOT, rel), "utf8")));
+  }
+  const findings = lint.lintCurriculum(curriculumTree, { today: ctx.today });
   for (const rel of reviewMessageFiles) {
     const { learner } = await import(pathToFileURL(join(ROOT, rel)).href);
     findings.push(...lint.lintReviewStrings(learner, rel));

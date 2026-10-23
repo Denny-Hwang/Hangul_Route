@@ -58,6 +58,7 @@ import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
 import { CellLinkRow } from '../story/CellLinkRow';
+import { preloadQuestReviews } from '../quest/quest-reviews';
 import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
 
 export interface EpisodeDetailViewProps {
@@ -124,6 +125,9 @@ export function EpisodeDetailView({
   }, [episodeId, locale, titles]);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // A quest's warm-up and Try these again start loading here, with their switches on (F-CURR-002 row CM-15).
+  const learnerId = profile?.id ?? null;
+  useEffect(() => preloadQuestReviews(learnerId), [learnerId]);
 
   // May the learner start each quest, the one next and the plan view (F-ENT-003 sections 3.5, 3.7).
   const tier = useAccessTier(profile?.id ?? '');

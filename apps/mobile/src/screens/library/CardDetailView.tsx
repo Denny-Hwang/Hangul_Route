@@ -38,7 +38,7 @@ import { cardKoLine, cardTitleIsKo } from '../../logic/card-art';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
-import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useActiveLearnerId } from '../../store/active-learner';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryLoaded } from '../story-content';
 
@@ -50,7 +50,7 @@ export interface CardDetailViewProps {
   /** A locked card says how it is earned (F-LAYOUT-001 §3.6, F-STORY-006 §3.7): the Library pane and the stack screen pass it. */
   showHowToEarn?: boolean;
   /**
-   * `learner` (default): today's card for the active profile. `preview` (All lessons, F-BROWSE-001 §4.7):
+   * `learner` (default): today's card for the active learner (a guest's id in a guest run). `preview` (All lessons, F-BROWSE-001 §4.7):
    * front and back as an earned card looks, no earn hint, no share action, no progress-store read.
    */
   state?: CardDetailState;
@@ -67,9 +67,11 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // the card shows its front only (no flip, no Share), so its back is never drawn or shared blank.
   const storyReady = useStoryLoaded(source?.storyId);
   const card = source && localizeCard(source, locale);
-  const profile = useProfileStore(activeProfileSelector);
+  // [GU] The active learner (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3): the guest's id in a guest run, which has no
+  // profile record, so the card a guest just earned shows its earned face, flip and Share (7.1, See my card).
+  const learnerId = useActiveLearnerId();
   // A preview reads no learner's cards: it shows every card as an earned one.
-  const snap = useProgressStore((s) => (state === 'preview' || !profile ? undefined : s.byProfile[profile.id]));
+  const snap = useProgressStore((s) => (state === 'preview' || learnerId === null ? undefined : s.byProfile[learnerId]));
   const earned = snap?.cards.some((c) => c.cardId === cardId) ?? false;
   // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
   const hint = useMemo(() => {
@@ -103,7 +105,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // F-MOTION-002 flip (components/FlipCard.tsx); Share is gated mid-flip (F-CARD-003 §8).
   const [isFlipping, setIsFlipping] = useState(false);
   const canFlip = unlocked && storyReady;
-  // A card that stops being flippable (the active profile changed while it showed its back) returns to its front.
+  // A card that stops being flippable (the active learner changed while it showed its back) returns to its front.
   useEffect(() => {
     if (!canFlip) setFace('front');
   }, [canFlip]);

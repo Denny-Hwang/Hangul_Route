@@ -7,7 +7,7 @@ import { LOCALE_META, type UiLocale } from './locales';
  * locale's `speechLang`.
  */
 
-export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear' | 'monthYear' | 'weekdayLong' | 'monthShort';
+export type DateKind = 'weekday' | 'monthDay' | 'monthDayYear' | 'monthYear' | 'weekdayLong' | 'monthShort' | 'weekdayNarrow';
 export type DateInput = Date | string | number;
 
 export interface FormatDateOptions {
@@ -25,6 +25,17 @@ const WEEKDAYS_LONG: Record<UiLocale, readonly string[]> = {
   en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
   es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
   ko: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],
+};
+
+/**
+ * One-letter day names for the Home week strip (F-CURR-002 row CM-17), always from this table so every engine
+ * draws the same letters (Hermes `Intl` coverage is unverified, §10): Spanish uses X for miércoles, as its
+ * calendars do, so it never repeats M.
+ */
+const WEEKDAYS_NARROW: Record<UiLocale, readonly string[]> = {
+  en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+  es: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+  ko: ['일', '월', '화', '수', '목', '금', '토'],
 };
 
 const MONTHS: Record<UiLocale, readonly string[]> = {
@@ -65,6 +76,7 @@ const DATE_OPTIONS: Record<DateKind, Intl.DateTimeFormatOptions> = {
   monthYear: { month: 'long', year: 'numeric' },
   weekdayLong: { weekday: 'long' },
   monthShort: { month: 'short' },
+  weekdayNarrow: { weekday: 'narrow' },
 };
 
 function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean): string {
@@ -83,12 +95,14 @@ function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean
 /**
  * A short date in the locale: `weekday` ("Thu"), `monthDay` ("Sep 3"), `monthDayYear` ("Sep 3, 2026") or a whole month,
  * `monthYear` ("September 2026"; "Sep 2026" from the fallback table), or a whole weekday, `weekdayLong` ("Thursday",
- * for a sentence that lists days), or a month alone, `monthShort` ("Sep", a chart axis). Empty string for an invalid date.
+ * for a sentence that lists days), or a month alone, `monthShort` ("Sep", a chart axis), or a one-letter day,
+ * `weekdayNarrow` ("T", the Home week strip; always the table above). Empty string for an invalid date.
  */
 export function formatDate(locale: UiLocale, value: DateInput, kind: DateKind, options: FormatDateOptions = {}): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   const utc = options.utc === true;
+  if (kind === 'weekdayNarrow') return WEEKDAYS_NARROW[locale][utc ? date.getUTCDay() : date.getDay()]!;
   try {
     const intlOptions = utc ? { ...DATE_OPTIONS[kind], timeZone: 'UTC' } : DATE_OPTIONS[kind];
     return new Intl.DateTimeFormat(LOCALE_META[locale].speechLang, intlOptions).format(date);

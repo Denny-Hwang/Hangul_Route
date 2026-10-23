@@ -8,8 +8,9 @@ import {
   ClassMoveEmptyBodySchema,
   ClassMovePreviewBodySchema,
   ClassScopeAckBodySchema,
+  acknowledgedScopeVersion,
   LEARNER_CLASS_CAP,
-  isFullScopeVersion,
+  isMemoryScopeVersion,
   rosterAlias,
   type ClassMoveCreateBody,
   type ClassMoveVia,
@@ -527,7 +528,8 @@ classMoveRoutes.get('/:id/class-scope', async (c) => {
   const rows: Array<{ learnerId: string; name: string; needed: boolean }> = [];
   for (const learner of learners) {
     if (!(await inLiveClass(db, learner.id))) continue;
-    rows.push({ learnerId: learner.id, name: learner.displayName, needed: !isFullScopeVersion(ackOf.get(learner.id)?.textVersion) });
+    // Needed until acknowledged at a text that lists every item a teacher may read, the memory counts included (row CM-16).
+    rows.push({ learnerId: learner.id, name: learner.displayName, needed: !isMemoryScopeVersion(ackOf.get(learner.id)?.textVersion) });
   }
   rows.sort((a, b) => a.name.localeCompare(b.name) || a.learnerId.localeCompare(b.learnerId));
   return ok(c, { current: CLASS_SCOPE_TEXT_VERSION, learners: rows });
@@ -545,7 +547,8 @@ classMoveRoutes.post('/:id/learners/:learnerId/class-scope', async (c) => {
   if ((role !== 'owner' && role !== 'caregiver') || !(await db.membership(family.id, 'learner', learnerId))) return notFound(c);
   if (!body) return badRequest(c);
   if (body.version !== CLASS_SCOPE_TEXT_VERSION) return fail(c, 'class_scope_stale', 'The update has changed', 422, { current: CLASS_SCOPE_TEXT_VERSION });
-  const ack = await recordClassScopeAck(db, { learnerId, textVersion: body.version, basis: 'caregiver', evidence: account.id }, new Date());
+  // Recorded at the text the console drew (row CM-16): a console built before it listed no `memory` item.
+  const ack = await recordClassScopeAck(db, { learnerId, textVersion: acknowledgedScopeVersion(body), basis: 'caregiver', evidence: account.id }, new Date());
   event('space.scope.acknowledged', { basis: 'caregiver' });
   return ok(c, { version: ack.textVersion, ackedAt: ack.ackedAt });
 });
@@ -558,7 +561,8 @@ classScopeSyncRoutes.put('/learners/:id/class-scope', async (c) => {
   const body = await readBody(c, ClassScopeAckBodySchema);
   if (!body) return badRequest(c);
   if (body.version !== CLASS_SCOPE_TEXT_VERSION) return fail(c, 'class_scope_stale', 'The update has changed', 422, { current: CLASS_SCOPE_TEXT_VERSION });
-  const ack = await recordClassScopeAck(dbFor(c), { learnerId, textVersion: body.version, basis: 'device', evidence: deviceId }, new Date());
+  // Recorded at the text the app drew (row CM-16): an app built before it listed no `memory` item.
+  const ack = await recordClassScopeAck(dbFor(c), { learnerId, textVersion: acknowledgedScopeVersion(body), basis: 'device', evidence: deviceId }, new Date());
   event('space.scope.acknowledged', { basis: 'device' });
   return ok(c, { version: ack.textVersion, ackedAt: ack.ackedAt });
 });
@@ -577,7 +581,7 @@ export async function inboxClassFields(
   if (scope === 'class') return { classScope: null, classMoves: [] };
   try {
     const ack = inClass ? await db.getClassScopeAck(learnerId) : null;
-    const classScope = inClass ? { needed: !isFullScopeVersion(ack?.textVersion), current: CLASS_SCOPE_TEXT_VERSION } : null;
+    const classScope = inClass ? { needed: !isMemoryScopeVersion(ack?.textVersion), current: CLASS_SCOPE_TEXT_VERSION } : null;
     if (!classTransferEnabled(env)) return { classScope, classMoves: [] };
     const moves = await db.executedClassMovesOf([learnerId], new Date(now.getTime() - CLASS_MOVE_NOTICE_MS));
     const spaces = new Map((await db.getSpaces(moves.map((m) => m.destSpaceId))).map((s) => [s.id, s]));

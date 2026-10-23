@@ -142,11 +142,11 @@ describe('content-locale: one helper per kind of shipped content', () => {
     const base = { slot: 1, kind: 'replay', subtitle: 'replay', collected: false } as const;
     const questCard: MissionCard = { ...base, titleEn: quest.titleEn, questId: quest.id, episodeId: episode.id };
     const storyCard: MissionCard = { ...base, kind: 'story', subtitle: 'story', titleEn: episode.titleEn, episodeId: episode.id };
-    const dailyTest: MissionCard = { ...base, kind: 'daily-test', subtitle: 'dailyTest', titleEn: null };
+    const dailyReview: MissionCard = { ...base, kind: 'daily-review', subtitle: 'dailyReview', titleEn: null };
     const orphan: MissionCard = { ...base, titleEn: 'Something' };
     expect(localizeMissionCard(questCard, 'es', overlays).titleEn).toBe('Primeras letras');
     expect(localizeMissionCard(storyCard, 'es', overlays).titleEn).toBe('Letras');
-    expect(localizeMissionCard(dailyTest, 'es', overlays)).toBe(dailyTest);
+    expect(localizeMissionCard(dailyReview, 'es', overlays)).toBe(dailyReview);
     expect(localizeMissionCard(orphan, 'es', overlays)).toBe(orphan);
     expect(localizeMissionCard(questCard, 'en', overlays)).toBe(questCard);
     expect(localizeMissionCard({ ...questCard, questId: 'quest:none' }, 'es', overlays).titleEn).toBe(quest.titleEn);

@@ -158,6 +158,8 @@ export type RootStackParamList = {
   StageComplete: { stageKey: StageKey };
   /** The Hangul Check (F-QUEST-002 §3.9), from the ceremony and the Journey Stage 1 header; never gates anything. */
   StageReview: { stageKey: StageKey };
+  /** F-CURR-002 row CM-14: the Daily Review and Keep going (no params: nothing about the learner in the URL). */
+  DailyReview: undefined;
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {

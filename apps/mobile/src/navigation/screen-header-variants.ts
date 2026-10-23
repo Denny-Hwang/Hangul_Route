@@ -63,6 +63,7 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   Results: 'back',
   StageComplete: 'back',
   StageReview: 'close',
+  DailyReview: 'close',
   CardDetail: 'close',
   StoryReader: 'close',
   StorySources: 'back',

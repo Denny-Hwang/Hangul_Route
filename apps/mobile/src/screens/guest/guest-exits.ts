@@ -1,6 +1,6 @@
 import { guestLeaveState, type GuestLeaveState } from '../../logic/guest/guest-run';
 import { guestSaveStack, type GuestSaveStack, type GuestSaveTarget } from '../../logic/guest/guest-save';
-import { endGuestRunTo, type GuestRoute } from '../../store/guest-launch';
+import { endGuestRunTo, guestRunLostTarget, type GuestRoute } from '../../store/guest-launch';
 import { closeGrownUpSession } from '../../store/grown-up-session';
 
 /**
@@ -20,7 +20,7 @@ interface ResetAction {
 }
 
 /** What these exits need of a navigation object: its parent (the root stack), or the root itself. */
-interface Dispatcher {
+export interface Dispatcher {
   dispatch: (action: ResetAction) => void;
 }
 
@@ -44,6 +44,15 @@ export function openGuestStack(root: Dispatcher | undefined, route: GuestRoute):
 export function leaveGuestRun(navigation: Nested, at: 'quest' | null): void {
   const target = endGuestRunTo(at);
   navigation.getParent()?.dispatch({ type: 'RESET', payload: guestLeaveState(target) });
+}
+
+/**
+ * Section 6.4: another tab saved, removed or replaced the record of the run on here, so the run already ended
+ * (`refresh`). The root leaves the `Guest` stack for the same target as Close, so the guest's screens never stay up
+ * writing under no learner or the active profile. `root`: the root stack (the `Guest` route's own navigation).
+ */
+export function leaveLostGuestRun(root: Dispatcher | undefined): void {
+  root?.dispatch({ type: 'RESET', payload: guestLeaveState(guestRunLostTarget()) });
 }
 
 /** [GU] What the save's openers need of the `Guest` stack's navigation (Results and the Not now card). */

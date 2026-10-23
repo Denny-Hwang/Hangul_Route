@@ -19,7 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { learnerScopes, type ClassScopeEnv } from '../lib/class-scope';
+import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
 import { recordServerEvent } from '../lib/server-events';
@@ -521,7 +521,7 @@ spacesRoutes.get('/:id/roster', async (c) => {
   const learners = [];
   const members = await db.membersOf(space.id);
   // [TV] each learner's scope, read once for the whole roster (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
-  const scopes = await learnerScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId), c.env);
+  const scopes = await learnerReadScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId), c.env);
   for (const m of members) {
     if (m.memberKind !== 'learner') continue;
     const learner = await db.getLearner(m.memberId);
@@ -537,9 +537,10 @@ spacesRoutes.get('/:id/roster', async (c) => {
       lastActiveAt: learner.lastActiveAt,
       // selfRoute reaches a family space only (F-PLAN-002 section 3.10); a class sees no activity day before joinedAt (F-REPORT-001 section 3.8).
       // [TV] full scope (a family; a class after the family's acknowledgement) adds vocab, the Hangul Check, the self-route and the goal; never firstTryRate on a roster.
-      summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt, scope: scopes.get(learner.id) }),
+      // F-CURR-002 CM-16: the memory counts only where the acknowledged text listed them (a family always).
+      summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt, scope: scopes.get(learner.id)?.scope, memory: scopes.get(learner.id)?.memory }),
       lastSyncedAt: snapshot?.updatedAt ?? null,
-      scope: scopes.get(learner.id) ?? 'base',
+      scope: scopes.get(learner.id)?.scope ?? 'base',
     });
   }
   learners.sort((a, b) => b.lastActiveAt.localeCompare(a.lastActiveAt));

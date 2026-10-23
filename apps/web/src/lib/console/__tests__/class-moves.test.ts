@@ -1,3 +1,4 @@
+import { CLASS_SCOPE_TEXT_VERSION } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import { createConsoleApi } from '../api';
 import { moveError, moveOrder, readClassScope, readDestinations, readIncoming, readMoveLists, readNotices, readOutgoing, readPreview, readReportScope } from '../class-moves';
@@ -123,6 +124,6 @@ describe('the console client (ids in paths, the learner in bodies and the query)
     c = client({ version: 'class-scope-2026-10', ackedAt: 't' });
     expect(await c.api.acknowledgeClassScope('space:f', 'profile:mina', 'class-scope-2026-10')).toEqual({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: 't' } });
     expect(urlOf(c.fetchImpl)).toBe('https://api.test/api/spaces/space%3Af/learners/profile%3Amina/class-scope');
-    expect(JSON.parse(String(initOf(c.fetchImpl).body))).toEqual({ version: 'class-scope-2026-10' });
+    expect(JSON.parse(String(initOf(c.fetchImpl).body))).toEqual({ version: 'class-scope-2026-10', shown: CLASS_SCOPE_TEXT_VERSION });
   });
 });

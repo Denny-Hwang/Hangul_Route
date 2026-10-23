@@ -16,7 +16,7 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  *   ① continue story → best replay → next story → again story → explore
  *   ② New — the one next quest (`routeNext`, F-ENT-003 section 3.5) when the
  *     caller gives `route`, else the Journey cursor (grid episodes only)
- *   ③ Daily test (F-RVW-001) when available, else
+ *   ③ Daily Review (F-CURR-002 §4.5, row CM-14) when it is on and 3 or more items are due, else
  *      vocabulary → next story → best remaining replay → again story → explore
  *
  * An unfinished story is a stronger signal than a replay, so it takes slot ①
@@ -37,10 +37,14 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * F-VOC-005 and F-STORY-004 §3.7 (F-VOC-005 §8 item 7), the standing default
  * until the owner reorders it. It never takes slot ①.
  *
- * Slot ③ is capability-gated: F-RVW-001 has not shipped, so until it does the
- * slot falls back down its own chain rather than rendering a card that
- * navigates nowhere (F-HW-001 §9.2). The learner-facing invariant is "exactly
- * three live cards", not which engine backs each one.
+ * Slot ③ is flag-gated: with `dailyReview` off (or `memoryRecord` off, which
+ * leaves nothing to review) the slot falls back down its own chain, today's
+ * behaviour (F-CURR-002 §12.2), rather than rendering a card that navigates
+ * nowhere (F-HW-001 §9.2). The learner-facing invariant is "exactly three live
+ * cards", not which engine backs each one. On a review-first day (§4.3: more
+ * than 3 Daily Reviews are due) the Daily Review card comes first and the
+ * normal day's cards ① and ② follow it in their order; it is a suggestion and
+ * never takes the place of the new lesson.
  *
  * A card carries a subtitle *code*, never prose (F-I18N-001 §3.4 rule 3): the
  * plan is pinned for the day, so it must not freeze a language into it. The
@@ -51,7 +55,7 @@ import { storyStatus, type StoryStatus } from '../story/story-status';
  * `free-end` and `practice` are card (2) at the end of the free lessons (F-ENT-003 section 3.7):
  * the celebration once per profile and device, then the practice card.
  */
-export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore' | 'free-end' | 'practice' | 'vocab';
+export type MissionCardKind = 'replay' | 'new' | 'daily-review' | 'story' | 'explore' | 'free-end' | 'practice' | 'vocab';
 
 /**
  * Keys of `learner.home.mission.subtitle`, plus `explore`, whose words are
@@ -60,12 +64,12 @@ export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explo
  * with a `storyReason` reads `learner.storyShelf.home.subtitle[storyReason]`
  * (`missionCardText`). `vocab` reads `learner.home.mission.vocab` with the card's `vocabDue`.
  */
-export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore' | 'nextInPlan' | 'freeEnd' | 'practice' | 'vocab';
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyReview' | 'explore' | 'nextInPlan' | 'freeEnd' | 'practice' | 'vocab';
 
 export interface MissionCard {
   slot: 1 | 2 | 3;
   kind: MissionCardKind;
-  /** The quest or episode title (content); `null` on the daily-test card, which names itself. */
+  /** The quest or episode title (content); `null` on the Daily Review card, which names itself. */
   titleEn: string | null;
   subtitle: MissionSubtitle;
   /** Present for replay / new / story cards. */
@@ -100,14 +104,25 @@ export interface MissionPlan {
    * set when the input gives `vocabDay`. Absent on a plan built without it.
    */
   vocabDay?: string;
+  /**
+   * The Daily Review card leads the day's plan (F-CURR-002 §4.3, review first): it is the plan's first card, the
+   * normal day's cards (1) and (2) follow, and the normal day's card (3) is not drawn. Set on a fresh plan only.
+   */
+  reviewFirst?: boolean;
 }
 
-export interface MissionCapabilities {
-  /** Flip to true when F-RVW-001 ships (T-030–T-032). */
-  dailyTestAvailable: boolean;
-}
+/** F-CURR-002 §4.5: the Daily Review card shows from this many due items. */
+export const DAILY_REVIEW_MIN_DUE = 3;
 
-export const DEFAULT_CAPABILITIES: MissionCapabilities = { dailyTestAvailable: false };
+/** What Home knows of the Daily Review for the learner and the local day (row CM-14). */
+export interface MissionDailyReview {
+  /** Items due today (the review engine's due pool). */
+  due: number;
+  /** Today's Daily Review was finished (a `daily` review entry on the local day). */
+  done: boolean;
+  /** The due pool is larger than 3 Daily Reviews (the engine's `reviewFirst`, §4.3). */
+  reviewFirst: boolean;
+}
 
 export interface BuildMissionInput {
   profileId: string;
@@ -116,7 +131,14 @@ export interface BuildMissionInput {
   episodes: readonly Episode[];
   /** YYYY-MM-DD. */
   today: string;
-  capabilities?: MissionCapabilities;
+  /**
+   * The Daily Review (F-CURR-002 §4.5, row CM-14): set while `dailyReview` and `memoryRecord` are on for the learner;
+   * `null` while either is off, so slot (3) keeps today's chain and a pinned Daily Review card gives way to it (§12.2);
+   * omitted when unknown, so a pinned card stays as it is. Slot (3) leads with the Daily Review card from 3 due items,
+   * or once it was done today (the collected card stays tappable). It replaces the vocabulary card: its pool already
+   * holds the due words.
+   */
+  dailyReview?: MissionDailyReview | null;
   /**
    * The plan already built for `today`, if any. Slot targets are reused
    * verbatim so cards never shift position mid-day (§3.2); only `collected`
@@ -167,8 +189,8 @@ export interface BuildMissionInput {
   freeEnd?: { seen: boolean; practice: PracticeTarget | null };
   /**
    * The vocabulary nudge (F-VOC-005 §3.7, `homeVocabNudge`): set when at least three words are due,
-   * else null. Slot ③ then leads with the "Words are ready" card; ignored when the Daily Test is
-   * available, whose pools already hold the due words. Null or omitted with `vocabTopicsEnabled` off.
+   * else null. Slot ③ then leads with the "Words are ready" card; ignored when the Daily Review card
+   * shows, whose pool already holds the due words. Null or omitted with `vocabTopicsEnabled` off.
    */
   vocab?: { topicKey: string; due: number } | null;
   /** The topics whose Speed Round completed today (`vocabRoundsDone`): the vocabulary card is then collected. */
@@ -301,6 +323,16 @@ function exploreCard(slot: 1 | 3, episode: Episode): MissionCard {
 /** The "Words are ready" card (F-VOC-005 §3.7): its Speed Round opens in Relaxed for `topicKey`. */
 function vocabCard(nudge: { topicKey: string; due: number }): MissionCard {
   return { slot: 3, kind: 'vocab', titleEn: null, subtitle: 'vocab', topicKey: nudge.topicKey, vocabDue: nudge.due, collected: false };
+}
+
+/** The Daily Review card (row CM-14): it names itself and opens the Daily Review, or its done page once collected. */
+function dailyReviewCard(done: boolean): MissionCard {
+  return { slot: 3, kind: 'daily-review', titleEn: null, subtitle: 'dailyReview', collected: done };
+}
+
+/** Whether slot (3) shows the Daily Review card: on, and 3 or more items due or done today. */
+function offersDailyReview(review: MissionDailyReview | null | undefined): review is MissionDailyReview {
+  return review !== null && review !== undefined && (review.done || review.due >= DAILY_REVIEW_MIN_DUE);
 }
 
 /** What the plan already holds, so no card repeats a quest, an episode or a story. */
@@ -551,7 +583,7 @@ function repinVocabDay(pinned: MissionPlan, input: BuildMissionInput): readonly 
   if (input.vocabDay === undefined || pinned.vocabDay === undefined || pinned.vocabDay === input.vocabDay) return cards;
   const index = cards.findIndex((c) => c.slot === 3);
   const card = cards[index];
-  if (card === undefined || card.kind === 'daily-test') return cards;
+  if (card === undefined || card.kind === 'daily-review') return cards;
   let replacement: MissionCard | null = null;
   if (card.kind === 'vocab') {
     const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
@@ -575,6 +607,7 @@ function repinVocabDay(pinned: MissionPlan, input: BuildMissionInput): readonly 
 function isCollected(card: MissionCard, input: BuildMissionInput, fallback: boolean): boolean {
   if (card.storyMode === 'replay') return false;
   if (card.kind === 'vocab') return card.topicKey !== undefined && (input.vocabRoundsDone?.has(card.topicKey) ?? false);
+  if (card.kind === 'daily-review') return input.dailyReview?.done ?? fallback;
   return card.questId ? completedToday(input.snapshot, card.questId, input.today) : fallback;
 }
 
@@ -592,17 +625,41 @@ function refreshedReason(card: MissionCard, input: BuildMissionInput): StoryReas
   return storyStatus(entry, input.snapshot, input.stories.bookmarks).state === 'in-progress' ? 'continue' : 'next';
 }
 
+/**
+ * The Daily Review exceptions to the day pin (F-CURR-002 §12.2, row CM-14). With the review off (`dailyReview: null`)
+ * a pinned Daily Review card gives way to the first card of slot (3)'s chain, and a review-first plan goes back to the
+ * normal order. With the card due now (3 or more items) and absent from the pin, slot (3) takes it unless that card
+ * was collected today or is a story the learner has started ("Keep reading"); a pinned plan never turns review first.
+ */
+function repinDailyReview(plan: MissionPlan, input: BuildMissionInput): MissionPlan {
+  const index = plan.cards.findIndex((c) => c.kind === 'daily-review');
+  if (input.dailyReview === null && index >= 0) {
+    const rest = plan.cards.filter((_, i) => i !== index);
+    const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
+    for (const other of rest) use(used, other.slot === 2 ? { ...other, episodeId: undefined } : other, input);
+    const third = firstOf(SLOT_3_CHAIN, 3, { ...input, vocabCarry: null }, used);
+    const { reviewFirst: _wasFirst, ...normal } = plan;
+    return { ...normal, cards: [...rest.sort((a, b) => a.slot - b.slot), ...(third ? [third] : [])] };
+  }
+  if (index >= 0 || !offersDailyReview(input.dailyReview) || input.dailyReview.done) return plan;
+  const at = plan.cards.findIndex((c) => c.slot === 3);
+  const card = plan.cards[at];
+  if (card !== undefined && (isCollected(card, input, card.collected) || (card.kind === 'story' && refreshedReason(card, input) === 'continue'))) return plan;
+  const cards = at >= 0 ? plan.cards.map((c, i) => (i === at ? dailyReviewCard(false) : c)) : [...plan.cards, dailyReviewCard(false)];
+  return { ...plan, cards };
+}
+
 export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const { profileId, snapshot, quests, episodes, today } = input;
-  const capabilities = input.capabilities ?? DEFAULT_CAPABILITIES;
 
   // §3.2 — reuse today's existing slot targets so nothing shifts under the
   // learner; only completion state (and a story card's reason line) is refreshed.
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
+    const pinned = repinDailyReview(input.pinned, input);
     return {
-      ...input.pinned,
+      ...pinned,
       ...(input.vocabDay !== undefined ? { vocabDay: input.vocabDay } : {}),
-      cards: repinClosed(repinFreeEnd(repinPlacedOut(repinVocabDay(input.pinned, input), input), input), input).map((card) => {
+      cards: repinClosed(repinFreeEnd(repinPlacedOut(repinVocabDay(pinned, input), input), input), input).map((card) => {
         const refreshed: MissionCard = { ...card, collected: isCollected(card, input, card.collected) };
         if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
         // A plan removed after the pin (unpublished, or the own plan archived): the quest stays, "Next in your plan" goes.
@@ -631,25 +688,24 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
 
   if (second) cards.push(second);
 
-  // ③ Daily test when available, else vocabulary → next story → replay → again story → explore.
-  if (capabilities.dailyTestAvailable) {
-    cards.push({
-      slot: 3,
-      kind: 'daily-test',
-      titleEn: null,
-      subtitle: 'dailyTest',
-      collected: false,
-    });
-  } else {
+  // ③ Daily Review when it is on and due, else vocabulary → next story → replay → again story → explore.
+  const review = input.dailyReview;
+  const offered = offersDailyReview(review);
+  if (offered) cards.push(dailyReviewCard(review.done));
+  else {
     const third = firstOf(SLOT_3_CHAIN, 3, input, used);
     if (third) cards.push(third);
   }
+  // Review first (§4.3): the Daily Review card leads, the normal day's cards follow in their order. Never once done today.
+  const reviewFirst = offered && review.reviewFirst && !review.done;
+  const ordered = reviewFirst ? [...cards.filter((c) => c.kind === 'daily-review'), ...cards.filter((c) => c.kind !== 'daily-review')] : cards;
 
   return {
     date: today,
     profileId,
-    cards: cards.map((card) => ({ ...card, collected: isCollected(card, input, false) })),
+    cards: ordered.map((card) => ({ ...card, collected: isCollected(card, input, false) })),
     ...(input.vocabDay !== undefined ? { vocabDay: input.vocabDay } : {}),
+    ...(reviewFirst ? { reviewFirst: true } : {}),
   };
 }
 
@@ -671,7 +727,7 @@ export function missionCardText(card: MissionCard, m: MissionMessages): { title:
     return { title: card.practiceKind === 'topic' ? m.access.practice.topicTitle(name) : name, subtitle: m.access.practice.subtitle };
   }
   if (card.subtitle === 'vocab') return { title: mission.vocab.title, subtitle: mission.vocab.subtitle(card.vocabDue ?? 0) };
-  const title = card.titleEn ?? mission.dailyTest.title;
+  const title = card.titleEn ?? mission.dailyReview.title;
   if (card.subtitle === 'explore') return { title, subtitle: storyHome.explore };
   if (card.subtitle === 'nextInPlan') return { title, subtitle: m.routeNext.home.subtitle };
   if (card.subtitle === 'story' && card.storyReason) return { title, subtitle: storyHome.subtitle[card.storyReason] };

@@ -10,11 +10,12 @@ import {
   Screen,
   Spacer,
   spacing,
+  touchTarget,
 } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
@@ -41,6 +42,7 @@ import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
+import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 
 type QuestMessages = Messages['learner']['quest'];
 
@@ -59,6 +61,11 @@ export interface QuestPlayerViewProps {
    */
   onAskLeave?: () => void;
   /**
+   * The learner whose quest may open with a warm-up and end with Try these again (F-CURR-002 section 4.5, row
+   * CM-15), each behind its own switch. Absent (the All lessons preview): neither shows.
+   */
+  reviewsFor?: string | null;
+  /**
    * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 7.2 (row GU-3): one plain line under Hoya's hello (step 1), between
    * Hoya's card and Continue: the guest run's storage-blocked line. Not a live region, read in order.
    */
@@ -70,6 +77,42 @@ export interface QuestPlayerViewProps {
   ownClose?: boolean;
 }
 
+type QuestReviewPlan = NonNullable<Awaited<ReturnType<QuestReviewChunk['planQuestWarmup']>>>;
+/** A session outside the six steps: being planned (at most a moment), none, offered, or on screen (Try these again plays on Results). */
+type ReviewPhase =
+  | { kind: 'none' }
+  | { kind: 'deciding' }
+  | { kind: 'offer' | 'playing'; chunk: QuestReviewChunk; plan: QuestReviewPlan };
+const NO_REVIEW: ReviewPhase = { kind: 'none' };
+const DECIDING: ReviewPhase = { kind: 'deciding' };
+/** How long the first step waits for a warm-up plan before the quest starts without one. */
+export const WARMUP_DECIDE_MS = 1500;
+/** How long the reward step holds its buttons for Try these again's plan (so a button never moves under a finger). */
+export const TRY_AGAIN_DECIDE_MS = 800;
+
+/**
+ * Plans a session once and settles on the first of the plan and the time limit; a plan that comes later is
+ * dropped, so a session never opens on a step that has already begun.
+ */
+function decide(plan: () => Promise<{ chunk: QuestReviewChunk; plan: QuestReviewPlan | null }>, ms: number, set: (phase: ReviewPhase) => void): () => void {
+  let settled = false;
+  const settle = (phase: ReviewPhase): void => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    set(phase);
+  };
+  const timer = setTimeout(() => settle(NO_REVIEW), ms);
+  plan().then(
+    (out) => settle(out.plan ? { kind: 'offer', chunk: out.chunk, plan: out.plan } : NO_REVIEW),
+    () => settle(NO_REVIEW),
+  );
+  return () => {
+    settled = true;
+    clearTimeout(timer);
+  };
+}
+
 /**
  * The quest player body (F-BROWSE-001 BR-5a): the step header, Discover, the game launcher and the
  * narrative steps, with the run kept in `quest-run-store` (memory only). It reaches no learner store,
@@ -78,6 +121,9 @@ export interface QuestPlayerViewProps {
  * browse stack's own navigation container also provides.
  */
 export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
+  // The warm-up and Try these again load while the lesson does (F-CURR-002 row CM-15); with their switches off, nothing.
+  const reviewsFor = props.reviewsFor ?? null;
+  useEffect(() => preloadQuestReviews(reviewsFor), [reviewsFor]);
   // A lesson quest's steps come from its cell's chunk, and a story quest's story from the story's chunk
   // (F-CURR-002 §10): until it is in (a frame or two from the precache), the screen draws only its header (and a
   // calm status line if it takes longer), so the way back is always there.
@@ -86,7 +132,7 @@ export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement
   return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
-function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, introNote, ownClose = false }: QuestPlayerViewProps): React.ReactElement {
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -116,6 +162,28 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // run may start.
   useEffect(() => runQuestStart({ start, end }, begin, questId, episodeId), [questId, episodeId, start, end, begin]);
 
+  // The warm-up (F-CURR-002 section 4.5): before the first step of a Stage 2+ quest, outside the six steps, so the
+  // quest's steps, timing and stars are as they always were. Planned once per mount; with nothing due it is skipped.
+  const [warmup, setWarmup] = useState<ReviewPhase>(() => (warmupWanted(reviewsFor, episodeId, 0) ? DECIDING : NO_REVIEW));
+  const warmupNow = useRef(warmup);
+  warmupNow.current = warmup;
+  useEffect(() => {
+    if (warmupNow.current.kind !== 'deciding' || reviewsFor === null) return undefined;
+    // A run that resumes past its first step (a story quest's bookmark) starts as it is.
+    if (useQuestRunStore.getState().stepIndex !== 0) {
+      setWarmup(NO_REVIEW);
+      return undefined;
+    }
+    return decide(
+      async () => {
+        const chunk = await questReviewChunk();
+        return { chunk, plan: await chunk.planQuestWarmup({ profileId: reviewsFor, episodeId, locale }) };
+      },
+      WARMUP_DECIDE_MS,
+      (phase) => setWarmup(phase.kind === 'offer' ? { ...phase, kind: 'playing' } : phase),
+    );
+  }, [reviewsFor, episodeId, locale]);
+
   // When we re-focus (e.g., returning from a minigame), apply pending advance
   useFocusEffect(
     useCallback(() => {
@@ -124,6 +192,26 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   );
 
   const step = quest?.steps[stepIndex];
+
+  // Try these again (F-CURR-002 section 4.5, F-QUEST-002 L13 as amended): on the reward step, the default suggestion
+  // when this play had first-try misses; See results stays right under it. Planned once the reward step shows.
+  const onReward = !!quest && step?.kind === 'reward' && stepIndex === quest.steps.length - 1;
+  const [again, setAgain] = useState<ReviewPhase>(NO_REVIEW);
+  useEffect(() => {
+    if (!onReward) return undefined;
+    const missed = useQuestRunStore.getState().missed;
+    if (!tryAgainWanted(reviewsFor, missed.length)) return undefined;
+    setAgain(DECIDING);
+    return decide(
+      async () => {
+        const chunk = await questReviewChunk();
+        return { chunk, plan: await chunk.planQuestTryAgain({ profileId: reviewsFor, episodeId, missed, locale }) };
+      },
+      TRY_AGAIN_DECIDE_MS,
+      setAgain,
+    );
+  }, [onReward, reviewsFor, episodeId, locale]);
+
   // A new step (or leaving the quest) stops what the last one was saying: a Discover sentence, a game's word.
   useEffect(() => () => stop(), [stepIndex]);
 
@@ -215,6 +303,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     advance();
   };
 
+  if (warmup.kind === 'deciding') return <LessonWaiting />;
+  if (warmup.kind === 'playing' && reviewsFor !== null) {
+    const { QuestReviewSession } = warmup.chunk;
+    return <QuestReviewSession plan={warmup.plan} profileId={reviewsFor} onDone={() => setWarmup(NO_REVIEW)} />;
+  }
+
   // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
     <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={ownClose ? { leading: { kind: 'close', onPress: askLeave } } : undefined}>
@@ -251,6 +345,20 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           line={narrativeLine(step, q.keepGoing)}
           onContinue={advance}
           isReward={step.kind === 'reward'}
+          actions={
+            onReward && again.kind === 'deciding' ? (
+              <View style={{ minHeight: touchTarget.hero }} testID="quest-try-again-deciding" />
+            ) : onReward && again.kind === 'offer' ? (
+              <again.chunk.TryAgainOffer
+                onTry={() => {
+                  // The quest is done: Results writes its score and card first, then plays Try these again over it.
+                  if (reviewsFor !== null) handTryAgainToResults({ questId, profileId: reviewsFor, chunk: again.chunk, plan: again.plan });
+                  advance();
+                }}
+                onSeeResults={advance}
+              />
+            ) : undefined
+          }
           note={stepIndex === 0 ? introNote : undefined}
         />
       )}
@@ -263,12 +371,15 @@ function NarrativeStepBody({
   line,
   onContinue,
   isReward,
+  actions,
   note,
 }: {
   copy: QuestMessages;
   line: NarrativeLine;
   onContinue: () => void;
   isReward: boolean;
+  /** In place of the step's own button: the reward step's Try these again, offered or being planned (F-CURR-002 row CM-15). */
+  actions?: React.ReactNode;
   /** [GU] A plain line between Hoya's card and Continue (the guest run's storage-blocked line, section 7.2). */
   note?: string;
 }): React.ReactElement {
@@ -301,7 +412,7 @@ function NarrativeStepBody({
         </>
       ) : null}
       <View style={{ flex: 1 }} />
-      <Button label={isReward ? copy.seeResults.cta : copy.continue.cta} tone="primary" size="hero" fullWidth onPress={onContinue} />
+      {actions ?? <Button label={isReward ? copy.seeResults.cta : copy.continue.cta} tone="primary" size="hero" fullWidth onPress={onContinue} />}
       <Spacer size="lg" />
     </View>
   );

@@ -411,6 +411,8 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['report.class.milestone', (m, n) => m.report.class.milestone(7, 'Self-expression', n)],
   ['report.class.minutesTotal', (m, n) => m.report.class.minutesTotal(n)],
   ['report.class.medianMinutes', (m, n) => m.report.class.medianMinutes(n)],
+  ['report.detail.readyToRefresh', (m, n) => m.report.detail.readyToRefresh(n)],
+  ['report.class.memoryFrom', (m, n) => m.report.class.memoryFrom(n)],
 ];
 
 /** Messages with a number that is not a noun count (no plural to choose), each with the reason. */
@@ -433,6 +435,12 @@ const NUMBER_NOT_COUNTED: Readonly<Record<string, string>> = {
   'report.class.band.range': 'a range of 2 or more days, always plural',
   'report.class.band.atLeast': 'the 10+ band, always plural',
   'report.class.planRow': 'numbers after "assigned to", "started by" and "finished by", no noun',
+  'report.detail.wordsKnown': 'a label and its number',
+  'report.detail.mastery': 'numbers beside "done", "practiced" and "mastered" (a level at 0 has no part), no noun',
+  'report.detail.stageChecks': 'a label and its number',
+  'report.class.wordsKnown': 'a label and its number',
+  'report.class.readyToRefresh': 'a label and its number',
+  'report.class.stageChecks': 'a label and its number',
 };
 
 describe('report counts use plural() in every locale (en, es, ko, en-XA)', () => {
@@ -624,5 +632,21 @@ describe('privacy in the page frame (section 3.10)', () => {
   it('the document title never takes a name', () => {
     expect(typeof en.report.documentTitle).toBe('string');
     for (const locale of LOCALES) expect(getMessages(locale).report.documentTitle).not.toMatch(/\{|name/i);
+  });
+});
+
+describe('the mastery line names only the levels above 0 (F-CURR-002 CM-16: never a zero as a result)', () => {
+  it('in every locale', () => {
+    for (const locale of [...LOCALES, PSEUDO_LOCALE] as MessageLocale[]) {
+      const d = getMessages(locale).report.detail;
+      // Until row CM-20 derives levels 2 and 3, only Done has a count.
+      expect(d.mastery(5, 0, 0), locale).not.toMatch(/\b0\b|,/);
+      expect(d.mastery(0, 2, 0), locale).not.toMatch(/\b0\b|,/);
+      expect(d.mastery(3, 0, 1).split(',').length, locale).toBe(2);
+      expect(d.mastery(35, 12, 4).split(',').length, locale).toBe(3);
+    }
+    expect(en.report.detail.mastery(5, 0, 0)).toBe('Episodes: 5 done');
+    expect(es.report.detail.mastery(1, 0, 2)).toBe('Episodios: 1 terminado, 2 dominados');
+    expect(ko.report.detail.mastery(5, 2, 0)).toBe('에피소드: 완료 5개, 연습함 2개');
   });
 });

@@ -183,6 +183,15 @@ export function endGuestRunTo(at: 'quest' | null): GuestLeaveTarget {
 }
 
 /**
+ * Section 6.4: where the root goes when another tab ended this tab's run (`useGuestStore.runsLost`). The run is already
+ * off, so nothing ends here: no `guest.left` (the guest did not leave) and no leave mark (the record went or is another
+ * run's).
+ */
+export function guestRunLostTarget(): GuestLeaveTarget {
+  return guestLeaveTarget({ profiles: useProfileStore.getState().profiles, chooserOn: flags.whoChooserEnabled });
+}
+
+/**
  * Section 5.3, CS-G1: a guest run is only ever in front inside the `Guest` stack. The root stack calls this whenever
  * one of its routes takes focus; on any route but `Guest` a run still on ends here (no event, the record stays), so a
  * root reset that did not pass through the guest's exits (the resume chooser and its pick, a crash screen's remount)

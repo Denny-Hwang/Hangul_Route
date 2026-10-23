@@ -1,6 +1,7 @@
 import type { Story, StoryLevel } from '@hangul-route/content-schema';
 import { storyById } from '../../content/stories';
 import type { MinigameScope } from '../minigame-config';
+import type { RoundAsked } from '../memory/asked';
 
 /**
  * The quest host of the story reader, `StoryReadGame` (F-STORY-002 §3.1,
@@ -31,8 +32,10 @@ export function readGameTarget(
 export interface ReadGameDeps {
   /** The bookmark seam (`useReaderBookmark().save`). */
   saveBookmark: (index: number) => void;
-  /** `useQuestRunStore.answerRound` (checkpoint rounds, `cp:<id>`). */
-  answerRound: (roundKey: string, correct: boolean) => void;
+  /** `useQuestRunStore.answerRound` (checkpoint rounds, `cp:<id>`), with what the checkpoint asked (row CM-12). */
+  answerRound: (roundKey: string, correct: boolean, asked?: RoundAsked) => void;
+  /** What a checkpoint round asked, for the memory store (F-CURR-002 row CM-12). */
+  askedOf?: (roundKey: string) => RoundAsked | undefined;
   /** `useQuestRunStore.markStepComplete`. */
   markStepComplete: () => void;
   /** The shell's close: `minigame.finished`, then back to the quest step. */
@@ -61,7 +64,7 @@ export interface ReadGameHandlers {
 export function readGameHandlers(deps: ReadGameDeps): ReadGameHandlers {
   return {
     onSceneChange: (index) => deps.saveBookmark(index),
-    onAnswer: (roundKey, correct) => deps.answerRound(roundKey, correct),
+    onAnswer: (roundKey, correct) => deps.answerRound(roundKey, correct, deps.askedOf?.(roundKey)),
     onFinish: () => {
       deps.markStepComplete();
       deps.finish();

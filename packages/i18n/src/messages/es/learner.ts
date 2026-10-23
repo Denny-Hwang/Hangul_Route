@@ -244,13 +244,13 @@ export const learner = {
     mission: {
       heading: 'Hoy con Hoya',
       sameAsHero: 'Igual que tu siguiente lección de arriba',
-      dailyTest: { title: 'Repaso rápido' },
+      dailyReview: { title: 'Repaso diario' },
       subtitle: {
         replay: 'Otra vuelta con Hoya',
         story: 'Hora del cuento',
         new: 'Algo nuevo hoy',
         assigned: 'Elegido para ti',
-        dailyTest: 'Un minuto con Hoya',
+        dailyReview: 'Unos 3 minutos',
       },
       vocab: {
         title: '¡Palabras listas!',
@@ -1919,6 +1919,81 @@ export const learner = {
     trySub: 'Sin crear un perfil',
     guest: 'Primera misión',
     guestCaption: 'Aún sin guardar',
+  },
+  /** El Repaso diario (F-CURR-002, CM-14): estrellas y cuántas cosas quedaron más firmes; nunca un porcentaje, "n de m" ni reloj. */
+  dailyReview: {
+    title: 'Repaso diario',
+    readyLine: (n: number) => plural('es', n, { one: 'Hay 1 cosa lista para repasar', other: `Hay ${n} cosas listas para repasar` }),
+    result: {
+      headline: { three: '¡Maravilloso!', two: '¡Buen trabajo!', one: '¡Buen intento!' },
+      stronger: (n: number) => plural('es', n, { one: '1 quedó más firme', other: `${n} quedaron más firmes` }),
+      noneStronger: 'Cada respuesta te ayuda a recordar.',
+      backHome: { cta: 'Ir al inicio' },
+    },
+    allRefreshed: {
+      title: 'Todo repasado por hoy',
+      body: 'Por ahora no hay nada que repasar. Juega una misión o lee un cuento.',
+    },
+    leave: {
+      title: '¿Paramos por ahora?',
+      body: 'Lo que respondiste sigue contando.',
+      stay: { cta: 'Seguir' },
+      stop: { cta: 'Parar' },
+    },
+  },
+  keepGoing: {
+    offer: '¿Quieres hacer unas más?',
+    cta: 'Repasar más',
+    enough: { title: 'Por hoy ya es suficiente.', body: 'Hoya te traerá el resto pronto.' },
+    doneToday: { title: 'Repaso diario hecho hoy' },
+  },
+  warmUp: {
+    pill: 'Repaso',
+    intro: 'Un repaso rápido antes de empezar.',
+    skip: { cta: 'Saltar repaso' },
+    done: 'Repaso hecho',
+  },
+  tryAgain: {
+    cta: 'Probar estos otra vez',
+    intro: 'Otro vistazo rápido a los más difíciles.',
+  },
+  goals: {
+    steadyWeeks: (count: number) => plural('es', count, { one: '1 semana cumplida', other: `${count} semanas cumplidas` }),
+    firstWeek: 'Tu primera semana cumplida empieza aquí',
+    newRun: (best: number) => plural('es', best, { one: '¡Empieza una racha nueva! Mejor racha: 1 día', other: `¡Empieza una racha nueva! Mejor racha: ${best} días` }),
+    today: {
+      met: 'Meta del día lograda',
+      more: 'Un poco más para tu meta del día',
+    },
+    daily: {
+      light: 'Ligero',
+      steady: 'Moderado',
+      strong: 'Intenso',
+      time: { light: 'unos 5 minutos', steady: 'unos 10 minutos', strong: 'unos 15 minutos' },
+      label: (tier: string, time: string) => `${tier}, ${time}`,
+    },
+    weekly: {
+      days: (n: number) => plural('es', n, { one: '1 día', other: `${n} días` }),
+    },
+    sheet: {
+      title: 'Tus metas',
+      everyDay: 'Cada día',
+      everyWeek: 'Cada semana',
+      steadyHelp: 'Una semana cumplida es una semana en la que aprendes tantos días como elegiste. Se suman y siempre se quedan.',
+      restHelp: 'Días de descanso: aunque descanses hasta 2 días por semana, Hoya mantiene tu racha.',
+      fromPlan: (days: number) => plural('es', days, { one: '1 día, según tu plan semanal', other: `${days} días, según tu plan semanal` }),
+      seePlan: { cta: 'Ver mi plan' },
+      done: { cta: 'Listo' },
+    },
+    first: {
+      title: '¿Cuánto tiempo al día te va bien?',
+      later: { cta: 'Ahora no' },
+    },
+    banner: {
+      dayMet: '¡Meta del día lograda!',
+      weekMet: (count: number) =>
+        plural('es', count, { one: '¡Meta de la semana lograda! Ya llevas 1 semana cumplida.', other: `¡Meta de la semana lograda! Ya llevas ${count} semanas cumplidas.` }),
+    },
   },
   /** [GU] Probar la primera misión sin perfil (AMENDMENTS-GUEST-FIRST-LESSON 16.1, GU-3): misión, perfil, añadir. */
   guest: {

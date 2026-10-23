@@ -636,3 +636,34 @@ describe('inAppReportView: the edges every branch of the words covers (section 5
     expect(view.title).toBe('Sam: report');
   });
 });
+
+describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
+  const memory = { wordsKnown: 18, readyToRefresh: 4, cellBestCounts: [6, 1, 0] as [number, number, number], stageChecks: 0, weekPoints: 12, topDue: ['lex:sagwa'], reviewOn: true as const };
+
+  it('one block after the letters, in either voice, with a line per count above 0', () => {
+    for (const voice of ['second', 'third'] as const) {
+      const blocks = inAppReportView(input({ voice, summary: summary({ memory }) })).moreDetail?.blocks ?? [];
+      expect(block(blocks, 'memory'), voice).toEqual({
+        kind: 'lines',
+        key: 'memory',
+        heading: 'Words and review',
+        lines: ['Words known: 18', '4 items are ready to refresh', 'Episodes: 6 done, 1 practiced'],
+      });
+      const keys = blocks.map((b) => ('key' in b ? b.key : b.kind));
+      expect(keys.indexOf('memory')).toBeGreaterThan(keys.indexOf('strong'));
+      expect(JSON.stringify(blocks)).not.toMatch(/lex:sagwa|%/);
+    }
+  });
+
+  it('nothing while the summary carries no block (memoryRecord off), and no zero line', () => {
+    expect(block(inAppReportView(input()).moreDetail?.blocks, 'memory')).toBeUndefined();
+    const zero = { ...memory, wordsKnown: 0, readyToRefresh: 0, cellBestCounts: [0, 0, 0] as [number, number, number] };
+    expect(block(inAppReportView(input({ summary: summary({ memory: zero }) })).moreDetail?.blocks, 'memory')).toBeUndefined();
+    expect(block(inAppReportView(input({ summary: summary({ memory: { ...zero, stageChecks: 2 } }) })).moreDetail?.blocks, 'memory')).toMatchObject({ lines: ['Stage Checks passed: 2'] });
+  });
+
+  it('no items ready to refresh while the learner has no review surface (the memoryRecord shadow period)', () => {
+    const shadow = { ...memory, reviewOn: undefined, readyToRefresh: 300 };
+    expect(block(inAppReportView(input({ summary: summary({ memory: shadow }) })).moreDetail?.blocks, 'memory')).toMatchObject({ lines: ['Words known: 18', 'Episodes: 6 done, 1 practiced'] });
+  });
+});

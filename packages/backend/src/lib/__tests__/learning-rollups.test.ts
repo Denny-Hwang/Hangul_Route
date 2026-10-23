@@ -53,7 +53,7 @@ const FULL_MEMORY_DAILY = {
 
 const SAMPLES: Record<(typeof ROLLUP_EVENT_NAMES)[number], Record<string, unknown>> = {
   'memory.daily': FULL_MEMORY_DAILY,
-  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '31+' },
+  'items.seeded': { countBucket: '500-999', spreadDaysBucket: '46-62' },
   'session.end': { durationSeconds: 754, streakDays: 3, questLeft: 1, leftAtKind: 'listen-pick', afterWrongStreak: 2 },
   'review.complete': { kind: 'daily', stageKey: 'stage1', symbolsCorrect: 4, wordsCorrect: 3, retries: 1, stars: 2 },
   'goal.met': { points: 7, target: 6 },
@@ -108,7 +108,7 @@ describe('rows per event', () => {
   it('maps each sample onto its documented cells', () => {
     expect(rollupKeysFor('items.seeded', SAMPLES['items.seeded'])).toEqual([
       { metric: 'items.seeded.count', dim: '', bucket: '500-999' },
-      { metric: 'items.seeded.spreadDays', dim: '', bucket: '31+' },
+      { metric: 'items.seeded.spreadDays', dim: '', bucket: '46-62' },
     ]);
     expect(rollupKeysFor('session.end', SAMPLES['session.end'])).toEqual([
       { metric: 'session.end.minutes', dim: '', bucket: '12' },
@@ -178,10 +178,15 @@ describe('rows per event', () => {
   });
 
   it('closed sets: a bucket code off the shared edges adds nothing, so a caller cannot create rows at will', () => {
-    const forged = rollupKeysFor('memory.daily', { ...FULL_MEMORY_DAILY, hist: [], arms: {}, durableWeekBucket: '12345', dueVolumeBucket: '7-8' });
-    expect(forged.map((k) => k.metric)).toEqual(['memory.daily.newHeld', 'memory.daily.minutes']);
+    // Row CM-12 made each bucket field an enum of its shared codes (Worker first), so a forged code fails the whole payload.
+    expect(rollupKeysFor('memory.daily', { ...FULL_MEMORY_DAILY, hist: [], arms: {}, durableWeekBucket: '12345', dueVolumeBucket: '7-8' })).toEqual([]);
+    expect(rollupKeysFor('memory.daily', { ...FULL_MEMORY_DAILY, hist: [], arms: {}, durableWeekBucket: '37' })).toEqual([]);
     expect(rollupKeysFor('items.seeded', { countBucket: '501-998', spreadDaysBucket: '9' })).toEqual([]);
-    expect(rollupKeysFor('items.seeded', { countBucket: '20-49', spreadDaysBucket: '9' })).toEqual([{ metric: 'items.seeded.count', dim: '', bucket: '20-49' }]);
+    expect(rollupKeysFor('items.seeded', { countBucket: '20-49', spreadDaysBucket: '9' })).toEqual([]);
+    expect(rollupKeysFor('items.seeded', { countBucket: '20-49', spreadDaysBucket: '8-14' })).toEqual([
+      { metric: 'items.seeded.count', dim: '', bucket: '20-49' },
+      { metric: 'items.seeded.spreadDays', dim: '', bucket: '8-14' },
+    ]);
     // Raw counts are bucketed on the Worker: many different values land in a few cells.
     const buckets = new Set<string>();
     for (let n = 0; n < 2000; n += 7)

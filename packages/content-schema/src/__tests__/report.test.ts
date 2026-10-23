@@ -231,8 +231,16 @@ describe('LearnerReportResponseSchema (section 3.8)', () => {
 
   it('reads exactly the roster allow-list (activity on it since RP-W2) plus the family self-route', () => {
     expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('activity');
-    // [TV] plus the full-scope words and Hangul Check (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
-    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'vocab', 'stage1Anchor'].sort());
+    // [TV] plus the full-scope words and Hangul Check (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2), and the memory counts (F-CURR-002 CM-16)
+    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'vocab', 'stage1Anchor', 'memory'].sort());
+  });
+
+  it('F-CURR-002 CM-16: carries the memory block when the Worker sends it, and drops a malformed one on its own', () => {
+    const memory = { wordsKnown: 30, readyToRefresh: 4, cellBestCounts: [3, 1, 0], stageChecks: 1, weekPoints: 8, topDue: ['lex:sagwa'] };
+    expect(LearnerReportResponseSchema.parse({ ...body, summary: { ...projected, memory } }).summary?.memory).toEqual(memory);
+    const bad = LearnerReportResponseSchema.parse({ ...body, summary: { ...projected, memory: { ...memory, wordsKnown: -1 } } });
+    expect(bad.summary?.memory).toBeUndefined();
+    expect(bad.summary?.cardsUnlocked).toBe(projected.cardsUnlocked);
   });
 
   it('[TV] carries vocab with firstTryRate, the Hangul Check, the scope and the learner settings when the Worker sends them', () => {
