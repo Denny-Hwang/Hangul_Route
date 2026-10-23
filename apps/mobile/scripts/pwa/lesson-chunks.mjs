@@ -78,10 +78,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // block, screen and logic in chunks) measures 4,809,323 B raw / 1,268,690 B gzip (release `build:web`), 189 B under
   // main with CM-20 (4,809,512 B): its cost is paid by importing React's hooks by name in the start-bundle modules it
   // touches (no `import React, {...}` wildcard helper), so the line stays.
-  // CM-22 (Stages 2-7: the prize table, the Results prize and stageCeremonyAt latch, the routes, Home's summary trigger,
-  // the Journey header slot and 16 English strings; ceremony, check and summary in chunks) measures 4,813,015 B raw /
-  // 1,270,373 B gzip on CM-21's 4,809,323 B, with the touched start-bundle modules importing React's hooks by name.
-  startBundleRaw: 4_815_000,
+  // CM-22 (Stages 2-7: the prize table, the Results prize, the gate, three routes and two slots, 16 English strings;
+  // every stage's prize ceremony, Stage 1's included, the check, the summary and its trigger in the stage-check chunk)
+  // measures 4,806,089 B raw / 1,268,793 B gzip (release `build:web`), 3,234 B under CM-21's 4,809,323 B: the line stays.
+  startBundleRaw: 4_810_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -222,8 +222,8 @@ export const SCREEN_CHUNKS = Object.freeze([
   // reached only through the literal `import()` of `src/screens/cell-check/cell-check-entry.tsx`); the session logic is
   // the memory chunk's and the rounds the Daily Review chunk's, each reached at run time.
   Object.freeze({ name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' }),
-  // F-CURR-002 row CM-22: the Stages 2-7 ceremony, the Stage Check, the one retroactive summary and the Journey header's
-  // extras (`src/screens/stage-check/stage-check-chunk.tsx`, reached only through the literal `import()` of
+  // F-CURR-002 row CM-22: every stage's prize ceremony (Stage 1's included), the Stage Check, the one retroactive
+  // summary and Home's trigger for it, and the Journey header's extras (`src/screens/stage-check/stage-check-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/stage-check/stage-check-entry.tsx`); the session logic is the memory chunk's.
   Object.freeze({ name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' }),
 ]);

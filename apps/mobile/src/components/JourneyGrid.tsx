@@ -130,9 +130,10 @@ export interface JourneyGridProps {
   mastery?: JourneyMastery;
   /**
    * A Stage 2-7 header's extras (F-CURR-002 row CM-22): `actions` beside the pill (See your prize, Stage Check),
-   * `caption` under the one-liner (the tested-out line); omitted: none.
+   * `caption` under the one-liner (the tested-out line), `below` under the header (the buttons at large text sizes);
+   * omitted: none.
    */
-  renderStageExtras?: (stage: StageKey, place: 'actions' | 'caption', complete: boolean) => ReactNode;
+  renderStageExtras?: (stage: StageKey, place: 'actions' | 'caption' | 'below', complete: boolean) => ReactNode;
 }
 
 export function JourneyGrid({
@@ -266,6 +267,7 @@ export function JourneyGrid({
                 {renderStageExtras?.(row.stage, 'actions', pill === 'complete')}
               </View>
             </View>
+            {renderStageExtras?.(row.stage, 'below', pill === 'complete')}
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
               {row.cells.map((cell) => (

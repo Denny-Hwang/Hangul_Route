@@ -5,7 +5,7 @@ import { completeStages } from '../../my-route/latch';
 import { routeNext, routeNextInputOf } from '../../route-next';
 import { gridEpisodesOf } from '../../my-route/order';
 import { mergeSnapshots } from '../../sync/merge';
-import { recapStages, withStageCeremony } from '../stage-ceremony';
+import { RECAP_SYNC_GRACE_MS, UPPER_PRIZE_STAGES, recapStages, recapSyncSettled, withStageCeremony } from '../stage-ceremony';
 
 /*
  * F-CURR-002 sections 4.8 step 7 and 7.3, row CM-22: the one retroactive summary lists every finished Stage 2-7 with
@@ -102,12 +102,39 @@ describe('the Stage Check never blocks the next stage (OD-1, section 7.3)', () =
       ...untaken,
       stageCheckAt: { stage2: AT },
       stageCeremonyAt: { stage2: AT },
-      reviews: [{ id: 'stage-check:stage2:2026-10-01:k', kind: 'stage-certificate', generatedAt: AT, scope: 'stage2', itemIds: ['lex:a'], resultStars: 1, missedItemIds: ['lex:a'] }],
+      reviews: [{ id: 'stage-check:stage2', kind: 'stage-certificate', generatedAt: AT, scope: 'stage2', itemIds: ['lex:a'], resultStars: 1, missedItemIds: ['lex:a'] }],
     };
     const a = routeNext(inputOf(untaken));
     const b = routeNext(inputOf(taken));
     expect(a).toEqual(b);
     expect(a.kind === 'quest' ? episodesAll.find((e) => e.id === a.episodeId)?.stage : null).toBe('stage3');
     expect([...completeStages(untaken, episodesAll)]).toEqual([...completeStages(taken, episodesAll)]);
+  });
+});
+
+describe('UPPER_PRIZE_STAGES: the stages of the stage ceremony, from the one prize table', () => {
+  it('is Stages 2-7 in stage order, never Stage 1', () => {
+    expect(UPPER_PRIZE_STAGES).toEqual(['stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+  });
+});
+
+describe('recapSyncSettled: the summary waits for this session\'s sync, so a key another device latched is pulled first', () => {
+  it('never while a sync runs, even after the grace', () => {
+    expect(recapSyncSettled('syncing', false)).toBe(false);
+    expect(recapSyncSettled('syncing', true)).toBe(false);
+  });
+
+  it('at once after a finished sync, offline (error) or with no server (off)', () => {
+    expect(recapSyncSettled('synced', false)).toBe(true);
+    expect(recapSyncSettled('error', false)).toBe(true);
+    expect(recapSyncSettled('off', false)).toBe(true);
+  });
+
+  it('idle or no record yet: only once the grace passed with no sync started', () => {
+    expect(recapSyncSettled('idle', false)).toBe(false);
+    expect(recapSyncSettled(undefined, false)).toBe(false);
+    expect(recapSyncSettled('idle', true)).toBe(true);
+    expect(recapSyncSettled(undefined, true)).toBe(true);
+    expect(RECAP_SYNC_GRACE_MS).toBeGreaterThanOrEqual(1000);
   });
 });

@@ -1,24 +1,19 @@
 import type { StageKey } from '@hangul-route/content-schema';
-import { useIsFocused } from '@react-navigation/native';
-import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
-import { episodesAll } from '../../content';
-import { recapStages, withStageCeremony } from '../../logic/reviews/stage-ceremony';
-import { notifyProgressPersisted } from '../../logic/sync/persist-hook';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
-import { useProgressStore } from '../../store/progress-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
 
 /*
  * The start bundle's door to the Stages 2-7 ceremony, the Stage Check and the one retroactive summary (F-CURR-002
- * sections 4.5, 4.8 step 7, 7.3, 10 and 12.2, row CM-22; design/wireframes/reviews/stage-check.md). The session logic
- * is the memory chunk's (`stageCheckApi()`); the ceremony, the check, the summary and the Journey header's buttons
- * are a chunk of their own (`./stage-check-chunk.tsx`, marker `screen-chunk:stage-check`), reached only through the
- * literal `import()` below. Here: the gates, the routes, the header slot, Home's summary trigger and the
- * `stageCeremonyAt` writer that Results and the summary use.
+ * sections 4.5, 4.8 step 7, 7.3, 10 and 12.2, row CM-22; design/wireframes/reviews/stage-check.md). Only the gate, the
+ * three routes and two slots live here, so the start bundle stays at its line (section 10): the session logic is the
+ * memory chunk's (`stageCheckApi()`); every stage's prize ceremony (Stage 1's too, unchanged), the check, the summary
+ * and Home's trigger for it, the Journey header's buttons and the `stageCeremonyAt` writer are a chunk of their own (`./stage-check-chunk.tsx`, marker
+ * `screen-chunk:stage-check`), reached only through the literal `import()` below.
  *
  * Gates (section 12.2): the ceremony, its prize button and the summary run while `stageChecks` is on for a learner;
  * the Stage Check needs `memoryRecord` too. Off, nothing loads and nothing is written; latched results stay.
@@ -28,7 +23,8 @@ type Chunk = typeof import('./stage-check-chunk');
 let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
-function loadChunk(): Promise<Chunk> {
+/** The Stage Check's chunk, loaded once (a failed load is tried again on the next ask). */
+export function loadStageCheckChunk(): Promise<Chunk> {
   loading ??= import('./stage-check-chunk').then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
@@ -39,29 +35,22 @@ function loadChunk(): Promise<Chunk> {
   return loading;
 }
 
-const learnerOf = (profileId: string | null): boolean =>
-  profileId !== null && useProfileStore.getState().profiles.some((p) => p.id === profileId && (p.role ?? 'learner') === 'learner');
-
-/** `stageChecks` on for this learner: the Stages 2-7 ceremony, its prize button and the summary. */
+/** `stageChecks` on for this learner (never a grown-up persona): the Stages 2-7 ceremony, its prize button and the summary. */
 export function useStageCeremonyOn(profileId: string | null): boolean {
   const on = useCurrFlag('stageChecks');
-  useProfileStore((s) => s.profiles);
-  return on && learnerOf(profileId);
+  const profiles = useProfileStore((s) => s.profiles);
+  return on && profiles.some((p) => p.id === profileId && (p.role ?? 'learner') === 'learner');
 }
 
 /**
- * Writes a `stageCeremonyAt` key for each stage on the hydrated snapshot (earliest wins), saved and synced like any
- * write; nothing when every stage already holds one. Results calls it for the stage whose ceremony it offers, the
- * summary for every stage it lists.
+ * Latches `stageCeremonyAt` for the stages (earliest wins) through the chunk's writer: Results calls it for the stage
+ * whose ceremony it offers, so that stage is never in the summary.
  */
-export function latchStageCeremony(profileId: string, stages: readonly StageKey[], now: Date = new Date()): void {
-  const progress = useProgressStore.getState();
-  const snap = progress.hydratedFor.has(profileId) ? progress.byProfile[profileId] : undefined;
-  if (!snap) return;
-  const next = withStageCeremony(snap, stages, now.toISOString());
-  if (next === null) return;
-  progress.replaceSnapshot(profileId, next);
-  notifyProgressPersisted(profileId);
+export function latchStageCeremonyLater(profileId: string, stages: readonly StageKey[]): void {
+  loadStageCheckChunk().then(
+    (chunk) => chunk.latchStageCeremony(profileId, stages),
+    () => undefined,
+  );
 }
 
 function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: () => void } {
@@ -70,7 +59,7 @@ function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: (
   useEffect(() => {
     if (!on || chunk !== null || failed) return undefined;
     let live = true;
-    loadChunk().then(
+    loadStageCheckChunk().then(
       (c) => live && setChunk(c),
       () => live && setFailed(true),
     );
@@ -81,86 +70,56 @@ function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: (
   return { chunk: on ? chunk : null, failed, retry: () => setFailed(false) };
 }
 
-/** How long Home waits before it opens the summary, and between tries (a dropped navigation is asked again). */
-const RECAP_RETRY_MS = 400;
-const RECAP_TRIES = 5;
-
-/** Profiles whose summary this app session already showed: Home never opens it twice, even if a write fails. */
-const recapOpened = new Set<string>();
-
-/** The summary marks itself shown when it mounts (a navigation that a reset dropped is tried again on the next focus). */
-export function markStageRecapShown(profileId: string): void {
-  recapOpened.add(profileId);
+/** A route's frame while the chunk loads; one that cannot load shows Try again. */
+function Waiting({ failed, retry }: { failed: boolean; retry: () => void }): ReactElement {
+  return failed ? <OopsScreen onRetry={retry} /> : <LessonWaiting />;
 }
 
-/**
- * Home's trigger for the one retroactive summary (section 4.8 step 7, panel G): when Home is in front for a learner
- * with `stageChecks` on, the snapshot is read, and some finished Stage 2-7 has no `stageCeremonyAt` key, it opens
- * the summary once. The summary writes the keys, so it is never shown again on this or any other device.
- */
-export function useStageRecapOnHome(profileId: string | null, navigation: NativeStackNavigationProp<RootStackParamList>): void {
-  const on = useStageCeremonyOn(profileId);
-  const focused = useIsFocused();
-  const hydrated = useProgressStore((s) => (profileId ? s.hydratedFor.has(profileId) : false));
-  const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
-  const pending = on && hydrated && snap !== undefined && profileId !== null && !recapOpened.has(profileId) ? recapStages(snap, episodesAll).length > 0 : false;
-  useEffect(() => {
-    if (!pending || !focused || profileId === null) return undefined;
-    // A navigation asked while the app is still settling its first screen can be dropped, so it is asked again,
-    // a few times, until the summary marks itself shown.
-    let tries = 0;
-    const ask = (): void => {
-      if (recapOpened.has(profileId) || tries >= RECAP_TRIES) return;
-      tries += 1;
-      navigation.navigate('StageRecap');
-      timer = setTimeout(ask, RECAP_RETRY_MS);
-    };
-    let timer = setTimeout(ask, RECAP_RETRY_MS);
-    return () => clearTimeout(timer);
-  }, [pending, focused, profileId, navigation]);
-}
-
+/** A Stage 2-7 header's extras: beside the pill, under the header (large text), or the tested-out caption. */
 export interface StageHeaderSlotProps {
-  place: 'actions' | 'caption';
-  profileId: string | null;
+  place: 'actions' | 'caption' | 'below';
   stage: StageKey;
   complete: boolean;
-  onOpenPrize: () => void;
-  onOpenCheck: () => void;
+  profileId: string | null;
 }
 
 /** A Stage 2-7 header's buttons (See your prize, Stage Check) or its tested-out caption; nothing while off or loading. */
 export function StageHeaderSlot(props: StageHeaderSlotProps): ReactElement | null {
   const ceremonyOn = useStageCeremonyOn(props.profileId);
   const cellCheck = useCurrFlag('cellCheck');
-  const want = props.place === 'actions' ? ceremonyOn && props.complete : cellCheck && !props.complete;
-  const ui = useChunk(want).chunk;
+  const ui = useChunk(props.stage !== 'stage1' && (props.complete ? ceremonyOn : cellCheck)).chunk;
   return ui === null ? null : <ui.StageHeaderExtras {...props} />;
 }
 
-/** The `StageCheck` route (panels D to F, H): the chunk's screen once it is in; one that cannot load shows Try again. */
+/** Home's slot for the one retroactive summary (section 4.8 step 7): the chunk's trigger while `stageChecks` is on. */
+export function StageRecapSlot({ profileId }: { profileId: string | null }): ReactElement | null {
+  const ui = useChunk(useStageCeremonyOn(profileId)).chunk;
+  return ui === null || profileId === null ? null : <ui.StageRecapTrigger profileId={profileId} />;
+}
+
+/** The `StageCheck` route (panels D to F, H). */
 export function StageCheckRoute(props: NativeStackScreenProps<RootStackParamList, 'StageCheck'>): ReactElement {
-  const { chunk, failed, retry } = useChunk(true);
-  if (failed) return <OopsScreen onRetry={retry} />;
-  if (chunk === null) return <LessonWaiting />;
-  const { StageCheckScreen } = chunk;
+  const ui = useChunk(true);
+  if (ui.chunk === null) return <Waiting {...ui} />;
+  const { StageCheckScreen } = ui.chunk;
   return <StageCheckScreen {...props} />;
 }
 
 /** The `StageRecap` route: the one retroactive summary (panel G). */
 export function StageRecapRoute(props: NativeStackScreenProps<RootStackParamList, 'StageRecap'>): ReactElement {
-  const { chunk, failed, retry } = useChunk(true);
-  if (failed) return <OopsScreen onRetry={retry} />;
-  if (chunk === null) return <LessonWaiting />;
-  const { StageRecapScreen } = chunk;
+  const ui = useChunk(true);
+  if (ui.chunk === null) return <Waiting {...ui} />;
+  const { StageRecapScreen } = ui.chunk;
   return <StageRecapScreen {...props} />;
 }
 
-/** The `StageComplete` route of a Stage 2-7: the stage ceremony (panel B). */
-export function UpperStageCompleteRoute(props: NativeStackScreenProps<RootStackParamList, 'StageComplete'>): ReactElement {
-  const { chunk, failed, retry } = useChunk(true);
-  if (failed) return <OopsScreen onRetry={retry} />;
-  if (chunk === null) return <LessonWaiting />;
-  const { UpperStageCompleteScreen } = chunk;
-  return <UpperStageCompleteScreen {...props} />;
+/**
+ * The `StageComplete` route: every stage's prize ceremony (Stage 1's wall and legendary cards unchanged, panel B for a
+ * Stage 2-7), by the one prize table, from the chunk.
+ */
+export function StageCompleteRoute(props: NativeStackScreenProps<RootStackParamList, 'StageComplete'>): ReactElement {
+  const ui = useChunk(true);
+  if (ui.chunk === null) return <Waiting {...ui} />;
+  const { StageCompleteScreen } = ui.chunk;
+  return <StageCompleteScreen {...props} />;
 }

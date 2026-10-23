@@ -9,13 +9,15 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { recapStages } from '../../logic/reviews/stage-ceremony';
 import { shownStageCards, stageCardOpenedEvent } from '../../logic/reviews/stage-check-offer';
-import { stageNumber, stagePrizeCards } from '../../logic/stage1/stage-complete';
+import { stagePrizeCards } from '../../logic/stage1/stage-complete';
+import { stageNumber } from '../../logic/story/story-fit';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useCurrFlag } from '../../store/remote-config-store';
-import { latchStageCeremony, markStageRecapShown, useStageCeremonyOn } from './stage-check-entry';
+import { latchStageCeremony, markStageRecapShown } from './stage-ceremony-latch';
+import { useStageCeremonyOn } from './stage-check-entry';
 import { StageCards } from './StageCards';
 
 /**

@@ -213,10 +213,16 @@ export function stageCheckApi(): StageCheckApi {
       progress.replaceSnapshot(profileId, { ...snap, stageCheckAt: merged });
       notifyProgressPersisted(profileId);
     },
+    stageOpen: (profileId, stage) => {
+      // The header's offer rule, read again by the session (F-ENT-003: every quest of the stage open to the learner).
+      const open = questOpenFor(profileId, new Date(), useProgressStore.getState().byProfile[profileId]);
+      const quests = gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).flatMap((e) => e.questIds);
+      return quests.length > 0 && quests.every(open);
+    },
+    serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,
     track: (event) => void track(event),
     overlays: (locale) => CONTENT_OVERLAYS[locale],
     ensureCell: (cell) => lessonContent.ensureCells([cell]),
-    random: () => Math.random(),
   });
   return stageCheck;
 }

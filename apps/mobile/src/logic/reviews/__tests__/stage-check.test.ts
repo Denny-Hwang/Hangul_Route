@@ -66,7 +66,11 @@ describe('the plan: items from all five themes, at least 30% at produce, interle
         expect(new Set(plan.rounds.map((r) => themeOf(cellOfItem.get(r.question.itemId) as string))).size, stage).toBe(5);
         const produce = plan.rounds.filter((r) => r.question.rung === 'produce').length;
         const canProduce = plan.rounds.filter((r) => ctx(voice).index.byId.get(r.question.itemId)?.formats.some((f) => FORMAT_RUNG[f] === 'produce')).length;
-        expect(produce, stage).toBeGreaterThanOrEqual(Math.min(Math.ceil(0.3 * plan.rounds.length), canProduce));
+        // Section 4.5: at least 30% at produce. Every stage that has a check reaches it with and without a device voice,
+        // so the bound is pinned (6 of 20), never weakened by how many items can be produced.
+        expect(canProduce, stage).toBeGreaterThanOrEqual(Math.ceil(0.3 * plan.rounds.length));
+        expect(produce, stage).toBeGreaterThanOrEqual(Math.ceil(0.3 * plan.rounds.length));
+        if (plan.rounds.length === STAGE_CHECK_SIZE) expect(produce, stage).toBeGreaterThanOrEqual(6);
       }
     }
     // Stages 2, 3, 4, 6 and 7, with and without a device voice; Stage 5 (the books) teaches no review items.
@@ -129,10 +133,10 @@ describe('the result: stars only, the 3-star tier latches', () => {
 describe('the entry and the telemetry (section 11.3)', () => {
   const result = { stars: 2 as const, itemIds: ['lex:a', 'lex:b'], missedItemIds: ['lex:b'], firstTryCorrect: 1, passed: false };
 
-  it('one stage-certificate entry, scope the stage, a random id with no profile id, that parses', () => {
-    const entry = stageCheckEntry({ stage: 'stage2', result, day: TODAY, now: new Date('2026-10-22T10:00:00.000Z'), nonce: 'k3' });
+  it('one stage-certificate entry per stage, scope the stage, an id with no profile id, that parses', () => {
+    const entry = stageCheckEntry({ stage: 'stage2', result, at: '2026-10-22T10:00:00.000Z' });
     expect(entry).toEqual({
-      id: 'stage-check:stage2:2026-10-22:k3',
+      id: 'stage-check:stage2',
       kind: 'stage-certificate',
       generatedAt: '2026-10-22T10:00:00.000Z',
       scope: 'stage2',
@@ -183,7 +187,9 @@ describe('the strings (section 7.7, section 9.3 review-copy, OD-1)', () => {
     expect(getMessages('en').learner.stageCheck.retro.title([2])).toBe('You finished Stage 2 earlier');
     expect(getMessages('en').learner.stageCheck.retro.title([2, 3])).toBe('You finished Stages 2 and 3 earlier');
     expect(getMessages('en').learner.stageCheck.retro.title([2, 3, 4])).toBe('You finished Stages 2, 3 and 4 earlier');
-    expect(getMessages('es').learner.stageCheck.retro.title([2, 3, 4])).toBe('Ya terminaste las etapas 2, 3 y 4');
-    expect(getMessages('ko').learner.stageCheck.retro.title([2, 3])).toBe('2단계, 3단계를 이미 끝냈어요');
+    expect(getMessages('es').learner.stageCheck.retro.title([2, 3, 4])).toBe('Ya terminaste las Etapas 2, 3 y 4');
+    expect(getMessages('ko').learner.stageCheck.retro.title([2, 3])).toBe('2단계와 3단계를 이미 끝냈어요');
+    expect(getMessages('ko').learner.stageCheck.retro.title([2, 3, 4])).toBe('2단계, 3단계와 4단계를 이미 끝냈어요');
+    expect(getMessages('ko').learner.stageCheck.retro.title([5])).toBe('5단계를 이미 끝냈어요');
   });
 });

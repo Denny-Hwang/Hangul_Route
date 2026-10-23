@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CURR_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema';
-import { bestStageStars, ceremonyMotion, shownStageCards, stageCardOpenedEvent, stageOffer, testedOutHint, type StageOfferInput } from '../stage-check-offer';
+import { bestStageStars, ceremonyMotion, headerActionsBelow, shownStageCards, stageCardOpenedEvent, stageOffer, testedOutHint, type StageOfferInput } from '../stage-check-offer';
 
 /**
  * F-CURR-002 sections 4.5, 7.3, 12.2 and OD-1 (row CM-22): what a Stage 2-7 header and ceremony offer. The Stage Check
@@ -91,5 +91,14 @@ describe('stage.card_opened (goal G5, section 11.3)', () => {
     expect(event).toEqual({ name: 'stage.card_opened', profileId: 'p1', payload: { stage: 'stage2' } });
     expect(CURR_TELEMETRY_PAYLOADS['stage.card_opened'].safeParse(event?.payload).success).toBe(true);
     expect(stageCardOpenedEvent('p1', 'stage9' as never)).toBeNull();
+  });
+});
+
+describe('headerActionsBelow: a Stage 2-7 header at large text (C at 320 px)', () => {
+  it('keeps the buttons beside the pill at the Standard and Large settings, under the header from Larger up', () => {
+    expect(headerActionsBelow(1)).toBe(false);
+    expect(headerActionsBelow(1.15)).toBe(false);
+    expect(headerActionsBelow(1.3)).toBe(true);
+    expect(headerActionsBelow(1.5)).toBe(true);
   });
 });

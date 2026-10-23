@@ -17,8 +17,9 @@ import { roundFor, type ReviewRound, type RoundInput } from './review-rounds';
  *   `STAGE_CHECK_MIN_ITEMS` (10) playable rounds there is no Stage Check (the wireframe's floor).
  * - **Result**: stars only (F-RVW-001 section 3.1, first try, unhinted). The 3-star tier (80% or more right first
  *   try) latches `stageCheckAt` (earliest): the "Stage Checks passed" line of the reports. Every finished check writes
- *   one `reviews[]` entry of kind `stage-certificate` (the existing kind; the UI never says "certificate"), scope the
- *   stage, never pruned; the best stars are read from them, so a later lower result never lowers what shows.
+ *   the stage's one `reviews[]` entry of kind `stage-certificate` (the existing kind; the UI never says "certificate"),
+ *   scope the stage, never pruned; a retake merges into it keeping the best stars, so a later lower result never
+ *   lowers what shows.
  * - It never gates anything: Stage N+1, its cells and the route do not read it (OD-1).
  */
 
@@ -121,12 +122,16 @@ export function stageCheckResult(rounds: readonly ReviewRound[], answers: Readon
   return checkResult(rounds, answers);
 }
 
-/** The `reviews[]` entry of a finished Stage Check: kind `stage-certificate`, scope the stage. A random id: never a profile id or a name. */
-export function stageCheckEntry(input: { stage: StageKey; result: CheckResult; day: string; now: Date; nonce: string }): ReviewEntry {
+/**
+ * The `reviews[]` entry of a finished Stage Check: kind `stage-certificate`, scope the stage, one per stage
+ * (`stage-check:<stage>`): a retake merges into it (`mergeReview`: the best stars, then the earliest copy), so retakes
+ * never grow `reviews[]`. `at` is the guarded stamp. Never a profile id or a name.
+ */
+export function stageCheckEntry(input: { stage: StageKey; result: CheckResult; at: string }): ReviewEntry {
   return {
-    id: `stage-check:${input.stage}:${input.day}:${input.nonce}`,
+    id: `stage-check:${input.stage}`,
     kind: 'stage-certificate',
-    generatedAt: input.now.toISOString(),
+    generatedAt: input.at,
     scope: input.stage,
     itemIds: input.result.itemIds,
     resultStars: input.result.stars,

@@ -128,8 +128,9 @@ export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
   // replaces a complete one (F-QUEST-002 §3.9, the caregiver verdict reads the field).
   const lm = Array.isArray(l.missedItemIds);
   const sm = Array.isArray(s.missedItemIds);
-  // A Cell Check's one entry per cell (row CM-21): at equal stars the earliest copy, so two devices converge.
-  if (lm === sm && l.kind === 'cell-check' && s.kind === 'cell-check') return earlierLatchTime(l.generatedAt, s.generatedAt) === l.generatedAt ? l : s;
+  // A Cell Check's one entry per cell (row CM-21) and a Stage Check's one entry per stage (row CM-22): at equal stars the
+  // earliest copy, so two devices converge.
+  if (lm === sm && l.kind === s.kind && (l.kind === 'cell-check' || l.id.startsWith('stage-check:'))) return earlierLatchTime(l.generatedAt, s.generatedAt) === l.generatedAt ? l : s;
   return lm || !sm ? l : s;
 }
 

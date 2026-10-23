@@ -161,7 +161,8 @@ export function StageCheckScreen({ navigation, route }: Props): React.ReactEleme
     void a
       .finishSession(w, p.plan, answers.current, recorded.current)
       .then(
-        (done) => setPhase({ kind: 'result', stars: done.stars, missed: done.missed }),
+        // Null: the check was switched off or the stage closed while it played; nothing was written (the calm page).
+        (done) => setPhase(done === null ? { kind: 'nothing' } : { kind: 'result', stars: done.stars, missed: done.missed }),
         () => setPhase({ kind: 'nothing' }),
       )
       .finally(() => {
@@ -330,7 +331,8 @@ export function StageCheckScreen({ navigation, route }: Props): React.ReactEleme
     );
   }
 
-  // Nothing to ask (the store cannot be read, too few playable rounds, the check switched off): one calm page.
+  // Nothing to ask (the store cannot be read, too few playable rounds, the meanings not on this device offline, the
+  // check switched off or the stage closed): one calm page with the Stage Check's own line.
   return (
     <Screen tone="canvas" scrollable testID="stage-check-nothing">
       <View style={{ alignItems: 'center', gap: spacing.sm }}>
@@ -338,7 +340,7 @@ export function StageCheckScreen({ navigation, route }: Props): React.ReactEleme
         <Heading level="prompt" align="center">
           {copy.title}
         </Heading>
-        <Body align="center">{m.learner.dailyReview.allRefreshed.body}</Body>
+        <Body align="center">{copy.notReady}</Body>
       </View>
       <Spacer size="xl" />
       <Button label={m.learner.stageComplete.backHome.cta} tone="primary" size="hero" fullWidth onPress={goHome} testID="stage-check-home" />
