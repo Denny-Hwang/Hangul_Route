@@ -38,6 +38,20 @@ describe('dictation-unambiguous: homophones (낫 / 낮 / 낯)', () => {
     expect(rows(lint(v2([teach('quest:t', ['낫', 'nat', 'sickle']), hear('quest:h', [dictation('낫', 'nat', 'sickle')])])))).toEqual([]);
     expect(rows(lint(v2([teach('quest:t', ...NAT), hear('quest:h', [dictation('낮', 'nat', 'daytime', { pictureRef: 'word:daytime' })])])))).toEqual([]);
   });
+
+  it('does not admit a picture whose meaning another spelling of the sound shares (the compact row draws only the meaning)', () => {
+    // 낫 and 낮 both taught as "thing": the picture settles it on a tall screen, but below 640 tall only "thing" shows.
+    const same: Array<[string, string, string]> = [['낫', 'nat', 'thing'], ['낮', 'nat', 'thing']];
+    expect(rows(lint(v2([teach('quest:t', ...same), hear('quest:h', [dictation('낮', 'nat', 'thing', { pictureRef: 'word:daytime' })])])))).toEqual([
+      `error ${V2} quests[1].scopes[0].rounds[0]`,
+    ]);
+    // A gloss line alone does not settle it either when the meaning is shared.
+    expect(rows(lint(v2([teach('quest:t', ...same), hear('quest:h', [dictation('낮', 'nat', 'thing', { promptEn: 'Type the word you hear: thing' })])])))).toEqual([
+      `error ${V2} quests[1].scopes[0].rounds[0]`,
+    ]);
+    // Taught with their own meanings, the same picture round passes.
+    expect(rows(lint(v2([teach('quest:t', ...NAT), hear('quest:h', [dictation('낮', 'nat', 'daytime', { promptEn: 'Type the word you hear: daytime' })])])))).toEqual([]);
+  });
 });
 
 describe('dictation-unambiguous: sound changes (같이, 학교)', () => {
