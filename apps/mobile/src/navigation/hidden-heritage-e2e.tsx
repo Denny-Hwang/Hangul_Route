@@ -14,6 +14,8 @@ import type { RootStackParamList } from './types';
 
 export interface HiddenHeritageE2eParams {
   missing?: boolean;
+  /** The scene whose reference round opens (row CM-37); the Food market when absent. */
+  sceneId?: string;
 }
 
 export interface HiddenHeritageE2eHandle {
