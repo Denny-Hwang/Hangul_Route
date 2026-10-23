@@ -26,10 +26,13 @@ import { themeGlyph } from '../../logic/journey';
 import { memoryChunk } from '../../logic/memory/boot';
 import type { DailyReviewApi, ReviewWorld } from '../../logic/reviews/daily-review-api';
 import type { AfterSession, DailySessionKind, PlannedSession, RoundAnswer } from '../../logic/reviews/daily-review';
+import { YUT_REVIEW_FLAG, sessionSeed } from '../../logic/reviews/yut-board';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { RoundView } from './ReviewRounds';
+import { YutReviewSkin } from './YutBoardSkin';
 
 /**
  * The Daily Review and Keep going (F-CURR-002 sections 4.3, 4.5, 7.4 and 7.7, row CM-14; design
@@ -41,6 +44,11 @@ import { RoundView } from './ReviewRounds';
  * refreshed today: nothing to ask, the flags off, or a store that cannot be read), E (Stop for now?, over a round) and
  * Keep going's done-today page (the collected card tapped). Never a percentage, an "n of m", a running count of
  * misses or a timer. Behind `dailyReview` with `memoryRecord`; off, a deep link shows D.
+ *
+ * Yut Review (row CM-39, `game.yut-review`, built-in pct 0): with the switch on when a session starts, the rounds sit
+ * under the yut board band (`YutBoardSkin.tsx`), and each round that ends throws the sticks, whatever its answer. The
+ * board reads only the session's seed and how many rounds ended; the answers, stars and result are the same as here
+ * with it off, and the result is this plain one.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyReview'>;
@@ -129,6 +137,12 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const reducedMotion = useReducedMotion();
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
+  // The Yut Review board of the session being played (row CM-39): its seed and how many rounds have ended; null when
+  // the session plays on the plain screen. Decided when the session starts, so a switch that flips mid-session waits.
+  const yutOn = useCurrFlag(YUT_REVIEW_FLAG);
+  const yutOnRef = useRef(yutOn);
+  yutOnRef.current = yutOn;
+  const [yut, setYut] = useState<{ seed: number; finished: number } | null>(null);
   const [leaving, setLeaving] = useState(false);
   // Bumped by each first answer, so the round's dot fills when it is answered.
   const [, setAnswered] = useState(0);
@@ -154,11 +168,13 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
       const a = api.current;
       if (w === null || a === null || starting.current) return;
       starting.current = true;
+      setYut(null);
       setPhase({ kind: 'loading' });
       try {
         const plan = await a.startSession(w, kind, locale);
         answers.current = new Map();
         recorded.current = [];
+        if (plan !== null && yutOnRef.current) setYut({ seed: sessionSeed([plan.kind, ...plan.rounds.map((r) => r.question.itemId)]), finished: 0 });
         setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
       } finally {
         starting.current = false;
@@ -228,6 +244,8 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const onSolved = (): void => {
     const p = phaseRef.current;
     if (p.kind !== 'playing') return;
+    // Every round that ends throws the sticks, whatever its answer: the board only counts ended rounds.
+    setYut((y) => (y === null ? null : { ...y, finished: y.finished + 1 }));
     if (p.index + 1 < p.plan.rounds.length) {
       setPhase({ ...p, index: p.index + 1 });
       return;
@@ -275,32 +293,40 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     const filled = phase.kind === 'playing' ? index + (answers.current.has(index) ? 1 : 0) : 0;
     const theme = round?.question.theme;
     const themeKey = theme !== undefined && !theme.startsWith('pack:') ? (theme as ThemeKey) : undefined;
+    const item =
+      round !== undefined ? (
+        <View key={index} style={{ gap: spacing.md }}>
+          {themeKey !== undefined ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="daily-review-theme">
+              <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Icon name={themeGlyph(themeKey)} size={spacing.lg} color={colors.text.secondary} />
+              </View>
+              <Body size="sm" tone="secondary" weight="semibold">
+                {m.learner.journey.themeWord[themeKey]}
+              </Body>
+            </View>
+          ) : null}
+          <RoundView
+            round={round}
+            reducedMotion={reducedMotion}
+            onFirst={(answer) => onFirst(index, answer)}
+            onSolved={onSolved}
+            grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
+          />
+        </View>
+      ) : null;
     return (
       <>
         <Screen tone="canvas" scrollable header={{ drawnByScreen: true }} testID="daily-review-screen">
           <TopRow onClose={close} filled={filled} total={total} current={index + 1} />
           <Spacer size="md" />
-          {round !== undefined ? (
-            <View key={index} style={{ gap: spacing.md }}>
-              {themeKey !== undefined ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }} testID="daily-review-theme">
-                  <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                    <Icon name={themeGlyph(themeKey)} size={spacing.lg} color={colors.text.secondary} />
-                  </View>
-                  <Body size="sm" tone="secondary" weight="semibold">
-                    {m.learner.journey.themeWord[themeKey]}
-                  </Body>
-                </View>
-              ) : null}
-              <RoundView
-                round={round}
-                reducedMotion={reducedMotion}
-                onFirst={(answer) => onFirst(index, answer)}
-                onSolved={onSolved}
-                grade={(target, typed) => api.current?.gradeTyped(target, typed) ?? 'miss'}
-              />
-            </View>
-          ) : null}
+          {yut === null ? (
+            item
+          ) : (
+            <YutReviewSkin seed={yut.seed} finished={yut.finished} reducedMotion={reducedMotion}>
+              {item}
+            </YutReviewSkin>
+          )}
         </Screen>
         {leaveSheet}
       </>
