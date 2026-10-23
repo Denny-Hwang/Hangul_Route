@@ -85,7 +85,8 @@ describe('stageCeremonyCards: the cards a Stage 2-7 ceremony and the summary sho
     const ids = (stage: 'stage2' | 'stage3' | 'stage4') => stageCeremonyCards(stage, [], UPPER_CELL_CARDS, heritageCardsAll).map((c) => c.id);
     expect(ids('stage2')).toEqual(['card:norae', 'card:dosirak', 'card:bokjumeoni', 'card:byeol', 'card:swing']);
     expect(ids('stage3')).toEqual(['card:hangeul', 'card:tteok', 'card:full-moon', 'card:gom', 'card:yut']);
-    expect(ids('stage4')).toEqual([]);
+    // Row CM-23 part 2: Stage 4's album cards, Greeting Dialogues' shipped card:insa among them.
+    expect(ids('stage4')).toEqual(['card:mwoyeyo', 'card:masisseoyo', 'card:insa', 'card:biga-wayo', 'card:gachi']);
     const prize = [{ id: 'card:x', stage: 'stage2' as const }, { id: 'card:norae', stage: 'stage2' as const }];
     expect(stageCeremonyCards('stage2', prize, ['card:norae', 'card:swing'], [...prize, { id: 'card:swing', stage: 'stage2' as const }]).map((c) => c.id)).toEqual([
       'card:x',

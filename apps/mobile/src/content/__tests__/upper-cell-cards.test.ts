@@ -2,31 +2,32 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { HeritageCardListSchema, STORY_CARD_FACT_MAX_CHARS, checkRomanization, type StageKey, type ThemeKey } from '@hangul-route/content-schema';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
-import { upperCellCardArtIds } from '@hangul-route/design-system/heritage-card-ids';
+import { upperCellCardArtIds } from '@hangul-route/design-system/upper-card-ids';
 import { describe, expect, it } from 'vitest';
 import { awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
-import { UPPER_CARD_GATED_IDS, heritageCardsAll, stage2Cards, upperCellCards } from '../heritage-cards';
+import { UPPER_CARD_GATED_IDS, heritageCardsAll, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { UPPER_CARD_BACKS, withUpperBack } from '../upper-card-backs';
-import { UPPER_CARD_REVIEW, UPPER_CARD_SOURCES } from '../upper-cell-card-sources';
-import { ALBUM_STAGES, ALBUM_THEMES, UPPER_CARD_SHIPPED, UPPER_CELL_CARDS } from '../upper-cell-cards';
+import { UPPER_CARD_REVIEW, UPPER_CARD_SHIPPED, UPPER_CARD_SOURCES } from '../upper-cell-card-sources';
+import { ALBUM_STAGES, ALBUM_THEMES } from '../album-order';
+import { UPPER_CELL_CARDS } from '../upper-cell-cards';
 
 /**
- * The upper-cell cards of Stages 2 and 3 (F-CURR-002 §5.1, §6.6, §7.2 and §9.2, row CM-23 part 1): one card per upper
+ * The upper-cell cards of Stages 2 to 4 (F-CURR-002 §5.1, §6.6, §7.2 and §9.2, row CM-23 parts 1 and 2): one card per upper
  * cell in its first volume, the taste cells' shipped awards kept exactly, every back-face fact sourced from the §6.6
  * allowlist, the Korean taught in the cell, and the review recorded before the content is ready.
  */
 const REPO = join(__dirname, '../../../../..');
 const THEMES: readonly ThemeKey[] = ['letters', 'life', 'rites', 'nature', 'crafts'];
-const STAGES: readonly StageKey[] = ['stage2', 'stage3'];
+const STAGES: readonly StageKey[] = ['stage2', 'stage3', 'stage4'];
 const cardOf = (id: string) => heritageCardsAll.find((c) => c.id === id);
 const cellFile = (stage: StageKey, theme: ThemeKey): string => join(REPO, `content/episodes/stage-${stage.slice(5)}/${theme}.json`);
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
 
-describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
-  it('one card per upper cell of Stages 2 and 3, by stage then theme, each naming its own first-volume cell', () => {
-    expect(UPPER_CELL_CARDS).toHaveLength(10);
+describe('upper-cell cards, Stages 2-4 (row CM-23)', () => {
+  it('one card per upper cell of Stages 2 to 4, by stage then theme, each naming its own first-volume cell', () => {
+    expect(UPPER_CELL_CARDS).toHaveLength(15);
     const cells = UPPER_CELL_CARDS.map((id) => {
       const card = cardOf(id);
       expect(card, id).toBeDefined();
@@ -49,17 +50,22 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
   });
 
   it('the taste cells keep their shipped four cards; their album card is their q1 card, never gated (F-CURR-001 Cards)', () => {
-    expect([...UPPER_CARD_SHIPPED]).toEqual(['card:dosirak', 'card:byeol']);
+    expect([...UPPER_CARD_SHIPPED]).toEqual(['card:dosirak', 'card:byeol', 'card:insa']);
+    // Greeting Dialogues (row CM-23 part 2): the shipped `episode:stage4-rites` award, exactly.
+    expect(questsAll.find((q) => q.id === 'quest:stage4-rites-q1')?.rewardCardId).toBe('card:insa');
+    expect(episodesAll.find((e) => e.id === 'episode:stage4-rites')?.rewardCardIds).toEqual(['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa']);
+    expect(stage4Cards.find((c) => c.id === 'card:insa')).toMatchObject({ rarity: 'rare', stage: 'stage4', theme: 'rites', unlockedBy: 'episode:stage4-rites' });
     expect(questsAll.find((q) => q.id === 'quest:stage2-life-q1')?.rewardCardId).toBe('card:dosirak');
     expect(questsAll.find((q) => q.id === 'quest:stage2-nature-q1')?.rewardCardId).toBe('card:byeol');
     expect(episodesAll.find((e) => e.id === 'episode:stage2-life')?.rewardCardIds).toEqual(['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak']);
     expect(episodesAll.find((e) => e.id === 'episode:stage2-nature')?.rewardCardIds).toEqual(['card:haneul', 'card:kkot', 'card:namu', 'card:byeol']);
-    for (const id of UPPER_CARD_SHIPPED) expect(stage2Cards.some((c) => c.id === id)).toBe(true);
+    for (const id of UPPER_CARD_SHIPPED) expect([...stage2Cards, ...stage4Cards].some((c) => c.id === id)).toBe(true);
+    for (const id of UPPER_CARD_SHIPPED) expect(UPPER_CARD_GATED_IDS.has(id), id).toBe(false);
     expect([...UPPER_CARD_GATED_IDS]).toEqual(upperCellCards.map((c) => c.id));
     expect(awardWorld.firstFinishCardIds).toBe(UPPER_CARD_GATED_IDS);
   });
 
-  it('every album card is drawn: the art ids are the same ten', () => {
+  it('every album card is drawn: the art ids are the same fifteen', () => {
     expect([...upperCellCardArtIds]).toEqual([...UPPER_CELL_CARDS]);
   });
 
@@ -71,6 +77,17 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
       expect(readFileSync(cellFile(card.stage, card.theme), 'utf8'), `${card.id}: ${ko} taught in its cell`).toContain(`"${ko}`);
       expect(checkRomanization(ko, card.romanization ?? ''), card.id).toEqual([]);
     }
+  });
+
+  it('Stage 4 (part 2): each card is a polite line of its cell\u2019s talk, the 해요체 ending, taught in the cell', () => {
+    const s4 = upperCellCards.filter((c) => c.stage === 'stage4');
+    expect(s4.map((c) => [c.id, c.subtitleKo, c.titleEn])).toEqual([
+      ['card:mwoyeyo', '이게 뭐예요?', 'What Is This?'],
+      ['card:masisseoyo', '맛있어요', 'It Is Tasty'],
+      ['card:biga-wayo', '비가 와요', 'It Is Raining'],
+      ['card:gachi', '같이 할까요?', 'Play Together?'],
+    ]);
+    for (const c of s4) expect(c.subtitleKo, c.id).toMatch(/요\??$/);
   });
 
   it('the fronts carry no back; each back is in the upper-cards chunk, one per card', () => {
@@ -113,6 +130,18 @@ describe('upper-cell cards, Stages 2-3 (row CM-23)', () => {
         return /\.tsx?$/.test(n) ? [p] : [];
       });
     const importers = files(SRC).filter((f) => /from '[^']*upper-card-backs'/.test(readFileSync(f, 'utf8')));
+    expect(importers.map((f) => relative(SRC, f))).toEqual(['screens/library/upper-cards-chunk.tsx']);
+  });
+
+  it('the album order is read by the upper-cards chunk only, so the start bundle never carries it (row CM-23 part 2)', () => {
+    const SRC = join(__dirname, '../..');
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((n) => {
+        const p = join(dir, n);
+        if (statSync(p).isDirectory()) return n === '__tests__' ? [] : files(p);
+        return /\.tsx?$/.test(n) ? [p] : [];
+      });
+    const importers = files(SRC).filter((f) => /from '[^']*album-order'/.test(readFileSync(f, 'utf8')));
     expect(importers.map((f) => relative(SRC, f))).toEqual(['screens/library/upper-cards-chunk.tsx']);
   });
 

@@ -19,6 +19,8 @@ const PROFILE = { createdAt: '2026-09-01T08:00:00.000Z' };
 const NOW = '2026-10-23T09:00:00.000Z';
 const LETTERS = episodesAll.find((e) => e.id === 'episode:stage2-letters')!;
 const LIFE = episodesAll.find((e) => e.id === 'episode:stage2-life')!;
+const S4_LETTERS = episodesAll.find((e) => e.id === 'episode:stage4-letters')!;
+const S4_RITES = episodesAll.find((e) => e.id === 'episode:stage4-rites')!;
 const T = (d: number): string => `2026-10-${String(d).padStart(2, '0')}T10:00:00.000Z`;
 
 /** A snapshot that finished every quest of `episode`: the first finish of quest i on day 1+i, its last replay on `replay`. */
@@ -147,10 +149,36 @@ describe('the retroactive award (row CM-23)', () => {
     }
   });
 
+  it('Stage 4 (row CM-23 part 2): a cell finished before the row shipped brings its card on reconcile, dated by its first finishes, once', () => {
+    const before = finished(S4_LETTERS, T(22));
+    const at = T(S4_LETTERS.questIds.length);
+    expect(awardOf(before, 'card:mwoyeyo')).toEqual({ cardId: 'card:mwoyeyo', source: 'episode', via: 'episode:stage4-letters', unlockedAt: at });
+    const once = applyAwards(before, missingAwards(awardWorld, before, PROFILE), NOW);
+    expect(once.cards.filter((c) => c.cardId === 'card:mwoyeyo')).toEqual([{ cardId: 'card:mwoyeyo', unlockedAt: at, newSinceLastView: true }]);
+    expect(missingAwards(awardWorld, once, PROFILE)).toEqual([]);
+    // Another device with no replays derives the same card and time; the merge keeps one entry.
+    const other = finished(S4_LETTERS, null);
+    const ro = applyAwards(other, missingAwards(awardWorld, other, PROFILE), NOW);
+    const merged = mergeSnapshots(once, ro, { now: new Date(NOW) });
+    expect(merged.cards.filter((c) => c.cardId === 'card:mwoyeyo').map((c) => c.unlockedAt)).toEqual([at]);
+    // Off: no new Stage 4 card; a held one stays listed.
+    expect(awardOf(before, 'card:mwoyeyo', awardWorldFor(false, new Set()))).toBeUndefined();
+    expect(obtainableCards(awardWorldFor(false, new Set(['card:mwoyeyo'])), new Set(['card:mwoyeyo'])).map((c) => c.id)).toContain('card:mwoyeyo');
+  });
+
+  it('Greeting Dialogues keeps its shipped award exactly, whatever the switch: four cards, card:insa from q1', () => {
+    const snap = finished(S4_RITES, null);
+    for (const on of [true, false]) {
+      const awards = derivedAwards(awardWorldFor(on, new Set()), snap, PROFILE).filter((a) => a.via === S4_RITES.id || a.via === 'quest:stage4-rites-q1');
+      expect(awards.map((a) => a.cardId).sort(), String(on)).toEqual(['card:annyeong', 'card:chingu', 'card:gamsa', 'card:insa']);
+      expect(UPPER_CARD_GATED_IDS.has('card:insa')).toBe(false);
+    }
+  });
+
   it('never random, never bought: every upper-cell card is an episode rule, no quest gives one', () => {
     for (const id of UPPER_CARD_GATED_IDS) {
       const card = awardWorld.cards.find((c) => c.id === id);
-      expect(card?.unlockedBy, id).toMatch(/^episode:stage[23]-/);
+      expect(card?.unlockedBy, id).toMatch(/^episode:stage[234]-/);
       expect(awardWorld.quests.some((q) => q.rewardCardId === id), id).toBe(false);
     }
   });

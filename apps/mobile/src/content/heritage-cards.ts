@@ -95,7 +95,9 @@ export const stage4Cards: HeritageCard[] = [
  * cell's first volume. Its back (blurb, fact and source line) is in the upper-cards chunk (`content/upper-card-backs.ts`),
  * which the card page loads, so the start bundle carries only what the Library, Results and the catch-up show.
  */
-const upper = (id: string, titleEn: string, ko: string, romanization: string, theme: ThemeKey, stage: StageKey): HeritageCard => ({
+// The romanization is the id when the two are spelled alike (row CM-23 part 2: the shorter call keeps the start bundle
+// under its line); either way it is the F-CNT-002 converter's (content/__tests__/upper-cell-cards.test.ts).
+const upper = (id: string, titleEn: string, ko: string, theme: ThemeKey, stage: StageKey, romanization: string = id): HeritageCard => ({
   id: `card:${id}`,
   titleEn,
   subtitleKo: ko,
@@ -110,19 +112,25 @@ const upper = (id: string, titleEn: string, ko: string, romanization: string, th
 });
 
 /**
- * The upper-cell cards of Stages 2 and 3 (row CM-23 part 1): one per upper cell. Lunch Box Words and Outdoor Words keep
- * their shipped four cards (F-CURR-001 "Cards"); their album card is their q1 card (`content/upper-cell-cards.ts`), so
- * these eight are the other cells'. Gated on `upperCards` (logic/awards/upper-cards.ts).
+ * The upper-cell cards of Stages 2 to 4 (row CM-23 parts 1 and 2): one per upper cell. Lunch Box Words, Outdoor Words and
+ * Greeting Dialogues keep their shipped four cards (F-CURR-001 "Cards"); their album card is their q1 card
+ * (`content/upper-cell-cards.ts`), so these twelve are the other cells'. Gated on `upperCards` (logic/awards/upper-cards.ts).
  */
 export const upperCellCards: HeritageCard[] = [
-  upper('norae', 'Song', '노래', 'norae', 'letters', 'stage2'),
-  upper('bokjumeoni', 'Lucky Pouch', '복주머니', 'bokjumeoni', 'rites', 'stage2'),
-  upper('swing', 'Swing', '그네', 'geune', 'crafts', 'stage2'),
-  upper('hangeul', 'Hangeul', '한글', 'hangeul', 'letters', 'stage3'),
-  upper('tteok', 'Rice Cake', '떡', 'tteok', 'life', 'stage3'),
-  upper('full-moon', 'Full Moon', '보름달', 'boreumdal', 'rites', 'stage3'),
-  upper('gom', 'Bear', '곰', 'gom', 'nature', 'stage3'),
-  upper('yut', 'Yut Sticks', '윷', 'yut', 'crafts', 'stage3'),
+  upper('norae', 'Song', '노래', 'letters', 'stage2'),
+  upper('bokjumeoni', 'Lucky Pouch', '복주머니', 'rites', 'stage2'),
+  upper('swing', 'Swing', '그네', 'crafts', 'stage2', 'geune'),
+  upper('hangeul', 'Hangeul', '한글', 'letters', 'stage3'),
+  upper('tteok', 'Rice Cake', '떡', 'life', 'stage3'),
+  upper('full-moon', 'Full Moon', '보름달', 'rites', 'stage3', 'boreumdal'),
+  upper('gom', 'Bear', '곰', 'nature', 'stage3'),
+  upper('yut', 'Yut Sticks', '윷', 'crafts', 'stage3'),
+  // Stage 4 (row CM-23 part 2): a polite line of each cell's talk. Greeting Dialogues keeps its four shipped cards; its
+  // album card is its q1 card, `card:insa` (content/upper-cell-cards.ts).
+  upper('mwoyeyo', 'What Is This?', '이게 뭐예요?', 'letters', 'stage4', 'ige mwoyeyo'),
+  upper('masisseoyo', 'It Is Tasty', '맛있어요', 'life', 'stage4'),
+  upper('biga-wayo', 'It Is Raining', '비가 와요', 'nature', 'stage4', 'biga wayo'),
+  upper('gachi', 'Play Together?', '같이 할까요?', 'crafts', 'stage4', 'gachi halkkayo'),
 ];
 
 /** The cards row CM-23 adds: awarded, listed and drawn only while `upperCards` is on (held ones always stay). */

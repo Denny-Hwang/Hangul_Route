@@ -10,7 +10,7 @@
   "pillarTags": [
     "D2"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:biga-wayo"],
   "quests": [
     {
       "id": "quest:stage4-nature-q1",
