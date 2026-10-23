@@ -18,7 +18,7 @@ import { isItemDue } from './spacing';
  * - `readyToRefresh`: the due pool today (memory items that are not retired and topic words), seeded items included,
  *   as the runtime's own `duePool`.
  * - `cellBestCounts`: episodes (cells and pack levels) at `cellBest` level 1, 2 and 3. Row CM-12 seeds level 1; row
- *   CM-20 derives levels 2 and 3, which then show here with no change.
+ *   CM-20 latches the derived levels (`./mastery.ts`), so levels 2 and 3 show here as they are reached.
  * - `stageChecks`: Stage Checks passed (`stageCheckAt` keys).
  * - `weekPoints`: the points of this ISO week, Monday to today, from `dayLog` (row CM-17); 0 without it.
  * - `topDue`: up to 8 due item ids in selection order (section 4.3): the lowest box first, then the oldest due day,
@@ -68,16 +68,25 @@ interface Due {
   due: string;
 }
 
+/**
+ * Words known (section 4.4, the rule above): the summary's count, and the counter on Home and the Learning Route
+ * (row CM-20), so the two never disagree.
+ */
+export function wordsKnownOf(rows: MemorySummaryInput['rows'], snapshot: Pick<ProgressSnapshot, 'vocab'>): number {
+  let n = 0;
+  for (const [id, { st }] of Object.entries(rows)) if (id.startsWith(LEX) && st.s >= WORDS_KNOWN_BOX && st.n >= 1 && st.r >= 1) n += 1;
+  for (const s of vocabOf(snapshot).items) if (s.bestBox >= WORDS_KNOWN_BOX && s.seen >= 1) n += 1;
+  return n;
+}
+
 export function memorySummaryOf({ rows, retired, snapshot, today, reviewOn = false }: MemorySummaryInput): MemorySummary {
-  let wordsKnown = 0;
+  const wordsKnown = wordsKnownOf(rows, snapshot);
   const due: Due[] = [];
   for (const [id, { st }] of Object.entries(rows)) {
-    if (id.startsWith(LEX) && st.s >= WORDS_KNOWN_BOX && st.n >= 1 && st.r >= 1) wordsKnown += 1;
     if (!retired.has(id) && isItemDue(st, today) && st.d !== null) due.push({ id, box: st.b, due: st.d });
   }
   const words: readonly VocabItemState[] = vocabOf(snapshot).items;
   for (const s of words) {
-    if (s.bestBox >= WORDS_KNOWN_BOX && s.seen >= 1) wordsKnown += 1;
     if (isDue(s, today) && s.due !== null) due.push({ id: s.id, box: s.box, due: s.due });
   }
   due.sort((a, b) => a.box - b.box || (a.due < b.due ? -1 : a.due > b.due ? 1 : 0) || jitterOf(a.id) - jitterOf(b.id) || (a.id < b.id ? -1 : 1));
