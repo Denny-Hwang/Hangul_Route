@@ -69,6 +69,7 @@ import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
 import { WriteFrameE2eHook, WriteFrameE2eScreen } from './write-frame-e2e';
 import { ClozePickE2eHook, ClozePickE2eScreen } from '../screens/minigames/cloze-pick-entry';
 import { StoryOrderE2eHook, StoryOrderE2eScreen } from './story-order-e2e';
+import { RolePlayE2eHook, RolePlayE2eScreen } from './role-play-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -136,6 +137,7 @@ export function RootNavigator(): ReactElement {
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <ClozePickE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <StoryOrderE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <RolePlayE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
@@ -217,6 +219,7 @@ export function RootNavigator(): ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="ClozePickE2e" component={ClozePickE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="StoryOrderE2e" component={StoryOrderE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="RolePlayE2e" component={RolePlayE2eScreen} /> : null}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
         {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}

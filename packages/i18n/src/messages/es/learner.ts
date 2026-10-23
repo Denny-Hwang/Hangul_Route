@@ -686,6 +686,12 @@ export const learner = {
       miss: 'Lee la oración otra vez. ¿Cuál encaja?',
       lookHere: 'Esta encaja aquí.',
     },
+    rolePlay: {
+      tapReply: 'Toca tu respuesta',
+      showMeanings: { cta: 'Ver significados' },
+      meaningsShown: 'Significados visibles',
+      moreReplies: 'Más respuestas abajo',
+    },
   },
 
   audio: {
@@ -1200,6 +1206,7 @@ export const learner = {
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
       clozePick: 'Completa el hueco de una oración',
+      rolePlay: 'Lee un diálogo y responde',
     },
     legend: {
       title: 'Qué significan las formas',

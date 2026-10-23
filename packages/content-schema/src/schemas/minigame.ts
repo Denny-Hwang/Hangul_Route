@@ -3,6 +3,7 @@ import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorp
 import { isOneKeyFinal } from '../hangul/compose-typed';
 import { AudioRefSchema } from './audio';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { RolePlaySceneSchema } from './role-play';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -44,6 +45,8 @@ export const MinigameKindSchema = z.enum([
   'cloze-pick', // Recognition · Cloze Pick (fallback: Listen & Pick with a text prompt)
   // F-CURR-002 §7.1 (row CM-34), additive.
   'story-order', // Discovery · put 3-5 Korean captions (with or without pictures) in order; fallback Story Sequence
+  // F-CURR-002 §7.1 (row CM-35), additive.
+  'role-play', // Interaction · a branching chat, read and tap a reply (fallback: Tap to Respond on the same turns)
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -665,6 +668,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
   z.object({ kind: z.literal('cloze-pick'), data: ClozePickRoundSchema }),
   z.object({ kind: z.literal('story-order'), data: StoryOrderRoundSchema }),
+  z.object({ kind: z.literal('role-play'), data: RolePlaySceneSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

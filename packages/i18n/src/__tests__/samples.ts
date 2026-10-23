@@ -996,4 +996,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],
   // F-CURR-002 row CM-31: Dictation's meaning line, a gloss in the UI locale.
   'learner.minigame.typeHangul.hear.meaning': [['apple'], ['rice cake soup']],
+  // F-CURR-002 row CM-35: a Role Play bubble: the partner's role (UI language), the line, its romanization and meaning; a sent reply.
+  // The Korean line is passed in at run time; the samples stand in with romanization, as the other games' rows do.
+  'a11y.minigame.rolePlay.partner': [['librarian', 'museun chaegeul chajayo?', 'museun chaegeul chajayo', 'What book are you looking for?']],
+  'a11y.minigame.rolePlay.me': [['donghwachaegeul chajayo.', 'donghwachaegeul chajayo']],
 };

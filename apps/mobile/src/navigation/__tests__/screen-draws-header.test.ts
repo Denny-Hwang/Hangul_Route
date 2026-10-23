@@ -64,6 +64,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/minigames/cloze-pick-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
   // Row CM-34: Story Order's game, the minigame step's chunk while `game.story-order` is on.
   'screens/minigames/story-order/StoryOrderStep.tsx#StoryOrderGame': 'screens/minigames/story-order/StoryOrderGame.tsx#StoryOrderGame',
+  // Row CM-35: Role Play's chunk (the game, and the fixture build's host).
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayGame': 'screens/minigames/role-play/RolePlayGame.tsx#RolePlayGame',
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayE2eScreen': 'screens/minigames/role-play/RolePlayE2eScreen.tsx#RolePlayE2eScreen',
 };
 
 /**

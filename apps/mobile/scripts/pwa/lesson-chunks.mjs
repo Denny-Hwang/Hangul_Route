@@ -258,6 +258,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
   // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
   Object.freeze({ name: 'story-order-chunk', marker: 'screen-chunk:story-order' }),
+  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
+  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
+  Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
 ]);
 
 /**

@@ -180,6 +180,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
       { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
       { name: 'story-order-chunk', marker: 'screen-chunk:story-order' },
+      { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
     ]);
   });
 
@@ -200,6 +201,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-22: the Stage Check's chunk, reached only through the entry's literal import().
     expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
     expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
+    // Row CM-35: Role Play's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
@@ -275,6 +279,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
       'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
       'story-order-chunk has no web bundle: the chunk is missing from the build',
+      'role-play-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

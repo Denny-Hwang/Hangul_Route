@@ -300,6 +300,7 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'write-frame': 'writeFrame',
   'order-it': 'sentenceBuilder',
   'cloze-pick': 'clozePick',
+  'role-play': 'rolePlay',
 };
 
 /**
