@@ -166,3 +166,11 @@ describe('memory.daily', () => {
     expect(studyMinutes([{ localDay: '2026-10-22', durationSeconds: 200_000 }], '2026-10-22')).toBe(1440);
   });
 });
+
+describe('the Words known count last read (row CM-20)', () => {
+  it('keeps a whole count, drops anything else, and is absent until the first read', () => {
+    expect(readMemoryFile({ wk: 120 }).wk).toBe(120);
+    for (const wk of [-1, 1.5, '120', null]) expect(readMemoryFile({ wk }).wk, String(wk)).toBeUndefined();
+    expect('wk' in emptyMemoryFile()).toBe(false);
+  });
+});

@@ -4,6 +4,7 @@ import {
   ROLLUP_SEEDED_COUNT_EDGES,
   ROLLUP_SPREAD_DAYS_EDGES,
   rollupBucketCode,
+  type CellLevel,
   type MemoryBackup,
   type MemorySummary,
   type ProgressSnapshot,
@@ -21,7 +22,8 @@ import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pus
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
 import { deriveSeed, seedInputKey } from './seed';
-import { memorySummaryOf } from './summary';
+import { deriveMastery, latchCellBest, selectDueCellIds, wordsMilestoneCrossed, type LevelRise } from './mastery';
+import { memorySummaryOf, wordsKnownOf } from './summary';
 import { DURABLE_LAG_DAYS, applyAnswer, isItemDue, type Rung } from './spacing';
 
 /**
@@ -73,6 +75,11 @@ export interface MemoryRuntimeDeps {
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
   applySeed(profileId: string, seed: { memSeededAt: string; cellBest: Readonly<Record<string, 1>> }): string | null;
+  /**
+   * Raises the hydrated snapshot's `cellBest` to these levels (max: never lower), saved and synced like any write
+   * (row CM-20). Returns the `cellBest` held after it, or null when the snapshot is not there.
+   */
+  applyCellBest(profileId: string, rises: readonly LevelRise[]): Readonly<Record<string, CellLevel>> | null;
   recordVocab(profileId: string, events: readonly VocabEvent[], now: Date): void;
   /** The server time of the learner's last snapshot sync (the inbox's `serverTime`), or null: the stamp cap of CM-11's hand-off. */
   serverTime?(profileId: string): string | null;
@@ -108,6 +115,13 @@ export interface MemoryRuntime {
    * undefined while the store or the snapshot cannot be read. `reviewOn`: the profile has the review surface.
    */
   summary(profileId: string, opts?: { reviewOn?: boolean }): Promise<MemorySummary | undefined>;
+  /**
+   * The mastery levels and Words known today (row CM-20, `./mastery.ts`), after every earlier operation on the
+   * profile: derives each cell's level, latches the rises into `cellBest` (one `mastery.level_up` each) and reads
+   * Words known. `celebrate` (the Results of an activity) returns the rises and a Words known milestone crossed since
+   * this device's last read; any other read takes them in silently, so each is celebrated at most once.
+   */
+  mastery(profileId: string, opts: MasteryOptions): Promise<MasteryRead | undefined>;
 }
 
 const VOCAB_ID = /^vocab:/;
@@ -122,6 +136,29 @@ const STAMP_CLAMP_MS = 24 * 60 * 60 * 1000;
  * every merge for long (CM-11's `boundMemoryStateToNow` holds the server side, also when nothing has
  * been seen yet). The local day of the answer is never clamped.
  */
+export interface MasteryOptions {
+  /** `volumes` is on for the profile: the New volume marker shows. */
+  volumesOn: boolean;
+  /** The review surface is on (`dailyReview`): Ready to refresh shows only then, as in reports (row CM-16). */
+  reviewOn: boolean;
+  /** The Results of an activity: return the rises and the milestone. */
+  celebrate: boolean;
+}
+
+export interface MasteryRead {
+  /** The latched levels (`cellBest`) after this read. */
+  cellBest: Readonly<Record<string, CellLevel>>;
+  /** Mastered cells with items due today ("Ready to refresh"). */
+  refresh: string[];
+  /** Started cells whose later volume has shipped and is not started ("New volume"). */
+  newVolume: string[];
+  wordsKnown: number;
+  /** With `celebrate`: the levels this read latched, in cell id order; else empty. */
+  rises: LevelRise[];
+  /** With `celebrate`: the Words known milestone crossed since this device's last read; else null. */
+  milestone: number | null;
+}
+
 export function stampOf(file: Pick<MemoryFile, 'rows'>, at: Date, serverTime: string | null = null): string {
   let latest = serverTime === null ? Number.NEGATIVE_INFINITY : Date.parse(serverTime);
   if (!Number.isFinite(latest)) latest = Number.NEGATIVE_INFINITY;
@@ -529,6 +566,47 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         if (!file || !snapshot) return undefined;
         const { index } = await items();
         return memorySummaryOf({ rows: file.rows, retired: index.retired, snapshot, today: deps.dayOf(deps.now()), reviewOn: opts?.reviewOn === true });
+      });
+    },
+
+    mastery(profileId, opts) {
+      return run(profileId, async () => {
+        await deps.hydrate(profileId);
+        const file = await load(profileId);
+        const snapshot = deps.snapshot(profileId);
+        if (!file || !snapshot) return undefined;
+        const { index } = await items();
+        const derived = deriveMastery({ cells: CATALOG.cells, quests: CATALOG.quests, items: index.items, retired: index.retired, rows: file.rows, snapshot });
+        let cellBest: Readonly<Record<string, CellLevel>> = snapshot.cellBest ?? {};
+        // Before the one-time seeding (section 4.8 step 6) has latched Done for the cells finished earlier, nothing is
+        // latched here: those are history, not rises, and would each send a `mastery.level_up`.
+        let rises = snapshot.memSeededAt === undefined ? [] : latchCellBest(cellBest, derived).rises;
+        if (rises.length > 0) {
+          const latched = deps.applyCellBest(profileId, rises);
+          if (latched === null) rises = [];
+          else cellBest = latched;
+          // Sent once, by the device that latched the rise; no PII, the cell id and the level only.
+          for (const rise of rises) {
+            const payload = CURR_TELEMETRY_PAYLOADS['mastery.level_up'].safeParse({ cellId: rise.cellId, level: rise.level });
+            if (payload.success) deps.track({ name: 'mastery.level_up', profileId, payload: payload.data });
+          }
+        }
+        const wordsKnown = wordsKnownOf(file.rows, snapshot);
+        let milestone: number | null = null;
+        if (file.wk === undefined || wordsKnown > file.wk) {
+          if (opts.celebrate && file.wk !== undefined) milestone = wordsMilestoneCrossed(file.wk, wordsKnown);
+          file.wk = wordsKnown;
+          markDirty(profileId);
+        }
+        const today = deps.dayOf(deps.now());
+        return {
+          cellBest,
+          refresh: opts.reviewOn ? [...selectDueCellIds(cellBest, derived, file.rows, vocabOf(snapshot).items, today)] : [],
+          newVolume: opts.volumesOn ? [...derived].filter(([, m]) => m.newVolume).map(([cell]) => cell) : [],
+          wordsKnown,
+          rises: opts.celebrate ? rises : [],
+          milestone,
+        };
       });
     },
   };

@@ -18,6 +18,8 @@ import type { DayFacts } from './spacing';
  * - `cursor`: the server `seq` of the last pull.
  * - `seededFrom`: the `memSeededAt` the seeded states here were derived from.
  * - `day`: today's counts for `memory.daily`; `dailySent` the last local day sent.
+ * - `wk`: the Words known count this device last read (row CM-20), so a Words known milestone is celebrated once, on
+ *   the Results of the activity that crossed it; absent until the first read, which sets it without a celebration.
  */
 
 export interface MemoryRow extends DayFacts {
@@ -47,6 +49,7 @@ export interface MemoryFile {
   seededFrom: string | null;
   day: DayCounts | null;
   dailySent: string | null;
+  wk?: number;
 }
 
 export function emptyMemoryFile(): MemoryFile {
@@ -100,6 +103,7 @@ export function readMemoryFile(raw: unknown): MemoryFile {
   file.seededFrom = typeof raw.seededFrom === 'string' ? raw.seededFrom : null;
   file.day = dayCountsOf(raw.day);
   file.dailySent = dayOrUndefined(raw.dailySent) ?? null;
+  if (typeof raw.wk === 'number' && Number.isInteger(raw.wk) && raw.wk >= 0) file.wk = raw.wk;
   return file;
 }
 
