@@ -14,12 +14,26 @@ import type { MinigameScope } from './minigame-config';
 export const DICTATION_SWITCH = 'game.type-hangul-hear' satisfies CurrFlagName;
 export const SPELLING_SWITCH = 'game.spelling-pick' satisfies CurrFlagName;
 
+/** Rounds turned from `hear` into `see` here: the game draws them as an ordinary `see` round (its heading too). */
+const fromHear = new WeakSet<object>();
+
+/** Whether `applyGameSwitches` made this round a `see` round of a word written as Dictation. */
+export function switchedFromHear(round: object): boolean {
+  return fromHear.has(round);
+}
+
+function seeOf<R extends object>(round: R): R & { mode: 'see' } {
+  const out = { ...round, mode: 'see' as const };
+  fromHear.add(out);
+  return out;
+}
+
 /** The scope with every round of a switched-off format replaced by its fallback; the same object when nothing changes. */
 export function applyGameSwitches(scope: MinigameScope, on: (flag: CurrFlagName) => boolean): MinigameScope {
   let out = scope;
   const hear = scope.typeHangul?.rounds;
   if (hear && hear.some((r) => typeHangulMode(r) === 'hear') && !on(DICTATION_SWITCH)) {
-    out = { ...out, typeHangul: { ...scope.typeHangul, rounds: hear.map((r) => (typeHangulMode(r) === 'hear' ? { ...r, mode: 'see' as const } : r)) } };
+    out = { ...out, typeHangul: { ...scope.typeHangul, rounds: hear.map((r) => (typeHangulMode(r) === 'hear' ? seeOf(r) : r)) } };
   }
   const picks = scope.listenPick?.rounds;
   if (picks && picks.some(isSpellingRound) && !on(SPELLING_SWITCH)) {

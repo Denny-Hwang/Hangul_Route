@@ -82,7 +82,8 @@ export function useHearRound(round: Pick<TypeHangulRound, 'mode' | 'audioRef' | 
   const isHear = round !== undefined && typeHangulMode(round) === 'hear';
   const speech = round === undefined ? null : hearSpeech(round);
   const clip = hasClip(speech?.audioRef);
-  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip });
+  // Only a hear round reports its fallback: a `see` round beside it in the scope plays nothing and shows no notice.
+  const slot = usePromptSlot({ source: DICTATION_AUDIO_SOURCE, hasClip: clip, reportFallback: isHear });
   const { play: slotPlay, reset: slotReset } = slot;
   const tts = useAudioStore((s) => s.tts.state);
   const muted = useAudioStore((s) => s.muted);

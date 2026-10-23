@@ -40,6 +40,7 @@ import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
+import { switchedFromHear } from '../../logic/game-switches';
 import type { DictationKit } from './dictation-entry';
 import type { HearRound } from './dictation-chunk';
 import type { MinigameHost } from './host';
@@ -214,7 +215,11 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   const hearRound = typeHangulMode(round) === 'hear';
   const hearing = hearRound && heard !== null && heard.mode !== 'see';
   const holding = hearing && heard.mode === 'hold';
-  const mode = hearing ? 'hear' : round.pictureRef && !hearRound ? 'picture' : 'see';
+  // A word written as Dictation that plays as `see` (no voice, sound off, its switch off, or no chunk) is an ordinary
+  // `see` round of the word: the Korean shows, and its line is the `see` heading, never "Type the word you hear".
+  const seenFromHear = (hearRound && !hearing) || switchedFromHear(round);
+  const mode = hearing ? 'hear' : round.pictureRef && !hearRound && !seenFromHear ? 'picture' : 'see';
+  const promptLine = seenFromHear ? t.heading.see : round.promptEn;
   const instruction = t.heading[mode];
   const skip = (): void => dispatch({ type: 'skip' });
   const done = (): void => dispatch({ type: 'done' });
@@ -231,7 +236,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
     <kit.HearPrompt hear={heard} round={round} compact={compactRow} first={state.roundIdx === 0} />
   ) : compactRow ? (
     <View style={{ flexShrink: 1, gap: spacing.xxs }}>
-      <Caption tone="secondary">{round.promptEn}</Caption>
+      <Caption tone="secondary">{promptLine}</Caption>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {mode === 'picture' ? <PictureArt pictureRef={round.pictureRef} gloss={round.target.en} size={pictureSize} /> : null}
         {mode === 'see' ? (
@@ -289,7 +294,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
         {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
       </View>
       <Spacer size="md" />
-      <Heading level="prompt">{round.promptEn}</Heading>
+      <Heading level="prompt">{promptLine}</Heading>
       <Spacer size="sm" />
       {prompt}
       {notice}
@@ -380,7 +385,8 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
         />
       ) : (
         <ResultPanel
-          showWord={hearRound}
+          // The word is added after a pass only when it was hidden before Done (a round that opened as `see` shows it already).
+          showWord={hearing}
           state={state}
           round={round}
           width={kbWidth}

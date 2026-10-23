@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { gradeTyped } from '../../reviews/engine';
 import { HEAR_FAILURES_TO_SEE, HEAR_HOLD_MS, afterFailedPlay, hearAnswerHinted, hearOpening, hearSpeech, typedTolerance } from '../hear-mode';
 
 const target = { ko: '사과', romanization: 'sagwa', en: 'apple' };
@@ -59,5 +60,31 @@ describe('typedTolerance and the hinted answer (section 4.3)', () => {
     expect(hearAnswerHinted('사과', '사과', true)).toBe(true);
     expect(hearAnswerHinted('사과', '사가', false)).toBe(true);
     expect(hearAnswerHinted('사과', '가가', true)).toBe(false);
+  });
+});
+
+describe('one tolerance for a quest and a review (section 4.3)', () => {
+  it('grades every typed answer as the review engine does, finals and stray characters included', () => {
+    const cases: Array<[string, string]> = [
+      ['사과', '사과'],
+      ['사과', '삭와'],
+      ['사과', '사가'],
+      ['사과', '사과!'],
+      ['사과', '사x과'],
+      ['밥', '바'],
+      ['책이', '채기'],
+      ['김밥 하나', '김밥하나'],
+      ['우유', 'ㅇ우유'],
+      ['사과', ''],
+      ['아', 'ㅇㅏ'],
+      ['바', 'ㅂ'],
+      ['가', 'ㅏ'],
+      ['닭', 'ㄷㅏㄺ'],
+      ['“사과”', '사과'],
+      ['사과', '사과ㅋ'],
+    ];
+    for (const [want, typed] of cases) expect(typedTolerance(want, typed)).toBe(gradeTyped(want, typed));
+    // An initial is not a final: 삭와 is two letters from 사과, a miss in both places.
+    expect(typedTolerance('사과', '삭와')).toBe('miss');
   });
 });

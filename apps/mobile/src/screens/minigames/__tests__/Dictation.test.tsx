@@ -49,6 +49,8 @@ function host(): MinigameHost & { answers: Answer[] } {
 }
 
 const mounted: ReactTestRenderer[] = [];
+/** Every `focus()` a mounted node took (the field is never focused while a round holds). */
+const focused: string[] = [];
 async function play(rounds: TypeHangulRound[], size = { width: 768, height: 1024 }, withKit = true): Promise<{ r: ReactTestRenderer; h: ReturnType<typeof host> }> {
   const h = host();
   let r!: ReactTestRenderer;
@@ -59,7 +61,7 @@ async function play(rounds: TypeHangulRound[], size = { width: 768, height: 1024
           <TypeHangulGame scope={{ kind: 'type-hangul', rounds: rounds.length, typeHangul: { rounds } }} host={h} hear={withKit ? kit : null} />
         </RomanizationModeOverride>
       </LayoutProvider>,
-      { createNodeMock: () => ({ focus: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined }) },
+      { createNodeMock: () => ({ focus: () => focused.push('node'), addEventListener: () => undefined, removeEventListener: () => undefined }) },
     );
   });
   mounted.push(r);
@@ -85,6 +87,7 @@ const labels = (root: ReactTestInstance): string[] =>
 const field = (r: ReactTestRenderer): string => labels(byTestId(r.root, 'type-hangul-field')[0]!).join(' ');
 
 beforeEach(() => {
+  focused.length = 0;
   rig.current = createAudioRig({ voices: [KO_VOICE] });
   useAudioStore.setState({ muted: false });
 });
@@ -207,11 +210,34 @@ describe('Dictation with no Korean voice, sound off, or the voice list unknown (
     expect(speaker?.props.accessibilityState?.disabled ?? speaker?.props['aria-disabled']).toBe(true);
     await typeKeys(r, 'ㅅㅏ');
     expect(field(r)).toContain(T.heading.hear);
+    // Nothing takes focus while the round holds: not the field, not a panel.
+    expect(focused).toEqual([]);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(HEAR_HOLD_MS);
     });
     await typeKeys(r, 'ㅅㅏ');
     expect(field(r)).toContain('사');
+  });
+
+  it('the voice list resolves to available during the hold: the round opens as hear at once, before 1.5 s, keys live', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    useAudioStore.setState({ tts: { state: 'unknown' } });
+    const { r } = await play([APPLE]);
+    await typeKeys(r, 'ㅅ');
+    expect(field(r)).toContain(T.heading.hear);
+    await act(async () => {
+      useAudioStore.setState({ tts: { state: 'ready', voiceId: 'com.apple.voice.Yuna', voiceName: 'Yuna', local: true, quality: 'standard' } });
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(HEAR_HOLD_MS / 3);
+    });
+    // Open as hear, well inside the hold: the speaker is live, the Korean is still hidden, and the first key is taken.
+    const speaker = byTestId(r.root, 'dictation-prompt-speaker').find((n) => n.props.accessibilityState !== undefined || n.props['aria-disabled'] !== undefined);
+    expect(speaker?.props.accessibilityState?.disabled ?? speaker?.props['aria-disabled'] ?? false).toBe(false);
+    expect(texts(r)).not.toContain('사과');
+    await typeKeys(r, 'ㅅㅏ');
+    expect(field(r)).toContain('사');
+    expect(byTestId(r.root, 'dictation-notice')).toHaveLength(0);
   });
 
   it('the voice list resolves to none during the hold: the round opens as see with the notice', async () => {
@@ -229,6 +255,9 @@ describe('Dictation with no Korean voice, sound off, or the voice list unknown (
   it('without the dictation chunk (switch off or not loaded) a hear round is the see round of the word', async () => {
     const { r } = await play([APPLE], undefined, false);
     expect(texts(r)).toContain('사과');
+    // An ordinary see round: its line is the see heading, never the hear line the round was written with.
+    expect(texts(r)).toContain(T.heading.see);
+    expect(texts(r)).not.toContain(APPLE.promptEn);
     expect(byTestId(r.root, 'dictation-notice')).toHaveLength(0);
     expect(byTestId(r.root, 'dictation-prompt-speaker')).toHaveLength(0);
   });
@@ -268,6 +297,16 @@ describe('the spelling round (Listen & Pick, promptKind spelling)', () => {
     expect(all).toContain('치읓 애, 기역 이. chaegi');
     // Never the Korean prompt as text before the answer: it is the answer.
     expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+  });
+
+  it('below 640 tall the speaker is its one sound control, and the two short spellings sit side by side', async () => {
+    const r = await renderPick(true);
+    expect(byTestId(r.root, 'listen-pick-hear-again')).toHaveLength(0);
+    expect(byTestId(r.root, 'listen-pick-speaker').length).toBeGreaterThan(0);
+    const cells = byTestId(r.root, 'listen-pick-options')[0]!.children.filter((c): c is ReactTestInstance => typeof c !== 'string');
+    const bases = r.root.findAll((n) => n.props.style !== undefined && JSON.stringify(n.props.style).includes('"flexBasis":"45%"'));
+    expect(cells.length).toBeGreaterThan(0);
+    expect(bases.length).toBeGreaterThanOrEqual(2);
   });
 
   it('a miss points back to the meaning', async () => {

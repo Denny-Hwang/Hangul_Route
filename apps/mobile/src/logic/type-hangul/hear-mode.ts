@@ -53,18 +53,37 @@ export function hearSpeech(round: Pick<TypeHangulRound, 'audioRef' | 'target'>):
   return audioRef === undefined ? { text } : { text, audioRef };
 }
 
-/** The letters of a text, block by block (first letter, vowel, final), spaces and edge punctuation left out. */
+/**
+ * The section 4.3 tolerance, kept equal to the review engine's `gradeTyped` (`reviews/engine.ts`): one rule, so a
+ * typed answer grades the same in a quest's Dictation round and in a review. It is a copy, not an import, because a
+ * module shared by the dictation chunk and the memory chunk would be carried by the start bundle; the parity test in
+ * `__tests__/hear-mode.test.ts` runs both over the same answers. The steps are the engine's: the asked form (NFC,
+ * single spaces, no edge punctuation), then each block as its first letter, vowel and final (an initial and a final
+ * are different letters), a lone letter in its own place, and any other character as itself.
+ */
+const EDGE_PUNCTUATION = /^["'\u201c\u201d\u2018\u2019(]+|[.!?~\u2026,"'\u201c\u201d\u2018\u2019)]+$/g;
+/** The compatibility letters that stand as a first letter (U+3131 to U+314E, the 19 initials) and the vowels. */
+const INITIAL_LETTERS = new Set([0x3131, 0x3132, 0x3134, 0x3137, 0x3138, 0x3139, 0x3141, 0x3142, 0x3143, 0x3145, 0x3146, 0x3147, 0x3148, 0x3149, 0x314a, 0x314b, 0x314c, 0x314d, 0x314e]);
+const VOWEL_FIRST = 0x314f;
+const VOWEL_LAST = 0x3163;
+
+function askedForm(text: string): string {
+  return text.normalize('NFC').replace(/\s+/g, ' ').trim().replace(EDGE_PUNCTUATION, '').trim();
+}
+
 function lettersOf(text: string): string[] {
   const out: string[] = [];
-  for (const ch of text.normalize('NFC').replace(/\s+/g, '')) {
+  for (const ch of askedForm(text).replace(/\s+/g, '')) {
     const parts = decomposeSyllable(ch);
-    if (parts === null) {
-      // A lone letter typed on its own (a compatibility jamo, U+3131 to U+3163) is a letter too.
-      if (/[\u3131-\u3163]/.test(ch)) out.push(ch);
+    if (parts !== null) {
+      out.push(`i${parts.initial}`, `m${parts.medial}`);
+      if (parts.final !== '') out.push(`f${parts.final}`);
       continue;
     }
-    out.push(parts.initial, `v${parts.medial}`);
-    if (parts.final !== '') out.push(parts.final);
+    const code = ch.charCodeAt(0);
+    if (INITIAL_LETTERS.has(code)) out.push(`i${ch}`);
+    else if (code >= VOWEL_FIRST && code <= VOWEL_LAST) out.push(`m${code - VOWEL_FIRST}`);
+    else out.push(ch);
   }
   return out;
 }
