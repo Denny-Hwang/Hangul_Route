@@ -83,7 +83,7 @@ export function mergeCellBest(
   return unionRecord(a, b, (x, y) => (x >= y ? x : y), PROGRESS_RECORD_MAX);
 }
 
-/** `cellCheckAt`, `stageCheckAt`, `testedOut` and `stamps`: key union, the earliest time wins. */
+/** `cellCheckAt`, `stageCheckAt`, `testedOut`, `stamps` and `stageCeremonyAt`: key union, the earliest time wins. */
 export function mergeLatchRecord(
   a: Readonly<Record<string, string>> | undefined,
   b: Readonly<Record<string, string>> | undefined,
@@ -165,9 +165,9 @@ export const GOALS_CLOCK_SKEW_MS = 10 * 60_000;
 
 type TimedFields = Pick<
   ProgressSnapshot,
-  'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt' | 'steadyWeeks'
+  'cellCheckAt' | 'stageCheckAt' | 'testedOut' | 'stamps' | 'goals' | 'dayLog' | 'streakLocal' | 'memSeededAt' | 'steadyWeeks' | 'stageCeremonyAt'
 >;
-const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps', 'steadyWeeks'] as const;
+const LATCH_KEYS = ['cellCheckAt', 'stageCheckAt', 'testedOut', 'stamps', 'steadyWeeks', 'stageCeremonyAt'] as const;
 
 /**
  * The time guard the Worker applies to a sent snapshot before it merges
