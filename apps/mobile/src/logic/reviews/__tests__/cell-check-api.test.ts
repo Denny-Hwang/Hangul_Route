@@ -49,7 +49,7 @@ function fake(over: Partial<CellCheckDeps> = {}): Fake {
     recordTestOut: async (_p, answers, passed) => void out.testOuts.push({ answers, passed }),
     testOutCell: () => out.cell,
     serverTime: () => null,
-    latch: (_p, field, cellId, at) => void out.latches.push({ field, cellId, at }),
+    latch: (_p, field, keys, at) => void out.latches.push(...keys.map((cellId) => ({ field, cellId, at }))),
     track: (e) => void out.events.push(e),
     overlays: () => ({}),
     ensureCell: async () => undefined,
@@ -235,5 +235,81 @@ describe('in Spanish or Korean', () => {
     const plan = await api2.startSession(await world(offline), CELL, 'check', 'ko');
     // Every lesson item of the cell is in the unloadable chunk: what is left are topic words, or no Check at all.
     for (const r of plan?.rounds ?? []) expect(r.question.itemId.startsWith('vocab:'), JSON.stringify(INDEX.byId.get(r.question.itemId)?.cells)).toBe(true);
+  });
+});
+
+describe('a Stage Jump (row CM-25)', () => {
+  const STAGE3 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage3-${t}`).filter((c) => INDEX.items.some((i) => i.cells.includes(c)));
+  const STAGE2 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage2-${t}`);
+
+  it('jumpOfferable: a stage with 10 or more playable rounds whose every cell may be tested out; never while off', async () => {
+    expect(STAGE3.length).toBeGreaterThanOrEqual(4);
+    const api = createCellCheckApi(fake().deps);
+    expect(await api.jumpOfferable('p1', 'stage3', STAGE3)).toBe(true);
+    // CM-21's topic-word limit, cell by cell: no Stage 2 cell may be tested out today, so Stage 2 has no jump.
+    expect(await api.jumpOfferable('p1', 'stage2', STAGE2)).toBe(false);
+    expect(await api.jumpOfferable('p1', 'stage5', ['letters', 'life'].map((t) => `episode:stage5-${t}`))).toBe(false);
+    expect(await api.jumpOfferable('p1', 'stage3', [])).toBe(false);
+    expect(await createCellCheckApi(fake({ on: () => false }).deps).jumpOfferable('p1', 'stage3', STAGE3)).toBe(false);
+  });
+
+  it('holds every answer to the end; a pass places the asked items and latches every cell and the stage key in one write', async () => {
+    const f = fake();
+    const api = createCellCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
+    expect(plan.mode).toBe('jump');
+    expect(plan.rounds).toHaveLength(20);
+    expect(plan.cells).toEqual(STAGE3);
+    api.started(w);
+    await api.recordRound(w, plan, 0, { correct: true });
+    expect(f.recorded).toEqual([]);
+    const done = await api.finishSession(w, plan, all(20, 16), [], NOW);
+    expect(done).toEqual({ stars: 3, passed: true });
+    expect(f.testOuts).toHaveLength(1);
+    expect(f.testOuts[0]?.answers).toHaveLength(20);
+    expect(f.latches.map((l) => l.cellId)).toEqual([...STAGE3, 'stage3']);
+    expect(f.latches.every((l) => l.field === 'testedOut' && l.at === NOW.toISOString())).toBe(true);
+    // One entry per stage (id `cell-check:stage3`), as CM-21 keeps one per cell.
+    expect(f.reviews[0]).toMatchObject({ id: 'cell-check:stage3', kind: 'cell-check', scope: 'stage3', resultStars: 3 });
+    // Telemetry: review.* of kind cell-check, stars only; no testout.finished, no item, no text.
+    expect(f.events.map((e) => e.name)).toEqual(['review.start', 'review.complete']);
+    expect(f.events.at(-1)).toEqual({ name: 'review.complete', profileId: 'p1', payload: { kind: 'cell-check', stars: 3 } });
+  });
+
+  it('not passed: the answers go to the store by their result, nothing latches', async () => {
+    const f = fake();
+    const api = createCellCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
+    expect(await api.finishSession(w, plan, all(20, 15), [], NOW)).toEqual({ stars: 2, passed: false });
+    expect(f.testOuts[0]?.passed).toBe(false);
+    expect(f.latches).toEqual([]);
+  });
+
+  it('checked at both ends: a locked or started cell, or a stage jumped already, plans nothing; one closed while it played latches nothing', async () => {
+    const locked = fake();
+    locked.cell = { stage: 'stage3', open: [true, false, true], started: false };
+    expect(await createCellCheckApi(locked.deps).startSession(await world(locked), 'stage3', 'jump', 'en', STAGE3)).toBeNull();
+    const jumped = fake({ snapshot: () => ({ testedOut: { stage3: NOW.toISOString() } }) as unknown as ProgressSnapshot });
+    expect(await createCellCheckApi(jumped.deps).startSession(await world(jumped), 'stage3', 'jump', 'en', STAGE3)).toBeNull();
+    const lapsed = fake();
+    const api = createCellCheckApi(lapsed.deps);
+    const w = await world(lapsed);
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
+    lapsed.cell = { stage: 'stage3', open: [true, true, false], started: false };
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toBeNull();
+    expect(lapsed.latches).toEqual([]);
+    expect(lapsed.testOuts).toEqual([]);
+    expect(lapsed.reviews).toEqual([]);
+  });
+
+  it('in Spanish or Korean, loads the chunks of every cell of the stage first', async () => {
+    const asked: string[] = [];
+    const f = fake({ ensureCell: async (cell) => void asked.push(cell) });
+    const api = createCellCheckApi(f.deps);
+    const plan = await api.startSession(await world(f), 'stage3', 'jump', 'ko', STAGE3);
+    expect(plan?.rounds.length).toBeGreaterThanOrEqual(10);
+    for (const cell of STAGE3) expect(asked).toContain(cell);
   });
 });

@@ -2760,4 +2760,20 @@ export const learner = {
       bodyNoCards: 'Every stage you finished stays on your Journey.',
     },
   },
+  /**
+   * Stage Jump Ahead (F-CURR-002 row CM-25): the Test out rule over a whole stage, offered on the Journey stage header of
+   * the stage the route has reached, before it is started. The Check's star headlines, stop sheet, intro buttons and the
+   * not-passed result reuse `dailyReview`, `stageReview` and `testOut`. Stars only: never a percentage, an "n of m", a
+   * pass mark, a timer or "failed". Read by the `review-copy` rule.
+   */
+  stageJump: {
+    /** One quiet line under the stage's cells; it is the Jump ahead button's description. */
+    prompt: 'Already know this stage?',
+    cta: 'Jump ahead',
+    /** The button's label for screen readers: the stage's number and title. */
+    label: (stage: number, title: string) => `Jump ahead past Stage ${stage}: ${title}`,
+    intro: 'About 7 minutes. Show what you know from every place in this stage. No timer.',
+    extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
+    passed: 'You jumped ahead!',
+  },
 } as const;

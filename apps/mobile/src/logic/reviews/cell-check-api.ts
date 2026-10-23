@@ -12,6 +12,9 @@ import {
   checkLatch,
   checkResult,
   planCellCheck,
+  planStageJump,
+  stageJumpItemIds,
+  testedOutKeys,
   type TestOutCell,
   testOutAllowed,
   testOutFinishedEvent,
@@ -42,6 +45,10 @@ import type { ReviewItemIndex } from './review-items-store';
  * - **A test-out** records nothing until it is finished (a stopped test-out writes nothing: the cell has not been
  *   taught). Then the asked items are placed by their result (`recordTestOut`), a pass latches `testedOut` and the
  *   unasked items are derived from it (`ensureSeeded` lays them).
+ * - **A Stage Jump** (row CM-25) is a test-out over a whole stage: the same rule, one Check over the stage's cells, the
+ *   stage and each cell checked at both ends (`jumpAllowed`); a pass latches `testedOut` for each cell and for the stage
+ *   key, with the guarded stamp. Its telemetry is `review.start` / `review.complete` of kind
+ *   `cell-check` with the stars only (no `testout.finished`: its items and first tries are not split per cell).
  */
 
 export interface CellCheckDeps {
@@ -61,8 +68,8 @@ export interface CellCheckDeps {
   testOutCell(profileId: string, cellId: string): TestOutCell | null;
   /** The server time of the learner's last snapshot sync, or null (the stamp cap). */
   serverTime(profileId: string): string | null;
-  /** Latches `cellCheckAt` or `testedOut` for the cell on the hydrated snapshot (earliest wins), saved and synced. */
-  latch(profileId: string, field: 'cellCheckAt' | 'testedOut', cellId: string, at: string): void;
+  /** Latches `cellCheckAt` or `testedOut` for these keys on the hydrated snapshot (earliest wins), saved and synced once. */
+  latch(profileId: string, field: 'cellCheckAt' | 'testedOut', keys: readonly string[], at: string): void;
   track(event: TelemetryEvent): void;
   overlays(locale: 'es' | 'ko'): Readonly<Record<string, Readonly<Record<string, string>>>>;
   ensureCell(cell: string): Promise<void>;
@@ -94,8 +101,13 @@ export interface CellCheckApi {
    * out; both false while off or unreadable.
    */
   offerable(profileId: string | null, cellId: string): Promise<CellOffers>;
-  /** The plan; null when there is none, or for a test-out the cell may not take now. */
-  startSession(world: CheckWorld, cellId: string, mode: CheckMode, locale: UiLocale): Promise<PlannedCheck | null>;
+  /** Whether a Stage Jump of these cells can play (10 or more rounds, row CM-25); false while off or unreadable. */
+  jumpOfferable(profileId: string | null, stage: string, cells: readonly string[]): Promise<boolean>;
+  /**
+   * The plan; null when there is none, or for a test-out the cell (for a Stage Jump each cell of the stage) may not take
+   * now. `cells`: a Stage Jump's cells (`mode: 'jump'`, `cellId` the stage key); ignored by a cell's own Check.
+   */
+  startSession(world: CheckWorld, cellId: string, mode: CheckMode, locale: UiLocale, cells?: readonly string[]): Promise<PlannedCheck | null>;
   /** The learner tapped Let's go: `review.start { kind: 'cell-check' }`. */
   started(world: CheckWorld): void;
   /** A Cell Check records a round's first answer now; a test-out holds it until the end. */
@@ -147,6 +159,13 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       return cells.length > 0 && cells.every((c) => tried.get(c) === false);
     });
 
+  /**
+   * Row CM-25: may the stage be jumped now: not jumped yet, and every cell of it may be tested out (not Stage 1, not
+   * started, every quest open under F-ENT-003). Read at the start and again before the latch, as a cell's test-out.
+   */
+  const jumpAllowed = (profileId: string, stage: string, cells: readonly string[]): boolean =>
+    cells.length > 0 && deps.snapshot(profileId)?.testedOut?.[stage] === undefined && cells.every((cell) => testOutAllowed(deps.testOutCell(profileId, cell)));
+
   return {
     readWorld,
 
@@ -159,23 +178,33 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       return { check, testOut: check && testOutFits(ctx.index, cellId) };
     },
 
-    async startSession(world, cellId, mode, locale) {
+    async jumpOfferable(profileId, stage, cells) {
+      const read = await readWorld(profileId);
+      if (read.kind !== 'ready') return false;
+      const { ctx } = read.world;
+      return stageJumpItemIds(ctx.index, cells).length > 0 && planStageJump(ctx, stage, cells, { gloss: glossFrom(undefined), seed: ctx.seed ?? '' }) !== null;
+    },
+
+    async startSession(world, cellId, mode, locale, cells = []) {
       const { ctx, profileId } = world;
       if (!deps.on(profileId)) return null;
       if (mode === 'testout' && !(testOutFits(ctx.index, cellId) && testOutAllowed(deps.testOutCell(profileId, cellId)))) return null;
+      if (mode === 'jump' && !jumpAllowed(profileId, cellId, cells)) return null;
       const seed = `${ctx.seed ?? ''}|${cellId}`;
-      let plan = planCellCheck(ctx, cellId, mode, { gloss: glossFrom(undefined), seed });
+      const planOf = (gloss: ReturnType<typeof glossFrom>, out?: ReadonlySet<string>): PlannedCheck | null =>
+        mode === 'jump' ? planStageJump(ctx, cellId, cells, { gloss, seed }, out) : planCellCheck(ctx, cellId, mode, { gloss, seed }, out);
+      let plan = planOf(glossFrom(undefined));
       if (plan !== null && locale !== 'en') {
         // As the Daily Review: the meanings come from the lesson chunks, and a meaning still missing is never shown in
         // English. A Check asks one cell's items, so their chunks load first and an item none of whose chunks loads
         // (offline, not cached) is left out; then the chunks of the options beside each answer, and the plan is built again.
         const tried = new Map<string, boolean>();
-        const ids = cellCheckItemIds(ctx.index, cellId);
+        const ids = mode === 'jump' ? stageJumpItemIds(ctx.index, cells) : cellCheckItemIds(ctx.index, cellId);
         await loadCells(ids, ctx, tried);
         const out = new Set(unloadable(ids, ctx, tried));
         const gloss = (): ReturnType<typeof glossFrom> => glossFrom(deps.overlays(locale));
-        plan = planCellCheck(ctx, cellId, mode, { gloss: gloss(), seed }, out);
-        if (plan !== null && (await loadCells(planItems(plan, true), ctx, tried))) plan = planCellCheck(ctx, cellId, mode, { gloss: gloss(), seed }, out);
+        plan = planOf(gloss(), out);
+        if (plan !== null && (await loadCells(planItems(plan, true), ctx, tried))) plan = planOf(gloss(), out);
       }
       return plan;
     },
@@ -186,7 +215,7 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
 
     recordRound(world, plan, index, answer) {
       const round = plan.rounds[index];
-      if (round === undefined || plan.mode === 'testout') return Promise.resolve();
+      if (round === undefined || plan.mode !== 'check') return Promise.resolve();
       return deps.recordAnswers(world.profileId, checkAnswers([round], new Map([[0, answer]])));
     },
 
@@ -195,14 +224,16 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       await Promise.all(recorded);
       // The switch, and for a test-out the cell's access, read again: either gone meanwhile writes nothing.
       if (!deps.on(profileId) || (plan.mode === 'testout' && !testOutAllowed(deps.testOutCell(profileId, plan.cellId)))) return null;
+      if (plan.mode === 'jump' && !jumpAllowed(profileId, plan.cellId, plan.cells ?? [])) return null;
       const result = checkResult(plan.rounds, answers);
       const file = await deps.file(profileId);
       const at = stampOf(file ?? { rows: {} }, now, deps.serverTime(profileId));
-      if (plan.mode === 'testout') await deps.recordTestOut(profileId, checkAnswers(plan.rounds, answers), result.passed, now);
+      if (plan.mode !== 'check') await deps.recordTestOut(profileId, checkAnswers(plan.rounds, answers), result.passed, now);
       deps.recordReview(profileId, cellCheckEntry({ cellId: plan.cellId, result, at }));
       const latch = checkLatch(plan.mode, result);
-      if (latch !== null) deps.latch(profileId, latch, plan.cellId, at);
-      // The unasked items of a passed test-out are derived from `testedOut` (laid by the seeding pass).
+      // A Stage Jump latches every cell of the stage and the stage key (row CM-25), one write.
+      if (latch !== null) deps.latch(profileId, latch, latch === 'testedOut' ? testedOutKeys(plan) : [plan.cellId], at);
+      // The unasked items of a passed test-out or jump are derived from `testedOut` (laid by the seeding pass).
       if (latch === 'testedOut') await deps.ensureSeeded(profileId).catch(() => undefined);
       deps.track(cellCheckCompleteEvent(profileId, result.stars));
       if (plan.mode === 'testout') {

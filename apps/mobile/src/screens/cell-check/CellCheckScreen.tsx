@@ -1,22 +1,25 @@
 import type { ThemeKey } from '@hangul-route/content-schema';
 import { Body, Button, ConfirmSheet, Heading, Hoya, Screen, Spacer, StarRow, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { episodeById } from '../../content';
+import { episodeById, episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode } from '../../logic/content-locale';
 import { memoryChunk } from '../../logic/memory/boot';
 import type { CellCheckApi, CheckWorld } from '../../logic/reviews/cell-check-api';
 import type { PlannedCheck } from '../../logic/reviews/cell-check';
+import { jumpCells } from '../../logic/reviews/cell-check-offer';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { useMasteryMoment } from '../../store/mastery-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useQuestAccess } from '../../store/tier-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
 import { OopsScreen } from '../system/OopsScreen';
 import { useActiveRouteNext } from '../use-route-next';
+import { stageJumpRuleNow } from './StageJumpLine';
 
 /**
  * The Cell Check and Test out (F-CURR-002 sections 4.4, 4.5 and 7.7, row CM-21; design/wireframes/reviews/
@@ -25,7 +28,8 @@ import { useActiveRouteNext } from '../use-route-next';
  * chunks), the session logic the memory chunk's (`cellCheckApi()`).
  *
  * C the intro, D the rounds (the cell's items only, so no theme line), E and E2 the Cell Check result, F and G the
- * test-out result, I the stop sheet (the Hangul Check's). Stars only: never a percentage, an "n of m", a pass mark, a
+ * test-out result, I the stop sheet (the Hangul Check's). Row CM-25: `mode: 'jump'` is Stage Jump Ahead over the stage
+ * whose key is `cellId`, with C's Jump ahead words and the test-out's F and G ("You jumped ahead!"). Stars only: never a percentage, an "n of m", a pass mark, a
  * timer or "failed". A stopped Cell Check keeps its answers and writes no entry; a stopped test-out writes nothing.
  */
 
@@ -34,8 +38,9 @@ type Rounds = typeof import('../reviews/daily-review-chunk');
 
 /** Hoya on the intro and the result: the Daily Review's size. */
 const END_HOYA = 120;
-/** The loading frame's dots: a Cell Check's 10 (not imported: no scheduler module in this chunk). */
+/** The loading frame's dots: a Cell Check's 10, a Stage Jump's 20 (not imported: no scheduler module in this chunk). */
 const LOADING_DOTS = 10;
+const JUMP_LOADING_DOTS = 20;
 
 type Phase =
   | { kind: 'loading' }
@@ -54,6 +59,10 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   const m = useMessages();
   const copy = m.learner.cellCheck;
   const out = m.learner.testOut;
+  const jumpCopy = m.learner.stageJump;
+  // Row CM-25: a Stage Jump's `cellId` is the stage key; its cells are the stage's playable grid cells.
+  const jump = mode === 'jump';
+  const stageCells = useMemo(() => (jump ? jumpCells(episodesAll).filter((c) => c.stage === cellId) : []), [jump, cellId]);
   const locale = useLocale();
   const reducedMotion = useReducedMotion();
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
@@ -72,6 +81,9 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   const finishing = useRef(false);
   const next = useActiveRouteNext()?.next;
   const moment = useMasteryMoment(profileId, phase.kind === 'result');
+  const open = useQuestAccess();
+  const openRef = useRef(open);
+  openRef.current = open;
   const episode = episodeById(cellId);
 
   useEffect(() => {
@@ -88,7 +100,10 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
         if (read.kind === 'unreadable') throw new Error('unreadable');
         if (read.kind !== 'ready') return null;
         world.current = read.world;
-        return a.startSession(read.world, cellId, mode, locale);
+        // Row CM-25: a jump only where the line would offer it (the stage the route has reached, not placed out); the
+        // session checks each cell's access and the stage again at its start and before its latch (`jumpAllowed`).
+        if (jump && !stageJumpRuleNow(profileId, cellId, openRef.current)) return null;
+        return a.startSession(read.world, cellId, mode, locale, stageCells.map((c) => c.id));
       })
       .then(
         (plan) => alive && setPhase((p) => (p.kind === 'failed' ? p : plan ? { kind: 'intro', plan } : { kind: 'nothing' })),
@@ -119,7 +134,8 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
     },
     [],
   );
-  const toPlace = (): void => leaveTo(() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main', { screen: 'Journey', params: { episodeId: cellId } })));
+  const toPlace = (): void =>
+    leaveTo(() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Main', { screen: 'Journey', ...(jump ? {} : { params: { episodeId: cellId } }) })));
   const toMap = (): void => leaveTo(() => navigation.navigate('Main', { screen: 'Journey' }));
 
   const onFirst = (index: number, answer: RoundAnswer): void => {
@@ -172,7 +188,7 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   }
 
   if (phase.kind === 'loading' || phase.kind === 'playing' || (ui === null && phase.kind !== 'nothing')) {
-    const total = phase.kind === 'playing' ? phase.plan.rounds.length : LOADING_DOTS;
+    const total = phase.kind === 'playing' ? phase.plan.rounds.length : jump ? JUMP_LOADING_DOTS : LOADING_DOTS;
     const index = phase.kind === 'playing' ? phase.index : 0;
     const round = phase.kind === 'playing' ? phase.plan.rounds[index] : undefined;
     const filled = phase.kind === 'playing' ? index + (answers.current.has(index) ? 1 : 0) : 0;
@@ -215,9 +231,10 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
       <Screen tone="canvas" scrollable testID="cell-check-intro">
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <Hoya pose="waving" size={END_HOYA} accessibilityLabel={m.a11y.hoya('waving')} />
-          <ui.DisplayHeadline testID="cell-check-title">{mode === 'testout' ? out.title : copy.title}</ui.DisplayHeadline>
-          <Body align="center">{copy.body}</Body>
+          <ui.DisplayHeadline testID="cell-check-title">{jump ? jumpCopy.cta : mode === 'testout' ? out.title : copy.title}</ui.DisplayHeadline>
+          <Body align="center">{jump ? jumpCopy.intro : copy.body}</Body>
           {mode === 'testout' ? <Body align="center">{out.intro}</Body> : null}
+          {jump ? <Body align="center">{jumpCopy.extra}</Body> : null}
         </View>
         <Spacer size="xl" />
         <Button
@@ -242,14 +259,20 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   if (phase.kind === 'result' && ui !== null) {
     const title = episode ? localizeEpisode(episode, locale).titleEn : '';
     const rise = moment?.read.rises.find((r) => r.cellId === cellId) ?? null;
-    const banners =
-      moment !== null && rise !== null && episode ? (
+    // A jump's result takes the moment as every result does (no cell's rise leaks into the next Results), and shows no
+    // level-up for one cell of the stage: only a Words known milestone the jump crossed (row CM-25).
+    const banners = jump ? (
+      moment !== null && moment.read.milestone !== null ? <moment.ui.MasteryBanners milestone={moment.read.milestone} levelUp={null} reducedMotion={reducedMotion} /> : null
+    ) : moment !== null && rise !== null && episode ? (
         <moment.ui.MasteryBanners milestone={moment.read.milestone} levelUp={{ title, level: rise.level, theme: episode.theme as ThemeKey }} reducedMotion={reducedMotion} />
       ) : null;
-    const testOut = mode === 'testout';
-    const headline = testOut ? (phase.passed ? out.passed : out.start) : m.learner.dailyReview.result.headline[headlineKey(phase.stars)];
+    // A Stage Jump ends as a test-out does (cell-check.md F and G), over the stage (row CM-25).
+    const testOut = mode !== 'check';
+    const headline = testOut ? (phase.passed ? (jump ? jumpCopy.passed : out.passed) : out.start) : m.learner.dailyReview.result.headline[headlineKey(phase.stars)];
     const pose = phase.passed ? 'cheering' : testOut ? 'waving' : 'thinking';
-    const firstQuest = episode?.questIds[0];
+    const firstCell = jump ? stageCells[0] : undefined;
+    const firstQuest = jump ? firstCell?.questIds[0] : episode?.questIds[0];
+    const firstEpisodeId = jump ? (firstCell?.id ?? cellId) : cellId;
     const nextQuest = next?.kind === 'quest' ? next : null;
     return (
       <Screen tone="canvas" scrollable testID="cell-check-result">
@@ -277,7 +300,7 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
             <Button label={m.learner.home.next.heading} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('EpisodeDetail', { episodeId: nextQuest.episodeId }))} testID="cell-check-next" />
           ) : null}
           {testOut && !phase.passed && firstQuest !== undefined ? (
-            <Button label={m.learner.episode.quests.start.cta} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('QuestPlayer', { questId: firstQuest, episodeId: cellId }))} testID="cell-check-first" />
+            <Button label={m.learner.episode.quests.start.cta} tone="primary" size="hero" fullWidth onPress={() => leaveTo(() => navigation.replace('QuestPlayer', { questId: firstQuest, episodeId: firstEpisodeId }))} testID="cell-check-first" />
           ) : null}
           {!testOut && !phase.passed ? <Button label={copy.toPlace} tone="primary" size="hero" fullWidth onPress={toPlace} testID="cell-check-to-place" /> : null}
           <Button
@@ -299,7 +322,7 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
       <View style={{ alignItems: 'center', gap: spacing.sm }}>
         <Hoya pose="waving" size={END_HOYA} accessibilityLabel={m.a11y.hoya('waving')} />
         <Heading level="prompt" align="center">
-          {copy.title}
+          {jump ? jumpCopy.cta : copy.title}
         </Heading>
         <Body align="center">{m.learner.dailyReview.allRefreshed.body}</Body>
       </View>

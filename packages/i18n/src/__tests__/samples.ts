@@ -989,4 +989,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-23: an album's card count (from 1; an album with none says New), and an album row's name with its status.
   'learner.library.albums.count': [[1], [2], [12]],
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
+  // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
+  'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
 };

@@ -144,6 +144,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'upperStageComplete',
   // The Library, whose category albums count the cards held (row CM-23): only fills, never "n of m" or a percentage.
   'library',
+  // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
+  'stageJump',
 ];
 
 export interface ReviewStringFinding {

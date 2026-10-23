@@ -577,3 +577,29 @@ describe('routeNext: tested-out cells (F-CURR-002 section 4.5, row CM-21)', () =
     expect(routeNext(input({ snapshot: { ...snap(), testedOut: {} } }))).toMatchObject({ questId: 'quest:q1' });
   });
 });
+
+describe('routeNext: a Stage Jump (F-CURR-002 row CM-25)', () => {
+  const at = '2026-10-11T09:00:00.000Z';
+
+  it('the cursor skips the jumped stage: every cell of it and the stage key latched; the stage key alone skips nothing', () => {
+    // Stage 1 done up to the jump; the jump of Stage 2 marks its one cell and latches `stage2`.
+    const done = snap(['q1', 'q2', 'q3', 'q4', 'q5']);
+    const jumped = { ...done, testedOut: { 'episode:s2-life': at, stage2: at } };
+    expect(routeNext(input({ snapshot: done }))).toMatchObject({ questId: 'quest:q6', episodeId: 'episode:s2-life' });
+    expect(routeNext(input({ snapshot: jumped }))).toMatchObject({ kind: 'quest', episodeId: 'episode:s4-rites', source: 'cursor' });
+    expect(routeNext(input({ snapshot: { ...done, testedOut: { stage2: at } } }))).toMatchObject({ questId: 'quest:q6' });
+    // The jumped quests are never marked done: they stay in the snapshot as they were.
+    expect(jumped.quests.map((q) => q.questId)).not.toContain('quest:q6');
+  });
+
+  it('a grown-up override newer than the jump wins: the jumped cell is on the route again; a later jump skips it again', () => {
+    const done = snap(['q1', 'q2', 'q3', 'q4', 'q5']);
+    const placement = (overrideAt: string) =>
+      ({ id: 'placement:a', completedAt: '2026-10-10T09:00:00.000Z', override: { by: 'parent', at: overrideAt, startQuestId: 'quest:q6' } }) as unknown as NonNullable<ProgressSnapshot['placements']>[number];
+    const latched = { 'episode:s2-life': at, stage2: at };
+    const putBack = { ...done, testedOut: latched, placements: [placement('2026-10-12T09:00:00.000Z')] };
+    expect(routeNext(input({ snapshot: putBack }))).toMatchObject({ questId: 'quest:q6', episodeId: 'episode:s2-life' });
+    const jumpedAfter = { ...done, testedOut: latched, placements: [placement('2026-10-10T12:00:00.000Z')] };
+    expect(routeNext(input({ snapshot: jumpedAfter }))).toMatchObject({ episodeId: 'episode:s4-rites' });
+  });
+});

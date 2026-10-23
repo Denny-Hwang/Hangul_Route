@@ -1,7 +1,7 @@
 import { Body, Button, Card, Spacer, spacing } from '@hangul-route/design-system';
 import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { routeEnabledFor } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -60,7 +60,7 @@ export function usePlanPrompt(
  * The quiet card "Hoya can make a weekly plan for you" with **Make my plan** and **Not now**
  * (AM-6; wireframe journey/my-route-overview.md D and FP-B13: the prompt only, no week dots).
  */
-export function PlanPromptCard({ profileId, onOpen }: { profileId: string; onOpen: () => void }): React.ReactElement {
+export function PlanPromptCard({ profileId, onOpen }: { profileId: string; onOpen: () => void }): ReactElement {
   const t = useMessages().learner.weeklyPlan.homePrompt;
   return (
     <Card padding="md" tone="sunken" testID="home-plan-prompt">
@@ -147,14 +147,14 @@ export function PlanSlotCard({
   onOverview: () => void;
   /** Not now on the check-in, or an answer that came too late: the slot lets the card go. */
   onCloseCheckIn: () => void;
-}): React.ReactElement | null {
+}): ReactElement | null {
   if (slot.kind === 'prompt') return <PlanPromptCard profileId={profileId} onOpen={onOpen} />;
   if (slot.kind === 'check-in') return <CheckInCard key={profileId} profileId={profileId} offer={slot.offer} onClose={onCloseCheckIn} testID="home-plan-check-in" />;
   return <MovedLine profileId={profileId} onOverview={onOverview} />;
 }
 
 /** "Hoya moved your plan along" with See my plan; drawing it marks the line seen (section 3.7). */
-function MovedLine({ profileId, onOverview }: { profileId: string; onOverview: () => void }): React.ReactElement {
+function MovedLine({ profileId, onOverview }: { profileId: string; onOverview: () => void }): ReactElement {
   const t = useMessages().learner.weeklyPlan.homeMoved;
   useEffect(() => {
     void useRouteStore.getState().markMovedSeen(profileId, new Date().toISOString());
