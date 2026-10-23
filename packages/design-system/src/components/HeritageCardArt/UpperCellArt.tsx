@@ -308,7 +308,7 @@ function MwoyeyoArt(p: ArtProps): React.ReactElement {
       {pair}
       <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
       <Bubble x={106} w={72} tx={144}>
-        <Rect x={124} y={36} width={36} height={20} rx={5} fill={colors.brand.secondaryLight} stroke={colors.brand.secondary} strokeWidth={2.5} />
+        <Rect x={124} y={36} width={36} height={20} rx={5} fill={colors.hoya.furBlue} stroke={colors.brand.secondary} strokeWidth={2.5} />
         <Line x1={138} y1={36} x2={138} y2={56} stroke={colors.brand.secondary} strokeWidth={2.5} />
       </Bubble>
     </Card>
@@ -371,7 +371,7 @@ function BigaWayoArt(p: ArtProps): React.ReactElement {
           [170, 92],
           [100, 116],
         ] as const
-      ).map(([x, y]) => drop(x, y, colors.brand.secondaryLight))}
+      ).map(([x, y]) => drop(x, y, colors.brand.secondary))}
       {pair}
       <Bubble x={22} w={72} tx={56}>
         {drop(44, 32, colors.brand.secondary)}
@@ -386,7 +386,7 @@ function BigaWayoArt(p: ArtProps): React.ReactElement {
 }
 
 function GachiArt(p: ArtProps): React.ReactElement {
-  // Shall we play together?: a ball between the friends; one asks, the other answers with a bright star.
+  // Shall we do it together?: a ball between the friends; one asks, the other answers with a bright star.
   return (
     <Card theme="crafts" p={p}>
       {pair}

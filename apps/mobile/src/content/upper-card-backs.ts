@@ -83,7 +83,7 @@ export const UPPER_CARD_BACKS: Readonly<Record<string, UpperCardBack>> = {
   ),
   'card:masisseoyo': back(
     'What you say when the food tastes good.',
-    'The standard Korean pronunciation rules give two ways to say this word: with a d sound in the middle, or with an s sound. Both are correct.',
+    'The standard pronunciation rules give masitda two ways to be said: with a d sound in the middle, or with an s sound. Both are correct.',
     '표준어 규정 제2부 표준 발음법 제15항',
     NIKL,
     0,

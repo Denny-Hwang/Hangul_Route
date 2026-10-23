@@ -130,7 +130,7 @@ export const upperCellCards: HeritageCard[] = [
   upper('mwoyeyo', 'What Is This?', '이게 뭐예요?', 'letters', 'stage4', 'ige mwoyeyo'),
   upper('masisseoyo', 'It Is Tasty', '맛있어요', 'life', 'stage4'),
   upper('biga-wayo', 'It Is Raining', '비가 와요', 'nature', 'stage4', 'biga wayo'),
-  upper('gachi', 'Play Together?', '같이 할까요?', 'crafts', 'stage4', 'gachi halkkayo'),
+  upper('gachi', 'Do It Together?', '같이 할까요?', 'crafts', 'stage4', 'gachi halkkayo'),
 ];
 
 /** The cards row CM-23 adds: awarded, listed and drawn only while `upperCards` is on (held ones always stay). */
