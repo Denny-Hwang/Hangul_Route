@@ -3,6 +3,7 @@ import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { closeInstallGuide } from './text-fit';
 
 /**
  * F-CURR-002 section 7.1 F10, row CM-39 (design/wireframes/minigame/yut-review.md, design/screens/minigame-variety/ D9
@@ -212,4 +213,23 @@ test('game.yut-review off: the plain review screen, the same rounds and result',
   await expect(page.getByTestId('yut-board')).toHaveCount(0);
   for (let n = 1; n <= 3; n += 1) await endRound(page, n, 'right');
   await expect(page.getByTestId('daily-review-stars')).toHaveAttribute('aria-label', '3 stars');
+});
+
+test('largest text (150 %) at 320 x 640: the throw wraps under the board, the tray stays inside the band, nothing scrolls sideways', async ({ page }) => {
+  const id = await onboard(page);
+  await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+  await seed(page, id, 3);
+  await closeInstallGuide(page);
+  await card(page).click();
+  await page.setViewportSize({ width: 320, height: 640 });
+  await expect(page.getByTestId('yut-review-skin')).toBeVisible();
+  await endRound(page, 1, 'miss-then-right');
+  await expect(page.getByTestId('yut-throw-leg').first()).toBeVisible();
+  const [band, board, panel, tray] = await Promise.all(['yut-band', 'yut-board', 'yut-throw', 'yut-tray'].map((t) => page.getByTestId(t).boundingBox()));
+  expect(band && board && panel && tray).toBeTruthy();
+  // Stacked: the throw starts under the board, and the tray ends inside the band.
+  expect(panel!.y).toBeGreaterThanOrEqual(board!.y + board!.height - 1);
+  expect(tray!.x + tray!.width).toBeLessThanOrEqual(band!.x + band!.width + 1);
+  await expectNoScore(page);
+  await shot(page, 'yut-review-largest-320x640', { width: 320, height: 640 });
 });

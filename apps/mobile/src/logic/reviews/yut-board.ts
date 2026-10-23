@@ -281,3 +281,8 @@ export function moveFrames(move: Move, times: FrameTimes, reducedMotion: boolean
   });
   return out;
 }
+
+/** How long a move's frames take on screen: the sum of their delays (ms). */
+export function framesDuration(frames: readonly Frame[]): number {
+  return frames.reduce((total, f) => total + f.delay, 0);
+}

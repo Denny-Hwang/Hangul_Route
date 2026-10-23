@@ -16,6 +16,7 @@ import {
   YUT_STATIONS,
   YUT_THROWS,
   boardAfter,
+  framesDuration,
   homeTray,
   moveFor,
   moveFrames,
@@ -237,6 +238,27 @@ describe('moveFrames: what the band shows while the piece walks', () => {
         expect(moveFrames(move, TIMES, true)).toEqual([{ legs: move.legs.length, position: move.to.position, laps: move.to.laps, delay: 0 }]);
         const frames = moveFrames(move, TIMES, false);
         expect(frames[frames.length - 1]).toMatchObject({ legs: move.legs.length, position: move.to.position, laps: move.to.laps });
+      }),
+      { numRuns: 200 },
+    );
+  });
+});
+
+describe('framesDuration: how long a move is on screen (the plain result waits for the last one)', () => {
+  it('is the sum of the frame delays: 0 for no frames, the walk and the pause between throws otherwise', () => {
+    expect(framesDuration([])).toBe(0);
+    const move = { from: BOARD_START, legs: [{ throw: YUT_THROWS.geol, ...walk(BOARD_START, 3) }], to: { position: 3, laps: 0 } };
+    expect(framesDuration(moveFrames(move, { fall: 200, step: 120, again: 320 }, false))).toBe(200 + 120 + 120);
+  });
+
+  it('is bounded: at most three throws of at most five stations each', () => {
+    const times = { fall: 200, step: 120, again: 320 };
+    fc.assert(
+      fc.property(fc.integer(), fc.integer({ min: 1, max: 40 }), (seed, n) => {
+        const move = boardAfter(seed, n).last!;
+        const ms = framesDuration(moveFrames(move, times, false));
+        expect(ms).toBeGreaterThan(0);
+        expect(ms).toBeLessThanOrEqual(MAX_THROWS_PER_ITEM * (times.again + times.fall + 4 * times.step));
       }),
       { numRuns: 200 },
     );

@@ -32,7 +32,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { RoundView } from './ReviewRounds';
-import { YutReviewSkin } from './YutBoardSkin';
+import { YutReviewSkin, yutResultHold } from './YutBoardSkin';
 
 /**
  * The Daily Review and Keep going (F-CURR-002 sections 4.3, 4.5, 7.4 and 7.7, row CM-14; design
@@ -48,7 +48,7 @@ import { YutReviewSkin } from './YutBoardSkin';
  * Yut Review (row CM-39, `game.yut-review`, built-in pct 0): with the switch on when a session starts, the rounds sit
  * under the yut board band (`YutBoardSkin.tsx`), and each round that ends throws the sticks, whatever its answer. The
  * board reads only the session's seed and how many rounds ended; the answers, stars and result are the same as here
- * with it off, and the result is this plain one.
+ * with it off, and the result is this plain one, opened once the last item's throw has shown (`yutResultHold`).
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DailyReview'>;
@@ -142,7 +142,12 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const yutOn = useCurrFlag(YUT_REVIEW_FLAG);
   const yutOnRef = useRef(yutOn);
   yutOnRef.current = yutOn;
-  const [yut, setYut] = useState<{ seed: number; finished: number } | null>(null);
+  const [yut, setYutState] = useState<{ seed: number; finished: number } | null>(null);
+  const yutRef = useRef(yut);
+  const setYut = useCallback((next: { seed: number; finished: number } | null): void => {
+    yutRef.current = next;
+    setYutState(next);
+  }, []);
   const [leaving, setLeaving] = useState(false);
   // Bumped by each first answer, so the round's dot fills when it is answered.
   const [, setAnswered] = useState(0);
@@ -180,7 +185,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
         starting.current = false;
       }
     },
-    [locale],
+    [locale, setYut],
   );
 
   // Opens on the Daily Review, or on the done-today page once it is finished (keep-going.md E).
@@ -244,8 +249,10 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const onSolved = (): void => {
     const p = phaseRef.current;
     if (p.kind !== 'playing') return;
-    // Every round that ends throws the sticks, whatever its answer: the board only counts ended rounds.
-    setYut((y) => (y === null ? null : { ...y, finished: y.finished + 1 }));
+    // Every round that ends throws the sticks, whatever its answer: the board only counts ended rounds. The count is
+    // that of the round that ended, so a second call for the same round throws nothing more.
+    const y = yutRef.current;
+    if (y !== null && y.finished < p.index + 1) setYut({ ...y, finished: p.index + 1 });
     if (p.index + 1 < p.plan.rounds.length) {
       setPhase({ ...p, index: p.index + 1 });
       return;
@@ -255,8 +262,10 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     if (w === null || a === null || finishing.current) return;
     finishing.current = true;
     setPhase({ kind: 'loading' });
-    void a
-      .finishSession(w, p.plan, answers.current, recorded.current)
+    // With the yut board on, the plain result waits until the last item's throw has shown (row CM-39); off, at once.
+    const hold = y === null ? 0 : yutResultHold(y.seed, p.plan.rounds.length, reducedMotion);
+    const finish = a.finishSession(w, p.plan, answers.current, recorded.current);
+    void (hold === 0 ? finish : Promise.all([finish, new Promise<void>((resolve) => setTimeout(resolve, hold))]).then(([done]) => done))
       .then(({ finished, world: next }) => {
         world.current = next;
         setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });

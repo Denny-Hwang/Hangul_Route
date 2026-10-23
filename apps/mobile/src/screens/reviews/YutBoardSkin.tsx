@@ -1,10 +1,11 @@
-import { Body, KOREAN_LANGUAGE, KOREAN_LINE_BREAK, KoreanText, borderWidth, colors, layout, motion, radii, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
+import { Body, KOREAN_LANGUAGE, KOREAN_LINE_BREAK, KoreanText, TEXT_SIZE_FACTORS, borderWidth, colors, layout, motion, radii, spacing, touchTarget, useEffectiveFontScale, useLayoutClass } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Platform, Text, View } from 'react-native';
+import { ErrorBoundary } from 'react-error-boundary';
 import { Circle, Path, Rect, Svg } from 'react-native-svg';
 import { useMessages } from '../../i18n/use-messages';
-import { BOARD_LINES, BOARD_VIEW, YUT_STATIONS, boardAfter, homeTray, moveFrames, type Frame, type Leg, type Move } from '../../logic/reviews/yut-board';
+import { BOARD_LINES, BOARD_VIEW, YUT_STATIONS, boardAfter, framesDuration, homeTray, moveFrames, type Frame, type Leg, type Move } from '../../logic/reviews/yut-board';
 
 /**
  * Yut Review (F-CURR-002 section 7.1 F10, row CM-39; design design/wireframes/minigame/yut-review.md,
@@ -19,6 +20,9 @@ import { BOARD_LINES, BOARD_VIEW, YUT_STATIONS, boardAfter, homeTray, moveFrames
  * - Sizes (constants table): 128 on a phone from 600 tall, 96 below 600 tall with the throw beside it and no sticks, and
  *   two panes from window class regular with the board at 320.
  * - Reduced motion: no walk and no falling sticks; every throw of the item shows at once.
+ * - Large text (an effective font scale from `YUT_STACK_FONT_SCALE`): on a phone the throw wraps under the board.
+ * - A band that fails to draw hides (an error boundary around the band alone): the round under it stays mounted and the
+ *   session goes on as on the plain screen.
  */
 
 /** The board on a phone from 600 tall: 2 x `touchTarget.min` (128). */
@@ -29,6 +33,8 @@ export const YUT_BOARD_SHORT = touchTarget.hero;
 export const YUT_BOARD_PANE = 5 * touchTarget.min;
 /** Below this window height the band shrinks (constants table: "128 from 600 tall; 96 below"). */
 export const YUT_FULL_BAND_MIN_HEIGHT = 600;
+/** From this effective font scale (the largest text size step, 150 %) the throw stacks under the board on a phone. */
+export const YUT_STACK_FONT_SCALE = TEXT_SIZE_FACTORS.largest;
 
 /** Station and piece radii in board units (the 120 viewBox of the mock). */
 const STATION_R = 5;
@@ -56,27 +62,61 @@ const korean = { lang: KOREAN_LANGUAGE, accessibilityLanguage: KOREAN_LANGUAGE }
 
 const FRAME_TIMES = { fall: motion.duration.base, step: motion.duration.fast, again: motion.duration.slow };
 
+/**
+ * How long the plain result waits after the last round ends, so the last item's throw is seen (and read) too: with
+ * motion, the last move's walk and then `motion.duration.slow` on its final station (at most three throws, so bounded);
+ * with reduced motion, a still `motion.duration.celebration` with nothing moving. 0 when there is no move to show.
+ */
+export function yutResultHold(seed: number, ended: number, reducedMotion: boolean): number {
+  try {
+    const move = boardAfter(seed, ended).last;
+    if (move === null) return 0;
+    if (reducedMotion) return motion.duration.celebration;
+    return framesDuration(moveFrames(move, FRAME_TIMES, false)) + motion.duration.slow;
+  } catch {
+    // A board that cannot be worked out is hidden (the band's error boundary); the result does not wait for it.
+    return 0;
+  }
+}
+
 /** A sentence ends with its full stop (the visible lines have none: "Throw again"). */
 const sentence = (text: string): string => (/[.!?。]$/.test(text) ? text : `${text}.`);
 
-/** Runs the frames of the latest move; returns the one on screen. */
-function useFrame(move: Move | null, key: number, reducedMotion: boolean): Frame | null {
+/**
+ * Runs the frames of the latest move; returns the one on screen. The frame index belongs to its frames: a new move
+ * starts at its own first frame in the same render (no frame of the move before, or of its end, flashes first).
+ */
+function useFrame(move: Move | null, reducedMotion: boolean): Frame | null {
   const frames = useMemo(() => (move === null ? [] : moveFrames(move, FRAME_TIMES, reducedMotion)), [move, reducedMotion]);
-  const [index, setIndex] = useState(0);
+  const startAt = reducedMotion ? Math.max(0, frames.length - 1) : 0;
+  const [run, setRun] = useState({ frames, index: startAt });
+  let current = run;
+  if (run.frames !== frames) {
+    current = { frames, index: startAt };
+    setRun(current);
+  }
   useEffect(() => {
-    setIndex(frames.length === 0 ? 0 : reducedMotion ? frames.length - 1 : 0);
     if (reducedMotion || frames.length <= 1) return undefined;
     const timers: ReturnType<typeof setTimeout>[] = [];
     let at = 0;
     frames.forEach((f, i) => {
       if (i === 0) return;
       at += f.delay;
-      timers.push(setTimeout(() => setIndex(i), at));
+      timers.push(setTimeout(() => setRun((r) => (r.frames === frames ? { frames, index: i } : r)), at));
     });
     return () => timers.forEach(clearTimeout);
-    // A new move (the next finished item) starts its own frames.
-  }, [frames, key, reducedMotion]);
-  return frames[Math.min(index, frames.length - 1)] ?? null;
+  }, [frames, reducedMotion]);
+  return frames[Math.min(current.index, frames.length - 1)] ?? null;
+}
+
+/** Says a move on native: VoiceOver queues it after the next round's own announcements; Android and the web read the live region. Never throws. */
+function announceMove(text: string): void {
+  if (Platform.OS !== 'ios') return;
+  try {
+    AccessibilityInfo.announceForAccessibilityWithOptions(text, { queue: true });
+  } catch {
+    // Nothing to say it with: the throw is still on screen.
+  }
 }
 
 function Board({ size, position, label }: { size: number; position: number; label: string }): ReactElement {
@@ -135,8 +175,10 @@ function Tray({ laps, label }: { laps: number; label: string }): ReactElement {
       testID="yut-tray"
       style={{
         flexDirection: 'row',
+        flexWrap: 'wrap',
         alignItems: 'center',
         alignSelf: 'flex-start',
+        maxWidth: '100%',
         gap: spacing.sm,
         backgroundColor: colors.surface.sunken,
         borderRadius: radii.pill,
@@ -190,33 +232,42 @@ export interface YutReviewSkinProps {
   children: ReactNode;
 }
 
-export function YutReviewSkin({ seed, finished, reducedMotion, children }: YutReviewSkinProps): ReactElement {
+/** The band's layout, worked out by the shell (outside the error boundary) so the round keeps its place if the band fails. */
+interface BandLayout {
+  /** From 600 tall: the full band with the sticks. */
+  tall: boolean;
+  /** Two panes from window class regular: the band beside the item. */
+  panes: boolean;
+  /** Large text on a phone: the throw under the board. */
+  stacked: boolean;
+  size: number;
+}
+
+function YutBand({ seed, finished, reducedMotion, band }: { seed: number; finished: number; reducedMotion: boolean; band: BandLayout }): ReactElement {
   const m = useMessages();
   const copy = m.learner.yutReview;
-  const lc = useLayoutClass();
   const board = useMemo(() => boardAfter(seed, finished), [seed, finished]);
-  const frame = useFrame(board.last, finished, reducedMotion);
+  const frame = useFrame(board.last, reducedMotion);
   const description = useDescription(board.last);
 
-  // Native screen readers hear each throw once; the web reads the polite region below.
+  // VoiceOver hears each throw once, queued after the next round's own announcements; Android and the web read the
+  // polite region below.
   useEffect(() => {
-    if (Platform.OS === 'web' || description === null) return;
-    AccessibilityInfo.announceForAccessibility(description.text);
+    if (description !== null) announceMove(description.text);
   }, [description]);
 
-  const tall = lc.windowHeight === 0 || lc.windowHeight >= YUT_FULL_BAND_MIN_HEIGHT;
-  const panes = tall && lc.width !== 'compact';
-  const size = !tall ? YUT_BOARD_SHORT : panes ? YUT_BOARD_PANE : YUT_BOARD_PHONE;
+  const { tall, panes, stacked, size } = band;
   const move = board.last;
   const position = frame?.position ?? board.state.position;
   const laps = frame?.laps ?? board.state.laps;
   const shownLegs = move === null || frame === null ? [] : move.legs.slice(0, frame.legs);
   const wentHome = move !== null && laps > move.from.laps;
+  const column = tall || stacked;
 
   const throwPanel = (
-    <View style={{ gap: spacing.sm, flexShrink: 1 }} testID="yut-throw">
+    <View style={{ gap: spacing.sm, flexShrink: 1, maxWidth: '100%' }} testID="yut-throw">
       {shownLegs.map((leg, i) => (
-        <View key={`${finished}-${i}`} testID="yut-throw-leg" style={{ flexDirection: tall ? 'column' : 'row', flexWrap: 'wrap', alignItems: tall ? 'flex-start' : 'center', gap: spacing.xs }}>
+        <View key={`${finished}-${i}`} testID="yut-throw-leg" style={{ flexDirection: column ? 'column' : 'row', flexWrap: 'wrap', alignItems: column ? 'flex-start' : 'center', gap: spacing.xs }}>
           <KoreanText ko={leg.throw.ko} romanization={leg.throw.romanization} size="sm" testID={`yut-throw-name-${leg.throw.name}`} />
           <Body size="sm" tone="secondary" testID="yut-throw-stations">
             {copy.stations(leg.path.length)}
@@ -238,46 +289,79 @@ export function YutReviewSkin({ seed, finished, reducedMotion, children }: YutRe
     </View>
   );
 
-  // The web's polite region: the whole move once, the Korean names tagged Korean (shell rule 12).
+  // The polite region (the web and Android; iOS is told above): the whole move once, the Korean names tagged Korean
+  // (shell rule 12).
+  const words =
+    description === null
+      ? ''
+      : description.parts.map((p, i) => (
+          <Text {...KOREAN_LINE_BREAK} key={`${finished}-${i}`}>
+            {p.before}
+            <Text {...KOREAN_LINE_BREAK} {...korean}>
+              {p.ko}
+            </Text>
+            {p.after}
+          </Text>
+        ));
   const live =
     Platform.OS === 'web' ? (
       <Text {...KOREAN_LINE_BREAK} style={srOnly} accessibilityLiveRegion="polite" aria-live="polite" testID="yut-live">
-        {description === null
-          ? ''
-          : description.parts.map((p, i) => (
-              <Text {...KOREAN_LINE_BREAK} key={`${finished}-${i}`}>
-                {p.before}
-                <Text {...KOREAN_LINE_BREAK} {...korean}>
-                  {p.ko}
-                </Text>
-                {p.after}
-              </Text>
-            ))}
+        {words}
         {description?.tail ?? ''}
       </Text>
+    ) : Platform.OS === 'android' ? (
+      <View style={srOnly} accessibilityLiveRegion="polite" testID="yut-live">
+        <Text {...KOREAN_LINE_BREAK}>
+          {words}
+          {description?.tail ?? ''}
+        </Text>
+      </View>
     ) : null;
 
   const boardView = <Board size={size} position={position} label={m.a11y.yutReview.board} />;
 
   if (panes) {
     return (
+      <View style={{ width: size, gap: spacing.md }} testID="yut-band">
+        {boardView}
+        {throwPanel}
+        {live}
+      </View>
+    );
+  }
+  return (
+    <View style={{ flexDirection: stacked ? 'column' : 'row', alignItems: 'flex-start', gap: spacing.md }} testID="yut-band">
+      {boardView}
+      {throwPanel}
+      {live}
+    </View>
+  );
+}
+
+export function YutReviewSkin({ seed, finished, reducedMotion, children }: YutReviewSkinProps): ReactElement {
+  const lc = useLayoutClass();
+  const fontScale = useEffectiveFontScale();
+  const tall = lc.windowHeight === 0 || lc.windowHeight >= YUT_FULL_BAND_MIN_HEIGHT;
+  const panes = tall && lc.width !== 'compact';
+  const band: BandLayout = { tall, panes, stacked: !panes && fontScale >= YUT_STACK_FONT_SCALE, size: !tall ? YUT_BOARD_SHORT : panes ? YUT_BOARD_PANE : YUT_BOARD_PHONE };
+  // Only the band sits in the boundary: if it fails to draw it hides, and the round (a sibling) stays mounted as is.
+  const bandView = (
+    <ErrorBoundary fallback={null}>
+      <YutBand seed={seed} finished={finished} reducedMotion={reducedMotion} band={band} />
+    </ErrorBoundary>
+  );
+
+  if (panes) {
+    return (
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: layout.pane.gap }} testID="yut-review-skin">
-        <View style={{ width: size, gap: spacing.md }} testID="yut-band">
-          {boardView}
-          {throwPanel}
-          {live}
-        </View>
+        {bandView}
         <View style={{ flex: 1, maxWidth: layout.maxWidth.reading, gap: spacing.md }}>{children}</View>
       </View>
     );
   }
   return (
     <View style={{ gap: spacing.md }} testID="yut-review-skin">
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }} testID="yut-band">
-        {boardView}
-        {throwPanel}
-        {live}
-      </View>
+      {bandView}
       {children}
     </View>
   );
