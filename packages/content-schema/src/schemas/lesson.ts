@@ -4,6 +4,7 @@ import { themeOrder } from './episode';
 import { StageKeySchema, ThemeKeySchema, type StageKey } from './heritage-card';
 import { KoTextSchema } from './ko-text';
 import {
+  HiddenHeritageRoundSchema,
   ListenPickRoundSchema,
   OrderItRoundSchema,
   PicWordRoundSchema,
@@ -89,6 +90,8 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('type-hangul'), rounds: z.array(TypeHangulRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('trace-word'), rounds: z.array(TraceWordRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('write-frame'), rounds: z.array(WriteFrameRoundSchema).min(1).max(4) }),
+  /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes; each target found is a round. */
+  z.object({ ref: ScopeRefSchema, kind: z.literal('hidden-heritage'), rounds: z.array(HiddenHeritageRoundSchema).min(1).max(2) }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -113,6 +116,8 @@ export function scopeRoundCount(scope: LessonScope): number {
       return scope.turns.length;
     case 'story-sequence':
       return 1;
+    case 'hidden-heritage':
+      return scope.rounds.reduce((n, r) => n + r.targets.length, 0);
     default:
       return scope.rounds.length;
   }

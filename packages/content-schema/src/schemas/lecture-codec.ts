@@ -1,6 +1,9 @@
 import type { z } from 'zod';
 import {
+  ACTIVITY_PRESETS,
   LECTURE_DECK_VERSIONS,
+  LECTURE_PRESETS,
+  LectureBlockSchema,
   LECTURE_MAX_FRAGMENT_CHARS,
   LECTURE_MAX_JSON_BYTES,
   LectureDeckSchema,
@@ -37,8 +40,25 @@ export const LECTURE_DECODE_FAILURES = [
   'bad_json',
   'unsupported_version',
   'invalid',
+  /** A block kind or preset this build does not know: the deck comes from a newer console (F-CURR-002 §8, row CM-36). */
+  'unknown_kind',
 ] as const;
 export type LectureDecodeFailure = (typeof LECTURE_DECODE_FAILURES)[number];
+
+/** A link from a newer console or presenter: the presenter shows its update notice, never the broken-link page. */
+export const isNewerDeckFailure = (reason: LectureDecodeFailure): boolean => reason === 'unsupported_version' || reason === 'unknown_kind';
+
+const BLOCK_KINDS: ReadonlySet<unknown> = new Set(LectureBlockSchema.options.map((o) => o.shape.kind.value));
+const known = (list: readonly string[], value: unknown): boolean => typeof value !== 'string' || list.includes(value);
+
+/** A block kind, an activity preset or a deck preset this build does not know (a string it has no name for). */
+function namesUnknownKind(json: Record<string, unknown>): boolean {
+  if (!known(LECTURE_PRESETS, json.preset)) return true;
+  const blocks = Array.isArray(json.blocks) ? json.blocks : [];
+  return blocks.some(
+    (b) => isRecord(b) && typeof b.kind === 'string' && (!BLOCK_KINDS.has(b.kind) || (b.kind === 'activity' && !known(ACTIVITY_PRESETS, b.preset))),
+  );
+}
 
 /**
  * Where and why a decoded deck failed the schema. Only the path (schema keys
@@ -114,7 +134,8 @@ export function encodeDeck(deck: LectureDeckInput): string {
 
 /**
  * Reads a fragment value (`1.…` or `2.…`; a leading `#` and `d=` are tolerated).
- * A later version is `unsupported_version`; a deck whose `v` is not the
+ * A later version is `unsupported_version`, a block kind or preset this build does not know
+ * `unknown_kind` (both from a newer console: the update notice); a deck whose `v` is not the
  * prefix's, or a v1 deck holding a v2 feature, is `invalid`.
  * Never throws: every failure is a reason the presenter can show and count.
  */
@@ -152,6 +173,7 @@ export function decodeDeck(fragment: string): LectureDecodeResult {
   if (isRecord(json) && typeof json.v === 'number' && !READABLE_VERSIONS.has(json.v)) {
     return { ok: false, reason: 'unsupported_version' };
   }
+  if (isRecord(json) && namesUnknownKind(json)) return { ok: false, reason: 'unknown_kind' };
 
   const result = LectureDeckSchema.safeParse(json);
   if (!result.success) {

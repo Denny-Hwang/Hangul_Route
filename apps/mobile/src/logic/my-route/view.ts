@@ -299,6 +299,7 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'trace-word': 'traceWord',
   'write-frame': 'writeFrame',
   'order-it': 'sentenceBuilder',
+  'hidden-heritage': 'hiddenHeritage',
 };
 
 /**
@@ -306,10 +307,16 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
  * app can play (`PLAYABLE_KINDS`) are named, so a game whose screen has not landed
  * yet is never advertised (F-CURR-001 §3.11).
  */
+/**
+ * Playable kinds the sheet does not name yet: a game that merges dark behind its `game.<kind>` switch (built-in pct 0)
+ * plays its fallback until it ramps, so the sheet names it from the row that ramps it (F-CURR-002 row CM-36).
+ */
+const SHEET_KINDS: ReadonlySet<MinigameKind> = new Set([...PLAYABLE_KINDS].filter((k) => k !== 'hidden-heritage'));
+
 export function gamesFor(
   skill: Skill,
   games: Messages['learner']['myRoute']['games'],
-  playable: ReadonlySet<MinigameKind> = PLAYABLE_KINDS,
+  playable: ReadonlySet<MinigameKind> = SHEET_KINDS,
 ): string[] {
   return (Object.keys(SKILL_OF_KIND) as MinigameKind[]).flatMap((kind) => {
     const key = GAME_NAME_KEY[kind];

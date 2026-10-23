@@ -152,6 +152,8 @@ describe('runDeck: the slides this build draws', () => {
       'activity',
       'card',
       'end',
+      // F-CURR-002 row CM-36: the Hidden Heritage scene hunt.
+      'hidden-heritage',
       'letter',
       'pattern',
       'quiz',

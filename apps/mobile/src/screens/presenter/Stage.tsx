@@ -29,6 +29,7 @@ import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
 import { WriteTogetherSlide } from './slides/WriteTogetherSlide';
+import { HiddenHeritageSlide } from './slides/HiddenHeritageSlide';
 import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
 import { StorySlide } from './slides/StorySlide';
 import { TitleSlide } from './slides/TitleSlide';
@@ -203,6 +204,8 @@ export function Stage(props: StageProps): ReactElement {
           <SentenceBuildSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'write-together' ? (
           <WriteTogetherSlide slide={slide} reveal={reveal} romanization={props.romanization} />
+        ) : slide.kind === 'hidden-heritage' ? (
+          <HiddenHeritageSlide slide={slide} reveal={reveal} />
         ) : null}
       </View>
       {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}

@@ -1151,6 +1151,7 @@ export const learner = {
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
       sentenceBuilder: '문장 만들기',
+      hiddenHeritage: '그림에서 물건 찾기',
     },
     legend: {
       title: '모양의 뜻',
@@ -1676,6 +1677,7 @@ export const learner = {
         realia: '보고 읽기',
         build: '문장 만들기',
         write: '함께 쓰기',
+        hiddenHeritage: '함께 찾기',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -2037,5 +2039,11 @@ export const learner = {
     intro: '7분쯤 걸려요. 이 단계의 모든 곳에서 아는 것을 보여 주세요. 시간 제한은 없어요.',
     extra: '잘되면 이 단계의 모든 곳이 완료로 표시되고 앞으로 넘어갈 수 있어요. 퀘스트는 모두 언제든 다시 할 수 있어요.',
     passed: '단계를 건너뛰었어요!',
+  },
+  hiddenHeritage: {
+    prompt: '이것을 찾아요',
+    found: '찾은 것',
+    again: '다시 찾아 봐요',
+    allFound: '모두 찾았어요',
   },
 } satisfies DeepPartial<Messages['learner']>;
