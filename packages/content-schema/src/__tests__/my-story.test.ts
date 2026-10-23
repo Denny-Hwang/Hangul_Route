@@ -140,6 +140,15 @@ describe('my-story-private-topic: no frame asks for a private fact', () => {
     ['My mom likes ___.'],
     ['I go to ___ with my family.'],
     ['My teacher is ___.'],
+    // Review of PR #849 (Codex P2): other ways of asking where the learner lives.
+    ['My hometown is ___.'],
+    ['My home is in ___.'],
+    ['My house is near ___.'],
+    ['My neighborhood has ___.'],
+    ['My neighbourhood is ___.'],
+    ['My street address is ___.'],
+    ['I grew up in ___.'],
+    ['Where are you from?'],
   ])('refuses "%s"', (en) => {
     expect(messages(MyStoryFrameSchema, { ...place, frame: { ...place.frame, en } }).some((m) => m.startsWith('my-story-private-topic'))).toBe(true);
   });
