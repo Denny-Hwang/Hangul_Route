@@ -218,13 +218,20 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const extrasAnnouncement = extras
     ? extraCardsAnnouncement(m.extraCards, extras.cards.map((c) => c.titleEn), extras.episodeTitle)
     : null;
-  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, extrasAnnouncement, ...masteryAnnouncement]
+  const announcement = [newCard ? m.newCard.announce(newCard.titleEn) : null, extrasAnnouncement]
     .filter((line): line is string => line !== null)
     .join(' ');
   useEffect(() => {
     if (!announcement || Platform.OS !== 'ios' || tryAgain !== null) return;
     AccessibilityInfo.announceForAccessibility(announcement);
   }, [announcement, tryAgain]);
+  // The mastery lines land after the card lines (an async read), so iOS gets them in an announcement of their own and
+  // the card lines are never read twice. Android and the web read them in the live region below.
+  const masteryLines = masteryAnnouncement.filter((line): line is string => line !== null).join(' ');
+  useEffect(() => {
+    if (!masteryLines || Platform.OS !== 'ios' || tryAgain !== null) return;
+    AccessibilityInfo.announceForAccessibility(masteryLines);
+  }, [masteryLines, tryAgain]);
 
   // The one next (F-ENT-003 sections 3.5 and 3.8): due today, then the leading plan source, then the
   // default route, with this quest counted as done (`resultsTeaser` passes it as `justCompleted`), so Home,

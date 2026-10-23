@@ -33,6 +33,7 @@ import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
+import { formatNumber } from '@hangul-route/i18n';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { isContentLocked } from '../../logic/content-access';
@@ -996,7 +997,7 @@ export function HomeScreen(): React.ReactElement {
         {/* The streak pill waits for the first day: never "Streak 0 days". Once the goals strip is drawn, the streak is its line;
             while its chunk loads or cannot load (offline before the precache), the pill stays. */}
         {!(goals && profile) && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
-        {wordsKnown >= 1 ? <Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown)} testID="home-words-known" /> : null}
+        {wordsKnown >= 1 ? <Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown, formatNumber(locale, wordsKnown))} testID="home-words-known" /> : null}
         <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
         <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>

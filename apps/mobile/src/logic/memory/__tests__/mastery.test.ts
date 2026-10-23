@@ -109,10 +109,25 @@ describe('deriveMastery: the levels of section 4.4', () => {
     expect(wordHeldAt(word('vocab:bap', { bestBox: 2 }), 3)).toBe(false);
   });
 
-  it('a topic word the learner has not collected is out of the denominator until it is collected (F-VOC-005 P7)', () => {
+  it('a topic word the learner has not collected stays in the denominator and is not held (section 4.4 as written)', () => {
     const items = [...Array.from({ length: 4 }, (_, i) => ({ id: `lex:w${i}`, cells: [CELL] })), { id: 'vocab:bap', cells: [CELL] }];
     const m = deriveMastery(input({ items, retired: new Set(), rows: rowsAt(4, 3), snapshot: snap({ questDoneAt: done('q1', 'q2') }) })).get(CELL);
-    expect(m).toMatchObject({ level: 2, denominator: ['lex:w0', 'lex:w1', 'lex:w2', 'lex:w3'] });
+    expect(m).toMatchObject({ level: 2, denominator: ['lex:w0', 'lex:w1', 'lex:w2', 'lex:w3', 'vocab:bap'] }); // 4 of 5
+    expect(levelOf(input({ items, retired: new Set(), rows: rowsAt(3, 3), snapshot: snap({ questDoneAt: done('q1', 'q2') }) }))).toBe(1); // 3 of 5
+  });
+
+  it('a cell made mostly of topic words (Stage 2 Nature: 2 lesson items, 12 words) is not Practiced on its lesson items and one word', () => {
+    const items = [
+      ...Array.from({ length: 2 }, (_, i) => ({ id: `lex:w${i}`, cells: [CELL] })),
+      ...Array.from({ length: 12 }, (_, i) => ({ id: `vocab:t${i}`, cells: [CELL] })),
+    ];
+    const vocab = (ws: VocabItemState[]) => ({ v: 1 as const, items: ws, topics: [] }) as unknown as ProgressSnapshot['vocab'];
+    const one = input({ items, retired: new Set(), rows: rowsAt(2, 3), snapshot: snap({ questDoneAt: done('q1', 'q2'), vocab: vocab([word('vocab:t0', { bestBox: 3, box: 3 })]) }) });
+    expect(deriveMastery(one).get(CELL)).toMatchObject({ level: 1 });
+    expect(deriveMastery(one).get(CELL)?.denominator).toHaveLength(14); // 3 of 14 held
+    // 12 of 14 held (2 lesson items and 10 words): Practiced.
+    const ten = Array.from({ length: 10 }, (_, i) => word(`vocab:t${i}`, { bestBox: 3, box: 3 }));
+    expect(levelOf(input({ ...one, snapshot: snap({ questDoneAt: done('q1', 'q2'), vocab: vocab(ten) }) }))).toBe(2);
   });
 
   it('an empty denominator never reaches Practiced', () => {
@@ -297,7 +312,8 @@ describe('the mastery and Words known strings (section 7.7, section 9.3 review-c
       m.learner.mastery.newVolume,
       m.learner.mastery.levelUp('Letters', m.learner.mastery.level.mastered),
       ...[1, 120, 2000].map((n) => m.learner.wordsKnown.pill(n)),
-      m.learner.wordsKnown.route(120),
+      m.learner.wordsKnown.route('120'),
+      m.learner.wordsKnown.pill(1200, '1,200'),
       m.learner.wordsKnown.milestone('1,000'),
     ];
     for (const text of texts) {
@@ -305,5 +321,8 @@ describe('the mastery and Words known strings (section 7.7, section 9.3 review-c
       expect(text.trim().length, text).toBeGreaterThan(0);
     }
     expect(m.learner.wordsKnown.pill(120)).toContain('120');
+    // The screen passes the count formatted for the locale; the plain count only picks the plural form.
+    expect(m.learner.wordsKnown.pill(1200, '1.200')).toContain('1.200');
+    expect(m.learner.wordsKnown.route('1.200')).toContain('1.200');
   });
 });

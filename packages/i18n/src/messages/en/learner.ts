@@ -2663,12 +2663,13 @@ export const learner = {
   },
   /**
    * Words known (section 4.4, row CM-20): Home's pill, drawn from 1 (never "0 words known"), the Learning Route card's
-   * line, and the banner on the Results of the activity that crossed a milestone (100, 250, 500, 1,000, 2,000; the
-   * screen passes the number formatted for the locale).
+   * line, and the banner on the Results of the activity that crossed a milestone (100, 250, 500, 1,000, 2,000). The
+   * screen passes the number formatted for the locale (`shown`, `count`: "1,200"); the pill also takes the plain count,
+   * which picks the plural form.
    */
   wordsKnown: {
-    pill: (count: number) => plural('en', count, { one: '1 word known', other: `${count} words known` }),
-    route: (count: number) => `Words you know: ${count}`,
+    pill: (count: number, shown: string = `${count}`) => plural('en', count, { one: '1 word known', other: `${shown} words known` }),
+    route: (count: string) => `Words you know: ${count}`,
     milestone: (count: string) => `${count} words! Hoya is so proud of you.`,
   },
 } as const;
