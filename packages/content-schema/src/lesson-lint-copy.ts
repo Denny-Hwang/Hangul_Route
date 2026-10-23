@@ -146,6 +146,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'library',
   // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
   'stageJump',
+  // Hidden Heritage (row CM-36): a find is never a score, a miss only "Look again".
+  'hiddenHeritage',
 ];
 
 export interface ReviewStringFinding {

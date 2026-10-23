@@ -11,6 +11,7 @@ import {
   QUEST_REVIEW_CHUNKS,
   REVIEW_CHUNKS,
   ROOT_CHUNKS,
+  SCENE_CHUNKS,
   SCREEN_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -178,7 +179,12 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
     ]);
+    // Row CM-36: one chunk per Hidden Heritage scene.
+    expect(SCENE_CHUNKS[0]).toEqual({ name: 'scene-food-market', marker: 'scene-chunk:food-market' });
+    // Row CM-37 part 3: the Nature & Animals four-season scene.
+    expect(SCENE_CHUNKS).toContainEqual({ name: 'scene-four-seasons', marker: 'scene-chunk:four-seasons' });
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -201,6 +207,27 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-36: the Hidden Heritage game and its scenes, each reached only through a literal import().
+    expect(read('src/screens/minigames/hidden-heritage-chunk.tsx')).toContain(`export const HIDDEN_HERITAGE_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./hidden-heritage-chunk')");
+    expect(read('src/screens/minigames/scenes/scene-food-market.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[0].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-food-market')");
+    // Row CM-37 part 3: the Nature & Animals four-season scene.
+    expect(read('src/screens/minigames/scenes/scene-four-seasons.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS.find((c) => c.name === 'scene-four-seasons').marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-four-seasons')");
+  });
+
+  it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
+    expect(PRECACHE_BUDGET.sceneChunkRaw).toBe(25_000);
+    const start = { url: START, text: 'var s=1;' };
+    const text = `__d(function(){var m="${SCENE_CHUNKS[0].marker}"})`;
+    const scene = { url: `${WEB_JS_DIR}/scene-food-market-${md5(text)}.js`, text };
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS.slice(0, 1), bundles: [start, scene], precached: all([start, scene]) })).toEqual([]);
+    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS.slice(0, 1), bundles: [start, scene], precache: { count: 2, size: 10 } });
+    expect(reportLines(report).some((l) => l.startsWith('  hidden heritage scene chunks  1 bundles') && l.endsWith('ceiling 25000 B each)'))).toBe(true);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: text.length - 1 };
+    expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +292,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

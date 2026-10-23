@@ -20,6 +20,7 @@ import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
 import { CultureQuizGame } from './CultureQuizGame';
 import type { MinigameHost } from './host';
+import { HiddenHeritageStep } from './hidden-heritage-entry';
 import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
@@ -172,6 +173,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
+    case 'hidden-heritage':
+      return <HiddenHeritageStep scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }
