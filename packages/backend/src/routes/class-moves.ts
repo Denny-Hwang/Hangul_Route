@@ -351,6 +351,10 @@ classMoveRoutes.post('/:id/class-moves', async (c) => {
     // Read again after the insert: a direct move (or a leave) that landed between the checks above and the insert
     // has already taken the learner out of the source, and an ask left waiting for it could later move a learner
     // who is not there; a join that landed in the destination meanwhile would leave the ask pointless.
+    // Best effort, a residual race remains: a `/join` into the destination that passed its `move_waiting` check
+    // before this insert can still commit its seat after these reads, so the learner is in both classes while the
+    // ask waits. Accepting it then takes the learner out of the source (the safe side); declining or letting it
+    // expire leaves the double for the teacher to clear from the roster.
     if (!(await db.membership(source.id, 'learner', body.learnerId))) {
       await db.endClassMove(row.id, 'cancelled', 'learner_left', null, now);
       return notFound(c);

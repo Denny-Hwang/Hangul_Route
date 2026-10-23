@@ -26,18 +26,6 @@ export async function activeClassesOf(db: Db, learnerId: string, excludeSpaceId?
 }
 
 /**
- * Learner members of class `spaceId` who are already in `LEARNER_CLASS_CAP` other live classes: bringing the class
- * back from the archive would take each of them past the cap (`POST /:id/unarchive`).
- */
-export async function learnersAtClassCap(db: Db, spaceId: string): Promise<number> {
-  let n = 0;
-  for (const m of await db.membersOf(spaceId)) {
-    if (m.memberKind === 'learner' && (await activeClassesOf(db, m.memberId, spaceId)) >= LEARNER_CLASS_CAP) n += 1;
-  }
-  return n;
-}
-
-/**
  * Whether a learner may take a seat in class `cls`, in the `/join` order:
  * the learner's class cap, then the class cap, then the school's seats.
  * `null` when there is room, when the learner is already a member (no new

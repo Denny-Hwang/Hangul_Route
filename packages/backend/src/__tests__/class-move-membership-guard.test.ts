@@ -1,11 +1,14 @@
-import { TRANSFER_CONSENT_TEXT_VERSION } from '@hangul-route/content-schema';
+import { TRANSFER_CONSENT_TEXT_VERSION, type Space } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { D1Db, fallbackDb, setFallbackDb } from '../db';
+import type { D1Like, D1PreparedLike } from '../db/d1';
 import { hashSecret } from '../lib/device-auth';
 import { classMoveClientLimiter } from '../routes/class-moves';
 import { lookupLimiter } from '../routes/spaces';
 import { deviceTransferLimiter } from '../routes/transfer-device';
 import { transferClientLimiter } from '../routes/transfers';
 import { testDb as db } from './helpers/db';
+import { openSqliteD1 } from './helpers/sqlite';
 import {
   A,
   B,
@@ -136,6 +139,28 @@ describe('(a) a join with the old class code after a move answers 409 moved_out'
   });
 });
 
+describe('(a2) a move chain A -> D -> B still holds the learner out of A', () => {
+  it('the old code of A answers moved_out naming B, the class the learner is in now', async () => {
+    await directMoveToD();
+    vi.setSystemTime(new Date(NOW.getTime() + HOUR));
+    const ask = await call('POST', moves(D), bearer('teacher-a'), { learnerId: SUNI, destinationSpaceId: B, code: CODE_B });
+    expect(ask.status).toBe(201);
+    expect((await call('POST', `${moves(B)}/${moveId(ask)}/accept`, bearer('teacher-b'), {})).status).toBe(200);
+    expect(await classes()).toEqual([B]);
+    const r = await join(A, CODE_A);
+    expect([r.status, r.body.error?.code]).toEqual([409, 'moved_out']);
+    expect(r.body.error?.details).toEqual({ to: { spaceId: B, name: 'Saturday Class B' } });
+    // D's old code too (the move out of D stands)
+    const d = await join(D, CODE_D);
+    expect([d.status, d.body.error?.code]).toEqual([409, 'moved_out']);
+    expect(await classes()).toEqual([B]);
+    // leaving B ends the line: A's code joins again
+    expect((await call('POST', `/api/spaces/${B}/leave`, device, { learnerId: SUNI })).status).toBe(200);
+    expect((await join(A, CODE_A)).status).toBe(201);
+    expect(await classes()).toEqual([A]);
+  });
+});
+
 describe('(b) the guard holds only while the move stands', () => {
   it('after leaving the destination, the old class code joins again (201)', async () => {
     await directMoveToD();
@@ -219,6 +244,91 @@ describe('(d) unarchive never brings a class back past the 3-class cap', () => {
     const r = await call('POST', `/api/spaces/${A}/unarchive`, bearer('teacher-a'), {});
     expect(r.status).toBe(200);
     expect((await db.getSpace(A))?.archivedAt).toBeNull();
+  });
+});
+
+describe('(d2) unarchive costs a constant number of D1 statements, whatever the class size', () => {
+  const T = '2026-10-01T00:00:00.000Z';
+  const klass = (id: string, archivedAt: string | null): Space => ({
+    id,
+    kind: 'class',
+    name: id,
+    parentSpaceId: null,
+    ownerAccountId: 'teacher-x',
+    joinCode: null,
+    joinCodeExpiresAt: null,
+    settings: { consentMode: 'parent', anonymizeRoster: false },
+    archivedAt,
+    createdAt: T,
+  });
+
+  /** A fresh database: archived class `space:big` with `learners` learners, each also in `others` other live classes. */
+  async function world(learners: number, others: number) {
+    const d1 = openSqliteD1();
+    const seedDb = new D1Db(d1);
+    await seedDb.putAccount({ id: 'teacher-x', email: null, displayName: null, consent: null, createdAt: T });
+    await seedDb.putSpace(klass('space:big', T));
+    await seedDb.addMembership({ spaceId: 'space:big', memberKind: 'account', memberId: 'teacher-x', role: 'owner', joinedAt: T });
+    for (let o = 0; o < others; o += 1) await seedDb.putSpace(klass(`space:other-${o}`, null));
+    for (let i = 0; i < learners; i += 1) {
+      const id = `profile:big-${String(i).padStart(3, '0')}`;
+      await seedDb.putLearner({ id, displayName: `Learner ${i}`, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
+      await seedDb.addMembership({ spaceId: 'space:big', memberKind: 'learner', memberId: id, role: 'student', joinedAt: T });
+      for (let o = 0; o < others; o += 1) await seedDb.addMembership({ spaceId: `space:other-${o}`, memberKind: 'learner', memberId: id, role: 'student', joinedAt: T });
+    }
+    let prepared = 0;
+    const counted: D1Like = {
+      prepare(sql: string): D1PreparedLike {
+        prepared += 1;
+        return d1.prepare(sql);
+      },
+      batch: (statements) => d1.batch(statements),
+    };
+    const unarchive = async () => {
+      const before = fallbackDb();
+      setFallbackDb(new D1Db(counted));
+      prepared = 0;
+      try {
+        const r = await call('POST', '/api/spaces/space:big/unarchive', bearer('teacher-x'), {});
+        return { r, prepared, archivedAt: (await seedDb.getSpace('space:big'))?.archivedAt ?? null };
+      } finally {
+        setFallbackDb(before);
+      }
+    };
+    return { unarchive, close: () => d1.close() };
+  }
+
+  it('25 learners under the cap come back with the same statements as 1, far under the 50 a Free-plan invocation allows', async () => {
+    const one = await world(1, 2);
+    const big = await world(25, 2);
+    try {
+      const a = await one.unarchive();
+      const b = await big.unarchive();
+      expect([a.r.status, b.r.status]).toEqual([200, 200]);
+      expect([a.archivedAt, b.archivedAt]).toEqual([null, null]);
+      expect(b.prepared).toBe(a.prepared);
+      expect(b.prepared).toBeLessThan(15);
+    } finally {
+      one.close();
+      big.close();
+    }
+  });
+
+  it('25 learners at the cap: 409 with the count, the class stays archived, still a constant number of statements', async () => {
+    const one = await world(1, 3);
+    const big = await world(25, 3);
+    try {
+      const a = await one.unarchive();
+      const b = await big.unarchive();
+      expect([a.r.status, a.r.body.error?.code, a.r.body.error?.details]).toEqual([409, 'unarchive_over_cap', { learners: 1 }]);
+      expect([b.r.status, b.r.body.error?.code, b.r.body.error?.details]).toEqual([409, 'unarchive_over_cap', { learners: 25 }]);
+      expect([a.archivedAt, b.archivedAt]).toEqual([T, T]);
+      expect(b.prepared).toBe(a.prepared);
+      expect(b.prepared).toBeLessThan(15);
+    } finally {
+      one.close();
+      big.close();
+    }
   });
 });
 

@@ -53,10 +53,11 @@ describe('double class membership repair SQL', () => {
       ['space:class-a', 'Class A'],
       ['space:class-b', 'Class B'],
       ['space:class-c', 'Class C'],
+      ['space:class-d', 'Class D'],
     ] as const) {
       await db.putSpace(cls(id, name));
     }
-    for (const id of ['profile:suni', 'profile:jun']) {
+    for (const id of ['profile:suni', 'profile:jun', 'profile:mina', 'profile:ara']) {
       await db.putLearner({ id, displayName: id, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: T0, lastActiveAt: T0 });
     }
     const move = (id: string, learner: string, from: string, to: string, at: string) =>
@@ -78,6 +79,15 @@ describe('double class membership repair SQL', () => {
     await joined('space:class-b', 'profile:jun', MOVED);
     await move('move:jun-2', 'profile:jun', 'space:class-c', 'space:class-a', BACK);
     await joined('space:class-a', 'profile:jun', BACK);
+    // Mina: moved A -> D, D was archived, then back in A by A's code: A is her only live class (kept).
+    await move('move:mina-1', 'profile:mina', 'space:class-a', 'space:class-d', MOVED);
+    await joined('space:class-d', 'profile:mina', MOVED);
+    await db.putSpace({ ...cls('space:class-d', 'Class D'), archivedAt: BACK });
+    await joined('space:class-a', 'profile:mina', REJOINED);
+    // Ara: moved A -> B, left B, joined A again, then joined B again with B's code: both her own choice (kept).
+    await move('move:ara-1', 'profile:ara', 'space:class-a', 'space:class-b', MOVED);
+    await joined('space:class-a', 'profile:ara', BACK);
+    await joined('space:class-b', 'profile:ara', REJOINED);
 
     const [select = '', remove = ''] = statements();
     expect(statements()).toHaveLength(2);
@@ -112,6 +122,8 @@ describe('double class membership repair SQL', () => {
     expect((await d1.prepare(select).all()).results).toEqual([]);
     expect((await db.membershipsOf('learner', 'profile:suni')).map((m) => m.spaceId)).toEqual(['space:class-b']);
     expect((await db.membershipsOf('learner', 'profile:jun')).map((m) => m.spaceId).sort()).toEqual(['space:class-a', 'space:class-b']);
+    expect((await db.membershipsOf('learner', 'profile:mina')).map((m) => m.spaceId).sort()).toEqual(['space:class-a', 'space:class-d']);
+    expect((await db.membershipsOf('learner', 'profile:ara')).map((m) => m.spaceId).sort()).toEqual(['space:class-a', 'space:class-b']);
     d1.close();
   });
 });
