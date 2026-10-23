@@ -993,4 +993,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
   // F-CURR-002 row CM-31: Dictation's meaning line, a gloss in the UI locale.
   'learner.minigame.typeHangul.hear.meaning': [['apple'], ['rice cake soup']],
+  // Owner report 2026-10-23: the Join screen's move lines (the learner, then the classes) and the classes a join keeps.
+  'caregiver.join.errors.movedOut': [['Suni', 'Sunday Class B', 'Sunday Class A']],
+  'caregiver.join.errors.movedOutElsewhere': [['Suni', 'Sunday Class A']],
+  'caregiver.join.errors.moveWaiting': [['Sunday Class B']],
+  'caregiver.join.confirm.staysIn': [['Suni', ['Sunday Class A']], ['Mina', ['Sunday Class A', 'Art club']], ['Jo Ann', ['A', 'B', 'C']]],
+  // Owner report 2026-10-23: the class settings lines after a move and an unarchive the class cap refused.
+  'console.settings.learnerGone': [['Mina']],
+  'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
+  'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
 };

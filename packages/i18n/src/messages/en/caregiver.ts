@@ -451,6 +451,12 @@ export const caregiver = {
       me: { cta: "That's me" },
       joining: { cta: 'Joining…' },
       alreadyIn: { cta: 'I was already in this class' },
+      /**
+       * Owner report 2026-10-23: under the confirm button when the learner is already in other classes. A join keeps
+       * them (it is not a move); `classes` are their names. "Move" is the Classes card's `transfer.actions.move.cta`.
+       */
+      staysIn: (learner: string, classes: readonly string[]) =>
+        `${learner} stays in ${classes.length <= 2 ? classes.join(' and ') : `${classes.slice(0, -1).join(', ')} and ${classes[classes.length - 1]}`} too. To move instead, use Move or ask the teacher.`,
       notThis: { cta: 'Not this one' },
     },
     /** A learner who was in the class before picks their roster name; the teacher approves. */
@@ -484,6 +490,14 @@ export const caregiver = {
       alreadyOnDevice: 'This device already has that learner — switch profiles instead.',
       badFormat: 'A code has 6 letters or numbers.',
       off: 'Joining a class is not set up on this build.',
+      /**
+       * Owner report 2026-10-23, `/join` 409 `moved_out`: the learner moved out of this class (`from`) to `to` and is
+       * still there. `movedOutElsewhere` when the app cannot name the class it moved to.
+       */
+      movedOut: (learner: string, to: string, from: string) => `${learner} moved to ${to}. To be in ${from} too, ask the teacher.`,
+      movedOutElsewhere: (learner: string, from: string) => `${learner} moved to another class. To be in ${from} too, ask the teacher.`,
+      /** `/join` 409 `move_waiting`: a move into this class (`to`) waits for the teacher's yes. */
+      moveWaiting: (to: string) => `A move to ${to} is waiting for the teacher. It finishes when they say yes.`,
     },
     /**
      * [OA] "Who is joining?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D14, sections 10.3 and 17.4, row OA-7b): a family

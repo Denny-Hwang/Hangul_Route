@@ -36,7 +36,7 @@ import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
 import { inboxClassFields } from './class-moves';
 import { inboxTransfers } from './transfer-device';
-import { learnerMembershipRows } from './spaces';
+import { learnerInboxMemberships } from './spaces';
 
 /**
  * /api/sync — F-SYNC-001 §3.2. One snapshot row per learner with
@@ -197,7 +197,7 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const { tier, source } = await tierForLearner(db, learnerId, now);
   // F-PLAN-002 section 3.5: a curriculum reaches only an app that derives with a horizon (`?cap=curriculum`).
   const plans = (await inboxPlansFor(db, learnerId)).filter((p) => p.meta === null || acceptsCurriculum(c.req.queries('cap')));
-  const memberships = await learnerMembershipRows(db, learnerId);
+  const memberships = await learnerInboxMemberships(db, learnerId, classScoped);
   // Notes from grown-ups (F-FEEDBACK-001 section 6.8): delivery rules 1-7 and the prefs row in one query.
   const notes = await db.notesForLearner(learnerId, classScoped ? 'class' : 'full', now, NOTE_INBOX_LIMIT);
   // [TV] the class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 4.3); never on a class tablet.
@@ -206,7 +206,7 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
     plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
-    memberships: classScoped ? memberships.filter((m) => m.kind !== 'family') : memberships,
+    memberships,
     tier,
     tierSource: source,
     tierValidUntil: tier === 'premium' ? new Date(now.getTime() + TIER_GRACE_MS).toISOString() : null,

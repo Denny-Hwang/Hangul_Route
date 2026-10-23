@@ -10,6 +10,7 @@ import { relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { MoveButton } from './TransferParts';
 import { rem } from '@/lib/console/rem';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
 
 /**
  * [TV] "Teacher moves" on the class moves page (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8; wireframe
@@ -99,6 +100,9 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
     setBusy(id);
     setFailed(null);
     const r = await run();
+    // An ask answered (an accept moves a learner): an open roster in another console tab reads again at once, even when
+    // this section has gone meanwhile (the teacher left the page while the answer was on its way).
+    if (r.ok) announceRosterChange();
     if (!live.current) return;
     setBusy(null);
     if (r.ok) {

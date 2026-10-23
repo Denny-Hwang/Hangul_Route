@@ -25,6 +25,7 @@ import { fail, ok } from '../envelope';
 import { authorizeDevice } from '../lib/device-auth';
 import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
+import { settleMove } from '../lib/moves';
 import { classSeatCheck } from '../lib/seats';
 import { classTransferEnabled, learnerSideCooldown, newRequest, newTransferId, settle, transferDeviceConsentEnabled, type TransferEnv } from '../lib/transfer';
 import { destinationFacts, hasCaregiverRoute, learnerSideView, primeDestinationFacts, viewLookups, type TransferLearnerSideView } from '../lib/transfer-views';
@@ -255,6 +256,11 @@ async function startDeviceMove(c: Ctx, mode: 'preview' | 'create'): Promise<Resp
   if (mode === 'create' && dest.id !== body.destinationSpaceId) return fail(c, 'destination_changed', 'This code now opens a different class', 409);
   if (dest.kind !== 'class') return fail(c, 'not_transferable', 'A learner can move into a class only', 422);
   if (dest.id === source.id) return fail(c, 'same_space', 'That is the class the learner is in', 409);
+
+  // [TV] TV-D7: a teacher move still waiting for the receiving class blocks a device move too (one open move per
+  // learner, either kind), settled first so an expired ask or one whose learner left never blocks.
+  const teacherMove = await db.openClassMoveOf(learnerId);
+  if (teacherMove && (await settleMove(db, teacherMove, now)).status === 'requested') return fail(c, 'already_open', 'A move is already open for this learner', 409, { startedBy: 'class' });
 
   // One open request per learner; this device's own request comes back on a repeated create (section 4.9).
   const openRaw = await db.openTransferOf(learnerId);
