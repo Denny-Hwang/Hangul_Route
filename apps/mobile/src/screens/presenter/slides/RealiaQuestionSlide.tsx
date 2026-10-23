@@ -124,7 +124,11 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
   );
 }
 
-/** The word the question is about: its Korean at `presenter.size.prompt` and its romanization, on the chip look of taught Korean. */
+/**
+ * The word the question is about: its Korean at `presenter.size.prompt` and its romanization, on the chip look of taught
+ * Korean. A Cloze Pick value gap keys its question by its whole sentence (row CM-30, first shipped in row CM-3A S6), so
+ * the chip wraps its two parts and never grows past the key row.
+ */
 function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; rom: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
@@ -133,7 +137,7 @@ function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; 
     <View
       testID="presenter-realia-key"
       accessibilityLabel={rom ? koreanTextLabel(ko, romanization) : ko}
-      style={{ ...chip, flexDirection: 'row', alignItems: 'baseline', columnGap: units(unit, spacing.md), paddingVertical: units(unit, spacing.xs), paddingHorizontal: units(unit, spacing.lg) }}
+      style={{ ...chip, flexDirection: 'row', flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1, alignItems: 'baseline', columnGap: units(unit, spacing.md), paddingVertical: units(unit, spacing.xs), paddingHorizontal: units(unit, spacing.lg) }}
     >
       <TaughtKo size={size(presenter.size.prompt)}>{ko}</TaughtKo>
       {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}

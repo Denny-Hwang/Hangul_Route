@@ -177,6 +177,17 @@ describe('QuestionSlide: reply (LV-S2)', () => {
 
 describe('RealiaQuestionSlide (LV-S2, V7)', () => {
   const realia = stage6.filter((s): s is RealiaQuestionBody => isRealiaQuestion(s));
+
+  it('a Cloze Pick value gap keys its question by its sentence, which wraps inside the key row (row CM-3A S6)', async () => {
+    // Stage 6 Crafts q3's Check: 덤은 사과 ___ 개예요, beside the price cards.
+    const sentence = realia.find((s) => s.prompt.key?.ko.includes('___'))!;
+    expect(sentence).toBeDefined();
+    const r = await render(inView(<RealiaQuestionSlide slide={sentence} shown={QUESTION} romanization="always" />));
+    const chip = byTestId(r.root, 'presenter-realia-key')[0]!;
+    const style = Object.assign({}, ...[chip.props.style].flat()) as Record<string, unknown>;
+    expect(style).toMatchObject({ flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1 });
+    expect(screenTexts(chip)).toEqual(expect.arrayContaining([sentence.prompt.key!.ko, sentence.prompt.key!.romanization]));
+  });
   const withKey = realia.find((s) => s.prompt.key !== undefined && s.prompt.answerEntryId !== undefined && s.options.every((o) => o.ko !== undefined))!;
 
   it('the sheet stays beside the question; the key word and the lead line; the found line and the mark only at the answer build', async () => {
