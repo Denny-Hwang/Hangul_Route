@@ -25,7 +25,8 @@ describe('minigame kinds', () => {
     expect(MinigameKindSchema.options).toEqual(
       expect.arrayContaining(['match-sound', 'card-match', 'culture-quiz', 'listen-pick', 'pic-word-match']),
     );
-    expect(MinigameKindSchema.options).toHaveLength(22);
+    // 21 + `cloze-pick` (F-CURR-002 row CM-30) + `story-order` (row CM-34).
+    expect(MinigameKindSchema.options).toHaveLength(23);
   });
 
   it('adds story-read additively (F-STORY-002 PR 2.1) and parses it as a quest step kind', () => {

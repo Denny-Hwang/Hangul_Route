@@ -283,6 +283,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
         { kind: "cloze-pick", rounds: [{ id: "c1", gapKind: "value" }], realia },
         { kind: "cloze-pick", rounds: 1, clozePick: { rounds: [{ id: "c1", gapKind: "value" }], realia } },
       ],
+      // F-CURR-002 row CM-34: Story Order's rounds as authored.
+      [{ kind: "story-order", rounds: [1, 2] }, { kind: "story-order", rounds: 2, storyOrder: { rounds: [1, 2] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });

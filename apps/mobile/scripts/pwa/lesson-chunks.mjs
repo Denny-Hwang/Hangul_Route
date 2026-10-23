@@ -254,6 +254,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // reached only through the literal `import()` of `src/screens/minigames/cloze-pick-entry.tsx` while `game.cloze-pick`
   // is on); its Listen & Pick fallback stays in the start bundle.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/story-order-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
+  Object.freeze({ name: 'story-order-chunk', marker: 'screen-chunk:story-order' }),
 ]);
 
 /**

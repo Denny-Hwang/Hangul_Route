@@ -62,6 +62,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-30: the Cloze Pick game's chunk (its fallback, Listen & Pick, is imported as usual).
   'screens/minigames/cloze-pick-entry.tsx#ClozePickStepBody': 'screens/minigames/cloze-pick-step.tsx#ClozePickStepBody',
   'screens/minigames/cloze-pick-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
+  // Row CM-34: Story Order's game, the minigame step's chunk while `game.story-order` is on.
+  'screens/minigames/story-order/StoryOrderStep.tsx#StoryOrderGame': 'screens/minigames/story-order/StoryOrderGame.tsx#StoryOrderGame',
 };
 
 /**

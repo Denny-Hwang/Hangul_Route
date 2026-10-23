@@ -12,6 +12,7 @@ import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { RealiaReadE2eParams } from './realia-read-e2e';
+import type { StoryOrderE2eParams } from './story-order-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
@@ -341,6 +342,8 @@ export type RootStackParamList = {
   WriteFrameE2e: WriteFrameE2eParams;
   /** Fixture builds only (`navigation/cloze-pick-e2e.tsx`): a Cloze Pick step on fixture rounds (F-CURR-002 row CM-30). */
   ClozePickE2e: ClozePickE2eParams;
+  /** Fixture builds only (`navigation/story-order-e2e.tsx`): Story Order's step on fixture scopes (F-CURR-002 CM-34). */
+  StoryOrderE2e: StoryOrderE2eParams;
   /**
    * [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): what a teacher sees and
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.

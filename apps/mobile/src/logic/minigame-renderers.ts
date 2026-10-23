@@ -32,4 +32,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'write-frame',
   // F-CURR-002 row CM-30 (its Listen & Pick fallback while `game.cloze-pick` is off)
   'cloze-pick',
+  // F-CURR-002 CM-34: behind `game.story-order`, whose off state plays Story Sequence (`logic/game-switches.ts`).
+  'story-order',
 ]);

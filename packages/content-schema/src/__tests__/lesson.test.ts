@@ -333,6 +333,7 @@ describe('LessonScopeSchema', () => {
         'trace-word',
         'type-hangul',
         'write-frame',
+        'story-order',
       ].sort(),
     );
     for (const kind of LESSON_SCOPE_KINDS) expect(MinigameKindSchema.options).toContain(kind);

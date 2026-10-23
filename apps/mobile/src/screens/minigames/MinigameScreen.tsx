@@ -1,4 +1,5 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
+import type { MinigameKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useRef } from 'react';
 import type { ReactElement } from 'react';
@@ -31,6 +32,7 @@ import { SentenceBuilderGame } from './SentenceBuilderGame';
 import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
+import { StoryOrderStep } from './story-order/StoryOrderStep';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { TraceWordGame } from './TraceWordGame';
@@ -116,6 +118,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     }
     exits.back();
   };
+  /** A switch played another kind's rounds (Story Order's fallback, row CM-34): the event names the game that played. */
+  const closeAs = (kind: MinigameKind): void => {
+    void track(minigameFinishedEvent(kind, questId, stepIndex, activeProfileId));
+    exits.back();
+  };
 
   // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
   const fallback = (message: string): ReactElement => (
@@ -188,6 +195,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     // F-CURR-002 row CM-30: the game behind `game.cloze-pick`, else its Listen & Pick fallback.
     case 'cloze-pick':
       return <ClozePickStep scope={scope} host={host} onBack={exits.back} onRendered={(kind) => (renderedKind.current = kind)} />;
+    // F-CURR-002 row CM-34: behind `game.story-order`; off, its rounds play as Story Sequence (text cards).
+    case 'story-order':
+      return <StoryOrderStep scope={scope} host={host} sequenceId={ref ?? ''} onFallbackFinish={() => closeAs('story-sequence')} />;
     default:
       return fallback(copy.comingSoon);
   }

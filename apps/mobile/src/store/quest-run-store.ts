@@ -12,7 +12,7 @@ export interface FirstRoundAnswer {
   correct: boolean;
   asked: RoundAsked;
   at: Date;
-  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24). */
+  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24; Story Order's Show meanings, CM-34). */
   hinted?: boolean;
 }
 
@@ -58,6 +58,8 @@ interface Actions {
   /**
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
+   * `hinted`: answered with help (Dictation's hint or a one-letter slip, row CM-31; Story Order's Show meanings, row
+   * CM-34, which passes it with a right answer only): the memory store records it as a hinted right answer.
    */
   answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
   markStepComplete: () => void;

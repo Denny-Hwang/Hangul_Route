@@ -5,6 +5,7 @@ import {
   parseNarration,
   romanize,
   SLOT_MARKER,
+  storyOrderPictures,
   syllableSplit,
   wordReviewCardCap,
   type CheckKind,
@@ -31,6 +32,7 @@ import { koTokenParts } from '../ko-tokens';
 import { validRounds } from '../listen-pick';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
+import { playableStoryOrder } from '../story-order/fallback';
 import { buildRound, withoutMark, type SbParticle } from '../sentence-builder/progression';
 import {
   buildCultureQuizRounds,
@@ -599,6 +601,21 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       // Cloze Pick (F-CURR-002 section 8, row CM-30): the existing question slides, no new slide kind.
       case 'cloze-pick':
         clozeStep(path, ref, scope.clozePick);
+        return;
+      // Story Order (F-CURR-002 section 8, row CM-34): no slide kind of its own. Each round's lines become sentence
+      // slides in their right order, so the room reads the story together: the Korean first and its meaning a click
+      // later, as the learner's cards hold it back; a picture only where the round draws its pictures.
+      case 'story-order':
+        for (const round of playableStoryOrder(scope)) {
+          const pictures = storyOrderPictures(round);
+          for (const panel of round.panels) {
+            push(`${path}/${round.id}/${panel.id}`, {
+              kind: 'sentence',
+              sentence: spokenLine(panel.caption),
+              ...(pictures && panel.pictureRef !== undefined ? { picture: panel.pictureRef } : {}),
+            });
+          }
+        }
         return;
       default:
         skip(ref, 'unsupported-step');
