@@ -3,6 +3,7 @@ import {
   LENGTH_PRESETS,
   SelfRouteSchema,
   generateCurriculum,
+  jumpedStagesOf,
   placementLevelRank,
   placedOutGrowth,
   questsPlacedOutAtLevel,
@@ -133,12 +134,15 @@ export function startPutBack(
   return storedSet.some((id) => !seedSet.has(id));
 }
 
-/** The newest change to the start: a result's time or an override's, whichever is later (the key `keptFor` answers). */
-export function planChangeAt(placements: readonly PlacementResult[] | undefined): string | undefined {
+/**
+ * The newest change to the start: a result's time, an override's or a passed Stage Jump's (its stage key's `testedOut`
+ * latch, F-CURR-002 row CM-25), whichever is later (the key `keptFor` answers). So Keep my plan after a jump is kept
+ * with no level check at all, and a jump after an earlier kept change is offered again.
+ */
+export function planChangeAt(placements: readonly PlacementResult[] | undefined, testedOut?: Readonly<Record<string, string>>): string | undefined {
   let top: string | undefined;
-  for (const r of placements ?? []) {
-    for (const at of [r.completedAt, r.override?.at]) if (at !== undefined && (top === undefined || at > top)) top = at;
-  }
+  const times = [...(placements ?? []).flatMap((r) => [r.completedAt, r.override?.at]), ...jumpedStagesOf(testedOut).map((stage) => testedOut?.[stage])];
+  for (const at of times) if (at !== undefined && (top === undefined || at > top)) top = at;
   return top;
 }
 
@@ -148,7 +152,11 @@ const updateInputOf = (context: ProposalContext, active: SelfRoute): ProposeInpu
   existing: { meta: active.meta, items: active.items },
 });
 
-/** Which change the update follows: a grown-up override on the newest result, else a retake. */
+/**
+ * Which change the update follows: a grown-up override on the newest result, else a retake. A passed Stage Jump (row
+ * CM-25) raises the start as a retake does and reports `retake`: `route.updated` keeps its two sources (no new value
+ * before the Worker accepts it).
+ */
 export function planUpdateSource(placements: readonly PlacementResult[] | undefined): UpdateSource {
   if (placements === undefined || placements.length === 0) return 'retake';
   const newest = placements.reduce((top, r) => (r.completedAt > top.completedAt ? r : top), placements[0] as PlacementResult);
@@ -164,7 +172,7 @@ export function planOfferOf(i: PlanOfferInput): PlanOffer | null {
     const catalog = routeCatalogOf(i.context.catalog ?? CATALOG);
     // Nothing in the plan's future would change (a level that rose alone): no update.
     if (proposal.diff !== undefined && proposal.diff.itemsRemoved === 0 && proposal.diff.itemsAdded === 0) return null;
-    const changeAt = planChangeAt(i.context.placements);
+    const changeAt = planChangeAt(i.context.placements, i.context.testedOut);
     if (changeAt !== undefined && i.keptFor === changeAt) return null;
     const stored = { ...i.active.meta.params, catalogVersion: i.active.meta.catalogVersion };
     const completed = new Set(i.context.completedQuestIds);

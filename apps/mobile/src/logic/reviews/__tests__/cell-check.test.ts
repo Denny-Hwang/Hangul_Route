@@ -125,10 +125,26 @@ describe('Stage Jump Ahead (row CM-25): one Check over the stage, the CM-13 sele
         const single = planCellCheck(ctx(voice), cell, 'testout', rounds);
         if (single !== null) expect(ids.some((id) => own.includes(id)), `${stage} ${cell}`).toBe(true);
       }
+      // Section 4.5: at least 30% at produce, strictly, on every shipped stage.
       const produce = plan.rounds.filter((r) => r.question.rung === 'produce').length;
-      const canProduce = [...new Set(ids)].filter((id) => ctx(voice).index.byId.get(id)?.formats.some((f) => FORMAT_RUNG[f] === 'produce')).length;
-      expect(produce).toBeGreaterThanOrEqual(Math.min(Math.ceil(0.3 * plan.rounds.length), canProduce));
+      expect(produce, `${stage} produce`).toBeGreaterThanOrEqual(Math.ceil(0.3 * plan.rounds.length));
+      // Section 4.5 format cap: no more than 3 in a row of one format. Every shipped stage's pool allows it, with a
+      // device voice (hear-pick and read-pick both) and without (read-pick spread between the produce rounds).
+      let run = 1;
+      for (let i = 1; i < plan.rounds.length; i += 1) {
+        run = plan.rounds[i]?.question.format === plan.rounds[i - 1]?.question.format ? run + 1 : 1;
+        expect(run, `${stage} voice ${voice} format run at ${i}`).toBeLessThanOrEqual(MAX_FORMAT_RUN);
+      }
     }
+  });
+
+  it('a cell with review items that cannot be asked (its chunk did not load) means no jump: no cell is latched unasked', () => {
+    const cells = stageCells('stage2');
+    const full = planStageJump(ctx(), 'stage2', cells, rounds);
+    expect(full).not.toBeNull();
+    const gone = cells.find((cell) => cellCheckItemIds(ctx().index, cell).length > 0) as string;
+    const out = new Set(cellCheckItemIds(ctx().index, gone));
+    expect(planStageJump(ctx(), 'stage2', cells, rounds, out)).toBeNull();
   });
 
   it('a stage of books (Stage 5) or no cells has no jump; the same seed gives the same plan', () => {

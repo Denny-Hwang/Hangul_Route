@@ -27,6 +27,20 @@ export interface StageJumpLineProps extends StageJumpSlotProps {
 
 const CELLS = jumpCells(episodesAll);
 
+/**
+ * The jump rule for a stage from the stores now, without the round count (`cellCheck` is the session's own gate): the
+ * `CellCheck` route checks it in jump mode before it plans and again before it latches, so a stale or future way in
+ * can never jump a locked, started, passed or later stage.
+ */
+export function stageJumpRuleNow(profileId: string | null, stage: string, open: (questId: string) => boolean): boolean {
+  if (profileId === null) return false;
+  const snap = useProgressStore.getState().byProfile[profileId];
+  if (snap === undefined) return false;
+  const done = new Set(snap.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId));
+  const placedOut = placedOutSkipSet(snap.placements, questsAll, episodesAll);
+  return stageJumpOffer({ stage, cells: CELLS, done, placedOut, testedOut: snap.testedOut, open, checkOn: true, arm: testOutArmFor(profileId), playable: true });
+}
+
 export function StageJumpLine({ profileId, stage, checkOn }: StageJumpLineProps): React.ReactElement | null {
   const m = useMessages();
   const copy = m.learner.stageJump;
@@ -65,8 +79,8 @@ export function StageJumpLine({ profileId, stage, checkOn }: StageJumpLineProps)
         tone="secondary"
         size="md"
         fullWidth
+        // No hint: the prompt line just above is read on its own, so a hint would say it twice.
         accessibilityLabel={copy.label(stage.order, stage.titleEn)}
-        accessibilityHint={copy.prompt}
         onPress={() => navigation.navigate('CellCheck', { cellId: stage.key, mode: 'jump' })}
         testID="journey-stage-jump"
       />

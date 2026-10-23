@@ -100,7 +100,8 @@ export function stageJumpItemIds(index: EngineContext['index'], cells: readonly 
  * items go through the engine's Check selector on their own (box first), and the stage's 20 are taken round robin from
  * those orders, so every cell is asked when it can be and a cell of many words cannot crowd out a small one; the
  * engine's Check over the 20 then sets the produce share (at least 30%) and interleaves them across the themes. Null
- * with fewer than 10 playable rounds (Stage 5's books teach no review items, so it offers none).
+ * with fewer than 10 playable rounds (Stage 5's books teach no review items, so it offers none), or when a cell that
+ * teaches review items would not be asked at all.
  */
 export function planStageJump(
   ctx: EngineContext,
@@ -118,7 +119,13 @@ export function planStageJump(
     return [...picked];
   };
   const best = planRounds(ctx, idsOf, STAGE_JUMP_SIZE, STAGE_JUMP_MIN_ROUNDS, rounds, exclude);
-  return best === null ? null : { cellId: stage, mode: 'jump', rounds: best, soundNotice: best.some((r) => r.question.voiceFallback), cells: [...cells] };
+  if (best === null) return null;
+  // A pass latches every cell of the stage, so every cell that teaches review items must be asked at least once. One
+  // left out (its lesson chunk could not load offline, or none of its rounds can play here) means no jump: a cell is
+  // never marked tested out without a question on it.
+  const asked = new Set(best.flatMap((r) => ctx.index.byId.get(r.question.itemId)?.cells ?? []));
+  if (cells.some((cell) => cellCheckItemIds(ctx.index, cell).length > 0 && !asked.has(cell))) return null;
+  return { cellId: stage, mode: 'jump', rounds: best, soundNotice: best.some((r) => r.question.voiceFallback), cells: [...cells] };
 }
 
 export interface CheckResult {

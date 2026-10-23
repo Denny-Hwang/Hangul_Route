@@ -116,6 +116,7 @@ const stageNumber = (stage: string): number => Number(stage.replace('stage', '')
  * - every quest of every stage before it done, placed out or in a tested-out cell, so the level a jump stands for
  *   (the next stage's band 0, F-PLC-001 section 3.6 as amended) never claims a stage the learner has not covered;
  * - nobody started it: no quest of the stage done and no cell of it tested out;
+ * - the route has not passed it: not every quest of it placed out by the level check;
  * - every quest of the stage open to the learner (F-ENT-003: the same access as playing them; a locked stage offers no
  *   jump), in E3's offered arm, with `cellCheck` (and `memoryRecord`) on and 10 or more playable rounds.
  */
@@ -125,6 +126,9 @@ export function stageJumpOffer(i: StageJumpOfferInput): boolean {
   const own = i.cells.filter((c) => c.stage === i.stage);
   const quests = own.flatMap((c) => c.questIds);
   if (own.length === 0 || quests.length === 0 || own.some(tested) || quests.some((q) => i.done.has(q) || !i.open(q))) return false;
+  // The route is already past a stage the level check placed out whole (a `stage3` band 0 result places out Stages 1
+  // and 2): a jump there would raise nothing, so only the stage the route has reached shows the line.
+  if (quests.every((q) => i.placedOut?.has(q) === true)) return false;
   return i.cells
     .filter((c) => stageNumber(c.stage) < stageNumber(i.stage))
     .every((c) => tested(c) || c.questIds.every((q) => i.done.has(q) || i.placedOut?.has(q) === true));

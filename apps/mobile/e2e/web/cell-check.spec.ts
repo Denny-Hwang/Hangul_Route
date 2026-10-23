@@ -112,8 +112,10 @@ async function answer(page: Page, cell: string | readonly string[], right: boole
     }
     for (const w of words) await page.getByTestId('daily-review-round').getByRole('button', { name: w, exact: true, disabled: false }).first().click();
   } else {
-    const ko = ((await page.getByTestId('daily-review-prompt').innerText()).split('\n')[0] ?? '').trim();
     const ids = await page.locator('[data-testid^="daily-review-option-"]').evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') ?? '').replace('daily-review-option-', '')));
+    // A shown sound (the letter for this romanization, the read choice of a symbol), else a shown Korean prompt.
+    const sound = (await page.getByTestId('daily-review-sound').count()) > 0 ? (await page.getByTestId('daily-review-sound').innerText()).trim() : null;
+    const ko = sound !== null ? (items.find((i) => i.romanization === sound && ids.includes(i.id))?.ko ?? sound) : ((await page.getByTestId('daily-review-prompt').innerText()).split('\n')[0] ?? '').trim();
     const id = items.find((i) => i.ko === ko && ids.includes(i.id))?.id ?? ids.find((x) => items.some((i) => i.id === x && i.ko === ko));
     expect(id, `the prompt ${ko} names an item of the cell`).toBeDefined();
     if (!right) {

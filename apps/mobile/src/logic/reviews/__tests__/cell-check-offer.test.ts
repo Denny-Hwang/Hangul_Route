@@ -105,6 +105,15 @@ describe('Stage Jump Ahead (row CM-25): the stage the route has reached, before 
     expect(jump({ stage: 'stage4' })).toBe(false);
   });
 
+  it('a stage3 band 0 placement (Stages 1 and 2 placed out) offers the line on Stage 3 only', () => {
+    const placedOut = new Set([...questsOf('stage1'), ...questsOf('stage2')]);
+    const at = (stage: string) => jump({ stage, done: new Set(), placedOut });
+    expect(at('stage2')).toBe(false);
+    expect(at('stage3')).toBe(true);
+    // A stage placed out in part is still the stage the route has reached.
+    expect(jump({ placedOut: new Set([...questsOf('stage1'), 'quest:stage2-letters-q1']), done: new Set() })).toBe(true);
+  });
+
   it('entitlement (F-ENT-003): a stage with one locked quest offers no jump', () => {
     expect(jump({ open: (q) => q !== 'quest:stage2-life-q3' })).toBe(false);
     expect(jump({ open: () => false })).toBe(false);

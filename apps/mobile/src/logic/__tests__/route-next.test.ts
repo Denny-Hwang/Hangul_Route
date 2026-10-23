@@ -591,4 +591,15 @@ describe('routeNext: a Stage Jump (F-CURR-002 row CM-25)', () => {
     // The jumped quests are never marked done: they stay in the snapshot as they were.
     expect(jumped.quests.map((q) => q.questId)).not.toContain('quest:q6');
   });
+
+  it('a grown-up override newer than the jump wins: the jumped cell is on the route again; a later jump skips it again', () => {
+    const done = snap(['q1', 'q2', 'q3', 'q4', 'q5']);
+    const placement = (overrideAt: string) =>
+      ({ id: 'placement:a', completedAt: '2026-10-10T09:00:00.000Z', override: { by: 'parent', at: overrideAt, startQuestId: 'quest:q6' } }) as unknown as NonNullable<ProgressSnapshot['placements']>[number];
+    const latched = { 'episode:s2-life': at, stage2: at };
+    const putBack = { ...done, testedOut: latched, placements: [placement('2026-10-12T09:00:00.000Z')] };
+    expect(routeNext(input({ snapshot: putBack }))).toMatchObject({ questId: 'quest:q6', episodeId: 'episode:s2-life' });
+    const jumpedAfter = { ...done, testedOut: latched, placements: [placement('2026-10-10T12:00:00.000Z')] };
+    expect(routeNext(input({ snapshot: jumpedAfter }))).toMatchObject({ episodeId: 'episode:s4-rites' });
+  });
 });

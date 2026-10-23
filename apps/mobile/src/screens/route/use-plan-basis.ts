@@ -41,7 +41,7 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
     const completedQuestIds = completedQuestIdsOf(snapshot.quests);
     const unlockedStages = unlockedStagesFor(new Date(), profileId) as StageKey[];
     // From the newest level check (`effectiveRoute`), with or without a plan in force: a later place to start moves Change the plan's start.
-    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, ...(snapshot.testedOut === undefined ? {} : { testedOut: snapshot.testedOut }) }));
+    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, testedOut: snapshot.testedOut }));
     return setupBasisOf({ active, proposal, ...(choice === undefined ? {} : { choice }), completedQuestIds, unlockedStages, today });
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change plans again.
     // eslint-disable-next-line react-hooks/exhaustive-deps

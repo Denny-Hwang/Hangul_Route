@@ -129,7 +129,7 @@ export interface ProposalContext {
   /** `unlockedStagesFor(now, profileId)`: the access tier, so stage and quest access agree. */
   unlockedStages: readonly StageKey[];
   /** The snapshot's `testedOut`: a Stage Jump (F-CURR-002 row CM-25) raises the level and places out its cells. */
-  testedOut?: Readonly<Record<string, string>>;
+  testedOut?: Readonly<Record<string, string>> | undefined;
   today: DateKey;
   pace?: PaceId;
   startDate?: DateKey;
@@ -152,7 +152,7 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
       : effectiveRoute(c.placements ?? [], routeCatalogOf(catalog), {
           isEntitled: (stage) => unlocked.has(stage),
           completedQuestIds: new Set(c.completedQuestIds),
-          ...(c.testedOut === undefined ? {} : { testedOut: c.testedOut }),
+          testedOut: c.testedOut,
         });
   return {
     audience: 'self',

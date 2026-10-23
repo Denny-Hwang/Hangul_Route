@@ -2061,11 +2061,11 @@ export const learner = {
     pill: 'Ya lo sabes',
   },
   stageJump: {
-    prompt: '¿Ya sabes esta etapa?',
+    prompt: '¿Ya conoces esta etapa?',
     cta: 'Adelantar etapa',
     label: (stage: number, title: string) => `Adelantar etapa: Etapa ${stage}, ${title}`,
     intro: 'Unos 7 minutos. Muestra lo que sabes de todos los lugares de esta etapa. Sin reloj.',
-    extra: 'Si sale bien, todos los lugares de esta etapa quedan como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
+    extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
   },
 } satisfies DeepPartial<Messages['learner']>;

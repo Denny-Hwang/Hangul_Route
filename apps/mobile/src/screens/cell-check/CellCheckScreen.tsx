@@ -15,8 +15,10 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { useMasteryMoment } from '../../store/mastery-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { useQuestAccess } from '../../store/tier-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
 import { useActiveRouteNext } from '../use-route-next';
+import { stageJumpRuleNow } from './StageJumpLine';
 
 /**
  * The Cell Check and Test out (F-CURR-002 sections 4.4, 4.5 and 7.7, row CM-21; design/wireframes/reviews/
@@ -74,6 +76,9 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   const finishing = useRef(false);
   const next = useActiveRouteNext()?.next;
   const moment = useMasteryMoment(profileId, phase.kind === 'result');
+  const open = useQuestAccess();
+  const openRef = useRef(open);
+  openRef.current = open;
   const episode = episodeById(cellId);
 
   useEffect(() => {
@@ -89,6 +94,8 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
         const read = await a.readWorld(profileId);
         if (read.kind !== 'ready') return null;
         world.current = read.world;
+        // Row CM-25: a jump only where the line would offer it (the stage reached, not started, every quest open).
+        if (jump && !stageJumpRuleNow(profileId, cellId, openRef.current)) return null;
         return a.startSession(read.world, cellId, mode, locale, stageCells.map((c) => c.id));
       })
       .then(
@@ -144,6 +151,11 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
     const w = world.current;
     const a = api.current;
     if (w === null || a === null || finishing.current) return;
+    // Again before the latch: access can change while the jump is played (a plan ended in another tab).
+    if (jump && !stageJumpRuleNow(profileId, cellId, openRef.current)) {
+      setPhase({ kind: 'nothing' });
+      return;
+    }
     finishing.current = true;
     setPhase({ kind: 'loading' });
     void a
@@ -233,8 +245,11 @@ export function CellCheckScreen({ navigation, route }: Props): React.ReactElemen
   if (phase.kind === 'result' && ui !== null) {
     const title = episode ? localizeEpisode(episode, locale).titleEn : '';
     const rise = moment?.read.rises.find((r) => r.cellId === cellId) ?? null;
-    const banners =
-      moment !== null && rise !== null && episode ? (
+    // A jump's result takes the moment as every result does (no cell's rise leaks into the next Results), and shows no
+    // level-up for one cell of the stage: only a Words known milestone the jump crossed (row CM-25).
+    const banners = jump ? (
+      moment !== null && moment.read.milestone !== null ? <moment.ui.MasteryBanners milestone={moment.read.milestone} levelUp={null} reducedMotion={reducedMotion} /> : null
+    ) : moment !== null && rise !== null && episode ? (
         <moment.ui.MasteryBanners milestone={moment.read.milestone} levelUp={{ title, level: rise.level, theme: episode.theme as ThemeKey }} reducedMotion={reducedMotion} />
       ) : null;
     // A Stage Jump ends as a test-out does (cell-check.md F and G), over the stage (row CM-25).

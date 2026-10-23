@@ -27,7 +27,7 @@ export function proposalContextFor(profileId: string, now: Date): ProposalContex
     ageGroup: profile.ageGroup,
     unlockedStages: unlockedStagesFor(now, profileId) as StageKey[],
     today: dayKey(now.toISOString()),
-    ...(snapshot.testedOut === undefined ? {} : { testedOut: snapshot.testedOut }),
+    testedOut: snapshot.testedOut,
   };
 }
 
@@ -66,7 +66,8 @@ export async function loadPlanOffer(profileId: string, enabled: boolean, now: Da
 
 /** Keep my plan / the report's Not now on an update: hidden until the start changes again. */
 export async function keepPlan(profileId: string): Promise<void> {
-  const changeAt = planChangeAt(useProgressStore.getState().byProfile[profileId]?.placements);
+  const snapshot = useProgressStore.getState().byProfile[profileId];
+  const changeAt = planChangeAt(snapshot?.placements, snapshot?.testedOut);
   if (changeAt !== undefined) await useRouteStore.getState().markKept(profileId, changeAt);
 }
 

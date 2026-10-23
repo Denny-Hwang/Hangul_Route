@@ -6,6 +6,7 @@ import {
   jumpLevelOf,
   jumpedStagesOf,
   modeCeiling,
+  overrideInForce,
   placementLevelRank,
   placedOutGrowth,
   questsPlacedOutAtLevel,
@@ -189,11 +190,23 @@ describe('a jump combined with a placement result by the maximum', () => {
     expect(route.placedOutQuestIds).not.toContain(SHELF.id);
   });
 
-  it('a parent override does not put back a jumped stage (the cursor skips a tested-out cell whatever it says)', () => {
+  it('a grown-up override newer than the jump puts the jumped stage back (the grown-up keeps the last word)', () => {
     const override = makeResult({ id: 'placement:o', completedAt: at(7), override: { by: 'parent', at: at(7), startQuestId: q(1) } });
+    // The jump at day 5, the override at day 7.
     const route = effectiveRoute([deep, override], ROUTE, { ...paid, testedOut: jumpOf(ROUTE, ['stage3']) })!;
     expect(route.startQuestId).toBe(q(1));
+    for (const quest of STAGE3) expect(route.placedOutQuestIds).not.toContain(quest.id);
+    // An override moves the start, never the level (as with a result).
+    expect(route.level).toEqual(jumpLevelOf('stage3'));
+  });
+
+  it('a jump newer than the override moves past it; the override still sets the start before the stage', () => {
+    const override = makeResult({ id: 'placement:o', completedAt: at(3), override: { by: 'parent', at: at(3), startQuestId: q(1) } });
+    const route = effectiveRoute([deep, override], ROUTE, { ...paid, testedOut: jumpOf(ROUTE, ['stage3'], at(8)) })!;
+    expect(route.startQuestId).toBe(q(1));
     for (const quest of STAGE3) expect(route.placedOutQuestIds).toContain(quest.id);
+    expect(overrideInForce([deep, override])?.at).toBe(at(3));
+    expect(overrideInForce([deep])).toBeUndefined();
   });
 
   it('a completed quest is never touched, and an unentitled jumped level names the stage it needs', () => {

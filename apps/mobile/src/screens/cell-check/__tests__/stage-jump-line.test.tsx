@@ -8,7 +8,7 @@ import { jumpCells } from '../../../logic/reviews/cell-check-offer';
 import { useProfileStore } from '../../../store/profile-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { buttonsNamed, cleanup, press, render, screenTexts } from '../../../test-support/render';
-import { StageJumpLine } from '../StageJumpLine';
+import { StageJumpLine, stageJumpRuleNow } from '../StageJumpLine';
 
 /**
  * F-CURR-002 row CM-25: Stage Jump Ahead's line under a Journey stage. On the stage the route has reached, before it
@@ -80,6 +80,9 @@ describe('the Jump ahead line', () => {
     expect(screenTexts(r.root)).toContain(EN.learner.stageJump.prompt);
     const [button] = buttonsNamed(r.root, EN.learner.stageJump.label(2, 'Words'));
     expect(button).toBeDefined();
+    // The prompt is read once, as its own line: the button carries no hint repeating it.
+    expect(Object.values(button!.props).filter((v) => v === EN.learner.stageJump.prompt)).toEqual([]);
+    expect(screenTexts(r.root).filter((t) => t === EN.learner.stageJump.prompt)).toHaveLength(1);
     await press(button!);
     expect(navigate).toHaveBeenCalledWith('CellCheck', { cellId: 'stage2', mode: 'jump' });
     expect(jumpOfferable).toHaveBeenCalledWith(ID, 'stage2', CELLS.filter((c) => c.stage === 'stage2').map((c) => c.id));
@@ -108,6 +111,15 @@ describe('the Jump ahead line', () => {
     await cleanup();
     jumpOfferable.mockImplementation(async () => true);
     expect((await draw(<StageJumpLine profileId={ID} stage={STAGE2} checkOn={false} />)).toJSON()).toBeNull();
+  });
+
+  it('stageJumpRuleNow (the route re-check): the reached open stage only, from the stores now', () => {
+    expect(stageJumpRuleNow(ID, 'stage2', () => true)).toBe(true);
+    expect(stageJumpRuleNow(ID, 'stage3', () => true)).toBe(false);
+    expect(stageJumpRuleNow(ID, 'stage2', () => false)).toBe(false);
+    expect(stageJumpRuleNow(null, 'stage2', () => true)).toBe(false);
+    snapshot(questsOfStage('stage1'), { testedOut: { stage2: AT } });
+    expect(stageJumpRuleNow(ID, 'stage2', () => true)).toBe(false);
   });
 
   it('after a Stage 2 jump, Stage 3 is the reached stage and offers its own', async () => {

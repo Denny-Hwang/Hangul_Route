@@ -133,7 +133,7 @@ export function RouteProposalScreen({ route, navigation }: Props): React.ReactEl
       ageGroup: profile.ageGroup,
       unlockedStages: unlockedStagesFor(new Date(), profileId) as StageKey[],
       today,
-      ...(snapshot.testedOut === undefined ? {} : { testedOut: snapshot.testedOut }),
+      testedOut: snapshot.testedOut,
     };
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change re-plans.
     // eslint-disable-next-line react-hooks/exhaustive-deps
