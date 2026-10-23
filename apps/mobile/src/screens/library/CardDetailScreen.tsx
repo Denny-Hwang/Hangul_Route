@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import type { RootStackParamList } from '../../navigation/types';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { useProgressStore } from '../../store/progress-store';
@@ -7,7 +7,7 @@ import { CardDetailView } from './CardDetailView';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CardDetail'>;
 
-export function CardDetailScreen({ route }: Props): React.ReactElement {
+export function CardDetailScreen({ route }: Props): ReactElement {
   const { cardId } = route.params;
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3), no profile record needed.
   const profileId = useActiveLearnerId();
