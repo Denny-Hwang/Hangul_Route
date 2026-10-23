@@ -25,7 +25,8 @@ describe('minigame kinds', () => {
     expect(MinigameKindSchema.options).toEqual(
       expect.arrayContaining(['match-sound', 'card-match', 'culture-quiz', 'listen-pick', 'pic-word-match']),
     );
-    expect(MinigameKindSchema.options).toHaveLength(21);
+    // 21, then `hidden-heritage` (F-CURR-002 row CM-36).
+    expect(MinigameKindSchema.options).toHaveLength(22);
   });
 
   it('adds story-read additively (F-STORY-002 PR 2.1) and parses it as a quest step kind', () => {

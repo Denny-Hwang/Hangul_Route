@@ -30,4 +30,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'trace-word',
   // F-CURR-001 G-5
   'write-frame',
+  // F-CURR-002 row CM-36: the game, or its Pic-Word Match fallback while `game.hidden-heritage` is off.
+  'hidden-heritage',
 ]);

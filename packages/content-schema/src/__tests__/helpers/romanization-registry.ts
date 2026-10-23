@@ -76,6 +76,14 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
     path: 'apps/mobile/src/content/upper-cell-card-sources.ts',
     reason: 'test-only source records of the upper-cell card backs (F-CURR-002 row CM-23): Korean page titles, publishers and quoted source words, never shown; the cards they cite carry their Korean and romanization in heritage-cards.ts (registered, B1)',
   },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/food-market.ts',
+    reason: "the Food market scene's reference round and its quoted sources (F-CURR-002 row CM-36): the round is a scene's sample spots, played by the fixture-build e2e and copied by the content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/logic/__tests__/hidden-heritage-flow.test.ts",
+  },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/seollal-room.ts',
+    reason: "the Seollal room scene's reference round, its Korean text overlay and its quoted sources (F-CURR-002 row CM-37 part 2): the round is a scene's sample spots, played by the fixture-build e2e and copied by the Holidays content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-seollal.test.tsx",
+  },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },

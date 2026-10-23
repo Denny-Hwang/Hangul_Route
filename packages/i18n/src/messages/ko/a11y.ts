@@ -321,4 +321,9 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => `단계 확인, 가장 좋은 결과 별 ${stars}개`,
   },
+  hiddenHeritage: {
+    foundLive: (gloss: string) => `찾았어요: ${gloss}`,
+    spotFound: (gloss: string) => `${gloss}, 찾았어요`,
+    slotEmpty: '아직 찾지 않았어요',
+  },
 } satisfies DeepPartial<Messages['a11y']>;
