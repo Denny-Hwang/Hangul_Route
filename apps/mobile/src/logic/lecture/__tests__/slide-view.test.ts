@@ -495,7 +495,8 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
 
 describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S2)', () => {
   const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
-  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+  // Row CM-3A S3: the Stage 3 Checks rotate Cloze Pick, Sentence Builder and Dictation; nature q1 still hears its Apply.
+  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
   const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
   const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
   type Quiz = Extract<Slide, { kind: 'quiz' }>;

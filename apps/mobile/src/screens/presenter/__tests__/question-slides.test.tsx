@@ -51,8 +51,9 @@ const QUESTION: ReadonlySet<BuildName> = new Set(['question']);
 const ANSWER: ReadonlySet<BuildName> = new Set(['question', 'answer']);
 
 const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
-const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
-const stage3Text = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }], false);
+// Row CM-3A S3: the Stage 3 Checks rotate Cloze Pick, Sentence Builder and Dictation; nature q1 hears its Apply (pictures and sentences).
+const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
+const stage3Text = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }], false);
 const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
 const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }, { kind: 'quest', id: 'quest:stage6-crafts-q3' }]);
 /** Every realia question of the shipped Stage 6 lessons, so a figure and a picture question are always found. */
