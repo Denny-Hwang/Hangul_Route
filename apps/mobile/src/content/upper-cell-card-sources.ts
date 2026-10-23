@@ -163,28 +163,41 @@ export const UPPER_CARD_SOURCES: Readonly<Record<string, readonly UpperCardSourc
 export const UPPER_CARD_SHIPPED: ReadonlySet<string> = new Set(['card:dosirak', 'card:byeol', 'card:insa']);
 
 /**
- * The multi-agent review of the twelve card backs (part 1's eight, part 2's four) and their es and ko overlays
- * (F-CURR-002 §9.2). Content stays draft until every pass is recorded; `passes >= 3` and `reviewedBy: 'MAR'` as for a
- * lesson cell. No pass claims native-speaker or expert review. The independent MAR of the es and ko strings runs in the PR's fix stage.
+ * The multi-agent review of part 1's eight card backs and their es and ko overlays (F-CURR-002 §9.2). Content stays
+ * draft until every pass is recorded; `passes >= 3` and `reviewedBy: 'MAR'` as for a lesson cell. No pass claims
+ * native-speaker or expert review. Part 2's four Stage 4 cards have their own record, `UPPER_CARD_REVIEW_S4`.
  */
 export const UPPER_CARD_REVIEW = {
   status: 'ready' as 'draft' | 'ready',
   reviewedBy: 'MAR' as const,
   reviewedAt: '2026-10-23',
-  // Part 1's four passes, then part 2's own four on the Stage 4 cards (author, three checkers, reviser and third pass).
-  passes: 4,
+  passes: 5,
   notes: [
     'Pass 1 author (2026-10-23): one card per upper cell of Stages 2-3, its Korean taught in the cell (노래 S2 letters q1, 복주머니 S2 rites q3, 그네 S2 crafts q1, 한글 S3 letters q3, 떡 S3 life, 보름달 S3 rites, 곰 S3 nature, 윷 S3 crafts); facts drawn from §6.6 sources; romanization through the F-CNT-002 converter.',
     "Pass 2a language: 'tied to a child\\'s clothes' is age wording (7.7, card-age-words) and was reworded to 'tied to clothes' in en, es and ko; the full-moon fact repeated 'full moon', now 'That moon stands for plenty'; ko norae 'ol-lasseoyo' for an inscription replaced by the inscription verb 'deungjae-doeeosseoyo'; ko hangeul fact tightened. The title Hangeul keeps the Revised Romanization spelling of the stories; the shipped Hangul Day card is unchanged.",
     "Pass 2b culture and facts: every claim matched to its source words (UPPER_CARD_SOURCES quoteOrLocator); 'wooden' yut sticks is not in the Korea Heritage Service text and was removed from the yut fact and blurb in en, es and ko; the 1443 naming as Hunminjeongeum rests on UNESCO Memory of the World, the 28 letters on NIKL; the UNESCO claim names the exact element, 'inscribed 2012'; the rice cake and Dano facts claim Korea's designation and custom only, never an origin. The heritage.go.kr descriptions load by script, so their words are the ones recorded by the shipped reviews (access dates kept); the new 떡 만들기 page was re-opened for its name and designation date only, which is all the fact claims.",
     'Pass 2c learning design: each Korean word is taught in its cell; no Hangul in an English field; facts at most 180 characters; culture-source, review-copy and the 7.7 list pass; cards come only from finishing a cell (never random, never sold).',
     'Pass 3 reviser and third pass: the fixes above applied and re-read in en, es and ko; the e2e fixture story card that took 한글 now takes its 한글날 축하해요 keyword, so no two cards share a Korean word.',
+    "Pass 4 independent MAR (2026-10-23, a separate reviewer of the PR's own commits): es PASS and ko PASS on the 6 album UI messages and the 8 card title, blurb and fact overlays (natural, true to the en text and the sources; 'inscribed 2012' read as 등재되었어요 / se inscribió; 국가무형유산 as named on the access date; no age words, percentages, emoji, origin claims or expert claims). Its nits, applied: ko album 'fresh' is 새로 시작, so the row label no longer says 앨범 twice; the ko gom fact drops the repeated 겨울 (겨울잠을 자고); es 'a partir de la Etapa 2'; the es length allow-list reason names the themeNames form (the Journey cell word is Campo). Kept: the title Hangeul (Revised Romanization, as the stories spell it) beside the shipped Hangul Day card and the Hangul Check UI, whose names are shipped strings this row does not change. The heritage.go.kr words for 단오, 추석 and 윷놀이 are the ones the shipped story reviews recorded (access dates kept); the reviewer found they support the claims.",
+  ],
+} as const;
 
-    // Row CM-23 part 2 (Stage 4), the same passes on its four new cards and their es and ko overlays.
+/**
+ * The multi-agent review of row CM-23 part 2: the four Stage 4 card backs and their es and ko overlays (F-CURR-002
+ * §9.2), kept apart from part 1's record so each part's passes and dates read on their own. No pass claims
+ * native-speaker or expert review.
+ */
+export const UPPER_CARD_REVIEW_S4 = {
+  status: 'ready' as 'draft' | 'ready',
+  reviewedBy: 'MAR' as const,
+  reviewedAt: '2026-10-23',
+  passes: 5,
+  notes: [
     'Part 2 pass 1 author (2026-10-23): one card per upper cell of Stage 4, each a polite (haeyo) line of its cell taught in its Discover (이게 뭐예요? S4 letters q1, 맛있어요 S4 life q2, 비가 와요 S4 nature q1, 같이 할까요? S4 crafts q3); Greeting Dialogues keeps its four shipped cards and its album card is its q1 card:insa, as part 1 chose for the two taste cells; every fact rests on a National Institute of Korean Language page re-opened on 2026-10-23 (이게, 뭐 and 무어, 장마 and 반말 in the Standard Korean Language Dictionary; Standard Pronunciation article 15 and its proviso); romanization through the F-CNT-002 converter.',
     "Part 2 pass 2a language: the es blurb of 비가 와요 repeated its title ('Está lloviendo'), now 'Llueve, así que…'; titles in title case; es avoids a gendered 'juntos' in '¿Jugamos?'; the ko pronunciation fact names both standard forms and ends 'both are correct'; no age wording; every card line ends in the polite yo, as the row asks.",
     "Part 2 pass 2b culture and facts: each claim matched to its quoted words; the banmal fact first read 'the plain talk of people who are very close', which narrows the dictionary's 'unclear or very close', and now reads 'a way of talking used between people who are very close' in en and es (ko already said 쓰는 말); the pronunciation fact says the rules allow two ways, as the article 15 proviso does; the rainy-season fact defines the Korean word only and claims no origin for a season Korea shares with its neighbours; no UNESCO claim in this part.",
     'Part 2 pass 2c learning design: each line is taught in its own cell (test: the card Korean appears in the cell file); facts 89-139 characters, under the 180 cap; no Hangul in an English field; the facts teach about the line (short forms, two right pronunciations, a weather word, the polite ending) and never test the learner; review-copy, culture-source and the 7.7 list pass; cards come only from finishing a cell.',
     'Part 2 pass 3 reviser and third pass: both fixes applied and the four cards re-read in en, es and ko against their sources; no two of the 82 cards share a Korean word (T-AWARD-5).',
+    "Part 2 pass 4 independent MAR (2026-10-23, a separate reviewer of part 2's own commits): ko PASS; es NOT PASS on one string. Language: '¿Jugamos?', and the English 'Play Together?' with it, read 같이 할까요? as 'play'; the cell glosses it 'shall we do it together? (polite)' and 할 is 'do', so the card would teach the wrong verb. Fixed in the fix stage with the reviewer's wording: en 'Do It Together?', es '¿Lo hacemos en equipo?' (keeps 'together' with no gendered plural). The en and es masisseoyo facts said the rules give 'this word' two ways; Standard Pronunciation article 15 and its proviso cover the headword 맛있다, so en and es now name masitda (converter romanization), as ko already did. The ko gachi fact's conditional now reads '요'를 빼고 '같이 할까?'라고 하면 반말이에요 (the reviewer's wording). The other es strings and every ko string passed as written: natural, polite, true to the en text and the NIKL sources, no age words, no origin, UNESCO or expert claims.",
   ],
 } as const;

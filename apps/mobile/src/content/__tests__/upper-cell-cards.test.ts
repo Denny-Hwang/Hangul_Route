@@ -9,7 +9,7 @@ import { episodesAll } from '../episodes';
 import { UPPER_CARD_GATED_IDS, heritageCardsAll, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { UPPER_CARD_BACKS, withUpperBack } from '../upper-card-backs';
-import { UPPER_CARD_REVIEW, UPPER_CARD_SHIPPED, UPPER_CARD_SOURCES } from '../upper-cell-card-sources';
+import { UPPER_CARD_REVIEW, UPPER_CARD_REVIEW_S4, UPPER_CARD_SHIPPED, UPPER_CARD_SOURCES } from '../upper-cell-card-sources';
 import { ALBUM_STAGES, ALBUM_THEMES } from '../album-order';
 import { UPPER_CELL_CARDS } from '../upper-cell-cards';
 
@@ -24,6 +24,38 @@ const STAGES: readonly StageKey[] = ['stage2', 'stage3', 'stage4'];
 const cardOf = (id: string) => heritageCardsAll.find((c) => c.id === id);
 const cellFile = (stage: StageKey, theme: ThemeKey): string => join(REPO, `content/episodes/stage-${stage.slice(5)}/${theme}.json`);
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
+
+/** Every `ko` string a learner is taught in a cell's quests (discover items, rounds, pairs), never a culture note or source. */
+function taughtKo(node: unknown, out: string[] = [], key = ''): string[] {
+  if (key === 'culture' || key === 'sources' || key === 'citation') return out;
+  if (Array.isArray(node)) for (const x of node) taughtKo(x, out, key);
+  else if (node !== null && typeof node === 'object')
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'ko' && typeof v === 'string') out.push(v);
+      else taughtKo(v, out, k);
+    }
+  return out;
+}
+
+const words = (text: string): string[] => text.split(/[\s.,!?'"“”‘’…·]+/).filter((w) => w.length > 0);
+
+/**
+ * The word or line is taught in the cell: a taught item is it, or a taught sentence holds its words in order, the last
+ * one allowed a particle after it (a Stage 4 card is a whole line, 비가 와요, taught as 비가 와요!).
+ */
+function taughtIn(stage: StageKey, theme: ThemeKey, ko: string): boolean {
+  const cell = JSON.parse(readFileSync(cellFile(stage, theme), 'utf8')) as { quests?: unknown };
+  const want = words(ko);
+  if (want.length === 0) return false;
+  return taughtKo(cell.quests).some((t) => {
+    if (t === ko) return true;
+    const have = words(t);
+    for (let i = 0; i + want.length <= have.length; i += 1) {
+      if (want.every((w, j) => (j === want.length - 1 ? have[i + j]!.startsWith(w) : have[i + j] === w))) return true;
+    }
+    return false;
+  });
+}
 
 describe('upper-cell cards, Stages 2-4 (row CM-23)', () => {
   it('one card per upper cell of Stages 2 to 4, by stage then theme, each naming its own first-volume cell', () => {
@@ -74,9 +106,15 @@ describe('upper-cell cards, Stages 2-4 (row CM-23)', () => {
     for (const card of upperCellCards) {
       expect(card.rarity, card.id).toBe('rare');
       const ko = card.subtitleKo ?? '';
-      expect(readFileSync(cellFile(card.stage, card.theme), 'utf8'), `${card.id}: ${ko} taught in its cell`).toContain(`"${ko}`);
+      expect(taughtIn(card.stage, card.theme, ko), `${card.id}: ${ko} taught in its cell`).toBe(true);
       expect(checkRomanization(ko, card.romanization ?? ''), card.id).toEqual([]);
     }
+    // The check reads taught text only: a word from another cell, or only in a source title, is not taught here.
+    expect(taughtIn('stage2', 'letters', '윷')).toBe(false);
+    expect(taughtIn('stage3', 'letters', '맞춤법')).toBe(false);
+    // A line is matched word by word in order, never as loose words of a sentence.
+    expect(taughtIn('stage4', 'nature', '비가 와요')).toBe(true);
+    expect(taughtIn('stage4', 'nature', '와요 비가')).toBe(false);
   });
 
   it('Stage 4 (part 2): each card is a polite line of its cell\u2019s talk, the 해요체 ending, taught in the cell', () => {
@@ -85,7 +123,7 @@ describe('upper-cell cards, Stages 2-4 (row CM-23)', () => {
       ['card:mwoyeyo', '이게 뭐예요?', 'What Is This?'],
       ['card:masisseoyo', '맛있어요', 'It Is Tasty'],
       ['card:biga-wayo', '비가 와요', 'It Is Raining'],
-      ['card:gachi', '같이 할까요?', 'Play Together?'],
+      ['card:gachi', '같이 할까요?', 'Do It Together?'],
     ]);
     for (const c of s4) expect(c.subtitleKo, c.id).toMatch(/요\??$/);
   });
@@ -115,10 +153,16 @@ describe('upper-cell cards, Stages 2-4 (row CM-23)', () => {
   });
 
   it('the review is recorded before the content is ready: MAR, three passes or more, no expert or native-speaker claim', () => {
-    expect(UPPER_CARD_REVIEW).toMatchObject({ status: 'ready', reviewedBy: 'MAR' });
-    expect(UPPER_CARD_REVIEW.passes).toBeGreaterThanOrEqual(3);
-    expect(UPPER_CARD_REVIEW.notes.length).toBeGreaterThanOrEqual(3);
-    expect(UPPER_CARD_REVIEW.notes.join(' ')).not.toMatch(/native[- ]speaker review|expert review|reviewed by (a|an) (native|expert)/i);
+    for (const review of [UPPER_CARD_REVIEW, UPPER_CARD_REVIEW_S4]) {
+      expect(review).toMatchObject({ status: 'ready', reviewedBy: 'MAR' });
+      expect(review.passes).toBeGreaterThanOrEqual(3);
+      expect(review.notes.length).toBeGreaterThanOrEqual(3);
+      expect(review.notes.join(' ')).not.toMatch(/native[- ]speaker review|expert review|reviewed by (a|an) (native|expert)/i);
+    }
+    // Part 2's record is its own and names its independent es and ko pass (row CM-23 part 2 fix stage).
+    expect(UPPER_CARD_REVIEW.notes.join(' ')).not.toMatch(/Part 2/);
+    expect(UPPER_CARD_REVIEW_S4.notes.every((n) => n.startsWith('Part 2'))).toBe(true);
+    expect(UPPER_CARD_REVIEW_S4.notes.some((n) => /independent MAR/.test(n))).toBe(true);
   });
 
   it('the backs are imported by the upper-cards chunk only, so the start bundle never carries them', () => {

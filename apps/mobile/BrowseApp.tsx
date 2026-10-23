@@ -22,6 +22,7 @@ import {
   type Reentry,
 } from './src/logic/browse/boot';
 import { defaultBrowseBundle } from './src/logic/browse/bundle';
+import { browseBundleUnderUpperCards } from './src/logic/browse/upper-cards-gate';
 import type { ResolvedPass } from './src/logic/browse/pass';
 import { resolveEntry } from './src/logic/browse/target';
 import { BROWSE_REGISTERED_ROUTES, BrowseNavigator, type BrowseStackParamList } from './src/navigation/browse';
@@ -43,6 +44,7 @@ import { isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { useAudioStore } from './src/store/audio-store';
 import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { currFlagOn } from './src/store/remote-config-store';
 
 /**
  * All lessons, the third root of the learner web build at `/browse`
@@ -102,7 +104,9 @@ export default function BrowseApp(): React.ReactElement {
   const messages = useMessages();
   // The device record's text size (owner items 6 and 7).
   const textSize = useLocaleStore((s) => s.textSize);
-  const bundle = useMemo(() => defaultBrowseBundle(canRenderPicture), []);
+  // F-CURR-002 row CM-23: the upper-cell cards are listed once `upperCards` is on for everyone. All lessons reads no
+  // remote copy and has no learner to bucket, so its built-in launch state decides (pct 0 today: off).
+  const bundle = useMemo(() => browseBundleUnderUpperCards(defaultBrowseBundle(canRenderPicture), currFlagOn('upperCards', null, null)), []);
   // The effective switch, read once (BD6): never the raw flag.
   const gatingEnabled = useMemo(() => gatingActive(flags, bundleOs()), []);
   const [online, setOnline] = useState(isOnline);

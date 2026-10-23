@@ -19,7 +19,7 @@ import { applyAwards } from '../logic/awards/apply';
 import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
 import { ownedIdsOf } from '../logic/awards/upper-cards';
-import type { DerivedAward } from '../logic/awards/types';
+import type { AwardWorld, DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
 import { sessionKindOf, takesOver, type SessionOptions } from '../logic/sessions/hold';
 import { elapsedSeconds, keepsRun, lastStreakDay, newSessionId } from '../logic/sessions/session-log';
@@ -390,13 +390,19 @@ const WELCOME_CARD_IDS = new Set(welcomeCardIds);
  * welcome card) or the rules cannot read the record: a saved snapshot is
  * read back unvalidated, and a malformed one must never stop a hydrate or a sync.
  */
+/**
+ * The award world for a learner holding `cards` (F-CURR-002 row CM-23): the upper-cell cards only while `upperCards` is
+ * on for them, or once held. The reconcile and Results read it.
+ */
+export const awardWorldOf = (profileId: string, cards: ProgressSnapshot['cards'] | undefined): AwardWorld =>
+  awardWorldFor(upperCardsOnFor(profileId), ownedIdsOf(cards));
+
 function withAwards(profileId: string, snap: ProgressSnapshot): { snap: ProgressSnapshot; added: DerivedAward[] } {
   const profile = useProfileStore.getState().profiles.find((p) => p.id === profileId);
   if (!profile) return { snap, added: [] };
   try {
     // F-CURR-002 row CM-23: the upper-cell cards arrive only while `upperCards` is on for this learner.
-    const world = awardWorldFor(upperCardsOnFor(profileId), ownedIdsOf(snap.cards));
-    const added = missingAwards(world, snap, profile);
+    const added = missingAwards(awardWorldOf(profileId, snap.cards), snap, profile);
     if (added.length === 0) return { snap, added };
     return { snap: applyAwards(snap, added, new Date().toISOString()), added };
   } catch {
