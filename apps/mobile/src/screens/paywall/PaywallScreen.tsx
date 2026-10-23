@@ -2,7 +2,8 @@ import { CATALOG, freeLessonsFacts } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Heading, Hoya, Screen, Spacer, colors, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -54,7 +55,7 @@ function freeBundleFacts(): { facts: FreePlanContext['facts']; stories: number; 
  * grown-up hand-off (no new tab, so no extra tap after the PIN); a PIN older than 2 minutes opens the
  * grown-up area's own PIN screen first, which hands off after a correct PIN.
  */
-export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
+export function PaywallScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const { audience } = useAudience();
   const messages = useMessages();

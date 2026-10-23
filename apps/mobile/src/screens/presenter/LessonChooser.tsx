@@ -1,7 +1,8 @@
 import { Icon, borderWidth, colors, radii, spacing, touchTarget, useTypeScale, z, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { lessonChosen, type ChooserEpisodeRow, type ChooserGroup, type ChooserRow, type StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHOOSER_PAGE, type ChooserTab, type HomeSnapshot } from '../../logic/lecture/home-state';
@@ -47,7 +48,7 @@ const ROW_BASIS_REM = 16;
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
-function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly ChooserTab[]; value: ChooserTab; label: string; names: Record<ChooserTab, string>; onChange: (tab: ChooserTab) => void }): React.ReactElement {
+function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly ChooserTab[]; value: ChooserTab; label: string; names: Record<ChooserTab, string>; onChange: (tab: ChooserTab) => void }): ReactElement {
   const ts = useTypeScale().size;
   const refs = useRef(new Map<ChooserTab, View | null>());
   const onKey = (e: { key: string; preventDefault?: () => void }): void => {
@@ -103,7 +104,7 @@ function ChooserTabs({ tabs, value, label, names, onChange }: { tabs: readonly C
   );
 }
 
-export function LessonChooser({ messages, groups, state, onState, defaultStage, onBuild, onFooterHeight }: LessonChooserProps): React.ReactElement {
+export function LessonChooser({ messages, groups, state, onState, defaultStage, onBuild, onFooterHeight }: LessonChooserProps): ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const insets = useSafeAreaInsets();
@@ -158,7 +159,7 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
   };
   const minutesLine = (row: ChooserRow): string => (row.kind === 'letters' ? quick.letters(row.jamoIds.length) : quick.minutes(row.minutes));
 
-  const flatRow = (row: ChooserRow, ref?: (el: View | null) => void): React.ReactElement => (
+  const flatRow = (row: ChooserRow, ref?: (el: View | null) => void): ReactElement => (
     <CheckRow
       key={row.key}
       rowRef={ref}
@@ -171,7 +172,7 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
     />
   );
 
-  const paged = (rows: readonly ChooserRow[], which: 'stories' | 'topics'): React.ReactElement => {
+  const paged = (rows: readonly ChooserRow[], which: 'stories' | 'topics'): ReactElement => {
     const shown = Math.min(rows.length, state.more[which]);
     const rest = rows.length - shown;
     return (
@@ -199,7 +200,7 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
     );
   };
 
-  const episodeRow = (row: ChooserEpisodeRow): React.ReactElement => {
+  const episodeRow = (row: ChooserEpisodeRow): ReactElement => {
     const open = state.expanded.includes(row.key);
     const listId = `presenter-chooser-lessons-${row.key.replace(/[^a-z0-9-]/g, '-')}`;
     const locked = lessonLocked(chosen, row);
@@ -254,7 +255,7 @@ export function LessonChooser({ messages, groups, state, onState, defaultStage, 
     );
   };
 
-  let panel: React.ReactElement | null = null;
+  let panel: ReactElement | null = null;
   if (tab === 'lessons') {
     const group = stageGroups.find((g) => g.id === stage);
     panel = (

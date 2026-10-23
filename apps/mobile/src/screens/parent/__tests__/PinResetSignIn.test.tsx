@@ -1,6 +1,6 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -91,7 +91,7 @@ async function showReset(navigation = nav()) {
 const defaultFlag = flags.pinResetSignInEnabled;
 
 /** The route's header, reduced to its title (the app's `LearnerScreenHeader` needs a navigator). */
-function TitleSlot({ options }: ScreenHeaderSlotProps): React.ReactElement | null {
+function TitleSlot({ options }: ScreenHeaderSlotProps): ReactElement | null {
   return options?.title ? <Text>{options.title}</Text> : null;
 }
 

@@ -1,7 +1,8 @@
 import type { WriteFrameRound } from '@hangul-route/content-schema';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { ReactElement } from 'react';
 import type { MinigameScope } from '../logic/minigame-config';
 import { minigameFinishedEvent } from '../logic/minigame-finished';
 import { FIXTURE_ROUNDS, type WriteFrameFixture } from '../logic/write-frame/e2e-rounds';
@@ -62,7 +63,7 @@ export function WriteFrameE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WriteFrameE2e'>;
 
-export function WriteFrameE2eScreen({ route, navigation }: Props): React.ReactElement {
+export function WriteFrameE2eScreen({ route, navigation }: Props): ReactElement {
   const scope = useMemo<MinigameScope>(() => {
     const rounds = route.params.rounds.map((key) => FIXTURE_ROUNDS[key] as WriteFrameRound);
     return { kind: 'write-frame', rounds: rounds.length, writeFrame: { rounds } };

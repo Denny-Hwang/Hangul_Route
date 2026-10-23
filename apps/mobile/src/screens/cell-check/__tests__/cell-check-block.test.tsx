@@ -1,6 +1,6 @@
 import type { Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currBuiltInPct } from '../../../config/flags';
@@ -51,7 +51,7 @@ function snapshot(over: Partial<ProgressSnapshot> = {}): void {
   useProgressStore.setState({ byProfile: { [ID]: { profileId: ID, updatedAt: '2026-10-01T00:00:00.000Z', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, ...over } as ProgressSnapshot } });
 }
 
-const props = (over: Partial<React.ComponentProps<typeof CellCheckBlock>> = {}): React.ComponentProps<typeof CellCheckBlock> => ({
+const props = (over: Partial<ComponentProps<typeof CellCheckBlock>> = {}): ComponentProps<typeof CellCheckBlock> => ({
   place: 'top',
   profileId: ID,
   episodeId: CELL,
@@ -64,7 +64,7 @@ const props = (over: Partial<React.ComponentProps<typeof CellCheckBlock>> = {}):
   ...over,
 });
 
-async function draw(element: React.ReactElement) {
+async function draw(element: ReactElement) {
   const r = await render(element);
   await act(async () => {
     await Promise.resolve();
@@ -86,7 +86,7 @@ afterEach(async () => {
 });
 
 describe('the gate (section 12.2)', () => {
-  function Probe({ id }: { id: string | null }): React.ReactElement {
+  function Probe({ id }: { id: string | null }): ReactElement {
     return <>{String(useSwitches(id)[0])}</>;
   }
   const on = async (id: string | null): Promise<boolean> => {
@@ -158,7 +158,7 @@ describe('the block (A, A2)', () => {
 });
 
 describe('Test out (B)', () => {
-  const bottom = (over: Partial<React.ComponentProps<typeof CellCheckBlock>> = {}) => props({ place: 'bottom', stars: [0, 0, 0], ...over });
+  const bottom = (over: Partial<ComponentProps<typeof CellCheckBlock>> = {}) => props({ place: 'bottom', stars: [0, 0, 0], ...over });
 
   it('under an unstarted open cell: Already know this? and Test out, which opens the test-out', async () => {
     const r = await draw(<CellCheckBlock {...bottom()} />);

@@ -1,6 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -39,7 +40,7 @@ export function QuizSlide({
   /** The room cannot hear the Korean: the teacher-says text replaces the speaker (section 3.7). */
   sayIt: boolean;
   onPlaySound: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit } = usePresenterView();
   const revealed = shown.has('answer');
   // Options whose meanings still spill out of their cards at body size (a long gloss on a phone's
@@ -60,12 +61,12 @@ export function QuizSlide({
   );
 }
 
-function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; sayIt: boolean; onPlaySound: () => void; crowded: boolean }): React.ReactElement | null {
+function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; sayIt: boolean; onPlaySound: () => void; crowded: boolean }): ReactElement | null {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.quiz;
   const promptSize = size(presenter.size.prompt);
-  const heading = (text: string): React.ReactElement => (
+  const heading = (text: string): ReactElement => (
     <Text {...KOREAN_LINE_BREAK} role="heading" testID="presenter-quiz-question" style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}>
       {text}
     </Text>
@@ -121,7 +122,7 @@ function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; say
  * `AnswerLine` in QuizParts.tsx on purpose: the quiz's question row has no room for a row-shaped line
  * beside 140-unit letters, and the story check's prompt has no room for a stacked one.
  */
-function AnswerLine({ shown }: { shown: boolean }): React.ReactElement {
+function AnswerLine({ shown }: { shown: boolean }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   return (

@@ -45,7 +45,7 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   // The level check's routes: the screen while the run is on that route, null on a stale one (listed above).
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
   // [GU] The guest stack's shared learner screen (the card page): the same component, typed for the guest stack's routes.
-  shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as React\.ComponentType<GuestScreenProps<K>>;/ },
+  shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as ComponentType<GuestScreenProps<K>>;/ },
 };
 
 /**

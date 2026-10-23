@@ -12,7 +12,8 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
@@ -36,7 +37,7 @@ export interface InstallGuideSheetProps {
   shareUrl?: string;
 }
 
-export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.ReactElement | null {
+export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactElement | null {
   const { copy } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.install;
@@ -173,7 +174,7 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
   );
 }
 
-function Step({ icon, label }: { icon: 'arrow-right' | 'plus' | 'home'; label: string }): React.ReactElement {
+function Step({ icon, label }: { icon: 'arrow-right' | 'plus' | 'home'; label: string }): ReactElement {
   return (
     <View
       style={{

@@ -9,7 +9,7 @@ import {
   spacing,
   supportedCardIds,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import {
@@ -114,8 +114,8 @@ function ArtTile({
   /** The silhouette's tile (`mono`). */
   sunken?: boolean;
   testID?: string;
-  children?: React.ReactNode;
-}): React.ReactElement {
+  children?: ReactNode;
+}): ReactElement {
   return (
     <View
       testID={testID}
@@ -137,7 +137,7 @@ function ArtTile({
   );
 }
 
-export function PictureArt({ pictureRef, gloss, size, decorative = false, mono = false, tile: tileStyle = LEARNER_TILE, testID }: PictureArtProps): React.ReactElement {
+export function PictureArt({ pictureRef, gloss, size, decorative = false, mono = false, tile: tileStyle = LEARNER_TILE, testID }: PictureArtProps): ReactElement {
   const m = useMessages();
   const picture = resolvePictureArt(pictureRef, gloss, PICTURE_CONTEXT);
   const name = pictureName(gloss, m.a11y.minigame.picture);

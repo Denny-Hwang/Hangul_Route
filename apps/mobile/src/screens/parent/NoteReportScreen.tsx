@@ -1,7 +1,8 @@
 import { Body, Button, Card, Heading, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { NOTE_REPORT_REASONS, type NoteReportReason } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
@@ -33,7 +34,7 @@ type Done = Exclude<ReportAnswer, 'refused'> | 'hidden';
  * full-scope device, online) hides without a report (decision D8), after the Hide confirm. The
  * person reporting is never told what happens to the sender.
  */
-export function NoteReportScreen({ navigation, route }: Props): React.ReactElement {
+export function NoteReportScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const t = m.caregiver.notes;

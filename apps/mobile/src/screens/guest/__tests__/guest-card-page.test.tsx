@@ -1,6 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
-import React from 'react';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

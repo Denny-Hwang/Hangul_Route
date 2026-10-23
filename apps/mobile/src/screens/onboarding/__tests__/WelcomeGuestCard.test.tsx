@@ -1,6 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { GuestRecord } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -52,8 +52,8 @@ const rootDispatch = vi.fn();
 const navigation = { navigate: vi.fn(), getParent: () => ({ navigate: vi.fn(), dispatch: rootDispatch }) };
 const welcome = () => (
   <WelcomeScreen
-    navigation={navigation as unknown as React.ComponentProps<typeof WelcomeScreen>['navigation']}
-    route={{ key: 'welcome', name: 'Welcome', params: undefined } as React.ComponentProps<typeof WelcomeScreen>['route']}
+    navigation={navigation as unknown as ComponentProps<typeof WelcomeScreen>['navigation']}
+    route={{ key: 'welcome', name: 'Welcome', params: undefined } as ComponentProps<typeof WelcomeScreen>['route']}
   />
 );
 

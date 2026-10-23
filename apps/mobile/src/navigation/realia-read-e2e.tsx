@@ -1,7 +1,8 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
 import { minigameFinishedEvent } from '../logic/minigame-finished';
 import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
@@ -59,7 +60,7 @@ export function RealiaE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RealiaReadE2e'>;
 
-export function RealiaReadE2eScreen({ route, navigation }: Props): React.ReactElement {
+export function RealiaReadE2eScreen({ route, navigation }: Props): ReactElement {
   const { fixture, mode = 'quest', romanization = 'always' } = route.params;
   useEffect(() => {
     log.answers = [];

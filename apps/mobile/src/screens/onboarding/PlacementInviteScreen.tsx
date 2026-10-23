@@ -13,7 +13,8 @@ import {
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { inviteOutcome, type InviteChoice } from '../../logic/placement/entry';
@@ -42,7 +43,7 @@ const HOYA_SIZE = touchTarget.hero + spacing.xxl;
  * Shown only while `flags.placementEnabled` is on and the bank parsed
  * (`logic/placement/entry`).
  */
-export function PlacementInviteScreen({ navigation, route }: Props): React.ReactElement {
+export function PlacementInviteScreen({ navigation, route }: Props): ReactElement {
   const { profileId } = route.params;
   const messages = useMessages();
   const copy = messages.learner.placement.invite;
@@ -129,7 +130,7 @@ function ForkChoice({
   hint: string;
   onPress: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}

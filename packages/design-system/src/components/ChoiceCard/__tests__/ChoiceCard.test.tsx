@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children, isValidElement, createElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors, radii, spacing } from '../../../tokens';
 import { ChoiceCard } from '../ChoiceCard';
@@ -21,7 +22,7 @@ vi.mock('../../TextSize', async () => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
+type El = ReactElement<Props>;
 
 /** The card body inside the Pressable (its children are a render function of `{ pressed }`). */
 function body(props: Partial<ChoiceCardProps>): El {
@@ -30,11 +31,11 @@ function body(props: Partial<ChoiceCardProps>): El {
   return render({ pressed: false });
 }
 
-const kids = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 
 /** Every element of a tree, depth first. */
 function all(el: El): El[] {
-  return [el, ...kids(el).filter((k) => React.isValidElement(k)).flatMap((k) => all(k))];
+  return [el, ...kids(el).filter((k) => isValidElement(k)).flatMap((k) => all(k))];
 }
 
 const icons = (el: El): El[] => all(el).filter((e) => e.type === 'Icon');
@@ -48,7 +49,7 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
   });
 
   it('tile: the mark sits on the top corner on a disc of the state fill, so the content keeps the whole width', () => {
-    const art = React.createElement('View', { testID: 'art' });
+    const art = createElement('View', { testID: 'art' });
     const card = body({ state: 'correct', art, layout: 'tile' });
     const corner = kids(card).at(-1);
     expect(corner?.type).toBe('View');
@@ -65,7 +66,7 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
   });
 
   it('tile with no mark (waiting) draws no corner', () => {
-    const card = body({ state: 'idle', art: React.createElement('View'), layout: 'tile' });
+    const card = body({ state: 'idle', art: createElement('View'), layout: 'tile' });
     expect(icons(card)).toHaveLength(0);
     expect(kids(card)).toHaveLength(1);
   });
@@ -79,7 +80,7 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
   it('a miss carries the try-another mark by default and the dash with wrongMark="dash", in either layout', () => {
     expect(icons(body({ state: 'wrong', label: 'pear' }))[0]?.props.name).toBe('replay');
     expect(icons(body({ state: 'wrong', label: 'pear', wrongMark: 'dash' }))[0]?.props.name).toBe('dash');
-    const tile = body({ state: 'wrong', art: React.createElement('View'), layout: 'tile', wrongMark: 'dash' });
+    const tile = body({ state: 'wrong', art: createElement('View'), layout: 'tile', wrongMark: 'dash' });
     expect(icons(tile)[0]?.props).toMatchObject({ name: 'dash', color: colors.text.primary });
     expect((kids(tile).at(-1)?.props.style as Props).backgroundColor).toBe(colors.feedback.nudgeLight);
   });

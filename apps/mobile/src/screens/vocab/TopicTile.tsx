@@ -1,6 +1,6 @@
 import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { VocabTopic } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import type { TopicTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
@@ -57,7 +57,7 @@ export function TopicTile({
   /** A closed tile's hint: the ask by audience (`askFor`, F-ENT-003 section 3.7). */
   hint?: string;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}

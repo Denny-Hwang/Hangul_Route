@@ -1,6 +1,7 @@
 import { Button, Heading, Hoya, Icon, colors, radii, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
 import { useIsFocused } from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { PauseSheet as PauseSheetModel } from '../../logic/placement/flow';
@@ -23,7 +24,7 @@ import { LinkButton } from '../../components/LinkButton';
 
 /** Below this window height Hoya is left out of the sheet, so the two buttons fit. */
 const HOYA_MIN_WINDOW_HEIGHT = 400;
-export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactElement {
+export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): ReactElement {
   const { m, applyRun, say, screenReader, finishForGrownUp } = usePlacement();
   const copy = m.learner.placement;
   const title = sheet.kind === 'rest' ? copy.rest.line : sheet.kind === 'sound' ? copy.soundNeeded.title : copy.pause.title;

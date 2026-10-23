@@ -1,5 +1,5 @@
 import { StoryScene } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { LectureSceneView } from '../../../logic/lecture/sources/story';
 import { SCENE_STAGE, units } from '../../../logic/lecture/stage-constants';
@@ -11,7 +11,7 @@ import { usePresenterView } from '../presenter-context';
  * 300 units with the stage radius. Its accessible name is the scene caption (README D8), which is
  * never drawn. A scene with no art yet is the story theme's tinted panel.
  */
-export function StoryArt({ scene, testID }: { scene: LectureSceneView | undefined; testID?: string }): React.ReactElement {
+export function StoryArt({ scene, testID }: { scene: LectureSceneView | undefined; testID?: string }): ReactElement {
   const { unit } = usePresenterView();
   const width = units(unit, SCENE_STAGE);
   return (

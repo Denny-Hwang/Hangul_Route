@@ -18,9 +18,9 @@ import {
   KOREAN_LINE_BREAK,
   type DrawItem,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement, ReactNode, ComponentType } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
-import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
+import { Svg, Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import type { RealiaSheetView, SheetText } from '../../../logic/lecture/build-steps';
 import { sheetRoomy } from '../../../logic/lecture/slide-view';
 import { units } from '../../../logic/lecture/stage-constants';
@@ -61,7 +61,7 @@ export interface SheetAnswer {
 const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: Path, polygon: Polygon } as const;
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
-export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: { sheet: RealiaSheetView; rom: boolean; width: number; answer?: SheetAnswer; tight?: boolean }): React.ReactElement {
+export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: { sheet: RealiaSheetView; rom: boolean; width: number; answer?: SheetAnswer; tight?: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const mark = (id: string): Mark | undefined => (answer === undefined ? undefined : answer.shown && answer.entryId === id ? 'found' : 'none');
   const roomy = sheetRoomy(sheet);
@@ -87,7 +87,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: {
   );
   const title = sheet.heading ? <Heading text={sheet.heading} rom={rom} centered={sheet.kind !== 'ticket'} /> : null;
 
-  let body: React.ReactElement;
+  let body: ReactElement;
   switch (sheet.kind) {
     case 'ticket':
       body = (
@@ -167,7 +167,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: {
 }
 
 /** The sheet's title: its Korean at `presenter.size.prompt`, its romanization beside it. */
-function Heading({ text, rom, centered }: { text: SheetText; rom: boolean; centered: boolean }): React.ReactElement {
+function Heading({ text, rom, centered }: { text: SheetText; rom: boolean; centered: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   return (
@@ -183,7 +183,7 @@ function Heading({ text, rom, centered }: { text: SheetText; rom: boolean; cente
  * it. A line's own text keeps its width (`shrink` false); its value gives way and wraps, so no word
  * spills out of its line on a narrow stage.
  */
-function Piece({ text, rom, roomy, align, shrink = true }: { text: SheetText; rom: boolean; roomy: boolean; align: 'flex-start' | 'flex-end' | 'center'; shrink?: boolean }): React.ReactElement {
+function Piece({ text, rom, roomy, align, shrink = true }: { text: SheetText; rom: boolean; roomy: boolean; align: 'flex-start' | 'flex-end' | 'center'; shrink?: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const give = shrink ? { flexShrink: 1, minWidth: 0 } : { flexShrink: 0 };
@@ -195,7 +195,7 @@ function Piece({ text, rom, roomy, align, shrink = true }: { text: SheetText; ro
   );
 }
 
-function Rom({ text, on, align = 'flex-start' }: { text: string; on: boolean; align?: 'flex-start' | 'flex-end' | 'center' }): React.ReactElement {
+function Rom({ text, on, align = 'flex-start' }: { text: string; on: boolean; align?: 'flex-start' | 'flex-end' | 'center' }): ReactElement {
   const size = useStageText();
   return (
     <Text
@@ -216,7 +216,7 @@ function Rom({ text, on, align = 'flex-start' }: { text: string; on: boolean; al
 }
 
 /** One line of the sheet: its text, a dotted leader and its value at the end of the row; on a price card, stacked and centred. */
-function SheetLine({ text, value, rom, roomy, stack = false }: { text: SheetText; value?: SheetText | undefined; rom: boolean; roomy: boolean; stack?: boolean }): React.ReactElement {
+function SheetLine({ text, value, rom, roomy, stack = false }: { text: SheetText; value?: SheetText | undefined; rom: boolean; roomy: boolean; stack?: boolean }): ReactElement {
   const { unit } = usePresenterView();
   if (stack) {
     return (
@@ -240,7 +240,7 @@ function SheetLine({ text, value, rom, roomy, stack = false }: { text: SheetText
 }
 
 /** A trail board: the line and its arrow cell, on the side it points to. */
-function Board({ dir, box, line, children }: { dir?: 'left' | 'right' | undefined; box: ViewStyle; line: number; children: React.ReactNode }): React.ReactElement {
+function Board({ dir, box, line, children }: { dir?: 'left' | 'right' | undefined; box: ViewStyle; line: number; children: ReactNode }): ReactElement {
   const { unit } = usePresenterView();
   const right = dir !== 'left';
   const arrow = (
@@ -266,7 +266,7 @@ function Board({ dir, box, line, children }: { dir?: 'left' | 'right' | undefine
 }
 
 /** One dressing prop, stretched to its box or kept at its aspect ratio (RealiaSheet's `Dressing`, in stage units). */
-function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): React.ReactElement | null {
+function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): ReactElement | null {
   const drawn = drawProp(refId, REALIA_REGISTRY);
   if (!drawn) return null;
   return (
@@ -274,7 +274,7 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
       <Svg width="100%" height="100%" viewBox={drawn.viewBox} preserveAspectRatio={stretch ? 'none' : centered ? 'xMidYMax meet' : 'xMinYMid meet'}>
         {drawn.items.map((item: DrawItem) => {
           if (item.tag === 'card') return null;
-          const Tag = TAGS[item.tag] as React.ComponentType<Record<string, unknown>>;
+          const Tag = TAGS[item.tag] as ComponentType<Record<string, unknown>>;
           return <Tag key={item.key} {...item.geometry} {...item.paint} transform={item.transform} />;
         })}
       </Svg>
@@ -291,7 +291,7 @@ type Mark = 'found' | 'none';
  * glyph sits smaller in its top-left corner, over the card's margin. A realia page draws its lines
  * bare (`mark` absent).
  */
-function Marked({ mark, corner = false, children }: { mark: Mark | undefined; corner?: boolean; children: React.ReactNode }): React.ReactElement {
+function Marked({ mark, corner = false, children }: { mark: Mark | undefined; corner?: boolean; children: ReactNode }): ReactElement {
   const { unit, messages } = usePresenterView();
   if (mark === undefined) return <>{children}</>;
   const look = realiaLineLook(mark);

@@ -21,11 +21,12 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
-import Svg, { Path, Rect } from 'react-native-svg';
+import { Svg, Path, Rect } from 'react-native-svg';
 import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -109,7 +110,7 @@ const borderOf: Record<Look, string> = {
  * with a word strip; letter-by-letter mode for a round whose ghost reads poorly at block size.
  * Order and direction coach, never fail; the round scores once, when the word is done.
  */
-export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElement {
+export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -374,7 +375,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
     </GestureDetector>
   );
 
-  const otherCanvas = (index: number): React.ReactElement => {
+  const otherCanvas = (index: number): ReactElement => {
     const other = round.blocks[index]!;
     const passed = index < done;
     return (
@@ -395,7 +396,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): React.ReactElemen
       {size > 0 ? (
         canvases?.count === 2 ? (
           <View style={{ flexDirection: 'row', gap: spacing.lg }}>
-            {round.blocks.map((_, i) => (i === state.block ? <React.Fragment key="live">{liveCanvas}</React.Fragment> : otherCanvas(i)))}
+            {round.blocks.map((_, i) => (i === state.block ? <Fragment key="live">{liveCanvas}</Fragment> : otherCanvas(i)))}
           </View>
         ) : (
           liveCanvas
@@ -620,7 +621,7 @@ function BlockArt({
   focus: number | null;
   ink: JamoStrokePoint[][];
   inkWidth: number;
-}): React.ReactElement {
+}): ReactElement {
   const letters = block.placed.letters;
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${BLOCK_VIEWBOX} ${BLOCK_VIEWBOX}`}>
@@ -683,7 +684,7 @@ function BlockChip({
   ink: JamoStrokePoint[][] | null;
   label: string;
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const look: Look = state === 'current' ? 'live' : state === 'done' ? 'pass' : 'waiting';
   return (
@@ -736,7 +737,7 @@ const stripBorder: Record<TraceWordTone, string> = {
 };
 
 /** Hoya's line in a strip of fixed height (Trace Stroke's), so a longer line never moves the canvas. */
-function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; message: string; lines: number; showHoya: boolean }): React.ReactElement {
+function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; message: string; lines: number; showHoya: boolean }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View

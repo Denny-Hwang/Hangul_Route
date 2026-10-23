@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { layoutClassFor, scaleMedia, type LayoutClass } from '../../layout';
 
@@ -6,7 +7,7 @@ const LayoutContext = createContext<LayoutClass | null>(null);
 
 export interface LayoutProviderProps {
   value: LayoutClass;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**
@@ -14,7 +15,7 @@ export interface LayoutProviderProps {
  * with `panes: 1`, not `wide`, so nested screens do not try to split again.
  * Also lets `/design-preview` and tests force a class (F-LAYOUT-001 §3.2).
  */
-export function LayoutProvider({ value, children }: LayoutProviderProps): React.ReactElement {
+export function LayoutProvider({ value, children }: LayoutProviderProps): ReactElement {
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>;
 }
 

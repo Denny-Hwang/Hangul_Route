@@ -1,7 +1,8 @@
 import { borderWidth, colors, radii, spacing, touchTarget, typography, z, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { forwardRef, useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
+import type { ReactNode, RefObject, ReactElement } from 'react';
 import { Pressable, Text, View, type ViewStyle } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { Svg, Circle } from 'react-native-svg';
 import { radioMove } from '../../../logic/lecture/tools';
 import { focusablesIn, rememberFocus, trapFocus } from '../../../platform/presenter';
 
@@ -76,12 +77,12 @@ export function Cover({
   label: string;
   testID: string;
   sunken?: boolean;
-  children: React.ReactNode;
-  initialFocus?: React.RefObject<View | null>;
+  children: ReactNode;
+  initialFocus?: RefObject<View | null>;
   /** The controls Tab cycles through, in order (default: the tabbable controls inside the overlay). */
   focusables?: () => readonly unknown[];
   style?: ViewStyle;
-}): React.ReactElement {
+}): ReactElement {
   const self = useRef<View>(null);
   useEffect(() => {
     const restore = rememberFocus();
@@ -145,7 +146,7 @@ export function ChipRadios<T extends string>({
   selected: T;
   onSelect: (value: T) => void;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const refs = useRef(new Map<T, View | null>());
   const values = options.map((o) => o.value);
@@ -207,7 +208,7 @@ const RING_LENGTH = 2 * Math.PI * RING_R;
  * The timer ring: a `surface.sunken` track and a `brand.primary` fill that starts at 12 o'clock
  * and grows clockwise with elapsed time (it never drops, TD5), with m:ss inside unless hidden.
  */
-export function TimerRing({ size, fraction, text, numberSize, showNumbers, label }: { size: number; fraction: number; text: string; numberSize: number; showNumbers: boolean; label: string }): React.ReactElement {
+export function TimerRing({ size, fraction, text, numberSize, showNumbers, label }: { size: number; fraction: number; text: string; numberSize: number; showNumbers: boolean; label: string }): ReactElement {
   const filled = Math.min(1, Math.max(0, fraction)) * RING_LENGTH;
   return (
     <View role="timer" accessibilityLabel={label} testID="presenter-timer-ring" style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>

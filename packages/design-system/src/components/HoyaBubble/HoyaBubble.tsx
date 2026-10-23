@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
@@ -38,7 +39,7 @@ export function HoyaBubble({
   dismissLabel,
   autoDismissMs,
   testID,
-}: HoyaBubbleProps): React.ReactElement {
+}: HoyaBubbleProps): ReactElement {
   const textScale = useTypeScale();
   useEffect(() => {
     if (!onDismiss || !autoDismissMs) return;

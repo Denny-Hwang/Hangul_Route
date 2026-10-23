@@ -3,7 +3,6 @@ import { CATALOG, decodeDeck, routeCatalogOf, type LectureDeck, type Profile, ty
 import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flags } from '../../../config/flags';

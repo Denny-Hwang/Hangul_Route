@@ -1,5 +1,5 @@
 import { Body, Button, Heading, Hoya, HoyaBubble, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 
@@ -14,7 +14,7 @@ export interface OopsScreenProps {
   actionLabel?: string;
 }
 
-export function OopsScreen({ onRetry, actionLabel }: OopsScreenProps): React.ReactElement {
+export function OopsScreen({ onRetry, actionLabel }: OopsScreenProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.oops;
   return (

@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors, spacing } from '../../../tokens';
 import { cursorMarkerParts, markerBand, pipInk, pipParts, stageSegmentParts, startBand, startMarkerParts, type PipPart } from '../geometry';
@@ -32,8 +33,8 @@ vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle
 vi.mock('../../Layout/LayoutProvider', () => ({ useMediaSize: (base: number) => Math.round(base * 1.5) }));
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
-const kids = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+type El = ReactElement<Props>;
+const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 const ACCENT = colors.stage.stage1;
 
 describe('PipParts: geometry parts as svg', () => {

@@ -1,5 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLocaleStore } from '../../../store/locale-store';
@@ -25,8 +25,8 @@ const navigation = { navigate, getParent: () => ({ navigate: parentNavigate }) }
 type Params = { classLink?: true; code?: string } | undefined;
 const welcome = (params: Params) => (
   <WelcomeScreen
-    navigation={navigation as unknown as React.ComponentProps<typeof WelcomeScreen>['navigation']}
-    route={{ key: 'welcome', name: 'Welcome', params } as React.ComponentProps<typeof WelcomeScreen>['route']}
+    navigation={navigation as unknown as ComponentProps<typeof WelcomeScreen>['navigation']}
+    route={{ key: 'welcome', name: 'Welcome', params } as ComponentProps<typeof WelcomeScreen>['route']}
   />
 );
 

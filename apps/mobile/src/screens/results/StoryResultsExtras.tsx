@@ -1,5 +1,6 @@
 import { Body, Button, Caption, Card, KoreanText, Spacer, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import { Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type {
@@ -27,7 +28,7 @@ interface Props {
  * primary (Next story, else Back home) and at most two ghosts (Read it again,
  * Episode page). No number anywhere (D3).
  */
-export function StoryResultsExtras({ extras, onChoose }: Props): React.ReactElement {
+export function StoryResultsExtras({ extras, onChoose }: Props): ReactElement {
   const m = useMessages();
   const { title, cultureNote, episodeLine, encouragement, primary, secondary } = extras;
   return (
@@ -90,7 +91,7 @@ export function StoryResultsExtras({ extras, onChoose }: Props): React.ReactElem
         testID={`story-results-${primary.action}`}
       />
       {secondary.map((choice) => (
-        <React.Fragment key={choice.action}>
+        <Fragment key={choice.action}>
           <Spacer size="sm" />
           <Button
             label={choice.label}
@@ -100,7 +101,7 @@ export function StoryResultsExtras({ extras, onChoose }: Props): React.ReactElem
             onPress={() => onChoose(choice)}
             testID={`story-results-${choice.action}`}
           />
-        </React.Fragment>
+        </Fragment>
       ))}
     </View>
   );

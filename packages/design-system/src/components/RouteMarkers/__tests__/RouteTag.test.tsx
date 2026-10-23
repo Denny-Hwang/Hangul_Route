@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors, radii, spacing } from '../../../tokens';
 import { TagMark } from '../RouteLegend';
@@ -9,8 +10,8 @@ vi.mock('react-native', () => ({ View: 'View', Text: 'Text', useWindowDimensions
 vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path' }));
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
-const kids = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+type El = ReactElement<Props>;
+const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 
 describe('RouteTag (F-ENT-003 E3-6, RouteMarkers D6)', () => {
   it('Next: a brand.primaryLight pill with the word only, hidden from screen readers', () => {

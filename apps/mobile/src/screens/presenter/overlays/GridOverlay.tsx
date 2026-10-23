@@ -1,5 +1,6 @@
 import { borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
 import { gridKindKey, type GridItem } from '../../../logic/lecture/tools';
 import { THUMB_HEIGHT, THUMB_WIDTH } from '../stage-metrics';
@@ -13,7 +14,7 @@ import { Cover, ToolButton } from './OverlayParts';
  * The open slide is outlined and marked Now; a hidden slide is dashed with Hidden and Show; the
  * others have Hide; the End slide has neither. Hidden slides last for this lesson only.
  */
-export function GridOverlay({ items, onGoto, onToggle, onClose }: { items: readonly GridItem[]; onGoto: (idx: number) => void; onToggle: (key: string) => void; onClose: () => void }): React.ReactElement {
+export function GridOverlay({ items, onGoto, onToggle, onClose }: { items: readonly GridItem[]; onGoto: (idx: number) => void; onToggle: (key: string) => void; onClose: () => void }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.grid;
@@ -38,13 +39,13 @@ export function GridOverlay({ items, onGoto, onToggle, onClose }: { items: reado
 
 type PressState = { focused?: boolean };
 
-function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?: React.Ref<View>; onGoto: (idx: number) => void; onToggle: (key: string) => void }): React.ReactElement {
+function Thumb({ item, innerRef, onGoto, onToggle }: { item: GridItem; innerRef?: Ref<View>; onGoto: (idx: number) => void; onToggle: (key: string) => void }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.grid;
   const kind = m.kind[gridKindKey(item.kind)];
   const label = [String(item.n), kind, item.title, item.now ? m.now : '', item.hidden ? m.hidden : ''].filter((part) => part !== '').join(', ');
-  const pill = (text: string): React.ReactElement => (
+  const pill = (text: string): ReactElement => (
     <View style={{ borderRadius: radii.pill, borderWidth: borderWidth.base, borderColor: colors.border.strong, backgroundColor: colors.surface.paper, paddingHorizontal: spacing.sm }}>
       <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }}>{text}</Text>
     </View>

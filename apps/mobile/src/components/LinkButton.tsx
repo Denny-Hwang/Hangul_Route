@@ -1,8 +1,8 @@
 import { Body, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 
-type IconName = React.ComponentProps<typeof Icon>['name'];
+type IconName = ComponentProps<typeof Icon>['name'];
 
 /**
  * A text link with a hit area of at least `touchTarget.min` (F-PLC-001 section 3.12): the visible words are the
@@ -21,7 +21,7 @@ export function LinkButton({
   icon?: IconName;
   testID?: string;
   accessibilityHint?: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}

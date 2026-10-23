@@ -1,5 +1,6 @@
 import { colors, motion, typography } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Pressable } from 'react-native';
 import Animated, {
   Easing,
@@ -11,7 +12,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
+import { Svg, Circle, Path, Text as SvgText } from 'react-native-svg';
 import type { Messages } from '@hangul-route/i18n';
 import type { JamoStrokePoint } from '../content/jamo-strokes';
 import { useMessages } from '../i18n/use-messages';
@@ -71,7 +72,7 @@ export function StrokeHint({
   playToken,
   strokeOrder: strokeOrderOverride,
   orderLabel,
-}: Props): React.ReactElement | null {
+}: Props): ReactElement | null {
   const appStrokeOrder = useMessages().a11y.minigame.strokeOrder;
   const strokeOrder = strokeOrderOverride ?? appStrokeOrder;
   // One progress shared value per stroke (0 → 1 along the path)
@@ -196,7 +197,7 @@ function StrokeTrail({
   totalStrokes,
   sweep,
   opacity,
-}: TrailProps): React.ReactElement {
+}: TrailProps): ReactElement {
   const pathD = pointsToPathD(stroke);
 
   // Trail opacity: 0 before sweep reaches this stroke, growing to ~0.6 once active
@@ -260,7 +261,7 @@ function StrokeOrderDiagram({
   target: JamoStrokePoint[][];
   size: number;
   viewBox: number;
-}): React.ReactElement {
+}): ReactElement {
   const items = buildStrokeDiagram(target);
   return (
     <Svg
@@ -296,7 +297,7 @@ function StrokeOrderDiagram({
         ) : null,
       )}
       {items.map((item) => (
-        <React.Fragment key={`badge-${item.order}`}>
+        <Fragment key={`badge-${item.order}`}>
           <Circle
             cx={item.badge.x}
             cy={item.badge.y}
@@ -316,7 +317,7 @@ function StrokeOrderDiagram({
           >
             {String(item.order)}
           </SvgText>
-        </React.Fragment>
+        </Fragment>
       ))}
     </Svg>
   );

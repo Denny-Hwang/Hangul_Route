@@ -1,6 +1,7 @@
 import { Body, Caption, spacing, touchTarget } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { licensesUrl } from '../../logic/links';
@@ -39,7 +40,7 @@ export function LicensesLink({
   opensDirectly = gateOpensDirectlyNow,
   open = openExternalUrl,
   handOffNeedsTap = HAND_OFF_NEEDS_TAP,
-}: LicensesLinkProps): React.ReactElement {
+}: LicensesLinkProps): ReactElement {
   const t = useMessages().learner.profile.licenses;
   const [note, setNote] = useState<string | null>(null);
   const waiting = useRef(false);

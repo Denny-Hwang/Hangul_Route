@@ -1,7 +1,8 @@
 import { Body, Button, Caption, Card, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { TRANSFER_CONSENT_LOCALES, type TransferConsentLocale } from '@hangul-route/content-schema';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
 import { useLocalePacks } from '../../i18n/use-messages';
@@ -33,7 +34,7 @@ export interface ConsentSheetProps {
  * block, the introduce option (off by default), then the buttons as the last element. The primary waits
  * until the end marker after `cannot_undo` has been in view once (D2), a scroll rule only.
  */
-export function ConsentSheet({ data, initialLocale, self, notice, error, busy, onYes, onNotNow, notNowNote = null }: ConsentSheetProps): React.ReactElement {
+export function ConsentSheet({ data, initialLocale, self, notice, error, busy, onYes, onNotNow, notNowNote = null }: ConsentSheetProps): ReactElement {
   const [locale, setLocale] = useState<TransferConsentLocale>(initialLocale);
   const [introduce, setIntroduce] = useState(false);
   const [markerY, setMarkerY] = useState<number | null>(null);

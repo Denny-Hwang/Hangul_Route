@@ -1,5 +1,5 @@
 import { presenter, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { realiaView, sheetUnits } from '../../../logic/lecture/slide-view';
@@ -32,7 +32,7 @@ const MAX_LEVEL = 3;
  * caption's romanization one build after the sheet, the key words' one build after them. A crowded
  * column (a long caption, long meanings on a small phone) fits itself, one compact level at a time.
  */
-export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: number }): React.ReactElement {
+export function RealiaSlide({ slide, reveal }: { slide: RealiaBody; reveal: number }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const fit = useFitLevel(MAX_LEVEL, unit);

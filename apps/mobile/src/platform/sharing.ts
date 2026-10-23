@@ -1,4 +1,4 @@
-import * as Sharing from 'expo-sharing';
+import { isAvailableAsync, shareAsync } from 'expo-sharing';
 import type { RefObject } from 'react';
 import { captureRef } from 'react-native-view-shot';
 
@@ -23,7 +23,7 @@ export interface ShareResult {
 
 export async function isShareAvailable(): Promise<boolean> {
   try {
-    return await Sharing.isAvailableAsync();
+    return await isAvailableAsync();
   } catch {
     return false;
   }
@@ -55,7 +55,7 @@ export async function shareSnapshot({
     return { ok: false, reason: 'capture-failed' };
   }
   try {
-    await Sharing.shareAsync(uri, {
+    await shareAsync(uri, {
       mimeType: format === 'png' ? 'image/png' : 'image/jpeg',
       dialogTitle: 'Share this card',
     });

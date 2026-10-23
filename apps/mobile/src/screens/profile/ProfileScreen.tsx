@@ -19,7 +19,8 @@ import {
 import { LOCALE_META, levelWords } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { LockBadge } from '../../components/LockBadge';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -59,7 +60,7 @@ import { LicensesLink } from './LicensesLink';
 import { ChallengeCard } from '../vocab/ChallengeCard';
 import { wordsOffered } from '../vocab/topic-data';
 
-export function ProfileScreen(): React.ReactElement {
+export function ProfileScreen(): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const t = m.learner.profile;

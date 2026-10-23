@@ -10,7 +10,8 @@ import {
   touchTarget,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { pinSetupChange, pinSetupRedo, type PinSetupState } from '../logic/onboarding/pin-setup';
@@ -39,7 +40,7 @@ interface PinSetupFieldProps {
  * calm amber line, never red. Design reference:
  * design/wireframes/onboarding/all-ages-onboarding.md, section D.
  */
-export function PinSetupField({ heading, state, onChange, error = null, disabled = false }: PinSetupFieldProps): React.ReactElement {
+export function PinSetupField({ heading, state, onChange, error = null, disabled = false }: PinSetupFieldProps): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.pin.setup;
   const { windowWidth, gutter, mediaScale } = useLayoutClass();

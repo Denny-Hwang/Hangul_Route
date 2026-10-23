@@ -1,5 +1,6 @@
 import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View, type LayoutChangeEvent } from 'react-native';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
 import { wallArtSize, wallColumns, type WallTileView } from '../../logic/vocab/topic-view';
@@ -26,7 +27,7 @@ export function WordWall({
 }: {
   tiles: readonly WallTileView[];
   onOpen?: (id: string) => void;
-}): React.ReactElement {
+}): ReactElement {
   // OS text size x the chosen Display text size (owner items 6 and 7).
   const fontScale = useEffectiveFontScale();
   const lc = useLayoutClass();
@@ -59,7 +60,7 @@ export function WordWall({
   );
 }
 
-function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOpen?: (id: string) => void }): React.ReactElement {
+function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOpen?: (id: string) => void }): ReactElement {
   const frame = {
     flexGrow: 1,
     minHeight: touchTarget.min,

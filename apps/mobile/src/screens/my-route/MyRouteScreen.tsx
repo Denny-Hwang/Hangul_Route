@@ -3,7 +3,8 @@ import type { ThemeKey } from '@hangul-route/content-schema';
 import { formatDate, formatNumber } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { bundleOs, flags, gatingActive, routeEnabledFor } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
@@ -91,7 +92,7 @@ export const NEXT_LESSON_COUNT = 3;
 const STAGE_ORDER = new Map(stages.map((s) => [s.key, s.order]));
 
 /** The root-stack screen: one learner's page for a grown-up, read-only (section 5.1). */
-export function MyRouteScreen({ route, navigation }: Props): React.ReactElement {
+export function MyRouteScreen({ route, navigation }: Props): ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const activeId = useProfileStore((s) => s.activeId);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
@@ -123,7 +124,7 @@ export function MyRouteScreen({ route, navigation }: Props): React.ReactElement 
 }
 
 /** The Route tab (LR-4): the active profile's own page. Mounted only while `flags.myRouteEnabled` is on (`mainTabs`). */
-export function MyRouteTabScreen(): React.ReactElement {
+export function MyRouteTabScreen(): ReactElement {
   const navigation = useNavigation<Navigation>();
   const profiles = useProfileStore((s) => s.profiles);
   const activeId = useProfileStore((s) => s.activeId);
@@ -139,7 +140,7 @@ interface BodyProps {
   navigation: Navigation;
 }
 
-function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): React.ReactElement {
+function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.myRoute;
   const locale = useLocale();

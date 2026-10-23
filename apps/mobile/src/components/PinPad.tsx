@@ -1,5 +1,5 @@
 import { Icon, colors, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { PIN_LENGTH } from '../logic/profiles/pin-hash';
@@ -28,7 +28,7 @@ interface PinPadProps {
  * `Delete last digit` are part of the e2e contract (layout.spec.ts).
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, section D.
  */
-export function PinPad({ value, onChange, disabled = false, layout, testID }: PinPadProps): React.ReactElement {
+export function PinPad({ value, onChange, disabled = false, layout, testID }: PinPadProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages().a11y;
   const gridWidth = layout.columns * layout.keySize + (layout.columns - 1) * PIN_PAD_GAP;

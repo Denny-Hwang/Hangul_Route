@@ -1,7 +1,8 @@
 import { createBottomTabNavigator, type BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
 import { Icon, borderWidth, colors, spacing, tabBarMetrics, typography, useLayoutClass, KOREAN_LINE_BREAK, useCappedFont } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { Platform, Text, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { flags } from '../config/flags';
@@ -16,7 +17,7 @@ import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const SCREENS: Readonly<Record<MainTabName, React.ComponentType>> = {
+const SCREENS: Readonly<Record<MainTabName, ComponentType>> = {
   Home: HomeScreen,
   Route: MyRouteTabScreen,
   Journey: JourneyScreen,
@@ -58,7 +59,7 @@ function fittedLabel(text: string): NonNullable<BottomTabNavigationOptions['tabB
  * section 5.1, LR-OD-2); the Route tab draws the `route` glyph over "Route" and is announced as
  * "Learning Route". Design: design/screens/learning-route/tab-bar.md, mock/tab-bar.html.
  */
-export function MainTabs(): React.ReactElement {
+export function MainTabs(): ReactElement {
   const messages = useMessages();
   const tabs = messages.a11y.tabs;
   // The tab row sits above the home indicator instead of a fixed 24px pad

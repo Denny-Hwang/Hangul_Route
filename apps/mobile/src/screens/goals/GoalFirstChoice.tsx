@@ -1,5 +1,5 @@
 import { Button, Card, Heading, Spacer, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { DAILY_TIERS, type DailyGoal } from '../../logic/goals/points';
@@ -16,7 +16,7 @@ export interface GoalFirstChoiceProps {
   onLater: () => void;
 }
 
-export function GoalFirstChoice({ onChoose, onLater }: GoalFirstChoiceProps): React.ReactElement {
+export function GoalFirstChoice({ onChoose, onLater }: GoalFirstChoiceProps): ReactElement {
   const g = useMessages().learner.goals;
   return (
     <Card padding="md" tone="sunken" testID="home-goal-first">

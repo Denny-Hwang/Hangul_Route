@@ -1,6 +1,7 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { Body, Card, Heading, Icon, Spacer, borderWidth, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useMessages } from '../../i18n/use-messages';
@@ -40,7 +41,7 @@ export function PeopleOnDeviceCard({
   profiles: readonly Profile[];
   onOpen: (profileId: string) => void;
   guest: GuestRowActions;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const messages = useMessages();
   const learners = profiles.filter((p) => p.role === 'learner');
   const { locked } = useLocks(profiles);

@@ -1,7 +1,8 @@
 import { Body, Button, Caption, Card, Heading, Pill, spacing } from '@hangul-route/design-system';
 import { DURATION_IDS, type DurationId, type PaceId, type StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { routeEnabledFor } from '../../config/flags';
 import { useLocale } from '../../i18n/use-messages';
@@ -38,7 +39,7 @@ export interface SuggestedPlanCardProps {
   onChange: () => void;
 }
 
-export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onChange }: SuggestedPlanCardProps): React.ReactElement | null {
+export function SuggestedPlanCard({ profileId, name, messages, stageTitle, onChange }: SuggestedPlanCardProps): ReactElement | null {
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   const tier = useAccessTier(profileId);
   const [offer, setOffer] = useState<PlanOffer | null>(null);
@@ -103,7 +104,7 @@ function NewPlanCard({
   stageTitle: (key: StageKey) => string;
   onChange: () => void;
   onDone: (outcome: Outcome) => void;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const m = messages.caregiver.placementReport.plan;
   const t = messages.learner.weeklyPlan.proposal;
   const [pace, setPace] = useState<PaceId>(offer.pace);
@@ -233,7 +234,7 @@ function UpdateCard({
   messages: Messages;
   offer: Extract<PlanOffer, { kind: 'update' }>;
   onDone: (outcome: Outcome) => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = messages.caregiver.placementReport.plan;
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);

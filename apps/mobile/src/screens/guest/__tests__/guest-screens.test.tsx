@@ -1,6 +1,6 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { GuestRecord } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -107,7 +107,7 @@ function navigationDouble() {
 }
 
 /** A header slot double: draws the screen's own leading control, as LearnerScreenHeader does when it cannot go back. */
-function HeaderDouble({ options }: ScreenHeaderSlotProps): React.ReactElement | null {
+function HeaderDouble({ options }: ScreenHeaderSlotProps): ReactElement | null {
   const leading = options?.leading;
   if (leading?.onPress === undefined) return null;
   return (
@@ -117,7 +117,7 @@ function HeaderDouble({ options }: ScreenHeaderSlotProps): React.ReactElement | 
   );
 }
 
-const inGuest = (element: React.ReactElement): React.ReactElement => <ScreenHeaderSlotContext.Provider value={HeaderDouble}>{element}</ScreenHeaderSlotContext.Provider>;
+const inGuest = (element: ReactElement): ReactElement => <ScreenHeaderSlotContext.Provider value={HeaderDouble}>{element}</ScreenHeaderSlotContext.Provider>;
 
 beforeEach(() => {
   disk.clear();

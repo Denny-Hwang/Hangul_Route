@@ -1,5 +1,5 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import type { SequenceStep } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -20,7 +20,7 @@ type SequenceBody = Extract<Slide, { kind: 'sequence' }>;
  * number marker instead of a number, so the room can answer "triangle, 2" without the true order
  * showing. Nothing is collected.
  */
-export function SequenceSlide({ slide, reveal }: { slide: SequenceBody; reveal: number }): React.ReactElement {
+export function SequenceSlide({ slide, reveal }: { slide: SequenceBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const view = sequenceView(slide, reveal);
@@ -52,7 +52,7 @@ export function SequenceSlide({ slide, reveal }: { slide: SequenceBody; reveal: 
 }
 
 /** Two columns in reading order (row by row), as the mock's grid. */
-function StepGrid({ children }: { children: React.ReactNode }): React.ReactElement {
+function StepGrid({ children }: { children: ReactNode }): ReactElement {
   const { unit } = usePresenterView();
   return (
     <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: units(unit, STAGE_GAP), rowGap: units(unit, STAGE_GAP_INNER) }}>
@@ -61,7 +61,7 @@ function StepGrid({ children }: { children: React.ReactNode }): React.ReactEleme
   );
 }
 
-function StepRow({ step, lead, rom, on }: { step: SequenceStep; lead: React.ReactNode; rom: boolean; on: boolean }): React.ReactElement {
+function StepRow({ step, lead, rom, on }: { step: SequenceStep; lead: ReactNode; rom: boolean; on: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const bodySize = size(presenter.size.body);
@@ -91,7 +91,7 @@ function StepRow({ step, lead, rom, on }: { step: SequenceStep; lead: React.Reac
 }
 
 /** The true order's numbered circle: 80 units, a `borderWidth.thick`-unit `text.primary` ring. */
-function StepNumber({ n }: { n: number }): React.ReactElement {
+function StepNumber({ n }: { n: number }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const box = units(unit, MARKER_BODY_FACTOR * presenter.size.body);

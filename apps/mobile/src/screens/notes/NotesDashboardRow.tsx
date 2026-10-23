@@ -1,5 +1,6 @@
 import { Body, Card, Icon, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { grownUpRow } from '../../logic/notes/grown-up';
@@ -12,7 +13,7 @@ import { useProfileNotes } from './use-notes';
  * note arrived since a grown-up last opened that learner's notes. The dashboard never lists notes
  * itself. The caller renders it only with `flags.notesEnabled` on.
  */
-export function NotesDashboardRow({ profileId, name, onOpen }: { profileId: string; name: string; onOpen: () => void }): React.ReactElement | null {
+export function NotesDashboardRow({ profileId, name, onOpen }: { profileId: string; name: string; onOpen: () => void }): ReactElement | null {
   const m = useMessages();
   const { data, memberships } = useProfileNotes(profileId);
   const row = useMemo(() => grownUpRow({ data: data ?? null, memberships }), [data, memberships]);

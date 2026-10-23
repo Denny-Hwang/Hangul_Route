@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { colors, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
@@ -25,7 +26,7 @@ export function SectionTabs<T extends string>({
   testID,
   panelId,
   focusSelected = false,
-}: SectionTabsProps<T>): React.ReactElement {
+}: SectionTabsProps<T>): ReactElement {
   const selectedRef = useRef<View>(null);
   const bodySize = useTypeScale().size.body;
   useEffect(() => {

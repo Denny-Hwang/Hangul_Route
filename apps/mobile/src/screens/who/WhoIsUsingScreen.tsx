@@ -12,7 +12,8 @@ import {
 } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { BackHandler, Platform, View } from 'react-native';
 import { GrownUpRow } from '../../components/GrownUpRow';
 import { flags } from '../../config/flags';
@@ -82,7 +83,7 @@ const ROWS_ACROSS = 3;
  * pick starts or resumes the guest run (`startGuestRun` closes the grown-up session, CS-G3) and selects nobody (no
  * `profile.switch`, CS-G4).
  */
-export function WhoIsUsingScreen({ navigation, route }: Props): React.ReactElement {
+export function WhoIsUsingScreen({ navigation, route }: Props): ReactElement {
   const messages = useMessages();
   const w = messages.learner.who;
   const locale = useLocale();

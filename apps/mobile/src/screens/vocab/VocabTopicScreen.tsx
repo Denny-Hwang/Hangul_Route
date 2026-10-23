@@ -13,7 +13,8 @@ import {
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -63,7 +64,7 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * goes through the grown-up gate here too, whichever screen opened it. Writes nothing.
  * Design: design/screens/vocab/topic.md.
  */
-export function VocabTopicScreen({ route, navigation }: Props): React.ReactElement {
+export function VocabTopicScreen({ route, navigation }: Props): ReactElement {
   const topic = pickerTopic(route.params.topicKey);
   const profile = useProfileStore(activeProfileSelector);
   // The access tier (F-ENT-003 section 3.4); nothing is locked while the switch is off (D5).
@@ -93,7 +94,7 @@ export function VocabTopicScreen({ route, navigation }: Props): React.ReactEleme
   );
 }
 
-function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
+function TopicNotFound({ onBack }: { onBack: () => void }): ReactElement {
   const copy = vocabCopyOf(useMessages());
   return (
     <Screen tone="canvas" testID="vocab-topic-not-found">
@@ -104,7 +105,7 @@ function TopicNotFound({ onBack }: { onBack: () => void }): React.ReactElement {
   );
 }
 
-function TopicPage({ source, navigation }: { source: VocabTopic; navigation: Navigation }): React.ReactElement {
+function TopicPage({ source, navigation }: { source: VocabTopic; navigation: Navigation }): ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages);
   const locale = useLocale();

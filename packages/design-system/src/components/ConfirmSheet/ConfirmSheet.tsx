@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useId, useRef } from 'react';
+import { useContext, useEffect, useId, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -68,7 +69,7 @@ export function ConfirmSheet({
   quietLabel,
   onQuiet,
   busy = false,
-}: ConfirmSheetProps): React.ReactElement {
+}: ConfirmSheetProps): ReactElement {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const titleId = `${testID}-title-${id}`;
   const messageId = `${testID}-message-${id}`;
@@ -123,7 +124,7 @@ export function ConfirmSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- announced when the step changes, not on every message edit
   }, [visible, busy, title, confirmFirst]);
 
-  const action = (kind: 'cancel' | 'confirm'): React.ReactElement => (
+  const action = (kind: 'cancel' | 'confirm'): ReactElement => (
     <Pressable
       key={kind}
       ref={

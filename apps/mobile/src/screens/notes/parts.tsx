@@ -1,10 +1,10 @@
 import { Pill, colors } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 
 /** "New": a word in the secondary pill, never only a dot and never amber or red (mock N2). */
-export function NewPill(): React.ReactElement {
+export function NewPill(): ReactElement {
   const m = useMessages();
   return (
     <View>

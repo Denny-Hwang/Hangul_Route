@@ -18,7 +18,8 @@ import {
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { themeGlyph } from '../../logic/journey';
@@ -65,7 +66,7 @@ type Phase =
   | { kind: 'result'; session: DailySessionKind; stars: 1 | 2 | 3; stronger: number | null; after: AfterSession };
 
 /** The dots row: fill-only, the same for right and wrong; it names the round's position and nothing else. */
-function RoundDots({ filled, total, current }: { filled: number; total: number; current: number }): React.ReactElement {
+function RoundDots({ filled, total, current }: { filled: number; total: number; current: number }): ReactElement {
   const m = useMessages();
   return (
     <View
@@ -93,7 +94,7 @@ function RoundDots({ filled, total, current }: { filled: number; total: number; 
 }
 
 /** [x] and the dots, at the top of a round and of the loading frame (the Cell Check draws it too, row CM-21). */
-export function TopRow({ onClose, filled, total, current }: { onClose: () => void; filled: number; total: number; current: number }): React.ReactElement {
+export function TopRow({ onClose, filled, total, current }: { onClose: () => void; filled: number; total: number; current: number }): ReactElement {
   const m = useMessages();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -111,7 +112,7 @@ export function TopRow({ onClose, filled, total, current }: { onClose: () => voi
   );
 }
 
-export function DisplayHeadline({ children, testID }: { children: string; testID?: string }): React.ReactElement {
+export function DisplayHeadline({ children, testID }: { children: string; testID?: string }): ReactElement {
   const capped = useCappedFont('display', DISPLAY_HEADLINE_MAX_SCALE);
   return (
     <Heading level="display" align="center" style={{ fontSize: capped.fontSize }} testID={testID}>
@@ -120,7 +121,7 @@ export function DisplayHeadline({ children, testID }: { children: string; testID
   );
 }
 
-export function DailyReviewScreen({ navigation }: Props): React.ReactElement {
+export function DailyReviewScreen({ navigation }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.dailyReview;
   const keep = m.learner.keepGoing;

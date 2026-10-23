@@ -24,7 +24,8 @@ import {
   type ChoiceCardState,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -115,7 +116,7 @@ interface Played {
  * when it ends, finished or left early (each counts, section 4.3); the `reviews[]` entry and `review.complete`
  * only when every round was answered.
  */
-export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessionProps): React.ReactElement {
+export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessionProps): ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const [roundIdx, setRoundIdx] = useState(0);
@@ -210,7 +211,7 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
   );
 }
 
-function SessionEnd({ kind, copy, m, stars, onDone }: { kind: QuestReviewKind; copy: QuestMessages; m: Messages; stars: 1 | 2 | 3; onDone: () => void }): React.ReactElement {
+function SessionEnd({ kind, copy, m, stars, onDone }: { kind: QuestReviewKind; copy: QuestMessages; m: Messages; stars: 1 | 2 | 3; onDone: () => void }): ReactElement {
   const warm = kind === 'warmup';
   return (
     <Screen tone="canvas" scrollable>
@@ -238,7 +239,7 @@ function SessionEnd({ kind, copy, m, stars, onDone }: { kind: QuestReviewKind; c
  * The reward step's buttons when the play had first-try misses (F-QUEST-002 L13 as amended): Try these again is
  * the default suggestion, and See results (with Play again on the episode) stays right under it, never required.
  */
-export function TryAgainOffer({ onTry, onSeeResults }: { onTry: () => void; onSeeResults: () => void }): React.ReactElement {
+export function TryAgainOffer({ onTry, onSeeResults }: { onTry: () => void; onSeeResults: () => void }): ReactElement {
   const l = useMessages().learner;
   const q = l.quest;
   return (
@@ -284,7 +285,7 @@ function instructionOf(round: PickRound, m: Messages): string {
   }
 }
 
-function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProps): React.ReactElement {
+function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProps): ReactElement {
   const m = useMessages();
   const a11y = m.a11y.minigame;
   const romanizationMode = useRomanizationMode();

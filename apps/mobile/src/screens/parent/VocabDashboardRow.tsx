@@ -1,6 +1,7 @@
 import type { VocabProgress } from '@hangul-route/content-schema';
 import { Body, Caption, KoreanText, borderWidth, colors, spacing } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { vocabItem } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -19,7 +20,7 @@ export function VocabDashboardRow({
 }: {
   snapshot: { vocab?: VocabProgress } | undefined;
   testID: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const messages = useMessages();
   const m = messages.caregiver.dashboard.words;
   const locale = useLocale();

@@ -1,5 +1,5 @@
 import { Body, Card, Hoya, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { GoalMoment } from '../../store/goals';
@@ -9,7 +9,7 @@ import type { GoalMoment } from '../../store/goals';
  * design/wireframes/home/goal-ring-weekly-dots.md E): one line each, Hoya cheering. Not a target; the telemetry is
  * sent by the points logic, never by the banner. A week that latched through a sync or a goal change has none.
  */
-export function GoalMomentBanner({ moment }: { moment: GoalMoment | null }): React.ReactElement | null {
+export function GoalMomentBanner({ moment }: { moment: GoalMoment | null }): ReactElement | null {
   const messages = useMessages();
   const g = messages.learner.goals.banner;
   if (moment === null || (!moment.dayMet && moment.weekMet === null)) return null;

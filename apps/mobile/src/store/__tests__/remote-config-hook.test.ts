@@ -1,4 +1,4 @@
-import React from 'react';
+import { createElement } from 'react';
 import TestRenderer, { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,7 +40,7 @@ function Probe({ flag }: { flag: 'goals' | 'dailyReview' }): null {
 let renderer: ReactTestRenderer | null = null;
 async function mount(flag: 'goals' | 'dailyReview'): Promise<void> {
   await act(async () => {
-    renderer = TestRenderer.create(React.createElement(Probe, { flag }));
+    renderer = TestRenderer.create(createElement(Probe, { flag }));
   });
 }
 

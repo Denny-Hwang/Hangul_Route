@@ -1,8 +1,8 @@
 import { Body, Caption, Icon, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
 import { formatDate } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { Svg, Circle } from 'react-native-svg';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { headlineOf, ringLineOf, streakTextOf, stripLabelOf, tierLabelOf, type GoalStripView } from '../../logic/goals/strip-view';
 import type { DotState } from '../../logic/goals/week';
@@ -25,7 +25,7 @@ export function dayKeyName(locale: Parameters<typeof formatDate>[0], day: string
   return formatDate(locale, `${day}T12:00:00.000Z`, kind, { utc: true });
 }
 
-function Dot({ state }: { state: DotState }): React.ReactElement {
+function Dot({ state }: { state: DotState }): ReactElement {
   const learned = state === 'learned';
   const rest = state === 'rest';
   return (
@@ -50,7 +50,7 @@ function Dot({ state }: { state: DotState }): React.ReactElement {
 }
 
 /** The daily goal ring: a track and an arc, closed with a check once the goal is met; never a number. */
-export function GoalRing({ fraction, met }: { fraction: number; met: boolean }): React.ReactElement {
+export function GoalRing({ fraction, met }: { fraction: number; met: boolean }): ReactElement {
   const r = (RING - RING_STROKE) / 2;
   const c = 2 * Math.PI * r;
   const arc = Math.max(0, Math.min(1, fraction)) * c;
@@ -84,7 +84,7 @@ export interface GoalStripProps {
   onPress: () => void;
 }
 
-export function GoalStrip({ view, today, onPress }: GoalStripProps): React.ReactElement {
+export function GoalStrip({ view, today, onPress }: GoalStripProps): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const g = messages.learner.goals;

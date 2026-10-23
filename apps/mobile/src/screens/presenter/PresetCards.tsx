@@ -1,7 +1,8 @@
 import { Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { PRESET_DEFAULT_MINUTES, PRESET_LENGTHS, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type StageKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { lengthOf, type HomeSnapshot } from '../../logic/lecture/home-state';
 import { presenterPresetOrder } from '../../logic/lecture/preset-source';
@@ -83,7 +84,7 @@ export interface PresetCardsProps {
   initialWidth?: number;
 }
 
-export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, ready = true, initialWidth = 0 }: PresetCardsProps): React.ReactElement {
+export function PresetCards({ messages, ctx, resolve, stages, state, onState, onStart, ready = true, initialWidth = 0 }: PresetCardsProps): ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const w = messages.learner.presenter.presets;
@@ -204,7 +205,7 @@ function PresetPanel({
   onStage: (s: StageKey) => void;
   onStart: () => void;
   ready: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const ts = useTypeScale().size;
   const w = messages.learner.presenter.presets;
   const fallback = resolved.fallback === 'zero' ? w.fallback.zero : resolved.fallback === 'warm-up' ? w.fallback.warmUp : resolved.fallback === 'restart' ? w.fallback.restart : null;

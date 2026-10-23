@@ -1,5 +1,6 @@
 import { Spacer, spacing } from '@hangul-route/design-system';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Platform, ScrollView, View, type ViewStyle } from 'react-native';
 import { stickyPromptMode } from '../../logic/layout/game-layout';
 import type { GameArrangement } from '../../logic/layout/game-layout';
@@ -8,11 +9,11 @@ interface Props {
   /** From `gameArrangement` / `pictureTextArrangement` (logic/layout/game-layout). */
   arrangement: GameArrangement;
   /** The question: heading, sound or picture, prompt text. */
-  prompt: React.ReactNode;
+  prompt: ReactNode;
   /** The tiles, cards or answer buttons. */
-  answers: React.ReactNode;
+  answers: ReactNode;
   /** Hoya's feedback after a miss: under the prompt beside the answers, or under the answers when stacked. */
-  feedback?: React.ReactNode;
+  feedback?: ReactNode;
   /** Space between the prompt and the answers when stacked (the game's phone layout). */
   stackedGap?: 'md' | 'lg' | 'xl';
   /**
@@ -60,7 +61,7 @@ export function GameColumns({
   stickyPrompt = false,
   resetKey,
   feedbackKey,
-}: Props): React.ReactElement {
+}: Props): ReactElement {
   const side = arrangement === 'side';
   const column = side ? { flex: 1, minWidth: 0 } : null;
   const mode = stickyPromptMode(arrangement, stickyPrompt, Platform.OS);

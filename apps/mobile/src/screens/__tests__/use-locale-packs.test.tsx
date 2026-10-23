@@ -1,5 +1,5 @@
 import type { UiLocale } from '@hangul-route/i18n';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { LocalePackChunk } from '../../logic/locale/locale-pack-store';

@@ -1,6 +1,6 @@
 import type { Profile, ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { episodesAll } from '../../../content/episodes';
@@ -52,7 +52,7 @@ function snapshot(done: readonly string[], over: Partial<ProgressSnapshot> = {})
   useProgressStore.setState({ byProfile: { [ID]: { profileId: ID, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, ...over } as ProgressSnapshot } });
 }
 
-async function draw(element: React.ReactElement) {
+async function draw(element: ReactElement) {
   const r = await render(element);
   await act(async () => {
     await Promise.resolve();

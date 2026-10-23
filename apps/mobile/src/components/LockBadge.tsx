@@ -1,5 +1,5 @@
 import { Icon, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 
 /** The lock glyph inside the badge (design/components/WhoTile/spec.md). */
@@ -16,7 +16,7 @@ export interface LockBadgeProps {
  * "locked", and the caption beside the name says it in words, so the lock is never colour alone. Placed by the
  * caller (top right of the plate on the chooser and the Profile tiles).
  */
-export function LockBadge({ testID }: LockBadgeProps): React.ReactElement {
+export function LockBadge({ testID }: LockBadgeProps): ReactElement {
   return (
     <View
       testID={testID}

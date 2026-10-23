@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { colors, radii, shadows, spacing } from '../../tokens';
 import type { CardPadding, CardProps } from './types';
@@ -28,7 +28,7 @@ export function Card({
   accessibilityHint,
   testID,
   style,
-}: CardProps): React.ReactElement {
+}: CardProps): ReactElement {
   const elevationStyle = elevation === 'flat' ? {} : shadows[elevation];
   const baseStyle = {
     backgroundColor: toneBg[tone],

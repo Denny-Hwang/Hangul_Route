@@ -28,7 +28,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, Ref, ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -93,7 +94,7 @@ function focusNode(node: Focusable | null): void {
   else focusForScreenReader(node);
 }
 
-export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props): React.ReactElement {
+export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -206,7 +207,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   }
 
   const skip = (): void => dispatch({ type: 'skip' });
-  const skipButton = (size: 'sm' | 'md', fullWidth = false): React.ReactElement => (
+  const skipButton = (size: 'sm' | 'md', fullWidth = false): ReactElement => (
     <Button label={copy.skip.cta} tone="ghost" size={size} fullWidth={fullWidth} onPress={skip} testID="write-frame-skip" />
   );
   const romanizationVisible = romanizationShown(romanizationMode, revealed);
@@ -219,7 +220,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   const slotWords: (string | null)[] = free ? [field.text.trim() === '' ? null : field.text.trim()] : words;
   const parts = frameParts(round.frame.ko, slotWords);
 
-  const progressRow = (withSkip: boolean): React.ReactElement => (
+  const progressRow = (withSkip: boolean): ReactElement => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
       <View style={{ flex: 1 }}>
         <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
@@ -235,7 +236,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       <Screen tone="canvas" testID="write-frame-my-page">
         <View style={{ alignItems: 'center', gap: spacing.md }}>
           <Hoya pose="cheering" size={spacing.xxxl + spacing.md} />
-          <View ref={myPageRef as React.Ref<View>} accessible focusable accessibilityRole="header">
+          <View ref={myPageRef as Ref<View>} accessible focusable accessibilityRole="header">
             <Heading level="title">{w.myPage.title}</Heading>
           </View>
         </View>
@@ -513,7 +514,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     </View>
   ) : null;
 
-  let panel: React.ReactElement;
+  let panel: ReactElement;
   if (!typing && !free && target) {
     panel = (
       <ResultPanel
@@ -582,7 +583,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
 }
 
 /** The frame card: paper, hairline, large radius, card shadow; one accessibility element when labelled. */
-function FrameCard({ children, label, testID }: { children: React.ReactNode; label?: string; testID?: string }): React.ReactElement {
+function FrameCard({ children, label, testID }: { children: ReactNode; label?: string; testID?: string }): ReactElement {
   return (
     <View
       accessible={label !== undefined}
@@ -613,7 +614,7 @@ interface FrameLineProps {
 }
 
 /** The Korean frame on one line (it wraps at 200 %): text, the slots and the fitted endings. */
-function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElement {
+function FrameLine({ parts, current, writing }: FrameLineProps): ReactElement {
   const textScale = useTypeScale();
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end' }} {...{ 'aria-hidden': true }} importantForAccessibility="no-hide-descendants">
@@ -664,7 +665,7 @@ function FrameLine({ parts, current, writing }: FrameLineProps): React.ReactElem
 }
 
 /** A finished sentence: the Korean, its romanization (converter) and the gloss with the picks. */
-function Sentence({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): React.ReactElement {
+function Sentence({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   return (
@@ -688,7 +689,7 @@ interface WordCardProps {
 }
 
 /** A word-bank card: the Korean, romanization and gloss. Any pick is right: no card has a wrong look. */
-function WordCard({ word, selected, romanizationVisible, columns, onPress, testID }: WordCardProps): React.ReactElement {
+function WordCard({ word, selected, romanizationVisible, columns, onPress, testID }: WordCardProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const label = m.a11y.koreanItem({ ko: word.ko, romanization: word.romanization, gloss: word.en });
@@ -736,12 +737,12 @@ interface SoundPanelProps {
 }
 
 /** The name round's Blocks tab: the sound table as tiles, its own Del; scrolls inside the keyboard's height. */
-function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPanelProps): React.ReactElement {
+function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPanelProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const w = m.learner.minigame.writeFrame.name;
   const a = m.a11y.minigame;
-  const tile = (ko: string, romanization: string, final: boolean): React.ReactElement => (
+  const tile = (ko: string, romanization: string, final: boolean): ReactElement => (
     <Pressable
       key={ko}
       accessibilityRole="button"

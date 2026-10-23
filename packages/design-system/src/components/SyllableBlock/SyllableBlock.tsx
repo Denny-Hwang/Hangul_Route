@@ -1,4 +1,5 @@
-import React from 'react';
+import { Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { colors, typography } from '../../tokens';
 import { syllableBlockView, syllableCellLook } from './layout';
@@ -20,7 +21,7 @@ export function SyllableBlock({
   size,
   accessibilityLabel,
   testID,
-}: SyllableBlockProps): React.ReactElement {
+}: SyllableBlockProps): ReactElement {
   const view = syllableBlockView({ vowel, hasFinal, highlight, parts, size });
 
   return (
@@ -35,7 +36,7 @@ export function SyllableBlock({
         <View key={row.map((c) => c.index).join('-')} style={{ flexDirection: 'row', gap: view.gap }}>
           {row.map((cell) =>
             renderCell ? (
-              <React.Fragment key={cell.index}>{renderCell(cell)}</React.Fragment>
+              <Fragment key={cell.index}>{renderCell(cell)}</Fragment>
             ) : (
               <View
                 key={cell.index}

@@ -1,6 +1,7 @@
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
 import { useLocale } from '../i18n/use-messages';
 import { localizeScope } from '../logic/content-locale';
@@ -61,7 +62,7 @@ export function SentenceE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SentenceBuilderE2e'>;
 
-export function SentenceBuilderE2eScreen({ route }: Props): React.ReactElement {
+export function SentenceBuilderE2eScreen({ route }: Props): ReactElement {
   const { set, mode, romanization } = route.params;
   const locale = useLocale();
   const scope = useMemo<MinigameScope>(() => {

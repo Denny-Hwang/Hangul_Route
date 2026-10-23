@@ -1,6 +1,6 @@
 import type { RuntimeVocabItem } from '@hangul-route/content-schema';
 import { Body, Card, Heading, KoreanText, borderWidth, spacing, touchTarget, useMediaSize } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { View } from 'react-native';
 import { PictureArt } from '../minigames/PictureArt';
 
@@ -24,7 +24,7 @@ interface FaceProps {
 
 const BACK_PICTURE = touchTarget.hero;
 
-function Face({ tint, children, testID }: { tint: string; children: React.ReactNode; testID: string }): React.ReactElement {
+function Face({ tint, children, testID }: { tint: string; children: ReactNode; testID: string }): ReactElement {
   return (
     <Card tone="paper" padding="lg" elevation="card" style={{ borderWidth: borderWidth.thick, borderColor: tint, minHeight: 2 * touchTarget.child }} testID={testID}>
       {children}
@@ -32,7 +32,7 @@ function Face({ tint, children, testID }: { tint: string; children: React.ReactN
   );
 }
 
-export function WordCardFront({ item, gloss, tint, romanizationShown, width, hint }: FaceProps & { hint: string }): React.ReactElement {
+export function WordCardFront({ item, gloss, tint, romanizationShown, width, hint }: FaceProps & { hint: string }): ReactElement {
   const big = useMediaSize(2 * touchTarget.child);
   const picture = width === null ? big : Math.max(touchTarget.min, Math.min(big, width));
   return (
@@ -48,7 +48,7 @@ export function WordCardFront({ item, gloss, tint, romanizationShown, width, hin
   );
 }
 
-export function WordCardBack({ item, gloss, tint, romanizationShown, senseNote }: FaceProps & { senseNote: string | undefined }): React.ReactElement {
+export function WordCardBack({ item, gloss, tint, romanizationShown, senseNote }: FaceProps & { senseNote: string | undefined }): ReactElement {
   const picture = useMediaSize(BACK_PICTURE);
   return (
     <Face tint={tint} testID="vocab-card-back">

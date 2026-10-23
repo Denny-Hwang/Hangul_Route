@@ -1,7 +1,7 @@
 import { Screen, Spacer } from '@hangul-route/design-system';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import type { RootStackParamList } from '../../navigation/types';
 import { backToNotes } from './back-to-notes';
 import { NoteDetailPane } from './NoteDetailPane';
@@ -11,7 +11,7 @@ import { NoteDetailPane } from './NoteDetailPane';
  * FB-8; mock design/screens/notes/note-page.md). One centred reading column; reached from the Home
  * card (one new note) and from My notes. Put this note away returns to My notes, which says so once.
  */
-export function NoteDetailScreen(): React.ReactElement {
+export function NoteDetailScreen(): ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { noteId } = useRoute<RouteProp<RootStackParamList, 'NoteDetail'>>().params;
   return (

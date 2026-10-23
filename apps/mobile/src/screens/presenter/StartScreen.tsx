@@ -1,5 +1,6 @@
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, z, type IconName, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distinctParts, type SkipPart, type SoundCheckOutcome, type VoiceCheck } from '../../logic/lecture/shell';
@@ -73,7 +74,7 @@ export interface PreviewRow {
 }
 
 /** What's in this lesson: numbered rows, the title and "about {n} min" (`presets.md` "Start -> preview"). */
-function Preview({ rows }: { rows: readonly PreviewRow[] }): React.ReactElement {
+function Preview({ rows }: { rows: readonly PreviewRow[] }): ReactElement {
   const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   return (
@@ -102,7 +103,7 @@ function Preview({ rows }: { rows: readonly PreviewRow[] }): React.ReactElement 
   );
 }
 
-function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNode; testID?: string }): React.ReactElement {
+function Check({ ok, children, testID }: { ok: boolean; children: ReactNode; testID?: string }): ReactElement {
   const icon: IconName = ok ? 'check-circle' : 'dash';
   return (
     <View testID={testID} style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' }}>
@@ -114,7 +115,7 @@ function Check({ ok, children, testID }: { ok: boolean; children: React.ReactNod
   );
 }
 
-function Line({ children, secondary, bold, large }: { children: React.ReactNode; secondary?: boolean; bold?: boolean; large?: boolean }): React.ReactElement {
+function Line({ children, secondary, bold, large }: { children: ReactNode; secondary?: boolean; bold?: boolean; large?: boolean }): ReactElement {
   const ts = useTypeScale().size;
   const size = large ? ts.bodyLg : ts.body;
   return (
@@ -131,7 +132,7 @@ function Line({ children, secondary, bold, large }: { children: React.ReactNode;
   );
 }
 
-export function StartScreen(props: StartScreenProps): React.ReactElement {
+export function StartScreen(props: StartScreenProps): ReactElement {
   return props.phone ? <PhoneStart {...props} /> : <WideStart {...props} />;
 }
 
@@ -155,7 +156,7 @@ function useVoiceLine(voice: VoiceCheck): { ok: boolean; text: string } | null {
   }
 }
 
-function DeckHead({ deckTitle, slides, minutes, compact, onDisplay }: { deckTitle: string; slides: number; minutes: number; compact?: boolean; onDisplay?: () => void }): React.ReactElement {
+function DeckHead({ deckTitle, slides, minutes, compact, onDisplay }: { deckTitle: string; slides: number; minutes: number; compact?: boolean; onDisplay?: () => void }): ReactElement {
   const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
@@ -183,7 +184,7 @@ function DeckHead({ deckTitle, slides, minutes, compact, onDisplay }: { deckTitl
   );
 }
 
-function FontWait(): React.ReactElement {
+function FontWait(): ReactElement {
   const { messages } = usePresenterView();
   return (
     <View role="status" style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -199,7 +200,7 @@ function FontWait(): React.ReactElement {
  * that could not play says the teacher can say each word. The voice line above keeps its wording,
  * and Ready never waits for this.
  */
-function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; outcome: SoundCheckOutcome | null; onTurnSoundOn?: () => void }): React.ReactElement {
+function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; outcome: SoundCheckOutcome | null; onTurnSoundOn?: () => void }): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start.testSound;
   return (
@@ -219,7 +220,7 @@ function SoundCheck({ onTest, outcome, onTurnSoundOn }: { onTest: () => void; ou
 }
 
 /** Before you start: the device checks and the skipped parts with [ See which ] (the same list on the wide page and in the phone's Details). */
-function Checks(props: StartScreenProps): React.ReactElement {
+function Checks(props: StartScreenProps): ReactElement {
   const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
@@ -276,7 +277,7 @@ function Checks(props: StartScreenProps): React.ReactElement {
   );
 }
 
-function PhoneStart(props: StartScreenProps): React.ReactElement {
+function PhoneStart(props: StartScreenProps): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
   const insets = useSafeAreaInsets();
@@ -379,7 +380,7 @@ function PhoneStart(props: StartScreenProps): React.ReactElement {
  */
 export const START_COLUMNS_MIN = layout.maxWidth.full;
 
-function WideStart(props: StartScreenProps): React.ReactElement {
+function WideStart(props: StartScreenProps): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.start;
   const start = useRef<View>(null);

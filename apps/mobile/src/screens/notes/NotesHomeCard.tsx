@@ -1,7 +1,8 @@
 import { Body, Card, Icon, Pill, borderWidth, colors, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -22,12 +23,12 @@ const cardShownSent = new Set<string>();
  * notes (several); **Read** is drawn inside it as the primary pill, not a second target. The free
  * text is never on Home. No dismiss, no timer, no Hoya. Renders nothing with the flag off.
  */
-export function NotesHomeCard({ gap }: { gap: 'after' | 'top' }): React.ReactElement | null {
+export function NotesHomeCard({ gap }: { gap: 'after' | 'top' }): ReactElement | null {
   return flags.notesEnabled ? <NotesHomeCardInner gap={gap} /> : null;
 }
 
 /** `gap`: after the mission cards the space goes above the card; at the top of the right column, below it. */
-function NotesHomeCardInner({ gap }: { gap: 'after' | 'top' }): React.ReactElement | null {
+function NotesHomeCardInner({ gap }: { gap: 'after' | 'top' }): ReactElement | null {
   const textScale = useTypeScale();
   const m = useMessages();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

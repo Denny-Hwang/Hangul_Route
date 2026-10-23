@@ -18,7 +18,7 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import { NOTE_REACTION_IDS, type NoteReactionId } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { NoteDetailView } from '../../logic/notes/view';
@@ -62,7 +62,7 @@ export interface NotePageProps {
  * radio group with the seen-by line as its description, then the two quiet links under a rule.
  * Shared by the stack screen and the wide split pane.
  */
-export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway, onReport, reportA11y }: NotePageProps): React.ReactElement {
+export function NotePage({ view, questTitle, picked, onPick, onStart, onPutAway, onReport, reportA11y }: NotePageProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const t = m.learner.notes.detail;
@@ -226,7 +226,7 @@ function QuietLink({
   role?: 'button' | 'link';
   onPress: () => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <Pressable

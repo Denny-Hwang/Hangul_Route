@@ -1,7 +1,8 @@
 import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { normalizeRescueCode } from '@hangul-route/content-schema';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { TextInput, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { decodeBackup } from '../../logic/sync/backup';
@@ -28,7 +29,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Restore'>;
 const codeLineHeight = (fontSize: number): number => Math.round(fontSize * 1.3);
 const CODE_BORDER = 2;
 
-export function RestoreScreen({ navigation, route }: Props): React.ReactElement {
+export function RestoreScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const fieldLineHeight = codeLineHeight(textScale.size.bodyLg);
   const { copy } = useAudience();

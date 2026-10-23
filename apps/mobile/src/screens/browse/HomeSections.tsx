@@ -20,7 +20,8 @@ import {
   useCappedFont,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { JourneyGrid } from '../../components/JourneyGrid';
@@ -62,7 +63,7 @@ export interface OpenTargets {
 }
 
 /** One row of Route · Journey · Library: a radiogroup, arrow keys move and select, one Tab stop (section 7). */
-export function SectionControl({ sections, value, onChange }: { sections: readonly BrowseSection[]; value: BrowseSection; onChange: (s: BrowseSection) => void }): React.ReactElement {
+export function SectionControl({ sections, value, onChange }: { sections: readonly BrowseSection[]; value: BrowseSection; onChange: (s: BrowseSection) => void }): ReactElement {
   const m = useMessages().caregiver.browse.home.section;
   const regular = useLayoutClass().width !== 'compact';
   // Drawn at the chosen text size; the native cap stays a budget for the step and the OS together.
@@ -140,7 +141,7 @@ export function SectionControl({ sections, value, onChange }: { sections: readon
 }
 
 /** Route: the learner trail's own rows in the no-progress state; a stage row shows that stage on the Journey. */
-export function RouteSection({ open }: { open: OpenTargets }): React.ReactElement {
+export function RouteSection({ open }: { open: OpenTargets }): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
@@ -170,7 +171,7 @@ export function RouteSection({ open }: { open: OpenTargets }): React.ReactElemen
 }
 
 /** Journey: the learner grid (two panes from the wide class), with the stage line when the Route section is absent. */
-export function JourneySection({ open, withStageLine }: { open: OpenTargets; withStageLine: boolean }): React.ReactElement {
+export function JourneySection({ open, withStageLine }: { open: OpenTargets; withStageLine: boolean }): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.home;
   const locale = useLocale();
@@ -259,7 +260,7 @@ export function JourneySection({ open, withStageLine }: { open: OpenTargets; wit
 }
 
 /** Library: the learner Library's groups in its order (Cards, Story Time, Culture, Words); a group with nothing is left out. */
-export function LibrarySection({ open }: { open: OpenTargets }): React.ReactElement {
+export function LibrarySection({ open }: { open: OpenTargets }): ReactElement {
   const { bundle } = useBrowseSession();
   const groups = useMemo(() => browseLibrary(bundle), [bundle]);
   return (
@@ -271,7 +272,7 @@ export function LibrarySection({ open }: { open: OpenTargets }): React.ReactElem
   );
 }
 
-function LibraryGroup({ group, open }: { group: BrowseLibraryGroup; open: OpenTargets }): React.ReactElement {
+function LibraryGroup({ group, open }: { group: BrowseLibraryGroup; open: OpenTargets }): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   switch (group.section) {
@@ -301,7 +302,7 @@ function LibraryGroup({ group, open }: { group: BrowseLibraryGroup; open: OpenTa
   }
 }
 
-function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; title: string; open: OpenTargets }): React.ReactElement {
+function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; title: string; open: OpenTargets }): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse.home;
@@ -357,7 +358,7 @@ function CardsGroup({ cards, title, open }: { cards: readonly HeritageCard[]; ti
 const RARITY_TONE = { legendary: 'nudge', rare: 'info', uncommon: 'success', common: 'neutral' } as const;
 
 /** A Library card slot, face up: the rarity pill, the face, the Korean with romanization and the English title. No earn hint, no New pill. */
-function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis: '31%' | '47%'; onPress: () => void }): React.ReactElement {
+function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis: '31%' | '47%'; onPress: () => void }): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const card = localizeCard(source, useLocale());
@@ -409,7 +410,7 @@ function CardSlot({ card: source, basis, onPress }: { card: HeritageCard; basis:
 }
 
 /** Story Time and Culture: the learner `StoryTile` with no learner state (no state line, no stars), closed tiles as the learner draws them. */
-function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; open: OpenTargets }): React.ReactElement {
+function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; open: OpenTargets }): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const copy = shelfCopy(messages);
@@ -445,7 +446,7 @@ function StoryTiles({ entries, open }: { entries: readonly StoryIndexEntry[]; op
  * A closed topic (switch on, sampler pass, section 4.2) keeps its row and its words, drawn as the learner
  * draws a closed tile: `surface.sunken`, the dotted ring and "Not open yet" (`learner.access.notOpen`).
  */
-function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section: 'words' }>['rows'][number]; onPress: () => void }): React.ReactElement {
+function WordsRow({ row, onPress }: { row: Extract<BrowseLibraryGroup, { section: 'words' }>['rows'][number]; onPress: () => void }): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.browse.home;
   const locale = useLocale();

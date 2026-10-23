@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { useLocale } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { readGameHandlers, readGameTarget } from '../../logic/story/read-game';
@@ -29,7 +30,7 @@ interface Props {
  * quest run, and its end-page Continue completes the step. Reading itself
  * scores nothing. The rules are in `logic/story/read-game.ts`.
  */
-export function StoryReadGame({ scope, onFinish, onBack, onOpenCultureNote }: Props): React.ReactElement {
+export function StoryReadGame({ scope, onFinish, onBack, onOpenCultureNote }: Props): ReactElement {
   const locale = useLocale();
   const { story: source, level } = useMemo(() => readGameTarget(scope), [scope]);
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).

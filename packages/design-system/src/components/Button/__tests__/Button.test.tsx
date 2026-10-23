@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../Button';
 import type { ButtonProps } from '../types';
@@ -35,7 +36,7 @@ vi.mock('react', async (importOriginal) => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
+type El = ReactElement<Props>;
 
 const HINT = 'Opens the billing page';
 
@@ -46,10 +47,10 @@ function pressable(props: Partial<ButtonProps>): El {
 /** The Pressable's children (a render function of `{ pressed }`), flattened, nulls dropped. */
 function body(el: El): El[] {
   const render = el.props.children as (s: { pressed: boolean }) => El;
-  return React.Children.toArray(render({ pressed: false }).props.children as React.ReactNode) as El[];
+  return Children.toArray(render({ pressed: false }).props.children as ReactNode) as El[];
 }
 
-const textOf = (el: El): string => React.Children.toArray(el.props.children as React.ReactNode).join('');
+const textOf = (el: El): string => Children.toArray(el.props.children as ReactNode).join('');
 
 describe('Button accessibilityHint', () => {
   it('web with a hint: aria-describedby names a hidden Text carrying the hint; the name stays the label', () => {

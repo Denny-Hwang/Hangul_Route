@@ -1,5 +1,4 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PickRound, QuestReviewPlan } from '../../../logic/reviews/quest-review-session';

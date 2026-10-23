@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { colors, radii, spacing } from '../../tokens';
 import { Caption } from '../Heading';
@@ -19,7 +19,7 @@ export interface RouteTagProps {
  * your plan" on `surface.sunken` with the 16 dp solid ring before the word. Hidden from screen
  * readers: the row's own label reads the tags as words.
  */
-export function RouteTag({ kind, label, testID }: RouteTagProps): React.ReactElement {
+export function RouteTag({ kind, label, testID }: RouteTagProps): ReactElement {
   return (
     <View
       testID={testID}

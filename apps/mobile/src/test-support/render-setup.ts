@@ -1,4 +1,5 @@
-import React from 'react';
+import { createContext, createElement } from 'react';
+import type { ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from './render';
@@ -13,8 +14,8 @@ import { cleanup } from './render';
 vi.mock('react-native-safe-area-context', () => {
   const insets = { top: 0, right: 0, bottom: 0, left: 0 };
   return {
-    SafeAreaInsetsContext: React.createContext(insets),
-    SafeAreaProvider: ({ children }: { children?: React.ReactNode }) => children,
+    SafeAreaInsetsContext: createContext(insets),
+    SafeAreaProvider: ({ children }: { children?: ReactNode }) => children,
     useSafeAreaInsets: () => insets,
   };
 });
@@ -45,8 +46,8 @@ vi.mock('react-native-reanimated', async () => {
 vi.mock('react-native-svg', () => {
   const shape =
     (name: string) =>
-    ({ children, ...props }: { children?: React.ReactNode }) =>
-      React.createElement(`svg-${name}`, props, children);
+    ({ children, ...props }: { children?: ReactNode }) =>
+      createElement(`svg-${name}`, props, children);
   const names = ['Circle', 'ClipPath', 'Defs', 'Ellipse', 'G', 'Line', 'LinearGradient', 'Path', 'Polygon', 'Polyline', 'Rect', 'Stop', 'Text'];
   return { default: shape('Svg'), Svg: shape('Svg'), ...Object.fromEntries(names.map((n) => [n, shape(n)])) };
 });

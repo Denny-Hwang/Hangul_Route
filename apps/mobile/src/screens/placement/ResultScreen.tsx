@@ -15,7 +15,8 @@ import {
   touchTarget,
 } from '@hangul-route/design-system';
 import type { PaceId, StageKey, ThemeKey } from '@hangul-route/content-schema';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { gridEpisodes } from '../../content/episodes';
@@ -47,7 +48,7 @@ import { PlanStrip, PlanUpdateCard } from './PlanParts';
  * tested; a retake that found a later start with a plan gets **Update my
  * plan** / **Keep my plan**. Without either the primary is **Start**.
  */
-export function ResultScreen(): React.ReactElement | null {
+export function ResultScreen(): ReactElement | null {
   const { finished } = usePlacement();
   return finished === null ? null : <ResultView check={finished} />;
 }
@@ -68,7 +69,7 @@ const LINK_ACTION: Readonly<Record<ResultLink, ResultAction>> = {
   tryStandard: 'tryStandard',
 };
 
-function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
+function ResultView({ check }: { check: FinishedCheck }): ReactElement {
   const { m, flow, say, screenReader, onResultAction, acceptPlan, updatePlan, profileId } = usePlacement();
   const copy = m.learner.placement.result;
   // A plan made meanwhile (Change, then the proposal screen), or the proposal screen's Not now
@@ -241,7 +242,7 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
   );
 }
 
-function RouteCard({ title, lines, icon }: { title: string; lines: string[]; icon?: 'pin' }): React.ReactElement {
+function RouteCard({ title, lines, icon }: { title: string; lines: string[]; icon?: 'pin' }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', gap: spacing.md, paddingVertical: spacing.sm }}>
       <View style={{ width: spacing.xl, alignItems: 'center', paddingTop: spacing.xxs }}>
@@ -265,7 +266,7 @@ function RouteCard({ title, lines, icon }: { title: string; lines: string[]; ico
  * cells whose quests are all placed out or done (still tappable later, never
  * "completed"), the completed tint on finished cells. One accessible element.
  */
-function MiniMap({ check, label }: { check: FinishedCheck; label: string }): React.ReactElement {
+function MiniMap({ check, label }: { check: FinishedCheck; label: string }): ReactElement {
   const grid = gridEpisodes(episodesAll);
   const episodeAt = (stage: StageKey, theme: ThemeKey): string | undefined =>
     grid.find((e) => e.stage === stage && e.theme === theme)?.id;

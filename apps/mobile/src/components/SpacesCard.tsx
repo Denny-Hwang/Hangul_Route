@@ -2,7 +2,8 @@ import { Body, Button, Caption, Card, Heading, Icon, Spacer, colors, radii, spac
 import type { LearnerMembership, Profile } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { classesCardView } from '../logic/transfers/transfer-views';
@@ -26,7 +27,7 @@ export interface SpacesCardProps {
  * `classesCardView`, decided from the inbox before any tap; nothing new renders while the inbox says
  * transfers are off. Leave keeps its confirm and now says when it did not go through.
  */
-export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactElement {
+export function SpacesCard({ profile, onJoin }: SpacesCardProps): ReactElement {
   const { copy } = useAudience();
   const messages = useMessages();
   const m = messages.caregiver.spaces;
@@ -82,7 +83,7 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
     if (!ok) setLeaveFailed(true);
   };
 
-  const lock = (gated: boolean, onPrimary = false): React.ReactNode =>
+  const lock = (gated: boolean, onPrimary = false): ReactNode =>
     gated ? <Icon name="lock" size={16} color={onPrimary ? colors.text.onPrimary : colors.brand.primary} /> : undefined;
   const gatedName = (base: string, gated: boolean): string => messages.caregiver.audience.gated(base, gated);
 

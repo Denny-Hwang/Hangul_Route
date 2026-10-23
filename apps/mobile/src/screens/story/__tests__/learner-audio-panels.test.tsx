@@ -1,5 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -176,7 +176,7 @@ describe('CultureNotesScreen: a term with no Korean voice', () => {
 
 describe('StoryEpisodeDetail: the panel goes under what was tapped, and a new word starts clean', () => {
   const noop = (): void => undefined;
-  const page = (episode: (typeof episodesAll)[number], entries: NonNullable<ReturnType<typeof storyEpisodeEntries>>): React.ReactElement => (
+  const page = (episode: (typeof episodesAll)[number], entries: NonNullable<ReturnType<typeof storyEpisodeEntries>>): ReactElement => (
     <RomanizationModeOverride mode="tap">
       <StoryEpisodeDetail
         episode={episode}

@@ -1,7 +1,8 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { availableLocales } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
 import { LinkButton } from '../../components/LinkButton';
@@ -44,7 +45,7 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
  * to my quest**, or once quest 1 is done **Add your name to keep your first quest.** with **Add my name**) and one line
  * under it (`welcome.keeps`). Let's start stays the only filled button, in its place; everything else is unchanged.
  */
-export function WelcomeScreen({ navigation, route }: Props): React.ReactElement {
+export function WelcomeScreen({ navigation, route }: Props): ReactElement {
   const m = useMessages();
   const w = m.learner.welcome;
   const available = availableLocales();

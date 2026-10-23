@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
+import type { ReactNode, ReactElement } from 'react';
+import { Svg, Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { colors } from '../../tokens';
 import type { HeritageCardArtProps } from './types';
 
@@ -26,7 +26,7 @@ interface ArtProps {
   accessibilityLabel: string;
 }
 
-function Frame({ themeKey, children }: { themeKey: keyof typeof colors.theme; children: React.ReactNode }): React.ReactElement {
+function Frame({ themeKey, children }: { themeKey: keyof typeof colors.theme; children: ReactNode }): ReactElement {
   return (
     <>
       <Rect x={0} y={0} width={200} height={200} fill={colors.theme[themeKey]} opacity={0.08} rx={8} />
@@ -39,7 +39,7 @@ function Frame({ themeKey, children }: { themeKey: keyof typeof colors.theme; ch
 // LETTERS & BOOKS
 // ---------------------------------------------------------------------------
 
-function BookArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function BookArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="letters">
@@ -63,7 +63,7 @@ function BookArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEle
   );
 }
 
-function HanjiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function HanjiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Square cream sheet of fibrous paper with slightly torn corner.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -99,7 +99,7 @@ function HanjiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEl
   );
 }
 
-function BrushArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function BrushArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Vertical brush + drop of ink above empty page.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -121,7 +121,7 @@ function BrushArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEl
   );
 }
 
-function InkArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function InkArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Rectangular black ink stick on a stone slab.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -146,7 +146,7 @@ function InkArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElem
   );
 }
 
-function OrigamiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function OrigamiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Folded paper crane in dancheong orange, mid-flight.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -177,7 +177,7 @@ function OrigamiArt({ size, testID, accessibilityLabel }: ArtProps): React.React
   );
 }
 
-function HangulDayArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function HangulDayArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Bold "한글" glyph with 6 amber sparkles + faint calendar page background.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -218,7 +218,7 @@ function HangulDayArt({ size, testID, accessibilityLabel }: ArtProps): React.Rea
 // FOOD & DAILY LIFE
 // ---------------------------------------------------------------------------
 
-function KimchiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function KimchiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="life">
@@ -256,7 +256,7 @@ function KimchiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactE
   );
 }
 
-function RiceArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function RiceArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Round cream bowl with mound of white rice + 3 steam wavy lines.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -299,7 +299,7 @@ function RiceArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEle
   );
 }
 
-function ChopsticksArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function ChopsticksArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Pair of slim metal chopsticks crossed at the bottom on a holder.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -335,7 +335,7 @@ function ChopsticksArt({ size, testID, accessibilityLabel }: ArtProps): React.Re
   );
 }
 
-function HanbokArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function HanbokArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Child's hanbok on a hanger: orange jeogori (top) + cream collar + blue chima (skirt).
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -385,7 +385,7 @@ function HanbokArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactE
   );
 }
 
-function KimbapArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function KimbapArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // 3 round slices arranged diagonally with seaweed + rice + orange/green centers.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -418,7 +418,7 @@ function KimbapArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactE
   );
 }
 
-function FamilyTableArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function FamilyTableArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Round wooden table top-down with 4 bowls at cardinal points + central rice.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -450,7 +450,7 @@ function FamilyTableArt({ size, testID, accessibilityLabel }: ArtProps): React.R
 // HOLIDAYS & TRADITIONS
 // ---------------------------------------------------------------------------
 
-function SeollalArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function SeollalArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="rites">
@@ -480,7 +480,7 @@ function SeollalArt({ size, testID, accessibilityLabel }: ArtProps): React.React
   );
 }
 
-function ChuseokArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function ChuseokArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Large warm cream full moon + rabbit silhouette + 3 rice stalks.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -521,7 +521,7 @@ function ChuseokArt({ size, testID, accessibilityLabel }: ArtProps): React.React
   );
 }
 
-function TteokgukArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function TteokgukArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Bowl with broth + 4 oval rice cake slices + green dot + yellow ribbon.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -561,7 +561,7 @@ function TteokgukArt({ size, testID, accessibilityLabel }: ArtProps): React.Reac
   );
 }
 
-function SongpyeonArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function SongpyeonArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // 3 half-moon rice cakes on pine needle bed: cream / pink / green.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -609,7 +609,7 @@ function SongpyeonArt({ size, testID, accessibilityLabel }: ArtProps): React.Rea
   );
 }
 
-function SebaeArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function SebaeArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Pair of folded hands resting on a tiny silk bag.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -651,7 +651,7 @@ function SebaeArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEl
   );
 }
 
-function LanternArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function LanternArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Glowing round paper lantern + tassel + 3 smaller background lanterns.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -702,7 +702,7 @@ function LanternArt({ size, testID, accessibilityLabel }: ArtProps): React.React
 // NATURE & ANIMALS
 // ---------------------------------------------------------------------------
 
-function TigerArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function TigerArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="nature">
@@ -752,7 +752,7 @@ function TigerArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEl
   );
 }
 
-function MagpieArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function MagpieArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Black-and-white magpie on a leafless branch.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -794,7 +794,7 @@ function MagpieArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactE
   );
 }
 
-function MugunghwaArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function MugunghwaArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // 5-petal pink flower with purple center on green stem.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -830,7 +830,7 @@ function MugunghwaArt({ size, testID, accessibilityLabel }: ArtProps): React.Rea
   );
 }
 
-function MountainArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function MountainArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="nature">
@@ -846,7 +846,7 @@ function MountainArt({ size, testID, accessibilityLabel }: ArtProps): React.Reac
   );
 }
 
-function SeaArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function SeaArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // 3 wavy lines bottom 40% + cream sailboat with orange sail.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -891,7 +891,7 @@ function SeaArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElem
   );
 }
 
-function MoonArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function MoonArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Full cream moon with 3 crater shadows + purple sky + 5 stars.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -928,7 +928,7 @@ function MoonArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEle
 // PLAY & CRAFTS
 // ---------------------------------------------------------------------------
 
-function YutnoriArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function YutnoriArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Frame themeKey="crafts">
@@ -954,7 +954,7 @@ function YutnoriArt({ size, testID, accessibilityLabel }: ArtProps): React.React
   );
 }
 
-function JegiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function JegiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Feather shuttlecock: warm-grey coin base + cream feathers radiating up + purple wrap.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -989,7 +989,7 @@ function JegiArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEle
   );
 }
 
-function KiteArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function KiteArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Diamond kite with central hole + tiger face + 2 tassels.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -1028,7 +1028,7 @@ function KiteArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactEle
   );
 }
 
-function TopArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function TopArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Wooden spinning top mid-spin + motion lines + dancheong stripe.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -1066,7 +1066,7 @@ function TopArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElem
   );
 }
 
-function PotteryArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function PotteryArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Round-bellied celadon vase with crackle pattern + curved crane etching.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -1114,7 +1114,7 @@ function PotteryArt({ size, testID, accessibilityLabel }: ArtProps): React.React
   );
 }
 
-function GayageumArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function GayageumArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   // Horizontal long zither with 12 strings + 2 movable bridges + subtle glow.
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -1166,7 +1166,7 @@ function GayageumArt({ size, testID, accessibilityLabel }: ArtProps): React.Reac
 // FALLBACK (kept for unknown card ids)
 // ---------------------------------------------------------------------------
 
-function FallbackArt({ size, testID, accessibilityLabel }: ArtProps): React.ReactElement {
+function FallbackArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
       <Rect x={0} y={0} width={200} height={200} fill={colors.surface.sunken} rx={8} />
@@ -1186,7 +1186,7 @@ export function HeritageCardArt({
   size = 200,
   testID,
   accessibilityLabel,
-}: HeritageCardArtProps): React.ReactElement {
+}: HeritageCardArtProps): ReactElement {
   const label = accessibilityLabel ?? `Card art for ${cardId}`;
   const p: ArtProps = { size, testID, accessibilityLabel: label };
   switch (cardId) {

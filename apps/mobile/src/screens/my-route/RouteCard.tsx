@@ -14,7 +14,8 @@ import {
   type PipView,
 } from '@hangul-route/design-system';
 import type { StageKey } from '@hangul-route/content-schema';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import type { HeroCopy, RouteCardCopy, RouteCardLine } from '../../logic/my-route/copy';
 import { routeCardLook } from '../../logic/my-route/view';
@@ -60,7 +61,7 @@ export interface RouteCardProps {
 }
 
 /** A 20 dp glyph beside the where line, hidden from screen readers (the summary label reads the words). */
-function Glyph({ name }: { name: 'pin' | 'flag' }): React.ReactElement {
+function Glyph({ name }: { name: 'pin' | 'flag' }): ReactElement {
   return (
     <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ paddingTop: spacing.xxs }}>
       <Icon name={name} size={spacing.lg + spacing.xxs} color={colors.text.primary} />
@@ -69,7 +70,7 @@ function Glyph({ name }: { name: 'pin' | 'flag' }): React.ReactElement {
 }
 
 /** "Now" or "Goal" over its line; a line without a label (a grown-up's reached goal) stands alone. */
-function LabelledLine({ line, glyph, testID }: { line: RouteCardLine; glyph: 'pin' | 'flag'; testID: string }): React.ReactElement {
+function LabelledLine({ line, glyph, testID }: { line: RouteCardLine; glyph: 'pin' | 'flag'; testID: string }): ReactElement {
   return (
     <View testID={testID}>
       {line.label !== null ? (
@@ -87,7 +88,7 @@ function LabelledLine({ line, glyph, testID }: { line: RouteCardLine; glyph: 'pi
   );
 }
 
-function Decorative({ children }: { children: React.ReactNode }): React.ReactElement {
+function Decorative({ children }: { children: ReactNode }): ReactElement {
   return (
     <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {children}
@@ -95,7 +96,7 @@ function Decorative({ children }: { children: React.ReactNode }): React.ReactEle
   );
 }
 
-export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, showNext = true, wordsKnown = null, testID = 'my-route-card' }: RouteCardProps): React.ReactElement {
+export function RouteCard({ copy, pips, goalStage, cta, pose, onAction, focusToken, showNext = true, wordsKnown = null, testID = 'my-route-card' }: RouteCardProps): ReactElement {
   const { windowWidth } = useLayoutClass();
   // Below 360 the compact card (LR-11): Continue (or Start) stays above the tab bar at 320 x 568.
   const look = routeCardLook(windowWidth, cta !== null);

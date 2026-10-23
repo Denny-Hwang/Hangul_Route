@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMessages } from '../../i18n/use-messages';
 import type { BrowseStackParamList } from '../../navigation/browse';
@@ -35,7 +36,7 @@ function useLeave(toItem: () => void): { confirming: boolean; ask: () => void; k
 type MinigameProps = NativeStackScreenProps<BrowseStackParamList, 'Minigame'>;
 
 /** A game step of a previewed lesson: the learner game in its own host mode (`'quest'` or `'check'`). */
-export function BrowseMinigameScreen({ route, navigation }: MinigameProps): React.ReactElement {
+export function BrowseMinigameScreen({ route, navigation }: MinigameProps): ReactElement {
   const m = useMessages().caregiver.browse;
   const { questId } = route.params;
   const toItem = useCallback((): void => {
@@ -61,7 +62,7 @@ type ReaderProps = NativeStackScreenProps<BrowseStackParamList, 'StoryReader'>;
  * no bookmark, no progress) under the strip. Done on its end page opens the
  * preview end screen; Close returns to the story page.
  */
-export function BrowseStoryReaderScreen({ route, navigation }: ReaderProps): React.ReactElement {
+export function BrowseStoryReaderScreen({ route, navigation }: ReaderProps): ReactElement {
   const m = useMessages().caregiver.browse;
   const { storyId } = route.params;
   const toItem = useCallback((): void => {
@@ -94,7 +95,7 @@ export function BrowseStoryReaderScreen({ route, navigation }: ReaderProps): Rea
 type SourcesProps = NativeStackScreenProps<BrowseStackParamList, 'StorySources'>;
 
 /** A story's sources: Copy link only (there is no PIN in All lessons, and no external page opens from it). */
-export function BrowseStorySourcesScreen({ route, navigation }: SourcesProps): React.ReactElement {
+export function BrowseStorySourcesScreen({ route, navigation }: SourcesProps): ReactElement {
   return (
     <StorySourcesScreen
       route={route}

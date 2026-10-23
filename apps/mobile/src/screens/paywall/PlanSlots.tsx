@@ -1,5 +1,5 @@
 import { Body, Spacer, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { FreeSlot } from '../../logic/plan-free-lines';
 
@@ -13,7 +13,7 @@ import type { FreeSlot } from '../../logic/plan-free-lines';
  * Under the free title: "Stage 1 is always free." while F-ENT-003's switch is off; with it on, the
  * free-plan line, the What is free list (a list, read item by item) and at most one situation line.
  */
-export function FreePlanLines({ slot }: { slot: FreeSlot }): React.ReactElement {
+export function FreePlanLines({ slot }: { slot: FreeSlot }): ReactElement {
   return (
     <View testID="plan-free-slot">
       {slot.line !== null ? (
@@ -45,7 +45,7 @@ export function FreePlanLines({ slot }: { slot: FreeSlot }): React.ReactElement 
 }
 
 /** Under the full-route lines: F-ENT-003's "Set a plan to guide what comes next." (and on the web the grown-up page line) when no plan exists, whatever the switch (item 10). */
-export function PlanGuidanceLine({ lines }: { lines: readonly string[] }): React.ReactElement | null {
+export function PlanGuidanceLine({ lines }: { lines: readonly string[] }): ReactElement | null {
   if (lines.length === 0) return null;
   return (
     <View testID="plan-guidance">

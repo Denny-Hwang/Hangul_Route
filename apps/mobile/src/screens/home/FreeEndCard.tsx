@@ -1,5 +1,5 @@
 import { Body, Button, Card, Hoya, Spacer, spacing, useMediaSize } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 
@@ -27,7 +27,7 @@ export function FreeEndCard({
   onReplay: () => void;
   askLabel: string;
   onAsk: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const access = m.learner.access;
   const hoya = useMediaSize(HOYA_SIZE);

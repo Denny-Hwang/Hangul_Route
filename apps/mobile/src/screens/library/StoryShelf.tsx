@@ -2,7 +2,8 @@ import { Body, Button, Caption, Card, Heading, KoreanText, Spacer, StoryScene, s
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { planOpenStory } from '../../logic/story/open-story';
@@ -38,7 +39,7 @@ export function StoryShelf({
   index: readonly StoryIndexEntry[];
   /** The "Picked for you" hero; `false` draws the tiles only. */
   hero?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
   const entries = useMemo(() => shelfEntries(index, category), [index, category]);
@@ -117,7 +118,7 @@ function HeroTile({
   /** D2, as on the tiles. */
   romanizationShown: boolean;
   onOpen: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const copy = shelfCopy(useMessages());
   const { view, status } = item;
   const action = heroAction(status, copy);

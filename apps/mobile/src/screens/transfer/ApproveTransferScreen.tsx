@@ -1,7 +1,8 @@
 import { Body, Button, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { TRANSFER_CONSENT_TEXT } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -25,7 +26,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ApproveTransfer'>;
  * read-only sheet whose only actions are the veto and Back (guard 11), and a planned move the cooling-off sheet
  * with Cancel the move. Behind the grown-up gate; the decision is `requestAction`, never this screen.
  */
-export function ApproveTransferScreen({ route, navigation }: Props): React.ReactElement {
+export function ApproveTransferScreen({ route, navigation }: Props): ReactElement {
   const { profileId, transferId } = route.params;
   const messages = useMessages();
   const t = messages.caregiver.transfer;

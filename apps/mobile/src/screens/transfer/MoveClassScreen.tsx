@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { TextInput, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -24,7 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'MoveClass'>;
  * grown-up gate unless it opens directly. Online only: offline says "This needs internet." and nothing is
  * queued (consent is never sent later). Reachable only while the Classes card offers Move (variant c).
  */
-export function MoveClassScreen({ route, navigation }: Props): React.ReactElement {
+export function MoveClassScreen({ route, navigation }: Props): ReactElement {
   const textScale = useTypeScale();
   const { profileId, fromSpaceId } = route.params;
   const messages = useMessages();

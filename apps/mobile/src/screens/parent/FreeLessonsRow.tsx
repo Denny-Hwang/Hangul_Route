@@ -1,7 +1,8 @@
 import { Body, Caption, Spacer, borderWidth, colors, spacing, touchTarget } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -55,7 +56,7 @@ export function FreeLessonsRowView({
   needsInternet: string;
   note: string | null;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const a11y = freeLessonsRowA11y(testID, offline, needsInternet, Platform.OS);
   // Several cards can each carry Open billing: on the web the link is described by its own line.
   const describedBy: Record<string, string> = a11y.describedBy !== null ? { 'aria-describedby': a11y.describedBy } : {};
@@ -114,7 +115,7 @@ export function FreeLessonsRowView({
  * learner's memberships and plans, and `routeNext` (the same input Home and the Plan screen build)
  * decides free-end.
  */
-export function FreeLessonsRow({ profileId, name, testID }: { profileId: string; name: string; testID: string }): React.ReactElement | null {
+export function FreeLessonsRow({ profileId, name, testID }: { profileId: string; name: string; testID: string }): ReactElement | null {
   const account = signedInAccount();
   if (account === null || !gatingActive(flags, bundleOs())) return null;
   // The owned spaces by content, so a new account object with the same spaces never reruns `routeNext`.
@@ -131,7 +132,7 @@ function OwnedFreeLessonsRow({
   name: string;
   testID: string;
   ownedKey: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const messages = useMessages();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const tier = useAccessTier(profileId);

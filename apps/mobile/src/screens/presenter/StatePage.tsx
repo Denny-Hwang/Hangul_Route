@@ -1,6 +1,7 @@
 import { Hoya, Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useTypeScale, type HoyaPose, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { READABLE_LINE, STATE_HOYA } from './stage-metrics';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { usePresenterView } from './presenter-context';
 
@@ -35,7 +36,7 @@ export function StatePage({
   secondary?: { label: string; onPress: () => void; testID?: string };
   /** A top-left Back (the rotate page's way out, `common.buttons.back`). */
   back?: { label: string; onPress: () => void; testID?: string };
-}): React.ReactElement {
+}): ReactElement {
   const ts = useTypeScale().size;
   const { messages } = usePresenterView();
   const action = useRef<View>(null);
@@ -89,7 +90,7 @@ export function StatePage({
 type PressState = { pressed: boolean; focused?: boolean };
 
 /** The presenter's primary pill (real pixels, `touchTarget.hero` tall): `brand.primaryDark` with `text.onPrimary` (7.65:1). */
-export const PrimaryButton = React.forwardRef<View, { label: string; onPress: () => void; disabled?: boolean; large?: boolean; testID?: string; minHeight?: number; grow?: boolean }>(
+export const PrimaryButton = forwardRef<View, { label: string; onPress: () => void; disabled?: boolean; large?: boolean; testID?: string; minHeight?: number; grow?: boolean }>(
   function PrimaryButton({ label, onPress, disabled, large, testID, minHeight, grow }, ref) {
     const ts = useTypeScale().size;
     return (
@@ -124,7 +125,7 @@ export const PrimaryButton = React.forwardRef<View, { label: string; onPress: ()
 );
 
 /** A secondary pill (paper with a `border.strong` outline). */
-export const GhostButton = React.forwardRef<View, { label: string; onPress: () => void; testID?: string; expanded?: boolean }>(function GhostButton(
+export const GhostButton = forwardRef<View, { label: string; onPress: () => void; testID?: string; expanded?: boolean }>(function GhostButton(
   { label, onPress, testID, expanded },
   ref,
 ) {
@@ -165,7 +166,7 @@ export const GhostButton = React.forwardRef<View, { label: string; onPress: () =
  * A top-left Back (the mock's `.back-link`): the `arrow-left` glyph and the label, `touchTarget.min`
  * tall, bold body text, a pill focus ring.
  */
-export const BackLink = React.forwardRef<View, { label: string; onPress: () => void; testID?: string }>(function BackLink({ label, onPress, testID }, ref) {
+export const BackLink = forwardRef<View, { label: string; onPress: () => void; testID?: string }>(function BackLink({ label, onPress, testID }, ref) {
   const ts = useTypeScale().size;
   return (
     <Pressable

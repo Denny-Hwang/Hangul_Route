@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { HOYA_VARIANTS } from '../../../tokens';
 import { Hoya } from '../Hoya';
@@ -24,6 +25,7 @@ vi.mock('react-native-reanimated', () => ({
 }));
 vi.mock('react-native-svg', () => ({
   default: 'Svg',
+  Svg: 'Svg',
   Circle: 'Circle',
   Ellipse: 'Ellipse',
   G: 'G',
@@ -46,15 +48,15 @@ interface Drawn {
 }
 
 /** Host elements only (function components expanded), keys and empty slots dropped, props in name order. */
-function drawn(node: React.ReactNode): Drawn[] {
+function drawn(node: ReactNode): Drawn[] {
   if (node === null || node === undefined || typeof node === 'boolean') return [];
   if (Array.isArray(node)) return node.flatMap(drawn);
-  if (!React.isValidElement(node)) throw new Error(`unexpected child ${String(node)}`);
-  const el = node as React.ReactElement<Record<string, unknown>>;
-  if (typeof el.type === 'function') return drawn((el.type as (p: unknown) => React.ReactNode)(el.props));
+  if (!isValidElement(node)) throw new Error(`unexpected child ${String(node)}`);
+  const el = node as ReactElement<Record<string, unknown>>;
+  if (typeof el.type === 'function') return drawn((el.type as (p: unknown) => ReactNode)(el.props));
   const { children, ...rest } = el.props;
   const props = Object.fromEntries(Object.entries(rest).sort(([a], [b]) => a.localeCompare(b)));
-  return [{ type: String(el.type), props, children: drawn(children as React.ReactNode) }];
+  return [{ type: String(el.type), props, children: drawn(children as ReactNode) }];
 }
 
 const POSES: HoyaPose[] = ['idle', 'cheering', 'thinking', 'reading', 'waving'];

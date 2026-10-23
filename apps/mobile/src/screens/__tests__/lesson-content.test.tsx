@@ -1,6 +1,7 @@
 import type { OverlayLocale, QuestStep } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React, { useState } from 'react';
+import { useState, createElement } from 'react';
+import type { ReactElement, ComponentType } from 'react';
 import { Text } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { act } from 'react-test-renderer';
@@ -105,7 +106,7 @@ async function loadCells(t: ReturnType<typeof bindings>): Promise<void> {
 const scriptError = (): Error => Object.assign(new Error('Loading module /_expo/static/js/web/lessons-cell-stage2-rites-0.js failed.'), { name: 'AsyncRequireError' });
 
 describe('useLessonQuestReady (the quest player and the game screen)', () => {
-  function Player({ hook, questId }: { hook: (id: string) => boolean; questId: string }): React.ReactElement {
+  function Player({ hook, questId }: { hook: (id: string) => boolean; questId: string }): ReactElement {
     return hook(questId) ? <Text testID="body">{`steps of ${questId}`}</Text> : <Text testID="waiting">waiting</Text>;
   }
 
@@ -189,7 +190,7 @@ describe('useLessonQuestReady (the quest player and the game screen)', () => {
   it('a host that reuses the screen for another quest never shows the old quest’s failure', async () => {
     const t = bindings();
     let show: (id: string) => void = () => undefined;
-    function Host(): React.ReactElement {
+    function Host(): ReactElement {
       const [questId, setQuestId] = useState('quest:stage2-rites-q1');
       show = setQuestId;
       return (
@@ -230,7 +231,7 @@ describe('LessonWaiting', () => {
 });
 
 describe('withLessonContent (All lessons and the presenter)', () => {
-  function Root(): React.ReactElement {
+  function Root(): ReactElement {
     return <Text testID="root">root</Text>;
   }
 
@@ -299,18 +300,18 @@ describe('withLessonContent (All lessons and the presenter)', () => {
 });
 
 describe('withLessonContent with a lazy root (the presenter and All lessons are chunks of their own)', () => {
-  function Root(): React.ReactElement {
+  function Root(): ReactElement {
     return <Text testID="root">root</Text>;
   }
   /** A root whose code arrives when the test says. */
   function lazyRoot(name = 'PresenterApp') {
-    const loads: Deferred<{ default: React.ComponentType<object> }>[] = [];
+    const loads: Deferred<{ default: ComponentType<object> }>[] = [];
     return {
       loads,
       root: {
         name,
         load: () => {
-          const d = deferred<{ default: React.ComponentType<object> }>();
+          const d = deferred<{ default: ComponentType<object> }>();
           loads.push(d);
           return d.promise;
         },
@@ -340,7 +341,7 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     const t = bindings({ locales: { ensureAll: () => new Promise<void>((_, reject) => (finish = () => reject(new Error('offline')))) } });
     await loadCells(t);
     const lazy = lazyRoot();
-    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    const r = await render(<>{createElement(t.withLessonContent(lazy.root))}</>);
     await act(async () => lazy.loads[0]?.resolve({ default: Root }));
     await settle();
     expect(byTestId(r.root, 'root')).toHaveLength(0);
@@ -353,7 +354,7 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     const t = bindings();
     await loadCells(t);
     const lazy = lazyRoot('BrowseApp');
-    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    const r = await render(<>{createElement(t.withLessonContent(lazy.root))}</>);
     await act(async () => lazy.loads[0]?.reject(new Error('offline')));
     await settle();
     expect(t.reload).not.toHaveBeenCalled();
@@ -370,7 +371,7 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     const t = bindings({ reload: () => true, answer: async () => true });
     await loadCells(t);
     const lazy = lazyRoot();
-    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    const r = await render(<>{createElement(t.withLessonContent(lazy.root))}</>);
     await act(async () => lazy.loads[0]?.reject(scriptError()));
     await settle();
     expect(t.answer).toHaveBeenCalledTimes(1);
@@ -382,7 +383,7 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     const t = bindings({ rootTimeoutMs: 20 });
     await loadCells(t);
     const lazy = lazyRoot('PresenterApp');
-    const r = await render(<>{React.createElement(t.withLessonContent(lazy.root))}</>);
+    const r = await render(<>{createElement(t.withLessonContent(lazy.root))}</>);
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 40));
     });

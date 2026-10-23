@@ -1,5 +1,4 @@
 import type { WriteFrameRound } from '@hangul-route/content-schema';
-import React from 'react';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

@@ -1,5 +1,5 @@
 import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { voiceHelpContent } from '../logic/audio/voice-help';
@@ -17,7 +17,7 @@ interface Props {
   testID?: string;
 }
 
-export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }: Props): React.ReactElement {
+export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }: Props): ReactElement {
   const m = useMessages();
   const help = voiceHelpContent(m.learner.audio.voiceHelp);
   return (

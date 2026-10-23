@@ -17,7 +17,8 @@ import {
 } from '@hangul-route/design-system';
 import { NOTES_MODES, type NotesMode } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { bundleOs, flags } from '../../config/flags';
@@ -53,7 +54,7 @@ const CARD_BUTTON_BASIS = touchTarget.hero + spacing.xxl;
  * (online, every device, not a report) and Report (queued with a local hide); the class-notes
  * setting and its one-time card; the disclosure line; on the web, Send a note on app.hangulroute.com.
  */
-export function NotesGrownUpScreen({ navigation, route }: Props): React.ReactElement {
+export function NotesGrownUpScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const t = m.caregiver.notes;
@@ -336,7 +337,7 @@ function GrownUpRow({
   online: boolean;
   onHide: () => void;
   onReport: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const t = m.caregiver.notes;

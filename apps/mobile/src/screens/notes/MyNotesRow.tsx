@@ -1,5 +1,6 @@
 import { Body, Card, Icon, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -13,11 +14,11 @@ import { useActiveNotes } from './use-notes';
  * neither never sees it. The `New` pill while a note shown on this device is unread. The row's name
  * is its visible text. Renders nothing (and no gap) when hidden.
  */
-export function MyNotesRow({ onOpen }: { onOpen: () => void }): React.ReactElement | null {
+export function MyNotesRow({ onOpen }: { onOpen: () => void }): ReactElement | null {
   return flags.notesEnabled ? <MyNotesRowInner onOpen={onOpen} /> : null;
 }
 
-function MyNotesRowInner({ onOpen }: { onOpen: () => void }): React.ReactElement | null {
+function MyNotesRowInner({ onOpen }: { onOpen: () => void }): ReactElement | null {
   const m = useMessages();
   const { data, memberships } = useActiveNotes();
   const row = useMemo(() => myNotesRowView({ enabled: true, memberships, data: data ?? null }), [memberships, data]);

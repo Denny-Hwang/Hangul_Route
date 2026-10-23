@@ -2,7 +2,8 @@ import type { HeritageCard, StageKey } from '@hangul-route/content-schema';
 import { Body, Button, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll } from '../../content';
 import { heritageCardsAll } from '../../content/heritage-cards';
@@ -32,7 +33,7 @@ import { StageCards } from './StageCards';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StageRecap'>;
 
-export function StageRecapScreen({ navigation }: Props): React.ReactElement {
+export function StageRecapScreen({ navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.learner;
   const locale = useLocale();

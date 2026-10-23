@@ -2,7 +2,8 @@ import { Body, Button, Hoya, Spacer, spacing, touchTarget } from '@hangul-route/
 import type { NoteReactionId } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -33,7 +34,7 @@ export function NoteDetailPane({
   /** After Put this note away: back to My notes, which says it once. */
   onPutAway: () => void;
   onSeeMyNotes: () => void;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const m = useMessages();
   const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

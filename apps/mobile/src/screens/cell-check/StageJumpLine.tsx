@@ -1,7 +1,8 @@
 import { Body, Button, spacing } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
@@ -41,7 +42,7 @@ export function stageJumpRuleNow(profileId: string | null, stage: string, open: 
   return stageJumpOffer({ stage, cells: CELLS, done, placedOut, testedOut: snap.testedOut, open, checkOn: true, arm: testOutArmFor(profileId), playable: true });
 }
 
-export function StageJumpLine({ profileId, stage, checkOn }: StageJumpLineProps): React.ReactElement | null {
+export function StageJumpLine({ profileId, stage, checkOn }: StageJumpLineProps): ReactElement | null {
   const m = useMessages();
   const copy = m.learner.stageJump;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

@@ -1,5 +1,6 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import { Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -19,7 +20,7 @@ type StoryBody = Extract<Slide, { kind: 'story' }>;
  * `romanization: 'tap'` one `rom` build that shows every romanization on the slide at once (D2).
  * Every word is the story's own (D14). A build that is not reached keeps its space.
  */
-export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: ReadonlySet<BuildName>; scene: LectureSceneView | undefined }): React.ReactElement {
+export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: ReadonlySet<BuildName>; scene: LectureSceneView | undefined }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const bodySize = size(presenter.size.body);
@@ -58,7 +59,7 @@ export function StorySlide({ slide, shown, scene }: { slide: StoryBody; shown: R
                 </Text>
               </Text>
             ) : (
-              <React.Fragment key={i}>{piece.text}</React.Fragment>
+              <Fragment key={i}>{piece.text}</Fragment>
             ),
           )}
         </Text>

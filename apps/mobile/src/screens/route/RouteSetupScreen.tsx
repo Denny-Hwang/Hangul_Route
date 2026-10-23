@@ -1,7 +1,8 @@
 import { Body, Button, Caption, Card, Heading, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { CURRICULUM_MAX_ITEMS, PACES, WEEKDAYS, addDays, type PaceId, type ThemeKey, type Weekday } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import {
@@ -46,7 +47,7 @@ import { useBackGuard } from '../use-back-guard';
 type Props = NativeStackScreenProps<RootStackParamList, 'RouteSetup'>;
 
 /** A theme chip: a checkbox with its order number when chosen, at least 64 dp. */
-function ThemeChip({ label, order, onPress, testID }: { label: string; order: string | null; onPress: () => void; testID: string }): React.ReactElement {
+function ThemeChip({ label, order, onPress, testID }: { label: string; order: string | null; onPress: () => void; testID: string }): ReactElement {
   const checked = order !== null;
   return (
     <Pressable
@@ -74,7 +75,7 @@ function ThemeChip({ label, order, onPress, testID }: { label: string; order: st
   );
 }
 
-export function RouteSetupScreen({ route, navigation }: Props): React.ReactElement {
+export function RouteSetupScreen({ route, navigation }: Props): ReactElement {
   const { profileId, choice } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.setup;

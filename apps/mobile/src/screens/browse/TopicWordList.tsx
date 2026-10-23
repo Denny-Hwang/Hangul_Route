@@ -1,5 +1,6 @@
 import { Body, Icon, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -25,7 +26,7 @@ import { KoChip, focusRing, type FocusState } from './browse-ui';
 /** The picture tile of a row (`touchTarget.min`, the mock's 64 tile). */
 const ART = touchTarget.min;
 
-export function TopicWordList({ words, hear }: { words: readonly TopicWordFact[]; hear: boolean }): React.ReactElement {
+export function TopicWordList({ words, hear }: { words: readonly TopicWordFact[]; hear: boolean }): ReactElement {
   const m = useMessages().caregiver.browse;
   // The Korean and its romanization are printed beside every button: the panel only says why it is silent.
   const slot = usePromptSlot({ source: TOPIC_HEAR_SOURCE, textOnScreen: true });

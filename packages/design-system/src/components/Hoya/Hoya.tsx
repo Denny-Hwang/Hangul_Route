@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import Animated, {
   Easing,
@@ -7,7 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
+import { Svg, Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 import { hoyaFigure, hoyaPaintProps, type HoyaFur, type HoyaPart } from '../../scene-art/hoya';
 import { hoyaVariantColors } from '../../tokens';
 import type { HoyaPose, HoyaProps } from './types';
@@ -40,7 +41,7 @@ function figureOf(pose: HoyaPose): readonly HoyaPart[] {
   return parts;
 }
 
-function renderPart(part: HoyaPart, key: number, fur: Fur): React.ReactElement {
+function renderPart(part: HoyaPart, key: number, fur: Fur): ReactElement {
   const paint = hoyaPaintProps(part, fur);
   switch (part.t) {
     case 'group':
@@ -68,7 +69,7 @@ export function Hoya({
   variant = 'orange',
   testID,
   accessibilityLabel,
-}: HoyaProps): React.ReactElement {
+}: HoyaProps): ReactElement {
   const fur = hoyaVariantColors(variant);
   const parts = figureOf(pose);
 

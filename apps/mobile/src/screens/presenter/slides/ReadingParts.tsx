@@ -1,5 +1,6 @@
 import { colors, koreanTextLabel, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, Fragment } from 'react';
+import type { RefObject, ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { NarrationPiece, SpokenLine } from '../../../logic/lecture/build-steps';
 import { nextFitLevel } from '../../../logic/lecture/slide-view';
@@ -61,7 +62,7 @@ function measureHeight(node: MeasuredNode | null, done: (height: number | null) 
 export function useFitLevel(
   max: number,
   unit?: number,
-): { level: number; onRoom: (e: LayoutChangeEvent) => void; onContent: (e: LayoutChangeEvent) => void; contentRef: React.RefObject<View> } {
+): { level: number; onRoom: (e: LayoutChangeEvent) => void; onContent: (e: LayoutChangeEvent) => void; contentRef: RefObject<View> } {
   const [fit, setFit] = useState({ level: 0, unit, resets: 0 });
   const room = useRef(0);
   const content = useRef(0);
@@ -113,7 +114,7 @@ export function useFitLevel(
  * A line's romanization and meaning as one run of text (a compact level of a reading slide): the
  * romanization semibold in `text.secondary` (`text.primary` on a lit bubble), then the meaning.
  */
-export function RomGloss({ romanization, gloss, rom, size, lit = false, testID }: { romanization: string; gloss: string; rom: boolean; size: number; lit?: boolean; testID?: string }): React.ReactElement {
+export function RomGloss({ romanization, gloss, rom, size, lit = false, testID }: { romanization: string; gloss: string; rom: boolean; size: number; lit?: boolean; testID?: string }): ReactElement {
   return (
     <Text {...KOREAN_LINE_BREAK} testID={testID} style={{ fontSize: size, lineHeight: Math.round(size * typography.leading.tight), color: colors.text.primary }}>
       <Text {...KOREAN_LINE_BREAK} aria-hidden={!rom} style={[{ fontWeight: typography.weight.semibold, color: lit ? colors.text.primary : colors.text.secondary }, reveal(rom)]}>
@@ -125,7 +126,7 @@ export function RomGloss({ romanization, gloss, rom, size, lit = false, testID }
 }
 
 /** The slide's kind at `presenter.size.caption`, top left, where the topic label sits (V5). */
-export function KindLabel({ text, testID }: { text: string; testID?: string }): React.ReactElement {
+export function KindLabel({ text, testID }: { text: string; testID?: string }): ReactElement {
   const size = useStageText();
   return (
     <Text {...KOREAN_LINE_BREAK} testID={testID} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.secondary }}>
@@ -139,7 +140,7 @@ export function KindLabel({ text, testID }: { text: string; testID?: string }): 
  * token's Korean in the presenter font and its romanization (`rom`: shown; with `romanization: 'tap'`
  * one build later), named only once it shows, so a screen reader never says it early (D2).
  */
-export function ChipText({ pieces, rom, small = false, testID }: { pieces: readonly NarrationPiece[]; rom: boolean; small?: boolean; testID?: string }): React.ReactElement {
+export function ChipText({ pieces, rom, small = false, testID }: { pieces: readonly NarrationPiece[]; rom: boolean; small?: boolean; testID?: string }): ReactElement {
   const size = useStageText();
   const chip = useChipStyle();
   // `small`: a compact level draws the line at `presenter.size.caption`.
@@ -157,7 +158,7 @@ export function ChipText({ pieces, rom, small = false, testID }: { pieces: reado
             </Text>
           </Text>
         ) : (
-          <React.Fragment key={i}>{piece.text}</React.Fragment>
+          <Fragment key={i}>{piece.text}</Fragment>
         ),
       )}
     </Text>
@@ -170,7 +171,7 @@ export function ChipText({ pieces, rom, small = false, testID }: { pieces: reado
  * `compact` (a compact level of the realia slide): the three run as one line of text that wraps,
  * at the tight line height, with less padding, so a long meaning takes no row of its own.
  */
-export function WordChip({ word, rom, compact = false, testID }: { word: SpokenLine; rom: boolean; compact?: boolean; testID?: string }): React.ReactElement {
+export function WordChip({ word, rom, compact = false, testID }: { word: SpokenLine; rom: boolean; compact?: boolean; testID?: string }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const chip = useChipStyle();
@@ -224,7 +225,7 @@ export function WordChip({ word, rom, compact = false, testID }: { word: SpokenL
  * `surface.sunken` with a stage border in `text.primary`; its accessible name is "gap"
  * (`a11y.presenter.slot`, section 10), never "underscore".
  */
-export function GapBox({ textSize, testID }: { textSize: number; testID?: string }): React.ReactElement {
+export function GapBox({ textSize, testID }: { textSize: number; testID?: string }): ReactElement {
   const { unit, messages } = usePresenterView();
   const name = messages.a11y.presenter.slot;
   return (

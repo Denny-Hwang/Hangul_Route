@@ -3,7 +3,8 @@ import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
@@ -44,7 +45,7 @@ const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow
 /** The title and the button above the rows and below them: a frame shared with the fallback. */
 const frame = { marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle } as const;
 
-export function LearningRouteRowView({ view, onOpen, testID }: { view: DashboardRowView; onOpen: () => void; testID: string }): React.ReactElement {
+export function LearningRouteRowView({ view, onOpen, testID }: { view: DashboardRowView; onOpen: () => void; testID: string }): ReactElement {
   const aboutRows = useMessages().caregiver.dashboard.aboutRows.cta;
   const [aboutOpen, setAboutOpen] = useState(false);
   const segments = view.segments.map((s) => ({ key: s.stage, state: s.state, here: s.here, accent: colors.stage[s.stage] }));
@@ -121,7 +122,7 @@ export function LearningRouteRowView({ view, onOpen, testID }: { view: Dashboard
  * Content that could not be read: the title and See Learning Route stay, so the
  * dashboard still reaches the page, which shows its own Try again card.
  */
-export function LearningRouteRowFallback({ title, cta, onOpen, testID }: { title: string; cta: string; onOpen: () => void; testID: string }): React.ReactElement {
+export function LearningRouteRowFallback({ title, cta, onOpen, testID }: { title: string; cta: string; onOpen: () => void; testID: string }): ReactElement {
   return (
     <View testID={testID} style={frame}>
       <Caption tone="muted">{title}</Caption>
@@ -154,7 +155,7 @@ export function LearningRouteRow({
   stored: ProgressSnapshot | undefined;
   showStarted: boolean;
   testID: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const messages = useMessages();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).

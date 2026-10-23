@@ -1,7 +1,8 @@
 import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -26,7 +27,7 @@ import { useNoteStoriesLoaded } from '../story-content';
  * (`StoryShelf hero={false}`). The shelf is mounted even with no culture tile,
  * so `story.shelf.viewed { section: 'culture' }` is sent once per visit either way.
  */
-export function CultureSection({ index }: { index: readonly StoryIndexEntry[] }): React.ReactElement {
+export function CultureSection({ index }: { index: readonly StoryIndexEntry[] }): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const locale = useLocale();

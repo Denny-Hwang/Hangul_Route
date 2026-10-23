@@ -1,5 +1,5 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { SpokenForm } from '../../../logic/audio/spoken';
 import { units } from '../../../logic/lecture/stage-constants';
@@ -27,7 +27,7 @@ export function SayIt({
    * because showing it at once would give the answer away. Absent: the Hangul first, always shown.
    */
   koShown?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const promptSize = size(presenter.size.prompt);

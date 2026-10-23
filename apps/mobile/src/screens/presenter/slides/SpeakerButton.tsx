@@ -1,5 +1,5 @@
 import { Icon, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { stageButtonSize, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN } from '../stage-metrics';
@@ -10,7 +10,7 @@ import { usePresenterView, useStageControlFloor } from '../presenter-context';
  * and a `brand.secondaryDark` glyph on paper, never below `touchTarget.hero` (`touchTarget.min`
  * in a phone window), named "Play the sound". Disabled while its build is not reached.
  */
-export function SpeakerButton({ enabled, onPress, testID }: { enabled: boolean; onPress: () => void; testID?: string }): React.ReactElement {
+export function SpeakerButton({ enabled, onPress, testID }: { enabled: boolean; onPress: () => void; testID?: string }): ReactElement {
   const { unit, messages, soundBlocked } = usePresenterView();
   const size = stageButtonSize(unit, touchTarget.hero, useStageControlFloor());
   return (

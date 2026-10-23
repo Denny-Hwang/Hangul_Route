@@ -1,6 +1,6 @@
 import { Body, Icon, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { UiLocale } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import type { LanguageOption } from '../logic/locale/language-picker';
 
@@ -22,7 +22,7 @@ export interface LanguageChipsProps {
   testID?: string;
 }
 
-export function LanguageChips({ options, selected, onSelect, groupLabel, testID }: LanguageChipsProps): React.ReactElement {
+export function LanguageChips({ options, selected, onSelect, groupLabel, testID }: LanguageChipsProps): ReactElement {
   return (
     <View
       testID={testID}

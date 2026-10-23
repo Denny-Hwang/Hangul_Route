@@ -16,9 +16,12 @@ export interface SvgProps extends ShapeProps<SVGSVGElement> {
   accessibilityLabel?: string;
 }
 
-export default function Svg({ testID, accessibilityLabel, ...rest }: SvgProps): JSX.Element {
+// Named as well as default, as react-native-svg exports it: the design system imports `{ Svg }` by name.
+export function Svg({ testID, accessibilityLabel, ...rest }: SvgProps): JSX.Element {
   return <svg {...rest} data-testid={testID} role={accessibilityLabel === undefined ? undefined : 'img'} aria-label={accessibilityLabel} />;
 }
+
+export default Svg;
 
 export function G(props: ShapeProps<SVGGElement>): JSX.Element {
   return <g {...props} />;

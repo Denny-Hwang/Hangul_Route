@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode, ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { borderWidth, colors, radii, spacing } from '../../../tokens';
 import { SPARK_FILL_MS, sparkLayout } from '../../../spark';
@@ -53,12 +54,12 @@ vi.mock('react-native-reanimated', () => ({
 const { EmptySlot, LitSpark, SparkMeter, SparkMeterBody } = await import('../SparkMeter');
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
-const kids = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+type El = ReactElement<Props>;
+const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 const SIZE = 24;
 const GAP = 6;
 
-function body(value: number, extra: Partial<React.ComponentProps<typeof SparkMeterBody>> = {}): El {
+function body(value: number, extra: Partial<ComponentProps<typeof SparkMeterBody>> = {}): El {
   const layout = sparkLayout(value);
   return SparkMeterBody({
     layout,

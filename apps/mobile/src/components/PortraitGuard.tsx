@@ -1,6 +1,7 @@
 import { Button, Heading, Hoya, colors, layoutClassFor, spacing, useLayoutClass, z } from '@hangul-route/design-system';
 import type { FormFactor } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
@@ -40,7 +41,7 @@ function screenForm(): FormFactor | null {
   return screen ? layoutClassFor(screen).form : null;
 }
 
-export function PortraitGuard(): React.ReactElement | null {
+export function PortraitGuard(): ReactElement | null {
   const layoutClass = useLayoutClass();
   const insets = useSafeAreaInsets();
   const messages = useMessages();

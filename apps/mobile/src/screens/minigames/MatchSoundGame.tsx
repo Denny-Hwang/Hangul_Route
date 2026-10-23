@@ -15,7 +15,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -38,7 +39,7 @@ interface Props {
   onFinish: () => void;
 }
 
-export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
+export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   const rounds = useMemo<MatchSoundRound[]>(
     () =>
       buildMatchSoundRounds({

@@ -1,7 +1,8 @@
 import type { StageKey } from '@hangul-route/content-schema';
 import { Body, Heading, Icon, Screen, Spacer, borderWidth, colors, radii, spacing, touchTarget, typography, useLayoutClass, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -35,7 +36,7 @@ const TRACK_W = spacing.xxxl;
 const TRACK_H = spacing.xl;
 const THUMB = spacing.lg;
 
-export function BrowseHomeScreen({ route, navigation }: Props): React.ReactElement {
+export function BrowseHomeScreen({ route, navigation }: Props): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.browse;
@@ -172,7 +173,7 @@ export function BrowseHomeScreen({ route, navigation }: Props): React.ReactEleme
 }
 
 /** The keep switch (section 4.3, OD-4): the whole row is one `switch`, at least 64 tall; the track is drawing only. */
-function KeepRow(): React.ReactElement {
+function KeepRow(): ReactElement {
   const m = useMessages().caregiver.browse.keep;
   const { kept, setKept, keepFailed } = useBrowseSettings();
   const on = kept === true;

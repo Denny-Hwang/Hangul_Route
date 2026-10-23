@@ -1,6 +1,7 @@
 import { Body, Button, borderWidth, colors, spacing, touchTarget } from '@hangul-route/design-system';
 import type { AdultPersona } from '@hangul-route/content-schema';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useMessages } from '../../i18n/use-messages';
@@ -26,7 +27,7 @@ import { readLastPersona } from '../../platform/shell-store';
  * Panel B straight away rather than Panel A swapping into it. Someone else moves focus to Parent or
  * caregiver, since the control that had it is gone.
  */
-export function WelcomeGrownUps(): React.ReactElement {
+export function WelcomeGrownUps(): ReactElement {
   const m = useMessages().learner.welcome.grownUps;
   const online = useOnline();
   const [lastPersona, setLastPersona] = useState<AdultPersona | null>(null);

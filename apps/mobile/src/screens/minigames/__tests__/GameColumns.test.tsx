@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -91,7 +91,7 @@ describe('GameColumns native columns: the round starts at the top, a new nudge c
     const id = String(el.props['data-testid'] ?? '');
     return { scrollHeight: 900, scrollWidth: 300, scroll: vi.fn((o: Scroll) => void (calls[id] ??= []).push({ top: o.top, left: o.left })) };
   };
-  const tree = (resetKey: string, feedbackKey: string | undefined): React.ReactElement => (
+  const tree = (resetKey: string, feedbackKey: string | undefined): ReactElement => (
     <GameColumns
       arrangement="side"
       stickyPrompt

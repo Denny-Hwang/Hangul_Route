@@ -1,7 +1,8 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo, Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
+import { Svg, Circle, Path, Text as SvgText } from 'react-native-svg';
 import { StrokeHint } from '../../../components/StrokeHint';
 import { strokesForJamo } from '../../../content/jamo-strokes';
 import type { BuildName } from '../../../logic/lecture/build-steps';
@@ -37,7 +38,7 @@ export function LetterSlide({
   /** The room cannot hear the Korean: the sound row becomes the "Say it:" box (section 3.7, PR 9). */
   sayIt?: boolean;
   onPlaySound: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter;
@@ -124,7 +125,7 @@ export function LetterSlide({
  * ring and a `text.primary` numeral on paper), with `StrokeHint` playing over it when its build
  * arrives or on R. Under reduced motion `StrokeHint` draws its own still diagram.
  */
-function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number }): React.ReactElement {
+function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const target = useMemo(() => strokesForJamo(jamoId) ?? [], [jamoId]);
   const items = useMemo(() => buildStrokeDiagram(target), [target]);
@@ -146,7 +147,7 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
           <Path key={`s${item.order}`} d={item.d} stroke={colors.text.primary} strokeWidth={STROKE_LINE} strokeLinecap="round" strokeLinejoin="round" fill="none" />
         ))}
         {items.map((item) => (
-          <React.Fragment key={`b${item.order}`}>
+          <Fragment key={`b${item.order}`}>
             <Circle cx={item.badge.x} cy={item.badge.y} r={STROKE_DOT_RADIUS} fill={colors.surface.paper} stroke={colors.brand.secondaryDark} strokeWidth={STROKE_DOT_RING} />
             <SvgText
               x={item.badge.x}
@@ -160,7 +161,7 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
             >
               {String(item.order)}
             </SvgText>
-          </React.Fragment>
+          </Fragment>
         ))}
       </Svg>
       {playToken > 0 ? <StrokeHint key={playToken} target={target} size={panel} viewBox={STROKE_VIEWBOX} playToken={playToken} strokeOrder={messages.a11y.minigame.strokeOrder} /> : null}

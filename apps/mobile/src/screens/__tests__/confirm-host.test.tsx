@@ -1,5 +1,4 @@
 import { ConfirmSheet, type ConfirmSheetProps } from '@hangul-route/design-system';
-import React from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConfirmHost } from '../../components/ConfirmHost';

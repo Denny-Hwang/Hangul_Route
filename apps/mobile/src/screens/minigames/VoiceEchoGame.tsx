@@ -17,7 +17,8 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -42,7 +43,7 @@ interface Props {
  * speech-to-text endpoint (see CRITICAL GAP §5). Until then, we ask the child
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
-export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactElement {
+export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame.voiceEcho;

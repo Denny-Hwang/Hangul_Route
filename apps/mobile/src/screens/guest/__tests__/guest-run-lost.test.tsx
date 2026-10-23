@@ -1,5 +1,4 @@
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
-import React from 'react';
 import type { ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

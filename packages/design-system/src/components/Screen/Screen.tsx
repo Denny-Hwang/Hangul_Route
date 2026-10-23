@@ -1,4 +1,5 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
+import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { ALL_SCREEN_EDGES, NO_INSETS, screenFrame } from '../../layout';
@@ -23,7 +24,7 @@ export function Screen({
   footer,
   header,
   testID,
-}: ScreenProps): React.ReactElement {
+}: ScreenProps): ReactElement {
   // The nearest provider's context (modal screens get their own, navigation/with-own-safe-area),
   // not useSafeAreaInsets, so a missing SafeAreaProvider degrades
   // to plain padding instead of throwing.

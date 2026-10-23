@@ -12,7 +12,8 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
@@ -149,7 +150,7 @@ const PAD_CHROME = 2 * spacing.lg + 3 * spacing.md + DOT_SIZE + touchTarget.chil
 /** Read by a screen reader, drawn nowhere (the presenter's and the games' live regions use the same box). */
 const SR_ONLY = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
-export function PinEntryScreen({ route, navigation }: Props): React.ReactElement {
+export function PinEntryScreen({ route, navigation }: Props): ReactElement {
   const storedHash = useAccountStore((s) => s.parentPinHash);
   // [OA] Row OA-5: a hash that could not be read is not "no PIN": a lock stays (fail closed, 13.2).
   const hashReadFailed = useAccountStore((s) => s.pinHashReadFailed);

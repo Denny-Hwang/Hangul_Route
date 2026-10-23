@@ -1,7 +1,8 @@
 import { LOCALE_META } from '@hangul-route/i18n';
 import { Body, Button, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useOnline } from '../../components/use-online';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -22,7 +23,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ClassScope'>;
  * device. Behind the grown-up gate whenever the device needs one (a child profile reaches it only through the PIN);
  * online only, never queued.
  */
-export function ClassScopeScreen({ route, navigation }: Props): React.ReactElement {
+export function ClassScopeScreen({ route, navigation }: Props): ReactElement {
   const { profileId } = route.params;
   const messages = useMessages();
   const t = messages.caregiver.classScope;

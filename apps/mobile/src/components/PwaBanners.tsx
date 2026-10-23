@@ -1,5 +1,6 @@
 import { Body, Button, Caption, Card, colors, layout, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
@@ -28,7 +29,7 @@ import { useUiStore } from '../store/ui-store';
  */
 type Banner = PwaBanner | null;
 
-export function PwaBanners(): React.ReactElement | null {
+export function PwaBanners(): ReactElement | null {
   const m = useMessages().learner.pwa;
   const [state, setState] = useState<BannerState>({ banner: null, waitForHome: false });
   const [offline, setOffline] = useState(false);

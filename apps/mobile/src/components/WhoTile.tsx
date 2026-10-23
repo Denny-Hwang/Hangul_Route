@@ -1,6 +1,7 @@
 import { Body, Icon, borderWidth, colors, radii, shadows, spacing, touchTarget } from '@hangul-route/design-system';
 import type { ThemeKey } from '@hangul-route/content-schema';
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View, type View as ViewType } from 'react-native';
 import { DEFAULT_AVATAR } from '../logic/profiles/avatar-catalog';
 import { LockBadge } from './LockBadge';
@@ -58,7 +59,7 @@ export interface WhoTileProps {
 export const WhoTile = forwardRef<ViewType, WhoTileProps>(function WhoTile(
   { variant, label, avatar, tint = null, width, locked = false, caption = null, line, accessibilityLabel, accessibilityHint, tabStop = true, onPress, onFocus, testID },
   ref,
-): React.ReactElement {
+): ReactElement {
   // [GU] The try tile is a start, not a person: Add a learner's dashed look (D11).
   const add = variant === 'add' || variant === 'try';
   // [GU] The guest's tile: the default cub, untinted, never locked (CS-G5).

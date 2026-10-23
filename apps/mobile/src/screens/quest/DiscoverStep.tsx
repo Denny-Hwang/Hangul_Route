@@ -23,7 +23,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, RefObject } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -84,7 +85,7 @@ interface Props {
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
-export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props): React.ReactElement {
+export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
   const locale = useLocale();
@@ -355,7 +356,7 @@ function HearButton({
   pulse?: boolean;
   tone: 'secondary' | 'ghost';
   dispatch: (event: DiscoverEvent) => void;
-}): React.ReactElement {
+}): ReactElement {
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
   useEffect(() => {
@@ -400,7 +401,7 @@ function DiscoverItemCard({
   bare?: boolean;
   /** A row under another row: a thin line above it. */
   divided?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const { item } = render;
   const slot = useCardSlot(item.key, [item.hear, item.letterName?.action, item.example?.hear], audio);
   const example = item.example;
@@ -554,7 +555,7 @@ function DiscoverItemCard({
 }
 
 /** The example's syllable blocks, the one that holds the symbol lit. Decorative: the word itself is read by KoreanText. */
-function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: boolean }> }): React.ReactElement {
+function ExampleBlocks({ blocks }: { blocks: Array<{ text: string; emphasised: boolean }> }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -613,9 +614,9 @@ function ExchangeCard({
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   m: Messages;
-  scrollRef: React.RefObject<ScrollView | null>;
+  scrollRef: RefObject<ScrollView | null>;
   audio: CardAudio;
-}): React.ReactElement {
+}): ReactElement {
   const ex = copy.exchange;
   const first = render.item.lines[0];
   // One slot for the exchange: Read along and each line's own speaker. When a line cannot play, its panel
@@ -663,8 +664,8 @@ function ExchangeLine({
   dispatch: (event: DiscoverEvent) => void;
   copy: DiscoverMessages;
   a11y: Messages['a11y'];
-  scrollRef: React.RefObject<ScrollView | null>;
-}): React.ReactElement {
+  scrollRef: RefObject<ScrollView | null>;
+}): ReactElement {
   const { line, lit } = render;
   const reducedMotion = useReducedMotion();
   const ref = useRef<View | null>(null);

@@ -1,5 +1,6 @@
 import { Body, Caption, Card, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Switch, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { needsFreshPin } from '../logic/profiles/session';
@@ -31,7 +32,7 @@ export interface ProfileLockCardProps {
  * change when that PIN is right; without a PIN it is disabled with **Set a grown-up PIN first.** Used by Edit profile
  * and the People on this device person page. Nothing here is synced.
  */
-export function ProfileLockCard({ profileId, onAskPin, subscribeFocus, failedLine, testID }: ProfileLockCardProps): React.ReactElement {
+export function ProfileLockCard({ profileId, onAskPin, subscribeFocus, failedLine, testID }: ProfileLockCardProps): ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const pinSet = useAccountStore((s) => s.parentPinHash !== null);

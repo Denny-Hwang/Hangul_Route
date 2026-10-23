@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { storyById } from '../../content/stories';
 import { backOrHome, resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { sourcesRouteParams, type SourcesRouteParams } from '../../logic/story/source-link';
@@ -48,13 +49,13 @@ const NOTHING = (): void => undefined;
  * reaching its end earns a story's daily-goal points (section 7.4, row CM-17).
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
-export function StoryReaderScreen(props: Props): React.ReactElement {
+export function StoryReaderScreen(props: Props): ReactElement {
   // The story's scenes come from its chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
   // only its waiting state (the way back, then a calm status line if it takes longer).
   return useStoryReady(props.route.params.storyId) ? <StoryReaderBody {...props} /> : <LessonWaiting />;
 }
 
-function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): React.ReactElement {
+function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): ReactElement {
   const { storyId, level, sceneIndex } = route.params;
   const locale = useLocale();
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).

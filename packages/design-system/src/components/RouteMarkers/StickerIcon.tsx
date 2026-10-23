@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
+import type { ReactElement } from 'react';
+import { Svg, Path } from 'react-native-svg';
 import { colors, spacing } from '../../tokens';
 import { iconGlyphs, iconPartProps } from '../Icon/glyphs';
 import type { IconName } from '../Icon/types';
@@ -21,7 +21,7 @@ export interface StickerIconProps {
  * and edged `STICKER_EDGE_UNITS` wider, then the glyph itself, so a route ring passing under the
  * corner reads as going behind it. The glyph is the `Icon` set's own geometry.
  */
-export function StickerIcon({ name, size, color, testID }: StickerIconProps): React.ReactElement {
+export function StickerIcon({ name, size, color, testID }: StickerIconProps): ReactElement {
   const parts = iconGlyphs[name];
   return (
     <Svg testID={testID} width={size} height={size} viewBox={`0 0 ${GRID} ${GRID}`}>

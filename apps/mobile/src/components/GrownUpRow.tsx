@@ -1,5 +1,6 @@
 import { Body, Caption, Icon, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import { useId } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 
 export interface GrownUpRowProps {
@@ -25,8 +26,8 @@ export interface GrownUpRowProps {
  * glyph, the generic label and a chevron, at least `touchTarget.min` high. A disabled row stays in the reading order
  * and says why. The caption is the row's description, so the name is the label (and the PIN) alone.
  */
-export function GrownUpRow({ label, locked, disabled = false, caption = null, accessibilityLabel, onPress, testID }: GrownUpRowProps): React.ReactElement {
-  const captionId = `grown-up-row-caption${React.useId().replace(/:/g, '-')}`;
+export function GrownUpRow({ label, locked, disabled = false, caption = null, accessibilityLabel, onPress, testID }: GrownUpRowProps): ReactElement {
+  const captionId = `grown-up-row-caption${useId().replace(/:/g, '-')}`;
   const describedBy = caption ? { 'aria-describedby': captionId } : {};
   return (
     <Pressable

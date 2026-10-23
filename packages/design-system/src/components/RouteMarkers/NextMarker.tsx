@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Svg from 'react-native-svg';
 import { colors } from '../../tokens';
@@ -20,7 +20,7 @@ export interface NextMarkerProps {
  * means "You started here" on the same grid. Absolutely placed, so it adds no size and no target;
  * decorative, because the label carries the word.
  */
-export function NextMarker({ tipInset = NEXT_TIP_INSET, edge = 0, testID }: NextMarkerProps): React.ReactElement {
+export function NextMarker({ tipInset = NEXT_TIP_INSET, edge = 0, testID }: NextMarkerProps): ReactElement {
   const band = markerBand(NEXT_MARKER_BASE);
   return (
     <View

@@ -1,4 +1,4 @@
-import * as Haptics from 'expo-haptics';
+import { ImpactFeedbackStyle, NotificationFeedbackType, impactAsync, notificationAsync } from 'expo-haptics';
 
 /**
  * Haptics wrapper — anti-startle calibrated for young learners.
@@ -13,20 +13,20 @@ export function setHapticsEnabled(v: boolean): void {
 
 export function tapLight(): void {
   if (!enabled) return;
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  void impactAsync(ImpactFeedbackStyle.Light);
 }
 
 export function tapMedium(): void {
   if (!enabled) return;
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  void impactAsync(ImpactFeedbackStyle.Medium);
 }
 
 export function success(): void {
   if (!enabled) return;
-  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  void notificationAsync(NotificationFeedbackType.Success);
 }
 
 export function nudge(): void {
   if (!enabled) return;
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+  void impactAsync(ImpactFeedbackStyle.Soft);
 }

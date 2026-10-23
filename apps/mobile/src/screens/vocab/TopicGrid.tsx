@@ -2,7 +2,8 @@ import { spacing, useLayoutClass, useMediaSize } from '@hangul-route/design-syst
 import type { VocabTopic } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -55,7 +56,7 @@ export function TopicGrid({
   source: TopicOpenSource;
   /** The width cap of the screen the grid sits in, for the first frame before the grid is measured. */
   width: 'reading' | 'full';
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const copy = vocabCopyOf(messages);
   const locale = useLocale();
