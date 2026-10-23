@@ -129,6 +129,11 @@ export const a11y = {
       lookHere: '여기를 봐요',
       dir: { left: '왼쪽으로', right: '오른쪽으로' },
     },
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `문장: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `완성된 문장: ${sentence}. ${meaning}`,
+      blank: '빈칸',
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: '시프트, 다른 글자',
