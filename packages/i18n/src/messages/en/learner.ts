@@ -591,6 +591,8 @@ export const learner = {
     episodePage: { cta: 'Episode page' },
     /** The one primary on the run that completed Stage 1: opens the ceremony (F-QUEST-002 §3.8). */
     stagePrize: { cta: 'See your Stage 1 prize' },
+    /** The run that finishes a Stage 2-7 (F-CURR-002 section 7.3, row CM-22): the one primary into its ceremony. */
+    upperStagePrize: { cta: (stage: number) => `See your Stage ${stage} prize` },
     /** The "Next up" teaser (F-QUEST-002 §3.5); the letters after `newLetters` are taught content. */
     nextUp: {
       title: 'Next up',
@@ -2706,5 +2708,43 @@ export const learner = {
     startBody: 'Start with the first quest. Hoya will help with the rest.',
     /** On each quest of a tested-out cell, with 2 stars; every quest stays playable. */
     pill: 'Tested out',
+    /** Row CM-22: under the header of a stage whose every cell is done or tested out, until the stage latches. */
+    stageHint: 'Play the quests you tested out of to finish this stage.',
+  },
+  /**
+   * The Stages 2-7 ceremony (F-CURR-002 section 7.3, row CM-22; design/wireframes/reviews/stage-check.md B). Its own
+   * namespace: `stageComplete` is the live Stage 1 ceremony and stays as it is. See my cards and Back home reuse
+   * `stageComplete.seeCards` / `.backHome`; the Journey header button reuses `journey.stagePrize`.
+   */
+  upperStageComplete: {
+    title: (stage: number) => `Stage ${stage} complete!`,
+    cheer: 'You finished every place in this stage. Hoya is so proud of you.',
+    cardTitle: 'Your stage card',
+  },
+  /**
+   * The Stage Check of Stages 2-7 (F-CURR-002 sections 4.5, 7.3 and 7.7, OD-1, row CM-22; design/wireframes/reviews/
+   * stage-check.md). Offered, never required; stars only, never a percentage, an "n of m", a score, a timer, "exam",
+   * "test", "pass", "fail" or a certificate. The stop sheet reuses `stageReview.leave`, the intro buttons and the
+   * romanization switch `stageReview.intro`, the pauses `stageReview.pause.second` / `.fourth` and `keepGoing`, the
+   * star headlines `dailyReview.result.headline`, the tricky line `cellCheck.tricky`. Read by the `review-copy` rule.
+   */
+  stageCheck: {
+    title: 'Stage Check',
+    offer: { cta: 'Take the Stage Check', body: 'About 7 minutes. You can skip it.' },
+    intro: 'About 7 minutes. Words, sounds and sentences from all five places. No timer. Take it again any time. Your best result is kept.',
+    /** The first pause between parts; the later ones reuse the Hangul Check's. */
+    pause: 'Lovely reading! Ready for more?',
+    best: 'Your best result is kept.',
+    notReady: 'This check is not open yet. Keep playing your quests.',
+    /** The one retroactive summary (section 4.8 step 7, panel G): every stage it lists, once. */
+    retro: {
+      title: (stages: readonly number[]) =>
+        stages.length === 1
+          ? `You finished Stage ${stages[0]} earlier`
+          : `You finished Stages ${stages.slice(0, -1).join(', ')} and ${stages[stages.length - 1]} earlier`,
+      body: 'Here are your stage cards.',
+      /** Before the stage cards ship (row CM-23), or with them switched off. */
+      bodyNoCards: 'Every stage you finished stays on your Journey.',
+    },
   },
 } as const;

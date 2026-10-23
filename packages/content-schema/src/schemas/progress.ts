@@ -395,6 +395,12 @@ export const ProgressSnapshotSchema = z.object({
   memSeededAt: IsoInstantSchema.optional().catch(undefined),
   /** Week Monday -> when that week reached its weekly goal; union of keys, earliest per key (row CM-17). */
   steadyWeeks: SteadyWeeksSchema,
+  /**
+   * Stage key -> when its ceremony was offered (Results on the run that finished it) or when the one retroactive
+   * summary listed it (row CM-22, sections 4.8 step 7 and 7.3). Union of keys, earliest per key, so no stage is summed
+   * up twice on any device or after a restore.
+   */
+  stageCeremonyAt: LatchRecordSchema,
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
@@ -421,6 +427,7 @@ export const CURR_002_SNAPSHOT_KEYS = [
   'stamps',
   'memSeededAt',
   'steadyWeeks',
+  'stageCeremonyAt',
 ] as const;
 
 /**

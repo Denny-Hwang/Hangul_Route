@@ -52,6 +52,7 @@ const fields = {
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
   steadyWeeks: { '2026-10-19': '2026-10-21T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-21T09:00:00.000Z' },
 };
 const memory = { wordsKnown: 42, readyToRefresh: 7, cellBestCounts: [5, 2, 1], stageChecks: 1, weekPoints: 18, topDue: ['lex:sagwa'] };
 
@@ -253,6 +254,19 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     // An older build leaves the key out: the count never drops.
     await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
     expect(Object.keys((await get('profile:suni', auth)).snapshot.steadyWeeks as object)).toHaveLength(3);
+  });
+  it('stageCeremonyAt (row CM-22, Worker first): two devices union their stages, the earliest time per stage, a time past the Worker now reads as now', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    const phone = { stage2: '2026-10-21T09:00:00.000Z' };
+    await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { stageCeremonyAt: phone }), summary });
+    // A tablet that summed up Stage 2 later and Stage 3 with a clock that read 2099.
+    const tablet = { stage2: '2026-10-22T08:00:00.000Z', stage3: '2099-01-01T00:00:00.000Z' };
+    expect((await put('profile:suni', auth, { ...base, baseRev: 1, snapshot: snapshotFor('profile:suni', { stageCeremonyAt: tablet }), summary })).status).toBe(200);
+    const got = await get('profile:suni', auth);
+    expect(got.snapshot.stageCeremonyAt).toEqual({ stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-22T12:00:00.000Z' });
+    // An older build leaves the key out: no stage is summed up again on any device.
+    await put('profile:suni', auth, { ...base, baseRev: 2, snapshot: snapshotFor('profile:suni'), summary });
+    expect((await get('profile:suni', auth)).snapshot.stageCeremonyAt).toEqual({ stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-22T12:00:00.000Z' });
   });
 });
 

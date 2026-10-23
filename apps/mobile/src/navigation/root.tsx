@@ -32,10 +32,10 @@ import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
-import { StageCompleteScreen } from '../screens/results/StageCompleteScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
 import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
+import { StageCheckRoute, StageCompleteRoute, StageRecapRoute } from '../screens/stage-check/stage-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
@@ -152,11 +152,15 @@ export function RootNavigator(): ReactElement {
         <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
         <Stack.Screen name="Minigame" component={MinigameScreen} />
         <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
-        <Stack.Screen name="StageComplete" component={StageCompleteScreen} options={{ animation: 'fade' }} />
+        {/* The prize ceremonies of every stage (F-CURR-002 row CM-22): the Stage Check's chunk, by the one prize table. */}
+        <Stack.Screen name="StageComplete" component={StageCompleteRoute} options={{ animation: 'fade' }} />
         <Stack.Screen name="StageReview" component={StageReviewScreen} options={{ gestureEnabled: false }} />
         {/* F-CURR-002 row CM-14: a chunk of its own; off (`dailyReview` or `memoryRecord`), it shows All refreshed today. */}
         <Stack.Screen name="DailyReview" component={DailyReviewRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CellCheck" component={CellCheckRoute} options={{ gestureEnabled: false }} />
+        {/* F-CURR-002 row CM-22: a chunk of its own, behind `stageChecks` (the check also needs `memoryRecord`). */}
+        <Stack.Screen name="StageCheck" component={StageCheckRoute} options={{ gestureEnabled: false }} />
+        <Stack.Screen name="StageRecap" component={StageRecapRoute} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />

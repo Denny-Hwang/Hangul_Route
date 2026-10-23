@@ -13,11 +13,14 @@ import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
 import { useSyncStore } from '../../store/sync-store';
 import { questOpenFor, useTierStore } from '../../store/tier-store';
+import { episodesAll } from '../../content';
 import { CONTENT_OVERLAYS } from '../content-locale';
+import { gridEpisodesOf } from '../my-route/order';
 import { createCellCheckApi, type CellCheckApi } from '../reviews/cell-check-api';
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
+import { createStageCheckApi, type StageCheckApi } from '../reviews/stage-check-api';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
 import { memoryRecordsFor, recordAnswers } from './boot';
@@ -175,6 +178,53 @@ export function cellCheckApi(): CellCheckApi {
     ensureCell: (cell) => lessonContent.ensureCells([cell]),
   });
   return cellCheck;
+}
+
+let stageCheck: StageCheckApi | null = null;
+
+/**
+ * The Stage Check of Stages 2-7 (F-CURR-002 row CM-22), here beside the Cell Check's API and the review engine, so
+ * the screen's chunk (`screens/stage-check/stage-check-chunk.tsx`) shares no module with this one.
+ */
+export function stageCheckApi(): StageCheckApi {
+  stageCheck ??= createStageCheckApi({
+    file: (profileId) => memoryRuntime().file(profileId),
+    ensureSeeded: (profileId) => memoryRuntime().ensureSeeded(profileId),
+    items: () => reviewItemStore.ensure(),
+    // With answers not recorded a check could latch a result while no memory state moved (stage-check.md States).
+    on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('stageChecks', profileId),
+    cells: (stage) => gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).map((e) => e.id),
+    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    voice: () => {
+      const audio = useAudioStore.getState();
+      return audio.tts.state === 'ready' && !audio.muted;
+    },
+    hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
+    snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
+    recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
+    recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
+    latch: (profileId, stage, at) => {
+      // On the hydrated snapshot only, merged earliest-wins (a latch never moves later); saved and synced like any write.
+      const progress = useProgressStore.getState();
+      const snap = progress.hydratedFor.has(profileId) ? progress.byProfile[profileId] : undefined;
+      if (!snap) return;
+      const merged = mergeLatchRecord(snap.stageCheckAt, { [stage]: at }) ?? {};
+      if (snap.stageCheckAt?.[stage] === merged[stage]) return;
+      progress.replaceSnapshot(profileId, { ...snap, stageCheckAt: merged });
+      notifyProgressPersisted(profileId);
+    },
+    stageOpen: (profileId, stage) => {
+      // The header's offer rule, read again by the session (F-ENT-003: every quest of the stage open to the learner).
+      const open = questOpenFor(profileId, new Date(), useProgressStore.getState().byProfile[profileId]);
+      const quests = gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).flatMap((e) => e.questIds);
+      return quests.length > 0 && quests.every(open);
+    },
+    serverTime: (profileId) => useTierStore.getState().byLearner[profileId]?.fetchedAt ?? null,
+    track: (event) => void track(event),
+    overlays: (locale) => CONTENT_OVERLAYS[locale],
+    ensureCell: (cell) => lessonContent.ensureCells([cell]),
+  });
+  return stageCheck;
 }
 
 /** A learner's stored rows and the review items, for the review surfaces; null when the store cannot be read. */

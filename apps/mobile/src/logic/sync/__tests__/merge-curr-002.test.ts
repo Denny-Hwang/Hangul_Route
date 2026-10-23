@@ -23,7 +23,7 @@ const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
   streakDays: 0,
   ...over,
 });
-const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks'] as const;
+const NEW_KEYS = ['cellBest', 'cellCheckAt', 'stageCheckAt', 'testedOut', 'goals', 'dayLog', 'streakLocal', 'streakBest', 'stamps', 'memSeededAt', 'steadyWeeks', 'stageCeremonyAt'] as const;
 const phone: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 2, 'life-s3': 1 },
   cellCheckAt: { 'letters-s2': '2026-10-20T09:00:00.000Z' },
@@ -36,6 +36,7 @@ const phone: Partial<ProgressSnapshot> = {
   stamps: { 'first-cell': '2026-10-15T09:00:00.000Z' },
   memSeededAt: '2026-10-14T09:00:00.000Z',
   steadyWeeks: { '2026-10-12': '2026-10-15T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-20T09:00:00.000Z' },
 };
 const tablet: Partial<ProgressSnapshot> = {
   cellBest: { 'letters-s2': 1, 'nature-s2': 3 },
@@ -46,6 +47,7 @@ const tablet: Partial<ProgressSnapshot> = {
   streakBest: 6,
   memSeededAt: '2026-10-16T09:00:00.000Z',
   steadyWeeks: { '2026-10-12': '2026-10-16T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' },
+  stageCeremonyAt: { stage2: '2026-10-21T09:00:00.000Z', stage3: '2026-10-21T09:00:00.000Z' },
 };
 
 describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
@@ -62,6 +64,8 @@ describe('mergeSnapshots, F-CURR-002 section 4.8 fields', () => {
     expect(m.stamps).toEqual(phone.stamps);
     expect(m.memSeededAt).toBe('2026-10-14T09:00:00.000Z');
     expect(m.steadyWeeks).toEqual({ '2026-10-12': '2026-10-15T09:00:00.000Z', '2026-10-19': '2026-10-21T09:00:00.000Z' });
+    // Row CM-22: union of stages, the earliest time per stage.
+    expect(m.stageCeremonyAt).toEqual({ stage2: '2026-10-20T09:00:00.000Z', stage3: '2026-10-21T09:00:00.000Z' });
   });
 
   it('is commutative and idempotent on the new fields', () => {
@@ -174,6 +178,7 @@ describe('mergeSnapshots, F-CURR-002 fields: property tests (fast-check)', () =>
       stamps: latch,
       memSeededAt: opt(instant),
       steadyWeeks: opt(fc.dictionary(fc.integer({ min: 0, max: 12 }).map((n) => new Date(Date.UTC(2026, 6, 6) + n * 7 * 86_400_000).toISOString().slice(0, 10)), instant)),
+      stageCeremonyAt: opt(fc.dictionary(fc.constantFrom('stage2', 'stage3', 'stage4', 'stage7'), instant)),
     })
     .map((fields) => ProgressSnapshotSchema.parse(JSON.parse(JSON.stringify(base(fields as Partial<ProgressSnapshot>)))) as ProgressSnapshot);
   const pick = (s: ProgressSnapshot) => Object.fromEntries(NEW_KEYS.filter((k) => s[k] !== undefined).map((k) => [k, s[k]]));

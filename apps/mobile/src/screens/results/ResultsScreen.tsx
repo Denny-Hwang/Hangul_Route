@@ -20,7 +20,7 @@ import {
 import { formatNumber, type Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -46,7 +46,8 @@ import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
-import { PRIZE_STAGE, opensStagePrize } from '../../logic/stage1/stage-complete';
+import { prizeStageOf } from '../../logic/stage1/stage-complete';
+import { stageNumber } from '../../logic/story/story-fit';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { resultsStoryOf, storyResultsActionEvent, storyResultsExtras } from '../../logic/story/results-extras';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
@@ -78,6 +79,7 @@ import { samplerStoryOf } from '../home/free-end-inputs';
 import { firstFreeTopicKey } from '../vocab/topic-data';
 import { clearTryAgainHandoff, peekTryAgainHandoff } from '../quest/quest-reviews';
 import { useBackGuard } from '../use-back-guard';
+import { latchStageCeremonyLater, useStageCeremonyOn } from '../stage-check/stage-check-entry';
 
 type ResultsMessages = Messages['learner']['results'];
 
@@ -94,7 +96,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
  * section 7.1: the stars, Hoya's line and the earned card with See my card, and none of the learner's next actions,
  * name row or hand-offs), with the same card celebration (`CardUnlockBanner`).
  */
-export function ResultsScreen({ route, navigation }: Props): React.ReactElement {
+export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.learner.results;
   const locale = useLocale();
@@ -283,8 +285,21 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (event) void track(event);
   }, [profile, total, questId, routeInput]);
   // The run that completed Stage 1 leads to its ceremony (F-QUEST-002 §3.8): See your Stage 1 prize is the one primary.
-  const stagePrize = opensStagePrize(outcome);
+  // A Stage 2-7 run leads to the stage ceremony while `stageChecks` is on (F-CURR-002 section 7.3, row CM-22): See your
+  // Stage N prize, by the one prize table.
+  const upperOn = useStageCeremonyOn(profile?.id ?? null);
+  const prizeStage = prizeStageOf(outcome, upperOn);
+  const stagePrize = prizeStage !== null;
   const actions = resultsActions(teaser, stagePrize);
+  const upperPrize = prizeStage === 'stage1' ? null : prizeStage;
+  const prizeLabel = upperPrize === null ? m.stagePrize.cta : m.upperStagePrize.cta(stageNumber(upperPrize));
+  const openPrize = (): void => {
+    if (prizeStage !== null) navigation.navigate('StageComplete', { stageKey: prizeStage });
+  };
+  // The ceremony offered here latches `stageCeremonyAt` (stage-check.md A), so this stage is never in the summary.
+  useEffect(() => {
+    if (upperPrize !== null && profile) latchStageCeremonyLater(profile.id, [upperPrize]);
+  }, [upperPrize, profile]);
 
   // The end of the free lessons (F-ENT-003 section 3.8): the celebration once per profile and device
   // after a scored quest, then the calm line. The seen key is read once, when Results opens.
@@ -325,7 +340,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   };
   // The run that finishes Stage 1 reaches the free end too: the prize stays on the free-end Results.
   const freeEndPrize = actions.stagePrize
-    ? { label: m.stagePrize.cta, onPress: () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) }
+    ? { label: prizeLabel, onPress: openPrize }
     : null;
   const practice = freeEndPrimary(firstFreeTopicKey(), samplerStoryOf(defaultStoryIndex()));
   const practiceLabel = practice === null ? null : practice.kind === 'story' ? messages.learner.access.readStory.cta : messages.learner.access.practiceWords.cta;
@@ -550,12 +565,12 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           {actions.stagePrize ? (
             <>
               <Button
-                label={m.stagePrize.cta}
+                label={prizeLabel}
                 tone={actions.stagePrize.tone}
                 size={actions.stagePrize.size}
                 fullWidth
                 testID="results-stage-prize"
-                onPress={() => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE })}
+                onPress={openPrize}
               />
               <Spacer size="sm" />
             </>
@@ -610,7 +625,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
  * The quest title and one line; letters in the line are taught content, so
  * they go through `KoreanText` with their romanization, never a plain string.
  */
-function NextUpCard({ teaser, m, caption }: { teaser: ResultsTeaser; m: ResultsMessages; caption: string }): React.ReactElement {
+function NextUpCard({ teaser, m, caption }: { teaser: ResultsTeaser; m: ResultsMessages; caption: string }): ReactElement {
   const { line } = teaser;
   return (
     <Card padding="md" tone="paper" testID="next-up-card">

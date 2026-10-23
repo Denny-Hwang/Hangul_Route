@@ -14,7 +14,7 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { JourneyGrid, type JourneyMastery } from '../../components/JourneyGrid';
 import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
@@ -24,7 +24,8 @@ import { cursorEntitlement } from '../../logic/cursor-context';
 import { dayKey } from '../../logic/homework/mission-builder';
 import { learnerCellMarks, type JourneyAccessInput } from '../../logic/journey-grid';
 import { completeStages } from '../../logic/my-route/latch';
-import { PRIZE_STAGE, ownsStagePrize } from '../../logic/stage1/stage-complete';
+import { HANGUL_PRIZE_STAGE, ownsStagePrize } from '../../logic/stage1/stage-complete';
+import { StageHeaderSlot } from '../stage-check/stage-check-entry';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
@@ -52,7 +53,7 @@ const STORY_ENTRIES = defaultStoryIndex();
 /** Any heritage story on the map: the explainer then says what the marks mean. */
 const MAP_HAS_STORIES = STORY_ENTRIES.some((e) => e.placement === 'shelf');
 
-export function JourneyScreen(): React.ReactElement {
+export function JourneyScreen(): ReactElement {
   const messages = useMessages();
   const m = messages.learner.journey;
   const locale = useLocale();
@@ -109,7 +110,7 @@ export function JourneyScreen(): React.ReactElement {
   const doneStages = useMemo(() => (snap === undefined ? undefined : completeStages(snap, episodesAll)), [snap]);
   // The ceremony stays reachable from the Stage 1 header once its prize cards are held (§3.8).
   const snapCards = snap?.cards;
-  const hasPrize = useMemo(() => (snapCards === undefined ? false : ownsStagePrize(snapCards, PRIZE_STAGE)), [snapCards]);
+  const hasPrize = useMemo(() => (snapCards === undefined ? false : ownsStagePrize(snapCards, HANGUL_PRIZE_STAGE)), [snapCards]);
   const marksOf = useMemo(
     () => learnerCellMarks({ quests: snapQuests ?? [], marks, catalog: ROUTE_CATALOG, completedIds }),
     [snapQuests, marks, completedIds],
@@ -186,7 +187,10 @@ export function JourneyScreen(): React.ReactElement {
         storyEntries={STORY_ENTRIES}
         quests={snapQuests}
         completeStages={doneStages}
-        onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: PRIZE_STAGE }) : undefined}
+        onOpenStagePrize={hasPrize ? () => navigation.navigate('StageComplete', { stageKey: HANGUL_PRIZE_STAGE }) : undefined}
+        // Stages 2-7 (F-CURR-002 row CM-22): See your prize and the Stage Check by the pill (under the header at large
+        // text sizes), and the tested-out caption, from the Stage Check's chunk while their switches are on.
+        renderStageExtras={(stage, place, complete) => <StageHeaderSlot place={place} stage={stage} complete={complete} profileId={profile?.id ?? null} />}
         onOpenHangulCheck={() => navigation.navigate('StageReview', { stageKey: 'stage1' })}
         // A stories-only cell opens its cell page on one pane and on two (F-STORY-005 §3.6).
         onOpenStories={(stage, theme) => navigation.navigate('CellStories', { stage, theme, source: 'cell' })}
@@ -249,7 +253,7 @@ export function JourneyScreen(): React.ReactElement {
 }
 
 /** Nothing selectable (no episode at all): the coming-soon words, so the pane is never blank. */
-function ComingSoonPane(): React.ReactElement {
+function ComingSoonPane(): ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode.comingSoon;
   return (

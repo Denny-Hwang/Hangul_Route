@@ -264,6 +264,8 @@ const CURR_002_FIELDS: readonly AdditiveField[] = [
   { ...curr002('memSeededAt', shape.memSeededAt, mergeEarliest), summaryKey: 'memory', keepStoredSummaryWhenSent: true },
   /* The steady-weeks latch (row CM-17): union of keys, earliest per key, so the Home headline never drops. */
   curr002('steadyWeeks', SteadyWeeksSchema, mergeLatchRecord),
+  /* The stage ceremony latch (row CM-22): union of keys, earliest per key, so the retroactive summary lists a stage once. */
+  curr002('stageCeremonyAt', LatchRecordSchema, mergeLatchRecord),
 ];
 
 export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT, SESSIONS, ...CURR_002_FIELDS];

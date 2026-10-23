@@ -24,7 +24,7 @@ import {
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -84,6 +84,7 @@ import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
 import type { RootStackParamList } from '../../navigation/types';
+import { StageRecapSlot } from '../stage-check/stage-check-entry';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { markFreeEndSeen, readFreeEndSeen } from '../../store/free-end-seen';
@@ -188,7 +189,7 @@ function MissionTile({
    */
   sameAsHero?: boolean;
   onPress: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
@@ -288,7 +289,7 @@ function NextLessonCard({
   onStart: () => void;
   /** See your Learning Route (the Route tab); null while the Learning Route is off. */
   onRoute: (() => void) | null;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   const copy = m.learner.home.next;
   const cta = lesson.cta === 'start' ? copy.start.cta : copy.continue.cta;
@@ -346,7 +347,7 @@ function CatchUpCard({
   count: number;
   hoyaSize: number;
   onSeeCards: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const m = useMessages();
   return (
     <View testID="home-catch-up">
@@ -366,7 +367,7 @@ function CatchUpCard({
   );
 }
 
-export function HomeScreen(): React.ReactElement {
+export function HomeScreen(): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
@@ -938,7 +939,7 @@ export function HomeScreen(): React.ReactElement {
 
   // Row 2a (F-FEEDBACK-001 FB-8, F-ROUTE-001 section 6.4): a new note from a teacher or the family,
   // after the mission cards; in two columns it heads the right column. Nothing with the flag off.
-  const notesCard = (place: 'after' | 'top'): React.ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
+  const notesCard = (place: 'after' | 'top'): ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
 
   // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
   // with no mission cards: one column as always.
@@ -949,6 +950,8 @@ export function HomeScreen(): React.ReactElement {
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
       {/* [OA] A refused sign-in reset ticket (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 step 5): once, over the start. */}
       <PinResetExpiredNotice />
+      {/* F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once. */}
+      <StageRecapSlot profileId={profile?.id ?? null} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: switchShown ? 'wrap' : 'nowrap' }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}

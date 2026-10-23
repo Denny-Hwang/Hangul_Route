@@ -397,6 +397,7 @@ export const learner = {
     backHome: { cta: '홈으로' },
     episodePage: { cta: '에피소드 페이지' },
     stagePrize: { cta: '1단계 선물 보기' },
+    upperStagePrize: { cta: (stage: number) => `${stage}단계 선물 보기` },
     nextUp: {
       title: '다음',
       next: { cta: '다음 퀘스트 하기' },
@@ -1990,5 +1991,31 @@ export const learner = {
     start: '좋은 시작이에요!',
     startBody: '첫 퀘스트부터 시작해요. 나머지는 호야가 도와줄게요.',
     pill: '이미 알아요',
+    stageHint: '확인하고 넘어간 퀘스트를 하면 이 단계를 끝낼 수 있어요.',
+  },
+  /** The Stages 2-7 ceremony (row CM-22): "N단계", as the Stage 1 prize says. */
+  upperStageComplete: {
+    title: (stage: number) => `${stage}단계 완료!`,
+    cheer: '이 단계의 모든 곳을 끝냈어요. 호야가 정말 뿌듯해해요.',
+    cardTitle: '나의 단계 카드',
+  },
+  /** The Stage Check (row CM-22): "단계 확인", beside "한글 확인" and "칸 확인"; never 시험 or 테스트. */
+  stageCheck: {
+    title: '단계 확인',
+    offer: { cta: '단계 확인해 보기', body: '7분쯤 걸려요. 건너뛰어도 돼요.' },
+    intro: '7분쯤 걸려요. 다섯 곳에서 배운 낱말, 소리, 문장이 나와요. 시간 제한은 없어요. 언제든지 다시 할 수 있어요. 가장 좋은 결과가 남아요.',
+    pause: '잘 읽었어요! 더 해 볼까요?',
+    best: '가장 좋은 결과가 남아요.',
+    notReady: '이 확인은 아직 열리지 않았어요. 퀘스트를 계속해 봐요.',
+    retro: {
+      // The last two stages join with 와 (단계 ends in a vowel): "2단계와 3단계를", "2단계, 3단계와 4단계를".
+      title: (stages: readonly number[]) => {
+        const named = stages.map((n) => `${n}단계`);
+        const head = named.slice(0, -1).join(', ');
+        return `${head === '' ? '' : `${head}와 `}${named[named.length - 1] ?? ''}를 이미 끝냈어요`;
+      },
+      body: '여기 나의 단계 카드가 있어요.',
+      bodyNoCards: '끝낸 단계는 모두 여정에 남아 있어요.',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

@@ -189,13 +189,16 @@ describe('the strings (section 7.7, section 9.3 review-copy)', () => {
     const m = getMessages(locale);
     expect(lintReviewMessages(m.learner, ['cellCheck', 'testOut'], locale)).toEqual([]);
     const texts = [...Object.values(m.learner.cellCheck).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v))), ...Object.values(m.learner.testOut)];
-    expect(texts.length).toBe(19);
+    // 19 from CM-21, and the stage header's tested-out caption from CM-22 (`testOut.stageHint`).
+    expect(texts.length).toBe(20);
     for (const text of texts) {
       expect(text.trim().length, text).toBeGreaterThan(0);
       expect(text, text).not.toMatch(/%|\bexam|\bquiz|\bscore|\bpass(ed)?\b|\bfail|examen|prueba|puntaje|시험|점수|통과|실패|탈락/i);
       for (const word of bannedWordsFor(locale, 'learner')) expect(text.toLowerCase(), `${text} has ${word}`).not.toContain(word.toLowerCase());
     }
     // "Test out" is the spec's name for the way in (section 4.5); no other string frames the check as a test.
-    expect(texts.filter((t) => /\btest/i.test(t))).toEqual(locale === 'en' ? ['Test out', 'You tested out!', 'Tested out'] : []);
+    expect(texts.filter((t) => /\btest/i.test(t))).toEqual(
+      locale === 'en' ? ['Test out', 'You tested out!', 'Tested out', 'Play the quests you tested out of to finish this stage.'] : [],
+    );
   });
 });
