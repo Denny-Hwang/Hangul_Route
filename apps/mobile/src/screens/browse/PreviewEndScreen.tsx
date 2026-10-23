@@ -1,6 +1,6 @@
 import { Body, Button, Heading, Hoya, Screen, Spacer, spacing, touchTarget, useLayoutClass } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { cardById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
@@ -26,7 +26,7 @@ import { beginPreview } from './preview-session';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewEnd'>;
 
-export function PreviewEndScreen({ route, navigation }: Props): React.ReactElement {
+export function PreviewEndScreen({ route, navigation }: Props): ReactElement {
   const m = useMessages().caregiver.browse.end;
   const { bundle, pass, gatingEnabled } = useBrowseSession();
   const { kind, id, episodeId, level, returnTo } = route.params;
@@ -76,7 +76,7 @@ export function PreviewEndScreen({ route, navigation }: Props): React.ReactEleme
   };
 
   const hasNext = lesson !== null || nextTale !== null;
-  const button = (label: string, onPress: () => void, primary: boolean, testID: string): React.ReactElement => (
+  const button = (label: string, onPress: () => void, primary: boolean, testID: string): ReactElement => (
     <View style={{ width: '100%', maxWidth: compact ? undefined : BROWSE_ACTION_MAX_WIDTH }}>
       <Button label={label} tone={primary ? 'primary' : 'ghost'} size={primary ? 'lg' : 'md'} fullWidth onPress={onPress} testID={testID} />
     </View>

@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement, Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { typeScale } from '../../../text-size';
 import { borderWidth, colors, layout as tokensLayout, spacing, touchTarget } from '../../../tokens';
@@ -42,18 +43,18 @@ vi.mock('react', async (importOriginal) => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
+type El = ReactElement<Props>;
 
-function all(node: React.ReactNode): El[] {
-  if (!React.isValidElement(node)) return [];
+function all(node: ReactNode): El[] {
+  if (!isValidElement(node)) return [];
   const el = node as El;
-  const kids = typeof el.props.children === 'function' ? [] : React.Children.toArray(el.props.children as React.ReactNode);
+  const kids = typeof el.props.children === 'function' ? [] : Children.toArray(el.props.children as ReactNode);
   return [el, ...kids.flatMap(all)];
 }
 const byTestId = (tree: El[], id: string): El | undefined => tree.find((e) => e.props.testID === id);
 const textOf = (el: El): string =>
-  React.Children.toArray(el.props.children as React.ReactNode)
-    .map((c) => (typeof c === 'string' ? c : React.isValidElement(c) ? textOf(c as El) : ''))
+  Children.toArray(el.props.children as ReactNode)
+    .map((c) => (typeof c === 'string' ? c : isValidElement(c) ? textOf(c as El) : ''))
     .join('');
 
 function props(over: Partial<ConfirmSheetProps> = {}): ConfirmSheetProps {

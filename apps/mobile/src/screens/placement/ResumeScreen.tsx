@@ -1,5 +1,5 @@
 import { Button, Heading, Hoya, Screen, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { usePlacement } from './context';
 
@@ -8,7 +8,7 @@ import { usePlacement } from './context';
  * wireframe placement L): **Continue** goes back to the same question with
  * the same options; **Start again** drops the saved run.
  */
-export function ResumeScreen(): React.ReactElement {
+export function ResumeScreen(): ReactElement {
   const { m, continueRun, startAgain } = usePlacement();
   const copy = m.learner.placement.resume;
   return (

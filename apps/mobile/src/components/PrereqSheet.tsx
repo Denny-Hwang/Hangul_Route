@@ -1,5 +1,5 @@
 import { Body, Button, Card, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { prereqSheetText, type PrereqSheet as PrereqSheetModel } from '../logic/quest-flow/soft-prereq';
@@ -15,7 +15,7 @@ export interface PrereqSheetProps {
   onPlayAnyway: () => void;
 }
 
-export function PrereqSheet({ sheet, onStartThere, onPlayAnyway }: PrereqSheetProps): React.ReactElement {
+export function PrereqSheet({ sheet, onStartThere, onPlayAnyway }: PrereqSheetProps): ReactElement {
   const text = prereqSheetText(sheet, useMessages().learner.episode);
   return (
     <View

@@ -1,6 +1,6 @@
 import { Body, Button, Heading, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { LOCALE_META, getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { languageTiles, type LanguageTile } from '../../logic/placement/flow';
 import { speechLangOf } from '../../logic/placement/options-view';
@@ -16,7 +16,7 @@ import { Note, RadioTile } from './parts';
  * English or Spanish without an instruction voice stays selectable, but Short
  * is then unavailable. The choice is for this check only.
  */
-export function LanguageScreen(): React.ReactElement {
+export function LanguageScreen(): ReactElement {
   const { m, flow, dispatch, capability, screenReader } = usePlacement();
   const copy = m.learner.placement.language;
   const tiles = languageTiles(flow.locales, flow.testLocale, flow.koreanAudio, (l) => hasVoiceFor(speechLangOf(l)));

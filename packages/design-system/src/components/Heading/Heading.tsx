@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { colors, typography } from '../../tokens';
 import type { TypeSizeName } from '../../text-size';
@@ -31,7 +31,7 @@ export function Heading({
   weight = 'bold',
   style,
   testID,
-}: HeadingProps): React.ReactElement {
+}: HeadingProps): ReactElement {
   const fontSize = useTypeScale().size[sizeOf[level]];
   return (
     <Text {...KOREAN_LINE_BREAK}
@@ -61,7 +61,7 @@ export function Body({
   size = 'md',
   style,
   testID,
-}: BodyProps): React.ReactElement {
+}: BodyProps): ReactElement {
   const scale = useTypeScale().size;
   const fontSize = size === 'sm' ? scale.bodySm : size === 'lg' ? scale.bodyLg : scale.body;
 
@@ -91,7 +91,7 @@ export function Caption({
   weight = 'medium',
   style,
   testID,
-}: Omit<BodyProps, 'size'>): React.ReactElement {
+}: Omit<BodyProps, 'size'>): ReactElement {
   const fontSize = useTypeScale().size.caption;
   return (
     <Text {...KOREAN_LINE_BREAK}

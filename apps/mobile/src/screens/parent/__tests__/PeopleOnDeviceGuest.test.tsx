@@ -1,7 +1,6 @@
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { ConfirmSheet, type ConfirmSheetProps } from '@hangul-route/design-system';
-import React from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

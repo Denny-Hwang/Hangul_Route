@@ -11,7 +11,8 @@ import {
   typography,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import { LinkButton } from '../../components/LinkButton';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -57,7 +58,7 @@ export interface GuestRowActions {
 }
 
 /** [GU] The first-quest row and its two actions (section 9.2, D13 and D14). */
-export function GuestPeopleRow({ first, actions }: { first: boolean; actions: GuestRowActions }): React.ReactElement {
+export function GuestPeopleRow({ first, actions }: { first: boolean; actions: GuestRowActions }): ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const pinSet = useAccountStore((s) => s.parentPinHash !== null);
@@ -156,7 +157,7 @@ export function GuestPeopleRow({ first, actions }: { first: boolean; actions: Gu
 }
 
 /** The paper secondary of OA-0b D19 (as Remove from this device), never red: at least 64 high, the label wraps. */
-function PaperButton({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }): React.ReactElement {
+function PaperButton({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }): ReactElement {
   const scale = useTypeScale();
   return (
     <Pressable
@@ -200,7 +201,7 @@ function PaperButton({ label, onPress, testID }: { label: string; onPress: () =>
  * sweep (`gateOpensDirectlyAfterRemove`), so a guest saved as a child or a PIN set in another tab meanwhile never lets
  * the destination open without the PIN. A sweep that could not read the storage keeps the sheet open with the line.
  */
-export function GuestOnlyGateBox({ onRemoved }: { onRemoved: (opensDirectly: boolean) => void }): React.ReactElement {
+export function GuestOnlyGateBox({ onRemoved }: { onRemoved: (opensDirectly: boolean) => void }): ReactElement {
   const messages = useMessages();
   const people = messages.caregiver.people;
   const [asking, setAsking] = useState(false);

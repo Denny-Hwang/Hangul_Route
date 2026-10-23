@@ -1,5 +1,5 @@
 import type { Quest } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import type { ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { questsAll } from '../../content/quests';
@@ -65,7 +65,7 @@ const level = storyReadStep(storyQuest)?.ref.level ?? 'listen';
 const navigation = { navigate: vi.fn(), push: vi.fn(), goBack: vi.fn(), canGoBack: () => true, setOptions: vi.fn(), addListener: () => () => undefined };
 const waiting = (r: ReactTestRenderer): number => byTestId(r.root, 'lesson-waiting').length;
 
-async function mount(element: React.ReactElement): Promise<ReactTestRenderer> {
+async function mount(element: ReactElement): Promise<ReactTestRenderer> {
   const r = await render(element);
   mounted.push(r);
   return r;

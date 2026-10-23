@@ -15,7 +15,7 @@ import {
   useLayoutClass,
   useEffectiveFontScale,
 } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 import { canProceed, controlsFor, showSoundGuideQuestion, type FlowControl } from '../../logic/placement/flow';
 import { MOTIVATION_CHOICES, modeTiles, modeTilesSideBySide } from '../../logic/placement/options-view';
@@ -34,7 +34,7 @@ import { Note, RadioTile } from './parts';
  * assumption 5; turning it on pre-sets *Take my time*) and the optional *Why
  * Korean?*. The profile's own sound-guide setting is never written.
  */
-export function OptionsScreen(): React.ReactElement {
+export function OptionsScreen(): ReactElement {
   const { m, flow, dispatch, say, screenReader } = usePlacement();
   const copy = m.learner.placement.options;
   const layout = useLayoutClass();
@@ -49,7 +49,7 @@ export function OptionsScreen(): React.ReactElement {
   };
   // Back (the route's ScreenHeader, the browser or phone back) steps back to the language screen through the check's
   // back guard, else leaves the check (AMENDMENTS-DISPLAY-NAV section 7.1).
-  const header = (title: string): React.ReactElement => <Heading level="title">{title}</Heading>;
+  const header = (title: string): ReactElement => <Heading level="title">{title}</Heading>;
 
   if (flow.optionsLayout === 'card') {
     const short = copy.mode.short;

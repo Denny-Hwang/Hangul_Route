@@ -1,5 +1,5 @@
 import { Body, Caption, Heading, Icon, Pill, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import type { NextLessonRowView } from '../../logic/my-route/next-lessons';
 
@@ -10,7 +10,7 @@ import type { NextLessonRowView } from '../../logic/my-route/next-lessons';
  * `touchTarget.min` that opens its lesson; its name reads the tag, the title and where it sits. No count of what is
  * left, no ratio, no "Open" word (every row is a lesson the learner can start).
  */
-export function NextLessons({ title, rows, onOpen }: { title: string; rows: readonly NextLessonRowView[]; onOpen: (row: NextLessonRowView) => void }): React.ReactElement | null {
+export function NextLessons({ title, rows, onOpen }: { title: string; rows: readonly NextLessonRowView[]; onOpen: (row: NextLessonRowView) => void }): ReactElement | null {
   if (rows.length === 0) return null;
   return (
     <View testID="my-route-next-lessons">

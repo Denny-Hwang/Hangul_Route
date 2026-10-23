@@ -1,7 +1,8 @@
 import { Spacer } from '@hangul-route/design-system';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { DEFAULT_WEEKLY_DAYS } from '../../logic/goals/points';
 import { goalStripView, sheetChoiceToSave } from '../../logic/goals/strip-view';
 import { checkSteadyWeeks, planDaysFor, saveGoals } from '../../store/goals';
@@ -26,7 +27,7 @@ export interface GoalsHomeProps {
   onSeePlan: () => void;
 }
 
-export function GoalsHome({ profileId, snapshot, today, planPromptShown, onSeePlan }: GoalsHomeProps): React.ReactElement {
+export function GoalsHome({ profileId, snapshot, today, planPromptShown, onSeePlan }: GoalsHomeProps): ReactElement {
   const [open, setOpen] = useState(false);
   const plans = usePlanStore((s) => s.byLearner[profileId]);
   const planDays = useMemo(() => planDaysFor(profileId, snapshot), [profileId, snapshot, plans, today]);

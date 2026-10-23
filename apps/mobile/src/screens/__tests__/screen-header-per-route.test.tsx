@@ -1,7 +1,7 @@
 import { Screen, ScreenHeaderSlotContext } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import { NavigationContext, NavigationRouteContext } from '@react-navigation/native';
-import React from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -41,7 +41,7 @@ function navigationFor(canGoBack: boolean): FakeNavigation {
   return { canGoBack: () => canGoBack, goBack: vi.fn(), addListener: () => () => undefined };
 }
 
-function inRoute(name: string, navigation: FakeNavigation, header?: React.ComponentProps<typeof Screen>['header']): React.ReactElement {
+function inRoute(name: string, navigation: FakeNavigation, header?: ComponentProps<typeof Screen>['header']): ReactElement {
   return (
     <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
       <NavigationContext.Provider value={navigation as never}>

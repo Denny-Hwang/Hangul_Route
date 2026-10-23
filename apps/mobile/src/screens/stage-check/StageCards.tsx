@@ -1,6 +1,6 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { Body, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View, type PressableStateCallbackType } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { CardArtThumb } from '../results/CardArtThumb';
@@ -12,7 +12,7 @@ type TileState = PressableStateCallbackType & { focused?: boolean };
  * The stage cards of the ceremony (B) and the summary (G): each a button into its card page, read "Open card: <title>",
  * as the Stage 1 ceremony draws its cards. Nothing when there are none (the stage card content is row CM-23's).
  */
-export function StageCards({ cards, onOpen, testID }: { cards: readonly HeritageCard[]; onOpen: (card: HeritageCard) => void; testID: string }): React.ReactElement | null {
+export function StageCards({ cards, onOpen, testID }: { cards: readonly HeritageCard[]; onOpen: (card: HeritageCard) => void; testID: string }): ReactElement | null {
   const messages = useMessages();
   if (cards.length === 0) return null;
   return (

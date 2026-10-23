@@ -14,7 +14,8 @@ import {
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, View } from 'react-native';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { localizedGloss, vocabItem } from '../../content/vocab';
@@ -87,7 +88,7 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * "Topic not found" or opens the grown-up gate for a locked topic (D5).
  * Design: design/screens/vocab/speed-round.md.
  */
-export function VocabSpeedRoundScreen({ route, navigation }: Props): React.ReactElement {
+export function VocabSpeedRoundScreen({ route, navigation }: Props): ReactElement {
   const topicKey = route.params.topicKey;
   const topic = pickerTopic(topicKey);
   const profile = useProfileStore(activeProfileSelector);
@@ -121,7 +122,7 @@ function SpeedRound({
   source: VocabTopic;
   requested: SpeedMode | undefined;
   navigation: Navigation;
-}): React.ReactElement {
+}): ReactElement {
   const [playing, setPlaying] = useState<Playing | null>(null);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -159,7 +160,7 @@ function StartSheet({
   onBack: () => void;
   onLearn: () => void;
   onStart: (start: Playing) => void;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const copy = messages.learner.vocab.speed;
   const locale = useLocale();
@@ -359,7 +360,7 @@ function RoundPlay({
   playing: Playing;
   navigation: Navigation;
   onLeave: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { config, canPlay } = playing;
   const messages = useMessages();
   const copy = messages.learner.vocab.speed;
@@ -611,7 +612,7 @@ function StopSheet({
   onStop: () => void;
   /** The sheet has finished closing (web and iOS). */
   onDismissed: () => void;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onKeep} onDismiss={onDismissed} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID="vocab-speed-stop">

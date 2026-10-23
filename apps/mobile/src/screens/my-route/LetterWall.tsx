@@ -1,5 +1,6 @@
 import { Body, Button, Icon, KoreanText, borderWidth, colors, radii, spacing, useEffectiveFontScale } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { letterTileWidth, type LetterState, type LetterWallView } from '../../logic/my-route/letter-wall';
 
@@ -29,7 +30,7 @@ const frameOf = (state: LetterState) =>
   }) as const;
 
 /** The check on a lit letter: a drawn badge on paper, hidden from screen readers (the label names the state). */
-function MetCheck({ size }: { size: number }): React.ReactElement {
+function MetCheck({ size }: { size: number }): ReactElement {
   return (
     <View
       aria-hidden
@@ -43,7 +44,7 @@ function MetCheck({ size }: { size: number }): React.ReactElement {
 }
 
 /** A small letter tile for the legend: the frame of the state around a plain chip. */
-function Swatch({ state }: { state: LetterState }): React.ReactElement {
+function Swatch({ state }: { state: LetterState }): ReactElement {
   return (
     <View aria-hidden importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ ...frameOf(state), padding: spacing.sm }}>
       <View
@@ -61,7 +62,7 @@ function Swatch({ state }: { state: LetterState }): React.ReactElement {
   );
 }
 
-export function LetterWall({ wall }: { wall: LetterWallView }): React.ReactElement {
+export function LetterWall({ wall }: { wall: LetterWallView }): ReactElement {
   const [open, setOpen] = useState(false);
   // OS text size x the chosen Display text size (owner items 6 and 7).
   const fontScale = useEffectiveFontScale();

@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement, cloneElement, Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { typeScale } from '../../../text-size';
 import { borderWidth, colors, radii, spacing, touchTarget } from '../../../tokens';
@@ -22,30 +23,30 @@ vi.mock('../../TextSize', async () => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
+type El = ReactElement<Props>;
 
 /** Calls local function components (the Display control) so the whole tree is plain tags. */
-function expand(node: React.ReactNode): React.ReactNode {
+function expand(node: ReactNode): ReactNode {
   if (Array.isArray(node)) return node.map(expand);
-  if (!React.isValidElement(node)) return node;
+  if (!isValidElement(node)) return node;
   const el = node as El;
-  if (typeof el.type === 'function') return expand((el.type as (p: Props) => React.ReactNode)(el.props));
+  if (typeof el.type === 'function') return expand((el.type as (p: Props) => ReactNode)(el.props));
   const children = el.props.children;
   if (children === undefined || typeof children === 'function') return el;
-  return React.cloneElement(el, undefined, ...React.Children.toArray(children as React.ReactNode).map(expand));
+  return cloneElement(el, undefined, ...Children.toArray(children as ReactNode).map(expand));
 }
 
-function all(node: React.ReactNode): El[] {
-  if (!React.isValidElement(node)) return [];
+function all(node: ReactNode): El[] {
+  if (!isValidElement(node)) return [];
   const el = node as El;
-  const kids = typeof el.props.children === 'function' ? [] : React.Children.toArray(el.props.children as React.ReactNode);
+  const kids = typeof el.props.children === 'function' ? [] : Children.toArray(el.props.children as ReactNode);
   return [el, ...kids.flatMap(all)];
 }
 
 const byTestId = (tree: El[], id: string): El | undefined => tree.find((e) => e.props.testID === id);
 const textOf = (el: El): string =>
-  React.Children.toArray(el.props.children as React.ReactNode)
-    .map((c) => (typeof c === 'string' ? c : React.isValidElement(c) ? textOf(c as El) : ''))
+  Children.toArray(el.props.children as ReactNode)
+    .map((c) => (typeof c === 'string' ? c : isValidElement(c) ? textOf(c as El) : ''))
     .join('');
 
 function render(over: Partial<ScreenHeaderProps> = {}): { root: El; tree: El[] } {
@@ -56,8 +57,8 @@ function render(over: Partial<ScreenHeaderProps> = {}): { root: El; tree: El[] }
 }
 
 /** The controls row: the header's first child. */
-const rowOf = (root: El): El => React.Children.toArray(root.props.children as React.ReactNode)[0] as El;
-const rowChildren = (root: El): El[] => React.Children.toArray(rowOf(root).props.children as React.ReactNode) as El[];
+const rowOf = (root: El): El => Children.toArray(root.props.children as ReactNode)[0] as El;
+const rowChildren = (root: El): El[] => Children.toArray(rowOf(root).props.children as ReactNode) as El[];
 
 describe('ScreenHeader style (pure)', () => {
   it('Back draws the left arrow, Close the close glyph, a root nothing', () => {
@@ -191,7 +192,7 @@ describe('ScreenHeader', () => {
     const kids = rowChildren(root);
     expect(kids.map((k) => k.props.testID ?? k.type)).toEqual(['screen-header-close', 'View', 'View']);
     expect(all(kids[1]!).some((e) => e.type === 'span')).toBe(true);
-    const under = React.Children.toArray(root.props.children as React.ReactNode)[1] as El;
+    const under = Children.toArray(root.props.children as ReactNode)[1] as El;
     expect(under.props.testID).toBe('screen-header-title');
     layout.width = 'compact';
   });
@@ -201,7 +202,7 @@ describe('ScreenHeader', () => {
     const { root, tree } = render({ onDisplay, trailing: <span>Profile</span> });
     const kids = rowChildren(root);
     const trailing = kids[kids.length - 1]!;
-    const trail = React.Children.toArray(trailing.props.children as React.ReactNode) as El[];
+    const trail = Children.toArray(trailing.props.children as ReactNode) as El[];
     expect(trail[0]!.props.testID).toBe('screen-header-display');
     expect(trail[1]!.type).toBe('span');
     const display = byTestId(tree, 'screen-header-display')!;

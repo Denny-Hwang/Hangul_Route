@@ -1,7 +1,8 @@
 import { DisplaySheet, textSizeOptions, type DisplayOption } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { TextSize } from '@hangul-route/content-schema';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { useLocale, useLocalePacks, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
 import { useHistorySheet } from '../platform/history-bridge';
@@ -28,7 +29,7 @@ export interface DeviceDisplaySheetProps {
   reportLocale?: boolean;
 }
 
-export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = true }: DeviceDisplaySheetProps): React.ReactElement {
+export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = true }: DeviceDisplaySheetProps): ReactElement {
   const messages = useMessages();
   const d = messages.common.display;
   const locale = useLocale();

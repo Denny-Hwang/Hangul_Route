@@ -1,6 +1,6 @@
-import React from 'react';
+import type { ReactElement, ComponentType } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
+import { Svg, Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { KOREAN_LANGUAGE } from '../../korean-text';
 import { drawProp, type DrawItem } from '../../scene-art/draw';
 import { REALIA_REGISTRY } from '../../scene-art/realia-registry';
@@ -40,7 +40,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
 /** One dressing prop, stretched to its box (`stretch`) or kept at its aspect ratio. */
-function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): React.ReactElement | null {
+function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): ReactElement | null {
   const drawn = drawProp(refId, REALIA_REGISTRY);
   if (!drawn) return null;
   return (
@@ -48,7 +48,7 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
       <Svg width="100%" height="100%" viewBox={drawn.viewBox} preserveAspectRatio={stretch ? 'none' : centered ? 'xMidYMax meet' : 'xMinYMid meet'}>
         {drawn.items.map((item: DrawItem) => {
           if (item.tag === 'card') return null;
-          const Tag = TAGS[item.tag] as React.ComponentType<Record<string, unknown>>;
+          const Tag = TAGS[item.tag] as ComponentType<Record<string, unknown>>;
           return <Tag key={item.key} {...item.geometry} {...item.paint} transform={item.transform} />;
         })}
       </Svg>
@@ -56,7 +56,7 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
   );
 }
 
-function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' | 'right' | 'center' }): React.ReactElement {
+function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' | 'right' | 'center' }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View style={{ alignItems: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start', flexShrink: 1 }}>
@@ -79,7 +79,7 @@ function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' 
   );
 }
 
-function Title({ title, label, centered }: { title: RealiaSheetText; label?: string; centered: boolean }): React.ReactElement {
+function Title({ title, label, centered }: { title: RealiaSheetText; label?: string; centered: boolean }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -106,7 +106,7 @@ interface LineProps {
 }
 
 /** A line of the text layer: the button, its mark and, once found, its gloss. */
-function LineButton({ line, layout, hint, onPress, testID }: LineProps): React.ReactElement {
+function LineButton({ line, layout, hint, onPress, testID }: LineProps): ReactElement {
   const textScale = useTypeScale();
   const look = realiaLineLook(line.mark);
   return (
@@ -163,7 +163,7 @@ function LineButton({ line, layout, hint, onPress, testID }: LineProps): React.R
 }
 
 /** A trail board: the button and its arrow cell, on the side it points to. */
-function Board({ line, hint, onPress, testID }: LineProps): React.ReactElement {
+function Board({ line, hint, onPress, testID }: LineProps): ReactElement {
   const right = line.dir !== 'left';
   const paper = realiaPaper('sign');
   const arrow = (
@@ -193,7 +193,7 @@ function Board({ line, hint, onPress, testID }: LineProps): React.ReactElement {
   );
 }
 
-export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel, lineHint, onPressLine, testID }: RealiaSheetProps): React.ReactElement {
+export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel, lineHint, onPressLine, testID }: RealiaSheetProps): ReactElement {
   const dressing = REALIA_DRESSINGS[kind];
   const paper = realiaPaper(kind);
   const lineId = (id: string): string | undefined => (testID ? `${testID}-line-${id}` : undefined);
@@ -208,7 +208,7 @@ export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel
     </View>
   );
 
-  let body: React.ReactElement;
+  let body: ReactElement;
   switch (kind) {
     case 'ticket':
       body = (

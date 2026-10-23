@@ -18,7 +18,8 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -43,7 +44,7 @@ interface Props {
   onFinish: () => void;
 }
 
-export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement {
+export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const rounds = useMemo<BuildLetterRound[]>(

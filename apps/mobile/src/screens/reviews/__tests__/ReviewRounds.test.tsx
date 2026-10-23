@@ -1,5 +1,4 @@
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
-import React from 'react';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TypeRound } from '../../../logic/reviews/review-rounds';

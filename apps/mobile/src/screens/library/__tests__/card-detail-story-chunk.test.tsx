@@ -1,5 +1,4 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FlipCard } from '../../../components/FlipCard';

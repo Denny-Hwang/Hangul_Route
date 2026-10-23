@@ -1,5 +1,5 @@
 import { Body, Card, Heading, Pill, Spacer, spacing, touchTarget } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { resolveRomanizationMode } from '../logic/locale/romanization-mode';
@@ -15,7 +15,7 @@ export interface ReadingPracticeCardProps {
   profileId: string;
 }
 
-export function ReadingPracticeCard({ profileId }: ReadingPracticeCardProps): React.ReactElement {
+export function ReadingPracticeCard({ profileId }: ReadingPracticeCardProps): ReactElement {
   const m = useMessages().learner.profile;
   const settings = useLocaleStore((s) => s.byProfile[profileId]);
   const setRomanizationMode = useLocaleStore((s) => s.setRomanizationMode);

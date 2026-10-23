@@ -1,5 +1,5 @@
 import { HeritageCardArt, WORD_ART_KEYS, WordArt, colors, presenter, supportedCardIds, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { romShown, shownBuilds, vocabArt } from '../../../logic/lecture/slide-view';
@@ -18,7 +18,7 @@ type VocabBody = Extract<Slide, { kind: 'vocab' }>;
  * `romanization: 'tap'` the romanization is its own build after `ko`. The gloss is never hidden by
  * that setting (owner decision D2).
  */
-export function VocabSlide({ slide, reveal }: { slide: VocabBody; reveal: number }): React.ReactElement {
+export function VocabSlide({ slide, reveal }: { slide: VocabBody; reveal: number }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const shown = shownBuilds(slide.builds, reveal);

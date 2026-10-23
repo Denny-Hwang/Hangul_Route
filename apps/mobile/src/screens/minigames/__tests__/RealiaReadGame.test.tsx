@@ -1,5 +1,4 @@
 import { LayoutProvider, layout, layoutClassFor } from '@hangul-route/design-system';
-import React from 'react';
 import { ScrollView } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it } from 'vitest';

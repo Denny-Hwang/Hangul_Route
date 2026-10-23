@@ -21,7 +21,8 @@ import {
   useMediaSize,
   type ChoiceCardState,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -104,7 +105,7 @@ function optionLabel(o: PickOption, showRomanization: boolean): string {
   return o.label ?? '';
 }
 
-export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<PickRound>): React.ReactElement {
+export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<PickRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const [wrong, setWrong] = useState<readonly string[]>([]);
@@ -193,7 +194,7 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: Round
 }
 
 /** Hoya after a miss: the round's own line, then the right answer as taught content (Korean and romanization; its option is outlined). */
-function MissLine({ round, heard }: { round: ReviewRound; heard: boolean }): React.ReactElement {
+function MissLine({ round, heard }: { round: ReviewRound; heard: boolean }): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const line = heard ? copy.listenPick.missHoya : round.type === 'order' ? copy.sentenceBuilder.miss : copy.realia.missHoya;
@@ -206,7 +207,7 @@ function MissLine({ round, heard }: { round: ReviewRound; heard: boolean }): Rea
 
 // ---- type ------------------------------------------------------------------------------------------------
 
-export function TypeRoundView({ round, onFirst, onSolved, reducedMotion, grade: gradeOf }: RoundProps<TypeRound>): React.ReactElement {
+export function TypeRoundView({ round, onFirst, onSolved, reducedMotion, grade: gradeOf }: RoundProps<TypeRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame;
   const t = copy.typeHangul;
@@ -302,7 +303,7 @@ export function TypeRoundView({ round, onFirst, onSolved, reducedMotion, grade: 
 
 // ---- order -----------------------------------------------------------------------------------------------
 
-export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<OrderRound>): React.ReactElement {
+export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: RoundProps<OrderRound>): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.sentenceBuilder;
   const [placed, setPlaced] = useState<readonly string[]>([]);
@@ -393,7 +394,7 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
 }
 
 /** The round for its type. */
-export function RoundView(props: RoundProps<ReviewRound>): React.ReactElement {
+export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   const { round } = props;
   if (round.type === 'pick') return <PickRoundView {...props} round={round} />;
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;

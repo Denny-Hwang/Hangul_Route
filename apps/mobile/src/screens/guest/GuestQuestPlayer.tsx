@@ -1,6 +1,7 @@
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { questById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { playerGuard } from '../../logic/episode-access';
@@ -30,7 +31,7 @@ export type GuestQuestPlayerProps = NativeStackScreenProps<GuestStackParamList, 
  * the record the storage-blocked line sits under Hoya's hello. The access guard runs as for any learner (quest 1 is in
  * the free plan); a closed answer ends the run instead of opening an episode page, which is not in this stack.
  */
-export function GuestQuestPlayer({ route, navigation }: GuestQuestPlayerProps): React.ReactElement | null {
+export function GuestQuestPlayer({ route, navigation }: GuestQuestPlayerProps): ReactElement | null {
   const { questId, episodeId } = route.params;
   const learnerId = useActiveLearnerId();
   const memoryOnly = useGuestStore((s) => s.memoryOnly);

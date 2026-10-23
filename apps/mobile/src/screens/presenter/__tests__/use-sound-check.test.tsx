@@ -1,5 +1,5 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
@@ -43,7 +43,7 @@ function fakes(): Fakes {
   };
 }
 
-function Harness({ onStartScreen, deps }: { onStartScreen: boolean; deps: Fakes['deps'] }): React.ReactElement {
+function Harness({ onStartScreen, deps }: { onStartScreen: boolean; deps: Fakes['deps'] }): ReactElement {
   const check = useSoundCheck({ ...deps, onStartScreen });
   return (
     <PresenterViewProvider value={{ messages: en, locale: 'en', unit: 1, reducedMotion: true }}>

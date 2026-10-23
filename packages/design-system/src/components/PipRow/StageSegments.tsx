@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Svg from 'react-native-svg';
 import { spacing } from '../../tokens';
@@ -32,14 +32,14 @@ export interface StageSegmentsProps {
  * carries the facts, so the row is hidden from screen readers on native and on
  * web (`aria-hidden`).
  */
-export function StageSegments({ segments, testID }: StageSegmentsProps): React.ReactElement {
+export function StageSegments({ segments, testID }: StageSegmentsProps): ReactElement {
   const size = useMediaSize(PIP_SIZE.stage);
   const gap = useMediaSize(spacing.xs);
   return <StageSegmentsBody segments={segments} size={size} gap={gap} testID={testID} />;
 }
 
 /** The row for a resolved size, without hooks (tested by calling it). */
-export function StageSegmentsBody({ segments, size, gap, testID }: StageSegmentsProps & { size: number; gap: number }): React.ReactElement {
+export function StageSegmentsBody({ segments, size, gap, testID }: StageSegmentsProps & { size: number; gap: number }): ReactElement {
   const band = markerBand(size);
   // Whole pixels, so a scaled band (0.45 x 30 = 13.5) never clips the bottom of the shapes.
   const height = Math.ceil(band + size);

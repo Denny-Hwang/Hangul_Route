@@ -1,5 +1,6 @@
 import { colors, layout, radii, shadows, spacing, typography, z, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { trapFocus } from '../../platform/presenter';
 import { EXIT_DIALOG_WIDTH } from './stage-metrics';
@@ -11,7 +12,7 @@ import { GhostButton, PrimaryButton } from './StatePage';
  * `surface.overlay`, "Leave the lesson?", "Nothing about anyone's progress changes.", Keep going
  * (primary, focused) and Exit. Esc or Keep going closes it; Tab and Shift+Tab stay inside it.
  */
-export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; onExit: () => void }): React.ReactElement {
+export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; onExit: () => void }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter;

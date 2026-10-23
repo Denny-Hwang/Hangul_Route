@@ -1,6 +1,7 @@
 import { Body, Button, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { guestSaveGate, guestTtlDays } from '../../logic/guest/guest-model';
@@ -29,7 +30,7 @@ type Props = NativeStackScreenProps<GuestStackParamList, 'GuestLater'>;
  * this?" does. It replaced Results in history (Results' Back is a `replace`), and the browser's or the phone's back
  * here does what Close does.
  */
-export function GuestLaterScreen({ navigation }: Props): React.ReactElement {
+export function GuestLaterScreen({ navigation }: Props): ReactElement {
   const m = useMessages();
   const g = m.learner.guest;
   const profiles = useProfileStore((s) => s.profiles);

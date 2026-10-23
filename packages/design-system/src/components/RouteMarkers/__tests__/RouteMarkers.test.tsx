@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { borderWidth, colors, spacing, typography } from '../../../tokens';
 import { nextMarkerParts, nextMarkerTop, routeRingParts, tagMarkParts, NEXT_MARKER_BASE, NEXT_TIP_INSET, TAG_MARK_SIZE } from '../geometry';
@@ -23,8 +24,8 @@ vi.mock('../../TextSize', async () => {
 });
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
-const kids = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+type El = ReactElement<Props>;
+const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 /** Calls a function component (or returns a host element as is) until a host element is reached. */
 const host = (el: El): El => (typeof el.type === 'function' ? host((el.type as (p: Props) => El)(el.props)) : el);
 const hidden = (el: El): void => {

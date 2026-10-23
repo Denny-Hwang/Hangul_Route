@@ -1,7 +1,7 @@
 import { Body, Button, Caption, Card, Heading, Icon, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import { PACES, type PaceId } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PACE_IDS } from '../../logic/route/proposal-flow';
 
@@ -30,7 +30,7 @@ export function PaceChips({
   onSelect: (pace: PaceId) => void;
   label: string;
   testIDPrefix: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
       {PACE_IDS.filter((id) => available.includes(id)).map((id) => {
@@ -84,7 +84,7 @@ export interface PlanStripProps {
 }
 
 /** J1: the learner's strip. **Use this plan** is the screen's one primary; no PIN (OD-14). */
-export function PlanStrip({ m, pace, paces, basis, busy, failed, onPace, onUse, onChange }: PlanStripProps): React.ReactElement {
+export function PlanStrip({ m, pace, paces, basis, busy, failed, onPace, onUse, onChange }: PlanStripProps): ReactElement {
   const copy = m.learner.placement.result.strip;
   const t = m.learner.weeklyPlan.proposal;
   return (
@@ -130,7 +130,7 @@ export function PlanUpdateCard({
   failed: boolean;
   onUpdate: () => void;
   onKeep: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const copy = m.learner.placement.result;
   return (
     <Card padding="md" testID="placement-plan-update">

@@ -1,4 +1,3 @@
-import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { questById } from '../../../content';
 import { shortenScope } from '../../../logic/quest-flow/quest-adapt';

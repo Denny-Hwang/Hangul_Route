@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import { KOREAN_LANGUAGE, koreanTextView } from '../../korean-text';
@@ -29,7 +29,7 @@ export function KoreanText({
   onPress,
   accessibilityLabel,
   testID,
-}: KoreanTextProps): React.ReactElement {
+}: KoreanTextProps): ReactElement {
   const scale = useTypeScale().size;
   const view = koreanTextView({
     scale,

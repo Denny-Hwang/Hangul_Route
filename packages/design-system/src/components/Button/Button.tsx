@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useId, useRef, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useId, useRef } from 'react';
+import type { MutableRefObject, ReactElement } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { TypeSizeName } from '../../text-size';
@@ -83,7 +84,7 @@ export function Button({
   expanded,
   testID,
   pressableRef,
-}: ButtonProps): React.ReactElement {
+}: ButtonProps): ReactElement {
   const hintId = useId();
   const fontSize = useTypeScale().size[sizeFont[size]];
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.

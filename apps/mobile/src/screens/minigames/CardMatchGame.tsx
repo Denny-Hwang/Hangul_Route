@@ -16,7 +16,8 @@ import {
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -46,7 +47,7 @@ function askedPair(pairs: readonly { ko: string }[], idx: number): RoundAsked | 
   return ko ? { texts: [ko], rung: 'read' } : undefined;
 }
 
-export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
+export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;

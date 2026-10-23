@@ -1,5 +1,6 @@
 import { Screen } from '@hangul-route/design-system';
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
+import type { ComponentType, ReactElement } from 'react';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON sections 6.2 and 7.1, F-CURR-002 section 10 (row GU-3): the `Guest` route of the
@@ -8,10 +9,10 @@ import React, { Suspense, lazy } from 'react';
  * bundle does not grow by it. Until it is in (one request, or the precache), a blank canvas, as before the first screen:
  * Welcome never shows first. A failed load reaches the app's crash screen, whose Try again asks again.
  */
-const load = (): Promise<{ default: React.ComponentType }> => import('./guest-chunk');
+const load = (): Promise<{ default: ComponentType }> => import('./guest-chunk');
 const LazyGuestStack = lazy(load);
 
-export function GuestStack(): React.ReactElement {
+export function GuestStack(): ReactElement {
   return (
     <Suspense fallback={<Screen tone="canvas">{null}</Screen>}>
       <LazyGuestStack />

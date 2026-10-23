@@ -1,5 +1,4 @@
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { episodesAll } from '../../../content/episodes';

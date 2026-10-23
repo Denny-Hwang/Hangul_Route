@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { NO_INSETS, detailPaneWidth, layoutClassFor } from '../../layout';
@@ -7,9 +8,9 @@ import { LayoutProvider, useLayoutClass } from './LayoutProvider';
 
 export interface SplitPaneProps {
   /** The list or grid. On one pane this is all that renders and the caller navigates as today. */
-  master: React.ReactNode;
+  master: ReactNode;
   /** The selected item's page (two panes only). */
-  detail: React.ReactNode;
+  detail: ReactNode;
   /** Defaults to `layout.pane.master`. */
   masterWidth?: number;
   /** Landmark names (`role="region"`), passed in already localised: the design system has no i18n dependency. */
@@ -38,7 +39,7 @@ export function SplitPane({
   detailLabel,
   detailScrolls = true,
   testID,
-}: SplitPaneProps): React.ReactElement {
+}: SplitPaneProps): ReactElement {
   const { panes, windowWidth, windowHeight } = useLayoutClass();
   const [measured, setMeasured] = useState<number | null>(null);
   // The measured width is exact (insets included); the formula covers the first frame.

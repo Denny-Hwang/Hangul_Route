@@ -1,5 +1,5 @@
 import { Icon, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { SpokenLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -29,7 +29,7 @@ const MAX_LEVEL = 2;
  * without a fade. Builds `line`, `line`; with `romanization: 'tap'` each romanization one build
  * after its line. A long exchange fits itself, one compact level at a time.
  */
-export function ReadAlongSlide({ slide, reveal, playing }: { slide: ReadAlongBody; reveal: number; playing?: number | null }): React.ReactElement {
+export function ReadAlongSlide({ slide, reveal, playing }: { slide: ReadAlongBody; reveal: number; playing?: number | null }): ReactElement {
   const { unit, messages } = usePresenterView();
   const fit = useFitLevel(MAX_LEVEL, unit);
   const view = readAlongView(slide, reveal);
@@ -47,7 +47,7 @@ export function ReadAlongSlide({ slide, reveal, playing }: { slide: ReadAlongBod
   );
 }
 
-function Turn({ line, side, view, lit, level }: { line: SpokenLine & { speaker: string }; side: 'a' | 'b'; view: PartView; lit: boolean; level: number }): React.ReactElement {
+function Turn({ line, side, view, lit, level }: { line: SpokenLine & { speaker: string }; side: 'a' | 'b'; view: PartView; lit: boolean; level: number }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const bodySize = size(presenter.size.body);

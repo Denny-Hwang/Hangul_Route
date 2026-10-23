@@ -1,6 +1,7 @@
 import { Body, Button, Card, Hoya, Spacer, spacing } from '@hangul-route/design-system';
 import { CATALOG, PACES, type ProgressSnapshot, type SelfRoute } from '@hangul-route/content-schema';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { checkInFits, checkInOffer, retainedOfferStep, type CheckInOffer, type RetainedOffer } from '../../logic/route/repace';
@@ -26,7 +27,7 @@ export function CheckInCard({
   /** Not now, or an answer that no longer applies: the holder stops showing the card. */
   onClose: () => void;
   testID: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const m = useMessages();
   const t = m.learner.weeklyPlan.checkIn;
   const pace = m.learner.weeklyPlan.proposal.pace;

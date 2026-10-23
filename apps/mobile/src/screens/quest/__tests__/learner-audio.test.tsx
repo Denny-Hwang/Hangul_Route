@@ -1,6 +1,5 @@
 import type { DiscoverPage } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { episodesAll } from '../../../content/episodes';

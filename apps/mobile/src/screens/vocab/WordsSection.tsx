@@ -1,5 +1,6 @@
 import { Body, Spacer } from '@hangul-route/design-system';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { vocabCopyOf } from '../../logic/vocab/copy';
@@ -17,7 +18,7 @@ import { TopicGrid } from './TopicGrid';
  * `flags.vocabTopicsEnabled` and a topic to show. Design:
  * design/screens/vocab/topics.md.
  */
-export function WordsSection(): React.ReactElement {
+export function WordsSection(): ReactElement {
   const copy = vocabCopyOf(useMessages());
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));

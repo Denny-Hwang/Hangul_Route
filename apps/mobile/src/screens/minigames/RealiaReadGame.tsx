@@ -16,7 +16,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -70,7 +71,7 @@ interface Props {
 /** D-2 D7: the realia stays in view beside the options. One flag for the Screen and GameColumns. */
 const STICKY_PROMPT = true;
 
-export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactElement {
+export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const play = useMemo(() => {
     const p = playableRealia(scope);
@@ -177,7 +178,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): React.ReactEleme
     setSoundAt(null);
   }, [roundId, slotReset]);
   /** The slot's status panel at one place: quiet (the live region kept) unless the last tap was there. */
-  const soundPanel = (at: SoundAt, testID: string): React.ReactElement => (
+  const soundPanel = (at: SoundAt, testID: string): ReactElement => (
     <PromptPanel
       variant="status"
       view={soundAt === at ? slot.view : { ...slot.view, statusShown: false }}

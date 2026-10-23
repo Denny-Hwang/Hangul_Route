@@ -1,4 +1,4 @@
-import * as Crypto from 'expo-crypto';
+import { randomUUID } from 'expo-crypto';
 import { readJson, writeJson } from './storage';
 
 /**
@@ -15,7 +15,7 @@ export async function getDeviceId(): Promise<string> {
     cached = saved;
     return saved;
   }
-  const fresh = `device-${Crypto.randomUUID()}`;
+  const fresh = `device-${randomUUID()}`;
   await writeJson(KEY, fresh);
   cached = fresh;
   return fresh;

@@ -1,9 +1,9 @@
 import { Body, Icon, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 
 /** The room block of a move waiting for room (F-SPACE-002 4.12): amber nudge, never red, as on the console requests page. */
-export function RoomBlock({ text }: { text: string }): React.ReactElement {
+export function RoomBlock({ text }: { text: string }): ReactElement {
   return (
     <View
       testID="transfer-room"

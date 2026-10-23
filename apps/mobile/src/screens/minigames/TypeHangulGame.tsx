@@ -28,7 +28,8 @@ import {
   useTypeScale,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, MutableRefObject, Ref } from 'react';
 import { Platform, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -80,7 +81,7 @@ export function focusPanel(node: Focusable | null): void {
   else focusForScreenReader(node);
 }
 
-export function TypeHangulGame({ scope, host, onBack }: Props): React.ReactElement {
+export function TypeHangulGame({ scope, host, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -393,12 +394,12 @@ export interface ResultPanelProps {
   height: number;
   gutter: number;
   /** Hoya's line, focused when the panel opens. */
-  panelRef: React.MutableRefObject<Focusable | null>;
+  panelRef: MutableRefObject<Focusable | null>;
   onFix: () => void;
 }
 
 /** After Done: Hoya's line, and on a miss the block compare, the word and Fix it (type-hangul.md "After Done"). */
-export function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: ResultPanelProps): React.ReactElement {
+export function ResultPanel({ state, round, width, height, gutter, panelRef, onFix }: ResultPanelProps): ReactElement {
   const m = useMessages();
   const t = m.learner.minigame.typeHangul;
   const k = m.a11y.minigame.keyboard;
@@ -420,7 +421,7 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
     <View style={{ height, width, alignSelf: 'center' }} testID="type-hangul-result">
       <ScrollView contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: spacing.md, gap: spacing.md }}>
         <View
-          ref={panelRef as React.Ref<View>}
+          ref={panelRef as Ref<View>}
           accessible
           focusable
           accessibilityLabel={line}
@@ -466,7 +467,7 @@ export function ResultPanel({ state, round, width, height, gutter, panelRef, onF
 }
 
 /** One row of the compare grid: a block per column; a differing block marked by its border and a dot, never colour alone. */
-function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; side: 'typed' | 'target'; cell: number }): React.ReactElement {
+function BlockRow({ blocks, side, cell }: { blocks: readonly BlockCompare[]; side: 'typed' | 'target'; cell: number }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', gap: spacing.xs }} testID={`type-hangul-${side}-row`} {...{ 'aria-hidden': true }} importantForAccessibility="no-hide-descendants">
       {blocks.map((block, i) => {
@@ -526,7 +527,7 @@ interface WordLineProps {
 }
 
 /** A word on one line, as the mock draws it: the Korean, its romanization and `· gloss`, read as one item. */
-function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProps): React.ReactElement {
+function WordLine({ round, romanizationVisible, onReveal, testID }: WordLineProps): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const { ko, romanization, en } = round.target;

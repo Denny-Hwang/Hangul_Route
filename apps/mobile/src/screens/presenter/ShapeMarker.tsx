@@ -1,6 +1,6 @@
 import { colors, presenter, typography } from '@hangul-route/design-system';
-import React from 'react';
-import Svg, { Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
+import type { ReactElement } from 'react';
+import { Svg, Circle, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { MARKER_BODY_FACTOR, MARKER_GEOMETRY, MARKER_STROKE, MARKER_VIEWBOX, SVG_UI_FONT, units, type MarkerShape } from '../../logic/lecture/stage-constants';
 import { usePresenterView } from './presenter-context';
 
@@ -11,7 +11,7 @@ import { usePresenterView } from './presenter-context';
  * tech. The order slide draws it (PR 7); the quiz options reuse it (PR 9); a compact option row of a
  * question slide draws it smaller (`side`, LV-S2).
  */
-export function ShapeMarker({ shape, n, side }: { shape: MarkerShape; n: number; /** Its side in units (a compact option row, LV-S2); 80 when absent. */ side?: number }): React.ReactElement {
+export function ShapeMarker({ shape, n, side }: { shape: MarkerShape; n: number; /** Its side in units (a compact option row, LV-S2); 80 when absent. */ side?: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = units(unit, side ?? MARKER_BODY_FACTOR * presenter.size.body);
   const g = MARKER_GEOMETRY[shape];

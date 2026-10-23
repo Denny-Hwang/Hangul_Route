@@ -11,7 +11,8 @@ import {
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -26,7 +27,7 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'FirstQuestPreview
  * content-driven and the CTA lands *inside* the first quest, with Main tabs
  * reset underneath so results return to Today.
  */
-export function FirstQuestPreviewScreen({ navigation }: Props): React.ReactElement {
+export function FirstQuestPreviewScreen({ navigation }: Props): ReactElement {
   const q = useMessages().learner.firstQuest;
   const locale = useLocale();
   const target = useMemo(() => {

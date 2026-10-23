@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import type { ReactElement } from 'react';
 import type { AccessSource } from '../logic/browse/pass';
 import type { BrowseHomeParams, BrowseRouteName } from '../logic/browse/boot';
 import { BrowseAccessScreen } from '../screens/browse/BrowseAccessScreen';
@@ -64,7 +64,7 @@ export const BROWSE_REGISTERED_ROUTES: ReadonlySet<BrowseRouteName> = new Set<Br
 
 const Stack = createNativeStackNavigator<BrowseStackParamList>();
 
-export function BrowseNavigator(): React.ReactElement {
+export function BrowseNavigator(): ReactElement {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="BrowseHome" component={BrowseHomeScreen} />

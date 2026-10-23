@@ -1,5 +1,6 @@
 import { Body, Button, Caption, Card, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useOnline } from '../../components/use-online';
@@ -70,7 +71,7 @@ type Step = { kind: 'who' } | { kind: 'name'; index: number } | { kind: 'consent
  *    a time: a second tap sends nothing more.
  * 5. One result line per learner, a polite status heading, `space.join.batch` once.
  */
-export function JoinBatch({ space, code, rows, gateClosed, askPin, onDone }: JoinBatchProps): React.ReactElement {
+export function JoinBatch({ space, code, rows, gateClosed, askPin, onDone }: JoinBatchProps): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.join;
   const w = m.who;
@@ -353,7 +354,7 @@ export function JoinBatch({ space, code, rows, gateClosed, askPin, onDone }: Joi
  * One learner on the checklist: a real check box labelled by the name, its caption as the description. A row of at
  * least `touchTarget.min`; a disabled (class-scoped) row is sunken with the name muted and cannot be checked.
  */
-function ChecklistItem({ row, checked, caption, onToggle }: { row: ChecklistRow; checked: boolean; caption: string | null; onToggle: () => void }): React.ReactElement {
+function ChecklistItem({ row, checked, caption, onToggle }: { row: ChecklistRow; checked: boolean; caption: string | null; onToggle: () => void }): ReactElement {
   const captionId = `join-who-caption-${row.id}`;
   return (
     <View role="listitem">

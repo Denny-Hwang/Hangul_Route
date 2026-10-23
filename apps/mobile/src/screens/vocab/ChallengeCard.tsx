@@ -1,5 +1,6 @@
 import { Body, Card, Spacer } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { challengeSettings, scaleOnOptIn } from '../../logic/vocab/challenge';
@@ -14,7 +15,7 @@ import { ScaleChips, SwitchRow } from './ChallengeControls';
  * reversible setting). Shown only where Words is offered (ProfileScreen).
  * Design: design/screens/vocab/speed-round.md "Profile: the Challenge card".
  */
-export function ChallengeCard({ profileId }: { profileId: string }): React.ReactElement {
+export function ChallengeCard({ profileId }: { profileId: string }): ReactElement {
   const messages = useMessages();
   const copy = messages.learner.vocab.speed.challenge;
   const settings = useLocaleStore((s) => s.byProfile[profileId]);

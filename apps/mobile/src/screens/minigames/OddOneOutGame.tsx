@@ -12,7 +12,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { jamoTileA11yLabel } from '../../logic/korean-labels';
@@ -28,7 +29,7 @@ interface Props {
   onFinish: () => void;
 }
 
-export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
+export function OddOneOutGame({ scope, onFinish }: Props): ReactElement {
   const rounds = useMemo<OddOneOutRound[]>(
     () => buildOddOneOutRounds({ scopeJamoIds: scope.jamoIds ?? [], rounds: scope.rounds ?? 4 }),
     [scope],

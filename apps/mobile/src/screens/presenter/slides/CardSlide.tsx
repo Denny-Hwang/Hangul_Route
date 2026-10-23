@@ -1,5 +1,5 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { CardArt } from '../../../components/CardArt';
 import { cardById } from '../../../content/heritage-cards';
@@ -21,7 +21,7 @@ type CardBody = Extract<Slide, { kind: 'card' }>;
  * With `romanization: 'tap'` the chip's romanization is its own build. Presenting awards nothing:
  * no "earned", star or count (section 3.9).
  */
-export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }): React.ReactElement {
+export function CardSlide({ slide, reveal }: { slide: CardBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const view = cardView(slide, reveal);

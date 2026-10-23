@@ -1,7 +1,7 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { ConfirmSheet, type ConfirmSheetProps } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -69,7 +69,7 @@ const child = (id: string, displayName: string): Profile => ({
 
 const JUN = 'profile:jun00001';
 
-function screen(): React.ReactElement {
+function screen(): ReactElement {
   return <PersonOnDeviceScreen navigation={navigation as never} route={{ key: 'PersonOnDevice', name: 'PersonOnDevice', params: { profileId: JUN } } as never} />;
 }
 

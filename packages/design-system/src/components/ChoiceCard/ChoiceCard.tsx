@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import { Icon } from '../Icon';
@@ -30,7 +30,7 @@ export function ChoiceCard({
   onPress,
   accessibilityLabel,
   testID,
-}: ChoiceCardProps): React.ReactElement {
+}: ChoiceCardProps): ReactElement {
   const look = choiceCardStyle(state, { wrongMark });
   const bodySize = useTypeScale().size.body;
   const tile = layout === 'tile';
@@ -38,7 +38,7 @@ export function ChoiceCard({
   const hasKorean = ko !== undefined && ko.trim().length > 0;
   const hasLabel = label !== undefined && label.length > 0;
 
-  const content = (borderColor: string): React.ReactElement => (
+  const content = (borderColor: string): ReactElement => (
     <View
       style={{
         flexDirection: 'row',

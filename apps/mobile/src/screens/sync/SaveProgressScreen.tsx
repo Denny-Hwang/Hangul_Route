@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, Heading, HoyaBubble, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
@@ -18,7 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SaveProgress'>;
  * sync/save-progress — F-RESTORE-001 §3.3. PIN-gated; the code is shown as
  * a block a parent writes down. Rotation is last and small on purpose.
  */
-export function SaveProgressScreen({ navigation, route }: Props): React.ReactElement {
+export function SaveProgressScreen({ navigation, route }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.saveProgress;
   // [OA] Row OA-7a: Save progress first on the Remove sheet names its learner; otherwise the active one.

@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ComponentType, ReactElement } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 /**
@@ -8,8 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
  * already, so inside the app-level provider it would pad the notch twice; its
  * own provider measures the sheet's real frame instead.
  */
-export function withOwnSafeArea<P extends object>(Component: React.ComponentType<P>): React.ComponentType<P> {
-  function WithOwnSafeArea(props: P): React.ReactElement {
+export function withOwnSafeArea<P extends object>(Component: ComponentType<P>): ComponentType<P> {
+  function WithOwnSafeArea(props: P): ReactElement {
     return (
       <SafeAreaProvider>
         <Component {...props} />

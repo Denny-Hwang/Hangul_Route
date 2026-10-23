@@ -3,7 +3,8 @@ import { CATALOG, generateCurriculum, type CurriculumDraft, type SelfRoute } fro
 import type { Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { draftWeeks, learnerNotices, previewStats, previewWeeks, type LearnerNotice } from '../../logic/route/plan-view';
@@ -40,7 +41,7 @@ function noticeText(t: PreviewMessages['notices'], notice: LearnerNotice): strin
   }
 }
 
-export function RoutePreviewScreen({ route, navigation }: Props): React.ReactElement {
+export function RoutePreviewScreen({ route, navigation }: Props): ReactElement {
   const { profileId, setup, replacing } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.planPreview;

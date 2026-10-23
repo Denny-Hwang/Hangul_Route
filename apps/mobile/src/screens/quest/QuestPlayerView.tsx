@@ -15,7 +15,8 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
@@ -122,7 +123,7 @@ function decide(plan: () => Promise<{ chunk: QuestReviewChunk; plan: QuestReview
  * navigation coupling is `useFocusEffect` (applying a game's pending advance on re-focus), which the
  * browse stack's own navigation container also provides.
  */
-export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement {
+export function QuestPlayerView(props: QuestPlayerViewProps): ReactElement {
   // The warm-up and Try these again load while the lesson does (F-CURR-002 row CM-15); with their switches off, nothing.
   const reviewsFor = props.reviewsFor ?? null;
   useEffect(() => preloadQuestReviews(reviewsFor), [reviewsFor]);
@@ -134,7 +135,7 @@ export function QuestPlayerView(props: QuestPlayerViewProps): React.ReactElement
   return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
-function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): React.ReactElement {
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -417,10 +418,10 @@ function NarrativeStepBody({
   onContinue: () => void;
   isReward: boolean;
   /** In place of the step's own button: the reward step's Try these again, offered or being planned (F-CURR-002 row CM-15). */
-  actions?: React.ReactNode;
+  actions?: ReactNode;
   /** [GU] A plain line between Hoya's card and Continue (the guest run's storage-blocked line, section 7.2). */
   note?: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <View style={{ flex: 1 }}>
       <Card padding="lg" tone={isReward ? 'success' : 'brand'}>
@@ -466,7 +467,7 @@ function MinigameLauncher({
   kind: QuestStepKind;
   onLaunch: () => void;
   onSkip: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const view = launcherView(kind, copy.launcher);
   return (
     <View style={{ flex: 1 }}>

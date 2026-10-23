@@ -1,5 +1,6 @@
 import { Body, Button, colors, radii, spacing } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { resetByWaitNoticeDue } from '../../logic/profiles/pin-reset';
@@ -13,7 +14,7 @@ import { useUiStore } from '../../store/ui-store';
  * after a PIN entered later than that reset (never at the setup itself); the record is cleared as soon as it shows.
  * An info notice (`feedback.infoLight`, `text.primary`), never a warning colour.
  */
-export function ResetByWaitNotice({ onChange }: { onChange: () => void }): React.ReactElement | null {
+export function ResetByWaitNotice({ onChange }: { onChange: () => void }): ReactElement | null {
   const m = useMessages().caregiver.pin;
   const [due] = useState(() => resetByWaitNoticeDue(useAccountStore.getState().pinResetByWait, useUiStore.getState().lastPinVerifiedAt));
   // Once Change PIN is pressed the notice has done its job: it is gone when the grown-up comes back here.

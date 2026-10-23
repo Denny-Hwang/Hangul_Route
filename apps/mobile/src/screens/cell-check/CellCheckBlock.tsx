@@ -2,7 +2,8 @@ import type { ThemeKey } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Card, Icon, Spacer, colors, spacing } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { memoryChunk } from '../../logic/memory/boot';
@@ -31,7 +32,7 @@ export interface CellCheckBlockProps extends CellCheckSlotProps {
   masteryOn: boolean;
 }
 
-export function CellCheckBlock({ place, profileId, episodeId, stage, theme, stars, open, checkOn, masteryOn }: CellCheckBlockProps): React.ReactElement | null {
+export function CellCheckBlock({ place, profileId, episodeId, stage, theme, stars, open, checkOn, masteryOn }: CellCheckBlockProps): ReactElement | null {
   const m = useMessages();
   const copy = m.learner.cellCheck;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

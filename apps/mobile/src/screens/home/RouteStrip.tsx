@@ -1,5 +1,5 @@
 import { Body, Caption, Card, Icon, PipRow, Spacer, StageSegments, colors, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { HomeStripView } from '../../logic/my-route/home-strip';
 
@@ -14,7 +14,7 @@ import type { HomeStripView } from '../../logic/my-route/home-strip';
  * pips and segments are hidden from screen readers (the label carries the words,
  * including the here stage's progress caption).
  */
-export function RouteStrip({ view, onPress }: { view: HomeStripView; onPress: () => void }): React.ReactElement {
+export function RouteStrip({ view, onPress }: { view: HomeStripView; onPress: () => void }): ReactElement {
   const textScale = useTypeScale();
   const segments = view.segments.map((s) => ({ key: s.stage, state: s.state, here: s.here, accent: colors.stage[s.stage] }));
   return (

@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { HoyaSvg, SceneSvg } from '../dom';
 import { HOYA_BOX, HOYA_POSES, hoyaItem } from '../hoya';
@@ -6,15 +7,15 @@ import { resolveColor } from '../tokens-map';
 import { makeArt, makeRegistry } from './fixtures';
 
 /** Function components without hooks: call them and read the element tree, no DOM needed. */
-function el(node: React.ReactNode): React.ReactElement<Record<string, unknown>> {
-  return node as React.ReactElement<Record<string, unknown>>;
+function el(node: ReactNode): ReactElement<Record<string, unknown>> {
+  return node as ReactElement<Record<string, unknown>>;
 }
-function children(node: React.ReactElement<Record<string, unknown>>): React.ReactElement<Record<string, unknown>>[] {
-  return React.Children.toArray(node.props.children as React.ReactNode) as React.ReactElement<Record<string, unknown>>[];
+function children(node: ReactElement<Record<string, unknown>>): ReactElement<Record<string, unknown>>[] {
+  return Children.toArray(node.props.children as ReactNode) as ReactElement<Record<string, unknown>>[];
 }
 /** Resolve one level of function components (the Item wrapper) into plain svg elements. */
-function flat(node: React.ReactElement<Record<string, unknown>>): React.ReactElement<Record<string, unknown>> {
-  return typeof node.type === 'function' ? el((node.type as (p: unknown) => React.ReactNode)(node.props)) : node;
+function flat(node: ReactElement<Record<string, unknown>>): ReactElement<Record<string, unknown>> {
+  return typeof node.type === 'function' ? el((node.type as (p: unknown) => ReactNode)(node.props)) : node;
 }
 
 const registry = makeRegistry([hoyaItem('waving')]);

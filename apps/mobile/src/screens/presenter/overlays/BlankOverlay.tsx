@@ -1,5 +1,6 @@
 import { Hoya, colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { PAUSE_WORD } from '../../../logic/lecture/content';
 import { HOYA_STAGE, units } from '../../../logic/lecture/stage-constants';
@@ -15,7 +16,7 @@ import { Cover, ToolButton } from './OverlayParts';
  * as a Korean chip with its romanization and its gloss in the presenter language. Both leave the
  * slide untouched; the first next or back only closes them.
  */
-export function BlankOverlay({ onPause }: { onPause: () => void }): React.ReactElement {
+export function BlankOverlay({ onPause }: { onPause: () => void }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.blank;
@@ -33,7 +34,7 @@ export function BlankOverlay({ onPause }: { onPause: () => void }): React.ReactE
   );
 }
 
-export function PauseOverlay(): React.ReactElement {
+export function PauseOverlay(): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const promptSize = size(presenter.size.display);

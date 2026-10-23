@@ -1,7 +1,7 @@
 import { HeritageCardArt } from '@hangul-route/design-system/components/HeritageCardArt';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from '../react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Svg as NamedSvg } from '../react-native-svg';
 
 /**
  * The web's `react-native-svg` (aliased in next.config.js, vitest.config.ts
@@ -13,6 +13,10 @@ describe('react-native-svg on the web', () => {
   it('maps Svg to an svg element, its label to role img with aria-label and its testID to data-testid', () => {
     const html = renderToStaticMarkup(<Svg width={64} height={64} viewBox="0 0 200 200" testID="art" accessibilityLabel="rice" />);
     expect(html).toBe('<svg width="64" height="64" viewBox="0 0 200 200" data-testid="art" role="img" aria-label="rice"></svg>');
+  });
+
+  it('exports Svg by name as well as by default, as react-native-svg does (the design system imports `{ Svg }`)', () => {
+    expect(NamedSvg).toBe(Svg);
   });
 
   it('leaves an unlabelled Svg without a role', () => {

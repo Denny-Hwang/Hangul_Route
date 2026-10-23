@@ -1,5 +1,5 @@
 import { Hoya, borderWidth, colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { activityTimerMs } from '../../../logic/lecture/slide-view';
@@ -17,7 +17,7 @@ type ActivityBody = Extract<Slide, { kind: 'activity' }>;
  * disabled and drawn outlined (`text.primary` on paper, `border.strong` ring) instead of the
  * filled `brand.primaryDark` action, so it never looks pressable.
  */
-export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; onStartTimer?: (ms: number) => void }): React.ReactElement {
+export function ActivitySlide({ slide, onStartTimer }: { slide: ActivityBody; onStartTimer?: (ms: number) => void }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter;

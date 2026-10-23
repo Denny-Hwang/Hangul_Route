@@ -1,6 +1,7 @@
 import { Body, Button, Card, Heading, Icon, KOREAN_LINE_BREAK, Spacer, borderWidth, colors, spacing, touchTarget } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useId, useState } from 'react';
+import { useId, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Platform, Pressable, Text, View, type ViewStyle } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -71,7 +72,7 @@ function focusRing(focused: boolean | undefined): ViewStyle {
 }
 
 /** A hidden copy of the hint, so a screen reader on the web hears it too (react-native-web drops `accessibilityHint`). */
-function WebHint({ id, text }: { id: string; text: string }): React.ReactElement {
+function WebHint({ id, text }: { id: string; text: string }): ReactElement {
   return (
     <Text {...KOREAN_LINE_BREAK} id={id} style={{ display: 'none' }}>
       {text}
@@ -79,7 +80,7 @@ function WebHint({ id, text }: { id: string; text: string }): React.ReactElement
   );
 }
 
-function NextRow({ label, hint, onPress, first, testID }: { label: string; hint: string; onPress: () => void; first: boolean; testID: string }): React.ReactElement {
+function NextRow({ label, hint, onPress, first, testID }: { label: string; hint: string; onPress: () => void; first: boolean; testID: string }): ReactElement {
   const hintId = useId();
   return (
     <Pressable
@@ -125,7 +126,7 @@ export function LectureCard({
   /** Opens a presenter link in a new tab; false when the browser gave none. */
   open?: (href: string) => boolean;
   hrefFor?: (profileId: string, words: PresetWords) => string | null;
-}): React.ReactElement | null {
+}): ReactElement | null {
   const messages = useMessages();
   const m = messages.caregiver.lecture;
   const hydratedFor = useProgressStore((s) => s.hydratedFor);

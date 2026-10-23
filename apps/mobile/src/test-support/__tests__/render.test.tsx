@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buttonsNamed, cleanup, press, render, resetPlatform, screenTexts, setPlatform, type RenderPlatform } from '../render';
@@ -53,7 +53,7 @@ describe('cleanup', () => {
   it('unmounts every renderer a test left mounted', async () => {
     const unmounted = vi.fn();
     function Probe(): null {
-      React.useEffect(() => unmounted, []);
+      useEffect(() => unmounted, []);
       return null;
     }
     await render(<Probe />);

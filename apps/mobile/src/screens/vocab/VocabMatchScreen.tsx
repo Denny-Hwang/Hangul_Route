@@ -1,7 +1,8 @@
 import type { VocabTopic } from '@hangul-route/content-schema';
 import { Screen } from '@hangul-route/design-system';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { localizedGloss } from '../../content/vocab';
 import { useLocale } from '../../i18n/use-messages';
@@ -31,7 +32,7 @@ type Navigation = NativeStackNavigationProp<RootStackParamList, 'VocabMatch'>;
  * to the topic page instead, which says "Topic not found", opens the grown-up
  * gate or leads to Learn.
  */
-export function VocabMatchScreen({ route, navigation }: Props): React.ReactElement {
+export function VocabMatchScreen({ route, navigation }: Props): ReactElement {
   const { topicKey } = route.params;
   const topic = pickerTopic(topicKey);
   const profile = useProfileStore(activeProfileSelector);
@@ -47,7 +48,7 @@ export function VocabMatchScreen({ route, navigation }: Props): React.ReactEleme
   return <MatchSession key={topic.key} source={topic} navigation={navigation} />;
 }
 
-function MatchSession({ source, navigation }: { source: VocabTopic; navigation: Navigation }): React.ReactElement {
+function MatchSession({ source, navigation }: { source: VocabTopic; navigation: Navigation }): ReactElement {
   const topicKey = source.key;
   const locale = useLocale();
   const profile = useProfileStore(activeProfileSelector);

@@ -5,7 +5,7 @@
  * Same glyph data and stroke rules as `Icon.tsx` (both go through `iconPartProps`;
  * design/components/Icon/spec.md). Decorative: it always sits next to its words.
  */
-import React from 'react';
+import type { ReactElement } from 'react';
 import { colors } from '../../tokens';
 import { iconGlyphs, iconPartProps } from './glyphs';
 import type { IconName } from './types';
@@ -18,7 +18,7 @@ export interface IconSvgProps {
   color?: string;
 }
 
-export function IconSvg({ name, size = 24, color = colors.text.primary }: IconSvgProps): React.ReactElement {
+export function IconSvg({ name, size = 24, color = colors.text.primary }: IconSvgProps): ReactElement {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" aria-hidden focusable="false">
       {iconGlyphs[name].map((part, index) => (

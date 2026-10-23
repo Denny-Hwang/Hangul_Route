@@ -1,5 +1,6 @@
 import { colors, koreanTextLabel, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import { Fragment } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { SpokenLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -30,7 +31,7 @@ const MAX_LEVEL = 3;
  * Parts sit `spacing.md` units apart (`.tight`), so a two-line note and both examples fit; a longer
  * pattern (a Stage 7 frame with long examples) fits itself, one compact level at a time.
  */
-export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: number }): React.ReactElement {
+export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const fit = useFitLevel(MAX_LEVEL, unit);
@@ -47,10 +48,10 @@ export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: nu
           <View testID="presenter-pattern-frame" style={{ gap: units(unit, spacing.xs) }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
               {slide.frame.pieces.map((piece, i) => (
-                <React.Fragment key={i}>
+                <Fragment key={i}>
                   {i > 0 ? <GapBox textSize={frameSize} testID="presenter-pattern-gap" /> : null}
                   {piece !== '' ? <TaughtKo size={frameSize}>{piece}</TaughtKo> : null}
-                </React.Fragment>
+                </Fragment>
               ))}
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.lg) }}>
@@ -83,7 +84,7 @@ export function PatternSlide({ slide, reveal }: { slide: PatternBody; reveal: nu
  * the same row; `compact`: the Korean at `presenter.size.body`, its romanization and meaning as one
  * run under it at `presenter.size.caption`.
  */
-function Example({ n, example, view, compact }: { n: number; example: SpokenLine; view: PartView; compact: boolean }): React.ReactElement {
+function Example({ n, example, view, compact }: { n: number; example: SpokenLine; view: PartView; compact: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const bodySize = size(presenter.size.body);

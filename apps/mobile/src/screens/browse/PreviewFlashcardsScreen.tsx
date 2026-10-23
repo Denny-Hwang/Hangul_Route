@@ -1,6 +1,7 @@
 import { Screen } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMessages } from '../../i18n/use-messages';
 import { previewCardsPorts } from '../../logic/vocab/cards-ports';
@@ -26,7 +27,7 @@ import { beginPreview, endPreview } from './preview-session';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewFlashcards'>;
 
-export function PreviewFlashcardsScreen({ route, navigation }: Props): React.ReactElement {
+export function PreviewFlashcardsScreen({ route, navigation }: Props): ReactElement {
   const m = useMessages().caregiver.browse;
   const { topicId, topicKey } = route.params;
   // The learner picker's topic, only while Words is on for learners (the item page offers the preview on the same terms).

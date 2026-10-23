@@ -1,6 +1,6 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { colors, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import type { BuildName, SpokenLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -61,7 +61,7 @@ export function QuestionSlide({
   romanization: RomanizationMode;
   sayIt: boolean;
   onPlaySound: () => void;
-}): React.ReactElement {
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
@@ -122,7 +122,7 @@ export function QuestionSlide({
  * `romanization: 'tap'` it waits for the answer build, as the options' do, D2) and its meaning, on
  * one wrapping row.
  */
-function KoLineRow({ line, rom, level, testID }: { line: SpokenLine; rom: boolean; level: number; testID: string }): React.ReactElement {
+function KoLineRow({ line, rom, level, testID }: { line: SpokenLine; rom: boolean; level: number; testID: string }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const bodySize = size(level >= 3 ? presenter.size.caption : presenter.size.body);
@@ -140,7 +140,7 @@ function KoLineRow({ line, rom, level, testID }: { line: SpokenLine; rom: boolea
 }
 
 /** What the room heard, joining under the question at the answer build (kept in place, unread, before it). */
-function PromptLine({ line, shown, level }: { line: SpokenLine; shown: boolean; level: number }): React.ReactElement {
+function PromptLine({ line, shown, level }: { line: SpokenLine; shown: boolean; level: number }): ReactElement {
   return (
     <View {...revealProps(shown)}>
       <KoLineRow line={line} rom level={level} testID="presenter-quiz-prompt-line" />
@@ -149,7 +149,7 @@ function PromptLine({ line, shown, level }: { line: SpokenLine; shown: boolean; 
 }
 
 /** The other speaker's line in a bordered box (`border.strong`), drawn from the start. */
-function SaidLine({ line, rom, level }: { line: SpokenLine; rom: boolean; level: number }): React.ReactElement {
+function SaidLine({ line, rom, level }: { line: SpokenLine; rom: boolean; level: number }): ReactElement {
   const { unit } = usePresenterView();
   return (
     <View

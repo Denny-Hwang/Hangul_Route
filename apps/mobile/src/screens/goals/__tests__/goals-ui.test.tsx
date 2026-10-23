@@ -1,6 +1,6 @@
 import { Caption, LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import type { ProgressSnapshot, SessionLog } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { goalStripView } from '../../../logic/goals/strip-view';
@@ -19,7 +19,7 @@ import { GoalsSheet } from '../GoalsSheet';
 // react-native-web's Modal draws into a portal outside the test tree: draw its children in place.
 vi.mock('react-native', async (load) => {
   const rn = await load<Record<string, unknown>>();
-  return { ...rn, Modal: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => (visible ? children : null) };
+  return { ...rn, Modal: ({ visible, children }: { visible: boolean; children: ReactNode }) => (visible ? children : null) };
 });
 
 const [MON, TUE, THU, FRI] = ['2026-10-19', '2026-10-20', '2026-10-22', '2026-10-23'];
@@ -33,7 +33,7 @@ function snapshot(over: Partial<ProgressSnapshot> = {}): ProgressSnapshot {
   return { profileId: 'p1', updatedAt: '2026-10-21T00:00:00.000Z', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, ...over };
 }
 
-async function draw(node: React.ReactElement, width = 320): Promise<ReactTestInstance> {
+async function draw(node: ReactElement, width = 320): Promise<ReactTestInstance> {
   let r!: ReactTestRenderer;
   await act(async () => {
     r = TestRenderer.create(<LayoutProvider value={layoutClassFor({ width, height: 800 })}>{node}</LayoutProvider>);

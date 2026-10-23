@@ -17,7 +17,8 @@ import {
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode, ReactElement } from 'react';
 import { Platform, Text, View } from 'react-native';
 import {
   checkBubble,
@@ -71,7 +72,7 @@ export interface CheckpointCardProps {
    */
   onBubbleShown?: () => void;
   /** The reader's shared sound state (`PromptPanel`: muted, no Korean voice, tap to hear). */
-  promptPanel?: React.ReactNode;
+  promptPanel?: ReactNode;
   /** The card region, for the focus move when it opens (web). */
   regionRef: (node: CheckpointFocusable | null) => void;
 }
@@ -102,7 +103,7 @@ export function CheckpointCard({
   onBubbleShown,
   promptPanel,
   regionRef,
-}: CheckpointCardProps): React.ReactElement {
+}: CheckpointCardProps): ReactElement {
   const pictureSize = useMediaSize(touchTarget.hero);
   const romanizationMode = useRomanizationMode();
   const ctx = { romanizationMode, revealed };

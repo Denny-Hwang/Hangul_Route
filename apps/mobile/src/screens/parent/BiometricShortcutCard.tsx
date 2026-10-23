@@ -1,5 +1,6 @@
 import { Body, Caption, Card, colors, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Switch, View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useMessages } from '../../i18n/use-messages';
@@ -21,7 +22,7 @@ import { useBiometricAvailable } from './use-biometric-available';
  * - Off turns it off at once and deletes the item.
  * - With no PIN the switch is disabled and the hint reads `needsPinFirst` (section 8.2).
  */
-export function BiometricShortcutCard({ onNeedPin }: { onNeedPin: () => void }): React.ReactElement | null {
+export function BiometricShortcutCard({ onNeedPin }: { onNeedPin: () => void }): ReactElement | null {
   const m = useMessages().caregiver.pin;
   const record = useAccountStore((s) => s.biometricShortcut);
   const pinSetAt = useAccountStore((s) => s.pinSetAt);

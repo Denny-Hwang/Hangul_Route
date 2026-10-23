@@ -1,5 +1,6 @@
 import { Body, Button, Card, Caption, Heading, Icon, PipRow, Spacer, colors, layout, radii, spacing, touchTarget } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import type { Skill } from '../../logic/my-route/types';
@@ -16,7 +17,7 @@ import type { SkillRowView } from '../../logic/my-route/view';
 /** Decoration only: the done disc carries its own check (PipRow spec). Also the parent dashboard row's mini rows (R-9b). */
 export const SKILL_ACCENT: Readonly<Record<Skill, string>> = { read: colors.stage.stage1, listen: colors.stage.stage4, write: colors.stage.stage7 };
 
-function SkillSheet({ row, onClose }: { row: SkillRowView; onClose: () => void }): React.ReactElement {
+function SkillSheet({ row, onClose }: { row: SkillRowView; onClose: () => void }): ReactElement {
   const m = useMessages();
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
@@ -67,7 +68,7 @@ export interface SkillsCardProps {
   note: string | null;
 }
 
-export function SkillsCard({ title, rows, tiles, note }: SkillsCardProps): React.ReactElement {
+export function SkillsCard({ title, rows, tiles, note }: SkillsCardProps): ReactElement {
   const [sheet, setSheet] = useState<SkillRowView | null>(null);
   return (
     <Card padding="md" testID="my-route-skills">

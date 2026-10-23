@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMessages } from '../../i18n/use-messages';
 import { previewReturnTarget } from '../../logic/browse/preview';
@@ -25,7 +26,7 @@ import { endPreview } from './preview-session';
  */
 type Props = NativeStackScreenProps<BrowseStackParamList, 'PreviewQuest'>;
 
-export function PreviewQuestScreen({ route, navigation }: Props): React.ReactElement {
+export function PreviewQuestScreen({ route, navigation }: Props): ReactElement {
   const { questId, episodeId, returnTo } = route.params;
   const m = useMessages().caregiver.browse;
   const [confirming, setConfirming] = useState(false);

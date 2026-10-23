@@ -1,5 +1,5 @@
 import { Caption, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { TextInput } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
@@ -23,7 +23,7 @@ export interface JoinNameFieldProps {
  * one-learner join and each name step of Who is joining? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-7b), which shows
  * this step unchanged once per picked learner.
  */
-export function JoinNameField({ value, onChange, locked, classDevice, profileName, hint }: JoinNameFieldProps): React.ReactElement {
+export function JoinNameField({ value, onChange, locked, classDevice, profileName, hint }: JoinNameFieldProps): ReactElement {
   const textScale = useTypeScale();
   const messages = useMessages();
   const m = messages.caregiver.join;

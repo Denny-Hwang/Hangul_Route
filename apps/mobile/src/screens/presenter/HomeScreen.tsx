@@ -1,7 +1,8 @@
 import { Hoya, Icon, borderWidth, colors, layout, radii, shadows, spacing, touchTarget, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { PRESET_DEFAULT_MINUTES, type ChooserGroup, type LectureDeck, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type StageKey } from '@hangul-route/content-schema';
 import type { Messages, UiLocale } from '@hangul-route/i18n';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextStyle } from 'react-native';
 import { lengthOf, type HomeSnapshot } from '../../logic/lecture/home-state';
 import { recentDayLabel, type RecentState } from '../../logic/lecture/home-view';
@@ -84,7 +85,7 @@ const CUSTOMIZE_PANEL = 'presenter-customize-panel';
 const RESTORE_SETTLE_MS = 800;
 const RESTORE_CAP_MS = 15_000;
 
-function BackControl({ label, onBack, href }: { label: string; onBack?: () => void; href?: string }): React.ReactElement | null {
+function BackControl({ label, onBack, href }: { label: string; onBack?: () => void; href?: string }): ReactElement | null {
   const ts = useTypeScale().size;
   if (href === undefined && onBack === undefined) return null;
   const look = ({ focused }: Focusable) => ({
@@ -120,7 +121,7 @@ function BackControl({ label, onBack, href }: { label: string; onBack?: () => vo
   );
 }
 
-export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactElement {
+export function PresenterHomeScreen(props: PresenterHomeProps): ReactElement {
   const scale = useTypeScale();
   const ts = scale.size;
   const { messages, state, onState } = props;
@@ -322,7 +323,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): React.ReactEleme
   );
 }
 
-function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove, now }: PresenterHomeProps): React.ReactElement {
+function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove, now }: PresenterHomeProps): ReactElement {
   const ts = useTypeScale().size;
   const m = messages.learner.presenter.home.recent;
   // After a remove, focus moves to the next row's remove button (or the one before), else the h2,
@@ -346,7 +347,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
   };
   const day = { today: messages.common.notes.date.today, yesterday: messages.common.notes.date.yesterday };
   const today = (now ?? (() => new Date()))();
-  const line = (copy: string, testID: string): React.ReactElement => (
+  const line = (copy: string, testID: string): ReactElement => (
     <Text {...KOREAN_LINE_BREAK}
       testID={testID}
       style={{
@@ -361,7 +362,7 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
       {copy}
     </Text>
   );
-  let body: React.ReactElement | null;
+  let body: ReactElement | null;
   if (recent.status === 'loading') body = null;
   else if (recent.status === 'off') body = line(m.storageOff, 'presenter-home-recent-off');
   else if (recent.list.items.length === 0) body = line(m.empty, 'presenter-home-recent-empty');

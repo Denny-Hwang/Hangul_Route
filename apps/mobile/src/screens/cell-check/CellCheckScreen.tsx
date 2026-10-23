@@ -1,7 +1,8 @@
 import type { ThemeKey } from '@hangul-route/content-schema';
 import { Body, Button, ConfirmSheet, Heading, Hoya, Screen, Spacer, StarRow, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodeById, episodesAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -54,7 +55,7 @@ type Phase =
 
 const headlineKey = (stars: 1 | 2 | 3): 'one' | 'two' | 'three' => (stars === 3 ? 'three' : stars === 2 ? 'two' : 'one');
 
-export function CellCheckScreen({ navigation, route }: Props): React.ReactElement {
+export function CellCheckScreen({ navigation, route }: Props): ReactElement {
   const { cellId, mode } = route.params;
   const m = useMessages();
   const copy = m.learner.cellCheck;

@@ -1,5 +1,6 @@
 import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { KoLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -17,7 +18,7 @@ type EndBody = Extract<Slide, { kind: 'end' }>;
  * and the class code panel when the deck has one. When the column still does not fit (a phone's
  * small stage, where text keeps its 18 px floor), the words drop to one row, then the letters.
  */
-export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }): React.ReactElement {
+export function EndSlide({ slide, joinCta }: { slide: EndBody; joinCta: string }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.slide.end;
@@ -87,7 +88,7 @@ function EndList({
   /** Whether the list has fitted its rows (false while it is still dropping items). */
   onFit: (fit: boolean) => void;
   testID: string;
-}): React.ReactElement {
+}): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const [shown, setShown] = useState(items.length);
@@ -148,7 +149,7 @@ function EndList({
   );
 }
 
-function CodePanel({ code, joinCta }: { code: string; joinCta: string }): React.ReactElement {
+function CodePanel({ code, joinCta }: { code: string; joinCta: string }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const m = messages.learner.presenter.slide.end;

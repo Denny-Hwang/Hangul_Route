@@ -1,6 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { colors, koreanTextLabel, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
@@ -46,7 +47,7 @@ const MAX_LEVEL = 3;
  * the options never move. With `romanization: 'tap'` the romanization of the options, the key word and
  * the sheet waits for the answer build (D2). Nothing is collected or tallied (TD6).
  */
-export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: RealiaQuestionBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): React.ReactElement {
+export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: RealiaQuestionBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
@@ -124,7 +125,7 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
 }
 
 /** The word the question is about: its Korean at `presenter.size.prompt` and its romanization, on the chip look of taught Korean. */
-function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; rom: boolean }): React.ReactElement {
+function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; rom: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const chip = useChipStyle();

@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
@@ -19,7 +19,7 @@ export function Progress({
   height = 12,
   label,
   testID,
-}: ProgressProps): React.ReactElement {
+}: ProgressProps): ReactElement {
   const textScale = useTypeScale();
   const clamped = Math.max(0, Math.min(value, max));
   const pct = max <= 0 ? 0 : clamped / max;

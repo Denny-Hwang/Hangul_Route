@@ -1,8 +1,8 @@
 import { Icon, borderWidth, colors, radii, typography, useMediaSize, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import type { StageKey } from '@hangul-route/content-schema';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { Svg, Circle } from 'react-native-svg';
 import type { BadgeLook } from '../../logic/my-route/view';
 
 /**
@@ -15,7 +15,7 @@ import type { BadgeLook } from '../../logic/my-route/view';
  */
 export const BADGE_SIZE = 40;
 
-export function StageBadge({ look, stage, order }: { look: BadgeLook; stage: StageKey; order: number | null }): React.ReactElement {
+export function StageBadge({ look, stage, order }: { look: BadgeLook; stage: StageKey; order: number | null }): ReactElement {
   const size = useMediaSize(BADGE_SIZE);
   const accent = colors.stage[stage];
   const circle = { width: size, height: size, borderRadius: radii.circle, alignItems: 'center', justifyContent: 'center' } as const;

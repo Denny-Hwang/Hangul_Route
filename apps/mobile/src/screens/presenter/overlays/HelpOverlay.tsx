@@ -1,6 +1,7 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
 import { HELP_WIDTH, KBD_MIN, KEY_COL } from '../stage-metrics';
@@ -34,14 +35,14 @@ export function HelpOverlay({
   onClose: () => void;
   /** A phone window: the bar's strip line under the title (`help.phoneBar`). */
   phone?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.help;
   const { width } = useWindowDimensions();
   const twoColumns = width >= layout.breakpoint.wide;
   const close = useRef<View>(null);
-  const cap = (c: KeyCap, i: number): React.ReactElement => (
+  const cap = (c: KeyCap, i: number): ReactElement => (
     <View
       key={i}
       style={{
@@ -112,7 +113,7 @@ export function HelpOverlay({
   );
 }
 
-function KeepVisibleSwitch({ on, label, onChange }: { on: boolean; label: string; onChange: (on: boolean) => void }): React.ReactElement {
+function KeepVisibleSwitch({ on, label, onChange }: { on: boolean; label: string; onChange: (on: boolean) => void }): ReactElement {
   const textScale = useTypeScale();
   return (
     <Pressable

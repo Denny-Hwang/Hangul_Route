@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ReactTestRenderer } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';

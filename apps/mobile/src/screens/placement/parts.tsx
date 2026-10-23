@@ -8,10 +8,10 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
-import React, { type ReactNode } from 'react';
+import type { ReactNode, ComponentProps, ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 
-export type IconName = React.ComponentProps<typeof Icon>['name'];
+export type IconName = ComponentProps<typeof Icon>['name'];
 
 /**
  * Small building blocks shared by the level check's screens (F-PLC-001
@@ -30,7 +30,7 @@ export function SpeakerButton({
   label: string;
   size?: number;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}
@@ -55,7 +55,7 @@ export function SpeakerButton({
  * The footstep trail: one dot per answer, and one open dot for the question
  * now. It only fills, shows no number, and screen readers skip it.
  */
-export function FootstepTrail({ answered }: { answered: number }): React.ReactElement {
+export function FootstepTrail({ answered }: { answered: number }): ReactElement {
   const dots = Array.from({ length: answered + 1 }, (_, i) => i < answered);
   return (
     <View
@@ -109,7 +109,7 @@ export function RadioTile({
   testID?: string;
   children: ReactNode;
   flex?: boolean;
-}): React.ReactElement {
+}): ReactElement {
   return (
     <Pressable
       testID={testID}
@@ -155,7 +155,7 @@ export function RadioTile({
 }
 
 /** A quiet line for a grown-up, under a control. */
-export function Note({ children, testID }: { children: ReactNode; testID?: string }): React.ReactElement {
+export function Note({ children, testID }: { children: ReactNode; testID?: string }): ReactElement {
   return (
     <Caption tone="secondary" testID={testID}>
       {children}
@@ -167,7 +167,7 @@ export function Note({ children, testID }: { children: ReactNode; testID?: strin
  * Choice cards in rows of `columns`, every cell the same width (the last row
  * is padded with empty cells), so a 2 x 2 grid stays a grid at any width.
  */
-export function ChoiceGrid({ columns, children }: { columns: 1 | 2; children: ReactNode[] }): React.ReactElement {
+export function ChoiceGrid({ columns, children }: { columns: 1 | 2; children: ReactNode[] }): ReactElement {
   const rows: ReactNode[][] = [];
   for (let i = 0; i < children.length; i += columns) rows.push(children.slice(i, i + columns));
   return (

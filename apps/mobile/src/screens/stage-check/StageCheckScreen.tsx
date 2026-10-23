@@ -2,7 +2,8 @@ import type { ThemeKey } from '@hangul-route/content-schema';
 import { Body, Button, ConfirmSheet, Heading, Hoya, Icon, Screen, Spacer, StarRow, colors, spacing } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { RomanizationModeOverride } from '../../i18n/use-romanization-mode';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -54,7 +55,7 @@ type Phase =
 
 const headlineKey = (stars: 1 | 2 | 3): 'one' | 'two' | 'three' => (stars === 3 ? 'three' : stars === 2 ? 'two' : 'one');
 
-export function StageCheckScreen({ navigation, route }: Props): React.ReactElement {
+export function StageCheckScreen({ navigation, route }: Props): ReactElement {
   const { stageKey } = route.params;
   const m = useMessages();
   const copy = m.learner.stageCheck;

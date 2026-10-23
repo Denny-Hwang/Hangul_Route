@@ -1,7 +1,7 @@
 import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
 import { REALIA_DRESSINGS, presenter, spacing } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BuildName } from '../../../logic/lecture/build-steps';
@@ -65,7 +65,7 @@ const views = (root: Node, match: (style: Record<string, unknown>) => boolean): 
   root.findAll((n) => typeof n.type !== 'string' && n.props.style !== undefined && match(styleOf(n)));
 const named = (root: Node, name: string): Node[] => root.findAll((n) => typeof n.type === 'function' && n.type.name === name);
 
-const atOneUnit = (element: React.ReactElement): React.ReactElement => (
+const atOneUnit = (element: ReactElement): ReactElement => (
   <PresenterViewProvider value={{ messages: en, locale: 'en', unit: 1, reducedMotion: true }}>{element}</PresenterViewProvider>
 );
 
@@ -73,7 +73,7 @@ const atOneUnit = (element: React.ReactElement): React.ReactElement => (
  * A tree at one stage unit with its own node mock (the stage speaker listens on its node, and a `contentRef` reads
  * `offsetHeight`), mounted through the shared helper so the render setup's cleanup unmounts it if a test fails first.
  */
-function mount(element: React.ReactElement, heights: Record<string, number> = {}): Promise<ReactTestRenderer> {
+function mount(element: ReactElement, heights: Record<string, number> = {}): Promise<ReactTestRenderer> {
   return render(atOneUnit(element), {
     createNodeMock: (el) => {
       const id = (el.props as { 'data-testid'?: string })['data-testid'];

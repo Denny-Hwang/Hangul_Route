@@ -16,7 +16,8 @@ import {
   type HoyaTone,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -121,7 +122,7 @@ export function VocabQuestionView({
   ring = false,
   hoya = null,
   testID = 'vocab-question',
-}: VocabQuestionViewProps): React.ReactElement {
+}: VocabQuestionViewProps): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   const say = m.a11y.vocab.question;
@@ -313,7 +314,7 @@ export function VocabQuestionView({
   const onLayout = (e: LayoutChangeEvent): void => setWidth(e.nativeEvent.layout.width);
 
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : say.speaker;
-  const speakerButton = (size: 'small' | 'large'): React.ReactElement => {
+  const speakerButton = (size: 'small' | 'large'): ReactElement => {
     const side = size === 'large' ? bigSpeaker : touchTarget.min;
     return (
       <Pressable

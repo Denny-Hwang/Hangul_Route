@@ -1,4 +1,5 @@
-import React from 'react';
+import { Children } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { borderWidth, colors } from '../../../tokens';
 import { wordArtModel } from '../../../word-art/model';
@@ -11,13 +12,13 @@ import type { WordArtModel } from '../../../word-art/model';
  * hooks, so it is called directly and its element tree is read.
  */
 vi.mock('react-native', () => ({ View: 'View' }));
-vi.mock('react-native-svg', () => ({ default: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', Rect: 'Rect', Path: 'Path' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', Rect: 'Rect', Path: 'Path' }));
 
 const { WordArtView } = await import('../WordArt');
 
 type Props = Record<string, unknown>;
-type El = React.ReactElement<Props>;
-const childrenOf = (el: El): El[] => React.Children.toArray(el.props.children as React.ReactNode) as El[];
+type El = ReactElement<Props>;
+const childrenOf = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
 
 /** The outer view, the svg, and each shape element rendered to its host props. */
 function paint(model: WordArtModel, testID?: string): { view: El; svg: El; shapes: { tag: string; props: Props }[] } {

@@ -14,7 +14,8 @@ import {
   touchTarget,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -70,7 +71,7 @@ const drawable = (cardId: string): boolean => supportedCardIds.includes(cardId) 
  * sends `culture.note.viewed`, as opening a note's sources does. `from:
  * 'quest'` (the reader inside a running quest) offers Back only.
  */
-export function CultureNotesScreen({ route, navigation }: Props): React.ReactElement {
+export function CultureNotesScreen({ route, navigation }: Props): ReactElement {
   const storyId = route.params?.storyId;
   const noteId = route.params?.noteId;
   const from = route.params?.from;
@@ -101,7 +102,7 @@ function CultureNotesContent({
   noteId: string | undefined;
   from: CultureNotesFrom | undefined;
   navigation: Navigation;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
   const c = copy.cultureNotes;
@@ -171,7 +172,7 @@ function CultureNotesContent({
     if (spec) void slot.play(() => playPrompt(spec));
   };
   /** A note's panel: quiet (nothing shown, the live region kept) unless its term was tapped last. */
-  const soundPanel = (noteId: string): React.ReactElement => (
+  const soundPanel = (noteId: string): ReactElement => (
     <PromptPanel
       variant="status"
       view={soundAt === noteId ? slot.view : { ...slot.view, statusShown: false }}
@@ -306,10 +307,10 @@ function NoteCard({
   onToggle: () => void;
   onHear: () => void;
   /** The screen's status panel, under this note's term (shown when this term was tapped last). */
-  soundPanel: React.ReactElement;
+  soundPanel: ReactElement;
   /** "From the story"; not drawn over a running quest. */
   onOpenStory: (() => void) | undefined;
-}): React.ReactElement {
+}): ReactElement {
   const messages = useMessages();
   const romanizationMode = useRomanizationMode();
   const locale = useLocale();

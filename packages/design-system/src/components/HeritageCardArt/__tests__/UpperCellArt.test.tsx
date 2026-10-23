@@ -1,4 +1,5 @@
-import React from 'react';
+import { isValidElement } from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors } from '../../../tokens';
 import { upperCellCardArtIds } from '../upper-card-ids';
@@ -9,14 +10,14 @@ import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
  * replaced by plain tags (as Hoya.test.tsx does): every album card draws a named 200 x 200 picture on its theme tint,
  * in token colours only, with at most five fill colours besides the theme tint and the shadow (heritage-card-art.md).
  */
-vi.mock('react-native-svg', () => ({ default: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Rect: 'Rect' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Rect: 'Rect' }));
 
-type Node = React.ReactElement<Record<string, unknown>>;
+type Node = ReactElement<Record<string, unknown>>;
 
 /** Calls function components until only host tags are left. */
 function resolve(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(resolve);
-  if (!React.isValidElement(node)) return node;
+  if (!isValidElement(node)) return node;
   const el = node as Node;
   if (typeof el.type === 'function') return resolve((el.type as (p: unknown) => unknown)(el.props));
   return { type: el.type, props: { ...el.props, children: resolve(el.props.children) } };

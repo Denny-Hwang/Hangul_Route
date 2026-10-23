@@ -17,7 +17,8 @@ import {
   useCappedFont,
   useTypeScale,
 } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View, type PressableStateCallbackType, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -57,7 +58,7 @@ export function KoChip({
   marked?: boolean;
   accessibilityLabel?: string;
   testID?: string;
-}): React.ReactElement {
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -90,7 +91,7 @@ export function KoChip({
 }
 
 /** A word: its chip, then the gloss in the UI language. */
-export function WordChip({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): React.ReactElement {
+export function WordChip({ ko, romanization, gloss }: { ko: string; romanization: string; gloss: string }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 }}>
       <KoChip ko={ko} romanization={romanization} />
@@ -102,7 +103,7 @@ export function WordChip({ ko, romanization, gloss }: { ko: string; romanization
 const SKILL_ICON: Readonly<Record<Skill, IconName>> = { read: 'book', listen: 'ear', write: 'pencil' };
 
 /** Read, listen, write as outlined chips with a glyph and the word (speaking is never a skill). Nothing for none. */
-export function SkillChips({ skills }: { skills: readonly Skill[] }): React.ReactElement | null {
+export function SkillChips({ skills }: { skills: readonly Skill[] }): ReactElement | null {
   const textScale = useTypeScale();
   const m = useMessages().learner.myRoute.skill;
   if (skills.length === 0) return null;
@@ -145,7 +146,7 @@ export function CardRow({
   testID?: string;
   /** `end`: the preview end screen's still 96 card (mock preview-end.md), no flip, no burst. */
   size?: keyof typeof CARD_THUMB;
-}): React.ReactElement {
+}): ReactElement {
   const thumb = CARD_THUMB[size];
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
@@ -216,7 +217,7 @@ export function lessonDisplayStyle(focused: boolean | undefined): ViewStyle {
 }
 
 /** [ Lesson display ]: the pill chip at the right of the header row. */
-export function LessonDisplayButton({ onPress }: { onPress: () => void }): React.ReactElement {
+export function LessonDisplayButton({ onPress }: { onPress: () => void }): ReactElement {
   const m = useMessages().caregiver.browse.home;
   // Drawn at the chosen text size; the native 1.3 cap stays a budget for the step and the OS together.
   const capped = useCappedFont('body', 1.3);

@@ -1,5 +1,6 @@
 import { Body, ChoiceCard, HoyaBubble, Screen, Spacer, touchTarget, useMediaSize } from '@hangul-route/design-system';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { optionViews, promptView } from '../../logic/placement/item-view';
@@ -21,7 +22,7 @@ const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question 
  * hand-off tap unlocked audio), never over a screen reader. The exit (the
  * route's ScreenHeader Close) leaves with nothing recorded (no run has begun). Nothing here is recorded.
  */
-export function WarmupScreen(): React.ReactElement {
+export function WarmupScreen(): ReactElement {
   const { m, flow, dispatch, markGesture, say, screenReader } = usePlacement();
   const copy = m.learner.placement;
   const [busy, setBusy] = useState(false);

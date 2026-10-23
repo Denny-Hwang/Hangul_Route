@@ -1,7 +1,7 @@
 import type { Profile, ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
 import { TextSizeProvider } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
+import type { ReactElement, ComponentProps } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currBuiltInPct } from '../../../config/flags';
@@ -84,7 +84,7 @@ function snapshot(stages: readonly StageKey[], over: Partial<ProgressSnapshot> =
   });
 }
 
-async function draw(element: React.ReactElement) {
+async function draw(element: ReactElement) {
   const r = await render(element);
   await act(async () => {
     for (let i = 0; i < 4; i += 1) await Promise.resolve();
@@ -111,7 +111,7 @@ afterEach(async () => {
 });
 
 describe('the gates (section 12.2)', () => {
-  function Probe({ id }: { id: string | null }): React.ReactElement {
+  function Probe({ id }: { id: string | null }): ReactElement {
     return <>{`${String(useStageCeremonyOn(id))}|${String(useStageCheckOn(id))}`}</>;
   }
   const read = async (id: string | null): Promise<string> => JSON.parse(JSON.stringify((await render(<Probe id={id} />)).toJSON())) as string;
@@ -135,7 +135,7 @@ describe('the gates (section 12.2)', () => {
 });
 
 describe('the Journey header (C)', () => {
-  const props = (over: Partial<React.ComponentProps<typeof StageHeaderExtras>> = {}): React.ComponentProps<typeof StageHeaderExtras> => ({
+  const props = (over: Partial<ComponentProps<typeof StageHeaderExtras>> = {}): ComponentProps<typeof StageHeaderExtras> => ({
     place: 'actions',
     profileId: ID,
     stage: 'stage2',

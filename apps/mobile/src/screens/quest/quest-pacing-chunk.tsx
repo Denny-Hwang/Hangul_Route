@@ -1,6 +1,7 @@
 import { CURR_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema';
 import type { UiLocale } from '@hangul-route/i18n';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactElement } from 'react';
 import { episodeById, questById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { localizeScope } from '../../logic/content-locale';
@@ -91,7 +92,7 @@ export function afterPractice(input: {
  * over it. Its first answer goes to the memory store marked hinted, through the run store's listener as every
  * round's does; it is not scored, so the stars and the step counter are the quest's own.
  */
-export function ScaffoldRound({ scope, onDone }: { scope: MinigameScope; onDone: () => void }): React.ReactElement {
+export function ScaffoldRound({ scope, onDone }: { scope: MinigameScope; onDone: () => void }): ReactElement {
   const hint = useMessages().learner.quest.adapt.scaffoldHint;
   const answered = useRef(false);
   return (

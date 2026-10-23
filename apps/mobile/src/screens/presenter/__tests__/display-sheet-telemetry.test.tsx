@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { DisplaySheetProps } from '@hangul-route/design-system';
-import React from 'react';
+import type { ReactElement } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -39,7 +39,7 @@ afterEach(() => {
 });
 
 /** Opens the sheet, picks 한국어 and confirms with Use. */
-async function chooseKorean(element: React.ReactElement): Promise<void> {
+async function chooseKorean(element: ReactElement): Promise<void> {
   await render(element);
   await act(async () => {
     sheet.props!.language!.onSelect('ko');

@@ -1,6 +1,5 @@
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
-import React from 'react';
 import { AccessibilityInfo } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
