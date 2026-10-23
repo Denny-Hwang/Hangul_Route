@@ -752,6 +752,30 @@ describe('mastery: levels latched into cellBest, Ready to refresh, New volume an
     expect(d.tracked.filter((e) => e.name === 'mastery.level_up')).toEqual([]);
   });
 
+  it('a first read before the seeding leaves the baseline to the first read after it: the levels reached before stay history', async () => {
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:') && !i.cells.includes(CELL)).slice(0, 101);
+    const rows = { ...Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])), ...Object.fromEntries(words.map((i) => [i.id, held(2)])) };
+    // This device's first mastery read lands before the seeding has latched (memSeededAt not there yet).
+    const d = await learner(rows, { memSeededAt: undefined }, null);
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ wordsKnown: 101, milestone: null, rises: [] });
+    await d.runTimers();
+    expect((d.store.get(MEMORY_KEY('p1')) as { wk?: number }).wk).toBeUndefined();
+    // The seeding latches; the next read is the silent baseline: the level is latched, but no rise, no milestone, no event.
+    d.snapshots.set('p1', { ...(d.snapshots.get('p1') as ProgressSnapshot), memSeededAt: '2026-10-22T09:30:00.000Z' });
+    const after = await d.rt.mastery('p1', MASTERY_OFF);
+    expect(after?.cellBest[CELL]).toBe(2);
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up')).toEqual([]);
+    expect(await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true })).toMatchObject({ wordsKnown: 101, milestone: null, rises: [] });
+    await d.runTimers();
+    expect((d.store.get(MEMORY_KEY('p1')) as { wk?: number }).wk).toBe(101);
+    // From then on a rise is live.
+    const file = await d.rt.file('p1');
+    for (const i of CELL_ITEMS) if (file) file.rows[i.id] = { sh: 'stage3', st: held(4) };
+    d.snapshots.set('p1', { ...(d.snapshots.get('p1') as ProgressSnapshot), cellCheckAt: { [CELL]: '2026-10-21T10:00:00.000Z' } });
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, celebrate: true }))?.rises).toEqual([{ cellId: CELL, level: 3 }]);
+    expect(d.tracked.filter((e) => e.name === 'mastery.level_up').map((e) => e.payload)).toEqual([{ cellId: CELL, level: 3 }]);
+  });
+
   it('reads nothing without a snapshot', async () => {
     const d = device();
     expect(await d.rt.mastery('p1', MASTERY_OFF)).toBeUndefined();

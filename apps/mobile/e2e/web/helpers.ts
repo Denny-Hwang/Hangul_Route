@@ -253,15 +253,25 @@ export function readStored<T = unknown>(page: Page, key: string): Promise<T | nu
 
 /** Write a JSON value under `key` the way `platform/storage` does, then load the app again so its stores hydrate from it. */
 export async function seedStored(page: Page, key: string, value: unknown): Promise<void> {
+  await seedStoredAll(page, { [key]: value });
+}
+
+/**
+ * Write several JSON values (key to value) in one IndexedDB transaction, then load the app once, so its stores hydrate
+ * from all of them together. Seeding keys one by one with `seedStored` loads the app between the writes: a launch that
+ * reads only some of them can act on that half state and save the result (a reconcile awarding cards, say), and the
+ * next launch then starts from that save instead of the seeded record.
+ */
+export async function seedStoredAll(page: Page, entries: Record<string, unknown>): Promise<void> {
   await page.evaluate(
-    ([k, json]) =>
+    (pairs) =>
       new Promise<void>((resolve, reject) => {
         const open = indexedDB.open('keyval-store');
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const db = open.result;
           const tx = db.transaction('keyval', 'readwrite');
-          tx.objectStore('keyval').put(json, `hr:${k}`);
+          for (const [k, json] of pairs) tx.objectStore('keyval').put(json, `hr:${k}`);
           tx.oncomplete = () => {
             db.close();
             resolve();
@@ -269,7 +279,7 @@ export async function seedStored(page: Page, key: string, value: unknown): Promi
           tx.onerror = () => reject(tx.error);
         };
       }),
-    [key, JSON.stringify(value)] as const,
+    Object.entries(entries).map(([k, v]) => [k, JSON.stringify(v)] as const),
   );
   await page.goto('/');
 }
