@@ -591,9 +591,10 @@ export const landing = {
       title: 'Privacy Policy',
       /**
        * October 22, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
-       * removed (owner decision 2026-10-21 (c)); the date the fixes merge.
+       * removed (owner decision 2026-10-21 (c)); the date the fixes merge. October 23, 2026 ([GU] AMENDMENTS-GUEST-FIRST-LESSON
+       * row GU-7, section 13.3): the first-quest bullet shows with the `guestLesson` claim on; GU-7's merge date.
        */
-      effective: 'Effective October 22, 2026',
+      effective: 'Effective October 23, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {

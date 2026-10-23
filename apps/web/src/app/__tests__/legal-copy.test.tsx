@@ -161,8 +161,9 @@ describe('privacy policy', () => {
     expect(privacy).toContain('is saved with the learner\'s progress reports.');
   });
 
-  it('says the privacy page was last updated 2026-10-22 (the SN-2 fact fixes, the draft banner removed)', () => {
-    expect(privacy).toContain('Effective October 22, 2026');
+  it('says the privacy page was last updated 2026-10-23 ([GU] GU-7: the first-quest bullet; SN-2 moved it to 2026-10-22)', () => {
+    expect(privacy).toContain('Effective October 23, 2026');
+    expect(privacy).not.toContain('Effective October 22, 2026');
   });
 
   describe('launch-news email list', () => {
@@ -273,9 +274,9 @@ describe('privacy policy', () => {
   /**
    * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.3 (rows GU-6 and GU-7): the first-quest bullet in "What we collect",
    * only while the `guestLesson` claim is on. GU-7 flips the claim; the claim-off render is the rollback of section 13.1.
-   * The effective date (`legal.privacy.effective`, English only, L10) must be GU-7's merge day. It reads October 22,
-   * 2026 (set by SN-2, the day GU-7 was opened); GU-7's merge-day fix stage moves it and this pin if the merge lands
-   * later (a merge gate in docs/launch/owner-runbook.md section L).
+   * The effective date (`legal.privacy.effective`, English only, L10) must be GU-7's merge day. It reads October 23,
+   * 2026 (UTC, the day the owner switched the guest path on, 2026-10-22 owner decision); if the merge lands later, a
+   * merge-day fix stage moves it and these pins (a merge gate in docs/launch/owner-runbook.md section L-0).
    */
   describe('[GU] the first-quest bullet', () => {
     const ON = { ...SITE_CLAIMS, guestLesson: true } as const;
@@ -306,7 +307,7 @@ describe('privacy policy', () => {
     });
 
     it('with the claim on: the Policy carries its effective date (GU-7\'s merge day, a merge gate), and the rest of the Policy is the claim-off Policy', () => {
-      expect(on).toContain('Effective October 22, 2026');
+      expect(on).toContain('Effective October 23, 2026');
       expect(on.replace(SENTENCES.join(' '), ' ').replace(/\s+/g, ' ')).toBe(off);
       expect(on).not.toMatch(/\bdraft\b|legal counsel|pending review|reviewed by counsel/i);
     });
@@ -539,11 +540,11 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       }
     });
 
-    it('both documents move to 2026-10-21 with the SN-2 fact fixes and the banner removed (the merge date)', () => {
+    it('both documents moved to 2026-10-22 with the SN-2 fact fixes and the banner removed; the Privacy Policy to 2026-10-23 with [GU] GU-7', () => {
       expect(terms).toContain('Effective October 22, 2026');
       expect(terms).not.toContain('Effective October 20, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 22, 2026');
+      expect(privacy).toContain('Effective October 23, 2026');
       expect(privacy).not.toContain('Effective October 20, 2026');
     });
 
