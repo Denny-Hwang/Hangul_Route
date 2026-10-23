@@ -71,9 +71,9 @@ async function put(learnerId: string, auth: Record<string, string>, body: Record
 }
 
 type Stored = { snapshot: Record<string, unknown> & { reviews: Array<{ id: string }>; sessions: Array<Record<string, unknown>> }; summary: Record<string, unknown> };
-/** Read as a build that reads every CM-3b review kind (`?cap=warmup`, row CM-15; the gate itself is sync-review-gate.test.ts). */
+/** Read as a build that reads every CM-3b review kind (`?cap=warmup,cell-check`, row CM-15; the gate itself is sync-review-gate.test.ts). */
 async function get(learnerId: string, auth: Record<string, string>): Promise<Stored> {
-  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot?cap=warmup`, { headers: auth });
+  const res = await app.request(`/api/sync/learners/${learnerId}/snapshot?cap=warmup,cell-check`, { headers: auth });
   return ((await res.json()) as { data: Stored }).data;
 }
 
@@ -224,8 +224,8 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     const auth = await register(DEVICE_A, 'profile:suni');
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { reviews: mixedReviews }), summary });
     const fewer = snapshotFor('profile:suni', { reviews: [review('review:a', 'daily')] });
-    // Sent by a build that reads every kind it holds (`?cap=warmup`); one that cannot read `warmup` keeps it (row CM-15).
-    const res = await app.request('/api/sync/learners/profile:suni/snapshot?cap=warmup', { method: 'PUT', headers: auth, body: JSON.stringify({ ...base, baseRev: 1, snapshot: fewer, summary }) });
+    // Sent by a build that reads every kind it holds (`?cap=warmup,cell-check`); one that cannot read `warmup` keeps it (row CM-15).
+    const res = await app.request('/api/sync/learners/profile:suni/snapshot?cap=warmup,cell-check', { method: 'PUT', headers: auth, body: JSON.stringify({ ...base, baseRev: 1, snapshot: fewer, summary }) });
     expect(res.status).toBe(200);
     expect((await get('profile:suni', auth)).snapshot.reviews.map((r) => r.id)).toEqual(['review:a']);
   });
@@ -235,7 +235,7 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     await put('profile:suni', auth, { ...base, baseRev: 0, snapshot: snapshotFor('profile:suni', { ...fields, reviews: mixedReviews }), summary });
     const issued = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId: 'profile:suni' }) });
     const code = ((await issued.json()) as { data: { code: string } }).data.code;
-    const res = await app.request('/api/recovery/claim?cap=warmup', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
+    const res = await app.request('/api/recovery/claim?cap=warmup,cell-check', { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
     expect(res.status).toBe(200);
     const data = ((await res.json()) as { data: { snapshot: { snapshot: Stored['snapshot'] } } }).data;
     expect(data.snapshot.snapshot.reviews.map((r) => r.id)).toEqual(keptIds);

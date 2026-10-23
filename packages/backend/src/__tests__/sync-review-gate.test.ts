@@ -147,6 +147,57 @@ describe('the warm-up review gate (F-CURR-002 section 13, row CM-15)', () => {
   });
 });
 
+describe('the Cell Check review gate (F-CURR-002 section 13, row CM-21, Worker first)', () => {
+  const BOTH = '?cap=warmup,cell-check';
+  const check = (id: string, cellId: string, stars: 1 | 2 | 3) => ({ id, kind: 'cell-check', generatedAt: '2026-10-21T09:00:00.000Z', scope: cellId, itemIds: ['lex:sagwa'], resultStars: stars, missedItemIds: [] });
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
+    await db.reset();
+    claimLimiter.reset();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('serves Cell Check entries only to a reader that declares cell-check; a CM-15 to CM-20 build (warmup only) never sees one', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    expect((await put('profile:suni', auth, 0, [certificate, check('cell-check:a', 'episode:stage2-life', 3), warmup('2026-10-21')], BOTH)).status).toBe(200);
+    expect(await reviewIds('profile:suni', auth, BOTH)).toEqual(['review:stage1', 'cell-check:a', 'warmup:2026-10-21']);
+    expect(await reviewIds('profile:suni', auth, CAP)).toEqual(['review:stage1', 'warmup:2026-10-21']);
+    expect(await reviewIds('profile:suni', auth)).toEqual(['review:stage1']);
+  });
+
+  it('keeps the stored Cell Check entries when an older build re-uploads without them, and never prunes them (a best result)', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    await put('profile:suni', auth, 0, [certificate, check('cell-check:a', 'episode:stage2-life', 3), check('cell-check:b', 'episode:stage2-rites', 2)], BOTH);
+    // A warmup-only build left them out: their absence says nothing.
+    expect((await put('profile:suni', auth, 1, [certificate, warmup('2026-10-21')], CAP)).status).toBe(200);
+    expect(await reviewIds('profile:suni', auth, BOTH)).toEqual(['review:stage1', 'warmup:2026-10-21', 'cell-check:a', 'cell-check:b']);
+    // A build from before CM-15 (no capability) keeps both gated kinds.
+    expect((await put('profile:suni', auth, 2, [certificate])).status).toBe(200);
+    expect(await reviewIds('profile:suni', auth, BOTH)).toEqual(['review:stage1', 'warmup:2026-10-21', 'cell-check:a', 'cell-check:b']);
+    // A build that declares it sends the whole list, which is stored as sent.
+    expect((await put('profile:suni', auth, 3, [certificate, check('cell-check:a', 'episode:stage2-life', 3)], BOTH)).status).toBe(200);
+    expect(await reviewIds('profile:suni', auth, BOTH)).toEqual(['review:stage1', 'cell-check:a']);
+  });
+
+  it('the Rescue Code claim and a 409 hand Cell Check entries only to a device that declares them', async () => {
+    const auth = await register(DEVICE_A, 'profile:suni');
+    await put('profile:suni', auth, 0, [certificate, check('cell-check:a', 'episode:stage2-life', 3)], BOTH);
+    const stale = await put('profile:suni', auth, 0, [certificate], CAP);
+    expect(stale.status).toBe(409);
+    expect(stale.body.data.snapshot?.reviews.map((r) => r.id)).toEqual(['review:stage1']);
+    const issued = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId: 'profile:suni' }) });
+    const code = ((await issued.json()) as { data: { code: string } }).data.code;
+    const res = await app.request(`/api/recovery/claim${BOTH}`, { method: 'POST', headers: json, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
+    expect(res.status).toBe(200);
+    const ids = ((await res.json()) as { data: { snapshot: { snapshot: { reviews: Array<{ id: string }> } } } }).data.snapshot.snapshot.reviews.map((r) => r.id);
+    expect(ids).toEqual(['review:stage1', 'cell-check:a']);
+  });
+});
+
 describe('reviewCapsOf', () => {
   it('reads the declared capabilities from repeated and comma-joined query values', async () => {
     const { reviewCapsOf } = await import('../lib/review-kinds');
