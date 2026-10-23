@@ -345,6 +345,17 @@ function isHttpsUrl(value: unknown): value is string {
   }
 }
 
+/**
+ * Owner report 2026-10-23: an unarchive the Worker refused because some learners of the class are already in the most
+ * classes one learner can be in (`409 unarchive_over_cap`, the class stays archived). Null for any other answer;
+ * `learners` is null when the count is missing or not a whole number above zero.
+ */
+export function unarchiveOverCap(result: ApiResult<unknown>): { learners: number | null } | null {
+  if (result.ok || result.code !== 'unarchive_over_cap') return null;
+  const n = result.details?.learners;
+  return { learners: typeof n === 'number' && Number.isInteger(n) && n > 0 ? n : null };
+}
+
 function mapError(status: number): ApiError {
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
@@ -403,8 +414,9 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ space: SpaceView; changed: boolean }>(`${base}/${encodeURIComponent(spaceId)}/name`, { method: 'PATCH', body: JSON.stringify({ name }) }, [200]),
     patchSettings: (spaceId: string, patch: { anonymizeRoster?: boolean; consentMode?: 'parent' | 'school' }) =>
       call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/settings`, { method: 'PATCH', body: JSON.stringify(patch) }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
+    /** An unarchive the class cap refuses answers `409 unarchive_over_cap` with `details.learners` (read by `unarchiveOverCap`). */
     archiveSpace: (spaceId: string, archive: boolean) =>
-      call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/${archive ? 'archive' : 'unarchive'}`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
+      call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/${archive ? 'archive' : 'unarchive'}`, { method: 'POST' }, [200], { details: true }).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
     deleteLearnerData: (spaceId: string, learnerId: string) =>
       call<{ deleted: boolean }>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/data`, { method: 'DELETE' }, [200]),
     relinkRequests: (spaceId: string) =>

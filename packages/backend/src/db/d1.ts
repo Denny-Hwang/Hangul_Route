@@ -584,6 +584,15 @@ const SPACE_EVENT_INSERT_SELECT = 'INSERT INTO space_events (id, space_id, kind,
  * [SA] Whether the account owns or is a teacher member of a live class of the school (section 6.1): with
  * `promoted_from = 'teacher'`, the test that keeps an ending admin a teacher of the school. Binds (school, account, account).
  */
+/**
+ * A learner member `m` of the space bound first who is already in the cap bound third of live classes other than the
+ * space bound second (the same id twice): `unarchiveClassWithinCap` and `learnersAtClassCapOf`. A constant number of
+ * statements whatever the class size (the Free plan allows 50 per invocation).
+ */
+const LEARNER_AT_CLASS_CAP = `m.space_id = ? AND m.member_kind = 'learner'
+  AND (SELECT COUNT(*) FROM memberships o JOIN spaces s ON s.id = o.space_id
+       WHERE o.member_kind = 'learner' AND o.member_id = m.member_id AND s.kind = 'class' AND s.archived_at IS NULL AND o.space_id <> ?) >= ?`;
+
 const TEACHES_LIVE_CLASS = `EXISTS (SELECT 1 FROM spaces s WHERE s.parent_space_id = ? AND s.kind = 'class' AND s.archived_at IS NULL
   AND (s.owner_account_id = ? OR EXISTS (SELECT 1 FROM memberships cm WHERE cm.space_id = s.id AND cm.member_kind = 'account' AND cm.member_id = ? AND cm.role IN ('owner', 'teacher'))))`;
 /** [SA] The account's admin row of the school. Binds (school, account). */
@@ -810,6 +819,17 @@ export class D1Db implements Db {
   }
   renameSpace(spaceId: string, name: string): Promise<number> {
     return this.changes('UPDATE spaces SET name = ? WHERE id = ? AND archived_at IS NULL', [name, spaceId]);
+  }
+  unarchiveClassWithinCap(spaceId: string, learnerClassCap: number): Promise<number> {
+    return this.changes(
+      `UPDATE spaces SET archived_at = NULL
+       WHERE id = ? AND kind = 'class' AND archived_at IS NOT NULL
+         AND NOT EXISTS (SELECT 1 FROM memberships m WHERE ${LEARNER_AT_CLASS_CAP})`,
+      [spaceId, spaceId, spaceId, learnerClassCap],
+    );
+  }
+  async learnersAtClassCapOf(spaceId: string, learnerClassCap: number): Promise<number> {
+    return (await this.one(`SELECT COUNT(*) AS n FROM memberships m WHERE ${LEARNER_AT_CLASS_CAP}`, [spaceId, spaceId, learnerClassCap], (r) => Number(r.n ?? 0))) ?? 0;
   }
   async addSpaceEvent(e: SpaceEvent): Promise<void> {
     await this.run(

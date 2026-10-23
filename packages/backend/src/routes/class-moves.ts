@@ -30,6 +30,7 @@ import { authorizeDevice } from '../lib/device-auth';
 import { learnerCapOf } from '../lib/entitlement';
 import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
+import { settleMove } from '../lib/moves';
 import { classSeatCheck, type SeatBlock } from '../lib/seats';
 import { recordServerEvent } from '../lib/server-events';
 import { classTransferEnabled, settle, teacherVia, type TransferEnv } from '../lib/transfer';
@@ -109,24 +110,6 @@ async function executeMove(db: Db, move: StoredClassMove, decider: ClassMoveDeci
   const reason = await classSeatCheck(db, dest, move.learnerId, now, { excludeSpaceId: move.sourceSpaceId });
   if (reason) event('space.seat_refused', { kind: 'class', reason, path: 'move' });
   return { executed: false, reason };
-}
-
-/**
- * Brings an open row up to date before it is shown or acted on (there is no scheduler): past its 14 days it
- * expires; a learner who left the source or a destination that was archived ends it. Answers the row as stored.
- */
-async function settleMove(db: Db, move: StoredClassMove, now: Date): Promise<StoredClassMove> {
-  if (move.status !== 'requested') return move;
-  if (move.expiresAt <= now.toISOString()) {
-    await db.endClassMove(move.id, 'expired', 'expired', null, now);
-  } else if (!(await db.membership(move.sourceSpaceId, 'learner', move.learnerId))) {
-    await db.endClassMove(move.id, 'cancelled', 'learner_left', null, now);
-  } else {
-    const dest = await db.getSpace(move.destSpaceId);
-    if (!dest || dest.archivedAt) await db.endClassMove(move.id, 'cancelled', 'destination_archived', null, now);
-    else return move;
-  }
-  return (await db.getClassMove(move.id)) ?? move;
 }
 
 const recentMove = (m: StoredClassMove, now: Date): boolean => {
@@ -365,6 +348,21 @@ classMoveRoutes.post('/:id/class-moves', async (c) => {
   if ((await db.createClassMove(row)) === 'already_open') return fail(c, 'already_open', 'A move is already waiting for this learner', 409);
 
   if (row.kind === 'accept') {
+    // Read again after the insert: a direct move (or a leave) that landed between the checks above and the insert
+    // has already taken the learner out of the source, and an ask left waiting for it could later move a learner
+    // who is not there; a join that landed in the destination meanwhile would leave the ask pointless.
+    // Best effort, a residual race remains: a `/join` into the destination that passed its `move_waiting` check
+    // before this insert can still commit its seat after these reads, so the learner is in both classes while the
+    // ask waits. Accepting it then takes the learner out of the source (the safe side); declining or letting it
+    // expire leaves the double for the teacher to clear from the roster.
+    if (!(await db.membership(source.id, 'learner', body.learnerId))) {
+      await db.endClassMove(row.id, 'cancelled', 'learner_left', null, now);
+      return notFound(c);
+    }
+    if (await db.membership(dest.id, 'learner', body.learnerId)) {
+      await db.endClassMove(row.id, 'cancelled', 'cancelled', null, now);
+      return fail(c, 'already_member', 'The learner is already in that class', 409);
+    }
     event('space.move.requested');
     const look = await lookups(db, [row]);
     return ok(c, { move: outgoingView((await db.getClassMove(row.id)) ?? row, look) }, 201);
@@ -584,10 +582,15 @@ export async function inboxClassFields(
     const classScope = inClass ? { needed: !isMemoryScopeVersion(ack?.textVersion), current: CLASS_SCOPE_TEXT_VERSION } : null;
     if (!classTransferEnabled(env)) return { classScope, classMoves: [] };
     const moves = await db.executedClassMovesOf([learnerId], new Date(now.getTime() - CLASS_MOVE_NOTICE_MS));
-    const spaces = new Map((await db.getSpaces(moves.map((m) => m.destSpaceId))).map((s) => [s.id, s]));
+    const spaces = new Map((await db.getSpaces([...new Set(moves.flatMap((m) => [m.destSpaceId, m.sourceSpaceId]))])).map((s) => [s.id, s]));
     return {
       classScope,
-      classMoves: moves.map((m) => ({ id: m.id, to: { spaceId: m.destSpaceId, name: spaces.get(m.destSpaceId)?.name ?? '' }, executedAt: m.executedAt ?? m.updatedAt })),
+      classMoves: moves.map((m) => ({
+        id: m.id,
+        to: { spaceId: m.destSpaceId, name: spaces.get(m.destSpaceId)?.name ?? '' },
+        from: { spaceId: m.sourceSpaceId, name: spaces.get(m.sourceSpaceId)?.name ?? '' },
+        executedAt: m.executedAt ?? m.updatedAt,
+      })),
     };
   } catch {
     // A failure here never costs the inbox its plans, memberships or tier (F-SPACE-002 section 4.4 rule).

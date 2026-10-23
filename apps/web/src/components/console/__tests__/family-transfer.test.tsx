@@ -315,6 +315,29 @@ describe('FamilyMoves (family-page.md)', () => {
     expect(allTestId('consent-sheet')).toHaveLength(0);
   });
 
+  it('a Yes that goes through tells other console tabs to read their rosters again; a failed Yes does not (owner report 2026-10-23)', async () => {
+    const posted: unknown[] = [];
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class {
+        constructor(readonly name: string) {}
+        postMessage(message: unknown): void {
+          posted.push([this.name, message]);
+        }
+        close(): void {}
+      },
+    );
+    const api = makeApi([okList([view()])]);
+    api.approveTransfer.mockResolvedValueOnce({ ok: false, error: 'network', status: -1 } as never);
+    await renderPage(api);
+    await click('family-review');
+    act(() => intersect());
+    await click('consent-yes');
+    expect(posted).toEqual([]);
+    await click('consent-yes');
+    expect(posted).toEqual([['hr-roster', { type: 'roster-changed', from: expect.any(String) }]]);
+  });
+
   it('terms_changed reloads and reopens the sheet with the updated line; family_too_new closes it to the notice and hides the answer', async () => {
     const api = makeApi([okList([view()])]);
     api.approveTransfer.mockResolvedValueOnce(fail('terms_changed') as never);
