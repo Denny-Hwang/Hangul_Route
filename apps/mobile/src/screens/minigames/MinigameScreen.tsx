@@ -65,7 +65,9 @@ export function MinigameScreen(props: Props): ReactElement {
   // takes longer), so the way back is always there.
   const lessonReady = useLessonQuestReady(props.route.params.questId);
   const storyReady = useStoryQuestReady(questById(props.route.params.questId));
-  return lessonReady && storyReady ? <MinigameBody {...props} /> : <LessonWaiting />;
+  // One body per step: the step's `game.<kind>` switches and its dictation chunk are decided once, as it opens (row CM-31).
+  const { questId, stepIndex } = props.route.params;
+  return lessonReady && storyReady ? <MinigameBody key={`${questId}:${stepIndex}`} {...props} /> : <LessonWaiting />;
 }
 
 function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): ReactElement {
@@ -159,7 +161,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     case 'culture-quiz':
       return <CultureQuizGame scope={scope} onFinish={close} />;
     case 'listen-pick':
-      return <ListenPickGame scope={scope} host={host} onBack={exits.back} spelling={kit} />;
+      return <ListenPickGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exits.back} spelling={kit} />;
     case 'pic-word-match':
       return <PicWordMatchGame scope={scope} host={host} onBack={exits.back} />;
     case 'tap-respond':
@@ -173,7 +175,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     case 'realia-read':
       return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
     case 'type-hangul':
-      return <TypeHangulGame scope={scope} host={host} onBack={exits.back} hear={kit} />;
+      // Keyed on the chunk, so the game never changes its hooks while mounted (the chunk is fixed for its life).
+      return <TypeHangulGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exits.back} hear={kit} />;
     case 'trace-word':
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':

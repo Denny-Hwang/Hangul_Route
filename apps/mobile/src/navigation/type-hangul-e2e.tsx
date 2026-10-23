@@ -100,7 +100,7 @@ export function TypeHangulE2eScreen({ route, navigation }: Props): ReactElement 
 
   if (switched.kind === 'loading') return <LessonWaiting />;
   if (switched.scope.kind === 'listen-pick') {
-    return <ListenPickGame key={route.key} scope={switched.scope} host={host} onBack={() => navigation.goBack()} spelling={switched.kit} />;
+    return <ListenPickGame key={`${route.key}:${switched.kit === null ? 'plain' : 'kit'}`} scope={switched.scope} host={host} onBack={() => navigation.goBack()} spelling={switched.kit} />;
   }
-  return <TypeHangulGame key={route.key} scope={switched.scope} host={host} onBack={() => navigation.goBack()} hear={switched.kit} />;
+  return <TypeHangulGame key={`${route.key}:${switched.kit === null ? 'plain' : 'kit'}`} scope={switched.scope} host={host} onBack={() => navigation.goBack()} hear={switched.kit} />;
 }

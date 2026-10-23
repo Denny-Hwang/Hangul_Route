@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CurrFlagName } from '../../config/flags';
 import { applyGameSwitches, needsDictationChunk } from '../../logic/game-switches';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { currFlagOn } from '../../store/remote-config-store';
@@ -29,11 +30,16 @@ export function loadDictationKit(): Promise<DictationKit> {
   return loading;
 }
 
-/** The chunk when `needed` (null while it loads), `'failed'` when it could not load; null when not needed. */
+/**
+ * The chunk when `needed` (null while it loads), `'failed'` when it could not load; null when not needed. A failure
+ * stands for the life of the hook: it is never tried again in the same mount, so a step that opened on its fallback
+ * never turns into the switched step under the learner (and a game never changes its hooks); the next step's mount
+ * tries again.
+ */
 export function useDictationKit(needed: boolean): DictationKit | 'failed' | null {
   const [kit, setKit] = useState<DictationKit | 'failed' | null>(loaded);
   useEffect(() => {
-    if (!needed || (kit !== null && kit !== 'failed')) return undefined;
+    if (!needed || kit !== null) return undefined;
     let live = true;
     loadDictationKit().then(
       (chunk) => {
@@ -59,7 +65,17 @@ export type SwitchedScope = { kind: 'ready'; scope: MinigameScope; kit: Dictatio
  */
 export function useSwitchedScope<S extends MinigameScope | undefined>(scope: S): S extends MinigameScope ? SwitchedScope : undefined;
 export function useSwitchedScope(scope: MinigameScope | undefined): SwitchedScope | undefined {
-  const switched = useMemo(() => (scope === undefined ? undefined : applyGameSwitches(scope, (flag) => currFlagOn(flag))), [scope]);
+  // Each switch is read once per mount (the step), so a new scope object for the same step (the UI language changed)
+  // keeps the step's decision even if remote config changed the switch in between.
+  const decided = useRef(new Map<CurrFlagName, boolean>());
+  const on = useCallback((flag: CurrFlagName): boolean => {
+    const held = decided.current.get(flag);
+    if (held !== undefined) return held;
+    const value = currFlagOn(flag);
+    decided.current.set(flag, value);
+    return value;
+  }, []);
+  const switched = useMemo(() => (scope === undefined ? undefined : applyGameSwitches(scope, on)), [scope, on]);
   const needed = switched !== undefined && needsDictationChunk(switched);
   const kit = useDictationKit(needed);
   return useMemo(() => {

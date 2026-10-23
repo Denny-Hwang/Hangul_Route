@@ -1,7 +1,7 @@
 import { RoundSchema, isSpellingRound, typeHangulMode, type KoText, type ListenPickRound, type TypeHangulRound } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { questsAll } from '../../content';
-import { DICTATION_SWITCH, SPELLING_SWITCH, applyGameSwitches, needsDictationChunk } from '../game-switches';
+import { DICTATION_SWITCH, SPELLING_SWITCH, applyGameSwitches, needsDictationChunk, switchedFromHear } from '../game-switches';
 import { scopeFor, type MinigameScope } from '../minigame-config';
 
 /**
@@ -51,6 +51,10 @@ describe('applyGameSwitches', () => {
     expect(out.typeHangul?.rounds).toEqual([{ ...apple, mode: 'see' }, water]);
     expect(out.typeHangul?.rounds.map(typeHangulMode)).toEqual(['see', 'see']);
     expect(needsDictationChunk(out)).toBe(false);
+    // The game draws the turned round as an ordinary see round (its heading too); a round written as see is untouched.
+    expect(switchedFromHear(out.typeHangul!.rounds[0]!)).toBe(true);
+    expect(switchedFromHear(out.typeHangul!.rounds[1]!)).toBe(false);
+    expect(switchedFromHear(apple)).toBe(false);
     // The input is not changed.
     expect(typeScope.typeHangul?.rounds[0]?.mode).toBe('hear');
   });
@@ -84,7 +88,18 @@ describe('every quest with the switches off (section 14)', () => {
   });
 
   it('renders as shipped rounds only: no Dictation or spelling round is left, and every round still parses', () => {
-    for (const { at, scope } of scopes) {
+    // No shipped quest has a Dictation or spelling round yet, so each scope is also checked written as one: the off
+    // path then has something to turn (the render loop in screens/minigames/__tests__/switched-step.test.tsx mounts them).
+    const written = scopes.flatMap(({ at, scope }) => {
+      const variants = [{ at, scope }];
+      if (scope.typeHangul) variants.push({ at: `${at} (as Dictation)`, scope: { ...scope, typeHangul: { rounds: scope.typeHangul.rounds.map((r) => ({ ...r, mode: 'hear' as const })) } } });
+      if (scope.listenPick) variants.push({ at: `${at} (with a spelling round)`, scope: { ...scope, listenPick: { rounds: [spelling, ...scope.listenPick.rounds] } } });
+      return variants;
+    });
+    const turned = written.filter(({ scope }) => needsDictationChunk(scope));
+    expect(turned.length).toBeGreaterThan(0);
+    for (const { at, scope } of turned) expect(applyGameSwitches(scope, ALL_OFF), at).not.toBe(scope);
+    for (const { at, scope } of written) {
       const off = applyGameSwitches(scope, ALL_OFF);
       expect(needsDictationChunk(off), at).toBe(false);
       for (const round of off.typeHangul?.rounds ?? []) {
