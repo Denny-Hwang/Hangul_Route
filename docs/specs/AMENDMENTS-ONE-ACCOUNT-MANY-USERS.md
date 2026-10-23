@@ -581,6 +581,8 @@ New names go into `TELEMETRY_EVENT_NAMES` (append-only, `packages/content-schema
 
 No console event is added (the console's existing server-side events are enough).
 
+[GU] Rows GU-1 and GU-5 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 12): `who.shown.trigger` and `profile.switch.trigger` gain `'try'` (a learner tile picked on a chooser the site's Start learning opened), and `who.picked.kind` gains `'try'` (the **Try the first quest** tile) and `'guest'` (the live guest's own tile). A guest pick sends no `profile.switch`, since no profile is selected. The `OA_PAYLOAD_RULES` above keep the new values; the `guest.*` names have rules of their own (`GUEST_PAYLOAD_RULES`, beside these in `keptEventFields`) and are counted in `telemetry_daily` too.
+
 ### 15.1 Daily counters (row OA-1, `0015_telemetry_daily.sql`)
 
 Today the Worker keeps events only in memory (`appendEvent`, at most 10,000 per isolate, `server-events.ts:290-295`), and the `events` table of `0001` is never written, so no goal could be computed. OA-1 adds one additive table and writes **only counts**:

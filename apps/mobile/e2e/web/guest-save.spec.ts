@@ -8,11 +8,13 @@ import { questsAll } from '../../src/content/quests';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON row GU-4 (sections 8.1 to 8.6, 10, 19): the save after the first quest, on the
- * learner export. The switch is off until row GU-7, so this runs on a bundle built with it on, and with a mocked sync
- * API (the save registers the new learner once the network is back, F-SYNC-002):
+ * learner export. The switch is on in the web build since row GU-7, so this runs on the release build (`build:web`) in
+ * every pull request's shards; a bundle built with the kill switch off skips it with `E2E_GUEST=0`. The registration
+ * after the save (F-SYNC-002: the new learner reaches the server only after the agreement) needs a sync API, so those
+ * checks run on a build with a mocked one, with `E2E_GUEST_API=1`:
  *
- *   EXPO_PUBLIC_GUEST_LESSON=1 EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
- *   E2E_GUEST=1 pnpm --filter @hangul-route/mobile exec playwright test guest-save
+ *   EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid pnpm --filter @hangul-route/mobile build:web
+ *   E2E_GUEST_API=1 pnpm --filter @hangul-route/mobile exec playwright test guest-save
  *
  * Covered: an empty device saves with "Me" and the agreement, and Home shows Hoya's bubble, the card in the Library
  * and quest 1 done (G2); "Someone I look after" makes the device's first PIN on the empty device (the `open` case);
@@ -24,7 +26,9 @@ import { questsAll } from '../../src/content/quests';
  * and quest 1 on the Journey after the save; Let's start with a live guest promotes it (GU-D11); an offline save registers when
  * the network returns.
  */
-test.skip(process.env.E2E_GUEST !== '1', 'needs a learner build with EXPO_PUBLIC_GUEST_LESSON=1 (E2E_GUEST=1); the switch is off until GU-7');
+test.skip(process.env.E2E_GUEST === '0', 'a build with the kill switch EXPO_PUBLIC_GUEST_LESSON=false (E2E_GUEST=0)');
+/** A build with the mocked sync API (`EXPO_PUBLIC_API_BASE_URL=https://api.e2e.invalid`): the registration checks run. */
+const WITH_API = process.env.E2E_GUEST_API === '1';
 test.use({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' });
 
 const en = getMessages('en');
@@ -262,7 +266,11 @@ test.describe('the save after the first quest (GU-4)', () => {
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
     await expect(page.getByTestId('home-guest-saved')).toHaveCount(0);
     // From the next sync pass (the app start) the new learner registers like any other (5.4 step 5): the server learns
-    // it only now, after the agreement, with the guest's id.
+    // it only now, after the agreement, with the guest's id. The release build has no sync API: nothing was sent at all.
+    if (!WITH_API) {
+      expect(calls).toEqual([]);
+      return;
+    }
     await expect.poll(() => calls.filter((call) => call.method === 'POST' && call.path === '/api/sync/learners').length, { timeout: 20_000 }).toBe(1);
     expect((calls.find((call) => call.path === '/api/sync/learners')!.body!.learner as { id: string }).id).toBe(guest!.id);
   });
@@ -455,6 +463,7 @@ test.describe('the save after the first quest (GU-4)', () => {
   });
 
   test('offline: the save works on the device and the learner registers when the network returns (F-SYNC-002)', async ({ page, context }) => {
+    test.skip(!WITH_API, 'needs a build with the mocked sync API (E2E_GUEST_API=1)');
     const calls = await mockApi(context);
     await playToResults(page);
     const guest = await readStored<{ id: string }>(page, 'guest');

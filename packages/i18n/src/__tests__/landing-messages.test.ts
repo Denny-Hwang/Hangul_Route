@@ -353,7 +353,8 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     // October 12, 2026: the backup sentences replace "until … sign in" (privacy-statements.test.ts).
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
     // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
-    expect(l.legal.privacy.effective).toBe('Effective October 22, 2026');
+    // October 23, 2026 ([GU] GU-7, AMENDMENTS-GUEST-FIRST-LESSON 13.3): the first-quest bullet shows (the guestLesson claim on).
+    expect(l.legal.privacy.effective).toBe('Effective October 23, 2026');
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.

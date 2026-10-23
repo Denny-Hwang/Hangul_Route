@@ -160,7 +160,15 @@ Wireframe `newuser-home.md`; mock `mock/<locale>/home.html`.
    34 % wide, so the bubble never covers the frame; from 45em the frame is 52 % from 30 % and the bubble 44 %. Every size
    inside the box is a percentage of it, so 200 % text never widens the page. The capture shows the same letter the
    bubble names (`FIRST_LETTER`, ㅏ since #806).
+   [GU] Rows GU-6 and GU-7 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 13.2): while the `guestLesson` claim is on (since
+   GU-7), one line `home.hero.guest` (**Start your first quest right away. Add a name at the end.**, body size,
+   `text.secondary`) sits right under the facts line and above the two grown-up links, still in the hero's text column,
+   and every Start learning (`learnerStart(locale)`) carries `try=1`. The hero capture already shows the screen the
+   guest reaches (Discover with ㅏ).
 3. `#who`, How it works and the promises: unchanged.
+   [GU] With the `guestLesson` claim on, How it works step 1 is `how.steps.start.guestTitle` with `how.guestLevelBody`
+   (`how.guestStartBody` while `levelCheck` is off) and step 3 says `how.steps.collect.guestBody`, so no step names a
+   profile first or promises a backup before a name is added (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 13.2 table).
 4. **"What does it cost?" leaves `/`** (OD-SN-3, default): its free line is the first sentence of the closing band; the
    plan lines stay on `/parents` and `/teachers`.
 5. **Closing band** (new `section`, `aria-labelledby`): `brand.primary` fill, `radii.xxl`, centred; h2
@@ -290,6 +298,14 @@ change heights, F-SITE-002 §3.11), and lowers a budget only with that measureme
   #804 (under 40 KB).
 - `site-word-budget.test.tsx` counts the visually hidden "Language" word and the endonym; the closed language menu's
   items are not counted (closed `<details>`).
+- [GU] Rows GU-6 and GU-7 (`AMENDMENTS-GUEST-FIRST-LESSON.md` section 13.2): the `/` headroom took the `guestLesson`
+  hero line, and no budget moved. GU-7 measures the shipped export with the claim on (`site-budgets.spec.ts`, macOS
+  Chromium): `/` 3,094 px at 375 (headroom 3,150) and 2,296 px at 1280 (at most 2,300), 290 and 294 words (at most 300);
+  es 3,332 and 2,363 px, 301 and 305 words; ko 3,041 and 2,220 px, 234 and 238 words (es and ko against the 10 %
+  allowance: 3,465, 2,530 and 330). The first-screen rules of the table hold in en, es and ko at 320, 375, 768, 1280
+  and 1920 px (`landing-layout.spec.ts`). Should a CI image measure `/` over 2,300 at 1280, the fallback that
+  section 13.2 of that file pre-approves applies (at 960 px and wider the line drops its top margin and the hero's
+  bottom padding takes one spacing step smaller), never a budget change.
 
 ### 3.13 Product captures [SN] (new)
 

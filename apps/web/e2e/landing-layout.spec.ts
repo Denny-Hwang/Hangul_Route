@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
-import { homePath, openForcedHome } from './forced-claims';
 import { LANDING_WIDTHS } from './landing-targets';
 
 /**
@@ -281,12 +280,13 @@ test.describe('[SN] the language menu open: no sideways scroll, the menu inside 
 });
 
 /**
- * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (row GU-6): the home with the `guestLesson` claim forced on through its
- * `claims` prop (`forced-claims.ts`), at 320, 375, 768, 1280 and 1920 px in en, es and ko. Nothing scrolls sideways;
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13.2 (rows GU-6 and GU-7): the home as shipped since GU-7 (the
+ * `guestLesson` claim on in `SITE_CLAIMS`), at 320, 375, 768, 1280 and 1920 px in en, es and ko. Nothing scrolls sideways;
  * the header, the h1, the lead and Start learning are on the first screen (568 px tall at 320, as AMENDMENTS-SITE-NEWUSER
  * section 3.11 measures phones); from 375 px the two grown-up links are too; the line stays in the hero, under the facts
  * line and above the grown-up links; and every Start learning carries try=1 while Sign in never does.
  */
+const homePath = (locale: 'en' | 'es' | 'ko'): string => (locale === 'en' ? '/' : `/${locale}`);
 const GUEST_VIEWS = [
   { width: 320, height: 568 },
   { width: 375, height: 812 },
@@ -298,9 +298,10 @@ const GUEST_VIEWS = [
 for (const lang of ['en', 'es', 'ko'] as const) {
   const hero = getMessages(lang).landing.home.hero;
   for (const { width, height } of GUEST_VIEWS) {
-    test(`[GU] ${homePath(lang)} at ${width} x ${height}, guestLesson forced on: first screen, the line in the hero, try=1 on Start learning`, async ({ page }) => {
+    test(`[GU] ${homePath(lang)} at ${width} x ${height}, guestLesson as shipped: first screen, the line in the hero, try=1 on Start learning`, async ({ page }) => {
       await page.setViewportSize({ width, height });
-      await openForcedHome(page, lang, 'on');
+      await page.goto(homePath(lang));
+      await page.waitForLoadState('load');
       const { doc, body } = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
       const culprits = doc > width || body > width ? (await overflowing(page, width)).join('; ') : '';
       expect(doc, culprits).toBeLessThanOrEqual(width);

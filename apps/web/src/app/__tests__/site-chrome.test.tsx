@@ -54,7 +54,8 @@ function controls(html: string): Control[] {
     text: (m[3] ?? '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&'),
   }));
 }
-const hrefOf = (c: Control | undefined): string => /href="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '';
+/** The control's href, decoded (`&amp;` joins `lang` and `try` on a Start learning link, [GU] GU-7). */
+const hrefOf = (c: Control | undefined): string => (/href="([^"]*)"/.exec(c?.attrs ?? '')?.[1] ?? '').replace(/&amp;/g, '&');
 /** True for a link of the footer's locale switcher (it carries hrefLang and marks the current locale's page). */
 const isSwitcherLink = (c: Control): boolean => c.attrs.includes('hrefLang=');
 

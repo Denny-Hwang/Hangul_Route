@@ -6,11 +6,8 @@ import { shot } from './shots';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON row GU-3 (section 19): the guest's first quest on an empty device, on the learner
- * export. The switch `EXPO_PUBLIC_GUEST_LESSON` is off until row GU-7, so this runs only on a bundle built with it on,
- * with `E2E_GUEST=1`:
- *
- *   EXPO_PUBLIC_GUEST_LESSON=1 pnpm --filter @hangul-route/mobile build:web
- *   E2E_GUEST=1 pnpm --filter @hangul-route/mobile exec playwright test guest-first-quest
+ * export. Row GU-7 turned the switch `EXPO_PUBLIC_GUEST_LESSON` on in the web build, so this runs on the release build
+ * (`build:web`) in every pull request's shards; a bundle built with the kill switch off skips it with `E2E_GUEST=0`.
  *
  * Covered: `/?try=1` reaches ㅏ in 2 taps (G1: the site's Start learning, then Continue on Hoya's hello), in Korean
  * with `lang=ko`; `try` leaves the address and `lang` stays; a reload within 30 minutes reopens quest 1; 31 minutes
@@ -20,7 +17,7 @@ import { shot } from './shots';
  * writes to the document title on the web); a run started from `/?try=1` or from Welcome's Back to my quest closes
  * the grown-up session of the tab (CS-G3).
  */
-test.skip(process.env.E2E_GUEST !== '1', 'needs a learner build with EXPO_PUBLIC_GUEST_LESSON=1 (E2E_GUEST=1); the switch is off until GU-7');
+test.skip(process.env.E2E_GUEST === '0', 'a build with the kill switch EXPO_PUBLIC_GUEST_LESSON=false (E2E_GUEST=0)');
 test.use({ viewport: { width: 360, height: 740 } });
 
 const en = getMessages('en');

@@ -243,7 +243,7 @@ export interface Flags {
   /**
    * [GU] Try the first quest without a profile (AMENDMENTS-GUEST-FIRST-LESSON sections 6, 7 and 15, rows GU-3 to GU-5):
    * the `try=1` boot intent, the guest run, Welcome's waiting card and the chooser's guest tiles. OFF when row GU-3
-   * lands; row GU-7 turns it on with the site claim. Web only (GU-D16, OQ-G1): a native bundle reads false whatever
+   * landed; ON in the web learner build since row GU-7, together with the site claim `guestLesson`. Web only (GU-D16, OQ-G1): a native bundle reads false whatever
    * `EXPO_PUBLIC_GUEST_LESSON` says, and the native builds never set it. A kill switch (`parseKillSwitch`). Off:
    * `try=1` is taken and dropped, no Welcome card, no guest run starts or reopens; a live record is kept (the sweep
    * still runs, row GU-2).
@@ -275,7 +275,8 @@ const launchDefaults: Flags = {
   pinResetSignInEnabled: false,
   biometricShortcutEnabled: true,
   multiJoinEnabled: true,
-  guestLessonEnabled: false,
+  // [GU] GU-7 turned this on with the site claim; web only (GU-D16), so a native bundle's launch value stays off.
+  guestLessonEnabled: !isNativeBundle(),
 };
 
 export const flags: Flags = {

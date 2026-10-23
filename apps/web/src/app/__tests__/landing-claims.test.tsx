@@ -218,9 +218,11 @@ describe('site text — the level-check lines follow the levelCheck claim', () =
     const H = t.home.how;
     const L = t.persona.learners.faq.level;
 
+    // [GU] With the guest start on (today, since GU-7) step 1 and the level answer take their guest variants; every
+    // combination of the two claims is pinned in landing-guest-claim.test.tsx. Here the guest start is off.
     for (const [state, base] of [
       ['every claim off', ALL_CLAIMS_OFF],
-      ['today', SITE_CLAIMS],
+      ['today, guest start off', { ...SITE_CLAIMS, guestLesson: false }],
     ] as const) {
       it(`${locale} (${state}, levelCheck off): no level question, step 1 as before`, () => {
         const claims = { ...base, levelCheck: false };

@@ -14,8 +14,8 @@ import { SITE_CLAIMS, type SiteClaims } from '../../data/site-claims';
 import { appUrl } from '../../lib/console/config';
 
 /**
- * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13 (row GU-6): the site with the `guestLesson` claim off (as shipped until
- * GU-7) and forced on, through the pages' `claims` prop, in every combination with `levelCheck` and in en, es and ko.
+ * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 13 (rows GU-6 and GU-7): the site with the `guestLesson` claim on (as
+ * shipped since GU-7) and off (the rollback of section 13.1), through the pages' `claims` prop, in every combination with `levelCheck` and in en, es and ko.
  *
  * - Every Start learning carries `try=1` with the claim on and never with it off; Sign in and Create never carry it.
  * - Home: the one hero line under the facts line; How it works step 1 and step 3 tell a true start (section 13.2):
@@ -36,6 +36,8 @@ function textOf(html: string): string {
 }
 
 const claimsWith = (levelCheck: boolean, guestLesson: boolean): Readonly<SiteClaims> => ({ ...SITE_CLAIMS, levelCheck, guestLesson });
+/** The rollback state of section 13.1: today's claims with the guest start withdrawn. */
+const OFF: Readonly<SiteClaims> = { ...SITE_CLAIMS, guestLesson: false };
 const COMBINATIONS = [false, true].flatMap((levelCheck) => [false, true].map((guestLesson) => ({ levelCheck, guestLesson })));
 
 /** Every href of the rendered page, decoded. */
@@ -52,8 +54,12 @@ const homeSteps = (html: string): string[] =>
 const heroText = (html: string): string => textOf(/<section aria-labelledby="home-title"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '');
 
 describe('[GU] the guestLesson claim on the site (AMENDMENTS-GUEST-FIRST-LESSON section 13)', () => {
-  it('is off today (it flips only in GU-7)', () => {
-    expect(SITE_CLAIMS.guestLesson).toBe(false);
+  it('is on today (flipped in GU-7), and a page without a claims prop renders as the claim on', () => {
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
+    for (const locale of LOCALES) {
+      expect(renderToStaticMarkup(<HomePage locale={locale} />)).toBe(renderToStaticMarkup(<HomePage locale={locale} claims={SITE_CLAIMS} />));
+      expect(renderToStaticMarkup(<HomePage locale={locale} />)).toContain(getMessages(locale).landing.home.hero.guest);
+    }
   });
 
   for (const locale of LOCALES) {
@@ -186,7 +192,9 @@ describe('[GU] every other caller of learnerStart gets try=1 from the page claim
         expect(on.length).toBeGreaterThanOrEqual(3);
         for (const href of on) expect(new URL(href).searchParams.get('try'), href).toBe('1');
         for (const href of grownUpLinks(render(ON))) expect(href).not.toMatch(/[?&]try=/);
-        for (const href of learnerLinks(render(SITE_CLAIMS))) expect(href).not.toMatch(/[?&]try=/);
+        for (const href of learnerLinks(render(OFF))) expect(href).not.toMatch(/[?&]try=/);
+        // The shipped claims (GU-7) are the on state.
+        expect(learnerLinks(render(SITE_CLAIMS))).toEqual(on);
         // No other guest copy reaches these pages (OQ-G7): the one line is the home's.
         expect(textOf(render(ON))).not.toContain(getMessages(locale).landing.home.hero.guest);
       });
@@ -214,7 +222,7 @@ describe('[GU] the Privacy Policy first-quest bullet (section 13.3), English onl
   for (const locale of LOCALES) {
     it(`${locale}: shown in "What we collect" with the claim on, in English, and absent with it off`, () => {
       const on = renderToStaticMarkup(<PrivacyPage locale={locale} claims={claimsWith(true, true)} />);
-      const off = renderToStaticMarkup(<PrivacyPage locale={locale} claims={SITE_CLAIMS} />);
+      const off = renderToStaticMarkup(<PrivacyPage locale={locale} claims={OFF} />);
       expect(textOf(on).split(BULLET)).toHaveLength(2);
       expect(textOf(off)).not.toContain(BULLET);
       expect(textOf(off)).not.toContain('Trying the first quest');

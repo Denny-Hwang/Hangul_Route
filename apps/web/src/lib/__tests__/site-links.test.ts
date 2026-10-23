@@ -188,22 +188,30 @@ describe('createAccount (/signin?mode=create&persona=<p>)', () => {
   });
 });
 
-describe('learnerStart (the learner app, unchanged behaviour)', () => {
-  it.each(LOCALES)('%s equals the landing hand-off appEntryUrl(appUrl(), locale)', (locale) => {
-    expect(learnerStart(locale)).toBe(appEntryUrl(appUrl(), locale));
+describe('learnerStart (the learner app)', () => {
+  // [GU] The claim-off link is the landing hand-off unchanged; with the shipped claim (on since GU-7) it adds try=1.
+  const OFF = { ...SITE_CLAIMS, guestLesson: false } as const;
+
+  it.each(LOCALES)('%s equals the landing hand-off appEntryUrl(appUrl(), locale) with the guest claim off', (locale) => {
+    expect(learnerStart(locale, OFF)).toBe(appEntryUrl(appUrl(), locale));
   });
 
-  it('is the production learner app, with ?lang= from a non-English page', () => {
-    expect(learnerStart('en')).toBe('https://app.hangulroute.com');
-    expect(learnerStart('es')).toBe('https://app.hangulroute.com?lang=es');
-    expect(learnerStart('ko')).toBe('https://app.hangulroute.com?lang=ko');
+  it('is the production learner app, with ?lang= from a non-English page (and try=1 after it, as shipped)', () => {
+    expect(learnerStart('en', OFF)).toBe('https://app.hangulroute.com');
+    expect(learnerStart('es', OFF)).toBe('https://app.hangulroute.com?lang=es');
+    expect(learnerStart('ko', OFF)).toBe('https://app.hangulroute.com?lang=ko');
+    expect(learnerStart('en')).toBe('https://app.hangulroute.com/?try=1');
+    expect(learnerStart('es')).toBe('https://app.hangulroute.com/?lang=es&try=1');
+    expect(learnerStart('ko')).toBe('https://app.hangulroute.com/?lang=ko&try=1');
   });
 
   it('follows NEXT_PUBLIC_APP_URL, never CONSOLE_ORIGIN', () => {
     vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://preview.app.example.com/');
     vi.stubEnv('CONSOLE_ORIGIN', 'https://console.example.com');
-    expect(learnerStart('en')).toBe('https://preview.app.example.com');
-    expect(learnerStart('es')).toBe('https://preview.app.example.com?lang=es');
+    expect(learnerStart('en', OFF)).toBe('https://preview.app.example.com');
+    expect(learnerStart('es', OFF)).toBe('https://preview.app.example.com?lang=es');
+    expect(learnerStart('en')).toBe('https://preview.app.example.com/?try=1');
+    expect(learnerStart('es')).toBe('https://preview.app.example.com/?lang=es&try=1');
   });
 });
 
@@ -215,11 +223,12 @@ describe('[GU] learnerStart with the guestLesson claim', () => {
   const ON = { ...SITE_CLAIMS, guestLesson: true } as const;
   const OFF = { ...SITE_CLAIMS, guestLesson: false } as const;
 
-  it('defaults to SITE_CLAIMS, where the claim is off until GU-7: no try=1 today', () => {
-    expect(SITE_CLAIMS.guestLesson).toBe(false);
+  it('defaults to SITE_CLAIMS, where the claim is on since GU-7: try=1 today, in every locale', () => {
+    expect(SITE_CLAIMS.guestLesson).toBe(true);
     for (const locale of LOCALES) {
       expect(learnerStart(locale)).toBe(learnerStart(locale, SITE_CLAIMS));
-      expect(learnerStart(locale)).not.toMatch(/try=/);
+      expect(learnerStart(locale)).toBe(learnerStart(locale, ON));
+      expect(new URL(learnerStart(locale)).searchParams.get('try')).toBe('1');
     }
   });
 

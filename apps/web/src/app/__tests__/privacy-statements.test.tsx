@@ -151,10 +151,10 @@ describe('the pages say what the app does, in the backup sentence', () => {
     expect(where).toContain('Data in transit is encrypted (HTTPS), and at rest it is access-controlled.');
   });
 
-  it('Privacy Policy: no draft banner (owner decision 2026-10-21 (c)), with the new effective date', () => {
+  it('Privacy Policy: no draft banner (owner decision 2026-10-21 (c)), with the new effective date ([GU] GU-7)', () => {
     const privacy = render(enPrivacyPage);
     expect(privacy).not.toContain('pending review by qualified legal counsel');
-    expect(privacy).toContain('Effective October 22, 2026');
+    expect(privacy).toContain('Effective October 23, 2026');
   });
 
   it('old home: the trust strip says "Child safety first" (OD-4) and makes no claim about which personal data we hold', () => {

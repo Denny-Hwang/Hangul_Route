@@ -267,6 +267,9 @@ describe('locale pages are the English pages with locale links', () => {
             ? `/${locale}${href}`
             : href === 'https://app.hangulroute.com'
               ? `${href}?lang=${locale}`
+              : // [GU] Start learning with the guestLesson claim on (GU-7): `lang` goes before `try=1`.
+                href === 'https://app.hangulroute.com/?try=1'
+                ? `https://app.hangulroute.com/?lang=${locale}&amp;try=1`
               : href.startsWith('https://app.hangulroute.com/signin')
                 ? `${href}${href.includes('?') ? '&amp;' : '?'}lang=${locale}`
                 : href;

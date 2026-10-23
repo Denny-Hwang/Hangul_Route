@@ -577,28 +577,42 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_MULTI_JOIN');
   });
-  it('[GU] guestLessonEnabled (AMENDMENTS-GUEST-FIRST-LESSON GU-3) is OFF until GU-7; on only in a web bundle, by the kill switch values', async () => {
+  it('[GU] guestLessonEnabled (AMENDMENTS-GUEST-FIRST-LESSON GU-7) is ON by default in a web bundle; the kill switch values turn it off', async () => {
     delete process.env.EXPO_PUBLIC_GUEST_LESSON;
     process.env.EXPO_OS = 'web';
     let mod = await reload();
-    expect(mod.flags.guestLessonEnabled).toBe(false);
-    expect(mod.launchDefaultFlags.guestLessonEnabled).toBe(false);
+    expect(mod.flags.guestLessonEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.guestLessonEnabled).toBe(true);
     for (const on of ['true', '1', 'on', 'yes', ' ON ']) {
       process.env.EXPO_PUBLIC_GUEST_LESSON = on;
       mod = await reload();
       expect(mod.flags.guestLessonEnabled, JSON.stringify(on)).toBe(true);
     }
-    for (const off of ['false', '0', 'off', 'no', 'maybe']) {
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
       process.env.EXPO_PUBLIC_GUEST_LESSON = off;
       mod = await reload();
       expect(mod.flags.guestLessonEnabled, JSON.stringify(off)).toBe(false);
     }
-    // GU-D16, OQ-G1: never in a native build, whatever the value says.
-    process.env.EXPO_PUBLIC_GUEST_LESSON = 'true';
+    // A kill switch: an unknown word leaves the launch value (on).
+    process.env.EXPO_PUBLIC_GUEST_LESSON = 'maybe';
+    mod = await reload();
+    expect(mod.flags.guestLessonEnabled).toBe(true);
+    delete process.env.EXPO_PUBLIC_GUEST_LESSON;
+    delete process.env.EXPO_OS;
+  }, RELOADS_MS);
+
+  it('[GU] guestLessonEnabled is never on in a native bundle (GU-D16, OQ-G1): off by default and whatever the value says', async () => {
     for (const os of ['ios', 'android']) {
       process.env.EXPO_OS = os;
-      mod = await reload();
+      delete process.env.EXPO_PUBLIC_GUEST_LESSON;
+      let mod = await reload();
       expect(mod.flags.guestLessonEnabled, os).toBe(false);
+      expect(mod.launchDefaultFlags.guestLessonEnabled, os).toBe(false);
+      for (const on of ['true', '1', 'on']) {
+        process.env.EXPO_PUBLIC_GUEST_LESSON = on;
+        mod = await reload();
+        expect(mod.flags.guestLessonEnabled, `${os} ${on}`).toBe(false);
+      }
     }
     delete process.env.EXPO_PUBLIC_GUEST_LESSON;
     delete process.env.EXPO_OS;
