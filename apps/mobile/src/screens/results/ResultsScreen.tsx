@@ -44,6 +44,9 @@ import { freeEndPrimary, freeEndResults, freeLessonCards } from '../../logic/fre
 import { offplanFinishedEvent, planBeforeOf, routeNext, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
+import { ownedIdsOf } from '../../logic/awards/upper-cards';
+import { awardWorldFor } from '../../content/award-world';
+import { currFlagOn } from '../../store/remote-config-store';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
 import { PRIZE_STAGES, prizeStageOf, stageNumber } from '../../logic/stage1/stage-complete';
@@ -164,6 +167,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         retries,
       },
       {
+        // F-CURR-002 row CM-23: a cell's upper-cell card arrives on this run only while `upperCards` is on.
+        world: awardWorldFor(currFlagOn('upperCards', profile.id), ownedIdsOf(useProgressStore.getState().byProfile[profile.id]?.cards)),
         isHydrated: (id) => useProgressStore.getState().hydratedFor.has(id),
         snapshot: (id) => useProgressStore.getState().byProfile[id],
         recordQuestComplete,

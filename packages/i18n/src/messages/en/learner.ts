@@ -501,6 +501,19 @@ export const learner = {
       /** The Next card row's name: "Next card" and how to earn it (the earn hint). */
       nextA11y: (hint: string) => `Next card. ${hint}`,
     },
+    /**
+     * The category albums (F-CURR-002 §7.2, row CM-23): one per theme, filled by the upper-cell cards of Stages 2 to 7.
+     * An album shows the cards held and how many (it only fills), never what is left (D3); one with none says New.
+     */
+    albums: {
+      title: 'Albums',
+      line: 'Each theme has an album. Finish a cell from Stage 2 on to add its card.',
+      names: { letters: 'Letters', life: 'Food', rites: 'Holidays', nature: 'Nature', crafts: 'Play' },
+      count: (n: number) => plural('en', n, { one: '1 card', other: `${n} cards` }),
+      fresh: 'New',
+      /** An album row's name: the album and its count, or that it is new. */
+      a11y: (name: string, status: string) => `${name} album: ${status}`,
+    },
     /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
     earnHint: {
       /** `title` is the episode's title (content). */

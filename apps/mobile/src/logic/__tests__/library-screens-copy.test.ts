@@ -71,4 +71,26 @@ describe('Library screens (F-STORY-006 PR 6.1)', () => {
     expect(view).toContain('a11y.lockedCardHint(');
     expect(read('CardDetailScreen.tsx')).toContain('showHowToEarn');
   });
+
+  it('the category albums (F-CURR-002 §7.2, row CM-23): a chunk of their own behind upperCards, copy that only fills', () => {
+    const library = read('LibraryScreen.tsx');
+    expect(library).toContain('<AlbumsSlot on={upperCards}');
+    expect(library).toContain('awardWorldFor(upperCards, unlockedIds)');
+    const chunk = read('upper-cards-chunk.tsx');
+    expect(chunk).not.toMatch(/\p{Extended_Pictographic}/u);
+    expect(chunk).toContain('m.count(');
+    expect(chunk).toContain('m.fresh');
+    // Never an empty slot drawn or a count of what is left (D3, §7.7).
+    expect(chunk).not.toMatch(/slots\.length|canComplete|\.slots\.map/);
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const m = getMessages(locale).learner.library.albums;
+      const texts = [m.title, m.line, m.fresh, ...Object.values(m.names), m.count(1), m.count(2), m.count(12), m.a11y(m.names.letters, m.count(2))];
+      for (const t of texts) {
+        expect(t, `${locale}: ${t}`).not.toMatch(/%|\d+\s*(\/|of|de|중)\s*\d+/);
+        expect(t, `${locale}: ${t}`).not.toMatch(/\p{Extended_Pictographic}/u);
+      }
+      expect(Object.keys(m.names)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
+    }
+    expect(Object.values(getMessages('en').learner.library.albums.names)).toEqual(['Letters', 'Food', 'Holidays', 'Nature', 'Play']);
+  });
 });

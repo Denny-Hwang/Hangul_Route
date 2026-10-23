@@ -5,10 +5,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { episodesAll } from '../../content';
+import { heritageCardsAll } from '../../content/heritage-cards';
+import { UPPER_CELL_CARDS } from '../../content/upper-cell-cards';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { recapStages } from '../../logic/reviews/stage-ceremony';
-import { shownStageCards, stageCardOpenedEvent } from '../../logic/reviews/stage-check-offer';
+import { shownStageCards, stageCardOpenedEvent, stageCeremonyCards } from '../../logic/reviews/stage-check-offer';
 import { stageNumber, stagePrizeCards } from '../../logic/stage1/stage-complete';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -40,7 +42,10 @@ export function StageRecapScreen({ navigation }: Props): React.ReactElement {
   const [stages] = useState<StageKey[]>(() => (snapshot && on ? recapStages(snapshot, episodesAll) : []));
   const owned = snapshot?.cards;
   const cards = useMemo<HeritageCard[]>(
-    () => stages.flatMap((stage) => shownStageCards(stagePrizeCards(stage), owned ?? [], upperCards)).map((c) => localizeCard(c, locale)),
+    () =>
+      stages
+        .flatMap((stage) => shownStageCards(stageCeremonyCards(stage, stagePrizeCards(stage), UPPER_CELL_CARDS, heritageCardsAll), owned ?? [], upperCards))
+        .map((c) => localizeCard(c, locale)),
     [stages, owned, upperCards, locale],
   );
 

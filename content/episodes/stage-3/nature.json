@@ -8,7 +8,7 @@
   "hoyaIntroEn": "I love animals! Let us read and build sentences about them.",
   "order": 4,
   "pillarTags": ["D2"],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:gom"],
   "quests": [
     {
       "id": "quest:stage3-nature-q1",

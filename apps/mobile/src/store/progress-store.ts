@@ -14,10 +14,11 @@ import {
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
-import { awardWorld, welcomeCardIds } from '../content/award-world';
+import { awardWorldFor, welcomeCardIds } from '../content/award-world';
 import { applyAwards } from '../logic/awards/apply';
 import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
+import { ownedIdsOf } from '../logic/awards/upper-cards';
 import type { DerivedAward } from '../logic/awards/types';
 import { latchQuests, recordBestQuest } from '../logic/quest-progress';
 import { sessionKindOf, takesOver, type SessionOptions } from '../logic/sessions/hold';
@@ -33,6 +34,7 @@ import { track } from '../platform/telemetry';
 import { isLiveGuestId } from './guest-store';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
+import { upperCardsOnFor } from './upper-cards-switch';
 
 /** The learner's progress snapshot (`hr:progress:<id>`); exported for the removal sweep (row OA-7a). */
 export const PROGRESS_KEY = (profileId: string): string => `progress:${profileId}`;
@@ -392,7 +394,9 @@ function withAwards(profileId: string, snap: ProgressSnapshot): { snap: Progress
   const profile = useProfileStore.getState().profiles.find((p) => p.id === profileId);
   if (!profile) return { snap, added: [] };
   try {
-    const added = missingAwards(awardWorld, snap, profile);
+    // F-CURR-002 row CM-23: the upper-cell cards arrive only while `upperCards` is on for this learner.
+    const world = awardWorldFor(upperCardsOnFor(profileId), ownedIdsOf(snap.cards));
+    const added = missingAwards(world, snap, profile);
     if (added.length === 0) return { snap, added };
     return { snap: applyAwards(snap, added, new Date().toISOString()), added };
   } catch {
@@ -828,3 +832,4 @@ onProfileRemoved((profileId) => {
   }));
   removeKey(key(profileId)).catch(() => undefined);
 });
+

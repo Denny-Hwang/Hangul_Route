@@ -79,7 +79,7 @@ function pairs(value: unknown, out: Array<[string, string]> = []): Array<[string
 }
 
 describe('Animal Sentences (F-CURR-001 S3-4)', () => {
-  it('is the nature cell of Stage 3: three quests, no new cards, ready exactly when both MAR sign-offs and three passes are in', () => {
+  it('is the nature cell of Stage 3: three quests, its one card the album card of row CM-23, ready exactly when both MAR sign-offs and three passes are in', () => {
     expect(cell.id).toBe('episode:stage3-nature');
     expect(cell.titleEn).toBe('Animal Sentences');
     expect(cell.quests.map((q) => q.id)).toEqual([
@@ -87,7 +87,8 @@ describe('Animal Sentences (F-CURR-001 S3-4)', () => {
       'quest:stage3-nature-q2',
       'quest:stage3-nature-q3',
     ]);
-    expect(cell.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(cell.rewardCardIds).toEqual(['card:gom']);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
     const signedOff =
       cell.review.language === 'native-reviewed' &&

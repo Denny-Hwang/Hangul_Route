@@ -1,7 +1,10 @@
-# F-CARD-S3-001 — Stage 3 Card Illustrations (deferred)
+# F-CARD-S3-001 — Stage 3 Card Illustrations
 
-**Status**: `draft` — implementation **blocked** on Stage 3 content (sentence library) being authored.
-**Scope**: `packages/design-system/src/components/HeritageCardArt/` + `apps/mobile/src/content/`
+**Status**: `ready` — amended 2026-10-23 by F-CURR-002 row CM-23 part 1: one card per upper cell, shipped behind the `upperCards` switch (the note below). Was `draft`, waiting on the stage's content, which now exists.
+
+> **Amended 2026-10-23 by F-CURR-002 row CM-23 part 1 (section 7.2, which settles F-CURR-001 OD-7):** its row ships the cards behind the `upperCards` switch (built-in pct 0; the owner ramps it). The scope is now **one card per upper cell**, earned by finishing the cell's first volume, not the earlier plan of about 30 cards for the stage: First Sentences 한글 (card:hangeul), Daily Mini-Sentences 떡 (card:tteok), Festival Sentences 보름달 (card:full-moon), Animal Sentences 곰 (card:gom), Game Sentences 윷 (card:yut). Each card's back-face fact cites a public institution from F-CURR-002 section 6.6 (`apps/mobile/src/content/upper-cell-card-sources.ts`). The cards fill the five category albums of the Library. Sections 2, 3.1, 3.2 (rarity mix and per-theme legendary), 5, 6 and 7 below are superseded by F-CURR-002 section 7.2 and its decision record; the visual contract of 3.2 (geometric minhwa, theme tokens, at most five colours) still holds. The drawings are `UpperCellCardArt` (`HeritageCardArt/UpperCellArt.tsx`), loaded in the app's upper-cards chunk.
+
+**Scope**: `packages/design-system/src/components/HeritageCardArt/` + `apps/mobile/src/content/` · amended (row CM-23): `packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx` and `card-ids.ts` (`upperCellCardArtIds`), `apps/mobile/src/content/heritage-cards.ts` (`upperCellCards`), `content/upper-cell-cards.ts`, the Library albums
 **Owner**: solo dev
 **Rollout**: Stage 3 unlock (after Stage 2 alpha + sentence content authoring)
 

@@ -34,6 +34,7 @@ import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { usePwaStore } from './src/store/pwa-store';
 import { startRemoteConfig } from './src/store/remote-config-store';
+import { wireUpperCards } from './src/store/upper-cards-wiring';
 import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
@@ -119,6 +120,8 @@ export default function App(): React.ReactElement {
     const unfollowGuest = followGuestChanges();
     void countVisit();
     // Remote config (F-CURR-002 section 12.2): the last copy, fetched when due and on each foreground; it can only reduce.
+    // F-CURR-002 row CM-23: the award reconcile reads `upperCards`, and runs again when the copy turns it on.
+    const unwireUpperCards = wireUpperCards();
     const stopRemoteConfig = startRemoteConfig();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
@@ -189,6 +192,7 @@ export default function App(): React.ReactElement {
       offInbox();
       foreground.remove();
       stopRemoteConfig();
+      unwireUpperCards();
       stopMemory();
       setProgressPersistListener(null);
     };

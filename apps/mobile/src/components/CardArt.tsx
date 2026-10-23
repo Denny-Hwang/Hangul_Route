@@ -8,6 +8,7 @@ import {
   radii,
   supportedCardIds,
   typography,
+  upperCellCardArtIds,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
@@ -18,6 +19,8 @@ import { cardArtSource, cardCoverCrop, cardPlateLayout, cardWordFontSize, type C
 import { storyCoverArt } from '../logic/story/scene-view';
 import { storyCoverVariant } from '../logic/story/story-tile';
 import { useStoryLoaded } from '../screens/story-content';
+import { UpperCardArtSlot } from '../screens/library/upper-cards-entry';
+import { useCurrFlag } from '../store/remote-config-store';
 
 /**
  * What a screen may set on the face: corner radius and placement only. A
@@ -97,8 +100,11 @@ export function CardArt({
   const coverReady = useStoryLoaded(card.storyId);
   const source = useMemo(() => cardArtSource(card, DEPS), [card, coverReady]);
   const labelled = accessibilityLabel !== undefined;
+  // An upper-cell card's drawing comes from its chunk while `upperCards` is on (F-CURR-002 row CM-23); the Korean-word
+  // face stands in until it is in.
+  const upperArt = useCurrFlag('upperCards') && source.kind === 'word' && upperCellCardArtIds.includes(card.id);
   const background =
-    source.kind === 'heritage' ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
+    source.kind === 'heritage' || upperArt ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
   return (
     <View
       testID={testID}
@@ -119,7 +125,10 @@ export function CardArt({
       ]}
     >
       {source.kind === 'heritage' ? <HeritageCardArt cardId={source.cardId} size={size} accessibilityLabel="" /> : null}
-      {source.kind === 'word' ? <CardWord word={source.word} size={size} fontFamily={wordFontFamily} /> : null}
+      {source.kind === 'word' && upperArt ? (
+        <UpperCardArtSlot cardId={card.id} size={size} fallback={<CardWord word={source.word} size={size} fontFamily={wordFontFamily} />} />
+      ) : null}
+      {source.kind === 'word' && !upperArt ? <CardWord word={source.word} size={size} fontFamily={wordFontFamily} /> : null}
       {source.kind === 'cover' ? <CoverCrop source={source} size={size} fontFamily={wordFontFamily} /> : null}
       {source.kind === 'plate' ? <CollectionPlate members={source.members} card={card} size={size} fontFamily={wordFontFamily} /> : null}
     </View>

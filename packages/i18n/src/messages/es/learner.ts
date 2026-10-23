@@ -347,6 +347,14 @@ export const learner = {
       a11y: (title: string) => `${title}: tarjetas por encontrar`,
       nextA11y: (hint: string) => `Siguiente tarjeta. ${hint}`,
     },
+    albums: {
+      title: 'Álbumes',
+      line: 'Cada tema tiene un álbum. Termina una casilla desde la Etapa 2 para añadir su tarjeta.',
+      names: { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos' },
+      count: (n: number) => plural('es', n, { one: '1 tarjeta', other: `${n} tarjetas` }),
+      fresh: 'Nuevo',
+      a11y: (name: string, status: string) => `Álbum ${name}: ${status}`,
+    },
     earnHint: {
       episode: (title: string) => `Termina el episodio: ${title}`,
       story: (title: string) => `Termina la historia: ${title}`,

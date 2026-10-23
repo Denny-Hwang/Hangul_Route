@@ -1,11 +1,13 @@
 import type { HeritageCard, ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
 import { useEffect, useMemo, useState } from 'react';
 import { episodesAll } from '../../content';
+import { heritageCardsAll } from '../../content/heritage-cards';
+import { UPPER_CELL_CARDS } from '../../content/upper-cell-cards';
 import { useLocale } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
 import { completeStages } from '../../logic/my-route/latch';
 import { gridEpisodesOf } from '../../logic/my-route/order';
-import { bestStageStars, shownStageCards, stageOffer, type StageOffer } from '../../logic/reviews/stage-check-offer';
+import { bestStageStars, shownStageCards, stageCeremonyCards, stageOffer, type StageOffer } from '../../logic/reviews/stage-check-offer';
 import { stagePrizeCards } from '../../logic/stage1/stage-complete';
 import { useProgressStore } from '../../store/progress-store';
 import { useCurrFlag } from '../../store/remote-config-store';
@@ -68,7 +70,7 @@ export function useStageOffer(profileId: string | null, stage: StageKey): StageO
   const best = useMemo(() => bestStageStars(reviews ?? [], stage), [reviews, stage]);
   const owned = snapshot?.cards;
   const cards = useMemo(
-    () => shownStageCards(stagePrizeCards(stage), owned ?? [], upperCards).map((c) => localizeCard(c, locale)),
+    () => shownStageCards(stageCeremonyCards(stage, stagePrizeCards(stage), UPPER_CELL_CARDS, heritageCardsAll), owned ?? [], upperCards).map((c) => localizeCard(c, locale)),
     [stage, owned, upperCards, locale],
   );
   const offer = stageOffer({ stage, complete, ceremonyOn, checkOn, playable: ask && playable, open, bestStars: best });

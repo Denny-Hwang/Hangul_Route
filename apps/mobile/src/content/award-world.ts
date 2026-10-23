@@ -1,8 +1,10 @@
 import type { AwardWorld } from '../logic/awards/types';
+import { withUpperCards } from '../logic/awards/upper-cards';
 import { episodesAll } from './episodes';
 import { heritageCardsAll } from './heritage-cards';
 import { questsAll } from './quests';
 import { storySets } from './story-cards';
+import { UPPER_CARD_GATED_IDS } from './upper-cell-cards';
 
 /**
  * The shipped bundle as the award engine reads it (F-STORY-006 §3.2): every
@@ -14,7 +16,13 @@ export const awardWorld: AwardWorld = {
   episodes: episodesAll,
   quests: questsAll,
   sets: storySets,
+  // F-CURR-002 §4.8 step 7 (row CM-23): the upper-cell cards are dated by the cells' first finishes.
+  firstFinishCardIds: UPPER_CARD_GATED_IDS,
 };
+
+/** The award world under the `upperCards` switch for a learner holding `owned` (logic/awards/upper-cards.ts). */
+export const awardWorldFor = (upperCardsOn: boolean, owned: ReadonlySet<string>): AwardWorld =>
+  withUpperCards(awardWorld, upperCardsOn, UPPER_CARD_GATED_IDS, owned);
 
 /**
  * Cards every profile is given on its first launch (`unlockedBy:

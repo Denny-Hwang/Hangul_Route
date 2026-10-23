@@ -31,7 +31,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
-import { awardWorld } from '../../content/award-world';
+import { awardWorld, awardWorldFor } from '../../content/award-world';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { earnHint } from '../../logic/awards/earn-hint';
 import { libraryShelves } from '../../logic/library/shelves';
@@ -55,6 +55,8 @@ import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
+import { AlbumsSlot } from './upper-cards-entry';
 import { CardDetailView } from './CardDetailView';
 import { CultureSection } from './CultureSection';
 import { StoryShelf } from './StoryShelf';
@@ -139,7 +141,9 @@ export function LibraryScreen(): React.ReactElement {
   const newIds = useMemo(() => new Set((snap?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId)), [snap]);
 
   // Only cards the learner holds or can still earn (F-STORY-006 §3.7): a card no rule can award is never a lock.
-  const listed = useMemo(() => obtainableCards(awardWorld, unlockedIds), [unlockedIds]);
+  // F-CURR-002 row CM-23: an upper-cell card is listed while `upperCards` is on, or once it is held.
+  const upperCards = useCurrFlag('upperCards');
+  const listed = useMemo(() => obtainableCards(awardWorldFor(upperCards, unlockedIds), unlockedIds), [upperCards, unlockedIds]);
   const collected = listed.filter((c) => unlockedIds.has(c.id)).length;
   const explainer = libraryExplainer(awardWorld, listed, m.how);
   // Earn hints name episodes in the UI language.
@@ -267,6 +271,9 @@ export function LibraryScreen(): React.ReactElement {
               {m.yours.empty}
             </Body>
           )}
+
+          {/* The category albums (F-CURR-002 §7.2, row CM-23): a chunk of their own, drawn while `upperCards` is on. */}
+          <AlbumsSlot on={upperCards} owned={unlockedIds} onOpenCard={openCard} />
 
           {shelves.toFind.length > 0 ? (
             <View testID="library-to-find">

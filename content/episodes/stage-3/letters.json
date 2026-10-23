@@ -10,7 +10,7 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:hangeul"],
   "quests": [
     {
       "id": "quest:stage3-letters-q1",

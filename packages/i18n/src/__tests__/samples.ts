@@ -986,4 +986,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.upperStageComplete.title': [[2], [7]],
   'learner.stageCheck.retro.title': [[[2]], [[2, 3]], [[2, 3, 4]], [[2, 3, 4, 6, 7]]],
   'a11y.stageCheck.best': [[1], [2], [3]],
+  // F-CURR-002 row CM-23: an album's card count (from 1; an album with none says New), and an album row's name with its status.
+  'learner.library.albums.count': [[1], [2], [12]],
+  'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
 };

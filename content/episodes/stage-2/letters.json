@@ -10,7 +10,7 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:norae"],
   "quests": [
     {
       "id": "quest:stage2-letters-q1",

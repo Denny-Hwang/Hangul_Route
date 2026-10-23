@@ -90,8 +90,30 @@ export const stage4Cards: HeritageCard[] = [
   make('insa', 'Greeting', '인사', 'insa', 'A bow or a hello — a greeting.', 'A small bow is a polite Korean greeting.', 'rites', 'stage4', 'rare', 'episode:stage4-rites'),
 ];
 
+/** A card's back-face source line: the first allowlisted entry of its `sources[]` (content/upper-cell-card-sources.ts). */
+const cited = (card: HeritageCard, title: string, publisher: string, more: number): HeritageCard => ({ ...card, citation: { title, publisher, more } });
+const KHS = '국가유산청 (Korea Heritage Service)';
+const NIKL = '국립국어원 (National Institute of Korean Language)';
+
+/**
+ * The upper-cell cards of Stages 2 and 3 (F-CURR-002 §7.2, row CM-23 part 1): one card per upper cell, in its first
+ * volume, earned by finishing the cell. Lunch Box Words and Outdoor Words keep their shipped four cards (F-CURR-001
+ * "Cards"); their album card is their q1 card (`content/upper-cell-cards.ts`), so these eight are the other cells'.
+ * Gated on `upperCards` (logic/awards/upper-cards.ts). Each back-face fact cites a §6.6 institution.
+ */
+export const upperCellCards: HeritageCard[] = [
+  cited(make('norae', 'Song', '노래', 'norae', 'A song to sing together.', "Arirang is a popular Korean folk song. 'Arirang, lyrical folk song in the Republic of Korea' was inscribed on UNESCO's Representative List in 2012.", 'letters', 'stage2', 'rare', 'episode:stage2-letters'), 'Arirang, lyrical folk song in the Republic of Korea', 'UNESCO Intangible Cultural Heritage', 1),
+  cited(make('bokjumeoni', 'Lucky Pouch', '복주머니', 'bokjumeoni', 'A little pouch that holds a wish for good luck.', 'At the start of the year, a bokjumeoni with a few grains inside was tied to clothes as a wish for good luck.', 'rites', 'stage2', 'rare', 'episode:stage2-rites'), '복주머니 (표준국어대사전)', NIKL, 0),
+  cited(make('swing', 'Swing', '그네', 'geune', 'A swing that flies up high.', 'Swinging is an old custom of Dano, the holiday on the fifth day of the fifth lunar month. Records from the Goryeo and Joseon eras tell of it.', 'crafts', 'stage2', 'rare', 'episode:stage2-crafts'), '국가무형유산 단오', KHS, 0),
+  cited(make('hangeul', 'Hangeul', '한글', 'hangeul', 'The letters you are learning to read.', 'King Sejong created 28 letters in 1443 and called them Hunminjeongeum. Today they are called Hangeul.', 'letters', 'stage3', 'rare', 'episode:stage3-letters'), '알고 싶은 한글', NIKL, 1),
+  cited(make('tteok', 'Rice Cake', '떡', 'tteok', 'Soft, chewy rice cake to share.', 'Making and sharing tteok, rice cake, was designated a National Intangible Heritage of Korea in 2021.', 'life', 'stage3', 'rare', 'episode:stage3-life'), '국가무형유산 떡 만들기', KHS, 0),
+  cited(make('full-moon', 'Full Moon', '보름달', 'boreumdal', 'A big, round moon on a holiday night.', 'Chuseok falls on the fifteenth day of the eighth lunar month, when the moon is full. That moon stands for plenty.', 'rites', 'stage3', 'rare', 'episode:stage3-rites'), '국가무형유산 추석', KHS, 0),
+  cited(make('gom', 'Bear', '곰', 'gom', 'A big, strong bear.', 'The bandalgaseumgom is a black bear with a white half-moon mark on its chest. It sleeps through the winter, and in Korea it is a natural monument.', 'nature', 'stage3', 'rare', 'episode:stage3-nature'), '반달가슴곰 (표준국어대사전)', NIKL, 0),
+  cited(make('yut', 'Yut Sticks', '윷', 'yut', 'Four sticks to throw in a game of yunnori.', 'Yunnori is played with four yut sticks. Two sides throw them, and how the sticks land decides how their pieces move.', 'crafts', 'stage3', 'rare', 'episode:stage3-crafts'), '국가무형유산 윷놀이', KHS, 0),
+];
+
 /** The hand-written cards, then the heritage story cards and their collection cards (F-STORY-006 §3.8). */
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...storyCards];
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards, ...storyCards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);
