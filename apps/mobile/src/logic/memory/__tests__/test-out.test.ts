@@ -120,7 +120,8 @@ describe('unasked items: derived from testedOut (deriveTestedOut)', () => {
 });
 
 describe('fixed clocks in four time zones: the spread starts the day after the local day of the test-out', () => {
-  // 2026-10-22T10:30Z is the 23rd at UTC+14 and in Seoul, the 22nd at UTC-12 and in Los Angeles.
+  // 2026-10-22T10:30Z is 00:30 on the 23rd at UTC+14, 19:30 on the 22nd in Seoul, 22:30 on the 21st at UTC-12 and
+  // 03:30 on the 22nd in Los Angeles.
   const at = '2026-10-22T10:30:00.000Z';
   const cases: [string, string][] = [
     ['Pacific/Kiritimati', '2026-10-23'],
@@ -201,4 +202,18 @@ describe('a Stage Jump (row CM-25): every cell of the stage and the stage key, o
       expect(derive(jump(at, [...STAGE2].reverse()), zoned(zone))).toEqual(states);
     });
   }
+});
+
+describe('across the US daylight-saving change (section 14 "across DST")', () => {
+  it('America/Los_Angeles: a test-out at 23:30 on 30 October spreads over 31 October, 1 and 2 November (the change is 1 November)', () => {
+    const dayOf = zoned('America/Los_Angeles');
+    const at = '2026-10-31T06:30:00.000Z';
+    expect(dayOf(new Date(at))).toBe('2026-10-30');
+    const states = derive({ [CELL]: at }, dayOf);
+    expect([...perDay(states.values()).keys()].sort()).toEqual(['2026-10-31', '2026-11-01', '2026-11-02']);
+    // Each due day is a local day the device reaches after the change: 23:30 PST on 1 November is still the 1st.
+    expect(dayOf(new Date('2026-11-02T07:30:00.000Z'))).toBe('2026-11-01');
+    expect(testOutPlacement({ correct: true, rung: 'read' }, true, '2026-10-30', at)?.d).toBe('2026-11-02');
+    expect(derive({ [CELL]: at }, zoned('America/Los_Angeles'))).toEqual(states);
+  });
 });

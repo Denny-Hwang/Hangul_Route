@@ -12,11 +12,13 @@ import { playableEpisodes } from '../next-quest';
  *   secondary, under "Cell Check done", and secondary on a tested-out cell (its quests keep their own buttons).
  * - **Test out** (line B): on a cell nobody started (no quest done, not tested out), not in Stage 1 (placement covers
  *   Stage 1, and its prize and Hangul Check need its quests), with every quest of the cell open to the learner
- *   (F-ENT-003: the same access as playing it; a locked cell offers none), in E3's offered arm, with 5 or more rounds.
+ *   (F-ENT-003: the same access as playing it; a locked cell offers none), in E3's offered arm, with 5 or more rounds
+ *   and topic words at most 30% of the cell's items (the memory store can schedule the rest; Stage 3 up today).
  * - **The mastery block** (E): the latched level (`cellBest`) from Done up, while `mastery` is on; one hint line for the
  *   next level, levels 1 and 2 only ("Take the Cell Check" only while the Check is on and not yet passed).
- * - **`cellCheck` off** (section 12.2): no Check button and no Test out line; "Cell Check done", "Tested out" and the
- *   levels are latched and show again when it is back on.
+ * - **`cellCheck` off** (section 12.2): no Check button and no Test out line; "Cell Check done" and the levels are
+ *   latched and show again when it is back on. "Tested out" stays drawn on the quests whatever the switch, because
+ *   `routeNext` keeps skipping the cell (the cell page draws it, not this chunk).
  */
 
 /** Experiment E3 (section 11.4, row CM-71): Test out offered against hidden. Until CM-71 assigns arms, every learner is offered it. */
@@ -41,6 +43,8 @@ export interface CellOfferInput {
   arm: TestOutArm;
   /** The cell has 5 or more playable rounds (unknown while the plan is read: nothing is offered yet). */
   playable: boolean;
+  /** The cell's topic words are few enough for Test out (`testOutFits`, section 4.5 decision record CM-21). */
+  testOutFits: boolean;
 }
 
 export type HintKey = 'practiced' | 'check' | 'mastered';
@@ -65,7 +69,7 @@ export function cellOffer(i: CellOfferInput): CellOffer {
   const check = checkable ? { tone: allDone && !i.checkPassed ? ('primary' as const) : ('secondary' as const), again: i.checkPassed } : null;
   const done = i.checkOn && i.checkPassed;
   const testOut =
-    i.checkOn && i.playable && !started && i.stage !== 'stage1' && i.open.length > 0 && i.open.every(Boolean) && i.arm === 'offered';
+    i.checkOn && i.playable && i.testOutFits && !started && i.stage !== 'stage1' && i.open.length > 0 && i.open.every(Boolean) && i.arm === 'offered';
   const level = i.masteryOn && i.level >= 1 ? (i.level as Exclude<CellLevel, 0>) : null;
   let hint: HintKey | null = null;
   if (level === 1) hint = 'practiced';

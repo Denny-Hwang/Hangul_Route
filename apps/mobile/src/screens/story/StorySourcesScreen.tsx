@@ -1,7 +1,7 @@
 import { Body, Caption, KoreanText, Pill, Screen, spacing } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -48,13 +48,13 @@ type Props = {
  * grown-up action: `PinEntry { next: 'ExternalLink', url }` unless the gate
  * opens directly, and only for an https link the story itself cites.
  */
-export function StorySourcesScreen(props: Props): React.ReactElement {
+export function StorySourcesScreen(props: Props): ReactElement {
   // The facts and their sources come from the story's chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
   // only its waiting state (the way back, then a calm status line if it takes longer).
   return useStoryReady(props.route.params.storyId) ? <StorySourcesBody {...props} /> : <LessonWaiting />;
 }
 
-function StorySourcesBody({ route, navigation, ...exitProps }: Props): React.ReactElement {
+function StorySourcesBody({ route, navigation, ...exitProps }: Props): ReactElement {
   const { storyId, factId, sceneIndex, from } = route.params;
   // Learner defaults: back where it came from, else Home; a link goes through the grown-up gate.
   const learnerHome = (): void => navigation?.navigate('Main', { screen: 'Home' });

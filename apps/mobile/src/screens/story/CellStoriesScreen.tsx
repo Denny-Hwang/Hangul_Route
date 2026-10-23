@@ -1,6 +1,6 @@
 import { Body, Button, Card, Heading, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { episodeById, episodesAll, stageByKey, themeByKey } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -24,7 +24,7 @@ const ACCENT = spacing.md;
  * No primary button, no counts of unread stories, no ranking, no timer. A stale link to a cell with no
  * story shows one calm card and Back. `journey.cell_stories_opened` is sent once per open.
  */
-export function CellStoriesScreen({ route, navigation }: Props): React.ReactElement {
+export function CellStoriesScreen({ route, navigation }: Props): ReactElement {
   const { stage, theme, source } = route.params;
   const messages = useMessages();
   const m = messages.learner.journey.cellStories;

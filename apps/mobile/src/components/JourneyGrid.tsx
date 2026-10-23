@@ -19,7 +19,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
-import React from 'react';
+import { useState, type ComponentType, type ReactElement, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
@@ -72,7 +72,7 @@ const CELL_EDGE = CELL.edge;
  * (`cellBest`), the mastered cells with items due and the cells with a new volume. Omitted: no ring, today's cells.
  */
 export interface JourneyMastery {
-  Ring: React.ComponentType<MasteryRingProps>;
+  Ring: ComponentType<MasteryRingProps>;
   levelOf: (episodeId: string) => CellLevel;
   refresh: ReadonlySet<string>;
   newVolume: ReadonlySet<string>;
@@ -129,7 +129,7 @@ export interface JourneyGridProps {
   /** One learner's mastery rings (row CM-20); omitted: none. */
   mastery?: JourneyMastery;
   /** Drawn under a stage's cells (row CM-25: Stage Jump Ahead's line); omitted: nothing. */
-  stageFooter?: (stage: StageDef) => React.ReactNode;
+  stageFooter?: (stage: StageDef) => ReactNode;
 }
 
 export function JourneyGrid({
@@ -150,7 +150,7 @@ export function JourneyGrid({
   onOpenHangulCheck,
   mastery,
   stageFooter,
-}: JourneyGridProps): React.ReactElement {
+}: JourneyGridProps): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const m = messages.learner.journey;
@@ -160,7 +160,7 @@ export function JourneyGrid({
   // The grid's width, from the column-label row (the same geometry as every cell row): each cell then gets
   // an explicit height, max(its width, its smallest height), so no platform has to settle aspectRatio
   // against minHeight. Before the first layout a cell is square (aspectRatio) with that smallest height.
-  const [gridWidth, setGridWidth] = React.useState<number | null>(null);
+  const [gridWidth, setGridWidth] = useState<number | null>(null);
   const cellWidth = gridWidth === null ? null : journeyCellSize(gridWidth, spacing.xs, layout.columns.journeyCellMax);
   // Each mark's word, so the words are on the page (section 3.14); the cell labels carry them for screen readers.
   const words = { next: messages.learner.routeNext.tag.next, inPlan: messages.learner.routeNext.tag.inPlan, notOpen: messages.learner.access.notOpen };
@@ -321,7 +321,7 @@ interface GridCellProps {
   mastery?: JourneyMastery;
 }
 
-function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, onOpenStories, episodeTitle, mastery }: GridCellProps): React.ReactElement {
+function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, onOpenStories, episodeTitle, mastery }: GridCellProps): ReactElement {
   const messages = useMessages();
   const { completed, placedOut, isStart } = cell.marks;
   const { next, inPlan, notOpen } = cell.access;

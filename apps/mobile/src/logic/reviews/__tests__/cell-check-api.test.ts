@@ -16,6 +16,8 @@ import type { RoundAnswer } from '../daily-review';
 
 const NOW = new Date('2026-10-22T10:00:00.000Z');
 const CELL = 'episode:stage2-letters';
+/** A test-out needs a cell whose topic words are few (`testOutFits`): Stage 3 Food. */
+const OUT = 'episode:stage3-life';
 
 interface Fake {
   deps: CellCheckDeps;
@@ -23,13 +25,14 @@ interface Fake {
   reviews: ReviewEntry[];
   recorded: MemoryAnswer[][];
   testOuts: Array<{ answers: readonly MemoryAnswer[]; passed: boolean }>;
+  cell: { stage: string; open: boolean[]; started: boolean } | null;
   latches: Array<{ field: string; cellId: string; at: string }>;
   events: TelemetryEvent[];
   seeded: number;
 }
 
 function fake(over: Partial<CellCheckDeps> = {}): Fake {
-  const out: Fake = { file: emptyMemoryFile(), reviews: [], recorded: [], testOuts: [], latches: [], events: [], seeded: 0, deps: {} as CellCheckDeps };
+  const out: Fake = { file: emptyMemoryFile(), reviews: [], recorded: [], testOuts: [], cell: { stage: 'stage3', open: [true, true, true], started: false }, latches: [], events: [], seeded: 0, deps: {} as CellCheckDeps };
   out.deps = {
     file: async () => out.file,
     ensureSeeded: async () => {
@@ -44,11 +47,12 @@ function fake(over: Partial<CellCheckDeps> = {}): Fake {
     recordReview: (_p, entry) => void out.reviews.push(entry),
     recordAnswers: async (_p, answers) => void out.recorded.push([...answers]),
     recordTestOut: async (_p, answers, passed) => void out.testOuts.push({ answers, passed }),
+    testOutCell: () => out.cell,
+    serverTime: () => null,
     latch: (_p, field, keys, at) => void out.latches.push(...keys.map((cellId) => ({ field, cellId, at }))),
     track: (e) => void out.events.push(e),
     overlays: () => ({}),
     ensureCell: async () => undefined,
-    random: () => 0.5,
     ...over,
   };
   return out;
@@ -70,11 +74,14 @@ describe('the gate and the reads', () => {
     expect(await createCellCheckApi(fake({ items: async () => Promise.reject(new Error('offline')) }).deps).readWorld('p1')).toEqual({ kind: 'unreadable' });
   });
 
-  it('offerable: a cell with 5 or more playable rounds; never while off; a Stage 5 book (no review items) never', async () => {
+  it('offerable: a cell with 5 or more playable rounds; Test out only where topic words are few; never while off; a Stage 5 book never', async () => {
     const api = createCellCheckApi(fake().deps);
-    expect(await api.offerable('p1', CELL)).toBe(true);
-    expect(await api.offerable('p1', 'episode:stage5-life')).toBe(false);
-    expect(await createCellCheckApi(fake({ on: () => false }).deps).offerable('p1', CELL)).toBe(false);
+    // Stage 2 Letters: 46 of its 89 items are topic words, so a Check and no Test out.
+    expect(await api.offerable('p1', CELL)).toEqual({ check: true, testOut: false });
+    expect(await api.offerable('p1', OUT)).toEqual({ check: true, testOut: true });
+    expect(await api.offerable('p1', 'episode:stage2-nature')).toEqual({ check: true, testOut: false });
+    expect(await api.offerable('p1', 'episode:stage5-life')).toEqual({ check: false, testOut: false });
+    expect(await createCellCheckApi(fake({ on: () => false }).deps).offerable('p1', CELL)).toEqual({ check: false, testOut: false });
   });
 });
 
@@ -85,6 +92,9 @@ describe('a Cell Check', () => {
     const w = await world(f);
     const plan = await api.startSession(w, CELL, 'check', 'en');
     expect(plan?.rounds).toHaveLength(10);
+    // review.start waits for Let's go: an intro left with Maybe later sends nothing.
+    expect(f.events).toEqual([]);
+    api.started(w);
     expect(f.events).toEqual([{ name: 'review.start', profileId: 'p1', payload: { kind: 'cell-check' } }]);
     const answers = all(10, 9);
     const recorded = [...answers].map(([i, a]) => api.recordRound(w, plan!, i, a));
@@ -92,7 +102,7 @@ describe('a Cell Check', () => {
     const done = await api.finishSession(w, plan!, answers, recorded, NOW);
     expect(done).toEqual({ stars: 3, passed: true });
     expect(f.reviews).toHaveLength(1);
-    expect(f.reviews[0]).toMatchObject({ kind: 'cell-check', scope: CELL, resultStars: 3, generatedAt: NOW.toISOString() });
+    expect(f.reviews[0]).toMatchObject({ id: `cell-check:${CELL}`, kind: 'cell-check', scope: CELL, resultStars: 3, generatedAt: NOW.toISOString() });
     expect(f.reviews[0]?.id).not.toContain('p1');
     expect(f.latches).toEqual([{ field: 'cellCheckAt', cellId: CELL, at: NOW.toISOString() }]);
     expect(f.testOuts).toEqual([]);
@@ -109,6 +119,31 @@ describe('a Cell Check', () => {
     expect(f.reviews).toHaveLength(1);
     expect(f.latches).toEqual([]);
   });
+
+  it('the switch turned off while it played (memoryRecord or cellCheck killed): nothing written, no event, null', async () => {
+    let on = true;
+    const f = fake({ on: () => on });
+    const api = createCellCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, CELL, 'check', 'en'))!;
+    on = false;
+    expect(await api.finishSession(w, plan, all(10, 10), [], NOW)).toBeNull();
+    expect(f.reviews).toEqual([]);
+    expect(f.latches).toEqual([]);
+    expect(f.events).toEqual([]);
+  });
+
+  it('a device clock far ahead: the entry and the latch carry the guarded stamp (CM-12 stampOf), never the raw clock', async () => {
+    const f = fake({ serverTime: () => '2026-10-22T09:00:00.000Z' });
+    const api = createCellCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, CELL, 'check', 'en'))!;
+    const ahead = new Date('2027-03-01T10:00:00.000Z');
+    await api.finishSession(w, plan, all(10, 10), [], ahead);
+    // The server's time plus the one-day cap.
+    expect(f.latches).toEqual([{ field: 'cellCheckAt', cellId: CELL, at: '2026-10-23T09:00:00.000Z' }]);
+    expect(f.reviews[0]?.generatedAt).toBe('2026-10-23T09:00:00.000Z');
+  });
 });
 
 describe('a test-out', () => {
@@ -116,7 +151,7 @@ describe('a test-out', () => {
     const f = fake();
     const api = createCellCheckApi(f.deps);
     const w = await world(f);
-    const plan = (await api.startSession(w, CELL, 'testout', 'en'))!;
+    const plan = (await api.startSession(w, OUT, 'testout', 'en'))!;
     await api.recordRound(w, plan, 0, { correct: true });
     await api.recordRound(w, plan, 1, { correct: false });
     // The learner stops here: no finish.
@@ -131,27 +166,59 @@ describe('a test-out', () => {
     const api = createCellCheckApi(f.deps);
     const w = await world(f);
     const seededBefore = f.seeded;
-    const plan = (await api.startSession(w, CELL, 'testout', 'en'))!;
+    const plan = (await api.startSession(w, OUT, 'testout', 'en'))!;
     const done = await api.finishSession(w, plan, all(10, 8), [], NOW);
     expect(done).toEqual({ stars: 3, passed: true });
     expect(f.testOuts).toHaveLength(1);
     expect(f.testOuts[0]?.passed).toBe(true);
     expect(f.testOuts[0]?.answers).toHaveLength(10);
-    expect(f.latches).toEqual([{ field: 'testedOut', cellId: CELL, at: NOW.toISOString() }]);
+    expect(f.latches).toEqual([{ field: 'testedOut', cellId: OUT, at: NOW.toISOString() }]);
     expect(f.seeded).toBe(seededBefore + 1);
-    expect(f.events).toContainEqual({ name: 'testout.finished', profileId: 'p1', payload: { cellId: CELL, passed: true, items: 10, firstTryCorrect: 8 } });
-    expect(f.reviews[0]).toMatchObject({ kind: 'cell-check', scope: CELL });
+    expect(f.events).toContainEqual({ name: 'testout.finished', profileId: 'p1', payload: { cellId: OUT, passed: true, items: 10, firstTryCorrect: 8 } });
+    expect(f.reviews[0]).toMatchObject({ kind: 'cell-check', scope: OUT });
   });
 
   it('not passed: the answers still go to the store (right ones to box 2 there), nothing latches', async () => {
     const f = fake();
     const api = createCellCheckApi(f.deps);
     const w = await world(f);
-    const plan = (await api.startSession(w, CELL, 'testout', 'en'))!;
+    const plan = (await api.startSession(w, OUT, 'testout', 'en'))!;
     expect(await api.finishSession(w, plan, all(10, 5), [], NOW)).toEqual({ stars: 2, passed: false });
     expect(f.testOuts[0]?.passed).toBe(false);
     expect(f.latches).toEqual([]);
-    expect(f.events).toContainEqual({ name: 'testout.finished', profileId: 'p1', payload: { cellId: CELL, passed: false, items: 10, firstTryCorrect: 5 } });
+    expect(f.events).toContainEqual({ name: 'testout.finished', profileId: 'p1', payload: { cellId: OUT, passed: false, items: 10, firstTryCorrect: 5 } });
+  });
+
+  it('no plan for a cell that may not take a test-out now: locked, started, Stage 1, unknown, or mostly topic words', async () => {
+    for (const cell of [
+      { stage: 'stage3', open: [true, false, true], started: false },
+      { stage: 'stage3', open: [true, true, true], started: true },
+      { stage: 'stage1', open: [true, true, true], started: false },
+      null,
+    ]) {
+      const f = fake();
+      f.cell = cell;
+      const api = createCellCheckApi(f.deps);
+      expect(await api.startSession(await world(f), OUT, 'testout', 'en'), JSON.stringify(cell)).toBeNull();
+    }
+    const f = fake();
+    const api = createCellCheckApi(f.deps);
+    expect(await api.startSession(await world(f), 'episode:stage2-nature', 'testout', 'en')).toBeNull();
+    // The Check of the same cell still plays.
+    expect(await api.startSession(await world(f), 'episode:stage2-nature', 'check', 'en')).not.toBeNull();
+  });
+
+  it('a plan that lapsed while it played (the cell locked at the finish): nothing placed, nothing latched, null', async () => {
+    const f = fake();
+    const api = createCellCheckApi(f.deps);
+    const w = await world(f);
+    const plan = (await api.startSession(w, OUT, 'testout', 'en'))!;
+    f.cell = { stage: 'stage3', open: [false, false, false], started: false };
+    expect(await api.finishSession(w, plan, all(10, 10), [], NOW)).toBeNull();
+    expect(f.testOuts).toEqual([]);
+    expect(f.latches).toEqual([]);
+    expect(f.reviews).toEqual([]);
+    expect(f.events.some((e) => e.name === 'testout.finished')).toBe(false);
   });
 });
 
@@ -172,33 +239,39 @@ describe('in Spanish or Korean', () => {
 });
 
 describe('a Stage Jump (row CM-25)', () => {
+  const STAGE3 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage3-${t}`).filter((c) => INDEX.items.some((i) => i.cells.includes(c)));
   const STAGE2 = ['letters', 'life', 'rites', 'nature', 'crafts'].map((t) => `episode:stage2-${t}`);
 
-  it('jumpOfferable: a stage with 10 or more playable rounds; never while off; Stage 5 (books) never', async () => {
+  it('jumpOfferable: a stage with 10 or more playable rounds whose every cell may be tested out; never while off', async () => {
+    expect(STAGE3.length).toBeGreaterThanOrEqual(4);
     const api = createCellCheckApi(fake().deps);
-    expect(await api.jumpOfferable('p1', 'stage2', STAGE2)).toBe(true);
+    expect(await api.jumpOfferable('p1', 'stage3', STAGE3)).toBe(true);
+    // CM-21's topic-word limit, cell by cell: no Stage 2 cell may be tested out today, so Stage 2 has no jump.
+    expect(await api.jumpOfferable('p1', 'stage2', STAGE2)).toBe(false);
     expect(await api.jumpOfferable('p1', 'stage5', ['letters', 'life'].map((t) => `episode:stage5-${t}`))).toBe(false);
-    expect(await api.jumpOfferable('p1', 'stage2', [])).toBe(false);
-    expect(await createCellCheckApi(fake({ on: () => false }).deps).jumpOfferable('p1', 'stage2', STAGE2)).toBe(false);
+    expect(await api.jumpOfferable('p1', 'stage3', [])).toBe(false);
+    expect(await createCellCheckApi(fake({ on: () => false }).deps).jumpOfferable('p1', 'stage3', STAGE3)).toBe(false);
   });
 
   it('holds every answer to the end; a pass places the asked items and latches every cell and the stage key in one write', async () => {
     const f = fake();
     const api = createCellCheckApi(f.deps);
     const w = await world(f);
-    const plan = (await api.startSession(w, 'stage2', 'jump', 'en', STAGE2))!;
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
     expect(plan.mode).toBe('jump');
     expect(plan.rounds).toHaveLength(20);
-    expect(plan.cells).toEqual(STAGE2);
+    expect(plan.cells).toEqual(STAGE3);
+    api.started(w);
     await api.recordRound(w, plan, 0, { correct: true });
     expect(f.recorded).toEqual([]);
     const done = await api.finishSession(w, plan, all(20, 16), [], NOW);
     expect(done).toEqual({ stars: 3, passed: true });
     expect(f.testOuts).toHaveLength(1);
     expect(f.testOuts[0]?.answers).toHaveLength(20);
-    expect(f.latches.map((l) => l.cellId)).toEqual([...STAGE2, 'stage2']);
+    expect(f.latches.map((l) => l.cellId)).toEqual([...STAGE3, 'stage3']);
     expect(f.latches.every((l) => l.field === 'testedOut' && l.at === NOW.toISOString())).toBe(true);
-    expect(f.reviews[0]).toMatchObject({ kind: 'cell-check', scope: 'stage2', resultStars: 3 });
+    // One entry per stage (id `cell-check:stage3`), as CM-21 keeps one per cell.
+    expect(f.reviews[0]).toMatchObject({ id: 'cell-check:stage3', kind: 'cell-check', scope: 'stage3', resultStars: 3 });
     // Telemetry: review.* of kind cell-check, stars only; no testout.finished, no item, no text.
     expect(f.events.map((e) => e.name)).toEqual(['review.start', 'review.complete']);
     expect(f.events.at(-1)).toEqual({ name: 'review.complete', profileId: 'p1', payload: { kind: 'cell-check', stars: 3 } });
@@ -208,18 +281,35 @@ describe('a Stage Jump (row CM-25)', () => {
     const f = fake();
     const api = createCellCheckApi(f.deps);
     const w = await world(f);
-    const plan = (await api.startSession(w, 'stage2', 'jump', 'en', STAGE2))!;
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
     expect(await api.finishSession(w, plan, all(20, 15), [], NOW)).toEqual({ stars: 2, passed: false });
     expect(f.testOuts[0]?.passed).toBe(false);
     expect(f.latches).toEqual([]);
+  });
+
+  it('checked at both ends: a locked or started cell, or a stage jumped already, plans nothing; one closed while it played latches nothing', async () => {
+    const locked = fake();
+    locked.cell = { stage: 'stage3', open: [true, false, true], started: false };
+    expect(await createCellCheckApi(locked.deps).startSession(await world(locked), 'stage3', 'jump', 'en', STAGE3)).toBeNull();
+    const jumped = fake({ snapshot: () => ({ testedOut: { stage3: NOW.toISOString() } }) as unknown as ProgressSnapshot });
+    expect(await createCellCheckApi(jumped.deps).startSession(await world(jumped), 'stage3', 'jump', 'en', STAGE3)).toBeNull();
+    const lapsed = fake();
+    const api = createCellCheckApi(lapsed.deps);
+    const w = await world(lapsed);
+    const plan = (await api.startSession(w, 'stage3', 'jump', 'en', STAGE3))!;
+    lapsed.cell = { stage: 'stage3', open: [true, true, false], started: false };
+    expect(await api.finishSession(w, plan, all(20, 20), [], NOW)).toBeNull();
+    expect(lapsed.latches).toEqual([]);
+    expect(lapsed.testOuts).toEqual([]);
+    expect(lapsed.reviews).toEqual([]);
   });
 
   it('in Spanish or Korean, loads the chunks of every cell of the stage first', async () => {
     const asked: string[] = [];
     const f = fake({ ensureCell: async (cell) => void asked.push(cell) });
     const api = createCellCheckApi(f.deps);
-    const plan = await api.startSession(await world(f), 'stage2', 'jump', 'ko', STAGE2);
+    const plan = await api.startSession(await world(f), 'stage3', 'jump', 'ko', STAGE3);
     expect(plan?.rounds.length).toBeGreaterThanOrEqual(10);
-    for (const cell of STAGE2) expect(asked).toContain(cell);
+    for (const cell of STAGE3) expect(asked).toContain(cell);
   });
 });

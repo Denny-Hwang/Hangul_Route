@@ -20,7 +20,7 @@ import {
   touchTarget,
 } from '@hangul-route/design-system';
 import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
@@ -59,7 +59,7 @@ import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { preloadQuestReviews } from '../quest/quest-reviews';
-import { CellCheckSlot, useCellCheckOn } from '../cell-check/cell-check-entry';
+import { CellCheckSlot } from '../cell-check/cell-check-entry';
 import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
 
 export interface EpisodeDetailViewProps {
@@ -113,7 +113,7 @@ export function EpisodeDetailView({
   from,
   onAsk: openAsk,
   onBackToOpenLessons,
-}: EpisodeDetailViewProps): React.ReactElement {
+}: EpisodeDetailViewProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
   const access = messages.learner.access;
@@ -129,8 +129,6 @@ export function EpisodeDetailView({
   // A quest's warm-up and Try these again start loading here, with their switches on (F-CURR-002 row CM-15).
   const learnerId = profile?.id ?? null;
   useEffect(() => preloadQuestReviews(learnerId), [learnerId]);
-  // Row CM-21: a tested-out cell's quests show "Tested out" and 2 stars while `cellCheck` is on (the latch stays when off).
-  const checkOn = useCellCheckOn(learnerId);
 
   // May the learner start each quest, the one next and the plan view (F-ENT-003 sections 3.5, 3.7).
   const tier = useAccessTier(profile?.id ?? '');
@@ -245,7 +243,9 @@ export function EpisodeDetailView({
     .filter((q): q is NonNullable<typeof q> => Boolean(q))
     .map((q) => localizeQuest(q, locale));
   const isPreview = episode.status === 'preview';
-  const testedOut = checkOn && snap?.testedOut?.[episode.id] !== undefined;
+  // Row CM-21: a tested-out cell's quests show "Tested out" and 2 stars whatever `cellCheck` says, as `routeNext` keeps
+  // skipping the cell (a latched mark, like the levels in reports).
+  const testedOut = snap?.testedOut?.[episode.id] !== undefined;
   const slot = {
     profileId: learnerId,
     episodeId: episode.id,

@@ -1,6 +1,6 @@
 import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
 import { batchHandoffPending, chooserLaunchParams, chooserLaunchTrigger } from '../store/who-chooser';
@@ -83,7 +83,7 @@ const cellStoriesRouteIdOf = ({ params }: { params: RootStackParamList['CellStor
 // route; any other root route taking focus ends a run still on, so no profile's quest is written under the guest's id.
 const guestRunGuard = ({ route }: { route: { name: string } }): { focus: () => void } => ({ focus: () => endGuestRunOutside(route.name) });
 
-export function RootNavigator(): React.ReactElement {
+export function RootNavigator(): ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const hydrated = useProfileStore((s) => s.hydrated);
   const hasProfile = profiles.length > 0;

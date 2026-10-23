@@ -1977,9 +1977,9 @@ export const learner = {
     toPlace: '이곳으로 돌아가기',
     toMap: '지도로 돌아가기',
     hint: {
-      practiced: '계속 복습하면 연습함이 돼요.',
-      check: '칸 확인을 하면 익힘이 될 수 있어요.',
-      mastered: '계속 복습하면 익힘이 돼요.',
+      practiced: '계속 복습하면 ‘연습함’이 돼요.',
+      check: '칸 확인을 하면 ‘익힘’이 될 수 있어요.',
+      mastered: '계속 복습하면 ‘익힘’이 돼요.',
     },
   },
   testOut: {
@@ -1989,8 +1989,6 @@ export const learner = {
     passed: '넘어갈 수 있어요!',
     start: '좋은 시작이에요!',
     startBody: '첫 퀘스트부터 시작해요. 나머지는 호야가 도와줄게요.',
-    next: '다음 레슨으로 가기',
-    first: '첫 퀘스트 시작하기',
     pill: '이미 알아요',
   },
   stageJump: {

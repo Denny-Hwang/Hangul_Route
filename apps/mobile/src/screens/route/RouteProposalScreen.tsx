@@ -30,7 +30,7 @@ import {
 } from '@hangul-route/content-schema';
 import { formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { dayKey } from '../../logic/homework/mission-builder';
@@ -106,7 +106,7 @@ function previewText(t: ProposalMessages, line: PreviewLine): string {
   }
 }
 
-export function RouteProposalScreen({ route, navigation }: Props): React.ReactElement {
+export function RouteProposalScreen({ route, navigation }: Props): ReactElement {
   const { source, profileId, proposedSent: sentBefore } = route.params;
   const m = useMessages();
   const t = m.learner.weeklyPlan.proposal;
