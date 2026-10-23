@@ -139,4 +139,5 @@ Reused: `learner.minigame.skip.cta`, `progress.pill`, `listenPick.hearAgain`, `a
 ## Open questions
 
 1. **Double finals** (ㄳ ㄺ ㄻ ...). Not asked in a heard round (they are spoken as one of the seven sounds). If an S2 cell wants them, a fourth tile kind (a two-letter final tile) is added with the meaning as the settling cue; CM-32 leaves it out.
-2. **Decoding Sprint frame** (F9). F9 is not in this row; CM-32 designs its bonus frame from `vocab/speed-round.md` (60 s, private best, the held-out probe), reusing this round and the fallback's Listen & Pick round unchanged.
+2. **Decoding Sprint frame** (F9). F9 is not in this row; CM-32 designs its bonus frame from `vocab/speed-round.md` (60 s, private best, the held-out probe), reusing this round and the fallback's Listen & Pick round unchanged. **Resolved in CM-32:** `decoding-sprint.md`.
+3. **Block arrangement (CM-32).** The build keeps the beside arrangement (first letter and vowel side by side, the final across the bottom) whatever vowel is placed, so a tap never moves a zone; the built block is then drawn whole. In the app the screen header sits above the round, so at 320 x 568 the last tile row is reached by a short scroll (spec CM-32 decision record).
