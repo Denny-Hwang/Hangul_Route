@@ -144,14 +144,18 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(messages(dup)).toEqual(['quests.0.scopes.3.ref: scope ref minigame:s3-letters-q1-apply is listed twice']);
   });
 
-  it('applies the Check rule: Listen & Pick (Sentence Builder too in stage7), exactly 2 rounds', () => {
+  it('applies the Check rule: Listen & Pick (Sentence Builder too in stage7, the Stage 3 rotation in stage3), exactly 2 rounds', () => {
     expect(CHECK_ROUNDS).toBe(2);
-    expect(checkKindsFor('stage3')).toEqual(['listen-pick']);
+    // Row CM-3A S3 (F-CURR-002 section 7.1): the Stage 3 Check rotation, Cloze Pick and Sentence Builder by default, Dictation too.
+    expect(checkKindsFor('stage3')).toEqual(['listen-pick', 'cloze-pick', 'order-it', 'type-hangul']);
     expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');
-    expect(messages(s3)).toEqual(['quests.0.steps.4.minigameKind: a stage3 Check plays listen-pick, not order-it']);
+    expect(messages(s3)).toEqual([]);
+    const s4 = lessonCell('stage4') as Json;
+    s4.quests[0] = lessonQuest('stage4', 'letters', 1, 'order-it');
+    expect(messages(s4)).toEqual(['quests.0.steps.4.minigameKind: a stage4 Check plays listen-pick, not order-it']);
 
     const three = lessonCell() as Json;
     three.quests[0].scopes[2].rounds.push(clone(three.quests[0].scopes[2].rounds[0]));
