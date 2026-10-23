@@ -170,6 +170,23 @@ function speechOf(text) {
     ...(typeof text.audioRef === "string" ? { audioRef: text.audioRef } : {}),
   };
 }
+/**
+ * The learner turns of a Role Play scene (F-CURR-002 row CM-35), along its first natural replies to an end; every way
+ * through a scene has as many (`role-play-even-branches` of `RolePlaySceneSchema`, which the lesson lint runs), so this
+ * equals `scopeRoundCount` (a test holds the two together).
+ */
+function rolePlayTurns(scene, where) {
+  const byId = new Map(need(scene, "nodes", where, "array").map((n) => [isObject(n) ? n.id : undefined, n]));
+  let id = need(scene, "start", where);
+  for (let turns = 0; turns <= byId.size; turns += 1) {
+    const node = byId.get(id);
+    if (!isObject(node)) break;
+    if (node.end === true) return turns;
+    id = (Array.isArray(node.replies) ? node.replies : []).find((r) => isObject(r) && r.kind === "natural")?.next;
+  }
+  throw new ContentError("role-play-good-endings: a Role Play scene's first natural replies do not reach an end", where);
+}
+
 /** The runtime scope of one lesson scope; `rounds` is what the §3.1 table counts. */
 export function runtimeScope(scope, where) {
   const { kind } = scope;
@@ -204,6 +221,9 @@ export function runtimeScope(scope, where) {
           };
         }),
       };
+    case "role-play":
+      // F-CURR-002 row CM-35: the scene as authored; `rounds` is the learner turns of a way through it (every way has as many).
+      return { kind, rounds: rolePlayTurns(scope.scene, where), rolePlay: { scene: scope.scene } };
     case "story-sequence":
       return {
         kind,

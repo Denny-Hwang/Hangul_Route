@@ -15,6 +15,7 @@ import {
   realiaReadIssues,
   type MinigameKind,
 } from './minigame';
+import { RolePlaySceneSchema, rolePlayTurnCount } from './role-play';
 import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, slotCount, type QuestStepKind } from './quest';
 import { AddedInSchema, CardIdSchema, IsoDateSchema, SourceSchema, VerificationSchema } from './story';
 
@@ -89,6 +90,8 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('type-hangul'), rounds: z.array(TypeHangulRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('trace-word'), rounds: z.array(TraceWordRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('write-frame'), rounds: z.array(WriteFrameRoundSchema).min(1).max(4) }),
+  /** Role Play (F-CURR-002 §7.1 F6, row CM-35): one branching chat; its rounds are the learner turns of a way through it. */
+  z.object({ ref: ScopeRefSchema, kind: z.literal('role-play'), scene: RolePlaySceneSchema }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -113,6 +116,8 @@ export function scopeRoundCount(scope: LessonScope): number {
       return scope.turns.length;
     case 'story-sequence':
       return 1;
+    case 'role-play':
+      return rolePlayTurnCount(scope.scene);
     default:
       return scope.rounds.length;
   }

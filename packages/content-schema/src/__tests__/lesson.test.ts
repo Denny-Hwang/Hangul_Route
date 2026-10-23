@@ -327,6 +327,7 @@ describe('LessonScopeSchema', () => {
         'order-it',
         'pic-word-match',
         'realia-read',
+        'role-play',
         'story-sequence',
         'tap-respond',
         'trace-word',

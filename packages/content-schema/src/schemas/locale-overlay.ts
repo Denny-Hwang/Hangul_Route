@@ -82,6 +82,14 @@ export const OVERLAY_FIELDS = {
     'traceWord.rounds.<roundId>.word.gloss',
     'writeFrame.rounds.<roundId>.frame.gloss',
     'writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss',
+    // F-CURR-002 row CM-35: a Role Play scene (its title, the partner's role, each line, each reply's meaning, Hoya's
+    // why line of a less natural reply and the closing line of an end).
+    'rolePlay.scene.title.gloss',
+    'rolePlay.scene.partner.gloss',
+    'rolePlay.scene.nodes.<nodeId>.line.gloss',
+    'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.text.gloss',
+    'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.why',
+    'rolePlay.scene.nodes.<nodeId>.closing',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],

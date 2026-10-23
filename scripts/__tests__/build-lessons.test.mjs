@@ -321,6 +321,18 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
     assert.throws(() => runtimeScope({ ref, kind: "build-letter", words: [kt("A", "a", "x")] }, "t"), /is not a Hangul syllable block/);
   });
 
+  test("role-play (row CM-35) keeps the scene as authored and counts the learner turns of a way through it", () => {
+    const reply = (id, next) => ({ id, text: kt("네.", "ne", "yes"), kind: "natural", next });
+    const nudge = { id: "x", text: kt("아니요.", "aniyo", "no"), kind: "lessNatural", whyEn: "Try another." };
+    const turnNode = (id, next) => ({ id, line: kt("뭐예요?", "mwoyeyo", "what is it?"), replies: [reply("a", next), nudge] });
+    const scene = { title: kt("도서관", "doseogwan", "At the library"), partner: kt("사서", "saseo", "librarian"), start: "t1", nodes: [turnNode("t1", "t2"), turnNode("t2", "t3"), turnNode("t3", "t4"), turnNode("t4", "end"), { id: "end", end: true, closingEn: "Well done!" }] };
+    assert.deepEqual(runtimeScope({ ref, kind: "role-play", scene }, "t"), { kind: "role-play", rounds: 4, rolePlay: { scene } });
+    const dead = { ...scene, nodes: scene.nodes.slice(0, 4) };
+    assert.throws(() => runtimeScope({ ref, kind: "role-play", scene: dead }, "t"), /role-play-good-endings/);
+    const loop = { ...scene, nodes: [turnNode("t1", "t1"), ...scene.nodes.slice(1)] };
+    assert.throws(() => runtimeScope({ ref, kind: "role-play", scene: loop }, "t"), /role-play-good-endings/);
+  });
+
   test("voice-echo (and any unknown kind) has no lesson scope", () => {
     assert.throws(() => runtimeScope({ ref, kind: "voice-echo" }, "t"), /lesson-no-speaking/);
   });
