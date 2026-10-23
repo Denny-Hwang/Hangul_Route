@@ -1,6 +1,6 @@
 import type { TeacherVisibleSummaryKey, VocabSummary } from '@hangul-route/content-schema';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { createConsoleApi, type RosterLearner } from '../api';
+import { createConsoleApi, unarchiveOverCap, type RosterLearner } from '../api';
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const space = { id: 'space:c', kind: 'class', name: 'A', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' };
@@ -283,5 +283,22 @@ describe('console api — browseScope (F-BROWSE-001 section 5.4)', () => {
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('https://api.example.com/api/entitlements/browse');
     expect(init.method).toBe('GET');
+  });
+});
+
+describe('unarchive refused for the class cap (owner report 2026-10-23)', () => {
+  it("keeps the 409's code and learner count, and unarchiveOverCap reads the count", async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(409, { ok: false, error: { code: 'unarchive_over_cap', message: 'Some learners of this class are already in the most classes', details: { learners: 2 } } }))
+      .mockResolvedValueOnce(json(409, { ok: false, error: { code: 'unarchive_over_cap', details: { learners: 'many' } } }))
+      .mockResolvedValueOnce(json(500, { ok: false, error: { code: 'internal' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    const refused = await api.archiveSpace('space:c', false);
+    expect(refused).toEqual({ ok: false, error: 'unknown', status: 409, code: 'unarchive_over_cap', details: { learners: 2 } });
+    expect(unarchiveOverCap(refused)).toEqual({ learners: 2 });
+    // A count the build cannot read still says the class cap stopped it, with no number it cannot trust.
+    expect(unarchiveOverCap(await api.archiveSpace('space:c', false))).toEqual({ learners: null });
+    expect(unarchiveOverCap(await api.archiveSpace('space:c', false))).toBeNull();
+    expect(unarchiveOverCap({ ok: true, data: space as never })).toBeNull();
   });
 });

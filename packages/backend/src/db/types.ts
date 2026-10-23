@@ -181,6 +181,15 @@ export interface Db {
    * insert (`putSpace` never writes it on update). The rows changed: 0 when the space is gone or archived.
    */
   renameSpace(spaceId: string, name: string): Promise<number>;
+  /**
+   * Brings an archived class back with one guarded statement (owner report 2026-10-23): `archived_at` is cleared only
+   * while no learner member of it is already in `learnerClassCap` other live classes, so the class never takes a
+   * learner past the cap. One statement, so a join that commits before it is counted and a join after it counts this
+   * class live. The rows changed: 0 when the space is gone, not an archived class, or a learner is at the cap.
+   */
+  unarchiveClassWithinCap(spaceId: string, learnerClassCap: number): Promise<number>;
+  /** How many learner members of `spaceId` are already in `learnerClassCap` or more other live classes (one statement). */
+  learnersAtClassCapOf(spaceId: string, learnerClassCap: number): Promise<number>;
   /** [SA] One `space_events` row (section 6.2); the kind is checked against `SpaceEventKindSchema`. */
   addSpaceEvent(event: SpaceEvent): Promise<void>;
   /** [SA] A space's events, newest first, at most `limit`. */
