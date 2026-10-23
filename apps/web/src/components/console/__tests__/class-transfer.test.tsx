@@ -578,3 +578,37 @@ describe('refresh, continued', () => {
     expect(text(root())).not.toContain(t.states.failed);
   });
 });
+
+describe('roster broadcast (owner report 2026-10-23)', () => {
+  it('an answered agreement or accept tells other console tabs to read their rosters again; a refused one does not', async () => {
+    const posted: unknown[] = [];
+    vi.stubGlobal(
+      'BroadcastChannel',
+      class {
+        constructor(readonly name: string) {}
+        postMessage(message: unknown): void {
+          posted.push([this.name, message]);
+        }
+        close(): void {}
+      },
+    );
+    try {
+      const both = fakeApi([list(source({ destination: { spaceId: 'space:b', name: 'Saturday Class B' } }))]);
+      await renderMoves(both.api, { direct: new Set(['space:a', 'space:b']) });
+      await act(async () => byTestId('move-agree').props.onClick());
+      expect(posted).toEqual([['hr-roster', { type: 'roster-changed', from: expect.any(String) }]]);
+      act(() => renderer?.unmount());
+      const joining = fakeApi([list(destination())]);
+      await renderMoves(joining.api);
+      await act(async () => byTestId('move-accept').props.onClick());
+      expect(posted).toHaveLength(2);
+      act(() => renderer?.unmount());
+      const refused = fakeApi([list(source())], { approve: [{ ok: false, error: 'network', status: -1 }] });
+      await renderMoves(refused.api);
+      await act(async () => byTestId('move-agree').props.onClick());
+      expect(posted).toHaveLength(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
