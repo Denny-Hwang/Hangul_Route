@@ -25,9 +25,10 @@ import { isItemDue } from './spacing';
  *   retired ones. A volume is started when one of its quests is done or it was tested out (`testedOut` of its volume
  *   cell, `cellOfVolume`). A volume not started never holds a level back; a started cell whose later volume has
  *   shipped (it has quests in the catalogue) and is not started shows the "New volume" marker instead.
- * - **Topic words** (`vocab:` ids) are read from the word slice (`bestBox`, `seen`) and count in the denominator once
- *   the learner has collected them: before that their answers are not recorded anywhere (F-VOC-005 P7), so a cell whose
- *   items are mostly topic words (Stage 2 Nature: 12 of 14) could otherwise never be Practiced.
+ * - **Topic words** (`vocab:` ids) are read from the word slice (`bestBox`, `seen`). They stay in the denominator as the
+ *   table says, collected or not: a word not collected yet is simply not held, so a cell made mostly of topic words
+ *   (Stage 2 Nature: 12 of 14) reaches Practiced when its words are practised, never on its two lesson items alone. A
+ *   latched level cannot be taken back, so the denominator is never narrowed below what the cell teaches.
  * - **Levels are cumulative**: Practiced needs Done, Mastered needs Practiced, so an item learned in another cell never
  *   lifts a cell nobody finished. An empty denominator never reaches Practiced.
  * - **The latch** (`latchCellBest`): the shown level is `cellBest`, which merges by max; a derived level only raises it.
@@ -122,9 +123,8 @@ export function deriveMastery(input: MasteryInput): Map<string, CellMastery> {
     if (started.length === 0) continue;
     const firstQuests = volumes.quests.get(1) ?? [];
     const isDone = (firstQuests.length > 0 && firstQuests.every((id) => done.has(id))) || testedOut[cell] !== undefined;
-    // A topic word the learner has not collected records no answer (F-VOC-005 P7), so it could never be held: it
-    // joins the denominator once it is in the word slice.
-    const denominator = masteryDenominator(input.items, cell, started, input.retired).filter((id) => !id.startsWith(VOCAB) || words.has(id));
+    // Every item the started volumes teach, topic words included whether collected or not (section 4.4 as written).
+    const denominator = masteryDenominator(input.items, cell, started, input.retired);
     const at3 = denominator.filter((id) => held(id, PRACTICED_BOX)).length;
     const at4 = denominator.filter((id) => held(id, MASTERED_BOX)).length;
     const practiced = isDone && reaches(at3, denominator.length, PRACTICED_SHARE);

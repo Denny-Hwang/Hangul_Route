@@ -1,6 +1,6 @@
 import { Body, Button, Card, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, useLayoutClass, useMediaSize } from '@hangul-route/design-system';
 import type { ThemeKey } from '@hangul-route/content-schema';
-import { formatDate } from '@hangul-route/i18n';
+import { formatDate, formatNumber } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -421,7 +421,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         focusToken={focusKey}
         // The tab's next lessons name the card's lesson first (owner decision 2026-10-17), so the card does not repeat it.
         showNext={variant !== 'tab' || nextRows.length === 0}
-        wordsKnown={wordsKnown >= 1 ? messages.learner.wordsKnown.route(wordsKnown) : null}
+        wordsKnown={wordsKnown >= 1 ? messages.learner.wordsKnown.route(formatNumber(locale, wordsKnown)) : null}
       />
 
       {view.planLine !== null ? (

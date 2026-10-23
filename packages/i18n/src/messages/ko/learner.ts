@@ -1958,12 +1958,12 @@ export const learner = {
   mastery: {
     level: { done: '완료', practiced: '연습함', mastered: '익힘' },
     readyToRefresh: '다시 볼 때예요',
-    newVolume: '새 권',
+    newVolume: '새 묶음이 있어요',
     levelUp: (title: string, level: string) => `${title}: ${level}`,
   },
   wordsKnown: {
-    pill: (count: number) => `아는 낱말 ${count}개`,
-    route: (count: number) => `내가 아는 낱말: ${count}개`,
+    pill: (count: number, shown: string = `${count}`) => `아는 낱말 ${shown}개`,
+    route: (count: string) => `내가 아는 낱말: ${count}개`,
     milestone: (count: string) => `낱말 ${count}개! 호야가 정말 뿌듯해해요.`,
   },
 } satisfies DeepPartial<Messages['learner']>;

@@ -978,7 +978,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.legal.privacy.sections.collect.bullets.guest': [[{ email: 'hello@example.com', levels: 'New reader / Some reading', days: 30, sharedDays: 7 }]],
   // F-CURR-002 row CM-20: a cell title and its level word; Words known counts (from 1), a milestone as the screen formats it.
   'learner.mastery.levelUp': [['Lunch Box Words', 'Practiced'], ['Family at the Table', 'Mastered']],
-  'learner.wordsKnown.pill': [[1], [120], [2000]],
-  'learner.wordsKnown.route': [[1], [120]],
+  'learner.wordsKnown.pill': [[1], [120], [2000, '2,000']],
+  'learner.wordsKnown.route': [['1'], ['120'], ['1,200']],
   'learner.wordsKnown.milestone': [['100'], ['1,000']],
 };

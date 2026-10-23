@@ -18,7 +18,7 @@ import { engineStates, withSentenceCredit } from '../reviews/engine';
 import { applyVocabEvents, vocabOf, type VocabEvent } from '../vocab/progress';
 import { daysBetween, isDue } from '../vocab/srs';
 import { countAnswer, durableWeek, memoryDailyPayload, openDay, studyMinutes } from './daily';
-import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, readableStore, sameState, storedFile, type MemoryFile } from './memory-file';
+import { answeredByShard, emptyMemoryFile, foldStates, holdsStates, laySeed, pushBatches, readMemoryFile, readableStore, sameState, storedFile, type MasteryMoments, type MemoryFile } from './memory-file';
 import { buildLookup, cellOfEpisode, resolveItems, resolveRound, shardOf, type ItemLookup } from './resolve';
 import { MEMORY_KEY } from './keys';
 import { deriveSeed, seedInputKey } from './seed';
@@ -117,9 +117,10 @@ export interface MemoryRuntime {
   summary(profileId: string, opts?: { reviewOn?: boolean }): Promise<MemorySummary | undefined>;
   /**
    * The mastery levels and Words known today (row CM-20, `./mastery.ts`), after every earlier operation on the
-   * profile: derives each cell's level, latches the rises into `cellBest` (one `mastery.level_up` each) and reads
-   * Words known. `celebrate` (the Results of an activity) returns the rises and a Words known milestone crossed since
-   * this device's last read; any other read takes them in silently, so each is celebrated at most once.
+   * profile: derives each cell's level, latches the rises into `cellBest` (one `mastery.level_up` each, none on this
+   * device's first read, a silent baseline) and reads Words known. Every read keeps the rises it latched and a Words
+   * known milestone crossed as moments in the store (`mc`, for their local day); only `celebrate` (the Results of an
+   * activity) returns them and takes them, so each is celebrated at most once and no other read takes one away.
    */
   mastery(profileId: string, opts: MasteryOptions): Promise<MasteryRead | undefined>;
 }
@@ -153,9 +154,9 @@ export interface MasteryRead {
   /** Started cells whose later volume has shipped and is not started ("New volume"). */
   newVolume: string[];
   wordsKnown: number;
-  /** With `celebrate`: the levels this read latched, in cell id order; else empty. */
+  /** With `celebrate`: the levels this device latched today and has not celebrated, in cell id order; else empty. */
   rises: LevelRise[];
-  /** With `celebrate`: the Words known milestone crossed since this device's last read; else null. */
+  /** With `celebrate`: the highest Words known milestone crossed today and not celebrated; else null. */
   milestone: number | null;
 }
 
@@ -577,34 +578,68 @@ export function createMemoryRuntime(deps: MemoryRuntimeDeps): MemoryRuntime {
         if (!file || !snapshot) return undefined;
         const { index } = await items();
         const derived = deriveMastery({ cells: CATALOG.cells, quests: CATALOG.quests, items: index.items, retired: index.retired, rows: file.rows, snapshot });
+        const today = deps.dayOf(deps.now());
+        // This device's first mastery read for the profile (the day `mastery` is ramped, or a new device): a silent
+        // baseline. It latches the levels reached before, but they are history, not rises: no `mastery.level_up` and
+        // no banner, as the Words known count it sets brings no milestone.
+        const baseline = file.wk === undefined;
         let cellBest: Readonly<Record<string, CellLevel>> = snapshot.cellBest ?? {};
         // Before the one-time seeding (section 4.8 step 6) has latched Done for the cells finished earlier, nothing is
-        // latched here: those are history, not rises, and would each send a `mastery.level_up`.
+        // latched here: those are history too.
         let rises = snapshot.memSeededAt === undefined ? [] : latchCellBest(cellBest, derived).rises;
         if (rises.length > 0) {
           const latched = deps.applyCellBest(profileId, rises);
           if (latched === null) rises = [];
           else cellBest = latched;
           // Sent once, by the device that latched the rise; no PII, the cell id and the level only.
+          if (!baseline) {
+            for (const rise of rises) {
+              const payload = CURR_TELEMETRY_PAYLOADS['mastery.level_up'].safeParse({ cellId: rise.cellId, level: rise.level });
+              if (payload.success) deps.track({ name: 'mastery.level_up', profileId, payload: payload.data });
+            }
+          }
+        }
+        // The moments wait in the store for the Results (`mc`), whichever read latched them: a read on Home or the
+        // Journey, which stay mounted under the Results, adds to them and never takes them. Kept for their local day.
+        const moments: MasteryMoments = file.mc !== undefined && file.mc.day === today ? { ...file.mc, rises: { ...file.mc.rises } } : { day: today, rises: {}, words: null };
+        let changed = file.mc !== undefined && file.mc.day !== today;
+        if (!baseline) {
           for (const rise of rises) {
-            const payload = CURR_TELEMETRY_PAYLOADS['mastery.level_up'].safeParse({ cellId: rise.cellId, level: rise.level });
-            if (payload.success) deps.track({ name: 'mastery.level_up', profileId, payload: payload.data });
+            if (rise.level > (moments.rises[rise.cellId] ?? 0)) moments.rises[rise.cellId] = rise.level;
+            changed = true;
           }
         }
         const wordsKnown = wordsKnownOf(file.rows, snapshot);
-        let milestone: number | null = null;
         if (file.wk === undefined || wordsKnown > file.wk) {
-          if (opts.celebrate && file.wk !== undefined) milestone = wordsMilestoneCrossed(file.wk, wordsKnown);
+          const crossed = file.wk === undefined ? null : wordsMilestoneCrossed(file.wk, wordsKnown);
+          if (crossed !== null && crossed > (moments.words ?? 0)) moments.words = crossed;
           file.wk = wordsKnown;
-          markDirty(profileId);
+          changed = true;
         }
-        const today = deps.dayOf(deps.now());
+        let shown: LevelRise[] = [];
+        let milestone: number | null = null;
+        let taken = false;
+        if (opts.celebrate) {
+          shown = Object.entries(moments.rises)
+            .map(([cellId, level]) => ({ cellId, level }))
+            .sort((a, b) => (a.cellId < b.cellId ? -1 : a.cellId > b.cellId ? 1 : 0));
+          milestone = moments.words;
+          taken = file.mc !== undefined || shown.length > 0 || milestone !== null;
+          delete file.mc;
+        } else if (Object.keys(moments.rises).length > 0 || moments.words !== null) {
+          file.mc = moments;
+        } else {
+          delete file.mc;
+        }
+        // Moments shown are saved at once, so a reload right after the Results never shows them again.
+        if (taken) await saveNow(profileId);
+        else if (changed) markDirty(profileId);
         return {
           cellBest,
           refresh: opts.reviewOn ? [...selectDueCellIds(cellBest, derived, file.rows, vocabOf(snapshot).items, today)] : [],
           newVolume: opts.volumesOn ? [...derived].filter(([, m]) => m.newVolume).map(([cell]) => cell) : [],
           wordsKnown,
-          rises: opts.celebrate ? rises : [],
+          rises: shown,
           milestone,
         };
       });

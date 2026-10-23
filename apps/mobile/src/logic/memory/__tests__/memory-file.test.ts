@@ -174,3 +174,16 @@ describe('the Words known count last read (row CM-20)', () => {
     expect('wk' in emptyMemoryFile()).toBe(false);
   });
 });
+
+describe('the mastery moments waiting for a Results (row CM-20)', () => {
+  it('keeps a dated record of levels 1-3 and a whole milestone, drops anything else', () => {
+    expect(readMemoryFile({ mc: { day: '2026-10-22', rises: { 'episode:stage3-life': 2, bad: 4, worse: '1' }, words: 100 } }).mc).toEqual({
+      day: '2026-10-22',
+      rises: { 'episode:stage3-life': 2 },
+      words: 100,
+    });
+    expect(readMemoryFile({ mc: { day: '2026-10-22', rises: {}, words: 0 } }).mc).toEqual({ day: '2026-10-22', rises: {}, words: null });
+    for (const mc of [null, 'x', { rises: {} }, { day: 'today', rises: {} }]) expect(readMemoryFile({ mc }).mc, JSON.stringify(mc)).toBeUndefined();
+    expect('mc' in emptyMemoryFile()).toBe(false);
+  });
+});

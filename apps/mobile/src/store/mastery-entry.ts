@@ -99,7 +99,8 @@ export interface MasteryView {
 /**
  * The Journey, Home and the Learning Route: the chunk and a read, again when the screen comes into focus, when a
  * snapshot field a level reads changes and when the local day turns. Null while off or while the chunk loads.
- * A read never celebrates: what it latches was reached elsewhere, so no banner waits for it.
+ * A read never celebrates. These screens stay mounted under the Results, so their read can come first after a quest:
+ * it latches the rise and moves Words known, but the moments stay in the store for the Results' read to show.
  */
 export function useMastery(profileId: string | null, snapshot: MasteryInputs | undefined, localToday: string): MasteryView | null {
   const on = useOn(profileId);

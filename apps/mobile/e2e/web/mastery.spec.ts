@@ -3,7 +3,7 @@ import { CATALOG } from '@hangul-route/content-schema';
 import { decodeReviewItems } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, readStored, seedStored } from './helpers';
+import { completeChildForm, journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -147,5 +147,110 @@ test.describe('mastery off (section 12.2)', () => {
     await openJourney(page);
     await expect(cell(page, 'Letters & Books')).toBeVisible();
     await expect(page.locator('[data-testid^="journey-mastery-"]')).toHaveCount(0);
+  });
+});
+
+test.describe('the Results of a quest (Home and the Journey mounted under it)', () => {
+  type SpeechWindow = Window & { __spoken?: string[] };
+  /** Headless Chromium has no Korean voice: stand in for speechSynthesis with a ko-KR voice and end each utterance at once. */
+  async function captureSpeech(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      const spoken: string[] = [];
+      (window as SpeechWindow).__spoken = spoken;
+      Object.defineProperty(window, 'speechSynthesis', {
+        configurable: true,
+        value: {
+          speaking: false,
+          pending: false,
+          speak: (u: SpeechSynthesisUtterance) => {
+            if (u.volume !== 0) spoken.push(u.text);
+            setTimeout(() => {
+              u.onstart?.call(u, new Event('start') as SpeechSynthesisEvent);
+              u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
+            }, 0);
+          },
+          cancel: () => undefined,
+          getVoices: () => [{ name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: true }],
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        },
+      });
+    });
+  }
+
+  test('finishing the last quest of a cell shows its level up and a Words known milestone, once', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await captureSpeech(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await completeChildForm(page, { name: 'Dami' });
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    const id = (await readStored<string>(page, 'profiles:active')) as string;
+    // Holidays quests 1 and 2 done; the third (Hanbok and the Bow) finishes the cell, a Done rise.
+    const rites = cellOf('rites');
+    const firstTwo = questsOf(rites).slice(0, 2);
+    await seedStored(page, `progress:${id}`, {
+      profileId: id,
+      updatedAt: AT,
+      episodes: [],
+      quests: firstTwo.map((questId) => ({ questId, episodeId: rites, startedAt: AT, completedAt: AT, stars: 1, attempts: 1, accuracy: 0.5 })),
+      cards: [],
+      sessions: [],
+      homework: [],
+      reviews: [],
+      streakDays: 0,
+      questDoneAt: Object.fromEntries(firstTwo.map((q) => [q, AT])),
+      memSeededAt: AT,
+      cellBest: {},
+    });
+    // 100 words known, and this device last read 99: the next read crosses the 100 milestone. Home reads first.
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:')).slice(0, 100);
+    const rows = Object.fromEntries(words.map((w) => [w.id, { sh: `stage${Math.max(1, w.stage)}`, st: { b: 2, d: '2027-01-01', c: 1, r: 1, n: 1, f: '2026-10-01', s: 2, at: AT } }]));
+    await seedStored(page, `memory:${id}`, { v: 1, rows, vf: {}, pending: [], cursor: 0, seededFrom: AT, day: null, dailySent: null, wk: 99 });
+    await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: ON });
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await expect(page.getByTestId('home-words-known')).toHaveText('100 words known');
+    const guide = page.getByTestId('install-guide');
+    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await playCheckByIds(page, [{ answer: 'jamo:yo' }, { answer: '한복' }]);
+    await page.getByRole('button', { name: 'See results' }).click();
+
+    // Home and the Journey re-read when the quest is written and latch first; the Results still shows both moments.
+    const milestone = page.getByTestId('results-words-milestone');
+    const levelUp = page.getByTestId('results-level-up');
+    await expect(milestone).toHaveText(/^100 words! Hoya is so proud of you\.$/);
+    await expect(levelUp).toHaveText('New Year & Festivals: Done');
+    // Both are in the polite live region, so the web reads them.
+    await expect(page.locator('[aria-live="polite"]').filter({ has: levelUp })).toHaveCount(1);
+    expect((await readStored<{ cellBest?: Record<string, number> }>(page, `progress:${id}`))?.cellBest?.[rites]).toBe(1);
+
+    // Shown once: a replay of the quest brings neither back.
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
+    await page.getByRole('button', { name: 'Play again', exact: true }).nth(2).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await playCheckByIds(page, [{ answer: 'jamo:yo' }, { answer: '한복' }]);
+    await page.getByRole('button', { name: 'See results' }).click();
+    await expect(page.getByText('Wonderful!').or(page.getByText('Great!')).or(page.getByText('You tried!'))).toBeVisible();
+    await expect(page.getByTestId('results-level-up')).toHaveCount(0);
+    await expect(page.getByTestId('results-words-milestone')).toHaveCount(0);
+    expect(errors).toEqual([]);
   });
 });
