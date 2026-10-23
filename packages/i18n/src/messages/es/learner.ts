@@ -1180,6 +1180,7 @@ export const learner = {
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
+      hiddenHeritage: 'Busca una cosa en un dibujo',
     },
     legend: {
       title: 'Qué significan las formas',
@@ -1738,6 +1739,7 @@ export const learner = {
         realia: 'Mira y lee',
         build: 'Arma una oración',
         write: 'Escribir en grupo',
+        hiddenHeritage: 'Buscar en grupo',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -2102,5 +2104,11 @@ export const learner = {
     intro: 'Unos 7 minutos. Muestra lo que sabes de todos los lugares de esta etapa. Sin reloj.',
     extra: 'Si sale bien, todos los lugares de esta etapa quedan marcados como Terminado y puedes avanzar. Todas las misiones siguen abiertas para jugar.',
     passed: '¡Adelantaste la etapa!',
+  },
+  hiddenHeritage: {
+    prompt: 'Busca esto',
+    found: 'Lo hallado',
+    again: 'Busca otra vez',
+    allFound: 'Encontraste todo',
   },
 } satisfies DeepPartial<Messages['learner']>;

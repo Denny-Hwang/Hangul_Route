@@ -11,6 +11,7 @@ import {
   QUEST_REVIEW_CHUNKS,
   REVIEW_CHUNKS,
   ROOT_CHUNKS,
+  SCENE_CHUNKS,
   SCREEN_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -178,7 +179,10 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
     ]);
+    // Row CM-36: one chunk per Hidden Heritage scene.
+    expect(SCENE_CHUNKS).toEqual([{ name: 'scene-food-market', marker: 'scene-chunk:food-market' }]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -201,6 +205,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-36: the Hidden Heritage game and its scenes, each reached only through a literal import().
+    expect(read('src/screens/minigames/hidden-heritage-chunk.tsx')).toContain(`export const HIDDEN_HERITAGE_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./hidden-heritage-chunk')");
+    expect(read('src/screens/minigames/scenes/scene-food-market.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[0].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-food-market')");
+  });
+
+  it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
+    expect(PRECACHE_BUDGET.sceneChunkRaw).toBe(25_000);
+    const start = { url: START, text: 'var s=1;' };
+    const text = `__d(function(){var m="${SCENE_CHUNKS[0].marker}"})`;
+    const scene = { url: `${WEB_JS_DIR}/scene-food-market-${md5(text)}.js`, text };
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, scene], precached: all([start, scene]) })).toEqual([]);
+    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, scene], precache: { count: 2, size: 10 } });
+    expect(reportLines(report).some((l) => l.startsWith('  hidden heritage scene chunks  1 bundles') && l.endsWith('ceiling 25000 B each)'))).toBe(true);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: text.length - 1 };
+    expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +287,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -417,10 +440,12 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeLessThan(10_000);
+    // CM-36 (Hidden Heritage) merged onto main e31bc3b33 (4,749,283 B) measures 4,756,289 B (release build), so the line
+    // is raised to 4,760,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_289).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_749_283).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_289).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

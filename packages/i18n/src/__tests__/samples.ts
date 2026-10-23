@@ -1000,4 +1000,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.learnerGone': [['Mina']],
   'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
   'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
+  // F-CURR-002 row CM-36: a found thing's meaning in the UI locale (content).
+  'a11y.hiddenHeritage.foundLive': [['soup'], ['rice']],
+  'a11y.hiddenHeritage.spotFound': [['soup'], ['chopsticks']],
 };
