@@ -223,6 +223,28 @@ describe('quest-run-store', () => {
     expect(useQuestRunStore.getState()).toMatchObject({ tries: [], short: null });
   });
 
+  it('a first answer given with a hint showing (Story Order, row CM-34) scores as usual and reaches the memory store hinted when right', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      store.answerRound('so:r1:0', true, { texts: ['먼저 일어나요.'] }, true);
+      // Story Order hands a miss over unhinted (its game passes hinted with a right answer only).
+      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] });
+      store.answerRound('so:r1:2', true, { texts: ['그리고 밥을 먹어요.'] });
+      expect(heard.map((a) => [a.correct, a.hinted ?? false])).toEqual([
+        [true, true],
+        // A miss stays a plain miss.
+        [false, false],
+        [true, false],
+      ]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+
   it('answerAside hands a round beside the steps to the memory store, hinted and unscored', () => {
     const heard: FirstRoundAnswer[] = [];
     setFirstRoundAnswerListener((a) => heard.push(a));

@@ -12,7 +12,7 @@ export interface FirstRoundAnswer {
   correct: boolean;
   asked: RoundAsked;
   at: Date;
-  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24). */
+  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24; Story Order's Show meanings, CM-34). */
   hinted?: boolean;
 }
 

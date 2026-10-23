@@ -179,6 +179,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
       { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
+      { name: 'story-order-chunk', marker: 'screen-chunk:story-order' },
     ]);
   });
 
@@ -205,6 +206,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-30: the Cloze Pick game's chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/cloze-pick-chunk.tsx')).toContain(`export const CLOZE_PICK_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
     expect(read('src/screens/minigames/cloze-pick-entry.tsx')).toContain("import('./cloze-pick-chunk')");
+    // Row CM-34: Story Order's chunk, reached only through the step's literal import().
+    expect(read('src/screens/minigames/story-order/story-order-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[6].marker}';`);
+    expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./story-order-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -270,6 +274,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
       'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
+      'story-order-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

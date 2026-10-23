@@ -2817,4 +2817,18 @@ export const learner = {
     extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
     passed: 'You jumped ahead!',
   },
+  /**
+   * Story Order (F-CURR-002 section 7.1 F5, row CM-34; design/wireframes/minigame/story-order.md): put Korean lines in
+   * order by reading them. The cards show Korean and romanization only; Show meanings is a hint for the rest of the
+   * round, never a penalty. An illustrated round reuses `story.sequence.title` and `.hint`; slots, misses, the replay
+   * and Skip reuse `story.sequence`. Read by the `review-copy` rule.
+   */
+  storyOrder: {
+    /** The heading of a round told by its captions alone. */
+    title: 'Put the lines in order',
+    hint: 'Read each line. Tap the one that comes first.',
+    showMeanings: 'Show meanings',
+    /** Replaces the button once the meanings show (not a toggle back). */
+    meaningsShown: 'Meanings shown',
+  },
 } as const;
