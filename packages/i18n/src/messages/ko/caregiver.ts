@@ -350,7 +350,7 @@ export const caregiver = {
       /** 반 이름 뒤에는 받침과 상관없는 조사(에, 에도, 의)만 써요. `moved` (`반을 옮겼어요. …의 새 반: …`)와 같은 형태예요. */
       movedOut: (learner: string, to: string, from: string) => `${learner}의 새 반: ${to}. ${from}에도 있으려면 선생님에게 물어봐요.`,
       movedOutElsewhere: (learner: string, from: string) => `${learner}의 반이 바뀌었어요. ${from}에도 있으려면 선생님에게 물어봐요.`,
-      moveWaiting: (to: string) => `새 반: ${to}. 반 옮기기가 선생님의 답을 기다리고 있어요. 선생님이 좋다고 하면 끝나요.`,
+      moveWaiting: (to: string) => `옮길 반: ${to}. 반 옮기기가 선생님의 답을 기다리고 있어요. 선생님이 좋다고 하면 끝나요.`,
     },
     /** [OA] 누가 들어가나요? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4, OA-7b): 이름 뒤에 조사를 붙이지 않고 콜론 형태로 써요. The consent step uses the shipped Join verb 참여 (`join.title`, `code.join.cta`); notNow is the transfer consent's words. */
     who: {

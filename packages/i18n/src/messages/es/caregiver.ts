@@ -330,7 +330,7 @@ export const caregiver = {
       alreadyIn: { cta: 'Ya estaba en esta clase' },
       /** Unirse no es cambiar de clase: se queda también en las otras. «Cambiar» es `transfer.actions.move.cta`. */
       staysIn: (learner: string, classes: readonly string[]) =>
-        `${learner} sigue también en ${classes.length <= 2 ? classes.join(' y ') : `${classes.slice(0, -1).join(', ')} y ${classes[classes.length - 1]}`}. Para cambiar de clase, usa Cambiar o pregúntale al docente.`,
+        `${learner} sigue también en ${classes.length <= 2 ? classes.join(' y ') : `${classes.slice(0, -1).join(', ')} y ${classes[classes.length - 1]}`}. Para cambiar de clase, usa Cambiar o pregúntale a tu docente.`,
       notThis: { cta: 'No es esta' },
     },
     pick: {
@@ -361,9 +361,9 @@ export const caregiver = {
       alreadyOnDevice: 'Este dispositivo ya tiene a ese estudiante: cambia de perfil.',
       badFormat: 'Un código tiene 6 letras o números.',
       off: 'Esta versión no permite unirse a una clase.',
-      movedOut: (learner: string, to: string, from: string) => `${learner} se cambió a ${to}. Para estar también en ${from}, pregúntale al docente.`,
-      movedOutElsewhere: (learner: string, from: string) => `${learner} se cambió a otra clase. Para estar también en ${from}, pregúntale al docente.`,
-      moveWaiting: (to: string) => `Un cambio a ${to} espera la respuesta del docente. Termina cuando diga que sí.`,
+      movedOut: (learner: string, to: string, from: string) => `${learner} se cambió a ${to}. Para estar también en ${from}, pregúntale a tu docente.`,
+      movedOutElsewhere: (learner: string, from: string) => `${learner} se cambió a otra clase. Para estar también en ${from}, pregúntale a tu docente.`,
+      moveWaiting: (to: string) => `Un cambio a ${to} espera la respuesta de tu docente. Termina cuando diga que sí.`,
     },
     /** [OA] "¿Quién se une?" (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4, OA-7b): estudiante, adultos, unirse; el nombre delante, con dos puntos. */
     who: {
