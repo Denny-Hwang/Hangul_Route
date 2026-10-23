@@ -452,7 +452,10 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
+    // CM-37 part 1 (the Letters scene's loader entry and the `scene:` overlay row, on CM-36) measures 4,749,984 B
+    // (release) and 4,750,140 B (app-host), so the line is 4,751,000 B for the four CM-37 scenes' loader entries.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_751_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_750_140).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeLessThan(10_000);

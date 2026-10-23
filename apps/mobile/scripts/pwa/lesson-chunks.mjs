@@ -100,8 +100,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
   // the game and each scene are chunks) measures 4,749,697 B raw (release) and 4,749,853 B (app-host): the line stays.
   // CM-37 part 1 (the Letters scene's loader entry and the `scene:` overlay fields; the scene is a chunk) measures
-  // 4,749,984 B raw / 1,266,150 B gzip (release): the line stays, 16 B under it.
-  startBundleRaw: 4_750_000,
+  // 4,749,984 B raw / 1,266,150 B gzip (release) and 4,750,140 B raw (app-host, CI), 140 B over the line: each scene
+  // costs its loader entry (about 145 B: the `import()` and its chunk path) and the `scene:` row is about 140 B, so the
+  // line is raised by 1,000 B for the four CM-37 scenes (parts 2 to 4 add about 435 B; about 425 B are left after them).
+  startBundleRaw: 4_751_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
