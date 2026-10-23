@@ -12,7 +12,7 @@ export interface FirstRoundAnswer {
   correct: boolean;
   asked: RoundAsked;
   at: Date;
-  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24). */
+  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24; Story Order's Show meanings, CM-34). */
   hinted?: boolean;
 }
 
@@ -59,7 +59,8 @@ interface Actions {
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
    */
-  answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked) => void;
+  /** `hinted`: answered with a hint showing (Story Order's Show meanings, row CM-34); a right one reaches the memory store as hinted. */
+  answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
   markStepComplete: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
@@ -92,7 +93,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
       stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
     }),
 
-  answerRound: (roundKey, correct, asked) => {
+  answerRound: (roundKey, correct, asked, hinted) => {
     const before = get();
     const first = !before.scoredRounds.includes(`${before.stepIndex}:${roundKey}`);
     set((s) => {
@@ -113,7 +114,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
     if (first && asked && firstAnswerListener && before.questId && before.episodeId) {
       try {
-        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date() });
+        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date(), ...(correct && hinted === true ? { hinted: true } : {}) });
       } catch {
         // The round is scored; only the memory store misses the answer.
       }

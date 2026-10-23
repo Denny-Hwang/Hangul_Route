@@ -7,6 +7,7 @@ import type {
   Realia,
   RealiaReadRound,
   StoryLevel,
+  StoryOrderRound,
   TraceWordRound,
   TypeHangulRound,
   WriteFrameRound,
@@ -64,6 +65,8 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Story Order (F-CURR-002 row CM-34): its rounds as authored, panels in the right order. */
+  storyOrder?: { rounds: StoryOrderRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;
