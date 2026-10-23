@@ -178,6 +178,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
     ]);
   });
 
@@ -198,6 +199,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-22: the Stage Check's chunk, reached only through the entry's literal import().
     expect(read('src/screens/stage-check/stage-check-chunk.tsx')).toContain(`export const STAGE_CHECK_CHUNK = '${SCREEN_CHUNKS[3].marker}';`);
     expect(read('src/screens/stage-check/stage-check-entry.tsx')).toContain("import('./stage-check-chunk')");
+    // Row CM-35: Role Play's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
@@ -265,6 +269,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'role-play-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -417,10 +422,13 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_750_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeLessThan(10_000);
+    // Main e31bc3b33 then measures 4,749,283 B (release) and 4,749,439 B (app-host). CM-35 (Role Play: the scene shape,
+    // the Tap to Respond fallback, the chunk door and the English strings; the game is a chunk) measures 4,754,958 B and
+    // 4,755,114 B on it, so the line is 4,756,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_756_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_754_958).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_114).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_754_958).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

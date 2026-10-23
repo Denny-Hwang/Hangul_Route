@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { isOneKeyFinal } from '../hangul/compose-typed';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { RolePlaySceneSchema } from './role-play';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -39,6 +40,8 @@ export const MinigameKindSchema = z.enum([
   'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
   'trace-word', // Construction · trace a whole syllable block or a two-syllable word
   'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
+  // F-CURR-002 §7.1 (row CM-35), additive.
+  'role-play', // Interaction · a branching chat, read and tap a reply (fallback: Tap to Respond on the same turns)
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -481,6 +484,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('role-play'), data: RolePlaySceneSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

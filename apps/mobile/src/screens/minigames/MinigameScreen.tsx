@@ -9,12 +9,14 @@ import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { playedScope } from '../../logic/role-play/fallback';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
 import type { RootStackParamList } from '../../navigation/types';
 import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
+import { useFrozenCurrFlag } from '../../store/remote-config-store';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -35,6 +37,7 @@ import { TraceWordGame } from './TraceWordGame';
 import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
+import { RolePlayStep } from './role-play/role-play-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 
@@ -73,14 +76,20 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const step = quest?.steps[stepIndex];
   const ref = step?.minigameRef;
   const locale = useLocale();
+  // `game.role-play` (F-CURR-002 section 12.2, row CM-35), read once the stored copy is in and then kept for the step,
+  // so a config that arrives mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond
+  // on the same turns. A role-play step waits for that read (a cold start reads off before it, which would freeze off).
+  const rolePlayOn = useFrozenCurrFlag('game.role-play');
+  const waitsForSwitch = rolePlayOn === null && ref !== undefined && scopeFor(ref)?.kind === 'role-play';
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const scope = useMemo(() => {
     // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
-    return source && ref ? localizeScope(source, ref, locale) : source;
-  }, [ref, locale, questId, stepIndex]);
+    const localized = source && ref ? localizeScope(source, ref, locale) : source;
+    return localized && playedScope(localized, rolePlayOn === true);
+  }, [ref, locale, questId, stepIndex, rolePlayOn]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
@@ -115,6 +124,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     </Screen>
   );
 
+  if (waitsForSwitch) return <LessonWaiting />;
   if (!quest || !step || !scope) {
     return fallback(copy.notFound);
   }
@@ -125,7 +135,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }),
+      useQuestRunStore
+        .getState()
+        .answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId, ...(meta.hinted ? { hinted: true } : {}) }),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();
@@ -172,6 +184,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
+    case 'role-play':
+      return <RolePlayStep scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

@@ -16,6 +16,7 @@ import {
   type QuestStep,
 } from '@hangul-route/content-schema';
 import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import { questsAll } from '../../../content/quests';
@@ -1994,6 +1995,21 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
   const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
+
+  it('Role Play (row CM-35): the reply slides of its main path, as the learner fallback plays it, until row CM-63 adds its slide', () => {
+    const rp = quest('role-play', [['apply', 'mg:role-play'], ['check', 'mg:role-play-none']], { rewardCardId: undefined });
+    const bun = b({
+      scopeFor: (ref) => (ref === 'mg:role-play' ? { kind: 'role-play', rounds: 4, rolePlay: { scene: LIBRARY_SCENE } } : ref === 'mg:role-play-none' ? { kind: 'role-play' } : undefined),
+      questById: (id) => (id === rp.id ? rp : undefined),
+    });
+    const { slides, skipped } = run(rp.id, {}, VOICE, bun);
+    const replies = quizzes(slides, 'reply');
+    expect(replies.map((q) => (q.prompt.ask === 'reply' ? q.prompt.line.ko : ''))).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!']);
+    // Each slide offers the turn's first natural reply as the one right answer and its less natural ones.
+    expect(replies.map((q) => q.options.filter((o) => o.correct).map((o) => o.ko))).toEqual([['안녕하세요!'], ['동화책을 찾아요.'], ['감사합니다!'], ['안녕히 계세요!']]);
+    expect(replies.every((q) => q.options.length === 2)).toBe(true);
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:role-play-none', reason: 'scope-too-small' }]);
+  });
 
   it('every shipped kind of question step becomes slides, in step order, with no skip', () => {
     const { slides, skipped } = run(asked.id);

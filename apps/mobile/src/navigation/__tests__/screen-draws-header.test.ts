@@ -59,6 +59,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-35: Role Play's chunk (the game, and the fixture build's host).
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayGame': 'screens/minigames/role-play/RolePlayGame.tsx#RolePlayGame',
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayE2eScreen': 'screens/minigames/role-play/RolePlayE2eScreen.tsx#RolePlayE2eScreen',
 };
 
 /**

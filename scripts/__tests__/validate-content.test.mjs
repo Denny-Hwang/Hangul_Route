@@ -651,6 +651,37 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     }
   });
 
+  test("a Role Play scene (row CM-35): a sound one passes; one whose ways differ in turns fails role-play-even-branches", () => {
+    const nudge = { id: "x", text: kt("아니요.", "aniyo", "No."), kind: "lessNatural", whyEn: "Try another reply." };
+    const turnNode = (id, next) => ({ id, line: kt("뭐예요?", "mwoyeyo", "What is it?"), replies: [{ id: "a", text: kt("네.", "ne", "Yes."), kind: "natural", next }, nudge] });
+    const scene = (t3Next) => ({
+      title: kt("도서관", "doseogwan", "At the library"),
+      partner: kt("사서", "saseo", "librarian"),
+      start: "t1",
+      nodes: [turnNode("t1", "t2"), turnNode("t2", "t3"), turnNode("t3", t3Next), turnNode("t4", "end"), { id: "end", end: true, closingEn: "Well done!" }],
+    });
+    const withScene = (sc) => {
+      const cell = lessonCell();
+      cell.quests[0].steps[3].minigameKind = "role-play";
+      cell.quests[0].scopes[1] = { ref: "minigame:s2-rites-q1-apply", kind: "role-play", scene: sc };
+      return cell;
+    };
+    for (const [sc, ok] of [[scene("t4"), true], [scene("end"), false]]) {
+      const root = makeRoot();
+      try {
+        writeContent(root, "episodes/stage-2/rites.json", withScene(sc));
+        const r = run(root);
+        if (ok) assert.equal(r.status, 0, r.stdout + r.stderr);
+        else {
+          assert.equal(r.status, 1);
+          assert.match(r.stdout, /file=content\/episodes\/stage-2\/rites\.json::role-play-good-endings: node t4 cannot be reached from the start/);
+        }
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+
   test("a {ko:} token passes only in an English field of a lesson cell; the zone keys only where the schema puts them", () => {
     const root = makeRoot();
     try {

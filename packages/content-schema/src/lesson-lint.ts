@@ -29,6 +29,7 @@ import { LessonNoteSchema, LessonReviewSchema, isLessonSignedOff, type LessonNot
 import { Stage1TableSchema, reviewItemsOf, type Stage1Table } from './review-items/build';
 import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from './review-items/sources';
 import { StableIdSnapshotSchema, type StableIdIssue } from './review-items/stable-ids';
+import { lintRolePlayScopes } from './role-play-rules';
 
 /*
  * The content lint, a build-time module (F-CURR-002 §9.3 and the F-CURR-001 lesson rules it
@@ -46,6 +47,8 @@ export * from './review-items/build';
 export * from './review-items/extract';
 export * from './review-items/sources';
 export * from './review-items/stable-ids';
+// F-CURR-002 row CM-35: the Role Play graph rules (content time only, so outside the package barrel).
+export * from './role-play-rules';
 
 // =====================================================================================================
 // F-CURR-002 §9.3: the lint rules for Volume 2 cells, Topic Pack levels and new stories. Each is an
@@ -868,6 +871,7 @@ function lintStrictLesson(entry: LessonEntry, ctx: { today: string; storyFacts: 
       if (scope.kind === 'voice-echo') add('lesson-no-speaking', pathOf('quests', qi, 'scopes', si, 'kind'), 'no lesson step records or asks for speech');
     });
   });
+  lintRolePlayScopes(entry.body.quests, add);
   if (ready) {
     const review = LessonReviewSchema.safeParse(entry.body.review);
     if (!review.success || !isLessonSignedOff(review.data)) {

@@ -99,7 +99,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  startBundleRaw: 4_750_000,
+  startBundleRaw: 4_756_000, // CM-35 (Role Play): main e31bc3b33 4,749,283 B release / 4,749,439 B app-host; with the row 4,754,958 / 4,755,114 B
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -257,6 +257,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
+  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
+  Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
 ]);
 
 /**

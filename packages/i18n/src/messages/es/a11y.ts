@@ -144,6 +144,11 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${particle} después de ${word}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    rolePlay: {
+      log: 'Diálogo',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role} dice: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `Dijiste: ${line}, ${romanization}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

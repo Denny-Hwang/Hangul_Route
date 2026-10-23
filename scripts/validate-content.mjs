@@ -284,6 +284,8 @@ if (lessonFiles.length > 0 || curriculumFiles.length > 0 || reviewMessageFiles.l
     for (const f of lint.lintLessonCell(parsedByRel.get(rel), ctx)) {
       violations.push({ file: rel, path: f.path, rule: `${f.rule}: ${f.message}` });
     }
+    // F-CURR-002 row CM-35: the Role Play graph rules (the cell schema above reports a scene's shape).
+    lint.lintRolePlayScopes(parsedByRel.get(rel)?.quests, (rule, path, message) => violations.push({ file: rel, path, rule: `${rule}: ${message}` }), false);
   }
   // F-CURR-002 §4.2 (row CM-10): `items-stable-id` reads the frozen review-item files beside the content.
   const curriculumTree = new Map(parsedByRel);
