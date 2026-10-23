@@ -34,6 +34,8 @@ import { shot } from './shots';
  *   GROWN_UP_SHELL_E2E=1 pnpm --filter @hangul-route/mobile exec playwright test grown-up-shell
  */
 const WITH_API = process.env.GROWN_UP_SHELL_E2E === '1';
+/** A build with the chooser's kill switch off (`EXPO_PUBLIC_WHO_CHOOSER=false`, `E2E_WHO=0`): no Who is using this? anywhere. */
+const WHO_OFF = process.env.E2E_WHO === '0';
 
 const en = getMessages('en');
 const lock = en.console.lock;
@@ -214,9 +216,16 @@ test.describe('the grown-up shell on the release build (flag on by default, A-10
     await expectOpen(page);
 
     await backToLearning(page).first().click();
-    // [OA] Row OA-10: the Learner app exit (`who=1`) lands on Who is using this? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 5.3).
-    await expect(page.getByRole('heading', { name: en.learner.who.title, exact: true })).toBeVisible();
-    await homeFor(page, 'Mina');
+    const chooser = page.getByRole('heading', { name: en.learner.who.title, exact: true });
+    if (WHO_OFF) {
+      // The kill-switch build ignores `who=1`: the exit lands on the learner's Home, with no chooser on the way.
+      await expect(page.getByText('Hi, Mina!')).toBeVisible();
+      await expect(chooser).toHaveCount(0);
+    } else {
+      // [OA] Row OA-10: the Learner app exit (`who=1`) lands on Who is using this? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 5.3).
+      await expect(chooser).toBeVisible();
+      await homeFor(page, 'Mina');
+    }
     expect(await page.evaluate((k) => sessionStorage.getItem(k), UNLOCK_SESSION_KEY)).toBeNull();
 
     await page.goBack();

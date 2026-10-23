@@ -241,6 +241,10 @@ for (const vp of [
       await expectReachable(page, page.getByRole('button', { name: 'Skip this one' }));
 
       await placeAll(page);
+      // The replay plays its first line once it is drawn, and its sound status ("No Korean voice", the fixtures' silent
+      // engine has none) appears only after that play, about a frame later: the card grows and pushes Done down. Done is
+      // checked against that settled screen, not the first frame (where it can sit in view, then move out of it).
+      await expect(page.getByTestId('story-sequence-replay-sound')).toContainText('No Korean voice on this device.');
       await expectReachable(page, page.getByRole('button', { name: 'Done', exact: true }));
       expect(await noSideScroll()).toBe(true);
     });
