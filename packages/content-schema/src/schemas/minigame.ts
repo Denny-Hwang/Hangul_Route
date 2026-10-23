@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { isOneKeyFinal } from '../hangul/compose-typed';
-import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { KoTextSchema, KoTextShape, PictureRefSchema, refineKoText } from './ko-text';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -39,6 +39,8 @@ export const MinigameKindSchema = z.enum([
   'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
   'trace-word', // Construction · trace a whole syllable block or a two-syllable word
   'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
+  // F-CURR-002 §7.1 F8 (row CM-38), additive.
+  'my-story', // Construction · 3-5 chained word-bank frames make a short text, shown as My page and not kept
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -430,42 +432,129 @@ export type SoundTable = z.infer<typeof SoundTableSchema>;
  * marks the one round composed without a bank (Write Your Name q3): unscored,
  * held in component state only (F-CURR-001 §3.7).
  */
-export const WriteFrameRoundSchema = z
-  .object({
-    id: z.string().min(1),
-    frame: KoTextSchema,
-    slots: z
-      .array(z.object({ id: z.string().min(1), bank: z.array(KoTextSchema).max(6).default([]) }))
-      .min(1)
-      .max(2),
-    entry: z.enum(['type', 'trace', 'pick']),
-    freeEntry: z.boolean().default(false),
-    /** The name round's Blocks tab; only a free-entry round has one. */
-    soundTable: SoundTableSchema.optional(),
-  })
-  .superRefine((round, ctx) => {
-    const issue = (path: (string | number)[], message: string) =>
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
-    const slots = round.frame.ko.split('___').length - 1;
-    if (slots !== round.slots.length) issue(['frame', 'ko'], `the frame has ${slots} slot(s) but ${round.slots.length} slot entries`);
-    round.slots.forEach((slot, i) => {
-      if (round.freeEntry) {
-        if (slot.bank.length > 0) issue(['slots', i, 'bank'], 'a free-entry slot has no word bank');
-      } else if (slot.bank.length < 2) {
-        issue(['slots', i, 'bank'], 'a word bank holds 2-6 taught words');
-      }
-      slot.bank.forEach((w, j) => {
-        if (!isComposable(w.ko)) issue(['slots', i, 'bank', j, 'ko'], 'a bank word is Hangul syllables only');
-      });
+export const WriteFrameRoundShape = z.object({
+  id: z.string().min(1),
+  frame: KoTextSchema,
+  slots: z
+    .array(z.object({ id: z.string().min(1), bank: z.array(KoTextSchema).max(6).default([]) }))
+    .min(1)
+    .max(2),
+  entry: z.enum(['type', 'trace', 'pick']),
+  freeEntry: z.boolean().default(false),
+  /** The name round's Blocks tab; only a free-entry round has one. */
+  soundTable: SoundTableSchema.optional(),
+});
+
+/**
+ * The rules of a Write Frame round, shared with the frames of My Story (F-CURR-002 row CM-38), which
+ * extend the shape (a `ZodEffects` has no `.extend`).
+ */
+export function writeFrameRoundRules(round: z.infer<typeof WriteFrameRoundShape>, ctx: z.RefinementCtx): void {
+  const issue = (path: (string | number)[], message: string) =>
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+  const slots = round.frame.ko.split('___').length - 1;
+  if (slots !== round.slots.length) issue(['frame', 'ko'], `the frame has ${slots} slot(s) but ${round.slots.length} slot entries`);
+  round.slots.forEach((slot, i) => {
+    if (round.freeEntry) {
+      if (slot.bank.length > 0) issue(['slots', i, 'bank'], 'a free-entry slot has no word bank');
+    } else if (slot.bank.length < 2) {
+      issue(['slots', i, 'bank'], 'a word bank holds 2-6 taught words');
+    }
+    slot.bank.forEach((w, j) => {
+      if (!isComposable(w.ko)) issue(['slots', i, 'bank', j, 'ko'], 'a bank word is Hangul syllables only');
     });
-    if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
-    if (!round.freeEntry && round.soundTable !== undefined) issue(['soundTable'], 'only a free-entry round has a sound table');
-    // Each slot is followed by a known pair, a single form or nothing, and every bank word is
-    // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
-    // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).
-    slotEndingIssues(round.frame.ko).forEach((message) => issue(['frame', 'ko'], message));
   });
+  if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
+  if (!round.freeEntry && round.soundTable !== undefined) issue(['soundTable'], 'only a free-entry round has a sound table');
+  // Each slot is followed by a known pair, a single form or nothing, and every bank word is
+  // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
+  // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).
+  slotEndingIssues(round.frame.ko).forEach((message) => issue(['frame', 'ko'], message));
+}
+
+export const WriteFrameRoundSchema = WriteFrameRoundShape.superRefine(writeFrameRoundRules);
 export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
+
+// ---- My Story (F-CURR-002 §7.1 F8, OD-13; row CM-38) -------------------------------------------
+
+/** A chain holds 3 to 5 frames (F-CURR-002 §7.1 F8). */
+export const MY_STORY_FRAMES_MIN = 3;
+export const MY_STORY_FRAMES_MAX = 5;
+/** Every slot of a My Story frame offers 3 to 5 taught words (design/wireframes/minigame/my-story.md). */
+export const MY_STORY_BANK_MIN = 3;
+export const MY_STORY_BANK_MAX = 5;
+
+/**
+ * Slot topics a My Story frame may never ask of the learner (F-CURR-002 §6.6 and §13, personal disclosure;
+ * design/wireframes/minigame/my-story.md: no home address, school name, real name, age, health or religion). Read
+ * in the frame's English gloss, any case, and only where the frame asks about the learner ("my" or "your" before the
+ * topic, or "I" or "you" with the fact): a frame about Hoya or the cast ("Her name is ___", "Hoya's grandmother
+ * lives in ___", "After school I ___") is not a disclosure and parses. The learner's own family is a topic too
+ * (§6.6: content never requires it). The MAR still checks every frame.
+ */
+export const MY_STORY_PRIVATE_TOPICS =
+  /\b(?:(?:my|your)\s+(?:(?:real|full|first|last|home|e-?mail|phone)\s+)?(?:names?|address(?:es)?|street|school|class|grade|teachers?|age|birthday|phone|e-?mail|password|home(?:town)?|house|neighbou?rhood|city|town|country|health|illness|medicine|religion|doctor|hospital|church|mosque|temple|family|mom|mum|dad|mother|father|parents?|brothers?|sisters?|grand(?:ma|pa|mother|father|parents?))|(?:I|you)\s+(?:live|lives|lived|am from|are from|come from|grew up|was born|were born|pray)|(?:I am|I'm|you are|you're)\s+(?:\S+\s+)?years?\s+old|(?:I am|I'm|I feel|you are|you're|you feel)\s+(?:sick|ill)|(?:I|you)\s+go\s+to\s+(?:church|mosque|temple)|where\s+(?:(?:do|did|are|am)\s+)?(?:I|you)\s+(?:live|from|come from|grew up))\b/i;
+
+/** A bank word of a My Story slot: taught Korean, and `neutral: true` on the one option that tells nothing about the learner. */
+export const MyStoryBankWordSchema = KoTextShape.extend({ neutral: z.literal(true).optional() }).superRefine(refineKoText);
+export type MyStoryBankWord = z.infer<typeof MyStoryBankWordSchema>;
+
+/**
+ * The rules a My Story frame adds to Write Frame's (row CM-38):
+ * - `my-story-neutral-option`: every slot's bank has exactly one neutral option (호야 for a person, 괜찮아요 for a
+ *   feeling, 공원 for a place), so nobody has to share a family, a feeling or a place to finish. It is drawn like the
+ *   others, so it is never the first card of the bank (it is not the default).
+ * - `my-story-private-topic`: the frame never asks for a private fact (`MY_STORY_PRIVATE_TOPICS`).
+ * Word bank only (no free text) and no sound table are in the shape itself.
+ */
+export function myStoryFrameRules(frame: { frame: { en: string }; slots: readonly { bank: readonly { neutral?: true | undefined }[] }[] }, ctx: z.RefinementCtx): void {
+  frame.slots.forEach((slot, i) => {
+    const neutral = slot.bank.flatMap((w, j) => (w.neutral === true ? [j] : []));
+    if (neutral.length !== 1) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slots', i, 'bank'], message: `my-story-neutral-option: a slot's bank has exactly one neutral option (it has ${neutral.length})` });
+    } else if (neutral[0] === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slots', i, 'bank', 0], message: 'my-story-neutral-option: the neutral option is drawn like the others, never first in the bank' });
+    }
+  });
+  const topic = MY_STORY_PRIVATE_TOPICS.exec(frame.frame.en);
+  if (topic) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['frame', 'en'], message: `my-story-private-topic: a frame never asks for a private fact ("${topic[0]}")` });
+  }
+}
+
+/**
+ * One frame of a My Story chain: a Write Frame round with a bank of 3 to 5 words per slot, one of them neutral, and
+ * no free entry and no sound table (slots are word-bank only, F-CURR-002 §7.1 F8). It parses to a `WriteFrameRound`
+ * (each bank word may carry `neutral`), so the fallback plays it in Write Frame unchanged.
+ */
+export const MyStoryFrameSchema = WriteFrameRoundShape.extend({
+  slots: z
+    .array(z.object({ id: z.string().min(1), bank: z.array(MyStoryBankWordSchema).min(MY_STORY_BANK_MIN).max(MY_STORY_BANK_MAX) }))
+    .min(1)
+    .max(2),
+  freeEntry: z.literal(false, { errorMap: () => ({ message: 'a My Story frame is word-bank only: no free entry' }) }).default(false),
+  soundTable: z.never({ errorMap: () => ({ message: 'a My Story frame is word-bank only: no sound table' }) }).optional(),
+})
+  .superRefine(writeFrameRoundRules)
+  .superRefine(myStoryFrameRules);
+export type MyStoryFrame = z.infer<typeof MyStoryFrameSchema>;
+
+/** A chain of 3 to 5 frames with distinct ids, in story order. */
+export const MyStoryFramesSchema = z
+  .array(MyStoryFrameSchema)
+  .min(MY_STORY_FRAMES_MIN)
+  .max(MY_STORY_FRAMES_MAX)
+  .superRefine((frames, ctx) => {
+    const ids = frames.map((f) => f.id);
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'frame ids must be unique' });
+  });
+
+/**
+ * My Story (F-CURR-002 §7.1 F8, blueprint 06 game 12): 3-5 chained Write Frame rounds that make a short text, shown at
+ * the end as "My page" and not kept (OD-13, F-CURR-001 OD-6). The text is never stored or sent.
+ */
+export const MyStoryRoundSchema = z.object({ id: z.string().min(1), frames: MyStoryFramesSchema });
+export type MyStoryRound = z.infer<typeof MyStoryRoundSchema>;
 
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
@@ -481,6 +570,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('my-story'), data: MyStoryRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

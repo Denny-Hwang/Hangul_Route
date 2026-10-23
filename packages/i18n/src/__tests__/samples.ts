@@ -1000,4 +1000,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.learnerGone': [['Mina']],
   'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
   'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
+  // F-CURR-002 row CM-38: My Story's sentences so far (a chain has 3-5 frames, so 1-4 lines while writing).
+  'learner.minigame.myStory.soFarFolded': [[1], [2], [4]],
+  'a11y.minigame.myStory.soFar': [[1], [2], [4]],
 };

@@ -41,6 +41,8 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   'type-hangul': ['write'],
   'trace-word': ['write'],
   'write-frame': ['write'],
+  // F-CURR-002 row CM-38: My Story writes its frames as Write Frame does.
+  'my-story': ['write'],
 };
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);

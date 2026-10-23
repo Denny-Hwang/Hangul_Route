@@ -221,6 +221,9 @@ export function runtimeScope(scope, where) {
       return { kind, rounds: scope.rounds.length, traceWord: { rounds: scope.rounds } };
     case "write-frame":
       return { kind, rounds: scope.rounds.length, writeFrame: { rounds: scope.rounds } };
+    // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
+    case "my-story":
+      return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }

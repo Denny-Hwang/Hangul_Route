@@ -215,6 +215,10 @@ export const a11y = {
       /** A name-round tile: its block (or final letter) and its sound. */
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    /** My Story (F-CURR-002 row CM-38): the list of sentences written so far, named with its length. */
+    myStory: {
+      soFar: (lines: number) => plural('en', lines, { one: 'My story so far, 1 line', other: `My story so far, ${lines} lines` }),
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

@@ -30,4 +30,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'trace-word',
   // F-CURR-001 G-5
   'write-frame',
+  // F-CURR-002 row CM-38: its own chunk; with `game.my-story` off it plays Write Frame on the first frame.
+  'my-story',
 ]);

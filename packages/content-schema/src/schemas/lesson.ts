@@ -12,6 +12,7 @@ import {
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
+  MyStoryFramesSchema,
   realiaReadIssues,
   type MinigameKind,
 } from './minigame';
@@ -89,6 +90,8 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('type-hangul'), rounds: z.array(TypeHangulRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('trace-word'), rounds: z.array(TraceWordRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('write-frame'), rounds: z.array(WriteFrameRoundSchema).min(1).max(4) }),
+  /** My Story (F-CURR-002 §7.1 F8, row CM-38): 3-5 chained word-bank frames, one neutral option in every bank. */
+  z.object({ ref: ScopeRefSchema, kind: z.literal('my-story'), frames: MyStoryFramesSchema }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -113,6 +116,8 @@ export function scopeRoundCount(scope: LessonScope): number {
       return scope.turns.length;
     case 'story-sequence':
       return 1;
+    case 'my-story':
+      return scope.frames.length;
     default:
       return scope.rounds.length;
   }

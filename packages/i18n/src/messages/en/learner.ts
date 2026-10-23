@@ -929,6 +929,20 @@ export const learner = {
         finishBlock: 'Finish the last block.',
       },
     },
+    /**
+     * My Story (F-CURR-002 §7.1 F8, row CM-38; design/wireframes/minigame/my-story.md): 3-5 Write Frame rounds in a
+     * row make a short text. It reuses `writeFrame.*` (the pick line, Change word, My page and its not-kept line),
+     * `common.buttons.done` and `audio.hearIt`. `done` shows only when every frame was written; after Skip with
+     * some lines written, `donePartial`.
+     */
+    myStory: {
+      heading: 'Write your story',
+      soFar: 'My story so far',
+      /** "My story so far" folded to one line while the learner writes (it opens on a tap). */
+      soFarFolded: (lines: number) => plural('en', lines, { one: '1 line so far', other: `${lines} lines so far` }),
+      done: 'You wrote a whole story!',
+      donePartial: 'Here is your story so far.',
+    },
   },
 
   /**
@@ -1570,6 +1584,8 @@ export const learner = {
       writeFrame: 'Finish a sentence of your own',
       /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
       sentenceBuilder: 'Build a sentence',
+      /** My Story (F-CURR-002 row CM-38): it counts for writing. */
+      myStory: 'Write a short story',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {
