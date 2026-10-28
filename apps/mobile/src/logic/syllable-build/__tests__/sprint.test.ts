@@ -1,7 +1,8 @@
 import { blockParts, CURR_TELEMETRY_PAYLOADS, REPRESENTATIVE_FINALS, SyllableBuildRoundSchema, type BlockParts, type SyllableBuildRound } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { askedOfScope } from '../../memory/resolve';
 import { blockOptions, fallbackScope, syllableBuildToListenPick } from '../fallback';
-import { DRILL_BLOCKS, isRealBlock, PROBE_BLOCKS, REAL_BLOCKS, soundKeyOf } from '../pool';
+import { DRILL_BLOCKS, isProbeBlock, isRealBlock, PROBE_BLOCKS, PROBE_FORMS, REAL_BLOCKS, soundKeyOf } from '../pool';
 import {
   CLOCK_START,
   drillBlocksShown,
@@ -13,6 +14,7 @@ import {
   perMinute,
   planSprint,
   PROBE_ROUNDS,
+  probeFormOf,
   probeRate,
   runClock,
   secondsLeft,
@@ -61,7 +63,16 @@ const bap: SyllableBuildRound = {
 describe('the fallback round: Listen & Pick on the built block (game.syllable-build off)', () => {
   it('the target and real blocks one zone away from it, from its own tiles, never two that sound the same', () => {
     const round = syllableBuildToListenPick(bap, 1);
-    expect(round.id).toBe('lp:syl:sb:bap');
+    // A word block records against its cell's item, as the game does; a bare block against its `syl` item.
+    expect(round.id).toBe('lp:sbw:sb:bap');
+    const bare = { ...bap, id: 'sb:ba', target: { ko: '밥', romanization: 'bap' } };
+    expect(syllableBuildToListenPick(bare, 1).id).toBe('lp:syl:sb:ba');
+    for (const r of [bap, bare]) {
+      const game = askedOfScope({ kind: 'syllable-build', syllableBuild: { rounds: [r] } }, r.id);
+      const fallback = fallbackScope({ kind: 'syllable-build', syllableBuild: { rounds: [r] } });
+      const picked = askedOfScope(fallback, fallback.listenPick!.rounds[0]!.id);
+      expect(picked?.texts, r.id).toEqual(game?.texts);
+    }
     expect(round.answerId).toBe('밥');
     expect(round.prompt).toEqual({ ko: '밥', romanization: 'bap', en: 'rice, a meal' });
     const ids = round.options.map((o) => o.id);
@@ -116,6 +127,24 @@ describe('the Decoding Sprint plan', () => {
           expect(isHeldOut(ko), `${ko} is held out`).toBe(false);
           expect(DRILL_BLOCKS, ko).toContain(ko);
         }
+      }
+    }
+  });
+
+  it('the n-th sprint probes form (n - 1) mod 4: the first four sprints each probe blocks never shown before', () => {
+    expect([1, 2, 3, 4, 5, 8, 9].map(probeFormOf)).toEqual([0, 1, 2, 3, 0, 3, 0]);
+    expect(probeFormOf(0)).toBe(0);
+    const seen = new Set<string>();
+    for (let n = 1; n <= 4; n += 1) {
+      const plan = planSprint(77 + n, true, n);
+      const targets = plan.probe.map((r) => r.target);
+      expect([...targets].sort()).toEqual([...(PROBE_FORMS[n - 1] as readonly string[])].sort());
+      for (const ko of targets) expect(seen.has(ko), `${ko} probed again in sprint ${n}`).toBe(false);
+      // Nothing a probe round shows is a probe block but its own target: its options are drill blocks.
+      for (const r of plan.probe) for (const o of r.options) expect(o === r.target || !isProbeBlock(o), `${r.target}: ${o}`).toBe(true);
+      for (const r of plan.probe) {
+        for (const o of r.options) seen.add(o);
+        expect(r.options.length, r.target).toBeGreaterThanOrEqual(3);
       }
     }
   });
@@ -201,7 +230,14 @@ describe('the result, the private best and the event', () => {
     expect(CURR_TELEMETRY_PAYLOADS['decode.sprint.finished'].safeParse(out.event!.payload).success).toBe(true);
     const text = JSON.stringify(out.event);
     for (const raw of ['"14"', ':14', '23', '"best"', '"sprints"', 'drill', '밥']) expect(text).not.toContain(raw);
-    expect(finishSprint({ ...tally, drillRight: 200 }, { v: 1, sprints: 30, best: 0 }, undefined).event?.payload).toEqual({ rateBucket: '50+', probeRateBucket: '18-20', sprintIndexBucket: '20+' });
+    expect(finishSprint({ ...tally, drillRight: 200 }, { v: 1, sprints: 30, best: 0 }, undefined).event?.payload).toEqual({ rateBucket: '75+', probeRateBucket: '18-20', sprintIndexBucket: '20+' });
+  });
+
+  it('a sprint whose probe was read, not heard (no sound), sends no event and still keeps the best', () => {
+    const out = finishSprint({ ...tally, probeHeard: false }, EMPTY_RECORD, 'p1');
+    expect(out.event).toBeNull();
+    expect(out.record).toEqual({ v: 1, sprints: 1, best: 14 });
+    expect(finishSprint({ ...tally, probeHeard: true }, EMPTY_RECORD, 'p1').event).not.toBeNull();
   });
 
   it('a stored record reads back; anything damaged is no record yet', () => {

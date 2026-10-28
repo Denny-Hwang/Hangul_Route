@@ -53,7 +53,7 @@ describe('rollup bucket edges', () => {
   });
 
   it('[CM-32] the Decoding Sprint rate and sprint index buckets', () => {
-    expect([0, 1, 2, 8, 15, 17, 29, 30, 49, 50, 240].map((v) => rollupBucketCode(v, ROLLUP_DECODE_RATE_EDGES))).toEqual([
+    expect([0, 1, 2, 8, 15, 17, 29, 30, 49, 50, 59, 60, 74, 75, 240].map((v) => rollupBucketCode(v, ROLLUP_DECODE_RATE_EDGES))).toEqual([
       '0',
       '1-2',
       '1-2',
@@ -63,8 +63,12 @@ describe('rollup bucket edges', () => {
       '27-29',
       '30-34',
       '40-49',
-      '50+',
-      '50+',
+      '50-59',
+      '50-59',
+      '60-74',
+      '60-74',
+      '75+',
+      '75+',
     ]);
     expect(rollupBucketCodes(ROLLUP_SPRINT_INDEX_EDGES)).toEqual(['0', '1', '2', '3', '4', '5-9', '10-19', '20+']);
   });

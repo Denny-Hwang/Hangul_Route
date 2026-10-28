@@ -12,14 +12,20 @@ import pool from './decode-pool.json';
  *   primers teach) and one-block everyday words with one of the seven final sounds. The device voice is tested on every
  *   block of both lists (`scripts/decode-voice-check.mjs`: each is said as one syllable, and two blocks sound the same
  *   only when their sound keys match; the spec's CM-32 decision record has the run).
- * - `probe`: the held-out blocks, all from the allowlist and none from the Stage 1 table: the end-of-sprint probe asks
- *   only these, and no drill round ever shows one, as its answer or as an option, so the probe measures decoding of
- *   blocks never drilled in any sprint (G9).
+ * - `probeForms`: the held-out blocks, all from the allowlist and none from the Stage 1 table, in 4 matched forms of 6
+ *   (each: an open block with ㅗ, one with ㅜ and one with ㅣ, and a closed block ending in ㄴ or ㄹ, one in ㅁ and one
+ *   in ㅇ). A sprint's probe asks one whole form, the n-th sprint form (n - 1) mod 4, so the first four sprints each
+ *   probe blocks never shown before and G9's first sprint is read against the fourth on blocks new to both. No drill
+ *   round ever shows a probe block, as its answer or as an option, and no probe round offers another probe block. No
+ *   probe block is a review item or a taught word of any stage (`items-stable-id.json`, the vocab topics); the open
+ *   ones are chart syllables, which only the Stage 7 letters review and the placement check also print.
  */
 
 export const STAGE1_BLOCKS: readonly string[] = pool.stage1;
 export const ALLOWLIST_BLOCKS: readonly string[] = pool.allowlist;
-export const PROBE_BLOCKS: readonly string[] = pool.probe;
+/** The probe's matched forms, in the order sprints take them. */
+export const PROBE_FORMS: readonly (readonly string[])[] = pool.probeForms;
+export const PROBE_BLOCKS: readonly string[] = PROBE_FORMS.flat();
 
 /** Every real block: the Stage 1 table and the allowlist. */
 export const REAL_BLOCKS: ReadonlySet<string> = new Set([...STAGE1_BLOCKS, ...ALLOWLIST_BLOCKS]);

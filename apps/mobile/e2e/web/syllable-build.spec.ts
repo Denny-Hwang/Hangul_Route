@@ -4,7 +4,7 @@ import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-ch
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { shot } from './shots';
-import { expectNoHorizontalOverflow } from './viewport';
+import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-002 section 7.1 F3 and F9, OD-8, sections 12.2 and 14, row CM-32 (design/wireframes/minigame/syllable-build.md,
@@ -121,7 +121,9 @@ async function answerRound(page: Page, prefix: 'decoding-sprint' | 'decoding-spr
     return { kind: 'build', spoken };
   }
   await page.getByTestId(`${prefix}-pick-option-${spoken}`).click();
-  await expect(page.getByTestId(`${prefix}-pick-answer`)).toBeVisible();
+  if (prefix === 'decoding-sprint') await expect(page.getByTestId(`${prefix}-pick-answer`)).toBeVisible();
+  // The held-out probe only measures: no answer, no right or miss is shown after a tap.
+  else await expect(page.getByTestId(`${prefix}-pick-answer`)).toHaveCount(0);
   return { kind: 'pick', spoken };
 }
 
@@ -197,8 +199,18 @@ test.describe('the Block Sprint (Decoding Sprint, row CM-32)', () => {
     await learner(page);
     await openSprint(page);
     await page.getByTestId('decoding-sprint-start').click();
+    await expect(page.getByTestId('decoding-sprint-pick')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+    // One reading column (layout.maxWidth.reading), centred, not the window's width.
+    const pick = await page.getByTestId('decoding-sprint-pick').boundingBox();
+    expect(pick!.width).toBeLessThanOrEqual(720);
     const first = await answerRound(page, 'decoding-sprint', undefined);
     await expect(page.getByTestId('decoding-sprint-build')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    expect(await page.evaluate(controlsPastEdge)).toEqual([]);
+    const board = await page.getByTestId('decoding-sprint-build').boundingBox();
+    expect(board!.width).toBeLessThanOrEqual(720);
     await shot(page, 'syllable-build-sprint-wide');
     await answerRound(page, 'decoding-sprint', first.spoken);
   });

@@ -159,7 +159,7 @@ describe('a quest step with game.syllable-build off and on (section 12.2: no swi
     const options = byTestId(r.root, 'listen-pick-option-밥');
     expect(options.length).toBeGreaterThan(0);
     await tap(r.root, 'listen-pick-option-밥');
-    expect(log[0]).toBe('listen-pick 0 true lp:syl:sb:bap');
+    expect(log[0]).toBe('listen-pick 0 true lp:sbw:sb:bap');
   });
 
   it('on: the game, with its count, heading and Skip; Skip completes the step as the game it played', async () => {

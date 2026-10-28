@@ -16,22 +16,30 @@ import { nudge, success, tapLight } from '../../platform/haptics';
  * one tap, then the answer shows (the right card checked; a tapped miss amber with the dash, never red, never an X) and
  * the round moves on by itself. The options show the Korean only, so the round is read, never matched by romanization.
  * With no device voice the prompt is the romanization (`bap`) with the sound notice, and the learner finds the block.
+ *
+ * The held-out probe plays it with `reveal={false}`: it only measures, so a tap shows no right or miss and no answer
+ * (no check, no dash, no romanization, no success or nudge haptic); the cards dim for a beat and the next block comes up,
+ * so a probe block is never practised with feedback (G9).
  */
 
 /** How long the answer shows before the next round: a right answer, a miss. */
 export const RIGHT_REVEAL_MS = 600;
 export const MISS_REVEAL_MS = 1000;
+/** A probe round (`reveal={false}`): the beat before the next block, the same after any tap. */
+export const PROBE_NEXT_MS = 400;
 
 interface Props {
   round: PickRoundPlan;
-  /** The first tap: right or not. The sprint holds its clock from here. */
-  onAnswer: (correct: boolean) => void;
+  /** The first tap: right or not, and whether the block was heard (not read from its romanization: no sound). The sprint holds its clock from here. */
+  onAnswer: (correct: boolean, heard: boolean) => void;
+  /** Show the answer after the tap (the drill); false for the held-out probe, which only measures. Default true. */
+  reveal?: boolean;
   /** The answer has shown: on to the next round. */
   onDone: () => void;
   testID?: string;
 }
 
-export function SprintPick({ round, onAnswer, onDone, testID = 'sprint-pick' }: Props): ReactElement {
+export function SprintPick({ round, onAnswer, onDone, reveal = true, testID = 'sprint-pick' }: Props): ReactElement {
   const m = useMessages();
   const slot = usePromptSlot({ source: 'decoding-sprint' });
   const { play } = slot;
@@ -59,16 +67,22 @@ export function SprintPick({ round, onAnswer, onDone, testID = 'sprint-pick' }: 
     if (tapped !== null) return;
     setTapped(ko);
     const right = ko === round.target;
+    onAnswer(right, !slot.view.textShown);
+    if (!reveal) {
+      tapLight();
+      timer.current = setTimeout(() => done.current(), PROBE_NEXT_MS);
+      return;
+    }
     if (right) {
       tapLight();
       success();
     } else nudge();
-    onAnswer(right);
     timer.current = setTimeout(() => done.current(), right ? RIGHT_REVEAL_MS : MISS_REVEAL_MS);
   };
 
   const stateOf = (ko: string): ChoiceCardState => {
     if (tapped === null) return 'idle';
+    if (!reveal) return 'disabled';
     if (ko === round.target) return 'correct';
     return ko === tapped ? 'wrong' : 'disabled';
   };
@@ -102,9 +116,9 @@ export function SprintPick({ round, onAnswer, onDone, testID = 'sprint-pick' }: 
           <Icon name="speaker" size={spacing.xl} color={colors.brand.secondaryDark} />
         </Pressable>
         <View accessibilityLiveRegion="polite" style={{ flex: 1 }}>
-          {tapped !== null ? (
+          {tapped !== null && reveal ? (
             <KoreanText ko={round.target} romanization={round.romanization} size="md" testID={`${testID}-answer`} />
-          ) : slot.view.textShown ? (
+          ) : tapped === null && slot.view.textShown ? (
             // No sound: the learner reads the sound and finds its block, so only the romanization is shown.
             <Body weight="bold" testID={`${testID}-sound`}>
               {round.romanization}

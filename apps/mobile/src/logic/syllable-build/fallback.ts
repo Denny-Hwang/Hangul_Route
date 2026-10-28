@@ -68,7 +68,9 @@ export function syllableBuildToListenPick(round: SyllableBuildRound, seed = 0): 
   }));
   const { spokenKo, audioRef } = round.target;
   return {
-    id: `lp:syl:${round.id}`,
+    // A bare block records against its `syl` item (`lp:syl:`); a word block (with its meaning) against its cell's item,
+    // as the game itself records it (`askedOfScope`), so the switch never changes which item a round records.
+    id: round.target.en === undefined ? `lp:syl:${round.id}` : `lp:sbw:${round.id}`,
     prompt: {
       ko: round.target.ko,
       romanization: round.target.romanization,

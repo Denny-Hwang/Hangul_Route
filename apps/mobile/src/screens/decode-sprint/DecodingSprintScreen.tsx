@@ -49,6 +49,10 @@ import { SprintPick } from "./SprintPick";
  * screen) -> the result: the blocks read and, from the second sprint, the learner's own best, with New best! only above
  * it. Stopping saves nothing. The record is this device's (`store/decode-sprint-store.ts`), and the one event,
  * `decode.sprint.finished`, carries buckets only.
+ *
+ * `game.syllable-build` is read once a sprint, at Start, so a remote copy arriving mid-sprint never swaps the rounds.
+ * The probe only measures (`SprintPick reveal={false}`) and counts foreground answer time only. Play again starts the
+ * next sprint from the record just finished, never from a storage read that could race the write.
  */
 
 type Phase =
@@ -71,7 +75,7 @@ const monotonic = (): number =>
 
 export interface DecodingSprintScreenProps {
   profileId: string;
-  /** `game.syllable-build` for the learner: every other drill round builds the block; off, every round is a pick. */
+  /** `game.syllable-build` for the learner: every other drill round builds the block; off, every round is a pick. Read at Start. */
   buildOn: boolean;
   onClose: () => void;
 }
@@ -92,31 +96,43 @@ export function DecodingSprintScreen({
   const [paused, setPaused] = useState(false);
   const [outcome, setOutcome] = useState<SprintOutcome | null>(null);
   const [pauseFocus, setPauseFocus] = useState(0);
+  /** The build switch for this sprint, latched at Start (and before it, the value the screen opened with). */
+  const [build, setBuild] = useState(buildOn);
   const revealing = useRef(false);
   const tally = useRef({
     drillRight: 0,
     probeRight: 0,
     probeMs: 0,
     shownAt: 0,
+    probeHeard: true,
   });
   /** Drill rounds already answered: a round drawn again after a pause is never scored twice. */
   const scored = useRef(new Set<number>());
 
+  /** A fresh sprint on `from`, the learner's record: the intro, nothing tallied. */
+  const reset = useCallback((from: DecodeSprintRecord): void => {
+    setRecord(from);
+    setRound(0);
+    setClock(CLOCK_START);
+    setOutcome(null);
+    setPaused(false);
+    revealing.current = false;
+    tally.current = { drillRight: 0, probeRight: 0, probeMs: 0, shownAt: 0, probeHeard: true };
+    scored.current = new Set();
+    setPhase("intro");
+  }, []);
+
   const load = useCallback((): void => {
     setPhase("loading");
-    void readDecodeSprint(profileId).then((raw) => {
-      setRecord(parseRecord(raw));
-      setRound(0);
-      setClock(CLOCK_START);
-      setOutcome(null);
-      setPaused(false);
-      revealing.current = false;
-      tally.current = { drillRight: 0, probeRight: 0, probeMs: 0, shownAt: 0 };
-      scored.current = new Set();
-      setPhase("intro");
-    });
-  }, [profileId]);
+    void readDecodeSprint(profileId).then((raw) => reset(parseRecord(raw)));
+  }, [profileId, reset]);
   useEffect(load, [load]);
+
+  /** Play again: the next sprint from the record just finished (its write may not have landed yet). */
+  const again = (): void => {
+    if (outcome !== null) reset(outcome.record);
+    else load();
+  };
 
   const plan: SprintPlan | null = useMemo(
     () =>
@@ -124,9 +140,10 @@ export function DecodingSprintScreen({
         ? null
         : planSprint(
             fnv1a32(`${profileId}|decode-sprint|${record.sprints + 1}`),
-            buildOn,
+            build,
+            record.sprints + 1,
           ),
-    [record, profileId, buildOn],
+    [record, profileId, build],
   );
 
   // The clock ticks only in the drill; the screen redraws in quarter seconds so the bar moves in whole seconds on time.
@@ -164,6 +181,22 @@ export function DecodingSprintScreen({
     });
   }, [phase, paused, pause]);
 
+  // The probe counts foreground answer time only: time away moves the round's start on by as long as the app was away.
+  useEffect(() => {
+    if (phase !== "probe") return undefined;
+    let awaySince: number | null = null;
+    return subscribeAppActive((active) => {
+      if (!active) {
+        awaySince ??= monotonic();
+        return;
+      }
+      if (awaySince !== null) {
+        tally.current.shownAt += Math.max(0, monotonic() - awaySince);
+        awaySince = null;
+      }
+    });
+  }, [phase]);
+
   const resume = (): void => {
     setPaused(false);
     // Paused while an answer showed: the round is over, so the next one comes up (and the clock runs again).
@@ -177,6 +210,7 @@ export function DecodingSprintScreen({
   };
 
   const start = (): void => {
+    setBuild(buildOn);
     const t = monotonic();
     setNow(t);
     setClock(runClock(CLOCK_START, t));
@@ -213,7 +247,7 @@ export function DecodingSprintScreen({
 
   const finish = (): void => {
     if (record === null) return;
-    const { drillRight, probeRight, probeMs } = tally.current;
+    const { drillRight, probeRight, probeMs, probeHeard } = tally.current;
     const out = finishSprint(
       {
         drillRight,
@@ -221,6 +255,7 @@ export function DecodingSprintScreen({
         probeRight,
         probeMs,
         probeRounds: plan?.probe.length ?? 0,
+        probeHeard,
       },
       record,
       profileId,
@@ -240,7 +275,7 @@ export function DecodingSprintScreen({
         <Spacer size="md" />
         <Heading level="title">{copy.title}</Heading>
         <Spacer size="sm" />
-        <Body>{copy.intro}</Body>
+        <Body>{buildOn ? copy.intro : copy.introPick}</Body>
         <Body>{copy.introProbe}</Body>
         <Spacer size="xl" />
         <Button
@@ -280,7 +315,7 @@ export function DecodingSprintScreen({
           tone="primary"
           size="lg"
           fullWidth
-          onPress={load}
+          onPress={again}
           testID="decoding-sprint-again"
         />
         <Spacer size="sm" />
@@ -330,13 +365,15 @@ export function DecodingSprintScreen({
         <SprintPick
           key={`probe-${round}`}
           round={r}
+          reveal={false}
           testID="decoding-sprint-probe-pick"
-          onAnswer={(correct) => {
+          onAnswer={(correct, heard) => {
             tally.current.probeMs += Math.max(
               0,
               monotonic() - tally.current.shownAt,
             );
             if (correct) tally.current.probeRight += 1;
+            if (!heard) tally.current.probeHeard = false;
           }}
           onDone={() => {
             if (round + 1 >= plan.probe.length) finish();

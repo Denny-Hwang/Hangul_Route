@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { blockParts, REPRESENTATIVE_FINALS, romanizeWord } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { letterName, NAMED_LETTERS } from '../letters';
-import { ALLOWLIST_BLOCKS, DRILL_BLOCKS, isProbeBlock, isRealBlock, PROBE_BLOCKS, REAL_BLOCKS, romanizationOf, soundKeyOf, STAGE1_BLOCKS } from '../pool';
+import { ALLOWLIST_BLOCKS, DRILL_BLOCKS, isProbeBlock, isRealBlock, PROBE_BLOCKS, PROBE_FORMS, REAL_BLOCKS, romanizationOf, soundKeyOf, STAGE1_BLOCKS } from '../pool';
 
 /**
  * F-CURR-002 section 7.1 F9 and section 19 assumption 5, row CM-32: the Decoding Sprint and Syllable Build play real
@@ -66,8 +66,40 @@ describe('the real blocks (allowlist test)', () => {
     for (const ko of STAGE1_BLOCKS) expect(romanizationOf(ko), ko).toBe(table.get(ko));
   });
 
+  it('the probe is 4 matched forms of 6: the same vowels in the open blocks and the same final sounds in the closed ones', () => {
+    expect(PROBE_FORMS).toHaveLength(4);
+    const shape = (form: readonly string[]) =>
+      form
+        .map((ko) => {
+          const p = blockParts(ko)!;
+          return p.final === null ? `open:${p.vowel}` : `closed:${'ㄴㄹ'.includes(p.final) ? 'ㄴㄹ' : p.final}`;
+        })
+        .sort()
+        .join(' ');
+    for (const form of PROBE_FORMS) {
+      expect(form).toHaveLength(6);
+      expect(shape(form)).toBe(shape(PROBE_FORMS[0]!));
+    }
+    expect(new Set(PROBE_BLOCKS).size).toBe(24);
+  });
+
+  it('no probe block is a review item or a taught word anywhere in the curriculum, so nothing else drills it by ear', () => {
+    const root = join(__dirname, '../../../../../..');
+    const stable = JSON.parse(readFileSync(join(root, 'packages/content-schema/src/review-items/items-stable-id.json'), 'utf8')) as { ids: Record<string, string>; alias?: Record<string, string> };
+    const itemTexts = new Set([...Object.keys(stable.ids), ...Object.keys(stable.alias ?? {})].flatMap((key) => key.split('|').slice(1)));
+    const vocabDir = join(root, 'content/vocab');
+    const vocab = readdirSync(vocabDir)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => readFileSync(join(vocabDir, f), 'utf8'))
+      .join('\n');
+    for (const ko of PROBE_BLOCKS) {
+      expect(itemTexts.has(ko), `${ko} is a review item`).toBe(false);
+      expect(vocab.includes(`"${ko}"`), `${ko} is a vocab topic word`).toBe(false);
+    }
+  });
+
   it('the probe is held out: allowlist blocks that are not in the Stage 1 table, and never a drill block', () => {
-    expect(PROBE_BLOCKS.length).toBeGreaterThanOrEqual(12);
+    expect(PROBE_BLOCKS.length).toBeGreaterThanOrEqual(24);
     for (const ko of PROBE_BLOCKS) {
       expect(ALLOWLIST_BLOCKS, ko).toContain(ko);
       expect(STAGE1_BLOCKS, ko).not.toContain(ko);

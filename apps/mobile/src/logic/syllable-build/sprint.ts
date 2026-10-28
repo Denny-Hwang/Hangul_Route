@@ -7,7 +7,7 @@ import {
 } from '@hangul-route/content-schema';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { blockOptions } from './fallback';
-import { DRILL_BLOCKS, heardFinal, isProbeBlock, partsOf, PROBE_BLOCKS, REAL_BLOCKS, romanizationOf } from './pool';
+import { DRILL_BLOCKS, heardFinal, isProbeBlock, partsOf, PROBE_FORMS, romanizationOf } from './pool';
 import { shuffled, tilesFor, tilesSound, type TileRows } from './tiles';
 
 /**
@@ -18,9 +18,11 @@ import { shuffled, tilesFor, tilesSound, type TileRows } from './tiles';
  *   paused, and when it runs out the round on screen is simply dropped (never a miss). Rounds hear a real block and
  *   pick it (Listen & Pick on the block) or, while `game.syllable-build` is on, build it (every other round). Real
  *   blocks only: the Stage 1 table and the allowlist, never a held-out probe block, as answer or as option.
- * - **Probe.** Then a short held-out probe with no clock on screen: `PROBE_ROUNDS` pick rounds of blocks no sprint
- *   ever drills (`PROBE_BLOCKS`), always picks, so the format is the same in every sprint and G9 compares like with
- *   like. Its rate is the right first tries per minute of answer time.
+ * - **Probe.** Then a short held-out probe with no clock on screen: `PROBE_ROUNDS` pick rounds of one matched form of
+ *   blocks no sprint ever drills (`PROBE_FORMS`, the n-th sprint form (n - 1) mod 4), always picks, so the format is
+ *   the same in every sprint and G9 compares like with like. Its options are drill blocks, never another probe block.
+ *   It only measures: a tap moves on with no right or miss shown and no answer, so a probe block is never practised.
+ *   Its rate is the right first tries per minute of answer time; a sprint whose probe was read (no sound) sends none.
  * - **Result.** A count of blocks read (right first tries in the drill) and the learner's own best, kept on this device
  *   only (`DecodeSprintRecord`) and never compared with anyone. `decode.sprint.finished` carries buckets only: the drill
  *   rate, the probe rate and the sprint index, each a code of its shared edges, parsed before it is sent.
@@ -65,11 +67,16 @@ function pick(target: string, seed: number, allowed: (ko: string) => boolean): P
   return { kind: 'pick', target, romanization: romanizationOf(target), options: shuffled(blockOptions(target, tiles, seed, allowed), seed + 3) };
 }
 
+/** The probe form of a learner's n-th sprint (n from 1): the four forms in turn. */
+export function probeFormOf(sprintIndex: number): number {
+  return (((Math.max(1, Math.floor(sprintIndex)) - 1) % PROBE_FORMS.length) + PROBE_FORMS.length) % PROBE_FORMS.length;
+}
+
 /**
  * The sprint's rounds for a seed (the profile and the sprint index): the drill from the drill blocks in a seeded order,
- * builds every other round while `build` is on; the probe from the held-out blocks.
+ * builds every other round while `build` is on; the probe from the held-out form of the sprint index (`probeFormOf`).
  */
-export function planSprint(seed: number, build: boolean): SprintPlan {
+export function planSprint(seed: number, build: boolean, sprintIndex = 1): SprintPlan {
   const targets = shuffled(
     DRILL_BLOCKS.filter((ko) => heardFinal(partsOf(ko) as BlockParts)),
     seed,
@@ -86,9 +93,10 @@ export function planSprint(seed: number, build: boolean): SprintPlan {
       drill.push(pick(target, s, inDrill));
     }
   }
-  const probe = shuffled(PROBE_BLOCKS, seed + 7)
+  const form = PROBE_FORMS[probeFormOf(sprintIndex)] ?? [];
+  const probe = shuffled(form, seed + 7)
     .slice(0, PROBE_ROUNDS)
-    .map((target, i) => pick(target, seed + 997 * (i + 1), (ko) => REAL_BLOCKS.has(ko)));
+    .map((target, i) => pick(target, seed + 997 * (i + 1), inDrill));
   return { drill, probe };
 }
 
@@ -149,6 +157,11 @@ export interface SprintTally {
   /** The probe's answer time: from each round being up to its first tap, summed. */
   probeMs: number;
   probeRounds: number;
+  /**
+   * Every probe round was heard (the sound on and a device voice). False when one was read from its romanization: a
+   * different task, so that sprint's rates are not sent (G9 reads decoding by ear). Absent counts as heard.
+   */
+  probeHeard?: boolean;
 }
 
 /** Right first tries per minute of `ms` (whole, rounded down). */
@@ -195,7 +208,10 @@ export interface SprintOutcome {
   event: TelemetryEvent | null;
 }
 
-/** The finished sprint against the learner's own record; the event carries buckets only, parsed before it is sent. */
+/**
+ * The finished sprint against the learner's own record; the event carries buckets only, parsed before it is sent, and
+ * none when the probe was read rather than heard (`probeHeard`). The best is kept either way.
+ */
 export function finishSprint(tally: SprintTally, before: DecodeSprintRecord, profileId: string | undefined): SprintOutcome {
   const read = tally.drillRight;
   const index = before.sprints + 1;
@@ -211,6 +227,6 @@ export function finishSprint(tally: SprintTally, before: DecodeSprintRecord, pro
     record,
     newBest: before.sprints > 0 && read > before.best,
     best: before.sprints > 0 ? record.best : null,
-    event: parsed.success ? { name: 'decode.sprint.finished', profileId, payload: parsed.data } : null,
+    event: parsed.success && tally.probeHeard !== false ? { name: 'decode.sprint.finished', profileId, payload: parsed.data } : null,
   };
 }

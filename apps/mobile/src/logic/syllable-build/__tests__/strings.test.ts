@@ -30,6 +30,7 @@ function texts(locale: 'en' | 'es' | 'ko'): string[] {
     s.title,
     s.offer,
     s.intro,
+    s.introPick,
     s.introProbe,
     s.probe,
     s.read(1),
