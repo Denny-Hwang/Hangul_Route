@@ -40,15 +40,22 @@ const settle = async (): Promise<void> => {
   });
 };
 
+/** For the off cases: lets pending work finish without importing the chunk (the door's own test counts its loads). */
+const idle = async (): Promise<void> => {
+  await act(async () => {
+    for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+};
+
 function switchTo(pct: number): void {
   useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct } } } });
 }
 
-async function rewardStep(questId = Q1.id): Promise<ReactTestRenderer> {
+async function rewardStep(questId = Q1.id, wait = settle): Promise<ReactTestRenderer> {
   const ports = { start: () => REWARD, end: vi.fn(), finish: vi.fn(), leave: vi.fn(), track: vi.fn() };
   const r = await render(<QuestPlayerView questId={questId} episodeId={CELL} ports={ports} onOpenGame={() => undefined} onBack={() => undefined} reviewsFor={PROFILE} />);
   mounted.push(r);
-  await settle();
+  await wait();
   return r;
 }
 
@@ -103,7 +110,7 @@ describe('the reward step (row CM-3C)', () => {
 
   it('off (the built-in pct 0): no tip, the reward step as before', async () => {
     switchTo(0);
-    const r = await rewardStep();
+    const r = await rewardStep(Q1.id, idle);
     expect(byTestId(r.root, 'culture-tip-reward')).toEqual([]);
     expect(hostNodes(r.root, (n) => n.props.role === 'region' && n.props['aria-label'] === EN.learner.cultureTip.region)).toEqual([]);
   });
@@ -128,11 +135,11 @@ describe('the card back (row CM-3C)', () => {
       },
     });
   }
-  async function card(): Promise<ReactTestRenderer> {
+  async function card(wait = settle): Promise<ReactTestRenderer> {
     const r = await render(<CardDetailView cardId={CARD} />);
     mounted.push(r);
-    await settle();
-    await settle();
+    await wait();
+    await wait();
     return r;
   }
 
@@ -156,11 +163,11 @@ describe('the card back (row CM-3C)', () => {
   it('off: no tip on either face', async () => {
     switchTo(0);
     hold();
-    const r = await card();
+    const r = await card(idle);
     expect(byTestId(r.root, 'culture-tip-fact-card')).toEqual([]);
     const flip = hostNodes(r.root, (n) => n.props.role === 'button' && n.props['aria-label'] === EN.a11y.flipToBack)[0]!;
     await press(flip);
-    await settle();
+    await idle();
     expect(byTestId(r.root, 'culture-tip-back')).toEqual([]);
   });
 });
