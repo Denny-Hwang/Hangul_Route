@@ -16,6 +16,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  useEffectiveFontScale,
   useLayoutClass,
   useMediaSize,
   useTypeScale,
@@ -23,7 +24,7 @@ import {
 import { romanizationShown } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { PromptPanel } from '../../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../../components/use-prompt-slot';
@@ -91,6 +92,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
   const copy: StoryOrderCopy = { storyOrder: m.learner.storyOrder, sequence: m.learner.story.sequence };
   const pill = m.learner.story.check.position.pill;
   const textScale = useTypeScale();
+  const fontScale = useEffectiveFontScale();
   const lc = useLayoutClass();
   const reducedMotion = useReducedMotion();
   const romanizationMode = useRomanizationMode();
@@ -117,6 +119,23 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
     if (state.meanings) focusForScreenReader(meaningsRef.current);
   }, [state.meanings]);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // A placed card leaves the row of cards with the focus on it (WCAG 2.4.3, the wireframe's Accessibility): focus moves
+  // to the first card still to place, to the first card of a new round, or to the replay's title once the row is full,
+  // so a keyboard, switch or screen-reader learner never starts again from the top of the screen.
+  const cardNodes = useRef(new Map<string, View>());
+  const replayTitleRef = useRef<View | null>(null);
+  const [focusTurn, setFocusTurn] = useState(0);
+  useEffect(() => {
+    if (focusTurn === 0) return;
+    const now = stateRef.current;
+    if (now.seq.phase !== 'ordering') {
+      focusForScreenReader(replayTitleRef.current);
+      return;
+    }
+    const next = remainingCards(now.seq)[0];
+    focusForScreenReader(next === undefined ? null : (cardNodes.current.get(next) ?? null));
+  }, [focusTurn]);
 
   const round = play.rounds[state.roundIndex];
   const cards = useMemo(() => (round ? storyOrderCards(round) : []), [round]);
@@ -159,6 +178,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
             announceForScreenReader(line);
             void say(card);
           }
+          setFocusTurn((n) => n + 1);
           return;
         }
         case 'miss':
@@ -178,6 +198,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
           setNote('none');
           setRevealed(new Set());
           setAnnounce('');
+          setFocusTurn((n) => n + 1);
           return;
         case 'complete':
           stop();
@@ -277,7 +298,17 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       <Screen tone="canvas" scrollable>
         {header}
         <Spacer size="lg" />
-        <Heading level="prompt">{copy.sequence.replay.title}</Heading>
+        {/* The row filled with the focus on a card that is gone: focus lands here (web: the DOM node). */}
+        <View
+          ref={replayTitleRef}
+          tabIndex={-1}
+          testID="story-order-replay-title"
+          accessible={Platform.OS !== 'web'}
+          accessibilityRole={Platform.OS !== 'web' ? 'header' : undefined}
+          accessibilityLabel={Platform.OS !== 'web' ? copy.sequence.replay.title : undefined}
+        >
+          <Heading level="prompt">{copy.sequence.replay.title}</Heading>
+        </View>
         <Text {...KOREAN_LINE_BREAK} testID="story-order-replay-announce" accessibilityLiveRegion="polite" aria-live="polite" style={VISUALLY_HIDDEN}>
           {replayAnnounce}
         </Text>
@@ -348,7 +379,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
   const heading = storyOrderHeading(round, copy);
   const pictures = cards.some((c) => c.pictureRef !== undefined);
   const columns = storyOrderColumns(lc.width, lc.windowWidth, pictures);
-  const perRow = storyOrderSlotsPerRow(lc.width, total);
+  const perRow = storyOrderSlotsPerRow(lc.width, total, fontScale);
   const slots = slotViews(state.seq);
   const rows: (typeof slots)[] = [];
   for (let i = 0; i < slots.length; i += perRow) rows.push(slots.slice(i, i + perRow));
@@ -420,6 +451,10 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
             <View key={card.id} style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}>
               <ChoiceCard
                 testID={`story-order-card-${card.id}`}
+                pressableRef={(node) => {
+                  if (node) cardNodes.current.set(card.id, node);
+                  else cardNodes.current.delete(card.id);
+                }}
                 art={card.pictureRef !== undefined ? <PictureArt pictureRef={card.pictureRef} gloss={card.line.en} size={pictureSize} decorative /> : null}
                 state={outcome ?? 'idle'}
                 ko={card.line.ko}
@@ -446,8 +481,13 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       <View accessibilityLiveRegion="polite">
         {note === 'none' ? null : <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.sequence.tryAnother : copy.sequence.lookHere} />}
       </View>
-      <Spacer size="xl" />
-      <Button label={copy.sequence.skip.cta} tone="ghost" size="md" fullWidth onPress={() => dispatch({ type: 'skip' })} testID="story-order-skip" />
+      {/* The Check has no Skip (check-launcher.ts): a Check step completes on the learner's answers only. */}
+      {host.mode === 'check' ? null : (
+        <>
+          <Spacer size="xl" />
+          <Button label={copy.sequence.skip.cta} tone="ghost" size="md" fullWidth onPress={() => dispatch({ type: 'skip' })} testID="story-order-skip" />
+        </>
+      )}
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );

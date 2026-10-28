@@ -52,9 +52,17 @@ export function storyOrderColumns(width: WidthClass, windowWidth: number, pictur
   return pictures && windowWidth >= 360 ? 2 : 1;
 }
 
-/** Slots per row: 2 x 2 on a phone (half the column each), every slot in one row from regular. */
-export function storyOrderSlotsPerRow(width: WidthClass, total: number): number {
-  return width === 'compact' ? 2 : Math.max(1, total);
+/** The effective text scale (OS size x the app's step) from which a phone's slots stack one per row: 200 %. */
+export const STORY_ORDER_STACK_SLOTS_AT = 2;
+
+/**
+ * Slots per row: 2 x 2 on a phone (half the column each), every slot in one row from regular. At very large text
+ * (`fontScale` from `STORY_ORDER_STACK_SLOTS_AT`) a phone's slots no longer fit two across, so they stack one per row
+ * (design/wireframes/minigame/story-order.md, large text); at 150 % they stay two across, never narrower than half the column.
+ */
+export function storyOrderSlotsPerRow(width: WidthClass, total: number, fontScale = 1): number {
+  if (width !== 'compact') return Math.max(1, total);
+  return fontScale >= STORY_ORDER_STACK_SLOTS_AT ? 1 : 2;
 }
 
 /** What a placed card or a replayed line says: the line at the sentence rate, its clip when it has one. */

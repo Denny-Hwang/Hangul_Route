@@ -179,10 +179,14 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
       { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
-      { name: 'story-order-chunk', marker: 'screen-chunk:story-order' },
+      { name: 'order-game-chunk', marker: 'screen-chunk:story-order' },
       { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
       { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
     ]);
+  });
+
+  it('no screen chunk takes the story- prefix of the story chunks (row CM-8 counts story-*.js bundles as stories)', () => {
+    expect(SCREEN_CHUNKS.filter((c) => c.name.startsWith('story-'))).toEqual([]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -212,8 +216,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/minigames/cloze-pick-chunk.tsx')).toContain(`export const CLOZE_PICK_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
     expect(read('src/screens/minigames/cloze-pick-entry.tsx')).toContain("import('./cloze-pick-chunk')");
     // Row CM-34: Story Order's chunk, reached only through the step's literal import().
-    expect(read('src/screens/minigames/story-order/story-order-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[6].marker}';`);
-    expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./story-order-chunk')");
+    expect(read('src/screens/minigames/story-order/order-game-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[6].marker}';`);
+    expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./order-game-chunk')");
     // Row CM-31: the dictation chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
     expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
@@ -282,7 +286,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
       'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
-      'story-order-chunk has no web bundle: the chunk is missing from the build',
+      'order-game-chunk has no web bundle: the chunk is missing from the build',
       'role-play-chunk has no web bundle: the chunk is missing from the build',
       'dictation-chunk has no web bundle: the chunk is missing from the build',
     ]);
@@ -448,6 +452,8 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeLessThan(10_000);
     // CM-31 (Dictation, #850) merged onto main 524961dae measures 4,757,612 B: under the line.
     expect(PRECACHE_BUDGET.startBundleRaw - 4_757_612).toBeGreaterThanOrEqual(0);
+    // CM-34 (Story Order, the game in the order-game chunk) on main 524961dae measures 4,758,546 B.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_546).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

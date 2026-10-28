@@ -9,6 +9,10 @@ import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, 
  * Cards start in a derangement of the correct order, a wrong tap is an amber
  * nudge that moves nothing, the finished order replays, and the quest still
  * completes through its Check. Nothing here needs a Korean voice or a network.
+ *
+ * This file covers Story Sequence (the `story-sequence` kind, F-STORY-003 "Story Order v2") on the release build.
+ * The F-CURR-002 `story-order` kind (row CM-34, captions to order) is story-checks-story-order.spec.ts, on the
+ * fixture build.
  */
 
 /** Correct order of the Seollal steps: English caption, Korean, romanization. */
