@@ -259,6 +259,31 @@ describe('stage1Occurrences: the Stage 1 symbol, syllable and word tables', () =
   });
 });
 
+describe('stage1Occurrences: a Match Shape scope (F-CURR-002 row CM-33)', () => {
+  it('asks the target letter of each pair round; an origin round, a malformed round and a missing target ask nothing', () => {
+    const quests = [{ id: 'quest:stage1-crafts-q4', steps: [{ id: 's2', kind: 'practice', minigameRef: 'minigame:s1-crafts-q4-play' }] }];
+    const scopes = {
+      'minigame:s1-crafts-q4-play': {
+        kind: 'match-shape',
+        matchShape: {
+          rounds: [
+            { id: 'ms:origin', shape: 'origin', target: 'jamo:giyeok', options: ['jamo:giyeok', 'jamo:a'] },
+            { id: 'ms:pair', shape: 'pair', target: 'jamo:a', lookAlike: 'jamo:giyeok' },
+            { id: 'ms:pair-no-target', shape: 'pair' },
+            'not a round',
+          ],
+        },
+      },
+    };
+    const occs = stage1Occurrences({ symbols: SYMBOLS, quests, scopes });
+    expect(occs.map((o) => [o.kind, o.ko, o.cell, o.at])).toEqual([
+      ['sym', 'ㅏ', 'episode:stage1-crafts', 'quest:stage1-crafts-q4 steps[0] minigame:s1-crafts-q4-play.matchShape.rounds[1]'],
+    ]);
+    // A scope with no Match Shape block asks nothing through it.
+    expect(stage1Occurrences({ symbols: SYMBOLS, quests, scopes: { 'minigame:s1-crafts-q4-play': { kind: 'match-shape' } } })).toEqual([]);
+  });
+});
+
 describe('storyOccurrences: the taught words of the check rounds', () => {
   const story = {
     id: 'story:sun-and-moon',
