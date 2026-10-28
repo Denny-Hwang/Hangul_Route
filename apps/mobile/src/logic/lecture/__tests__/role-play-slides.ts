@@ -6,7 +6,7 @@ import { expandDeck, type LectureBundle, type Slide } from '../deck-builder';
 /**
  * Role Play slides for the lecture tests (F-CURR-002 section 8, row CM-35): no shipped quest has a Role Play step
  * yet (the Stage 4 and pack rows author them), so a fixture quest with one apply step plays a fixture scene (the
- * library desk unless given) on the presenter's own English bundle.
+ * library desk unless given) on the presenter's own English bundle, with `game.role-play` on.
  */
 export const ROLE_PLAY_QUEST: Quest = {
   id: 'quest:role-play-fixture',
@@ -35,5 +35,5 @@ export function rolePlaySlides(over: Partial<LectureDeckInput> = {}, scene?: Rol
     blocks: [{ kind: 'quest', id: ROLE_PLAY_QUEST.id }],
     ...over,
   });
-  return expandDeck(deck, rolePlayBundle(scene), { canPlayKorean: true }).slides.filter((s): s is Extract<Slide, { kind: 'role-play' }> => s.kind === 'role-play');
+  return expandDeck(deck, rolePlayBundle(scene), { canPlayKorean: true }, { rolePlay: true }).slides.filter((s): s is Extract<Slide, { kind: 'role-play' }> => s.kind === 'role-play');
 }
