@@ -7,6 +7,7 @@ import { lectureBundle } from '../content';
 import { initialPresenterState } from '../controls';
 import { expandDeck, withBuilds, type ExpandedDeck, type Slide } from '../deck-builder';
 import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
+import { rolePlaySlides } from './role-play-slides';
 import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
@@ -147,7 +148,7 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds and the write-together slides (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3 and LV-S4)', () => {
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds, the write-together slides and the Role Play turns (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3, LV-S4 and CM-35)', () => {
     expect([...SHELL_SLIDE_KINDS].sort()).toEqual([
       'activity',
       'card',
@@ -157,6 +158,7 @@ describe('runDeck: the slides this build draws', () => {
       'quiz',
       'read-along',
       'realia',
+      'role-play',
       'sentence',
       'sentence-build',
       'sequence',
@@ -446,6 +448,17 @@ describe('the End slide', () => {
     expect(fitShown(11, 3, 2)).toBe(10);
     expect(fitShown(10, 2, 2)).toBe(10);
     expect(fitShown(0, 3, 2)).toBe(0);
+  });
+});
+
+describe('slideDetail: the Role Play slide (F-CURR-002 section 8, row CM-35)', () => {
+  it('names a turn by its question and the partner line; never by a reply, which would be the answer', () => {
+    const [first, second] = rolePlaySlides();
+    const names = { activity: () => '', reply: 'Which answer fits?' };
+    expect(slideDetail(first!, names)).toBe('Which answer fits?, librarian, 안녕하세요!, annyeonghaseyo, Hello!');
+    for (const r of second!.replies) expect(slideDetail(second!, names)).not.toContain(r.ko);
+    // Without the names, the partner line alone.
+    expect(slideDetail(second!)).toBe('librarian, 무슨 책을 찾아요?, museun chaegeul chajayo, What book are you looking for?');
   });
 });
 

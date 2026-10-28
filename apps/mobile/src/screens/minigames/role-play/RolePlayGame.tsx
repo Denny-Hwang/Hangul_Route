@@ -33,7 +33,7 @@ import { koSpeech } from '../../../logic/audio/ko-speech';
 import { afterReply } from '../../../logic/audio/reply-advance';
 import type { KoTokenPart } from '../../../logic/ko-tokens';
 import { startRolePlay, stepRolePlay, turnOf, type RpEffect, type RpEvent, type RpState } from '../../../logic/role-play/reducer';
-import { closingOf, logView, partsText, pinnedCap, progressOf, replyViews, whyParts, type BubbleView, type ReplyView } from '../../../logic/role-play/view';
+import { closingOf, logFollowY, logView, partsText, pinnedCap, progressOf, replyViews, titleJoinsLog, whyParts, type BubbleView, type ReplyView } from '../../../logic/role-play/view';
 import { playPrompt, stop } from '../../../platform/audio';
 import { nudge, success, tapLight } from '../../../platform/haptics';
 import { useReducedMotion } from '../../../platform/motion';
@@ -238,18 +238,26 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
   );
 
   // The log follows the newest partner line: to the end when the whole bubble fits, else to the bubble's top, so its
-  // role and Korean line are what shows (Largest text at 320 x 568), with the rest a scroll away.
+  // role and Korean line are what shows (Largest text at 320 x 568), else to the Korean line (`logFollowY`).
   const logH = useRef(0);
   const contentH = useRef(0);
   const trailH = useRef(0);
   const newestHRef = useRef(0);
+  const lineRef = useRef({ top: 0, bottom: 0 });
   const follow = useCallback((): void => {
     const log = logRef.current;
     if (!log) return;
     // The newest partner bubble is the list's last item, under it only a sound status that has just shown, and the padding.
-    const below = LOG_PAD + trailH.current;
-    if (logH.current === 0 || newestHRef.current + below <= logH.current) log.scrollToEnd({ animated: !reducedMotion });
-    else log.scrollTo({ y: Math.max(0, contentH.current - below - newestHRef.current), animated: !reducedMotion });
+    const y = logFollowY({
+      logHeight: logH.current,
+      contentHeight: contentH.current,
+      below: LOG_PAD + trailH.current,
+      newestHeight: newestHRef.current,
+      lineTop: lineRef.current.top,
+      lineBottom: lineRef.current.bottom,
+    });
+    if (y === 'end') log.scrollToEnd({ animated: !reducedMotion });
+    else log.scrollTo({ y, animated: !reducedMotion });
   }, [reducedMotion]);
 
   // The status trails the list until a later line joins the chat; then it sits in the chat and nothing trails.
@@ -259,8 +267,28 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
   const [bodyH, setBodyH] = useState(0);
   const [newestH, setNewestH] = useState(0);
   const [keepH, setKeepH] = useState(0);
+  // The scene title moves into the log only when the room under it cannot hold the newest line and a reply.
+  const [titleH, setTitleH] = useState(0);
+  const [lineBottom, setLineBottom] = useState(0);
+  const [titleInLog, setTitleInLog] = useState(false);
+  useEffect(() => {
+    if (titleJoinsLog({ bodyHeight: bodyH, titleHeight: titleH, titleInLog, lineBottom: lineBottom > 0 ? lineBottom + LOG_PAD : 0, keepHeight: keepH })) setTitleInLog(true);
+  }, [bodyH, titleH, titleInLog, lineBottom, keepH]);
   // The newest bubble's room includes the log's bottom padding, so the whole bubble shows above the pinned area.
   const cap = pinnedCap({ windowHeight, bodyHeight: bodyH, newestHeight: newestH > 0 ? newestH + LOG_PAD : 0, keepHeight: keepH });
+
+  const title = (
+    <View onLayout={(e: LayoutChangeEvent) => setTitleH(e.nativeEvent.layout.height)}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm }} testID="role-play-title">
+        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+          {scene.title.ko}
+        </Text>
+        <Body tone="secondary">{scene.title.romanization}</Body>
+        <Body tone="secondary">{scene.title.en}</Body>
+      </View>
+      <Spacer size="sm" />
+    </View>
+  );
 
   const onHear = (b: BubbleView): void => {
     if (replying.current) return;
@@ -276,14 +304,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
         <Pill label={copy.progress.pill(progress.value, progress.max)} tone="neutral" size="sm" />
       </View>
       <Spacer size="md" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm }} testID="role-play-title">
-        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-          {scene.title.ko}
-        </Text>
-        <Body tone="secondary">{scene.title.romanization}</Body>
-        <Body tone="secondary">{scene.title.en}</Body>
-      </View>
-      <Spacer size="sm" />
+      {titleInLog ? null : title}
 
       <View style={{ flex: 1 }} onLayout={(e: LayoutChangeEvent) => setBodyH(e.nativeEvent.layout.height)}>
         <ScrollView
@@ -300,6 +321,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
           }}
           testID="role-play-log"
         >
+          {titleInLog ? title : null}
           <View role="list" aria-label={m.a11y.minigame.rolePlay.log} style={{ gap: spacing.md }}>
             {bubbles.map((b, i) => (
               <Rise key={b.key} reducedMotion={reducedMotion}>
@@ -311,6 +333,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
                     cap={bubbleCap}
                     newest={b === newest}
                     onLayout={b === newest ? (h) => ((newestHRef.current = h), setNewestH(h), follow()) : undefined}
+                    onLineLayout={b === newest ? (top, bottom) => ((lineRef.current = { top, bottom }), setLineBottom(bottom), follow()) : undefined}
                     hearLabel={m.learner.audio.hearIt.cta}
                     hearA11y={m.a11y.minigame.hear(b.romanization)}
                     onHear={() => onHear(b)}
@@ -375,12 +398,14 @@ interface PartnerBubbleProps {
   cap: string;
   newest: boolean;
   onLayout?: (height: number) => void;
+  /** The Korean line's top and bottom from the bubble's top, for the log's follow. */
+  onLineLayout?: (top: number, bottom: number) => void;
   hearLabel: string;
   hearA11y: string;
   onHear: () => void;
 }
 
-function PartnerBubble({ bubble, scene, cap, newest, onLayout, hearLabel, hearA11y, onHear }: PartnerBubbleProps): ReactElement {
+function PartnerBubble({ bubble, scene, cap, newest, onLayout, onLineLayout, hearLabel, hearA11y, onHear }: PartnerBubbleProps): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -395,7 +420,12 @@ function PartnerBubble({ bubble, scene, cap, newest, onLayout, hearLabel, hearA1
         <Text {...KOREAN_LINE_BREAK} {...koreanSpeech}>{scene.partner.ko}</Text>
         {` ${scene.partner.romanization} · ${scene.partner.en}`}
       </Text>
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+      <Text
+        {...KOREAN_LINE_BREAK}
+        {...koreanSpeech}
+        onLayout={onLineLayout ? (e: LayoutChangeEvent) => onLineLayout(e.nativeEvent.layout.y, e.nativeEvent.layout.y + e.nativeEvent.layout.height) : undefined}
+        style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}
+      >
         {bubble.ko}
       </Text>
       <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{bubble.romanization}</Text>

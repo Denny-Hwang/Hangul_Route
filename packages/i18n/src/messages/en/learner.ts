@@ -2324,6 +2324,8 @@ export const learner = {
         build: 'Build a sentence',
         /** The write-together slide (LV-S4): the same value as `slide.write.title`. */
         write: 'Write together',
+        /** The Role Play slide (F-CURR-002 section 8, row CM-35): the same value as `slide.rolePlay.label`. */
+        rolePlay: 'Role play',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2388,6 +2390,8 @@ export const learner = {
       sentence: { label: 'Sentence' },
       pattern: { label: 'Sentence pattern' },
       readAlong: { label: 'Read along' },
+      /** The Role Play slide's kind label (F-CURR-002 section 8, row CM-35): a chat the room reads together, then picks the reply. */
+      rolePlay: { label: 'Role play' },
       /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
       realia: { ask: 'Look closely and find the answer.' },
       /**

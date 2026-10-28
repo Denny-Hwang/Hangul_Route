@@ -490,7 +490,8 @@ export function frameSpoken(frame: FrameText): SpokenForm {
  * The question slides (LV-S2): a listen question its prompt (a letter or syllable round at the
  * sound rate), a reply question the other speaker's line, a realia question its key word or, with
  * none, its sheet (`quizSound`). A sentence build (LV-S3) its sentence, at every build. A
- * write-together slide (LV-S4) the Korean it shows, never its answer early (`writeSound`).
+ * write-together slide (LV-S4) the Korean it shows, never its answer early (`writeSound`). A Role Play turn
+ * (F-CURR-002 section 8) the partner's line.
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -537,6 +538,9 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
       return { spoken: slide.sentence.spoken, kind: 'sentence' };
     case 'write-together':
       return writeSound(slide, reveal ?? slide.builds.length - 1);
+    case 'role-play':
+      // The partner's line, at the sentence rate, as the learner's Role Play says it (the replies are the room's to read).
+      return { spoken: slide.line.spoken, kind: 'sentence' };
     case 'title':
     case 'story':
     case 'activity':

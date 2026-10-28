@@ -20,6 +20,7 @@ import {
   toolsOpened,
 } from '../tools';
 import { initialTimer, reduceTimer } from '../timer';
+import { rolePlaySlides } from './role-play-slides';
 
 const state = (over: Partial<PresenterState> = {}): PresenterState => ({ ...initialPresenterState({ slides: [{ key: 'a', builds: ['x'] }] }), ...over });
 
@@ -226,6 +227,11 @@ describe('gridItems (README D13)', () => {
     expect(gridItems(build, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual([['sentence-build', '']]);
   });
 
+  it('a Role Play turn is titled by its scene in the slide language, never by a reply (F-CURR-002 section 8)', () => {
+    const turns = rolePlaySlides();
+    expect(gridItems(turns, state({ slideIdx: 0 }), names).map((i) => [i.kind, i.title])).toEqual(turns.map(() => ['role-play', 'At the library']));
+  });
+
   it('a write-together slide is titled by what its first build shows (a type round by its prompt and cue); a trace word has none, its meaning is the answer (LV-S4)', () => {
     const spoken = (ko: string, romanization: string, gloss: string) => ({ ko, romanization, gloss, spoken: { text: ko, romanization } });
     const frame = { pieces: ['제 이름은 ', '이에요/예요.'], romanization: 'je ireumeun ___ieyo/yeyo', gloss: 'My name is ___.' };
@@ -245,6 +251,7 @@ describe('gridItems (README D13)', () => {
     expect(gridKindKey('write-together')).toBe('write');
     expect(gridKindKey('sentence-build')).toBe('build');
     expect(gridKindKey('read-along')).toBe('readAlong');
+    expect(gridKindKey('role-play')).toBe('rolePlay');
     expect(gridKindKey('sentence')).toBe('sentence');
     expect(gridKindKey('vocab')).toBe('vocab');
   });

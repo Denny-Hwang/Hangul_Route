@@ -146,3 +146,54 @@ export function pinnedCap({ windowHeight, bodyHeight, newestHeight, keepHeight }
   const room = bodyHeight > 0 ? bodyHeight - newestHeight : half;
   return Math.max(keepHeight, Math.min(half, room));
 }
+
+export interface FollowSizes {
+  /** The log's height (0 until measured). */
+  logHeight: number;
+  /** The log's content height. */
+  contentHeight: number;
+  /** What sits under the newest partner bubble: a sound status that has just shown, and the log's padding. */
+  below: number;
+  /** The newest partner bubble, Hear it included. */
+  newestHeight: number;
+  /** The top and bottom of the bubble's Korean line, from the bubble's top (0 until measured). */
+  lineTop: number;
+  lineBottom: number;
+}
+
+/**
+ * Where the log scrolls when a partner line joins it (wireframe States: the newest line and one reply always visible):
+ * to the end when the whole bubble fits; else to the bubble's top, so its role and Korean line show, with Hear it a
+ * scroll away; and when even those do not fit (Largest text in a font with taller lines), to the Korean line itself,
+ * with its romanization under it.
+ */
+export function logFollowY({ logHeight, contentHeight, below, newestHeight, lineTop, lineBottom }: FollowSizes): number | 'end' {
+  if (logHeight === 0 || newestHeight + below <= logHeight) return 'end';
+  const top = Math.max(0, contentHeight - below - newestHeight);
+  return lineBottom <= logHeight ? top : top + lineTop;
+}
+
+export interface TitleSizes {
+  /** The room under the title for the log and the pinned area (0 until measured). */
+  bodyHeight: number;
+  /** The scene title with the space under it (0 until measured). */
+  titleHeight: number;
+  /** Whether the title already sits at the top of the log. */
+  titleInLog: boolean;
+  /** The newest partner bubble's role and Korean line: the bottom of its Korean line from its top (0 until measured). */
+  lineBottom: number;
+  /** The instruction row and the first reply (0 until measured). */
+  keepHeight: number;
+}
+
+/**
+ * Whether the scene title moves from above the log to the top of the log's content, so it scrolls away with the chat:
+ * only when the room under it cannot hold the newest line (its role and Korean line) above the instruction row and one
+ * reply (Largest text at 320 x 568 in a font with taller lines). Once moved it stays for the scene, so the title never
+ * jumps between turns.
+ */
+export function titleJoinsLog({ bodyHeight, titleHeight, titleInLog, lineBottom, keepHeight }: TitleSizes): boolean {
+  if (titleInLog) return true;
+  if (bodyHeight === 0 || titleHeight === 0 || lineBottom === 0 || keepHeight === 0) return false;
+  return bodyHeight < lineBottom + keepHeight;
+}
