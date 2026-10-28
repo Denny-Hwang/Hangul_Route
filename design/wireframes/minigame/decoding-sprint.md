@@ -67,7 +67,8 @@ Then: one minute of quick rounds (hear a real block, then pick it or build it), 
 | (Which block do you hear?) ...         |  <- 6 pick rounds, no clock on screen
 ```
 
-- **The held-out probe.** Six pick rounds of blocks no sprint ever drills (`PROBE_BLOCKS`: allowlist blocks that are not in the Stage 1 table either, so no lesson taught them as words), always picks, so the format is the same in every sprint and G9 compares like with like. No clock on screen; the time from each round coming up to its first tap is kept for the probe's rate (right first tries per minute), never shown.
+- **The held-out probe.** Six pick rounds, one whole matched form of blocks no sprint ever drills (`PROBE_FORMS`, 4 forms of 6: allowlist blocks that are not in the Stage 1 table and are no review item or taught word of any stage); the n-th sprint takes form (n - 1) mod 4, so the first four sprints each probe blocks never shown before. Always picks, so the format is the same in every sprint and G9 compares like with like. A probe round's options are drill blocks, never another probe block. No clock on screen; the foreground time from each round coming up to its first tap is kept for the probe's rate (right first tries per minute), never shown.
+- **The probe only measures.** One tap, then no right or miss and no answer: no check, no dash, no romanization, no success or nudge haptic. Every card dims for 0.4 s and the next block comes up, so a probe block is never practised with feedback. With no device voice the round shows the block's romanization as the drill does, and that sprint sends no event (a read probe is a different task).
 
 ## D. The result
 
@@ -107,4 +108,4 @@ Enter from: `journey/grid` (Stage 1 footer) · `reviews/hangul-check` results ·
 
 ## Strings
 
-New (`learner.decodingSprint`, with es and ko): `title`, `offer`, `intro`, `introProbe`, `probe`, `read(n)`, `best(n)`, `done`. Reused: `learner.vocab.speed.start`, `.challenge.pause / paused / resume / stop / fewSeconds / timeUp`, `.results.newBest / playAgain`, `a11y.vocab.speed.timeLeft`, `learner.minigame.listenPick.heading`, `a11y.minigame.option.*`, `a11y.minigame.hearAgain`, `learner.audio.*`, and every Syllable Build string.
+New (`learner.decodingSprint`, with es and ko): `title`, `offer`, `intro`, `introPick` (the intro while `game.syllable-build` is off: "One minute on the clock. Hear a block, then pick it."), `introProbe`, `probe`, `read(n)`, `best(n)`, `done`. Reused: `learner.vocab.speed.start`, `.challenge.pause / paused / resume / stop / fewSeconds / timeUp`, `.results.newBest / playAgain`, `a11y.vocab.speed.timeLeft`, `learner.minigame.listenPick.heading`, `a11y.minigame.option.*`, `a11y.minigame.hearAgain`, `learner.audio.*`, and every Syllable Build string.
