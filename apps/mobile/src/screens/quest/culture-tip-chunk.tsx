@@ -36,13 +36,21 @@ function useTipView(questId: string | undefined): CultureTipView | null {
   return cultureTipView(note, cellId, locale, CONTENT_OVERLAYS, citation);
 }
 
-/** The reward step's tip (`QuestCultureTip`). */
+/** What `CultureTip` (the start bundle's door) passes: a quest at its reward step, or a card and the face it is on. */
+export type TipProps = { questId: string } | { cardId: string; face: 'back' | 'fact-card' };
+
+/** The tip the door asks for: the reward step's tip for a quest, a card's tip for a card. */
+export function Tip(props: TipProps): ReactElement | null {
+  return 'questId' in props ? <QuestTip questId={props.questId} /> : <CardTip cardId={props.cardId} face={props.face} />;
+}
+
+/** The reward step's tip. */
 export function QuestTip({ questId }: { questId: string }): ReactElement | null {
   const view = useTipView(questId);
   return view === null ? null : <TipBox view={view} place="reward" />;
 }
 
-/** A card's tip (`CardCultureTip`): the note of the quest that awards it in its lesson cell. */
+/** A card's tip: the note of the quest that awards it in its lesson cell. */
 export function CardTip({ cardId, face }: { cardId: string; face: 'back' | 'fact-card' }): ReactElement | null {
   const questId = cardTipQuest(cardId, lessonEpisodes, (q) => questById(q)?.rewardCardId);
   const view = useTipView(questId);

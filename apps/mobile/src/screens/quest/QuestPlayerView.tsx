@@ -44,7 +44,7 @@ import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
-import { QuestCultureTip } from './culture-tip-entry';
+import { CultureTip } from './culture-tip-entry';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
 
@@ -401,7 +401,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           }
           note={stepIndex === 0 ? introNote : undefined}
           // The Did you know? tip (F-CURR-002 row CM-3C): the quest's note of its cell, behind `upperCards`.
-          tip={onReward ? <QuestCultureTip questId={questId} /> : undefined}
+          tip={onReward ? <CultureTip questId={questId} /> : undefined}
         />
       )}
     </Screen>
