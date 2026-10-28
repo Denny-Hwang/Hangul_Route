@@ -96,6 +96,14 @@ describe('what a round asked', () => {
     expect(askedOfScope(scope, 'nope')).toBeUndefined();
   });
 
+  it('Listen & Pick: a Read Pick Meaning round (row CM-3A S2) shows its Korean, so it asks its prompt at read', () => {
+    const scope = {
+      kind: 'listen-pick',
+      listenPick: { rounds: [{ id: 'see-baram', promptShown: true, prompt: ko('바람'), options: [], answerId: 'a' }] },
+    } as unknown as MinigameScope;
+    expect(askedOfScope(scope, 'see-baram')).toEqual({ texts: [{ ko: '바람' }], jamoIds: [], rung: 'read' });
+  });
+
   it('Pic-Word Match reads, Sentence Builder, Type Hangul and Write a Frame produce', () => {
     const pic = { kind: 'pic-word-match', picWord: { boards: [{ pairs: [{ id: 'p1', word: ko('배') }] }] } } as unknown as MinigameScope;
     expect(askedOfScope(pic, 'p1')).toEqual({ texts: [{ ko: '배' }], jamoIds: [], rung: 'read' });

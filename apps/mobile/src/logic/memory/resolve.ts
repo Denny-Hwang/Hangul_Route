@@ -107,7 +107,8 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const round = scope.listenPick?.rounds.find((r) => r.id === itemId);
       if (!round) return undefined;
       if (round.id.startsWith('lp:sym:')) return { texts: [], jamoIds: [round.id.slice('lp:sym:'.length)], rung: 'recognize' };
-      return { texts: texts(text(round.prompt, round.id.startsWith('lp:syl:') ? 'syl' : undefined)), jamoIds: [], rung: 'recognize' };
+      // Row CM-3A S2: a Read Pick Meaning round shows the Korean and asks its meaning, the read rung (section 4.3).
+      return { texts: texts(text(round.prompt, round.id.startsWith('lp:syl:') ? 'syl' : undefined)), jamoIds: [], rung: round.promptShown === true ? 'read' : 'recognize' };
     }
     case 'pic-word-match': {
       const pair = scope.picWord?.boards.flatMap((b) => b.pairs).find((p) => p.id === itemId);
