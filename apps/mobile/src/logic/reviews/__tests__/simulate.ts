@@ -4,6 +4,7 @@ import type { MemoryRow } from '../../memory/memory-file';
 import { cellOfEpisode } from '../../memory/resolve';
 import { applyAnswer, type Rung } from '../../memory/spacing';
 import { addDays } from '../../vocab/srs';
+import { stage1Quests } from '../../../content/quests';
 import { INDEX, LESSON_QUESTS } from '../../memory/__tests__/fixtures';
 import {
   CREDIT_INSIDE_SENTENCES,
@@ -61,10 +62,14 @@ export interface QuestPlan {
 const stageOf = (cell: string): number => Number(/stage(\d)/.exec(cell)?.[1] ?? 1);
 
 /**
- * The quests that introduce no item: the Stage 1 additions of F-CURR-002 section 4.2 (row CM-33) ask letters earlier
- * quests teach and have no Discover page, so a cell's items are not split onto them; they only ask again (recycles).
+ * The quests that introduce no item: a Stage 1 quest with no Discover page, as the Stage 1 addition of F-CURR-002
+ * section 4.2 (row CM-33), which only asks letters earlier quests teach. A cell's items are not split onto them; they
+ * only ask again (recycles). Derived from the Stage 1 table (every other Stage 1 quest has a Discover step; the
+ * Stage 5 books, which also have none, keep their share as before).
  */
-const INTRODUCE_NONE: ReadonlySet<string> = new Set(['quest:stage1-crafts-q4']);
+const INTRODUCE_NONE: ReadonlySet<string> = new Set(
+  stage1Quests.filter((q) => !q.steps.some((s) => (s.discover?.pages.length ?? 0) > 0)).map((q) => q.id),
+);
 
 /** The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests. */
 export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPlan[] {

@@ -1,6 +1,6 @@
 import { SHAPE_LOOK_ALIKES } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
-import { jitter, type EngineContext, type ReviewQuestion } from './engine';
+import { jitter, type EngineContext, type EngineStates, type ReviewQuestion } from './engine';
 
 /**
  * The rounds of a review session (F-CURR-002 sections 4.3 and 4.5, row CM-14): what a Daily Review or
@@ -15,8 +15,9 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  *
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
  * section 7.1 (Dictation, Syllable Build, Match Shape, Cloze Pick) join with their own rows behind
- * `game.<kind>` (`GameFormats`; Match Shape, row CM-33, as a `shape` round). `surfaceIndex` gives the engine the item index with only these formats, so an item it
- * cannot ask that way falls back to another way, or to the read rung, inside the engine, never here.
+ * `game.<kind>` (`GameFormats`; Match Shape, row CM-33, as a `shape` round). `surfaceIndex` gives the engine the
+ * item index with only these formats, so an item it cannot ask that way falls back to another way, or to the read
+ * rung, inside the engine, never here.
  */
 
 /** The formats this surface draws (section 7.1 formats come with their own rows). */
@@ -40,22 +41,36 @@ export const NO_GAME_FORMATS: GameFormats = new Set<ReviewFormat>();
 
 /**
  * Row CM-33: an item Match Shape can ask at the produce rung: a letter (a `sym` item, never a final's) that has a
- * look-alike pair (ㅂ / ㅍ, ㅓ / ㅗ, ㅏ / ㅓ, ㄹ / ㄷ), asked as a pair round. The look-alike must be taught too
- * (`shapeRound`), else the item is asked another way.
+ * look-alike pair (ㅂ / ㅍ, ㅓ / ㅗ, ㅏ / ㅓ, ㄹ / ㄷ), asked as a pair round. The look-alike must be in the build
+ * (`shapeRound`) and, when the surface knows the learner's states, met by this learner (`surfaceIndex`): otherwise the
+ * item is asked another way, so a pair round never shows a letter the learner has not been taught.
  */
 function shapeable(item: Pick<ReviewItem, 'kind' | 'ko'> & { id?: string }): boolean {
   return item.kind === 'sym' && !(item.id ?? '').endsWith('-batchim') && Object.prototype.hasOwnProperty.call(SHAPE_LOOK_ALIKES, item.ko);
 }
+
+/** The letter's look-alike `sym` item in the index (never a final's), or undefined. */
+function lookAlikeOf(index: Pick<SurfaceIndex, 'items'>, item: Pick<ReviewItem, 'ko'>): ReviewItem | undefined {
+  const look = SHAPE_LOOK_ALIKES[item.ko];
+  return look === undefined ? undefined : index.items.find((i) => i.kind === 'sym' && i.ko === look && !i.id.endsWith('-batchim'));
+}
+
+/** Met: the learner holds a state at box 1 or higher (box 0 or no state is not met; memory/spacing.ts). */
+const isMet = (states: EngineStates, id: string): boolean => (states[id]?.st.b ?? 0) >= 1;
 
 /**
  * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'> & { id?: string }, games: GameFormats = NO_GAME_FORMATS): ReviewFormat[] {
+export function surfaceFormats(
+  item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'> & { id?: string },
+  games: GameFormats = NO_GAME_FORMATS,
+  lookAlikeMet: (item: Pick<ReviewItem, 'ko'>) => boolean = () => true,
+): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   return item.formats.filter((f) => {
-    if (f === 'match-shape') return games.has(f) && shapeable(item);
+    if (f === 'match-shape') return games.has(f) && shapeable(item) && lookAlikeMet(item);
     if (!SURFACE_FORMATS.has(f)) return false;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
@@ -67,20 +82,33 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' 
 type SurfaceIndex = EngineContext['index'];
 const surfaceCache = new WeakMap<object, Map<string, SurfaceIndex>>();
 
-/** The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none is not askable here. */
-export function surfaceIndex(index: SurfaceIndex, games: GameFormats = NO_GAME_FORMATS): SurfaceIndex {
+/**
+ * The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none
+ * is not askable here. With Match Shape on and the learner's `states` given, a letter is asked as a pair round only
+ * when its look-alike is met too (row CM-33); that index depends on the states, so it is not cached.
+ */
+export function surfaceIndex(index: SurfaceIndex, games: GameFormats = NO_GAME_FORMATS, states?: EngineStates): SurfaceIndex {
+  const learner = games.has('match-shape') ? states : undefined;
+  const perLearner = learner !== undefined;
   const key = [...games].sort().join('|');
   const byGames = surfaceCache.get(index) ?? new Map<string, SurfaceIndex>();
   surfaceCache.set(index, byGames);
-  const held = byGames.get(key);
+  const held = perLearner ? undefined : byGames.get(key);
   if (held) return held;
+  const lookAlikeMet =
+    learner === undefined
+      ? undefined
+      : (item: Pick<ReviewItem, 'ko'>): boolean => {
+          const other = lookAlikeOf(index, item);
+          return other !== undefined && isMet(learner, other.id);
+        };
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item, games);
+    const formats = surfaceFormats(item, games, lookAlikeMet);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  byGames.set(key, out);
+  if (!perLearner) byGames.set(key, out);
   return out;
 }
 
@@ -312,6 +340,7 @@ function shapeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   if (!shapeable(item)) return null;
   const look = SHAPE_LOOK_ALIKES[item.ko];
   const other = itemsOfKind(input.index, 'sym').find((i) => i.ko === look && !i.id.endsWith('-batchim'));
+  // The look-alike must be in the build; whether this learner met it is settled earlier, by `surfaceIndex`.
   if (other === undefined) return null;
   const jamoId = (id: string): string => `jamo:${id.slice('sym:'.length)}`;
   return { type: 'shape', question, target: jamoId(item.id), lookAlike: jamoId(other.id), answer: { ko: koOf(item) } };

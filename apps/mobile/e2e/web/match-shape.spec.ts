@@ -104,20 +104,22 @@ async function playOrigin(page: Page, round: Origin, checks?: (page: Page) => Pr
 }
 
 async function playPair(page: Page, round: Pair, checks?: (page: Page) => Promise<void>): Promise<void> {
-  await expect(page.getByTestId('match-shape-heading')).toBeVisible();
+  const shown = page.getByTestId('match-shape-heading').filter({ visible: true });
+  await expect(shown).toBeVisible();
   if (checks) await checks(page);
   if (round.wrong !== undefined) {
     const wrong = page.getByTestId(`match-shape-tile-${round.wrong}`);
     await tapUntil(wrong, visible(page.getByTestId('match-shape-diff')));
     expect(await drawnColors(wrong)).not.toContain(RED);
   }
-  const heading = await page.getByTestId('match-shape-heading').getAttribute('aria-label');
+  const heading = await shown.getAttribute('aria-label');
   for (const i of round.copies) {
     const tile = page.getByTestId(`match-shape-tile-${i}`);
     await tapUntil(tile, async () => /, found$/.test((await tile.getAttribute('aria-label', { timeout: 1_000 }).catch(() => null)) ?? ''));
   }
-  // The round moves on by itself once every copy is found.
-  await expect.poll(async () => (await page.getByTestId('match-shape-heading').count()) === 0 || (await page.getByTestId('match-shape-heading').getAttribute('aria-label')) !== heading).toBe(true);
+  // The round moves on by itself once every copy is found: the next round's heading, or (after the last round) no
+  // visible heading at all (a finished step's screen can stay mounted, hidden, under the next one).
+  await expect.poll(async () => (await shown.count()) === 0 || (await shown.first().getAttribute('aria-label')) !== heading).toBe(true);
 }
 
 async function playStep(page: Page, rounds: ReadonlyArray<Origin | Pair>, checks: Record<number, (page: Page) => Promise<void>> = {}): Promise<void> {

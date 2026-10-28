@@ -130,9 +130,11 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       if (file === null) return { kind: 'unreadable' };
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
+      const states = engineStates(file.rows, snap ? vocabOf(snap) : undefined);
       const ctx: EngineContext = {
-        index: surfaceIndex(index, deps.games?.(profileId)),
-        states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
+        // Row CM-33: a pair round only when this learner met the letter's look-alike too.
+        index: surfaceIndex(index, deps.games?.(profileId), states),
+        states,
         today,
         voice: deps.voice(),
         seed: `${profileId}|${today}`,

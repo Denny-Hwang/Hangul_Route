@@ -57,7 +57,9 @@ export interface MatchShapeStepProps {
 export function MatchShapeStep(props: MatchShapeStepProps): ReactElement {
   const flag = useCurrFlag('game.match-shape');
   const { chunk, failed, retry } = useMatchShapeChunk();
-  // Read once, when the chunk is in, so a remote copy arriving mid-step never swaps the game under the learner.
+  // Read once, when the chunk is in, so a remote copy arriving mid-step never swaps the game under the learner. Before
+  // the stored copy is read the switch reads off, so that step plays Read Pick: it fails safe, and its result is
+  // reported as `listen-pick`, so a ramp counts what was played, never a game that was not shown.
   const [on, setOn] = useState<boolean | null>(null);
   useEffect(() => {
     if (chunk !== null && on === null) setOn(flag);

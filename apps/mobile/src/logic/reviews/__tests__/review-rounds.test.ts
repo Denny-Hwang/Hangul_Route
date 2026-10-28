@@ -239,6 +239,22 @@ describe('Match Shape at the produce rung (row CM-33, behind game.match-shape)',
     expect([other.target, other.lookAlike]).toEqual(['jamo:eo', 'jamo:o']);
   });
 
+  it('with the learner\'s states, a letter is asked as a pair round only once its look-alike is met (box 1 or more)', () => {
+    const base = indexOf(LETTERS);
+    const row = (b: number) => ({ st: { b, d: null, c: 0, r: 0, n: 0, f: '2026-10-01', s: b, at: '' } });
+    // ㅂ met, ㅍ not met yet (no state, then box 0): ㅂ is asked another way, so no pair round shows ㅍ untaught.
+    for (const states of [{ 'sym:bieup': row(3) }, { 'sym:bieup': row(3), 'sym:pieup': row(0) }]) {
+      const index = surfaceIndex(base, GAMES, states);
+      expect(index.byId.get('sym:bieup')?.formats).toEqual(['read-pick']);
+    }
+    // Both met: the pair round is open; the per-learner cut is never the shared cached one.
+    const met = surfaceIndex(base, GAMES, { 'sym:bieup': row(3), 'sym:pieup': row(1) });
+    expect(met.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'match-shape']);
+    expect(met).not.toBe(surfaceIndex(base, GAMES));
+    // With the switch off the states change nothing.
+    expect(surfaceIndex(base, NO_GAME_FORMATS, { 'sym:bieup': row(3) })).toBe(surfaceIndex(base));
+  });
+
   it('cannot be played when the look-alike is not taught, or the item is not a letter with one', () => {
     const index = surfaceIndex(indexOf(LETTERS.filter((i) => i.id !== 'sym:pieup')), GAMES);
     const input = { index, gloss: (_k: string | undefined, en: string | undefined) => en, seed: 's' };

@@ -398,12 +398,25 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
 
 /**
  * Match Shape at the produce rung: its board is the Match Shape chunk's, loaded here at run time through the entry's
- * `matchShapeChunk()`. The engine asks it only while `game.match-shape` is on.
+ * `matchShapeChunk()`. The engine asks it only while `game.match-shape` is on. If the chunk cannot load, the round keeps
+ * a way on: Try again loads it again (the session's close button stays in the top row), never a bare heading.
  */
 export function ShapeRoundLoader({ round, onFirst, onSolved }: RoundProps<ShapeRound>): ReactElement {
   const m = useMessages();
-  const { chunk } = useMatchShapeChunk();
-  if (chunk === null) return <Heading level="prompt">{m.learner.minigame.matchShape.heading.pair}</Heading>;
+  const { chunk, failed, retry } = useMatchShapeChunk();
+  if (chunk === null) {
+    return (
+      <View>
+        <Heading level="prompt">{m.learner.minigame.matchShape.heading.pair}</Heading>
+        {failed ? (
+          <>
+            <Spacer size="lg" />
+            <Button label={m.common.buttons.tryAgain} tone="primary" size="lg" fullWidth onPress={retry} testID="daily-review-shape-retry" />
+          </>
+        ) : null}
+      </View>
+    );
+  }
   return <chunk.ShapeRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
 }
 
