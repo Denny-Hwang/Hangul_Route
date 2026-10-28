@@ -50,13 +50,14 @@ const q3 = cell.quests[2]!;
 const nameScope = q3.scopes.find((s) => s.kind === 'write-frame');
 
 describe('Write Your Name (F-CURR-001 S7-1)', () => {
-  it('is the letters cell of Stage 7, three quests, no cards, ready with both MAR review sign-offs', () => {
+  it('is the letters cell of Stage 7, three quests, ready with both MAR review sign-offs; its one card is the album card of row CM-23 part 3 (F-CURR-002 section 7.2), on no quest', () => {
     expect(cell.id).toBe('episode:stage7-letters');
     expect(cell.titleEn).toBe('Write Your Name');
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-letters-q1', 'quest:stage7-letters-q2', 'quest:stage7-letters-q3']);
-    expect(cell.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23 part 3: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(cell.rewardCardIds).toEqual(['card:ireum']);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 
