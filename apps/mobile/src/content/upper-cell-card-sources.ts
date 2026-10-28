@@ -153,6 +153,162 @@ export const UPPER_CARD_SOURCES: Readonly<Record<string, readonly UpperCardSourc
         "반말 「명사」 「1」: '대화하는 사람의 관계가 분명치 아니하거나 매우 친밀할 때 쓰는, 높이지도 낮추지도 아니하는 말.' / ''이 책 재미있어?', '아주 재미있는걸'에서와 같이 종결 어미 '-아(어)', '-지', '-군', '-ㄴ걸' 따위가 쓰인다.'",
     },
   ],
+  // ---- Stages 6-7 and the album legendary cards (row CM-23 part 3) ----
+  // A source re-used from a shipped cell's culture note keeps that note's access date and quoted words (the cell's own
+  // MAR checked them); the pages opened again for this row carry 2026-10-23.
+  'card:won': [
+    {
+      title: '원 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9B%90',
+      accessed: '2026-10-14',
+      quoteOrLocator: "원1 「의존 명사」: '우리나라의 화폐 단위. 1원은 1전의 100배이다. 1962년 6월 10일부터 시행되었다. 기호는 ￦.' (as recorded by Read the Menu, note n1)",
+    },
+  ],
+  'card:yeogiyo': [
+    {
+      title: '호칭을 정해주세요. (온라인가나다)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&qna_seq=325443&pageIndex=1',
+      accessed: '2026-10-14',
+      quoteOrLocator:
+        "Answer of 2025-12-22, quoting 「우리, 뭐라고 부를까요?」: '식당, 미용실, 상점과 같은 서비스 기관의 직원을 부르는 말로 '여기요', '저기요' 등이 이미 보편적으로 사용되고 있습니다. 이 말은 직원과 손님 사이라는 사회적 관계를 직접 드러내지 않는다는 점에서 손님과 직원 모두에게 편안하게 사용되고 있습니다.' (as recorded by Order Food, note n1)",
+    },
+  ],
+  'card:gichapyo': [
+    {
+      title: '역귀성 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%AD%EA%B7%80%EC%84%B1',
+      accessed: '2026-10-14',
+      quoteOrLocator: "역귀성 (逆歸省) 「명사」: '명절 때에 자식이 고향의 부모를 찾아가는 것에 대하여 거꾸로 부모가 객지에 있는 자식들을 찾아감.' (as recorded by Travel for Chuseok, note n1)",
+    },
+  ],
+  'card:jeongsang': [
+    {
+      title: '입산시간지정제',
+      publisher: '국립공원공단 (Korea National Park Service)',
+      url: 'https://www.knps.or.kr/portal/main/contents.do?menuNo=8000198',
+      accessed: '2026-10-14',
+      quoteOrLocator: "입산시간지정제는 무엇인가요?: '산행목적지, 거리와 산행시간 등을 고려하여 탐방로별로 입산ㆍ통제시간을 지정ㆍ운영하는 제도입니다.' (as recorded by Hike & Ask, note n3)",
+    },
+  ],
+  'card:deom': [
+    {
+      title: '덤 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%A4',
+      accessed: '2026-10-14',
+      quoteOrLocator: "덤 「명사」 「1」: '제 값어치 외에 거저로 조금 더 얹어 주는 일. 또는 그런 물건.' (as recorded by Buy at Market, note n3)",
+    },
+  ],
+  'card:ireum': [
+    {
+      title: '외래어 표기법, 제1장 표기의 원칙',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://www.korean.go.kr/front/page/pageView.do?page_id=P000104&mn_id=97',
+      accessed: '2026-10-14',
+      quoteOrLocator: '제1장 표기의 원칙, 제1항: "외래어는 국어의 현용 24 자모만으로 적는다."',
+    },
+    {
+      title: '외래어 표기법의 이해 (새국어소식, 2002년 3월)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://www.korean.go.kr/nkview/nknews/200203/44_4.html',
+      accessed: '2026-10-14',
+      quoteOrLocator: '"즉 [p]와 [f] 소리를 똑같이 \'ㅍ\'으로 적거나, [l]과 [r] 소리를 똑같이 \'ㄹ\'로 적도록 하는 외래어 표기법 탓에 한국 사람들이 이 소리들을 제대로 발음하지 못한다는 것이다."',
+    },
+  ],
+  'card:achim': [
+    {
+      title: '에 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchView.do?word_no=460139&searchKeywordTo=3',
+      accessed: '2026-10-14',
+      quoteOrLocator: "에4 「조사」 1 「2」: '앞말이 시간의 부사어임을 나타내는 격 조사.' 예: '나는 아침에 운동을 한다.' (as recorded by My Holiday Memory, note n2)",
+    },
+  ],
+  'card:saengil': [
+    {
+      title: '돌 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%8C',
+      accessed: '2026-10-23',
+      quoteOrLocator: "돌1 「명사」 「1」: '어린아이가 태어난 날로부터 한 해가 되는 날.'",
+    },
+  ],
+  'card:tokki': [
+    {
+      title: '토끼 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%86%A0%EB%81%BC',
+      accessed: '2026-10-23',
+      quoteOrLocator: "토끼1 「명사」: '토낏과의 포유류를 통틀어 이르는 말. 귀가 길고 뒷다리가 앞다리보다 발달하였으며 꼬리는 짧다. 초식성으로 번식력이 강하다.'",
+    },
+  ],
+  'card:bihaenggi': [
+    {
+      title: '종이접기 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchView.do?word_no=516424&searchKeywordTo=3',
+      accessed: '2026-10-14',
+      quoteOrLocator: "종이-접기 「명사」: '종이를 접어서 학, 배, 비행기 따위의 모양을 만드는 일.' (as recorded by Make & Share, note n1)",
+    },
+  ],
+  'card:hunminjeongeum': [
+    {
+      title: 'Hunminjeongum Manuscript',
+      publisher: 'UNESCO Memory of the World',
+      url: 'https://www.unesco.org/en/memory-world/hunminjeongum-manuscript',
+      accessed: '2026-10-23',
+      quoteOrLocator: "'The manuscript published in the ninth lunar month of 1446, contains the promulgation by Sejong the Great' / Registration year: 1997",
+    },
+  ],
+  'card:jang': [
+    {
+      title: 'Knowledge, beliefs and practices related to jang making in the Republic of Korea',
+      publisher: 'UNESCO Intangible Cultural Heritage',
+      url: 'https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975',
+      accessed: '2026-10-23',
+      quoteOrLocator:
+        "'Inscribed in 2024 (19.COM) on the Representative List of the Intangible Cultural Heritage of Humanity' / 'Jang are fermented sauces – such as soybean paste, soy sauce and red chili paste – that form the basis of the Korean diet.'",
+    },
+  ],
+  'card:hangawi': [
+    {
+      title: '한가위 (표준국어대사전)',
+      publisher: '국립국어원 (National Institute of Korean Language)',
+      url: 'https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C%EA%B0%80%EC%9C%84',
+      accessed: '2026-10-23',
+      quoteOrLocator: "한가위 「명사」: '우리나라 명절의 하나. 음력 팔월 보름날이다. … 햅쌀로 송편을 빚고 햇과일 따위의 음식을 장만하여 차례를 지낸다. =추석.'",
+    },
+  ],
+  'card:jirisan': [
+    {
+      title: '우리나라 국립공원',
+      publisher: '국립공원공단 (Korea National Park Service)',
+      url: 'https://www.knps.or.kr/portal/main/contents.do?menuNo=8000665',
+      accessed: '2026-10-23',
+      quoteOrLocator:
+        "'1967년 국립공원위원회의 공원지정 결의와 국토종합계획심의회 통과 후 지리산을 제 1호 국립공원으로 지정' / '전국 24개 국립공원은 유형에 따라 산악형 19개, 해상·해안형 4개, 사적형 1개 공원으로 관리·운영되고 있습니다.'",
+    },
+  ],
+  'card:ssireum': [
+    {
+      title: 'Traditional Korean wrestling (Ssirum/Ssireum)',
+      publisher: 'UNESCO Intangible Cultural Heritage',
+      url: 'https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533',
+      accessed: '2026-10-23',
+      quoteOrLocator:
+        "'Inscribed in 2018 (13.COM) on the Representative List of the Intangible Cultural Heritage of Humanity' / the Republic of Korea's description: players 'wearing long fabric belts around their waists and one thigh'",
+    },
+    {
+      title: 'Traditional Korean wrestling listed as intangible cultural heritage following unprecedented merged application from both Koreas',
+      publisher: 'UNESCO Intangible Cultural Heritage',
+      url: 'https://ich.unesco.org/en/news/traditional-korean-wrestling-listed-as-intangible-cultural-heritage-following-unprecedented-merged-application-from-both-koreas-00325',
+      accessed: '2026-10-23',
+      quoteOrLocator: "'on the basis of a joint application by the Democratic People's Republic of Korea and the Republic of Korea'",
+    },
+  ],
 };
 
 /**
@@ -199,5 +355,25 @@ export const UPPER_CARD_REVIEW_S4 = {
     'Part 2 pass 2c learning design: each line is taught in its own cell (test: the card Korean appears in the cell file); facts 89-139 characters, under the 180 cap; no Hangul in an English field; the facts teach about the line (short forms, two right pronunciations, a weather word, the polite ending) and never test the learner; review-copy, culture-source and the 7.7 list pass; cards come only from finishing a cell.',
     'Part 2 pass 3 reviser and third pass: both fixes applied and the four cards re-read in en, es and ko against their sources; no two of the 82 cards share a Korean word (T-AWARD-5).',
     "Part 2 pass 4 independent MAR (2026-10-23, a separate reviewer of part 2's own commits): ko PASS; es NOT PASS on one string. Language: '¿Jugamos?', and the English 'Play Together?' with it, read 같이 할까요? as 'play'; the cell glosses it 'shall we do it together? (polite)' and 할 is 'do', so the card would teach the wrong verb. Fixed in the fix stage with the reviewer's wording: en 'Do It Together?', es '¿Lo hacemos juntos?' (a second es MAR on 2026-10-23 replaced the first fix, '¿Lo hacemos en equipo?': 'en equipo' adds a teamwork sense 같이 does not carry, and 'juntos' matches the cell's reviewed es gloss '¿lo hacemos juntos? (cortés)' and the quest title '¿Jugamos juntos?'; it agrees with the quoted 'we', not the learner). The en and es masisseoyo facts said the rules give 'this word' two ways; Standard Pronunciation article 15 and its proviso cover the headword 맛있다, so en and es now name masitda (converter romanization), as ko already did. The ko gachi fact's conditional now reads '요'를 빼고 '같이 할까?'라고 하면 반말이에요 (the reviewer's wording). The other es strings and every ko string passed as written: natural, polite, true to the en text and the NIKL sources, no age words, no origin, UNESCO or expert claims.",
+  ],
+} as const;
+
+/**
+ * The multi-agent review of row CM-23 part 3: the ten Stage 6-7 card backs, the five album legendary card backs and
+ * their es and ko overlays (F-CURR-002 §9.2), kept apart like part 2's record. No pass claims native-speaker or expert
+ * review. The independent MAR of the es and ko strings runs in the PR's fix stage.
+ */
+export const UPPER_CARD_REVIEW_S67 = {
+  status: 'ready' as 'draft' | 'ready',
+  reviewedBy: 'MAR' as const,
+  reviewedAt: '2026-10-23',
+  passes: 5,
+  notes: [
+    "Part 3 pass 1 author (2026-10-23): one card per Stage 6-7 cell, its word taught in the cell (원 S6 letters, 여기요 S6 life, 기차표 S6 rites, 정상 S6 nature, 덤 S6 crafts; 이름, 아침, 생일, 토끼 and 비행기 from the Stage 7 word banks), Stage 6 pictures drawing the cell's own Korean with round practice amounts in won, Stage 7 pages a word-bank sentence with the neutral cast (Hoya); one legendary card per album; facts from sources the cells' MAR already recorded (access dates kept) or pages opened again on 2026-10-23 (UNESCO Memory of the World and Intangible Cultural Heritage, the Korea National Park Service, the Standard Korean Language Dictionary entries 돌, 토끼 and 한가위).",
+    "Part 3 pass 2a language: the travel fact first read 'families often travel home to the parents', now 'many people travel home to their parents' in en, es and ko; the trail fact's 'set times to start up it' now 'set hours to begin the climb'; the letters legendary title 'Hunminjeongeum' overflowed the card page at 320 and is now 'Hangeul Book' (es 'Libro del hangeul'; its Korean stays 훈민정음); the travel fact says 'sons and daughters', since 'children' is age wording in the card check; the es jang fact was cut under the 180-character line; no age wording, no Hangul in an English field.",
+    "Part 3 pass 2b culture and facts: each claim matched to its quoted words; UNESCO is claimed only for the exact elements under their UNESCO names with the inscription year on the page (Hunminjeongum Manuscript 1997, jang making 2024, Ssirum/Ssireum 2018 on the joint application of the DPR Korea and the Republic of Korea); the jang fact claims the inscription only and no origin for fermented sauces Korea shares with its neighbours; the Hangawi fact leaves out the dictionary's origin note; the World Heritage page for Getbol could not be opened (HTTP 403), so the Nature legendary card rests on the Korea National Park Service instead; no native-speaker or expert-review claim.",
+    'Part 3 pass 2c learning design: every card word appears in its cell file (test), the Stage 7 words in its word bank; facts 76-179 characters; no lyrics, artists or brands; the Library albums only fill, a finished album says Album complete, the legendary earn hint says what to do and never how many are left (7.7); cards come only from finishing cells and albums (never random, never sold).',
+    'Part 3 pass 3 reviser and third pass: the fixes applied and the fifteen cards re-read in en, es and ko against their sources; no two of the 97 cards share a Korean word (T-AWARD-5).',
+    "Part 3 pass 4 independent MAR (2026-10-23, a separate reviewer of part 3's own commits): ko PASS on every string (the particles after the embedded English UNESCO names, no age wording); es PASS on the five album UI messages, es NOT PASS on two card strings. Fixed in the fix stage with the reviewer's wording: card:gichapyo is 'Boleto de tren' with 'Un boleto…', the word its Stage 6 rites cell teaches in es (the es overlays say boleto, never billete); its fact opens 'En las fiestas tradicionales', since 'En una fiesta' reads as a party and the source means 명절. Nits applied: the es jang and ssireum facts read 'La UNESCO inscribió «…» en 2024 / 2018', naming the inscribing body as the Arirang fact does; the new strings spell 한글 one way, Hangul (en 'Hangul Book', es 'Libro del hangul'), as the shipped Hangul Day card, the ireum back and the Stage 7 es glosses do, while part 1's shipped title Hangeul is not this part's to change; the two ireum source locators now quote the pages' own Korean words. Kept, as the rule requires: the exact English UNESCO element names inside the es and ko facts, with the Korean title of each card on its face (훈민정음, 장 담그기, 씨름) as the localized name.",
   ],
 } as const;

@@ -100,8 +100,15 @@ export function CardArt({
   const source = useMemo(() => cardArtSource(card, DEPS), [card, coverReady]);
   const labelled = accessibilityLabel !== undefined;
   // An upper-cell card's drawing comes from its chunk while `upperCards` is on (F-CURR-002 row CM-23); the Korean-word
-  // face stands in until it is in, and for a card the chunk does not draw.
-  const upperArt = useCurrFlag('upperCards') && source.kind === 'word';
+  // face stands in until it is in, and for a card the chunk does not draw. An album's legendary card (part 3) stands on
+  // its album's plate the same way.
+  const upperArt = useCurrFlag('upperCards') && (source.kind === 'word' || card.unlockedBy.startsWith('set:album-'));
+  const face =
+    source.kind === 'word' ? (
+      <CardWord word={source.word} size={size} fontFamily={wordFontFamily} />
+    ) : source.kind === 'plate' ? (
+      <CollectionPlate members={source.members} card={card} size={size} fontFamily={wordFontFamily} />
+    ) : null;
   const background =
     source.kind === 'heritage' ? colors.surface.paper : source.kind === 'plate' ? colors.surface.sunken : colors.theme[source.theme];
   return (
@@ -124,12 +131,8 @@ export function CardArt({
       ]}
     >
       {source.kind === 'heritage' ? <HeritageCardArt cardId={source.cardId} size={size} accessibilityLabel="" /> : null}
-      {source.kind === 'word' && upperArt ? (
-        <UpperCardArtSlot cardId={card.id} size={size} fallback={<CardWord word={source.word} size={size} fontFamily={wordFontFamily} />} />
-      ) : null}
-      {source.kind === 'word' && !upperArt ? <CardWord word={source.word} size={size} fontFamily={wordFontFamily} /> : null}
       {source.kind === 'cover' ? <CoverCrop source={source} size={size} fontFamily={wordFontFamily} /> : null}
-      {source.kind === 'plate' ? <CollectionPlate members={source.members} card={card} size={size} fontFamily={wordFontFamily} /> : null}
+      {face !== null && upperArt ? <UpperCardArtSlot cardId={card.id} size={size} fallback={face} /> : face}
     </View>
   );
 }

@@ -182,6 +182,39 @@ describe('with game.hidden-heritage on', () => {
     expect(audio.stop).toHaveBeenCalled();
   });
 
+  it('a step that narrows after the first answer keeps the scene at 256 dp, so no target is scored twice', async () => {
+    gameSwitch(true);
+    const root = await draw(SCOPE, 320, 288);
+    const spot = (id: string) => spots(root).find((s) => s.props.testID === `hh-spot-${id}`)!;
+    await act(async () => spot('hangari').props.onPress());
+    expect(log).toHaveLength(1);
+    const measured = root.findAll((n) => typeof n.props.onLayout === 'function' && n.props.testID === undefined)[0]!;
+    await act(async () => {
+      measured.props.onLayout({ nativeEvent: { layout: { width: 255, height: 500, x: 0, y: 0 } } });
+    });
+    expect(byTestId(root, 'hh-scene').length).toBeGreaterThan(0);
+    expect(byTestId(root, 'hh-scene-scroll').length).toBeGreaterThan(0);
+    expect(root.findAll((n) => n.props.testID === 'pic-word-picture-bap')).toHaveLength(0);
+    for (const s of spots(root)) {
+      const style = StyleSheet.flatten(s.props.style) as { width: number; height: number };
+      expect(Math.min(style.width, style.height), s.props.testID).toBeGreaterThanOrEqual(48);
+    }
+    const asked = ROUND.targets.find((t) => t.word.ko === root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko)!;
+    await act(async () => spot(asked.id).props.onPress());
+    expect(log.map(([key]) => key)).toEqual([log[0]![0], log[0]![0]]);
+    expect(log.every(([key]) => /^w\d$/.test(key))).toBe(true);
+  });
+
+  it('while playing, a screen reader hears the scene alt text as one image before the spots', async () => {
+    gameSwitch(true);
+    const root = await draw();
+    const art = root.findAll((n) => n.props.testID === 'hh-scene-art' && n.props.accessibilityRole === 'image');
+    expect(art.length).toBeGreaterThan(0);
+    expect(art[0]!.props.accessibilityLabel).toBe(ROUND.altEn);
+    const order = root.findAll((n) => n.props.testID === 'hh-scene-art' || (n.type === Pressable && String(n.props.testID).startsWith('hh-spot-')));
+    expect(order[0]!.props.testID).toBe('hh-scene-art');
+  });
+
   it('a scene that does not load (not in this build, no chunk) is never drawn: the fallback plays', async () => {
     gameSwitch(true);
     const root = await draw({ ...SCOPE, hiddenHeritage: { rounds: [{ ...ROUND, sceneId: 'scene:not-in-this-build' }] } });

@@ -49,7 +49,7 @@ describe('the Food market scene (row CM-36)', () => {
     for (const target of FOOD_MARKET_SCENE.round.targets) expect(FOOD_MARKET_SCENE.art.altEn.toLowerCase()).not.toContain(target.word.en);
   });
 
-  it('cites an allowlisted institution with its URL, access date and quoted words for every fact; reviewed by MAR in 3 passes', () => {
+  it('cites an allowlisted institution with its URL, access date and quoted words for every fact; reviewed by MAR in 3 passes or more, a reviser among them', () => {
     const allow = ['National Museum of Korea', 'National Folk Museum of Korea', 'Korea Heritage Service', 'National Institute of Korean Language'];
     for (const fact of FOOD_MARKET_SCENE.note.facts) {
       expect(fact.sources.length, fact.id).toBeGreaterThan(0);
@@ -60,7 +60,10 @@ describe('the Food market scene (row CM-36)', () => {
         expect(s.quote.length).toBeGreaterThan(10);
       }
     }
-    expect(FOOD_MARKET_SCENE.review).toMatchObject({ reviewedBy: 'MAR', passes: 3 });
+    expect(FOOD_MARKET_SCENE.review).toMatchObject({ reviewedBy: 'MAR' });
+    expect(FOOD_MARKET_SCENE.review.passes).toBeGreaterThanOrEqual(3);
+    expect(FOOD_MARKET_SCENE.review.notes).toHaveLength(FOOD_MARKET_SCENE.review.passes);
+    expect(FOOD_MARKET_SCENE.review.notes.some((n) => n.startsWith('Pass 4 (reviser)'))).toBe(true);
     expect(JSON.stringify(FOOD_MARKET_SCENE.review)).not.toMatch(/native speaker|native-speaker|expert/i);
   });
 });

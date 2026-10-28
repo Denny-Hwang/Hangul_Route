@@ -5,8 +5,10 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { PictureArt } from '../../../components/PictureArt';
 import { partsShown } from '../../../logic/lecture/build-steps';
+import { stageSceneOn } from '../../../logic/lecture/hidden-heritage-stage';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { PIC_MD, units } from '../../../logic/lecture/stage-constants';
+import { useRemoteConfigStore } from '../../../store/remote-config-store';
 import { loadHiddenHeritageChunk, loadScene } from '../../minigames/hidden-heritage-scenes';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
@@ -26,14 +28,19 @@ const SCENE_W = layout.maxWidth.reading;
  * it together", the scene, and beside it the Korean word at `presenter.size.display` with its romanization; builds
  * `ko` (the scene and the word), `gloss` (the meaning), `answer` (the found ring on the thing's spot). The class looks
  * and points; nothing is scored and nobody's name is on the stage. The scene is its own lazy chunk; until it is in, or
- * when it cannot load, the target's own bundled picture stands in.
+ * when it cannot load, or while the switch is off (`stageSceneOn`), the target's own bundled picture stands in.
  */
 export function HiddenHeritageSlide({ slide, reveal }: { slide: HiddenHeritageBody; reveal: number }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   // The scene and its renderer are lazy chunks (the game's): the target's own picture stands in until both are in.
+  const sceneOn = useRemoteConfigStore((s) => stageSceneOn(s.cache));
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   useEffect(() => {
+    if (!sceneOn) {
+      setLoaded(null);
+      return undefined;
+    }
     let live = true;
     void Promise.all([loadScene(slide.sceneId), loadHiddenHeritageChunk()]).then(
       ([scene, ui]) => live && setLoaded(scene ? { scene, ui } : null),
@@ -42,7 +49,7 @@ export function HiddenHeritageSlide({ slide, reveal }: { slide: HiddenHeritageBo
     return () => {
       live = false;
     };
-  }, [slide.sceneId]);
+  }, [slide.sceneId, sceneOn]);
 
   const parts = partsShown(slide.builds, reveal);
   const romShown = parts.find((p) => p.name === 'ko')?.rom === true;
@@ -58,7 +65,7 @@ export function HiddenHeritageSlide({ slide, reveal }: { slide: HiddenHeritageBo
     <View testID="presenter-hidden-heritage" style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
       <KindLabel text={messages.learner.presenter.grid.kind.hiddenHeritage} testID="presenter-kind-label" />
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
-        {loaded ? (
+        {sceneOn && loaded ? (
           <View accessible accessibilityRole="image" accessibilityLabel={slide.alt} testID="presenter-hh-scene" style={{ width, height: (width * 3) / 4, borderRadius: units(unit, STAGE_RADIUS), overflow: 'hidden' }}>
             <loaded.ui.HiddenHeritageSceneArt scene={loaded.scene} width={width} />
             {ringShown ? (
