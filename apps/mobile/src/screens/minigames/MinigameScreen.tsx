@@ -3,11 +3,11 @@ import type { MinigameKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useRef } from 'react';
 import type { ReactElement } from 'react';
-import type { MinigameKind } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
+import { hintedForMemory } from '../../logic/memory/hinted-answer';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
@@ -157,9 +157,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
         roundKey,
         correct,
         inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId },
-        // Dictation's hint is a hinted right answer whatever it scored (row CM-31); Role Play's Show meanings counts
-        // only with a right reply, a wrong one being a plain miss (row CM-35).
-        meta?.hinted === true && (correct || scope.kind !== 'role-play'),
+        hintedForMemory(scope.kind, correct, meta?.hinted),
       ),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();

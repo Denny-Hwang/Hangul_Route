@@ -70,7 +70,9 @@ interface CellRow {
  * what it builds now; LV-S3: no order-it step skipped; LV-S4: no step skipped at all). Stage 5 is the five books together.
  * Row CM-3A S6 (F-CURR-002 section 7.1 Check rotation): the Dictation Checks of Stage 6 Letters q3, Life q3, Rites q3 and
  * Nature q2 are write-together slides now, not question slides, so those cells' question floors are 2 lower and the
- * type-hangul write slides 8 more; their Realia Read and Cloze Pick value Checks stay question slides.
+ * type-hangul write slides 8 more; their Realia Read and Cloze Pick value Checks stay question slides. Crafts q3's Apply
+ * is Role Play at the stall now (row CM-35's role-play slides, not the four Tap & Respond question slides), so the
+ * crafts floor is 4 lower.
  */
 const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:letters': { quests: 3, slides: 43, wordCards: 0, differentWords: 0, quiz: 25, skipped: {}, flattened: {} },
@@ -127,7 +129,7 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
     flattened: {},
   },
   'stage6:crafts': {
-    quests: 3, slides: 23, wordCards: 18, differentWords: 17, quiz: 22,
+    quests: 3, slides: 23, wordCards: 18, differentWords: 17, quiz: 18,
     skipped: {},
     flattened: {},
   },

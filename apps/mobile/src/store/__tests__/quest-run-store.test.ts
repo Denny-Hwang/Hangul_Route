@@ -230,11 +230,12 @@ describe('quest-run-store', () => {
       const store = useQuestRunStore.getState();
       store.beginQuest('quest:x', 'episode:y');
       store.answerRound('so:r1:0', true, { texts: ['먼저 일어나요.'] }, true);
-      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] }, true);
+      // Story Order passes the hint with a right answer only (a hinted answer of Dictation, row CM-31, is never wrong),
+      // so its miss reaches the store as a plain miss.
+      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] });
       store.answerRound('so:r1:2', true, { texts: ['그리고 밥을 먹어요.'] });
       expect(heard.map((a) => [a.correct, a.hinted ?? false])).toEqual([
         [true, true],
-        // A hinted answer is never wrong: a miss stays a plain miss.
         [false, false],
         [true, false],
       ]);
