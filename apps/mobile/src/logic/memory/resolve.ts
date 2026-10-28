@@ -129,11 +129,12 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
     }
     case 'story-order': {
-      // F-CURR-002 row CM-34: a slot asks the line that comes next (`<round>/<panel>`), read in order: the read rung.
+      // F-CURR-002 row CM-34: a slot asks the line that comes next (`<round>/<panel>`), read in order: the read rung. No
+      // kind, as Listen & Pick: a sentence is the pattern item and a one-word caption the word item (the catalogue's kind).
       const at = itemId.indexOf('/');
       const round = scope.storyOrder?.rounds.find((r) => r.id === itemId.slice(0, at));
       const panel = at < 0 ? undefined : round?.panels.find((p) => p.id === itemId.slice(at + 1));
-      return panel ? { texts: texts(text(panel.caption, 'pat')), jamoIds: [], rung: 'read' } : undefined;
+      return panel ? { texts: texts(text(panel.caption)), jamoIds: [], rung: 'read' } : undefined;
     }
     default:
       return undefined;

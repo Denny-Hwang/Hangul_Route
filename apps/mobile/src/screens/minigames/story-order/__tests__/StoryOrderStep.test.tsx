@@ -7,7 +7,7 @@ import { setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } 
 import { useRemoteConfigStore } from '../../../../store/remote-config-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../../test-support/render';
 import type { MinigameHost } from '../../host';
-import { StoryOrderStep } from '../StoryOrderStep';
+import { STORY_ORDER_DECIDE_WAIT_MS, StoryOrderStep } from '../StoryOrderStep';
 
 /**
  * F-CURR-002 §12.2, row CM-34: `game.story-order` decides, once when the step opens, between the game (its own chunk)
@@ -44,12 +44,12 @@ function flag(on: boolean | null): void {
   useRemoteConfigStore.setState({ hydrated: true, cache: on === null ? null : { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.story-order': { on, pct: 100 } } } });
 }
 
-async function open(fixture: keyof typeof STORY_ORDER_FIXTURES): Promise<{ r: ReactTestRenderer; host: MinigameHost; finished: () => number }> {
+async function open(fixture: keyof typeof STORY_ORDER_FIXTURES, mode: MinigameHost['mode'] = 'quest'): Promise<{ r: ReactTestRenderer; host: MinigameHost; finished: () => number }> {
   let finished = 0;
   const scope = STORY_ORDER_FIXTURES[fixture];
   // As MinigameScreen's quest host: the answer goes to the run store with what it asked.
   const host: MinigameHost = {
-    mode: 'quest',
+    mode,
     answer: vi.fn((key: string | number, correct: boolean, meta?: { itemId?: string; hinted?: boolean }) =>
       useQuestRunStore.getState().answerRound(key, correct, meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted),
     ),
@@ -161,12 +161,33 @@ describe('StoryOrderStep: game.story-order off (its built-in pct 0)', () => {
   });
 
   it('a remote copy that lands mid-step never swaps the game', async () => {
-    useRemoteConfigStore.setState({ hydrated: false, cache: null });
+    flag(false);
     const { r } = await open('captions');
+    expect(screenTexts(r.root)).toContain(SEQ.title);
     flag(true);
     await settle();
     expect(screenTexts(r.root)).toContain(SEQ.title);
     expect(byTestId(r.root, 'story-order-cards')).toHaveLength(0);
+  });
+
+  it('a stored copy that is never read: after the wait the step decides without it (the fallback), never a dead end', async () => {
+    useRemoteConfigStore.setState({ hydrated: false, cache: null });
+    const { r } = await open('captions');
+    expect(screenTexts(r.root)).not.toContain(SEQ.title);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, STORY_ORDER_DECIDE_WAIT_MS + 50));
+    });
+    expect(screenTexts(r.root)).toContain(SEQ.title);
+    expect(byTestId(r.root, 'story-order-cards')).toHaveLength(0);
+  });
+
+  it('a Check step has no Skip this one (check-launcher.ts): the fallback draws none', async () => {
+    flag(false);
+    const { r } = await open('twoRounds', 'check');
+    expect(screenTexts(r.root)).toContain(SEQ.title);
+    expect(buttonsNamed(r.root, SEQ.skip.cta)).toHaveLength(0);
+    const quest = await open('twoRounds');
+    expect(buttonsNamed(quest.r.root, SEQ.skip.cta)).toHaveLength(1);
   });
 });
 
@@ -195,5 +216,18 @@ describe('StoryOrderStep: game.story-order on', () => {
     for (let i = 0; i < 100 && byTestId(r.root, 'story-order-cards').length === 0; i += 1) await settle();
     expect(byTestId(r.root, 'story-order-cards')).toHaveLength(1);
     expect(screenTexts(r.root)).toContain(getMessages('en').learner.storyOrder.title);
+  });
+
+  it('a step opened before the stored copy is read waits for it (after the chunk tests: the chunk stays loaded), so the owner\'s ramp is never latched as off', async () => {
+    useRemoteConfigStore.setState({ hydrated: false, cache: null });
+    const { r } = await open('captions');
+    expect(screenTexts(r.root)).not.toContain(SEQ.title);
+    expect(byTestId(r.root, 'story-order-cards')).toHaveLength(0);
+    // The stored copy is read and has the switch on: the game, from its chunk.
+    await act(async () => {
+      flag(true);
+    });
+    for (let i = 0; i < 100 && byTestId(r.root, 'story-order-cards').length === 0; i += 1) await settle();
+    expect(byTestId(r.root, 'story-order-cards')).toHaveLength(1);
   });
 });

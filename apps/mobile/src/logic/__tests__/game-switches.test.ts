@@ -36,6 +36,16 @@ describe('GAME_SWITCHES', () => {
     expect(renderedKind('story-order', OFF)).toBe('story-sequence');
     expect(renderedKind('listen-pick', OFF)).toBe('listen-pick');
   });
+
+  it('every gated kind, switch off, renders its fallback and never itself; the fallback is ungated, so off is never a gated game', () => {
+    for (const kind of Object.keys(GAME_SWITCHES) as MinigameKind[]) {
+      const off = renderedKind(kind, OFF);
+      expect(off, kind).not.toBe(kind);
+      expect(GAME_SWITCHES[off], kind).toBeUndefined();
+      expect(renderedKind(off, OFF), kind).toBe(off);
+      expect(PLAYABLE_KINDS.has(off), kind).toBe(true);
+    }
+  });
 });
 
 describe('every quest step maps to a playable kind with every game switch off (table check)', () => {
@@ -50,6 +60,8 @@ describe('every quest step maps to a playable kind with every game switch off (t
       const scope = scopeFor(ref);
       if (!scope || scope.kind === 'voice-echo') continue;
       expect(PLAYABLE_KINDS.has(renderedKind(scope.kind, OFF)), `${quest} step ${i} ${ref}`).toBe(true);
+      // A gated kind in the catalogue (CM-3A's Story Order Checks, once authored) never plays itself with its switch off.
+      if (GAME_SWITCHES[scope.kind]) expect(renderedKind(scope.kind, OFF), `${quest} step ${i} ${ref}`).not.toBe(scope.kind);
     }
   });
 
