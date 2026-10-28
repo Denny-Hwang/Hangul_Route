@@ -25,11 +25,14 @@ const SETTING: ItemDef = {
   horizonY: 230,
   alt: 'A school room with a paper lattice window, a low writing desk and a door open to a yard',
   accuracyNote:
-    'A generic room of a private school of earlier times: plaster wall, a paper lattice window, an oiled-paper floor and a low writing desk; the door opens on a yard. No sign, writing or named school is drawn.',
+    'A generic room of a private school of earlier times: plaster wall, a paper lattice window, an oiled-paper floor and a low writing desk; the door opens on a yard with plain land rising to a far ridge. No sign, writing or named school is drawn.',
   nodes: [
     { t: 'rect', x: 0, y: 0, w: 400, h: 300, fill: 'surface.sunken' },
     { t: 'rect', x: 204, y: 16, w: 188, h: 206, fill: 'surface.canvas' },
     { t: 'rect', x: 204, y: 182, w: 188, h: 40, fill: 'border.strong' },
+    // The far land beyond the yard, rising to a ridge the mountain stands on (its base at y 100).
+    { t: 'path', d: 'M204 182V102C230 100 270 99 300 100C330 103 362 110 392 120V182Z', fill: 'border.strong' },
+    { t: 'path', d: 'M204 102C230 100 270 99 300 100C330 103 362 110 392 120', stroke: 'text.secondary', sw: 'thin', det: true },
     { t: 'rect', x: 196, y: 8, w: 204, h: 10, fill: 'text.secondary' },
     { t: 'rect', x: 196, y: 8, w: 8, h: 222, fill: 'text.secondary' },
     { t: 'rect', x: 392, y: 8, w: 8, h: 222, fill: 'text.secondary' },
@@ -190,7 +193,7 @@ export const LETTERS_SCHOOL_SCENE: HiddenHeritageScene = {
         sources: [
           {
             institution: 'National Museum of Korea',
-            title: '《단원 풍속도첩》 (Album of Genre Paintings by Danwon)',
+            title: '《단원 풍속도첩》 (Danwon pungsokdocheop, album of genre paintings)',
             url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=3799',
             accessed: '2026-10-23',
             quote: '국적/시대 한국 - 조선 … 이 화첩의 게제순은 1）서당, 2) 논갈이, … 25) 장터길이다. 이들 작품명을 통해서 알 수 있듯이, 각계층의 생업장면과 놀이 등 생활의 이모저모가 잘 나타나 있다.',
@@ -230,12 +233,13 @@ export const LETTERS_SCHOOL_SCENE: HiddenHeritageScene = {
   review: {
     reviewedBy: 'MAR',
     reviewedAt: '2026-10-23',
-    passes: 4,
+    passes: 5,
     notes: [
       'Pass 1 (author, 2026-10-23): the subject is the seodang, the first painting of the National Museum of Korea album (its page opened on 2026-10-23; the quotes are copied from it), drawn as an empty room with no figure; the National Institute of Korean Language dictionary pages for 서당 and 붓 opened the same day. Targets 책, 붓 and 나무 and other things 산, 새 and 꽃 are Stage 2 Letters words with the same romanization and gloss as the cell; each target has a bundled picture. The es and ko glosses reuse the reviewed glosses of the Letters cells and the vocabulary topics.',
       "Pass 2 (three checker lists, language, culture and facts, learning design, each read on its own against the author's text). Language: the ko subject first said children learned letters at a seodang, which is age wording (7.7) and more than the dictionary says, so it now reads 옛날의 사설 학교인 서당, as the en and es do; the ko album fact said 모습 twice and now reads 일과 놀이 등 생활의 여러 모습; the album title is written with the converter's romanization, Danwon pungsokdocheop. Culture and facts: every claim was matched to its quoted words; 'Joseon' now rests on the page's 국적/시대 line, added to the quote; the album is named by its title only, as its page leaves the hand open; Classical Chinese and the brush are shared East Asian heritage and no claim gives them a Korean origin; no UNESCO claim; the books are bound on the right with a blank title slip, and no composition of the album is used (its seodang painting is a group of figures with no room drawn). Learning design: every thing is a taught Letters word, the alt texts name the room and never a thing, the spots read in order mountain, bird, book, brush, tree, flower, and the 7.7 list passes (no red, no score, no age words).",
       'Pass 3 (reviser and third pass): the fixes above applied in en, es and ko and the whole scene re-read against its sources; the profile, the culture-source lint, the rr.ts romanization check and the es and ko overlay check pass.',
       "Pass 4 (es and ko pass of the fix stage, 2026-10-27): every spot meaning checked against the reviewed Letters and vocabulary glosses (now a test); the ko 책 gloss read 글이나 where the Letters cell reads 글과, so it now matches the cell; the es and ko subject said the seodang was the subject of Joseon genre painting where the en says a subject, so they now read uno de los temas and 소재 가운데 하나.",
+      "Pass 5 (independent es and ko review, 2026-10-27, PASS with nits): all 12 es and ko strings matched to their quoted sources and to the reviewed Letters and vocabulary glosses, with the rr.ts romanization and the 7.7 list rechecked. Applied: the ko subject's second sentence now says where the things are (방에는 낮은 책상, 실로 묶은 책, 붓이 있어요), and the album source is named by its title only, Danwon pungsokdocheop, never as by Danwon. Kept: 사사로이 in the ko seodang fact, the dictionary's own word. The yard view now has plain land rising to a far ridge, so the mountain stands on land.",
     ],
   },
 };

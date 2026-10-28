@@ -81,10 +81,13 @@ function lettersWords(): Array<{ ko: string; romanization: string; en: string }>
 }
 
 /** Every entry of the reviewed overlay files of a locale (content/i18n/<locale>/*.json), lesson overlays included. */
+/** Only the Stage 2 lesson cells and the minigame rounds teach these words in a word pair with a reviewed gloss. */
+const REVIEWED_GLOSS_FILE = /^(lessons-stage2-[a-z]+|minigames)\.json$/;
+
 function reviewedOverlays(locale: 'es' | 'ko'): Record<string, Record<string, string>> {
   const dir = new URL(`../../../../../../content/i18n/${locale}/`, import.meta.url);
   const out: Record<string, Record<string, string>> = {};
-  for (const name of readdirSync(dir).filter((n) => n.endsWith('.json'))) {
+  for (const name of readdirSync(dir).filter((n) => REVIEWED_GLOSS_FILE.test(n))) {
     const file = JSON.parse(readFileSync(new URL(name, dir), 'utf8')) as { entries?: Record<string, Record<string, string>> };
     for (const [id, fields] of Object.entries(file.entries ?? {})) out[id] = { ...out[id], ...fields };
   }
@@ -140,17 +143,17 @@ describe('the Letters school room scene (row CM-37 part 1)', () => {
     for (const value of Object.values(OVERLAYS.es[SCENE.id] ?? {})) expect(value).not.toMatch(/[가-힣]/);
   });
 
-  it('each spot meaning in es and ko is the gloss its word already has in a reviewed lesson or vocabulary overlay', () => {
+  it('each spot meaning in es and ko is the gloss its word already has in a reviewed Stage 2 lesson or minigame word pair', () => {
     for (const locale of ['es', 'ko'] as const) {
       const entry = OVERLAYS[locale][SCENE.id] ?? {};
       for (const [group, list] of [['targets', ROUND.targets], ['others', ROUND.others]] as const) {
         for (const thing of list) {
           const reviewed = new Set<string>();
           for (const [id, fields] of Object.entries(reviewedOverlays(locale))) {
-            if (id.startsWith('scene:')) continue;
-            for (const [field, value] of Object.entries(fields)) {
-              if (field.endsWith(`.${thing.id}.word.gloss`) || field.endsWith(`.${thing.id}.gloss`)) reviewed.add(value);
-            }
+            if (id.startsWith('scene:') || id.startsWith('pitem:')) continue;
+            // A word pair, a card pair or a word bank entry keyed by the word's own romanization, never a sentence or an option.
+            const own = new RegExp(`(^|\\.)(pairs\\.${thing.id}\\.word|cardPairs\\.${thing.id}|bank\\.${thing.id})\\.gloss$`);
+            for (const [field, value] of Object.entries(fields)) if (own.test(field)) reviewed.add(value);
           }
           expect([...reviewed], `${locale} ${thing.id}`).toContain(entry[`round.${group}.${thing.id}.word.gloss`]);
         }
