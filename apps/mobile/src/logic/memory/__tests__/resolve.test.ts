@@ -137,3 +137,28 @@ describe('what a round asked', () => {
     expect(resolveRound({ scope: pic, itemId: 'p1' })?.rung).toBe('read');
   });
 });
+
+describe('askedOfScope: Match Shape and its Read Pick fallback (row CM-33)', () => {
+  const SHAPES: MinigameScope = {
+    kind: 'match-shape',
+    matchShape: {
+      rounds: [
+        { id: 'ms:origin:nieun', shape: 'origin', target: 'jamo:nieun', options: ['jamo:giyeok', 'jamo:nieun', 'jamo:mieum'], picture: 'prop:shape-origin-nieun', noteEn: 'x', fact: 'nieun' },
+        { id: 'ms:pair:bieup', shape: 'pair', target: 'jamo:bieup', lookAlike: 'jamo:pieup', layout: 'tlltlt', diffNoteEn: 'x' },
+      ],
+    },
+  };
+
+  it('a pair round asks its letter at the produce rung; an origin round teaches its fact and asks nothing', () => {
+    expect(askedOfScope(SHAPES, 'ms:pair:bieup')).toEqual({ texts: [], jamoIds: ['jamo:bieup'], rung: 'produce' });
+    expect(askedOfScope(SHAPES, 'ms:origin:nieun')).toBeUndefined();
+    expect(askedOfScope(SHAPES, 'ms:nope')).toBeUndefined();
+    expect(resolveItems(lookup, 'episode:stage1-crafts', askedOfScope(SHAPES, 'ms:pair:bieup')!)).toEqual([B]);
+    expect(resolveRound({ scope: SHAPES, itemId: 'ms:origin:nieun' })).toBeUndefined();
+  });
+
+  it('Read Pick asks its letter at the read rung', () => {
+    const pick: MinigameScope = { kind: 'listen-pick', readPick: { rounds: [{ id: 'ms:pair:bieup', target: 'jamo:bieup', options: [], answerId: 'jamo:bieup' }] } };
+    expect(askedOfScope(pick, 'ms:pair:bieup')).toEqual({ texts: [], jamoIds: ['jamo:bieup'], rung: 'read' });
+  });
+});

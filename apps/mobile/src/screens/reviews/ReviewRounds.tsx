@@ -29,11 +29,12 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
-import type { OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
+import type { OrderRound, PickOption, PickRound, ReviewRound, ShapeRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { PictureArt } from '../minigames/PictureArt';
+import { useMatchShapeChunk } from '../minigames/match-shape-entry';
 
 /**
  * The rounds of the Daily Review and Keep going (F-CURR-002 sections 4.3 and 4.5, row CM-14; design
@@ -393,10 +394,24 @@ export function OrderRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   );
 }
 
+// ---- shape (row CM-33) -------------------------------------------------------------------------------------
+
+/**
+ * Match Shape at the produce rung: its board is the Match Shape chunk's, loaded here at run time through the entry's
+ * `matchShapeChunk()`. The engine asks it only while `game.match-shape` is on.
+ */
+export function ShapeRoundLoader({ round, onFirst, onSolved }: RoundProps<ShapeRound>): ReactElement {
+  const m = useMessages();
+  const { chunk } = useMatchShapeChunk();
+  if (chunk === null) return <Heading level="prompt">{m.learner.minigame.matchShape.heading.pair}</Heading>;
+  return <chunk.ShapeRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
+}
+
 /** The round for its type. */
 export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   const { round } = props;
   if (round.type === 'pick') return <PickRoundView {...props} round={round} />;
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;
+  if (round.type === 'shape') return <ShapeRoundLoader {...props} round={round} />;
   return <OrderRoundView {...props} round={round} />;
 }

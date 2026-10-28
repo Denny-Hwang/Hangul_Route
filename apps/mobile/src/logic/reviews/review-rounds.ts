@@ -1,3 +1,4 @@
+import { SHAPE_LOOK_ALIKES } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { jitter, type EngineContext, type ReviewQuestion } from './engine';
 
@@ -14,7 +15,7 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  *
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
  * section 7.1 (Dictation, Syllable Build, Match Shape, Cloze Pick) join with their own rows behind
- * `game.<kind>`. `surfaceIndex` gives the engine the item index with only these formats, so an item it
+ * `game.<kind>` (`GameFormats`; Match Shape, row CM-33, as a `shape` round). `surfaceIndex` gives the engine the item index with only these formats, so an item it
  * cannot ask that way falls back to another way, or to the read rung, inside the engine, never here.
  */
 
@@ -30,13 +31,31 @@ export const MAX_ORDER_TILES = 8;
 const HAS_SLOT = /_/;
 
 /**
+ * The section 7.1 formats a surface may add while their `game.<kind>` switch is on (row CM-33: Match Shape, the
+ * produce rung of a `sym` item with a look-alike). Off, the engine never picks them, so it asks the item another way
+ * or at the read rung.
+ */
+export type GameFormats = ReadonlySet<ReviewFormat>;
+export const NO_GAME_FORMATS: GameFormats = new Set<ReviewFormat>();
+
+/**
+ * Row CM-33: an item Match Shape can ask at the produce rung: a letter (a `sym` item, never a final's) that has a
+ * look-alike pair (ㅂ / ㅍ, ㅓ / ㅗ, ㅏ / ㅓ, ㄹ / ㄷ), asked as a pair round. The look-alike must be taught too
+ * (`shapeRound`), else the item is asked another way.
+ */
+function shapeable(item: Pick<ReviewItem, 'kind' | 'ko'> & { id?: string }): boolean {
+  return item.kind === 'sym' && !(item.id ?? '').endsWith('-batchim') && Object.prototype.hasOwnProperty.call(SHAPE_LOOK_ALIKES, item.ko);
+}
+
+/**
  * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces.
  */
-export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'>): ReviewFormat[] {
+export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' | 'picture'> & { id?: string }, games: GameFormats = NO_GAME_FORMATS): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   return item.formats.filter((f) => {
+    if (f === 'match-shape') return games.has(f) && shapeable(item);
     if (!SURFACE_FORMATS.has(f)) return false;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
@@ -46,19 +65,22 @@ export function surfaceFormats(item: Pick<ReviewItem, 'kind' | 'ko' | 'formats' 
 }
 
 type SurfaceIndex = EngineContext['index'];
-const surfaceCache = new WeakMap<object, SurfaceIndex>();
+const surfaceCache = new WeakMap<object, Map<string, SurfaceIndex>>();
 
-/** The item index with each item's formats cut to this surface's; an item left with none is not askable here. */
-export function surfaceIndex(index: SurfaceIndex): SurfaceIndex {
-  const held = surfaceCache.get(index);
+/** The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none is not askable here. */
+export function surfaceIndex(index: SurfaceIndex, games: GameFormats = NO_GAME_FORMATS): SurfaceIndex {
+  const key = [...games].sort().join('|');
+  const byGames = surfaceCache.get(index) ?? new Map<string, SurfaceIndex>();
+  surfaceCache.set(index, byGames);
+  const held = byGames.get(key);
   if (held) return held;
   const items: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item);
+    const formats = surfaceFormats(item, games);
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  surfaceCache.set(index, out);
+  byGames.set(key, out);
   return out;
 }
 
@@ -137,7 +159,18 @@ export interface OrderRound extends RoundBase {
   words: string[];
 }
 
-export type ReviewRound = PickRound | TypeRound | OrderRound;
+/**
+ * Match Shape at the produce rung (row CM-33): tap every copy of the letter among its look-alike. The six tiles are
+ * laid out by the round's screen (the Match Shape chunk), so no layout logic sits in this chunk.
+ */
+export interface ShapeRound extends RoundBase {
+  type: 'shape';
+  /** The letter's jamo id (`jamo:bieup`) and its look-alike's. */
+  target: string;
+  lookAlike: string;
+}
+
+export type ReviewRound = PickRound | TypeRound | OrderRound | ShapeRound;
 
 /** The meaning of an item (or a reply) in the UI language; undefined when it has none. */
 export type GlossOf = (key: string | undefined, en: string | undefined) => string | undefined;
@@ -275,6 +308,15 @@ function orderRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   };
 }
 
+function shapeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): ShapeRound | null {
+  if (!shapeable(item)) return null;
+  const look = SHAPE_LOOK_ALIKES[item.ko];
+  const other = itemsOfKind(input.index, 'sym').find((i) => i.ko === look && !i.id.endsWith('-batchim'));
+  if (other === undefined) return null;
+  const jamoId = (id: string): string => `jamo:${id.slice('sym:'.length)}`;
+  return { type: 'shape', question, target: jamoId(item.id), lookAlike: jamoId(other.id), answer: { ko: koOf(item) } };
+}
+
 /** The round for an engine question, or null when the item cannot be played this way (it is then skipped). */
 export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRound | null {
   const item = input.index.byId.get(question.itemId);
@@ -290,6 +332,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       return typeRound(question, item, input, 'picture');
     case 'sentence-builder':
       return orderRound(question, item, input);
+    case 'match-shape':
+      return shapeRound(question, item, input);
     default:
       return null;
   }

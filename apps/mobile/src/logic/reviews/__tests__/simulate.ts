@@ -60,6 +60,12 @@ export interface QuestPlan {
 
 const stageOf = (cell: string): number => Number(/stage(\d)/.exec(cell)?.[1] ?? 1);
 
+/**
+ * The quests that introduce no item: the Stage 1 additions of F-CURR-002 section 4.2 (row CM-33) ask letters earlier
+ * quests teach and have no Discover page, so a cell's items are not split onto them; they only ask again (recycles).
+ */
+const INTRODUCE_NONE: ReadonlySet<string> = new Set(['quest:stage1-crafts-q4']);
+
 /** The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests. */
 export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPlan[] {
   const firstCell = (item: ReviewItem): string | undefined => item.cells.find((c) => c.startsWith('episode:'));
@@ -69,9 +75,11 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
     if (cell !== undefined) byCell.set(cell, [...(byCell.get(cell) ?? []), item.id]);
   }
   const questsOf = new Map<string, string[]>();
+  const lastOf = new Map<string, string>();
   for (const q of LESSON_QUESTS) {
     const cell = cellOfEpisode(q.episodeId);
-    questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
+    lastOf.set(cell, q.id);
+    if (!INTRODUCE_NONE.has(q.id)) questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
   }
   return LESSON_QUESTS.map((q) => {
     const cell = cellOfEpisode(q.episodeId);
@@ -80,7 +88,8 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
     const own = byCell.get(cell) ?? [];
     const per = Math.ceil(own.length / quests.length);
     const recycles = items.filter((i) => i.asked.includes(cell)).map((i) => i.id);
-    return { questId: q.id, cell, stage: stageOf(cell), introduces: own.slice(at * per, (at + 1) * per), recycles: at === quests.length - 1 ? recycles : [] };
+    const introduces = at < 0 ? [] : own.slice(at * per, (at + 1) * per);
+    return { questId: q.id, cell, stage: stageOf(cell), introduces, recycles: lastOf.get(cell) === q.id ? recycles : [] };
   });
 }
 

@@ -6,7 +6,7 @@ import { localDay, vocabOf } from '../vocab/progress';
 import { checkAnswers } from './cell-check';
 import type { RoundAnswer } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
-import { glossFrom, surfaceIndex } from './review-rounds';
+import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 import {
   planStageCheck,
@@ -47,6 +47,8 @@ export interface StageCheckDeps {
   /** The stage's grid cells, theme order. */
   cells(stage: StageKey): readonly string[];
   visibility(profileId: string): SourceVisibility;
+  /** Row CM-33: the section 7.1 formats switched on for the profile (`game.match-shape`); none when absent. */
+  games?(profileId: string): GameFormats;
   voice(): boolean;
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
@@ -113,7 +115,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index),
+        index: surfaceIndex(index, deps.games?.(profileId)),
         states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
         today,
         voice: deps.voice(),

@@ -31,9 +31,13 @@ const lateDays = (sim: Sim) => sim.days.filter((d) => d.day >= 29);
 const series = (sim: Sim, key: 'pool' | 'left' | 'answered') => `${key} by day: ${sim.days.map((d) => d[key]).join(' ')}`;
 const median = (values: readonly number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] as number;
 
-/** Pins of what the S-a readings cost (measured on this build: opening pool at most 71, review-first on 26-27 of days 30-60, a median of 55-57 answers a day). */
+/**
+ * Pins of what the S-a readings cost (measured on this build: opening pool at most 71, review-first on 26-27 of days
+ * 30-60, a median of 55-57 answers a day). Row CM-33's Stage 1 addition (one more quest a day before Stage 2, asking six
+ * letters again) moves seed 4 to review-first on 29 of days 30-60, so that pin is 29 (it was 28).
+ */
 const OPENING_POOL_MAX = 80;
-const REVIEW_FIRST_LATE_DAYS_MAX = 28;
+const REVIEW_FIRST_LATE_DAYS_MAX = 29;
 const ANSWERED_MEDIAN_MAX = 60;
 
 describe('S-a: one quest a day, the Daily Review every day, Keep going on days the pool is over 20', () => {

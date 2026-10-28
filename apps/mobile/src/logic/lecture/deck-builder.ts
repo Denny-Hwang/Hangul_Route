@@ -29,6 +29,7 @@ import {
 import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
 import { validRounds } from '../listen-pick';
+import { shapeListenRounds } from './format-rounds';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
 import { buildRound, withoutMark, type SbParticle } from '../sentence-builder/progression';
@@ -592,6 +593,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       case 'write-frame':
         writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
+        return;
+      // The Stage 1 additions' Match Shape (F-CURR-002 section 8, row CM-33): the existing listen question slides, no new slide kind.
+      case 'match-shape':
+        listenStep(path, ref, shapeListenRounds(scope));
         return;
       default:
         skip(ref, 'unsupported-step');
