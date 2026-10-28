@@ -70,7 +70,7 @@
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 곳으로 간다는 틀",
       "steps.s2.discover.pages.0.items.0.examples.hakgyoe-gayo.gloss": "공부하는 곳으로 간다는 뜻",
       "steps.s2.discover.pages.0.items.0.examples.badae-gayo.gloss": "넓고 짠 물이 있는 곳으로 간다는 뜻",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "사는 곳으로 온다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "가족이 사는 곳으로 온다는 뜻",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "가깝게 지내는 사람이 온다는 뜻"
     },
     "minigame:s3-life-q1-practice": {
@@ -149,7 +149,7 @@
     "minigame:s3-life-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가깝게 지내는 사람이 공부하는 곳으로 간다는 뜻",
       "orderIt.rounds.r1.distractors.wayo.gloss": "말하는 사람이나 마음에 둔 사람 쪽으로 움직이다",
-      "orderIt.rounds.r2.sentence.gloss": "어머니가 사는 곳으로 온다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
       "orderIt.rounds.r2.distractors.gayo.gloss": "여기에서 다른 곳으로 움직이다",
       "orderIt.rounds.r3.sentence.gloss": "아버지가 넓고 짠 물이 있는 곳으로 간다는 뜻",
       "orderIt.rounds.r3.distractors.sane.gloss": "높이 솟은 땅으로",
@@ -168,12 +168,12 @@
       "picWord.boards.2.pairs.p1.word.gloss": "어머니가 넓고 짠 물이 있는 곳으로 간다는 뜻",
       "picWord.boards.2.pairs.p2.word.gloss": "아버지가 높이 솟은 땅으로 간다는 뜻",
       "picWord.boards.2.pairs.p3.word.gloss": "가깝게 지내는 사람이 공부하는 곳으로 간다는 뜻",
-      "picWord.boards.3.pairs.p1.word.gloss": "가깝게 지내는 사람이 사는 곳으로 온다는 뜻",
-      "picWord.boards.3.pairs.p2.word.gloss": "어머니가 사는 곳으로 온다는 뜻",
-      "picWord.boards.3.pairs.p3.word.gloss": "나보다 어린 형제자매가 사는 곳으로 온다는 뜻"
+      "picWord.boards.3.pairs.p1.word.gloss": "가깝게 지내는 사람이 우리 가족이 사는 곳으로 온다는 뜻",
+      "picWord.boards.3.pairs.p2.word.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
+      "picWord.boards.3.pairs.p3.word.gloss": "나보다 어린 형제자매가 가족이 사는 곳으로 온다는 뜻"
     },
     "minigame:s3-life-q3-check": {
-      "clozePick.rounds.c1.sentence.gloss": "어머니가 사는 곳으로 온다는 뜻",
+      "clozePick.rounds.c1.sentence.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
       "clozePick.rounds.c1.tiles.wayo.gloss": "말하는 사람이나 마음에 둔 사람 쪽으로 움직이다",
       "clozePick.rounds.c1.tiles.gayo.gloss": "여기에서 다른 곳으로 움직이다",
       "clozePick.rounds.c1.tiles.masyeoyo.gloss": "물 같은 것을 목으로 넘기다",

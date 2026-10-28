@@ -102,3 +102,34 @@ describe('askedKo reads a Cloze Pick round as the review-item build does (row CM
     expect(askedKo([round('word', '___을 먹어요.', 7)])).toEqual([]);
   });
 });
+
+describe('a Stage 3 Check meaning in the Korean UI never shows the answer (row CM-3A S3, review fix)', () => {
+  type Round = { id: string; sentence: { ko: string }; gapKind?: string; tiles?: Array<{ ko: string }>; answerIndex?: number; particle?: { tile: number } };
+  const theme = (rel: string): string => rel.replace(/^.*\/([a-z]+)\.json$/, '$1');
+  const words = (ko: string): string[] => ko.replace(/[.,!?]/g, '').split(' ').filter((w) => w !== '' && !w.includes('___'));
+
+  it('a Cloze Pick or Sentence Builder Check meaning in ko holds neither the built sentence\'s words nor the filled gap', () => {
+    let read = 0;
+    for (const [rel, body] of cells) {
+      const overlay = JSON.parse(readFileSync(join(REPO_ROOT, `content/i18n/ko/lessons-stage3-${theme(rel)}.json`), 'utf8')) as { entries: Record<string, Record<string, string>> };
+      for (const quest of (body as { quests: Array<LessonBodyQuest & { steps: Array<{ kind: string; minigameRef?: string }> }> }).quests) {
+        const ref = quest.steps.find((s) => s.kind === 'check')?.minigameRef;
+        const scope = quest.scopes.find((s) => s.ref === ref) as { kind: string; rounds?: Round[] } | undefined;
+        if (ref === undefined || scope === undefined || (scope.kind !== 'cloze-pick' && scope.kind !== 'order-it')) continue;
+        for (const round of scope.rounds ?? []) {
+          const field = scope.kind === 'cloze-pick' ? 'clozePick' : 'orderIt';
+          const gloss = overlay.entries[ref]?.[`${field}.rounds.${round.id}.sentence.gloss`];
+          expect(gloss, `${ref} ${round.id}`).toBeDefined();
+          if (gloss === undefined) continue;
+          read += 1;
+          const answer = round.tiles?.[round.answerIndex ?? -1]?.ko ?? '';
+          const filled = scope.kind === 'cloze-pick' ? words(round.sentence.ko.replace('___', answer)) : words(round.sentence.ko);
+          // A word gap's answer tile, and every word of the sentence the learner builds or completes.
+          const shown = scope.kind === 'cloze-pick' && round.gapKind !== 'particle' ? [answer, ...filled] : filled;
+          for (const w of shown) expect(gloss.includes(w), `${ref} ${round.id}: "${gloss}" shows ${w}`).toBe(false);
+        }
+      }
+    }
+    expect(read).toBeGreaterThanOrEqual(20);
+  });
+});

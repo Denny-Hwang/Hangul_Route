@@ -53,9 +53,9 @@
       "listenPick.rounds.r4.prompt": "저는 엄마와 할머니가 있어요."
     },
     "minigame:s3-rites-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "저는 할아버지와 할머니가 있어요.",
+      "orderIt.rounds.c1.sentence.gloss": "나에게 부모님의 아버지와 어머니가 계신다는 뜻",
       "orderIt.rounds.c1.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
-      "orderIt.rounds.c2.sentence.gloss": "사과와 송편을 먹어요.",
+      "orderIt.rounds.c2.sentence.gloss": "둥글고 아삭한 과일과 반달 모양으로 빚은 추석 떡, 둘 다 먹는다는 뜻",
       "orderIt.rounds.c2.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
       "orderIt.rounds.c2.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시"
     },
@@ -165,7 +165,7 @@
       "clozePick.rounds.c1.tiles.bwayo.gloss": "눈으로 바라보다",
       "clozePick.rounds.c1.tiles.meogeoyo.gloss": "음식을 입에 넣어 삼키다",
       "clozePick.rounds.c1.tiles.haeyo.gloss": "어떤 일을 하다",
-      "clozePick.rounds.c2.sentence.gloss": "새해에 웃어른께 절을 드려요.",
+      "clozePick.rounds.c2.sentence.gloss": "새해 첫날 웃어른께 큰절로 인사드린다는 뜻",
       "clozePick.rounds.c2.tiles.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
       "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
       "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시"
