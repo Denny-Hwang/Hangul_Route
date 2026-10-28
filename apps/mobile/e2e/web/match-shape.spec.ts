@@ -103,7 +103,7 @@ async function playOrigin(page: Page, round: Origin, checks?: (page: Page) => Pr
   await page.getByTestId('match-shape-continue').click();
 }
 
-async function playPair(page: Page, round: Pair, checks?: (page: Page) => Promise<void>): Promise<void> {
+async function playPair(page: Page, round: Pair, checks?: (page: Page) => Promise<void>, last = false): Promise<void> {
   const shown = page.getByTestId('match-shape-heading').filter({ visible: true });
   await expect(shown).toBeVisible();
   if (checks) await checks(page);
@@ -117,16 +117,21 @@ async function playPair(page: Page, round: Pair, checks?: (page: Page) => Promis
     const tile = page.getByTestId(`match-shape-tile-${i}`);
     await tapUntil(tile, async () => /, found$/.test((await tile.getAttribute('aria-label', { timeout: 1_000 }).catch(() => null)) ?? ''));
   }
-  // The round moves on by itself once every copy is found: the next round's heading, or (after the last round) no
-  // visible heading at all (a finished step's screen can stay mounted, hidden, under the next one).
-  await expect.poll(async () => (await shown.count()) === 0 || (await shown.first().getAttribute('aria-label')) !== heading).toBe(true);
+  // The round moves on by itself once every copy is found: the next round's heading. After a step's last round the
+  // quest moves to its next step, whose screen can sit over the finished one while it stays mounted, so the caller
+  // waits for that next step's own controls instead.
+  if (last) return;
+  // Read every heading in one pass (no auto-wait): a heading that leaves between a count and a read never stalls it.
+  await expect
+    .poll(async () => (await shown.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))).every((label) => label !== heading))
+    .toBe(true);
 }
 
 async function playStep(page: Page, rounds: ReadonlyArray<Origin | Pair>, checks: Record<number, (page: Page) => Promise<void>> = {}): Promise<void> {
   await expect(page.getByTestId('match-shape-game')).toBeVisible();
   for (const [i, round] of rounds.entries()) {
     if (round.kind === 'origin') await playOrigin(page, round, checks[i]);
-    else await playPair(page, round, checks[i]);
+    else await playPair(page, round, checks[i], i === rounds.length - 1);
   }
 }
 
