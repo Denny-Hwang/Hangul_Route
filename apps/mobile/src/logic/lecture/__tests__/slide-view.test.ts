@@ -32,6 +32,7 @@ import {
   vocabArt,
   writeView,
 } from '../slide-view';
+import { rolePlaySlides } from './role-play-slides';
 
 /**
  * What the PR 7 slides show at each build (F-TCH-004 section 3.4; design/screens/presenter/
@@ -190,6 +191,20 @@ describe('activityTimerMs', () => {
     expect(activity.builds).toEqual(['prompt']);
     expect(activityTimerMs(activity)).toBe(180_000);
     expect(activityTimerMs({ ...activity, minutes: 1 })).toBe(60_000);
+  });
+});
+
+describe('slideSound: a Role Play turn (F-CURR-002 section 8, row CM-35)', () => {
+  it("plays the partner's line at the sentence rate, at every build, never a reply", () => {
+    for (const turn of rolePlaySlides()) {
+      for (let reveal = 0; reveal < turn.builds.length; reveal++) expect(slideSound(turn, reveal)).toEqual({ spoken: turn.line.spoken, kind: 'sentence' });
+    }
+  });
+
+  it('builds the question, then the answer, in both romanization modes (the replies keep their romanization for the answer with tap)', () => {
+    const [turn] = rolePlaySlides();
+    expect(buildsFor(turn!, { romanization: 'always', strokeGuide: true })).toEqual(['question', 'answer']);
+    expect(buildsFor(turn!, { romanization: 'tap', strokeGuide: true })).toEqual(['question', 'answer']);
   });
 });
 

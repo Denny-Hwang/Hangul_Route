@@ -225,3 +225,9 @@ export function stageButtonSize(unit: number, hero: number, floor: number = hero
 export function units(unit: number, n: number): number {
   return Math.round(unit * n);
 }
+/**
+ * The Role Play slide (F-CURR-002 section 8, row CM-35; design/screens/presenter/slide-role-play.md): the chat
+ * column's share of the content width (the replies take the rest), and a chat bubble's share of that column.
+ */
+export const ROLE_PLAY_CHAT_SHARE = '44%';
+export const ROLE_PLAY_BUBBLE_SHARE = '88%';

@@ -100,8 +100,8 @@ export function slideLocale(input: { deck: LectureDeck | null; device: UiLocale;
 
 /**
  * Slide kinds the presenter draws: the shell's (PR 6), the teaching slides (PR 7), the quizzes (PR 9),
- * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1), the sentence builds (LV-S3) and
- * the write-together slides (LV-S4).
+ * the story slides (PR 11), the reading slides (AMENDMENTS-LECTURE-V2 LV-S1), the sentence builds (LV-S3),
+ * the write-together slides (LV-S4) and the Role Play turns (F-CURR-002 section 8, row CM-35).
  */
 export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'title',
@@ -120,6 +120,7 @@ export const SHELL_SLIDE_KINDS: ReadonlySet<SlideKind> = new Set<SlideKind>([
   'realia',
   'sentence-build',
   'write-together',
+  'role-play',
 ]);
 
 /** One line of the start screen's "not shown as slides" list: the block that holds it and why. */
@@ -326,7 +327,8 @@ export function barOverlap(barHeight: number, insetBottom: number, offsetY: numb
  * `reveal`, a build is named by its first question. A write-together slide (LV-S4) is named by what its
  * first build shows: a type round by its prompt and cue (`typeCue`), a trace round by its Korean word, a
  * frame by its line (`names.frame`), the name round by its own (`names.ownName`); never by an answer.
- * Each step forward on it then says what that build showed (`writeMove`).
+ * Each step forward on it then says what that build showed (`writeMove`). A Role Play turn (F-CURR-002 section 8) is
+ * named by its question (`names.reply`) and the partner's line, never by a reply.
  */
 export function slideDetail(
   slide: Slide,
@@ -374,6 +376,9 @@ export function slideDetail(
     }
     case 'read-along':
       return slide.lines.map((l) => `${l.speaker}, ${l.ko}, ${l.romanization}, ${l.gloss}`).join(', ');
+    case 'role-play':
+      // The question, then the partner's line as a read-along line is named; never a reply, which would be the answer.
+      return [names?.reply ?? '', `${slide.partner}, ${slide.line.ko}, ${slide.line.romanization}, ${slide.line.gloss}`].filter((w) => w !== '').join(', ');
     case 'realia':
       // The sheet's own accessible text (F-CURR-001 §3.14), then each key word as a vocab slide names it.
       return [slide.sheet.alt, ...slide.keyWords.map((w) => `${w.ko}, ${w.romanization}, ${w.gloss}`)].join(', ');
