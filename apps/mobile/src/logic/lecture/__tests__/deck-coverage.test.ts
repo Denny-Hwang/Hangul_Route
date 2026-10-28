@@ -359,7 +359,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
       }
     }
     // Section 1: type-hangul 21 steps holding 73 rounds, write-frame 7 holding 21, trace-word 5 holding 20; one write-frame round is the name round.
-    expect({ rounds, ...counts }).toEqual({ rounds: 114, type: 73, trace: 20, frame: 20, 'own-name': 1 });
+    // Row CM-3A S7: five Stage 7 Checks are Write Frame now, 2 rounds each.
+    expect({ rounds, ...counts }).toEqual({ rounds: 124, type: 73, trace: 20, frame: 30, 'own-name': 1 });
   });
 
   it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {
@@ -385,8 +386,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
         }
       }
     }
-    // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30.
-    expect({ rounds, built }).toEqual({ rounds: 135, built: 135 });
+    // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S7 keeps 5 of those
+    // Checks as Sentence Builder (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation).
+    expect({ rounds, built }).toEqual({ rounds: 115, built: 115 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {

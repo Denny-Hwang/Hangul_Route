@@ -2400,7 +2400,8 @@ describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 an
 
   it('every shipped order-it round, the Stage 7 Checks included, becomes a sentence-build slide with no skip', () => {
     const shipped = lectureBundle('en');
-    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
+    // Row CM-3A S7: Stage 7 life q3 and letters q2 keep a Sentence Builder Check; life q2 builds in its Practice.
+    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q3', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
     for (const id of ids) {
       const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
       const quest = shipped.questById(id)!;

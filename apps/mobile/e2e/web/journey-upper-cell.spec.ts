@@ -65,16 +65,6 @@ async function typeHangul(page: Page, n: number, total: number, text: string): P
   await expect(page.getByText('You typed it!')).toBeVisible();
 }
 
-/** Sentence Builder Check: place the tiles of the round in order, by accessible name. */
-async function placeTiles(page: Page, tiles: readonly string[]): Promise<void> {
-  const tray = page.getByTestId('sentence-builder-tray');
-  await expect(tray).toBeVisible({ timeout: 5_000 });
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
 /** Type Hangul: tap the keys for each word, then Done; a typed word moves on by itself. */
 async function typeWords(page: Page, words: readonly string[]): Promise<void> {
   for (const [i, word] of words.entries()) {
@@ -123,37 +113,20 @@ async function traceWord(page: Page, word: string, romanization: string): Promis
   }
 }
 
-/** Sentence Builder as the Check (S7-4): no round counter; the round's gloss shows, then its tiles by accessible name in order. */
-async function buildCheckRound(page: Page, gloss: string, tiles: readonly string[]): Promise<void> {
-  await expect(page.getByTestId('sentence-builder-gloss')).toHaveText(gloss, { timeout: 5_000 });
-  const tray = page.getByTestId('sentence-builder-tray');
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
-/** Sentence Builder as the Stage 7 Check (S7-5): tap one round's tiles in order, past the touch window. */
-async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<void> {
-  const tray = page.getByTestId('sentence-builder-tray');
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await expect(tray.getByRole('button', { name, exact: true })).toBeVisible({ timeout: 5_000 });
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
-/** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
-async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+/**
+ * A Stage 7 Cloze Pick Check (F-CURR-002 row CM-3A S7). `game.cloze-pick` ships at built-in pct 0, so the release
+ * build plays its Listen & Pick fallback in the text prompt mode (the sentence with its gap and its meaning, the same
+ * tiles): tap the tile that fits each round, by its tile id (`<round>:t<index>`), a beat apart.
+ */
+async function pickClozeCheck(page: Page, answers: ReadonlyArray<readonly [round: string, tile: number]>, screenshot?: string): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
-  for (const tiles of rounds) {
-    const tray = page.getByTestId('sentence-builder-tray');
-    for (const name of tiles) {
-      await page.waitForTimeout(120);
-      await tray.getByRole('button', { name, exact: true }).click();
-    }
-    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
-    await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  for (const [i, [round, tile]] of answers.entries()) {
+    await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible({ timeout: 5_000 });
+    const option = page.getByTestId(`listen-pick-option-${round}:t${tile}`);
+    await expect(option).toBeVisible({ timeout: 5_000 });
+    if (i === 0 && screenshot !== undefined) await shot(page, screenshot);
+    await page.waitForTimeout(120);
+    await option.click();
   }
 }
 
@@ -911,7 +884,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
-  // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
+  // on), Type Hangul with the cast name 호야 (이름 is a Dictation round, a see round with its switch off), and the
+  // Cloze Pick Check of row CM-3A S7 (이건 ___이에요.).
   'episode:stage7-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -926,10 +900,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeAnswer(page, '이름');
       await typeAnswer(page, '한글');
       await typeAnswer(page, '이건 이름이에요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      await placeTiles(page, ['이건, igeon', '이름이에요, ireumieyo']);
-      await expect(page.getByTestId('sentence-builder-gloss')).toHaveText('This is Hangul.', { timeout: 5_000 });
-      await placeTiles(page, ['이건, igeon', '한글이에요, hangeurieyo']);
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'write-your-name-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -939,7 +910,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
-  // learner's own way past it), Type Hangul on the in-app keyboard, the Sentence Builder Check.
+  // learner's own way past it), Type Hangul on the in-app keyboard (아침 and 저녁 are Dictation rounds, see rounds
+  // with their switch off), and the Cloze Pick Check of row CM-3A S7 (___에 밥을 먹어요.).
   'episode:stage7-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -958,20 +930,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeHangul(page, 2, 4, '저녁');
       await typeHangul(page, 3, 4, '점심에');
       await typeHangul(page, 4, 4, '아침에 밥을 먹어요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      const tray = page.getByTestId('sentence-builder-tray');
-      await expect(tray).toBeVisible({ timeout: 5_000 });
-      await shot(page, 'my-day-q1-check-320');
-      for (const tiles of [
-        ['아침에, achime', '밥을, babeul', '먹어요, meogeoyo'],
-        ['점심에, jeomsime', '밥을, babeul', '먹어요, meogeoyo'],
-      ]) {
-        await expect(tray.getByRole('button', { name: tiles[0], exact: true })).toBeVisible({ timeout: 5_000 });
-        for (const name of tiles) {
-          await page.waitForTimeout(120);
-          await tray.getByRole('button', { name, exact: true }).click();
-        }
-      }
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'my-day-q1-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1002,10 +961,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeRound(page, 2, 4, '봤어요');
       await typeRound(page, 3, 4, '만들었어요');
       await typeRound(page, 4, 4, '떡국');
-      await buildCheck(page, [
-        ['송편을, songpyeoneul', '먹었어요, meogeosseoyo'],
-        ['보름달을, boreumdareul', '봤어요, bwasseoyo'],
-      ]);
+      // The Cloze Pick Check of row CM-3A S7: the past verb that fits each sentence.
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'my-holiday-memory-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1014,7 +971,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Holidays & Traditions: My Holiday Memory\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
+  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, and the Cloze Pick Check of
+  // row CM-3A S7 with a particle gap (고양이___ takes 가, 곰___ takes 이).
   'episode:stage7-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -1034,10 +992,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeRound(page, 3, 4, '곰이 좋아요');
       await shot(page, 'favorite-animal-q1-type-320');
       await typeRound(page, 4, 4, '새가 좋아요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      // Check round 1 is a particle round (the noun is given, 가 is picked); round 2 builds the sentence.
-      await buildCheckRound(page, 'I like cats.', ['가, ga']);
-      await buildCheckRound(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
+      await pickClozeCheck(page, [['c1', 1], ['c2', 1]], 'favorite-animal-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1068,10 +1023,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await build(page, 1, 3, ['를, reul']);
       await build(page, 2, 3, ['꽃을, kkocheul', '그려요, geuryeoyo']);
       await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
-      // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      await buildCheckTiles(page, ['을, eul']);
-      await buildCheckTiles(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      // The Stage 7 Check (row CM-3A S7) is Cloze Pick: 을 after a final consonant, then the verb that fits.
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'make-share-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
