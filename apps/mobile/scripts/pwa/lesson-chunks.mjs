@@ -261,6 +261,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-35: the Role Play game and the fixture build's host screen
+  // (`src/screens/minigames/role-play/role-play-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/role-play/role-play-entry.tsx`).
+  Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
 ]);
 
 /**
