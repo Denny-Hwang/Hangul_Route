@@ -80,7 +80,10 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // so a config that arrives mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond
   // on the same turns. A role-play step waits for that read (a cold start reads off before it, which would freeze off).
   const rolePlayOn = useFrozenCurrFlag('game.role-play');
-  const waitsForSwitch = rolePlayOn === null && ref !== undefined && scopeFor(ref)?.kind === 'role-play';
+  const rolePlayStep = ref !== undefined && scopeFor(ref)?.kind === 'role-play';
+  const waitsForSwitch = rolePlayOn === null && rolePlayStep;
+  // Only a role-play step's scope depends on the switch, so every other game keeps its rounds when the read lands.
+  const playsRolePlay = rolePlayStep && rolePlayOn === true;
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const scope = useMemo(() => {
@@ -88,8 +91,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     const localized = source && ref ? localizeScope(source, ref, locale) : source;
-    return localized && playedScope(localized, rolePlayOn === true);
-  }, [ref, locale, questId, stepIndex, rolePlayOn]);
+    return localized && playedScope(localized, playsRolePlay);
+  }, [ref, locale, questId, stepIndex, playsRolePlay]);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
