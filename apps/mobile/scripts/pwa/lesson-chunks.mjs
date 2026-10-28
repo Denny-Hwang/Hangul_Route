@@ -98,11 +98,15 @@ export const PRECACHE_BUDGET = Object.freeze({
   // beside its hooks and one (content/stories.ts) reads the generated story index as a namespace
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
-  // the app-host build 4,742,847 B. That line was the release measurement plus a 7,309 B rounding margin (4,750,000 B).
-  // F-CURR-002 row CM-32 (Syllable Build and the Block Sprint; their screens are the precached syllable-build-chunk):
-  // 4,756,366 B raw / 1,267,623 B gzip on main e31bc3b33 (4,749,283 B) plus CM-32, +7,083 B that cannot leave the start
-  // bundle (the round schema the content parser needs, the entry, the route, the two offers' slots, the English
-  // strings), so the line is 4,760,000 B since CM-32: that measurement plus a 3,634 B margin.
+  // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
+  // CM-23c (Stages 6-7 upper-cell cards, the five legendary cards and their album sets, #845) on main e31bc3b33
+  // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
+  // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
+  // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
+  // F-CURR-002 row CM-32 (Syllable Build and the Block Sprint; their screens are the precached syllable-build-chunk) adds
+  // about 7,100 B that cannot leave the start bundle (the round schema the content parser needs, the entry, the route,
+  // the two offers' slots, the English strings): 4,756,366 B raw on main e31bc3b33 before CM-23c; see the CM-32 decision
+  // record for the measurement on this main.
   startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at

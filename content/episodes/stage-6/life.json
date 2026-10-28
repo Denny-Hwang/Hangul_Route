@@ -10,7 +10,7 @@
   "pillarTags": [
     "B2"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:yeogiyo"],
   "quests": [
     {
       "id": "quest:stage6-life-q1",
