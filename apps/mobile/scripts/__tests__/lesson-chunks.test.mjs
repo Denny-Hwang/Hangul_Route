@@ -181,6 +181,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
       { name: 'story-order-chunk', marker: 'screen-chunk:story-order' },
       { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
+      { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
     ]);
   });
 
@@ -213,6 +214,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-34: Story Order's chunk, reached only through the step's literal import().
     expect(read('src/screens/minigames/story-order/story-order-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[6].marker}';`);
     expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./story-order-chunk')");
+    // Row CM-31: the dictation chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
+    expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -280,6 +284,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
       'story-order-chunk has no web bundle: the chunk is missing from the build',
       'role-play-chunk has no web bundle: the chunk is missing from the build',
+      'dictation-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -441,6 +446,8 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeLessThan(10_000);
+    // CM-31 (Dictation, #850) merged onto main 524961dae measures 4,757,612 B: under the line, which stays.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_757_612).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
