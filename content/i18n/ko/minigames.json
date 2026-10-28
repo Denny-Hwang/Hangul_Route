@@ -154,6 +154,26 @@
       "picWord.boards.0.pairs.cheongja.word.gloss": "푸른빛이 도는 한국의 옛 도자기",
       "picWord.boards.0.pairs.but.word.gloss": "먹물을 묻혀 글씨를 쓰는 도구",
       "picWord.boards.0.pairs.jongijeopgi.word.gloss": "네모난 한 장으로 학이나 배 모양을 만드는 놀이"
+    },
+    "minigame:s1-crafts-q4-play": {
+      "matchShape.rounds.ms-origin-nieun.note": "혀가 윗잇몸에 닿아요.",
+      "matchShape.rounds.ms-origin-giyeok.note": "혀 뒤쪽이 입천장 뒤쪽에 닿아요.",
+      "matchShape.rounds.ms-pair-bieup.diffNote": "{ko:ㅂ}은 양옆이 길게 서 있어요. {ko:ㅍ}은 위아래에 긴 줄이 있고 납작하게 누워 있어요.",
+      "matchShape.rounds.ms-origin-mieum.note": "입술을 다물어요. 입의 모양이에요.",
+      "matchShape.rounds.ms-origin-siot.note": "이의 모양이에요.",
+      "matchShape.rounds.ms-origin-ieung.note": "목구멍의 모양이에요."
+    },
+    "minigame:s1-crafts-q4-apply": {
+      "matchShape.rounds.ms-origin-eu.note": "땅처럼 평평해요.",
+      "matchShape.rounds.ms-origin-i.note": "서 있는 사람처럼 곧아요.",
+      "matchShape.rounds.ms-pair-eo.diffNote": "{ko:ㅓ}: 긴 세로줄에서 짧은 획이 왼쪽으로 나와요. {ko:ㅗ}: 납작한 가로줄에서 짧은 획이 위로 나와요.",
+      "matchShape.rounds.ms-origin-a.note": "서 있는 사람의 오른쪽에 하늘을 본뜬 둥근 점이 있어요.",
+      "matchShape.rounds.ms-pair-a.diffNote": "{ko:ㅏ}: 짧은 획이 오른쪽을 가리켜요. {ko:ㅓ}: 짧은 획이 왼쪽을 가리켜요.",
+      "matchShape.rounds.ms-pair-rieul.diffNote": "{ko:ㄹ}은 가로줄 세 개가 지그재그로 이어져요. {ko:ㄷ}은 가로줄이 두 개이고 지그재그가 없어요."
+    },
+    "minigame:s1-crafts-q4-check": {
+      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "글자 pieup",
+      "listenPick.rounds.lp-sym-jamo-o.prompt": "글자 o"
     }
   }
 }

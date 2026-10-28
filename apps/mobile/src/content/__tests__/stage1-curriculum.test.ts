@@ -32,8 +32,14 @@ import { questsAll } from '../quests';
  */
 
 const hasDiscover = (quest: Quest): boolean => quest.steps.some((s) => s.kind === 'discover');
-const REBUILT: readonly Quest[] = STAGE1_QUESTS.filter(hasDiscover);
-const ALL_REBUILT = STAGE1_QUESTS.length === 15 && REBUILT.length === 15;
+/**
+ * The 15 quests of F-QUEST-002. The Stage 1 additions of F-CURR-002 section 5.2 (row CM-33, Crafts quest 4, letter shapes)
+ * come after them, teach no new symbol and bypass these rules; `stage1-additions.test.ts` holds them to their own.
+ */
+const STAGE1_ADDITIONS: ReadonlySet<string> = new Set(['quest:stage1-crafts-q4']);
+const BASE: readonly Quest[] = STAGE1_QUESTS.filter((q) => !STAGE1_ADDITIONS.has(q.id));
+const REBUILT: readonly Quest[] = BASE.filter(hasDiscover);
+const ALL_REBUILT = BASE.length === 15 && REBUILT.length === 15;
 
 const STEP_ORDER: readonly QuestStepKind[] = ['intro', 'discover', 'practice', 'apply', 'check', 'reward'];
 const ROUNDS: Partial<Record<QuestStepKind, number>> = { practice: 6, apply: 4, check: 2 };
@@ -196,8 +202,10 @@ describe('the rebuilt Stage 1 quests', () => {
       'quest:stage1-crafts-q2',
       'quest:stage1-crafts-q3',
     ]);
-    expect(STAGE1_QUESTS).toEqual(REBUILT);
+    expect(BASE).toEqual(REBUILT);
     expect(ALL_REBUILT).toBe(true);
+    // The additions follow quest 15 in cursor order.
+    expect(STAGE1_QUESTS.slice(15).map((q) => q.id)).toEqual([...STAGE1_ADDITIONS]);
   });
 
   it('teaches the symbols of the spec quest list, in page order', () => {
@@ -362,8 +370,8 @@ describe('the rebuilt Stage 1 quests', () => {
     }
   });
 
-  it('gives an episode whose quests are all rebuilt the sum of their minutes (section 3.6: letters 15)', () => {
-    const rebuilt = new Set(REBUILT.map((q) => q.id));
+  it('gives an episode whose quests are all rebuilt the sum of their minutes (section 3.6: letters 15; crafts 16 with the CM-33 addition)', () => {
+    const rebuilt = new Set([...REBUILT.map((q) => q.id), ...STAGE1_ADDITIONS]);
     const done = episodesAll.filter((e) => e.stage === 'stage1' && e.questIds.length > 0 && e.questIds.every((id) => rebuilt.has(id)));
     expect(done.map((e) => e.id)).toEqual(expect.arrayContaining(['episode:stage1-letters', 'episode:stage1-life', 'episode:stage1-rites']));
     for (const episode of done) {
@@ -376,12 +384,14 @@ describe('the rebuilt Stage 1 quests', () => {
     expect(episodesAll.find((e) => e.id === 'episode:stage1-life')?.estimatedMinutes).toBe(12);
     expect(episodesAll.find((e) => e.id === 'episode:stage1-rites')?.estimatedMinutes).toBe(14);
     expect(episodesAll.find((e) => e.id === 'episode:stage1-nature')?.estimatedMinutes).toBe(12);
-    expect(episodesAll.find((e) => e.id === 'episode:stage1-crafts')?.estimatedMinutes).toBe(12);
+    // F-CURR-002 row CM-33: 12, and 4 for the letter-shapes quest.
+    expect(episodesAll.find((e) => e.id === 'episode:stage1-crafts')?.estimatedMinutes).toBe(16);
   });
 
-  it('takes Stage 1 to 15 quests and about 65 minutes (section 3.6 symbol accounting)', () => {
+  it('takes Stage 1 to 15 quests and about 65 minutes (section 3.6 symbol accounting), and Crafts to 4 with the addition, last on the route', () => {
     const stage1 = episodesAll.filter((e) => e.stage === 'stage1' && (e.placement ?? 'grid') === 'grid');
-    expect(stage1.map((e) => e.questIds.length)).toEqual([3, 3, 3, 3, 3]);
+    expect(stage1.map((e) => e.questIds.filter((id) => !STAGE1_ADDITIONS.has(id)).length)).toEqual([3, 3, 3, 3, 3]);
+    expect(stage1[4]!.questIds.slice(3)).toEqual([...STAGE1_ADDITIONS]);
     expect(REBUILT.reduce((n, q) => n + q.estimatedMinutes, 0)).toBe(65);
   });
 });
@@ -413,7 +423,8 @@ describe('the Nature and Crafts quests (Q-8)', () => {
     const nature = episodesAll.find((e) => e.id === 'episode:stage1-nature')!;
     const crafts = episodesAll.find((e) => e.id === 'episode:stage1-crafts')!;
     expect(nature.questIds).toEqual(['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']);
-    expect(crafts.questIds).toEqual(['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']);
+    // F-CURR-002 row CM-33 appends the letter-shapes quest, which carries no card of its own.
+    expect(crafts.questIds).toEqual(['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4']);
     const extras = (episode: typeof nature): string[] => {
       const questCards = new Set(episode.questIds.map((id) => questsAll.find((q) => q.id === id)?.rewardCardId));
       return episode.rewardCardIds.filter((id) => !questCards.has(id)).sort();

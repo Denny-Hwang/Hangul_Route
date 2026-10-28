@@ -154,6 +154,26 @@
       "picWord.boards.0.pairs.cheongja.word.gloss": "cerámica celadón",
       "picWord.boards.0.pairs.but.word.gloss": "pincel",
       "picWord.boards.0.pairs.jongijeopgi.word.gloss": "plegado de papel"
+    },
+    "minigame:s1-crafts-q4-play": {
+      "matchShape.rounds.ms-origin-nieun.note": "La lengua toca la encía de arriba.",
+      "matchShape.rounds.ms-origin-giyeok.note": "La parte de atrás de la lengua toca el paladar blando.",
+      "matchShape.rounds.ms-pair-bieup.diffNote": "{ko:ㅂ} está de pie, con dos lados altos. {ko:ㅍ} está acostada, con líneas largas arriba y abajo.",
+      "matchShape.rounds.ms-origin-mieum.note": "Los labios se cierran: la forma de la boca.",
+      "matchShape.rounds.ms-origin-siot.note": "La forma de un diente.",
+      "matchShape.rounds.ms-origin-ieung.note": "La forma de la garganta."
+    },
+    "minigame:s1-crafts-q4-apply": {
+      "matchShape.rounds.ms-origin-eu.note": "Plana, como la tierra.",
+      "matchShape.rounds.ms-origin-i.note": "Recta, como una persona de pie.",
+      "matchShape.rounds.ms-pair-eo.diffNote": "{ko:ㅓ}: un trazo corto sale a la izquierda de una línea alta. {ko:ㅗ}: un trazo corto sale hacia arriba de una línea plana.",
+      "matchShape.rounds.ms-origin-a.note": "Una persona de pie, con el punto redondo del cielo a la derecha.",
+      "matchShape.rounds.ms-pair-a.diffNote": "{ko:ㅏ}: el trazo corto apunta a la derecha. {ko:ㅓ}: el trazo corto apunta a la izquierda.",
+      "matchShape.rounds.ms-pair-rieul.diffNote": "{ko:ㄹ} tiene tres líneas planas unidas en zigzag. {ko:ㄷ} tiene dos líneas planas y no tiene zigzag."
+    },
+    "minigame:s1-crafts-q4-check": {
+      "listenPick.rounds.lp-sym-jamo-pieup.prompt": "la letra pieup",
+      "listenPick.rounds.lp-sym-jamo-o.prompt": "la letra o"
     }
   }
 }

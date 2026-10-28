@@ -88,9 +88,11 @@ const stage1Episodes: Episode[] = [
     titleEn: 'Yut, Kites & Paper',
     subtitleEn: 'Korean games and crafts to try.',
     hoyaIntroEn: 'Let us play yunnori. Throw the sticks!',
-    questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'],
+    // F-CURR-002 row CM-33: the Stage 1 addition (where letter shapes come from) closes the route, after all 30
+    // symbols are taught, so every letter it asks was shown first.
+    questIds: ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4'],
     rewardCardIds: ['card:yutnori', 'card:jegi', 'card:kite', 'card:top', 'card:pottery'],
-    estimatedMinutes: 12,
+    estimatedMinutes: 16,
     pillarTags: ['E1'],
     status: 'shipped',
   },

@@ -986,6 +986,8 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
     ['quest:stage1-crafts-q2', 'episode:stage1-crafts'],
     ['quest:stage1-crafts-q3', 'episode:stage1-crafts'],
+    // F-CURR-002 row CM-33: the Stage 1 addition, which carries no card of its own.
+    ['quest:stage1-crafts-q4', 'episode:stage1-crafts'],
   ];
   const STAGE1_QUEST_CARDS = [
     'card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:chuseok', 'card:sebae',
@@ -1198,8 +1200,8 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     it('accumulates over the session without repeating a card', () => {
       useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
       useProgressStore.getState().reconcileAwards('profile:a');
-      // Play & Crafts has three quests since F-QUEST-002 Q-8: all three complete the episode.
-      const crafts = ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'].map((id) => quest(id, 'episode:stage1-crafts', 1, T2));
+      // Play & Crafts has three quests since F-QUEST-002 Q-8, and four since F-CURR-002 row CM-33: all four complete the episode.
+      const crafts = ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4'].map((id) => quest(id, 'episode:stage1-crafts', 1, T2));
       const snap = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
       useProgressStore.getState().replaceSnapshot('profile:a', { ...snap, quests: [...snap.quests, ...crafts] });
       const list = useProgressStore.getState().catchUp['profile:a'] ?? [];
@@ -1286,11 +1288,13 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
 
     it('a completion by sync is a catch-up: one aggregate event, the next pass sends none', () => {
       const withTiger = snapshotWith({ cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] });
-      // Crafts q1 at 3 stars earns its quest card; q2-q3 at 1 star (F-QUEST-002 Q-8) complete the episode, whose other four cards follow.
+      // Crafts q1 at 3 stars earns its quest card; q2-q3 at 1 star (F-QUEST-002 Q-8) and q4 (F-CURR-002 row CM-33, no card of
+      // its own) complete the episode, whose other four cards follow.
       const crafts = [
         quest('quest:stage1-crafts-q1', 'episode:stage1-crafts', 3),
         quest('quest:stage1-crafts-q2', 'episode:stage1-crafts', 1),
         quest('quest:stage1-crafts-q3', 'episode:stage1-crafts', 1),
+        quest('quest:stage1-crafts-q4', 'episode:stage1-crafts', 1),
       ];
       useProgressStore.getState().replaceSnapshot('profile:a', { ...withTiger, quests: crafts });
       expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([

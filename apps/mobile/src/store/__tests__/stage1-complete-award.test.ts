@@ -71,11 +71,11 @@ describe('Stage 1 completion through the real store (F-QUEST-002 §3.8)', () => 
     useProgressStore.getState().ensure('p1');
   });
 
-  it('has the 15 quests the stage needs', () => {
-    expect(STAGE1_QUESTS).toHaveLength(15);
+  it('has the 16 quests the stage needs (the 15 and the CM-33 addition)', () => {
+    expect(STAGE1_QUESTS).toHaveLength(16);
   });
 
-  it('15 quests at mixed stars award every Stage 1 card, the stage once and the prize once; a replay adds nothing', () => {
+  it('16 quests at mixed stars award every Stage 1 card, the stage once and the prize once; a replay adds nothing', () => {
     const track = vi.fn();
     const outcomes = STAGE1_QUESTS.map(({ questId, episodeId }, i) => visit(questId, episodeId, ((i % 3) + 1) as 1 | 2 | 3, track));
 
