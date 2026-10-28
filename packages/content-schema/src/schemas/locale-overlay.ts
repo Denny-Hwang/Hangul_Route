@@ -82,6 +82,9 @@ export const OVERLAY_FIELDS = {
     'traceWord.rounds.<roundId>.word.gloss',
     'writeFrame.rounds.<roundId>.frame.gloss',
     'writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss',
+    // F-CURR-002 row CM-33: the Stage 1 additions' Match Shape lines.
+    'matchShape.rounds.<roundId>.note',
+    'matchShape.rounds.<roundId>.diffNote',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],

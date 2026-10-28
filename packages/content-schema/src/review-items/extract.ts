@@ -419,6 +419,11 @@ function stage1Scope(c: Collector, ref: string, scope: Rec, at: string): void {
     else if (id.startsWith('lp:syl:')) c.text(round.prompt, 'syl', 'round', where, { glossKey });
     else c.text(round.prompt, 'lex', 'round', where, { glossKey, picture: pictureOf(answer) });
   });
+  // F-CURR-002 row CM-33, the Stage 1 additions: a Match Shape pair round asks its target letter. An origin round
+  // teaches where a shape comes from (the learner meets the fact there), so it is no evidence about the letter.
+  arr(isRec(scope.matchShape) ? scope.matchShape.rounds : []).filter(isRec).forEach((round, ri) => {
+    if (round.shape === 'pair' && typeof round.target === 'string') c.symbol(round.target, 'round', `${at}.matchShape.rounds[${ri}]`);
+  });
 }
 
 /**
