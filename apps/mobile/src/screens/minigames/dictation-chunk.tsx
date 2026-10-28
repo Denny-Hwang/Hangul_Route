@@ -54,6 +54,9 @@ import { useAudioStore } from '../../store/audio-store';
  *   spells an option block by block with the letter names, so two options that sound the same are told apart by ear.
  */
 
+/** This chunk's marker (`SCREEN_CHUNKS` in scripts/pwa/lesson-chunks.mjs): the build checks it is a precached bundle of its own. */
+export const DICTATION_CHUNK = 'screen-chunk:dictation';
+
 export const DICTATION_AUDIO_SOURCE = 'type-hangul-hear';
 export const SPELLING_AUDIO_SOURCE = 'spelling-pick';
 

@@ -261,6 +261,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
+  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/dictation-entry.ts`).
+  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
 ]);
 
 /**
