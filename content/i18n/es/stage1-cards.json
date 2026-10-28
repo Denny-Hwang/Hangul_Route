@@ -376,6 +376,81 @@
       "title": "¿Lo hacemos juntos?",
       "blurb": "Una forma cortés de invitar a alguien a participar.",
       "fact": "Sin yo, gachi halkka es banmal, una forma de hablar entre personas muy cercanas. No eleva ni rebaja a la otra persona."
+    },
+    "card:won": {
+      "title": "Won",
+      "blurb": "Los precios de un menú terminan en won.",
+      "fact": "El won, con el símbolo ₩, es la moneda de Corea del Sur. El won de hoy se usa desde el 10 de junio de 1962."
+    },
+    "card:yeogiyo": {
+      "title": "¡Por aquí!",
+      "blurb": "Se dice en voz alta para pedir que venga quien atiende.",
+      "fact": "Para llamar a quien atiende en un restaurante o una tienda, se suele decir yeogiyo. No marca quién atiende y quién es atendido, así que va bien para ambos."
+    },
+    "card:gichapyo": {
+      "title": "Boleto de tren",
+      "blurb": "Un boleto con las estaciones y la hora del tren.",
+      "fact": "En las fiestas tradicionales, mucha gente viaja a casa de sus padres. Yeokgwiseong es al revés: los padres viajan a donde viven sus hijos e hijas."
+    },
+    "card:jeongsang": {
+      "title": "Cima",
+      "blurb": "Lo más alto de la montaña, donde termina el sendero.",
+      "fact": "En los parques nacionales de Corea, cada sendero tiene horas fijas para empezar a subir, según su distancia y el tiempo de camino."
+    },
+    "card:deom": {
+      "title": "Un poquito más",
+      "blurb": "Uno más, gratis.",
+      "fact": "Deom es un poquito más que quien vende añade gratis, además de lo que pagaste."
+    },
+    "card:ireum": {
+      "title": "Nombre",
+      "blurb": "Un nombre escrito con letras del hangul.",
+      "fact": "Los nombres de otros idiomas se escriben con las letras del hangul, así que algunos sonidos comparten letra: la f y la p comparten una, y también la l y la r."
+    },
+    "card:achim": {
+      "title": "Mañana",
+      "blurb": "El comienzo del día, cuando sale el sol.",
+      "fact": "Pon e después de una palabra de tiempo para decir cuándo: achime significa «por la mañana», como en «hago ejercicio por la mañana»."
+    },
+    "card:saengil": {
+      "title": "Cumpleaños",
+      "blurb": "Un día para compartir pastel con la familia y los amigos.",
+      "fact": "Dol es la palabra para el día en que alguien cumple un año, un año entero desde el día en que nació."
+    },
+    "card:tokki": {
+      "title": "Conejo",
+      "blurb": "Un conejo de orejas largas que salta.",
+      "fact": "El conejo tiene orejas largas, patas traseras más fuertes que las delanteras y la cola corta. Come plantas."
+    },
+    "card:bihaenggi": {
+      "title": "Avión",
+      "blurb": "Dobla el papel y deja volar el avión.",
+      "fact": "Jongijeopgi es doblar papel para darle formas como una grulla, un barco o un avión."
+    },
+    "card:hunminjeongeum": {
+      "title": "Libro del hangul",
+      "blurb": "El libro que dio a conocer las nuevas letras.",
+      "fact": "El «Hunminjeongum Manuscript» de 1446 dio a conocer las nuevas letras del rey Sejong. Se inscribió en el Registro Memoria del Mundo de la UNESCO en 1997."
+    },
+    "card:jang": {
+      "title": "Elaboración de jang",
+      "blurb": "Salsas que se hacen y se guardan con cuidado.",
+      "fact": "Los jang son salsas fermentadas, como la salsa de soya. La UNESCO inscribió «Knowledge, beliefs and practices related to jang making in the Republic of Korea» en 2024."
+    },
+    "card:hangawi": {
+      "title": "Hangawi",
+      "blurb": "Otro nombre de la fiesta de la cosecha.",
+      "fact": "Hangawi es otro nombre de Chuseok, el día quince del octavo mes lunar. El songpyeon se hace con el arroz nuevo."
+    },
+    "card:jirisan": {
+      "title": "Jirisan",
+      "blurb": "Una gran montaña, el primer parque nacional de Corea.",
+      "fact": "Jirisan fue el primer parque nacional de Corea, en 1967. Hoy Corea tiene 24 parques nacionales, y 19 de ellos son de montaña."
+    },
+    "card:ssireum": {
+      "title": "Ssireum",
+      "blurb": "Dos jugadores, dos cinturones de tela y un gran empujón.",
+      "fact": "La UNESCO inscribió «Traditional Korean wrestling (Ssirum/Ssireum)» en 2018, por una candidatura conjunta de la RPD de Corea y la República de Corea."
     }
   }
 }

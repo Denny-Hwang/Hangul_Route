@@ -65,14 +65,15 @@ const NATURAL_REPLIES: Readonly<Record<string, readonly string[]>> = {
 };
 
 describe('Hike & Ask (F-CURR-001 S6-4)', () => {
-  it('is the nature cell of Stage 6, three quests, no new cards, MAR signed off, ready (shipped at CATALOG_VERSION 24 on the compact literal, section 3.12)', () => {
+  it('is the nature cell of Stage 6, three quests, MAR signed off, ready; its one card is the album card of row CM-23 part 3 (F-CURR-002 section 7.2), on no quest (shipped at CATALOG_VERSION 24 on the compact literal, section 3.12)', () => {
     expect(cell.id).toBe('episode:stage6-nature');
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.culture.every((n) => n.verification.passes >= 3)).toBe(true);
     expect(cell.titleEn).toBe('Hike & Ask');
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage6-nature-q1', 'quest:stage6-nature-q2', 'quest:stage6-nature-q3']);
-    expect(cell.rewardCardIds).toEqual([]);
+    // F-CURR-002 row CM-23 part 3: one card per upper cell, earned by finishing the cell (no quest card).
+    expect(cell.rewardCardIds).toEqual(['card:jeongsang']);
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 

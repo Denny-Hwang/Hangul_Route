@@ -10,7 +10,7 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:gichapyo"],
   "quests": [
     {
       "id": "quest:stage6-rites-q1",
