@@ -38,6 +38,9 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
   const { target } = slide.prompt;
   const parts = checkPromptParts(slide.prompt.text, target);
   const inline = parts.some((p) => 'target' in p);
+  // A prompt that opens with its chip (a Cloze Pick sentence, row CM-30, met on shipped Checks by row CM-3A S3): the chip's
+  // Korean is taller than the heading's line, so the heading keeps room above it inside the stage's content area.
+  const leadsWithChip = parts[0] !== undefined && 'target' in parts[0];
   const targetRom = optionRomShown(romanization, revealed);
   const targetGloss = slide.prompt.glossAtAnswer !== true || revealed;
   const chip = (word: KoLine) => (
@@ -67,7 +70,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
           <Text {...KOREAN_LINE_BREAK}
             role="heading"
             testID="presenter-check-prompt"
-            style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.normal) }}
+            style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.normal), paddingTop: leadsWithChip ? units(unit, spacing.sm) : 0 }}
           >
             {parts.map((part, i) => ('target' in part ? <Fragment key={i}>{chip(part.target)}</Fragment> : <Fragment key={i}>{part.text}</Fragment>))}
           </Text>
