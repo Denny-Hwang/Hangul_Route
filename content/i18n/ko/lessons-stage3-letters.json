@@ -153,9 +153,9 @@
       "listenPick.rounds.a4.prompt": "가까이 있는 것이 물건을 넣어 메는 것이라는 뜻"
     },
     "minigame:s3-letters-q3-check": {
-      "typeHangul.rounds.d1.prompt": "한국어를 적는 문자를 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d1.prompt": "한국어를 적는 문자를 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d1.target.gloss": "한국어를 적는 문자",
-      "typeHangul.rounds.d2.prompt": "글씨 쓰는 도구를 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d2.prompt": "글씨 쓰는 도구를 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d2.target.gloss": "글씨 쓰는 도구"
     }
   }

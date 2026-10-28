@@ -151,9 +151,9 @@
       "listenPick.rounds.a4.prompt": "줄무늬 맹수가 달린다는 말"
     },
     "minigame:s3-nature-q3-check": {
-      "typeHangul.rounds.d1.prompt": "귀가 긴 동물을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d1.prompt": "귀가 긴 동물을 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d1.target.gloss": "귀가 긴 동물",
-      "typeHangul.rounds.d2.prompt": "줄무늬 맹수를 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d2.prompt": "줄무늬 맹수를 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d2.target.gloss": "줄무늬 맹수"
     }
   }

@@ -1358,7 +1358,7 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-23",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "pass 4 language (MAR, 2026-10-14): applied: 하고 as a joining particle (ko), no aspect drift in ko glosses, 'hago' marked as Korean in es, 있어요 with grandparents glossed as possession, q3 r4 now 엄마하고 아빠가, no untaught N N possessive, no q1 particle choice, 떡 role labels; rejected: 송편/떡 gloss (spec 3.4), read-to-picture Check (no schema mode).",
       "pass 5 culture (MAR, 2026-10-14): n1 and n2 re-checked against all five sources, passes 3; applied: q3 Discover title 'Things People Do', the ko q2 Hoya line no longer a flat claim, 'By custom' on n1; no stereotype, no 'all Koreans' claim, no real person, shop, brand or price; reads for any age.",
@@ -1366,7 +1366,9 @@
       "pass 4 language round 2 (MAR, 2026-10-14): applied: 있어요 tile 'have, there is', ko glosses 저는 … 있어요 (no 계세요), '윷을 던지며 놀아요', ko 해요 note and frame gloss as sentences, en 해요 note \"do\" (doer from context), caption 'Family sentences', Check r2 heard -> picture in all quests (with data); rejected: ko titles 'A하고 B' (no typed taught Korean in chrome).",
       "pass 5 culture round 2 (MAR, 2026-10-14): applied: the q3 Hoya line places sebae at Seollal, the Lunar New Year (encykorea 정의 정월 초하룻날), and the q1 family page caption no longer asks about the learner's own family; n1 and n2 text unchanged, passes 3.",
       "pass 6 translation round 2 (MAR, 2026-10-14): applied: es articles (una abuela y un abuelo), 'marca de …, tras …', '(como objeto)', capitalised haeyo note, ko 있어요 gloss, ko q1 blurb without typed 하고; rejected: {ko:} tokens in es notes (#652 exemption not on main; Hangul in es fails korean-in-ui-field).",
-      "Check rotation pass (MAR, row CM-3A S3, 2026-10-23): the Checks rotate Cloze Pick, Sentence Builder and Dictation (F-CURR-002 section 7.1); every Check has a produce round; tiles, endings and sentences are taught in the cell; Dictation words have no sound change or homophone; es and ko glosses follow the cell's overlays."
+      "Check rotation MAR (row CM-3A S3, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): the stage's 15 Checks are Cloze Pick 6, Sentence Builder 5 and Dictation 4, none above 40 in 100, no Listen & Pick; every Check is a produce round; no two adjacent quests share Practice, Apply and Check.",
+      "CM-3A S3 MAR (cont.): Language: 할아버지하고 할머니가 있어요 and 사과하고 송편을 먹어요 keep 하고 as the joining particle; 보름달을 봐요 and 세배를 해요 take 을 / 를 by the final sound; 한복 and 송편 are said as written, so they fit Dictation. Culture and facts: 세배 is the New Year's bow to elders and 송편 the half-moon rice cake of Chuseok, as in the cell's sourced notes.",
+      "CM-3A S3 MAR (cont.): Learning design: the ko Sentence Builder meanings say 와 for 하고, the cell's own Practice style, so the Korean learner still builds the 하고 sentence. Reviser: ko Dictation prompts say 써 봐요 (was 쳐 봐요). Third pass: no change."
     ]
   },
   "contentVer": 2

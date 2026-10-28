@@ -1257,11 +1257,13 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-23",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, marks, 이에요/예요 and 이/가 clean; applied: no 없어요 in scored reading, Checks repeat no apply sentence (q1 c2), ko glosses as definitions matching stage 4, one ko term each for 네 and 이에요/예요, es friend wording without gender; 저는 is an unanalysed chunk until a later 은/는 cell.",
       "Culture pass 5 (MAR): no culture claim (section 3.9); the four language notes re-checked against all nine cited NIKL and AKS pages, two or three sources each, nothing copied, n4 worded as the source's 윗사람; no real person, brand or price; no age wording; Hoya is the cast name.",
-      "Check rotation pass (MAR, row CM-3A S3, 2026-10-23): the Checks rotate Cloze Pick, Sentence Builder and Dictation (F-CURR-002 section 7.1); every Check has a produce round; tiles, endings and sentences are taught in the cell; Dictation words have no sound change or homophone; es and ko glosses follow the cell's overlays."
+      "Check rotation MAR (row CM-3A S3, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): the stage's 15 Checks are Cloze Pick 6, Sentence Builder 5 and Dictation 4, none above 40 in 100, no Listen & Pick; every Check is a produce round; no two adjacent quests share Practice, Apply and Check.",
+      "CM-3A S3 MAR (cont.): Language: 가방이에요 / 학교예요 with the 이에요 / 예요 choice after a final consonant or a vowel; the word gap's tiles 가방, 책, 학교 each take 이에요 or make a different meaning, never the shown one; 한글 and 연필 are said as written (no sound change, no homophone), so they fit Dictation.",
+      "CM-3A S3 MAR (cont.): Learning design: tiles, endings and sentences are all taught in the cell's Discover and Practice; the answer is never the only grammatical tile, so the meaning line decides. Reviser: ko Dictation prompts say 써 봐요 like the rest of the content (was 쳐 봐요). Third pass: es and ko glosses follow the cell's overlay style; no change."
     ]
   },
   "contentVer": 2

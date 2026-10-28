@@ -108,9 +108,9 @@
       "listenPick.rounds.r4.prompt": "떡 맛이 좋아요."
     },
     "minigame:s3-rites-q2-check": {
-      "typeHangul.rounds.d1.prompt": "한국의 전통 옷을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d1.prompt": "한국의 전통 옷을 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d1.target.gloss": "한국의 전통 옷",
-      "typeHangul.rounds.d2.prompt": "반달 모양으로 빚은 떡을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.d2.prompt": "반달 모양으로 빚은 떡을 뜻하는 낱말을 써 봐요.",
       "typeHangul.rounds.d2.target.gloss": "반달 모양으로 빚은 떡"
     },
     "quest:stage3-rites-q3": {
