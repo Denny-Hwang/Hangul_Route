@@ -5,7 +5,13 @@
     "episode:stage7-rites": {
       "title": "Mi recuerdo de fiesta",
       "subtitle": "Escribe qué comiste, hiciste y viste en un día especial.",
-      "hoyaIntro": "Los días especiales dejan buenos recuerdos. ¡Vamos a escribir sobre los tuyos!"
+      "hoyaIntro": "Los días especiales dejan buenos recuerdos. ¡Vamos a escribir sobre los tuyos!",
+      "culture.n1.text": "Una acción pasada termina en {ko:았어요} cuando la última vocal de la raíz es {ko:ㅏ} u {ko:ㅗ}, y en {ko:었어요} tras cualquier otra vocal: {ko:먹었어요}, {ko:만들었어요}. {ko:보았어요} puede escribirse corto como {ko:봤어요}.",
+      "culture.n2.text": "Después de una palabra de día o de tiempo, {ko:에} dice cuándo pasa algo: {ko:설날에} significa en Seollal.",
+      "culture.n3.text": "La terminación {ko:이에요} va tras una palabra que acaba en consonante final, y {ko:예요} tras una que acaba en vocal: {ko:생일이에요}.",
+      "culture.n4.text": "El tteokguk, una sopa de pastel de arroz en rodajas, es el plato clásico de Seollal.",
+      "culture.n5.text": "En Chuseok, las familias a menudo se reúnen para preparar songpyeon juntas.",
+      "culture.n6.text": "Chuseok está unido desde hace mucho a la luna llena, y hasta se le llamó la fiesta de la luna."
     },
     "quest:stage7-rites-q1": {
       "title": "Comí tteokguk",

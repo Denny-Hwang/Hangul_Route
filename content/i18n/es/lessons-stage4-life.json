@@ -5,7 +5,8 @@
     "episode:stage4-life": {
       "title": "Charla en la cocina",
       "subtitle": "Habla en la mesa con una familia que cocina junta.",
-      "hoyaIntro": "¡Algo huele rico! Vamos con la familia a la cocina."
+      "hoyaIntro": "¡Algo huele rico! Vamos con la familia a la cocina.",
+      "culture.n1.text": "Mucha gente pregunta {ko:밥 먹었어요?} como un saludo amable. Muestra interés por la otra persona, y basta con una respuesta corta."
     },
     "quest:stage4-life-q1": {
       "title": "¿Ya comiste?",

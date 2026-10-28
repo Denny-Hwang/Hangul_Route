@@ -21,7 +21,8 @@ export const OVERLAY_ENTITY_ID = /^[a-z0-9-]+:[a-z0-9-:.]+$/;
 export const OVERLAY_FIELDS = Object.freeze({
   jamo: ["gloss", "soundHint", "exampleWord.gloss", "nameHint"],
   card: ["title", "blurb", "fact"],
-  episode: ["title", "subtitle", "hoyaIntro"],
+  // F-CURR-002 row CM-3C: a lesson cell's notes (`culture[]`, by note id), shown as the Did you know? tip.
+  episode: ["title", "subtitle", "hoyaIntro", "culture.<noteId>.text"],
   quest: [
     "title",
     "blurb",

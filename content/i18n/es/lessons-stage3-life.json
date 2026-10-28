@@ -5,7 +5,12 @@
     "episode:stage3-life": {
       "title": "Minifrases del día",
       "subtitle": "Frases cortas para comer, beber y salir.",
-      "hoyaIntro": "Comer, beber, ir y venir: ¡armemos frases cortas sobre un día!"
+      "hoyaIntro": "Comer, beber, ir y venir: ¡armemos frases cortas sobre un día!",
+      "culture.n1.text": "Una oración que termina en {ko:요} es cortés. Este estilo, {ko:해요체} (haeyoche), es el estilo cortés que más se usa al hablar cada día.",
+      "culture.n2.text": "{ko:을} y {ko:를} marcan aquello sobre lo que recae una acción, como lo que comes o bebes. {ko:을} va tras consonante final; {ko:를}, tras vocal.",
+      "culture.n3.text": "{ko:이} y {ko:가} marcan el sujeto de la oración, aquí lo que describes o lo que te gusta. {ko:이} va tras consonante final; {ko:가}, tras vocal.",
+      "culture.n4.text": "Una palabra que describe, como {ko:뜨거워요}, puede cerrar una oración por sí sola. A diferencia del español, no necesita otra palabra para 'es' o 'está'.",
+      "culture.n5.text": "{ko:에} después de una palabra de lugar marca adónde alguien va o viene: {ko:가요} es ir, {ko:와요} es venir. Venir es acercarse a quien habla o a la persona en quien piensas."
     },
     "quest:stage3-life-q1": {
       "title": "Como y bebo",
