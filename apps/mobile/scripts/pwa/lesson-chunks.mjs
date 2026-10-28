@@ -99,10 +99,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
-  // the game is the order-game chunk) on main e31bc3b33, whose release build measures 4,749,283 B (6,592 B over
-  // 150c07383, 717 B under the line): 4,755,885 B raw / 1,267,451 B gzip (release `build:web`, Metro cache cleared),
-  // 6,602 B over that main, so the line is that measurement plus a 4,115 B rounding margin (4,760,000 B).
+  // CM-23c (Stages 6-7 upper-cell cards, the five legendary cards and their album sets, #845) on main e31bc3b33
+  // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
+  // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
+  // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
   startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at

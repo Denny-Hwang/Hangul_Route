@@ -10,7 +10,7 @@
   "pillarTags": [
     "B2"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:achim"],
   "quests": [
     {
       "id": "quest:stage7-life-q1",

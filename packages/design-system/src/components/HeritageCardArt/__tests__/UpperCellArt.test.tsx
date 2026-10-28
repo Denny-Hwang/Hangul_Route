@@ -2,7 +2,7 @@ import { isValidElement } from 'react';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors } from '../../../tokens';
-import { upperCellCardArtIds } from '../upper-card-ids';
+import { albumLegendArtIds, upperCellCardArtIds } from '../upper-card-ids';
 import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
 
 /**
@@ -10,7 +10,7 @@ import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
  * replaced by plain tags (as Hoya.test.tsx does): every album card draws a named 200 x 200 picture on its theme tint,
  * in token colours only, with at most five fill colours besides the theme tint and the shadow (heritage-card-art.md).
  */
-vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Rect: 'Rect' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Rect: 'Rect', Text: 'Text' }));
 
 type Node = ReactElement<Record<string, unknown>>;
 
@@ -41,7 +41,7 @@ const TOKEN_COLOURS: ReadonlySet<string> = new Set<string>(
 );
 
 describe('UpperCellCardArt (row CM-23)', () => {
-  it.each(upperCellCardArtIds)('%s draws a named picture in token colours', (cardId) => {
+  it.each([...upperCellCardArtIds, ...albumLegendArtIds])('%s draws a named picture in token colours', (cardId) => {
     const tree = resolve(UpperCellCardArt({ cardId, size: 96, testID: 'art', accessibilityLabel: 'Card art' })) as Host;
     expect(tree.type).toBe('Svg');
     expect(tree.props).toMatchObject({ width: 96, height: 96, viewBox: '0 0 200 200', testID: 'art', accessibilityLabel: 'Card art' });
@@ -69,7 +69,7 @@ describe('UpperCellCardArt (row CM-23)', () => {
     const tree = resolve(UpperCellCardArt({ cardId: 'card:norae' })) as Host;
     expect(tree.props).toMatchObject({ width: 200, accessibilityLabel: 'Card art for card:norae' });
     expect(UpperCellCardArt({ cardId: 'card:book' })).toBeNull();
-    expect(upperCellCardArtIds.every(hasUpperCellArt)).toBe(true);
+    expect([...upperCellCardArtIds, ...albumLegendArtIds].every(hasUpperCellArt)).toBe(true);
     expect(hasUpperCellArt('card:book')).toBe(false);
   });
 });
