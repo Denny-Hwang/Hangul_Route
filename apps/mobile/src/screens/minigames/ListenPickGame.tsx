@@ -267,7 +267,14 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt, spelling
 
   const header = headerView(host.mode, state, copy);
   const spellingKit = spellingNow ? spelling : null;
-  const prompt = promptView(round, state, host.mode, spellingKit === null ? slot.view.textShown || textMode : false);
+  // The spelling round's Korean is its answer: a sound that cannot play (no voice, sound off) shows only the status
+  // panel, never the prompt text, until the round resolves.
+  const prompt = promptView(
+    round,
+    spellingKit === null ? state : { ...state, textPrompt: false },
+    host.mode,
+    spellingKit === null ? slot.view.textShown || textMode : false,
+  );
   const resolved = state.status === 'resolved' || state.status === 'done';
   const hear = (): void => dispatch({ type: 'hear' });
   // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
