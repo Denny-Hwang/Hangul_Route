@@ -63,16 +63,37 @@ export type JoinErrorCode =
   | 'unknown'
   /** [OA] `/join` answered `401` or `403`: this device cannot act for that learner (row OA-7b); reads as `unknown`. */
   | 'forbidden'
+  /** Owner report 2026-10-23: a move out of this class stands (the learner is in the class it moved to). */
+  | 'moved_out'
+  /** Owner report 2026-10-23: a move into this class waits for the teacher. */
+  | 'move_waiting'
   | 'off';
+
+/**
+ * What the move lines name (owner report 2026-10-23): the learner, the class being joined (`space`), and for
+ * `moved_out` the class the learner moved to (`other`, when the Worker named it).
+ */
+export interface JoinLineFacts {
+  learner: string;
+  space: string;
+  other?: string | null;
+}
 
 /**
  * Calm copy for the learner; names the fix, never a person (F-LEARN-001 §3.9).
  * The words come from the caregiver subtree the screen passes in (F-I18N-001
  * §3.4 rule 3): `join.errors`, the `retry` lines Restore shares, and the two
- * audience-free lines of `audience.shared`.
+ * audience-free lines of `audience.shared`. The two move lines need `facts`; without them they read as `unknown`.
  */
-export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>, cap?: number | null): string {
+export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>, cap?: number | null, facts?: JoinLineFacts): string {
   switch (code) {
+    case 'moved_out': {
+      if (!facts) return m.retry.unknown;
+      const to = facts.other?.trim();
+      return to ? m.join.errors.movedOut(facts.learner, to, facts.space) : m.join.errors.movedOutElsewhere(facts.learner, facts.space);
+    }
+    case 'move_waiting':
+      return facts ? m.join.errors.moveWaiting(facts.space) : m.retry.unknown;
     case 'code_not_found':
       return m.join.errors.codeNotFound;
     case 'code_expired':
@@ -120,7 +141,11 @@ export function lookupRefusal(result: { kind: SpaceKind; full: boolean; seat: Lo
   return result.full ? { code: 'cap_class', cap: null } : null;
 }
 
-/** Errors that mean "fix the code" (stay on the code step) versus "stop here". */
+/**
+ * Errors that mean "fix the code" (stay on the code step) versus "stop here". `moved_out` and `move_waiting` are not
+ * code errors: the code is right, so the screen stays on the class and says why this learner cannot join it now.
+ */
 export function isCodeError(code: JoinErrorCode): boolean {
+  if (code === 'moved_out' || code === 'move_waiting') return false;
   return code === 'code_not_found' || code === 'code_expired' || code === 'invalid' || code === 'not_joinable';
 }

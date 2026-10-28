@@ -1,4 +1,5 @@
 import {
+  LEARNER_CLASS_CAP,
   SpaceCreateSchema,
   SpaceJoinSchema,
   SpaceLookupSchema,
@@ -22,6 +23,8 @@ import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
+import { standingMoveOut, waitingMoveInto } from '../lib/moves';
+import type { TransferEnv } from '../lib/transfer';
 import { recordServerEvent } from '../lib/server-events';
 import { id, spaceEventId, type Account } from '../store';
 
@@ -29,7 +32,7 @@ import { id, spaceEventId, type Account } from '../store';
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
  * every route resolves the actor once and asks `can()`.
  */
-export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } & ClassScopeEnv }>();
+export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } & ClassScopeEnv & TransferEnv }>();
 
 /** School consent mode stays locked until the owner's legal review (app-map decision #26). */
 export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } | undefined): boolean {
@@ -201,7 +204,18 @@ spacesRoutes.post('/lookup', async (c) => {
   const learnerId = parsed.data.learnerId && LOOKUP_LEARNER_ID.test(parsed.data.learnerId) ? parsed.data.learnerId : null;
   const vouched = learnerId && parseDeviceHeader(c.req.header('Authorization')) && typeof (await authorizeDevice(c, learnerId)) === 'string' ? learnerId : null;
   const seat = await lookupSeat(db, space, vouched, now);
-  return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, seat, roster });
+  // Owner report 2026-10-23: a vouched learner who is not in this class learns of a move that stands out of it
+  // (`moved`) or waits to bring it here (`moveWaiting`), so the app can say so before `/join` refuses. Top-level
+  // and optional, never a new `seat.reason`: shipped apps pass an unknown reason through as a join error code.
+  const moves = vouched && space.kind === 'class' && !(await db.membership(space.id, 'learner', vouched)) ? await joinMoveGuard(db, vouched, space.id, now, c.env) : null;
+  return ok(c, {
+    space: { id: space.id, kind: space.kind, name: space.name },
+    full,
+    seat,
+    roster,
+    ...(moves?.moved ? { moved: { to: moves.moved } } : {}),
+    ...(moves?.waiting ? { moveWaiting: { from: moves.waiting } } : {}),
+  });
 });
 
 spacesRoutes.get('/:id/members', async (c) => {
@@ -279,6 +293,24 @@ spacesRoutes.post('/:id/unarchive', async (c) => {
   if (!('id' in space)) return space;
   const account = await requireCan(c, db, space, 'space.archive');
   if (!('id' in account)) return account;
+  if (space.kind === 'class' && space.archivedAt) {
+    // A class comes back with every membership it kept, so it must not take a learner past the class cap: a learner
+    // who joined 3 other classes while it was archived keeps them, and the class stays archived (nothing is dropped).
+    // One guarded statement whatever the class size: a join that committed before it is counted, and a join after it
+    // counts this class live and is refused by its own atomic cap. A refusal is then counted once; when that count
+    // finds no learner at the cap (one left in between, or the class came back meanwhile) the statement runs again.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if ((await db.unarchiveClassWithinCap(space.id, LEARNER_CLASS_CAP)) === 1) {
+        space.archivedAt = null;
+        return ok(c, { space: publicSpace(space) });
+      }
+      const fresh = await db.getSpace(space.id);
+      if (!fresh?.archivedAt) return ok(c, { space: publicSpace(fresh ?? { ...space, archivedAt: null }) });
+      const learners = await db.learnersAtClassCapOf(space.id, LEARNER_CLASS_CAP);
+      if (learners > 0) return fail(c, 'unarchive_over_cap', 'Some learners of this class are already in the most classes', 409, { learners });
+    }
+    return fail(c, 'conflict', 'The class changed meanwhile; try again', 409);
+  }
   space.archivedAt = null;
   await db.putSpace(space);
   return ok(c, { space: publicSpace(space) });
@@ -384,6 +416,8 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (typeof auth !== 'string') return auth;
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
     const existing = await db.membership(space.id, 'learner', learnerId);
+    // What the inbox would list now (the same rows and the same class-device filter), so the app replaces its cache.
+    const memberships = async () => learnerInboxMemberships(db, learnerId, (await db.getDevice(learnerId, auth))?.scope === 'class');
     // The device's current name becomes the roster name, also on a join again: the repair path for a learner
     // renamed on an app build that cannot PATCH. Column-only, and only while the learner has no PATCH edit (PATCH
     // orders edits by device time; a server-time join must not enter that order). The body already holds the
@@ -401,7 +435,16 @@ spacesRoutes.post('/:id/join', async (c) => {
     };
     if (existing) {
       await applyName();
-      return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
+      return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name }, memberships: await memberships() });
+    }
+    if (space.kind === 'class') {
+      // Owner report 2026-10-23: a learner moved out of this class keeps its old code (a poster, a QR, a bookmarked
+      // link), and a join with it used to put the learner back while still in the class it moved to; a join into
+      // the destination of a move still waiting left the learner in both once the ask ended. Both answer 409 and
+      // change nothing. Shipped apps show their 3-classes line for an unknown 409 (an accepted fallback).
+      const guard = await joinMoveGuard(db, learnerId, space.id, now, c.env);
+      if (guard.moved) return fail(c, 'moved_out', 'This learner moved to another class', 409, { to: guard.moved });
+      if (guard.waiting) return fail(c, 'move_waiting', 'A move to this class is waiting', 409, { from: guard.waiting });
     }
     // [SA] One atomic statement takes the seat under every cap (AMENDMENTS-SEATS-ADMINS section 3.3).
     const taken = await takeLearnerSeat(db, space, learnerId, now);
@@ -409,7 +452,7 @@ spacesRoutes.post('/:id/join', async (c) => {
       // Another device of this learner joined between the read above and the statement.
       await applyName();
       const row = await db.membership(space.id, 'learner', learnerId);
-      return ok(c, { alreadyMember: true, membership: row, space: { id: space.id, kind: space.kind, name: space.name } });
+      return ok(c, { alreadyMember: true, membership: row, space: { id: space.id, kind: space.kind, name: space.name }, memberships: await memberships() });
     }
     if (taken.kind === 'refused') {
       const { code: reason, cap } = taken.refusal;
@@ -420,7 +463,7 @@ spacesRoutes.post('/:id/join', async (c) => {
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     await applyName();
-    return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
+    return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name }, memberships: await memberships() }, 201);
   }
 
   // Account path: co-parent into a family, invited teacher into a school.
@@ -585,4 +628,19 @@ export async function learnerMembershipRows(db: Db, learnerId: string) {
     if (space && !space.archivedAt) rows.push({ spaceId: space.id, kind: space.kind, name: space.name, role: m.role, joinedAt: m.joinedAt });
   }
   return rows;
+}
+
+/** The inbox `memberships`: a class-approved device sees class and school spaces only (SEC-4). Also `/join`'s list. */
+export async function learnerInboxMemberships(db: Db, learnerId: string, classScoped: boolean) {
+  const rows = await learnerMembershipRows(db, learnerId);
+  return classScoped ? rows.filter((m) => m.kind !== 'family') : rows;
+}
+
+/**
+ * Owner report 2026-10-23: for a learner not in class `spaceId`, the class a move out of it still stands in
+ * (`moved`), else the class a move into it waits from (`waiting`). The waiting check settles the open rows first.
+ */
+async function joinMoveGuard(db: Db, learnerId: string, spaceId: string, now: Date, env: TransferEnv | undefined) {
+  const moved = await standingMoveOut(db, learnerId, spaceId, now);
+  return { moved, waiting: moved ? null : await waitingMoveInto(db, learnerId, spaceId, now, env) };
 }

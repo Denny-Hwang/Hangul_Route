@@ -169,8 +169,11 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt, spelling
         const current = stateRef.current;
         const round = roundsRef.current[current.roundIdx];
         if (!round) return;
-        // Text prompt mode: nothing is said before the answer (it would answer the round), only the completed prompt after it.
-        if (textModeRef.current && effect.why !== 'confirm') return;
+        // Text prompt mode: nothing is said before the answer (it would answer the round), only the completed prompt
+        // after it: the confirm, and a tap on the status panel once the round is answered (sound turned on, a blocked
+        // play tapped again).
+        const answered = current.status === 'resolved' || current.status === 'done';
+        if (textModeRef.current && effect.why !== 'confirm' && !(effect.why === 'manual' && answered)) return;
         // The 800 ms replay after a wrong tap waits while the text stands in for a sound that is off or absent.
         if (effect.why === 'replay' && !shouldAutoReplay(viewRef.current)) return;
         // The autoplay opens a new round: a new prompt slot, so last round's text does not carry over.

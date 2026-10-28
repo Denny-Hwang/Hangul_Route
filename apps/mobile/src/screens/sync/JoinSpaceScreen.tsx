@@ -5,6 +5,10 @@ import type { ReactElement } from 'react';
 import { TextInput, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { codeFieldFontSize, cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage, joinPrefill, lookupRefusal } from '../../logic/spaces/join-code';
+import { lookupMoveLine, otherClasses, rosterPickOnly, staysInLine } from '../../logic/spaces/join-moves';
+import { classesCardView } from '../../logic/transfers/transfer-views';
+import { useOnline } from '../../components/use-online';
+import { useLearnerTransfers, useMoveDate, useOpenMoveWith, useTransferDevice } from '../transfer/use-transfer-facts';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { validateDisplayName } from '../../logic/profiles/profile-model';
 import { relinkNotice } from '../../logic/sync/restore';
@@ -60,6 +64,12 @@ export const RELINK_POLL_MS = 4000;
  * hand-off code the launch took for the checklist (`takeBatchHandoff`) fills the code and is looked up at once; should
  * it turn out to be a class code, it is held and the chooser asks who is joining (OA-D20), never joining as whoever
  * played last.
+ *
+ * Owner report 2026-10-23 (a learner moved from class A to class B showed in both): a lookup that says a move out of
+ * this class stands (`moved`) or a move into it waits (`moveWaiting`) shows that line on the confirm step and offers
+ * no Join for this learner (`/join` refuses with the same code; its refusal shows the same line). A class join keeps
+ * the classes the learner is in, so the confirm step names them, with Move when this device may start a move from
+ * the one class. A class tablet the move left without its class gets the roster pick only (no "I'm new").
  */
 export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -83,6 +93,8 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
   // [SA] The at-cap line of a full class with a roster (section 3.4): shown above "I'm new", never in place of the roster.
   const [seatLine, setSeatLine] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Owner report 2026-10-23: a move that stands out of the found class or waits into it; no Join while set.
+  const [moveLine, setMoveLine] = useState<string | null>(null);
   const [done, setDone] = useState<{ name: string; alreadyMember: boolean; notice?: string } | null>(null);
   // [OA] Who is joining? (row OA-7b): the checklist rows once the lookup found a family it applies to.
   const [batch, setBatch] = useState<readonly ChecklistRow[] | null>(null);
@@ -111,6 +123,18 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
     };
   }, [profileId, deviceScope]);
   const nameLocked = gateClosed || classDevice;
+  // Owner report 2026-10-23: the classes the learner is in now (a join keeps them) and whether a move may start here.
+  const hydrate = useMembershipStore((s) => s.hydrate);
+  const rows = useMembershipStore((s) => (profileId === null ? undefined : s.byLearner[profileId]));
+  const rejoin = useMembershipStore((s) => (profileId === null ? undefined : s.rejoinByLearner[profileId]));
+  useEffect(() => {
+    if (profileId !== null) void hydrate(profileId).catch(() => undefined);
+  }, [profileId, hydrate]);
+  const transfers = useLearnerTransfers(profile?.id);
+  const device = useTransferDevice(profile?.id);
+  const online = useOnline();
+  const date = useMoveDate();
+  const openMove = useOpenMoveWith(navigation);
   const joinName = nameLocked ? (profile?.displayName ?? '') : name;
 
   // The class join link's code (owner decision 2026-10-17) first, else the family home's hand-off; read once. The
@@ -143,6 +167,7 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
   const find = async (typed: string = code): Promise<void> => {
     setMessage(null);
     setSeatLine(null);
+    setMoveLine(null);
     setBusy(true);
     // [SA] The active learner goes with the lookup, so a member who already holds the seat finds room (section 3.4).
     const result = await lookup(typed, profileId ?? undefined);
@@ -160,13 +185,13 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
       navigation.navigate('WhoIsUsing', { trigger: 'join' });
       return;
     }
-    const rows = await batchRowsFor(result.space.kind);
+    const batchRows = await batchRowsFor(result.space.kind);
     setBusy(false);
     // [SA] The line comes from `seat.reason` (else the old `full`). At a class with a roster, a returning student can
     // still pick their name (relink takes no seat), so the roster stays and the line sits above "I'm new".
     // [OA] Who is joining? reads each learner's seat from its own `/join` (a member keeps its place), so the lookup's
     // line for the active learner does not stop the checklist (section 10.2).
-    const refusal = rows !== null ? null : lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
+    const refusal = batchRows !== null ? null : lookupRefusal({ kind: result.space.kind, full: result.full, seat: result.seat });
     if (refusal !== null) {
       const line = joinErrorMessage(refusal.code, messages.caregiver, refusal.cap);
       if (result.space.kind !== 'class' || result.roster.length === 0) {
@@ -176,9 +201,14 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
       setSeatLine(line);
       setPicking(true);
     }
+    // Owner report 2026-10-23: the move line goes on the confirm step, in place of the Join for this learner.
+    if (batchRows === null && profile) setMoveLine(lookupMoveLine(result, profile.displayName, messages.caregiver)?.line ?? null);
+    // A class tablet the move left without its class comes back through the roster pick only (the teacher approves).
+    const classRows = (useMembershipStore.getState().byLearner[profile?.id ?? ''] ?? []).filter((r) => r.kind === 'class').length;
+    if (rosterPickOnly({ classDevice, kind: result.space.kind, rosterSize: result.roster.length, rejoin, classRows })) setPicking(true);
     setFound(result.space);
     setRoster(result.roster);
-    setBatch(rows);
+    setBatch(batchRows);
   };
 
   // [OA] The launch's family hand-off code is looked up at once, so the checklist opens (OA-D20).
@@ -254,6 +284,11 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
     const result = await join(profile.id, found.id, code, joinName.trim() || undefined);
     setBusy(false);
     if (!result.ok) {
+      if (result.error === 'moved_out' || result.error === 'move_waiting') {
+        // The same line the lookup would have shown (an older lookup, or a move that landed since): no Join now.
+        setMoveLine(joinErrorMessage(result.error, messages.caregiver, null, { learner: profile.displayName, space: found.name, other: result.to?.name ?? null }));
+        return;
+      }
       setMessage(joinErrorMessage(result.error, messages.caregiver, result.cap));
       if (isCodeError(result.error)) setFound(null);
       return;
@@ -262,6 +297,13 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
   };
 
   const seeYouAs = found?.kind === 'family' ? m.confirm.seeYouAs.family : m.confirm.seeYouAs.teacher;
+  // Owner report 2026-10-23: a join is not a move, so the confirm step names the classes the learner keeps, and offers
+  // Move from the one class when this device may start one (the Classes card's rule).
+  const others = found && profile ? otherClasses(rows ?? [], found) : [];
+  const staysIn = others.length > 0 && profile ? staysInLine(profile.displayName, others.map((r) => r.name), messages.caregiver) : null;
+  const moveView = others.length === 1 && device ? classesCardView({ transfers, memberships: rows ?? [], device, online }, messages.caregiver.transfer, date).move : null;
+  const moveFrom = moveView && !moveView.disabled ? others[0] : undefined;
+  const pickOnly = found !== null && rosterPickOnly({ classDevice, kind: found.kind, rosterSize: roster.length, rejoin, classRows: (rows ?? []).filter((r) => r.kind === 'class').length });
 
   return (
     <Screen tone="canvas" scrollable>
@@ -300,17 +342,22 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
               <Spacer size="sm" />
             </>
           ) : null}
-          <Button
-            label={m.pick.newHere.cta}
-            tone="ghost"
-            size="sm"
-            fullWidth
-            onPress={() => {
-              setPicking(false);
-              // A new learner reads the line on the name step too; the join still decides.
-              if (seatLine !== null) setMessage(seatLine);
-            }}
-          />
+          {pickOnly ? (
+            // A class tablet the move left without its class: the roster pick is the only way back (no "I'm new").
+            <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setPicking(false); setFound(null); setRoster([]); setSeatLine(null); setMoveLine(null); }} />
+          ) : (
+            <Button
+              label={m.pick.newHere.cta}
+              tone="ghost"
+              size="sm"
+              fullWidth
+              onPress={() => {
+                setPicking(false);
+                // A new learner reads the line on the name step too; the join still decides.
+                if (seatLine !== null) setMessage(seatLine);
+              }}
+            />
+          )}
         </Card>
       ) : found && batch !== null ? (
         <JoinBatch
@@ -327,7 +374,30 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
           <Spacer size="xs" />
           <JoinNameField value={joinName} onChange={setName} locked={nameLocked} classDevice={classDevice} profileName={profile?.displayName ?? ''} hint={hint} />
           <Spacer size="md" />
-          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
+          {moveLine !== null ? (
+            <Caption tone="secondary" align="center" testID="join-move-line">{moveLine}</Caption>
+          ) : (
+            <>
+              <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || !nameOk} onPress={() => void confirmName()} />
+              {staysIn !== null ? (
+                <>
+                  <Spacer size="sm" />
+                  <Caption tone="muted" align="center" testID="join-stays-in">{staysIn}</Caption>
+                  {moveFrom && profile ? (
+                    <Button
+                      label={messages.caregiver.transfer.actions.move.cta}
+                      tone="ghost"
+                      size="sm"
+                      fullWidth
+                      accessibilityLabel={messages.caregiver.audience.gated(messages.caregiver.transfer.a11y.move(moveFrom.name), moveView?.gated ?? false)}
+                      onPress={() => openMove({ screen: 'MoveClass', profileId: profile.id, fromSpaceId: moveFrom.spaceId })}
+                      testID="join-move-instead"
+                    />
+                  ) : null}
+                </>
+              ) : null}
+            </>
+          )}
           <Spacer size="sm" />
           {roster.length > 0 ? (
             <Button
@@ -342,7 +412,7 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
               }}
             />
           ) : null}
-          <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); if (message === seatLine) setMessage(null); setSeatLine(null); }} />
+          <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); if (message === seatLine) setMessage(null); setSeatLine(null); setMoveLine(null); }} />
         </Card>
       ) : (
         <>

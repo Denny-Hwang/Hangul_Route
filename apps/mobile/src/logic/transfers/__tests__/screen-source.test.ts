@@ -72,7 +72,8 @@ describe('review fixes (PR #563)', () => {
   const move = (): string => read('screens/transfer/MoveClassScreen.tsx');
   const approve = (): string => read('screens/transfer/ApproveTransferScreen.tsx');
   const sheet = (): string => read('screens/transfer/ConsentSheet.tsx');
-  const hooks = (): string => read('screens/transfer/use-transfer.ts');
+  // The navigation-free hooks live in use-transfer-facts.ts (a screen render test needs no navigation mock); use-transfer.ts re-exports them.
+  const hooks = (): string => read('screens/transfer/use-transfer.ts') + read('screens/transfer/use-transfer-facts.ts');
 
   it('a stale consent text never reloads: both screens use the tested reload sets', () => {
     expect(move()).toContain('MOVE_RELOAD.has(result.error)');
