@@ -71,19 +71,6 @@ export interface HiddenHeritageScene {
   round: HiddenHeritageRoundLike;
   note: SceneNote;
   review: SceneReview;
-  /**
-   * The scene's own Spanish and Korean text (F-I18N-001 §3.10; row CM-37): its alt text, the meaning that names each
-   * thing's spot and each fact. The reference round plays them in the fixture-build e2e; the content row that ships the
-   * cell copies them into its `content/i18n/` overlays (`hiddenHeritage.rounds.<roundId>.…`).
-   */
-  overlays?: Readonly<Partial<Record<'es' | 'ko', SceneOverlay>>>;
-}
-
-/** One locale's text of a scene: keyed by thing id and fact id. */
-export interface SceneOverlay {
-  alt: string;
-  things: Readonly<Record<string, string>>;
-  facts: Readonly<Record<string, string>>;
 }
 
 /**

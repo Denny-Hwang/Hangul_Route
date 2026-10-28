@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { HIDDEN_HERITAGE_LIMITS, checkHiddenHeritageRound, checkHiddenHeritageScene, sceneRegistry } from '../hidden-heritage/profile';
 import { SEOLLAL_ROOM_SCENE } from '../hidden-heritage/seollal-room';
@@ -15,6 +16,7 @@ import { serializedBytes } from '../rules';
 
 const scene = SEOLLAL_ROOM_SCENE;
 const clone = (): HiddenHeritageScene => JSON.parse(JSON.stringify(scene)) as HiddenHeritageScene;
+const json = (path: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${path}`, import.meta.url), 'utf8'));
 const rules = (findings: Array<{ rule: string }>): string[] => [...new Set(findings.map((f) => f.rule))].sort();
 
 describe('the Seollal room scene (row CM-37)', () => {
@@ -22,7 +24,7 @@ describe('the Seollal room scene (row CM-37)', () => {
     expect(checkHiddenHeritageScene(scene)).toEqual([]);
   });
 
-  it('is 25,000 B or less as its chunk carries it (§10 ceilings table), overlays included', () => {
+  it('is 25,000 B or less as its chunk carries it (§10 ceilings table)', () => {
     expect(serializedBytes(scene)).toBeLessThanOrEqual(HIDDEN_HERITAGE_LIMITS.chunkBytes);
     const fat = clone();
     fat.note = { ...fat.note, accuracyNote: 'x'.repeat(25_000) };
@@ -69,17 +71,33 @@ describe('the Seollal room scene (row CM-37)', () => {
     for (const target of scene.round.targets) expect(scene.art.altEn.toLowerCase()).not.toContain(target.word.en);
   });
 
-  it('carries es and ko text for its alt text, every thing and every fact, none of it blank', () => {
-    const ids = [...scene.round.targets, ...scene.round.others].map((t) => t.id).sort();
-    for (const locale of ['es', 'ko'] as const) {
-      const o = scene.overlays?.[locale];
-      expect(o, locale).toBeDefined();
-      expect(o!.alt.trim().length).toBeGreaterThan(0);
-      expect(Object.keys(o!.things).sort()).toEqual(ids);
-      expect(Object.keys(o!.facts).sort()).toEqual(scene.note.facts.map((f) => f.id).sort());
-      for (const value of [o!.alt, ...Object.values(o!.things), ...Object.values(o!.facts)]) expect(value.trim(), locale).not.toBe('');
+  it('its targets are Discover words of the Stage 2 Holidays cell (§4.2: an item is its Korean, glossed by its first Discover)', () => {
+    const discover: Array<{ ko: string; romanization: string; en: string }> = [];
+    const walk = (node: unknown, inDiscover: boolean): void => {
+      if (Array.isArray(node)) node.forEach((n) => walk(n, inDiscover));
+      else if (node && typeof node === 'object') {
+        const rec = node as Record<string, unknown>;
+        if (inDiscover && typeof rec.ko === 'string' && typeof rec.en === 'string' && typeof rec.romanization === 'string') {
+          discover.push({ ko: rec.ko, romanization: rec.romanization, en: rec.en });
+        }
+        for (const [k, v] of Object.entries(rec)) walk(v, inDiscover || k === 'discover');
+      }
+    };
+    walk(json('content/episodes/stage-2/rites.json'), false);
+    for (const t of scene.round.targets) {
+      const first = discover.find((d) => d.ko === t.word.ko);
+      expect(first, t.word.ko).toEqual(t.word);
     }
-    expect(scene.overlays!.ko!.alt).toMatch(/[가-힣]/);
+  });
+
+  it('its es and ko text is the scene: overlay of content/i18n, and its meanings are the ones the Holidays cell ships', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      const entry = (json(`content/i18n/${locale}/hidden-heritage.json`) as { entries: Record<string, Record<string, string>> }).entries[scene.id]!;
+      expect(entry, locale).toBeDefined();
+      const cell = new Set(Object.values((json(`content/i18n/${locale}/lessons-stage2-rites.json`) as { entries: Record<string, Record<string, string>> }).entries).flatMap((e) => Object.values(e)));
+      for (const t of scene.round.targets) expect(cell.has(entry[`round.targets.${t.id}.word.gloss`]!), `${locale} ${t.id}`).toBe(true);
+      expect(entry['round.alt']).toBe(entry['art.alt']);
+    }
   });
 
   it('cites a public source for every fact with its URL, access date and quoted words; reviewed by MAR in 3 or more passes', () => {

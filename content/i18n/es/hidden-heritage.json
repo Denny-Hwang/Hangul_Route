@@ -1,0 +1,22 @@
+{
+  "locale": "es",
+  "domain": "hidden-heritage",
+  "entries": {
+    "scene:seollal-room": {
+      "art.alt": "Una habitación de un hanok en la mañana de Seollal, con una ventana abierta al cielo.",
+      "round.alt": "Una habitación de un hanok en la mañana de Seollal, con una ventana abierta al cielo.",
+      "round.targets.hanbok.word.gloss": "ropa tradicional coreana",
+      "round.targets.tteokguk.word.gloss": "sopa de masa de arroz",
+      "round.targets.yeon.word.gloss": "cometa",
+      "round.others.bokjumeoni.word.gloss": "bolsita de la suerte",
+      "round.others.bangseok.word.gloss": "cojín para el suelo",
+      "round.others.yut.word.gloss": "palitos de yut",
+      "note.subject": "Seollal, el Año Nuevo lunar, en casa: la ropa nueva de Año Nuevo, un tazón de tteokguk y los juegos del primer mes lunar (el yut y las cometas), como los describen los registros de costumbres estacionales.",
+      "note.facts.f1.claim": "Seollal es el primer día del primer mes lunar, así que su fecha cambia cada año: el 17 de febrero en 2026 y el 7 de febrero en 2027.",
+      "note.facts.f2.claim": "Antiguos libros de costumbres estacionales cuentan que el tteokguk siempre se comía en la mañana de Seollal y se ofrecía a las visitas.",
+      "note.facts.f3.claim": "La tradición de hacer y llevar hanbok (Hanbok Lifestyle) fue declarada Patrimonio Inmaterial Nacional de Corea el 20 de julio de 2022. La ropa nueva hecha para Seollal se llamaba seolbim.",
+      "note.facts.f4.claim": "El yunnori, un juego de cuatro palitos que se lanzan, fue declarado Patrimonio Inmaterial Nacional de Corea el 11 de noviembre de 2022 con el nombre «Yut nori (Playing Yut)». Tradicionalmente se juega desde el comienzo del año lunar hasta Daeboreum, la primera luna llena del año.",
+      "note.facts.f5.claim": "Según registros de finales de Joseon, las cometas se volaban sobre todo desde el comienzo del año lunar hasta Daeboreum, la primera luna llena del año."
+    }
+  }
+}

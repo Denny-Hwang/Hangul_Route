@@ -87,7 +87,7 @@ const SETTING: ItemDef = {
   box: { w: 400, h: 300 },
   z: 'back',
   horizonY: 190,
-  alt: 'Inside a hanok room: a plastered wall, a lattice window open to the sky and a board floor with a small table',
+  alt: 'Inside a hanok room: a plastered wall, a lattice window open to the sky and an oiled-paper floor with a small table',
   accuracyNote:
     'A generic room of a timber house: a beam, two posts, a plain wall, a window whose two paper-covered lattice doors stand open, a floor of oiled paper over boards and a small round table (soban). It copies no named house; no screen, painting, writing or ritual table is drawn.',
   nodes: [
@@ -164,7 +164,7 @@ const KITE: ItemDef = {
   tags: { heritage: true },
   sourceRef: ref(SRC.kite, NFM),
   accuracyNote:
-    'The shield kite (bangpaeyeon) the entry calls the most common Korean kite: a paper rectangle with a round hole at its centre and bamboo sticks. It is drawn as a red-disc, green-skirt kite (hongkkokji nokchimayeon), a kind the entry lists: a coloured disc on the white top half and a coloured lower half, so it stands out from the paper doors. The string runs down out of the window; no writing is drawn.',
+    'The shield kite (bangpaeyeon) the entry calls the most common Korean kite: a paper rectangle with a round hole at its centre and bamboo sticks. It is drawn with an orange disc on the white top half and a green lower half (the entry names kites by the colour of the disc and of the lower half; these colours are theme tokens, not one named kind), so it stands out from the paper doors. The string runs down out of the window; no writing is drawn.',
   nodes: [
     { t: 'rect', x: 4, y: 4, w: 64, h: 36, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'rect', x: 4, y: 40, w: 64, h: 40, fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
@@ -221,7 +221,7 @@ const YUT: ItemDef = {
   alt: 'Four wooden yut sticks lying on the floor, three flat side up',
   tags: { heritage: true },
   sourceRef: ref(SRC.yutSeason, KHS),
-  accuracyNote: 'Four long sticks (garakyut), round on one side and flat on the other; the flat side is drawn light. Three up and one down is the throw called geol.',
+  accuracyNote: 'Four long sticks (garangnyut), round on one side and flat on the other; the flat side is drawn light. Three up and one down is the throw called geol.',
   nodes: [
     { t: 'path', d: 'M4 6L64 2L65 11L5 15Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M20 20L82 18L82 27L20 29Z', fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
@@ -270,7 +270,7 @@ export const SEOLLAL_ROOM_SCENE: HiddenHeritageScene = {
     facts: [
       {
         id: 'f1',
-        claimEn: 'Seollal is the first day of the first lunar month, so its date moves each year: it was 17 February in 2026 and is 7 February in 2027.',
+        claimEn: 'Seollal is the first day of the first lunar month, so its date moves each year: 17 February in 2026, 7 February in 2027.',
         sources: [SRC.seol, SRC.kasi2026, SRC.kasi2027],
       },
       {
@@ -280,71 +280,35 @@ export const SEOLLAL_ROOM_SCENE: HiddenHeritageScene = {
       },
       {
         id: 'f3',
-        claimEn: 'Hanbok (Hanbok Lifestyle) has been a National Intangible Heritage of Korea since 20 July 2022. New clothes made for Seollal were called seolbim.',
+        claimEn: 'Hanbok Lifestyle, the making and wearing of hanbok, was designated a National Intangible Heritage of Korea on 20 July 2022. New clothes made for Seollal were called seolbim.',
         sources: [SRC.hanbok, SRC.seolbim],
       },
       {
         id: 'f4',
-        claimEn: 'Yut nori (Playing Yut), a game of four thrown sticks, has been a National Intangible Heritage of Korea since 11 November 2022. It is traditionally played from the New Year to the first full moon.',
+        claimEn:
+          'Yunnori, a game of four thrown sticks, was designated a National Intangible Heritage of Korea on 11 November 2022 under the name "Yut nori (Playing Yut)". It is traditionally played from the start of the lunar year to Daeboreum, the first full moon of the year.',
         sources: [SRC.yut, SRC.yutSeason],
       },
       {
         id: 'f5',
-        claimEn: 'Records of the late Joseon period say kites were flown most from the New Year to Daeboreum, the first full moon of the year.',
+        claimEn: 'Records of the late Joseon period say kites were flown most from the start of the lunar year to Daeboreum, the first full moon of the year.',
         sources: [SRC.kite],
       },
     ],
     accuracyNote:
-      'Composed from the kit, not from a painting: no figure, viewpoint or group of a known painting is used, and no person is drawn. The room, the table and the cushion are generic. Foods and games of one holiday only (Seollal); songpyeon, ogokbap and the ancestral rite (charye) are not drawn. Nothing is framed as a UNESCO element.',
+      'Composed from the kit, not from a painting: no figure, viewpoint or group of a known painting is used, and no person is drawn. The room, the table and the cushion are generic. Foods and games of one holiday only (Seollal); songpyeon, ogokbap and the ancestral rite (charye) are not drawn. Nothing is framed as a UNESCO element. Hanbok Lifestyle and Yut nori were designated in 2022 as National Intangible Cultural Property, the category named National Intangible Heritage since May 2024; f3 and f4 use the current name, as the Korea Heritage Service record does, and give the status to the designated element (the practice of making and wearing hanbok, not the garment).',
   },
   review: {
     reviewedBy: 'MAR',
     reviewedAt: '2026-10-23',
-    passes: 4,
+    passes: 5,
     notes: [
       'Author: all ten sources opened on 2026-10-23 (the encyclopedia through its search and content API, the heritage records through the portal and its open-data detail); every quote is copied from them, "…" marks an elision.',
       'Pass 1, three checkers in parallel. Language: words, romanization and glosses pass; fixed es f2 ("en la mañana"), ko f2 (세시풍속 as one word), the ko alt word order and "durujumeoni" in a note. Culture and facts: f1-f5 supported by their quoted words; Hanbok Lifestyle and Yut nori are national heritage, never UNESCO; one holiday, no charye table, no person, no painting copied. Learning design: taught Stage 2 Holidays targets with card pictures, spots H-1 to H-4; the kite shared the paper doors\' colour.',
-      'Pass 2, reviser: the language fixes above; the kite redrawn as a red-disc, green-skirt kite (hongkkokji nokchimayeon, listed in the kite entry), its alt and note updated. Kept: 연 as a target (a taught word; its device voice is a single syllable), no genre-painting citation (the subject is seasonal customs, a kite day in the style guide).',
+      'Pass 2, reviser: the language fixes above; the kite redrawn with a coloured disc and a green lower half (the kite entry names kites by these colours), its alt and note updated. Kept: 연 as a target (a taught word; its device voice is a single syllable), no genre-painting citation (the subject is seasonal customs, a kite day in the style guide).',
       'Pass 3, final read of the revised file across all three lanes: every fix confirmed with no new problem; eight colours, none of the ring or focus tokens.',
       'Pass 4, a fresh checker before the PR: every quote re-read against the live pages on 2026-10-23 (the encyclopedia content API for 설, 떡국, 연날리기 and 복주머니, all of 한국세시풍속사전; the open-data records, designation dates 20220720 and 20221111; the KASI tables for 2026 and 2027). Two claims tightened to their sources: f4 says yut is traditionally played from the New Year to the first full moon (the record speaks of how it was handed down, not of when it may be played), and f5 names the late Joseon records the kite entry cites; es and ko follow. The es and ko meanings match the ones the Stage 2 Holidays cell already ships.',
+      'Pass 5, the fix stage after two PR reviews (culture, language, learning design): f3 gives the status to Hanbok Lifestyle, the making and wearing of hanbok, not to the garment; f3 and f4 say when each element was designated, and the note records the 2024 rename of the category; f4 leads with yunnori, the romanization the Stage 2 cells teach, and names the designated element in quotes; f4 and f5 say "the start of the lunar year", never a bare "New Year"; f1 gives both dates without a tense; the kite note names the orange disc it draws; the floor alt matches its note; the es and ko text moved to content/i18n/{es,ko}/hidden-heritage.json (the `scene:` overlay prefix), with es and ko for the subject; es f2 and the ko alt reworded.',
     ],
-  },
-  overlays: {
-    es: {
-      alt: 'Una habitación de un hanok en la mañana de Seollal, con una ventana abierta al cielo.',
-      things: {
-        hanbok: 'ropa tradicional coreana',
-        tteokguk: 'sopa de masa de arroz',
-        yeon: 'cometa',
-        bokjumeoni: 'bolsita de la suerte',
-        bangseok: 'cojín para el suelo',
-        yut: 'palitos de yut',
-      },
-      facts: {
-        f1: 'Seollal es el primer día del primer mes lunar, así que su fecha cambia cada año: fue el 17 de febrero en 2026 y es el 7 de febrero en 2027.',
-        f2: 'Antiguos libros de costumbres de cada estación cuentan que el tteokguk siempre se comía en la mañana de Seollal y se ofrecía a las visitas.',
-        f3: 'El hanbok (Hanbok Lifestyle) es Patrimonio Inmaterial Nacional de Corea desde el 20 de julio de 2022. La ropa nueva hecha para Seollal se llamaba seolbim.',
-        f4: 'El yut nori (Playing Yut), un juego de cuatro palitos que se lanzan, es Patrimonio Inmaterial Nacional de Corea desde el 11 de noviembre de 2022. Tradicionalmente se juega desde Año Nuevo hasta la primera luna llena.',
-        f5: 'Según registros de finales de Joseon, las cometas se volaban sobre todo desde Año Nuevo hasta Daeboreum, la primera luna llena del año.',
-      },
-    },
-    ko: {
-      alt: '창문이 하늘로 열린, 설날 아침의 한옥 방.',
-      things: {
-        hanbok: '한국의 전통 옷',
-        tteokguk: '설날에 먹는, 떡을 넣은 국',
-        yeon: '바람에 날리는 종이 장난감',
-        bokjumeoni: '새해에 행운을 바라며 지니는 작은 주머니',
-        bangseok: '앉을 때 밑에 까는 작은 깔개',
-        yut: '놀이할 때 던지는 나무 막대 네 개',
-      },
-      facts: {
-        f1: '설날은 음력 1월 1일이라서 양력 날짜가 해마다 달라요. 2026년에는 2월 17일이었고, 2027년에는 2월 7일이에요.',
-        f2: '옛 세시풍속 책에는 설날 아침에 떡국을 꼭 먹고, 손님이 오면 떡국을 대접했다고 적혀 있어요.',
-        f3: '한복생활은 2022년 7월 20일에 국가무형유산으로 지정되었어요. 설날에 새로 지어 입는 옷을 설빔이라고 했어요.',
-        f4: '윷가락 네 개를 던져 노는 윷놀이는 2022년 11월 11일에 국가무형유산으로 지정되었어요. 정초부터 정월 대보름까지 가족과 마을에서 즐겨 온 놀이예요.',
-        f5: '조선 후기 기록에 따르면 연날리기는 정초부터 정월 대보름 사이에 가장 많이 했어요.',
-      },
-    },
   },
 };

@@ -87,7 +87,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   },
   {
     path: 'packages/design-system/src/scene-art/hidden-heritage/seollal-room.ts',
-    reason: "the Seollal room scene's reference round, its Korean text overlay and its quoted sources (F-CURR-002 row CM-37 part 2): the round is a scene's sample spots, played by the fixture-build e2e and copied by the Holidays content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-seollal.test.tsx",
+    reason: "the Seollal room scene's reference round and its quoted Korean sources (F-CURR-002 row CM-37 part 2): the round is a scene's sample spots, played by the fixture-build e2e and copied by the Holidays content row that ships the cell, whose lesson file is scanned; the round's romanization is checked by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-seollal.test.tsx, and its targets against the Stage 2 Holidays Discover words by packages/design-system/src/scene-art/__tests__/hidden-heritage-seollal.test.ts",
   },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
