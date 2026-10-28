@@ -132,6 +132,17 @@ describe('Role Play scene (F-CURR-002 section 7.1 F6, row CM-35)', () => {
     expect(messages(wide).join()).toMatch(/at most 4 ways/);
   });
 
+  it('counts two natural replies that lead to the same line as two ways, so converging choices cannot pass the cap', () => {
+    const converging = clone();
+    // t1 gains a second natural reply to t2 (2 x 2 = 4 ways), then t4 a second one to the end (8 ways).
+    turn(converging, 't1').replies.splice(1, 0, { id: 'hi', text: kt('안녕하세요.', 'annyeonghaseyo', 'Hello.'), kind: 'natural', next: 't2' });
+    expect(rolePlayPaths(converging)).toHaveLength(4);
+    expect(messages(converging)).toEqual([]);
+    turn(converging, 't4').replies.splice(1, 0, { id: 'bye', text: kt('안녕히 계세요.', 'annyeonghi gyeseyo', 'Goodbye.'), kind: 'natural', next: 'end' });
+    expect(rolePlayPaths(converging)).toHaveLength(8);
+    expect(messages(converging).join()).toMatch(/at most 4 ways/);
+  });
+
   it('rides in RoundSchema and LessonScopeSchema; a lesson scope counts its learner turns', () => {
     expect(RoundSchema.safeParse({ kind: 'role-play', data: LIBRARY_SCENE }).success).toBe(true);
     const scope = LessonScopeSchema.parse({ ref: 'minigame:s4-letters-q1-apply', kind: 'role-play', scene: LIBRARY_SCENE });

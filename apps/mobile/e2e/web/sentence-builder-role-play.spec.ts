@@ -88,8 +88,16 @@ async function checkTurnTwo(page: Page, where: string, largest = false): Promise
   expect(ids).toHaveLength(3);
   await expect.poll(() => inside(page.getByTestId(ids[0]!), pinned), { message: `${where}: the first reply is in the pinned area's visible part` }).toBe(true);
   if (largest) {
-    await page.getByTestId('role-play-hear').scrollIntoViewIfNeeded();
-    await expect.poll(() => inside(page.getByTestId('role-play-hear'), logArea), { message: `${where}: Hear it is reached by scrolling the log` }).toBe(true);
+    const hear = page.getByTestId('role-play-hear');
+    await expect
+      .poll(
+        async () => {
+          await hear.scrollIntoViewIfNeeded();
+          return inside(hear, logArea);
+        },
+        { message: `${where}: Hear it is reached by scrolling the log` },
+      )
+      .toBe(true);
   }
 }
 
@@ -174,6 +182,9 @@ test.describe('Role Play: read and tap (F-CURR-002 row CM-35)', () => {
     await send(page, 'hello', '무슨 책을 찾아요?');
     await checkTurnTwo(page, '768');
     await expect(page.getByTestId('role-play-more')).toHaveCount(0);
+    // There is room, so the scene title stays above the log.
+    await expect(page.getByTestId('role-play-title')).toBeVisible();
+    await expect(page.getByTestId('role-play-log').getByTestId('role-play-title')).toHaveCount(0);
     for (const id of ['storybook', 'hangeul', 'fine']) await expect.poll(() => inside(reply(page, id), page.getByTestId('role-play-replies')), { message: id }).toBe(true);
     const column = await box(page.getByTestId('role-play-log'));
     const bubble = await box(page.getByTestId('role-play-partner-newest'));
@@ -189,6 +200,20 @@ test.describe('Role Play: read and tap (F-CURR-002 row CM-35)', () => {
     await expect(page.getByTestId('role-play-more')).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await shot(page, 'role-play-320-largest');
+  });
+
+  test('Largest text at 320 x 568 in a font with taller lines: the title joins the log, the newest line and a reply stay in view', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, ON, { textSize: 'largest' });
+    // Line heights of a fallback font with tall metrics (a Linux browser's Korean font): every line 1.5 times its size.
+    await page.addStyleTag({ content: '[data-testid="role-play"] * { line-height: 1.5 !important; }' });
+    await send(page, 'hello', '무슨 책을 찾아요?');
+    await checkTurnTwo(page, 'Largest, taller lines', true);
+    // The scene title is now the log's first item, above the chat, so it scrolls away with it.
+    await expect(page.getByTestId('role-play-log').getByTestId('role-play-title')).toHaveCount(1);
+    await expect(page.getByTestId('role-play-more')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'role-play-320-largest-tall');
   });
 
   test('targets: every control at least 48 dp, every reply bubble at least 80 tall', async ({ page }) => {
