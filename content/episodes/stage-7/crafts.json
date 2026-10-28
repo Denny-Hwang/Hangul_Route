@@ -10,7 +10,7 @@
   "pillarTags": [
     "E1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:bihaenggi"],
   "quests": [
     {
       "id": "quest:stage7-crafts-q1",

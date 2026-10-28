@@ -15,6 +15,10 @@ import { plural } from '../../plural';
 
 const count = (n: number, one: string, other: string): string => `${n} ${plural('en', n, { one, other })}`;
 
+/** The five category albums by theme (F-CURR-002 §7.2, row CM-23): their names, and the lines that name one. */
+const ALBUM_NAMES = { letters: 'Letters', life: 'Food', rites: 'Holidays', nature: 'Nature', crafts: 'Play' };
+type AlbumTheme = keyof typeof ALBUM_NAMES;
+
 export const learner = {
   welcome: {
     title: "Hi! I'm Hoya.",
@@ -508,9 +512,13 @@ export const learner = {
     albums: {
       title: 'Albums',
       line: 'Each theme has an album. Finish a cell from Stage 2 on to add its card.',
-      names: { letters: 'Letters', life: 'Food', rites: 'Holidays', nature: 'Nature', crafts: 'Play' },
+      names: ALBUM_NAMES,
       count: (n: number) => plural('en', n, { one: '1 card', other: `${n} cards` }),
       fresh: 'New',
+      /** Row CM-23 part 3: an album with all its cards; its row shows the legendary card too. */
+      complete: 'Album complete',
+      /** An album's name in a line, as the Cards to find row of its legendary card (row CM-23 part 3). */
+      named: (theme: AlbumTheme) => `${ALBUM_NAMES[theme]} album`,
       /** An album row's name: the album and its count, or that it is new. */
       a11y: (name: string, status: string) => `${name} album: ${status}`,
     },
@@ -524,6 +532,8 @@ export const learner = {
       welcome: 'A welcome gift from Hoya',
       /** `collection` is the set's name (content). */
       set: (collection: string) => `Collect every card from the ${collection} stories`,
+      /** An album's legendary card (row CM-23 part 3): what to do, never how many are left. */
+      album: (theme: AlbumTheme) => `Collect every card in the ${ALBUM_NAMES[theme]} album`,
     },
   },
 
@@ -618,6 +628,14 @@ export const learner = {
       announce: (title: string) => `New card for your library! ${title}`,
       see: { cta: 'See my card' },
       seeA11y: (title: string) => `See my card: ${title}`,
+    },
+    /**
+     * A run that filled a category album (F-CURR-002 §7.2, row CM-23 part 3): the album's legendary card, shown with the
+     * F-MOTION-003 celebration in the new-card banner; assistive tech reads the title, then the card's title.
+     */
+    albumDone: {
+      title: 'Album complete!',
+      line: (theme: AlbumTheme) => `Your ${ALBUM_NAMES[theme]} album is full. Here is its legendary card.`,
     },
     /**
      * The extra cards a run brought besides the quest card: an episode, stage or set it completed

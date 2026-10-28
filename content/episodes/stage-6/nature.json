@@ -10,7 +10,7 @@
   "pillarTags": [
     "D2"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:jeongsang"],
   "quests": [
     {
       "id": "quest:stage6-nature-q1",

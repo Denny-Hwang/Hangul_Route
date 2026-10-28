@@ -11,7 +11,7 @@
     "D5",
     "D2"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:tokki"],
   "quests": [
     {
       "id": "quest:stage7-nature-q1",

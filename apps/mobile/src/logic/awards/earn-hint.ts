@@ -4,6 +4,10 @@ import { parseUnlockedBy } from './rules';
 import type { AwardWorld, EarnHint } from './types';
 
 type EarnHintMessages = Messages['learner']['library']['earnHint'];
+type AlbumTheme = Parameters<EarnHintMessages['album']>[0];
+
+/** The set id prefix of the category albums (`albumSetId`, logic/awards/albums.ts). */
+export const ALBUM_SET = 'set:album-';
 
 /**
  * How to earn a card, for a locked Library tile, a locked CardDetail and the
@@ -25,7 +29,9 @@ export function earnHint(card: HeritageCard, world: AwardWorld, m: EarnHintMessa
       return { kind: 'welcome', text: m.welcome };
     case 'set': {
       const set = world.sets.find((s) => s.id === rule.setId);
-      return set ? { kind: 'set', text: m.set(set.titleEn) } : null;
+      if (!set) return null;
+      // An album's legendary card (F-CURR-002 §7.2, row CM-23 part 3): the set's `titleEn` is the album's theme.
+      return { kind: 'set', text: rule.setId.startsWith(ALBUM_SET) ? m.album(set.titleEn as AlbumTheme) : m.set(set.titleEn) };
     }
     default:
       return null;
