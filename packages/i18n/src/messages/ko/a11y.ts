@@ -145,6 +145,13 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, _name: string) => `글자 ${letter}`,
+      found: (letter: string, _name: string, sound: string) => `글자 ${letter}, ${sound}, 찾았어요`,
+      pairHeading: (letter: string, _name: string, sound: string) => `글자 ${letter}, ${sound}: 모두 찾아 눌러요`,
+      sounds: (first: string, second: string) => `${first} 또는 ${second}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

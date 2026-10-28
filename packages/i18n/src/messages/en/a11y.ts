@@ -215,6 +215,18 @@ export const a11y = {
       /** A name-round tile: its block (or final letter) and its sound. */
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    /**
+     * Match Shape (row CM-33): an origin tile is named by its letter and sound; a pair tile by its letter and RR name,
+     * never its sound, so a name never answers the round; `sound` is the value read as words ("g or k").
+     */
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, name: string) => `${letter}, letter ${name}`,
+      found: (letter: string, name: string, sound: string) => `${letter}, letter ${name}, ${sound}, found`,
+      pairHeading: (letter: string, name: string, sound: string) => `Tap every ${letter}, letter ${name}, ${sound}`,
+      /** A sound value of two readings (`g/k`). */
+      sounds: (first: string, second: string) => `${first} or ${second}`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

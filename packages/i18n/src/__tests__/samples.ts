@@ -1004,4 +1004,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.learnerGone': [['Mina']],
   'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
   'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
+  // F-CURR-002 row CM-33: Match Shape's tile names (a jamo with its sound, or its RR letter name), the pair heading and
+  // a sound value of two readings.
+  'a11y.minigame.matchShape.originTile': [['x', 'n'], ['x', 'g or k']],
+  'a11y.minigame.matchShape.pairTile': [['x', 'bieup'], ['x', 'eo']],
+  'a11y.minigame.matchShape.found': [['x', 'bieup', 'b or p']],
+  'a11y.minigame.matchShape.pairHeading': [['x', 'bieup', 'b or p']],
+  'a11y.minigame.matchShape.sounds': [['g', 'k'], ['silent', 'ng']],
 };

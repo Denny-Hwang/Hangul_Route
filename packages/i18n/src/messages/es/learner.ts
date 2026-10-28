@@ -677,6 +677,14 @@ export const learner = {
         finishBlock: 'Termina el último bloque.',
       },
     },
+    matchShape: {
+      heading: { origin: '¿Qué letra viene de esta forma?', pair: 'Toca cada copia de esta letra' },
+      missOrigin: 'Mira el dibujo otra vez. ¿Qué letra tiene esa forma?',
+      missPair: 'Mira los trazos otra vez.',
+      found: '¡Encontrada!',
+      continue: { cta: 'Continuar' },
+      readPick: { heading: '¿Qué sonido tiene esta letra?', miss: 'Mira la letra otra vez.' },
+    },
   },
 
   audio: {

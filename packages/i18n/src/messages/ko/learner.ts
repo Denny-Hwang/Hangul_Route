@@ -657,6 +657,14 @@ export const learner = {
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
+    matchShape: {
+      heading: { origin: '어떤 글자가 이 모양에서 왔을까요?', pair: '이 글자를 모두 찾아 눌러요' },
+      missOrigin: '그림을 다시 봐요. 어떤 글자가 그 모양일까요?',
+      missPair: '획을 다시 봐요.',
+      found: '찾았어요!',
+      continue: { cta: '계속하기' },
+      readPick: { heading: '이 글자는 어떤 소리가 날까요?', miss: '글자를 다시 봐요.' },
+    },
   },
 
   audio: {

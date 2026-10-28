@@ -144,6 +144,13 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${particle} después de ${word}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, name: string) => `${letter}, letra ${name}`,
+      found: (letter: string, name: string, sound: string) => `${letter}, letra ${name}, ${sound}, encontrada`,
+      pairHeading: (letter: string, name: string, sound: string) => `Toca cada ${letter}, letra ${name}, ${sound}`,
+      sounds: (first: string, second: string) => `${first} o ${second}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,
