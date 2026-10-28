@@ -11,7 +11,7 @@
     "B1",
     "E1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:deom"],
   "quests": [
     {
       "id": "quest:stage6-crafts-q1",

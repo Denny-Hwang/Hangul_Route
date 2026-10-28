@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { awardWorld } from '../../../content/award-world';
+import { awardWorld, awardWorldFor } from '../../../content/award-world';
 import { obtainableCards } from '../../awards/obtainable';
 import { parseUnlockedBy } from '../../awards/rules';
 import { libraryShelves } from '../shelves';
@@ -86,5 +86,22 @@ describe('libraryShelves on the shipped cards', () => {
     const shelves = libraryShelves([odd], new Set(), awardWorld, EN);
     expect(shelves.toFind).toEqual([{ key: 'other', title: 'More cards', cardIds: ['card:odd'] }]);
     expect(shelves.next?.hint).toBe(EN.cardDetail.earn.later);
+  });
+});
+
+describe('libraryShelves, the album legendary cards (row CM-23 part 3)', () => {
+  it('upperCards on: each legendary card waits in a row named for its album, in the UI language', () => {
+    const world = awardWorldFor(true, new Set());
+    const listed = obtainableCards(world, new Set());
+    for (const [locale, name] of [['en', 'Letters album'], ['es', 'Álbum Letras'], ['ko', '글자 앨범']] as const) {
+      const group = libraryShelves(listed, new Set(), world, getMessages(locale).learner).toFind.find((g) => g.key === 'set:set:album-letters');
+      expect(group, locale).toEqual({ key: 'set:set:album-letters', title: name, cardIds: ['card:hunminjeongeum'] });
+    }
+  });
+
+  it('upperCards off: no legendary card is listed to find', () => {
+    const world = awardWorldFor(false, new Set());
+    const groups = libraryShelves(obtainableCards(world, new Set()), new Set(), world, EN).toFind;
+    expect(groups.some((g) => g.key.startsWith('set:set:album-'))).toBe(false);
   });
 });
