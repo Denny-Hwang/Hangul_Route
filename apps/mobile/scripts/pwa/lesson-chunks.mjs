@@ -116,7 +116,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the cloze-pick-chunk) measures 4,762,235 B raw / 1,269,443 B gzip (release `build:web`, Metro cache cleared)
   // on main 524961dae, whose own release build measures 4,751,444 B raw: +10,791 B. The line is that measurement plus a
   // 2,765 B rounding margin.
-  startBundleRaw: 4_765_000,
+  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S3 (#852, #850, #851, #854, #856, each measured
+  // alone above) measures 4,783,181 B raw / 1,276,079 B gzip (release `build:web`, Metro cache cleared); S3's Stage 3
+  // Check kinds add 67 B (4,783,248 B raw / 1,276,087 B gzip). The line is that measurement plus a 6,752 B margin.
+  startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
