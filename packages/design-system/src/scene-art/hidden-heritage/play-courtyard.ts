@@ -9,9 +9,10 @@ import type { HiddenHeritageScene } from './types';
  * sticks beside a yut board on a straw mat. It copies, traces or follows no painting: genre painting is its subject
  * only (style guide rule 1), and no person, Hoya or writing is drawn.
  *
- * Its chunk (this module: the setting, the eight props, the layers, the reference round, its es and ko meanings and the
- * note) is held to 25,000 B (§10 ceilings table; `hidden-heritage.test.ts`). Eight colours, none of the ring or focus
- * tokens.
+ * Its chunk (this module: the setting, the eight props, the layers, the reference round and the note) is held to
+ * 25,000 B (§10 ceilings table; `hidden-heritage.test.ts`). Eight colours, none of the ring or focus tokens. The es and
+ * ko of every English string a learner reads here (alt text, spot meanings, subject, card-back facts) are in
+ * `content/i18n/<locale>/hidden-heritage.json` (entity `scene:play-courtyard`).
  */
 
 const SETTING: ItemDef = {
@@ -200,7 +201,7 @@ const GONGGI: ItemDef = {
 
 const word = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
 
-const ALT = 'A courtyard set out for games on a winter day.';
+const ALT = 'A courtyard set out for games.';
 const ACCESSED = '2026-10-23';
 const NFM = 'National Folk Museum of Korea';
 const folk = (topic: number, title: string, quote: string) => ({
@@ -312,32 +313,3 @@ export const PLAY_COURTYARD_SCENE: HiddenHeritageScene = {
   },
 };
 
-/**
- * The es and ko meanings of the reference round, under the overlay paths of `scripts/overlay-fields.mjs` (the round's
- * alt text and the meaning that names each spot). The Play & Crafts Volume 2 Stage 2 cell copies them into its
- * `content/i18n/<locale>` overlay with the round; the targets' meanings are the ones the cell's quest already ships.
- */
-export const PLAY_COURTYARD_OVERLAYS = {
-  es: {
-    'hiddenHeritage.rounds.hh1.alt': 'Un patio preparado para jugar en un día de invierno.',
-    'hiddenHeritage.rounds.hh1.targets.yeon.word.gloss': 'cometa',
-    'hiddenHeritage.rounds.hh1.targets.paengi.word.gloss': 'peonza, trompo',
-    'hiddenHeritage.rounds.hh1.targets.yut.word.gloss': 'palitos de yut',
-    'hiddenHeritage.rounds.hh1.targets.jegi.word.gloss': 'un volante que se patea',
-    'hiddenHeritage.rounds.hh1.others.eolle.word.gloss': 'carrete de hilo',
-    'hiddenHeritage.rounds.hh1.others.ttakji.word.gloss': 'ficha de papel doblado',
-    'hiddenHeritage.rounds.hh1.others.gonggi.word.gloss': 'piedritas para lanzar y atrapar',
-    'hiddenHeritage.rounds.hh1.others.yutpan.word.gloss': 'tablero de yut',
-  },
-  ko: {
-    'hiddenHeritage.rounds.hh1.alt': '겨울날 놀이 준비를 해 둔 마당.',
-    'hiddenHeritage.rounds.hh1.targets.yeon.word.gloss': '바람에 날리는 종이 장난감',
-    'hiddenHeritage.rounds.hh1.targets.paengi.word.gloss': '빙글빙글 돌려서 노는 장난감',
-    'hiddenHeritage.rounds.hh1.targets.yut.word.gloss': '놀이할 때 던지는 나무 막대 네 개',
-    'hiddenHeritage.rounds.hh1.targets.jegi.word.gloss': '발로 차올리며 노는 전통 놀잇감',
-    'hiddenHeritage.rounds.hh1.others.eolle.word.gloss': '실을 감고 푸는 나무 틀',
-    'hiddenHeritage.rounds.hh1.others.ttakji.word.gloss': '종이를 접어 만든 네모난 놀잇감',
-    'hiddenHeritage.rounds.hh1.others.gonggi.word.gloss': '손으로 던지고 받는 작은 돌 다섯 개',
-    'hiddenHeritage.rounds.hh1.others.yutpan.word.gloss': '말을 옮기는 길이 그려진 판',
-  },
-} as const;

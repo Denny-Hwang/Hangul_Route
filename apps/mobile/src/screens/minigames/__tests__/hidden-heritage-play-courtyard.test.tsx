@@ -1,7 +1,9 @@
-import { HiddenHeritageRoundSchema, checkRomanization, isOverlayFieldAllowed } from '@hangul-route/content-schema';
+import { readFileSync } from 'node:fs';
+import { HiddenHeritageRoundSchema, checkRomanization, translatableFields } from '@hangul-route/content-schema';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
-import { PLAY_COURTYARD_OVERLAYS, PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
+import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
 import { Pressable, StyleSheet } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -95,9 +97,44 @@ describe('the Play courtyard scene in the app (row CM-37 part 4)', () => {
     for (const thing of [...ROUND.targets, ...ROUND.others]) expect(checkRomanization(thing.word.ko, thing.word.romanization), thing.id).toEqual([]);
   });
 
-  it('its es and ko meanings sit under overlay paths a lesson round may carry', () => {
+  it('every English string of the scene that a learner reads has an es and a ko overlay (F-I18N-001 §3.10)', () => {
+    const fields = translatableFields(SCENE.id, SCENE).map((f) => f.field);
+    // The alt text twice, eight meanings, the subject and six card-back facts.
+    expect(fields).toHaveLength(17);
     for (const locale of ['es', 'ko'] as const) {
-      for (const path of Object.keys(PLAY_COURTYARD_OVERLAYS[locale])) expect(isOverlayFieldAllowed('minigame:s2-crafts-v2-q1-practice', path), path).toBe(true);
+      const entry = OVERLAYS[locale][SCENE.id] ?? {};
+      expect(Object.keys(entry).sort(), locale).toEqual([...fields].sort());
+      for (const field of fields) expect(entry[field], `${locale} ${field}`).toEqual(expect.stringMatching(/\S/));
+      for (const value of Object.values(entry)) {
+        expect(value).not.toMatch(/%|\b(wrong|fail\w*|lost)\b|UNESCO/i);
+        expect(value).not.toMatch(/어린이|niños|niñas/i);
+        if (locale === 'es') expect(value).not.toMatch(/[가-힣]/);
+        else expect(value).toMatch(/[가-힣]/);
+      }
+    }
+  });
+
+  it('a target is never named by another thing in ko, and no ko meaning just repeats its word', () => {
+    const ko = OVERLAYS.ko[SCENE.id] ?? {};
+    for (const other of ROUND.others) {
+      for (const target of ROUND.targets) expect(ko[`round.others.${other.id}.word.gloss`], other.id).not.toContain(target.word.ko);
+    }
+    for (const [group, list] of [['targets', ROUND.targets], ['others', ROUND.others]] as const) {
+      for (const thing of list) expect(ko[`round.${group}.${thing.id}.word.gloss`], thing.id).not.toContain(thing.word.ko);
+    }
+  });
+
+  it('each target meaning in es and ko is the one the cell already ships (minigame:s2-crafts-q2-apply cardPairs)', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      const file = JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/lessons-stage2-crafts.json`, import.meta.url), 'utf8')) as {
+        entries: Record<string, Record<string, string>>;
+      };
+      const cell = file.entries['minigame:s2-crafts-q2-apply']!;
+      const entry = OVERLAYS[locale][SCENE.id] ?? {};
+      for (const t of ROUND.targets) {
+        expect(cell[`cardPairs.${t.id}.gloss`], `${locale} ${t.id}`).toEqual(expect.stringMatching(/\S/));
+        expect(entry[`round.targets.${t.id}.word.gloss`], `${locale} ${t.id}`).toBe(cell[`cardPairs.${t.id}.gloss`]);
+      }
     }
   });
 

@@ -1,0 +1,25 @@
+{
+  "locale": "ko",
+  "domain": "hidden-heritage",
+  "entries": {
+    "scene:play-courtyard": {
+      "art.alt": "놀이 준비를 해 둔 마당.",
+      "round.alt": "놀이 준비를 해 둔 마당.",
+      "round.targets.yeon.word.gloss": "바람에 날리는 종이 장난감",
+      "round.targets.paengi.word.gloss": "빙글빙글 돌려서 노는 장난감",
+      "round.targets.yut.word.gloss": "던져서 나온 모양대로 말을 옮기는 놀이에 쓰는 나무 막대 네 개",
+      "round.targets.jegi.word.gloss": "발로 차올리며 노는 전통 놀잇감",
+      "round.others.eolle.word.gloss": "실을 감고 푸는 나무 틀",
+      "round.others.ttakji.word.gloss": "종이를 접어 만든 네모난 놀잇감",
+      "round.others.gonggi.word.gloss": "손으로 던지고 받는 작은 돌 다섯 개",
+      "round.others.yutpan.word.gloss": "말을 옮기는 길이 그려진 판",
+      "note.subject": "설 무렵 마당의 모습은 풍속화의 소재 가운데 하나예요. 윷놀이, 연날리기, 제기차기, 팽이치기, 딱지치기, 공기놀이 같은 전통 놀이가 있어요.",
+      "note.facts.f1.claim": "윷놀이는 윷가락 네 개로 해요. 두 편이 윷을 던지고, 윷가락이 엎어지거나 젖혀진 모양에 따라 윷판 위의 말이 몇 칸 갈지 정해져요.",
+      "note.facts.f2.claim": "윷놀이는 정월 초하루부터 대보름까지 하는 놀이로, 나이와 상관없이 누구나 함께 어울려 즐겨요.",
+      "note.facts.f3.claim": "연은 종이에 가는 대나무 살을 붙여 만들고, 얼레에 감은 실에 매어 날려요. 한국에서 가장 흔한 연은 네모난 종이 가운데에 둥근 구멍이 뚫린 방패연이에요.",
+      "note.facts.f4.claim": "제기는 엽전이나 쇠붙이를 얇고 질긴 종이나 천으로 싸고, 끝을 여러 갈래로 찢어 만들어요. 발로 차면서 놀아요.",
+      "note.facts.f5.claim": "팽이는 나무를 원뿔 모양으로 깎아 만들어요. 평평한 땅이나 얼음판 위에서 채찍으로 쳐서 계속 돌게 해요.",
+      "note.facts.f6.claim": "딱지치기는 종이로 만든 딱지를 상대의 딱지 위로 내리쳐 뒤집으면 그 딱지를 따는 놀이예요. 공기놀이는 공기라고 부르는 작은 놀잇감을 손으로 던지고 받고 쥐면서 노는 놀이예요."
+    }
+  }
+}

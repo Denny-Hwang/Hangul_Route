@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PLAY_COURTYARD_OVERLAYS, PLAY_COURTYARD_SCENE } from '../hidden-heritage/play-courtyard';
+import { PLAY_COURTYARD_SCENE } from '../hidden-heritage/play-courtyard';
 import { HIDDEN_HERITAGE_LIMITS, checkHiddenHeritageRound, checkHiddenHeritageScene, sceneRegistry } from '../hidden-heritage/profile';
 import type { HiddenHeritageScene } from '../hidden-heritage/types';
 import { drawScene } from '../draw';
@@ -22,9 +22,8 @@ describe('the Play courtyard scene (row CM-37 part 4)', () => {
     expect(checkHiddenHeritageScene(SCENE)).toEqual([]);
   });
 
-  it('is 25,000 B or less as its chunk carries it, its meanings included (§10 ceilings table)', () => {
-    const bytes = serializedBytes(SCENE) + serializedBytes(PLAY_COURTYARD_OVERLAYS);
-    expect(bytes).toBeLessThanOrEqual(HIDDEN_HERITAGE_LIMITS.chunkBytes);
+  it('is 25,000 B or less as its chunk carries it (§10 ceilings table)', () => {
+    expect(serializedBytes(SCENE)).toBeLessThanOrEqual(HIDDEN_HERITAGE_LIMITS.chunkBytes);
     const fat = clone();
     fat.note = { ...fat.note, accuracyNote: 'x'.repeat(25_000) };
     expect(rules(checkHiddenHeritageScene(fat))).toEqual(['H-budget']);
@@ -58,7 +57,6 @@ describe('the Play courtyard scene (row CM-37 part 4)', () => {
     for (const other of SCENE.round.others) {
       for (const target of SCENE.round.targets) {
         expect(other.word.en.toLowerCase(), other.id).not.toContain(target.word.en.toLowerCase());
-        expect(PLAY_COURTYARD_OVERLAYS.ko[`hiddenHeritage.rounds.hh1.others.${other.id}.word.gloss` as keyof typeof PLAY_COURTYARD_OVERLAYS.ko]).not.toContain(target.word.ko);
       }
     }
   });
@@ -67,24 +65,6 @@ describe('the Play courtyard scene (row CM-37 part 4)', () => {
     expect(JSON.stringify(SCENE.items)).not.toMatch(/[가-힣]/);
     for (const thing of things) expect(SCENE.art.altEn.toLowerCase()).not.toContain(thing.word.en.toLowerCase());
     expect(SCENE.round.altEn).toBe(SCENE.art.altEn);
-  });
-
-  it('gives the alt text and every meaning in es and ko, under the overlay paths a lesson round uses', () => {
-    const paths = ['hiddenHeritage.rounds.hh1.alt', ...SCENE.round.targets.map((t) => `hiddenHeritage.rounds.hh1.targets.${t.id}.word.gloss`), ...SCENE.round.others.map((t) => `hiddenHeritage.rounds.hh1.others.${t.id}.word.gloss`)];
-    for (const locale of ['es', 'ko'] as const) {
-      const table = PLAY_COURTYARD_OVERLAYS[locale] as Record<string, string>;
-      expect(Object.keys(table).sort(), locale).toEqual([...paths].sort());
-      for (const [path, text] of Object.entries(table)) {
-        expect(text.trim().length, `${locale} ${path}`).toBeGreaterThan(0);
-        if (locale === 'es') expect(text, path).not.toMatch(/[가-힣]/);
-        if (locale === 'ko') expect(text, path).toMatch(/[가-힣]/);
-      }
-    }
-    // A thing's ko meaning never just repeats its word (a circular gloss).
-    for (const thing of things) {
-      const kind = SCENE.round.targets.some((t) => t.id === thing.id) ? 'targets' : 'others';
-      expect((PLAY_COURTYARD_OVERLAYS.ko as Record<string, string>)[`hiddenHeritage.rounds.hh1.${kind}.${thing.id}.word.gloss`]).not.toContain(thing.word.ko);
-    }
   });
 
   it('cites an allowlisted institution with its URL, access date and quoted words for every fact; no UNESCO or origin claim', () => {
@@ -115,7 +95,7 @@ describe('the Play courtyard scene (row CM-37 part 4)', () => {
 
   it('is reviewed by MAR in 3 passes, with no native-speaker or expert claim and no age wording', () => {
     expect(SCENE.review).toMatchObject({ reviewedBy: 'MAR', passes: 3 });
-    const text = JSON.stringify({ review: SCENE.review, note: SCENE.note, overlays: PLAY_COURTYARD_OVERLAYS, items: SCENE.items.map((i) => i.alt) });
+    const text = JSON.stringify({ review: SCENE.review, note: SCENE.note, alt: SCENE.art.altEn, items: SCENE.items.map((i) => i.alt) });
     expect(text).not.toMatch(/native speaker|native-speaker|expert/i);
     expect(text).not.toMatch(/\b(kids?|children|child|ages? \d)\b|어린이/i);
   });

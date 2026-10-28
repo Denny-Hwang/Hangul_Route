@@ -10,9 +10,10 @@ import { expectNoHorizontalOverflow } from './viewport';
  * round through `window.__hrHiddenHeritageE2E` (fixture bundle only, served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test hidden-heritage-play
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-play
  *
- * `game.hidden-heritage` ships at built-in pct 0, so each case seeds the stored remote copy.
+ * `game.hidden-heritage` ships at built-in pct 0, so each case seeds the stored remote copy. The `realia-read-` prefix puts
+ * this spec in the fixture e2e run (the same entry as CM-36's `realia-read-hidden-heritage.spec.ts`).
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -30,8 +31,9 @@ type E2eWindow = Window & {
   __hrHiddenHeritageE2E?: { open(p: { missing?: boolean; sceneId?: string }): void; log(): { answers: Array<{ key: string; correct: boolean }>; completed: number } };
 };
 
-async function open(page: Page, gameOn: boolean): Promise<void> {
+async function open(page: Page, gameOn: boolean, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
+  if (textSize) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-17T09:00:00.000Z', textSize });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: gameOn, pct: gameOn ? 100 : 0 } } });
   await page.reload();
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
@@ -84,13 +86,15 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
         await expect(page.getByText('Look again').first()).toBeVisible();
         await expect(page.getByTestId('hh-ring-miss')).toBeVisible();
         expect(await page.locator('body').innerText()).not.toMatch(SHAME);
-        await page.waitForTimeout(700);
+        // State, not sleeps: the miss ring clears on its own (MISS_RING_MS) before the next tap.
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
         for (let i = 0; i < 4; i += 1) {
           ko = await asked(page);
           await spot(page, TARGETS[ko]!.id).click();
           await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
           if (i === 0) await shot(page, `hidden-heritage-play-found-${size.name}`);
-          await page.waitForTimeout(800);
+          // The next word comes once the meaning has shown (FOUND_ADVANCE_MS); after the last, the end panel.
+          if (i < 3) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
         }
         await expect(page.getByText('You found them all')).toBeVisible();
         for (const t of Object.values(TARGETS)) await expect(page.getByTestId('hh-end').getByText(t.meaning, { exact: true })).toBeVisible();
@@ -110,6 +114,18 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
       await expect(page.getByTestId('hh-scene')).toHaveCount(0);
       await expectNoHorizontalOverflow(page);
       await shot(page, 'hidden-heritage-play-off-320');
+    });
+
+    test('at the Largest text size the courtyard still fits: nothing scrolls sideways, every thing 48 dp or more', async ({ page }) => {
+      await open(page, true, 'largest');
+      await expect(page.getByTestId('hh-scene')).toBeVisible();
+      await asked(page);
+      for (const name of THINGS) {
+        const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+        expect(Math.min(box.width, box.height), name).toBeGreaterThanOrEqual(48);
+      }
+      await expectNoHorizontalOverflow(page);
+      await shot(page, 'hidden-heritage-play-largest-320');
     });
   });
 });
