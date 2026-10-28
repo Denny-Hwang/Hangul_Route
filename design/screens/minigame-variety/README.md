@@ -23,6 +23,7 @@ Built by:
 | `mock/*.html` (8 pages) | each format's main state; each page fills the window, so the same file is the 320 and the 768 shot |
 | `mock/states.html` | boards C, D, S, M, O, R, Y, B: the miss (amber) and found states, each format's fallback round when its `game.<kind>` is off (C3, D1 for Dictation's `see` round, D3, S2, M3, O3, R3, Y2, B2), the no-voice notice, the spelling round, the Role Play end card, My page (not kept), the Yut "throw again" state |
 | `shots/` | the mocks rendered in Chromium: `<format>-320.png` (320 x 568 at 2x) and `<format>-768.png` (768 x 1024 at 1x), and `states.png` (the boards at 1x, full page) |
+| `shots/app-match-shape-*-320.png` | row CM-33: the built Match Shape at 320 px (origin round with its sources open, and a pair round), captured by `apps/mobile/e2e/web/match-shape.spec.ts` with `HR_SHOTS=1` |
 
 Open any file in a browser. Nothing is interactive (the Role Play page sizes its reply area by the layout B rule and scrolls its chat log to the newest line on load, as the app does).
 
