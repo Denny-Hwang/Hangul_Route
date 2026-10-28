@@ -2121,6 +2121,7 @@ export const learner = {
     title: 'Carrera de bloques',
     offer: 'Ronda extra: lee todos los bloques que puedas en un minuto.',
     intro: 'Un minuto en el reloj. Escucha un bloque y elígelo o ármalo.',
+    introPick: 'Un minuto en el reloj. Escucha un bloque y elígelo.',
     introProbe: 'Después, unos bloques más, sin reloj.',
     probe: 'Unos bloques más. Ya no hay reloj.',
     read: (n: number) => count(n, 'bloque leído', 'bloques leídos'),

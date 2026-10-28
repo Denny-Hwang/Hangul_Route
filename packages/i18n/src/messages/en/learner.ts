@@ -2816,6 +2816,8 @@ export const learner = {
     /** The bonus line on the Journey's Stage 1 header and on the Hangul Check results, above the button. */
     offer: 'Bonus round: read as many blocks as you can in one minute.',
     intro: 'One minute on the clock. Hear a block, then pick it or build it.',
+    /** The intro while `game.syllable-build` is off: every round is a pick, so it promises no build. */
+    introPick: 'One minute on the clock. Hear a block, then pick it.',
     introProbe: 'Then a few more blocks, with no clock.',
     /** The probe starts: the clock is gone. */
     probe: 'A few more blocks. No clock now.',
