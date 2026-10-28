@@ -379,9 +379,32 @@ function checkHasReadOrProduceRound(quest: LessonBodyQuest, kind: string): boole
   return kind === 'listen-pick' && Array.isArray(rounds) && rounds.some(isReadMeaningRound);
 }
 
+/**
+ * The shape of a Read Pick Meaning round (row CM-3A S2; kept in the lint, not the round schema, so the start bundle does
+ * not carry it): it is not a spelling round, and every option is a meaning (a picture with its label), never a spelling,
+ * since the Korean shown is the answer. A scope's rounds are all read or all heard (the game draws one prompt mode).
+ */
+export function readPickRoundIssues(rounds: readonly unknown[]): Array<{ round: number; path: string; message: string }> {
+  const out: Array<{ round: number; path: string; message: string }> = [];
+  const shown = rounds.map((r) => isRecord(r) && r.promptShown === true);
+  if (shown.some(Boolean) && !shown.every(Boolean)) {
+    out.push({ round: shown.indexOf(false), path: 'promptShown', message: "a Listen & Pick scope's rounds are all Read Pick Meaning (promptShown: true) or all heard" });
+  }
+  rounds.forEach((round, ri) => {
+    if (!isRecord(round) || round.promptShown !== true) return;
+    if (round.promptKind !== undefined) out.push({ round: ri, path: 'promptKind', message: 'a Read Pick Meaning round is not a spelling round' });
+    if (!isReadMeaningRound(round)) out.push({ round: ri, path: 'options', message: 'a Read Pick Meaning round offers meanings only: pictures with their labels, no spelling' });
+  });
+  return out;
+}
+
 function lintQuestChecks(entry: LessonEntry, add: Add): void {
   const triples = entry.body.quests.map((q) => ['practice', 'apply', 'check'].map((k) => stepGameKind(q, k) ?? '-').join(' / '));
   entry.body.quests.forEach((quest, qi) => {
+    quest.scopes.forEach((scope, si) => {
+      if (scope.kind !== 'listen-pick' || !Array.isArray(scope.rounds)) return;
+      for (const issue of readPickRoundIssues(scope.rounds)) add('lesson-check-variety', pathOf('quests', qi, 'scopes', si, 'rounds', issue.round, issue.path), issue.message);
+    });
     const check = stepGameKind(quest, 'check');
     if (check !== undefined && entry.stage >= 2 && !checkHasReadOrProduceRound(quest, check)) {
       add('lesson-check-variety', pathOf('quests', qi), `the Check plays ${check} with no read-meaning or produce round; from Stage 2 on every Check has at least 1`);

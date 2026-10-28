@@ -171,6 +171,9 @@ export const QuestObjectSchema = z.object({
  * The game a Check step may use (F-QUEST-002 T4, amended by F-CURR-001 §3.11):
  * Listen & Pick, or for a `stage7` quest also Sentence Builder (`order-it`),
  * because Stage 7's skill is writing. The Check scope holds exactly 2 rounds.
+ * `stage2` (F-CURR-002 §7.1 Check rotation, row CM-3A S2): Listen & Pick (with its Read
+ * Pick Meaning round), Dictation (Type Hangul) and Pic-Word Match, so no game holds more
+ * than 40% of the stage's Checks.
  * `stage4` (F-CURR-002 §7.1 Check rotation, row CM-3A S4): the default Dialogue reply pick
  * (Tap to Respond, the line read with its replies), Cloze Pick and Sentence Builder, so no
  * game holds more than 40% of the stage's Checks.
@@ -182,6 +185,7 @@ export const QuestObjectSchema = z.object({
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
+  if (stage === 'stage2') return ['listen-pick', 'type-hangul', 'pic-word-match'];
   if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
   if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
   // F-CURR-002 §7.1 Check rotation (row CM-3A S6): a Stage 6 Check is a realia question (Realia Read, or Cloze Pick

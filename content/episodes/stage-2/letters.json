@@ -134,7 +134,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-letters-q1-check",
           "durationSeconds": 35
@@ -372,6 +372,7 @@
           "rounds": [
             {
               "id": "see-hae",
+              "promptShown": true,
               "prompt": {
                 "ko": "해",
                 "romanization": "hae",
@@ -397,7 +398,8 @@
               "answerId": "hae"
             },
             {
-              "id": "read-norae",
+              "id": "see-norae",
+              "promptShown": true,
               "prompt": {
                 "ko": "노래",
                 "romanization": "norae",
@@ -406,27 +408,18 @@
               "options": [
                 {
                   "id": "norae",
-                  "text": {
-                    "ko": "노래",
-                    "romanization": "norae",
-                    "en": "song"
-                  }
+                  "pictureRef": "word:culture-song",
+                  "labelEn": "song"
                 },
                 {
-                  "id": "nara",
-                  "text": {
-                    "ko": "나라",
-                    "romanization": "nara",
-                    "en": "country"
-                  }
+                  "id": "sae",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "bird"
                 },
                 {
-                  "id": "nuna",
-                  "text": {
-                    "ko": "누나",
-                    "romanization": "nuna",
-                    "en": "older sister (said by a man or boy)"
-                  }
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "labelEn": "star"
                 }
               ],
               "answerId": "norae"
@@ -550,8 +543,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Hear and Type",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-letters-q2-check",
           "durationSeconds": 35
         },
@@ -784,68 +777,27 @@
         },
         {
           "ref": "minigame:s2-letters-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "see-ttalgi",
-              "prompt": {
-                "ko": "딸기",
-                "romanization": "ttalgi",
-                "en": "strawberry"
-              },
-              "options": [
-                {
-                  "id": "ttalgi",
-                  "pictureRef": "word:food-strawberry",
-                  "labelEn": "strawberry"
-                },
-                {
-                  "id": "ppang",
-                  "pictureRef": "word:food-bread",
-                  "labelEn": "bread"
-                },
-                {
-                  "id": "tteok",
-                  "pictureRef": "word:food-tteok",
-                  "labelEn": "rice cake"
-                }
-              ],
-              "answerId": "ttalgi"
-            },
-            {
-              "id": "read-ppang",
-              "prompt": {
+              "id": "hear-ppang",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "빵",
                 "romanization": "ppang",
                 "en": "bread"
-              },
-              "options": [
-                {
-                  "id": "ppang",
-                  "text": {
-                    "ko": "빵",
-                    "romanization": "ppang",
-                    "en": "bread"
-                  }
-                },
-                {
-                  "id": "bang",
-                  "text": {
-                    "ko": "방",
-                    "romanization": "bang",
-                    "en": "room"
-                  }
-                },
-                {
-                  "id": "san",
-                  "text": {
-                    "ko": "산",
-                    "romanization": "san",
-                    "en": "mountain"
-                  }
-                }
-              ],
-              "answerId": "ppang"
+              }
+            },
+            {
+              "id": "hear-ttalgi",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "딸기",
+                "romanization": "ttalgi",
+                "en": "strawberry"
+              }
             }
           ]
         }
@@ -985,8 +937,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
           "minigameRef": "minigame:s2-letters-q3-check",
           "durationSeconds": 35
         },
@@ -1219,68 +1171,69 @@
         },
         {
           "ref": "minigame:s2-letters-q3-check",
-          "kind": "listen-pick",
-          "rounds": [
+          "kind": "pic-word-match",
+          "boards": [
             {
-              "id": "see-gwi",
-              "prompt": {
-                "ko": "귀",
-                "romanization": "gwi",
-                "en": "ear"
-              },
-              "options": [
+              "pairs": [
+                {
+                  "id": "sagwa",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                },
                 {
                   "id": "gwi",
                   "pictureRef": "word:body-ear",
-                  "labelEn": "ear"
+                  "word": {
+                    "ko": "귀",
+                    "romanization": "gwi",
+                    "en": "ear"
+                  }
                 },
                 {
-                  "id": "ko",
-                  "pictureRef": "word:body-nose",
-                  "labelEn": "nose"
-                },
-                {
-                  "id": "ip",
-                  "pictureRef": "word:body-mouth",
-                  "labelEn": "mouth"
+                  "id": "gawi",
+                  "pictureRef": "word:school-scissors",
+                  "word": {
+                    "ko": "가위",
+                    "romanization": "gawi",
+                    "en": "scissors"
+                  }
                 }
-              ],
-              "answerId": "gwi"
+              ]
             },
             {
-              "id": "read-uija",
-              "prompt": {
-                "ko": "의자",
-                "romanization": "uija",
-                "en": "chair"
-              },
-              "options": [
+              "pairs": [
                 {
                   "id": "uija",
-                  "text": {
+                  "pictureRef": "word:school-chair",
+                  "word": {
                     "ko": "의자",
                     "romanization": "uija",
                     "en": "chair"
                   }
                 },
                 {
-                  "id": "ai",
-                  "text": {
-                    "ko": "아이",
-                    "romanization": "ai",
-                    "en": "child"
+                  "id": "wonsungi",
+                  "pictureRef": "word:animal-monkey",
+                  "word": {
+                    "ko": "원숭이",
+                    "romanization": "wonsungi",
+                    "en": "monkey"
                   }
                 },
                 {
-                  "id": "dari",
-                  "text": {
-                    "ko": "다리",
-                    "romanization": "dari",
-                    "en": "leg"
+                  "id": "gwi",
+                  "pictureRef": "word:body-ear",
+                  "word": {
+                    "ko": "귀",
+                    "romanization": "gwi",
+                    "en": "ear"
                   }
                 }
-              ],
-              "answerId": "uija"
+              ]
             }
           ]
         }
@@ -1390,7 +1343,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-letters-q4-check",
           "durationSeconds": 35
@@ -1628,6 +1581,7 @@
           "rounds": [
             {
               "id": "see-hoesaek",
+              "promptShown": true,
               "prompt": {
                 "ko": "회색",
                 "romanization": "hoesaek",
@@ -1653,39 +1607,31 @@
               "answerId": "hoesaek"
             },
             {
-              "id": "read-dwaeji",
+              "id": "see-gwi",
+              "promptShown": true,
               "prompt": {
-                "ko": "돼지",
-                "romanization": "dwaeji",
-                "en": "pig"
+                "ko": "귀",
+                "romanization": "gwi",
+                "en": "ear"
               },
               "options": [
                 {
-                  "id": "dwaeji",
-                  "text": {
-                    "ko": "돼지",
-                    "romanization": "dwaeji",
-                    "en": "pig"
-                  }
+                  "id": "gwi",
+                  "pictureRef": "word:body-ear",
+                  "labelEn": "ear"
                 },
                 {
-                  "id": "dari",
-                  "text": {
-                    "ko": "다리",
-                    "romanization": "dari",
-                    "en": "leg"
-                  }
+                  "id": "ko",
+                  "pictureRef": "word:body-nose",
+                  "labelEn": "nose"
                 },
                 {
-                  "id": "baji",
-                  "text": {
-                    "ko": "바지",
-                    "romanization": "baji",
-                    "en": "pants, trousers"
-                  }
+                  "id": "ip",
+                  "pictureRef": "word:body-mouth",
+                  "labelEn": "mouth"
                 }
               ],
-              "answerId": "dwaeji"
+              "answerId": "gwi"
             }
           ]
         }
@@ -1805,8 +1751,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
           "minigameRef": "minigame:s2-letters-q5-check",
           "durationSeconds": 35
         },
@@ -2039,68 +1985,69 @@
         },
         {
           "ref": "minigame:s2-letters-q5-check",
-          "kind": "listen-pick",
-          "rounds": [
+          "kind": "pic-word-match",
+          "boards": [
             {
-              "id": "see-kkot",
-              "prompt": {
-                "ko": "꽃",
-                "romanization": "kkot",
-                "en": "flower"
-              },
-              "options": [
+              "pairs": [
                 {
                   "id": "kkot",
                   "pictureRef": "word:nature-flower",
-                  "labelEn": "flower"
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
                 },
                 {
-                  "id": "namu",
-                  "pictureRef": "word:nature-tree",
-                  "labelEn": "tree"
+                  "id": "bit",
+                  "pictureRef": "word:science-light",
+                  "word": {
+                    "ko": "빛",
+                    "romanization": "bit",
+                    "en": "light"
+                  }
                 },
                 {
-                  "id": "byeol",
-                  "pictureRef": "word:nature-star",
-                  "labelEn": "star"
+                  "id": "but",
+                  "pictureRef": "card:brush",
+                  "word": {
+                    "ko": "붓",
+                    "romanization": "but",
+                    "en": "brush"
+                  }
                 }
-              ],
-              "answerId": "kkot"
+              ]
             },
             {
-              "id": "read-ot",
-              "prompt": {
-                "ko": "옷",
-                "romanization": "ot",
-                "en": "clothes"
-              },
-              "options": [
+              "pairs": [
                 {
-                  "id": "ot",
-                  "text": {
-                    "ko": "옷",
-                    "romanization": "ot",
-                    "en": "clothes"
+                  "id": "ssiat",
+                  "pictureRef": "word:science-seed",
+                  "word": {
+                    "ko": "씨앗",
+                    "romanization": "ssiat",
+                    "en": "seed"
                   }
                 },
                 {
-                  "id": "o",
-                  "text": {
-                    "ko": "오",
-                    "romanization": "o",
-                    "en": "five"
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
                   }
                 },
                 {
-                  "id": "mun",
-                  "text": {
-                    "ko": "문",
-                    "romanization": "mun",
-                    "en": "door"
+                  "id": "bit",
+                  "pictureRef": "word:science-light",
+                  "word": {
+                    "ko": "빛",
+                    "romanization": "bit",
+                    "en": "light"
                   }
                 }
-              ],
-              "answerId": "ot"
+              ]
             }
           ]
         }
@@ -2210,7 +2157,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-letters-q6-check",
           "durationSeconds": 35
@@ -2448,6 +2395,7 @@
           "rounds": [
             {
               "id": "see-ip",
+              "promptShown": true,
               "prompt": {
                 "ko": "잎",
                 "romanization": "ip",
@@ -2473,39 +2421,31 @@
               "answerId": "ip"
             },
             {
-              "id": "read-ap",
+              "id": "see-kkot",
+              "promptShown": true,
               "prompt": {
-                "ko": "앞",
-                "romanization": "ap",
-                "en": "front"
+                "ko": "꽃",
+                "romanization": "kkot",
+                "en": "flower"
               },
               "options": [
                 {
-                  "id": "ap",
-                  "text": {
-                    "ko": "앞",
-                    "romanization": "ap",
-                    "en": "front"
-                  }
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "labelEn": "flower"
                 },
                 {
-                  "id": "an",
-                  "text": {
-                    "ko": "안",
-                    "romanization": "an",
-                    "en": "inside"
-                  }
+                  "id": "ip",
+                  "pictureRef": "word:prop-leaf",
+                  "labelEn": "leaf"
                 },
                 {
-                  "id": "al",
-                  "text": {
-                    "ko": "알",
-                    "romanization": "al",
-                    "en": "egg"
-                  }
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "labelEn": "star"
                 }
               ],
-              "answerId": "ap"
+              "answerId": "kkot"
             }
           ]
         }
@@ -2680,10 +2620,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 register and romanization clean; ko overlay names letters by jamo; q2, q3, q5 and q6 rule lines tightened; q4 and q6 practice reworked within the art that exists; glosses fixed (회사, 낮, 과자, 있다). 있다 is said [읻따], a tensing the cell does not teach; it stays only as the ㅆ-final example, with its audio.",
-      "Culture (pass 5, MAR 2026-10-14): all six language notes re-checked against both sources (verification line 3); n6 narrowed to the letters taught; the q5 carry-over sentence removed; 떡볶이 glossed often spicy. No culture claim beyond the notes, no person, brand, shop or price, no age wording."
+      "Culture (pass 5, MAR 2026-10-14): all six language notes re-checked against both sources (verification line 3); n6 narrowed to the letters taught; the q5 carry-over sentence removed; 떡볶이 glossed often spicy. No culture claim beyond the notes, no person, brand, shop or price, no age wording.",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23: language, culture and learning-design checkers, reviser, third pass): Read Pick Meaning in q1, q4, q6 (해, 노래; 회색, 귀; 잎, 꽃), Dictation in q2 (빵, 딸기), Pic-Word Match in q3, q5 on the quest's own words.",
+      "Dictation words have no sound change, one spelling among taught words and no ㅐ/ㅔ or ㅚ/ㅙ/ㅞ; no q5 or q6 final is asked by ear (several letters share its sound). Read words use only letters taught by then. Glosses are the cell's own.",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Listen & Pick 7, Pic-Word Match 6 and Dictation 5 of 18; every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1

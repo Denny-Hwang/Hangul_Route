@@ -720,9 +720,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && !bare(round.prompt.ko).includes(bare(answer.text.ko));
       push(`${path}/q${i + 1}`, {
         kind: 'quiz',
-        prompt: { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
+        // Row CM-3A S2: a Read Pick Meaning round is a meaning question on its shown Korean (nothing said before the
+        // answer), its pictures the options, as in the game.
+        prompt: round.promptShown
+          ? { ask: 'meaning', ko: round.prompt.ko, romanization: round.prompt.romanization }
+          : { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
         options: shuffleSeeded(options, seed()),
-        textPrompt,
+        textPrompt: textPrompt && !round.promptShown,
       });
     });
   };

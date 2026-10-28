@@ -68,6 +68,8 @@ interface CellRow {
  * Section 1, verbatim, with the rows the LV-S rows lowered (LV-S1: no Discover item flattened; LV-S2:
  * no listen-pick, tap-respond or realia-read step skipped, and each cell's question floor raised to
  * what it builds now; LV-S3: no order-it step skipped; LV-S4: no step skipped at all). Stage 5 is the five books together.
+ * F-CURR-002 row CM-3A S2: each Stage 2 cell's floor is 2 lower, because one of its Checks is now Dictation, whose 2
+ * rounds are write-together slides (counted below), not question slides; no round lost its slide.
  * Row CM-3A S6 (F-CURR-002 section 7.1 Check rotation): the Dictation Checks of Stage 6 Letters q3, Life q3, Rites q3 and
  * Nature q2 are write-together slides now, not question slides, so those cells' question floors are 2 lower and the
  * type-hangul write slides 8 more; their Realia Read and Cloze Pick value Checks stay question slides. Crafts q3's Apply
@@ -86,11 +88,11 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:rites': { quests: 3, slides: 36, wordCards: 4, differentWords: 4, quiz: 23, skipped: {}, flattened: {} },
   'stage1:nature': { quests: 3, slides: 32, wordCards: 16, differentWords: 14, quiz: 24, skipped: {}, flattened: {} },
   'stage1:crafts': { quests: 3, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
-  'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 16, skipped: {}, flattened: {} },
-  'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 19, skipped: {}, flattened: {} },
-  'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 20, skipped: {}, flattened: {} },
-  'stage2:nature': { quests: 3, slides: 84, wordCards: 70, differentWords: 17, quiz: 15, skipped: {}, flattened: {} },
-  'stage2:crafts': { quests: 3, slides: 83, wordCards: 78, differentWords: 18, quiz: 28, skipped: {}, flattened: {} },
+  'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 14, skipped: {}, flattened: {} },
+  'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 17, skipped: {}, flattened: {} },
+  'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 18, skipped: {}, flattened: {} },
+  'stage2:nature': { quests: 3, slides: 84, wordCards: 70, differentWords: 17, quiz: 13, skipped: {}, flattened: {} },
+  'stage2:crafts': { quests: 3, slides: 83, wordCards: 78, differentWords: 18, quiz: 26, skipped: {}, flattened: {} },
   'stage3:letters': {
     quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 14,
     skipped: {},
@@ -370,9 +372,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
       }
     }
     // Section 1: type-hangul 21 steps holding 73 rounds, write-frame 7 holding 21, trace-word 5 holding 20; one write-frame round is the name round.
-    // Row CM-3A S7: five Stage 7 Checks are Write Frame now, 2 rounds each. Rows CM-3A S6 and S3 (F-CURR-002 section 7.1):
-    // four Stage 6 and four Stage 3 Checks are Dictation now, 8 type-hangul steps of 2 rounds more.
-    expect({ rounds, ...counts }).toEqual({ rounds: 140, type: 89, trace: 20, frame: 30, 'own-name': 1 });
+    // Row CM-3A S7: five Stage 7 Checks are Write Frame now, 2 rounds each. Rows CM-3A S2, S3 and S6 (F-CURR-002 section
+    // 7.1): five Stage 2, four Stage 3 and four Stage 6 Checks are Dictation now, 13 type-hangul steps of 2 rounds more.
+    expect({ rounds, ...counts }).toEqual({ rounds: 150, type: 99, trace: 20, frame: 30, 'own-name': 1 });
   });
 
   it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {

@@ -1,4 +1,5 @@
-import { isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
+import { isReadPickScope, isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
+import { romanizationShown } from '@hangul-route/i18n';
 import {
   Body,
   Button,
@@ -115,7 +116,7 @@ interface Focusable {
 /** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
-export function ListenPickGame({ scope, host, onBack, hint, textPrompt, spelling = null }: Props): ReactElement {
+export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(
     () => validRounds(scope).map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i)),
@@ -148,6 +149,28 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt, spelling
   // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot. The spelling round
   // prints its meaning, never its Korean (the answer), so it shows only the status panel (W11); the text prompt mode
   // (row CM-30) draws its prompt as text.
+  // Read Pick Meaning (F-CURR-002 section 7.1, the default Stage 2 Check; row CM-3A S2): a scope whose rounds show their
+  // Korean prompt (`promptShown`) plays in the text prompt mode, the Korean read in the learner's romanization mode, under
+  // the shipped "What does this mean?" heading and the picture miss line; the word is said once after the right pick.
+  const textPrompt: ListenPickTextPrompt | undefined =
+    textPromptProp ??
+    (isReadPickScope(rounds)
+      ? {
+          heading: copy.cultureQuiz.heading,
+          missLine: copy.picWord.missHoya,
+          prompt: (r, focusRef) => (
+            <View ref={focusRef} style={{ alignItems: 'center' }} testID="listen-pick-text-prompt">
+              <KoreanText
+                ko={r.prompt.ko}
+                romanization={r.prompt.romanization}
+                romanizationShown={romanizationShown(romanizationMode, false)}
+                size="md"
+                testID="listen-pick-prompt-text"
+              />
+            </View>
+          ),
+        }
+      : undefined);
   const textMode = textPrompt !== undefined;
   const textModeRef = useRef(textMode);
   textModeRef.current = textMode;

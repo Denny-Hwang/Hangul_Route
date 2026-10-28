@@ -417,6 +417,11 @@ function scopeWords(scope: LessonScope): { read: KoText[]; shown: KoText[] } {
       const prompts = scope.rounds.map((r) => r.prompt);
       return { read: [...options, ...prompts], shown: [...options, ...prompts] };
     }
+    // F-CURR-002 row CM-3A S2: a Dictation (or `see`) round's word is written, then shown.
+    case 'type-hangul': {
+      const targets = scope.rounds.map((r) => r.target);
+      return { read: targets, shown: targets };
+    }
     default:
       return { read: [], shown: [] };
   }
@@ -537,7 +542,8 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
         if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
         // The other Stage 2 cells show a Word Builder word only as exposure (rule 6's theme words): a Pic-Word or
         // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
-        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter.
+        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
+        // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
         const scored =
           cell.theme === 'letters'
             ? quest
@@ -545,7 +551,8 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
                 ...quest,
                 scopes: quest.scopes.flatMap((sc): LessonScope[] =>
                   sc.kind === 'listen-pick'
-                    ? [{ ...sc, rounds: sc.rounds.map((r) => ({ ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
+                    ? // A heard prompt is exposure; a Read Pick Meaning prompt (row CM-3A S2) is read.
+                      [{ ...sc, rounds: sc.rounds.map((r) => (r.promptShown === true ? r : { ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
                     : sc.kind === 'pic-word-match' || sc.kind === 'card-match'
                       ? []
                       : [sc],
@@ -560,7 +567,7 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
     for (const cell of stage2) expect(stage2ReuseProblems(cell)).toEqual([]);
   });
 
-  it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3)', () => {
+  it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3), Dictation included', () => {
     expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
     if (wordBuilder === undefined) return;
     const norm = (ko: string): string =>
@@ -582,6 +589,11 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
     }
     for (const quest of wordBuilder.quests) {
       for (const scope of quest.scopes) {
+        // Row CM-3A S2: Dictation spells a word by ear, so it never asks a word with ㅐ, ㅔ, ㅒ, ㅖ, ㅚ, ㅙ or ㅞ.
+        if (scope.kind === 'type-hangul') {
+          for (const round of scope.rounds) if (round.mode === 'hear') expect(norm(round.target.ko), `${scope.ref} ${round.id}`).not.toMatch(/[EW]|ㅒ|ㅖ/);
+          continue;
+        }
         if (scope.kind !== 'listen-pick') continue;
         for (const round of scope.rounds) {
           const heard = norm(round.prompt.ko);
