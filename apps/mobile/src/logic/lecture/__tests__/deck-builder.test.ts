@@ -2043,6 +2043,9 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
         questById: (id) => (id === rp.id ? rp : undefined),
       });
     const turns = (slides: readonly Slide[]): RolePlay[] => only(slides, 'role-play');
+    // `game.role-play` on (section 12.2): the presenter reads it once per deck; left out, it is off.
+    const ON = { rolePlay: true };
+    const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice, ON);
 
     it('a role-play slide per turn of the main path, in order, each with the question and answer builds; a scope with no scene is skipped', () => {
       const { slides, skipped } = run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE));
@@ -2115,10 +2118,24 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
 
     it('the run draws the slide (a shell kind), its Sound plays the partner line, and its words count as sentences for a later word card', () => {
       const deck = deckOf([{ kind: 'quest', id: rp.id }]);
-      const expanded = expandDeck(deck, withScene(LIBRARY_SCENE), VOICE);
+      const expanded = expandDeck(deck, withScene(LIBRARY_SCENE), VOICE, ON);
       const { slides, parts } = runDeck(deck, expanded);
       expect(only(slides, 'role-play')).toHaveLength(4);
       expect(parts).toEqual([{ blockIndex: 0, reason: 'scope-too-small' }]);
+    });
+
+    it('with game.role-play off (the switches left out, or off) the step builds the reply slides of Tap to Respond on its main path, never a Role Play slide', () => {
+      for (const off of [undefined, { rolePlay: false }]) {
+        const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id: rp.id }]), withScene(LIBRARY_SCENE), VOICE, off);
+        expect(turns(slides)).toEqual([]);
+        const replies = quizzes(slides, 'reply');
+        expect(replies.map((q) => q.key)).toEqual(['quest:role-play/s1/q1', 'quest:role-play/s1/q2', 'quest:role-play/s1/q3', 'quest:role-play/s1/q4']);
+        expect(replies.map((q) => (q.prompt.ask === 'reply' ? q.prompt.line.ko : ''))).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!']);
+        // One right answer per turn, the first natural reply; a second natural reply is left out, as the learner fallback plays it.
+        expect(replies.every((q) => q.options.filter((o) => o.correct).length === 1)).toBe(true);
+        expect(replies[1]!.options.map((o) => o.ko).sort()).toEqual(['괜찮아요.', '동화책을 찾아요.']);
+        expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:role-play-none', reason: 'scope-too-small' }]);
+      }
     });
 
     it('the deck shape does not change: a deck naming a quest with a Role Play step stays v1 and decodes, so no new decode failure is needed', () => {

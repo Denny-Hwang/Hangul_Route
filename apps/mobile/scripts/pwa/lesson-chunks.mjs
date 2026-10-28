@@ -284,9 +284,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
   // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
   Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
-  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
-  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
-  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
+  // F-CURR-002 row CM-35: the Role Play game and the fixture build's host screen
+  // (`src/screens/minigames/role-play/role-play-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/role-play/role-play-entry.tsx`).
   Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
   // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of

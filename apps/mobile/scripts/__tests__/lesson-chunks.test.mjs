@@ -221,6 +221,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-31: the dictation chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
     expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
+    // Row CM-35: the Role Play game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[7].marker}';`);
+    expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
