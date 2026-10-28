@@ -147,7 +147,8 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
   it('applies the Check rule: Listen & Pick (Sentence Builder too in stage7), exactly 2 rounds', () => {
     expect(CHECK_ROUNDS).toBe(2);
     expect(checkKindsFor('stage3')).toEqual(['listen-pick']);
-    expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it']);
+    // Row CM-3A S7: the Stage 7 Check rotation (F-CURR-002 section 7.1): Write Frame, Cloze Pick and Sentence Builder.
+    expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it', 'write-frame', 'cloze-pick']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');

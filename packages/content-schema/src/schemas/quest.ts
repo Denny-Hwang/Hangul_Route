@@ -171,10 +171,12 @@ export const QuestObjectSchema = z.object({
  * The game a Check step may use (F-QUEST-002 T4, amended by F-CURR-001 §3.11):
  * Listen & Pick, or for a `stage7` quest also Sentence Builder (`order-it`),
  * because Stage 7's skill is writing. The Check scope holds exactly 2 rounds.
+ * `stage7` (F-CURR-002 §7.1 Check rotation, row CM-3A S7): also Write Frame (the default
+ * S7 Check) and Cloze Pick, so no game holds more than 40% of the stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
-  return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
+  return stage === 'stage7' ? ['listen-pick', 'order-it', 'write-frame', 'cloze-pick'] : ['listen-pick'];
 }
 
 /** The quest-level step rules (F-QUEST-002 §3.1), shared by `QuestSchema` and `LessonQuestSchema`. */
