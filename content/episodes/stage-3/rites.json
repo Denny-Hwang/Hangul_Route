@@ -10,7 +10,9 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:full-moon"],
+  "rewardCardIds": [
+    "card:full-moon"
+  ],
   "quests": [
     {
       "id": "quest:stage3-rites-q1",
@@ -1297,24 +1299,24 @@
       "sources": [
         {
           "title": "세배",
-          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
-          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "정의: '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사.' / '조부모·부모에게 먼저 절하고, … 아랫사람이 윗사람에게 절을 하여 새해 첫인사를 드린다.' / '세배를 받는 이도 … 한마디씩 덕담을 한다.'"
-        },
-        {
-          "title": "세배",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8%EB%B0%B0",
           "accessed": "2026-10-14",
           "quoteOrLocator": "세배(歲拜)「명사」: '섣달그믐이나 정초에 웃어른께 인사로 하는 절.'"
+        },
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사.' / '조부모·부모에게 먼저 절하고, … 아랫사람이 윗사람에게 절을 하여 새해 첫인사를 드린다.' / '세배를 받는 이도 … 한마디씩 덕담을 한다.'"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0029802 and stdict 세배; every quoteOrLocator string found verbatim. 'New Year's bow', 'at the start of the year', 'younger family members bow to grandparents, parents and other elders' and 'elders answer with kind wishes' are each supported as recorded in passes 1 and 2b. textEn now opens the custom with 'By custom,' (the source describes a custom, not what every family does; no new fact). No run of words shared with a source; no designation number; no ancestral rite named. Outcome: pass, hedge applied.\npass 5 round 2 (MAR culture, 2026-10-14): the q3 Discover Hoya line now places sebae at Seollal, the Lunar New Year (en/es/ko), from encykorea E0029802 정의 '정월 초하룻날'; textEn unchanged; lesson-copies-source re-run clean. Outcome: pass."
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'the New Year's bow' and 'at the start of the year' = encykorea 세배 정의 (정월 초하룻날 … 새해의 첫인사) and stdict 세배 (섣달그믐이나 정초에 웃어른께 인사로 하는 절); 'younger family members bow to grandparents, parents and other elders' = encykorea 세배 (조부모·부모에게 먼저 절하고 … 아랫사람이 윗사람에게); 'elders answer with kind wishes' = encykorea 세배 (세배를 받는 이도 … 덕담을 한다). Restated in own words; no ancestral rite named (the encykorea sentence on 차례 is not quoted). Same fact as Holiday Words n2 and n8. Used in: q3 Discover Hoya line, q3 Discover page 1 caption, q3 practice r1 and apply r1 (sebae sentence).\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0029802 and stdict 세배. 정의 '정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사' supports 'the New Year's bow' and 'at the start of the year'; 내용 '조부모·부모에게 먼저 절하고, 형·누나 등 차례로 아랫사람이 윗사람에게 절을' and the later visits to 일가친척과 이웃어른 support 'younger family members bow to grandparents, parents and other elders'; '세배를 받는 이도 … 한마디씩 덕담을 한다' supports 'elders answer with kind wishes'; stdict '섣달그믐이나 정초에 웃어른께 인사로 하는 절' matches. All quoteOrLocator strings found verbatim on the pages. textEn is a restatement, not a translation of any source sentence; no copy found. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0029802 and stdict 세배; every quoteOrLocator string found verbatim. 'New Year's bow', 'at the start of the year', 'younger family members bow to grandparents, parents and other elders' and 'elders answer with kind wishes' are each supported as recorded in passes 1 and 2b. textEn now opens the custom with 'By custom,' (the source describes a custom, not what every family does; no new fact). No run of words shared with a source; no designation number; no ancestral rite named. Outcome: pass, hedge applied.\npass 5 round 2 (MAR culture, 2026-10-14): the q3 Discover Hoya line now places sebae at Seollal, the Lunar New Year (en/es/ko), from encykorea E0029802 정의 '정월 초하룻날'; textEn unchanged; lesson-copies-source re-run clean. Outcome: pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1324,17 +1326,17 @@
       "sources": [
         {
           "title": "추석",
-          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
-          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "정의: '음력 8월 15일로 가배·가위·한가위·중추절 등으로 불리는 우리나라의 명절.' / 내용 요약: '추석은 1년 중 가장 큰 보름달을 맞이하는 달의 명절이다.' / 추석 절식: '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.'"
-        },
-        {
-          "title": "추석",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B6%94%EC%84%9D",
           "accessed": "2026-10-14",
           "quoteOrLocator": "추석(秋夕)「명사」: '우리나라 명절의 하나. 음력 팔월 보름날이다. …' (동의어 팔월대보름, 한가위)"
+        },
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "정의: '음력 8월 15일로 가배·가위·한가위·중추절 등으로 불리는 우리나라의 명절.' / 내용 요약: '추석은 1년 중 가장 큰 보름달을 맞이하는 달의 명절이다.' / 추석 절식: '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.'"
         },
         {
           "title": "보름달",
@@ -1348,7 +1350,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-14): 'day 15 of the eighth lunar month' = encykorea 추석 정의 (음력 8월 15일) and stdict 추석 (음력 팔월 보름날이다); 'a full-moon day' = stdict 보름달 (음력 보름날 밤에 뜨는 둥근달) with the 보름날 date; 'known as a festival of the moon' = encykorea 추석 내용 요약 (1년 중 가장 큰 보름달을 맞이하는 달의 명절); 'families may gather under the bright moon to make songpyeon' = encykorea 추석 절식 (밝은 달을 보면서 가족들이 모여 송편을 만든다), hedged with 'may'. The stdict 추석 quote is trimmed before its 차례 clause (OD-9). Restated in own words. Used in: q3 Discover Hoya line ('Chuseok has a big, bright full moon'), q3 Discover page 2 caption, q2 Discover page 2 and q3 sentences with 보름달.\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달. 정의 '음력 8월 15일' and stdict '음력 팔월 보름날이다' support 'day 15 of the eighth lunar month'; stdict 보름달 '음력 보름날 밤에 뜨는 둥근달' supports 'a full-moon day'; 내용 요약 '1년 중 가장 큰 보름달을 맞이하는 달의 명절' supports 'known as a festival of the moon'; 추석 절식 '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다' supports 'families may gather under the bright moon to make songpyeon' (the source places this on the evening of day 14; the note gives no day for it and hedges with 'may', so it stays accurate). All quoteOrLocator strings found verbatim on the pages. No source wording copied. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달; every quoteOrLocator string found verbatim, the stdict 추석 quote ends before its 차례 clause (OD-9). 'day 15 of the eighth lunar month', 'a full-moon day', 'known as a festival of the moon' and 'families may gather under the bright moon to make songpyeon' (hedged, no day given) are each supported. The q3 Hoya line ('Chuseok has a big, bright full moon') rests on the same 내용 요약. No run of words shared with a source. Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, 2026-10-14): 'day 15 of the eighth lunar month' = encykorea 추석 정의 (음력 8월 15일) and stdict 추석 (음력 팔월 보름날이다); 'a full-moon day' = stdict 보름달 (음력 보름날 밤에 뜨는 둥근달) with the 보름날 date; 'known as a festival of the moon' = encykorea 추석 내용 요약 (1년 중 가장 큰 보름달을 맞이하는 달의 명절); 'families may gather under the bright moon to make songpyeon' = encykorea 추석 절식 (밝은 달을 보면서 가족들이 모여 송편을 만든다), hedged with 'may'. The stdict 추석 quote is trimmed before its 차례 clause (OD-9). Restated in own words. Used in: q3 Discover Hoya line ('Chuseok has a big, bright full moon'), q3 Discover page 2 caption, q2 Discover page 2 and q3 sentences with 보름달.\npass 2b (independent fact check, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달. 정의 '음력 8월 15일' and stdict '음력 팔월 보름날이다' support 'day 15 of the eighth lunar month'; stdict 보름달 '음력 보름날 밤에 뜨는 둥근달' supports 'a full-moon day'; 내용 요약 '1년 중 가장 큰 보름달을 맞이하는 달의 명절' supports 'known as a festival of the moon'; 추석 절식 '열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다' supports 'families may gather under the bright moon to make songpyeon' (the source places this on the evening of day 14; the note gives no day for it and hedges with 'may', so it stays accurate). All quoteOrLocator strings found verbatim on the pages. No source wording copied. Outcome: pass, no change.\npass 5 (MAR culture review, final independent pass, 2026-10-14): re-opened encykorea E0057862, stdict 추석 and stdict 보름달; every quoteOrLocator string found verbatim, the stdict 추석 quote ends before its 차례 clause (OD-9). 'day 15 of the eighth lunar month', 'a full-moon day', 'known as a festival of the moon' and 'families may gather under the bright moon to make songpyeon' (hedged, no day given) are each supported. The q3 Hoya line ('Chuseok has a big, bright full moon') rests on the same 내용 요약. No run of words shared with a source. Outcome: pass, no change.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],

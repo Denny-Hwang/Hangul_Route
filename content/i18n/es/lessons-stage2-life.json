@@ -5,7 +5,8 @@
     "episode:stage2-life": {
       "title": "Palabras de la lonchera",
       "subtitle": "Lee palabras coreanas de comida y de las comidas del día.",
-      "hoyaIntro": "Ya conoces las letras. ¡Leamos palabras de comida!"
+      "hoyaIntro": "Ya conoces las letras. ¡Leamos palabras de comida!",
+      "culture.n1.text": "En una comida coreana tradicional de todos los días, el arroz ({ko:밥}) se sirve con platos de acompañamiento, llamados {ko:반찬}, y con sopa ({ko:국}) o guiso."
     },
     "quest:stage2-life-q1": {
       "title": "Palabras de la lonchera",

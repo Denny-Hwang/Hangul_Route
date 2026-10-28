@@ -5,7 +5,9 @@
     "episode:stage2-crafts": {
       "title": "Palabras del parque",
       "subtitle": "Lee palabras del parque y de juegos tradicionales.",
-      "hoyaIntro": "Columpios, trompos y cuerdas de saltar: ¡leamos las palabras con las que jugamos!"
+      "hoyaIntro": "Columpios, trompos y cuerdas de saltar: ¡leamos las palabras con las que jugamos!",
+      "culture.n1.text": "{ko:제기차기} es un juego tradicional coreano. Se patea un {ko:제기}, un juguete pequeño con peso y flecos de papel o tela, y se intenta que no toque el suelo durante el mayor número de patadas posible.",
+      "culture.n2.text": "{ko:팽이치기} es un juego tradicional coreano con una peonza de madera. Se mantiene girando con golpes de un pequeño látigo, a menudo sobre el hielo en invierno, y en algunas competencias gana la peonza que gira más tiempo."
     },
     "quest:stage2-crafts-q1": {
       "title": "En el parque",

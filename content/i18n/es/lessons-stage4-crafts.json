@@ -147,7 +147,9 @@
     "episode:stage4-crafts": {
       "hoyaIntro": "Mina y yo estamos jugando. ¡Ven a leer lo que decimos!",
       "subtitle": "Unos amigos eligen un juego y se turnan.",
-      "title": "A jugar con amigos"
+      "title": "A jugar con amigos",
+      "culture.n1.text": "Los amigos cercanos suelen hablarse en habla informal, {ko:반말} (banmal). En esta casilla, las frases corteses terminan en {ko:요} (yo); las informales entre Hoya y Mina, no.",
+      "culture.n2.text": "{ko:같이 할까요?} y {ko:같이 할까?} preguntan lo mismo: ¿lo hacemos juntos? La terminación {ko:요} hace cortés la primera; la segunda es informal."
     }
   }
 }

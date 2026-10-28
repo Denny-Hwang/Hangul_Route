@@ -5,7 +5,9 @@
     "episode:stage6-letters": {
       "title": "Lee el menú",
       "subtitle": "Lee platillos, precios y bebidas en un menú.",
-      "hoyaIntro": "¡Un menú! Leamos los platillos, los precios y las bebidas."
+      "hoyaIntro": "¡Un menú! Leamos los platillos, los precios y las bebidas.",
+      "culture.n1.text": "En Corea del Sur los precios están en wones, que se escriben {ko:원}. El won actual es la moneda desde 1962, y su símbolo es ₩.",
+      "culture.n2.text": "El coreano tiene dos series de números: los nativos, como {ko:하나} y {ko:둘}, y los sinocoreanos, como {ko:일}, {ko:이} y {ko:삼}. Los precios del menú usan la serie sinocoreana: {ko:천} es mil, así que {ko:천 원} son 1000 wones."
     },
     "quest:stage6-letters-q1": {
       "title": "Platillos del menú",

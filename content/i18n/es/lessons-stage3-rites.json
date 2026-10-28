@@ -5,7 +5,9 @@
     "episode:stage3-rites": {
       "title": "Oraciones de fiesta",
       "subtitle": "Oraciones cortas sobre Seollal y Chuseok",
-      "hoyaIntro": "¡Los días de fiesta son divertidos! Vamos a leer y armar oraciones sobre ellos."
+      "hoyaIntro": "¡Los días de fiesta son divertidos! Vamos a leer y armar oraciones sobre ellos.",
+      "culture.n1.text": "El sebae es la reverencia de Año Nuevo. Por costumbre, al empezar el año los miembros más jóvenes de la familia se inclinan ante los abuelos, los padres y otros mayores, y los mayores responden con buenos deseos.",
+      "culture.n2.text": "Chuseok cae el día 15 del octavo mes lunar, día de luna llena, y se conoce como una fiesta de la luna. Las familias pueden reunirse bajo la luna brillante para preparar songpyeon."
     },
     "quest:stage3-rites-q1": {
       "title": "La abuela y el abuelo",

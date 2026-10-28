@@ -5,7 +5,10 @@
     "episode:stage3-crafts": {
       "title": "Frases de juegos",
       "subtitle": "Arma frases sobre juegos y lugares para jugar.",
-      "hoyaIntro": "¡Digamos a qué queremos jugar, adónde vamos y qué hacemos!"
+      "hoyaIntro": "¡Digamos a qué queremos jugar, adónde vamos y qué hacemos!",
+      "culture.n1.text": "{ko:을} y {ko:를} marcan aquello sobre lo que recae una acción. La palabra anterior decide cuál va: {ko:을} tras consonante final, {ko:를} tras vocal.",
+      "culture.n2.text": "{ko:싶어요} después de una palabra de acción terminada en {ko:고} dice que quieres hacerlo: {ko:하고} {ko:싶어요}, quiero hacerlo.",
+      "culture.n3.text": "{ko:에} después de un lugar, con una palabra de ir como {ko:가요}, marca adónde vas: {ko:공원에} {ko:가요}, voy al parque."
     },
     "quest:stage3-crafts-q1": {
       "title": "Quiero jugar",
