@@ -128,7 +128,11 @@ describe('Role Play (row CM-35)', () => {
     // The Hangul branch was played: its own line is in the log.
     expect(texts(r)).toEqual(expect.arrayContaining(['한글 책은 여기 있어요.']));
     expect(h.answers.map((a) => (a as unknown[])[2])).toEqual([{ itemId: 't1/hello' }, { itemId: 't2/hangeul' }, { itemId: 't3b/thanks' }, { itemId: 't4/stay' }]);
-    await press(byTestId(root(r), 'role-play-continue').find((n) => typeof n.props.onClick === 'function')!);
+    const cont = byTestId(root(r), 'role-play-continue').find((n) => typeof n.props.onClick === 'function')!;
+    await press(cont);
+    expect(h.completes).toBe(1);
+    // A fast second press (a double click on the web) does not close the step twice.
+    await press(cont);
     expect(h.completes).toBe(1);
     expect(hostNodes(root(r), (n) => /mic|record|voice-echo/i.test(String(n.props['data-testid'] ?? '')))).toEqual([]);
   });

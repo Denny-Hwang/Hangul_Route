@@ -3,6 +3,7 @@ import { isSoundRolePlayScene, rolePlayPaths } from '@hangul-route/content-schem
 import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { ALL_LESSON_SCOPES } from '../../../content/__tests__/helpers/lesson-stages';
 import { firstNatural, lookHereOf, startRolePlay, stepRolePlay, turnOf, type RpEffect, type RpEvent, type RpState } from '../reducer';
 
 const scene = LIBRARY_SCENE;
@@ -110,29 +111,29 @@ describe('Role Play branch reducer (row CM-35)', () => {
  * Property (section 7.7, "no bad ending in a Role Play branch"): whatever the learner taps, in any order, any scene
  * the schema accepts ends at a closing line, after exactly its turn count, with one scored answer per turn.
  */
-const sceneArb = fc
-  .record({ turns: fc.integer({ min: 4, max: 6 }), split: fc.integer({ min: 0, max: 5 }), merge: fc.boolean() })
-  .map(({ turns, split, merge }): RolePlayScene => {
-    const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
-    const nudge = { id: 'x', text: kt('아니요.', 'aniyo', 'No.'), kind: 'lessNatural' as const, whyEn: 'Try another.' };
-    const at = Math.min(split, turns - 2);
-    const nodes: RolePlayScene['nodes'] = [];
-    for (let i = 0; i < turns; i += 1) {
-      const next = i === turns - 1 ? 'end' : `t${i + 1}`;
-      const replies =
-        i === at
-          ? [
-              { id: 'a', text: kt('네.', 'ne', 'Yes.'), kind: 'natural' as const, next },
-              { id: 'b', text: kt('좋아요.', 'joayo', 'Good.'), kind: 'natural' as const, next: merge ? next : `b${i + 1}` },
-              nudge,
-            ]
-          : [{ id: 'a', text: kt('네.', 'ne', 'Yes.'), kind: 'natural' as const, next }, nudge];
-      nodes.push({ id: `t${i}`, line: kt('뭐예요?', 'mwoyeyo', 'What is it?'), replies });
-      if (!merge && i > at) nodes.push({ id: `b${i}`, line: kt('뭐예요?', 'mwoyeyo', 'What is it?'), replies: [{ ...replies[0]!, next: i === turns - 1 ? 'end' : `b${i + 1}` }, nudge] });
-    }
-    nodes.push({ id: 'end', end: true, closingEn: 'Well done!' });
-    return { title: kt('도서관', 'doseogwan', 'At the library'), partner: kt('사서', 'saseo', 'librarian'), start: 't0', nodes };
-  });
+/** A scene of `turns` turns that splits at turn `split` (at most the last but one) into two branches that meet again or stay apart. */
+function shapeScene({ turns, split, merge }: { turns: number; split: number; merge: boolean }): RolePlayScene {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const nudge = { id: 'x', text: kt('아니요.', 'aniyo', 'No.'), kind: 'lessNatural' as const, whyEn: 'Try another.' };
+  const at = Math.min(split, turns - 2);
+  const nodes: RolePlayScene['nodes'] = [];
+  for (let i = 0; i < turns; i += 1) {
+    const next = i === turns - 1 ? 'end' : `t${i + 1}`;
+    const replies =
+      i === at
+        ? [
+            { id: 'a', text: kt('네.', 'ne', 'Yes.'), kind: 'natural' as const, next },
+            { id: 'b', text: kt('좋아요.', 'joayo', 'Good.'), kind: 'natural' as const, next: merge ? next : `b${i + 1}` },
+            nudge,
+          ]
+        : [{ id: 'a', text: kt('네.', 'ne', 'Yes.'), kind: 'natural' as const, next }, nudge];
+    nodes.push({ id: `t${i}`, line: kt('뭐예요?', 'mwoyeyo', 'What is it?'), replies });
+    if (!merge && i > at) nodes.push({ id: `b${i}`, line: kt('뭐예요?', 'mwoyeyo', 'What is it?'), replies: [{ ...replies[0]!, next: i === turns - 1 ? 'end' : `b${i + 1}` }, nudge] });
+  }
+  nodes.push({ id: 'end', end: true, closingEn: 'Well done!' });
+  return { title: kt('도서관', 'doseogwan', 'At the library'), partner: kt('사서', 'saseo', 'librarian'), start: 't0', nodes };
+}
+const sceneArb = fc.record({ turns: fc.integer({ min: 4, max: 6 }), split: fc.integer({ min: 0, max: 5 }), merge: fc.boolean() }).map(shapeScene);
 
 describe('any taps reach a good ending (property)', () => {
   it('random taps through any accepted scene: ends at a closing line after its turn count, one score a turn', () => {
@@ -161,5 +162,85 @@ describe('any taps reach a good ending (property)', () => {
       }),
       { numRuns: 300, seed: 35 },
     );
+  });
+});
+
+/**
+ * Exhaustive (section 7.7, review fix): every way through every scene that ships or that the suites play is walked
+ * through the reducer, not sampled. The scenes are the fixture scene, every role-play scope of the lesson cells (the
+ * Stage 4 and pack rows add theirs and inherit this walk), and every scene shape the property draws from (4 to 6
+ * turns, a split at each turn, branches that meet again or stay apart). At each turn every natural reply is taken, so
+ * two natural replies that lead to the same line are two ways; each way is played twice: each less natural reply
+ * tapped first, then the natural reply at once.
+ */
+describe('every branch of every scene reaches a good ending (exhaustive)', () => {
+  const shipped = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]): Array<[string, RolePlayScene]> =>
+    scope.kind === 'role-play' && scope.rolePlay ? [[ref, scope.rolePlay.scene]] : [],
+  );
+  const shapes: Array<[string, RolePlayScene]> = [];
+  for (let turns = 4; turns <= 6; turns += 1) {
+    for (let split = 0; split <= 5; split += 1) {
+      for (const merge of [true, false]) shapes.push([`shape ${turns}/${split}/${merge ? 'meet' : 'apart'}`, shapeScene({ turns, split, merge })]);
+    }
+  }
+  const scenes: Array<[string, RolePlayScene]> = [['fixture: library', LIBRARY_SCENE], ...shipped, ...shapes];
+
+  type Answer = Extract<RpEffect, { type: 'answer' }>;
+  interface Way {
+    replies: string[];
+    state: RpState;
+    answers: Answer[];
+    ends: number;
+  }
+  /** Every way through `s` by its natural replies; `missFirst` taps each less natural reply of a turn before it. */
+  function ways(s: RolePlayScene, missFirst: boolean): Way[] {
+    const out: Way[] = [];
+    const walk = (state: RpState, replies: string[], answers: Answer[], ends: number): void => {
+      if (state.done) {
+        out.push({ replies, state, answers, ends });
+        return;
+      }
+      const turn = turnOf(s, state);
+      expect(turn, `${replies.join('>')}: a turn or the end, never a dead end`).toBeDefined();
+      expect(replies.length, 'no way runs past the longest scene').toBeLessThanOrEqual(6);
+      for (const natural of turn!.replies.filter((r) => r.kind === 'natural')) {
+        let at = state;
+        const scored = [...answers];
+        const taps = [...(missFirst ? turn!.replies.filter((r) => r.kind === 'lessNatural').map((r) => r.id) : []), natural.id];
+        for (const id of taps) {
+          const step = stepRolePlay(s, at, tap(id));
+          scored.push(...step.effects.filter((e): e is Answer => e.type === 'answer'));
+          at = step.state;
+        }
+        expect(at.sending, `${natural.id} is sent`).toBe(natural.id);
+        const sent = stepRolePlay(s, at, SENT);
+        walk(sent.state, [...replies, natural.id], scored, ends + sent.effects.filter((e) => e.type === 'end').length);
+      }
+    };
+    walk(startRolePlay(s).state, [], [], 0);
+    return out;
+  }
+
+  it('walks the fixture scene, every shipped role-play scope and every shape', () => {
+    expect(scenes.length).toBe(1 + shipped.length + 36);
+  });
+
+  it.each(scenes)('%s: every way ends at its closing line after its turn count, one score a turn, a first miss scored as a miss', (_name, s) => {
+    expect(isSoundRolePlayScene(s)).toBe(true);
+    const turns = rolePlayTurnCount(s);
+    for (const missFirst of [false, true]) {
+      const all = ways(s, missFirst);
+      // One way per natural-reply choice, as the content rules count them (at most 4).
+      expect(all).toHaveLength(rolePlayPaths(s).length);
+      for (const way of all) {
+        const where = `${missFirst ? 'misses first' : 'direct'}: ${way.replies.join('>')}`;
+        const end = s.nodes.find((n) => n.id === way.state.node);
+        expect(isRolePlayEnd(end) && end.closingEn.length > 0, where).toBe(true);
+        expect(way.state.turn, where).toBe(turns);
+        expect(way.ends, where).toBe(1);
+        expect(way.answers, where).toHaveLength(turns);
+        expect(way.answers.every((a) => a.correct === !missFirst), where).toBe(true);
+      }
+    }
   });
 });

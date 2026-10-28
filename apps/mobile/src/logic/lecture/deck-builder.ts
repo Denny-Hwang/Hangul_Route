@@ -31,7 +31,7 @@ import {
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
-import { rolePlayMainPath } from '../role-play/fallback';
+import { rolePlayMainPath, rolePlayToTapRespond } from '../role-play/fallback';
 import { validRounds } from '../listen-pick';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
@@ -158,6 +158,18 @@ export interface LectureBundle {
 export interface VoiceInfo {
   canPlayKorean: boolean;
 }
+
+/**
+ * The F-CURR-002 switches a deck reads (section 12.2): with `game.<kind>` off, every step of that kind builds its
+ * fallback's slides. The presenter reads them once per deck (`PresenterApp`); left out, every switch is off, the
+ * state a kill-switched kind merges in.
+ */
+export interface DeckSwitches {
+  /** `game.role-play` (row CM-35): on, the Role Play slide; off, the reply slides of Tap to Respond on its main path. */
+  rolePlay: boolean;
+}
+
+const SWITCHES_OFF: DeckSwitches = Object.freeze({ rolePlay: false });
 
 export type Slide = SlideBody & { key: string; builds: readonly BuildName[] };
 
@@ -337,7 +349,7 @@ export function withBuilds(slides: readonly Slide[], opts: BuildOptions): Slide[
   return slides.map((slide) => ({ ...slide, builds: buildsFor(slide, opts) }));
 }
 
-export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: VoiceInfo): ExpandedDeck {
+export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: VoiceInfo, switches: DeckSwitches = SWITCHES_OFF): ExpandedDeck {
   const opts: BuildOptions = { romanization: deck.options.romanization, strokeGuide: deck.options.strokeGuide };
   const textPrompt = !voice.canPlayKorean || !deck.options.sound;
   const slides: Slide[] = [];
@@ -588,10 +600,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'tap-respond':
         replyStep(path, ref, listOf(scope.dialogue));
         return;
-      // Role Play (F-CURR-002 section 8, row CM-35): the reply slides of its main path, as the learner fallback plays it,
-      // until row CM-63 adds the read-together Role Play slide (the class picks the reply).
+      // Role Play (F-CURR-002 section 8, row CM-35): with `game.role-play` on, the read-together Role Play slide (the
+      // class picks the reply); off, the reply slides of its main path, as the learner fallback plays it (section 12.2).
       case 'role-play':
-        rolePlayStep(path, ref, scope.rolePlay?.scene);
+        if (switches.rolePlay) rolePlayStep(path, ref, scope.rolePlay?.scene);
+        else replyStep(path, ref, scope.rolePlay ? rolePlayToTapRespond(scope.rolePlay.scene) : []);
         return;
       case 'realia-read':
         realiaReadStep(path, ref, scope.realiaRead);
@@ -1289,7 +1302,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         skip(id, 'unknown-id');
         continue;
       }
-      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
+      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice, switches);
       // A taught word keeps the sound the quest gave it, on its card or its reading slide (a Discover sentence stays a sentence).
       const voices = new Map<string, WordVoice>();
       for (const [ko, v] of alone.slides.flatMap(slideVoices)) if (!voices.has(ko)) voices.set(ko, v);
