@@ -252,26 +252,61 @@ test.describe('Role Play: read and tap (F-CURR-002 row CM-35)', () => {
     await expect(page.getByTestId('role-play-partner-newest')).toHaveAttribute('aria-live', 'polite');
   });
 
+  test('reduced motion: a new bubble is simply there (no rise), and the log sits at the newest line', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, ON);
+    await expect(page.getByTestId('role-play')).toBeVisible();
+    /** The vertical offset of each element from the newest `testId` bubble up to the chat list (the rise is a translate). */
+    const offsets = (testId: string): Promise<number[]> =>
+      page
+        .getByTestId(testId)
+        .last()
+        .evaluate((el) => {
+          const out: number[] = [];
+          for (let at: Element | null = el; at && at.getAttribute('role') !== 'list'; at = at.parentElement) {
+            const t = getComputedStyle(at).transform;
+            out.push(t === 'none' ? 0 : new DOMMatrixReadOnly(t).m42);
+          }
+          return out;
+        });
+    // My reply joins the chat in place at once: read on the frame it shows, with no offset left to settle.
+    await reply(page, 'hello').click();
+    await expect(page.getByTestId('role-play-me')).toHaveCount(1);
+    expect((await offsets('role-play-me')).every((y) => Math.abs(y) < 0.5)).toBe(true);
+    // The partner's answer too, and the log is at the newest line with no smooth scroll.
+    await expect(page.getByTestId('role-play-partner-newest')).toContainText('무슨 책을 찾아요?');
+    expect((await offsets('role-play-partner-newest')).every((y) => Math.abs(y) < 0.5)).toBe(true);
+    await expect.poll(() => inside(page.getByTestId('role-play-partner-newest'), page.getByTestId('role-play-log')), { message: 'the newest bubble is in view' }).toBe(true);
+    expect(await page.getByTestId('role-play-log').evaluate((el) => [el, ...el.querySelectorAll('*')].every((n) => getComputedStyle(n).scrollBehavior !== 'smooth'))).toBe(true);
+    await shot(page, 'role-play-320-reduced-motion');
+  });
+
   test('game.role-play off: Tap to Respond on the same turns (the main path), and its telemetry names tap-respond', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await open(page, { on: false, pct: 100 });
     await expect(page.getByText('Choose your reply')).toBeVisible();
     await expect(page.getByText('Someone says')).toBeVisible();
     await expect(page.getByTestId('role-play')).toHaveCount(0);
-    for (const [line, right] of [
+    const turns = [
       ['안녕하세요!', '안녕하세요!'],
       ['무슨 책을 찾아요?', '동화책을 찾아요.'],
       ['동화책은 여기 있어요.', '감사합니다!'],
       ['또 오세요!', '안녕히 계세요!'],
-    ] as const) {
-      await expect(page.getByRole('heading', { name: line }).or(page.getByText(line, { exact: true }).first())).toBeVisible();
+    ] as const;
+    const shownLine = (line: string): Locator => page.getByRole('heading', { name: line }).or(page.getByText(line, { exact: true }).first());
+    for (const [i, [line, right]] of turns.entries()) {
+      await expect(shownLine(line)).toBeVisible();
       // The second natural reply of turn 2 is not offered: every option left has one right answer.
       await expect(page.getByText('한글 책을 찾아요.')).toHaveCount(0);
       await page.getByRole('button', { name: new RegExp(`^${right.replace(/[.!?]/g, '\\$&')}`) }).click();
-      await page.waitForTimeout(1100);
+      // Paced by what shows, not by a clock: the next turn's line, or after the last turn the finished game.
+      const next = turns[i + 1];
+      if (next) await expect(shownLine(next[0])).toBeVisible();
     }
+    await expect
+      .poll(async () => (await events(page)).filter((e) => e.name === 'minigame.finished').map((e) => e.payload?.kind), { message: 'the fallback finishes as tap-respond' })
+      .toEqual(['tap-respond']);
     await shot(page, 'role-play-320-fallback');
-    const finished = (await events(page)).filter((e) => e.name === 'minigame.finished');
-    expect(finished.map((e) => e.payload?.kind)).toEqual(['tap-respond']);
   });
 });

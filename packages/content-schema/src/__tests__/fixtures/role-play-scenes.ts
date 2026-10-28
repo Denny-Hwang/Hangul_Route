@@ -8,8 +8,9 @@ import type { RolePlayScene } from '../../schemas/role-play';
  * holds every line to it). The partner is named by role, never by a personal name.
  *
  * Read by three suites, so all play the same chat: the schema tests here, the app's branch reducer and renderer
- * tests (`apps/mobile/src/logic/role-play/`), and the Playwright suite (`apps/mobile/e2e/web/role-play.spec.ts`),
- * which hands the scene to the fixture build's `window.__hrRolePlayE2E`.
+ * tests (`apps/mobile/src/logic/role-play/`), and the Playwright suite (`apps/mobile/e2e/web/sentence-builder-role-play.spec.ts`;
+ * the prefix lets the fixture e2e run's file-name filter select it until the owner adds a `role-play` entry), which
+ * hands the scene to the fixture build's `window.__hrRolePlayE2E`.
  */
 
 const ko = (k: string, romanization: string, en: string) => ({ ko: k, romanization, en });
