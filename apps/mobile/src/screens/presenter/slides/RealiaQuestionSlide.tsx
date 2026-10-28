@@ -3,6 +3,8 @@ import { colors, koreanTextLabel, presenter, spacing, touchTarget, typography, K
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
+import { CLOZE_GAP } from '@hangul-route/content-schema';
+import { spokenGap } from '../../../logic/cloze-pick/round';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { sheetUnits } from '../../../logic/lecture/slide-view';
@@ -92,6 +94,8 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
           {...KOREAN_LINE_BREAK}
           role="heading"
           testID="presenter-quiz-question"
+          // A Cloze Pick value gap's question keeps its gap ("The fan is ___ won."): a screen reader says it as a word.
+          aria-label={prompt.text.includes(CLOZE_GAP) ? spokenGap(prompt.text, messages.a11y.minigame.clozePick.blank) : undefined}
           style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}
         >
           {prompt.text}
@@ -130,13 +134,16 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
  * the chip wraps its two parts and never grows past the key row.
  */
 function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; rom: boolean }): ReactElement {
-  const { unit } = usePresenterView();
+  const { unit, messages } = usePresenterView();
   const size = useStageText();
   const chip = useChipStyle();
+  // A sentence key's gap is said as a word ("buchaeneun, blank, wonieyo"), never "underscore".
+  const blank = messages.a11y.minigame.clozePick.blank;
+  const said = spokenGap(ko, blank);
   return (
     <View
       testID="presenter-realia-key"
-      accessibilityLabel={rom ? koreanTextLabel(ko, romanization) : ko}
+      accessibilityLabel={rom ? koreanTextLabel(said, spokenGap(romanization, blank)) : said}
       style={{ ...chip, flexDirection: 'row', flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1, alignItems: 'baseline', columnGap: units(unit, spacing.md), paddingVertical: units(unit, spacing.xs), paddingHorizontal: units(unit, spacing.lg) }}
     >
       <TaughtKo size={size(presenter.size.prompt)}>{ko}</TaughtKo>
