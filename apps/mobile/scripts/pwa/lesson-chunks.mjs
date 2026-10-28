@@ -261,6 +261,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-33: Match Shape (the quest game, its board and origin pictures, the facts' sources, the review
+  // round at the produce rung and the Read Pick fallback; `src/screens/minigames/match-shape-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
+  Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
 ]);
 
 /**
