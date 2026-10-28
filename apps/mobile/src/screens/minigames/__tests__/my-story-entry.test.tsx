@@ -33,8 +33,9 @@ afterEach(async () => {
 describe('My Story when its chunk cannot load (row CM-38)', () => {
   it('plays Write Frame on the first frame instead of a crash screen', async () => {
     const { MyStoryRoute } = await import('../my-story-entry');
+    const onFallback = vi.fn();
     await act(async () => {
-      mounted = TestRenderer.create(<MyStoryRoute scope={scope} host={host} />, {
+      mounted = TestRenderer.create(<MyStoryRoute scope={scope} host={host} onFallback={onFallback} />, {
         createNodeMock: () => ({ focus: vi.fn(), addEventListener: () => undefined, removeEventListener: () => undefined }),
       });
     });
@@ -49,5 +50,7 @@ describe('My Story when its chunk cannot load (row CM-38)', () => {
     expect(shown).not.toContain('Write your story');
     expect(shown.join(' ')).toMatch(/1 \/ 1/);
     expect(byTestId(r.root, 'oops-screen')).toHaveLength(0);
+    // The host is told which scope was played, so minigame.finished names write-frame (review of PR #849).
+    expect(onFallback).toHaveBeenCalledWith(expect.objectContaining({ kind: 'write-frame', rounds: 1 }));
   });
 });

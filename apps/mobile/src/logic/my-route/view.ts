@@ -23,6 +23,7 @@ import {
   type StageTagKind,
   type Viewer,
 } from './copy';
+import { SWITCHED_KINDS } from '../game-fallback';
 import { PLAYABLE_KINDS } from '../minigame-renderers';
 import { letterWallView, type LetterTile, type LetterWallView } from './letter-wall';
 import { hoyaPoseFor } from './seen';
@@ -253,6 +254,8 @@ export interface MyRouteViewInput {
   firstReached?: boolean;
   /** The first free word topic this build lists (`practiceTopicOf`); the free-end hero's Practice words. Absent or null: Open Library. */
   practiceTopic?: string | null;
+  /** Whether a `game.<kind>` switch is on for this learner (`useCurrFlag`); absent: none is, so the sheet names no switched game. */
+  gameOn?: (kind: MinigameKind) => boolean;
   /**
    * The episode page shows F-ENT-003's preview, with its own ask, for a quest that is not open
    * (E3-6). Until then the page does not check quest access, so a not-open cell opens nothing: the
@@ -302,19 +305,27 @@ export const GAME_NAME_KEY: Readonly<Partial<Record<MinigameKind, GameKey>>> = {
   'order-it': 'sentenceBuilder',
 };
 
+/** No `game.<kind>` switch is on: the default for a view that does not read them (a grown-up's report rows). */
+const NO_GAME_ON = (): boolean => false;
+
 /**
  * The games that count for `skill`, named as the sheet shows them. Only kinds the
  * app can play (`PLAYABLE_KINDS`) are named, so a game whose screen has not landed
- * yet is never advertised (F-CURR-001 §3.11).
+ * yet is never advertised (F-CURR-001 §3.11). A new format behind a `game.<kind>`
+ * switch (F-CURR-002 §12.2, `SWITCHED_KINDS`) is named only while `gameOn` says its
+ * switch is on: off, its steps play the fallback kind, which the sheet already names
+ * (review of PR #849, row CM-38).
  */
 export function gamesFor(
   skill: Skill,
   games: Messages['learner']['myRoute']['games'],
   playable: ReadonlySet<MinigameKind> = PLAYABLE_KINDS,
+  gameOn: (kind: MinigameKind) => boolean = NO_GAME_ON,
 ): string[] {
   return (Object.keys(SKILL_OF_KIND) as MinigameKind[]).flatMap((kind) => {
     const key = GAME_NAME_KEY[kind];
-    return SKILL_OF_KIND[kind].includes(skill) && key !== undefined && playable.has(kind) ? [games[key]] : [];
+    const shown = playable.has(kind) && (!SWITCHED_KINDS.includes(kind) || gameOn(kind));
+    return SKILL_OF_KIND[kind].includes(skill) && key !== undefined && shown ? [games[key]] : [];
   });
 }
 
@@ -429,7 +440,7 @@ export function withConnectors(rows: TrailRowView[], model: Pick<MyRouteModel, '
 }
 
 /** One skill row: the word, an absolute count and its earned marks (also the parent dashboard's mini rows, R-9b). */
-export function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages): SkillRowView {
+export function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages, gameOn: (kind: MinigameKind) => boolean = NO_GAME_ON): SkillRowView {
   const { label, detail } = skillCopy(row, ctx);
   const marks: Pip[] = Array.from({ length: row.marks }, (_, k) => ({ key: `${row.skill}-mark-${k}`, kind: 'quest', state: 'done', isCursor: false, isStart: false }));
   if (row.quests > 0 && row.nextReachable) marks.push({ key: `${row.skill}-next`, kind: 'quest', state: 'open', isCursor: false, isStart: false });
@@ -441,7 +452,7 @@ export function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyConte
     detail,
     marks,
     a11yLabel: m.a11y.myRoute.skill(label, detail),
-    sheet: { title: games.title(label), note: games.note, games: gamesFor(row.skill, games) },
+    sheet: { title: games.title(label), note: games.note, games: gamesFor(row.skill, games, PLAYABLE_KINDS, gameOn) },
   };
 }
 
@@ -512,7 +523,7 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
     trail: withConnectors(readyOnce(rows, i.viewer === 'grownup' ? messages.caregiver.journey.ready(i.name) : messages.learner.myRoute.caption.ready), model),
     initialOpen: here.stage,
     skillsTitle: skillsTitle(ctx),
-    skills: model.skills.map((row) => skillRowView(row, ctx, messages)),
+    skills: model.skills.map((row) => skillRowView(row, ctx, messages, i.gameOn)),
     skillsNote: skillsNoteCopy(ctx),
     tiles: tilesCopy(model, ctx),
     gains: gainTiles(model, messages, i.viewer),

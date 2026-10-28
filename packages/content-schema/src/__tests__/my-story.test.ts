@@ -149,6 +149,11 @@ describe('my-story-private-topic: no frame asks for a private fact', () => {
     ['My street address is ___.'],
     ['I grew up in ___.'],
     ['Where are you from?'],
+    // Review of PR #849: an age or a name asked another way.
+    ['How old are you?'],
+    ['I am called ___.'],
+    ["I'm named ___."],
+    ['Call me ___.'],
   ])('refuses "%s"', (en) => {
     expect(messages(MyStoryFrameSchema, { ...place, frame: { ...place.frame, en } }).some((m) => m.startsWith('my-story-private-topic'))).toBe(true);
   });
@@ -169,6 +174,8 @@ describe('my-story-private-topic: no frame asks for a private fact', () => {
       'Hoya is ___ years old.',
       'The doctor says ___.',
       'Hoya goes to the hospital with ___.',
+      'Hoya is called ___ at school.',
+      'Hoya calls me ___.',
     ]) {
       expect(MY_STORY_PRIVATE_TOPICS.test(en), en).toBe(false);
       expect(messages(MyStoryFrameSchema, { ...place, frame: { ...place.frame, en } }), en).toEqual([]);

@@ -27,6 +27,18 @@ const audio = vi.hoisted(() => ({ playPrompt: vi.fn((_spec: { text: string; kind
 vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), ...audio }));
 const telemetry = vi.hoisted(() => ({ track: vi.fn(() => Promise.resolve()) }));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), ...telemetry }));
+// The app's own storage layer (IndexedDB through idb-keyval on the web): every write is watched (review of PR #849).
+const storageWrites = vi.hoisted(() => [] as unknown[][]);
+vi.mock('../../../platform/storage', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../../../platform/storage')>();
+  const watch =
+    <A extends unknown[], R>(fn: (...args: A) => R) =>
+    (...args: A): R => {
+      storageWrites.push(args);
+      return fn(...args);
+    };
+  return { ...real, writeJson: watch(real.writeJson), updateJson: watch(real.updateJson), removeKey: watch(real.removeKey) };
+});
 
 type Host = MinigameHost & { calls: unknown[]; completes: number };
 const host = (): Host => {
@@ -276,6 +288,7 @@ describe('test P-1 extended to My Story (OD-13): nothing written leaves the step
   });
 
   it('nothing is logged or written to browser storage while the chain is played', async () => {
+    storageWrites.length = 0;
     const logs = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) => vi.spyOn(console, m).mockImplementation(() => undefined));
     const storage = (): Storage => {
       const map = new Map<string, string>();
@@ -299,6 +312,8 @@ describe('test P-1 extended to My Story (OD-13): nothing written leaves the step
     for (const spy of logs) expect(spy).not.toHaveBeenCalled();
     for (const setItem of setItems) expect(setItem).not.toHaveBeenCalled();
     expect(globalThis.localStorage.length + globalThis.sessionStorage.length).toBe(0);
+    // Nor through the app's storage layer: no write carries a picked word or a written sentence.
+    expect(JSON.stringify(storageWrites, (_k, v: unknown) => (typeof v === 'function' ? '[fn]' : v))).not.toMatch(/[ㄱ-ㆎ가-힣]|jumare|gachi|gibuni/);
   });
 
   it('the text is gone after the step unmounts: a new mount starts with an empty chain', async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { myStoryToWriteFrame } from '../../logic/my-story/fallback';
 import { LessonWaiting } from '../lesson-content';
@@ -32,6 +32,11 @@ export interface MyStoryRouteProps {
   scope: MinigameScope;
   host: MinigameHost;
   onBack?: () => void;
+  /**
+   * The chunk could not load and the step plays this fallback scope (Write Frame on the first frame) instead: the
+   * host then records answers against it and `minigame.finished` names the kind that was played (`write-frame`).
+   */
+  onFallback?: (played: MinigameScope) => void;
 }
 
 /**
@@ -42,6 +47,7 @@ export interface MyStoryRouteProps {
 export function MyStoryRoute(props: MyStoryRouteProps): ReactElement {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
+  const fallbackScope = useMemo(() => (failed ? myStoryToWriteFrame(props.scope) : null), [failed, props.scope]);
   useEffect(() => {
     if (chunk !== null || failed) return undefined;
     let live = true;
@@ -53,8 +59,12 @@ export function MyStoryRoute(props: MyStoryRouteProps): ReactElement {
       live = false;
     };
   }, [chunk, failed]);
-  if (failed) return <WriteFrameGame scope={myStoryToWriteFrame(props.scope)} host={props.host} onBack={props.onBack} />;
+  const { onFallback } = props;
+  useEffect(() => {
+    if (fallbackScope !== null) onFallback?.(fallbackScope);
+  }, [fallbackScope, onFallback]);
+  if (fallbackScope !== null) return <WriteFrameGame scope={fallbackScope} host={props.host} onBack={props.onBack} />;
   if (chunk === null) return <LessonWaiting />;
   const { MyStoryGame } = chunk;
-  return <MyStoryGame {...props} />;
+  return <MyStoryGame scope={props.scope} host={props.host} onBack={props.onBack} />;
 }

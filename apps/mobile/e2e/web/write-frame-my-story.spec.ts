@@ -56,7 +56,10 @@ async function box(page: Page, testId: string) {
 }
 /** Every free-text field on the page: an input outside the in-app keyboard's own, a textarea, anything editable. */
 const freeText = (page: Page) => page.locator('input:not([type="hidden"]), textarea, [contenteditable="true"], [contenteditable=""]');
-/** What the browser keeps for this origin: both Web Storages and every IndexedDB database's name. */
+/**
+ * What the browser keeps for this origin: both Web Storages, and every key and value of every object store of every
+ * IndexedDB database (the app's own storage is IndexedDB through idb-keyval, `platform/storage.web.ts`).
+ */
 async function stored(page: Page): Promise<string> {
   return page.evaluate(async () => {
     const all: string[] = [];
@@ -66,11 +69,43 @@ async function stored(page: Page): Promise<string> {
         all.push(k, store.getItem(k) ?? '');
       }
     }
+    const text = (v: unknown): string => {
+      try {
+        return typeof v === 'string' ? v : JSON.stringify(v) ?? String(v);
+      } catch {
+        return String(v);
+      }
+    };
+    const request = <T,>(r: IDBRequest<T>): Promise<T> =>
+      new Promise((resolve, reject) => {
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+      });
     const dbs = (await indexedDB.databases?.()) ?? [];
-    all.push(...dbs.map((d) => d.name ?? ''));
+    for (const { name, version } of dbs) {
+      if (!name) continue;
+      all.push(name);
+      const db = await request(indexedDB.open(name, version));
+      for (const storeName of Array.from(db.objectStoreNames)) {
+        const tx = db.transaction(storeName, 'readonly');
+        const os = tx.objectStore(storeName);
+        const [keys, values] = await Promise.all([request(os.getAllKeys()), request(os.getAll())]);
+        all.push(storeName, ...keys.map(text), ...values.map(text));
+      }
+      db.close();
+    }
     return all.join('\n');
   });
 }
+
+/** Elements under `testId` with a running CSS animation or a non-zero transition (the mastery suite's check). */
+const animatedUnder = (page: Page, testId: string): Promise<number> =>
+  page.getByTestId(testId).first().evaluate((el) =>
+    [el, ...Array.from(el.querySelectorAll('*'))].filter((n) => {
+      const cs = getComputedStyle(n);
+      return cs.animationName !== 'none' || (cs.transitionDuration !== '0s' && cs.transitionProperty !== 'none' && cs.transitionDuration !== '');
+    }).length,
+  );
 
 test.describe('My Story: a short text from word-bank frames, shown as My page and not kept (F-CURR-002 CM-38)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1, build:web:fixtures)');
@@ -80,6 +115,7 @@ test.describe('My Story: a short text from word-bank frames, shown as My page an
     await open(page);
     await expect(page.getByRole('heading', { name: 'Write your story' })).toBeVisible();
     await expect(page.getByText('1 / 3')).toBeVisible();
+    const before = await stored(page);
     // Word bank only: no free-text field anywhere, the neutral option drawn like the others (last, unlabelled).
     await expect(freeText(page)).toHaveCount(0);
     for (const id of ['write-frame-word-0', 'write-frame-word-1', 'write-frame-word-2']) {
@@ -162,9 +198,37 @@ test.describe('My Story: a short text from word-bank frames, shown as My page an
     expect(JSON.stringify(sent)).not.toMatch(HANGUL);
     // Nor the sentences' romanization or meaning.
     expect(JSON.stringify(sent)).not.toMatch(/gongwon|hoyawa|gwaenchanayo|jumare|gibuni|the park|with Hoya|feel okay/i);
-    expect(await stored(page)).not.toMatch(/공원|호야와|괜찮아요|gongwone|hoyawa/);
+    // Every key and value the origin keeps, against what it kept before the first pick: no written sentence, its
+    // romanization or its meaning was added.
+    const written = /공원에|호야와|괜찮아요|gongwone|hoyawa|gwaenchanayo|the park|with Hoya|feel okay/g;
+    const count = (text: string): number => text.match(written)?.length ?? 0;
+    expect(count(await stored(page))).toBe(count(before));
     expect(decodeURIComponent(page.url())).not.toMatch(HANGUL);
     await expect(page.getByTestId('my-story-page')).toHaveCount(0);
+  });
+
+  test('reduced motion, 320 x 568: each sentence shows in the story so far and on My page at once, nothing animates', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page);
+    expect(await animatedUnder(page, 'write-frame')).toBe(0);
+    await page.getByTestId('write-frame-word-2').click();
+    await typeText(page, '공원');
+    await page.getByTestId('write-frame-done').click();
+    await expect(page.getByText('2 / 3')).toBeVisible({ timeout: 5_000 });
+    // The written sentence is in the list as the next frame opens: no slide-in to wait for.
+    await expect(page.getByTestId('my-story-so-far')).toContainText('저는 주말에 공원에 가요.');
+    expect(await animatedUnder(page, 'write-frame')).toBe(0);
+    await page.getByTestId('write-frame-word-2').click();
+    await typeText(page, '호야');
+    await page.getByTestId('write-frame-done').click();
+    await expect(page.getByText('3 / 3')).toBeVisible({ timeout: 5_000 });
+    await page.getByTestId('write-frame-word-2').click();
+    await expect(page.getByTestId('my-story-page')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId('my-story-page-line')).toHaveCount(3);
+    expect(await animatedUnder(page, 'my-story-page')).toBe(0);
+    await expect(freeText(page)).toHaveCount(0);
+    await shot(page, 'my-story-320-reduced-motion');
   });
 
   test('Skip after one frame: My page shows the story so far with the same not-kept line', async ({ page }) => {

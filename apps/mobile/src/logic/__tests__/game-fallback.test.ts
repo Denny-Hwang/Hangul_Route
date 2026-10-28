@@ -46,6 +46,19 @@ describe('the game.<kind> switches and their fallbacks (F-CURR-002 §7.1, §12.2
     expect(problems).toEqual([]);
   });
 
+  it('no shipped quest plays a switched kind yet: the content row that adds the first changes this test on purpose', () => {
+    // Review of PR #849: today the pass above holds no My Story step, so it proves nothing for that kind. The first
+    // S7 or pack L5 row that adds a chain flips this to `true` and the switch-off pass then covers real content.
+    expect(everyStep.some(({ scope }) => SWITCHED_KINDS.includes(scope.kind))).toBe(false);
+  });
+
+  it('with every switch off, a quest that holds a My Story step plays every step as a shipped kind', () => {
+    const withStory = [...everyStep.slice(0, 3), { at: 'synthetic step', scope: story }];
+    const played = withStory.map(({ scope }) => playedScope(scope, allOff).kind);
+    expect(played.at(-1)).toBe('write-frame');
+    expect(played.filter((kind) => SWITCHED_KINDS.includes(kind) || (!PLAYABLE_KINDS.has(kind) && kind !== 'voice-echo'))).toEqual([]);
+  });
+
   it('with every switch on, a step plays its own scope, unchanged', () => {
     for (const { scope } of everyStep) expect(playedScope(scope, allOn)).toBe(scope);
     expect(playedScope(story, allOn)).toBe(story);

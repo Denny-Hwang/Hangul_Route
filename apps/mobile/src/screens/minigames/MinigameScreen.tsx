@@ -1,6 +1,6 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
@@ -8,7 +8,7 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { gameFlagOf, playedScope } from '../../logic/game-fallback';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
-import { scopeFor } from '../../logic/minigame-config';
+import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
 import type { RootStackParamList } from '../../navigation/types';
@@ -90,6 +90,12 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const gameOnNow = useCurrFlag(gameFlagOf(ownScope?.kind ?? 'write-frame'));
   const [gameOn] = useState(gameOnNow);
   const scope = useMemo(() => (ownScope ? playedScope(ownScope, () => gameOn) : undefined), [ownScope, gameOn]);
+  // A game whose chunk cannot load plays its fallback instead (My Story: Write Frame on the first frame); answers and
+  // `minigame.finished` then go with the scope that was played (review of PR #849).
+  const fellBackTo = useRef<MinigameScope | null>(null);
+  const onFallback = useCallback((played: MinigameScope): void => {
+    fellBackTo.current = played;
+  }, []);
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
   const patternNote = useMemo(() => (scope?.kind === 'order-it' && quest ? patternNoteOf(localizeQuest(quest, locale)) : undefined), [scope, quest, locale]);
   // [GU] The active learner: the guest's id in a guest run (AMENDMENTS-GUEST-FIRST-LESSON 5.3, row GU-3).
@@ -110,7 +116,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   const close = (): void => {
     if (scope) {
-      void track(minigameFinishedEvent(scope.kind, questId, stepIndex, activeProfileId));
+      void track(minigameFinishedEvent((fellBackTo.current ?? scope).kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };
@@ -134,7 +140,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }),
+      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope: fellBackTo.current ?? scope, itemId: meta.itemId }),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();
@@ -182,7 +188,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
     case 'my-story':
-      return <MyStoryRoute scope={scope} host={host} onBack={exits.back} />;
+      return <MyStoryRoute scope={scope} host={host} onBack={exits.back} onFallback={onFallback} />;
     default:
       return fallback(copy.comingSoon);
   }
