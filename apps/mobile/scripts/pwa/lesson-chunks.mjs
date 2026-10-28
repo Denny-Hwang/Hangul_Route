@@ -103,6 +103,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
+  // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
+  // the game and each scene are chunks) merged onto main 524961dae measures 4,758,450 B raw / 1,268,719 B gzip (release
+  // `build:web`, Metro cache cleared), 7,006 B over that main (the round schema 1,613 B, the fixture-only e2e hook
+  // 927 B, the codec's unknown_kind 491 B, the deck builder 357 B, the strings 273 B, the root navigator 196 B, the
+  // rest the entry, loader, fallback board and wiring), so it fits under the same line with a 1,550 B margin.
   startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
