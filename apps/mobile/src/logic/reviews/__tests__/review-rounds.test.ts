@@ -252,7 +252,10 @@ describe('Syllable Build at the produce rung (row CM-32, behind game.syllable-bu
     expect(vowel).toMatchObject({ target: { ko: '고' }, fixed: 'vowel' });
     const final = roundFor(q('sym:nieun-batchim', 'syllable-build'), gameInput()) as BuildRound;
     expect(final).toMatchObject({ target: { ko: '산' }, fixed: 'final' });
-    // No taught block holds ㅋ: the round cannot be built, so the item is asked another way.
+    // No taught block holds ㅋ: the surface index leaves the format out, so the engine asks it at read and the session
+    // never drops it for want of a round; a symbol a block holds keeps it.
+    expect(games.byId.get('sym:kieuk')?.formats).toEqual(['read-pick']);
+    expect(games.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'syllable-build']);
     expect(roundFor(q('sym:kieuk', 'syllable-build'), gameInput())).toBeNull();
   });
 });

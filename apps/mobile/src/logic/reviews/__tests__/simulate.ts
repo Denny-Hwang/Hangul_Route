@@ -21,6 +21,7 @@ import {
   type EngineContext,
   type ReviewSession,
 } from '../engine';
+import { roundFor, surfaceIndex } from '../review-rounds';
 
 /**
  * The 60-day simulation of the review engine (F-CURR-002 section 4.3, row CM-13). A simulated
@@ -100,7 +101,14 @@ export interface Knobs {
   warmupSize: number;
   credit: boolean;
   voice: boolean;
+  /**
+   * Row CM-32: the review surfaces with `game.syllable-build` on: the engine reads the surface index with Syllable Build,
+   * and a question its round cannot be built for is left out of the session, as the Daily Review and the Checks do.
+   */
+  games?: boolean;
 }
+
+const GAMES_ON = new Set(['syllable-build'] as const);
 
 export const DEFAULT_KNOBS: Knobs = { keepGoingRounds: KEEP_GOING_ROUNDS_PER_DAY, warmupSize: WARMUP_SIZE, credit: CREDIT_INSIDE_SENTENCES, voice: true };
 
@@ -132,8 +140,12 @@ export class Sim {
     return addDays(START_DAY, this.dayIndex);
   }
 
+  /** Questions left out because their round could not be built (row CM-32; always 0 without `games`). */
+  dropped = 0;
+
   ctx(): EngineContext {
-    return { index: INDEX, states: this.rows, today: this.today, voice: this.knobs.voice, seed: `sim:${this.today}` };
+    const index = this.knobs.games === true ? surfaceIndex(INDEX, GAMES_ON) : INDEX;
+    return { index, states: this.rows, today: this.today, voice: this.knobs.voice, seed: `sim:${this.today}` };
   }
 
   private answerOf(itemId: string, rung: Rung): MemoryAnswer {
@@ -163,8 +175,14 @@ export class Sim {
   /** Plays a review session: every question answered by the learner. Returns the due items it drew. */
   play(session: ReviewSession | null): number {
     if (session === null) return 0;
-    this.record(session.questions.map((q) => this.answerOf(q.itemId, q.rung)));
-    return session.questions.filter((q) => !q.stretch).length;
+    let questions = session.questions;
+    if (this.knobs.games === true) {
+      const ctx = this.ctx();
+      questions = questions.filter((q) => roundFor(q, { index: ctx.index, states: ctx.states, gloss: (_k, en) => en, seed: ctx.seed ?? '' }) !== null);
+      this.dropped += session.questions.length - questions.length;
+    }
+    this.record(questions.map((q) => this.answerOf(q.itemId, q.rung)));
+    return questions.filter((q) => !q.stretch).length;
   }
 
   /** One lesson quest: the warm-up (Stage 2 and up), the new items met and practised, and the cell's recycle rounds. */

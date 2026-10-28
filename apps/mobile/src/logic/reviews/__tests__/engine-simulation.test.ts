@@ -60,6 +60,16 @@ describe('S-a: one quest a day, the Daily Review every day, Keep going on days t
     });
   }
 
+  it('holds with game.syllable-build on too (row CM-32): the surface index with Syllable Build, and no due item dropped', () => {
+    for (const seed of [1, 2]) {
+      const sim = new Sim(seed, { ...DEFAULT_KNOBS, games: true });
+      scenarioA(sim, DAYS);
+      const late = lateDays(sim);
+      expect(late.filter((d) => d.left <= POOL_LINE).length / late.length, series(sim, 'left')).toBeGreaterThanOrEqual(0.9);
+      expect(sim.dropped).toBe(0);
+    }
+  });
+
   it('holds with no device voice too, on the two-rung ladder', () => {
     const sim = new Sim(1, { ...DEFAULT_KNOBS, voice: false });
     scenarioA(sim, DAYS);

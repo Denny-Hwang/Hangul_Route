@@ -78,8 +78,13 @@ export function surfaceIndex(index: SurfaceIndex, games: GameFormats = NO_GAME_F
   const held = byGames.get(key);
   if (held) return held;
   const items: ReviewItem[] = [];
+  // Row CM-32: a symbol keeps Syllable Build only when a block of this index can host it (`hostsOf`), so a symbol no
+  // block holds (ㅌ, a compound vowel, a final heard as another) is asked another way, or at the read rung, inside the
+  // engine, and never dropped from a session for want of a round.
+  const hostable = games.has('syllable-build') ? hostableSymbols(index, games) : null;
   for (const item of index.items) {
-    const formats = surfaceFormats(item, games);
+    let formats = surfaceFormats(item, games);
+    if (item.kind === 'sym' && hostable !== null && !hostable.has(symbolKey(item))) formats = formats.filter((f) => f !== 'syllable-build');
     if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
@@ -186,6 +191,8 @@ export interface RoundInput {
   gloss: GlossOf;
   /** The same seed gives the same options and tiles. */
   seed: string;
+  /** The learner's item states (row CM-32: a symbol's Syllable Build prefers a block the learner has met). */
+  states?: EngineContext['states'];
 }
 
 const koOf = (item: Pick<ReviewItem, 'ko' | 'romanization'>): KoText => ({ ko: item.ko, romanization: item.romanization });
@@ -320,17 +327,42 @@ function symbolZone(item: Pick<ReviewItem, 'id' | 'ko'>): SyllableZone {
   return /^[ㅏ-ㅣ]$/.test(item.ko) ? 'vowel' : 'first';
 }
 
+const symbolKey = (item: Pick<ReviewItem, 'id' | 'ko'>): string => `${symbolZone(item)}:${item.ko}`;
+
+/** The blocks of the index that can host a symbol in its zone: one block whose final, if any, is one of the seven final sounds. */
+function hostsOf(index: SurfaceIndex, zone: SyllableZone, letter: string): ReviewItem[] {
+  return [...itemsOfKind(index, 'syl'), ...itemsOfKind(index, 'lex')].filter((i) => {
+    const p = blockParts(i.ko);
+    if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) return false;
+    return zone === 'first' ? p.first === letter : zone === 'vowel' ? p.vowel === letter : p.final === letter;
+  });
+}
+
+/** Every `zone:letter` a block of the index can host (what `hostsOf` finds), for `surfaceIndex`. */
+function hostableSymbols(index: SurfaceIndex, games: GameFormats): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const i of index.items) {
+    if ((i.kind !== 'syl' && i.kind !== 'lex') || surfaceFormats(i, games).length === 0) continue;
+    const p = blockParts(i.ko);
+    if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) continue;
+    out.add(`first:${p.first}`);
+    out.add(`vowel:${p.vowel}`);
+    if (p.final !== null) out.add(`final:${p.final}`);
+  }
+  return out;
+}
+
 function buildRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): BuildRound | null {
   if (item.kind === 'sym') {
-    // A taught block (a `syl` item, or a one-block word) with the symbol in its zone, chosen by the seed.
+    // A taught block with the symbol in its zone, chosen by the seed: a block the learner has met first, then a block of
+    // the Stage 1 table (a `syl` item), then a one-block word of a later stage, so a Stage 1 learner builds a block of
+    // letters they know rather than a word they have never met.
     const zone = symbolZone(item);
-    const letter = item.ko;
-    const hosts = [...itemsOfKind(input.index, 'syl'), ...itemsOfKind(input.index, 'lex')].filter((i) => {
-      const p = blockParts(i.ko);
-      if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) return false;
-      return zone === 'first' ? p.first === letter : zone === 'vowel' ? p.vowel === letter : p.final === letter;
-    });
-    const host = seededOrder(hosts, `${input.seed}|${item.id}|host`, (i) => i.id)[0];
+    const hosts = hostsOf(input.index, zone, item.ko);
+    const met = (i: ReviewItem): boolean => input.states?.[i.id] !== undefined;
+    const tiers = [hosts.filter(met), hosts.filter((i) => i.kind === 'syl'), hosts];
+    const tier = tiers.find((t) => t.length > 0) ?? [];
+    const host = seededOrder(tier, `${input.seed}|${item.id}|host`, (i) => i.id)[0];
     if (host === undefined) return null;
     return { type: 'build', question, target: koOf(host), fixed: zone, answer: { ko: koOf(host) } };
   }
