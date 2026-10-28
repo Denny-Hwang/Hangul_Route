@@ -173,8 +173,8 @@ export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick'
     const namesItsLine = named.some((e) => r.sentence.ko.includes(e.text.ko));
     // The other direction (row CM-3A S6): the gap is a line's name and the sentence states its value (___ is 5,000
     // won). Another line's name as a tile is then wrong only if the sentence states none of that line's values.
-    const states = (e: { value?: { ko: string } }): boolean => e.value !== undefined && e.value.ko !== '' && r.sentence.ko.includes(e.value.ko);
-    const statesItsValue = named.some((e) => cardValue(e.text.ko) === cardValue(answer) && states(e));
+    const states = (e: { value?: { ko: string } }): boolean => !!e.value?.ko && r.sentence.ko.includes(e.value.ko);
+    const statesItsValue = named.some(states);
     r.tiles.forEach((tile, t) => {
       if (t === r.answerIndex || namesItsLine || entriesOf(tile.ko).length === 0) return;
       if (statesItsValue && !entriesOf(tile.ko).some(states)) return;
