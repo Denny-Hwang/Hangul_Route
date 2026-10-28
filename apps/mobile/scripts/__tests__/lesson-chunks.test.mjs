@@ -181,6 +181,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
       { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
       { name: 'order-game-chunk', marker: 'screen-chunk:story-order' },
+      { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
     ]);
   });
 
@@ -217,6 +218,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-34: Story Order's chunk, reached only through the step's literal import().
     expect(read('src/screens/minigames/story-order/order-game-chunk.tsx')).toContain(`export const STORY_ORDER_CHUNK = '${SCREEN_CHUNKS[7].marker}';`);
     expect(read('src/screens/minigames/story-order/StoryOrderStep.tsx')).toContain("import('./order-game-chunk')");
+    // Row CM-35: the Role Play game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
+    expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -284,6 +288,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
       'dictation-chunk has no web bundle: the chunk is missing from the build',
       'order-game-chunk has no web bundle: the chunk is missing from the build',
+      'role-play-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
