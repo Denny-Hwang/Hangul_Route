@@ -116,7 +116,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
   // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
   // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
-  startBundleRaw: 4_765_000,
+  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S7 (#852, #850, #851, #854, #856, each measured
+  // alone above) measures 4,783,209 B raw / 1,276,097 B gzip (release `build:web`); S7's Stage 7 Check kinds and
+  // re-authored steps add 27 B (4,783,236 B raw / 1,276,092 B gzip). The line is that measurement plus a 6,764 B margin.
+  startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
