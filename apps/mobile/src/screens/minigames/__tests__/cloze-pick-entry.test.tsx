@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { clozeFixtureScope } from '../../../logic/cloze-pick/e2e-rounds';
 import { tileId } from '../../../logic/cloze-pick/round';
-import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
+import { getMessages } from '@hangul-route/i18n';
+import { useAudioStore } from '../../../store/audio-store';
+import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickStep, type ClozePickRendered } from '../cloze-pick-entry';
 import type { MinigameHost } from '../host';
 
@@ -117,6 +119,23 @@ describe('game.cloze-pick off: the Listen & Pick fallback with a text prompt', (
       [1, true, 'e2e-cloze-particle'],
     ]);
     expect(h.completes).toBe(1);
+  });
+
+  it('with sound off, the status panel after the answer says the completed sentence once sound is turned on', async () => {
+    useAudioStore.setState({ muted: true });
+    try {
+      audio.playPrompt.mockResolvedValueOnce('muted' as never);
+      const { r } = await step(['word']);
+      await tapId(r, `listen-pick-option-${tileId('e2e-cloze-word', 0)}`);
+      expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+      const [turnOn] = buttonsNamed(r.root, getMessages('en').learner.audio.action.turn_on.cta);
+      expect(turnOn).toBeDefined();
+      await press(turnOn!);
+      expect(audio.playPrompt).toHaveBeenCalledTimes(2);
+      expect(audio.playPrompt.mock.calls[1]?.[0]).toMatchObject({ text: '책을 읽어요.' });
+    } finally {
+      useAudioStore.setState({ muted: false });
+    }
   });
 
   it('a value gap keeps its card above the text prompt, so it can still be read', async () => {

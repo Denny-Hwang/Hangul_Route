@@ -70,14 +70,75 @@ export function surfaceIndex(index: SurfaceIndex, games: SurfaceGames = {}): Sur
   const allowed = games.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS;
   const held = cache.get(index);
   if (held) return held;
-  const items: ReviewItem[] = [];
+  const cut: ReviewItem[] = [];
   for (const item of index.items) {
     const formats = surfaceFormats(item, allowed);
-    if (formats.length > 0) items.push(formats.length === item.formats.length ? item : { ...item, formats });
+    if (formats.length > 0) cut.push(formats.length === item.formats.length ? item : { ...item, formats });
+  }
+  // A sentence none of whose words has two fair tiles cannot be a Cloze Pick round: its produce rung is then Sentence
+  // Builder, or the engine asks it at read (section 4.5), rather than choosing a format whose round is never built.
+  const pool = games.clozePick === true ? clozePool(cut) : null;
+  const items: ReviewItem[] = [];
+  for (const item of cut) {
+    if (pool === null || !item.formats.includes('cloze-pick') || clozeTileable(item, pool)) items.push(item);
+    else {
+      const formats = item.formats.filter((f) => f !== 'cloze-pick');
+      if (formats.length > 0) items.push({ ...item, formats });
+    }
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
   cache.set(index, out);
   return out;
+}
+
+/** The words of the sentences (`pat`) at each place counted from the end, and the sentences by their meaning. */
+interface ClozePool {
+  atFromEnd: Map<number, Set<string>>;
+  byMeaning: Map<string, Array<{ id: string; ko: string }>>;
+}
+
+function clozePool(items: readonly ReviewItem[]): ClozePool {
+  const atFromEnd = new Map<number, Set<string>>();
+  const byMeaning = new Map<string, Array<{ id: string; ko: string }>>();
+  for (const item of items) {
+    if (item.kind !== 'pat') continue;
+    if (item.en !== undefined) byMeaning.set(item.en, [...(byMeaning.get(item.en) ?? []), { id: item.id, ko: bareWord(item.ko) }]);
+    const words = clozeWords(item);
+    words?.forEach((w, i) => {
+      const fromEnd = words.length - 1 - i;
+      const set = atFromEnd.get(fromEnd) ?? new Set<string>();
+      set.add(w.ko);
+      atFromEnd.set(fromEnd, set);
+    });
+  }
+  return { atFromEnd, byMeaning };
+}
+
+/** The sentences of another item with the same meaning (bare): a tile that makes one of them is not fair. */
+const sameMeaningOf = (item: Pick<ReviewItem, 'id' | 'en'>, byMeaning: ClozePool['byMeaning']): Set<string> =>
+  new Set((item.en === undefined ? [] : (byMeaning.get(item.en) ?? [])).filter((o) => o.id !== item.id).map((o) => o.ko));
+
+/**
+ * Whether `tile` may stand beside `answer` in a gap: not a word of the sentence, not one that differs only in its
+ * ending (책이 / 책은: the meaning would not decide), and not one that makes another sentence of the same meaning.
+ */
+const fairTile = (tile: string, answer: string, own: ReadonlySet<string>, sameMeaning: ReadonlySet<string>, filled: string): boolean =>
+  !own.has(tile) && tile[0] !== answer[0] && !sameMeaning.has(filled);
+
+/** Whether some word of the sentence has at least two fair tiles in the pool (what `clozeRound` needs to build a round). */
+function clozeTileable(item: ReviewItem, pool: ClozePool): boolean {
+  const words = clozeWords(item);
+  if (item.kind !== 'pat' || words === null) return false;
+  const own = new Set(words.map((w) => w.ko));
+  const sameMeaning = sameMeaningOf(item, pool.byMeaning);
+  return words.some((answer, at) => {
+    let fair = 0;
+    for (const tile of pool.atFromEnd.get(words.length - 1 - at) ?? []) {
+      const filled = words.map((w, i) => (i === at ? tile : w.ko)).join(' ');
+      if (fairTile(tile, answer.ko, own, sameMeaning, filled) && ++fair >= 2) return true;
+    }
+    return false;
+  });
 }
 
 /** The words of a sentence (edge punctuation off) beside their romanization, or null when the two do not line up. */
@@ -171,8 +232,8 @@ export interface ClozeRound extends RoundBase {
   type: 'cloze';
   /** The sentence with its one word left out (`___`), and its romanization the same way. */
   gapped: KoText;
-  /** The sentence's meaning in the UI language: the input the round reads from. */
-  meaning?: string;
+  /** The sentence's meaning in the UI language: the input the round reads from (no meaning, no Cloze round). */
+  meaning: string;
   /** The word tiles (Korean and romanization, no meaning), in a seeded order. */
   tiles: PickOption[];
   answerId: string;
@@ -321,14 +382,18 @@ function orderRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
  * stand at the same place, counted from the end, in other sentences (a Korean sentence ends with its verb), the same
  * theme first. A tile is never one that differs only in its ending (책이 / 책은: the meaning would not decide), one
  * already in the sentence, or one that makes another sentence with the same meaning. The left-out word is the first,
- * in a seeded order, that has at least two such tiles; none has: the item is asked another way.
+ * in a seeded order, that has at least two such tiles; none has, or the meaning is missing in the UI language: null,
+ * and `roundFor` asks it another way (`surfaceIndex` already drops Cloze Pick from a sentence no word of which has two).
  */
 function clozeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): ClozeRound | null {
   const words = clozeWords(item);
   if (words === null) return null;
+  // Without the meaning in the UI language the tiles are not settled (책이 ___ takes 있어요 and 없어요): asked another way.
   const meaning = itemGloss(item, input);
+  if (meaning === undefined) return null;
   const own = new Set(words.map((w) => w.ko));
-  const sameMeaning = new Set(itemsOfKind(input.index, 'pat').filter((i) => i.id !== item.id && i.en === item.en).map((i) => bareWord(i.ko)));
+  const pats = itemsOfKind(input.index, 'pat');
+  const sameMeaning = new Set(item.en === undefined ? [] : pats.filter((i) => i.id !== item.id && i.en === item.en).map((i) => bareWord(i.ko)));
   const others = itemsOfKind(input.index, 'pat').filter((i) => i.id !== item.id);
   const seed = `${input.seed}|${item.id}`;
   const places = seededOrder(
@@ -352,7 +417,7 @@ function clozeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
     const seen = new Set([answer.ko]);
     for (const { word } of [...near, ...far]) {
       if (tiles.length >= MAX_OPTIONS - 1) break;
-      if (seen.has(word.ko) || own.has(word.ko) || word.ko[0] === answer.ko[0] || sameMeaning.has(filledWith(word.ko))) continue;
+      if (seen.has(word.ko) || !fairTile(word.ko, answer.ko, own, sameMeaning, filledWith(word.ko))) continue;
       seen.add(word.ko);
       tiles.push(word);
     }
@@ -377,10 +442,10 @@ function clozeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
       type: 'cloze',
       question,
       gapped: { ko: gapKo, romanization: gapRom },
-      ...(meaning ? { meaning } : {}),
+      meaning,
       tiles: options,
       answerId,
-      answer: { ko: koOf(item), ...(meaning ? { gloss: meaning } : {}) },
+      answer: { ko: koOf(item), gloss: meaning },
     };
   }
   return null;
@@ -402,7 +467,12 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
     case 'sentence-builder':
       return orderRound(question, item, input);
     case 'cloze-pick':
-      return clozeRound(question, item, input);
+      // No round (no meaning in the UI language yet, or no fair tiles for this pool): the same produce rung as
+      // Sentence Builder when the item has it, so the rung the engine records stays right; else the item is skipped.
+      return (
+        clozeRound(question, item, input) ??
+        (item.formats.includes('sentence-builder') ? orderRound({ ...question, format: 'sentence-builder' }, item, input) : null)
+      );
     default:
       return null;
   }

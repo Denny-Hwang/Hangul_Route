@@ -422,13 +422,13 @@ describe('precacheReport and its budget lines', () => {
     // Named React imports (no `import React, { ... }`: 142 start-bundle modules lose Babel's wildcard interop helper,
     // named-react-imports.test.mjs) measure 4,742,691 B on main 150c07383 (release build, Metro cache cleared; the
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
-    // CM-30 (Cloze Pick; the game, its fallback and its rules in the cloze-pick chunk) measures 4,755,726 B on main
-    // e31bc3b33 (4,749,283 B), so the line is 4,760,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
+    // CM-30 (Cloze Pick; the game in the cloze-pick chunk, its Listen & Pick fallback in the start bundle with the door)
+    // measures 4,760,074 B on main e31bc3b33 (4,749,283 B), so the line is 4,765,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_765_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_691).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_742_847).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_726).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_726).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_760_074).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_760_074).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

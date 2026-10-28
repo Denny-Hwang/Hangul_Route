@@ -131,6 +131,24 @@ describe('the cloze-pick lesson scope', () => {
     // The answer may sit in an entry's text as well as its value (a ticket's time, a sign's place).
     const onText = { ...realia, entries: [{ id: 'e1', text: kt('삼천 원', 'samcheon won', '3,000 won') }] };
     expect(clozePickIssues(scope({ rounds: [value({ answerIndex: 1 })], realia: onText }))).toEqual([]);
+    // Whole values: 만 오천 원 (15,000) is not 오천 (5,000), although it is written inside it.
+    const fifteen = { ...realia, entries: [{ id: 'e1', text: kt('사과', 'sagwa', 'apple'), value: kt('만 오천 원', 'man ocheon won', '15,000 won') }] };
+    expect(clozePickIssues(scope({ rounds: [value()], realia: fifteen }))).toEqual([
+      { path: ['rounds', 0, 'answerIndex'], message: 'a value gap answer "오천" is on the realia card' },
+    ]);
+    // A tile that is another line's value is right too, unless the sentence names the line it asks.
+    const menu = {
+      ...realia,
+      entries: [
+        { id: 'e1', text: kt('사과', 'sagwa', 'apple'), value: kt('오천 원', 'ocheon won', '5,000 won') },
+        { id: 'e2', text: kt('배', 'bae', 'pear'), value: kt('삼천 원', 'samcheon won', '3,000 won') },
+      ],
+    };
+    expect(clozePickIssues(scope({ rounds: [value()], realia: menu }))).toEqual([
+      { path: ['rounds', 0, 'tiles', 1], message: 'a value gap tile "삼천" is also on the realia card: the sentence names the line it asks' },
+    ]);
+    const named = value({ sentence: kt('사과는 ___ 원이에요.', 'sagwaneun ___ wonieyo.', 'The apples are ___ won.') });
+    expect(clozePickIssues(scope({ rounds: [named], realia: menu }))).toEqual([]);
     // A round whose answer points past its tiles is the round schema's issue, never a crash here.
     expect(clozePickIssues({ ...scope({ rounds: [value()], realia }), rounds: [{ ...value(), answerIndex: 9 } as ClozePickRound] })).toHaveLength(0);
   });
