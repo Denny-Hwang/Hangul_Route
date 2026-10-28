@@ -3,7 +3,7 @@ import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
 import { Pressable, StyleSheet } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { questsAll } from '../../../content';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../../logic/minigame-config';
@@ -21,6 +21,13 @@ import type { MinigameHost } from '../host';
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
+
+// The voice is a spy: the prompt is spoken only once the scene is known to fit (Codex review on #853).
+const audio = vi.hoisted(() => ({
+  playPrompt: vi.fn(() => Promise.resolve('played' as const)),
+  stop: vi.fn(),
+}));
+vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), ...audio }));
 
 const ROUND = HiddenHeritageRoundSchema.parse(FOOD_MARKET_SCENE.round);
 const SCOPE: MinigameScope = { kind: 'hidden-heritage', rounds: 3, hiddenHeritage: { rounds: [ROUND] } };
@@ -67,6 +74,8 @@ const spots = (root: ReactTestInstance): ReactTestInstance[] =>
 const text = (root: ReactTestInstance): string => root.findAll((n) => typeof n.props.children === 'string').map((n) => n.props.children as string).join(' | ');
 
 beforeEach(() => {
+  audio.playPrompt.mockClear();
+  audio.stop.mockClear();
   log.length = 0;
   completed = 0;
   scenes.resetScenesForTests();
@@ -147,6 +156,30 @@ describe('with game.hidden-heritage on', () => {
     const narrow = await draw(SCOPE, 288, 255);
     expect(byTestId(narrow, 'hh-scene')).toHaveLength(0);
     expect(narrow.findAll((n) => n.props.testID === 'pic-word-picture-bap').length).toBeGreaterThan(0);
+  });
+
+  it('speaks the first word only once the scene fits, never before the layout and never over the fallback', async () => {
+    gameSwitch(true);
+    await draw(SCOPE, 288, 255);
+    expect(audio.playPrompt).not.toHaveBeenCalled();
+    await draw(SCOPE, 320, 288);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+  });
+
+  it('a step that narrows into the fallback (a split screen opens) stops the scene voice', async () => {
+    gameSwitch(true);
+    const root = await draw(SCOPE, 320, 288);
+    const measured = root.findAll((n) => typeof n.props.onLayout === 'function' && n.props.testID === undefined)[0]!;
+    audio.stop.mockClear();
+    await act(async () => {
+      measured.props.onLayout({ nativeEvent: { layout: { width: 255, height: 500, x: 0, y: 0 } } });
+    });
+    expect(byTestId(root, 'hh-scene')).toHaveLength(0);
+    expect(root.findAll((n) => n.props.testID === 'pic-word-picture-bap').length).toBeGreaterThan(0);
+    expect(audio.stop).toHaveBeenCalled();
   });
 
   it('a scene that does not load (not in this build, no chunk) is never drawn: the fallback plays', async () => {
