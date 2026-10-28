@@ -173,6 +173,44 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
     });
   }
 
+  test.describe('keyboard at 320', () => {
+    test.use({ viewport: { width: 320, height: 568 } });
+
+    test('a round finished by keyboard alone: Tab to a card, Enter or Space places it, focus moves to the next card, then to the replay title', async ({ page }) => {
+      await open(page, 'captions');
+      const focusedCard = (): Promise<string | null> =>
+        page.evaluate(() => {
+          const id = document.activeElement?.getAttribute('data-testid') ?? '';
+          return id.startsWith('story-order-card-') ? id.slice('story-order-card-'.length) : null;
+        });
+      const remainingIds = (): Promise<string[]> =>
+        page.evaluate(() => Array.from(document.querySelectorAll('[data-testid^="story-order-card-"]')).map((el) => el.getAttribute('data-testid')!.slice('story-order-card-'.length)));
+      // Tab from the top of the screen to the first card.
+      for (let i = 0; i < 20 && (await focusedCard()) === null; i += 1) await page.keyboard.press('Tab');
+      expect(await focusedCard()).not.toBeNull();
+      for (const [i, p] of MORNING.panels.entries()) {
+        const cards = await remainingIds();
+        const at = cards.indexOf(p.id);
+        expect(await focusedCard()).toBe(cards[0]);
+        // The cards are one after the other in the tab order.
+        for (let t = 0; t < at; t += 1) await page.keyboard.press('Tab');
+        expect(await focusedCard()).toBe(p.id);
+        await page.keyboard.press(i % 2 === 0 ? 'Enter' : 'Space');
+        // The last card fills the row and opens the replay, so its slot is not on screen any more.
+        if (i === MORNING.panels.length - 1) break;
+        await expect(page.getByTestId(`story-order-slot-${i + 1}`)).toHaveAccessibleName(`Place ${i + 1} of 4: ${p.caption.ko}`);
+        await expect(page.getByTestId('story-order-announce')).toHaveText(`Place ${i + 1} of 4: ${p.caption.ko}`);
+        // The placed card is gone and the focus is on the first card still to place, never on the page body.
+        await expect.poll(focusedCard).toBe((await remainingIds())[0]);
+      }
+      await expect(page.getByRole('heading', { name: 'The story, in order' })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)).toBe('story-order-replay-title');
+      const { answers } = await log(page);
+      expect(answers.map((a) => [a.key, a.correct])).toEqual(MORNING.panels.map((_, i) => [`so:morning:${i}`, true]));
+      await shot(page, 'story-order-keyboard-replay-320');
+    });
+  });
+
   test.describe('reduced motion', () => {
     test.use({ viewport: { width: 320, height: 568 }, reducedMotion: 'reduce' });
 
@@ -204,7 +242,7 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
   test.describe('largest text at 320', () => {
     test.use({ viewport: { width: 320, height: 568 } });
 
-    test('five lines with every slot filled: slots grow, nothing is cut, no sideways scroll, Skip stays reachable', async ({ page }) => {
+    test('five lines with all but the last slot filled: slots grow, nothing is cut, no sideways scroll, Skip stays reachable', async ({ page }) => {
       await open(page, 'five', { textSize: 'largest' });
       const five = STORY_ORDER_FIXTURES.five.storyOrder!.rounds[0]!;
       await expectTargets(page);

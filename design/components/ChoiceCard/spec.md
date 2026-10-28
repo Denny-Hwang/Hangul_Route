@@ -24,6 +24,7 @@ The design system has no copy and no i18n dependency. The caller passes already-
 | `onPress` | `() => void?` | Fires only in `idle` and `hint` |
 | `accessibilityLabel` | `string` | Required. The accessible name (for a picture option, the text label) |
 | `testID` | `string?` | |
+| `pressableRef` | `Ref<View>?` | The pressable's node, for a screen that moves focus to the card (as Button's `pressableRef`) |
 
 ## Anatomy
 

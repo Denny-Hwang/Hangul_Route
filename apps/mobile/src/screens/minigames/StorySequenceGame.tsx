@@ -88,9 +88,12 @@ interface Props {
   /**
    * One round of a step that plays several (Story Order's fallback, F-CURR-002 row CM-34): its slot keys carry
    * `keyPrefix`, so two rounds never share one, and only the `last` round, or a skip, completes the step. `answer`,
-   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked.
+   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked. A
+   * chained round is not a story's sequence, so it sends no `story.sequence.finished` (the step's `minigame.finished`
+   * names it; design/wireframes/minigame/story-order.md). `noSkip`: the chain is a Check's step, and the Check has no
+   * Skip (check-launcher.ts), so Skip this one is not drawn.
    */
-  chain?: { keyPrefix: string; last: boolean; answer?: (roundKey: string, slot: number, correct: boolean) => void };
+  chain?: { keyPrefix: string; last: boolean; answer?: (roundKey: string, slot: number, correct: boolean) => void; noSkip?: boolean };
 }
 
 /** Column share of one card cell, by column count. */
@@ -171,15 +174,17 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
 
   const finish = useCallback(
     (finalState: SequenceState, skipped: boolean): void => {
-      void track({
-        name: 'story.sequence.finished',
-        profileId: activeProfileId,
-        payload: sequenceFinishedPayload(
-          { storyId: scope.story?.storyId ?? null, sequenceId },
-          sequenceSummary(finalState),
-          skipped,
-        ),
-      });
+      if (chain === undefined) {
+        void track({
+          name: 'story.sequence.finished',
+          profileId: activeProfileId,
+          payload: sequenceFinishedPayload(
+            { storyId: scope.story?.storyId ?? null, sequenceId },
+            sequenceSummary(finalState),
+            skipped,
+          ),
+        });
+      }
       stop();
       if (chain === undefined || chain.last || skipped) markStepComplete();
       onFinish(skipped);
@@ -517,8 +522,12 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
           <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.tryAnother : copy.lookHere} />
         )}
       </View>
-      <Spacer size="xl" />
-      <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
+      {chain?.noSkip === true ? null : (
+        <>
+          <Spacer size="xl" />
+          <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
+        </>
+      )}
     </Screen>
   );
 }
