@@ -2,7 +2,7 @@ import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { awardWorld, awardWorldFor } from '../../../content/award-world';
 import { episodesAll } from '../../../content/episodes';
-import { UPPER_CARD_GATED_IDS } from '../../../content/heritage-cards';
+import { UPPER_CARD_GATED_IDS, albumLegendCards, upperCellCards } from '../../../content/heritage-cards';
 import { mergeSnapshots } from '../../sync/merge';
 import { applyAwards } from '../apply';
 import { derivedAwards, firstFinishedAt, missingAwards } from '../derive';
@@ -175,11 +175,118 @@ describe('the retroactive award (row CM-23)', () => {
     }
   });
 
-  it('never random, never bought: every upper-cell card is an episode rule, no quest gives one', () => {
-    for (const id of UPPER_CARD_GATED_IDS) {
+  it('never random, never bought: every upper-cell card is an episode rule, every legendary card its album set, no quest gives one', () => {
+    for (const { id } of upperCellCards) {
       const card = awardWorld.cards.find((c) => c.id === id);
-      expect(card?.unlockedBy, id).toMatch(/^episode:stage[234]-/);
-      expect(awardWorld.quests.some((q) => q.rewardCardId === id), id).toBe(false);
+      expect(card?.unlockedBy, id).toMatch(/^episode:stage[23467]-/);
     }
+    for (const { id, theme } of albumLegendCards) expect(awardWorld.cards.find((c) => c.id === id)?.unlockedBy, id).toBe(`set:album-${theme}`);
+    for (const id of UPPER_CARD_GATED_IDS) expect(awardWorld.quests.some((q) => q.rewardCardId === id), id).toBe(false);
+  });
+
+  it('Stages 6-7 (row CM-23 part 3): a cell finished before the row shipped brings its card on reconcile, once', () => {
+    const s7 = episodesAll.find((e) => e.id === 'episode:stage7-nature')!;
+    const before = finished(s7, T(24));
+    const at = T(s7.questIds.length);
+    expect(awardOf(before, 'card:tokki')).toEqual({ cardId: 'card:tokki', source: 'episode', via: 'episode:stage7-nature', unlockedAt: at });
+    const once = applyAwards(before, missingAwards(awardWorld, before, PROFILE), NOW);
+    expect(missingAwards(awardWorld, once, PROFILE)).toEqual([]);
+    expect(awardOf(before, 'card:tokki', awardWorldFor(false, new Set()))).toBeUndefined();
+  });
+});
+
+/**
+ * The album legendary cards (F-CURR-002 §7.2, row CM-23 part 3): a finished album brings its legendary card through the
+ * set rule, once, dated by the last of its five cards, the same on every device, retroactively for an album finished
+ * before the row shipped; `upperCards` off brings none and keeps a held one.
+ */
+describe('album legendary cards (row CM-23 part 3)', () => {
+  const LETTERS_CELLS = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].map((s) => episodesAll.find((e) => e.id === `episode:${s}-letters`)!);
+  /** A snapshot that finished every quest of `cells`, the k-th quest overall first on day 1+k (its replays on `replay`). */
+  function finishedAll(cells: readonly (typeof LETTERS)[], replay: string | null, cards: ProgressSnapshot['cards'] = []): ProgressSnapshot {
+    const runs = cells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+    const day = (k: number): string => new Date(Date.UTC(2026, 8, 1 + k, 10)).toISOString();
+    return {
+      ...finished(LETTERS, null),
+      quests: runs.map((r, k) => ({ ...r, startedAt: day(k), completedAt: replay ?? day(k), stars: 2 as const, attempts: 1, accuracy: 0.9 })),
+      questDoneAt: Object.fromEntries(runs.map((r, k) => [r.questId, day(k)])),
+      cards,
+    };
+  }
+  const lastFirstFinish = (snap: ProgressSnapshot): string => Object.values(snap.questDoneAt ?? {}).sort().pop()!;
+
+  it('an album completes only with all five of its cards: four cells finished bring no legendary card', () => {
+    expect(awardOf(finishedAll(LETTERS_CELLS.slice(0, 4), null), 'card:hunminjeongeum')).toBeUndefined();
+    expect(awardOf(finishedAll(LETTERS_CELLS.slice(1), null), 'card:hunminjeongeum')).toBeUndefined();
+    const all = finishedAll(LETTERS_CELLS, null);
+    expect(awardOf(all, 'card:hunminjeongeum')).toEqual({ cardId: 'card:hunminjeongeum', source: 'set', via: 'set:album-letters', unlockedAt: lastFirstFinish(all) });
+    // Only the letters album is full: no other legendary card.
+    for (const { id } of albumLegendCards.slice(1)) expect(awardOf(all, id), id).toBeUndefined();
+  });
+
+  it('retroactive: an album finished before the row shipped brings its five cards and its legendary card on one reconcile, once', () => {
+    const before = finishedAll(LETTERS_CELLS, T(28));
+    const added = missingAwards(awardWorld, before, PROFILE).map((a) => a.cardId);
+    expect(added).toEqual(expect.arrayContaining(['card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:won', 'card:ireum', 'card:hunminjeongeum']));
+    const once = applyAwards(before, missingAwards(awardWorld, before, PROFILE), NOW);
+    expect(once.cards.filter((c) => c.cardId === 'card:hunminjeongeum')).toEqual([{ cardId: 'card:hunminjeongeum', unlockedAt: lastFirstFinish(before), newSinceLastView: true }]);
+    expect(missingAwards(awardWorld, once, PROFILE)).toEqual([]);
+  });
+
+  it('the legendary card unlocks once: held album cards count, and a held legendary card is never added again', () => {
+    const at = '2026-10-20T10:00:00.000Z';
+    // Hoya's welcome card is held too, so the only card the rules still owe is the legendary one.
+    const held = ['card:tiger', 'card:norae', 'card:hangeul', 'card:mwoyeyo', 'card:won', 'card:ireum'].map((cardId) => ({ cardId, unlockedAt: at, newSinceLastView: false }));
+    const snap = { ...finishedAll([], null), cards: held };
+    expect(missingAwards(awardWorld, snap, PROFILE).map((a) => a.cardId)).toEqual(['card:hunminjeongeum']);
+    const once = applyAwards(snap, missingAwards(awardWorld, snap, PROFILE), NOW);
+    expect(once.cards.filter((c) => c.cardId === 'card:hunminjeongeum').map((c) => c.unlockedAt)).toEqual([at]);
+    expect(missingAwards(awardWorld, once, PROFILE)).toEqual([]);
+  });
+
+  it('two devices derive the same legendary card and time whatever replays each holds; their merge holds one entry', () => {
+    const a = finishedAll(LETTERS_CELLS, T(29));
+    const b = finishedAll(LETTERS_CELLS, null);
+    expect(awardOf(a, 'card:hunminjeongeum')).toEqual(awardOf(b, 'card:hunminjeongeum'));
+    const ra = applyAwards(a, missingAwards(awardWorld, a, PROFILE), NOW);
+    const rb = applyAwards(b, missingAwards(awardWorld, b, PROFILE), '2026-10-24T09:00:00.000Z');
+    const merged = mergeSnapshots(ra, rb, { now: new Date(NOW) });
+    expect(merged.cards.filter((c) => c.cardId === 'card:hunminjeongeum').map((c) => c.unlockedAt)).toEqual([lastFirstFinish(a)]);
+    expect(missingAwards(awardWorld, merged, PROFILE)).toEqual([]);
+  });
+
+  it('the shipped album card counts: the Food album needs Lunch Box Words\u2019 card:dosirak, whatever the switch', () => {
+    const LIFE_CELLS = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].map((s) => episodesAll.find((e) => e.id === `episode:${s}-life`)!);
+    const snap = finishedAll(LIFE_CELLS, null);
+    expect(awardOf(snap, 'card:jang')?.via).toBe('set:album-life');
+    const noDosirak = { ...snap, quests: snap.quests.filter((q) => q.questId !== 'quest:stage2-life-q1') };
+    expect(awardOf(noDosirak, 'card:jang')).toBeUndefined();
+  });
+
+  it('two devices that hold the Food album’s quest-reward card at different times end with one legendary entry at the earliest time', () => {
+    const LIFE_CELLS = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].map((s) => episodesAll.find((e) => e.id === `episode:${s}-life`)!);
+    // card:dosirak comes from a quest, so each device dates it by its own unlock, both after every first finish.
+    const dosirakAt = (at: string): ProgressSnapshot['cards'] => [{ cardId: 'card:dosirak', unlockedAt: at, newSinceLastView: false }];
+    const a = finishedAll(LIFE_CELLS, T(29), dosirakAt('2026-10-21T10:00:00.000Z'));
+    const b = finishedAll(LIFE_CELLS, null, dosirakAt('2026-10-22T10:00:00.000Z'));
+    const ra = applyAwards(a, missingAwards(awardWorld, a, PROFILE), NOW);
+    const rb = applyAwards(b, missingAwards(awardWorld, b, PROFILE), '2026-10-24T09:00:00.000Z');
+    expect(ra.cards.filter((c) => c.cardId === 'card:jang')).toHaveLength(1);
+    expect(rb.cards.filter((c) => c.cardId === 'card:jang')).toHaveLength(1);
+    const merged = mergeSnapshots(ra, rb, { now: new Date(NOW) });
+    expect(merged.cards.filter((c) => c.cardId === 'card:jang').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+    expect(merged.cards.filter((c) => c.cardId === 'card:dosirak').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+    expect(missingAwards(awardWorld, merged, PROFILE)).toEqual([]);
+    // The merge reads the same in either order.
+    expect(mergeSnapshots(rb, ra, { now: new Date(NOW) }).cards.filter((c) => c.cardId === 'card:jang').map((c) => c.unlockedAt)).toEqual(['2026-10-21T10:00:00.000Z']);
+  });
+
+  it('upperCards off: a full album brings no legendary card and lists none; a held one stays', () => {
+    const snap = finishedAll(LETTERS_CELLS, null);
+    const off = awardWorldFor(false, new Set());
+    expect(awardOf(snap, 'card:hunminjeongeum', off)).toBeUndefined();
+    expect(obtainableCards(off, new Set()).some((c) => c.rarity === 'legendary' && UPPER_CARD_GATED_IDS.has(c.id))).toBe(false);
+    const held = new Set(['card:hunminjeongeum']);
+    expect(obtainableCards(awardWorldFor(false, held), held).map((c) => c.id)).toContain('card:hunminjeongeum');
   });
 });

@@ -1,110 +1,54 @@
-# F-CARD-S6-001 — Stage 6 Card Illustrations (deferred)
+# F-CARD-S6-001 — Stage 6 Card Illustrations
 
-**Status**: `draft` — implementation **blocked** on Stage 6 real-use content (menus, signs, calls) being authored.
-**Scope**: `packages/design-system/src/components/HeritageCardArt/` + `apps/mobile/src/content/`
+**Status**: `ready` — amended 2026-10-23 by F-CURR-002 row CM-23 part 3: one card per upper cell, shipped behind the `upperCards` switch (built-in pct 0; the owner ramps it). Was `draft`, waiting on the stage's real-use content, which now exists (F-CURR-001 Stage 6 cells).
+**Scope**: row CM-23 part 3 — `packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx` and `upper-card-ids.ts` (`upperCellCardArtIds`), `apps/mobile/src/content/heritage-cards.ts` (`upperCellCards`), `content/upper-cell-cards.ts`, `content/upper-card-backs.ts`, `content/upper-cell-card-sources.ts`, the Stage 6 cell files' `rewardCardIds`, the Library albums
 **Owner**: solo dev
-**Rollout**: Stage 6 unlock
+**Rollout**: with the `upperCards` switch (F-CURR-002 sections 7.2 and 12.2)
 
 ---
 
+> **Amended 2026-10-23 by F-CURR-002 row CM-23 part 3 (section 7.2 and its decision record, which settle F-CURR-001 OD-7).** The earlier plan of 30 cards for the stage, its card seed and its age wording are gone: the scope is **one card per upper cell**, earned by finishing the cell's first volume, and the audience is anyone learning Hangul (CLAUDE.md section 1). The cards fill the five category albums of the Library.
+
 ## 1. Context
 
-Stage 6 of the Heritage Journey is **Real-use** — children take Korean out into the world. Reading actual menus, store signs, transit announcements, video-call conversations with grandparents. The vocabulary is grounded in concrete daily situations.
-
-Stage 6 cards visually represent **real-world artifacts** — a photo-realistic-ish menu page, a transit sign, a phone screen showing a video call. Where Stage 5 cards were atmospheric story scenes, Stage 6 cards are **functional documents** with diegetic Korean.
-
-Card count target: 30 (6 per theme).
+Stage 6 of the Journey is **real use**: the learner reads Korean out in the world, on a menu board, at a table, on a train ticket, on a trail sign and on a market price card. Each Stage 6 card shows **one real-world artifact with its Korean drawn in the picture**, the thing its cell teaches the learner to read.
 
 ## 2. User story
 
-> As **P5** (12+, Stage 6 unlocked after 5 stages of vocabulary + sentences + stories) earning a "Read the Menu" card, I want it to **look like an actual menu** — Korean dishes listed, prices, photos hinted — so the card preserves the *act* of reading something real.
+> As **a learner who finished a Stage 6 cell**, I want its card to look like the thing I just learned to read, a menu or a sign with real Korean on it, so the card keeps the act of reading something real.
 
-## 3. Acceptance criteria (when implemented)
+## 3. Acceptance criteria (as built)
 
-### 3.1 Card content
+### 3.1 Cards
 
-- `heritage-cards.ts` gains a Stage 6 section: 30 entries with `stage: 'stage6'`.
-- Each card represents **one real-world artifact**. Sample titles:
-  - "Read the Korean Menu" — bibimbap, kimbap, naengmyeon listed in Hangul + romanization
-  - "Subway Sign" — line color + station name in 한글
-  - "Phone Call with Grandma" — phone screen with Korean caller display
-  - "Mailbox with Korean Address" — postcode + 우편번호 visible
-  - "Store Sign 김밥천국" — recognizable Korean franchise sign
+- Five rare cards, one per Stage 6 cell, each named in `unlockedBy: 'episode:stage6-<theme>'`, in the cell file's `rewardCardIds` and on no quest (`upperCellCards` in `apps/mobile/src/content/heritage-cards.ts`):
 
-### 3.2 Visual contract (extends previous stages)
+| Cell | Card | Korean | The picture |
+|---|---|---|---|
+| Read the Menu (`letters`) | Won (`card:won`) | 원 | a menu board, 김밥 이천 원 and 라면 삼천 원, a won coin |
+| Order Food (`life`) | Over Here! (`card:yeogiyo`) | 여기요 | a friend at a table calls 여기요! to the server |
+| Travel for Chuseok (`rites`) | Train Ticket (`card:gichapyo`) | 기차표 | a ticket, 서울 → 부산 at 두 시 |
+| Hike & Ask (`nature`) | Summit (`card:jeongsang`) | 정상 | a trail sign, 정상 ↑ and 한 시간 |
+| Buy at Market (`crafts`) | A Little Extra (`card:deom`) | 덤 | a price card, 사과 세 개 이천 원, and one apple more |
 
-- **Diegetic typography** — actual Korean characters embedded as the artifact's *content*, not just the card title
-- Max colors per card raised to **8** (same as Stage 5)
-- **Documentary feel** — more rectilinear, less storybook-atmospheric
-- Theme tinting LOW (4% — lets the artifact's own colors lead)
-- **Stage 6 watermark**: `6` glyph + a tiny "world" / globe icon
+- Every Korean word on a card and in its picture is taught in its own cell. Amounts are round practice amounts in won. No brand, store name or logo is drawn.
+- Each back-face fact cites a public institution from F-CURR-002 section 6.6 (`content/upper-cell-card-sources.ts`, held to the allowlist by the `culture-source` card check): the National Institute of Korean Language (원, 여기요, 역귀성, 덤) and the Korea National Park Service (the trail start times).
+- A card is awarded from the cell's first finishes (`questDoneAt`), retroactively for a cell finished before the row shipped, once and the same on every device. Never random, never sold.
 
-### 3.3 Rarity distribution
+### 3.2 Visual contract
 
-Same density. Legendary cards represent the most empowering real-world moments — e.g., "First call to grandma" or "First menu order without help".
+- The shipped geometric minhwa style of `HeritageCardArt` (design/brief/illustrations/heritage-card-art.md): rounded primitives, a ~3 px stroke, the theme tint, theme tokens only (no new token), at most five fill colours besides the tint and the floor shadow.
+- **Diegetic Korean**: the artifact's Korean is drawn as text in the picture (`word` in `UpperCellArt.tsx`), never as a reading aid; the card's own Korean and romanization stay on the card face.
 
-### 3.4 HeritageCardArt extension
+### 3.3 Art
 
-- 30 new switch cases bringing total to 180 supported cards (Stages 1-6)
-- Per-card SVG uses heavy Korean typography rendering — embed `<text>` elements with actual Hangul characters
+- The drawings are `UpperCellCardArt` (`HeritageCardArt/UpperCellArt.tsx`), loaded in the app's upper-cards chunk, so the start bundle carries none of them. Budget tests: each new drawing at most 1,700 B of source; the module at most 34,000 B.
 
 ## 4. Out of scope
 
-- **Interactive menus** (tap to hear pronunciation) — F-MOTION-014 (Phase 2)
-- **Real-world photography** — illustrations only; photos require licensing
-- **Brand logos** (KakaoTalk, Samsung, etc.) — generic representations only
+- Tap-to-hear on the drawn Korean.
+- Photography and brand logos.
 
-## 5. Suggested 30-card seed (subject to native-Korean editorial review)
+## 5. Dependencies
 
-### Letters & Books (6) — documents
-- "Library card" 도서관 카드 · common
-- "School schedule" 시간표 · common
-- "Korean newspaper page" 신문 한 면 · uncommon
-- "Letter from a friend" 친구 편지 · rare
-- "Bookstore receipt" 서점 영수증 · uncommon
-- "Library application form" 도서관 신청서 · legendary
-
-### Food & Daily Life (6) — menus + receipts
-- "Korean BBQ menu" 고깃집 메뉴 · uncommon
-- "Convenience store snack" 편의점 간식 · common
-- "Restaurant receipt" 식당 영수증 · common
-- "Lunchbox label" 도시락 포장지 · uncommon
-- "Recipe card" 레시피 카드 · rare
-- "Order at the food truck" 푸드트럭 주문 · legendary
-
-### Holidays & Traditions (6) — festival flyers
-- "Seollal greeting card" 설날 카드 · uncommon
-- "Chuseok poster" 추석 포스터 · common
-- "Lantern festival ticket" 연등회 티켓 · rare
-- "Lunar calendar page" 음력 달력 한 면 · common
-- "Tea ceremony invitation" 다도 초대장 · uncommon
-- "Family gathering invitation" 가족 모임 초대 · legendary
-
-### Nature & Animals (6) — signs + warnings
-- "Park sign 공원" · common
-- "Mountain trail marker" 산악 표지판 · uncommon
-- "Beach safety sign" 바다 안전 표시 · common
-- "National park map" 국립공원 지도 · rare
-- "Animal exhibit label" 동물원 안내판 · uncommon
-- "Weather forecast" 일기 예보 · legendary
-
-### Play & Crafts (6) — store signs
-- "Toy store window" 장난감 가게 · common
-- "Stationery shop" 문구점 · uncommon
-- "Craft supplies receipt" 공예 재료 영수증 · common
-- "Karaoke price list" 노래방 가격표 · rare
-- "Playground sign" 놀이터 표지 · uncommon
-- "Hangul-themed gift shop" 한글 선물 가게 · legendary
-
-## 6. Ship-when triggers
-
-Implement when **all** are true:
-1. **Stage 6 real-use content authored** — menus, signs, document samples
-2. **Stage 6 quests drafted** — read-then-act pattern
-3. **Stage 5 beta complete**
-
-## 7. Dependencies
-
-Upstream: F-CARD-S5-001, F-CARD-002, F-CARD-001.
-Downstream: F-CARD-S7-001.
-External: native-Korean editorial review; brand-safety review for any depicted store/franchise.
+Upstream: F-CURR-002 section 7.2, F-CARD-001, F-CARD-002, F-STORY-006, F-MOTION-003.
