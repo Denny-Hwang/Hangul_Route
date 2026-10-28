@@ -199,11 +199,15 @@ test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () 
       const ko = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
       await spot(page, LETTERS_TARGETS[ko]!.id).click();
       await expect(page.getByRole('button', { name: `${LETTERS_TARGETS[ko]!.meaning}, found` })).toBeVisible();
-      await page.waitForTimeout(800);
+      // State, not sleeps: the next word comes once the meaning has shown (FOUND_ADVANCE_MS).
+      if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
     }
     await expect(page.getByText('You found them all')).toBeVisible();
     await expectNoShame(page);
     await shot(page, 'hidden-heritage-letters-end-320');
+    expect((await log(page)).answers.map((a) => a.correct)).toEqual([true, true, true]);
+    await page.getByTestId('hh-continue').click();
+    await expect.poll(async () => (await log(page)).completed).toBe(1);
   });
 
   test('at 320, game.hidden-heritage off: Pic-Word Match on 책, 붓 and 나무 from their own pictures', async ({ page }) => {
