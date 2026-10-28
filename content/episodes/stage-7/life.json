@@ -114,7 +114,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-life-q1-check",
           "durationSeconds": 40
         },
@@ -171,21 +171,23 @@
           "rounds": [
             {
               "id": "t1",
-              "promptEn": "Type the word for morning.",
+              "promptEn": "Type the word you hear.",
               "target": {
                 "ko": "아침",
                 "romanization": "achim",
                 "en": "morning"
-              }
+              },
+              "mode": "hear"
             },
             {
               "id": "t2",
-              "promptEn": "Type the word for evening.",
+              "promptEn": "Type the word you hear.",
               "target": {
                 "ko": "저녁",
                 "romanization": "jeonyeok",
                 "en": "evening"
-              }
+              },
+              "mode": "hear"
             },
             {
               "id": "t3",
@@ -210,39 +212,59 @@
         },
         {
           "ref": "minigame:s7-life-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "아침에 밥을 먹어요.",
-                "romanization": "achime babeul meogeoyo",
+                "ko": "___에 밥을 먹어요.",
+                "romanization": "___e babeul meogeoyo",
                 "en": "In the morning, I eat a meal."
               },
-              "pictureRef": "card:rice",
-              "distractors": [
+              "tiles": [
                 {
-                  "ko": "가요",
-                  "romanization": "gayo",
-                  "en": "I go"
+                  "ko": "아침",
+                  "romanization": "achim",
+                  "en": "morning"
+                },
+                {
+                  "ko": "점심",
+                  "romanization": "jeomsim",
+                  "en": "lunch, lunchtime"
+                },
+                {
+                  "ko": "저녁",
+                  "romanization": "jeonyeok",
+                  "en": "evening"
                 }
-              ]
+              ],
+              "answerIndex": 0
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "점심에 밥을 먹어요.",
-                "romanization": "jeomsime babeul meogeoyo",
+                "ko": "___에 밥을 먹어요.",
+                "romanization": "___e babeul meogeoyo",
                 "en": "At lunchtime, I eat a meal."
               },
-              "pictureRef": "card:rice",
-              "distractors": [
+              "tiles": [
                 {
-                  "ko": "가요",
-                  "romanization": "gayo",
-                  "en": "I go"
+                  "ko": "저녁",
+                  "romanization": "jeonyeok",
+                  "en": "evening"
+                },
+                {
+                  "ko": "아침",
+                  "romanization": "achim",
+                  "en": "morning"
+                },
+                {
+                  "ko": "점심",
+                  "romanization": "jeomsim",
+                  "en": "lunch, lunchtime"
                 }
-              ]
+              ],
+              "answerIndex": 2
             }
           ]
         }
@@ -342,9 +364,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-life-q2-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -592,48 +614,111 @@
         },
         {
           "ref": "minigame:s7-life-q2-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "아침에 달걀을 먹어요.",
-                "romanization": "achime dalgyareul meogeoyo",
-                "en": "In the morning, I eat an egg."
+              "frame": {
+                "ko": "호야는 저녁에 ___을/를 먹어요.",
+                "romanization": "hoyaneun jeonyeoge ___eul/reul meogeoyo",
+                "en": "In the evening, Hoya eats ___."
               },
-              "pictureRef": "word:food-egg",
-              "distractors": [],
-              "particle": {
-                "tile": 1,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker (after a vowel)"
-                  }
-                ]
-              }
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    },
+                    {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "seaweed rice roll"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "저녁에 빵을 먹어요.",
-                "romanization": "jeonyeoge ppangeul meogeoyo",
-                "en": "In the evening, I eat bread."
+              "frame": {
+                "ko": "호야는 ___에 ___을/를 먹어요.",
+                "romanization": "hoyaneun ___e ___eul/reul meogeoyo",
+                "en": "___, Hoya eats ___."
               },
-              "pictureRef": "word:food-bread",
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "가요",
-                  "romanization": "gayo",
-                  "en": "I go"
+                  "id": "time",
+                  "bank": [
+                    {
+                      "ko": "아침",
+                      "romanization": "achim",
+                      "en": "In the morning"
+                    },
+                    {
+                      "ko": "점심",
+                      "romanization": "jeomsim",
+                      "en": "At lunchtime"
+                    },
+                    {
+                      "ko": "저녁",
+                      "romanization": "jeonyeok",
+                      "en": "In the evening"
+                    }
+                  ]
+                },
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    },
+                    {
+                      "ko": "빵",
+                      "romanization": "ppang",
+                      "en": "bread"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "seaweed rice roll"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -1071,13 +1156,18 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, 에 and 을/를 and romanization clean; applied: write-frame glosses compose with every bank pick in en, es and ko (ko colon form, no particle after the slot), no untaught or swappable Check distractors, q3 words before the frame, 점심 glossed lunch, ko typing term 자판으로 쓰기, es Teclea and marca de objeto.",
       "Culture pass 5 (MAR): no culture claim (section 3.7 lists none); the particle notes restate dictionary senses of 에 and 을/를, no source needed; ko 오늘 and 저녁 glosses reworded away from dictionary wording; q2 intro offers food without assuming a breakfast; school, work, park and home give any age a true answer; no real person, brand or price.",
       "CM-3C (F-CURR-002 §5.3 S7, 2026-10-23): culture notes n1-n3 added (banchan, waiting for the eldest, spoon and chopsticks), source National Folk Museum of Korea, each with its own verification record.",
-      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick on the time word (___에 밥을 먹어요, ids kept), q2 Check is Write Frame about Hoya (호야는 저녁에 ___을/를 먹어요 and 호야는 ___에 ___을/를 먹어요; the Apply played neither frame), q3 keeps Sentence Builder. q1 Apply t1-t2 are Dictation (아침, 저녁). Two retired sentences: 아침에 달걀을 먹어요, 저녁에 빵을 먹어요.",
+      "CM-3A S7 language (MAR, 2026-10-23): first pass had the q2 Check repeat Apply f1 word for word; revised to the evening frame the Apply only picked. Every pick fills as correct Korean (에, 을/를 by the last syllable); es ___, Hoya come ___ and ko 때: ___, 호야가 먹는 것: ___ follow the q3 frame. 밥 keeps a neutral answer for any learner.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Write Frame and Sentence Builder Checks, one each; off, Cloze Pick plays as Listen & Pick and both Dictation rounds as see rounds; es and ko meanings keep no gap; any pick of either bank writes a true sentence; nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim added by this row; CM-3C's n1-n3 and their sources are untouched; the Checks name only foods and times the cell teaches; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the #867 reviews): both q2 Check frames named the learner (저녁에 ___을/를 먹어요 was also Apply f3); both now name Hoya (호야는 ...), so the Check asks nothing about the learner (section 6.6) and repeats no Apply frame. es Por la noche, Hoya come ___ and ko 호야가 해가 질 무렵 먹는 것: ___ compose with every pick."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -163,6 +163,22 @@ export function stepGameKind(quest: LessonBodyQuest, kind: string): string | und
   return step?.minigameKind ?? scopeOfStep(quest, kind)?.kind;
 }
 
+/**
+ * A Cloze Pick round (row CM-30, `{ sentence, tiles, answerIndex }`): it asks its completed sentence and,
+ * for a word gap, the answer tile, as the review-item build reads it (row CM-3A). The gapped sentence and
+ * the wrong tiles are shown, not taught; a value gap is read from its card, so it asks no Korean here.
+ */
+const isClozeRound = (r: Record<string, unknown>): boolean => Array.isArray(r.tiles) && typeof r.answerIndex === 'number' && typeof r.sentence === 'object' && r.sentence !== null;
+function clozeAsked(round: Record<string, unknown>, out: string[]): string[] {
+  const answer = (round.tiles as unknown[])[round.answerIndex as number] as { ko?: unknown } | undefined;
+  const sentence = (round.sentence as { ko?: unknown }).ko;
+  if (round.gapKind === 'value' || typeof answer?.ko !== 'string' || typeof sentence !== 'string') return out;
+  const filled = normalizeKo(sentence.replace('___', answer.ko));
+  if (filled !== '') out.push(filled);
+  if (round.gapKind !== 'particle') out.push(normalizeKo(answer.ko));
+  return out;
+}
+
 /** Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet. */
 const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia']);
 
@@ -179,17 +195,7 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   }
   if (typeof value !== 'object' || value === null) return out;
   const record = value as Record<string, unknown>;
-  // A Cloze Pick round (row CM-30) asks its completed sentence, and a word gap its answer tile, as the review items read it.
-  if (Array.isArray(record.tiles) && typeof record.answerIndex === 'number' && typeof record.sentence === 'object' && record.sentence !== null) {
-    const answer = record.tiles[record.answerIndex] as Record<string, unknown> | undefined;
-    const sentence = (record.sentence as Record<string, unknown>).ko;
-    if (typeof answer?.ko === 'string' && typeof sentence === 'string') {
-      const filled = normalizeKo(sentence.replace('___', answer.ko));
-      if (filled !== '' && record.gapKind !== 'value') out.push(filled);
-      if (record.gapKind !== 'particle' && record.gapKind !== 'value') out.push(normalizeKo(answer.ko));
-    }
-    return out;
-  }
+  if (isClozeRound(record)) return clozeAsked(record, out);
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {

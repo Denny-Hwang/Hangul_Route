@@ -1,4 +1,4 @@
-import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
+import { LectureDeckSchema, SLOT_MARKER, type LectureBlock } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
@@ -40,14 +40,14 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
  * The slides with nothing of their own to play: a title, a story scene (Read-to-me reads it on its
  * own path, checked below), an activity, the End slide (a summary of many words), Odd One Out and a
  * story check with no target word (their only Korean is in the options, so playing it would say
- * the answer).
+ * the answer), and a Cloze Pick question (row CM-30): its target is the sentence with its gap, which
+ * is not said before the answer (a gap read aloud says "underscore"; the sentence would answer it).
  */
 function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
-  // A Cloze Pick question (row CM-30, first shipped by row CM-3A S4): its target is the sentence with its gap, which is
-  // not said (a gap read aloud says "underscore", and the completed sentence would say the answer).
-  const clozeGap = (s: Extract<Slide, { kind: 'quiz' }>): boolean => s.prompt.ask === 'check' && s.prompt.target?.ko.includes('___') === true;
-  return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined) || clozeGap(slide));
+  if (slide.kind !== 'quiz') return false;
+  if (slide.prompt.ask === 'odd-one-out') return true;
+  return slide.prompt.ask === 'check' && (slide.prompt.target === undefined || slide.prompt.target.ko.includes(SLOT_MARKER));
 }
 
 /**

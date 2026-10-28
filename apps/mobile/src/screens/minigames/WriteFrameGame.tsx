@@ -46,7 +46,17 @@ import {
   type WriteFrameEvent,
   type WriteFrameState,
 } from '../../logic/write-frame/flow';
-import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization, type FramePart } from '../../logic/write-frame/view';
+import {
+  fillGloss,
+  fittedEnding,
+  frameParts,
+  frameReading,
+  nameGloss,
+  sentenceKo,
+  sentenceRomanization,
+  writeFrameHeader,
+  type FramePart,
+} from '../../logic/write-frame/view';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
@@ -206,10 +216,15 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     );
   }
 
-  const skip = (): void => dispatch({ type: 'skip' });
-  const skipButton = (size: 'sm' | 'md', fullWidth = false): ReactElement => (
-    <Button label={copy.skip.cta} tone="ghost" size={size} fullWidth={fullWidth} onPress={skip} testID="write-frame-skip" />
+  // The Check has no Skip and shows the two fill-only dots and "Quick check" (row CM-3A S7); any other host keeps both.
+  const headerView = writeFrameHeader(
+    host.mode,
+    { roundIdx: state.roundIdx, total: state.total, written: state.written.length },
+    { checkPill: copy.listenPick.checkTitle.pill, progress: copy.progress.pill },
   );
+  const skip = (): void => dispatch({ type: 'skip' });
+  const skipButton = (size: 'sm' | 'md', fullWidth = false): ReactElement | null =>
+    headerView.skip ? <Button label={copy.skip.cta} tone="ghost" size={size} fullWidth={fullWidth} onPress={skip} testID="write-frame-skip" /> : null;
   const romanizationVisible = romanizationShown(romanizationMode, revealed);
   const reveal = (): void => setRevealed(true);
   const bankOf = (slot: number): readonly KoText[] => round.slots[slot]?.bank ?? [];
@@ -220,12 +235,21 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   const slotWords: (string | null)[] = free ? [field.text.trim() === '' ? null : field.text.trim()] : words;
   const parts = frameParts(round.frame.ko, slotWords);
 
+  const headerPill = headerView.title ? (
+    <Pill label={headerView.title} tone="primary" size="sm" />
+  ) : headerView.label ? (
+    <Pill label={headerView.label} size="sm" />
+  ) : null;
   const progressRow = (withSkip: boolean): ReactElement => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }} testID="write-frame-header">
       <View style={{ flex: 1 }}>
-        <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
+        {headerView.kind === 'dots' ? (
+          <Progress variant="dots" value={headerView.value} max={headerView.max} tone="primary" />
+        ) : (
+          <Progress value={headerView.value} max={headerView.max} tone="primary" />
+        )}
       </View>
-      <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
+      {headerPill}
       {withSkip ? skipButton('sm') : null}
     </View>
   );
@@ -412,7 +436,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     <>
       {compactRow ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
+          {headerPill}
           <View style={{ flex: 1 }}>{changeWord}</View>
           {skipIn === 'top' ? skipButton('sm') : null}
         </View>
@@ -558,7 +582,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       </View>
       {nameTabs}
       {panel}
-      {skipIn === 'bottom' ? (
+      {skipIn === 'bottom' && (headerView.skip || (typing && !inlineDone)) ? (
         <View style={{ width: kbWidth, alignSelf: 'center', paddingTop: spacing.md, gap: spacing.sm }}>
           {typing && !inlineDone ? doneButton : null}
           {skipButton('md', true)}
@@ -571,7 +595,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   // left for the frame (as Type Hangul); a shorter window scrolls them with the frame instead.
   const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm) + (helper ? textScale.size.bodySm * 2 : 0);
   const tabsRow = nameTabs ? touchTarget.min + spacing.sm : 0;
-  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + touchTarget.min : 0;
+  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + (headerView.skip ? touchTarget.min : 0) : 0;
   const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + tabsRow + kb.height + underKeyboard + touchTarget.min;
 
   return (

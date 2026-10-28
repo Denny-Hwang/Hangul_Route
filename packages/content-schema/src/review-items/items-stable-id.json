@@ -751,7 +751,18 @@
     "lex|원숭이": "vocab:wonsungi",
     "lex|야구": "vocab:yagu",
     "lex|연필": "vocab:yeonpil",
-    "lex|윷놀이": "vocab:yunnori"
+    "lex|윷놀이": "vocab:yunnori",
+    "pat|곰이 좋아요": "pat:gomi-joayo",
+    "pat|호야가 좋아하는 동물은 ___이에요/예요": "pat:hoyaga-joahaneun-dongmureun-n-ieyo-yeyo",
+    "pat|호야가 좋아하는 날은 ___이에요/예요": "pat:hoyaga-joahaneun-nareun-n-ieyo-yeyo",
+    "pat|호야는 저녁에 ___을/를 먹어요": "pat:hoyaneun-jeonyeoge-n-eul-reul-meogeoyo",
+    "pat|호야는 ___에 ___을/를 만들었어요": "pat:hoyaneun-n-e-n-eul-reul-mandeureosseoyo",
+    "pat|호야는 ___에 ___을/를 먹어요": "pat:hoyaneun-n-e-n-eul-reul-meogeoyo",
+    "pat|이건 한글 ___이에요/예요": "pat:igeon-hangeul-n-ieyo-yeyo",
+    "pat|이건 호야 ___이에요/예요": "pat:igeon-hoya-n-ieyo-yeyo",
+    "pat|종이를 접고 ___": "pat:jongireul-jeopgo-n",
+    "pat|먼저 ___을/를 접어요": "pat:meonjeo-n-eul-reul-jeobeoyo",
+    "pat|___이/가 정말 ___": "pat:n-i-ga-jeongmal-n"
   },
   "alias": {
     "exc|김치가 매워요|네, 매워요": "exc:gugi-maewoyo",
@@ -785,6 +796,14 @@
     "pat:seonsaengnim-annyeonghaseyo",
     "pat:seonsaengnim-annyeonghaseyo-ige-mwoyeyo",
     "pat:yeogiyeyo",
-    "pat:yeonpirieyo"
+    "pat:yeonpirieyo",
+    "pat:achime-dalgyareul-meogeoyo",
+    "pat:horangiga-joayo",
+    "pat:igeon-hangeul-geuljayeyo",
+    "pat:igeon-je-ireumieyo",
+    "pat:jega-joahaneun-dongmureun-saeyeyo",
+    "pat:jeonyeoge-ppangeul-meogeoyo",
+    "pat:seollare-tteokgugeul-meogeosseoyo",
+    "pat:tokkineun-jeongmal-gwiyeowoyo"
   ]
 }

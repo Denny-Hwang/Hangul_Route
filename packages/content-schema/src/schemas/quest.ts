@@ -174,11 +174,13 @@ export const QuestObjectSchema = z.object({
  * `stage4` (F-CURR-002 §7.1 Check rotation, row CM-3A S4): the default Dialogue reply pick
  * (Tap to Respond, the line read with its replies), Cloze Pick and Sentence Builder, so no
  * game holds more than 40% of the stage's Checks.
+ * `stage7` (F-CURR-002 §7.1 Check rotation, row CM-3A S7): also Write Frame (the default
+ * S7 Check) and Cloze Pick, so no game holds more than 40% of the stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
   if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
-  return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
+  return stage === 'stage7' ? ['listen-pick', 'order-it', 'write-frame', 'cloze-pick'] : ['listen-pick'];
 }
 
 /** The quest-level step rules (F-QUEST-002 §3.1), shared by `QuestSchema` and `LessonQuestSchema`. */

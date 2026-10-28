@@ -249,6 +249,19 @@ describe('taught items and pronunciation', () => {
     expect(askedKo([{ kind: 'cloze-pick', rounds }])).toEqual(['맛이 어때요', '어때요', '한글이에요']);
   });
 
+  it('reads a Cloze Pick round as its completed sentence and, for a word gap, its answer tile, never the gap or a wrong tile (row CM-3A)', () => {
+    const scopes = [
+      {
+        kind: 'cloze-pick',
+        rounds: [
+          { id: 'c1', sentence: kt('별을 ___.'), tiles: [kt('접어요'), kt('그려요'), kt('잘라요')], answerIndex: 1 },
+          { id: 'c2', sentence: kt('꽃___ 접어요.'), gapKind: 'particle', tiles: [kt('을'), kt('를'), kt('로')], answerIndex: 0 },
+        ],
+      },
+    ];
+    expect(askedKo(scopes)).toEqual(['별을 그려요', '그려요', '꽃을 접어요']);
+  });
+
   it('counts a word seen only as a wrong option as new when a later quest teaches it', () => {
     const pick = q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [
       { ref: 'm:c', kind: 'listen-pick', rounds: [{ prompt: kt('하늘'), options: [{ id: 'a', text: kt('하늘') }, { id: 'b', text: kt('구름') }], answerId: 'a' }] },

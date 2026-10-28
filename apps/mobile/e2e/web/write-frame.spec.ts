@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { keepSidewaysIfAsked } from './helpers';
+import { keepSidewaysIfAsked, seedStored } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -32,13 +32,18 @@ interface TelemetryEvent {
   payload?: Record<string, unknown>;
 }
 type E2eWindow = Window & {
-  __hrWriteFrameE2E?: { open(params: { rounds: Fixture[]; mode?: 'quest' | 'preview' }): void; log(): Log; events(): TelemetryEvent[] };
+  __hrWriteFrameE2E?: { open(params: { rounds: Fixture[]; mode?: 'quest' | 'preview' | 'check' }): void; log(): Log; events(): TelemetryEvent[] };
 };
 
-async function open(page: Page, rounds: Fixture[], mode: 'quest' | 'preview' = 'quest'): Promise<void> {
+async function open(page: Page, rounds: Fixture[], mode: 'quest' | 'preview' | 'check' = 'quest', opts: { textSize?: 'largest' } = {}): Promise<void> {
   await page.goto('/');
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrWriteFrameE2E), undefined, { timeout: 10_000 });
-  await page.evaluate(([r, m]) => (window as E2eWindow).__hrWriteFrameE2E?.open({ rounds: r as Fixture[], mode: m as 'quest' | 'preview' }), [rounds, mode] as const);
+  if (opts.textSize) {
+    await seedStored(page, 'device:settings', { uiLocale: 'en', textSize: opts.textSize, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
+    await page.reload();
+    await page.waitForFunction(() => Boolean((window as E2eWindow).__hrWriteFrameE2E), undefined, { timeout: 10_000 });
+  }
+  await page.evaluate(([r, m]) => (window as E2eWindow).__hrWriteFrameE2E?.open({ rounds: r as Fixture[], mode: m as 'quest' | 'preview' | 'check' }), [rounds, mode] as const);
   await expect(page.getByTestId('write-frame')).toBeVisible();
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
 }
@@ -152,6 +157,34 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     await expect(page.getByText('On Chuseok, I ate half-moon rice cakes.')).toBeVisible();
     expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-holiday' }]);
   });
+
+  // F-CURR-002 row CM-3A S7: Write Frame is a Stage 7 Check game, and the Check has no Skip (it is the quest's only evidence).
+  for (const textSize of [undefined, 'largest'] as const) {
+    test(`320 x 568${textSize ? ', largest text' : ''}, as a Check: two slots, the Quick check header, no Skip in any phase, nothing sideways`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 568 });
+      await open(page, ['holiday'], 'check', textSize ? { textSize } : {});
+      await expect(page.getByText('Quick check', { exact: true })).toBeVisible();
+      await expect(page.getByText('1 / 1')).toHaveCount(0);
+      await expect(page.getByTestId('write-frame-skip')).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `write-frame-check-320${textSize ? '-largest' : ''}-pick`);
+      await page.getByTestId('write-frame-word-1').click();
+      await expect(page.getByTestId('write-frame-skip')).toHaveCount(0);
+      await typeText(page, '추석');
+      await page.getByTestId('write-frame-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+      await expect(page.getByText('Pick a word. Any word works.')).toBeVisible({ timeout: 5_000 });
+      await expect(page.getByTestId('write-frame-skip')).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `write-frame-check-320${textSize ? '-largest' : ''}-second-slot`);
+      await page.getByTestId('write-frame-word-1').click();
+      await typeText(page, '송편');
+      await page.getByTestId('write-frame-done').click();
+      await expect(page.getByText('추석에 송편을 먹었어요.')).toBeVisible();
+      await expect(page.getByTestId('write-frame-skip')).toHaveCount(0);
+      expect((await log(page)).answers).toEqual([{ key: '0', correct: true, itemId: 'e2e-holiday' }]);
+    });
+  }
 
   test('the name round: tiles and the keyboard edit one field, Done needs whole syllables, unscored, gone after Continue', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
