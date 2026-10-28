@@ -88,7 +88,9 @@ interface Props {
   /**
    * One round of a step that plays several (Story Order's fallback, F-CURR-002 row CM-34): its slot keys carry
    * `keyPrefix`, so two rounds never share one, and only the `last` round, or a skip, completes the step. `answer`,
-   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked.
+   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked. A
+   * chained round is not a story's sequence, so it sends no `story.sequence.finished` (the step's `minigame.finished`
+   * names it; design/wireframes/minigame/story-order.md).
    */
   chain?: { keyPrefix: string; last: boolean; answer?: (roundKey: string, slot: number, correct: boolean) => void };
 }
@@ -171,15 +173,17 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
 
   const finish = useCallback(
     (finalState: SequenceState, skipped: boolean): void => {
-      void track({
-        name: 'story.sequence.finished',
-        profileId: activeProfileId,
-        payload: sequenceFinishedPayload(
-          { storyId: scope.story?.storyId ?? null, sequenceId },
-          sequenceSummary(finalState),
-          skipped,
-        ),
-      });
+      if (chain === undefined) {
+        void track({
+          name: 'story.sequence.finished',
+          profileId: activeProfileId,
+          payload: sequenceFinishedPayload(
+            { storyId: scope.story?.storyId ?? null, sequenceId },
+            sequenceSummary(finalState),
+            skipped,
+          ),
+        });
+      }
       stop();
       if (chain === undefined || chain.last || skipped) markStepComplete();
       onFinish(skipped);

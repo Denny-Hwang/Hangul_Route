@@ -22,6 +22,14 @@ vi.mock('../order-game-chunk', async (importOriginal) => {
   if (chunk.fail) throw new Error('offline');
   return importOriginal<object>();
 });
+// What the step sends: the fallback is not a story's sequence, so `story.sequence.finished` never goes out.
+const sent = vi.hoisted(() => [] as Array<{ name: string }>);
+vi.mock('../../../../platform/telemetry', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  track: vi.fn(async (event: { name: string }) => {
+    sent.push(event);
+  }),
+}));
 vi.mock('../../../../platform/audio', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   playPrompt: vi.fn(async () => ({ status: 'played' })),
@@ -68,6 +76,7 @@ const settle = async (): Promise<void> => {
 };
 
 beforeEach(() => {
+  sent.length = 0;
   useQuestRunStore.getState().beginQuest('quest:fixture', 'episode:fixture');
 });
 afterEach(async () => {
@@ -120,6 +129,19 @@ describe('StoryOrderStep: game.story-order off (its built-in pct 0)', () => {
     } finally {
       setFirstRoundAnswerListener(null);
     }
+  });
+
+  it('sends no story-bound story.sequence.finished: not after a round, not at the end, not on a skip, not on an empty step', async () => {
+    flag(false);
+    const { r } = await open('twoRounds');
+    for (const p of day!.panels) await press(pressable(r.root, `story-sequence-card-${p.id}`));
+    await press(pressable(r.root, 'story-sequence-done'));
+    const [skip] = buttonsNamed(r.root, SEQ.skip.cta);
+    await press(skip!);
+    const empty = await open('empty');
+    const [go] = buttonsNamed(empty.r.root, SEQ.continue.cta);
+    await press(go!);
+    expect(sent.map((e) => e.name)).not.toContain('story.sequence.finished');
   });
 
   it('Skip this one in round 1 ends the step', async () => {

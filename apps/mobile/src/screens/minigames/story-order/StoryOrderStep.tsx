@@ -85,8 +85,8 @@ function StoryOrderFallback({ scope, host, sequenceId, onFinish }: { scope: Mini
   const round = rounds[index];
   const current = scopes[index];
   if (round === undefined || current === undefined) {
-    // No round to put in order: Story Sequence's own empty line and Continue.
-    return <StorySequenceGame scope={{ kind: 'story-sequence', storySteps: [] }} sequenceId={sequenceId} onFinish={onFinish} />;
+    // No round to put in order: Story Sequence's own empty line and Continue, chained so no story event goes out.
+    return <StorySequenceGame scope={{ kind: 'story-sequence', storySteps: [] }} sequenceId={sequenceId} chain={{ keyPrefix: '', last: true }} onFinish={onFinish} />;
   }
   const last = index === scopes.length - 1;
   return (
