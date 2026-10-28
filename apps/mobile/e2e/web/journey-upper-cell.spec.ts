@@ -143,19 +143,6 @@ async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<vo
   }
 }
 
-/** The two rounds of a Listen & Pick Check already opened with Go (playCheckByIds without its Go), by option id. */
-async function playCheckRounds(page: Page, ids: readonly [string, string]): Promise<void> {
-  for (const [i, id] of ids.entries()) {
-    const option = page.getByTestId(`listen-pick-option-${id}`);
-    await expect(option).toBeVisible();
-    await expect(async () => {
-      await option.click();
-      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
-    }).toPass();
-    if (i === 0) await waitForNextListenPickRound(page);
-  }
-}
-
 /** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
 async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
@@ -471,7 +458,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await page.getByRole('button', { name: 'Go', exact: true }).click();
       await expect(page.getByTestId('listen-pick-option-c1:t0')).toBeVisible({ timeout: 5_000 });
       await shot(page, 'first-sentences-q1-cloze-check-320');
-      await playCheckRounds(page, ['c1:t0', 'c2:t0']);
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }], { go: false });
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1187,4 +1174,42 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
+  // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.
+  test('episode:stage3-rites q2: its Dictation Check plays as see rounds with game.type-hangul-hear dark, to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(3, THEME_LABEL.rites), exact: true }).click();
+    await page.getByTestId('episode-quest-quest:stage3-rites-q2').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(headerClose(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    // Sentence Builder: four particle rounds (the words are given, 이 or 가 is picked) and one built sentence.
+    await build(page, 1, 5, ['이, i']);
+    await build(page, 2, 5, ['이, i']);
+    await build(page, 3, 5, ['가, ga']);
+    await build(page, 4, 5, ['사과하고, sagwahago', '떡이, tteogi', '맛있어요, masisseoyo']);
+    await build(page, 5, 5, ['이, i']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await pickByIds(page, ['hanbok', 'apple', 'moon', 'tteok']);
+    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    for (const word of ['한복', '송편']) {
+      // A see round: the word is shown, there is no speaker, and the in-app keyboard types it.
+      await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
+      await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
+      if (word === '한복') await shot(page, 's3-3-q2-dictation-check-see-320');
+      for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+      await page.getByTestId('type-hangul-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+    }
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
 });
