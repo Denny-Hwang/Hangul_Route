@@ -143,6 +143,19 @@ async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<vo
   }
 }
 
+/** The two rounds of a Listen & Pick Check already opened with Go (playCheckByIds without its Go), by option id. */
+async function playCheckRounds(page: Page, ids: readonly [string, string]): Promise<void> {
+  for (const [i, id] of ids.entries()) {
+    const option = page.getByTestId(`listen-pick-option-${id}`);
+    await expect(option).toBeVisible();
+    await expect(async () => {
+      await option.click();
+      await expect(option).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (i === 0) await waitForNextListenPickRound(page);
+  }
+}
+
 /** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
 async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
@@ -454,7 +467,11 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await build(page, 5, 5, ['이에요, ieyo']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['school-bag', 'school-school', 'book', 'school-school']);
-      await playCheckByIds(page, [{ answer: 'school-bag' }, { answer: 'a' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await expect(page.getByTestId('listen-pick-option-c1:t0')).toBeVisible({ timeout: 5_000 });
+      await shot(page, 'first-sentences-q1-cloze-check-320');
+      await playCheckRounds(page, ['c1:t0', 'c2:t0']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -515,7 +532,12 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['o1', 'songpyeon', 'o1', 'grandma']);
       await expect(page.getByText('Two quick ones', { exact: true })).toBeVisible();
-      await playCheckByIds(page, [{ answer: 'grandpa' }, { answer: 'songpyeon' }]);
+      // The Check is Sentence Builder (F-CURR-002 row CM-3A S3): a built sentence, then the 을 / 를 choice after 송편.
+      await buildCheck(page, [
+        ['할아버지하고, harabeojihago', '할머니가, halmeoniga', '있어요, isseoyo'],
+        // A particle round: the words are given in order, the ending after 송편 is picked.
+        ['을, eul'],
+      ]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's3-3-q1-reward-320');
     },
@@ -544,7 +566,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['nonggu', 'yeon', 'julleomgi'],
         ['chukgu', 'yunnori', 'yeon'],
       ]);
-      await playCheckByIds(page, [{ answer: 'kite' }, { answer: 'chukgu' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -571,7 +594,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       ]);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await matchBoards(page, 4, ['p1', 'p2', 'p3']);
-      await playCheckByIds(page, [{ answer: 'o1' }, { answer: 'o1' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -882,7 +906,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await buildSentence(page, ['산에, sane', '곰이, gomi', '있어요, isseoyo']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['bird', 'fox', 'a', 'a']);
-      await playCheckByIds(page, [{ answer: 'bear' }, { answer: 'a' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
