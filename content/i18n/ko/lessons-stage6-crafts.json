@@ -213,14 +213,14 @@
     },
     "minigame:s6-crafts-q3-check": {
       "clozePick.realia.alt": "닷새마다 서는 장의 가게 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 일으키는 물건",
-      "clozePick.rounds.c1.sentence.gloss": "공짜로 더 받는 것은 빨갛고 둥근 과일 ___개예요.",
-      "clozePick.rounds.c1.tiles.han.gloss": "1",
-      "clozePick.rounds.c1.tiles.du.gloss": "2",
-      "clozePick.rounds.c1.tiles.se.gloss": "3",
-      "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일 3개는 ___원이에요.",
-      "clozePick.rounds.c2.tiles.cheon.gloss": "1,000",
-      "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
-      "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000"
+      "clozePick.rounds.c1.sentence.gloss": "공짜로 더 받는 것은 ___예요.",
+      "clozePick.rounds.c1.tiles.sagwa-han-gae.gloss": "과일 1개",
+      "clozePick.rounds.c1.tiles.sagwa-du-gae.gloss": "과일 2개",
+      "clozePick.rounds.c1.tiles.sagwa-se-gae.gloss": "과일 3개",
+      "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일은 ___이에요.",
+      "clozePick.rounds.c2.tiles.se-gae-cheon-won.gloss": "3개에 1,000원",
+      "clozePick.rounds.c2.tiles.se-gae-icheon-won.gloss": "3개에 2,000원",
+      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3개에 5,000원"
     }
   }
 }

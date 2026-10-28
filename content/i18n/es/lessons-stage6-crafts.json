@@ -213,14 +213,14 @@
     },
     "minigame:s6-crafts-q3-check": {
       "clozePick.realia.alt": "Carteles de precios en un puesto de mercado de cada cinco días: manzanas, un cartel de una manzana de regalo y un abanico plegable",
-      "clozePick.rounds.c1.sentence.gloss": "El regalo es ___ manzana.",
-      "clozePick.rounds.c1.tiles.han.gloss": "una",
-      "clozePick.rounds.c1.tiles.du.gloss": "dos",
-      "clozePick.rounds.c1.tiles.se.gloss": "tres",
-      "clozePick.rounds.c2.sentence.gloss": "Tres manzanas cuestan ___ wones.",
-      "clozePick.rounds.c2.tiles.cheon.gloss": "mil",
-      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil",
-      "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil"
+      "clozePick.rounds.c1.sentence.gloss": "El regalo es ___.",
+      "clozePick.rounds.c1.tiles.sagwa-han-gae.gloss": "una manzana",
+      "clozePick.rounds.c1.tiles.sagwa-du-gae.gloss": "dos manzanas",
+      "clozePick.rounds.c1.tiles.sagwa-se-gae.gloss": "tres manzanas",
+      "clozePick.rounds.c2.sentence.gloss": "Las manzanas están a ___.",
+      "clozePick.rounds.c2.tiles.se-gae-cheon-won.gloss": "3 por 1000 wones",
+      "clozePick.rounds.c2.tiles.se-gae-icheon-won.gloss": "3 por 2000 wones",
+      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3 por 5000 wones"
     }
   }
 }

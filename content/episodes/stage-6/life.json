@@ -1027,26 +1027,26 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "라면 ___ 개 주세요.",
-                "romanization": "ramyeon ___ gae juseyo",
+                "ko": "라면 ___ 주세요.",
+                "romanization": "ramyeon ___ juseyo",
                 "en": "Please give me ___ instant noodles."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "두",
-                  "romanization": "du",
-                  "en": "two"
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two (things)"
                 },
                 {
-                  "ko": "세",
-                  "romanization": "se",
-                  "en": "three"
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three (things)"
                 },
                 {
-                  "ko": "한",
-                  "romanization": "han",
-                  "en": "one"
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
                 }
               ],
               "answerIndex": 0
@@ -1054,26 +1054,26 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "우유 ___ 개 주세요.",
-                "romanization": "uyu ___ gae juseyo",
+                "ko": "우유 ___ 주세요.",
+                "romanization": "uyu ___ juseyo",
                 "en": "Please give me ___ milks."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "한",
-                  "romanization": "han",
-                  "en": "one"
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
                 },
                 {
-                  "ko": "세",
-                  "romanization": "se",
-                  "en": "three"
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three (things)"
                 },
                 {
-                  "ko": "두",
-                  "romanization": "du",
-                  "en": "two"
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two (things)"
                 }
               ],
               "answerIndex": 1

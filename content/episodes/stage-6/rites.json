@@ -907,26 +907,26 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "대구 기차는 네 시 ___ 분이에요.",
-                "romanization": "daegu gichaneun ne si ___ bunieyo",
-                "en": "The train to Daegu is at ___ minutes past four."
+                "ko": "대구 기차는 ___ 분이에요.",
+                "romanization": "daegu gichaneun ___ bunieyo",
+                "en": "The train to Daegu is at ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "삼십",
-                  "romanization": "samsip",
-                  "en": "thirty"
+                  "ko": "세 시 삼십",
+                  "romanization": "se si samsip",
+                  "en": "3:30"
                 },
                 {
-                  "ko": "이십",
-                  "romanization": "isip",
-                  "en": "twenty"
+                  "ko": "네 시 이십",
+                  "romanization": "ne si isip",
+                  "en": "4:20"
                 },
                 {
-                  "ko": "십",
-                  "romanization": "sip",
-                  "en": "ten"
+                  "ko": "네 시 십",
+                  "romanization": "ne si sip",
+                  "en": "4:10"
                 }
               ],
               "answerIndex": 1

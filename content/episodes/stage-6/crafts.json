@@ -1386,26 +1386,26 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "덤은 사과 ___ 개예요.",
-                "romanization": "deomeun sagwa ___ gaeyeyo",
-                "en": "The little extra is ___ apple."
+                "ko": "덤은 ___예요.",
+                "romanization": "deomeun ___yeyo",
+                "en": "The little extra is ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "한",
-                  "romanization": "han",
-                  "en": "one"
+                  "ko": "사과 한 개",
+                  "romanization": "sagwa han gae",
+                  "en": "one apple"
                 },
                 {
-                  "ko": "두",
-                  "romanization": "du",
-                  "en": "two"
+                  "ko": "사과 두 개",
+                  "romanization": "sagwa du gae",
+                  "en": "two apples"
                 },
                 {
-                  "ko": "세",
-                  "romanization": "se",
-                  "en": "three"
+                  "ko": "사과 세 개",
+                  "romanization": "sagwa se gae",
+                  "en": "three apples"
                 }
               ],
               "answerIndex": 0
@@ -1413,26 +1413,26 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "사과 세 개는 ___ 원이에요.",
-                "romanization": "sagwa se gaeneun ___ wonieyo",
-                "en": "Three apples are ___ won."
+                "ko": "사과는 ___이에요.",
+                "romanization": "sagwaneun ___ieyo",
+                "en": "The apples are ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "천",
-                  "romanization": "cheon",
-                  "en": "one thousand"
+                  "ko": "세 개 천 원",
+                  "romanization": "se gae cheon won",
+                  "en": "3 for 1,000 won"
                 },
                 {
-                  "ko": "이천",
-                  "romanization": "icheon",
-                  "en": "two thousand"
+                  "ko": "세 개 이천 원",
+                  "romanization": "se gae icheon won",
+                  "en": "3 for 2,000 won"
                 },
                 {
-                  "ko": "오천",
-                  "romanization": "ocheon",
-                  "en": "five thousand"
+                  "ko": "세 개 오천 원",
+                  "romanization": "se gae ocheon won",
+                  "en": "3 for 5,000 won"
                 }
               ],
               "answerIndex": 1

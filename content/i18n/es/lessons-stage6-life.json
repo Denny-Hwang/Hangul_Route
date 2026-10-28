@@ -209,13 +209,13 @@
     "minigame:s6-life-q2-check": {
       "clozePick.realia.alt": "Una nota de pedido en la mesa: un gimbap, dos fideos instantáneos, tres cajitas de leche y un huevo.",
       "clozePick.rounds.c1.sentence.gloss": "Deme ___ fideos instantáneos, por favor.",
-      "clozePick.rounds.c1.tiles.du.gloss": "dos",
-      "clozePick.rounds.c1.tiles.se.gloss": "tres",
-      "clozePick.rounds.c1.tiles.han.gloss": "uno",
+      "clozePick.rounds.c1.tiles.du-gae.gloss": "dos",
+      "clozePick.rounds.c1.tiles.se-gae.gloss": "tres",
+      "clozePick.rounds.c1.tiles.han-gae.gloss": "uno",
       "clozePick.rounds.c2.sentence.gloss": "Deme ___ cajitas de leche, por favor.",
-      "clozePick.rounds.c2.tiles.han.gloss": "una",
-      "clozePick.rounds.c2.tiles.se.gloss": "tres",
-      "clozePick.rounds.c2.tiles.du.gloss": "dos"
+      "clozePick.rounds.c2.tiles.han-gae.gloss": "una",
+      "clozePick.rounds.c2.tiles.se-gae.gloss": "tres",
+      "clozePick.rounds.c2.tiles.du-gae.gloss": "dos"
     },
     "minigame:s6-life-q3-practice": {
       "realiaRead.realia.alt": "Un menú pequeño en una mesa: gimbap, fideos instantáneos, pasteles de arroz picantes y leche, cada uno con su precio.",

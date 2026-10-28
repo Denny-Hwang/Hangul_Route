@@ -175,10 +175,10 @@
       "clozePick.rounds.c1.tiles.han.gloss": "la una",
       "clozePick.rounds.c1.tiles.du.gloss": "las dos",
       "clozePick.rounds.c1.tiles.ne.gloss": "las cuatro",
-      "clozePick.rounds.c2.sentence.gloss": "El tren a Daegu sale a las cuatro y ___.",
-      "clozePick.rounds.c2.tiles.samsip.gloss": "treinta",
-      "clozePick.rounds.c2.tiles.isip.gloss": "veinte",
-      "clozePick.rounds.c2.tiles.sip.gloss": "diez"
+      "clozePick.rounds.c2.sentence.gloss": "El tren a Daegu sale a ___.",
+      "clozePick.rounds.c2.tiles.se-si-samsip.gloss": "las tres y treinta",
+      "clozePick.rounds.c2.tiles.ne-si-isip.gloss": "las cuatro y veinte",
+      "clozePick.rounds.c2.tiles.ne-si-sip.gloss": "las cuatro y diez"
     },
     "minigame:s6-rites-q3-practice": {
       "realiaRead.realia.alt": "El plan de viaje de Hoya: la estación a la una, el tren a las dos, el pueblo o ciudad natal a las cinco y la casa de la abuela a las seis",
