@@ -207,6 +207,21 @@ test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () 
     for (const t of Object.values(LETTERS_TARGETS)) await expect(page.getByTestId(`pic-word-picture-${t.id}`)).toBeVisible();
     await expect(page.getByTestId('hh-scene')).toHaveCount(0);
   });
+
+  test.describe('at 768', () => {
+    test.use({ viewport: { width: 768, height: 1024 } });
+
+    test('the same six named spots, each 135 dp or more, and no sideways scroll', async ({ page }) => {
+      await open(page, true, false, LETTERS);
+      await expect(page.getByTestId('hh-scene')).toBeVisible();
+      for (const name of LETTERS_THINGS) {
+        const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+        expect(Math.min(box.width, box.height), name).toBeGreaterThanOrEqual(134);
+      }
+      await expectNoHorizontalOverflow(page);
+      await shot(page, 'hidden-heritage-letters-ask-768');
+    });
+  });
 });
 
 async function expectNoShame(page: Page): Promise<void> {
