@@ -10,7 +10,10 @@ import { expectNoHorizontalOverflow } from './viewport';
  * through `window.__hrHiddenHeritageE2E` (fixture bundle only, served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test hidden-heritage-seasons
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-seasons
+ *
+ * The file is named under `realia-read` (its sibling scene game), like CM-36's realia-read-hidden-heritage.spec.ts, so the
+ * fixture e2e run's `realia-read` entry in .github/workflows/web-app.yml selects it.
  *
  * `game.hidden-heritage` ships at built-in pct 0, so each case seeds the stored remote copy.
  */
@@ -38,6 +41,8 @@ async function open(page: Page, gameOn: boolean): Promise<void> {
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
   await page.evaluate((sceneId) => (window as E2eWindow).__hrHiddenHeritageE2E?.open({ sceneId }), SCENE);
 }
+
+const log = (page: Page) => page.evaluate(() => (window as E2eWindow).__hrHiddenHeritageE2E!.log());
 
 async function asked(page: Page): Promise<string> {
   const ko = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
@@ -70,19 +75,23 @@ test.describe('Hidden Heritage, the four seasons (F-CURR-002 CM-37 part 3)', () 
       await shot(page, `hidden-heritage-seasons-ask-${size.name}`);
       await page.getByTestId('hh-spot-bandalgaseumgom').click();
       await expect(page.getByText('Look again').first()).toBeVisible();
-      await page.waitForTimeout(700);
+      // State, not sleeps: the miss is logged and its ring clears on its own (MISS_RING_MS) before the next tap.
+      await expect.poll(async () => (await log(page)).answers.length).toBe(1);
+      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
       for (let i = 0; i < 4; i += 1) {
         ko = await asked(page);
         await page.getByTestId(`hh-spot-${TARGETS[ko]!.id}`).click();
         await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
-        await page.waitForTimeout(800);
+        await expect.poll(async () => (await log(page)).answers.length).toBe(i + 2);
+        // The next word comes once the meaning has shown (FOUND_ADVANCE_MS); after the last, the end panel.
+        if (i < 3) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
       }
       await expect(page.getByText('You found them all')).toBeVisible();
       for (const t of Object.values(TARGETS)) await expect(page.getByTestId('hh-end').getByText(t.meaning, { exact: true })).toBeVisible();
       expect(await page.locator('body').innerText()).not.toMatch(SHAME);
       await expectNoHorizontalOverflow(page);
       await shot(page, `hidden-heritage-seasons-end-${size.name}`);
-      const answers = (await page.evaluate(() => (window as E2eWindow).__hrHiddenHeritageE2E!.log())).answers;
+      const answers = (await log(page)).answers;
       expect(answers.map((a) => a.correct)).toEqual([false, true, true, true, true]);
     });
   }

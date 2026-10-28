@@ -74,13 +74,35 @@ describe('the four-season scene (row CM-37 part 3)', () => {
     const bear = scene.items.find((i) => i.id === 'prop:hh-moon-bear')!;
     expect(bear.accuracyNote).toMatch(/mouth closed/);
     expect(JSON.stringify(bear.nodes)).not.toMatch(/feedback|brand\.primary/);
+    // Round shapes only: no pointed polygon (claws, teeth) anywhere, and one path, the white half-moon on the chest.
+    expect(bear.nodes.filter((n) => n.t === 'poly')).toEqual([]);
+    const paths = bear.nodes.filter((n) => n.t === 'path');
+    expect(paths).toHaveLength(1);
+    expect(paths[0]).toMatchObject({ fill: 'surface.paper' });
+    // The muzzle is closed: under the nose (cy 30) nothing but the muzzle ellipse sits in the face (y 24 to 44).
+    const face = bear.nodes.filter((n) => n.t === 'ellipse' && n.cy > 24 && n.cy < 44);
+    expect(face.map((n) => (n.t === 'ellipse' ? [n.cx, n.cy] : null))).toEqual([
+      [42, 33],
+      [42, 30],
+    ]);
     expect(Math.floor(scene.round.others.find((t) => t.id === 'bandalgaseumgom')!.spot.x / 100)).toBe(2);
   });
 
-  it('records the MAR review in at least 3 passes, with no native-speaker or expert claim and no age wording', () => {
+  it('the falling snow is the only snow: the mountain over the 눈 spot wears no white cap', () => {
+    const mountain = scene.items.find((i) => i.id === 'prop:hh-winter-mountain')!;
+    expect(JSON.stringify(mountain.nodes)).not.toContain('surface.paper');
+    expect(`${mountain.alt} ${mountain.accuracyNote}`).not.toMatch(/\b(white|snowy|snowcap)\b/i);
+    const snowColumn = Math.floor(scene.round.targets.find((t) => t.id === 'nun')!.spot.x / 100);
+    expect(Math.floor(scene.round.others.find((t) => t.id === 'san')!.spot.x / 100)).toBe(snowColumn);
+  });
+
+  it('records the MAR review in at least 3 passes, a reviser and a third pass after it, with no native-speaker or expert claim and no age wording', () => {
     expect(scene.review).toMatchObject({ reviewedBy: 'MAR' });
     expect(scene.review.passes).toBeGreaterThanOrEqual(3);
     expect(scene.review.notes).toHaveLength(scene.review.passes);
+    const reviser = scene.review.notes.findIndex((n) => n.startsWith('Pass 4 (reviser)'));
+    expect(reviser).toBeGreaterThanOrEqual(0);
+    expect(scene.review.notes.slice(reviser + 1).some((n) => /\(third pass\)/.test(n))).toBe(true);
     const text = JSON.stringify({ review: scene.review, note: scene.note, overlays: FOUR_SEASONS_OVERLAYS, items: scene.items.map((i) => i.alt) });
     expect(text).not.toMatch(/native speaker|native-speaker|expert/i);
     expect(text).not.toMatch(/\b(kids?|children|child|ages? \d)\b|어린이/i);
