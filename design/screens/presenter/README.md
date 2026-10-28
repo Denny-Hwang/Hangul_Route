@@ -17,6 +17,7 @@ Built by:
 - **PR 11** (stories): `slide-story.md`.
 - **PR 12** (vocabulary topics): `slide-topic.md`.
 - **F-BROWSE-001 BR-13** ([ Present this ] on the item page): `present-this.md`.
+- **F-CURR-002 CM-35** (the Role Play slide, section 8): `slide-role-play.md` (a screen spec built from the reply question and read-along slides; no new mock page).
 - PR 10 (the console setup page) is merged; wireframe K stays its reference and nothing is redrawn here.
 
 ## What is here
@@ -33,6 +34,7 @@ Built by:
 | `slide-story.md`, `slide-topic.md` | PR 11 and PR 12 |
 | `states.md` | PR 6: invalid link, loading, too small, portrait; the phone's rotate page (LV-M1) |
 | `present-this.md` | BR-13 |
+| `slide-role-play.md` | F-CURR-002 CM-35: a Role Play turn, the chat beside the reply rows, Hoya's reasons in amber, the closing line |
 | `mock/presenter.css`, `mock/presenter.js` | one sheet for every page (the tokens block, the constants block, the rules) and a ten-line helper: `#b=<n>` shows builds 0 to n, `#v=<name>` picks a variant, `#bar=hidden` fades the bar, `#gray=1` renders in greyscale |
 | `mock/*.html` | one page per screen or state (50 pages); `builds-board.html` shows every build of each slide kind side by side |
 | `shots/` | the pages in Chromium as 128-colour palette PNGs. Projected surfaces at **1280 x 720** and **1920 x 1080** (1x; a projector shows the window as is), plus 1024 x 768 (4:3), 2560 x 1080 (21:9), 768 x 1024 (iPad portrait) and 375 x 667 (too small) where the layout changes. Teacher setup (home, start) at **375** and **1280** (2x, full page) and **320 with the browser text size at 200 %** (`-320-text200`). **Greyscale** checks (`-gray`): letter, quiz answer, sequence order, end, corner timer, picker |
