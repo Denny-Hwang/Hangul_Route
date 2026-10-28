@@ -230,11 +230,12 @@ export const LETTERS_SCHOOL_SCENE: HiddenHeritageScene = {
   review: {
     reviewedBy: 'MAR',
     reviewedAt: '2026-10-23',
-    passes: 3,
+    passes: 4,
     notes: [
       'Pass 1 (author, 2026-10-23): the subject is the seodang, the first painting of the National Museum of Korea album (its page opened on 2026-10-23; the quotes are copied from it), drawn as an empty room with no figure; the National Institute of Korean Language dictionary pages for 서당 and 붓 opened the same day. Targets 책, 붓 and 나무 and other things 산, 새 and 꽃 are Stage 2 Letters words with the same romanization and gloss as the cell; each target has a bundled picture. The es and ko glosses reuse the reviewed glosses of the Letters cells and the vocabulary topics.',
       "Pass 2 (three checker lists, language, culture and facts, learning design, each read on its own against the author's text). Language: the ko subject first said children learned letters at a seodang, which is age wording (7.7) and more than the dictionary says, so it now reads 옛날의 사설 학교인 서당, as the en and es do; the ko album fact said 모습 twice and now reads 일과 놀이 등 생활의 여러 모습; the album title is written with the converter's romanization, Danwon pungsokdocheop. Culture and facts: every claim was matched to its quoted words; 'Joseon' now rests on the page's 국적/시대 line, added to the quote; the album is named by its title only, as its page leaves the hand open; Classical Chinese and the brush are shared East Asian heritage and no claim gives them a Korean origin; no UNESCO claim; the books are bound on the right with a blank title slip, and no composition of the album is used (its seodang painting is a group of figures with no room drawn). Learning design: every thing is a taught Letters word, the alt texts name the room and never a thing, the spots read in order mountain, bird, book, brush, tree, flower, and the 7.7 list passes (no red, no score, no age words).",
       'Pass 3 (reviser and third pass): the fixes above applied in en, es and ko and the whole scene re-read against its sources; the profile, the culture-source lint, the rr.ts romanization check and the es and ko overlay check pass.',
+      "Pass 4 (es and ko pass of the fix stage, 2026-10-27): every spot meaning checked against the reviewed Letters and vocabulary glosses (now a test); the ko 책 gloss read 글이나 where the Letters cell reads 글과, so it now matches the cell; the es and ko subject said the seodang was the subject of Joseon genre painting where the en says a subject, so they now read uno de los temas and 소재 가운데 하나.",
     ],
   },
 };

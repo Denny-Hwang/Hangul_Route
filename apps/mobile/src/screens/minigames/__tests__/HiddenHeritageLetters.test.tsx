@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { HiddenHeritageRoundSchema, romanizeWord, translatableFields } from '@hangul-route/content-schema';
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
@@ -80,6 +80,17 @@ function lettersWords(): Array<{ ko: string; romanization: string; en: string }>
   return out;
 }
 
+/** Every entry of the reviewed overlay files of a locale (content/i18n/<locale>/*.json), lesson overlays included. */
+function reviewedOverlays(locale: 'es' | 'ko'): Record<string, Record<string, string>> {
+  const dir = new URL(`../../../../../../content/i18n/${locale}/`, import.meta.url);
+  const out: Record<string, Record<string, string>> = {};
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.json'))) {
+    const file = JSON.parse(readFileSync(new URL(name, dir), 'utf8')) as { entries?: Record<string, Record<string, string>> };
+    for (const [id, fields] of Object.entries(file.entries ?? {})) out[id] = { ...out[id], ...fields };
+  }
+  return out;
+}
+
 beforeEach(() => {
   scenes.resetScenesForTests();
 });
@@ -127,6 +138,24 @@ describe('the Letters school room scene (row CM-37 part 1)', () => {
       for (const value of Object.values(entry)) expect(value).not.toMatch(/%|\b(wrong|fail\w*|lost)\b/i);
     }
     for (const value of Object.values(OVERLAYS.es[SCENE.id] ?? {})) expect(value).not.toMatch(/[가-힣]/);
+  });
+
+  it('each spot meaning in es and ko is the gloss its word already has in a reviewed lesson or vocabulary overlay', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      const entry = OVERLAYS[locale][SCENE.id] ?? {};
+      for (const [group, list] of [['targets', ROUND.targets], ['others', ROUND.others]] as const) {
+        for (const thing of list) {
+          const reviewed = new Set<string>();
+          for (const [id, fields] of Object.entries(reviewedOverlays(locale))) {
+            if (id.startsWith('scene:')) continue;
+            for (const [field, value] of Object.entries(fields)) {
+              if (field.endsWith(`.${thing.id}.word.gloss`) || field.endsWith(`.${thing.id}.gloss`)) reviewed.add(value);
+            }
+          }
+          expect([...reviewed], `${locale} ${thing.id}`).toContain(entry[`round.${group}.${thing.id}.word.gloss`]);
+        }
+      }
+    }
   });
 });
 
