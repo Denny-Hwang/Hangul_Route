@@ -25,6 +25,8 @@
     "./heritage-card-ids": "./src/components/HeritageCardArt/card-ids.ts",
     "./upper-card-ids": "./src/components/HeritageCardArt/upper-card-ids.ts",
     "./src/components/HeritageCardArt/UpperCellArt": "./src/components/HeritageCardArt/UpperCellArt.tsx",
+    "./src/components/ShapeOriginArt/ShapeOriginArt": "./src/components/ShapeOriginArt/ShapeOriginArt.tsx",
+    "./src/scene-art/shape-origin-registry": "./src/scene-art/shape-origin-registry.ts",
     "./hangul-keyboard-layout": "./src/components/HangulKeyboard/layout.ts",
     "./components/*": "./src/components/*/index.ts"
   },
