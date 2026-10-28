@@ -63,6 +63,7 @@ export type FlowEffect =
   | { type: 'schedule-clear'; ms: number }
   | { type: 'cancel-clear' }
   | { type: 'schedule-advance'; ms: number }
+  | { type: 'cancel-advance' }
   | { type: 'complete' };
 
 /** The rounds a scope can play: each with 3 or more targets, every one with its Korean and romanization. */
@@ -116,7 +117,8 @@ export function stepFlow(state: FlowState, event: FlowEvent, rounds: readonly Hi
     case 'clear-flash':
       return state.flash === null ? same : { state: { ...state, flash: null }, effects: [] };
     case 'advance': {
-      if (state.pending === null) return same;
+      // Only while playing: a Skip inside the found word's delay ends the step, and a late timer changes nothing.
+      if (state.status !== 'playing' || state.pending === null) return same;
       const at = state.at + 1;
       if (at >= (state.order[state.roundIdx]?.length ?? 0)) return { state: { ...state, pending: null, status: 'end', live: null }, effects: [] };
       const next = { ...state, at, pending: null, live: null };
@@ -130,8 +132,10 @@ export function stepFlow(state: FlowState, event: FlowEvent, rounds: readonly Hi
       return { state: next, effects: [{ type: 'play', targetId: next.order[roundIdx]![0]! }] };
     }
     case 'skip':
-      // Ends the step without marking the words not found (the shell's Skip).
-      return state.status === 'playing' || state.status === 'end' ? { state: { ...state, status: 'done' }, effects: [{ type: 'cancel-clear' }, { type: 'complete' }] } : same;
+      // Ends the step without marking the words not found (the shell's Skip), and drops a found word's pending advance.
+      return state.status === 'playing' || state.status === 'end'
+        ? { state: { ...state, status: 'done', pending: null }, effects: [{ type: 'cancel-clear' }, { type: 'cancel-advance' }, { type: 'complete' }] }
+        : same;
   }
 }
 

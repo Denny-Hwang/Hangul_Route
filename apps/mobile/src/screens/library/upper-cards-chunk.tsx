@@ -3,7 +3,7 @@ import { Body, Caption, Heading, Spacer, borderWidth, colors, radii, spacing } f
 import { useMemo, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
-import { heritageCardsAll } from '../../content/heritage-cards';
+import { albumLegendCards, heritageCardsAll } from '../../content/heritage-cards';
 import { ALBUM_STAGES, ALBUM_THEMES } from '../../content/album-order';
 import { UPPER_CELL_CARDS } from '../../content/upper-cell-cards';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -19,7 +19,8 @@ export { withUpperBack } from '../../content/upper-card-backs';
  * the Library's category albums, loaded by `./upper-cards-entry.tsx`.
  *
  * Each album row shows its theme, how many of its cards the learner holds (or New), and those cards, each opening its
- * card page. It only fills: no empty slots, no count of what is left, no percentage (D3, §7.7).
+ * card page. It only fills: no empty slots, no count of what is left, no percentage (D3, §7.7). A finished album says
+ * so, and once its legendary card is held (row CM-23 part 3) that card leads the row's faces.
  */
 export const UPPER_CARDS_CHUNK = 'screen-chunk:upper-cards';
 
@@ -42,13 +43,15 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
       <View style={{ gap: spacing.xs }}>
         {albums.map((album) => {
           const name = m.names[album.theme];
-          const status = album.held.length === 0 ? m.fresh : m.count(album.held.length);
+          const status = album.complete ? m.complete : album.held.length === 0 ? m.fresh : m.count(album.held.length);
+          const legend = albumLegendCards.find((c) => c.theme === album.theme && owned.has(c.id));
+          const faces = legend ? [legend, ...album.held] : album.held;
           return (
             <View
               key={album.theme}
               testID={`library-album-${album.theme}`}
-              accessible={album.held.length === 0}
-              accessibilityLabel={album.held.length === 0 ? m.a11y(name, status) : undefined}
+              accessible={faces.length === 0}
+              accessibilityLabel={faces.length === 0 ? m.a11y(name, status) : undefined}
               style={{
                 flexDirection: 'row',
                 flexWrap: 'wrap',
@@ -61,15 +64,16 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
                 backgroundColor: colors.surface.paper,
               }}
             >
-              <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: spacing.xl * 4 }} accessible={album.held.length > 0} accessibilityLabel={album.held.length > 0 ? m.a11y(name, status) : undefined}>
+              <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: spacing.xl * 4 }} accessible={faces.length > 0} accessibilityLabel={faces.length > 0 ? m.a11y(name, status) : undefined}>
                 <Body weight="semibold">{name}</Body>
                 <Caption tone="muted" testID={`library-album-${album.theme}-status`}>
                   {status}
                 </Caption>
               </View>
-              {album.held.length > 0 ? (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-                  {album.held.map((source) => {
+              {faces.length > 0 ? (
+                // Up to six faces (a legendary card and five album cards): the row wraps inside the album at 320.
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, maxWidth: '100%' }}>
+                  {faces.map((source) => {
                     const card = localizeCard(source, locale);
                     return (
                       <Pressable

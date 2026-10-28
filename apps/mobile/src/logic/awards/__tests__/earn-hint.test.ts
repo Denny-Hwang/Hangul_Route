@@ -1,6 +1,8 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
+import { awardWorld } from '../../../content/award-world';
+import { cardById } from '../../../content/heritage-cards';
 import { earnHint } from '../earn-hint';
 import type { AwardWorld } from '../types';
 import { CARDS, WORLD } from './fixtures';
@@ -28,6 +30,13 @@ describe('earnHint (F-STORY-006 §3.7)', () => {
 
   it('a set card names the collection', () => {
     expect(earnHint(card('card:set-tales'), WORLD, m)).toEqual({ kind: 'set', text: 'Collect every card from the Tales stories' });
+  });
+
+  it('an album legendary card names its album in the UI language, never how many cards are left (row CM-23 part 3)', () => {
+    const legend = cardById('card:jirisan')!;
+    expect(earnHint(legend, awardWorld, m)).toEqual({ kind: 'set', text: 'Collect every card in the Nature album' });
+    expect(earnHint(legend, awardWorld, getMessages('es').learner.library.earnHint)?.text).toBe('Reúne todas las tarjetas del álbum Naturaleza');
+    expect(earnHint(legend, awardWorld, getMessages('ko').learner.library.earnHint)?.text).toBe('자연 앨범의 카드 모두 모으기');
   });
 
   it('has no hint for a rule it cannot explain (unknown rule, missing episode, unregistered set)', () => {
