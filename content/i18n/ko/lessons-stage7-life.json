@@ -90,8 +90,8 @@
       "traceWord.rounds.w4.word.gloss": "쌀로 지은 먹을거리, 또는 끼니"
     },
     "minigame:s7-life-q1-apply": {
-      "typeHangul.rounds.t1.prompt": "하루가 시작되는 때를 나타내는 낱말을 자판으로 써 봐요.",
-      "typeHangul.rounds.t2.prompt": "해가 질 무렵을 나타내는 낱말을 자판으로 써 봐요.",
+      "typeHangul.rounds.t1.prompt": "들리는 낱말을 자판으로 써 봐요.",
+      "typeHangul.rounds.t2.prompt": "들리는 낱말을 자판으로 써 봐요.",
       "typeHangul.rounds.t3.prompt": "‘낮 열두 시쯤에’라는 말을 자판으로 써 봐요.",
       "typeHangul.rounds.t4.prompt": "하루가 시작될 때 식사를 한다는 문장을 자판으로 써 봐요.",
       "typeHangul.rounds.t1.target.gloss": "해가 뜰 때부터 낮이 되기 전까지의 때",
@@ -100,10 +100,14 @@
       "typeHangul.rounds.t4.target.gloss": "하루가 시작될 때 식사를 한다는 뜻"
     },
     "minigame:s7-life-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "하루가 시작될 때 식사를 한다는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "낮 열두 시쯤 식사를 한다는 뜻",
-      "orderIt.rounds.c1.distractors.gayo.gloss": "어떤 곳으로 움직인다는 말",
-      "orderIt.rounds.c2.distractors.gayo.gloss": "어떤 곳으로 움직인다는 말"
+      "clozePick.rounds.c1.sentence.gloss": "하루가 시작될 때 식사를 한다는 뜻",
+      "clozePick.rounds.c2.sentence.gloss": "낮 열두 시쯤 식사를 한다는 뜻",
+      "clozePick.rounds.c1.tiles.achim.gloss": "해가 뜰 때부터 낮이 되기 전까지의 때",
+      "clozePick.rounds.c1.tiles.jeomsim.gloss": "낮 열두 시쯤, 또는 그때 하는 식사",
+      "clozePick.rounds.c1.tiles.jeonyeok.gloss": "해가 지고 나서 밤이 깊어지기 전까지의 동안",
+      "clozePick.rounds.c2.tiles.achim.gloss": "해가 뜰 때부터 낮이 되기 전까지의 때",
+      "clozePick.rounds.c2.tiles.jeomsim.gloss": "낮 열두 시쯤, 또는 그때 하는 식사",
+      "clozePick.rounds.c2.tiles.jeonyeok.gloss": "해가 지고 나서 밤이 깊어지기 전까지의 동안"
     },
     "minigame:s7-life-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "하루가 시작될 때 밀가루를 반죽해 구운 먹을거리를 먹는다는 뜻",
@@ -140,11 +144,21 @@
       "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "김 위에 밥과 재료를 올려 만 음식"
     },
     "minigame:s7-life-q2-check": {
-      "orderIt.rounds.c1.sentence.gloss": "하루가 시작될 때 닭이 낳은 알을 먹는다는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "해가 질 무렵 밀가루를 반죽해 구운 먹을거리를 먹는다는 뜻",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "목적어를 나타내는 조사 (받침 있는 말 뒤)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "목적어를 나타내는 조사 (받침 없는 말 뒤)",
-      "orderIt.rounds.c2.distractors.gayo.gloss": "어떤 곳으로 움직인다는 말"
+      "writeFrame.rounds.c1.frame.gloss": "해가 질 무렵 먹는 것: ___",
+      "writeFrame.rounds.c2.frame.gloss": "때: ___, 먹는 것: ___",
+      "writeFrame.rounds.c1.slots.food.bank.bap.gloss": "쌀로 지은 먹을거리, 또는 끼니",
+      "writeFrame.rounds.c1.slots.food.bank.ppang.gloss": "밀가루를 반죽해 구운 먹을거리",
+      "writeFrame.rounds.c1.slots.food.bank.sagwa.gloss": "둥글고 새콤달콤한 열매",
+      "writeFrame.rounds.c1.slots.food.bank.dalgyal.gloss": "닭이 낳은 알",
+      "writeFrame.rounds.c1.slots.food.bank.gimbap.gloss": "김 위에 밥과 재료를 올려 만 음식",
+      "writeFrame.rounds.c2.slots.time.bank.achim.gloss": "하루가 시작될 때",
+      "writeFrame.rounds.c2.slots.time.bank.jeomsim.gloss": "낮 열두 시쯤",
+      "writeFrame.rounds.c2.slots.time.bank.jeonyeok.gloss": "해가 질 무렵",
+      "writeFrame.rounds.c2.slots.food.bank.bap.gloss": "쌀로 지은 먹을거리, 또는 끼니",
+      "writeFrame.rounds.c2.slots.food.bank.ppang.gloss": "밀가루를 반죽해 구운 먹을거리",
+      "writeFrame.rounds.c2.slots.food.bank.sagwa.gloss": "둥글고 새콤달콤한 열매",
+      "writeFrame.rounds.c2.slots.food.bank.dalgyal.gloss": "닭이 낳은 알",
+      "writeFrame.rounds.c2.slots.food.bank.gimbap.gloss": "김 위에 밥과 재료를 올려 만 음식"
     },
     "minigame:s7-life-q3-practice": {
       "typeHangul.rounds.t1.prompt": "지금 보내고 있는 이 하루를 나타내는 낱말을 자판으로 써 봐요.",

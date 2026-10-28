@@ -101,8 +101,14 @@
       "typeHangul.rounds.t4.target.gloss": "가래떡을 얇게 썰어 넣고 끓인 국"
     },
     "minigame:s7-rites-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "반달 모양 떡을 먹은 일",
-      "orderIt.rounds.c2.sentence.gloss": "크고 둥근 달을 본 일"
+      "clozePick.rounds.c1.sentence.gloss": "반달 모양 떡을 먹은 일",
+      "clozePick.rounds.c2.sentence.gloss": "크고 둥근 달을 본 일",
+      "clozePick.rounds.c1.tiles.meogeosseoyo.gloss": "먹은 일을 말하는 말",
+      "clozePick.rounds.c1.tiles.bwasseoyo.gloss": "본 일을 말하는 말",
+      "clozePick.rounds.c1.tiles.mandeureosseoyo.gloss": "만든 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.meogeosseoyo.gloss": "먹은 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.bwasseoyo.gloss": "본 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.mandeureosseoyo.gloss": "만든 일을 말하는 말"
     },
     "minigame:s7-rites-q2-practice": {
       "traceWord.rounds.w1.word.gloss": "음력 1월 1일, 새해 첫날 명절",
@@ -177,8 +183,19 @@
       "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "보름날 밤의 둥근 달"
     },
     "minigame:s7-rites-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "내 마음에 가장 드는 날이 가을 보름 명절이라는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "새해 첫날 명절에 가래떡을 넣은 국을 먹은 일"
+      "writeFrame.rounds.c1.frame.gloss": "가장 좋아하는 날: ___",
+      "writeFrame.rounds.c1.slots.day.bank.seollal.gloss": "새해 첫날 명절",
+      "writeFrame.rounds.c1.slots.day.bank.chuseok.gloss": "가을 보름 명절",
+      "writeFrame.rounds.c1.slots.day.bank.saengil.gloss": "태어난 날",
+      "writeFrame.rounds.c1.slots.day.bank.jumal.gloss": "토요일과 일요일",
+      "writeFrame.rounds.c2.frame.gloss": "___에 만든 것: ___",
+      "writeFrame.rounds.c2.slots.day.bank.seollal.gloss": "새해 첫날 명절",
+      "writeFrame.rounds.c2.slots.day.bank.chuseok.gloss": "가을 보름 명절",
+      "writeFrame.rounds.c2.slots.day.bank.saengil.gloss": "태어난 날",
+      "writeFrame.rounds.c2.slots.thing.bank.songpyeon.gloss": "반달 모양 떡",
+      "writeFrame.rounds.c2.slots.thing.bank.tteok.gloss": "곡식 가루를 쪄서 만든 음식",
+      "writeFrame.rounds.c2.slots.thing.bank.keikeu.gloss": "구워 만든 달콤한 서양 과자",
+      "writeFrame.rounds.c2.slots.day.bank.jumal.gloss": "토요일과 일요일"
     }
   }
 }

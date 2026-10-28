@@ -50,11 +50,14 @@
       "typeHangul.rounds.y4.target.gloss": "me gustan los pájaros"
     },
     "minigame:s7-nature-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Me gustan los gatos.",
-      "orderIt.rounds.c2.sentence.gloss": "Me gustan los tigres.",
-      "orderIt.rounds.c2.distractors.gomi.gloss": "oso (como sujeto)",
-      "orderIt.rounds.c1.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
-      "orderIt.rounds.c1.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
+      "clozePick.rounds.c1.sentence.gloss": "Me gustan los gatos.",
+      "clozePick.rounds.c2.sentence.gloss": "Me gustan los osos.",
+      "clozePick.rounds.c1.tiles.i.gloss": "marca de sujeto (después de una consonante final)",
+      "clozePick.rounds.c1.tiles.ga.gloss": "marca de sujeto (después de una vocal)",
+      "clozePick.rounds.c1.tiles.reul.gloss": "marca de objeto (después de una vocal)",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto (después de una vocal)",
+      "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto (después de una consonante final)",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto (después de una consonante final)"
     },
     "quest:stage7-nature-q2": {
       "title": "Tigre grande, gato lindo",
@@ -161,11 +164,21 @@
       "writeFrame.rounds.w3.slots.looks.bank.jagayo.gloss": "pequeño"
     },
     "minigame:s7-nature-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Mi animal favorito es el pájaro.",
-      "orderIt.rounds.c2.sentence.gloss": "Los conejos son muy lindos.",
-      "orderIt.rounds.c2.distractors.keoyo.gloss": "es grande",
-      "orderIt.rounds.c1.particle.choices.ieyo.gloss": "es (después de una consonante final)",
-      "orderIt.rounds.c1.particle.choices.yeyo.gloss": "es (después de una vocal)"
+      "writeFrame.rounds.c1.frame.gloss": "Mi animal favorito es el ___.",
+      "writeFrame.rounds.c1.slots.animal.bank.horangi.gloss": "tigre",
+      "writeFrame.rounds.c1.slots.animal.bank.goyangi.gloss": "gato",
+      "writeFrame.rounds.c1.slots.animal.bank.tokki.gloss": "conejo",
+      "writeFrame.rounds.c1.slots.animal.bank.gom.gloss": "oso",
+      "writeFrame.rounds.c1.slots.animal.bank.sae.gloss": "pájaro",
+      "writeFrame.rounds.c2.frame.gloss": "El ___ es muy ___.",
+      "writeFrame.rounds.c2.slots.animal.bank.horangi.gloss": "tigre",
+      "writeFrame.rounds.c2.slots.animal.bank.goyangi.gloss": "gato",
+      "writeFrame.rounds.c2.slots.animal.bank.tokki.gloss": "conejo",
+      "writeFrame.rounds.c2.slots.animal.bank.gom.gloss": "oso",
+      "writeFrame.rounds.c2.slots.animal.bank.sae.gloss": "pájaro",
+      "writeFrame.rounds.c2.slots.looks.bank.gwiyeowoyo.gloss": "lindo",
+      "writeFrame.rounds.c2.slots.looks.bank.keoyo.gloss": "grande",
+      "writeFrame.rounds.c2.slots.looks.bank.jagayo.gloss": "pequeño"
     }
   }
 }

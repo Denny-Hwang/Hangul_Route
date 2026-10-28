@@ -50,11 +50,14 @@
       "typeHangul.rounds.y4.target.gloss": "깃털 달린 동물이 마음에 든다는 말"
     },
     "minigame:s7-nature-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "야옹 하는 동물이 마음에 든다는 말",
-      "orderIt.rounds.c2.sentence.gloss": "줄무늬 맹수가 마음에 든다는 말",
-      "orderIt.rounds.c2.distractors.gomi.gloss": "털이 덥수룩한 들짐승 (문장의 주어)",
-      "orderIt.rounds.c1.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
-      "orderIt.rounds.c1.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
+      "clozePick.rounds.c1.sentence.gloss": "야옹 하는 동물이 마음에 든다는 말",
+      "clozePick.rounds.c2.sentence.gloss": "털이 덥수룩한 들짐승이 마음에 든다는 말",
+      "clozePick.rounds.c1.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.c1.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.c1.tiles.reul.gloss": "목적어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.c2.tiles.eul.gloss": "목적어를 나타내는 조사 (받침 있는 말 뒤)"
     },
     "quest:stage7-nature-q2": {
       "title": "큰 호랑이, 귀여운 고양이",
@@ -161,11 +164,21 @@
       "writeFrame.rounds.w3.slots.looks.bank.jagayo.gloss": "몸집이 조그맣다"
     },
     "minigame:s7-nature-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "내 마음에 가장 드는 것이 깃털 달린 동물이라는 말",
-      "orderIt.rounds.c2.sentence.gloss": "귀가 긴 동물은 무척 사랑스럽다는 말",
-      "orderIt.rounds.c2.distractors.keoyo.gloss": "몸집이 우람하다는 뜻",
-      "orderIt.rounds.c1.particle.choices.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
-      "orderIt.rounds.c1.particle.choices.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)"
+      "writeFrame.rounds.c1.frame.gloss": "내 마음에 가장 드는 동물: ___",
+      "writeFrame.rounds.c1.slots.animal.bank.horangi.gloss": "줄무늬 맹수",
+      "writeFrame.rounds.c1.slots.animal.bank.goyangi.gloss": "야옹 하는 동물",
+      "writeFrame.rounds.c1.slots.animal.bank.tokki.gloss": "귀가 긴 동물",
+      "writeFrame.rounds.c1.slots.animal.bank.gom.gloss": "털이 덥수룩한 들짐승",
+      "writeFrame.rounds.c1.slots.animal.bank.sae.gloss": "깃털 달린 동물",
+      "writeFrame.rounds.c2.frame.gloss": "___: 무척 ___",
+      "writeFrame.rounds.c2.slots.animal.bank.horangi.gloss": "줄무늬 맹수",
+      "writeFrame.rounds.c2.slots.animal.bank.goyangi.gloss": "야옹 하는 동물",
+      "writeFrame.rounds.c2.slots.animal.bank.tokki.gloss": "귀가 긴 동물",
+      "writeFrame.rounds.c2.slots.animal.bank.gom.gloss": "털이 덥수룩한 들짐승",
+      "writeFrame.rounds.c2.slots.animal.bank.sae.gloss": "깃털 달린 동물",
+      "writeFrame.rounds.c2.slots.looks.bank.gwiyeowoyo.gloss": "사랑스럽다",
+      "writeFrame.rounds.c2.slots.looks.bank.keoyo.gloss": "몸집이 우람하다",
+      "writeFrame.rounds.c2.slots.looks.bank.jagayo.gloss": "몸집이 조그맣다"
     }
   }
 }

@@ -326,6 +326,7 @@
     "pat|곰은 귀여워요": "pat:gomeun-gwiyeowoyo",
     "pat|곰은 커요": "pat:gomeun-keoyo",
     "pat|곰이 헤엄쳐요": "pat:gomi-heeomchyeoyo",
+    "pat|곰이 좋아요": "pat:gomi-joayo",
     "pat|곰이 커요": "pat:gomi-keoyo",
     "pat|공책이에요": "pat:gongchaegieyo",
     "pat|공을 차요": "pat:gongeul-chayo",
@@ -405,6 +406,7 @@
     "pat|좋아! 내 차례야": "pat:joa-nae-charyeya",
     "pat|좋아요": "pat:joayo",
     "pat|종이를 접고 잘라요": "pat:jongireul-jeopgo-jallayo",
+    "pat|종이를 접고 ___": "pat:jongireul-jeopgo-n",
     "pat|줄넘기를 하고 싶어요": "pat:julleomgireul-hago-sipeoyo",
     "pat|꽃을 그려요": "pat:kkocheul-geuryeoyo",
     "pat|꽃을 접어요": "pat:kkocheul-jeobeoyo",
@@ -435,6 +437,7 @@
     "pat|___에 ___을/를 봤어요": "pat:n-e-n-eul-reul-bwasseoyo",
     "pat|___에 ___을/를 만들었어요": "pat:n-e-n-eul-reul-mandeureosseoyo",
     "pat|___에 ___을/를 먹었어요": "pat:n-e-n-eul-reul-meogeosseoyo",
+    "pat|___에 ___을/를 먹어요": "pat:n-e-n-eul-reul-meogeoyo",
     "pat|___을/를 해요": "pat:n-eul-reul-haeyo",
     "pat|___을/를 접어요": "pat:n-eul-reul-jeobeoyo",
     "pat|___을/를 먹었어요": "pat:n-eul-reul-meogeosseoyo",
@@ -735,6 +738,16 @@
     "lex|연필": "vocab:yeonpil",
     "lex|윷놀이": "vocab:yunnori"
   },
-  "alias": {},
-  "retired": []
+  "alias": {
+    "pat|이건 한글 ___이에요/예요": "pat:igeon-hangeul-geuljayeyo",
+    "pat|이건 제 ___이에요/예요": "pat:igeon-je-ireumieyo"
+  },
+  "retired": [
+    "pat:achime-dalgyareul-meogeoyo",
+    "pat:horangiga-joayo",
+    "pat:jega-joahaneun-dongmureun-saeyeyo",
+    "pat:jeonyeoge-ppangeul-meogeoyo",
+    "pat:seollare-tteokgugeul-meogeosseoyo",
+    "pat:tokkineun-jeongmal-gwiyeowoyo"
+  ]
 }

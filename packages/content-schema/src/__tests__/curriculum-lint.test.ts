@@ -45,6 +45,23 @@ const BOTH_SEVERITIES: readonly CurriculumRule[] = ['lesson-new-load', 'lesson-c
 /** Rules that never read Volume 1 or shipped stories: errors only. */
 const ERRORS_ONLY: readonly CurriculumRule[] = ['lesson-recycle', 'lesson-culture-coverage', 'pack-skeleton', 'story-topic-unique'];
 
+/** The shipped Volume 1 lesson cells and shipped stories of the repository, as validate-content reads them. */
+function shippedTree(): Map<string, unknown> {
+  const tree = new Map<string, unknown>();
+  const walk = (rel: string): void => {
+    for (const entry of readdirSync(join(REPO_ROOT, rel), { withFileTypes: true })) {
+      const child = `${rel}/${entry.name}`;
+      const json = (): unknown => JSON.parse(readFileSync(join(REPO_ROOT, child), 'utf8'));
+      if (entry.isDirectory()) walk(child);
+      else if (/^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/.test(child)) tree.set(child, json());
+      else if (/^content\/stories\/[^/]+\.json$/.test(child) && SHIPPED_STORY_IDS.has((json() as { id: string }).id)) tree.set(child, json());
+    }
+  };
+  walk('content/episodes');
+  walk('content/stories');
+  return tree;
+}
+
 describe('lintCurriculum over the content/fixtures/curriculum-lint bundles', () => {
   for (const [name, bundle] of bundles) {
     if (bundle.expect === undefined) continue;
@@ -76,21 +93,17 @@ describe('lintCurriculum over the content/fixtures/curriculum-lint bundles', () 
   });
 
   it('only warns on Volume 1 cells and shipped stories (they turn into errors in row CM-3B)', () => {
-    const tree = new Map<string, unknown>();
-    const walk = (rel: string): void => {
-      for (const entry of readdirSync(join(REPO_ROOT, rel), { withFileTypes: true })) {
-        const child = `${rel}/${entry.name}`;
-        const json = (): unknown => JSON.parse(readFileSync(join(REPO_ROOT, child), 'utf8'));
-        if (entry.isDirectory()) walk(child);
-        else if (/^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/.test(child)) tree.set(child, json());
-        else if (/^content\/stories\/[^/]+\.json$/.test(child) && SHIPPED_STORY_IDS.has((json() as { id: string }).id)) tree.set(child, json());
-      }
-    };
-    walk('content/episodes');
-    walk('content/stories');
+    const tree = shippedTree();
     expect(tree.size).toBeGreaterThanOrEqual(25 + SHIPPED_STORY_IDS.size);
     // Whatever Volume 1 still breaks (row CM-3A re-authors it), it is a warning until row CM-3B.
     expect(lintCurriculum(tree).filter((f) => f.severity !== 'warning')).toEqual([]);
+  });
+
+  it('row CM-3A S7: the five Stage 7 Volume 1 cells pass every rule with no warning (check rotation, culture-source, dictation)', () => {
+    const tree = shippedTree();
+    expect([...tree.keys()].filter((f) => f.startsWith('content/episodes/stage-7/'))).toHaveLength(5);
+    // The stage-wide share of lesson-check-variety is filed under the stage's first file, so this reads it too.
+    expect(lintCurriculum(tree).filter((f) => f.file.startsWith('content/episodes/stage-7/')).map((f) => `${f.rule} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
   });
 
   it('builds the story-topic-unique bundles from stories that parse with StorySchema', () => {

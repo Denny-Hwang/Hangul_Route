@@ -79,6 +79,36 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
     expect(built.items.map((i) => i.id).sort()).toEqual(Object.values(snapshot.ids).filter((id) => !snapshot.retired.includes(id)).sort());
   });
 
+  it('row CM-3A S7: the Stage 7 Check re-authoring keeps two ids by alias and retires the sentences it took out of every round', () => {
+    const byId = new Map(built.items.map((i) => [i.id, i]));
+    // An edited Check sentence that became a Write Frame keeps its learner state under the frame's key.
+    const S7_ALIAS: Record<string, string> = {
+      'pat|이건 제 ___이에요/예요': 'pat:igeon-je-ireumieyo',
+      'pat|이건 한글 ___이에요/예요': 'pat:igeon-hangeul-geuljayeyo',
+    };
+    for (const [key, id] of Object.entries(S7_ALIAS)) {
+      expect(snapshot.alias[key], key).toBe(id);
+      expect(normalizeKo(byId.get(id)?.ko ?? ''), id).toBe(key.slice('pat|'.length));
+      expect(byId.get(id)?.cells, id).toContain('episode:stage7-letters');
+    }
+    // A retired id is never an item again (so never selected for review), and its own sentence is no longer taught.
+    const S7_RETIRED = [
+      'pat:achime-dalgyareul-meogeoyo',
+      'pat:horangiga-joayo',
+      'pat:jega-joahaneun-dongmureun-saeyeyo',
+      'pat:jeonyeoge-ppangeul-meogeoyo',
+      'pat:seollare-tteokgugeul-meogeosseoyo',
+      'pat:tokkineun-jeongmal-gwiyeowoyo',
+    ];
+    const keyOf = new Map(Object.entries(snapshot.ids).map(([key, id]) => [id, key]));
+    for (const id of S7_RETIRED) {
+      expect(snapshot.retired, id).toContain(id);
+      expect(byId.has(id), id).toBe(false);
+      expect(shown.has(normalizeKo((keyOf.get(id) ?? '').slice('pat|'.length))), id).toBe(false);
+    }
+    expect(built.retired.map((r) => r.id)).toEqual(expect.arrayContaining(S7_RETIRED));
+  });
+
   it('is committed in its canonical form (one entry per line, ids sorted), which --freeze writes', () => {
     expect(snapshotText).toBe(serializeSnapshot(built.frozen));
   });

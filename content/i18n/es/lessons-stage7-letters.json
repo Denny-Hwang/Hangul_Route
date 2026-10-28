@@ -77,7 +77,7 @@
     },
     "minigame:s7-letters-q1-apply": {
       "typeHangul.rounds.y1.prompt": "Escribe el nombre de Hoya.",
-      "typeHangul.rounds.y2.prompt": "Escribe la palabra para nombre.",
+      "typeHangul.rounds.y2.prompt": "Escribe la palabra que oyes.",
       "typeHangul.rounds.y3.prompt": "Escribe la palabra para el alfabeto coreano.",
       "typeHangul.rounds.y4.prompt": "Escribe: Esto es un nombre.",
       "typeHangul.rounds.y1.target.gloss": "Hoya",
@@ -86,10 +86,14 @@
       "typeHangul.rounds.y4.target.gloss": "Esto es un nombre."
     },
     "minigame:s7-letters-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Esto es un nombre.",
-      "orderIt.rounds.c2.sentence.gloss": "Esto es hangul.",
-      "orderIt.rounds.c2.distractors.ireum.gloss": "nombre",
-      "orderIt.rounds.c1.distractors.jeoneun.gloss": "yo (forma cortés)"
+      "clozePick.rounds.c1.sentence.gloss": "Esto es un nombre.",
+      "clozePick.rounds.c2.sentence.gloss": "Esto es hangul.",
+      "clozePick.rounds.c1.tiles.ireum.gloss": "nombre",
+      "clozePick.rounds.c1.tiles.hangeul.gloss": "hangul, el alfabeto coreano",
+      "clozePick.rounds.c1.tiles.chaek.gloss": "libro",
+      "clozePick.rounds.c2.tiles.ireum.gloss": "nombre",
+      "clozePick.rounds.c2.tiles.hangeul.gloss": "hangul, el alfabeto coreano",
+      "clozePick.rounds.c2.tiles.chaek.gloss": "libro"
     },
     "minigame:s7-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Me llamo Hoya.",
@@ -135,10 +139,15 @@
       "writeFrame.rounds.w2.slots.what.bank.yeonpil.gloss": "lápiz"
     },
     "minigame:s7-letters-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Este es mi nombre.",
-      "orderIt.rounds.c2.sentence.gloss": "Esta es una letra del hangul.",
-      "orderIt.rounds.c1.distractors.sori.gloss": "sonido",
-      "orderIt.rounds.c2.distractors.jeoneun.gloss": "yo (forma cortés)"
+      "writeFrame.rounds.c1.frame.gloss": "Esto es mi ___.",
+      "writeFrame.rounds.c2.frame.gloss": "Esto es ___ en hangul.",
+      "writeFrame.rounds.c1.slots.what.bank.ireum.gloss": "nombre",
+      "writeFrame.rounds.c1.slots.what.bank.chaek.gloss": "libro",
+      "writeFrame.rounds.c1.slots.what.bank.gabang.gloss": "mochila",
+      "writeFrame.rounds.c1.slots.what.bank.yeonpil.gloss": "lápiz",
+      "writeFrame.rounds.c2.slots.what.bank.geulja.gloss": "una letra",
+      "writeFrame.rounds.c2.slots.what.bank.ireum.gloss": "un nombre",
+      "writeFrame.rounds.c2.slots.what.bank.chaek.gloss": "un libro"
     }
   }
 }

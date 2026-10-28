@@ -105,7 +105,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-rites-q1-check",
           "durationSeconds": 40
         },
@@ -251,27 +251,59 @@
         },
         {
           "ref": "minigame:s7-rites-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "송편을 먹었어요.",
-                "romanization": "songpyeoneul meogeosseoyo",
+                "ko": "송편을 ___.",
+                "romanization": "songpyeoneul ___",
                 "en": "I ate songpyeon."
               },
-              "pictureRef": "card:songpyeon",
-              "distractors": []
+              "tiles": [
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                },
+                {
+                  "ko": "봤어요",
+                  "romanization": "bwasseoyo",
+                  "en": "I saw"
+                },
+                {
+                  "ko": "만들었어요",
+                  "romanization": "mandeureosseoyo",
+                  "en": "I made"
+                }
+              ],
+              "answerIndex": 0
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "보름달을 봤어요.",
-                "romanization": "boreumdareul bwasseoyo",
+                "ko": "보름달을 ___.",
+                "romanization": "boreumdareul ___",
                 "en": "I saw the full moon."
               },
-              "pictureRef": "card:moon",
-              "distractors": []
+              "tiles": [
+                {
+                  "ko": "만들었어요",
+                  "romanization": "mandeureosseoyo",
+                  "en": "I made"
+                },
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                },
+                {
+                  "ko": "봤어요",
+                  "romanization": "bwasseoyo",
+                  "en": "I saw"
+                }
+              ],
+              "answerIndex": 2
             }
           ]
         }
@@ -739,9 +771,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-rites-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -996,27 +1028,101 @@
         },
         {
           "ref": "minigame:s7-rites-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "제가 좋아하는 날은 추석이에요.",
-                "romanization": "jega joahaneun nareun chuseogieyo",
-                "en": "My favorite day is Chuseok."
+              "frame": {
+                "ko": "제가 좋아하는 날은 ___이에요/예요.",
+                "romanization": "jega joahaneun nareun ___ieyo/yeyo",
+                "en": "My favorite day is ___."
               },
-              "pictureRef": "card:chuseok",
-              "distractors": []
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "설날에 떡국을 먹었어요.",
-                "romanization": "seollare tteokgugeul meogeosseoyo",
-                "en": "On Seollal, I ate tteokguk."
+              "frame": {
+                "ko": "___에 ___을/를 만들었어요.",
+                "romanization": "___e ___eul/reul mandeureosseoyo",
+                "en": "On ___, I made ___."
               },
-              "pictureRef": "card:tteokguk",
-              "distractors": []
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "생일",
+                      "romanization": "saengil",
+                      "en": "my birthday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "떡",
+                      "romanization": "tteok",
+                      "en": "rice cake"
+                    },
+                    {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -1219,11 +1325,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, past forms, allomorphs and romanization clean; applied: ko glosses describe and echo no tile, no 이미, q3 glosses name the learner as the one who likes the day, type prompts give the dictionary verb, no extra tiles in the Checks, q3 r3 extra tile wrong in form, n1 names ㅏ / ㅗ in Hangul.",
-      "Culture pass 5 (MAR): n1-n6 re-checked against every cited NIKL, AKS and Korea Heritage Service page or reviewed story fact, nothing copied; applied: 주말 in every q2 day bank so every learner has a true answer, the moon caption says 'was even called', a neutral ko 가족 gloss, ko titles on 특별한 날; no real person, brand, price, ancestral rite or age wording."
+      "Culture pass 5 (MAR): n1-n6 re-checked against every cited NIKL, AKS and Korea Heritage Service page or reviewed story fact, nothing copied; applied: 주말 in every q2 day bank so every learner has a true answer, the moon caption says 'was even called', a neutral ko 가족 gloss, ko titles on 특별한 날; no real person, brand, price, ancestral rite or age wording.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick on the past verb (송편을 ___, 보름달을 ___; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame (제가 좋아하는 날은 ___, and the q2 made frame, typed now). Retired: 설날에 떡국을 먹었어요. 주말 stays in every day bank, so every learner has a true answer.",
+      "CM-3A S7 culture (MAR, 2026-10-23, re-read 2026-10-27): no culture claim and no note added; the Checks name only songpyeon, the full moon and days the cell teaches. n5's sources are CM-3C's fix (NFM 송편 first, then the two AKS entries), kept as CM-3C wrote them; culture-source reports nothing.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; off, Cloze Pick plays as Listen & Pick; es comí, vi, hice and ko 먹은 일, 본 일, 만든 일 gloss the past verbs alike; 주말 keeps a neutral answer; no frame asks about family or feelings."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

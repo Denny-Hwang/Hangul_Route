@@ -101,8 +101,14 @@
       "typeHangul.rounds.t4.target.gloss": "sopa de pastel de arroz"
     },
     "minigame:s7-rites-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Comí songpyeon.",
-      "orderIt.rounds.c2.sentence.gloss": "Vi la luna llena."
+      "clozePick.rounds.c1.sentence.gloss": "Comí songpyeon.",
+      "clozePick.rounds.c2.sentence.gloss": "Vi la luna llena.",
+      "clozePick.rounds.c1.tiles.meogeosseoyo.gloss": "comí",
+      "clozePick.rounds.c1.tiles.bwasseoyo.gloss": "vi",
+      "clozePick.rounds.c1.tiles.mandeureosseoyo.gloss": "hice",
+      "clozePick.rounds.c2.tiles.meogeosseoyo.gloss": "comí",
+      "clozePick.rounds.c2.tiles.bwasseoyo.gloss": "vi",
+      "clozePick.rounds.c2.tiles.mandeureosseoyo.gloss": "hice"
     },
     "minigame:s7-rites-q2-practice": {
       "traceWord.rounds.w1.word.gloss": "el Año Nuevo lunar",
@@ -177,8 +183,19 @@
       "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "la luna llena"
     },
     "minigame:s7-rites-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Mi día favorito es Chuseok.",
-      "orderIt.rounds.c2.sentence.gloss": "En Seollal comí tteokguk."
+      "writeFrame.rounds.c1.frame.gloss": "Mi día favorito es ___.",
+      "writeFrame.rounds.c1.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
+      "writeFrame.rounds.c1.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
+      "writeFrame.rounds.c1.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.c1.slots.day.bank.jumal.gloss": "el fin de semana",
+      "writeFrame.rounds.c2.frame.gloss": "En ___ hice ___.",
+      "writeFrame.rounds.c2.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
+      "writeFrame.rounds.c2.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
+      "writeFrame.rounds.c2.slots.day.bank.saengil.gloss": "mi cumpleaños",
+      "writeFrame.rounds.c2.slots.thing.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
+      "writeFrame.rounds.c2.slots.thing.bank.tteok.gloss": "pastel de arroz",
+      "writeFrame.rounds.c2.slots.thing.bank.keikeu.gloss": "pastel",
+      "writeFrame.rounds.c2.slots.day.bank.jumal.gloss": "el fin de semana"
     }
   }
 }
