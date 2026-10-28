@@ -424,10 +424,12 @@ describe('precacheReport and its budget lines', () => {
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
     // Main e31bc3b33 then measures 4,749,283 B (release) and 4,749,439 B (app-host). CM-35 (Role Play: the scene shape,
     // the Tap to Respond fallback, the chunk door and the English strings; the game is a chunk) measures 4,754,958 B and
-    // 4,755,114 B on it, so the line is 4,756,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_756_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_754_958).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_755_114).toBeGreaterThanOrEqual(0);
+    // 4,755,114 B on it; with its lecture Role Play slide (the deck builder's turns, which ride with the lecture logic in
+    // the start bundle; the slide itself is in the presenter's root chunk) 4,756,208 B and 4,756,364 B, so the line is
+    // 4,758,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_758_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_208).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_756_364).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_754_958).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
