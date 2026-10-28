@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { LessonCellSchema, discoverItemTexts, type LessonCell, type LessonQuest } from '@hangul-route/content-schema';
+import { LessonCellSchema, discoverItemTexts, fillClozeGap, type LessonCell, type LessonQuest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -16,6 +16,12 @@ const CELL: LessonCell = LessonCellSchema.parse(JSON.parse(readFileSync(new URL(
 const LEXEME: Readonly<Record<string, string>> = {
   윷놀이를: '윷놀이',
   축구를: '축구',
+  // F-CURR-002 row CM-3A S3: the Cloze Pick word tiles and the Dictation words of the Check rotation.
+  야구: '야구',
+  축구: '축구',
+  농구: '농구',
+  제기: '제기',
+  팽이: '팽이',
   줄넘기를: '줄넘기',
   야구를: '야구',
   농구를: '농구',
@@ -82,6 +88,14 @@ function playedKorean(quest: LessonQuest): string[] {
         return scope.boards.flatMap((b) => b.pairs.map((p) => p.word.ko));
       case 'listen-pick':
         return scope.rounds.flatMap((r) => [r.prompt.ko, ...r.options.flatMap((o) => (o.text ? [o.text.ko] : []))]);
+      // Row CM-3A S3: the completed sentence and, for a word gap, its word tiles (a particle tile is no word).
+      case 'cloze-pick':
+        return scope.rounds.flatMap((r) => [
+          fillClozeGap(r.sentence.ko, r.tiles[r.answerIndex]!.ko),
+          ...(r.gapKind === 'word' ? r.tiles.map((t) => t.ko) : []),
+        ]);
+      case 'type-hangul':
+        return scope.rounds.map((r) => r.target.ko);
       default:
         throw new Error(`Game Sentences plays no ${scope.kind}`);
     }
@@ -101,11 +115,16 @@ describe('Game Sentences (F-CURR-001 S3-5)', () => {
     expect(CELL.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 
-  it('plays Sentence Builder, a sentence picture match and a Listen & Pick Check (section 3.4)', () => {
-    for (const quest of CELL.quests) {
+  it('plays Sentence Builder, a sentence picture match and the Check rotation: Cloze Pick, Sentence Builder, Dictation (section 3.4; F-CURR-002 section 7.1)', () => {
+    const kinds = CELL.quests.map((quest) => {
       const kindOf = (step: string) => quest.steps.find((s) => s.kind === step)?.minigameKind;
-      expect([kindOf('practice'), kindOf('apply'), kindOf('check')], quest.id).toEqual(['order-it', 'pic-word-match', 'listen-pick']);
-    }
+      return [kindOf('practice'), kindOf('apply'), kindOf('check')];
+    });
+    expect(kinds).toEqual([
+      ['order-it', 'pic-word-match', 'cloze-pick'],
+      ['order-it', 'pic-word-match', 'order-it'],
+      ['order-it', 'pic-word-match', 'type-hangul'],
+    ]);
   });
 
   it('every sentence is polite and ends with its sentence mark', () => {
@@ -156,15 +175,17 @@ describe('Game Sentences (F-CURR-001 S3-5)', () => {
     }
   });
 
-  it('a heard Check offers pictures and a read Check offers written sentences, one right answer each', () => {
-    for (const quest of CELL.quests) {
-      const check = quest.scopes.find((s) => s.kind === 'listen-pick');
-      if (check?.kind !== 'listen-pick') throw new Error(`${quest.id} has no Check`);
-      const [heard, read] = check.rounds;
-      expect(heard?.options.every((o) => o.pictureRef !== undefined && o.text === undefined), quest.id).toBe(true);
-      expect(read?.options.every((o) => o.text !== undefined && o.pictureRef === undefined), quest.id).toBe(true);
-      expect(read?.options.find((o) => o.id === read.answerId)?.text?.ko).toBe(read?.prompt.ko);
-    }
+  it('the Checks: a word gap and a particle gap (q1), two built sentences (q2), two words by ear (q3)', () => {
+    const [q1, q2, q3] = CELL.quests.map((q) => q.scopes.find((s) => s.ref.endsWith('-check')));
+    if (q1?.kind !== 'cloze-pick' || q2?.kind !== 'order-it' || q3?.kind !== 'type-hangul') throw new Error('Check kinds');
+    expect(q1.rounds.map((r) => r.gapKind)).toEqual(['word', 'particle']);
+    // The particle gap follows 연, a final consonant: 을, never 를.
+    expect(q1.rounds[1]?.tiles[q1.rounds[1].answerIndex]?.ko).toBe('을');
+    expect(q2.rounds.map((r) => r.sentence.ko)).toEqual(['바다에 가고 싶어요.', '공원에 가고 싶어요.']);
+    expect(q3.rounds.map((r) => [r.mode, r.target.ko])).toEqual([
+      ['hear', '팽이'],
+      ['hear', '제기'],
+    ]);
   });
 
   it('the culture record holds only sourced language notes, each with two sources and three verification passes', () => {
@@ -182,6 +203,8 @@ describe('Game Sentences (F-CURR-001 S3-5)', () => {
   it('is ready with both multi-agent review sign-offs (section 3.8)', () => {
     expect(CELL.status).toBe('ready');
     expect([CELL.review.language, CELL.review.culture, CELL.review.reviewedBy]).toEqual(['native-reviewed', 'culture-reviewed', 'MAR']);
-    expect(CELL.review.notes).toHaveLength(2);
+    // Row CM-3A S3 adds the Check rotation MAR (three notes: the rotation, then its passes) to the two sign-off notes.
+    expect(CELL.review.notes).toHaveLength(5);
+    expect(CELL.review.notes?.[2]).toMatch(/^Check rotation MAR \(row CM-3A S3/);
   });
 });

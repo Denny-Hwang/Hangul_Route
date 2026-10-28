@@ -38,7 +38,7 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
 
 /**
  * The slides with nothing of their own to play: a title, a story scene (Read-to-me reads it on its
- * own path, checked below), an activity, the End slide (a summary of many words), Odd One Out and a
+ * own path, checked below), an activity, the End slide (a summary of many words), Odd One Out, a
  * story check with no target word (their only Korean is in the options, so playing it would say
  * the answer), and a Cloze Pick question (row CM-30): its target is the sentence with its gap, which
  * is not said before the answer (a gap read aloud says "underscore"; the sentence would answer it).

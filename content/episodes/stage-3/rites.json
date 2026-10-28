@@ -140,7 +140,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s3-rites-q1-check",
           "durationSeconds": 40
         },
@@ -376,69 +376,47 @@
         },
         {
           "ref": "minigame:s3-rites-q1-check",
-          "kind": "listen-pick",
+          "kind": "order-it",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "할머니하고 할아버지가 있어요.",
-                "romanization": "halmeonihago harabeojiga isseoyo",
-                "en": "I have a grandma and a grandpa."
+              "id": "c1",
+              "sentence": {
+                "ko": "할아버지하고 할머니가 있어요.",
+                "romanization": "harabeojihago halmeoniga isseoyo",
+                "en": "I have a grandpa and a grandma."
               },
-              "options": [
+              "distractors": [
                 {
-                  "id": "grandpa",
-                  "pictureRef": "word:family-grandpa",
-                  "labelEn": "Grandpa"
-                },
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
-                },
-                {
-                  "id": "apple",
-                  "pictureRef": "word:food-apple",
-                  "labelEn": "Apple"
-                },
-                {
-                  "id": "mountain",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
                 }
-              ],
-              "answerId": "grandpa"
+              ]
             },
             {
-              "id": "r2",
-              "prompt": {
-                "ko": "송편하고 사과를 먹어요.",
-                "romanization": "songpyeonhago sagwareul meogeoyo",
-                "en": "I eat songpyeon and an apple."
+              "id": "c2",
+              "sentence": {
+                "ko": "사과하고 송편을 먹어요.",
+                "romanization": "sagwahago songpyeoneul meogeoyo",
+                "en": "I eat an apple and songpyeon."
               },
-              "options": [
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
-                },
-                {
-                  "id": "grandma",
-                  "pictureRef": "word:family-grandma",
-                  "labelEn": "Grandma"
-                },
-                {
-                  "id": "moon",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
-                },
-                {
-                  "id": "kite",
-                  "pictureRef": "card:kite",
-                  "labelEn": "Kite"
-                }
-              ],
-              "answerId": "songpyeon"
+              "pictureRef": "card:songpyeon",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker after a vowel"
+                  }
+                ]
+              }
             }
           ]
         }
@@ -538,9 +516,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s3-rites-q2-check",
-          "durationSeconds": 40
+          "durationSeconds": 50
         },
         {
           "id": "s6",
@@ -827,69 +805,27 @@
         },
         {
           "ref": "minigame:s3-rites-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "송편이 맛있어요.",
-                "romanization": "songpyeoni masisseoyo",
-                "en": "The songpyeon is tasty."
-              },
-              "options": [
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
-                },
-                {
-                  "id": "hanbok",
-                  "pictureRef": "card:hanbok",
-                  "labelEn": "Hanbok"
-                },
-                {
-                  "id": "moon",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
-                },
-                {
-                  "id": "mountain",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                }
-              ],
-              "answerId": "songpyeon"
+              "id": "d1",
+              "promptEn": "Type the word for traditional Korean clothes.",
+              "mode": "hear",
+              "target": {
+                "ko": "한복",
+                "romanization": "hanbok",
+                "en": "traditional Korean clothes"
+              }
             },
             {
-              "id": "r2",
-              "prompt": {
-                "ko": "한복이 예뻐요.",
-                "romanization": "hanbogi yeppeoyo",
-                "en": "The hanbok is pretty."
-              },
-              "options": [
-                {
-                  "id": "hanbok",
-                  "pictureRef": "card:hanbok",
-                  "labelEn": "Hanbok"
-                },
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
-                },
-                {
-                  "id": "apple",
-                  "pictureRef": "word:food-apple",
-                  "labelEn": "Apple"
-                },
-                {
-                  "id": "tiger",
-                  "pictureRef": "card:tiger",
-                  "labelEn": "Tiger"
-                }
-              ],
-              "answerId": "hanbok"
+              "id": "d2",
+              "promptEn": "Type the word for a half-moon rice cake.",
+              "mode": "hear",
+              "target": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cake"
+              }
             }
           ]
         }
@@ -988,7 +924,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s3-rites-q3-check",
           "durationSeconds": 40
         },
@@ -1293,69 +1229,62 @@
         },
         {
           "ref": "minigame:s3-rites-q3-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "윷놀이를 해요.",
-                "romanization": "yunnorireul haeyo",
-                "en": "I play yut."
-              },
-              "options": [
-                {
-                  "id": "yutnori",
-                  "pictureRef": "card:yutnori",
-                  "labelEn": "Yut game"
-                },
-                {
-                  "id": "sebae",
-                  "pictureRef": "card:sebae",
-                  "labelEn": "New Year's bow"
-                },
-                {
-                  "id": "moon",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
-                },
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
-                }
-              ],
-              "answerId": "yutnori"
-            },
-            {
-              "id": "r2",
-              "prompt": {
-                "ko": "보름달을 봐요.",
-                "romanization": "boreumdareul bwayo",
+              "id": "c1",
+              "sentence": {
+                "ko": "보름달을 ___.",
+                "romanization": "boreumdareul ___",
                 "en": "I look at the full moon."
               },
-              "options": [
+              "gapKind": "word",
+              "tiles": [
                 {
-                  "id": "moon",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
                 },
                 {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Songpyeon"
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
                 },
                 {
-                  "id": "kimchi",
-                  "pictureRef": "card:kimchi",
-                  "labelEn": "Kimchi"
-                },
-                {
-                  "id": "mountain",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
+                  "ko": "해요",
+                  "romanization": "haeyo",
+                  "en": "do"
                 }
               ],
-              "answerId": "moon"
+              "answerIndex": 0
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "세배___ 해요.",
+                "romanization": "sebae___ haeyo",
+                "en": "I do the New Year's bow."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "sebaereul haeyo"
             }
           ]
         }
@@ -1429,15 +1358,19 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "pass 4 language (MAR, 2026-10-14): applied: 하고 as a joining particle (ko), no aspect drift in ko glosses, 'hago' marked as Korean in es, 있어요 with grandparents glossed as possession, q3 r4 now 엄마하고 아빠가, no untaught N N possessive, no q1 particle choice, 떡 role labels; rejected: 송편/떡 gloss (spec 3.4), read-to-picture Check (no schema mode).",
       "pass 5 culture (MAR, 2026-10-14): n1 and n2 re-checked against all five sources, passes 3; applied: q3 Discover title 'Things People Do', the ko q2 Hoya line no longer a flat claim, 'By custom' on n1; no stereotype, no 'all Koreans' claim, no real person, shop, brand or price; reads for any age.",
       "pass 6 translation (MAR, 2026-10-14): es and ko 1:1 with the cell; applied: ko glosses define, not echo (둥근 달, 반달 모양으로 빚은 떡, 윷가락), q2 frame gloss matches its examples, 떡 definitions, 'Dos palabras de familia', Check title as the dictionary heading; rejected: es verb-form uniformity (mirrors en), {ko:} tokens in es notes (pipeline rule pending).",
       "pass 4 language round 2 (MAR, 2026-10-14): applied: 있어요 tile 'have, there is', ko glosses 저는 … 있어요 (no 계세요), '윷을 던지며 놀아요', ko 해요 note and frame gloss as sentences, en 해요 note \"do\" (doer from context), caption 'Family sentences', Check r2 heard -> picture in all quests (with data); rejected: ko titles 'A하고 B' (no typed taught Korean in chrome).",
       "pass 5 culture round 2 (MAR, 2026-10-14): applied: the q3 Hoya line places sebae at Seollal, the Lunar New Year (encykorea 정의 정월 초하룻날), and the q1 family page caption no longer asks about the learner's own family; n1 and n2 text unchanged, passes 3.",
-      "pass 6 translation round 2 (MAR, 2026-10-14): applied: es articles (una abuela y un abuelo), 'marca de …, tras …', '(como objeto)', capitalised haeyo note, ko 있어요 gloss, ko q1 blurb without typed 하고; rejected: {ko:} tokens in es notes (#652 exemption not on main; Hangul in es fails korean-in-ui-field)."
+      "pass 6 translation round 2 (MAR, 2026-10-14): applied: es articles (una abuela y un abuelo), 'marca de …, tras …', '(como objeto)', capitalised haeyo note, ko 있어요 gloss, ko q1 blurb without typed 하고; rejected: {ko:} tokens in es notes (#652 exemption not on main; Hangul in es fails korean-in-ui-field).",
+      "Check rotation MAR (row CM-3A S3, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): the stage's 15 Checks are Cloze Pick 6, Sentence Builder 5 and Dictation 4, none above 40 in 100, no Listen & Pick; every Check is a produce round; no two adjacent quests share Practice, Apply and Check.",
+      "CM-3A S3 MAR (cont.): Language: 할아버지하고 할머니가 있어요 and 사과하고 송편을 먹어요 keep 하고 as the joining particle; 보름달을 봐요 and 세배를 해요 take 을 / 를 by the final sound; 한복 and 송편 are said as written, so they fit Dictation. Culture and facts: 세배 is the New Year's bow to elders and 송편 the half-moon rice cake of Chuseok, as in the cell's sourced notes.",
+      "CM-3A S3 MAR (cont.): Learning design: the ko Sentence Builder meanings say 와 for 하고, the cell's own Practice style, so the Korean learner still builds the 하고 sentence. Reviser: ko Dictation prompts say 써 봐요 (was 쳐 봐요). Third pass: no change.",
+      "CM-3A S3 PR review (2026-10-27): the ko q1 Sentence Builder meanings were plain sentences that showed 송편을 and the word order in a Korean UI; they are now definitions (...는 뜻) like the other cells' Checks, and so is the q3 c2 Cloze meaning. A test holds every Stage 3 Cloze Pick and Sentence Builder Check meaning to this."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

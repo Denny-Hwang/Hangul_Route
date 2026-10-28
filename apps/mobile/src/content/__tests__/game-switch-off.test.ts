@@ -13,9 +13,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * `game.<kind>` switch renders its fallback round of a shipped kind when the switch is off (section 7.1), so no switch
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
- * shipped game. (Rows CM-3A S6 and S7 ship the first Cloze Pick steps, in Stage 6 and Stage 7 Checks; the fixture
- * keeps the check from depending on them, still checks every gap kind, and the e2e answers a fallback round of the
- * fixture step.)
+ * shipped game. (Rows CM-3A S3, S6 and S7 ship the first Cloze Pick steps, in Stage 3, Stage 6 and Stage 7 Checks; the
+ * fixture keeps the check from depending on them, still checks every gap kind, and the e2e answers a fallback round of
+ * the fixture step.)
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */
@@ -58,6 +58,18 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       return scope?.kind === kind ? fallbackProblems(scope, `${questId} step ${i}`) : [];
     });
     expect(problems).toEqual([]);
+  });
+
+  it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
+    const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+      'quest:stage3-crafts-q1',
+      'quest:stage3-letters-q1',
+      'quest:stage3-life-q1',
+      'quest:stage3-life-q3',
+      'quest:stage3-nature-q1',
+      'quest:stage3-rites-q3',
+    ]);
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {

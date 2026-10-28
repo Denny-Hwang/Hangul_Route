@@ -85,8 +85,14 @@
       "orderIt.rounds.r5.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)"
     },
     "minigame:s3-crafts-q1-check": {
-      "listenPick.rounds.hear-yeon.prompt": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
-      "listenPick.rounds.read-chukgu.prompt": "공을 차서 골을 넣는 경기를 바라는 말"
+      "clozePick.rounds.c1.sentence.gloss": "방망이로 공을 치는 경기를 바라는 말",
+      "clozePick.rounds.c1.tiles.yagu.gloss": "방망이로 공을 치고 달리는 운동",
+      "clozePick.rounds.c1.tiles.chukgu.gloss": "발로 공을 차서 골을 넣는 운동",
+      "clozePick.rounds.c1.tiles.nonggu.gloss": "공을 높이 걸린 바구니에 넣는 운동",
+      "clozePick.rounds.c2.sentence.gloss": "종이 놀잇감을 하늘에 띄우기를 바라는 말",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "clozePick.rounds.c2.tiles.reul.gloss": "받침 없는 말 뒤에서 동작의 대상을 나타내는 조사",
+      "clozePick.rounds.c2.tiles.i.gloss": "받침 있는 말 뒤에서 주어를 나타내는 조사"
     },
     "minigame:s3-crafts-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "미끄럼틀과 그네가 있는 곳으로 향한다는 말",
@@ -101,8 +107,10 @@
       "orderIt.rounds.r3.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)"
     },
     "minigame:s3-crafts-q2-check": {
-      "listenPick.rounds.hear-san.prompt": "높이 솟은 땅으로 향한다는 말",
-      "listenPick.rounds.read-noriteo.prompt": "미끄럼틀과 그네가 있는 곳으로 향한다는 말"
+      "orderIt.rounds.c1.sentence.gloss": "짠물이 끝없이 펼쳐진 곳으로 향하기를 바라는 말",
+      "orderIt.rounds.c1.distractors.hago.gloss": "어떤 일을 함 (‘싶어요’ 앞에 쓰는 꼴)",
+      "orderIt.rounds.c2.sentence.gloss": "나무와 잔디가 있는 넓은 쉼터로 향하기를 바라는 말",
+      "orderIt.rounds.c2.distractors.nalligo.gloss": "공중에 띄워 움직이게 함 (‘싶어요’ 앞에 쓰는 꼴)"
     },
     "minigame:s3-crafts-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말",
@@ -120,8 +128,10 @@
       "orderIt.rounds.r5.distractors.dollyeoyo.gloss": "제자리에서 빙글빙글 움직이게 함"
     },
     "minigame:s3-crafts-q3-check": {
-      "listenPick.rounds.hear-jegi.prompt": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
-      "listenPick.rounds.read-paengi.prompt": "뾰족한 놀잇감을 빙글빙글 움직이게 한다는 말"
+      "typeHangul.rounds.d1.prompt": "빙글빙글 도는 뾰족한 놀잇감을 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d1.target.gloss": "빙글빙글 도는 뾰족한 놀잇감",
+      "typeHangul.rounds.d2.prompt": "발로 차올리며 노는 전통 놀잇감을 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d2.target.gloss": "발로 차올리며 노는 전통 놀잇감"
     },
     "minigame:s3-crafts-q1-apply": {
       "picWord.boards.0.pairs.yunnori.word.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",

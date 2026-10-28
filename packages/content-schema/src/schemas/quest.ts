@@ -176,9 +176,13 @@ export const QuestObjectSchema = z.object({
  * game holds more than 40% of the stage's Checks.
  * `stage7` (F-CURR-002 §7.1 Check rotation, row CM-3A S7): also Write Frame (the default
  * S7 Check) and Cloze Pick, so no game holds more than 40% of the stage's Checks.
+ * `stage3` (F-CURR-002 §7.1 Check rotation, row CM-3A S3): Cloze Pick and Sentence Builder
+ * (the S3 default Check) and Dictation (Type Hangul), so no game holds more than 40% of the
+ * stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
+  if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
   if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
   // F-CURR-002 §7.1 Check rotation (row CM-3A S6): a Stage 6 Check is a realia question (Realia Read, or Cloze Pick
   // on a value read from the card) or Dictation (Type Hangul `hear`), so no game holds more than 40% of the Checks.

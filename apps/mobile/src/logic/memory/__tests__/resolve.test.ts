@@ -184,7 +184,7 @@ describe('Role Play: a turn asks its exchange (row CM-35)', () => {
     const ask = (id: string) => resolveItems(exchanges, 'episode:stage4-letters', askedOfScope(scope, id)!);
     expect(ask('t2/storybook')).toEqual([STORY]);
     expect(ask('t2/hangeul')).toEqual([HANGEUL]);
-    // Through a host answer: `{ scope, itemId }`, hinted when meanings were showing.
-    expect(resolveRound({ scope, itemId: 't2/hangeul', hinted: true })?.texts).toEqual([{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }]);
+    // Through a host answer: `{ scope, itemId }` (hinted goes beside it, to answerRound).
+    expect(resolveRound({ scope, itemId: 't2/hangeul' })?.texts).toEqual([{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }]);
   });
 });

@@ -23,6 +23,4 @@ export interface RoundAsked {
   check?: CheckView;
   /** A reader checkpoint (`cp:<id>`) of a story tier, read like a check. */
   checkpoint?: { story: Story | undefined; level: StoryLevel; roundKey: string };
-  /** Answered with a hint showing (Role Play's Show meanings, row CM-35): a right answer then counts as hinted. */
-  hinted?: true;
 }

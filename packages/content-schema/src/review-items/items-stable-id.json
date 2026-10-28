@@ -762,7 +762,16 @@
     "pat|이건 호야 ___이에요/예요": "pat:igeon-hoya-n-ieyo-yeyo",
     "pat|종이를 접고 ___": "pat:jongireul-jeopgo-n",
     "pat|먼저 ___을/를 접어요": "pat:meonjeo-n-eul-reul-jeobeoyo",
-    "pat|___이/가 정말 ___": "pat:n-i-ga-jeongmal-n"
+    "pat|___이/가 정말 ___": "pat:n-i-ga-jeongmal-n",
+    "lex|봐요": "lex:bwayo",
+    "lex|와요": "lex:wayo",
+    "pat|바다에 가고 싶어요": "pat:badae-gago-sipeoyo",
+    "pat|공원에 가고 싶어요": "pat:gongwone-gago-sipeoyo",
+    "pat|고양이가 작아요": "pat:goyangiga-jagayo",
+    "pat|할아버지하고 할머니가 있어요": "pat:harabeojihago-halmeoniga-isseoyo",
+    "pat|네, 친구가 있어요": "pat:ne-chinguga-isseoyo",
+    "pat|사과하고 송편을 먹어요": "pat:sagwahago-songpyeoneul-meogeoyo",
+    "pat|토끼가 귀여워요": "pat:tokkiga-gwiyeowoyo"
   },
   "alias": {
     "exc|김치가 매워요|네, 매워요": "exc:gugi-maewoyo",
@@ -815,6 +824,7 @@
     "pat:ramyeon-juseyo",
     "pat:sagwa-han-gae-juseyo",
     "pat:samcheon-wonieyo",
-    "pat:uyu-se-gae-juseyo"
+    "pat:uyu-se-gae-juseyo",
+    "pat:namue-goyangiga-isseoyo"
   ]
 }
