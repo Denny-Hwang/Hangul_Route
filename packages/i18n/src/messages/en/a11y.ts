@@ -450,6 +450,8 @@ export const a11y = {
     slot: 'gap',
     /** A sentence-build move, announced politely (AMENDMENTS-LECTURE-V2 section 10, LV-S3): the tile just placed. */
     tilePlaced: (word: string) => `${word} placed`,
+    /** A Role Play slide's reply bubble from the room (F-CURR-002 section 8, row CM-35): the class, never a name; `line` is the Korean with its romanization once it shows. */
+    rolePlayClass: (line: string) => `The class said: ${line}`,
   },
   /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
   who: {
