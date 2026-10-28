@@ -201,7 +201,7 @@ async function playTasteQ1(
   shot: string,
   firstWord: string,
   boards: readonly (readonly string[])[],
-  check: readonly [string, string],
+  check: (page: Page) => Promise<void>,
 ): Promise<void> {
   await startFirstQuest(page);
   await expect(page.getByText(firstWord, { exact: true }).first()).toBeVisible();
@@ -217,7 +217,8 @@ async function playTasteQ1(
     }
   }
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await playCheckByIds(page, [{ answer: check[0] }, { answer: check[1] }]);
+  await check(page);
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-check.png`), fullPage: true });
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByText('Next up')).toBeVisible();
   await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
@@ -350,6 +351,42 @@ async function playPicWordBoards(page: Page, boards: readonly (readonly string[]
   }
 }
 
+/** A Pic-Word Match Check (F-CURR-002 row CM-3A S2): the launcher's Go, then each board's pairs by id. */
+async function playCheckBoards(page: Page, boards: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const ids of boards) {
+    await expect.poll(() => boardIds(page)).toEqual([...ids].sort());
+    for (const id of ids) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+}
+
+/** A Read Pick Meaning Check (row CM-3A S2): the Korean is drawn as text, no speaker, then the pictures by id. */
+async function playReadPickCheck(page: Page, answers: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible();
+  await expect(page.getByText('What does this mean?')).toBeVisible();
+  await expect(page.getByTestId('listen-pick-speaker')).toHaveCount(0);
+  const size = page.viewportSize();
+  await shot(page, `read-pick-${answers[0]}-${size?.width ?? 0}`);
+  // The same round wide (1024 x 768), then back to the test's own size.
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible();
+  await shot(page, `read-pick-${answers[0]}-wide`);
+  if (size) await page.setViewportSize(size);
+  await pickByIds(page, answers);
+}
+
+/** A Dictation Check (row CM-3A S2): the launcher's Go, then each word typed (a `see` round when no voice or its switch is off). */
+async function playDictationCheck(page: Page, name: string, words: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  await shot(page, `dictation-${name}-${page.viewportSize()?.width ?? 0}`);
+  for (const word of words) await typeAnswer(page, word);
+}
+
 /** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards carry a label, not a button role. */
 async function playCardMatch(page: Page, pairs: readonly (readonly [romanization: string, meaning: string])[]): Promise<void> {
   await page.getByRole('button', { name: 'Play minigame' }).click();
@@ -422,8 +459,11 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['morae', 'sand'],
         ['gong', 'ball'],
       ]);
-      // One first-try miss shows the amber nudge, then the ball; the reading round reads 공.
-      await playCheckByIds(page, [{ answer: 'sport-ball', missWith: 'kite' }, { answer: 'gong' }]);
+      // F-CURR-002 row CM-3A S2: the Check is Pic-Word Match on the cell's own words (Check rotation, section 7.1).
+      await playCheckBoards(page, [
+        ['gong', 'jajeongeo', 'haneul'],
+        ['yeon', 'namu', 'gong'],
+      ]);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
     },
@@ -601,7 +641,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
-  // skipped (the shipped game), and the Check is answered by id: the sun picture, then the written 노래.
+  // skipped (the shipped game), and the Check is Read Pick Meaning on 해 and 노래 (row CM-3A S2).
   'episode:stage2-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -623,7 +663,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       }
       // Apply (the shipped Card Match) is skipped; the Check is answered by id.
       await page.getByRole('button', { name: 'Skip for now' }).click();
-      await playCheckByIds(page, [{ answer: 'hae' }, { answer: 'norae' }]);
+      // Row CM-3A S2: Read Pick Meaning, 해 and 노래 read, their pictures picked.
+      await playReadPickCheck(page, ['hae', 'norae']);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
       await shot(page, 's2-1-q1-results-320');
@@ -635,7 +676,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S2-2: Holiday Words, q1 "Seollal Words": Discover, all six Pic-Word boards, Build a Letter
-  // (the shipped game, skipped here), and the Check by id: the 세배 picture, then the written 설날.
+  // (the shipped game, skipped here), and the Check: Read Pick Meaning on 설날 and 한복 (row CM-3A S2).
   'episode:stage2-rites': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -651,7 +692,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['hanbok', 'tteokguk', 'sebae'],
       ]);
       await page.getByRole('button', { name: 'Skip for now' }).click();
-      await playCheckByIds(page, [{ answer: 'sebae' }, { answer: 'seollal' }]);
+      // Row CM-3A S2: Read Pick Meaning, 설날 and 한복 read, their pictures picked.
+      await playReadPickCheck(page, ['seollal', 'hanbok']);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
       await shot(page, 's2-2-q1-results-320');
@@ -891,19 +933,22 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Nature & Animals: Animal Sentences\./)).toBeVisible();
     },
   },
-  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
-  // gimbap picture, then the written 도시락.
+  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is Read
+  // Pick Meaning on 김밥 and 우유 (row CM-3A S2).
   'episode:stage2-life': {
-    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, (p) => playReadPickCheck(p, ['gimbap', 'uyu'])),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
       await page.goto('/');
       await expectCellOnRoute(page, 2, 'Lunch Box Words');
     },
   },
-  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
+  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is Dictation of 하늘 and 나무 (row CM-3A S2).
   'episode:stage2-nature': {
-    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, async (p) => {
+      await p.setViewportSize({ width: 320, height: 720 });
+      await playDictationCheck(p, 'haneul', ['하늘', '나무']);
+    }),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
       await page.goto('/');
