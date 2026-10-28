@@ -105,8 +105,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
   // F-CURR-002 row CM-32 (Syllable Build and the Block Sprint; their screens are the precached syllable-build-chunk) adds
   // about 7,100 B that cannot leave the start bundle (the round schema the content parser needs, the entry, the route,
-  // the two offers' slots, the English strings): 4,756,366 B raw on main e31bc3b33 before CM-23c; see the CM-32 decision
-  // record for the measurement on this main.
+  // the two offers' slots, the English strings): 4,758,598 B raw / 1,268,475 B gzip on main 524961dae (CM-23c's
+  // 4,751,444 B) plus CM-32, +7,154 B, 1,402 B under the line, so the line stays.
   startBundleRaw: 4_760_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at

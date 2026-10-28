@@ -428,6 +428,9 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeLessThan(10_000);
+    // CM-32 (Syllable Build and the Block Sprint, their screens in syllable-build-chunk) on main 524961dae measures
+    // 4,758,598 B (+7,154 B over CM-23c's 4,751,444 B), under the same line.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_598).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
