@@ -445,13 +445,13 @@ describe('precacheReport and its budget lines', () => {
     // build, Metro cache cleared; +2,161 B over that main; the app-host build 4,751,600 B), so the line is 4,760,000 B.
     // CM-30 (Cloze Pick; the game in the cloze-pick chunk, its Listen & Pick fallback in the start bundle with the door)
     // measures 4,762,235 B on main 524961dae (4,751,444 B), so the line is 4,765,000 B.
-    // The merged CM-30/31/34/35/3C stack with row CM-3A S4 measures 4,783,314 B (release build), so the line is 4,790,000 B.
+    // The merged CM-30/31/34/35/3C stack with row CM-3A S4 measures 4,783,492 B (release build), so the line is 4,790,000 B.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_790_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_783_314).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_783_314).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_783_492).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_783_492).toBeLessThan(10_000);
     // CM-31 (Dictation, #850) merged onto main 524961dae measures 4,757,612 B: under the line, which stays.
     expect(PRECACHE_BUDGET.startBundleRaw - 4_757_612).toBeGreaterThanOrEqual(0);
     // CM-34 (Story Order, the game in the order-game chunk) on main 524961dae measures 4,758,546 B.

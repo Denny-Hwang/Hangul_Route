@@ -172,8 +172,8 @@ describe('QuestionSlide: reply (LV-S2)', () => {
     expect(byTestId(r.root, 'presenter-quiz-speaker')).toHaveLength(0);
     const said = byTestId(r.root, 'presenter-quiz-said')[0]!;
     expect(hiddenNow(said)).toBe(false);
-    // Row CM-3A S4: the life q1 Check asks about the rice cake (Dialogue reply pick).
-    expect(screenTexts(said)).toEqual(expect.arrayContaining(['떡 먹었어요?', slide.prompt.line.romanization, slide.prompt.line.gloss]));
+    // Row CM-3A S4: the life q1 Role Play's first turn (its reply slides while `game.role-play` is off, row CM-35).
+    expect(screenTexts(said)).toEqual(expect.arrayContaining(['밥 먹었어요?', slide.prompt.line.romanization, slide.prompt.line.gloss]));
     expect(byTestId(r.root, 'presenter-quiz-option-gloss').map(hiddenNow).every(Boolean)).toBe(true);
     expect(byTestId(r.root, 'presenter-quiz-option-ko').map((n) => textOf(n)).sort()).toEqual(slide.options.map((o) => o.ko).sort());
   });

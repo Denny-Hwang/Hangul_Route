@@ -118,7 +118,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 2,765 B rounding margin.
   // The merged CM-30, CM-31, CM-34, CM-35 and CM-3C stack (each under its own line alone) measures 4,783,247 B raw /
   // 1,276,097 B gzip (release `build:web`); row CM-3A S4 on it (content in the lesson chunks, the Role Play case of the
-  // scaffold) measures 4,783,314 B raw / 1,276,098 B gzip, +67 B. The line is that measurement plus a 6,686 B margin.
+  // scaffold) adds 67 B, and with CM-35's review fixes (83b6ffa43) the stack measures 4,783,492 B raw / 1,276,171 B gzip.
+  // The line is that measurement plus a 6,508 B margin.
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
