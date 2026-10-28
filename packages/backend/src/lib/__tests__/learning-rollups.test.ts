@@ -218,6 +218,11 @@ describe('rows per event', () => {
       { metric: 'session.end.questLeft', dim: '', bucket: '1' },
       { metric: 'session.end.questLeft', dim: 'order-it', bucket: '1' },
     ]);
+    // Row CM-34: the Story Order kind code is a quit dimension too.
+    expect(rollupKeysFor('session.end', { questLeft: 1, leftAtKind: 'story-order' })).toEqual([
+      { metric: 'session.end.questLeft', dim: '', bucket: '1' },
+      { metric: 'session.end.questLeft', dim: 'story-order', bucket: '1' },
+    ]);
   });
 
   it('session.end: a game kind is written only for a quit, so its rate has the reporting sessions as denominator', () => {

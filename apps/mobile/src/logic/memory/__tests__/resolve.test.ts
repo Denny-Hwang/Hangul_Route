@@ -111,6 +111,13 @@ describe('what a round asked', () => {
     expect(askedOfScope(frame, 'w2')).toBeUndefined();
   });
 
+  it('Story Order reads the line its slot asked for (row CM-34)', () => {
+    const scope = { kind: 'story-order', storyOrder: { rounds: [{ id: 'r1', panels: [{ id: 'up', caption: ko('먼저 일어나요.') }] }] } } as unknown as MinigameScope;
+    expect(askedOfScope(scope, 'r1/up')).toEqual({ texts: [{ ko: '먼저 일어나요.' }], jamoIds: [], rung: 'read' });
+    for (const id of ['r1/down', 'r2/up', 'r1', 'up']) expect(askedOfScope(scope, id), id).toBeUndefined();
+    expect(askedOfScope({ kind: 'story-order' } as MinigameScope, 'r1/up')).toBeUndefined();
+  });
+
   it('Realia Read asks the card only (one rea item), never its key word or options', () => {
     const scope = {
       kind: 'realia-read',

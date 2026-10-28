@@ -106,6 +106,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
   // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
   // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae.
+  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
+  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
+  // `build:web`), 7,102 B over that main.
   // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
   // Pick's text prompt mode, the door, the Listen & Pick fallback with its card and round helpers (in the start bundle
   // so the switch never depends on the chunk it guards) and 10 English strings; the game, its flow and its view are
@@ -279,6 +282,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/dictation-entry.ts`).
   Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
 ]);
 
 /**

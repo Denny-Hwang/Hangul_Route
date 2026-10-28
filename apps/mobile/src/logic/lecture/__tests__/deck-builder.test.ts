@@ -31,6 +31,7 @@ import {
   type LectureVocabTopic,
   type Slide,
 } from '../deck-builder';
+import { STORY_ORDER_FIXTURES } from '../../../navigation/story-order-e2e-fixture';
 
 // ---- fixtures ---------------------------------------------------------------
 
@@ -2584,5 +2585,45 @@ describe('expandDeck: Cloze Pick on the existing question slides (F-CURR-002 sec
       { blockIndex: 0, ref: 'mg:cloze-none', reason: 'scope-too-small' },
     ]);
     expect(new Set(kinds(slides))).toEqual(new Set(['title', 'quiz', 'realia', 'end']));
+  });
+});
+
+describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
+  // The two-round fixture: an illustrated round settled by its time words, then a captions-only round.
+  const soScopes: Record<string, MinigameScope> = { 'mg:story-order': STORY_ORDER_FIXTURES.twoRounds, 'mg:story-order-empty': STORY_ORDER_FIXTURES.empty };
+  const soQuest: Quest = { ...quest('story-order', [['intro'], ['apply', 'mg:story-order'], ['practice', 'mg:story-order-empty']]), rewardCardId: undefined };
+  soQuest.steps[1]!.minigameKind = 'story-order';
+  soQuest.steps[2]!.minigameKind = 'story-order';
+  const b = bundle({ scopeFor: (ref) => soScopes[ref] ?? scopes[ref], questById: (id) => (id === soQuest.id ? soQuest : quests.find((q) => q.id === id)) });
+  const run = () => expandDeck(deckOf([{ kind: 'quest', id: soQuest.id }]), b, VOICE);
+
+  it('maps onto the sentence slides, no slide kind of its own: each line in its right order, round by round', () => {
+    const { slides, skipped } = run();
+    expect(kinds(slides)).toEqual(['title', ...Array(8).fill('sentence'), 'end']);
+    const lines = only(slides, 'sentence');
+    expect(lines.map((s) => s.sentence.ko)).toEqual([
+      '아침에 해가 떠요.',
+      '점심에 빵을 먹어요.',
+      '저녁에 비가 와요.',
+      '밤에 별이 떠요.',
+      '먼저 일어나요.',
+      '그다음에 세수해요.',
+      '그리고 밥을 먹어요.',
+      '마지막에 공원에 가요.',
+    ]);
+    expect(keys(lines).slice(0, 2)).toEqual(['quest:story-order/s2/day/sun', 'quest:story-order/s2/day/bread']);
+    // An empty scope adds no slide and no skip.
+    expect(skipped).toEqual([]);
+  });
+
+  it('the Korean first and its meaning a click later; the picture only where the round draws pictures', () => {
+    const lines = only(run().slides, 'sentence');
+    expect(lines[0]).toMatchObject({
+      sentence: { ko: '아침에 해가 떠요.', romanization: 'achime haega tteoyo', gloss: 'In the morning the sun comes up.' },
+      picture: 'word:nature-sun',
+      builds: ['ko', 'gloss', 'art'],
+    });
+    expect(lines[4]).not.toHaveProperty('picture');
+    expect(lines[4]!.builds).toEqual(['ko', 'gloss']);
   });
 });

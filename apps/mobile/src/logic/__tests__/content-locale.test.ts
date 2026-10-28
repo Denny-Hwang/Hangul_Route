@@ -20,6 +20,8 @@ import { storiesAll } from '../../content/stories';
 import { buildSequenceCards } from '../story/sequence-cards';
 import { REALIA_FIXTURES } from '../../navigation/realia-read-e2e-fixture';
 import { clozeFixtureScope } from '../cloze-pick/e2e-rounds';
+import { STORY_ORDER_FIXTURES } from '../../navigation/story-order-e2e-fixture';
+import { storyOrderFallbackScopes } from '../story-order/fallback';
 
 /**
  * F-I18N-001 §3.6: the screens show content titles, blurbs and glosses through
@@ -147,6 +149,18 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(apples.value?.en).toBe('3.000 wones');
     // The taught Korean and its romanization never change.
     expect(apples.value?.ko).toBe('삼천 원');
+    expect(localizeScope(scope, ref, 'en', es)).toBe(scope);
+  });
+
+  it('localizes a Story Order scope: each caption gloss by its round and panel; the fallback reads it (row CM-34)', () => {
+    const scope = STORY_ORDER_FIXTURES.twoRounds;
+    const ref = 'minigame:e2e-story-order';
+    const es: Overlays = { es: { [ref]: { 'storyOrder.rounds.morning.panels.up.caption.gloss': 'Primero, me levanto.' } }, ko: {} };
+    const out = localizeScope(scope, ref, 'es', es);
+    const up = out.storyOrder!.rounds.find((r) => r.id === 'morning')!.panels.find((p) => p.id === 'up')!;
+    expect(up.caption).toEqual({ ko: '먼저 일어나요.', romanization: 'meonjeo ireonayo', en: 'Primero, me levanto.' });
+    expect(out.storyOrder!.rounds[0]!.panels[0]!.caption.en).toBe('In the morning the sun comes up.');
+    expect(storyOrderFallbackScopes(out)[1]!.storySteps![0]!.labelEn).toBe('Primero, me levanto.');
     expect(localizeScope(scope, ref, 'en', es)).toBe(scope);
   });
 

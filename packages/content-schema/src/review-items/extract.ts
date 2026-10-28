@@ -367,6 +367,19 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       });
       return;
     }
+    case 'story-order':
+      // F-CURR-002 row CM-34: each panel's caption is a line of taught words the learner reads in order. A caption that
+      // ends a sentence is a pattern; a one-word caption (하늘) is the word Discover taught, never a second item of it (§4.2).
+      rounds.forEach((round, ri) => {
+        const rid = key(round, ri);
+        arr(round.panels).filter(isRec).forEach((panel, pi) => {
+          c.text(panel.caption, 'loose', 'round', `${at}.rounds[${ri}].panels[${pi}]`, {
+            glossKey: k(`storyOrder.rounds.${rid}.panels.${key(panel, pi)}.caption.gloss`),
+            picture: pictureOf(panel),
+          });
+        });
+      });
+      return;
     default:
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);

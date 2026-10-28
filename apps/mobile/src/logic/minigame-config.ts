@@ -8,6 +8,7 @@ import type {
   Realia,
   RealiaReadRound,
   StoryLevel,
+  StoryOrderRound,
   TraceWordRound,
   TypeHangulRound,
   WriteFrameRound,
@@ -67,6 +68,8 @@ export interface MinigameScope {
   writeFrame?: { rounds: WriteFrameRound[] };
   /** Cloze Pick (F-CURR-002 row CM-30): its rounds, and the card a value gap is read from. */
   clozePick?: { rounds: ClozePickRound[]; realia?: Realia };
+  /** Story Order (F-CURR-002 row CM-34): its rounds as authored, panels in the right order. */
+  storyOrder?: { rounds: StoryOrderRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

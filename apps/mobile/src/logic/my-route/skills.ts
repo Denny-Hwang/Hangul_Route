@@ -43,6 +43,9 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   'write-frame': ['write'],
   // F-CURR-002 row CM-30: Cloze Pick reads a sentence and picks the piece that completes it.
   'cloze-pick': ['read'],
+  // F-CURR-002 row CM-34: none while it merges dark (built-in pct 0), as its fallback Story Sequence, so the sheet
+  // never names a game the learner does not see; the row that ramps `game.story-order` maps it to read and names it.
+  'story-order': [],
 };
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);

@@ -10,6 +10,7 @@ import {
   PicWordRoundSchema,
   RealiaReadRoundSchema,
   RealiaSchema,
+  StoryOrderRoundSchema,
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
@@ -96,6 +97,16 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
     kind: z.literal('cloze-pick'),
     rounds: z.array(ClozePickRoundSchema).min(1).max(6),
     realia: RealiaSchema.optional(),
+  }),
+  /** Story Order (F-CURR-002 §7.1 F5, row CM-34): 1 or 2 rounds a step, each with its own id. */
+  z.object({
+    ref: ScopeRefSchema,
+    kind: z.literal('story-order'),
+    rounds: z
+      .array(StoryOrderRoundSchema)
+      .min(1)
+      .max(2)
+      .refine((rounds) => new Set(rounds.map((r) => r.id)).size === rounds.length, 'round ids must be unique'),
   }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
