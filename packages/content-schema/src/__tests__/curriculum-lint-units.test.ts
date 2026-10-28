@@ -8,6 +8,7 @@ import {
   freqCoverage,
   hasSoundChange,
   isReadMeaningRound,
+  readPickRoundIssues,
   koStrings,
   lessonBodies,
   lintCurriculum,
@@ -362,6 +363,25 @@ describe('lintCurriculum edge cases', () => {
     expect(check('listen-pick', { rounds: [{ options: [{ id: 'a', text: kt('하늘') }], answerId: 'a' }] })).toHaveLength(1);
     expect(check('listen-pick', {})).toHaveLength(1);
     expect(check('story-sequence', { lines: [{ id: 'a', speakerEn: 'Hoya', line: kt('안녕') }] })).toHaveLength(1);
+  });
+
+  it('holds a Read Pick Meaning round to its shape: meanings only, not a spelling round, and a scope all read or all heard (row CM-3A S2)', () => {
+    const read = (options: Json[], extra: Json = {}) => ({ id: 'r', promptShown: true, prompt: kt('하늘'), options, answerId: 'a', ...extra });
+    const pics = [{ id: 'a', pictureRef: 'word:nature-sky', labelEn: 'sky' }, { id: 'b', pictureRef: 'card:sea', labelEn: 'sea' }];
+    expect(readPickRoundIssues([read(pics), read(pics)])).toEqual([]);
+    expect(readPickRoundIssues([{ id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }])).toEqual([]);
+    expect(readPickRoundIssues([read([{ id: 'a', text: kt('하늘') }, ...pics])]).map((i) => i.path)).toEqual(['options']);
+    expect(readPickRoundIssues([read(pics, { promptKind: 'spelling' })]).map((i) => i.path)).toEqual(['promptKind']);
+    expect(readPickRoundIssues([read(pics), { id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }])).toEqual([
+      { round: 1, path: 'promptShown', message: "a Listen & Pick scope's rounds are all Read Pick Meaning (promptShown: true) or all heard" },
+    ]);
+    expect(readPickRoundIssues(['x', read(pics)]).map((i) => i.round)).toEqual([0]);
+    // The lint reports it on the round, for Volume 1 (a warning) and Volume 2 (an error) alike.
+    const mixed = { ref: 'm:c', kind: 'listen-pick', rounds: [read(pics), { id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }] };
+    const v2 = body('episode:stage2-nature-v2', 2, [q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [mixed])], { volume: 2 });
+    expect(rows(lint({ 'content/episodes/stage-2/nature.v2.json': v2 }), 'lesson-check-variety')).toContain(
+      'lesson-check-variety error content/episodes/stage-2/nature.v2.json quests[0].scopes[0].rounds[1].promptShown',
+    );
   });
 
   it('caps a game kind at 40 in 100 of the Checks of a stage across its files', () => {
