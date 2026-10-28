@@ -151,6 +151,8 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(checkKindsFor('stage4')).toEqual(['listen-pick', 'tap-respond', 'cloze-pick', 'order-it']);
     // Row CM-3A S7: the Stage 7 Check rotation (F-CURR-002 section 7.1): Write Frame, Cloze Pick and Sentence Builder.
     expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it', 'write-frame', 'cloze-pick']);
+    // Row CM-3A S6: a Stage 6 Check is a realia question (Realia Read, Cloze Pick on a value) or Dictation.
+    expect(checkKindsFor('stage6')).toEqual(['listen-pick', 'realia-read', 'cloze-pick', 'type-hangul']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');

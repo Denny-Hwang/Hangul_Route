@@ -134,7 +134,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-life-q1-check",
           "durationSeconds": 40
         },
@@ -378,65 +378,131 @@
         },
         {
           "ref": "minigame:s6-life-q1-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:order-food-menu",
+            "kind": "menu",
+            "title": {
+              "ko": "메뉴",
+              "romanization": "menyu",
+              "en": "menu"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice roll"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "tteokbokki",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "milk",
+                "text": {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                }
+              }
+            ],
+            "altEn": "A small menu on a table: gimbap, instant noodles, spicy rice cakes and milk, each with its price."
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "김밥 주세요.",
-                "romanization": "gimbap juseyo",
-                "en": "Gimbap, please."
-              },
+              "questionEn": "Which dish on the menu is instant noodles?",
               "options": [
                 {
                   "id": "a",
-                  "pictureRef": "card:kimbap"
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "seaweed rice roll"
+                  }
                 },
                 {
                   "id": "b",
-                  "pictureRef": "word:food-ramyeon"
+                  "text": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
                 },
                 {
                   "id": "c",
-                  "pictureRef": "word:food-milk"
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "ramyeon"
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "라면 주세요.",
-                "romanization": "ramyeon juseyo",
-                "en": "Instant noodles, please."
+              "questionEn": "Find this on the menu. Which picture shows it?",
+              "key": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
               },
               "options": [
                 {
                   "id": "a",
-                  "text": {
-                    "ko": "우유 주세요.",
-                    "romanization": "uyu juseyo",
-                    "en": "Milk, please."
-                  }
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "noodles"
                 },
                 {
                   "id": "b",
-                  "text": {
-                    "ko": "라면 주세요.",
-                    "romanization": "ramyeon juseyo",
-                    "en": "Instant noodles, please."
-                  }
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
                 },
                 {
                   "id": "c",
-                  "text": {
-                    "ko": "김밥 주세요.",
-                    "romanization": "gimbap juseyo",
-                    "en": "Gimbap, please."
-                  }
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "gimbap"
                 }
               ],
-              "answerId": "b"
+              "answerId": "b",
+              "answerEntryId": "milk"
             }
           ]
         }
@@ -578,7 +644,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s6-life-q2-check",
           "durationSeconds": 40
         },
@@ -655,7 +721,8 @@
                 }
               }
             ],
-            "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg."
+            "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg.",
+            "kind": "menu"
           },
           "rounds": [
             {
@@ -955,79 +1022,127 @@
         },
         {
           "ref": "minigame:s6-life-q2-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "라면 두 개 주세요.",
-                "romanization": "ramyeon du gae juseyo",
-                "en": "Two instant noodles, please."
+              "sentence": {
+                "ko": "김밥 ___ 주세요.",
+                "romanization": "gimbap ___ juseyo",
+                "en": "Seaweed rice roll: ___, please."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "라면 두 개 주세요.",
-                    "romanization": "ramyeon du gae juseyo",
-                    "en": "Two instant noodles, please."
-                  }
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two (things)"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "라면 세 개 주세요.",
-                    "romanization": "ramyeon se gae juseyo",
-                    "en": "Three instant noodles, please."
-                  }
+                  "ko": "하나",
+                  "romanization": "hana",
+                  "en": "one"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "우유 두 개 주세요.",
-                    "romanization": "uyu du gae juseyo",
-                    "en": "Two milks, please."
-                  }
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three (things)"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "우유 세 개 주세요.",
-                "romanization": "uyu se gae juseyo",
-                "en": "Three milks, please."
+              "sentence": {
+                "ko": "___ 세 개 주세요.",
+                "romanization": "___ se gae juseyo",
+                "en": "___: three, please."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "우유 한 개 주세요.",
-                    "romanization": "uyu han gae juseyo",
-                    "en": "One milk, please."
-                  }
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "달걀 세 개 주세요.",
-                    "romanization": "dalgyal se gae juseyo",
-                    "en": "Three eggs, please."
-                  }
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "우유 세 개 주세요.",
-                    "romanization": "uyu se gae juseyo",
-                    "en": "Three milks, please."
-                  }
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
                 }
               ],
-              "answerId": "c"
+              "answerIndex": 2
             }
-          ]
+          ],
+          "realia": {
+            "ref": "realia:order-food-slip",
+            "title": {
+              "ko": "주문",
+              "romanization": "jumun",
+              "en": "order"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice roll"
+                },
+                "value": {
+                  "ko": "하나",
+                  "romanization": "hana",
+                  "en": "one"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two (things)"
+                }
+              },
+              {
+                "id": "milk",
+                "text": {
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
+                },
+                "value": {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three (things)"
+                }
+              },
+              {
+                "id": "egg",
+                "text": {
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
+                }
+              }
+            ],
+            "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg.",
+            "kind": "menu"
+          }
         }
       ]
     },
@@ -1196,7 +1311,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s6-life-q3-check",
           "durationSeconds": 40
         },
@@ -1599,77 +1714,27 @@
         },
         {
           "ref": "minigame:s6-life-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "얼마예요?",
-                "romanization": "eolmayeyo",
-                "en": "How much is it?"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "삼천 원이에요.",
-                    "romanization": "samcheon wonieyo",
-                    "en": "It is 3,000 won."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "잘 먹겠습니다.",
-                    "romanization": "jal meokgetseumnida",
-                    "en": "I will eat well. (said before eating)"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "라면 주세요.",
-                    "romanization": "ramyeon juseyo",
-                    "en": "Instant noodles, please."
-                  }
-                }
-              ],
-              "answerId": "a"
+              "promptEn": "Type the price you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "삼천 원",
+                "romanization": "samcheon won",
+                "en": "3,000 won"
+              }
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "이천 원이에요.",
-                "romanization": "icheon wonieyo",
-                "en": "It is 2,000 won."
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "삼천 원",
-                    "romanization": "samcheon won",
-                    "en": "3,000 won"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "천 원",
-                    "romanization": "cheon won",
-                    "en": "1,000 won"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "이천 원",
-                    "romanization": "icheon won",
-                    "en": "2,000 won"
-                  }
-                }
-              ],
-              "answerId": "c"
+              "promptEn": "Type the price you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "천 원",
+                "romanization": "cheon won",
+                "en": "1,000 won"
+              }
             }
           ]
         }
@@ -1804,10 +1869,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied Discover exchanges for the server lines (뭐 드릴까요?, 라면 하나요?, 삼천 원이에요, 맛있게 드세요), offers without -도, taught 잘 가요 for the 안녕히 가세요 distractor, counter notes in the right direction, 'One bowl of instant noodles?', 네, 얼마예요?; kept the q3 Check reply round.",
-      "Culture pass 5 (MAR): all sources re-fetched (verification line 3); n4 reworded to what the dictionary says; 잘 먹겠습니다 modelled as one option some people use; milk kept on the drawn menu; no real person, shop, brand or price; no all-Koreans claim; no age wording."
+      "Culture pass 5 (MAR): all sources re-fetched (verification line 3); n4 reworded to what the dictionary says; 잘 먹겠습니다 modelled as one option some people use; milk kept on the drawn menu; no real person, shop, brand or price; no all-Koreans claim; no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Realia Read (menu), q2 Cloze Pick (order slip), q3 Dictation of 삼천 원 and 천 원.",
+      "CM-3A S6 language: 김밥 하나 주세요 and 우유 세 개 주세요 are the counted orders the cell teaches. Learning design: q2 c1 asks the one slip line Practice did not (김밥 하나); c2 reads the other way, from 세 개 to the food on that line, which Practice never asked.",
+      "CM-3A S6 culture and facts: a drawn generic slip, no shop, brand or real price. Reviser: the en and es meanings give no count or food away by grammar (Seaweed rice roll: ___, please.). Third pass: no change."
     ]
   },
   "contentVer": 1

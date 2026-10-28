@@ -147,7 +147,7 @@ export function scopeRoundCount(scope: LessonScope): number {
  * goes with a value gap (it would be read for nothing); the card's entry ids are unique; a value gap's answer is
  * written on the card as a whole value (an entry's text or value), so a round never shows 5,000 won and accepts 3,000,
  * nor shows 15,000 won and accepts 5,000; and a tile that is another value of the card needs a sentence that names
- * the line it asks.
+ * the line it asks (or, when the gap is the line's name, a sentence that states its value and none of the tile's).
  */
 export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick' }>): Array<{ path: (string | number)[]; message: string }> {
   const { realia, rounds } = scope;
@@ -171,8 +171,13 @@ export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick'
     }
     // Another value of the card as a tile is right too, unless the sentence names the line it asks (The apples are ___ won).
     const namesItsLine = named.some((e) => r.sentence.ko.includes(e.text.ko));
+    // The other direction (row CM-3A S6): the gap is a line's name and the sentence states its value (___ is 5,000
+    // won). Another line's name as a tile is then wrong only if the sentence states none of that line's values.
+    const states = (e: { value?: { ko: string } }): boolean => !!e.value?.ko && r.sentence.ko.includes(e.value.ko);
+    const statesItsValue = named.some(states);
     r.tiles.forEach((tile, t) => {
       if (t === r.answerIndex || namesItsLine || entriesOf(tile.ko).length === 0) return;
+      if (statesItsValue && !entriesOf(tile.ko).some(states)) return;
       out.push({ path: ['rounds', i, 'tiles', t], message: `a value gap tile "${tile.ko}" is also on the realia card: the sentence names the line it asks` });
     });
   });

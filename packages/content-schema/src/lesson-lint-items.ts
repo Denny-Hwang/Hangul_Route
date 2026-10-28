@@ -198,6 +198,8 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   if (isClozeRound(record)) return clozeAsked(record, out);
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
+    // A Role Play scene's title and partner name the place and the role (row CM-35); the chat asks its lines.
+    if ((key === 'title' || key === 'partner') && Array.isArray(record.nodes)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
       askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
     } else if (key === 'scene' && typeof child === 'object' && child !== null) {

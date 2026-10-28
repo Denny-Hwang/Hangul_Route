@@ -2551,7 +2551,8 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    expect(typeSlides).toBe(73 * 3);
+    // 73 shipped type-hangul rounds, and the 8 of the four Stage 6 Dictation Checks (row CM-3A S6), in three languages.
+    expect(typeSlides).toBe(81 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

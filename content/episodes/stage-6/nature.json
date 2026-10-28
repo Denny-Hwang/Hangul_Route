@@ -98,7 +98,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-nature-q1-check",
           "durationSeconds": 40
         },
@@ -346,15 +346,68 @@
         },
         {
           "ref": "minigame:s6-nature-q1-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:hike-trail-sign",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "river",
+                "text": {
+                  "ko": "강",
+                  "romanization": "gang",
+                  "en": "river"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "entrance",
+                "text": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              }
+            ],
+            "altEn": "A trail sign on a post: boards to the summit and the river point right; the entrance, exit and restroom point left"
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "정상",
-                "romanization": "jeongsang",
-                "en": "summit"
-              },
+              "questionEn": "Which board shows the way to the river?",
               "options": [
                 {
                   "id": "a",
@@ -367,56 +420,54 @@
                 {
                   "id": "b",
                   "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "river"
+            },
+            {
+              "id": "c2",
+              "questionEn": "Which board shows the way out?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
                     "ko": "입구",
                     "romanization": "ipgu",
                     "en": "entrance"
                   }
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "출구",
-                    "romanization": "chulgu",
-                    "en": "exit"
-                  }
-                }
-              ],
-              "answerId": "a"
-            },
-            {
-              "id": "c2",
-              "prompt": {
-                "ko": "출구",
-                "romanization": "chulgu",
-                "en": "exit"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "출구",
-                    "romanization": "chulgu",
-                    "en": "exit"
-                  }
-                },
-                {
                   "id": "b",
                   "text": {
-                    "ko": "산길",
-                    "romanization": "sangil",
-                    "en": "mountain trail"
+                    "ko": "화장실",
+                    "romanization": "hwajangsil",
+                    "en": "restroom"
                   }
                 },
                 {
                   "id": "c",
                   "text": {
-                    "ko": "강",
-                    "romanization": "gang",
-                    "en": "river"
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
                   }
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "exit"
             }
           ]
         }
@@ -543,7 +594,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s6-nature-q2-check",
           "durationSeconds": 40
         },
@@ -885,77 +936,27 @@
         },
         {
           "ref": "minigame:s6-nature-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "정상이 어디예요?",
-                "romanization": "jeongsangi eodiyeyo",
-                "en": "Where is the summit?"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "오른쪽으로 가세요.",
-                    "romanization": "oreunjjogeuro gaseyo",
-                    "en": "Go to the right, please."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "감사합니다.",
-                    "romanization": "gamsahamnida",
-                    "en": "Thank you."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "잘 가요!",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye!"
-                  }
-                }
-              ],
-              "answerId": "a"
-            },
-            {
-              "id": "c2",
-              "prompt": {
+              "promptEn": "Type the direction you hear.",
+              "mode": "hear",
+              "target": {
                 "ko": "왼쪽",
                 "romanization": "oenjjok",
                 "en": "left"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "왼쪽",
-                    "romanization": "oenjjok",
-                    "en": "left"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "오른쪽",
-                    "romanization": "oreunjjok",
-                    "en": "right"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "정상",
-                    "romanization": "jeongsang",
-                    "en": "summit"
-                  }
-                }
-              ],
-              "answerId": "a"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the direction you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "오른쪽",
+                "romanization": "oreunjjok",
+                "en": "right"
+              }
             }
           ]
         }
@@ -1058,7 +1059,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-nature-q3-check",
           "durationSeconds": 40
         },
@@ -1319,65 +1320,94 @@
         },
         {
           "ref": "minigame:s6-nature-q3-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:hike-time-sign",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "value": {
+                  "ko": "두 시간",
+                  "romanization": "du sigan",
+                  "en": "two hours"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "river",
+                "text": {
+                  "ko": "강",
+                  "romanization": "gang",
+                  "en": "river"
+                },
+                "value": {
+                  "ko": "세 시간",
+                  "romanization": "se sigan",
+                  "en": "three hours"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "value": {
+                  "ko": "한 시간",
+                  "romanization": "han sigan",
+                  "en": "one hour"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              }
+            ],
+            "altEn": "A trail sign with times: summit two hours and river three hours to the right; exit one hour and the restroom to the left"
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "얼마나 걸려요?",
-                "romanization": "eolmana geollyeoyo",
-                "en": "How long does it take?"
+              "questionEn": "How long does it take to the river?",
+              "key": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
               },
               "options": [
                 {
                   "id": "a",
-                  "text": {
-                    "ko": "한 시간 걸려요.",
-                    "romanization": "han sigan geollyeoyo",
-                    "en": "It takes one hour."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "오른쪽으로 가세요.",
-                    "romanization": "oreunjjogeuro gaseyo",
-                    "en": "Go to the right, please."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "감사합니다.",
-                    "romanization": "gamsahamnida",
-                    "en": "Thank you."
-                  }
-                }
-              ],
-              "answerId": "a"
-            },
-            {
-              "id": "c2",
-              "prompt": {
-                "ko": "두 시간",
-                "romanization": "du sigan",
-                "en": "two hours"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "두 시간",
-                    "romanization": "du sigan",
-                    "en": "two hours"
-                  }
-                },
-                {
-                  "id": "b",
                   "text": {
                     "ko": "한 시간",
                     "romanization": "han sigan",
                     "en": "one hour"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "두 시간",
+                    "romanization": "du sigan",
+                    "en": "two hours"
                   }
                 },
                 {
@@ -1389,7 +1419,40 @@
                   }
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "river"
+            },
+            {
+              "id": "c2",
+              "questionEn": "Which place is one hour away?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "exit"
             }
           ]
         }
@@ -1524,10 +1587,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): spelling, spacing, register and 26 romanizations clean; applied: q1 r2 loses the 입구 distractor, q1 r3 asks by situation, ko q3 typing prompts and 시간 gloss told apart, ko t4 prompt no echo, han/du/se as the forms before 시간 (no 줄인 말), 산길 and 볼일 glosses, main's titles and glosses, es tú; kept Hangul hours on the time sign (decoding).",
-      "Culture pass 5 (MAR): eleven sources re-read, n1-n4 pass (n4 wording fixed); applied: no 'real trail sign' claim, q1 Discover captions make no unsourced claim about real signs, q2 ends on asking for the entrance, not 잘 가요 to an adult stranger; no stereotype, 'all Koreans' claim, real person, shop, brand, price or real sign; suits any age."
+      "Culture pass 5 (MAR): eleven sources re-read, n1-n4 pass (n4 wording fixed); applied: no 'real trail sign' claim, q1 Discover captions make no unsourced claim about real signs, q2 ends on asking for the entrance, not 잘 가요 to an adult stranger; no stereotype, 'all Koreans' claim, real person, shop, brand, price or real sign; suits any age.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 and q3 Realia Read (trail signs), q2 Dictation of 왼쪽 and 오른쪽 (no sound change, one spelling each).",
+      "CM-3A S6 learning design: q1 c1 asks the one board Practice leaves (강); c2 (출구) repeats a Practice board, as Practice asks the other four and the art set has no picture for a reverse round. q3 asks each line the other way from Practice.",
+      "CM-3A S6 reviser: the en prompt is Type the direction you hear. (es dirección, ko 방향); ko prompts say 써 봐요. Third pass: no change."
     ]
   },
   "contentVer": 1

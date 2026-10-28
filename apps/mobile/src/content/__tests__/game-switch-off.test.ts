@@ -13,8 +13,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * `game.<kind>` switch renders its fallback round of a shipped kind when the switch is off (section 7.1), so no switch
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
- * shipped game. (Row CM-3A S7 ships the first Cloze Pick steps, five Stage 7 Checks; the fixture keeps the check
- * from depending on them, and the e2e answers a fallback round of the fixture step.)
+ * shipped game. (Rows CM-3A S6 and S7 ship the first Cloze Pick steps, in Stage 6 and Stage 7 Checks; the fixture
+ * keeps the check from depending on them, still checks every gap kind, and the e2e answers a fallback round of the
+ * fixture step.)
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */
@@ -64,5 +65,18 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     const broken = clozeFixtureScope(['word']);
     broken.clozePick!.rounds[0] = { ...broken.clozePick!.rounds[0]!, answerIndex: 7 };
     expect(fallbackProblems(broken, 'fixture')).toEqual(['fixture: nothing to play with the switch off']);
+  });
+
+  it('the shipped quests play Cloze Pick, so the check above is not empty (row CM-3A S6)', () => {
+    const shipped = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick');
+    expect(shipped.length).toBeGreaterThan(0);
+    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3).
+    expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-')).map(({ questId }) => questId).sort()).toEqual([
+      'quest:stage6-crafts-q1',
+      'quest:stage6-crafts-q3',
+      'quest:stage6-letters-q2',
+      'quest:stage6-life-q2',
+      'quest:stage6-rites-q2',
+    ]);
   });
 });

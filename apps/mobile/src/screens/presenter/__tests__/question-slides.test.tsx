@@ -181,6 +181,25 @@ describe('QuestionSlide: reply (LV-S2)', () => {
 
 describe('RealiaQuestionSlide (LV-S2, V7)', () => {
   const realia = stage6.filter((s): s is RealiaQuestionBody => isRealiaQuestion(s));
+
+  it('a Cloze Pick value gap keys its question by its sentence, which wraps inside the key row (row CM-3A S6)', async () => {
+    // A Stage 6 Cloze Pick Check (김밥은 ___ 원이에요.), beside its menu.
+    const sentence = realia.find((s) => s.prompt.key?.ko.includes('___'))!;
+    expect(sentence).toBeDefined();
+    const r = await render(inView(<RealiaQuestionSlide slide={sentence} shown={QUESTION} romanization="always" />));
+    const chip = byTestId(r.root, 'presenter-realia-key')[0]!;
+    const style = Object.assign({}, ...[chip.props.style].flat()) as Record<string, unknown>;
+    expect(style).toMatchObject({ flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1 });
+    expect(screenTexts(chip)).toEqual(expect.arrayContaining([sentence.prompt.key!.ko, sentence.prompt.key!.romanization]));
+    // A screen reader says the gap as a word, in the chip and in the question ("The fan is blank won."), never "underscore".
+    const blank = en.a11y.minigame.clozePick.blank;
+    expect(chip.props['aria-label']).not.toContain('___');
+    expect(chip.props['aria-label']).toContain(blank);
+    const question = byTestId(r.root, 'presenter-quiz-question')[0]!;
+    expect(sentence.prompt.text).toContain('___');
+    expect(question.props['aria-label']).not.toContain('___');
+    expect(question.props['aria-label']).toContain(blank);
+  });
   const withKey = realia.find((s) => s.prompt.key !== undefined && s.prompt.answerEntryId !== undefined && s.options.every((o) => o.ko !== undefined))!;
 
   it('the sheet stays beside the question; the key word and the lead line; the found line and the mark only at the answer build', async () => {

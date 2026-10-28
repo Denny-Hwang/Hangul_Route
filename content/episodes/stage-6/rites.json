@@ -101,7 +101,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-rites-q1-check",
           "durationSeconds": 40
         },
@@ -362,14 +362,61 @@
         },
         {
           "ref": "minigame:s6-rites-q1-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-q1-ticket",
+            "kind": "ticket",
+            "title": {
+              "ko": "기차표",
+              "romanization": "gichapyo",
+              "en": "train ticket"
+            },
+            "entries": [
+              {
+                "id": "train",
+                "text": {
+                  "ko": "기차",
+                  "romanization": "gicha",
+                  "en": "train"
+                }
+              },
+              {
+                "id": "dep",
+                "text": {
+                  "ko": "출발",
+                  "romanization": "chulbal",
+                  "en": "departure"
+                },
+                "value": {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                }
+              },
+              {
+                "id": "arr",
+                "text": {
+                  "ko": "도착",
+                  "romanization": "dochak",
+                  "en": "arrival"
+                },
+                "value": {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan (a city)"
+                }
+              }
+            ],
+            "altEn": "A train ticket: the train leaves from Seoul and arrives in Busan"
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "출발",
-                "romanization": "chulbal",
-                "en": "departure"
+              "questionEn": "Which word goes with this city on the ticket?",
+              "key": {
+                "ko": "서울",
+                "romanization": "Seoul",
+                "en": "Seoul (a city)"
               },
               "options": [
                 {
@@ -397,33 +444,45 @@
                   }
                 }
               ],
-              "answerId": "b"
+              "answerId": "b",
+              "answerEntryId": "dep"
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "기차",
-                "romanization": "gicha",
-                "en": "train"
+              "questionEn": "Which word goes with this city on the ticket?",
+              "key": {
+                "ko": "부산",
+                "romanization": "Busan",
+                "en": "Busan (a city)"
               },
               "options": [
                 {
                   "id": "a",
-                  "pictureRef": "word:travel-train",
-                  "labelEn": "train"
+                  "text": {
+                    "ko": "출발",
+                    "romanization": "chulbal",
+                    "en": "departure"
+                  }
                 },
                 {
                   "id": "b",
-                  "pictureRef": "word:travel-airplane",
-                  "labelEn": "airplane"
+                  "text": {
+                    "ko": "기차",
+                    "romanization": "gicha",
+                    "en": "train"
+                  }
                 },
                 {
                   "id": "c",
-                  "pictureRef": "word:travel-bus",
-                  "labelEn": "bus"
+                  "text": {
+                    "ko": "도착",
+                    "romanization": "dochak",
+                    "en": "arrival"
+                  }
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "arr"
             }
           ]
         }
@@ -538,7 +597,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s6-rites-q2-check",
           "durationSeconds": 40
         },
@@ -602,7 +661,8 @@
                 }
               }
             ],
-            "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time"
+            "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time",
+            "kind": "ticket"
           },
           "rounds": [
             {
@@ -815,79 +875,114 @@
         },
         {
           "ref": "minigame:s6-rites-q2-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "세 시",
-                "romanization": "se si",
-                "en": "three o'clock"
+              "sentence": {
+                "ko": "부산 기차는 ___ 분이에요.",
+                "romanization": "busan gichaneun ___ bunieyo",
+                "en": "The train to Busan is at ___."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "두 시",
-                    "romanization": "du si",
-                    "en": "two o'clock"
-                  }
+                  "ko": "네 시 이십",
+                  "romanization": "ne si isip",
+                  "en": "4:20"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "네 시",
-                    "romanization": "ne si",
-                    "en": "four o'clock"
-                  }
+                  "ko": "세 시 이십",
+                  "romanization": "se si isip",
+                  "en": "3:20"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "세 시",
-                    "romanization": "se si",
-                    "en": "three o'clock"
-                  }
+                  "ko": "세 시 삼십",
+                  "romanization": "se si samsip",
+                  "en": "3:30"
                 }
               ],
-              "answerId": "c"
+              "answerIndex": 2
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "삼십 분",
-                "romanization": "samsip bun",
-                "en": "thirty minutes"
+              "sentence": {
+                "ko": "___ 기차는 네 시 이십 분이에요.",
+                "romanization": "___ gichaneun ne si isip bunieyo",
+                "en": "The train to ___ is at 4:20."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "삼십 분",
-                    "romanization": "samsip bun",
-                    "en": "thirty minutes"
-                  }
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "사십 분",
-                    "romanization": "sasip bun",
-                    "en": "forty minutes"
-                  }
+                  "ko": "대전",
+                  "romanization": "Daejeon",
+                  "en": "Daejeon"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "십 분",
-                    "romanization": "sip bun",
-                    "en": "ten minutes"
-                  }
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 0
             }
-          ]
+          ],
+          "realia": {
+            "ref": "realia:s6-rites-q2-board",
+            "title": {
+              "ko": "출발",
+              "romanization": "chulbal",
+              "en": "departure"
+            },
+            "entries": [
+              {
+                "id": "daejeon",
+                "text": {
+                  "ko": "대전",
+                  "romanization": "Daejeon",
+                  "en": "Daejeon (a city)"
+                },
+                "value": {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                }
+              },
+              {
+                "id": "busan",
+                "text": {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan (a city)"
+                },
+                "value": {
+                  "ko": "세 시 삼십 분",
+                  "romanization": "se si samsip bun",
+                  "en": "3:30"
+                }
+              },
+              {
+                "id": "daegu",
+                "text": {
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu (a city)"
+                },
+                "value": {
+                  "ko": "네 시 이십 분",
+                  "romanization": "ne si isip bun",
+                  "en": "4:20"
+                }
+              }
+            ],
+            "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time",
+            "kind": "ticket"
+          }
         }
       ]
     },
@@ -985,7 +1080,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s6-rites-q3-check",
           "durationSeconds": 40
         },
@@ -1062,7 +1157,8 @@
                 }
               }
             ],
-            "altEn": "Hoya's trip plan: the station at one, the train at two, the hometown at five, Grandma's home at six"
+            "altEn": "Hoya's trip plan: the station at one, the train at two, the hometown at five, Grandma's home at six",
+            "kind": "ticket"
           },
           "rounds": [
             {
@@ -1268,77 +1364,27 @@
         },
         {
           "ref": "minigame:s6-rites-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "고향",
-                "romanization": "gohyang",
-                "en": "hometown"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "기차역",
-                    "romanization": "gichayeok",
-                    "en": "train station"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "고향",
-                    "romanization": "gohyang",
-                    "en": "hometown"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "기차표",
-                    "romanization": "gichapyo",
-                    "en": "train ticket"
-                  }
-                }
-              ],
-              "answerId": "b"
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              }
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "할머니 댁",
-                "romanization": "halmeoni daek",
-                "en": "Grandma's home"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "할머니 댁",
-                    "romanization": "halmeoni daek",
-                    "en": "Grandma's home"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "고향",
-                    "romanization": "gohyang",
-                    "en": "hometown"
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "기차역",
-                    "romanization": "gichayeok",
-                    "en": "train station"
-                  }
-                }
-              ],
-              "answerId": "a"
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
+              }
             }
           ]
         }
@@ -1426,10 +1472,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing and RR clean; hour and minute number sets never mixed in one option set; applied: the board names Daegu not Seoul and is not called Hoya's train, 다섯 시 / 여섯 시 shown in Hangul in q3 Discover, a third city in q1 r1/r3, 'Hours use ...' wording, dictionary-based ko glosses for 출발 / 도착.",
-      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (passes: 3); n2's orthography locator corrected to the attached 두시 삼십분 오초; the drawn ticket is no longer called real or every ticket; 고향 glossed as where someone or their family comes from; 'many' and 'some' only, no rite, no real person, shop, brand or price, no age wording."
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (passes: 3); n2's orthography locator corrected to the attached 두시 삼십분 오초; the drawn ticket is no longer called real or every ticket; 고향 glossed as where someone or their family comes from; 'many' and 'some' only, no rite, no real person, shop, brand or price, no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Realia Read (ticket), q2 Cloze Pick (departure board), q3 Dictation of 출발 and 도착 (lines of the plan card; said as written, one spelling each).",
+      "CM-3A S6 language: 부산 기차는 세 시 삼십 분이에요 reads the whole time (Practice asked its hour and minutes apart); ___ 기차는 네 시 이십 분이에요 reads the board from the time to the city. Learning design: q3 Dictation no longer asks the words its Apply typed (고향, 기차역).",
+      "CM-3A S6 culture and facts: Busan the large south-east coastal city, Daegu the large south-east inland city, Daejeon near the middle (the cell's sources); the board is drawn and generic. Reviser: ko prompts say 써 봐요; es ends with a period. Third pass: no change."
     ]
   },
   "contentVer": 1
