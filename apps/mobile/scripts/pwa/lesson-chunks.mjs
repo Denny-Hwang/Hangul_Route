@@ -281,7 +281,8 @@ export const SCREEN_CHUNKS = Object.freeze([
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
   // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
-  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
   Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
   // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
