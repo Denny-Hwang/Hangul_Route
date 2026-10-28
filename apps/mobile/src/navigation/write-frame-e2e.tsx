@@ -23,8 +23,11 @@ import type { RootStackParamList } from './types';
 export interface WriteFrameE2eParams {
   /** Which fixture rounds to play, in order. */
   rounds: readonly WriteFrameFixture[];
-  /** `preview` plays as the All lessons preview does: the quest host, with the name round opening on the cast name. */
-  mode?: Extract<HostMode, 'quest' | 'preview'>;
+  /**
+   * `preview` plays as the All lessons preview does: the quest host, with the name round opening on the cast name.
+   * `check` plays as a Stage 7 Write Frame Check does (F-CURR-002 row CM-3A S7): the Check host, no Skip.
+   */
+  mode?: Extract<HostMode, 'quest' | 'preview' | 'check'>;
 }
 
 export interface WriteFrameE2eHandle {
@@ -74,7 +77,7 @@ export function WriteFrameE2eScreen({ route, navigation }: Props): ReactElement 
   }, [route.params]);
 
   const host: MinigameHost = {
-    mode: 'quest',
+    mode: route.params.mode === 'check' ? 'check' : 'quest',
     answer: (key, correct, meta) => {
       log.answers.push({ key: String(key), correct, ...(meta?.itemId === undefined ? {} : { itemId: meta.itemId }) });
     },

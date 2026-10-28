@@ -154,8 +154,8 @@
       "writeFrame.rounds.c1.slots.act.bank.geuryeoyo.gloss": "선으로 모양을 나타내요",
       "writeFrame.rounds.c2.frame.gloss": "맨 처음에 꺾어 겹치는 것: ___",
       "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "글씨를 쓰는 얇은 것",
-      "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "하늘을 나는 탈것 (종이로 만든 모양)",
-      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "줄기 끝에 피는 것 (종이로 만든 모양)"
+      "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "하늘을 나는 탈것 모양",
+      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "줄기 끝에 피는 것 모양"
     }
   }
 }

@@ -79,15 +79,16 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
     expect(built.items.map((i) => i.id).sort()).toEqual(Object.values(snapshot.ids).filter((id) => !snapshot.retired.includes(id)).sort());
   });
 
-  it('row CM-3A S7: the Stage 7 Check re-authoring keeps two ids by alias and retires the sentences it took out of every round', () => {
+  it('row CM-3A S7: the Stage 7 Check re-authoring retires the sentences it took out of every round, aliases none, and freezes its frames as new items', () => {
     const byId = new Map(built.items.map((i) => [i.id, i]));
-    // An edited Check sentence that became a Write Frame keeps its learner state under the frame's key.
-    const S7_ALIAS: Record<string, string> = {
-      'pat|이건 제 ___이에요/예요': 'pat:igeon-je-ireumieyo',
-      'pat|이건 한글 ___이에요/예요': 'pat:igeon-hangeul-geuljayeyo',
+    // One policy for the whole stage: a removed Check sentence is retired, never aliased onto a frame (a frame is a new item).
+    expect(snapshot.alias).toEqual({});
+    const S7_FRAMES: Record<string, string> = {
+      'pat|이건 호야 ___이에요/예요': 'pat:igeon-hoya-n-ieyo-yeyo',
+      'pat|이건 한글 ___이에요/예요': 'pat:igeon-hangeul-n-ieyo-yeyo',
     };
-    for (const [key, id] of Object.entries(S7_ALIAS)) {
-      expect(snapshot.alias[key], key).toBe(id);
+    for (const [key, id] of Object.entries(S7_FRAMES)) {
+      expect(snapshot.ids[key], key).toBe(id);
       expect(normalizeKo(byId.get(id)?.ko ?? ''), id).toBe(key.slice('pat|'.length));
       expect(byId.get(id)?.cells, id).toContain('episode:stage7-letters');
     }
@@ -95,6 +96,8 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
     const S7_RETIRED = [
       'pat:achime-dalgyareul-meogeoyo',
       'pat:horangiga-joayo',
+      'pat:igeon-hangeul-geuljayeyo',
+      'pat:igeon-je-ireumieyo',
       'pat:jega-joahaneun-dongmureun-saeyeyo',
       'pat:jeonyeoge-ppangeul-meogeoyo',
       'pat:seollare-tteokgugeul-meogeosseoyo',

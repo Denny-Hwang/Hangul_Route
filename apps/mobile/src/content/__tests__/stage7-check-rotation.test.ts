@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { CHECK_ROUNDS, LessonCellSchema, checkKindsFor, scopeRoundCount, type LessonCell, type LessonQuest, type LessonScope } from '@hangul-route/content-schema';
-import { PRODUCE_KINDS } from '@hangul-route/content-schema/lint';
+import { PRODUCE_KINDS, normalizeKo } from '@hangul-route/content-schema/lint';
 import { describe, expect, it } from 'vitest';
 import { clozeFallbackScope, validClozeRounds } from '../../logic/cloze-pick/round';
 import { validRounds } from '../../logic/listen-pick';
@@ -10,8 +10,10 @@ import { scopeFor } from '../../logic/minigame-config';
  * F-CURR-002 row CM-3A, part S7 (section 7.1 Check rotation, 6.6 risk notes, 9.3): the Stage 7 Volume 1 Checks
  * rotate over Write Frame (the default S7 Check), Cloze Pick and Sentence Builder, so no game holds more than 40% of
  * the stage's Checks; every Check asks the learner to produce; no two adjacent quests share a Practice, Apply and
- * Check triple; every word-bank frame offers a neutral option and never needs the learner's own family or feelings.
- * The lint over the same files (no finding of any rule) is `packages/content-schema` curriculum-lint.test.ts.
+ * Check triple; no Write Frame Check repeats a frame its own quest's Apply just played; every Write Frame Check is about
+ * Hoya or about things, never about the learner (the neutral option of the section 6.6 risk notes), and no frame or
+ * bank of the stage needs the learner's own family or feelings. The lint over the same files (no finding of any rule)
+ * is `packages/content-schema` curriculum-lint.test.ts.
  */
 
 const DIR = new URL('../../../../../content/episodes/stage-7/', import.meta.url);
@@ -50,6 +52,9 @@ const PERSONAL = new Set([
   '기분',
 ]);
 
+/** First-person owners and choosers: a Check frame with one would be about the learner (section 6.6 neutral option). */
+const FIRST_PERSON = new Set(['제', '제가', '저', '저는', '저도', '저의', '내', '내가', '나', '나는', '우리', '우리는']);
+
 describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
   it('reads the five Volume 1 cells, 15 quests', () => {
     expect(CELLS.map((c) => c.theme).sort()).toEqual(['crafts', 'letters', 'life', 'nature', 'rites']);
@@ -84,7 +89,7 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
     for (const quest of QUESTS) expect(quest.scopes.map((s) => s.kind), quest.id).not.toContain('my-story');
   });
 
-  it('every word-bank frame offers a neutral option in every slot, and no frame names the learner\'s own family or feelings (section 6.6)', () => {
+  it('no frame or bank of the stage names a family or feeling word, and every bank slot has an answer that is neither (section 6.6)', () => {
     let frames = 0;
     for (const quest of QUESTS) {
       for (const scope of quest.scopes) {
@@ -99,6 +104,41 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
       }
     }
     expect(frames).toBeGreaterThanOrEqual(20);
+  });
+
+  it('every Write Frame Check is about Hoya or about things, never the learner: no first-person owner or chooser, no "my" in a frame or bank, and a liking frame names Hoya (section 6.6 neutral option)', () => {
+    const checks = QUESTS.map((q) => scopeOfStep(q, 'check')!).filter((s) => s.kind === 'write-frame');
+    expect(checks).toHaveLength(5);
+    let liking = 0;
+    for (const scope of checks) {
+      for (const round of scope.rounds) {
+        const where = `${scope.ref} ${round.id}`;
+        const words = round.frame.ko.split(/[\s.,]+/).filter((w) => w !== '');
+        for (const word of words) expect(FIRST_PERSON.has(word), `${where}: ${word}`).toBe(false);
+        expect(round.frame.en, where).not.toMatch(/\b(my|me|mine)\b/i);
+        for (const slot of round.slots) for (const w of slot.bank) expect(w.en, `${where} ${w.ko}`).not.toMatch(/\b(my|me|mine)\b/i);
+        if (/좋아/.test(round.frame.ko)) {
+          liking += 1;
+          expect(words[0], where).toMatch(/^호야/);
+        }
+      }
+    }
+    expect(liking).toBe(2);
+  });
+
+  it("no Write Frame Check round repeats a frame its own quest's Apply played", () => {
+    let checked = 0;
+    for (const quest of QUESTS) {
+      const check = scopeOfStep(quest, 'check')!;
+      const apply = scopeOfStep(quest, 'apply');
+      if (check.kind !== 'write-frame' || apply?.kind !== 'write-frame') continue;
+      const played = new Set(apply.rounds.map((r) => normalizeKo(r.frame.ko)));
+      for (const round of check.rounds) {
+        checked += 1;
+        expect(played.has(normalizeKo(round.frame.ko)), `${check.ref} ${round.id}: ${round.frame.ko}`).toBe(false);
+      }
+    }
+    expect(checked).toBe(10);
   });
 
   it('the one free-entry round is the unscored name round of Write Your Name q3, never a Check', () => {
@@ -121,16 +161,26 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
   it('a Dictation round asks a word its cell showed on a Discover page before it, with its meaning', () => {
     let hear = 0;
     for (const cell of CELLS) {
+      // Whole words only: a word item's Korean, or a whole word of a sentence, frame or example (아침에 is not 아침).
       const discovered = new Set<string>();
+      const addWords = (ko: string): void => {
+        for (const w of normalizeKo(ko).split(' ')) discovered.add(normalizeKo(w));
+      };
       for (const quest of cell.quests) {
         for (const step of quest.steps) {
-          for (const page of step.discover?.pages ?? []) for (const item of page.items) discovered.add(JSON.stringify(item));
+          for (const page of step.discover?.pages ?? []) {
+            for (const item of page.items) {
+              if (item.type === 'word') discovered.add(normalizeKo(item.word.ko));
+              else if (item.type === 'sentence') addWords(item.sentence.ko);
+              else if (item.type === 'pattern') for (const ex of item.examples) addWords(ex.ko);
+            }
+          }
         }
         for (const scope of quest.scopes) {
           if (scope.kind !== 'type-hangul') continue;
           for (const round of scope.rounds.filter((r) => r.mode === 'hear')) {
             hear += 1;
-            expect([...discovered].some((item) => item.includes(`"${round.target.ko}`)), `${scope.ref} ${round.id}`).toBe(true);
+            expect(discovered.has(normalizeKo(round.target.ko)), `${scope.ref} ${round.id}: ${round.target.ko}`).toBe(true);
             expect(round.target.en.length, `${scope.ref} ${round.id}`).toBeGreaterThan(0);
           }
         }
