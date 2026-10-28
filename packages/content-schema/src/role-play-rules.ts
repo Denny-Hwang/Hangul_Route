@@ -13,7 +13,8 @@ import { ROLE_PLAY_TURNS_MAX, ROLE_PLAY_TURNS_MIN, RolePlaySceneSchema, isRolePl
  *                            option on every Tap to Respond fallback turn)
  *
  * and at most `ROLE_PLAY_PATHS_MAX` ways through a scene, so the multi-agent review reads every one (the wireframe's
- * cap of 4 leaves, counted as ways, so two branches that meet again count twice).
+ * cap of 4 leaves, counted as ways, so two branches that meet again count twice, and so do two natural replies of a
+ * turn that lead to the same line).
  */
 
 export const ROLE_PLAY_PATHS_MAX = 4;
@@ -50,7 +51,8 @@ export function rolePlayPaths(scene: SceneShape, limit = 64): string[][] {
     }
     const nexts = node.replies.flatMap((r) => (r.kind === 'natural' && r.next !== undefined ? [r.next] : []));
     if (nexts.length === 0) out.push(here);
-    for (const next of new Set(nexts)) walk(next, here);
+    // One way per natural reply: two replies that lead to the same line are two learner choices to review.
+    for (const next of nexts) walk(next, here);
   };
   walk(scene.start, []);
   return out;
@@ -84,7 +86,7 @@ export function rolePlayIssues(scene: SceneShape): RolePlayIssue[] {
   }
   const paths = rolePlayPaths(scene, ROLE_PLAY_PATHS_MAX + 1);
   const dead = paths.filter((p) => !isRolePlayEnd(byId.get(p[p.length - 1] as string)));
-  for (const p of dead) add('role-play-good-endings', ['nodes'], `the way ${p.join(' > ')} does not end at a closing line`);
+  for (const p of new Set(dead.map((d) => d.join(' > ')))) add('role-play-good-endings', ['nodes'], `the way ${p} does not end at a closing line`);
   if (dead.length > 0) return out;
   if (paths.length > ROLE_PLAY_PATHS_MAX) {
     add('lesson-schema', ['nodes'], `a scene has at most ${ROLE_PLAY_PATHS_MAX} ways through it, so every way can be reviewed`);

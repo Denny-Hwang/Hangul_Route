@@ -17,7 +17,7 @@ import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
-import { currFlagOn } from '../../store/remote-config-store';
+import { useFrozenCurrFlag } from '../../store/remote-config-store';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -82,9 +82,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const step = quest?.steps[stepIndex];
   const ref = step?.minigameRef;
   const locale = useLocale();
-  // `game.role-play` (F-CURR-002 section 12.2, row CM-35), read once as the step opens, so a config that arrives
-  // mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond on the same turns.
-  const [rolePlayOn] = useState(() => currFlagOn('game.role-play'));
+  // `game.role-play` (F-CURR-002 section 12.2, row CM-35), read once the stored copy is in and then kept for the step,
+  // so a config that arrives mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond
+  // on the same turns. A role-play step waits for that read (a cold start reads off before it, which would freeze off).
+  const rolePlayOn = useFrozenCurrFlag('game.role-play');
+  const waitsForSwitch = rolePlayOn === null && ref !== undefined && scopeFor(ref)?.kind === 'role-play';
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const localized = useMemo(() => {
@@ -92,7 +94,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     const localized = source && ref ? localizeScope(source, ref, locale) : source;
-    return localized && playedScope(localized, rolePlayOn);
+    return localized && playedScope(localized, rolePlayOn === true);
   }, [ref, locale, questId, stepIndex, rolePlayOn]);
   // The `game.<kind>` switches, decided as the step opens, and the dictation chunk when a round plays from it (row CM-31).
   const switched = useSwitchedScope(localized);
@@ -139,7 +141,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     </Screen>
   );
 
-  if (switched?.kind === 'loading') return <LessonWaiting />;
+  if (switched?.kind === 'loading' || waitsForSwitch) return <LessonWaiting />;
   if (!quest || !step || !scope) {
     return fallback(copy.notFound);
   }

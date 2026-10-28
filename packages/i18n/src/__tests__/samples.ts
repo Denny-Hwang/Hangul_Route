@@ -1013,4 +1013,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // The Korean line is passed in at run time; the samples stand in with romanization, as the other games' rows do.
   'a11y.minigame.rolePlay.partner': [['librarian', 'museun chaegeul chajayo?', 'museun chaegeul chajayo', 'What book are you looking for?']],
   'a11y.minigame.rolePlay.me': [['donghwachaegeul chajayo.', 'donghwachaegeul chajayo']],
+  // F-CURR-002 row CM-35, the lecture Role Play slide: the reply the class gave (its Korean with romanization, passed in at run time).
+  'a11y.presenter.rolePlayClass': [['annyeonghaseyo!, annyeonghaseyo']],
 };

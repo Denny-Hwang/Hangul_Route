@@ -299,6 +299,7 @@ export const a11y = {
     timerLeft: (t: string) => `Tiempo que queda: ${t}`,
     slot: 'espacio',
     tilePlaced: (word: string) => `Se colocó: ${word}`,
+    rolePlayClass: (line: string) => `La clase dijo: ${line}`,
   },
   /** [OA] Nombres accesibles del selector (OA-4a, 17.2). */
   who: {

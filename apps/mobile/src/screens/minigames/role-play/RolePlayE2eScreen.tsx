@@ -4,14 +4,15 @@ import type { ReactElement } from 'react';
 import { minigameFinishedEvent } from '../../../logic/minigame-finished';
 import { playedScope } from '../../../logic/role-play/fallback';
 import { addTelemetryListener, track, type TelemetryEvent } from '../../../platform/telemetry';
-import { currFlagOn } from '../../../store/remote-config-store';
+import { useFrozenCurrFlag } from '../../../store/remote-config-store';
+import { LessonWaiting } from '../../lesson-content';
 import type { MinigameHost } from '../host';
 import { TapRespondGame } from '../TapRespondGame';
 import { RolePlayGame } from './RolePlayGame';
 
 /**
  * The fixture build's Role Play host (row CM-35; `navigation/role-play-e2e.tsx` opens it). It decides `game.role-play`
- * as the quest screen does (read once as the step opens): on, the game; off, Tap to Respond on the same turns. It
+ * as the quest screen does (read once the stored copy is in, then kept): on, the game; off, Tap to Respond on the same turns. It
  * records what the quest host would receive and the telemetry sent, on `window.__hrRolePlayE2E`. Only the fixture
  * build registers its route; in a real build the code sits unused in the chunk.
  */
@@ -27,8 +28,8 @@ export interface RolePlayE2eScreenProps {
 }
 
 export function RolePlayE2eScreen({ route, navigation }: RolePlayE2eScreenProps): ReactElement {
-  const [on] = useState(() => currFlagOn('game.role-play'));
-  const scope = useMemo(() => playedScope({ kind: 'role-play', rounds: 0, rolePlay: { scene: route.params.scene } }, on), [route.params, on]);
+  const on = useFrozenCurrFlag('game.role-play');
+  const scope = useMemo(() => playedScope({ kind: 'role-play', rounds: 0, rolePlay: { scene: route.params.scene } }, on === true), [route.params, on]);
   const [log] = useState<Log>(() => ({ answers: [], completes: 0 }));
   useEffect(() => {
     const events: TelemetryEvent[] = [];
@@ -46,6 +47,7 @@ export function RolePlayE2eScreen({ route, navigation }: RolePlayE2eScreenProps)
     void track(minigameFinishedEvent(scope.kind, 'e2e-role-play', 0));
     navigation.goBack();
   };
+  if (on === null) return <LessonWaiting />;
   if (scope.kind === 'tap-respond') return <TapRespondGame key={route.key} scope={scope} onFinish={finish} />;
   const host: MinigameHost = {
     mode: 'quest',
