@@ -113,7 +113,7 @@ describe('what a round asked', () => {
 
   it('Story Order reads the line its slot asked for (row CM-34)', () => {
     const scope = { kind: 'story-order', storyOrder: { rounds: [{ id: 'r1', panels: [{ id: 'up', caption: ko('먼저 일어나요.') }] }] } } as unknown as MinigameScope;
-    expect(askedOfScope(scope, 'r1/up')).toEqual({ texts: [{ ko: '먼저 일어나요.', kind: 'pat' }], jamoIds: [], rung: 'read' });
+    expect(askedOfScope(scope, 'r1/up')).toEqual({ texts: [{ ko: '먼저 일어나요.' }], jamoIds: [], rung: 'read' });
     for (const id of ['r1/down', 'r2/up', 'r1', 'up']) expect(askedOfScope(scope, id), id).toBeUndefined();
     expect(askedOfScope({ kind: 'story-order' } as MinigameScope, 'r1/up')).toBeUndefined();
   });

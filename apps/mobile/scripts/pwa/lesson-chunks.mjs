@@ -113,6 +113,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
   // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
   // 2,388 B under the 4,760,000 B line of that main.
+  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
+  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
+  // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -276,10 +279,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
-  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/story-order-chunk.tsx`, reached only
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
-  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
-  Object.freeze({ name: 'story-order-chunk', marker: 'screen-chunk:story-order' }),
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
   // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
   // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
