@@ -82,7 +82,9 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
   it('row CM-3A S7: the Stage 7 Check re-authoring retires the sentences it took out of every round, aliases none, and freezes its frames as new items', () => {
     const byId = new Map(built.items.map((i) => [i.id, i]));
     // One policy for the whole stage: a removed Check sentence is retired, never aliased onto a frame (a frame is a new item).
-    expect(snapshot.alias).toEqual({});
+    // (Row CM-3A S4's aliases are Stage 4 items.)
+    const stage7Aliases = Object.entries(snapshot.alias).filter(([, id]) => byId.get(id)?.cells.some((c) => c.startsWith('episode:stage7')));
+    expect(stage7Aliases).toEqual([]);
     const S7_FRAMES: Record<string, string> = {
       'pat|이건 호야 ___이에요/예요': 'pat:igeon-hoya-n-ieyo-yeyo',
       'pat|이건 한글 ___이에요/예요': 'pat:igeon-hangeul-n-ieyo-yeyo',

@@ -32,16 +32,6 @@ export const CLOZE_SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFo
 /** What a surface may ask beyond the shipped formats: the section 7.1 formats whose `game.<kind>` is on. */
 export interface SurfaceGames {
   clozePick?: boolean;
-  /** Dictation with `game.type-hangul-hear` on (row CM-31). */
-  dictation?: boolean;
-}
-/** The name row CM-31 gave the same options. */
-export type SurfaceOptions = SurfaceGames;
-
-/** The formats a surface with these games on may ask. */
-function allowedFormats(games: SurfaceGames): ReadonlySet<ReviewFormat> {
-  const base = games.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS;
-  return games.dictation === true ? new Set<ReviewFormat>([...base, 'dictation']) : base;
 }
 
 /** At most this many options a pick round shows (2 x 2 at 320). */
@@ -55,8 +45,7 @@ const HAS_SLOT = /_/;
 /**
  * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
- * Read), which the item does not carry, so it is left to its own surfaces. `allowed` is the set of formats this
- * surface draws, or the games that are on (`SurfaceGames`), which give that set.
+ * Read), which the item does not carry, so it is left to its own surfaces.
  */
 /** What this surface draws beyond the shipped formats: Dictation with `game.type-hangul-hear` on (row CM-31). */
 export interface SurfaceOptions extends SurfaceGames {
@@ -77,8 +66,6 @@ export function surfaceFormats(
     // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
     if (f === 'dictation') return options.dictation === true && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
     if (!formats.has(f)) return false;
-    // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
-    if (f === 'dictation') return item.kind === 'lex' && !HAS_SLOT.test(item.ko);
     // A Cloze Pick round leaves out one word of a sentence, so its words and their romanization must line up.
     if (f === 'cloze-pick') return item.kind === 'pat' && clozeWords(item) !== null;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
@@ -94,8 +81,7 @@ const surfaceCaches = new Map<string, WeakMap<object, SurfaceIndex>>();
 
 /**
  * The item index with each item's formats cut to this surface's; an item left with none is not askable here. With
- * `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the engine falls back); with
- * `game.type-hangul-hear` off a word's produce rung is Type Hangul `see`.
+ * `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the engine falls back).
  */
 export function surfaceIndex(index: SurfaceIndex, options: SurfaceOptions = {}): SurfaceIndex {
   const key = `${options.clozePick === true ? 'c' : ''}${options.dictation === true ? 'd' : ''}`;

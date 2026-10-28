@@ -156,7 +156,15 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted === true),
+      useQuestRunStore.getState().answerRound(
+        roundKey,
+        correct,
+        inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId },
+        // F-CURR-002 section 4.3: Type Hangul's hint (Dictation's Show how it sounds, or a typed answer one letter off,
+        // row CM-31) is a hinted right answer whatever it scored; the other games' hints (Story Order's Show meanings,
+        // row CM-34; Role Play's, row CM-35) are help shown, so a wrong answer with one is still a plain miss.
+        meta?.hinted === true && (correct || scope.kind === 'type-hangul'),
+      ),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();

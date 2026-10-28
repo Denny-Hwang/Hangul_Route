@@ -72,7 +72,6 @@ export const OVERLAY_FIELDS = Object.freeze({
     "clozePick.rounds.<roundId>.sentence.gloss",
     "clozePick.rounds.<roundId>.tiles.<tile>.gloss",
     "clozePick.realia.alt",
-
     // F-CURR-002 row CM-34: a Story Order panel's caption gloss (Show meanings, the replay, the fallback's label).
     "storyOrder.rounds.<roundId>.panels.<panelId>.caption.gloss",
     // F-CURR-002 row CM-35: a Role Play scene.
