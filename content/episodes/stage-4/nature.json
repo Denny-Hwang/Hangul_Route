@@ -1041,10 +1041,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the Korea National Park Service page 우리나라 국립공원 says Jirisan was named the first national park in 1967, that 24 national parks are named today, and that 19 of them are mountain parks. 'Today' is as of the access date. English paraphrase.\nPass 1b (second source, 2026-10-23): the National Archives of Korea theme page on national parks says Jirisan was named Korea's first national park on 29 December 1967.\nPass 2 (fact check, 2026-10-23): page fetched again (it needs a browser user agent); 1967, 제 1호, 24개 and 산악형 19개 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the Korea National Park Service page 우리나라 국립공원 says Jirisan was named the first national park in 1967, that 24 national parks are named today, and that 19 of them are mountain parks. 'Today' is as of the access date. English paraphrase.\nPass 1b (second source, 2026-10-23): the National Archives of Korea theme page on national parks says Jirisan was named Korea's first national park on 29 December 1967.\nPass 2 (fact check, 2026-10-23): page fetched again (it needs a browser user agent); 1967, 제 1호, 24개 and 산악형 19개 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): Korea National Park Service 우리나라 국립공원 re-read: '현재 24개의 국립공원', Jirisan the first (1967), 19 of the 24 are mountain parks. Holds. es/ko checked."
       }
     },
     {
@@ -1068,10 +1068,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the same Korea National Park Service page calls the parks the public's place of rest (국민의 휴식처) and gives about 43 million visitors a year, counted for 2025. English paraphrase.\nPass 1b (second source, 2026-10-23): the ministry press release on korea.kr (24 February 2026) gives 43.31 million national park visitors in 2025.\nPass 2 (fact check, 2026-10-23): page fetched again; 휴식처 and 4천 3백만 명 (2025년 기준) found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the same Korea National Park Service page calls the parks the public's place of rest (국민의 휴식처) and gives about 43 million visitors a year, counted for 2025. English paraphrase.\nPass 1b (second source, 2026-10-23): the ministry press release on korea.kr (24 February 2026) gives 43.31 million national park visitors in 2025.\nPass 2 (fact check, 2026-10-23): page fetched again; 휴식처 and 4천 3백만 명 (2025년 기준) found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): KNPS page and the korea.kr release of the Ministry of Climate, Energy and Environment re-read: '2025년 4,331만 명'; 'about 43 million' holds. es/ko checked."
       }
     },
     {
@@ -1088,17 +1088,17 @@
         },
         {
           "title": "반달가슴곰 복원 20주년, ‘공존(共存): 사람과 자연의 동행’",
-          "publisher": "환경부 보도자료 — 대한민국 정책브리핑 (korea.kr)",
+          "publisher": "기후에너지환경부 (발표 당시 환경부) 보도자료 — 대한민국 정책브리핑 (korea.kr)",
           "url": "https://www.korea.kr/briefing/pressReleaseView.do?newsId=156657302",
           "accessed": "2026-10-23",
           "quoteOrLocator": "보도자료 제목 (2024.10.29, 환경부): ‘반달가슴곰 복원 20주년’, twenty years from the 2004 start the Korea National Park Service page gives"
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the Korea National Park Service page 반달가슴곰 says the bear, once found across the peninsula, is endangered, and that the restoration project began in Jirisan National Park in 2004. The causes the page lists are left out (child-safe tone). English paraphrase.\nPass 1b (second source, 2026-10-23): the Ministry of Environment press release on korea.kr (29 October 2024) marks 20 years of the bear restoration, which matches the 2004 start.\nPass 2 (fact check, 2026-10-23): page fetched again; 멸종위기 and 2004년 지리산국립공원에서 복원사업 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the Korea National Park Service page 반달가슴곰 says the bear, once found across the peninsula, is endangered, and that the restoration project began in Jirisan National Park in 2004. The causes the page lists are left out (child-safe tone). English paraphrase.\nPass 1b (second source, 2026-10-23): the Ministry of Environment press release on korea.kr (29 October 2024) marks 20 years of the bear restoration, which matches the 2004 start.\nPass 2 (fact check, 2026-10-23): page fetched again; 멸종위기 and 2004년 지리산국립공원에서 복원사업 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): KNPS 반달가슴곰 re-read: endangered, restoration begun in Jirisan National Park in 2004. Holds. The second source's publisher now names the ministry as on the access date (기후에너지환경부, then 환경부; reorganised October 2025). es/ko checked."
       }
     }
   ],
@@ -1110,7 +1110,8 @@
     "notes": [
       "Language and translation passes 4 and 6 (MAR, #637): no distractor borrows a sibling cell's Discover item; q2 asks only its own words; ko glosses are definitions with no echo (가겠다고 대답하는 말, 공원으로 간다는 대답); the q1 Story Sequence keeps speaker turns; es names no gendered friend; romanization follows checkRomanization.",
       "Culture pass 5 (MAR, #637): no culture claim and no sourced language note (culture: []), so no verification record; no real person, shop, brand or price; no age wording; the friend is never gendered in es.",
-      "CM-3C (F-CURR-002 §5.5 S4, 2026-10-23): culture notes n1-n3 added (Jirisan the first national park, 1967; 24 parks; visitors; the Asiatic black bear project), source Korea National Park Service, each with its own verification record."
+      "CM-3C (F-CURR-002 §5.5 S4, 2026-10-23): culture notes n1-n3 added (Jirisan the first national park, 1967; 24 parks; visitors; the Asiatic black bear project), source Korea National Park Service, each with its own verification record.",
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1

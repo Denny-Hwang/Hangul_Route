@@ -1006,10 +1006,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Folk Museum of Korea entry 반찬 (Hallyu culture dictionary, topic 11968) defines it as the foods eaten with rice and says that in a Korean restaurant several side dishes come with the one dish ordered. 'Often', not always. English paraphrase.\nPass 1b (second source, 2026-10-23): the Standard Korean Language Dictionary defines 반찬 as the general word for the food eaten with rice.\nPass 2 (fact check, 2026-10-23): entry fetched again; 정의 and the restaurant sentence found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Folk Museum of Korea entry 반찬 (Hallyu culture dictionary, topic 11968) defines it as the foods eaten with rice and says that in a Korean restaurant several side dishes come with the one dish ordered. 'Often', not always. English paraphrase.\nPass 1b (second source, 2026-10-23): the Standard Korean Language Dictionary defines 반찬 as the general word for the food eaten with rice.\nPass 2 (fact check, 2026-10-23): entry fetched again; 정의 and the restaurant sentence found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): NFM 반찬 (11968) re-read: food eaten with rice; one dish ordered in a Korean restaurant comes with several banchan. Holds. es revised to 'aunque pidas un solo plato' (was 'con el único plato que pides'); ko checked."
       }
     },
     {
@@ -1033,10 +1033,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Folk Museum of Korea entry 식사예절 (dictionary of Korean food, clothing and housing, topic 7821) says that when two or more eat together, the younger pick up their spoon after the eldest does. 'Usually' keeps it a custom, not a rule for every table. English paraphrase.\nPass 1b (second source, 2026-10-23): the museum's Hallyu culture dictionary entry 식사예절 (topic 12056) gives the same rule: the younger pick up their spoon after the eldest.\nPass 2 (fact check, 2026-10-23): entry fetched again; 연장자가 수저를 든 후에 수저를 든다 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Folk Museum of Korea entry 식사예절 (dictionary of Korean food, clothing and housing, topic 7821) says that when two or more eat together, the younger pick up their spoon after the eldest does. 'Usually' keeps it a custom, not a rule for every table. English paraphrase.\nPass 1b (second source, 2026-10-23): the museum's Hallyu culture dictionary entry 식사예절 (topic 12056) gives the same rule: the younger pick up their spoon after the eldest.\nPass 2 (fact check, 2026-10-23): entry fetched again; 연장자가 수저를 든 후에 수저를 든다 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): NFM 식사예절 (7821, 12056) re-read: '연장자가 수저를 든 후에 수저를 든다'. Holds. ko revised to '가장 웃어른이' (was '가장 어른이', not idiomatic); es checked."
       }
     },
     {
@@ -1060,10 +1060,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
+        "passes": 4,
         "checkedAt": "2026-10-23",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the same National Folk Museum of Korea entry 식사예절 says rice and dishes with broth (kimchi with its liquid, stew, soup) are eaten with the spoon and the other side dishes with chopsticks. English paraphrase.\nPass 1b (second source, 2026-10-23): the museum's Hallyu culture dictionary entry 식사예절 (topic 12056) gives the same spoon and chopsticks rule.\nPass 2 (fact check, 2026-10-23): entry fetched again; the sentence found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage."
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the same National Folk Museum of Korea entry 식사예절 says rice and dishes with broth (kimchi with its liquid, stew, soup) are eaten with the spoon and the other side dishes with chopsticks. English paraphrase.\nPass 1b (second source, 2026-10-23): the museum's Hallyu culture dictionary entry 식사예절 (topic 12056) gives the same spoon and chopsticks rule.\nPass 2 (fact check, 2026-10-23): entry fetched again; the sentence found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): NFM 식사예절 (7821, 12056): '밥과 국물이 있는 김치·찌개·국은 숟가락으로 먹고, 다른 찬은 젓가락으로 먹는다'. Holds. es/ko checked."
       }
     }
   ],
@@ -1075,7 +1075,8 @@
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, 에 and 을/를 and romanization clean; applied: write-frame glosses compose with every bank pick in en, es and ko (ko colon form, no particle after the slot), no untaught or swappable Check distractors, q3 words before the frame, 점심 glossed lunch, ko typing term 자판으로 쓰기, es Teclea and marca de objeto.",
       "Culture pass 5 (MAR): no culture claim (section 3.7 lists none); the particle notes restate dictionary senses of 에 and 을/를, no source needed; ko 오늘 and 저녁 glosses reworded away from dictionary wording; q2 intro offers food without assuming a breakfast; school, work, park and home give any age a true answer; no real person, brand or price.",
-      "CM-3C (F-CURR-002 §5.3 S7, 2026-10-23): culture notes n1-n3 added (banchan, waiting for the eldest, spoon and chopsticks), source National Folk Museum of Korea, each with its own verification record."
+      "CM-3C (F-CURR-002 §5.3 S7, 2026-10-23): culture notes n1-n3 added (banchan, waiting for the eldest, spoon and chopsticks), source National Folk Museum of Korea, each with its own verification record.",
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1
