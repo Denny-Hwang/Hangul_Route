@@ -21,7 +21,7 @@ import {
 import type { HiddenHeritageScene } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { HIDDEN_HERITAGE_RINGS } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Pressable, View, type LayoutChangeEvent, type PressableStateCallbackType } from 'react-native';
+import { Pressable, ScrollView, View, type LayoutChangeEvent, type PressableStateCallbackType } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -33,6 +33,7 @@ import {
   endView,
   headerView,
   liveText,
+  MIN_SCENE_WIDTH,
   promptView,
   sceneLayout,
   showsHoya,
@@ -190,6 +191,10 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
         case 'schedule-clear':
           timers.current.clear = setTimeout(() => dispatchRef.current({ type: 'clear-flash' }), effect.ms);
           return;
+        case 'cancel-advance':
+          if (timers.current.advance) clearTimeout(timers.current.advance);
+          timers.current.advance = null;
+          return;
         case 'schedule-advance':
           timers.current.advance = setTimeout(() => {
             setRevealed(false);
@@ -224,10 +229,16 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
     };
   }, []);
 
-  const fit =
+  const measured =
     contentWidth === null
       ? undefined
       : sceneLayout({ contentWidth, maxWidth: layout.maxWidth.reading, short, heightForScene: windowHeight - SHORT_CHROME, columnMin: COLUMN_MIN, gap: spacing.lg });
+  // The fit decision is latched once the learner has answered: a window that narrows after that (a split screen opens)
+  // keeps the scene at its 256 dp floor, scrolled sideways, instead of a Pic-Word Match board that would score the same
+  // targets a second time under its own keys. Before the first answer, a narrow window still plays the fallback.
+  const latched = state.answered > 0 || state.status !== 'playing';
+  const latchedNarrow = measured === null && latched;
+  const fit = latchedNarrow ? ({ arrangement: 'stack', sceneWidth: MIN_SCENE_WIDTH } as const) : measured;
   // The first word is spoken once the scene is known to fit: never before the layout, and never when the step turns out
   // to be the Pic-Word Match fallback (that game speaks its own prompts). A step that later narrows into the fallback
   // stops this game's voice and timers, since this component stays mounted under it.
@@ -269,26 +280,40 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   if (fit === null) return <PicWordMatchGame scope={picWordFallback(scope)} host={host} onBack={onBack} />;
 
   const header = headerView(state, rounds, m.learner.minigame);
-  const sceneView = (views: readonly SpotView[], tappable: boolean): ReactElement | null =>
-    fit === undefined ? null : (
+  const sceneBox = (views: readonly SpotView[], tappable: boolean, width: number): ReactElement => (
       <View
         testID="hh-scene"
         accessible={!tappable}
         accessibilityRole={tappable ? undefined : 'image'}
-        accessibilityLabel={round.altEn}
-        style={{ width: fit.sceneWidth, height: (fit.sceneWidth * 3) / 4, alignSelf: 'center', borderRadius: radii.lg, overflow: 'hidden' }}
+        accessibilityLabel={tappable ? undefined : round.altEn}
+        style={{ width, height: (width * 3) / 4, alignSelf: 'center', borderRadius: radii.lg, overflow: 'hidden' }}
       >
-        <HiddenHeritageSceneArt scene={scene} width={fit.sceneWidth} />
+        {tappable ? (
+          // While playing, the setting is still told first: the art is one image named by the alt text, before the spots.
+          <View testID="hh-scene-art" accessible accessibilityRole="image" accessibilityLabel={round.altEn}>
+            <HiddenHeritageSceneArt scene={scene} width={width} />
+          </View>
+        ) : (
+          <HiddenHeritageSceneArt scene={scene} width={width} />
+        )}
         {views.map((v) =>
           tappable ? (
-            <Spot key={v.id} view={v} sceneWidth={fit.sceneWidth} onTap={(id) => dispatch({ type: 'tap', id })} />
+            <Spot key={v.id} view={v} sceneWidth={width} onTap={(id) => dispatch({ type: 'tap', id })} />
           ) : v.ring ? (
-            <View key={v.id} pointerEvents="none" style={{ position: 'absolute', ...spotRect(v.spot, fit.sceneWidth) }}>
+            <View key={v.id} pointerEvents="none" style={{ position: 'absolute', ...spotRect(v.spot, width) }}>
               <Ring kind={v.ring} />
             </View>
           ) : null,
         )}
       </View>
+    );
+  const sceneView = (views: readonly SpotView[], tappable: boolean): ReactElement | null =>
+    fit === undefined ? null : latchedNarrow ? (
+      <ScrollView horizontal testID="hh-scene-scroll">
+        {sceneBox(views, tappable, fit.sceneWidth)}
+      </ScrollView>
+    ) : (
+      sceneBox(views, tappable, fit.sceneWidth)
     );
 
   const headerRow = (

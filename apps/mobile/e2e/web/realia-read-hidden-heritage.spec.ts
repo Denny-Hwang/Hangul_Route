@@ -11,7 +11,10 @@ import { expectNoHorizontalOverflow } from './viewport';
  * which exists only in the fixture bundle (served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test hidden-heritage
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage
+ *
+ * The file is named under `realia-read` (its sibling scene game) so the fixture e2e run's `realia-read` entry in
+ * .github/workflows/web-app.yml selects it, the way sentence-builder-* and write-frame-* specs ride their parents.
  *
  * `game.hidden-heritage` ships at built-in pct 0, so each case seeds the stored remote copy. Speech is the silent
  * engine of ./fixtures (no voice: the written word with romanization carries the round).
@@ -85,9 +88,9 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
         await spot(page, other[0]!).click();
         await expect(page.getByText('Look again').first()).toBeVisible();
         await expect(page.getByTestId('hh-ring-miss')).toBeVisible();
-        await page.waitForTimeout(700);
+        // State, not sleeps: the miss ring clears on its own (MISS_RING_MS) before the next tap.
+        await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
         await spot(page, other[1]!).click();
-        await page.waitForTimeout(700);
         await expect(page.getByTestId('hh-ring-hint')).toBeVisible();
         await shot(page, `hidden-heritage-hint-${size.name}`);
         expect(await asked(page)).toBe(ko);
@@ -97,7 +100,8 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
           await spot(page, TARGETS[ko]!.id).click();
           await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
           if (i === 0) await shot(page, `hidden-heritage-found-${size.name}`);
-          await page.waitForTimeout(800);
+          // The next word comes once the meaning has shown (FOUND_ADVANCE_MS); after the last, the end panel.
+          if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
         }
         await expect(page.getByText('You found them all')).toBeVisible();
         for (const t of Object.values(TARGETS)) await expect(page.getByTestId('hh-end').getByText(t.meaning, { exact: true })).toBeVisible();

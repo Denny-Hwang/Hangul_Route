@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Slide } from '../deck-builder';
+import { STAGE_SCENE_FLAG, stageSceneOn } from '../hidden-heritage-stage';
 import { SHELL_SLIDE_KINDS, slideDetail } from '../shell';
 import { slideSound } from '../slide-view';
 import { gridKindKey, gridItems } from '../tools';
@@ -32,5 +33,23 @@ describe('the Hidden Heritage slide', () => {
     expect(slideSound(slide)).toEqual({ spoken: slide.word.spoken, kind: 'word' });
     const [item] = gridItems([slide], { slideIdx: 0, skipped: new Set() }, { activity: () => '' });
     expect(item?.title).toBe('');
+  });
+});
+
+describe('the projector follows game.hidden-heritage (§12.2)', () => {
+  const copy = (on: boolean, pct: number) => ({ v: 1 as const, fetchedAt: 0, maxAgeS: 300, flags: { [STAGE_SCENE_FLAG]: { on, pct } } });
+
+  it('off at the launch state (no remote copy, built-in pct 0): the picture stands in for the scene', () => {
+    expect(stageSceneOn(null)).toBe(false);
+  });
+
+  it('off while the switch is off or still ramping, since the stage has no profile to bucket', () => {
+    expect(stageSceneOn(copy(false, 100))).toBe(false);
+    expect(stageSceneOn(copy(true, 0))).toBe(false);
+    expect(stageSceneOn(copy(true, 50))).toBe(false);
+  });
+
+  it('on once the switch is on for everyone', () => {
+    expect(stageSceneOn(copy(true, 100))).toBe(true);
   });
 });

@@ -129,9 +129,22 @@ describe('the flow', () => {
     const missed = run([{ type: 'tap', id: 'hangari' }]);
     expect(canSkip(missed.state)).toBe(true);
     const skipped = stepFlow(missed.state, { type: 'skip' }, ROUNDS);
-    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-clear', 'complete']);
+    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-clear', 'cancel-advance', 'complete']);
     expect(skipped.effects.some((e) => e.type === 'answer')).toBe(false);
     expect(stepFlow(skipped.state, { type: 'skip' }, ROUNDS).effects).toEqual([]);
+  });
+
+  it('a Skip while a found word shows drops its advance: a late timer neither reopens the end nor asks the next word', () => {
+    const first = startFlow(ROUNDS, 1).order[0]![0]!;
+    const found = run([{ type: 'tap', id: first }]);
+    expect(found.state.pending).toBe(first);
+    expect(canSkip(found.state)).toBe(true);
+    const skipped = stepFlow(found.state, { type: 'skip' }, ROUNDS);
+    expect(skipped.state.status).toBe('done');
+    expect(skipped.effects.map((e) => e.type)).toEqual(['cancel-clear', 'cancel-advance', 'complete']);
+    const late = stepFlow(skipped.state, { type: 'advance' }, ROUNDS);
+    expect(late.state).toBe(skipped.state);
+    expect(late.effects).toEqual([]);
   });
 
   it('an empty scope has nothing to play and never asks', () => {

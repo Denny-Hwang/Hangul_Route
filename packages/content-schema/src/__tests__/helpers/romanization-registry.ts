@@ -77,6 +77,11 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
     reason: 'test-only source records of the upper-cell card backs (F-CURR-002 row CM-23): Korean page titles, publishers and quoted source words, never shown; the cards they cite carry their Korean and romanization in heritage-cards.ts (registered, B1)',
   },
   {
+    path: 'packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx',
+    reason:
+      "the Korean drawn inside the Stage 6-7 and album legendary card pictures (F-CURR-002 row CM-23 part 3): a menu, a ticket, a sign or a word-bank sentence of the card's own cell, never a reading aid; the cards' Korean and romanization are in heritage-cards.ts (registered, B1)",
+  },
+  {
     path: 'packages/design-system/src/scene-art/hidden-heritage/food-market.ts',
     reason: "the Food market scene's reference round and its quoted sources (F-CURR-002 row CM-36): the round is a scene's sample spots, played by the fixture-build e2e and copied by the content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/logic/__tests__/hidden-heritage-flow.test.ts",
   },
