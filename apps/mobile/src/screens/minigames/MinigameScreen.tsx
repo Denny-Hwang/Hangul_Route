@@ -86,7 +86,10 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // so a config that arrives mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond
   // on the same turns. A role-play step waits for that read (a cold start reads off before it, which would freeze off).
   const rolePlayOn = useFrozenCurrFlag('game.role-play');
-  const waitsForSwitch = rolePlayOn === null && ref !== undefined && scopeFor(ref)?.kind === 'role-play';
+  const rolePlayStep = ref !== undefined && scopeFor(ref)?.kind === 'role-play';
+  const waitsForSwitch = rolePlayOn === null && rolePlayStep;
+  // Only a role-play step's scope depends on the switch, so every other game keeps its rounds when the read lands.
+  const playsRolePlay = rolePlayStep && rolePlayOn === true;
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const localized = useMemo(() => {
@@ -94,8 +97,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
     const scoped = source && ref ? localizeScope(source, ref, locale) : source;
-    return scoped && playedScope(scoped, rolePlayOn === true);
-  }, [ref, locale, questId, stepIndex, rolePlayOn]);
+    return scoped && playedScope(scoped, playsRolePlay);
+  }, [ref, locale, questId, stepIndex, playsRolePlay]);
   // The `game.<kind>` switches, decided as the step opens, and the dictation chunk when a round plays from it (row CM-31).
   const switched = useSwitchedScope(localized);
   const scope = switched?.kind === 'ready' ? switched.scope : undefined;

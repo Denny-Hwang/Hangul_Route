@@ -120,6 +120,13 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
   // While a reply is said, nothing may start the partner line again (it would cut the reply off).
   const replying = useRef(false);
   const replyRefs = useRef(new Map<string, Focusable | null>());
+  // Continue completes the game once: a fast second press (a double click on the web) would close the step twice.
+  const completed = useRef(false);
+  const complete = useCallback(() => {
+    if (completed.current) return;
+    completed.current = true;
+    host.complete();
+  }, [host]);
   const endRef = useRef<View | null>(null);
   const logRef = useRef<ScrollView | null>(null);
 
@@ -352,7 +359,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             <View ref={endRef} focusable accessible testID="role-play-end">
               <HoyaBubble tone="cheering" message={closing} />
               <Spacer size="md" />
-              <Button label={m.common.buttons.continue} tone="primary" size="lg" fullWidth onPress={host.complete} testID="role-play-continue" />
+              <Button label={m.common.buttons.continue} tone="primary" size="lg" fullWidth onPress={complete} testID="role-play-continue" />
             </View>
           ) : (
             <Replies
