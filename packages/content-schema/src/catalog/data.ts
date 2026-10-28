@@ -82,7 +82,11 @@ const handCells: CatalogCell[] = [
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 12, ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
-  cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 16, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4']),
+  // F-CURR-002 row CM-33: the Stage 1 addition is optional (section 4.2), as in the bundle's episode.
+  {
+    ...cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 16, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4']),
+    optionalQuestIds: ['quest:stage1-crafts-q4'],
+  },
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
     'quest:story-sejong-new-letters-read',
     'quest:story-shapes-of-hangeul-read',

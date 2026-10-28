@@ -1,4 +1,4 @@
-import type { Episode, Quest, QuestProgress, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
+import { requiredQuestIds, type Episode, type Quest, type QuestProgress, type StageKey, type ThemeDef, type ThemeKey } from '@hangul-route/content-schema';
 import type { IconName } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { cellKey, gridEpisodes } from '../content/episodes';
@@ -42,15 +42,20 @@ export function stagePillLabel(
   return m[state].pill;
 }
 
+/**
+ * Every quest the episode needs is done: its `questIds` without the optional additions (F-CURR-002 section 4.2,
+ * `requiredQuestIds`), so a quest that joins a finished episode never reopens it.
+ */
 export function isEpisodeComplete(
-  episode: Pick<Episode, 'id' | 'questIds'>,
+  episode: Pick<Episode, 'id' | 'questIds' | 'optionalQuestIds'>,
   quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[],
 ): boolean {
-  if (episode.questIds.length === 0) return false;
+  const required = requiredQuestIds(episode);
+  if (required.length === 0) return false;
   const done = new Set(
     quests.filter((q) => q.episodeId === episode.id && q.completedAt).map((q) => q.questId),
   );
-  return episode.questIds.every((id) => done.has(id));
+  return required.every((id) => done.has(id));
 }
 
 /**
@@ -59,7 +64,7 @@ export function isEpisodeComplete(
  * never complete.
  */
 export function isCellComplete(
-  episodes: readonly Pick<Episode, 'id' | 'questIds'>[],
+  episodes: readonly Pick<Episode, 'id' | 'questIds' | 'optionalQuestIds'>[],
   quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[],
 ): boolean {
   return episodes.length > 0 && episodes.every((e) => isEpisodeComplete(e, quests));

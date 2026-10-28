@@ -50,13 +50,15 @@ const storyQuestIds = new Set(storyQuests.map((quest) => quest.id));
 const lessonQuests = questsAll.filter((quest) => !storyQuestIds.has(quest.id));
 const episodeOfQuest = (questId: string): Episode | undefined => episodesAll.find((e) => e.questIds.includes(questId));
 
-const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds'> => ({
+const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds'> => ({
   stage: episode.stage,
   theme: episode.theme,
   episodeId: episode.id,
   title: episode.titleEn,
   minutes: episode.estimatedMinutes,
   questIds: episode.questIds,
+  // F-CURR-002 section 4.2 (row CM-33): an episode's optional additions are the cell's too.
+  ...(episode.optionalQuestIds === undefined ? {} : { optionalQuestIds: episode.optionalQuestIds }),
 });
 
 describe('cells and the bundle episodes', () => {

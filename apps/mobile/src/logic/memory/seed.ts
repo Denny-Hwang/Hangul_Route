@@ -1,4 +1,4 @@
-import { effectiveRoute, type CatalogCell, type CatalogQuest, type MemoryItemState, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { effectiveRoute, requiredQuestIds, type CatalogCell, type CatalogQuest, type MemoryItemState, type ProgressSnapshot } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { latchQuests } from '../quest-progress';
 import { addDays } from '../vocab/srs';
@@ -36,7 +36,7 @@ export interface SeedInput {
   retired: ReadonlySet<string>;
   /** The catalogue's quests and grid cells (`CATALOG`). */
   quests: readonly Pick<CatalogQuest, 'id' | 'episodeId'>[];
-  cells: readonly Pick<CatalogCell, 'episodeId' | 'questIds'>[];
+  cells: readonly Pick<CatalogCell, 'episodeId' | 'questIds' | 'optionalQuestIds'>[];
   /** `memSeededAt`: the instant the seeding ran first, on any device. */
   seededAt: string;
   /** The local day of an instant on this device (F-VOC-005 P5). */
@@ -171,7 +171,8 @@ export function deriveSeed(input: SeedInput): Seed {
 
   const cellBest: Record<string, 1> = {};
   for (const cell of input.cells) {
-    if (cell.questIds.length > 0 && cell.questIds.every((id) => done.has(id))) cellBest[cell.episodeId] = 1;
+    const required = requiredQuestIds(cell);
+    if (required.length > 0 && required.every((id) => done.has(id))) cellBest[cell.episodeId] = 1;
   }
   return { states, count: ordered.length, spreadDays: Math.ceil(ordered.length / SEED_PER_DAY), cellBest };
 }

@@ -25,6 +25,13 @@ export const EpisodeObjectSchema = z.object({
   subtitleEn: z.string().optional(),
   hoyaIntroEn: z.string(),
   questIds: z.array(z.string()),
+  /**
+   * Quests of `questIds` that joined the episode after it shipped (F-CURR-002 section 4.2, the Stage 1 additions of
+   * section 5.2): played in order like the rest, never required for the episode, its cell or its stage to complete
+   * (`requiredQuestIds`), so a learner who finished the episode before an addition shipped keeps it finished and no
+   * completion is announced twice.
+   */
+  optionalQuestIds: z.array(z.string()).optional(),
   rewardCardIds: z.array(z.string()).min(0),
   estimatedMinutes: z.number().int().min(3).max(60),
   status: EpisodeStatusSchema,
@@ -48,8 +55,19 @@ export const BOOK_MAX_QUESTS = 3;
 /** The parsed fields the rules read (defaults already applied). */
 export type EpisodeRuleInput = Pick<
   z.output<typeof EpisodeObjectSchema>,
-  'id' | 'stage' | 'theme' | 'order' | 'questIds' | 'status' | 'format' | 'placement' | 'volume' | 'pillarTags'
+  'id' | 'stage' | 'theme' | 'order' | 'questIds' | 'optionalQuestIds' | 'status' | 'format' | 'placement' | 'volume' | 'pillarTags'
 >;
+
+/**
+ * The quests an episode needs for completion: `questIds` without its `optionalQuestIds` (F-CURR-002 section 4.2).
+ * Every completion rule (the episode, its cell, its stage, the award engine and the cursor's "behind the learner"
+ * test) reads this, never `questIds` alone.
+ */
+export function requiredQuestIds(episode: Pick<Episode, 'questIds' | 'optionalQuestIds'>): readonly string[] {
+  const optional = episode.optionalQuestIds;
+  if (optional === undefined || optional.length === 0) return episode.questIds;
+  return episode.questIds.filter((id) => !optional.includes(id));
+}
 
 /**
  * Object-level rules: the questIds relaxation of F-STORY-001 §3.9 and the
@@ -63,6 +81,13 @@ export const episodeRules = (episode: EpisodeRuleInput, ctx: z.RefinementCtx): v
 
   if (episode.questIds.length < 1 && !preview) {
     issue(['questIds'], 'questIds needs at least one quest unless the episode is a preview');
+  }
+
+  for (const id of episode.optionalQuestIds ?? []) {
+    if (!episode.questIds.includes(id)) issue(['optionalQuestIds'], `optional quest ${id} is not one of the episode's questIds`);
+  }
+  if ((episode.optionalQuestIds?.length ?? 0) > 0 && episode.questIds.every((id) => episode.optionalQuestIds?.includes(id))) {
+    issue(['optionalQuestIds'], 'an episode needs at least one quest that is not optional');
   }
 
   for (const p of pillarTagProblems(episode.pillarTags)) {

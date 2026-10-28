@@ -7,6 +7,7 @@ import {
   checkRomanization,
   routeCatalogOf,
   discoverItemTexts,
+  requiredQuestIds,
   type MatchShapeRound,
   type Quest,
 } from '@hangul-route/content-schema';
@@ -59,6 +60,13 @@ describe('the Stage 1 additions (row CM-33)', () => {
     const stage1 = routeCatalogOf(CATALOG).quests.filter((q) => q.stage === 'stage1' && q.grid).map((q) => q.id);
     expect(stage1.slice(15)).toEqual([...ADDITIONS]);
     for (const quest of quests()) expect(questTeaches(quest), quest.id).toEqual([]);
+  });
+
+  it('is optional: Read Hangul! still completes the Crafts episode and Stage 1, in the bundle and the catalogue (section 4.2)', () => {
+    const crafts = episodesAll.find((e) => e.id === 'episode:stage1-crafts');
+    expect(crafts?.optionalQuestIds).toEqual([...ADDITIONS]);
+    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage1-crafts')?.optionalQuestIds).toEqual([...ADDITIONS]);
+    expect(crafts && requiredQuestIds(crafts)).toEqual(['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']);
   });
 
   it('pass QuestSchema, every step ref resolves to a scope of its kind, and the Check is Listen & Pick with 2 rounds', () => {
@@ -183,7 +191,9 @@ describe('the Stage 1 additions (row CM-33)', () => {
 
   it('is stamped in hand-stamps.json above catalogue version 32, and are catalogue rows that teach nothing new', () => {
     const stamps = HAND_STAMPS as Record<string, number>;
-    expect(Object.keys(stamps).sort()).toEqual([...ADDITIONS].sort());
+    // Every addition is stamped; other hand-written quests (the Stage 5 book quests of rows CM-46a and CM-46) may be
+    // stamped beside them, so the file is not pinned to this row's ids.
+    for (const id of ADDITIONS) expect(Object.prototype.hasOwnProperty.call(stamps, id), id).toBe(true);
     for (const id of ADDITIONS) {
       expect(stamps[id], id).toBeGreaterThan(32);
       expect(String(stamps[id])).toMatch(/^2026\d{4}$/);

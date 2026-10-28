@@ -1,4 +1,4 @@
-import { ProgressSnapshotSchema, VocabProgressSchema, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
+import { ProgressSnapshotSchema, VocabProgressSchema, requiredQuestIds, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -710,10 +710,10 @@ describe('applyPlacementOverride (F-PLC-001 section 3.9)', () => {
 
 describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled off)', () => {
   const notified: string[] = [];
-  /** The live Stage 1 grid quests; no count is pinned here. */
+  /** The live Stage 1 grid quests the stage needs (an optional addition of F-CURR-002 section 4.2 is not one); no count is pinned here. */
   const stage1 = episodesAll
     .filter((e) => e.stage === 'stage1' && (e.placement ?? 'grid') === 'grid' && (e.status === 'shipped' || e.status === 'ready'))
-    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+    .flatMap((e) => requiredQuestIds(e).map((questId) => ({ questId, episodeId: e.id })));
   const finish = (profileId: string, q: { questId: string; episodeId: string }) =>
     useProgressStore.getState().recordQuestComplete(profileId, { ...q, stars: 1, accuracy: 1, attempts: 1 });
   const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -986,8 +986,6 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
     ['quest:stage1-crafts-q2', 'episode:stage1-crafts'],
     ['quest:stage1-crafts-q3', 'episode:stage1-crafts'],
-    // F-CURR-002 row CM-33: the Stage 1 addition, which carries no card of its own.
-    ['quest:stage1-crafts-q4', 'episode:stage1-crafts'],
   ];
   const STAGE1_QUEST_CARDS = [
     'card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:kimbap', 'card:seollal', 'card:chuseok', 'card:sebae',
@@ -1200,8 +1198,8 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
     it('accumulates over the session without repeating a card', () => {
       useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
       useProgressStore.getState().reconcileAwards('profile:a');
-      // Play & Crafts has three quests since F-QUEST-002 Q-8, and four since F-CURR-002 row CM-33: all four complete the episode.
-      const crafts = ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4'].map((id) => quest(id, 'episode:stage1-crafts', 1, T2));
+      // Play & Crafts has three quests since F-QUEST-002 Q-8: all three complete the episode.
+      const crafts = ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3'].map((id) => quest(id, 'episode:stage1-crafts', 1, T2));
       const snap = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
       useProgressStore.getState().replaceSnapshot('profile:a', { ...snap, quests: [...snap.quests, ...crafts] });
       const list = useProgressStore.getState().catchUp['profile:a'] ?? [];
@@ -1288,13 +1286,11 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
 
     it('a completion by sync is a catch-up: one aggregate event, the next pass sends none', () => {
       const withTiger = snapshotWith({ cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] });
-      // Crafts q1 at 3 stars earns its quest card; q2-q3 at 1 star (F-QUEST-002 Q-8) and q4 (F-CURR-002 row CM-33, no card of
-      // its own) complete the episode, whose other four cards follow.
+      // Crafts q1 at 3 stars earns its quest card; q2-q3 at 1 star (F-QUEST-002 Q-8) complete the episode, whose other four cards follow.
       const crafts = [
         quest('quest:stage1-crafts-q1', 'episode:stage1-crafts', 3),
         quest('quest:stage1-crafts-q2', 'episode:stage1-crafts', 1),
         quest('quest:stage1-crafts-q3', 'episode:stage1-crafts', 1),
-        quest('quest:stage1-crafts-q4', 'episode:stage1-crafts', 1),
       ];
       useProgressStore.getState().replaceSnapshot('profile:a', { ...withTiger, quests: crafts });
       expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([

@@ -45,13 +45,17 @@ const titleOf = (cardId: string): string => {
   return card.titleEn;
 };
 
-/** Every shipped Stage 1 grid quest with its episode and quest card (F-STORY-006 §3.11 row 1). */
+/**
+ * Every shipped Stage 1 grid quest with its episode and quest card (F-STORY-006 §3.11 row 1). The optional Stage 1
+ * addition of F-CURR-002 row CM-33 (Play & Crafts quest 4) carries no card of its own, so its `rewardCardId` is
+ * undefined; every quest the stage needs still has one.
+ */
 const STAGE1 = episodesAll
   .filter((e) => e.stage === 'stage1' && e.status === 'shipped' && (e.placement ?? 'grid') === 'grid')
-  .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })))
-  .map(({ questId, episodeId }) => {
+  .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id, optional: e.optionalQuestIds?.includes(questId) === true })))
+  .map(({ questId, episodeId, optional }) => {
     const rewardCardId = questsAll.find((q) => q.id === questId)?.rewardCardId;
-    if (!rewardCardId) throw new Error(`${questId} has no quest card`);
+    if (!rewardCardId && !optional) throw new Error(`${questId} has no quest card`);
     return { questId, episodeId, rewardCardId };
   });
 
@@ -121,7 +125,7 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     expect(STAGE1.length).toBeGreaterThan(0);
-    const questCards = STAGE1.map((q) => q.rewardCardId);
+    const questCards = STAGE1.flatMap((q) => (q.rewardCardId === undefined ? [] : [q.rewardCardId]));
     const seed = (profileId: string): ProgressSnapshot => record(profileId, STAGE1, 2, questCards);
 
     const profileId = await learnerAtHome(page, seed);
