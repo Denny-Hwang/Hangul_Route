@@ -151,6 +151,8 @@ export const a11y = {
     },
     /** Listen & Pick: the speaker button, and a picture option with no label. */
     hearAgain: 'Play the sound again',
+    /** Dictation's speaker (F-CURR-002 row CM-31): the first focus after the heading; it plays the word again on every tap. */
+    dictation: { speaker: 'Hear the word' },
     picture: 'Picture',
     /** An answer card in its state (Listen & Pick, Pic-Word Match); `label` is what the card says. */
     option: {

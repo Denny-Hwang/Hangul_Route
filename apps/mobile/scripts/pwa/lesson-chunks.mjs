@@ -30,7 +30,7 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  */
 export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
-  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // 4,760,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
   // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
   // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
   // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
@@ -103,6 +103,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
+  // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
+  // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
+  // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae.
   // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
   // Pick's text prompt mode, the door, the Listen & Pick fallback with its card and round helpers (in the start bundle
   // so the switch never depends on the chunk it guards) and 10 English strings; the game, its flow and its view are
@@ -272,6 +275,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
+  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
+  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/dictation-entry.ts`).
+  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
 ]);
 
 /**
