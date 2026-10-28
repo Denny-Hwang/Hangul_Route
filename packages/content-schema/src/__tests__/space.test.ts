@@ -3,11 +3,16 @@ import {
   FREE_CLASS_STUDENT_CAP,
   JOIN_CODE_ALPHABET,
   LEARNER_CLASS_CAP,
+  InboxClassMoveSchema,
   LearnerMembershipSchema,
+  LookupMovedSchema,
+  LookupMoveWaitingSchema,
   MembershipSchema,
   ProfileRoleSchema,
   SpaceCreateSchema,
+  SpaceJoinResponseSchema,
   SpaceJoinSchema,
+  SpaceLookupResponseSchema,
   SpaceLookupSchema,
   SpaceSchema,
   SpaceSettingsSchema,
@@ -86,5 +91,35 @@ describe('space schemas (F-SPACE-001 §3.1)', () => {
     expect(ProfileRoleSchema.parse(undefined)).toBe('learner');
     expect(LEARNER_CLASS_CAP).toBe(3);
     expect(FREE_CLASS_STUDENT_CAP).toBe(20);
+  });
+});
+
+describe('move answers (owner report 2026-10-23)', () => {
+  const to = { spaceId: 'space:class-d', name: 'Evening Class D' };
+  const from = { spaceId: 'space:class-a', name: 'Sunday Class A' };
+  const lookup = { space: { id: 'space:class-a', kind: 'class', name: 'Sunday Class A' }, full: false, seat: { full: false, reason: null, cap: null }, roster: [] };
+
+  it('the lookup carries moved and moveWaiting only when sent', () => {
+    expect(SpaceLookupResponseSchema.parse(lookup)).toEqual(lookup);
+    expect(SpaceLookupResponseSchema.parse({ ...lookup, moved: { to }, moveWaiting: { from } })).toMatchObject({ moved: { to }, moveWaiting: { from } });
+    expect(SpaceLookupResponseSchema.safeParse({ ...lookup, moved: { to: { spaceId: '', name: 'x' } } }).success).toBe(false);
+    expect(LookupMovedSchema.parse({ to })).toEqual({ to });
+    expect(LookupMoveWaitingSchema.safeParse({ from: { name: 'x' } }).success).toBe(false);
+  });
+
+  it('the join answer carries the inbox memberships when sent', () => {
+    const row = { spaceId: 'space:class-d', kind: 'class', name: 'Evening Class D', role: 'student', joinedAt: 't' };
+    const membership = { spaceId: 'space:class-d', memberKind: 'learner', memberId: 'profile:suni', role: 'student', joinedAt: 't' };
+    const answer = { alreadyMember: false, membership, space: { id: 'space:class-d', kind: 'class', name: 'Evening Class D' } };
+    expect(SpaceJoinResponseSchema.parse(answer).memberships).toBeUndefined();
+    expect(SpaceJoinResponseSchema.parse({ ...answer, memberships: [row] }).memberships).toEqual([row]);
+    expect(SpaceJoinResponseSchema.parse({ ...answer, alreadyMember: true, membership: null }).membership).toBeNull();
+    expect(SpaceJoinResponseSchema.safeParse({ ...answer, memberships: [{ spaceId: 'x' }] }).success).toBe(false);
+  });
+
+  it('an inbox move notice may name the class moved from', () => {
+    const notice = { id: 'move:1', to, executedAt: 't' };
+    expect(InboxClassMoveSchema.parse(notice)).toEqual(notice);
+    expect(InboxClassMoveSchema.parse({ ...notice, from })).toEqual({ ...notice, from });
   });
 });

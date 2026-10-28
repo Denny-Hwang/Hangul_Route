@@ -544,6 +544,38 @@ DELETE FROM feedback_notes WHERE id = '<note_id>' AND NOT EXISTS (SELECT 1 FROM 
 SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY text_version, basis;
 ```
 
+### H-6. 옮긴 학습자가 두 반에 모두 남은 경우 고치기 (오너가 직접, 2026-10-23 신고)
+
+반 A 에서 반 B 로 옮긴 학습자가 A 와 B 에 모두 보이던 문제는, 옮긴 뒤 A 의 옛 참여 코드 (포스터, QR, 저장한 링크) 로 A 에 다시 들어간 경우였다. 이제 Worker 가 이런 참여를 `409 moved_out` 으로 막는다 (B 를 떠나면 다시 들어갈 수 있다). 이 절은 **이미 생긴** 이중 소속을 정리하는 방법이다. 새 경로 (route) 는 없고, 오너가 손으로 한 번 실행한다. 자동으로 돌지 않는다.
+
+파일: `docs/launch/ops/double-class-membership.sql` (1단계 SELECT, 2단계 DELETE). **파일 전체를 한 번에 실행하지 않는다** (1단계 바로 뒤에 2단계가 돈다). 그리고 두 단계 모두 **`--file` 이 아니라 `--command`** 로 실행한다: `--remote --file` 은 D1 가져오기 (import) API 로 가서 실행한 쿼리 수와 줄 수만 돌려주고 SELECT 결과 줄도, 지운 수 (`changes`) 도 보여 주지 않는다 (그 사이 데이터베이스가 잠시 막힐 수도 있다). 저장소 루트에서:
+
+1. 단계별 파일로 나누기
+   ```sh
+   awk '/^-- STEP 1/{f=1;next} /^-- STEP 2/{f=0} f' docs/launch/ops/double-class-membership.sql > step1.sql
+   awk '/^-- STEP 2/{f=1;next} f' docs/launch/ops/double-class-membership.sql > step2.sql
+   ```
+2. 1단계 (읽기만):
+   ```sh
+   pnpm --filter @hangul-route/api exec wrangler d1 execute hangul-route --remote --json --command "$(cat step1.sql)" > double-membership-log.json
+   jq '.[0].results | length' double-membership-log.json
+   ```
+   - `[0].results` 의 각 줄이 고칠 소속 하나다: 학습자 id, 원래 반 (source) 과 옮겨 간 반 (dest) 의 id 와 이름, 이동 id 와 종류 (`class_move` 교사 이동 / `transfer` 가족 요청 이동), 이동 시각 (`executed_at`), 원래 반에 다시 들어온 시각 (`source_joined_at`, 항상 이동 시각보다 늦다).
+   - **이 출력 파일이 감사 기록 (audit log) 이다.** 2단계 전에 보관한다. 줄 수가 0 이면 여기서 끝.
+3. 2단계 (삭제):
+   ```sh
+   pnpm --filter @hangul-route/api exec wrangler d1 execute hangul-route --remote --json --command "$(cat step2.sql)" > double-membership-delete.json
+   jq '.[0].meta.changes' double-membership-delete.json
+   ```
+   - 1단계가 보여 준 원래 반 소속만 지운다 (옮겨 간 반 소속, 학습 기록, 카드와 별은 그대로). 지운 수 (`[0].meta.changes`) 가 1단계 줄 수와 같아야 한다.
+4. 확인: 1단계를 다시 실행하면 0줄. 2단계를 다시 실행해도 0줄을 지운다 (멱등).
+
+손대지 않는 경우:
+- 옮긴 뒤 다른 이동으로 원래 반에 다시 들어간 학습자 (정상).
+- 옮겨 간 반이 보관 (archive) 된 학습자: 살아 있는 반은 원래 반이다 (Worker 도 이때는 다시 들어가게 둔다).
+- 옮겨 간 반을 떠났다가 원래 반에 다시 들어가고, 그 뒤 옮겨 간 반 코드로 또 들어간 학습자: 두 소속 모두 본인이 고른 것이다.
+- 다른 모양의 이중 소속: 이동을 기다리는 동안 받는 반 코드로 들어간 경우 (이제 `409 move_waiting` 으로 막힌다), 또는 A → B → C 로 두 번 옮긴 뒤 A 코드로 들어간 경우 (이제 `409 moved_out` 으로 막힌다). 이런 경우는 콘솔의 반 명단에서 학습자를 직접 빼면 된다.
+
 ## I. 스페인어 · 한국어 화면 (F-I18N-001 15b / 16b, 2026-10-14 오너 결정)
 
 > es 와 ko 가 출시되었다 (`LOCALE_STATUS` 가 셋 모두 `'shipped'`). 대시보드 변수는 바뀌지 않는다: 머지 후 평소처럼 배포되면 켜진다. 언어 검토는 다국어 검토 (multi-agent review, ledger `MAR`) 이며, 어떤 화면·사이트·스토어 문구도 원어민이나 사람 전문가가 검토했다고 말하지 않는다.

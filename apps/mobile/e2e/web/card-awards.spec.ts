@@ -9,7 +9,7 @@ import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
 import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 
@@ -366,14 +366,17 @@ async function upperLearner(
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
   const quests = cells.flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
   const snap = record(profileId, quests, 2, held);
-  await seedStored(page, `progress:${profileId}`, {
-    ...snap,
-    quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
-    questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
+  // One write and one launch: seeded one key at a time, a launch between the writes reads the record with the switch
+  // on, awards and saves the eight cards, and the launch the test looks at has nothing left to catch up on.
+  await seedStoredAll(page, {
+    [`progress:${profileId}`]: {
+      ...snap,
+      quests: snap.quests.map((q) => ({ ...q, startedAt: UPPER_AT, completedAt: '2026-10-20T10:00:00.000Z' })),
+      questDoneAt: Object.fromEntries(quests.map((q) => [q.questId, UPPER_AT])),
+    },
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } },
+    ...(settings ? { 'device:settings': { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
   });
-  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: upperPct } } });
-  if (settings) await seedStored(page, 'device:settings', { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' });
-  await page.reload();
   await expect(page.getByText('Today with Hoya')).toBeVisible();
   await closeInstallGuide(page);
   return profileId;
@@ -549,5 +552,88 @@ test.describe('Stage 4 upper-cell cards (F-CURR-002 row CM-23 part 2, release bu
     expect(saved.filter((c) => NEW_S4.includes(c.cardId))).toEqual([]);
     expect(saved.filter((c) => NEW_UPPER.includes(c.cardId))).toEqual([]);
     for (const id of [...TASTE_HELD, ...RITES]) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+  });
+});
+
+/**
+ * F-CURR-002 §4.8 step 7 and §7.2 (row CM-23 part 3): Stages 6-7 and the album legendary cards. A learner who finished
+ * every upper cell before this build, holding the cards of parts 1 and 2 and the shipped ones, gets the ten new Stage
+ * 6-7 cards and the five legendary cards once, each legendary dated by the last card of its album; every album says
+ * Album complete and leads with its legendary card; with `upperCards` off nothing new arrives.
+ */
+const allUpperCells = episodesAll.filter((e) => ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'].includes(e.stage) && (e.placement ?? 'grid') === 'grid' && e.questIds.length > 0);
+const NEW_S67 = ['card:won', 'card:yeogiyo', 'card:gichapyo', 'card:jeongsang', 'card:deom', 'card:ireum', 'card:achim', 'card:saengil', 'card:tokki', 'card:bihaenggi'];
+const LEGENDS = ['card:hunminjeongeum', 'card:jang', 'card:hangawi', 'card:jirisan', 'card:ssireum'];
+const S67_HELD = [...S4_HELD, ...NEW_S4];
+
+test.describe('Stages 6-7 cards and the album legendary cards (F-CURR-002 row CM-23 part 3, release bundle)', () => {
+  test.skip(FIXTURE_BUILD, 'the release content: run on the release build');
+  test.use({ timezoneId: 'UTC' });
+
+  test('320: every upper cell finished earlier brings ten cards and five legendary cards once; each album is complete', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 800 });
+    const profileId = await upperLearner(page, 100, undefined, allUpperCells, S67_HELD);
+
+    const wanted = [...NEW_S67, ...LEGENDS];
+    await expect.poll(async () => (await storedCards(page, profileId)).filter((c) => wanted.includes(c.cardId)).length).toBe(wanted.length);
+    const saved = await storedCards(page, profileId);
+    // Each new card is dated by its cell's first finishes; each legendary card by the last card of its album (the same).
+    for (const id of wanted) expect(saved.find((c) => c.cardId === id)?.unlockedAt, id).toBe(UPPER_AT);
+    for (const id of S67_HELD) expect(saved.filter((c) => c.cardId === id), id).toHaveLength(1);
+    expect(await catchUp(page).innerText()).not.toMatch(FRACTION);
+
+    await openLibraryCards(page);
+    const albums = page.getByTestId('library-albums');
+    await albums.scrollIntoViewIfNeeded();
+    for (const theme of ['letters', 'life', 'rites', 'nature', 'crafts']) {
+      await expect(page.getByTestId(`library-album-${theme}-status`), theme).toHaveText('Album complete');
+    }
+    for (const id of LEGENDS) await expect(albums.getByTestId(`library-album-card-${id}`), id).toHaveCount(1);
+    expect(await albums.innerText()).not.toMatch(FRACTION);
+    expect(await albums.innerText()).not.toMatch(EMOJI);
+    await shot(page, 'upper-cards-s67-albums-320');
+
+    // A legendary card opens with its drawing, its Korean name and its sourced fact.
+    await albums.getByTestId('library-album-card-card:hunminjeongeum').click();
+    await expect(page.getByText(/Hunminjeongum Manuscript of 1446/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText('훈민정음', { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    await expect(shown(page, 'card-detail-citation').first()).toContainText('UNESCO');
+    await shot(page, 'upper-cards-legendary-card-320');
+
+    // A Stage 6 card: a real thing read, with its fact and source.
+    await page.goBack();
+    await page.getByTestId('library-albums').getByTestId('library-album-card-card:won').click();
+    await expect(page.getByText(/June 10, 1962/).filter({ visible: true }).first()).toBeVisible();
+    await expect(shown(page, 'card-detail-citation').first()).toContainText('National Institute of Korean Language');
+    await shot(page, 'upper-cards-s6-card-320');
+
+    // A second launch adds nothing: one entry per card, one legendary card per album.
+    await page.goto('/');
+    await expect(page.getByText('Today with Hoya')).toBeVisible();
+    const again = await storedCards(page, profileId);
+    expect(new Set(again.map((c) => c.cardId)).size).toBe(again.length);
+    expect(again.filter((c) => LEGENDS.includes(c.cardId))).toHaveLength(LEGENDS.length);
+    expect(errors).toEqual([]);
+  });
+
+  test('wide: the complete albums with their legendary cards', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await upperLearner(page, 100, undefined, allUpperCells, S67_HELD);
+    await openLibraryCards(page);
+    await page.getByTestId('library-albums').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('library-album-nature-status')).toHaveText('Album complete');
+    await shot(page, 'upper-cards-s67-albums-wide');
+  });
+
+  test('upperCards off: no Stage 6-7 card and no legendary card arrives; the held cards stay', async ({ page }) => {
+    const profileId = await upperLearner(page, 0, undefined, allUpperCells, S67_HELD);
+    await openLibraryCards(page);
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+    await expect(page.getByTestId('library-albums')).toHaveCount(0);
+    const saved = await storedCards(page, profileId);
+    expect(saved.filter((c) => [...NEW_S67, ...LEGENDS].includes(c.cardId))).toEqual([]);
+    for (const id of S67_HELD) expect(saved.some((c) => c.cardId === id), id).toBe(true);
   });
 });

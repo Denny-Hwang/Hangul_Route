@@ -12,6 +12,7 @@ import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, 
 import { actionOutcome, canAgreeBoth, classMoveGroups, historyDate, ownAnswerWaits, retryShown, type ClassView } from '@/lib/console/transfer-requests';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
 import type { ConfirmAsk } from './ConfirmSheet';
 
 /**
@@ -477,6 +478,9 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
         return rest;
       });
       const result = await call();
+      // An answered move (an agreement can move the learner at once): an open roster in another console tab reads again
+      // at once, so class A never keeps a learner who moved to B (owner report 2026-10-23). No id or name travels.
+      if (result.ok) announceRosterChange();
       setBusy(false);
       const outcome = actionOutcome(result);
       if (outcome === 'locked' || outcome === 'signIn' || outcome === 'forbidden') {

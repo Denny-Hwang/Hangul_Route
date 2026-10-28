@@ -82,7 +82,7 @@ export const OVERLAY_FIELDS = {
     'traceWord.rounds.<roundId>.word.gloss',
     'writeFrame.rounds.<roundId>.frame.gloss',
     'writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss',
-    // F-CURR-002 row CM-30: Cloze Pick's sentence meaning, its tiles' content glosses and a value gap's card.
+    // F-CURR-002 row CM-30: Cloze Pick's sentence meaning, its tiles' content glosses and a value gap's card (its alt, title and lines).
     'clozePick.rounds.<roundId>.sentence.gloss',
     'clozePick.rounds.<roundId>.tiles.<tile>.gloss',
     'clozePick.realia.alt',
@@ -96,6 +96,9 @@ export const OVERLAY_FIELDS = {
     'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.text.gloss',
     'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.why',
     'rolePlay.scene.nodes.<nodeId>.closing',
+    'clozePick.realia.title.gloss',
+    'clozePick.realia.entries.<entry>.text.gloss',
+    'clozePick.realia.entries.<entry>.value.gloss',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],

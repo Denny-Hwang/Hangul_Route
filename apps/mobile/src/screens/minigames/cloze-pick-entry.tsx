@@ -3,22 +3,30 @@ import type { ReactElement } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MinigameScope } from '../../logic/minigame-config';
 import type { RootStackParamList } from '../../navigation/types';
+import { abandonPendingChunk } from '../../platform/lesson-chunk-abandon';
 import { useCurrFlagDecided } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
-import { OopsScreen } from '../system/OopsScreen';
+import { ClozePickFallback } from './cloze-pick-fallback';
 import type { MinigameHost } from './host';
 
 /*
- * The start bundle's door to Cloze Pick (F-CURR-002 sections 7.1, 10 and 12.2, row CM-30). The game and its
- * fallback are a chunk of their own (`./cloze-pick-chunk.tsx`, marker `screen-chunk:cloze-pick`), reached only
- * through the literal `import()` below, so the start bundle carries this door alone.
+ * The start bundle's door to Cloze Pick (F-CURR-002 sections 7.1, 10 and 12.2, row CM-30). The game is a chunk of its
+ * own (`./cloze-pick-chunk.tsx`, marker `screen-chunk:cloze-pick`), reached only through the literal `import()` below;
+ * the door and the fallback (`./cloze-pick-fallback.tsx`) are in the start bundle.
  *
  * - **Gate:** `game.cloze-pick` (`currFlagOn`, built-in pct 0, the `EXPO_PUBLIC_CURR_GAMES_OFF` build floor), read
  *   once when the step opens, so a remote change never swaps the game in the middle of a round.
  * - **Off:** every round plays its fallback, the shipped Listen & Pick in its text prompt mode on the same tiles,
- *   answer and scoring (section 12.2: no switch bricks a quest), with its answers on the same round ids.
- * - The chunk is precached with the app; one that cannot load shows the crash screen's Try again, as the Cell Check.
+ *   answer and scoring (section 12.2: no switch bricks a quest), with its answers on the same round ids. Nothing is
+ *   loaded: the switch never depends on the code it guards.
+ * - **On:** the chunk loads (it is precached with the app). One that cannot load, or does not answer within
+ *   `CHUNK_TIMEOUT_MS`, plays the fallback as well, so a broken or hung chunk never leaves the quest step stuck.
  */
+
+/** A chunk load that has not answered by then is given up (the lesson chunks' timeout) and the step plays its fallback. */
+export const CHUNK_TIMEOUT_MS = 15_000;
+/** The chunk's web bundle name (`SCREEN_CHUNKS` in scripts/pwa/lesson-chunks.mjs). */
+const CHUNK_BUNDLE = 'cloze-pick-chunk';
 
 type Chunk = typeof import('./cloze-pick-chunk');
 let loading: Promise<Chunk> | null = null;
@@ -35,21 +43,35 @@ function loadChunk(): Promise<Chunk> {
   return loading;
 }
 
-function useChunk(): { chunk: Chunk | null; failed: boolean; retry: () => void } {
+/** The chunk, loaded only while `wanted`; `failed` once it rejected or timed out. */
+function useChunk(wanted: boolean): { chunk: Chunk | null; failed: boolean } {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    if (chunk !== null || failed) return undefined;
+    if (!wanted || chunk !== null || failed) return undefined;
     let live = true;
+    const timer = setTimeout(() => {
+      if (!live) return;
+      live = false;
+      // Metro's web loader would hand the same hung request to the next try: fail it so a later step asks again.
+      loading = null;
+      abandonPendingChunk(CHUNK_BUNDLE);
+      setFailed(true);
+    }, CHUNK_TIMEOUT_MS);
     loadChunk().then(
-      (c) => live && setChunk(c),
-      () => live && setFailed(true),
+      (c) => {
+        if (live) setChunk(c);
+      },
+      () => {
+        if (live) setFailed(true);
+      },
     );
     return () => {
       live = false;
+      clearTimeout(timer);
     };
-  }, [chunk, failed]);
-  return { chunk, failed, retry: () => setFailed(false) };
+  }, [wanted, chunk, failed]);
+  return { chunk, failed };
 }
 
 export type ClozePickRendered = 'cloze-pick' | 'listen-pick';
@@ -62,21 +84,25 @@ export interface ClozePickStepProps {
   onRendered?: (kind: ClozePickRendered) => void;
 }
 
-/** A `cloze-pick` step: the game while its switch is on, else its Listen & Pick fallback. */
-export function ClozePickStep(props: ClozePickStepProps): ReactElement {
+/** A `cloze-pick` step: the game while its switch is on and its chunk is in, else its Listen & Pick fallback. */
+export function ClozePickStep({ onRendered, ...props }: ClozePickStepProps): ReactElement {
   const now = useCurrFlagDecided('game.cloze-pick');
   const on = useRef<boolean | null>(null);
   if (on.current === null && now !== null) on.current = now;
-  const { chunk, failed, retry } = useChunk();
-  if (failed) return <OopsScreen onRetry={retry} />;
-  if (chunk === null || on.current === null) return <LessonWaiting />;
-  const { ClozePickStepBody } = chunk;
-  return <ClozePickStepBody {...props} on={on.current} />;
+  const { chunk, failed } = useChunk(on.current === true);
+  const rendered: ClozePickRendered | null = on.current === null ? null : on.current && !failed ? (chunk === null ? null : 'cloze-pick') : 'listen-pick';
+  useEffect(() => {
+    if (rendered !== null) onRendered?.(rendered);
+  }, [rendered, onRendered]);
+  if (rendered === null) return <LessonWaiting />;
+  if (rendered === 'listen-pick' || chunk === null) return <ClozePickFallback {...props} />;
+  const { ClozePickGame } = chunk;
+  return <ClozePickGame {...props} />;
 }
 
 /** Fixture builds only (`navigation/cloze-pick-e2e.tsx`, in the chunk): the `window.__hrClozePickE2E` hook. */
 export function ClozePickE2eHook(): ReactElement | null {
-  const { chunk } = useChunk();
+  const { chunk } = useChunk(true);
   if (chunk === null) return null;
   const { ClozePickE2eHookBody } = chunk;
   return <ClozePickE2eHookBody />;
@@ -84,7 +110,7 @@ export function ClozePickE2eHook(): ReactElement | null {
 
 /** Fixture builds only: a Cloze Pick step on the fixture rounds. */
 export function ClozePickE2eScreen({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'ClozePickE2e'>): ReactElement {
-  const { chunk } = useChunk();
+  const { chunk } = useChunk(true);
   if (chunk === null) return <LessonWaiting />;
   const { ClozePickE2eBody } = chunk;
   return <ClozePickE2eBody key={route.key} rounds={route.params.rounds} onBack={() => navigation.goBack()} />;
