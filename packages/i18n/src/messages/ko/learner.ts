@@ -2083,4 +2083,8 @@ export const learner = {
     showMeanings: '뜻 보기',
     meaningsShown: '뜻이 보여요',
   },
+  cultureTip: {
+    title: '알고 있었나요?',
+    region: '레슨 노트',
+  },
 } satisfies DeepPartial<Messages['learner']>;

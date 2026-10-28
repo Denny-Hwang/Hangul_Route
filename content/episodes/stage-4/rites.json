@@ -1075,6 +1075,13 @@
       "textEn": "{ko:설날} (Seollal) is the Korean Lunar New Year. A common greeting then is {ko:새해 복 많이 받으세요}, a wish that the other person has a year full of blessings.",
       "sources": [
         {
+          "title": "송년과 신년의 언어 예절, a column by 허철구 on New Year language etiquette",
+          "publisher": "국립국어원 (National Institute of Korean Language), 새국어소식, 언어 예절 column",
+          "url": "https://www.korean.go.kr/nkview/news/91/news6_2.htm",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Column on New Year greetings: lists ‘새해 복 많이 받으십시오’ and ‘과세 안녕하십니까?’ as suitable greetings to elders, gives elders' replies such as ‘새해 복 많이 받게’, and says the bow itself is the greeting, so the words are not said during the bow."
+        },
+        {
           "title": "설, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0028997",
@@ -1087,13 +1094,6 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0046905",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 인사, section 내용, (1) 말로 하는 인사, ⑤ 경조사에 임하여 하는 인사말: for the Seollal bow (세배) it gives the greeting ‘새해에 복 많이 받으십시오.’ with ‘오래오래 건강하십시오.’"
-        },
-        {
-          "title": "송년과 신년의 언어 예절, a column by 허철구 on New Year language etiquette",
-          "publisher": "국립국어원 (National Institute of Korean Language), 새국어소식, 언어 예절 column",
-          "url": "https://www.korean.go.kr/nkview/news/91/news6_2.htm",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Column on New Year greetings: lists ‘새해 복 많이 받으십시오’ and ‘과세 안녕하십니까?’ as suitable greetings to elders, gives elders' replies such as ‘새해 복 많이 받게’, and says the bow itself is the greeting, so the words are not said during the bow."
         }
       ],
       "verification": {
@@ -1111,7 +1111,8 @@
     "reviewedAt": "2026-10-14",
     "notes": [
       "Language pass 4 (MAR): spelling, spacing, 해요체 and romanization clean; applied one-order Story Sequences (q2 follows Discover, the teacher opens), the q2 past caption covering question and answer, Hoya returning the teacher's greeting in q3, 미나도 in the q3 Check reply as glossed, no late 오랜만이에요 in q3 practice, the intro naming the three scenes, one wording for 복.",
-      "Culture pass 5 (MAR): the Seollal note re-checked against its three sources (verification line 3); 'Korean Lunar New Year' and 'a year full of blessings' applied; cast is Hoya, Mina and an unnamed teacher; no stereotype, no group named as a whole, no real person, brand or price, no age wording."
+      "Culture pass 5 (MAR): the Seollal note re-checked against its three sources (verification line 3); 'Korean Lunar New Year' and 'a year full of blessings' applied; cast is Hoya, Mina and an unnamed teacher; no stereotype, no group named as a whole, no real person, brand or price, no age wording.",
+      "CM-3C (2026-10-23): note n1's sources reordered, none added or removed; the allowlisted one is first, as the on-screen tip prints the first source."
     ]
   },
   "contentVer": 1

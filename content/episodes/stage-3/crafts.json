@@ -10,7 +10,9 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:yut"],
+  "rewardCardIds": [
+    "card:yut"
+  ],
   "quests": [
     {
       "id": "quest:stage3-crafts-q1",
@@ -1255,25 +1257,25 @@
       "textEn": "{ko:을} and {ko:를} mark the thing an action is done to. The word before them decides which: {ko:을} after a final consonant, {ko:를} after a vowel.",
       "sources": [
         {
-          "title": "문법(文法)",
-          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
-          "url": "https://encykorea.aks.ac.kr/Article/E0019486",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "내용, (2)접사의 모습 ① 곡용접사 단락: 목적격 을/를을 조사로 들고, 체언 어기의 받침 유무에 따라 조사가 두 형태로 갈라진다고 설명하며 그 예를 학생이·은·을…(받침 있는 말 아래)와 학교가·는·를…(받침 없는 말 아래)로 나열한다."
-        },
-        {
           "title": "을",
           "publisher": "National Institute of Korean Language, Standard Korean Language Dictionary",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=469161&searchKeywordTo=3",
           "accessed": "2026-10-14",
           "quoteOrLocator": "표제어 을 2 「조사」 1 「1」 뜻풀이: 동작이 직접 미치는 대상을 나타내는 격 조사로 풀이함. 같은 항목은 받침이 있는 체언 다음에 붙는다고 표시하고 참고 어휘로 를을 든다."
+        },
+        {
+          "title": "문법(文法)",
+          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
+          "url": "https://encykorea.aks.ac.kr/Article/E0019486",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용, (2)접사의 모습 ① 곡용접사 단락: 목적격 을/를을 조사로 들고, 체언 어기의 받침 유무에 따라 조사가 두 형태로 갈라진다고 설명하며 그 예를 학생이·은·을…(받침 있는 말 아래)와 학교가·는·를…(받침 없는 말 아래)로 나열한다."
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 을 and 를 mark the object of an action and that the choice follows the word before them, 을 after a final consonant and 를 after a vowel. Encyclopedia of Korean Culture, 문법, the 곡용접사 paragraph, names 을/를 as the object case particle and says a particle splits into two forms by whether the stem has a final consonant (학생을 against 학교를); the Standard Korean Language Dictionary, 을 2 sense 1, defines it as the case particle for the direct target of an action. Both pages resolved (HTTP 200) on 2026-10-14. The note is an English paraphrase; the locators are Korean summaries, not quotations. Backs the q1 and q3 pattern notes and every particle round of the Sentence Builder. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched both sources again (HTTP 200). Encyclopedia of Korean Culture, 문법, (2) 접사의 모습, ① 곡용접사: confirmed. It lists 을/를 as the object case marker and says the particle takes one of two forms by whether the stem ends in a final consonant, with 학생을 against 학교를. The Standard Korean Language Dictionary, 을 2, sense 1, defines it as the case particle for the direct target of an action: confirmed. The locator claimed that the 를 entry appears on the same results page with the same definition. That is false: the 을 results page lists only 을 1, 을 2 and -을 3. The locator now cites what the 을 2 entry itself shows (it attaches after a noun ending in a consonant and lists 를 as a related word). Note text unchanged. No run of words is shared between the note and either source; each locator shares at most a section heading or a few dictionary terms with its source page. Line 3 (passes: 3, MAR culture review, pass 5, 2026-10-14): both sources fetched again (HTTP 200). Encyclopedia of Korean Culture, 문법, ① 곡용접사: 을/를 as the object case marker, two forms by a final consonant (학생을 against 학교를): confirmed. Standard Korean Language Dictionary, 을 2 (word_no 469161, entry view): 「조사」 1 is marked for use after a noun with a final consonant, sense 「1」 is the case particle for the direct target of an action, and 를 is listed under 참고 어휘: confirmed. The source link now opens the entry view instead of the results page, which shows only sense 「1」. The bare 1 in the locator is the entry's own sense-group number and stays. Note text unchanged; no run of words shared with either locator. Locator precision (MAR re-review, 2026-10-14): the 곡용접사 paragraph prints the forms as lists (학생이·은·을… and 학교가·는·를…), read as 학생+을 and 학교+를; the locator now cites those lists rather than the words 학생을 and 학교를, which the page does not spell out. Note text unchanged."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 을 and 를 mark the object of an action and that the choice follows the word before them, 을 after a final consonant and 를 after a vowel. Encyclopedia of Korean Culture, 문법, the 곡용접사 paragraph, names 을/를 as the object case particle and says a particle splits into two forms by whether the stem has a final consonant (학생을 against 학교를); the Standard Korean Language Dictionary, 을 2 sense 1, defines it as the case particle for the direct target of an action. Both pages resolved (HTTP 200) on 2026-10-14. The note is an English paraphrase; the locators are Korean summaries, not quotations. Backs the q1 and q3 pattern notes and every particle round of the Sentence Builder. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched both sources again (HTTP 200). Encyclopedia of Korean Culture, 문법, (2) 접사의 모습, ① 곡용접사: confirmed. It lists 을/를 as the object case marker and says the particle takes one of two forms by whether the stem ends in a final consonant, with 학생을 against 학교를. The Standard Korean Language Dictionary, 을 2, sense 1, defines it as the case particle for the direct target of an action: confirmed. The locator claimed that the 를 entry appears on the same results page with the same definition. That is false: the 을 results page lists only 을 1, 을 2 and -을 3. The locator now cites what the 을 2 entry itself shows (it attaches after a noun ending in a consonant and lists 를 as a related word). Note text unchanged. No run of words is shared between the note and either source; each locator shares at most a section heading or a few dictionary terms with its source page. Line 3 (passes: 3, MAR culture review, pass 5, 2026-10-14): both sources fetched again (HTTP 200). Encyclopedia of Korean Culture, 문법, ① 곡용접사: 을/를 as the object case marker, two forms by a final consonant (학생을 against 학교를): confirmed. Standard Korean Language Dictionary, 을 2 (word_no 469161, entry view): 「조사」 1 is marked for use after a noun with a final consonant, sense 「1」 is the case particle for the direct target of an action, and 를 is listed under 참고 어휘: confirmed. The source link now opens the entry view instead of the results page, which shows only sense 「1」. The bare 1 in the locator is the entry's own sense-group number and stays. Note text unchanged; no run of words shared with either locator. Locator precision (MAR re-review, 2026-10-14): the 곡용접사 paragraph prints the forms as lists (학생이·은·을… and 학교가·는·를…), read as 학생+을 and 학교+를; the locator now cites those lists rather than the words 학생을 and 학교를, which the page does not spell out. Note text unchanged.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1309,25 +1311,25 @@
       "textEn": "{ko:에} after a place, with a going word like {ko:가요}, marks where you are headed: {ko:공원에} {ko:가요}, I go to the park.",
       "sources": [
         {
-          "title": "격(格)",
-          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
-          "url": "https://encykorea.aks.ac.kr/Article/E0002127",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "내용, 격의 종류를 차례로 설명하는 단락: 부사격조사로 에, 에게 등을 들고, 부사격이 뜻으로 처소나 지향점 따위를 나타낸다고 설명한 부분."
-        },
-        {
           "title": "에",
           "publisher": "National Institute of Korean Language, Standard Korean Language Dictionary",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=460139&searchKeywordTo=3",
           "accessed": "2026-10-14",
           "quoteOrLocator": "표제어 에 4 「조사」 1 「3」 뜻풀이: 앞말을 나아가는 방향의 부사어로 만드는 격 조사로 풀이하고, 용례로 학교에 가다와 지금 산에 간다를 든다."
+        },
+        {
+          "title": "격(格)",
+          "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002127",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용, 격의 종류를 차례로 설명하는 단락: 부사격조사로 에, 에게 등을 들고, 부사격이 뜻으로 처소나 지향점 따위를 나타낸다고 설명한 부분."
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 에 after a place word marks the place you are going to, as in 공원에 가요. The Encyclopedia of Korean Culture, 격, names 에 among the adverbial case particles and says that case marks a place or a goal (지향점); the Standard Korean Language Dictionary, 에 4 sense 1, defines 에 as the case particle that makes the word before it a place adverbial. Both pages resolved (HTTP 200) on 2026-10-14. English paraphrase only; locators are Korean summaries. Backs the q2 pattern note. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched both sources again (HTTP 200). Encyclopedia of Korean Culture, 격, 내용: 에 is listed among the adverbial case particles, and adverbial case is said to mark a location or a goal (지향점): confirmed. The locator now says this is the paragraph that goes through the kinds of case, because the article has no heading named for it. The Standard Korean Language Dictionary, 에 4, sense 1, defines 에 for a location adverbial (where something is), not a destination. That locator did not back the claim, so it now cites sense 3 of the same entry: the case particle for the direction of movement, with examples such as going to school and going to the mountain. Sense 3 is what supports 공원에 가요. Note text unchanged. No run of words is shared between the note and either source; each locator shares at most a few dictionary terms with its source page. Line 3 (passes: 3, MAR culture review, pass 5, 2026-10-14): both sources fetched again (HTTP 200). Encyclopedia of Korean Culture, 격: 에 among the adverbial case particles, marking a place or a goal (지향점): confirmed. Standard Korean Language Dictionary, 에 4 (word_no 460139, entry view), 「조사」 1 「3」: the case particle for the direction of movement, with 학교에 가다 and 지금 산에 간다 as examples: confirmed; the results page shows only sense 「1」 (location), so the link now opens the entry view. Finding applied: 에 also marks where something is (sense 「1」), so the note now ties the destination reading to a going word ({ko:가요}). Sense 「3」 backs the revised text exactly; no run of words shared with either locator. Locator precision (MAR re-review, 2026-10-14): the locator now gives the entry's second example in full, 지금 산에 간다. Note text unchanged."
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-14): the claim is that 에 after a place word marks the place you are going to, as in 공원에 가요. The Encyclopedia of Korean Culture, 격, names 에 among the adverbial case particles and says that case marks a place or a goal (지향점); the Standard Korean Language Dictionary, 에 4 sense 1, defines 에 as the case particle that makes the word before it a place adverbial. Both pages resolved (HTTP 200) on 2026-10-14. English paraphrase only; locators are Korean summaries. Backs the q2 pattern note. Line 2 (passes: 2, independent fact check, pass 2b, 2026-10-14): a session that did not author the cell fetched both sources again (HTTP 200). Encyclopedia of Korean Culture, 격, 내용: 에 is listed among the adverbial case particles, and adverbial case is said to mark a location or a goal (지향점): confirmed. The locator now says this is the paragraph that goes through the kinds of case, because the article has no heading named for it. The Standard Korean Language Dictionary, 에 4, sense 1, defines 에 for a location adverbial (where something is), not a destination. That locator did not back the claim, so it now cites sense 3 of the same entry: the case particle for the direction of movement, with examples such as going to school and going to the mountain. Sense 3 is what supports 공원에 가요. Note text unchanged. No run of words is shared between the note and either source; each locator shares at most a few dictionary terms with its source page. Line 3 (passes: 3, MAR culture review, pass 5, 2026-10-14): both sources fetched again (HTTP 200). Encyclopedia of Korean Culture, 격: 에 among the adverbial case particles, marking a place or a goal (지향점): confirmed. Standard Korean Language Dictionary, 에 4 (word_no 460139, entry view), 「조사」 1 「3」: the case particle for the direction of movement, with 학교에 가다 and 지금 산에 간다 as examples: confirmed; the results page shows only sense 「1」 (location), so the link now opens the entry view. Finding applied: 에 also marks where something is (sense 「1」), so the note now ties the destination reading to a going word ({ko:가요}). Sense 「3」 backs the revised text exactly; no run of words shared with either locator. Locator precision (MAR re-review, 2026-10-14): the locator now gives the entry's second example in full, 지금 산에 간다. Note text unchanged.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],

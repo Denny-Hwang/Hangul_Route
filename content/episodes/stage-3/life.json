@@ -8,7 +8,9 @@
   "hoyaIntroEn": "Eat, drink, go and come: let's build little sentences about a day!",
   "order": 2,
   "pillarTags": [],
-  "rewardCardIds": ["card:tteok"],
+  "rewardCardIds": [
+    "card:tteok"
+  ],
   "quests": [
     {
       "id": "quest:stage3-life-q1",
@@ -1211,25 +1213,25 @@
       "textEn": "A sentence that ends in {ko:요} is polite. This style, {ko:해요체} (haeyoche), is the polite style people use most in everyday talk.",
       "sources": [
         {
-          "title": "공손법, an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0079632",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 공손법, section 내용, paragraph on 해요체: “해요체는 ‘합쇼체’ 다음으로 상대를 정중히 대하는 대표적인 존대 말투의 하나다.” and “… 오늘날 일상 대화에서 가장 폭넓게 쓰이는 등급이다.”"
-        },
-        {
           "title": "해요체, an entry of the Standard Korean Language Dictionary",
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%B4%EC%9A%94%EC%B2%B4",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 해요-체 「명사」 『언어』: “상대 높임법의 하나. 상대편을 보통으로 높이는 뜻을 나타내는 종결형으로, 격식체인 ‘하오체’와 ‘하십시오체’를 쓸 자리에 두루 쓰는 비격식체이다. ‘안녕히 계세요. 다음에 또 들르겠어요.’ 따위이다.”"
+        },
+        {
+          "title": "공손법, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079632",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 공손법, section 내용, paragraph on 해요체: “해요체는 ‘합쇼체’ 다음으로 상대를 정중히 대하는 대표적인 존대 말투의 하나다.” and “… 오늘날 일상 대화에서 가장 폭넓게 쓰이는 등급이다.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 공손법, paragraph on 해요체; dictionary headword 해요-체). The encyclopedia calls 해요체 a representative polite style and the level used most widely in everyday conversation today; the dictionary defines it as the non-formal polite ending style with -요 examples. The note matches both; its English wording is original and copies no source text. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The note matches both; nothing copied. The q1 page 1 caption now carries it without Korean ('the polite style people use most in everyday talk'), because a page caption renders as plain text. Outcome: confirmed, no change to the note."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry calls 해요체 a polite speech level and the one used most widely in everyday conversation today; the dictionary defines 해요체 as the non-formal polite ending style, with examples ending in -요. The note says 'polite' and 'used most in everyday talk', restates both in original English and copies no source wording. Carried by: q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 공손법, paragraph on 해요체; dictionary headword 해요-체). The encyclopedia calls 해요체 a representative polite style and the level used most widely in everyday conversation today; the dictionary defines it as the non-formal polite ending style with -요 examples. The note matches both; its English wording is original and copies no source text. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The note matches both; nothing copied. The q1 page 1 caption now carries it without Korean ('the polite style people use most in everyday talk'), because a page caption renders as plain text. Outcome: confirmed, no change to the note.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1238,18 +1240,18 @@
       "textEn": "{ko:을} and {ko:를} mark the thing an action is done to, such as what you eat or drink. {ko:을} follows a final consonant; {ko:를} follows a vowel.",
       "sources": [
         {
-          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph: “목적격 조사 ‘을’과 ‘를’은 의미가 같으면서 자음으로 끝나는 체언 다음에서는 ‘을’이 나타나고 모음으로 끝나는 체언 다음에서는 ‘를’이 나타나며 그 반대의 경우에는 나타날 수 없다.”"
-        },
-        {
           "title": "목적격 조사, an entry of the Standard Korean Language Dictionary",
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A9%EC%A0%81%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 목적격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 목적어 자격을 가지게 하는 격 조사. ‘을/를’이 있다.”"
+        },
+        {
+          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph: “목적격 조사 ‘을’과 ‘를’은 의미가 같으면서 자음으로 끝나는 체언 다음에서는 ‘을’이 나타나고 모음으로 끝나는 체언 다음에서는 ‘를’이 나타나며 그 반대의 경우에는 나타날 수 없다.”"
         },
         {
           "title": "를, an entry of the Standard Korean Language Dictionary",
@@ -1263,7 +1265,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim; the consonant / vowel rule and 'the thing an action is done to' match. Carried by the q1 pattern noteEn and the particle hint of q1 r4, r5. Outcome: confirmed, no change. Pass 7 (MAR re-check of the PR head, 2026-10-14): the 목적격 조사 page does not show the 를 sense its locator also quoted, so that quote moved to its own source, the 를 entry (searchKeyword=를), where it was found verbatim. Outcome: confirmed after splitting a locator; note text unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 을/를 as the object case particle (the thing the action is done to); the encyclopedia entry states that 을 follows a consonant-final noun and 를 a vowel-final noun. The note restates both in original English with no copied wording. Carried by: q1 Discover pattern noteEn and the particle hint of the q1 Sentence Builder rounds r4 and r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 상보적 분포, last paragraph; dictionary 목적격 조사 and 를 「조사」 「1」). The dictionary supports 'marks the thing an action is done to' (direct object of the action); the encyclopedia states 을 after a consonant-final noun and 를 after a vowel-final noun. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim; the consonant / vowel rule and 'the thing an action is done to' match. Carried by the q1 pattern noteEn and the particle hint of q1 r4, r5. Outcome: confirmed, no change. Pass 7 (MAR re-check of the PR head, 2026-10-14): the 목적격 조사 page does not show the 를 sense its locator also quoted, so that quote moved to its own source, the 를 entry (searchKeyword=를), where it was found verbatim. Outcome: confirmed after splitting a locator; note text unchanged.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1272,18 +1274,18 @@
       "textEn": "{ko:이} and {ko:가} mark the subject of a sentence, here the thing you describe or like. {ko:이} follows a final consonant; {ko:가} follows a vowel.",
       "sources": [
         {
-          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph, after the 을/를 sentence (consonant-final noun: 을; vowel-final noun: 를): “‘이’와 ‘가’도 같은 이유로 한 형태소임을 알 수 있다.”"
-        },
-        {
           "title": "주격 조사, an entry of the Standard Korean Language Dictionary",
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A3%BC%EA%B2%A9%20%EC%A1%B0%EC%82%AC",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 주격 조사 『언어』: “문장 안에서, 체언이나 체언 구실을 하는 말 뒤에 붙어 주어의 자격을 가지게 하는 격 조사. ‘이/가’, ‘께서’, ‘에서’ 따위가 있다.”"
+        },
+        {
+          "title": "상보적 분포, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0079637",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 상보적 분포, section 내용, last paragraph, after the 을/를 sentence (consonant-final noun: 을; vowel-final noun: 를): “‘이’와 ‘가’도 같은 이유로 한 형태소임을 알 수 있다.”"
         },
         {
           "title": "은, 는, 이, 가 조사 분류, an Online Ganada answer",
@@ -1297,7 +1299,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources reopened and each quoteOrLocator found verbatim; the Online Ganada answer states the direction rule. The q3 particle rounds r4 and r5 became word-order rounds (their particle hint showed the q3 note about place words, pass 4), so the note is now carried by the q2 pattern noteEn and the particle hint of q2 r4, r5 only. Outcome: confirmed, no change to the note. Pass 7 (MAR re-check of the PR head, 2026-10-14): with {ko:좋아요} the liked thing takes 이/가, and the gloss 'I like bread' could hide that it is the subject; the note and the q2 pattern noteEn now say 'the thing you describe or like'. Online Ganada 320750 quotes 이/가 as marking the thing that shows a state, which covers 빵이 좋아요. Outcome: note widened to match its sources; nothing copied."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The dictionary names 이/가 as the subject case particle; the encyclopedia entry says 이 and 가 alternate for the same reason as 을/를, that is 이 after a consonant-final noun and 가 after a vowel-final noun. The note restates this in original English with no copied wording. Carried by: q2 Discover pattern noteEn and the particle hint of q2 rounds r4, r5 and q3 rounds r4, r5.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both cited pages re-fetched and each quoteOrLocator found verbatim. The dictionary supports 'marks the subject'; the encyclopedia only says 이 and 가 are one morpheme for the same reason as 을/를, so it implies but does not state which form follows which. Fix: added a third source, the NIKL Online Ganada answer 320750 (www.korean.go.kr), which quotes the dictionary senses 이 「039」 (after a noun with a final consonant) and 가 「017」 (after a noun with no final consonant); its quote was found verbatim. With it the note's direction rule is stated by a source. Note text unchanged; English wording original, nothing copied. Outcome: confirmed after adding a source.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three sources reopened and each quoteOrLocator found verbatim; the Online Ganada answer states the direction rule. The q3 particle rounds r4 and r5 became word-order rounds (their particle hint showed the q3 note about place words, pass 4), so the note is now carried by the q2 pattern noteEn and the particle hint of q2 r4, r5 only. Outcome: confirmed, no change to the note. Pass 7 (MAR re-check of the PR head, 2026-10-14): with {ko:좋아요} the liked thing takes 이/가, and the gloss 'I like bread' could hide that it is the subject; the note and the q2 pattern noteEn now say 'the thing you describe or like'. Online Ganada 320750 quotes 이/가 as marking the thing that shows a state, which covers 빵이 좋아요. Outcome: note widened to match its sources; nothing copied.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1306,25 +1308,25 @@
       "textEn": "A describing word such as {ko:뜨거워요} can end a sentence by itself. Unlike English, it needs no extra word for 'is'.",
       "sources": [
         {
-          "title": "형용사, an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0063550",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 형용사, section 내용, first paragraph: “국어의 형용사는 단독으로도 서술어로 쓰일 수 있다는 점에서 be동사의 도움을 받는 영어의 형용사와는 차이가 있다.”"
-        },
-        {
           "title": "형용사, an entry of the Standard Korean Language Dictionary",
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%98%95%EC%9A%A9%EC%82%AC",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Headword 형용-사 「명사」 『언어』: “사물의 성질이나 상태를 나타내는 품사. 활용할 수 있어 동사와 함께 용언에 속한다.”"
+        },
+        {
+          "title": "형용사, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0063550",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 형용사, section 내용, first paragraph: “국어의 형용사는 단독으로도 서술어로 쓰일 수 있다는 점에서 be동사의 도움을 받는 영어의 형용사와는 차이가 있다.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 형용사, section 내용, first paragraph; dictionary 형용-사, and 맛-있다 「형용사」). The encyclopedia says a Korean adjective can be a predicate alone, unlike an English adjective that needs be, which is what the note says; the dictionary confirms the adjective is an inflecting state word. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The 맛-있다 see-also was removed from the dictionary locator because that entry is not on the cited search page. The q2 page 2 caption carries the note without Korean. Outcome: confirmed after narrowing a locator; note text unchanged."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The encyclopedia entry says a Korean adjective serves as a predicate alone, unlike an English adjective that needs be; the dictionary defines the adjective as a word of state that inflects like a verb. The note restates this in original English with no copied wording. Carried by: q2 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched and each quoteOrLocator found verbatim (encyclopedia entry 형용사, section 내용, first paragraph; dictionary 형용-사, and 맛-있다 「형용사」). The encyclopedia says a Korean adjective can be a predicate alone, unlike an English adjective that needs be, which is what the note says; the dictionary confirms the adjective is an inflecting state word. English wording is original, nothing copied. Outcome: confirmed, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both sources reopened and each quoteOrLocator found verbatim. The 맛-있다 see-also was removed from the dictionary locator because that entry is not on the cited search page. The q2 page 2 caption carries the note without Korean. Outcome: confirmed after narrowing a locator; note text unchanged.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {

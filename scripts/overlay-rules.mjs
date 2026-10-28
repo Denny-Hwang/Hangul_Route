@@ -15,7 +15,8 @@
 //                            apps/mobile/src/content/__tests__/overlays.test.ts), or a path
 //                            naming an element the entity does not have
 //   overlay-forbidden-field  a field outside OVERLAY_FIELDS for the id prefix
-//   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields
+//   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields (the
+//                            {ko:} tokens of a lesson note, Discover or cell `culture[]`, are taught Korean)
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
@@ -102,7 +103,10 @@ const tokenList = (text) => Array.from(text.matchAll(TOKEN), (m) => m[1]).sort()
  */
 const KO_TOKEN = /\{ko:([^}]*)\}/g;
 const LESSON_NOTE_FIELD = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.note$/;
-const isLessonNote = (id, field) => /^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field);
+/** A lesson cell's own note (`culture[]`, F-CURR-002 row CM-3C), shown as the Did you know? tip: the same `{ko:}` rule. */
+const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
+const isLessonNote = (id, field) =>
+  (/^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field)) || (/^episode:stage[2-467]-/.test(id) && CELL_NOTE_FIELD.test(field));
 const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
 
 /**

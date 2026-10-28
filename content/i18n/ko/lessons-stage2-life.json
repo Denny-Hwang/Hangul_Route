@@ -5,7 +5,8 @@
     "episode:stage2-life": {
       "title": "도시락 낱말",
       "subtitle": "음식과 식사에 관한 한국어 낱말을 읽어요.",
-      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!"
+      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!",
+      "culture.n1.text": "한국의 전통적인 일상 밥상에는 {ko:밥}을 중심으로 여러 {ko:반찬}, 그리고 {ko:국}이나 찌개를 함께 차려요."
     },
     "quest:stage2-life-q1": {
       "title": "도시락 낱말",

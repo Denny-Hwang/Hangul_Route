@@ -1264,6 +1264,13 @@
       "textEn": "In a traditional everyday Korean meal, rice ({ko:밥}) is served with side dishes, called {ko:반찬}, and with soup ({ko:국}) or stew.",
       "sources": [
         {
+          "title": "반찬",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%B0%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 반찬(飯饌) 「명사」, the definition (its only sense): the general word for the foods eaten along with rice."
+        },
+        {
           "title": "반상(飯床)",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
           "url": "https://encykorea.aks.ac.kr/Article/E0021491",
@@ -1276,20 +1283,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0021492",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 반상기, section 내용, first sentence: the dishes a 반상 is made of, listing rice, soup, stew, kimchi, sauces and side dishes."
-        },
-        {
-          "title": "반찬",
-          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%B0%AC",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 반찬(飯饌) 「명사」, the definition (its only sense): the general word for the foods eaten along with rice."
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): all three pages opened. The Encyclopedia of Korean Culture entry 반상 defines it as a setting of rice and side dishes, says rice is the staple with side dishes alongside, and that soup or stew is set with them; the entry 반상기 lists rice, soup, stew, kimchi, sauces and side dishes as what a 반상 holds; the Standard Korean Language Dictionary defines 반찬 as the foods eaten with rice. Backs the note and the q3 Discover line. The note says traditional everyday meal (the 반상 the sources describe), not what every household eats. English paraphrase, no wording copied.\nPass 2b (independent fact check, 2026-10-14): all three pages re-opened. Encyclopedia of Korean Culture 반상: the definition is a setting made of rice and side dishes, and 내용 paragraph 1 calls it the everyday meal setting, with rice as the staple, side dishes as the accompaniment, and soup or stew set alongside them. 반상기 내용 sentence 1 lists rice, soup, stew, kimchi, the sauces and side dishes. The Standard Korean Language Dictionary entry 반찬(飯饌) has one sense: a general word for the food eaten with rice. Locators match. The note's 'traditional everyday meal' follows the encyclopedia's own framing and makes no claim about every household. Claim holds. The note is an English paraphrase and shares no wording with the sources. Both hosts are on SOURCE_HOST_ALLOWLIST, and both publishers are Korean public institutions.\nPass 5 (MAR culture review, independent final check, 2026-10-14): the Encyclopedia of Korean Culture entries 반상 and 반상기 and the Standard Korean Language Dictionary entry 반찬(飯饌) re-read. 반상 is a setting of rice and side dishes with soup or stew alongside, the everyday native meal; 반상기 lists rice, soup, stew, kimchi, sauces and side dishes; 반찬 has one sense, the foods eaten with rice, and its locator now says so. Claim holds as the traditional everyday meal, not what every household eats. No wording shared with the sources."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): all three pages opened. The Encyclopedia of Korean Culture entry 반상 defines it as a setting of rice and side dishes, says rice is the staple with side dishes alongside, and that soup or stew is set with them; the entry 반상기 lists rice, soup, stew, kimchi, sauces and side dishes as what a 반상 holds; the Standard Korean Language Dictionary defines 반찬 as the foods eaten with rice. Backs the note and the q3 Discover line. The note says traditional everyday meal (the 반상 the sources describe), not what every household eats. English paraphrase, no wording copied.\nPass 2b (independent fact check, 2026-10-14): all three pages re-opened. Encyclopedia of Korean Culture 반상: the definition is a setting made of rice and side dishes, and 내용 paragraph 1 calls it the everyday meal setting, with rice as the staple, side dishes as the accompaniment, and soup or stew set alongside them. 반상기 내용 sentence 1 lists rice, soup, stew, kimchi, the sauces and side dishes. The Standard Korean Language Dictionary entry 반찬(飯饌) has one sense: a general word for the food eaten with rice. Locators match. The note's 'traditional everyday meal' follows the encyclopedia's own framing and makes no claim about every household. Claim holds. The note is an English paraphrase and shares no wording with the sources. Both hosts are on SOURCE_HOST_ALLOWLIST, and both publishers are Korean public institutions.\nPass 5 (MAR culture review, independent final check, 2026-10-14): the Encyclopedia of Korean Culture entries 반상 and 반상기 and the Standard Korean Language Dictionary entry 반찬(飯饌) re-read. 반상 is a setting of rice and side dishes with soup or stew alongside, the everyday native meal; 반상기 lists rice, soup, stew, kimchi, sauces and side dishes; 반찬 has one sense, the foods eaten with rice, and its locator now says so. Claim holds as the traditional everyday meal, not what every household eats. No wording shared with the sources.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],
