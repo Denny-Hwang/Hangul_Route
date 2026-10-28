@@ -11,12 +11,14 @@ import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
+import { playedScope } from '../../logic/role-play/fallback';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
 import type { RootStackParamList } from '../../navigation/types';
 import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
+import { useFrozenCurrFlag } from '../../store/remote-config-store';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -40,6 +42,7 @@ import { TypeHangulGame } from './TypeHangulGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
 import { useSwitchedScope } from './dictation-entry';
+import { RolePlayStep } from './role-play/role-play-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 
@@ -80,14 +83,20 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const step = quest?.steps[stepIndex];
   const ref = step?.minigameRef;
   const locale = useLocale();
+  // `game.role-play` (F-CURR-002 section 12.2, row CM-35), read once the stored copy is in and then kept for the step,
+  // so a config that arrives mid-step never swaps the game under the learner; off, a role-play step plays Tap to Respond
+  // on the same turns. A role-play step waits for that read (a cold start reads off before it, which would freeze off).
+  const rolePlayOn = useFrozenCurrFlag('game.role-play');
+  const waitsForSwitch = rolePlayOn === null && ref !== undefined && scopeFor(ref)?.kind === 'role-play';
   // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
   // game's rounds are not rebuilt (and reshuffled) on every render.
   const localized = useMemo(() => {
     // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
-    return source && ref ? localizeScope(source, ref, locale) : source;
-  }, [ref, locale, questId, stepIndex]);
+    const inLocale = source && ref ? localizeScope(source, ref, locale) : source;
+    return inLocale && playedScope(inLocale, rolePlayOn === true);
+  }, [ref, locale, questId, stepIndex, rolePlayOn]);
   // The `game.<kind>` switches, decided as the step opens, and the dictation chunk when a round plays from it (row CM-31).
   const switched = useSwitchedScope(localized);
   const scope = switched?.kind === 'ready' ? switched.scope : undefined;
@@ -133,7 +142,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     </Screen>
   );
 
-  if (switched?.kind === 'loading') return <LessonWaiting />;
+  if (waitsForSwitch || switched?.kind === 'loading') return <LessonWaiting />;
   if (!quest || !step || !scope) {
     return fallback(copy.notFound);
   }
@@ -144,7 +153,14 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted === true),
+      useQuestRunStore.getState().answerRound(
+        roundKey,
+        correct,
+        inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId },
+        // Dictation's hint is a hinted right answer whatever it scored (row CM-31); Role Play's Show meanings counts
+        // only with a right reply, a wrong one being a plain miss (row CM-35).
+        meta?.hinted === true && (correct || scope.kind !== 'role-play'),
+      ),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
       close();
@@ -198,6 +214,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     // F-CURR-002 row CM-34: behind `game.story-order`; off, its rounds play as Story Sequence (text cards).
     case 'story-order':
       return <StoryOrderStep scope={scope} host={host} sequenceId={ref ?? ''} onFallbackFinish={() => closeAs('story-sequence')} />;
+    case 'role-play':
+      return <RolePlayStep scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

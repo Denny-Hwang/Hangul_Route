@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { create } from 'zustand';
 import { currBuildFloor, currBuiltInPct, type CurrFlagName } from '../config/flags';
 import {
@@ -204,6 +205,19 @@ export function useCurrFlagDecided(flag: CurrFlagName): boolean | null {
   const on = useCurrFlag(flag);
   const ready = useRemoteConfigStore(decidable);
   return ready ? on : null;
+}
+
+/**
+ * A switch read once, for a surface that must not change under the learner once it opens (row CM-35: a game step):
+ * `null` until the store can decide (the stored copy read, or a fetch kept one), then the answer at that moment, kept
+ * for the life of the component, so a copy that arrives mid-step never swaps what is on screen. Until then the
+ * caller waits (a cold start reads off before the stored copy is in, which would freeze the fallback).
+ */
+export function useFrozenCurrFlag(flag: CurrFlagName): boolean | null {
+  const ready = useRemoteConfigStore(decidable);
+  const frozen = useRef<boolean | null>(null);
+  if (frozen.current === null && ready) frozen.current = currFlagOn(flag);
+  return frozen.current;
 }
 
 /** Tests only. */

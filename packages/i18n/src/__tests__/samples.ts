@@ -1009,4 +1009,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-30: Cloze Pick's prompt card, the romanization with its gap read as a word and the meaning.
   'a11y.minigame.clozePick.sentence': [['chaegeul blank', 'I read a book.'], ['mulblank masyeoyo', 'I drink water.']],
   'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],
+  // F-CURR-002 row CM-35: a Role Play bubble: the partner's role (UI language), the line, its romanization and meaning; a sent reply.
+  // The Korean line is passed in at run time; the samples stand in with romanization, as the other games' rows do.
+  'a11y.minigame.rolePlay.partner': [['librarian', 'museun chaegeul chajayo?', 'museun chaegeul chajayo', 'What book are you looking for?']],
+  'a11y.minigame.rolePlay.me': [['donghwachaegeul chajayo.', 'donghwachaegeul chajayo']],
+  // F-CURR-002 row CM-35, the lecture Role Play slide: the reply the class gave (its Korean with romanization, passed in at run time).
+  'a11y.presenter.rolePlayClass': [['annyeonghaseyo!, annyeonghaseyo']],
 };

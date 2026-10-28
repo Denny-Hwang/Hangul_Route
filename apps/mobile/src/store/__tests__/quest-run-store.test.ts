@@ -287,5 +287,20 @@ describe('quest-run-store', () => {
       setFirstRoundAnswerListener(null);
     }
   });
-});
 
+  it('a first answer given with a hint showing reaches the memory store hinted when right, as a plain miss when wrong (row CM-35)', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      store.answerRound('t1', true, { texts: ['안녕하세요!'], hinted: true });
+      store.answerRound('t2', false, { texts: ['무슨 책을 찾아요?'], hinted: true });
+      store.answerRound('t3', true, { texts: ['또 오세요!'] });
+      expect(heard.map((a) => a.hinted)).toEqual([true, undefined, undefined]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+});

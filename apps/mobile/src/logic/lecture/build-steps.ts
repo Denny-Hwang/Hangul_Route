@@ -149,6 +149,32 @@ export type WriteTogether =
   | { variant: 'frame'; frame: FrameText; banks: SheetText[][]; example: SheetText & { spoken: SpokenForm } }
   | { variant: 'own-name'; frame: FrameText; groups: SheetText[][] };
 
+/** A reply bubble of a Role Play turn on the stage: natural (it fits), or less natural with Hoya's reason (`{ko:}` tokens as chips). */
+export interface RolePlayReplyView {
+  ko: string;
+  romanization: string;
+  gloss: string;
+  natural: boolean;
+  why?: NarrationPiece[];
+}
+
+/**
+ * A Role Play turn on the stage (F-CURR-002 section 8 "Role Play (a read-together chat; the class picks the reply)",
+ * row CM-35): the scene's place and the partner's role in the slide language, the exchange just before this turn
+ * (the partner's line and the reply the room gave, on the main path), the partner's line now, and the replies in the
+ * slide's seeded order. Builds `question`, `answer`: the room picks a reply by its marker; at the answer the natural
+ * replies are marked and each less natural one keeps its place with Hoya's reason in amber, never red, so every turn
+ * ends well. The last turn carries the scene's closing line, shown at its answer build.
+ */
+export interface RolePlayTurn {
+  scene: string;
+  partner: string;
+  before?: { line: SpokenLine; reply: SpokenLine };
+  line: SpokenLine;
+  replies: RolePlayReplyView[];
+  closing?: string;
+}
+
 export interface SequenceStep {
   id: string;
   gloss: string;
@@ -252,6 +278,8 @@ export type SlideBody =
   | { kind: 'sentence-build'; sentence: SpokenLine; tiles: BuildTile[]; bank: BankPlace[] }
   /** A Type Hangul, Trace a Word or Write Frame round the room writes together (LV-S4): see `WriteTogether`. */
   | ({ kind: 'write-together' } & WriteTogether)
+  /** A Role Play turn the room reads together and picks the reply for (F-CURR-002 section 8, row CM-35): see `RolePlayTurn`. */
+  | ({ kind: 'role-play' } & RolePlayTurn)
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -327,6 +355,7 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       return ['art', 'narration', ...(body.korean ? (['korean'] as const) : []), ...(body.korean || chips ? rom : [])];
     }
     case 'quiz':
+    case 'role-play':
       return ['question', 'answer'];
     case 'card':
       // The chip (and so its romanization build) is drawn only when the card has both its Korean and romanization.

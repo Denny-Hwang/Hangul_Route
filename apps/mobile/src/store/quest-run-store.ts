@@ -117,8 +117,10 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
     if (first && asked && firstAnswerListener && before.questId && before.episodeId) {
       try {
-        // A hinted answer (help shown, or a typed slip of one letter) is never wrong for the memory store, whatever it scored.
-        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct: correct || hinted, asked, at: new Date(), ...(hinted ? { hinted: true } : {}) });
+        // A hinted answer (help shown, or a typed slip of one letter) is never wrong for the memory store, whatever it
+        // scored; a round that only says it was asked with a hint showing (`asked.hinted`, row CM-35) is hinted when right.
+        const help = hinted || (correct && asked.hinted === true);
+        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct: correct || hinted, asked, at: new Date(), ...(help ? { hinted: true } : {}) });
       } catch {
         // The round is scored; only the memory store misses the answer.
       }

@@ -1,5 +1,8 @@
 import {
   CATALOG,
+  decodeDeck,
+  encodeDeck,
+  LECTURE_DECODE_FAILURES,
   LECTURE_PRESETS,
   LectureDeckSchema,
   PRESET_LENGTHS,
@@ -16,6 +19,7 @@ import {
   type QuestStep,
 } from '@hangul-route/content-schema';
 import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import { questsAll } from '../../../content/quests';
@@ -1995,6 +1999,103 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice);
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
   const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
+
+  describe('Role Play (F-CURR-002 section 8, row CM-35): a read-together chat, the class picks the reply', () => {
+    type RolePlay = Extract<Slide, { kind: 'role-play' }>;
+    const rp = quest('role-play', [['apply', 'mg:role-play'], ['check', 'mg:role-play-none']], { rewardCardId: undefined });
+    const withScene = (scene: typeof LIBRARY_SCENE) =>
+      b({
+        scopeFor: (ref) => (ref === 'mg:role-play' ? { kind: 'role-play', rounds: 4, rolePlay: { scene } } : ref === 'mg:role-play-none' ? { kind: 'role-play' } : undefined),
+        questById: (id) => (id === rp.id ? rp : undefined),
+      });
+    const turns = (slides: readonly Slide[]): RolePlay[] => only(slides, 'role-play');
+
+    it('a role-play slide per turn of the main path, in order, each with the question and answer builds; a scope with no scene is skipped', () => {
+      const { slides, skipped } = run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE));
+      const chat = turns(slides);
+      expect(chat.map((t) => t.key)).toEqual(['quest:role-play/s1/t1', 'quest:role-play/s1/t2', 'quest:role-play/s1/t3', 'quest:role-play/s1/t4']);
+      expect(chat.map((t) => t.line.ko)).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!']);
+      expect(chat.every((t) => t.builds.join() === 'question,answer')).toBe(true);
+      expect(chat.every((t) => t.scene === 'At the library' && t.partner === 'librarian')).toBe(true);
+      expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:role-play-none', reason: 'scope-too-small' }]);
+      // No reply slide of the Tap to Respond fallback: the lecture has its own slide now.
+      expect(only(slides, 'quiz')).toEqual([]);
+    });
+
+    it('each turn carries the exchange before it (the partner line and the reply the room gave), the line with what Sound says, and every reply', () => {
+      const chat = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides);
+      expect(chat[0]!.before).toBeUndefined();
+      expect(chat[1]!.before).toEqual({
+        line: { ko: '안녕하세요!', romanization: 'annyeonghaseyo', gloss: 'Hello!', spoken: { text: '안녕하세요!', romanization: 'annyeonghaseyo' } },
+        reply: { ko: '안녕하세요!', romanization: 'annyeonghaseyo', gloss: 'Hello!', spoken: { text: '안녕하세요!', romanization: 'annyeonghaseyo' } },
+      });
+      expect(chat[2]!.before?.reply.ko).toBe('동화책을 찾아요.');
+      expect(chat[1]!.line).toEqual({
+        ko: '무슨 책을 찾아요?',
+        romanization: 'museun chaegeul chajayo',
+        gloss: 'What book are you looking for?',
+        spoken: { text: '무슨 책을 찾아요?', romanization: 'museun chaegeul chajayo' },
+      });
+      // Turn 2 keeps both natural replies (either fits; the stage follows the first) and the less natural one with its reason.
+      const sorted = [...chat[1]!.replies].sort((x, y) => x.ko.localeCompare(y.ko));
+      expect(sorted).toEqual([
+        { ko: '괜찮아요.', romanization: 'gwaenchanayo', gloss: 'It is okay.', natural: false, why: [{ text: 'They asked which book. Tell them the book you want.' }] },
+        { ko: '동화책을 찾아요.', romanization: 'donghwachaegeul chajayo', gloss: 'I am looking for a storybook.', natural: true },
+        { ko: '한글 책을 찾아요.', romanization: 'hangeul chaegeul chajayo', gloss: 'I am looking for a Hangul book.', natural: true },
+      ]);
+    });
+
+    it("a reason's {ko:} token is a Korean chip with its romanization; a token that cannot be romanized drops only that reason, counted", () => {
+      const last = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides)[3]!;
+      expect(last.replies.find((r) => !r.natural)?.why).toEqual([
+        { text: 'You are the one leaving, so ' },
+        { ko: '안녕히 계세요', romanization: 'annyeonghi gyeseyo' },
+        { text: ' fits: it is said to the one who stays.' },
+      ]);
+      const odd = {
+        ...LIBRARY_SCENE,
+        nodes: LIBRARY_SCENE.nodes.map((n) =>
+          n.id === 't1' && !('end' in n) ? { ...n, replies: n.replies.map((r) => (r.kind === 'lessNatural' ? { ...r, whyEn: 'Try {ko:ㅋ}.' } : r)) } : n,
+        ),
+      };
+      const { slides, skipped } = run(rp.id, {}, VOICE, withScene(odd));
+      const first = turns(slides)[0]!;
+      expect(first.replies).toHaveLength(2);
+      expect(first.replies.find((r) => !r.natural)).toEqual({ ko: '잘 먹겠습니다!', romanization: 'jal meokgetseumnida', gloss: 'I will eat well. (said before eating)', natural: false });
+      expect(skipped).toContainEqual({ blockIndex: 0, ref: 'mg:role-play', reason: 'no-romanization' });
+    });
+
+    it('every turn ends well: every turn has a natural reply, every less natural one has its reason, and only the last turn closes the chat', () => {
+      const chat = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides);
+      expect(chat.every((t) => t.replies.some((r) => r.natural))).toBe(true);
+      expect(chat.every((t) => t.replies.every((r) => r.natural || (r.why !== undefined && r.why.length > 0)))).toBe(true);
+      expect(chat.map((t) => t.closing)).toEqual([undefined, undefined, undefined, 'You found your book!']);
+    });
+
+    it('the replies are in the slide seed order, the same for the same deck, and the room is never shown them in content order every time', () => {
+      const orders = (seed: number) => turns(run(rp.id, { seed }, VOICE, withScene(LIBRARY_SCENE)).slides).map((t) => t.replies.map((r) => r.ko).join('|'));
+      expect(orders(7)).toEqual(orders(7));
+      const seeds = Array.from({ length: 12 }, (_, i) => i);
+      expect(new Set(seeds.map((seed) => orders(seed)[1])).size).toBeGreaterThan(1);
+    });
+
+    it('the run draws the slide (a shell kind), its Sound plays the partner line, and its words count as sentences for a later word card', () => {
+      const deck = deckOf([{ kind: 'quest', id: rp.id }]);
+      const expanded = expandDeck(deck, withScene(LIBRARY_SCENE), VOICE);
+      const { slides, parts } = runDeck(deck, expanded);
+      expect(only(slides, 'role-play')).toHaveLength(4);
+      expect(parts).toEqual([{ blockIndex: 0, reason: 'scope-too-small' }]);
+    });
+
+    it('the deck shape does not change: a deck naming a quest with a Role Play step stays v1 and decodes, so no new decode failure is needed', () => {
+      const deck = deckOf([{ kind: 'quest', id: rp.id }]);
+      const fragment = encodeDeck(deck);
+      expect(fragment.startsWith('1.')).toBe(true);
+      const decoded = decodeDeck(fragment);
+      expect(decoded.ok).toBe(true);
+      expect(LECTURE_DECODE_FAILURES).toEqual(['empty', 'too_large', 'bad_encoding', 'bad_json', 'unsupported_version', 'invalid']);
+    });
+  });
 
   it('every shipped kind of question step becomes slides, in step order, with no skip', () => {
     const { slides, skipped } = run(asked.id);

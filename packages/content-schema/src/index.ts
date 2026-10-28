@@ -70,3 +70,5 @@ export * from './schemas/lesson-chooser';
 export * from './schemas/curr-telemetry';
 export * from './schemas/curr-rollup-buckets';
 export * from './schemas/guest';
+// F-CURR-002 row CM-35: the Role Play scene and its graph rules.
+export * from './schemas/role-play';

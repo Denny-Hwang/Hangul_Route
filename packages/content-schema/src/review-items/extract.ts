@@ -274,6 +274,20 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
         if (reply !== undefined) c.text(turn.line, 'exc', 'round', `${at}.turns[${ti}]`, { glossKey: k(`dialogue.${ti}.npc`), reply });
       });
       return;
+    case 'role-play': {
+      // Each turn's line with each natural reply is an exchange (section 4.2): two natural replies are two items. A less
+      // natural reply is never sent, so it teaches nothing. Glossed at the runtime scope's overlay fields (`rolePlay.scene`).
+      const scene = isRec(scope.scene) ? scope.scene : {};
+      arr(scene.nodes).filter(isRec).forEach((node, ni) => {
+        const id = key(node, ni);
+        arr(node.replies).filter(isRec).forEach((r, ri) => {
+          if (r.kind !== 'natural') return;
+          const reply = lineOf(r.text, k(`rolePlay.scene.nodes.${id}.replies.${key(r, ri)}.text.gloss`));
+          if (reply !== undefined) c.text(node.line, 'exc', 'round', `${at}.scene.nodes[${ni}].replies[${ri}]`, { glossKey: k(`rolePlay.scene.nodes.${id}.line.gloss`), reply });
+        });
+      });
+      return;
+    }
     case 'story-sequence':
       arr(scope.lines).filter(isRec).forEach((line, li) => {
         c.text(line.line, 'pat', 'round', `${at}.lines[${li}]`, { glossKey: k(`storySteps.${key(line, li)}.label`) });

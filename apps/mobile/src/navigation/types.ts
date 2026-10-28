@@ -19,6 +19,7 @@ import type { TypeHangulE2eParams } from './type-hangul-e2e';
 import type { ClozePickE2eParams } from './cloze-pick-e2e';
 import type { TraceWordE2eParams } from './trace-word-e2e';
 import type { WriteFrameE2eParams } from './write-frame-e2e';
+import type { RolePlayE2eParams } from './role-play-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -344,6 +345,7 @@ export type RootStackParamList = {
   ClozePickE2e: ClozePickE2eParams;
   /** Fixture builds only (`navigation/story-order-e2e.tsx`): Story Order's step on fixture scopes (F-CURR-002 CM-34). */
   StoryOrderE2e: StoryOrderE2eParams;
+  RolePlayE2e: RolePlayE2eParams;
   /**
    * [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): what a teacher sees and
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.

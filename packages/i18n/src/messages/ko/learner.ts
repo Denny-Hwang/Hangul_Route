@@ -676,6 +676,12 @@ export const learner = {
       miss: '문장을 다시 읽어 봐요. 어느 것이 알맞을까요?',
       lookHere: '여기에는 이게 알맞아요.',
     },
+    rolePlay: {
+      tapReply: '대답을 눌러요',
+      showMeanings: { cta: '뜻 보기' },
+      meaningsShown: '뜻이 보여요',
+      moreReplies: '아래에 대답이 더 있어요',
+    },
   },
 
   audio: {
@@ -1181,6 +1187,7 @@ export const learner = {
       writeFrame: '나만의 문장 완성하기',
       sentenceBuilder: '문장 만들기',
       clozePick: '문장의 빈칸 채우기',
+      rolePlay: '대화 읽고 대답 누르기',
     },
     legend: {
       title: '모양의 뜻',
@@ -1706,6 +1713,7 @@ export const learner = {
         realia: '보고 읽기',
         build: '문장 만들기',
         write: '함께 쓰기',
+        rolePlay: '역할극',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -1754,6 +1762,7 @@ export const learner = {
       sentence: { label: '문장' },
       pattern: { label: '문장 틀' },
       readAlong: { label: '함께 읽기' },
+      rolePlay: { label: '역할극' },
       realia: { ask: '잘 보고 답을 찾아요.' },
       build: { title: '함께 문장을 만들어요', next: '다음 낱말은 뭘까요?', particle: '어떤 말이 어울릴까요?' },
       write: {
