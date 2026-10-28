@@ -7,17 +7,19 @@ import { LESSON_STAGE_MODULES } from '../../../content/__tests__/helpers/lesson-
 import { localizeScope } from '../../../logic/content-locale';
 import { tileId } from '../../../logic/cloze-pick/round';
 import { scopeFor, type MinigameScope } from '../../../logic/minigame-config';
-import { byTestId, render, screenTexts, unmount } from '../../../test-support/render';
+import { byTestId, hostNodes, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickFallback } from '../cloze-pick-fallback';
 import { ClozePickGame } from '../ClozePickGame';
 import type { MinigameHost } from '../host';
 import { WriteFrameGame } from '../WriteFrameGame';
 
 /**
- * F-CURR-002 row CM-3A S7 (sections 12.2 and 14, "every quest renders with each game.<kind> off"): every Stage 7
- * Check step renders at 320 px in en, es and ko. A Cloze Pick Check draws Cloze Pick with `game.cloze-pick` on and its
- * Listen & Pick fallback (text prompt, the same tiles) with it off; a Write Frame Check draws its word bank. Every
- * Check is a shipped game or behind a switch with a fallback, so no switch leaves a Stage 7 Check unplayable.
+ * F-CURR-002 row CM-3A S7 (sections 12.2 and 14, "every quest renders with each game.<kind> off"): every round of
+ * every Stage 7 Check step renders at 320 px in en, es and ko, in the Check host (`mode: 'check'`). A Cloze Pick Check
+ * draws Cloze Pick with `game.cloze-pick` on and its Listen & Pick fallback (text prompt, the same tiles) with it off;
+ * a Write Frame Check draws its word bank, the "Quick check" header and no Skip, before and after the pick (the Check
+ * is the quest's only evidence, `logic/quest-flow/check-launcher.ts`). Every Check is a shipped game or behind a
+ * switch with a fallback, so no switch leaves a Stage 7 Check unplayable.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -31,7 +33,9 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
 vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => true }));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => undefined) }));
 
-const host: MinigameHost = { mode: 'quest', answer: () => undefined, complete: () => undefined };
+const host: MinigameHost = { mode: 'check', answer: () => undefined, complete: () => undefined };
+/** No game draws a Skip in the Check (any `*-skip` test id). */
+const skips = (r: ReactTestRenderer): number => hostNodes(r.root, (n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].endsWith('-skip')).length;
 const LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
 const overlaysOf = (ref: string) => Object.values(LESSON_STAGE_MODULES).find((m) => ref in m.LESSON_SCOPES)?.LESSON_SCOPE_OVERLAYS;
 
@@ -68,25 +72,43 @@ describe('the Stage 7 Checks render with their switches on and off (row CM-3A S7
     it(`${locale}: each Cloze Pick Check draws the game when on and the Listen & Pick fallback on the same tiles when off`, async () => {
       for (const { questId, ref, scope } of checks.filter((c) => c.scope.kind === 'cloze-pick')) {
         const local = localizeScope(scope, ref, locale, overlaysOf(ref));
-        const round = local.clozePick!.rounds[0]!;
-        const on = await mount(<ClozePickGame scope={local} host={host} />);
-        expect(byTestId(on.root, 'cloze-pick-sentence').length, `${questId} on`).toBeGreaterThan(0);
-        expect(byTestId(on.root, `cloze-pick-tile-${tileId(round.id, round.answerIndex)}`).length, `${questId} on`).toBeGreaterThan(0);
-        const off = await mount(<ClozePickFallback scope={local} host={host} />);
-        expect(byTestId(off.root, 'listen-pick-text-prompt').length, `${questId} off`).toBeGreaterThan(0);
-        expect(byTestId(off.root, `listen-pick-option-${tileId(round.id, round.answerIndex)}`).length, `${questId} off`).toBeGreaterThan(0);
-        // The meaning shown is the UI language's gloss of the sentence, never the English in es or ko.
-        if (locale !== 'en') expect(screenTexts(off.root).join(' '), questId).not.toContain(scope.clozePick!.rounds[0]!.sentence.en);
+        expect(local.clozePick!.rounds, questId).toHaveLength(2);
+        for (const [i, round] of local.clozePick!.rounds.entries()) {
+          // Each round on its own, so every round of the Check is drawn, not only the first.
+          const one = { ...local, rounds: 1, clozePick: { ...local.clozePick!, rounds: [round] } };
+          const where = `${questId} ${round.id}`;
+          const on = await mount(<ClozePickGame scope={one} host={host} />);
+          expect(byTestId(on.root, 'cloze-pick-sentence').length, `${where} on`).toBeGreaterThan(0);
+          expect(byTestId(on.root, `cloze-pick-tile-${tileId(round.id, round.answerIndex)}`).length, `${where} on`).toBeGreaterThan(0);
+          expect(skips(on), `${where} on`).toBe(0);
+          const off = await mount(<ClozePickFallback scope={one} host={host} />);
+          expect(byTestId(off.root, 'listen-pick-text-prompt').length, `${where} off`).toBeGreaterThan(0);
+          expect(byTestId(off.root, `listen-pick-option-${tileId(round.id, round.answerIndex)}`).length, `${where} off`).toBeGreaterThan(0);
+          expect(skips(off), `${where} off`).toBe(0);
+          // The meaning shown is the UI language's gloss of the sentence, never the English in es or ko.
+          if (locale !== 'en') expect(screenTexts(off.root).join(' '), where).not.toContain(scope.clozePick!.rounds[i]!.sentence.en);
+        }
       }
     }, 60_000);
 
-    it(`${locale}: each Write Frame Check draws its frame and its word bank`, async () => {
+    it(`${locale}: each round of each Write Frame Check draws its frame, its word bank and the Check header, with no Skip before or after the pick`, async () => {
       for (const { questId, ref, scope } of checks.filter((c) => c.scope.kind === 'write-frame')) {
         const local = localizeScope(scope, ref, locale, overlaysOf(ref));
-        const r = await mount(<WriteFrameGame scope={local} host={host} />);
-        const texts = screenTexts(r.root).join(' ');
-        for (const word of local.writeFrame!.rounds[0]!.slots[0]!.bank) expect(texts, `${questId} ${word.ko}`).toContain(word.ko);
+        expect(local.writeFrame!.rounds, questId).toHaveLength(2);
+        for (const round of local.writeFrame!.rounds) {
+          const where = `${questId} ${round.id}`;
+          const one = { ...local, rounds: 1, writeFrame: { rounds: [round] } };
+          const r = await mount(<WriteFrameGame scope={one} host={host} />);
+          const texts = screenTexts(r.root).join(' ');
+          for (const word of round.slots[0]!.bank) expect(texts, `${where} ${word.ko}`).toContain(word.ko);
+          expect(texts, where).toContain('Quick check');
+          expect(skips(r), where).toBe(0);
+          // After the pick (typing on the keyboard, or the next slot's bank): still no Skip.
+          const first = byTestId(r.root, 'write-frame-word-0').find((n) => typeof n.props.onClick === 'function');
+          await press(first!);
+          expect(skips(r), `${where} after the pick`).toBe(0);
+        }
       }
-    }, 60_000);
+    }, 120_000);
   }
 });
