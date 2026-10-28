@@ -117,6 +117,9 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   // not short, or a phone), beside Done (a short window), else under Done (type-hangul.md).
   const inlineDone = phone || compactRow;
   const skipIn: 'top' | 'answer' | 'bottom' = lc.short ? 'answer' : compactRow || phone ? 'top' : 'bottom';
+  // A Check has no Skip (F-QUEST-002 L2; the Stage 2 Dictation Check, F-CURR-002 row CM-3A S2): it is the only evidence
+  // the learner can write what was just taught. Its header is the Check's: fill-only dots and "Quick check", no "n / N" (D3).
+  const check = host.mode === 'check';
   // A window under 640 tall keeps keys at the touch floor (no media scale): a 1024 x 600 window
   // would otherwise draw 4 x 90 and push Done off the screen.
   const keyboardClass = compactRow && lc.mediaScale !== 1 ? { ...lc, mediaScale: 1 } : lc;
@@ -278,9 +281,9 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {/* Hear mode's one row has no room for the count pill (type-hangul.md, below 640 tall). */}
-        {kit === null ? <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" /> : null}
+        {kit === null && !check ? <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" /> : null}
         <View style={{ flex: 1, minWidth: 0 }}>{prompt}</View>
-        {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+        {skipIn === 'top' && !check ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
       </View>
       {notice}
     </>
@@ -288,10 +291,14 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
+          {check ? (
+            <Progress variant="dots" value={Math.min(state.total, state.roundIdx + (state.phase === 'pass' ? 1 : 0))} max={state.total} tone="primary" />
+          ) : (
+            <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
+          )}
         </View>
-        <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
-        {skipIn === 'top' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+        {check ? <Pill label={copy.listenPick.checkTitle.pill} tone="primary" size="sm" /> : <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />}
+        {skipIn === 'top' && !check ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
       </View>
       <Spacer size="md" />
       <Heading level="prompt">{promptLine}</Heading>
@@ -367,7 +374,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
           {answerField}
           {inlineDone ? doneButton : null}
           {/* A short window (a phone on its side) has no room for Skip in the top row: it sits beside Done. */}
-          {skipIn === 'answer' ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
+          {skipIn === 'answer' && !check ? <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={skip} testID="type-hangul-skip" /> : null}
         </View>
       </View>
       {state.phase === 'typing' ? (
@@ -396,10 +403,10 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
           onFix={() => dispatch({ type: 'fix' })}
         />
       )}
-      {skipIn === 'bottom' ? (
+      {skipIn === 'bottom' && (!check || !inlineDone) ? (
         <View style={{ width: kbWidth, alignSelf: 'center', paddingTop: spacing.md, gap: spacing.sm }}>
           {state.phase === 'typing' && !inlineDone ? doneButton : null}
-          <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={skip} testID="type-hangul-skip" />
+          {check ? null : <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={skip} testID="type-hangul-skip" />}
         </View>
       ) : null}
     </View>
@@ -410,7 +417,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   // too short for that (a small phone on its side, 568 x 320) scrolls them with the prompt instead,
   // so no key is ever cut off and the touch floor is kept (keyboard.md, short windows).
   const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm);
-  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + touchTarget.min : 0;
+  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + (check ? 0 : touchTarget.min) : 0;
   const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + kb.height + underKeyboard + touchTarget.min;
 
   // A phone (and any short window) gets the keyboard edge to edge, so the screen has no width cap there.

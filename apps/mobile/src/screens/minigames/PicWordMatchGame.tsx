@@ -212,6 +212,9 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   }
 
   const header = headerView(state, copy);
+  // A Check has no Skip and shows the Check's header, fill-only dots (one a board) and "Quick check", never "n / N"
+  // (F-QUEST-002 L2 and D3; the Stage 2 Pic-Word Match Checks, F-CURR-002 row CM-3A S2).
+  const check = host.mode === 'check';
   const pairById = new Map(board.pairs.map((p) => [p.id, p]));
   const select = (tileSide: Side, pairId: string) => (): void => dispatch({ type: 'select', side: tileSide, pairId });
   const showMissHoya = state.selected !== null && (state.missCounts[state.selected.pairId] ?? 0) > 0;
@@ -220,10 +223,14 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          <Progress value={header.value} max={header.max} tone="primary" />
+          {check ? (
+            <Progress variant="dots" value={state.boardIdx + (state.status === 'resolved' ? 1 : 0)} max={state.pairCounts.length} tone="primary" />
+          ) : (
+            <Progress value={header.value} max={header.max} tone="primary" />
+          )}
         </View>
-        {showCount ? <Pill label={header.label} tone="neutral" size="sm" /> : null}
-        {canSkip(state) ? (
+        {check ? <Pill label={copy.listenPick.checkTitle.pill} tone="primary" size="sm" /> : showCount ? <Pill label={header.label} tone="neutral" size="sm" /> : null}
+        {canSkip(state) && !check ? (
           <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={() => dispatch({ type: 'skip' })} testID="pic-word-skip" />
         ) : null}
       </View>
