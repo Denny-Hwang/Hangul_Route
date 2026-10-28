@@ -10,7 +10,9 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:swing"],
+  "rewardCardIds": [
+    "card:swing"
+  ],
   "quests": [
     {
       "id": "quest:stage2-crafts-q1",
@@ -1241,6 +1243,20 @@
       "textEn": "{ko:제기차기} is a traditional Korean game. Players kick a {ko:제기}, a small weighted toy with a paper or cloth fringe, and try to keep it off the ground for as many kicks as they can.",
       "sources": [
         {
+          "title": "제기차기 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1604",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘구멍 뚫린 엽전이나 동전을 비단이나 한지로 접어 싼 다음 … 그 한지의 끝을 여러 갈래로 찢어 술을 너풀거리게 한 제기를 발로 차며 즐기는 놀이.’ 내용: ‘땅을 딛지 않고 계속 차는 것을 ‘헐랭이(발 들고 차기)’라고 한다.’ / ‘합계를 내어 승부를 짓기도 한다.’"
+        },
+        {
+          "title": "제기차기 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4833",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘제기는 엽전이나 쇠붙이에 얇고 질긴 종이나 천을 접어서 싼 다음, 끝을 여러 갈래로 찢어 너풀거리게 한 놀이기구이다.’"
+        },
+        {
           "title": "제기차기",
           "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
           "url": "https://encykorea.aks.ac.kr/Article/E0051251",
@@ -1259,7 +1275,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 paragraph 1 and MCST 놀이방법 support every clause: a traditional game, a coin or metal core wrapped in hanji, silk, paper or cloth with a torn fringe, kicked to keep it off the ground, highest count wins. Both sources treat the jegi itself as the toy the game uses, which backs the q2 Hoya line 'Jegi and spinning tops are traditional Korean toys'. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional game' (MCST lists it under 전통놀이; the encyclopedia files it under 놀이), the weighted core wrapped in paper or cloth with a fringe, and kicking to keep it up for the highest count. Seasonal timing (New Year in the encyclopedia, winter on the MCST page) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives kicking the jegi without letting it drop and competing on the count, and 내용 paragraph 1 gives a coin wrapped in hanji or silk with the ends torn into fringes; MCST 놀이방법 gives repeated kicks so it does not touch the ground, higher count wins, and lists it under 전통놀이. Every clause of the note is supported; 'weighted' follows from the coin or metal core. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 paragraph 1 and MCST 놀이방법 support every clause: a traditional game, a coin or metal core wrapped in hanji, silk, paper or cloth with a torn fringe, kicked to keep it off the ground, highest count wins. Both sources treat the jegi itself as the toy the game uses, which backs the q2 Hoya line 'Jegi and spinning tops are traditional Korean toys'. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note.\nCM-3C (2026-10-23): culture-source fix. The National Folk Museum of Korea entries 제기차기 (folk arts dictionary, topic 1604; seasonal customs dictionary, topic 4833) added first, read through the site's topic API: a jegi of a coin wrapped in paper or cloth with a torn fringe, kicked with the foot, with contests decided by the count. The note's words are unchanged; its source line now names the museum."
       }
     },
     {
@@ -1267,6 +1283,13 @@
       "kind": "culture",
       "textEn": "{ko:팽이치기} is a traditional Korean game with a wooden spinning top. Players keep the top turning by striking it with a small whip, often on ice in winter, and some contests see whose top spins longest.",
       "sources": [
+        {
+          "title": "팽이치기 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1634",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘평평한 땅바닥이나 얼음판 위에서 나무를 원뿔모양으로 깎아 만든 팽이를 채찍으로 때려 돌리며 즐기는 대표적인 겨울철 어린이놀이.’ 내용: ‘‘오래돌리기’는 … 어느 쪽이 더 오래 도는가를 따지는 방법이다.’"
+        },
         {
           "title": "팽이치기",
           "publisher": "Academy of Korean Studies, Encyclopedia of Korean Culture",
@@ -1286,7 +1309,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 and MCST 유래 and 놀이방법 support every clause: a traditional winter game, a top carved from hard wood, kept spinning by striking it with a whip (채), on ice, and the 오래 돌리기 contest. The top is the object the game uses, which backs the q2 Hoya line calling it a traditional toy. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): both pages fetched; each supports 'traditional (folk) game', a wooden top kept spinning by striking it with a whip, play on ice in winter, and a longest-spin contest. Origin dating (Three Kingdoms, Nihon Shoki) deliberately left out of the note.\nPass 2 (independent fact-check, 2026-10-14): re-opened both pages. Encyclopedia 정의 gives striking a top with a whip on ice in winter, 내용 gives tops carved from hard wood, a whip made of a stick with cord, and 오래돌리기 (which top spins longer); MCST 유래 calls it a winter folk game on ice made of wood and string, and 놀이방법 lists 오래 돌리기. Every clause of the note is supported. Note is an English paraphrase with no wording copied from either page. Outcome: pass, no change.\nPass 5 (MAR culture review, 2026-10-14): re-checked against both sources (both HTTP 200). Encyclopedia 정의 and 내용 and MCST 유래 and 놀이방법 support every clause: a traditional winter game, a top carved from hard wood, kept spinning by striking it with a whip (채), on ice, and the 오래 돌리기 contest. The top is the object the game uses, which backs the q2 Hoya line calling it a traditional toy. No copied wording, no designation number, no person, shop, brand or price. Outcome: pass, no change to the note.\nCM-3C (2026-10-23): culture-source fix. The National Folk Museum of Korea entry 팽이치기 (folk arts dictionary, topic 1634) added first: a wooden top struck with a whip on flat ground or ice in winter, and the 오래돌리기 contest of whose top spins longest. The note's words are unchanged."
       }
     }
   ],

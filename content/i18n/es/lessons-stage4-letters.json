@@ -5,7 +5,10 @@
     "episode:stage4-letters": {
       "title": "Leer juntos",
       "subtitle": "Sigue una charla con tu docente, línea por línea.",
-      "hoyaIntro": "Escucha cada línea y síguela. ¡Vamos a preguntar por palabras nuevas!"
+      "hoyaIntro": "Escucha cada línea y síguela. ¡Vamos a preguntar por palabras nuevas!",
+      "culture.n1.text": "El Día del Hangeul, {ko:한글날}, es el 9 de octubre. Celebra la creación del Hunminjeongeum, las letras que hoy se llaman hangeul, y el día en que se compartieron con todos.",
+      "culture.n2.text": "El rey Sejong terminó las nuevas letras en 1443. En 1446 se dieron a conocer en un libro llamado Hunminjeongeum, que significa los sonidos correctos para enseñar al pueblo.",
+      "culture.n3.text": "El libro de 1446 que explica las letras se inscribió en 1997 en el Registro de la Memoria del Mundo de la UNESCO, con el nombre Hunminjeongum Manuscript."
     },
     "quest:stage4-letters-q1": {
       "title": "¿Qué es esto?",

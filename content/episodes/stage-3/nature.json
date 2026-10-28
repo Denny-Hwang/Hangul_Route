@@ -7,8 +7,12 @@
   "subtitleEn": "Say where animals are, how they look and what they do.",
   "hoyaIntroEn": "I love animals! Let us read and build sentences about them.",
   "order": 4,
-  "pillarTags": ["D2"],
-  "rewardCardIds": ["card:gom"],
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [
+    "card:gom"
+  ],
   "quests": [
     {
       "id": "quest:stage3-nature-q1",
@@ -1284,6 +1288,13 @@
       "textEn": "In a Korean sentence the word that says what the subject does or is like comes after the subject, at the end.",
       "sources": [
         {
+          "title": "서술어 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%9C%EC%88%A0%EC%96%B4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘서술-어(敍述語)’ 「명사」 『언어』: ‘한 문장에서 주어의 움직임, 상태, 성질 따위를 서술하는 말.’"
+        },
+        {
           "title": "문장",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0019645",
@@ -1296,20 +1307,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0027885",
           "accessed": "2026-10-14",
           "quoteOrLocator": "정의: ‘문장에서 주어의 동작·상태·성질 등을 설명하는 문장성분.’ 내용: ‘정상적인 문장에서 서술어는 주어의 뒤에 놓이며 … 서술어에는 용언(用言)이 주로 쓰인다.’"
-        },
-        {
-          "title": "서술어 (표준국어대사전 검색 결과)",
-          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%9C%EC%88%A0%EC%96%B4",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "표제어 ‘서술-어(敍述語)’ 「명사」 『언어』: ‘한 문장에서 주어의 움직임, 상태, 성질 따위를 서술하는 말.’"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened encykorea 문장 and 서술어; the basic order and the predicate after the subject at the end found as quoted. Finding (minor): both sources came from one reference work; added the NIKL Standard Korean Language Dictionary entry 서술어 (주어의 움직임, 상태, 성질 따위를 서술하는 말, opened 2026-10-14, HTTP 200), which supports 'says what the subject does or is like'. Paraphrased; nothing copied. Outcome: confirmed, a third source added."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened encykorea 문장 and 서술어; the basic order and the predicate after the subject at the end found as quoted. Finding (minor): both sources came from one reference work; added the NIKL Standard Korean Language Dictionary entry 서술어 (주어의 움직임, 상태, 성질 따위를 서술하는 말, opened 2026-10-14, HTTP 200), which supports 'says what the subject does or is like'. Paraphrased; nothing copied. Outcome: confirmed, a third source added.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],

@@ -5,7 +5,11 @@
     "episode:stage3-letters": {
       "title": "Primeras oraciones",
       "subtitle": "Oraciones que nombran cosas, lo que hay y quién eres.",
-      "hoyaIntro": "Ya sabes leer palabras. ¡Ahora vamos a unirlas en oraciones!"
+      "hoyaIntro": "Ya sabes leer palabras. ¡Ahora vamos a unirlas en oraciones!",
+      "culture.n1.text": "La terminación {ko:이에요} va tras una palabra que acaba en consonante final, y {ko:예요} tras una que acaba en vocal: {ko:책이에요}, {ko:학교예요}.",
+      "culture.n2.text": "El marcador de sujeto es {ko:이} tras consonante final y {ko:가} tras vocal: {ko:책이}, {ko:친구가}.",
+      "culture.n3.text": "{ko:이건} es la forma corta de {ko:이것은}, y {ko:이것} señala una cosa cerca de quien habla.",
+      "culture.n4.text": "{ko:저} es una forma humilde y cortés de decir yo, con personas de más edad o rango, o con quienes no tienes confianza; {ko:나} es la forma sencilla de decir yo entre iguales."
     },
     "quest:stage3-letters-q1": {
       "title": "Es un libro",

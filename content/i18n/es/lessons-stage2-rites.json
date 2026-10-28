@@ -5,7 +5,15 @@
     "episode:stage2-rites": {
       "title": "Palabras de fiesta",
       "subtitle": "Palabras de Seollal, Chuseok y juegos de fiesta",
-      "hoyaIntro": "¡Las fiestas están llenas de palabras! Vamos a leer las palabras de Seollal y Chuseok."
+      "hoyaIntro": "¡Las fiestas están llenas de palabras! Vamos a leer las palabras de Seollal y Chuseok.",
+      "culture.n1.text": "Seollal es el primer día del año según el calendario lunar. El tteokguk, una sopa clara con pastel de arroz blanco en rodajas finas, es la comida más ligada a ese día.",
+      "culture.n2.text": "El sebae es una reverencia profunda ante los mayores y el primer saludo del año nuevo. Ese día, por tradición, la gente se pone ropa nueva, llamada seolbim.",
+      "culture.n3.text": "Chuseok cae el día 15 del octavo mes del calendario lunar, cuando empieza la cosecha. Se dan gracias por los cultivos del año, y su luna llena simboliza la abundancia.",
+      "culture.n4.text": "El songpyeon es un pastel de arroz en forma de media luna, relleno de frijoles, sésamo o castañas y cocido al vapor sobre agujas de pino. Prepararlo juntos es una costumbre familiar de Chuseok.",
+      "culture.n5.text": "El yunnori es un juego de tablero en el que dos equipos se turnan para lanzar cuatro palitos de madera, los yut, y mueven sus fichas según cómo caen. Por tradición se juega desde el Año Nuevo hasta la primera luna llena del año.",
+      "culture.n6.text": "Volar cometas es un juego tradicional de la temporada de Año Nuevo, sobre todo desde el Año Nuevo hasta la primera luna llena del año.",
+      "culture.n7.text": "El bokjumeoni es una bolsita que lleva un deseo de buena suerte. Al comenzar el año, por tradición se ataba a la ropa de los niños, con unos granos dentro.",
+      "culture.n8.text": "Los mayores que reciben la reverencia de Año Nuevo responden con buenos deseos y a veces dan a los niños un poco de dinero, llamado sebaetdon."
     },
     "quest:stage2-rites-q1": {
       "title": "Palabras de Seollal",

@@ -5,7 +5,10 @@
     "episode:stage4-nature": {
       "title": "Charlas en el parque",
       "subtitle": "Habla del tiempo y de planes con una amistad.",
-      "hoyaIntro": "¡Vamos al parque! Podemos hablar del cielo, de la lluvia y de nuestros planes."
+      "hoyaIntro": "¡Vamos al parque! Podemos hablar del cielo, de la lluvia y de nuestros planes.",
+      "culture.n1.text": "Jirisan se convirtió en el primer parque nacional de Corea en 1967. Hoy Corea tiene 24 parques nacionales, y la mayoría son parques de montaña.",
+      "culture.n2.text": "Los parques nacionales de Corea son lugares para descansar en la naturaleza. En 2025 recibieron unos 43 millones de visitantes.",
+      "culture.n3.text": "El oso negro asiático, {ko:반달가슴곰}, llegó a estar en peligro de extinción en Corea. En 2004 empezó un proyecto en el Parque Nacional de Jirisan para que los osos volvieran a vivir allí."
     },
     "quest:stage4-nature-q1": {
       "title": "Mirando el cielo",

@@ -51,7 +51,7 @@ describe('the lesson manifest and its chunks', () => {
     for (const id of cells) {
       const mod = LESSON_CELL_MODULES[id];
       expect(mod?.CHUNK_HASH, id).toBe(index.LESSON_CELL_CHUNKS[id]);
-      expect(Object.keys(mod ?? {}).sort()).toEqual(['CHUNK_HASH', 'LESSON_OVERLAYS', 'LESSON_SCOPES', 'LESSON_STEPS']);
+      expect(Object.keys(mod ?? {}).sort()).toEqual(['CHUNK_HASH', 'LESSON_NOTES', 'LESSON_OVERLAYS', 'LESSON_SCOPES', 'LESSON_STEPS']);
       const episode = index.LESSON_EPISODES.find((e) => e.id === id);
       expect(Object.keys(mod?.LESSON_STEPS ?? {}).sort(), id).toEqual([...(episode?.questIds ?? [])].sort());
     }
