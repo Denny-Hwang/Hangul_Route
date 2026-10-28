@@ -302,6 +302,21 @@ export class MemoryDb implements Db {
     this.spaces.set(spaceId, { ...space, name });
     return 1;
   }
+  async unarchiveClassWithinCap(spaceId: string, learnerClassCap: number): Promise<number> {
+    const space = this.spaces.get(spaceId);
+    if (!space || space.kind !== 'class' || space.archivedAt === null) return 0;
+    if ((await this.learnersAtClassCapOf(spaceId, learnerClassCap)) > 0) return 0;
+    this.spaces.set(spaceId, { ...space, archivedAt: null });
+    return 1;
+  }
+  async learnersAtClassCapOf(spaceId: string, learnerClassCap: number): Promise<number> {
+    const liveClassesBesides = (learnerId: string): number =>
+      [...this.memberships.values()].filter((o) => {
+        const s = this.spaces.get(o.spaceId);
+        return o.memberKind === 'learner' && o.memberId === learnerId && o.spaceId !== spaceId && !!s && s.kind === 'class' && s.archivedAt === null;
+      }).length;
+    return [...this.memberships.values()].filter((m) => m.spaceId === spaceId && m.memberKind === 'learner' && liveClassesBesides(m.memberId) >= learnerClassCap).length;
+  }
   async addSpaceEvent(event: SpaceEvent): Promise<void> {
     if (!this.spaces.has(event.spaceId)) throw new Error('FOREIGN KEY constraint failed');
     this.spaceEvents.set(event.id, clone({ ...event, kind: SpaceEventKindSchema.parse(event.kind) }));

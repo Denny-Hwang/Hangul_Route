@@ -132,16 +132,53 @@ describe('the Cloze Pick round of a review', () => {
     }
   });
 
-  it('is the same for the same seed, and null when no word has two tiles', () => {
+  it('is the same for the same seed; with no word of two tiles it is asked as Sentence Builder, or not at all', () => {
     expect(roundFor(q('pat:chaegi-isseoyo'), input())).toEqual(roundFor(q('pat:chaegi-isseoyo'), input()));
     const lone = surfaceIndex(indexOf([PATS[0] as ReviewItem, PATS[4] as ReviewItem]), { clozePick: true });
-    expect(roundFor(q('pat:chaegi-isseoyo'), input(lone))).toBeNull();
+    expect(roundFor(q('pat:chaegi-isseoyo'), input(lone))?.type).toBe('order');
     expect(roundFor(q('pat:gabangieyo'), input())).toBeNull();
   });
 
-  it('shows no English meaning beside Spanish or Korean: none when the locale has none', () => {
-    const round = roundFor(q('pat:chaegi-isseoyo'), input(ON, { gloss: () => undefined })) as ClozeRound;
-    expect(round.meaning).toBeUndefined();
-    expect(round.answer.gloss).toBeUndefined();
+  it('without the meaning in the UI language it is no Cloze round: the tiles would not be settled, so Sentence Builder asks it', () => {
+    // 책이 ___ takes 있어요 and 없어요 alike: only the meaning decides, so a missing es or ko meaning is never a cloze gap.
+    const round = roundFor(q('pat:chaegi-isseoyo'), input(ON, { gloss: () => undefined }));
+    expect(round?.type).toBe('order');
+    expect(round?.question).toMatchObject({ rung: 'produce', format: 'sentence-builder' });
+    // A sentence too long for Sentence Builder has no other produce round here: it is skipped, never shown unsettled.
+    const long = mk('pat:long', { ko: '저는 오늘 학교에서 친구와 같이 책을 읽어요.', romanization: 'jeoneun oneul hakgyoeseo chinguwa gachi chaegeul ilgeoyo', en: 'Today I read a book with a friend at school.', formats: ['hear-pick', 'read-pick', 'cloze-pick'] });
+    const longIndex = surfaceIndex(indexOf([...ITEMS, long]), { clozePick: true });
+    expect(roundFor({ ...q('pat:long') }, input(longIndex, { gloss: () => undefined }))).toBeNull();
+  });
+});
+
+describe('a sentence no word of which has two fair tiles (section 4.5: asked another way, never dropped)', () => {
+  // 물을 마셔요 alone in its pool: no other sentence offers a word at either place, so no Cloze round can be built.
+  const lonely = surfaceIndex(indexOf([PATS[0] as ReviewItem, PATS[4] as ReviewItem]), { clozePick: true });
+  const st = (over: Partial<MemoryItemState> = {}): MemoryItemState => ({ b: 3, d: TODAY, c: 2, r: 3, n: 4, f: '2026-10-01', s: 3, at: '2026-11-09T09:00:00.000Z', ...over });
+
+  it('the surface drops Cloze Pick from it and keeps its other formats', () => {
+    expect(lonely.byId.get('pat:mureul-masyeoyo')?.formats).not.toContain('cloze-pick');
+    expect(lonely.byId.get('pat:mureul-masyeoyo')?.formats).toContain('sentence-builder');
+    // With a fuller pool the same sentence keeps it.
+    expect(ON.byId.get('pat:chaegi-isseoyo')?.formats).toContain('cloze-pick');
+  });
+
+  it('the engine asks it as Sentence Builder at produce, for every seed', () => {
+    for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+      const ctx: EngineContext = { index: lonely, states: { 'pat:mureul-masyeoyo': { st: st() } }, today: TODAY, voice: true, seed };
+      const questions = buildDailyReview(ctx).questions;
+      expect(questions.map((x) => [x.format, x.rung])).toEqual([['sentence-builder', 'produce']]);
+      expect(roundFor(questions[0] as ReviewQuestion, input(lonely, { seed }))?.type).toBe('order');
+    }
+  });
+
+  it('a long sentence with Cloze Pick as its only produce format is asked at read', () => {
+    const long = mk('pat:long', { ko: '저는 오늘 학교에서 친구와 같이 책을 읽어요.', romanization: 'jeoneun oneul hakgyoeseo chinguwa gachi chaegeul ilgeoyo', en: 'Today I read a book with a friend at school.', formats: ['hear-pick', 'read-pick', 'cloze-pick'] });
+    const index = surfaceIndex(indexOf([long, PATS[4] as ReviewItem]), { clozePick: true });
+    expect(index.byId.get('pat:long')?.formats).toEqual(['hear-pick', 'read-pick']);
+    const ctx: EngineContext = { index, states: { 'pat:long': { st: st() } }, today: TODAY, voice: true, seed: 's' };
+    const questions = buildDailyReview(ctx).questions;
+    expect(questions.map((x) => x.rung)).toEqual(['read']);
+    expect(roundFor(questions[0] as ReviewQuestion, input(index))).not.toBeNull();
   });
 });

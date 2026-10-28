@@ -29,10 +29,12 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  * one-line change with the measured numbers in its PR.
  */
 export const PRECACHE_BUDGET = Object.freeze({
-  // The start bundle must not grow: its size after CM-8 moved the stories out (6,345,469 B raw / 1,573,399 B gzip, the
-  // release build of CM-8's final code on CM-5's head, no recorded clips; 7,337,815 B after CM-5, 8,321,783 B before
-  // CM-5) plus a 4,531 B rounding margin. A row that adds to it raises this line with its measurement; the es / ko story
-  // overlays still in the start bundle leave it with row CM-8b, before CM-46a adds narration. The phase-0 integration
+  // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
+  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
+  // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
+  // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
+  // before CM-46a adds narration. The phase-0 integration
   // (#802: CM-1 to CM-8, CM-70a, CM-70b on one branch) measures 6,371,165 B raw / 1,582,440 B gzip, so the line is that
   // measurement plus an 8,835 B rounding margin. [OA] The one-account integration (#801: OA-0b to OA-9 on main
   // 34e8f85d5) adds the chooser, PIN v2, people-on-this-device and the face or fingerprint shortcut to the shell:
@@ -97,23 +99,36 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (scripts/__tests__/named-react-imports.test.mjs keeps the rest out). On main 150c07383 the release
   // `build:web` (Metro cache cleared) measures 4,742,691 B raw / 1,263,763 B gzip, 69,890 B raw under 4,812,581 B;
   // the app-host build 4,742,847 B. The line is the release measurement plus a 7,309 B rounding margin.
-  startBundleRaw: 4_750_000,
+  // CM-23c (Stages 6-7 upper-cell cards, the five legendary cards and their album sets, #845) on main e31bc3b33
+  // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
+  // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
+  // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
+  // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
+  // Pick's text prompt mode, the door, the Listen & Pick fallback with its card and round helpers (in the start bundle
+  // so the switch never depends on the chunk it guards) and 10 English strings; the game, its flow and its view are
+  // the cloze-pick-chunk) measures 4,762,235 B raw / 1,269,443 B gzip (release `build:web`, Metro cache cleared)
+  // on main 524961dae, whose own release build measures 4,751,444 B raw: +10,791 B. The line is that measurement plus a
+  // 2,765 B rounding margin.
+  startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
-  // strings, main fc580beed). The line leaves about 94 KB for the stories and strings
-  // ahead (CM-46a, CM-46); a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves
-  // text out (CM-8b's story overlay split).
+  // strings, main fc580beed; ko 925,171 B, es 542,657 B on main 8dfb8a43c). The line left about 99 KB for the stories
+  // and strings ahead (CM-46a, CM-46) at the shrink, about 94 KB on the final integration and about 75 KB on main
+  // 8dfb8a43c; a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves text out
+  // (CM-8b's story overlay split).
   localeChunkRaw: 1_000_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
-  // BrowseApp 111,404 B raw. The line is the presenter plus about 54 KB.
+  // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
+  // PresenterApp 232,574 B, BrowseApp 104,116 B, about 67 KB under the line.
   rootChunkRaw: 300_000,
   // [GU] Each learner screen chunk (row GU-3: the guest's first quest stack, `src/navigation/guest-chunk.tsx`), loaded
   // the first time its screens open. Measured when GU-3 landed (see SCREEN_CHUNKS); the line leaves room for GU-4's
   // save screens, which join the same chunk.
   screenChunkRaw: 60_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
-  // crossing it triggers CM-5B (Save for offline). The jamo recordings re-measure it when they land (F-CURR-002 §10).
+  // crossing it triggers CM-5B (Save for offline). On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
+  // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
   // The story lines of scripts/build-stories.mjs `BUDGET` (perStoryRaw, totalRaw, totalGzip), held on the built story
   // bundles too, which are what the service worker caches: a built bundle is about 13% larger than its generated
@@ -123,8 +138,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   storiesGzip: 510_000,
   // The review-item index (F-CURR-002 §4.2, §10 ceilings table, row CM-10): one content-hashed chunk of
   // scripts/build-review-items.mjs, lazy and precached, held here on its built bundle and there on its module
-  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10: 728 items, 94,162 B raw / 19,597 B
-  // gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`).
+  // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10's first cut: 728 items, 94,162 B raw /
+  // 19,597 B gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`); with CM-10's review
+  // fixes (the Stage 1 Discover words) 733 items, 97,670 B raw / 20,024 B gzip as generated, 105,189 B raw /
+  // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   reviewItemsRaw: 150_000,
   reviewItemsGzip: 30_000,
 });
@@ -250,9 +267,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
-  // F-CURR-002 row CM-30: the Cloze Pick game, its flow and its prompt card (`src/screens/minigames/cloze-pick-chunk.tsx`,
+  // F-CURR-002 row CM-30: the Cloze Pick game, its flow and its prompt view (`src/screens/minigames/cloze-pick-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/minigames/cloze-pick-entry.tsx` while `game.cloze-pick`
-  // is on); its Listen & Pick fallback stays in the start bundle.
+  // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
+  // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
   // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/story-order-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while

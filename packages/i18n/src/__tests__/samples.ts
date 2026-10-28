@@ -989,8 +989,21 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-23: an album's card count (from 1; an album with none says New), and an album row's name with its status.
   'learner.library.albums.count': [[1], [2], [12]],
   'learner.library.albums.a11y': [['Letters', '2 cards'], ['Play', 'New']],
+  // F-CURR-002 row CM-23 part 3: an album named by its theme, the legendary card's earn hint and the album-complete lines.
+  'learner.library.albums.named': [['letters'], ['nature'], ['crafts']],
+  'learner.library.earnHint.album': [['letters'], ['nature'], ['rites']],
+  'learner.results.albumDone.line': [['letters'], ['nature'], ['rites']],
   // F-CURR-002 row CM-25: the Jump ahead button's label, the stage number and its title in the UI locale.
   'learner.stageJump.label': [[2, 'Words'], [3, 'First Sentences']],
+  // Owner report 2026-10-23: the Join screen's move lines (the learner, then the classes) and the classes a join keeps.
+  'caregiver.join.errors.movedOut': [['Suni', 'Sunday Class B', 'Sunday Class A']],
+  'caregiver.join.errors.movedOutElsewhere': [['Suni', 'Sunday Class A']],
+  'caregiver.join.errors.moveWaiting': [['Sunday Class B']],
+  'caregiver.join.confirm.staysIn': [['Suni', ['Sunday Class A']], ['Mina', ['Sunday Class A', 'Art club']], ['Jo Ann', ['A', 'B', 'C']]],
+  // Owner report 2026-10-23: the class settings lines after a move and an unarchive the class cap refused.
+  'console.settings.learnerGone': [['Mina']],
+  'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
+  'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
   // F-CURR-002 row CM-30: Cloze Pick's prompt card, the romanization with its gap read as a word and the meaning.
   'a11y.minigame.clozePick.sentence': [['chaegeul blank', 'I read a book.'], ['mulblank masyeoyo', 'I drink water.']],
   'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],

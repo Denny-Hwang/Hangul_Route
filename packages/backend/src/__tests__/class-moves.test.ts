@@ -407,7 +407,7 @@ describe('the family sees a one-time notice (TV-D10)', () => {
   it('carries the notice to the learner\'s own device inbox, never to a class tablet', async () => {
     const moved = moveOf(await post(moves(A), 'teacher-a', { learnerId: SUNI, destinationSpaceId: D }));
     const phone = await call('GET', `/api/sync/learners/${SUNI}/inbox`, device(PHONE, PHONE_SECRET));
-    expect(phone.body.data?.classMoves).toEqual([{ id: moved.id, to: { spaceId: D, name: 'Evening Class D' }, executedAt: NOW.toISOString() }]);
+    expect(phone.body.data?.classMoves).toEqual([{ id: moved.id, to: { spaceId: D, name: 'Evening Class D' }, from: { spaceId: A, name: 'Sunday Class A' }, executedAt: NOW.toISOString() }]);
     const tablet = await call('GET', `/api/sync/learners/${SUNI}/inbox`, device(TABLET, TABLET_SECRET));
     expect(tablet.body.data).toMatchObject({ classMoves: [], classScope: null });
     const locked = await call('GET', `/api/sync/learners/${SUNI}/inbox`, device(PHONE, PHONE_SECRET), undefined, LOCKED);

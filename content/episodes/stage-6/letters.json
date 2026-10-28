@@ -10,7 +10,7 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:won"],
   "quests": [
     {
       "id": "quest:stage6-letters-q1",
