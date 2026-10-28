@@ -10,7 +10,7 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": [],
+  "rewardCardIds": ["card:ireum"],
   "quests": [
     {
       "id": "quest:stage7-letters-q1",
