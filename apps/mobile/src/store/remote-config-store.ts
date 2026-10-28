@@ -212,3 +212,12 @@ export function resetRemoteConfigForTests(): void {
   failedAt = null;
   useRemoteConfigStore.setState({ cache: null, hydrated: false });
 }
+
+/**
+ * Whether `useCurrFlag` can decide yet (the stored copy has been read, or a fetch kept one). A surface that reads its
+ * switch once and keeps the answer (Story Order's step, F-CURR-002 row CM-34) waits for this, so a step opened before
+ * the stored copy is read never latches a switch the owner has turned on as off.
+ */
+export function useRemoteConfigDecidable(): boolean {
+  return useRemoteConfigStore(decidable);
+}

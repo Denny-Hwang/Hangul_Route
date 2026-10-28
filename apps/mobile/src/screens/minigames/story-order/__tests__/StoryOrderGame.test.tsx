@@ -55,10 +55,10 @@ interface Log {
   completed: number;
 }
 
-async function open(fixture: StoryOrderFixtureKey): Promise<{ r: ReactTestRenderer; log: Log }> {
+async function open(fixture: StoryOrderFixtureKey, mode: MinigameHost['mode'] = 'quest'): Promise<{ r: ReactTestRenderer; log: Log }> {
   const log: Log = { answers: [], completed: 0 };
   const host: MinigameHost = {
-    mode: 'quest',
+    mode,
     answer: (key, correct, meta) => log.answers.push({ key: String(key), correct, ...meta }),
     complete: () => {
       log.completed += 1;
@@ -200,6 +200,31 @@ describe('Story Order: replay and rounds', () => {
     expect(log.answers.map((a) => a.hinted === true)).toEqual([true, true, true, true, false, false, false, false]);
     // Each round's last slot (one card left) scores but names no item: the memory store hears nothing of it.
     expect(log.answers.map((a) => a.itemId)).toEqual(['day/sun', 'day/bread', 'day/rain', undefined, 'morning/up', 'morning/wash', 'morning/eat', undefined]);
+  });
+
+  it('focus follows each placement (WCAG 2.4.3): to the next card, to the replay title once the row is full, to the new round', async () => {
+    const { r } = await open('twoRounds');
+    const [day] = STORY_ORDER_FIXTURES.twoRounds.storyOrder!.rounds;
+    expect(reader.focused).toBe(0);
+    for (const [i, p] of day!.panels.entries()) {
+      await press(pressable(r.root, `story-order-card-${p.id}`));
+      // One move per placement; the last one lands on the replay title (a focusable, not a live, node).
+      expect(reader.focused).toBe(i + 1);
+    }
+    expect(has(r.root, 'story-order-replay-title')).toBe(true);
+    expect(byTestId(r.root, 'story-order-replay-title')[0]!.props.tabIndex).toBe(-1);
+    await press(pressable(r.root, 'story-order-done'));
+    expect(reader.focused).toBe(day!.panels.length + 1);
+    // A miss moves nothing, so the focus stays on the card that was pressed.
+    const before = reader.focused;
+    await press(pressable(r.root, 'story-order-card-park'));
+    expect(reader.focused).toBe(before);
+  });
+
+  it('a Check step has no Skip this one (check-launcher.ts)', async () => {
+    const { r } = await open('twoRounds', 'check');
+    expect(has(r.root, 'story-order-skip')).toBe(false);
+    expect(screenTexts(r.root)).not.toContain(EN.story.sequence.skip.cta);
   });
 
   it('Skip this one completes the step', async () => {

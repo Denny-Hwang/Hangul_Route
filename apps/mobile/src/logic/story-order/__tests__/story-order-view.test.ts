@@ -10,6 +10,7 @@ import {
   storyOrderColumns,
   storyOrderHeading,
   storyOrderSlotsPerRow,
+  STORY_ORDER_STACK_SLOTS_AT,
   type StoryOrderCopy,
 } from '../story-order-view';
 
@@ -61,6 +62,15 @@ describe('layout', () => {
     expect(storyOrderSlotsPerRow('regular', 4)).toBe(4);
     expect(storyOrderSlotsPerRow('wide', 5)).toBe(5);
     expect(storyOrderSlotsPerRow('wide', 0)).toBe(1);
+  });
+
+  it('stacks the slots of a phone one per row from 200 % text, and keeps two across at 150 %', () => {
+    expect(storyOrderSlotsPerRow('compact', 4, 1.5)).toBe(2);
+    expect(storyOrderSlotsPerRow('compact', 4, 1.99)).toBe(2);
+    expect(storyOrderSlotsPerRow('compact', 4, STORY_ORDER_STACK_SLOTS_AT)).toBe(1);
+    expect(storyOrderSlotsPerRow('compact', 5, 3)).toBe(1);
+    // A wider window has room for every slot in one row at any size.
+    expect(storyOrderSlotsPerRow('regular', 4, 2)).toBe(4);
   });
 });
 
