@@ -120,7 +120,13 @@
       "clozePick.rounds.c2.sentence.gloss": "한국 전통 방식으로 만든 종이는 ___원이에요.",
       "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
       "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000",
-      "clozePick.rounds.c2.tiles.cheon.gloss": "1,000"
+      "clozePick.rounds.c2.tiles.cheon.gloss": "1,000",
+      "clozePick.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "clozePick.realia.entries.fan.value.gloss": "5,000원",
+      "clozePick.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
+      "clozePick.realia.entries.hanji.value.gloss": "1,000원",
+      "clozePick.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
+      "clozePick.realia.entries.apple.value.gloss": "2,000원"
     },
     "minigame:s6-crafts-q2-practice": {
       "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 과일, 바람을 일으키는 물건, 전통 종이와 그 값",
@@ -220,7 +226,13 @@
       "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일은 ___이에요.",
       "clozePick.rounds.c2.tiles.se-gae-cheon-won.gloss": "3개에 1,000원",
       "clozePick.rounds.c2.tiles.se-gae-icheon-won.gloss": "3개에 2,000원",
-      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3개에 5,000원"
+      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3개에 5,000원",
+      "clozePick.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
+      "clozePick.realia.entries.apple.value.gloss": "3개에 2,000원",
+      "clozePick.realia.entries.extra.text.gloss": "산 것에 더해 공짜로 받는 것",
+      "clozePick.realia.entries.extra.value.gloss": "빨갛고 둥근 과일 하나",
+      "clozePick.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "clozePick.realia.entries.fan.value.gloss": "5,000원"
     }
   }
 }

@@ -215,7 +215,16 @@
       "clozePick.rounds.c2.sentence.gloss": "하얀 마실 것을 ___ 달라고 하는 말",
       "clozePick.rounds.c2.tiles.han-gae.gloss": "1개",
       "clozePick.rounds.c2.tiles.se-gae.gloss": "3개",
-      "clozePick.rounds.c2.tiles.du-gae.gloss": "2개"
+      "clozePick.rounds.c2.tiles.du-gae.gloss": "2개",
+      "clozePick.realia.title.gloss": "음식이나 물건을 시키는 일",
+      "clozePick.realia.entries.gimbap.text.gloss": "김에 밥과 속을 넣어 만 음식",
+      "clozePick.realia.entries.gimbap.value.gloss": "1이라는 수",
+      "clozePick.realia.entries.ramyeon.text.gloss": "끓여 먹는 꼬불꼬불한 국수",
+      "clozePick.realia.entries.ramyeon.value.gloss": "물건 둘",
+      "clozePick.realia.entries.milk.text.gloss": "소에서 짠 하얀 젖",
+      "clozePick.realia.entries.milk.value.gloss": "물건 셋",
+      "clozePick.realia.entries.egg.text.gloss": "닭이 낳은 알",
+      "clozePick.realia.entries.egg.value.gloss": "물건 하나"
     },
     "minigame:s6-life-q3-practice": {
       "realiaRead.realia.alt": "식탁 위의 작은 메뉴: 김밥, 라면, 떡볶이, 우유와 각각의 값이 적혀 있어요.",

@@ -120,7 +120,13 @@
       "clozePick.rounds.c2.sentence.gloss": "El papel coreano cuesta ___ wones.",
       "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil",
       "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil",
-      "clozePick.rounds.c2.tiles.cheon.gloss": "mil"
+      "clozePick.rounds.c2.tiles.cheon.gloss": "mil",
+      "clozePick.realia.entries.fan.text.gloss": "abanico",
+      "clozePick.realia.entries.fan.value.gloss": "5000 wones",
+      "clozePick.realia.entries.hanji.text.gloss": "papel coreano",
+      "clozePick.realia.entries.hanji.value.gloss": "1000 wones",
+      "clozePick.realia.entries.apple.text.gloss": "manzana",
+      "clozePick.realia.entries.apple.value.gloss": "2000 wones"
     },
     "minigame:s6-crafts-q2-practice": {
       "realiaRead.realia.alt": "Tres carteles de precios en un puesto de mercado de cada cinco días: manzanas, un abanico plegable y papel coreano, con precios",
@@ -220,7 +226,13 @@
       "clozePick.rounds.c2.sentence.gloss": "Las manzanas están a ___.",
       "clozePick.rounds.c2.tiles.se-gae-cheon-won.gloss": "3 por 1000 wones",
       "clozePick.rounds.c2.tiles.se-gae-icheon-won.gloss": "3 por 2000 wones",
-      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3 por 5000 wones"
+      "clozePick.rounds.c2.tiles.se-gae-ocheon-won.gloss": "3 por 5000 wones",
+      "clozePick.realia.entries.apple.text.gloss": "manzana",
+      "clozePick.realia.entries.apple.value.gloss": "3 por 2000 wones",
+      "clozePick.realia.entries.extra.text.gloss": "un poquito de más, de regalo",
+      "clozePick.realia.entries.extra.value.gloss": "una manzana",
+      "clozePick.realia.entries.fan.text.gloss": "abanico",
+      "clozePick.realia.entries.fan.value.gloss": "5000 wones"
     }
   }
 }

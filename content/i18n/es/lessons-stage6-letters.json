@@ -125,7 +125,15 @@
       "clozePick.rounds.c2.sentence.gloss": "El arroz mezclado cuesta ___ wones.",
       "clozePick.rounds.c2.tiles.samcheon.gloss": "tres mil",
       "clozePick.rounds.c2.tiles.ocheon.gloss": "cinco mil",
-      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil"
+      "clozePick.rounds.c2.tiles.icheon.gloss": "dos mil",
+      "clozePick.realia.entries.e1.text.gloss": "rollos de arroz con alga",
+      "clozePick.realia.entries.e1.value.gloss": "2000 wones",
+      "clozePick.realia.entries.e2.text.gloss": "pasteles de arroz picantes",
+      "clozePick.realia.entries.e2.value.gloss": "3000 wones",
+      "clozePick.realia.entries.e3.text.gloss": "fideos instantáneos",
+      "clozePick.realia.entries.e3.value.gloss": "4000 wones",
+      "clozePick.realia.entries.e4.text.gloss": "arroz mezclado",
+      "clozePick.realia.entries.e4.value.gloss": "5000 wones"
     },
     "quest:stage6-letters-q3": {
       "title": "¿Picante o no?",

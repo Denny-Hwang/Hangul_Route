@@ -178,7 +178,14 @@
       "clozePick.rounds.c2.sentence.gloss": "대한민국 남동쪽 내륙의 큰 도시로 가는 기차는 ___분에 떠나요.",
       "clozePick.rounds.c2.tiles.se-si-samsip.gloss": "3시 30",
       "clozePick.rounds.c2.tiles.ne-si-isip.gloss": "4시 20",
-      "clozePick.rounds.c2.tiles.ne-si-sip.gloss": "4시 10"
+      "clozePick.rounds.c2.tiles.ne-si-sip.gloss": "4시 10",
+      "clozePick.realia.title.gloss": "떠나는 기차 안내",
+      "clozePick.realia.entries.daejeon.text.gloss": "대한민국 가운데쯤에 있는 도시",
+      "clozePick.realia.entries.daejeon.value.gloss": "1시",
+      "clozePick.realia.entries.busan.text.gloss": "대한민국 남동쪽 바닷가의 큰 도시",
+      "clozePick.realia.entries.busan.value.gloss": "3시 30분",
+      "clozePick.realia.entries.daegu.text.gloss": "대한민국 남동쪽 내륙의 큰 도시",
+      "clozePick.realia.entries.daegu.value.gloss": "4시 20분"
     },
     "minigame:s6-rites-q3-practice": {
       "realiaRead.realia.alt": "호야의 여행 계획: 1시 기차역, 2시 기차 출발, 5시 고향 도착, 6시 할머니 댁",

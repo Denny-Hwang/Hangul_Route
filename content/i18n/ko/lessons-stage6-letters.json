@@ -125,7 +125,15 @@
       "clozePick.rounds.c2.sentence.gloss": "밥에 나물을 넣고 섞어 먹는 음식은 ___원이에요.",
       "clozePick.rounds.c2.tiles.samcheon.gloss": "3,000",
       "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000",
-      "clozePick.rounds.c2.tiles.icheon.gloss": "2,000"
+      "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
+      "clozePick.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
+      "clozePick.realia.entries.e1.value.gloss": "2,000원",
+      "clozePick.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "clozePick.realia.entries.e2.value.gloss": "3,000원",
+      "clozePick.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
+      "clozePick.realia.entries.e3.value.gloss": "4,000원",
+      "clozePick.realia.entries.e4.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
+      "clozePick.realia.entries.e4.value.gloss": "5,000원"
     },
     "quest:stage6-letters-q3": {
       "title": "매울까요, 안 매울까요?",

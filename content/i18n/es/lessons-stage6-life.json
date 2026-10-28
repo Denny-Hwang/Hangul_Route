@@ -215,7 +215,16 @@
       "clozePick.rounds.c2.sentence.gloss": "Deme ___ cajitas de leche, por favor.",
       "clozePick.rounds.c2.tiles.han-gae.gloss": "una",
       "clozePick.rounds.c2.tiles.se-gae.gloss": "tres",
-      "clozePick.rounds.c2.tiles.du-gae.gloss": "dos"
+      "clozePick.rounds.c2.tiles.du-gae.gloss": "dos",
+      "clozePick.realia.title.gloss": "pedido",
+      "clozePick.realia.entries.gimbap.text.gloss": "rollo de arroz con alga",
+      "clozePick.realia.entries.gimbap.value.gloss": "uno",
+      "clozePick.realia.entries.ramyeon.text.gloss": "fideos instantáneos",
+      "clozePick.realia.entries.ramyeon.value.gloss": "dos (cosas)",
+      "clozePick.realia.entries.milk.text.gloss": "leche",
+      "clozePick.realia.entries.milk.value.gloss": "tres (cosas)",
+      "clozePick.realia.entries.egg.text.gloss": "huevo",
+      "clozePick.realia.entries.egg.value.gloss": "uno (una cosa)"
     },
     "minigame:s6-life-q3-practice": {
       "realiaRead.realia.alt": "Un menú pequeño en una mesa: gimbap, fideos instantáneos, pasteles de arroz picantes y leche, cada uno con su precio.",
