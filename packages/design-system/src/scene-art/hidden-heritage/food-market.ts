@@ -200,11 +200,12 @@ export const FOOD_MARKET_SCENE: HiddenHeritageScene = {
   review: {
     reviewedBy: 'MAR',
     reviewedAt: '2026-10-23',
-    passes: 3,
+    passes: 4,
     notes: [
       'Pass 1 (author): both pages opened on 2026-10-23; the quotes are copied from them. The National Museum of Korea page lists the album order ending "25) 장터길"; the dictionary gives 반찬 one sense.',
       'Pass 2 (culture and facts): the scene shows a market subject only and copies no composition of the album (no figures are drawn at all); every target is a Stage 2 Food word; nothing is framed as Korean in origin.',
       'Pass 3 (language, learning design and anti-shame): the alt text names the setting, never a target; the targets carry romanization and a gloss; no English label or writing is in the picture.',
+      'Pass 4 (reviser): each claim says no more than its quote. f2 backs the subject line ("rice, soup and side dishes"), the table the scene draws around 밥, 국 and 김치; 반찬 itself is not a spot, so the content row that ships the cell either adds it as a thing or keeps f2 on the card back as the subject fact. Institution names are as of the access date; no brand appears.',
     ],
   },
 };

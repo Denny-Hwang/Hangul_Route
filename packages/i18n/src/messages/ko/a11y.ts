@@ -324,6 +324,6 @@ export const a11y = {
   hiddenHeritage: {
     foundLive: (gloss: string) => `찾았어요: ${gloss}`,
     spotFound: (gloss: string) => `${gloss}, 찾았어요`,
-    slotEmpty: '아직 찾지 않았어요',
+    slotEmpty: '아직 비어 있어요',
   },
 } satisfies DeepPartial<Messages['a11y']>;

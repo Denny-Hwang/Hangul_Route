@@ -8,6 +8,9 @@ import type { DeepPartial, Messages } from '../../types';
  * Korean has no plural: a count reads "noun n개 / n장 / n일 / n분". Taught Korean is never typed here: the
  * screens draw it with `KoreanText` from content (rule 5).
  */
+const ALBUM_NAMES = { letters: '글자', life: '음식', rites: '명절', nature: '자연', crafts: '놀이' };
+type AlbumTheme = keyof typeof ALBUM_NAMES;
+
 export const learner = {
   welcome: {
     title: '안녕하세요! 저는 호야예요.',
@@ -336,9 +339,11 @@ export const learner = {
     albums: {
       title: '앨범',
       line: '테마마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
-      names: { letters: '글자', life: '음식', rites: '명절', nature: '자연', crafts: '놀이' },
+      names: ALBUM_NAMES,
       count: (n: number) => `카드 ${n}장`,
       fresh: '새로 시작',
+      complete: '앨범 완성',
+      named: (theme: AlbumTheme) => `${ALBUM_NAMES[theme]} 앨범`,
       a11y: (name: string, status: string) => `${name} 앨범: ${status}`,
     },
     earnHint: {
@@ -347,6 +352,7 @@ export const learner = {
       stage: (stage: number) => `${stage}단계의 퀘스트 모두 끝내기`,
       welcome: '호야가 주는 환영 선물',
       set: (collection: string) => `이야기 카드 모두 모으기: ${collection}`,
+      album: (theme: AlbumTheme) => `${ALBUM_NAMES[theme]} 앨범의 카드 모두 모으기`,
     },
   },
 
@@ -417,6 +423,10 @@ export const learner = {
       announce: (title: string) => `라이브러리에 새 카드가 들어왔어요! ${title}`,
       see: { cta: '내 카드 보기' },
       seeA11y: (title: string) => `내 카드 보기: ${title}`,
+    },
+    albumDone: {
+      title: '앨범 완성!',
+      line: (theme: AlbumTheme) => `${ALBUM_NAMES[theme]} 앨범을 다 채웠어요. 전설 카드를 받았어요.`,
     },
     extraCards: {
       title: (n: number) => `라이브러리에 카드 ${n}장이 더 들어왔어요!`,
