@@ -880,56 +880,56 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "대전 기차는 ___ 시예요.",
-                "romanization": "daejeon gichaneun ___ siyeyo",
-                "en": "The train to Daejeon is at ___ o'clock."
+                "ko": "부산 기차는 ___ 분이에요.",
+                "romanization": "busan gichaneun ___ bunieyo",
+                "en": "The train to Busan is at ___."
               },
               "gapKind": "value",
               "tiles": [
-                {
-                  "ko": "한",
-                  "romanization": "han",
-                  "en": "one"
-                },
-                {
-                  "ko": "두",
-                  "romanization": "du",
-                  "en": "two"
-                },
-                {
-                  "ko": "네",
-                  "romanization": "ne",
-                  "en": "four"
-                }
-              ],
-              "answerIndex": 0
-            },
-            {
-              "id": "c2",
-              "sentence": {
-                "ko": "대구 기차는 ___ 분이에요.",
-                "romanization": "daegu gichaneun ___ bunieyo",
-                "en": "The train to Daegu is at ___."
-              },
-              "gapKind": "value",
-              "tiles": [
-                {
-                  "ko": "세 시 삼십",
-                  "romanization": "se si samsip",
-                  "en": "3:30"
-                },
                 {
                   "ko": "네 시 이십",
                   "romanization": "ne si isip",
                   "en": "4:20"
                 },
                 {
-                  "ko": "네 시 십",
-                  "romanization": "ne si sip",
-                  "en": "4:10"
+                  "ko": "세 시 이십",
+                  "romanization": "se si isip",
+                  "en": "3:20"
+                },
+                {
+                  "ko": "세 시 삼십",
+                  "romanization": "se si samsip",
+                  "en": "3:30"
                 }
               ],
-              "answerIndex": 1
+              "answerIndex": 2
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "___ 기차는 네 시 이십 분이에요.",
+                "romanization": "___ gichaneun ne si isip bunieyo",
+                "en": "The train to ___ is at 4:20."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu"
+                },
+                {
+                  "ko": "대전",
+                  "romanization": "Daejeon",
+                  "en": "Daejeon"
+                },
+                {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan"
+                }
+              ],
+              "answerIndex": 0
             }
           ],
           "realia": {
@@ -1371,9 +1371,9 @@
               "promptEn": "Type the word you hear.",
               "mode": "hear",
               "target": {
-                "ko": "고향",
-                "romanization": "gohyang",
-                "en": "hometown"
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
               }
             },
             {
@@ -1381,9 +1381,9 @@
               "promptEn": "Type the word you hear.",
               "mode": "hear",
               "target": {
-                "ko": "기차역",
-                "romanization": "gichayeok",
-                "en": "train station"
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
               }
             }
           ]
@@ -1472,10 +1472,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing and RR clean; hour and minute number sets never mixed in one option set; applied: the board names Daegu not Seoul and is not called Hoya's train, 다섯 시 / 여섯 시 shown in Hangul in q3 Discover, a third city in q1 r1/r3, 'Hours use ...' wording, dictionary-based ko glosses for 출발 / 도착.",
-      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (passes: 3); n2's orthography locator corrected to the attached 두시 삼십분 오초; the drawn ticket is no longer called real or every ticket; 고향 glossed as where someone or their family comes from; 'many' and 'some' only, no rite, no real person, shop, brand or price, no age wording."
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (passes: 3); n2's orthography locator corrected to the attached 두시 삼십분 오초; the drawn ticket is no longer called real or every ticket; 고향 glossed as where someone or their family comes from; 'many' and 'some' only, no rite, no real person, shop, brand or price, no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Realia Read (ticket), q2 Cloze Pick (departure board), q3 Dictation of 출발 and 도착 (lines of the plan card; said as written, one spelling each).",
+      "CM-3A S6 language: 부산 기차는 세 시 삼십 분이에요 reads the whole time (Practice asked its hour and minutes apart); ___ 기차는 네 시 이십 분이에요 reads the board from the time to the city. Learning design: q3 Dictation no longer asks the words its Apply typed (고향, 기차역).",
+      "CM-3A S6 culture and facts: Busan the large south-east coastal city, Daegu the large south-east inland city, Daejeon near the middle (the cell's sources); the board is drawn and generic. Reviser: ko prompts say 써 봐요; es ends with a period. Third pass: no change."
     ]
   },
   "contentVer": 1

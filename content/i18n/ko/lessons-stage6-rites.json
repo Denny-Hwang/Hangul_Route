@@ -171,14 +171,14 @@
     },
     "minigame:s6-rites-q2-check": {
       "clozePick.realia.alt": "역의 출발 안내판: 대전, 부산, 대구로 가는 기차와 떠나는 시각",
-      "clozePick.rounds.c1.sentence.gloss": "대한민국 가운데쯤에 있는 도시로 가는 기차는 ___시에 떠나요.",
-      "clozePick.rounds.c1.tiles.han.gloss": "1",
-      "clozePick.rounds.c1.tiles.du.gloss": "2",
-      "clozePick.rounds.c1.tiles.ne.gloss": "4",
-      "clozePick.rounds.c2.sentence.gloss": "대한민국 남동쪽 내륙의 큰 도시로 가는 기차는 ___분에 떠나요.",
-      "clozePick.rounds.c2.tiles.se-si-samsip.gloss": "3시 30",
-      "clozePick.rounds.c2.tiles.ne-si-isip.gloss": "4시 20",
-      "clozePick.rounds.c2.tiles.ne-si-sip.gloss": "4시 10",
+      "clozePick.rounds.c1.sentence.gloss": "대한민국 남동쪽 바닷가의 큰 도시로 가는 기차는 ___분에 떠나요.",
+      "clozePick.rounds.c1.tiles.ne-si-isip.gloss": "4시 20",
+      "clozePick.rounds.c1.tiles.se-si-isip.gloss": "3시 20",
+      "clozePick.rounds.c1.tiles.se-si-samsip.gloss": "3시 30",
+      "clozePick.rounds.c2.sentence.gloss": "___로 가는 기차는 4시 20분에 떠나요.",
+      "clozePick.rounds.c2.tiles.daegu.gloss": "대한민국 남동쪽 내륙의 큰 도시",
+      "clozePick.rounds.c2.tiles.daejeon.gloss": "대한민국 가운데쯤에 있는 도시",
+      "clozePick.rounds.c2.tiles.busan.gloss": "대한민국 남동쪽 바닷가의 큰 도시",
       "clozePick.realia.title.gloss": "떠나는 기차 안내",
       "clozePick.realia.entries.daejeon.text.gloss": "대한민국 가운데쯤에 있는 도시",
       "clozePick.realia.entries.daejeon.value.gloss": "1시",
@@ -228,10 +228,10 @@
       "typeHangul.rounds.t3.target.gloss": "할머니가 사시는 집"
     },
     "minigame:s6-rites-q3-check": {
-      "typeHangul.rounds.c1.prompt": "들리는 낱말을 입력해 봐요",
-      "typeHangul.rounds.c1.target.gloss": "태어나서 자란 곳",
-      "typeHangul.rounds.c2.prompt": "들리는 낱말을 입력해 봐요",
-      "typeHangul.rounds.c2.target.gloss": "기차를 타고 내리는 곳"
+      "typeHangul.rounds.c1.prompt": "들리는 낱말을 써 봐요.",
+      "typeHangul.rounds.c1.target.gloss": "목적지를 향해 떠남",
+      "typeHangul.rounds.c2.prompt": "들리는 낱말을 써 봐요.",
+      "typeHangul.rounds.c2.target.gloss": "목적지에 다다름"
     }
   }
 }

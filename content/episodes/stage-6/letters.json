@@ -682,9 +682,9 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "라면은 ___ 원이에요.",
-                "romanization": "ramyeoneun ___ wonieyo",
-                "en": "Instant noodles are ___ won."
+                "ko": "김밥은 ___ 원이에요.",
+                "romanization": "gimbabeun ___ wonieyo",
+                "en": "Seaweed rice rolls are ___ won."
               },
               "gapKind": "value",
               "tiles": [
@@ -704,34 +704,34 @@
                   "en": "five thousand"
                 }
               ],
-              "answerIndex": 0
+              "answerIndex": 1
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "비빔밥은 ___ 원이에요.",
-                "romanization": "bibimbabeun ___ wonieyo",
-                "en": "Mixed rice is ___ won."
+                "ko": "떡볶이는 ___ 원이에요.",
+                "romanization": "tteokbokkineun ___ wonieyo",
+                "en": "Spicy rice cakes are ___ won."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "삼천",
-                  "romanization": "samcheon",
-                  "en": "three thousand"
-                },
-                {
-                  "ko": "오천",
-                  "romanization": "ocheon",
-                  "en": "five thousand"
-                },
-                {
                   "ko": "이천",
                   "romanization": "icheon",
                   "en": "two thousand"
+                },
+                {
+                  "ko": "사천",
+                  "romanization": "sacheon",
+                  "en": "four thousand"
+                },
+                {
+                  "ko": "삼천",
+                  "romanization": "samcheon",
+                  "en": "three thousand"
                 }
               ],
-              "answerIndex": 1
+              "answerIndex": 2
             }
           ],
           "realia": {
@@ -1181,10 +1181,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): romanization, spelling (매운맛 one headword) and particles clean; applied number-set captions that name only the numbers on the board, extra-spicy for 매운맛 떡볶이, seaweed rice rolls, a ko tea question without 차, non-echo ko labels, shorter ko glosses; kept 육-십 as one number-set item (rule 4 count).",
-      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (verification line 3); q3 is another drawn menu board; Type Hangul prompts name the target; topic snack-bar dishes: no fact claim (dishes are only glossed), so no note, and n1 covers the won; no real person, shop, brand or price; no age wording."
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (verification line 3); q3 is another drawn menu board; Type Hangul prompts name the target; topic snack-bar dishes: no fact claim (dishes are only glossed), so no note, and n1 covers the won; no real person, shop, brand or price; no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Realia Read (dish menu), q2 Cloze Pick (price menu), q3 Dictation of 이천 원 and 칠천 원 (no sound change).",
+      "CM-3A S6 language: 김밥은 and 떡볶이는 take 은 / 는 by the last sound; ___ 원이에요 reads a whole value of the card. Learning design: q2 asks 김밥 and 떡볶이 in Korean numbers, which Practice read only as digits (2,000) or from the price back to the dish, so no Check repeats a Practice question.",
+      "CM-3A S6 reviser: es q1 c1 follows the cell pattern (¿Qué platillo es de ...?); ko Dictation prompts end with a period. Third pass: no gloss names a tile before the tap; no change."
     ]
   },
   "contentVer": 1

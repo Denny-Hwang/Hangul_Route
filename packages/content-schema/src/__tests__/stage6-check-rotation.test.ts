@@ -82,7 +82,7 @@ describe('Stage 6 Check rotation (F-CURR-002 row CM-3A S6)', () => {
   it('a Dictation Check asks a taught word with no sound change, heard (Type Hangul hear)', () => {
     const dictation = checks.filter((s) => s.kind === 'type-hangul');
     for (const scope of dictation) for (const round of scope.rounds) expect(round.mode, `${scope.ref} ${round.id}`).toBe('hear');
-    expect(dictation.flatMap((s) => (s.kind === 'type-hangul' ? s.rounds.map((r) => r.target.ko) : []))).toEqual(['이천 원', '칠천 원', '삼천 원', '천 원', '고향', '기차역', '왼쪽', '오른쪽']);
+    expect(dictation.flatMap((s) => (s.kind === 'type-hangul' ? s.rounds.map((r) => r.target.ko) : []))).toEqual(['이천 원', '칠천 원', '삼천 원', '천 원', '출발', '도착', '왼쪽', '오른쪽']);
   });
 
   it('adjacent quests of a cell never share the Practice, Apply and Check triple', () => {

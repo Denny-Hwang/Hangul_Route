@@ -169,9 +169,9 @@
       "dialogue.3.options.jeongsangieyo.gloss": "산의 가장 높은 곳이라고 알려 주는 말"
     },
     "minigame:s6-nature-q2-check": {
-      "typeHangul.rounds.c1.prompt": "들리는 방향을 쳐 봐요.",
+      "typeHangul.rounds.c1.prompt": "들리는 방향을 써 봐요.",
       "typeHangul.rounds.c1.target.gloss": "왼손이 있는 방향",
-      "typeHangul.rounds.c2.prompt": "들리는 방향을 쳐 봐요.",
+      "typeHangul.rounds.c2.prompt": "들리는 방향을 써 봐요.",
       "typeHangul.rounds.c2.target.gloss": "오른손이 있는 방향"
     },
     "minigame:s6-nature-q3-practice": {

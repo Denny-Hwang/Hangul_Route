@@ -118,14 +118,14 @@
     },
     "minigame:s6-letters-q2-check": {
       "clozePick.realia.alt": "음식 네 가지와 가격이 원으로 적힌 분식집 메뉴판",
-      "clozePick.rounds.c1.sentence.gloss": "금방 끓여 먹는 꼬불꼬불한 국수는 ___원이에요.",
+      "clozePick.rounds.c1.sentence.gloss": "김에 밥을 말아 썬 음식은 ___원이에요.",
       "clozePick.rounds.c1.tiles.sacheon.gloss": "4,000",
       "clozePick.rounds.c1.tiles.icheon.gloss": "2,000",
       "clozePick.rounds.c1.tiles.ocheon.gloss": "5,000",
-      "clozePick.rounds.c2.sentence.gloss": "밥에 나물을 넣고 섞어 먹는 음식은 ___원이에요.",
-      "clozePick.rounds.c2.tiles.samcheon.gloss": "3,000",
-      "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000",
+      "clozePick.rounds.c2.sentence.gloss": "가래떡을 매콤하게 익힌 음식은 ___원이에요.",
       "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
+      "clozePick.rounds.c2.tiles.sacheon.gloss": "4,000",
+      "clozePick.rounds.c2.tiles.samcheon.gloss": "3,000",
       "clozePick.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
       "clozePick.realia.entries.e1.value.gloss": "2,000원",
       "clozePick.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
@@ -181,9 +181,9 @@
       "typeHangul.rounds.t3.target.gloss": "잎을 뜨거운 물에 우려낸 마실 것"
     },
     "minigame:s6-letters-q3-check": {
-      "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요",
+      "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
       "typeHangul.rounds.c1.target.gloss": "2,000원",
-      "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요",
+      "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
       "typeHangul.rounds.c2.target.gloss": "7,000원"
     }
   }

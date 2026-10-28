@@ -171,14 +171,14 @@
     },
     "minigame:s6-rites-q2-check": {
       "clozePick.realia.alt": "Un tablero de salidas de la estación: trenes a Daejeon, Busan y Daegu, cada uno con su hora",
-      "clozePick.rounds.c1.sentence.gloss": "El tren a Daejeon sale a ___.",
-      "clozePick.rounds.c1.tiles.han.gloss": "la una",
-      "clozePick.rounds.c1.tiles.du.gloss": "las dos",
-      "clozePick.rounds.c1.tiles.ne.gloss": "las cuatro",
-      "clozePick.rounds.c2.sentence.gloss": "El tren a Daegu sale a ___.",
-      "clozePick.rounds.c2.tiles.se-si-samsip.gloss": "las tres y treinta",
-      "clozePick.rounds.c2.tiles.ne-si-isip.gloss": "las cuatro y veinte",
-      "clozePick.rounds.c2.tiles.ne-si-sip.gloss": "las cuatro y diez",
+      "clozePick.rounds.c1.sentence.gloss": "El tren a Busan sale a ___.",
+      "clozePick.rounds.c1.tiles.ne-si-isip.gloss": "las cuatro y veinte",
+      "clozePick.rounds.c1.tiles.se-si-isip.gloss": "las tres y veinte",
+      "clozePick.rounds.c1.tiles.se-si-samsip.gloss": "las tres y treinta",
+      "clozePick.rounds.c2.sentence.gloss": "El tren a ___ sale a las cuatro y veinte.",
+      "clozePick.rounds.c2.tiles.daegu.gloss": "Daegu",
+      "clozePick.rounds.c2.tiles.daejeon.gloss": "Daejeon",
+      "clozePick.rounds.c2.tiles.busan.gloss": "Busan",
       "clozePick.realia.title.gloss": "salidas",
       "clozePick.realia.entries.daejeon.text.gloss": "Daejeon (una ciudad)",
       "clozePick.realia.entries.daejeon.value.gloss": "1:00",
@@ -228,10 +228,10 @@
       "typeHangul.rounds.t3.target.gloss": "la casa de la abuela"
     },
     "minigame:s6-rites-q3-check": {
-      "typeHangul.rounds.c1.prompt": "Escribe la palabra que oyes",
-      "typeHangul.rounds.c1.target.gloss": "pueblo o ciudad natal",
-      "typeHangul.rounds.c2.prompt": "Escribe la palabra que oyes",
-      "typeHangul.rounds.c2.target.gloss": "estación de tren"
+      "typeHangul.rounds.c1.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.c1.target.gloss": "salida",
+      "typeHangul.rounds.c2.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.c2.target.gloss": "llegada"
     }
   }
 }
