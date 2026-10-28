@@ -1,6 +1,7 @@
 import { fillClozeGap, type ClozePickRound, type KoText, type ListenPickRound, type RealiaReadRound } from '@hangul-route/content-schema';
 import type { RoundAsked } from '../memory/asked';
 import type { MinigameScope } from '../minigame-config';
+import { rolePlayMainPath } from '../role-play/fallback';
 
 /**
  * The scaffold round of a hard Practice (F-CURR-002 section 4.6, row CM-24): one Listen & Pick round, a shipped and
@@ -50,6 +51,10 @@ export function scopeItems(scope: MinigameScope): KoText[] {
           : [],
       );
       break;
+    // Row CM-3A S4: a Role Play Practice asks its partner lines; the main path is the turns its Tap to Respond fallback plays.
+    case 'role-play':
+      all = scope.rolePlay ? rolePlayMainPath(scope.rolePlay.scene).map((turn) => turn.line) : [];
+      break;
     default:
       break;
   }
@@ -70,8 +75,16 @@ function askedKo(asked: RoundAsked): string | undefined {
     byId(scope.listenPick?.rounds)?.prompt.ko ??
     byId(scope.traceWord?.rounds)?.word.ko ??
     realiaWord(byId(scope.realiaRead?.rounds))?.ko ??
-    clozeKo(byId(scope.clozePick?.rounds))
+    clozeKo(byId(scope.clozePick?.rounds)) ??
+    // A Role Play answer names `<node>/<reply>`: the turn asked its partner line.
+    rolePlayLine(scope, itemId.split('/')[0])
   );
+}
+
+/** The partner line of a Role Play turn node (an end node has none). */
+function rolePlayLine(scope: MinigameScope, nodeId: string | undefined): string | undefined {
+  const node = scope.rolePlay?.scene.nodes.find((n) => n.id === nodeId);
+  return node !== undefined && 'line' in node ? node.line.ko : undefined;
 }
 
 /** A Cloze Pick round's completed sentence (a value gap asks its card, not a sentence). */

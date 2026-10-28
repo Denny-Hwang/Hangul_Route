@@ -179,12 +179,27 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   }
   if (typeof value !== 'object' || value === null) return out;
   const record = value as Record<string, unknown>;
+  // A Cloze Pick round (row CM-30) asks its completed sentence, and a word gap its answer tile, as the review items read it.
+  if (Array.isArray(record.tiles) && typeof record.answerIndex === 'number' && typeof record.sentence === 'object' && record.sentence !== null) {
+    const answer = record.tiles[record.answerIndex] as Record<string, unknown> | undefined;
+    const sentence = (record.sentence as Record<string, unknown>).ko;
+    if (typeof answer?.ko === 'string' && typeof sentence === 'string') {
+      const filled = normalizeKo(sentence.replace('___', answer.ko));
+      if (filled !== '' && record.gapKind !== 'value') out.push(filled);
+      if (record.gapKind !== 'particle' && record.gapKind !== 'value') out.push(normalizeKo(answer.ko));
+    }
+    return out;
+  }
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
       askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
+    } else if (key === 'scene' && typeof child === 'object' && child !== null) {
+      // A Role Play scene (row CM-35): its turns ask their lines and natural replies; the title and partner are labels.
+      askedKo((child as Record<string, unknown>).nodes, out);
     } else if (key === 'replies' && Array.isArray(child)) {
-      askedKo(child.filter((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>).correct === true), out);
+      // A Tap to Respond reply that is `correct`, or a Role Play reply that is `natural` (a less natural one is never sent).
+      askedKo(child.filter((r) => typeof r === 'object' && r !== null && ((r as Record<string, unknown>).correct === true || (r as Record<string, unknown>).kind === 'natural')), out);
     } else if (key === 'ko' && typeof child === 'string') {
       const ko = normalizeKo(child);
       if (ko !== '') out.push(ko);

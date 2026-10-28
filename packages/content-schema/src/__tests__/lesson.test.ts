@@ -148,6 +148,8 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(CHECK_ROUNDS).toBe(2);
     expect(checkKindsFor('stage3')).toEqual(['listen-pick']);
     expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it']);
+    // Row CM-3A S4: the Stage 4 Check rotation (Dialogue reply pick as Tap to Respond, Cloze Pick, Sentence Builder).
+    expect(checkKindsFor('stage4')).toEqual(['listen-pick', 'tap-respond', 'cloze-pick', 'order-it']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');

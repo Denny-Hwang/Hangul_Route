@@ -63,6 +63,35 @@ describe('the Practice items a scaffold may ask', () => {
   });
 });
 
+describe('a Role Play Practice (F-CURR-002 row CM-3A S4)', () => {
+  const rolePlay: MinigameScope = {
+    kind: 'role-play',
+    rounds: 2,
+    rolePlay: {
+      scene: {
+        title: k('집', 'At home'),
+        partner: k('할머니', 'grandma'),
+        start: 't1',
+        nodes: [
+          { id: 't1', line: k('밥 먹었어요?', 'Have you eaten?'), replies: [{ id: 'ate', text: k('네, 먹었어요.', 'Yes, I ate.'), kind: 'natural', next: 't2' }, { id: 'bye', text: k('잘 가요.', 'Goodbye.'), kind: 'lessNatural', whyEn: 'x' }] },
+          { id: 't2', line: k('우유 마셨어요?', 'Did you drink your milk?'), replies: [{ id: 'drank', text: k('네, 마셨어요.', 'Yes, I drank it.'), kind: 'natural', next: 'end' }, { id: 'ate', text: k('네, 먹었어요.', 'Yes, I ate.'), kind: 'lessNatural', whyEn: 'x' }] },
+          { id: 'side', line: k('김치 먹었어요?', 'Did you eat the kimchi?'), replies: [{ id: 'ate', text: k('네, 먹었어요.', 'Yes, I ate.'), kind: 'natural', next: 'end' }] },
+          { id: 'end', end: true, closingEn: 'Done!' },
+        ],
+      },
+    },
+  };
+
+  it('lists the partner lines of its main path, the turns its fallback plays', () => {
+    expect(scopeItems(rolePlay).map((t) => t.ko)).toEqual(['밥 먹었어요?', '우유 마셨어요?']);
+  });
+
+  it('reads a miss of the game (<node>/<reply>) and of its Tap to Respond fallback (the line)', () => {
+    expect(scaffoldScope(rolePlay, [{ scope: rolePlay, itemId: 't2/ate' }, { scope: rolePlay, itemId: 't1/bye' }])?.listenPick?.rounds[0]?.prompt.ko).toBe('밥 먹었어요?');
+    expect(scaffoldScope(rolePlay, [{ texts: ['우유 마셨어요?'] }])?.listenPick?.rounds[0]?.options.map((o) => o.text?.ko)).toEqual(['우유 마셨어요?', '밥 먹었어요?']);
+  });
+});
+
 describe('the scaffold round', () => {
   it('asks the last missed item with the hint, the misses first, three options at most', () => {
     const out = scaffoldScope(picWord, [
