@@ -25,8 +25,8 @@ const QUESTION: ReadonlySet<BuildName> = new Set(['question']);
 const ANSWER: ReadonlySet<BuildName> = new Set(['question', 'answer']);
 const turns = rolePlaySlides();
 
-function inView(child: ReactElement, locale: UiLocale = 'en'): ReactElement {
-  return <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: true }}>{child}</PresenterViewProvider>;
+function inView(child: ReactElement, locale: UiLocale = 'en', unit = 1): ReactElement {
+  return <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit, reducedMotion: true }}>{child}</PresenterViewProvider>;
 }
 
 function hiddenNow(node: { props: Record<string, unknown>; parent: unknown }): boolean {
@@ -81,7 +81,6 @@ describe('RolePlaySlide: the read-together chat (row CM-35)', () => {
     expect(byTestId(q.root, 'presenter-quiz-mark')).toHaveLength(0);
     expect(byTestId(q.root, 'presenter-quiz-option-gloss').every(hiddenNow)).toBe(true);
     expect(hiddenNow(byTestId(q.root, 'presenter-role-play-why')[0]!)).toBe(true);
-    expect(hiddenNow(byTestId(q.root, 'presenter-quiz-answer')[0]!)).toBe(true);
 
     const a = await render(inView(<RolePlaySlide slide={slide} shown={ANSWER} romanization="always" />));
     const natural = slide.replies.flatMap((x, i) => (x.natural ? [i] : []));
@@ -140,6 +139,21 @@ describe('RolePlaySlide: the read-together chat (row CM-35)', () => {
         expect(hostNodes(r.root, (n) => speak.test(String(n.props['data-testid'] ?? n.props.testID ?? '')) || speak.test(labelOf(n)))).toHaveLength(0);
       }
     }
+  });
+
+  it('a small stage (a phone sideways, where the text floor draws text bigger than its units) draws one column: the partner line in a row, no earlier exchange', async () => {
+    const phone = 568 / 1280;
+    const r = await render(inView(<RolePlaySlide slide={turns[1]!} shown={ANSWER} romanization="always" />, 'en', phone));
+    const root = byTestId(r.root, 'presenter-role-play')[0]!;
+    expect((root.props as { dataSet?: { layout?: string } }).dataSet?.layout ?? (root.props as Record<string, unknown>)['data-layout']).toBe('stacked');
+    expect(byTestId(r.root, 'presenter-role-play-before')).toHaveLength(0);
+    expect(byTestId(r.root, 'presenter-role-play-class')).toHaveLength(0);
+    expect(labelOf(byTestId(r.root, 'presenter-role-play-line')[0]!)).toBe('librarian: 무슨 책을 찾아요?, museun chaegeul chajayo, What book are you looking for?');
+    expect(byTestId(r.root, 'presenter-quiz-option-ko')).toHaveLength(turns[1]!.replies.length);
+    expect(hiddenNow(byTestId(r.root, 'presenter-role-play-why')[0]!)).toBe(false);
+    // The projector's own size keeps the two columns.
+    const wide = await render(inView(<RolePlaySlide slide={turns[1]!} shown={ANSWER} romanization="always" />, 'en', 1));
+    expect(byTestId(wide.root, 'presenter-role-play-before')).toHaveLength(1);
   });
 
   it('draws in the Korean and Spanish slide languages: the kind label and the class bubble follow the slide language', async () => {

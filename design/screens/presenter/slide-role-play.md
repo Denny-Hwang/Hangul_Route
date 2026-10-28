@@ -16,11 +16,15 @@ Two columns, `STAGE_GAP` apart, both centred vertically:
   - From the second turn, the **exchange before** this turn: the partner's line (left) and the reply the class gave (right), Korean at `presenter.size.body`, romanization and meaning as one caption run.
   - The **partner's line now** (left): the role above it (caption, semibold, `text.secondary`), the Korean at `presenter.size.prompt`, its romanization and meaning (caption).
   - Bubbles are at most `ROLE_PLAY_BUBBLE_SHARE` (88 %) of the column. Partner: `surface.sunken`, `border.strong` stage border. Class: `brand.secondaryLight`, `brand.secondary` border, no name (the learner's own bubbles have none).
-  - On the **last turn**, at the answer build: the scene's closing line (content, body, semibold) in a `feedback.successLight` box with a `feedback.success` border, so every chat ends well on the stage.
+  - On the **last turn**, at the answer build: the scene's closing line (content, caption, semibold) in a `feedback.successLight` box with a `feedback.success` border, so every chat ends well on the stage.
 - **Replies** (the rest):
-  - Question row: **Which answer fits?** (`quiz.reply`, prompt size, bold) and, at the answer build, "Hoya's answer" with Hoya `cheering` (README D6), in a slot kept from the start.
+  - The question **Which answer fits?** (`quiz.reply`, prompt size, bold) across the column. The column is narrower than a question slide's row, so there is no "Hoya's answer" line beside it: the check marks (named "Hoya's answer", README D6) mark the answer, and Hoya himself is in the reasons' box.
   - One row per reply (`OptionRows`, the reply question's rows): marker, Korean at prompt size, romanization; the meaning joins at the answer build.
   - Under the rows, at the answer build: **Hoya's reasons**: one amber box (`feedback.nudge` border on `feedback.nudgeLight`, `text.primary`) with Hoya `thinking` (`touchTarget.min` units) and, for each less natural reply, its marker (body size) and its reason (content; `{ko:}` tokens as Korean chips with their romanization).
+
+## Small stage (a phone sideways)
+
+Where the text floor draws text bigger than its units (`ROLE_PLAY_STACK_SCALE`, 1.2: 568 x 320 draws caption text 1.5 times its units, 844 x 390 none), the slide draws one column, as the reply question does: the question, the partner's line in one wrapping row (role, Korean, romanization, meaning) in its bubble, the reply rows, Hoya's reasons and, on the last turn, the closing line. The earlier exchange is left out there (the slide before shows it).
 
 ## Builds
 
@@ -47,10 +51,14 @@ Each column fits itself (`useFitLevel`, the measured fallback of V8); a new stag
 - The slide grid titles a turn by its scene ("At the library"), never by a reply.
 - Colour is never the only cue: the marks are check glyphs, and each reason carries its reply's shape-and-number marker.
 
+## As built (CM-35)
+
+Checked on a local build with the fixture library scene in a Stage 4 quest (not committed: no shipped quest has a Role Play step yet), at 1280 x 720, 1920 x 1080, 844 x 390 and 568 x 320 (touch), in en, es and ko: every part of every turn inside the stage at both builds; the reply column settles at fit level 3 at 1280 x 720 with three replies and a reason, the chat at level 2.
+
 ## Old presenters
 
 The deck does not change: a deck names quests, and the presenter builds the slides from its own bundled content, so a Role Play turn reaches only a presenter that draws it. A deck holding a quest with a Role Play step stays `v: 1`, and no new `LECTURE_DECODE_FAILURES` code is needed (section 8: bump `v` only if the deck shape changes). Row CM-63's new `game` block and presets bring their own decode failure code.
 
 ## Strings
 
-New: `learner.presenter.grid.kind.rolePlay` and `learner.presenter.slide.rolePlay.label` (en "Role play", es "Juego de roles", ko "역할극"), `a11y.presenter.rolePlayClass` (en "The class said: {line}", es "La clase dijo: {line}", ko "우리 반의 대답: {line}"). Reused: `quiz.reply`, `quiz.answer`, `a11y.presenter.answerMark`, `a11y.presenter.option`, `a11y.hoya`, `a11y.minigame.rolePlay.log`. The scene's place, the partner's role, the lines, the reasons and the closing line are content (lesson JSON with es and ko overlays).
+New: `learner.presenter.grid.kind.rolePlay` and `learner.presenter.slide.rolePlay.label` (en "Role play", es "Juego de roles", ko "역할극"), `a11y.presenter.rolePlayClass` (en "The class said: {line}", es "La clase dijo: {line}", ko "우리 반의 대답: {line}"). Reused: `quiz.reply`, `a11y.presenter.answerMark`, `a11y.presenter.option`, `a11y.hoya`, `a11y.minigame.rolePlay.log`. The scene's place, the partner's role, the lines, the reasons and the closing line are content (lesson JSON with es and ko overlays).

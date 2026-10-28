@@ -231,3 +231,8 @@ export function units(unit: number, n: number): number {
  */
 export const ROLE_PLAY_CHAT_SHARE = '44%';
 export const ROLE_PLAY_BUBBLE_SHARE = '88%';
+/**
+ * The Role Play slide draws one column, as the reply question does, once the text floor draws its text this many
+ * times its units or more (a phone sideways: 568 x 320 draws caption text 1.5 times its units; 844 x 390 none).
+ */
+export const ROLE_PLAY_STACK_SCALE = 1.2;

@@ -5,12 +5,12 @@ import { Text, View, type LayoutChangeEvent } from 'react-native';
 import type { BuildName, QuizOption, SpokenLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { markerFor } from '../../../logic/lecture/slide-view';
-import { ROLE_PLAY_CHAT_SHARE, ROLE_PLAY_BUBBLE_SHARE, units } from '../../../logic/lecture/stage-constants';
+import { ROLE_PLAY_BUBBLE_SHARE, ROLE_PLAY_CHAT_SHARE, ROLE_PLAY_STACK_SCALE, units } from '../../../logic/lecture/stage-constants';
 import { optionRomShown } from '../../../logic/lecture/tools';
 import { ShapeMarker } from '../ShapeMarker';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
-import { AnswerLine, OptionRows } from './QuizParts';
+import { OptionRows } from './QuizParts';
 import { ChipText, KindLabel, RomGloss, useFitLevel } from './ReadingParts';
 import { revealProps } from './reveal';
 
@@ -30,7 +30,9 @@ const CHAT_MAX_LEVEL = 2;
  * exchange just before this turn (the partner's line on the left, the room's reply on the right in the taught-Korean
  * chip colours, both a step smaller), and the partner's line now, named by the partner's role. On the right the
  * question ("Which answer fits?") and the replies, one row each with their shape-and-number markers, so the room
- * answers "triangle, 2" by pointing; nothing is collected, tallied or spoken into (LV-D9, section 7.7).
+ * answers "triangle, 2" by pointing; nothing is collected, tallied or spoken into (LV-D9, section 7.7). The reply
+ * column is narrower than a question slide's row, so the question takes its whole width and the check marks (named
+ * "Hoya's answer") stand in for the answer line, with Hoya himself in the reasons' box.
  *
  * Builds `question`, `answer`. At the answer every natural reply is marked as a quiz answer is (README D6), the
  * meanings join their rows, and under the rows Hoya (`thinking`) gives the reason of each less natural reply in the
@@ -54,6 +56,36 @@ export function RolePlaySlide({ slide, shown, romanization }: { slide: RolePlayB
   const whys = slide.replies.flatMap((r, i) => (r.why === undefined ? [] : [{ index: i, why: r.why }]));
   const promptSize = size(fit.level >= 2 ? presenter.size.body : presenter.size.prompt);
   const gap = units(unit, spacing.md);
+  const heading = (
+    <Text
+      {...KOREAN_LINE_BREAK}
+      role="heading"
+      testID="presenter-quiz-question"
+      style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}
+    >
+      {messages.learner.presenter.quiz.reply}
+    </Text>
+  );
+  const rows = <OptionRows options={options} revealed={revealed} romanization={romanization} compact={fit.level >= 1} small={fit.level >= 3} />;
+  const why = whys.length > 0 ? <Why whys={whys} shown={revealed} rom={rom} small={fit.level >= 3} /> : null;
+  const closing = slide.closing !== undefined ? <Closing text={slide.closing} shown={revealed} /> : null;
+  // A small stage (a phone sideways), where the text floor draws every line bigger than its units: one column, as the
+  // reply question draws it, with the partner's line in one wrapping row and no earlier exchange (the slide before shows it).
+  if (size(presenter.size.caption) / (unit * presenter.size.caption) > ROLE_PLAY_STACK_SCALE) {
+    return (
+      <View testID="presenter-role-play" onLayout={fit.onRoom} {...{ dataSet: { layout: 'stacked' } }} style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}>
+        <View ref={fit.contentRef} onLayout={fit.onContent} testID="presenter-role-play-replies" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap: units(unit, spacing.sm) }}>
+          {heading}
+          <View role="list" aria-label={messages.a11y.minigame.rolePlay.log} accessibilityLabel={messages.a11y.minigame.rolePlay.log}>
+            <Bubble who="partner" speaker={slide.partner} line={slide.line} rom={rom} level={fit.level} inline />
+          </View>
+          {rows}
+          {why}
+          {closing}
+        </View>
+      </View>
+    );
+  }
   return (
     <View testID="presenter-role-play" onLayout={onRoom} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
       <View style={{ width: ROLE_PLAY_CHAT_SHARE, minWidth: 0 }}>
@@ -73,24 +105,14 @@ export function RolePlaySlide({ slide, shown, romanization }: { slide: RolePlayB
             ) : null}
             <Bubble who="partner" speaker={slide.partner} line={slide.line} rom={rom} level={chatFit.level} />
           </View>
-          {slide.closing !== undefined ? <Closing text={slide.closing} shown={revealed} /> : null}
+          {closing}
         </View>
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <View ref={fit.contentRef} onLayout={fit.onContent} testID="presenter-role-play-replies" {...{ dataSet: { fit: String(fit.level) } }} style={{ gap }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER), minHeight: units(unit, touchTarget.hero) }}>
-            <Text
-              {...KOREAN_LINE_BREAK}
-              role="heading"
-              testID="presenter-quiz-question"
-              style={{ flex: 1, minWidth: 0, fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(promptSize * typography.leading.tight) }}
-            >
-              {messages.learner.presenter.quiz.reply}
-            </Text>
-            <AnswerLine shown={revealed} />
-          </View>
-          <OptionRows options={options} revealed={revealed} romanization={romanization} compact={fit.level >= 1} small={fit.level >= 3} />
-          {whys.length > 0 ? <Why whys={whys} shown={revealed} rom={rom} small={fit.level >= 3} /> : null}
+          {heading}
+          {rows}
+          {why}
         </View>
       </View>
     </View>
@@ -110,6 +132,7 @@ function Bubble({
   rom,
   past = false,
   level,
+  inline = false,
 }: {
   who: 'partner' | 'class';
   speaker?: string;
@@ -117,6 +140,8 @@ function Bubble({
   rom: boolean;
   past?: boolean;
   level: number;
+  /** A small stage's one column: the role, the Korean, its romanization and meaning in one wrapping row, full width. */
+  inline?: boolean;
 }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
@@ -133,10 +158,10 @@ function Bubble({
       role="listitem"
       accessibilityLabel={label}
       style={{
-        maxWidth: ROLE_PLAY_BUBBLE_SHARE,
-        alignSelf: who === 'partner' ? 'flex-start' : 'flex-end',
-        gap: units(unit, spacing.xs),
-        paddingVertical: units(unit, small ? spacing.sm : spacing.md),
+        ...(inline
+          ? { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: units(unit, spacing.lg) }
+          : { maxWidth: ROLE_PLAY_BUBBLE_SHARE, alignSelf: who === 'partner' ? 'flex-start' : 'flex-end', gap: units(unit, spacing.xs) }),
+        paddingVertical: units(unit, small || inline ? spacing.sm : spacing.md),
         paddingHorizontal: units(unit, spacing.xl),
         borderWidth: border,
         borderColor: who === 'partner' ? colors.border.strong : colors.brand.secondary,
@@ -201,7 +226,7 @@ function Why({ whys, shown, rom, small }: { whys: ReadonlyArray<{ index: number;
   );
 }
 
-/** The scene's closing line on the last turn (content in the slide language), joining under the chat at the answer build. */
+/** The scene's closing line on the last turn (content in the slide language, caption size so the Korean stays the largest line), joining under the chat at the answer build. */
 function Closing({ text, shown }: { text: string; shown: boolean }): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
@@ -221,7 +246,7 @@ function Closing({ text, shown }: { text: string; shown: boolean }): ReactElemen
         revealProps(shown).style,
       ]}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), fontWeight: typography.weight.semibold, color: colors.text.primary }}>
         {text}
       </Text>
     </View>
