@@ -96,10 +96,10 @@
       "clozePick.rounds.c2.sentence.gloss": "Dibujo una estrella.",
       "clozePick.rounds.c1.tiles.eul.gloss": "marca de objeto (después de una consonante final)",
       "clozePick.rounds.c1.tiles.reul.gloss": "marca de objeto (después de una vocal)",
-      "clozePick.rounds.c1.tiles.ro.gloss": "con, usando (después de una vocal o de una l final)",
       "clozePick.rounds.c2.tiles.jeobeoyo.gloss": "doblo",
       "clozePick.rounds.c2.tiles.jallayo.gloss": "corto",
-      "clozePick.rounds.c2.tiles.geuryeoyo.gloss": "dibujo"
+      "clozePick.rounds.c2.tiles.geuryeoyo.gloss": "dibujo",
+      "clozePick.rounds.c1.tiles.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "minigame:s7-crafts-q2-practice": {
       "typeHangul.rounds.t1.prompt": "Escribe la palabra que oyes.",
@@ -152,9 +152,10 @@
       "writeFrame.rounds.c1.frame.gloss": "Doblo el papel y luego ___.",
       "writeFrame.rounds.c1.slots.act.bank.jallayo.gloss": "corto",
       "writeFrame.rounds.c1.slots.act.bank.geuryeoyo.gloss": "dibujo",
-      "writeFrame.rounds.c2.frame.gloss": "Por último, dibujo una ___.",
-      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "flor",
-      "writeFrame.rounds.c2.slots.thing.bank.byeol.gloss": "estrella"
+      "writeFrame.rounds.c2.frame.gloss": "Primero doblo ___.",
+      "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "el papel",
+      "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "un avión de papel",
+      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "una flor de papel"
     }
   }
 }

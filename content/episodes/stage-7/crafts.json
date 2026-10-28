@@ -249,9 +249,9 @@
                   "en": "object marker (after a vowel)"
                 },
                 {
-                  "ko": "로",
-                  "romanization": "ro",
-                  "en": "with, using (after a vowel or a final l)"
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
                 }
               ],
               "answerIndex": 0,
@@ -818,23 +818,28 @@
             {
               "id": "c2",
               "frame": {
-                "ko": "마지막으로 ___을/를 그려요.",
-                "romanization": "majimageuro ___eul/reul geuryeoyo",
-                "en": "Last, I draw a ___."
+                "ko": "먼저 ___을/를 접어요.",
+                "romanization": "meonjeo ___eul/reul jeobeoyo",
+                "en": "First, I fold ___."
               },
               "slots": [
                 {
                   "id": "thing",
                   "bank": [
                     {
-                      "ko": "꽃",
-                      "romanization": "kkot",
-                      "en": "flower"
+                      "ko": "종이",
+                      "romanization": "jongi",
+                      "en": "the paper"
                     },
                     {
-                      "ko": "별",
-                      "romanization": "byeol",
-                      "en": "star"
+                      "ko": "비행기",
+                      "romanization": "bihaenggi",
+                      "en": "a paper plane"
+                    },
+                    {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "a paper flower"
                     }
                   ]
                 }
@@ -938,9 +943,11 @@
     "notes": [
       "Language (pass 4, MAR, 2026-10-14): Hoya in 해요체 throughout the ko overlay; the -고 note shows the stem rule (접어요 -> 접 + 고); 가위로 is a fixed chunk glossed 'with scissors' on its Discover page, and q2 Check no longer pairs it with 마지막으로; ko glosses define 접어요 / 잘라요 / 그려요 without echoing them; 을/를 answers rebalanced.",
       "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price.",
-      "CM-3A S7 learning design (MAR, 2026-10-23): q1 and q2 shared one triple; q1 Check is now Cloze Pick (꽃___ 접어요 particle gap, 별을 ___ verb gap; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame (종이를 접고 ___, a new frame, and the Last frame). q2 Practice t1 is Dictation (먼저). Discover still teaches both old q3 Check sentences.",
-      "CM-3A S7 language (MAR, 2026-10-23): the instrument tile 로 is wrong after 꽃 (it would be 꽃으로), so only 을 fits; the first draft put ㄹ in an English gloss (korean-in-ui-field), now 'a final l' in en and es. es Doblo el papel y luego ___ composes with corto / dibujo; ko glosses echo no tile.",
-      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; no two quests share a triple; off, Cloze Pick plays as Listen & Pick and Dictation as a see round; es Por último, dibujo una ___ agrees with both picks (flor, estrella); nothing typed is kept."
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 and q2 shared one triple; q1 Check is now Cloze Pick (꽃___ 접어요 particle gap, 별을 ___ verb gap; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame (종이를 접고 ___ and 먼저 ___을/를 접어요 with the paper, a paper plane or a paper flower; the Apply played neither frame). q2 Practice t1 is Dictation (먼저). Discover still teaches both old q3 Check sentences.",
+      "CM-3A S7 language (MAR, 2026-10-23): only 을 fits 꽃___ 접어요; the third tile is 가, the subject marker the stage teaches in nature, wrong after 꽃 as a particle and as a form. es Doblo el papel y luego ___ composes with corto / dibujo; ko glosses echo no tile.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; no two quests share a triple; off, Cloze Pick plays as Listen & Pick and Dictation as a see round; es Primero doblo ___ takes each pick with its own article (el papel, un avión de papel, una flor de papel); nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; n1 and n2 and their sources are untouched; the Checks name only paper, folded things and the cell's verbs; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the two independent reviews of #867): q3 Check c2 copied the q3 Apply's w3 (마지막으로 ___을/를 그려요, 꽃 / 별); it is now 먼저 ___을/를 접어요 with 종이, 비행기 and 꽃 (the q1 and q2 folded things). q1 Check c1's 로 tile, which Stage 7 teaches only inside the chunk 가위로, is now 가. ko 맨 처음에 꺾어 겹치는 것: ___ composes with every pick."
     ]
   },
   "contentVer": 2

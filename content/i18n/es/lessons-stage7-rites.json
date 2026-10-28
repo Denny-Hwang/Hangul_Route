@@ -183,15 +183,13 @@
       "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "la luna llena"
     },
     "minigame:s7-rites-q3-check": {
-      "writeFrame.rounds.c1.frame.gloss": "Mi día favorito es ___.",
+      "writeFrame.rounds.c1.frame.gloss": "El día favorito de Hoya es ___.",
       "writeFrame.rounds.c1.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.c1.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.c1.slots.day.bank.saengil.gloss": "mi cumpleaños",
       "writeFrame.rounds.c1.slots.day.bank.jumal.gloss": "el fin de semana",
-      "writeFrame.rounds.c2.frame.gloss": "En ___ hice ___.",
+      "writeFrame.rounds.c2.frame.gloss": "En ___ Hoya hizo ___.",
       "writeFrame.rounds.c2.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
       "writeFrame.rounds.c2.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
-      "writeFrame.rounds.c2.slots.day.bank.saengil.gloss": "mi cumpleaños",
       "writeFrame.rounds.c2.slots.thing.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
       "writeFrame.rounds.c2.slots.thing.bank.tteok.gloss": "pastel de arroz",
       "writeFrame.rounds.c2.slots.thing.bank.keikeu.gloss": "pastel",

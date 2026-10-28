@@ -164,7 +164,7 @@
       "writeFrame.rounds.w3.slots.looks.bank.jagayo.gloss": "pequeño"
     },
     "minigame:s7-nature-q3-check": {
-      "writeFrame.rounds.c1.frame.gloss": "Mi animal favorito es el ___.",
+      "writeFrame.rounds.c1.frame.gloss": "El animal favorito de Hoya es el ___.",
       "writeFrame.rounds.c1.slots.animal.bank.horangi.gloss": "tigre",
       "writeFrame.rounds.c1.slots.animal.bank.goyangi.gloss": "gato",
       "writeFrame.rounds.c1.slots.animal.bank.tokki.gloss": "conejo",

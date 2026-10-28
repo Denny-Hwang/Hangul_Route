@@ -144,8 +144,8 @@
       "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "rollo de arroz con alga"
     },
     "minigame:s7-life-q2-check": {
-      "writeFrame.rounds.c1.frame.gloss": "Por la noche como ___.",
-      "writeFrame.rounds.c2.frame.gloss": "___, como ___.",
+      "writeFrame.rounds.c1.frame.gloss": "Por la noche, Hoya come ___.",
+      "writeFrame.rounds.c2.frame.gloss": "___, Hoya come ___.",
       "writeFrame.rounds.c1.slots.food.bank.bap.gloss": "arroz",
       "writeFrame.rounds.c1.slots.food.bank.ppang.gloss": "pan",
       "writeFrame.rounds.c1.slots.food.bank.sagwa.gloss": "una manzana",

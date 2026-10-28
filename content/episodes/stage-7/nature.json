@@ -905,9 +905,9 @@
             {
               "id": "c1",
               "frame": {
-                "ko": "제가 좋아하는 동물은 ___이에요/예요.",
-                "romanization": "jega joahaneun dongmureun ___ieyo/yeyo",
-                "en": "My favorite animal is the ___."
+                "ko": "호야가 좋아하는 동물은 ___이에요/예요.",
+                "romanization": "hoyaga joahaneun dongmureun ___ieyo/yeyo",
+                "en": "Hoya's favorite animal is the ___."
               },
               "slots": [
                 {
@@ -947,8 +947,8 @@
             {
               "id": "c2",
               "frame": {
-                "ko": "___은/는 정말 ___.",
-                "romanization": "___eun/neun jeongmal ___",
+                "ko": "___이/가 정말 ___.",
+                "romanization": "___i/ga jeongmal ___",
                 "en": "The ___ is really ___."
               },
               "slots": [
@@ -1163,9 +1163,11 @@
     "notes": [
       "Language pass 4 (MAR): 해요체, spelling, spacing, romanization and the 이/가, 은/는, 이에요/예요 pairs clean; applied: 동물 for 짐승 in ko glosses, 이/가 called a subject marker, writing verbs (no speaking) in titles and captions, shorter bear gloss, fewer ko/es calques; kept: Write Frame glosses with ___ (filled by the pick), en w1 'I like the ___', order-it distractors (target gloss shown), 내가 in ko titles.",
       "Culture pass 5 (MAR): n1-n5 re-checked against every cited NIKL and AKS page (n5 via factRef story:sun-and-moon#f2), two or three Korean public-institution sources each, nothing copied (the ko q3 caption no longer echoes the 저 definition); the tiger tale reduced to the rice cakes with no peril; open-choice banks with 'any answer is a good one'; no real person, brand, price or age wording.",
-      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick with a particle gap (고양이___ takes 가, 곰___ takes 이; the wrong tiles are the object marker), q2 keeps Sentence Builder, q3 Check is Write Frame (the two Apply frames, new picks). Retired: 호랑이가 좋아요, 제가 좋아하는 동물은 새예요, 토끼는 정말 귀여워요; new item 곰이 좋아요 (on q1 Discover).",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick with a particle gap (고양이___ takes 가, 곰___ takes 이; the wrong tiles are the object marker), q2 keeps Sentence Builder, q3 Check is Write Frame (호야가 좋아하는 동물은 ___ and ___이/가 정말 ___; the Apply played neither frame). Retired: 호랑이가 좋아요, 제가 좋아하는 동물은 새예요, 토끼는 정말 귀여워요; new item 곰이 좋아요 (on q1 Discover).",
       "CM-3A S7 language (MAR, 2026-10-23): 는 is kept out of the tiles because 호랑이는 좋아요 is also Korean; filledRomanization goyangiga / gomi checked against RR; es and ko particle glosses reuse the reviewed q1 wording. Animal banks only, no feeling slot, so no frame asks about the learner's own feelings.",
-      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; off, the particle Check plays as Listen & Pick and keeps 가 and 이 apart by the last syllable in en, es and ko; the banks ask no feeling of the learner's own; nothing typed is kept."
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; off, the particle Check plays as Listen & Pick and keeps 가 and 이 apart by the last syllable in en, es and ko; the banks ask no feeling of the learner's own; nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; n1-n5 and their sources are untouched; the Checks name only animals and looks the cell teaches; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the #867 reviews): the q3 Check repeated Apply w2 and w3 word for word; c1 is now Hoya's favorite animal (호야가 좋아하는 동물은 ___, section 6.6) and c2 puts the q1 subject marker in the w3 frame (___이/가 정말 ___: 고양이가, 곰이). es El animal favorito de Hoya es el ___ and ko 호야 마음에 가장 드는 동물: ___ fit every pick."
     ]
   },
   "contentVer": 2

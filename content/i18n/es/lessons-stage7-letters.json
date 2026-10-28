@@ -139,12 +139,12 @@
       "writeFrame.rounds.w2.slots.what.bank.yeonpil.gloss": "lápiz"
     },
     "minigame:s7-letters-q3-check": {
-      "writeFrame.rounds.c1.frame.gloss": "Esto es mi ___.",
+      "writeFrame.rounds.c1.frame.gloss": "Esto es ___ de Hoya.",
       "writeFrame.rounds.c2.frame.gloss": "Esto es ___ en hangul.",
-      "writeFrame.rounds.c1.slots.what.bank.ireum.gloss": "nombre",
-      "writeFrame.rounds.c1.slots.what.bank.chaek.gloss": "libro",
-      "writeFrame.rounds.c1.slots.what.bank.gabang.gloss": "mochila",
-      "writeFrame.rounds.c1.slots.what.bank.yeonpil.gloss": "lápiz",
+      "writeFrame.rounds.c1.slots.what.bank.ireum.gloss": "el nombre",
+      "writeFrame.rounds.c1.slots.what.bank.chaek.gloss": "el libro",
+      "writeFrame.rounds.c1.slots.what.bank.gabang.gloss": "la mochila",
+      "writeFrame.rounds.c1.slots.what.bank.yeonpil.gloss": "el lápiz",
       "writeFrame.rounds.c2.slots.what.bank.geulja.gloss": "una letra",
       "writeFrame.rounds.c2.slots.what.bank.ireum.gloss": "un nombre",
       "writeFrame.rounds.c2.slots.what.bank.chaek.gloss": "un libro"
