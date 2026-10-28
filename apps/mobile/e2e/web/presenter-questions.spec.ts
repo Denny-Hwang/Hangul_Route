@@ -24,8 +24,8 @@ const DECK: LectureDeckInput = {
   seed: 7,
   blocks: [
     { kind: 'quest', id: 'quest:stage1-letters-q1' }, // a letter round and a word round (the Check)
-    { kind: 'quest', id: 'quest:stage3-life-q1' }, // two Cloze Pick questions (its Check, row CM-3A S3)
-    { kind: 'quest', id: 'quest:stage3-nature-q1' }, // heard picture and sentence rounds (its Apply)
+    // Stage 3 life q1's Check is Cloze Pick since row CM-3A S3 (no listen question); nature q1's Apply has them.
+    { kind: 'quest', id: 'quest:stage3-nature-q1' }, // heard picture and sentence rounds (its Apply), and a Cloze Pick Check
     { kind: 'quest', id: 'quest:stage4-life-q1' }, // reply questions (Tap to Respond)
     { kind: 'quest', id: 'quest:stage6-life-q3' }, // realia questions: Korean, figure and picture options on a menu
     { kind: 'quest', id: 'quest:stage6-nature-q1' }, // a five-board trail sign
@@ -304,7 +304,7 @@ test.describe('the listen question without a Korean voice (section 3.7)', () => 
 
   test('the teacher reads the romanization; the Hangul joins the Say it box at the answer build; no stage speaker', async ({ page }) => {
     // The suite's silent engine has no Korean voice (fixtures.ts), so the listen prompts are teacher-says text.
-    await page.goto(link({ ...DECK, id: 'lecture:e2eq02', blocks: [{ kind: 'quest', id: 'quest:stage3-nature-q1' }] }));
+    await page.goto(link({ ...DECK, id: 'lecture:e2eq02', blocks: [{ kind: 'quest', id: 'quest:stage3-letters-q1' }] }));
     await startLesson(page);
     const stage = page.getByTestId('presenter-stage');
     let visited = 0;
@@ -325,7 +325,7 @@ test.describe('the listen question without a Korean voice (section 3.7)', () => 
       await shot(page, `presenter-questions-say-it-${n}-a`);
       await expect.poll(() => fitProblems(page, false), { timeout: 3000 }).toEqual([]);
     }
-    // Stage 3 nature q1 has listen rounds (picture rounds and sentence rounds, its Apply): the walk must reach them.
+    // Stage 3 letters q1 has listen rounds (its Apply): the walk must reach them.
     expect(visited).toBeGreaterThan(0);
   });
 });
