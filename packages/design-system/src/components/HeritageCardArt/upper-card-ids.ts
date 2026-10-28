@@ -1,5 +1,5 @@
 /**
- * The album card ids `UpperCellCardArt` draws (F-CURR-002 §7.2, row CM-23): the upper-cell cards of Stages 2 to 4,
+ * The album card ids `UpperCellCardArt` draws (F-CURR-002 §7.2, row CM-23): the upper-cell cards of Stages 2 to 7,
  * Lunch Box Words', Outdoor Words' and Greeting Dialogues' album cards included. Pure, and a file of its own (row CM-23
  * part 2): only the drawings (`UpperCellArt.tsx`, in the app's upper-cards chunk) and the tests read it, so the start
  * bundle, which carries `card-ids.ts` for the Stage 1 drawings, carries this list only once, as the app's
@@ -24,4 +24,18 @@ export const upperCellCardArtIds: readonly string[] = [
   'card:insa',
   'card:biga-wayo',
   'card:gachi',
+  // Stages 6-7 (row CM-23 part 3): real-world things read, then writing
+  'card:won',
+  'card:yeogiyo',
+  'card:gichapyo',
+  'card:jeongsang',
+  'card:deom',
+  'card:ireum',
+  'card:achim',
+  'card:saengil',
+  'card:tokki',
+  'card:bihaenggi',
 ];
+
+/** The legendary card of each album, in album order (row CM-23 part 3; the app's `albumLegendCards`, a test pins them). */
+export const albumLegendArtIds: readonly string[] = ['card:hunminjeongeum', 'card:jang', 'card:hangawi', 'card:jirisan', 'card:ssireum'];

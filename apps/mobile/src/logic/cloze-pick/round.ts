@@ -3,9 +3,9 @@ import type { MinigameScope } from '../minigame-config';
 
 /**
  * Cloze Pick rounds (F-CURR-002 section 7.1 F1, row CM-30; design/wireframes/minigame/cloze-pick.md): the pure
- * helpers of the game and of its fallback, in the Cloze Pick chunk with them. No other chunk imports this folder (Metro
- * would hoist a module two chunks share into the start bundle): the memory store and the pacing fill the gap with the
- * schema's `fillClozeGap` themselves.
+ * helpers of the game and of its fallback. The fallback is in the start bundle (it plays with the switch off or the
+ * chunk unable to load), so this module is too; the game's flow and view (`./flow.ts`, `./view.ts`) are in the Cloze
+ * Pick chunk. The memory store and the pacing fill the gap with the schema's `fillClozeGap` themselves.
  *
  * - **The fallback** (`game.cloze-pick` off, or the chunk cannot load): the shipped Listen & Pick renderer in its
  *   text prompt mode, on the same tiles, answer and scoring (`clozeToListenPick`). The completed sentence is what

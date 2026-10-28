@@ -989,6 +989,11 @@ export const consoleMsgs = {
     },
     backToConsole: { cta: '콘솔로 돌아가기' },
     ownerOnly: '이 설정은 학교를 만든 분만 바꿀 수 있어요.',
+    learnerGone: (name: string) => `${name} 학생은 이제 이 반에 없어요.`,
+    unarchiveOverCap: (n: number | null, cap: number) =>
+      n === null
+        ? `이미 반 ${cap}개에 들어가 있는 학생이 있어요. 보관을 풀기 전에 그 학생을 다른 반으로 옮기거나 빼 주세요.`
+        : `학생 ${n}명이 이미 반 ${cap}개에 들어가 있어요. 보관을 풀기 전에 다른 반으로 옮기거나 빼 주세요.`,
   },
   school: {
     title: '학교',
@@ -1550,6 +1555,7 @@ export const consoleMsgs = {
       full: (cls: string) => `반(${cls})은 지금 자리가 없어요.`,
       capLearner: (name: string) => `${name} 학생은 들어갈 수 있는 반 수가 다 찼어요.`,
       alreadyMember: (name: string, cls: string) => `${name} 학생은 이미 반(${cls})에 있어요.`,
+      alreadyMemberKeepOne: (name: string, cls: string) => `${name} 학생은 이미 반(${cls})에 있어요. 반(${cls})에만 남기려면 이 반에서 빼 주세요.`,
       alreadyOpen: (name: string) => `${name} 학생의 반 옮기기가 이미 기다리고 있어요.`,
       sameSpace: (name: string) => `${name} 학생은 이미 이 반에 있어요.`,
       codeRequired: '먼저 반 코드를 입력하세요.',

@@ -33,9 +33,9 @@ import { cardCitationView } from '../../logic/library/card-citation';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
-import { awardWorld } from '../award-world';
+import { albumCardSets, awardWorld } from '../award-world';
 import { episodesAll } from '../episodes';
-import { heritageCardsAll, stage1Cards, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
+import { albumLegendCards, heritageCardsAll, stage1Cards, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { heldStoryCards, storiesAll, storyById } from '../stories';
 import { heldSetCardIds, heldStoryCardIds, storyCards, storySets } from '../story-cards';
@@ -188,8 +188,9 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
 
 // ---- the heritage story cards (F-STORY-006 §3.8, PR 6.7) -------------------------------------
 
-// F-CURR-002 row CM-23 adds the twelve upper-cell cards of Stages 2 to 4 (one per cell; the three taste cells keep theirs).
-const handWritten: readonly HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards];
+// F-CURR-002 row CM-23 adds the twenty-two upper-cell cards of Stages 2 to 7 (one per cell; the three taste cells keep
+// theirs) and, in part 3, the five album legendary cards.
+const handWritten: readonly HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards, ...upperCellCards, ...albumLegendCards];
 const slugOf = (storyId: string): string => storyId.replace(/^story:/, '');
 
 /**
@@ -358,7 +359,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       expect(storyCards.some((c) => c.id === set.cardId), set.cardId).toBe(true);
     }
     expect(heritageCardsAll).toEqual([...handWritten, ...storyCards]);
-    expect(awardWorld.sets).toBe(storySets);
+    // Row CM-23 part 3: the five album sets follow the story sets.
+    expect(awardWorld.sets).toEqual([...storySets, ...albumCardSets]);
   });
 
   it('T-AWARD-6: every bundled story card carries its story fact verbatim, the first source and a story keyword', () => {
@@ -421,22 +423,24 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
       }
     });
 
-    it('T-AWARD-7: 82 cards (25 common, 21 uncommon, 28 rare, 8 legendary) and 4 sets', () => {
-      expect(handWritten).toHaveLength(54);
-      expect(all).toHaveLength(82);
+    it('T-AWARD-7: 97 cards (25 common, 21 uncommon, 38 rare, 13 legendary), 4 story sets and 5 album sets', () => {
+      expect(handWritten).toHaveLength(69);
+      expect(all).toHaveLength(97);
       const byRarity = (r: HeritageCard['rarity']): number => all.filter((c) => c.rarity === r).length;
       expect({ common: byRarity('common'), uncommon: byRarity('uncommon'), rare: byRarity('rare'), legendary: byRarity('legendary') }).toEqual({
         common: 25,
         uncommon: 21,
-        rare: 28,
-        legendary: 8,
+        rare: 38,
+        legendary: 13,
       });
+      expect(albumCardSets.map((s) => s.id)).toEqual(['set:album-letters', 'set:album-life', 'set:album-rites', 'set:album-nature', 'set:album-crafts']);
+      for (const set of albumCardSets) expect(set.memberCardIds, set.id).toHaveLength(5);
       expect(sets.map((s) => s.id)).toEqual(['set:records-joseon', 'set:hangul-printing', 'set:science-art-life', 'set:seasons-tales']);
       for (const set of sets) expect(set.memberCardIds, set.id).toHaveLength(6);
       expect(() => HeritageCardListSchema.parse(all)).not.toThrow();
     });
 
-    it('T-AWARD-5: no two of the 82 cards share a Korean word, and the corpus lint agrees', () => {
+    it('T-AWARD-5: no two of the 97 cards share a Korean word, and the corpus lint agrees', () => {
       const words = all.flatMap((c) => (c.subtitleKo === undefined ? [] : [c.subtitleKo]));
       expect(new Set(words).size).toBe(words.length);
       expect(lintStoryCorpus(stories, { cards: [...handWritten, ...setHeadwords] }).filter((f) => f.rule === 'card-korean-duplicate')).toEqual([]);
@@ -457,10 +461,10 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
         })),
       ],
       quests: questsAll,
-      sets: cardsOf.sets,
+      sets: [...cardsOf.sets, ...albumCardSets],
     });
 
-    it('T-AWARD-1 with the 82 cards: every one, set cards included, is listed and earned by finishing every quest', () => {
+    it('T-AWARD-1 with the 97 cards: every one, story and album set cards included, is listed and earned by finishing every quest', () => {
       const w = shelfWorld(stories, { cards, sets });
       expectEarnable(w, w.cards);
     });
@@ -615,7 +619,8 @@ describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
       // A cover with nothing to draw would pass on kind alone: it names a backdrop and its alt text.
       if (src.kind === 'cover') expect([src.art.setting, src.art.altEn.length > 0], card.id).toEqual([expect.stringMatching(/^scene:/), true]);
     }
-    const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:') && !heldSetCardIds.includes(c.id));
+    // The album legendary cards (row CM-23 part 3) are drawn by the upper-cards chunk: checked below.
+    const sets = heritageCardsAll.filter((c) => c.unlockedBy.startsWith('set:') && !c.unlockedBy.startsWith('set:album-') && !heldSetCardIds.includes(c.id));
     expect(sets.length).toBeGreaterThan(0);
     expect(sets).toHaveLength(storySets.length - heldSetCardIds.length);
     for (const card of sets) {
@@ -625,6 +630,15 @@ describe('reviewed story and set cards (F-STORY-006 6.8)', () => {
       const expected = (def?.memberStoryIds ?? []).map((id) => storyCardId(id));
       expect(expected, card.id).toHaveLength(6);
       if (src.kind === 'plate') expect(src.members.map((m) => m.id), card.id).toEqual(expected);
+    }
+  });
+
+  it('an album legendary card shows its album as a plate until its drawing is in (row CM-23 part 3)', () => {
+    for (const card of albumLegendCards) {
+      const src = cardArtSource(card, deps);
+      expect(src.kind, card.id).toBe('plate');
+      const set = albumCardSets.find((s) => s.cardId === card.id);
+      if (src.kind === 'plate') expect(src.members.map((m) => m.id), card.id).toEqual(set?.memberCardIds);
     }
   });
 

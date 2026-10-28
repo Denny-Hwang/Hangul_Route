@@ -76,6 +76,11 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
     path: 'apps/mobile/src/content/upper-cell-card-sources.ts',
     reason: 'test-only source records of the upper-cell card backs (F-CURR-002 row CM-23): Korean page titles, publishers and quoted source words, never shown; the cards they cite carry their Korean and romanization in heritage-cards.ts (registered, B1)',
   },
+  {
+    path: 'packages/design-system/src/components/HeritageCardArt/UpperCellArt.tsx',
+    reason:
+      "the Korean drawn inside the Stage 6-7 and album legendary card pictures (F-CURR-002 row CM-23 part 3): a menu, a ticket, a sign or a word-bank sentence of the card's own cell, never a reading aid; the cards' Korean and romanization are in heritage-cards.ts (registered, B1)",
+  },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },

@@ -8,6 +8,9 @@ import type { DeepPartial, Messages } from '../../types';
  */
 const count = (n: number, one: string, other: string): string => `${n} ${plural('es', n, { one, other })}`;
 
+const ALBUM_NAMES = { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos' };
+type AlbumTheme = keyof typeof ALBUM_NAMES;
+
 export const learner = {
   welcome: {
     title: '¡Hola! Soy Hoya.',
@@ -350,9 +353,11 @@ export const learner = {
     albums: {
       title: 'Álbumes',
       line: 'Cada tema tiene un álbum. Termina una casilla a partir de la Etapa 2 para añadir su tarjeta.',
-      names: { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos' },
+      names: ALBUM_NAMES,
       count: (n: number) => plural('es', n, { one: '1 tarjeta', other: `${n} tarjetas` }),
       fresh: 'Nuevo',
+      complete: 'Álbum completo',
+      named: (theme: AlbumTheme) => `Álbum ${ALBUM_NAMES[theme]}`,
       a11y: (name: string, status: string) => `Álbum ${name}: ${status}`,
     },
     earnHint: {
@@ -361,6 +366,7 @@ export const learner = {
       stage: (stage: number) => `Termina todas las misiones de la Etapa ${stage}`,
       welcome: 'Un regalo de bienvenida de Hoya',
       set: (collection: string) => `Reúne todas las tarjetas de las historias de ${collection}`,
+      album: (theme: AlbumTheme) => `Reúne todas las tarjetas del álbum ${ALBUM_NAMES[theme]}`,
     },
   },
 
@@ -435,6 +441,10 @@ export const learner = {
       announce: (title: string) => `¡Tarjeta nueva para tu colección! ${title}`,
       see: { cta: 'Ver mi tarjeta' },
       seeA11y: (title: string) => `Ver mi tarjeta: ${title}`,
+    },
+    albumDone: {
+      title: '¡Álbum completo!',
+      line: (theme: AlbumTheme) => `Tu álbum ${ALBUM_NAMES[theme]} está lleno. Aquí tienes su tarjeta legendaria.`,
     },
     extraCards: {
       title: (n: number) =>

@@ -7,7 +7,7 @@ import { clozeFixtureScope } from '../e2e-rounds';
 
 /**
  * F-CURR-002 row CM-30: what the rest of the app reads from a `cloze-pick` scope. The memory store records the
- * produce rung of the completed sentence (a `pat` item) or, for a value gap, of the card it is read from (the `rea`
+ * produce rung of the completed sentence (a `pat` item, and a word gap's answer word) or, for a value gap, of the card it is read from (the `rea`
  * item), from the game and its fallback alike (same round ids). The adaptive pacing drops a last round and builds its
  * scaffold round from the completed sentences. My Route counts the game for reading.
  */
@@ -15,8 +15,9 @@ import { clozeFixtureScope } from '../e2e-rounds';
 describe('the memory store reads a Cloze Pick round', () => {
   const scope = clozeFixtureScope(['word', 'particle', 'value']);
 
-  it('a word or particle gap asks the completed sentence at the produce rung', () => {
-    expect(askedOfScope(scope, 'e2e-cloze-word')).toEqual({ texts: [{ ko: '책을 읽어요.', kind: 'pat' }], jamoIds: [], rung: 'produce' });
+  it('a word or particle gap asks the completed sentence at the produce rung, and a word gap its answer word', () => {
+    // The review build makes an item of a word gap's answer (extract.ts), so the round credits it too; a particle is none.
+    expect(askedOfScope(scope, 'e2e-cloze-word')).toEqual({ texts: [{ ko: '책을 읽어요.', kind: 'pat' }, { ko: '읽어요' }], jamoIds: [], rung: 'produce' });
     expect(askedOfScope(scope, 'e2e-cloze-particle')).toEqual({ texts: [{ ko: '물을 마셔요.', kind: 'pat' }], jamoIds: [], rung: 'produce' });
   });
 

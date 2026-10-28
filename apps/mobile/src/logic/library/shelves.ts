@@ -1,6 +1,6 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import { earnHint } from '../awards/earn-hint';
+import { ALBUM_SET, earnHint } from '../awards/earn-hint';
 import { parseUnlockedBy } from '../awards/rules';
 import type { AwardWorld } from '../awards/types';
 
@@ -46,7 +46,9 @@ function groupOf(card: HeritageCard, world: AwardWorld, m: LibraryMessages): { k
     }
     case 'set': {
       const set = world.sets.find((s) => s.id === rule.setId);
-      return { key: `set:${rule.setId}`, title: set?.titleEn ?? m.toFind.other };
+      // An album set's `titleEn` is its theme (row CM-23 part 3): the row is named for the album, in the UI language.
+      const title = set && rule.setId.startsWith(ALBUM_SET) ? m.albums.named(set.titleEn as Parameters<typeof m.albums.named>[0]) : set?.titleEn;
+      return { key: `set:${rule.setId}`, title: title ?? m.toFind.other };
     }
     case 'welcome':
       return { key: 'welcome', title: m.earnHint.welcome };

@@ -220,6 +220,8 @@ export type InboxClassScope = z.infer<typeof InboxClassScopeSchema>;
 export const InboxClassMoveSchema = z.object({
   id: z.string().min(1),
   to: z.object({ spaceId: z.string().min(1), name: z.string() }),
+  /** The class the learner moved from, with its live name (optional: older Workers leave it out). */
+  from: z.object({ spaceId: z.string().min(1), name: z.string() }).optional(),
   executedAt: z.string(),
 });
 export type InboxClassMove = z.infer<typeof InboxClassMoveSchema>;

@@ -27,3 +27,22 @@ The Stage 4 drawings follow F-CARD-S4-001 3.2 as amended: two round friends faci
 friend), each with a speech bubble in the HoyaBubble language (`surface.canvas` fill, `brand.secondary` border, never
 red), the bubble holding a drawn word: a question mark, an eraser, a heart, raindrops, a little house, a star. Theme
 tint, at most five fill colours, tokens only.
+
+## Stages 6-7 and the album legendary cards (row CM-23 part 3)
+
+The same spec on a learner who finished every upper cell before the row shipped: every album is complete and leads
+with its legendary card.
+
+| Shot | What it shows |
+|---|---|
+| `shots/upper-cards-s67-albums-320.png` | The albums at 320 px, each "Album complete": the legendary card first (in its legendary border), then the five album cards, wrapping to a second line. Still no count of what is left. |
+| `shots/upper-cards-legendary-card-320.png` | `card:hunminjeongeum` (Hangul Book) at 320 px: the legendary drawing in its gold frame with 훈민정음 on its label, the blurb, the UNESCO fact and its source line. |
+| `shots/upper-cards-s6-card-320.png` | `card:won` at 320 px: the menu board with 김밥 이천 원 and 라면 삼천 원, the fact and its National Institute of Korean Language source line. |
+| `shots/upper-cards-s67-albums-wide.png` | The complete albums on a wide window. |
+
+Stage 6 drawings (F-CARD-S6-001 as amended) are things read in the world with the cell's own Korean drawn in them: a
+menu board, a call to the server in a speech bubble, a train ticket, a trail sign, a market price card; amounts are round
+practice amounts in won. Stage 7 drawings (F-CARD-S7-001 as amended) are writing: the card's word as a word-bank tile
+(cream fill, sky-blue border) over a ruled page with the cell's sentence in handwriting blue; a long sentence takes a
+smaller size so it stays on the page. The legendary cards sit in a frame of the legendary rarity token with their Korean
+name on a label. Theme tint, at most five fill colours, tokens only.
