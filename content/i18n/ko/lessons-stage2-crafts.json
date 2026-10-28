@@ -39,7 +39,7 @@
       "picWord.boards.0.pairs.haneul.word.gloss": "머리 위로 보이는 높고 넓은 곳",
       "picWord.boards.1.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
       "picWord.boards.1.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
-      "picWord.boards.1.pairs.gong.word.gloss": "차거나 던지며 노는 둥근 물건"
+      "picWord.boards.1.pairs.chukgu.word.gloss": "공을 발로 차서 골을 넣는 운동"
     },
     "quest:stage2-crafts-q2": {
       "title": "전통 놀이",
@@ -57,7 +57,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "바람에 날리는 종이 장난감",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
-      "steps.s5.title": "듣고 쓰기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "멋져요!",
       "steps.s6.hoyaLine": "놀이 낱말 네 개를 읽었어요. 잘했어요!"
     },
@@ -98,7 +98,14 @@
     },
     "minigame:s2-crafts-q3-check": {
       "listenPick.rounds.see-chingu.prompt": "가깝게 지내는 사람",
-      "listenPick.rounds.see-dalligi.prompt": "누가 더 빨리 뛰는지 겨루는 경기"
+      "listenPick.rounds.see-dalligi.prompt": "누가 더 빨리 뛰는지 겨루는 경기",
+      "listenPick.rounds.see-chingu.options.chingu.label": "가깝게 지내는 사람",
+      "listenPick.rounds.see-chingu.options.dalligi.label": "누가 더 빨리 뛰는지 겨루는 경기",
+      "listenPick.rounds.see-chingu.options.julleomgi.label": "줄을 돌리며 뛰어넘는 놀이",
+      "listenPick.rounds.see-chingu.options.gong.label": "차거나 던지며 노는 둥근 물건",
+      "listenPick.rounds.see-dalligi.options.dalligi.label": "누가 더 빨리 뛰는지 겨루는 경기",
+      "listenPick.rounds.see-dalligi.options.chingu.label": "가깝게 지내는 사람",
+      "listenPick.rounds.see-dalligi.options.julleomgi.label": "줄을 돌리며 뛰어넘는 놀이"
     },
     "minigame:s2-crafts-q1-practice": {
       "picWord.boards.0.pairs.gong.word.gloss": "차거나 던지며 노는 둥근 물건",

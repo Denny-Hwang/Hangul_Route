@@ -356,6 +356,9 @@ async function playCheckBoards(page: Page, boards: readonly (readonly string[])[
   await page.getByRole('button', { name: 'Go', exact: true }).click();
   for (const ids of boards) {
     await expect.poll(() => boardIds(page)).toEqual([...ids].sort());
+    // A Check has no Skip (F-QUEST-002 L2), and its header is "Quick check", never "n / N".
+    await expect(page.getByTestId('pic-word-skip')).toHaveCount(0);
+    await expect(page.getByText('Quick check').first()).toBeVisible();
     for (const id of ids) {
       await page.getByTestId(`pic-word-picture-${id}`).click();
       await page.getByTestId(`pic-word-word-${id}`).click();
@@ -383,7 +386,15 @@ async function playReadPickCheck(page: Page, answers: readonly [string, string])
 async function playDictationCheck(page: Page, name: string, words: readonly [string, string]): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
   await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  // A Check has no Skip (F-QUEST-002 L2), at the phone width and wide; the prompt and the field stay on screen.
+  await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport();
   await shot(page, `dictation-${name}-${page.viewportSize()?.width ?? 0}`);
+  const size = page.viewportSize();
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
+  if (size) await page.setViewportSize(size);
   for (const word of words) await typeAnswer(page, word);
 }
 
@@ -462,7 +473,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       // F-CURR-002 row CM-3A S2: the Check is Pic-Word Match on the cell's own words (Check rotation, section 7.1).
       await playCheckBoards(page, [
         ['gong', 'jajeongeo', 'haneul'],
-        ['yeon', 'namu', 'gong'],
+        ['yeon', 'namu', 'chukgu'],
       ]);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();

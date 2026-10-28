@@ -401,12 +401,12 @@
                   }
                 },
                 {
-                  "id": "gong",
-                  "pictureRef": "word:sport-ball",
+                  "id": "chukgu",
+                  "pictureRef": "word:sport-soccer",
                   "word": {
-                    "ko": "공",
-                    "romanization": "gong",
-                    "en": "ball"
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
                   }
                 }
               ]
@@ -513,7 +513,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Hear and Type",
+          "titleEn": "Type the Word",
           "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-crafts-q2-check",
           "durationSeconds": 35

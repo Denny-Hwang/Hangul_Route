@@ -17,7 +17,7 @@
       "steps.s2.title": "Palabras de afuera",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Arma la palabra",
-      "steps.s5.title": "Escucha y escribe",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Tarjeta de estrella!",
       "steps.s1.hoyaLine": "¡Leamos lo que vemos afuera!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -53,7 +53,7 @@
       "steps.s2.title": "Palabras del agua",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Arma la palabra",
-      "steps.s5.title": "Lee y une",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras del agua!",
       "steps.s1.hoyaLine": "¡Vamos adonde está el agua!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -77,15 +77,20 @@
     },
     "minigame:s2-nature-q2-check": {
       "listenPick.rounds.pic-gureum.prompt": "nube",
-      "listenPick.rounds.see-baram.prompt": "viento"
+      "listenPick.rounds.see-baram.prompt": "viento",
+      "listenPick.rounds.pic-gureum.options.gureum.label": "nube",
+      "listenPick.rounds.pic-gureum.options.bi.label": "lluvia",
+      "listenPick.rounds.pic-gureum.options.nun.label": "nieve",
+      "listenPick.rounds.pic-gureum.options.baram.label": "viento",
+      "listenPick.rounds.see-baram.options.baram.label": "viento",
+      "listenPick.rounds.see-baram.options.gureum.label": "nube",
+      "listenPick.rounds.see-baram.options.bi.label": "lluvia"
     },
     "minigame:s2-nature-q3-check": {
-      "picWord.boards.0.pairs.gang.word.gloss": "río",
-      "picWord.boards.0.pairs.bada.word.gloss": "mar",
-      "picWord.boards.0.pairs.dol.word.gloss": "piedra",
-      "picWord.boards.1.pairs.mulgogi.word.gloss": "pez",
-      "picWord.boards.1.pairs.gang.word.gloss": "río",
-      "picWord.boards.1.pairs.san.word.gloss": "montaña"
+      "typeHangul.rounds.hear-bada.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-bada.target.gloss": "mar",
+      "typeHangul.rounds.hear-dol.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-dol.target.gloss": "piedra"
     },
     "minigame:s2-nature-q1-practice": {
       "picWord.boards.0.pairs.haneul.word.gloss": "cielo",

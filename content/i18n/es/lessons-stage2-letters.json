@@ -40,7 +40,7 @@
       "steps.s2.title": "Conoce kk, tt, pp, ss, jj",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une el significado",
-      "steps.s5.title": "Escucha y escribe",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Sonidos tensos!",
       "steps.s1.hoyaLine": "Dos letras iguales forman un sonido nuevo. ¡Conozcamos cinco!",
       "steps.s2.hoyaLine": "Una letra doble se dice tensa, con la garganta apretada y casi sin soplo de aire.",
@@ -134,7 +134,13 @@
     },
     "minigame:s2-letters-q1-check": {
       "listenPick.rounds.see-hae.prompt": "sol",
-      "listenPick.rounds.see-norae.prompt": "canción"
+      "listenPick.rounds.see-norae.prompt": "canción",
+      "listenPick.rounds.see-hae.options.hae.label": "sol",
+      "listenPick.rounds.see-hae.options.sae.label": "pájaro",
+      "listenPick.rounds.see-hae.options.byeol.label": "estrella",
+      "listenPick.rounds.see-norae.options.norae.label": "canción",
+      "listenPick.rounds.see-norae.options.sae.label": "pájaro",
+      "listenPick.rounds.see-norae.options.byeol.label": "estrella"
     },
     "minigame:s2-letters-q2-apply": {
       "cardPairs.kkachi.gloss": "urraca",
@@ -160,7 +166,7 @@
       "picWord.boards.0.pairs.gawi.word.gloss": "tijeras",
       "picWord.boards.1.pairs.uija.word.gloss": "silla",
       "picWord.boards.1.pairs.wonsungi.word.gloss": "mono",
-      "picWord.boards.1.pairs.gwi.word.gloss": "oreja"
+      "picWord.boards.1.pairs.juhwangsaek.word.gloss": "naranja"
     },
     "minigame:s2-letters-q4-apply": {
       "cardPairs.hoesa.gloss": "empresa, oficina",
@@ -170,7 +176,13 @@
     },
     "minigame:s2-letters-q4-check": {
       "listenPick.rounds.see-hoesaek.prompt": "gris",
-      "listenPick.rounds.see-gwi.prompt": "oreja"
+      "listenPick.rounds.see-gwi.prompt": "oreja",
+      "listenPick.rounds.see-hoesaek.options.hoesaek.label": "gris",
+      "listenPick.rounds.see-hoesaek.options.hayansaek.label": "blanco",
+      "listenPick.rounds.see-hoesaek.options.galsaek.label": "marrón",
+      "listenPick.rounds.see-gwi.options.gwi.label": "oreja",
+      "listenPick.rounds.see-gwi.options.ko.label": "nariz",
+      "listenPick.rounds.see-gwi.options.ip.label": "boca"
     },
     "minigame:s2-letters-q5-apply": {
       "cardPairs.ot.gloss": "ropa",
@@ -184,7 +196,7 @@
       "picWord.boards.0.pairs.but.word.gloss": "pincel",
       "picWord.boards.1.pairs.ssiat.word.gloss": "semilla",
       "picWord.boards.1.pairs.jeotgarak.word.gloss": "palillos",
-      "picWord.boards.1.pairs.bit.word.gloss": "luz"
+      "picWord.boards.1.pairs.chaek.word.gloss": "libro"
     },
     "minigame:s2-letters-q6-apply": {
       "cardPairs.bueok.gloss": "cocina",
@@ -194,7 +206,13 @@
     },
     "minigame:s2-letters-q6-check": {
       "listenPick.rounds.see-ip.prompt": "hoja",
-      "listenPick.rounds.see-kkot.prompt": "flor"
+      "listenPick.rounds.see-kkot.prompt": "flor",
+      "listenPick.rounds.see-ip.options.ip.label": "hoja",
+      "listenPick.rounds.see-ip.options.kkot.label": "flor",
+      "listenPick.rounds.see-ip.options.namu.label": "árbol",
+      "listenPick.rounds.see-kkot.options.kkot.label": "flor",
+      "listenPick.rounds.see-kkot.options.ip.label": "hoja",
+      "listenPick.rounds.see-kkot.options.byeol.label": "estrella"
     },
     "minigame:s2-letters-q1-practice": {
       "picWord.boards.0.pairs.sae.word.gloss": "pájaro",

@@ -37,7 +37,7 @@
       "steps.s2.title": "과일과 간식 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "낱말 완성하기",
-      "steps.s5.title": "듣고 쓰기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "간식 낱말!",
       "steps.s1.hoyaLine": "간식 시간이에요! 과일 낱말을 읽어 봐요.",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -54,7 +54,7 @@
       "steps.s2.title": "밥상 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝짓기",
-      "steps.s5.title": "읽고 짝짓기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "밥상 낱말!",
       "steps.s1.hoyaLine": "밥상이 차려졌어요. 무엇이 있는지 읽어 봐요!",
       "steps.s2.hoyaLine": "밥, 국, 반찬이에요. ‘들어 보기’를 누르고 낱말을 하나씩 읽어 봐요.",
@@ -72,7 +72,14 @@
     },
     "minigame:s2-life-q1-check": {
       "listenPick.rounds.pic-gimbap.prompt": "김에 밥과 재료를 넣고 말아 만든 음식",
-      "listenPick.rounds.see-uyu.prompt": "소에게서 얻는 하얀 마실 것"
+      "listenPick.rounds.see-uyu.prompt": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.pic-gimbap.options.gimbap.label": "김에 밥과 재료를 넣고 만 음식",
+      "listenPick.rounds.pic-gimbap.options.uyu.label": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.pic-gimbap.options.dalgyal.label": "닭이 낳는 둥근 알",
+      "listenPick.rounds.pic-gimbap.options.bap.label": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.see-uyu.options.uyu.label": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.see-uyu.options.dalgyal.label": "닭이 낳는 둥근 알",
+      "listenPick.rounds.see-uyu.options.banana.label": "껍질이 노랗고 길쭉한 과일"
     },
     "minigame:s2-life-q2-check": {
       "typeHangul.rounds.hear-subak.prompt": "낱말을 듣고 한글로 써 봐요.",
@@ -87,12 +94,10 @@
       "cardPairs.namul.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
     },
     "minigame:s2-life-q3-check": {
-      "picWord.boards.0.pairs.bibimbap.word.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
-      "picWord.boards.0.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
-      "picWord.boards.0.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
-      "picWord.boards.1.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
-      "picWord.boards.1.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
-      "picWord.boards.1.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것"
+      "typeHangul.rounds.hear-gimchi.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-gimchi.target.gloss": "배추를 맵게 절인 한국 음식",
+      "typeHangul.rounds.hear-mul.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-mul.target.gloss": "목마를 때 마시는 맑고 투명한 것"
     },
     "minigame:s2-life-q1-practice": {
       "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",

@@ -2584,8 +2584,8 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    // Row CM-3A S2 adds the five Stage 2 Dictation Checks: 10 rounds, 83 type rounds in all.
-    expect(typeSlides).toBe(83 * 3);
+    // Row CM-3A S2 adds the seven Stage 2 Dictation Checks: 14 rounds, 87 type rounds in all.
+    expect(typeSlides).toBe(87 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

@@ -118,7 +118,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Hear and Type",
+          "titleEn": "Type the Word",
           "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-nature-q1-check",
           "durationSeconds": 35
@@ -865,8 +865,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Read and Match",
-          "minigameKind": "pic-word-match",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-nature-q3-check",
           "durationSeconds": 35
         },
@@ -1098,69 +1098,27 @@
         },
         {
           "ref": "minigame:s2-nature-q3-check",
-          "kind": "pic-word-match",
-          "boards": [
+          "kind": "type-hangul",
+          "rounds": [
             {
-              "pairs": [
-                {
-                  "id": "gang",
-                  "pictureRef": "word:nature-river",
-                  "word": {
-                    "ko": "강",
-                    "romanization": "gang",
-                    "en": "river"
-                  }
-                },
-                {
-                  "id": "bada",
-                  "pictureRef": "card:sea",
-                  "word": {
-                    "ko": "바다",
-                    "romanization": "bada",
-                    "en": "sea"
-                  }
-                },
-                {
-                  "id": "dol",
-                  "pictureRef": "word:science-stone",
-                  "word": {
-                    "ko": "돌",
-                    "romanization": "dol",
-                    "en": "stone"
-                  }
-                }
-              ]
+              "id": "hear-bada",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              }
             },
             {
-              "pairs": [
-                {
-                  "id": "mulgogi",
-                  "pictureRef": "word:animal-fish",
-                  "word": {
-                    "ko": "물고기",
-                    "romanization": "mulgogi",
-                    "en": "fish"
-                  }
-                },
-                {
-                  "id": "gang",
-                  "pictureRef": "word:nature-river",
-                  "word": {
-                    "ko": "강",
-                    "romanization": "gang",
-                    "en": "river"
-                  }
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "word": {
-                    "ko": "산",
-                    "romanization": "san",
-                    "en": "mountain"
-                  }
-                }
-              ]
+              "id": "hear-dol",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "돌",
+                "romanization": "dol",
+                "en": "stone"
+              }
             }
           ]
         }

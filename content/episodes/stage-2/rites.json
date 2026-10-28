@@ -521,7 +521,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Hear and Type",
+          "titleEn": "Type the Word",
           "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-rites-q2-check",
           "durationSeconds": 35
@@ -1155,21 +1155,21 @@
             {
               "pairs": [
                 {
-                  "id": "yunnori",
-                  "pictureRef": "card:yutnori",
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
                   "word": {
-                    "ko": "윷놀이",
-                    "romanization": "yunnori",
-                    "en": "yut, the stick-throwing board game"
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
                   }
                 },
                 {
-                  "id": "yeon",
-                  "pictureRef": "card:kite",
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
                   "word": {
-                    "ko": "연",
-                    "romanization": "yeon",
-                    "en": "kite"
+                    "ko": "떡국",
+                    "romanization": "tteokguk",
+                    "en": "rice-cake soup"
                   }
                 },
                 {

@@ -44,7 +44,7 @@
       "steps.s2.title": "추석 낱말 네 개",
       "steps.s3.title": "그림 짝 맞추기",
       "steps.s4.title": "추석 낱말 만들기",
-      "steps.s5.title": "듣고 쓰기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "추석 낱말 완성!",
       "steps.s1.hoyaLine": "추석은 보름달이 뜨는 가을 명절이에요. 추석 낱말을 읽어 봐요!",
       "steps.s2.hoyaLine": "들어 보기를 눌러 낱말을 하나씩 들어 봐요.",
@@ -81,7 +81,13 @@
     },
     "minigame:s2-rites-q1-check": {
       "listenPick.rounds.see-seollal.prompt": "음력으로 새해 첫날",
-      "listenPick.rounds.see-hanbok.prompt": "한국의 전통 옷"
+      "listenPick.rounds.see-hanbok.prompt": "한국의 전통 옷",
+      "listenPick.rounds.see-seollal.options.seollal.label": "음력으로 새해 첫날",
+      "listenPick.rounds.see-seollal.options.san.label": "땅이 높이 솟은 곳",
+      "listenPick.rounds.see-seollal.options.bap.label": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.see-hanbok.options.hanbok.label": "한국의 전통 옷",
+      "listenPick.rounds.see-hanbok.options.tteokguk.label": "설날에 먹는, 떡을 넣은 국",
+      "listenPick.rounds.see-hanbok.options.san.label": "땅이 높이 솟은 곳"
     },
     "minigame:s2-rites-q2-check": {
       "typeHangul.rounds.hear-chuseok.prompt": "낱말을 듣고 한글로 써 봐요.",
@@ -99,8 +105,8 @@
       "picWord.boards.0.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
       "picWord.boards.0.pairs.yunnori.word.gloss": "막대 네 개를 던져 말을 옮기는 놀이",
       "picWord.boards.0.pairs.hanbok.word.gloss": "한국의 전통 옷",
-      "picWord.boards.1.pairs.yunnori.word.gloss": "막대 네 개를 던져 말을 옮기는 놀이",
-      "picWord.boards.1.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
+      "picWord.boards.1.pairs.songpyeon.word.gloss": "추석에 빚는 반달 모양 떡",
+      "picWord.boards.1.pairs.tteokguk.word.gloss": "설날에 먹는, 떡을 넣은 국",
       "picWord.boards.1.pairs.gajok.word.gloss": "한 집안을 이루는 사람들"
     },
     "minigame:s2-rites-q1-practice": {
