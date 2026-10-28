@@ -1,4 +1,4 @@
-import { LayoutProvider, TextSizeProvider, layoutClassFor, motion as motionTokens } from '@hangul-route/design-system';
+import { LayoutProvider, TextSizeProvider, layout, layoutClassFor, motion as motionTokens, touchTarget } from '@hangul-route/design-system';
 import { localeCopyProblems, reviewScoreProblems } from '@hangul-route/content-schema/lint';
 import { getMessages } from '@hangul-route/i18n';
 import fc from 'fast-check';
@@ -9,9 +9,9 @@ import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currBuiltInPct } from '../../../config/flags';
 import type { PlannedSession, RoundAnswer } from '../../../logic/reviews/daily-review';
-import type { PickRound, ReviewRound, TypeRound } from '../../../logic/reviews/review-rounds';
+import type { OrderRound, PickRound, ReviewRound, TypeRound } from '../../../logic/reviews/review-rounds';
 import { reviewStars } from '../../../logic/reviews/star-calc';
-import { YUT_REVIEW_FLAG, boardAfter, sessionSeed } from '../../../logic/reviews/yut-board';
+import { YUT_REVIEW_FLAG, boardAfter, framesDuration, moveFrames, sessionSeed } from '../../../logic/reviews/yut-board';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
 import { byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
 
@@ -87,6 +87,7 @@ const motion = vi.hoisted(() => ({ reduced: true }));
 vi.mock('../../../platform/motion', () => ({ useReducedMotion: () => motion.reduced }));
 
 const { DailyReviewScreen } = await import('../DailyReviewScreen');
+const { YUT_CLOCK_IDLE, yutClockAfter, yutClockLeft, yutPanes } = await import('../YutBoardSkin');
 
 const EN = getMessages('en');
 
@@ -117,8 +118,26 @@ function typeRound(i: number): TypeRound {
   };
 }
 
+/** A Sentence Builder round: two tiles, shuffled (the second word first). */
+function orderRound(i: number): OrderRound {
+  return {
+    type: 'order',
+    meaning: 'Hello',
+    tiles: [
+      { key: 't1', ko: '하세요' },
+      { key: 't0', ko: '안녕' },
+    ],
+    words: ['안녕', '하세요'],
+    question: { itemId: `lex:o${i}`, kind: 'lex', rung: 'produce', format: 'sentence-builder', theme: 'nature', stretch: false, voiceFallback: false },
+    answer: { ko: { ko: '안녕 하세요', romanization: 'annyeong haseyo' }, gloss: 'Hello' },
+  } as OrderRound;
+}
+
 function planOf(n: number, hows?: readonly How[]): PlannedSession {
-  const rounds: ReviewRound[] = Array.from({ length: n }, (_, i) => (hows !== undefined && hows[i]!.startsWith('type') ? typeRound(i) : pickRound(i)));
+  const rounds: ReviewRound[] = Array.from({ length: n }, (_, i) => {
+    const how = hows?.[i];
+    return how?.startsWith('type') ? typeRound(i) : how?.startsWith('order') ? orderRound(i) : pickRound(i);
+  });
   return { kind: 'daily', rounds, soundNotice: false };
 }
 
@@ -158,7 +177,7 @@ const tap = async (root: ReactTestInstance, id: string): Promise<void> => {
  * How a round ends: a pick right first time or wrong and then right; a typed word right first time, a one-letter slip
  * (hinted, the right form shown, then Next), or a miss and then right. The round ends every way.
  */
-type How = 'first' | 'retry' | 'type-right' | 'type-hinted' | 'type-miss';
+type How = 'first' | 'retry' | 'type-right' | 'type-hinted' | 'type-miss' | 'order-first' | 'order-retry';
 
 const typeKeys = async (root: ReactTestInstance, jamo: string): Promise<void> => {
   for (const j of jamo) await tap(root, `hangul-key-${j}`);
@@ -169,6 +188,11 @@ async function answer(root: ReactTestInstance, i: number, how: How): Promise<voi
   if (how === 'first' || how === 'retry') {
     if (how === 'retry') await tap(root, `daily-review-option-lex:other${i}`);
     await tap(root, `daily-review-option-lex:w${i}`);
+  } else if (how === 'order-first' || how === 'order-retry') {
+    // A tile out of order first (a miss), then the words in order.
+    if (how === 'order-retry') await tap(root, 'daily-review-tile-t1');
+    await tap(root, 'daily-review-tile-t0');
+    await tap(root, 'daily-review-tile-t1');
   } else if (how === 'type-hinted') {
     await typeKeys(root, 'ㅎㅗ');
     await tap(root, 'daily-review-type-done');
@@ -201,7 +225,7 @@ async function finishHold(): Promise<void> {
 }
 
 /** The first answer of a round as the screen records it. */
-const firstAnswerRight = (how: How): boolean => how === 'first' || how === 'type-right' || how === 'type-hinted';
+const firstAnswerRight = (how: How): boolean => how === 'first' || how === 'type-right' || how === 'type-hinted' || how === 'order-first';
 
 const pieceAt = (root: ReactTestInstance): number | null => {
   const node = root.findAll((n) => String(n.type) === 'svg-Circle' && typeof n.props.testID === 'string' && (n.props.testID as string).startsWith('yut-piece-'))[0];
@@ -284,6 +308,9 @@ describe('every round that ends throws, whatever its answer', () => {
     expect(pieceAt(r.root)).toBe(last.state.position);
     expect(legNames(r.root)).toEqual(last.last?.legs.map((l) => l.throw.name));
     expect(screenTexts(byTestId(r.root, 'yut-live')[0]!).join('')).toMatch(/^Throw: /);
+    // While it waits, the dots stay as the session left them: the plan's three, every one filled (not ten empty).
+    expect(byTestId(r.root, 'daily-review-dot-filled')).toHaveLength(3);
+    expect(byTestId(r.root, 'daily-review-dot')).toHaveLength(0);
     // Reduced motion: a still pause of motion.duration.celebration, nothing moving; then the plain result.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(motionTokens.duration.celebration - 1);
@@ -297,9 +324,9 @@ describe('every round that ends throws, whatever its answer', () => {
 });
 
 describe('play only: the randomness never decides stars, points or any reward (property)', () => {
-  it('for any seed and any mix of results (pick first try or retry, typed right, hinted then Next, miss then right), every round throws its own board, and every API call and the result are the same on and off', async () => {
+  it('for any seed and any mix of results (pick first try or retry, typed right, hinted then Next, miss then right, words in order first try or after a tile out of order), every round throws its own board, and every API call and the result are the same on and off', async () => {
     await fc.assert(
-      fc.asyncProperty(fc.array(fc.constantFrom<How>('first', 'retry', 'type-right', 'type-hinted', 'type-miss'), { minLength: 3, maxLength: 6 }), fc.integer({ min: 0, max: 999 }), async (hows, salt) => {
+      fc.asyncProperty(fc.array(fc.constantFrom<How>('first', 'retry', 'type-right', 'type-hinted', 'type-miss', 'order-first', 'order-retry'), { minLength: 3, maxLength: 6 }), fc.integer({ min: 0, max: 999 }), async (hows, salt) => {
         // The salt changes the item ids, so the seed (and every throw) changes.
         const p = planOf(hows.length, hows);
         p.rounds.forEach((round, i) => {
@@ -434,6 +461,87 @@ describe('motion and the screen reader', () => {
     expect(pieceAt(r.root)).toBe(second.to.position);
   });
 
+  it('with motion: a round that ends mid-walk waits; the walk ends, then the next move walks from there (no snap), and the result waits for both', async () => {
+    motion.reduced = false;
+    setYut(true);
+    const FRAMES = { fall: motionTokens.duration.base, step: motionTokens.duration.fast, again: motionTokens.duration.slow };
+    // A two-round plan whose first move outlasts the second round's own pause, so round 2 ends while it walks.
+    const salted = (salt: number): PlannedSession => {
+      const p = planOf(2);
+      p.rounds.forEach((round, i) => {
+        round.question = { ...round.question, itemId: `${round.question.itemId}|walk${salt}|${i}` };
+      });
+      return p;
+    };
+    let p = salted(0);
+    for (let salt = 0; framesDuration(moveFrames(boardAfter(seedOf(p), 1).last!, FRAMES, false)) < 3 * motionTokens.duration.slow; salt += 1) p = salted(salt + 1);
+    plan.current = p;
+    const first = boardAfter(seedOf(p), 1).last!;
+    const second = boardAfter(seedOf(p), 2).last!;
+    const d1 = framesDuration(moveFrames(first, FRAMES, false));
+    const d2 = framesDuration(moveFrames(second, FRAMES, false));
+    const r = await open();
+    drawn.length = 0;
+    await tap(r.root, 'daily-review-option-lex:w0');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(motionTokens.duration.slow);
+    });
+    await settle();
+    // Round 2 ends (its own pause) while the first move still walks: the first move stays on screen.
+    await tap(r.root, 'daily-review-option-lex:w1');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(motionTokens.duration.slow);
+    });
+    await settle();
+    expect(byTestId(r.root, 'daily-review-result')).toHaveLength(0);
+    expect(legNames(r.root)[0]).toBe(first.legs[0]!.throw.name);
+    expect(byTestId(r.root, 'daily-review-dot-filled')).toHaveLength(2);
+    // Both walks run in full: the result opens only after the second move has walked.
+    // The first walk ends (its length from when round 2 opened) ... (one act per walk: act holds a render's effects to its end)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(d1 - motionTokens.duration.slow);
+    });
+    expect(pieceAt(r.root)).toBe(first.to.position);
+    expect(legNames(r.root)).toEqual([second.legs[0]!.throw.name]);
+    // ... then the second walks from there ...
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(d2);
+    });
+    expect(pieceAt(r.root)).toBe(second.to.position);
+    expect(legNames(r.root)).toEqual(second.legs.map((l) => l.throw.name));
+    expect(byTestId(r.root, 'daily-review-result')).toHaveLength(0);
+    // ... and it rests there for motion.duration.slow before the plain result.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(motionTokens.duration.slow - 1);
+    });
+    expect(byTestId(r.root, 'daily-review-result')).toHaveLength(0);
+    await finishHold();
+    expect(byTestId(r.root, 'daily-review-result').length).toBeGreaterThan(0);
+    // Every station drawn, in order: the first walk to its end, then the second from there; nothing skipped or snapped.
+    const dedupe = (xs: readonly number[]): number[] => xs.filter((x, i) => i === 0 || xs[i - 1] !== x);
+    const expected = dedupe([...moveFrames(first, FRAMES, false), ...moveFrames(second, FRAMES, false)].map((f) => f.position));
+    expect(dedupe(drawn)).toEqual(expected);
+  });
+
+  it('the board clock: a move that ends while one walks waits for it; the latest of several waiting is the one that plays', () => {
+    const seed = 12_345;
+    expect(yutClockLeft(YUT_CLOCK_IDLE, 1_000)).toBe(0);
+    const a = yutClockAfter(YUT_CLOCK_IDLE, 1_000, seed, 1, false);
+    const d1 = a.busyUntil - 1_000;
+    expect(d1).toBeGreaterThan(0);
+    expect(a.next).toBeNull();
+    const b = yutClockAfter(a, 1_100, seed, 2, false);
+    expect(b.busyUntil).toBe(a.busyUntil);
+    expect(yutClockLeft(b, 1_100)).toBe(d1 - 100 + (b.next ?? 0));
+    // A third round that ends before the first walk is done replaces the waiting move (the band skips to the latest).
+    const c = yutClockAfter(b, 1_200, seed, 3, false);
+    expect(c.busyUntil).toBe(a.busyUntil);
+    expect(c.next).not.toBe(null);
+    // Once the walks are done the board is still; reduced motion is never busy.
+    expect(yutClockLeft(c, 60_000)).toBe(0);
+    expect(yutClockAfter(c, 1_300, seed, 4, true)).toEqual(YUT_CLOCK_IDLE);
+  });
+
   it('iOS: VoiceOver is told each move once, queued after the next round\'s own announcements; no live region', async () => {
     setPlatform('ios');
     const queued = vi.fn();
@@ -521,6 +629,30 @@ describe('layout (constants table)', () => {
     expect(byTestId(r.root, 'yut-sticks')).toHaveLength(0);
     await cleanup();
     r = await open({ width: 768, height: 1024 });
+    expect(boardSize(r.root)).toBe(320);
+  });
+
+  it('two panes only when the item pane keeps the round at the touch floor: a 600 to 711 wide window keeps the phone band over the item', async () => {
+    const tall = true;
+    for (const width of [600, 673, 700, 711]) expect(yutPanes(layoutClassFor({ width, height: 900 }), tall), `${width}`).toBe(false);
+    for (const width of [712, 768, 900, 1280]) expect(yutPanes(layoutClassFor({ width, height: 900 }), tall), `${width}`).toBe(true);
+    expect(yutPanes(layoutClassFor({ width: 1280, height: 500 }), false)).toBe(false);
+    // Where it turns on, the item pane holds the split keyboard's five cells at the floor.
+    for (const width of [712, 768, 900, 1280]) {
+      const lc = layoutClassFor({ width, height: 900 });
+      expect(Math.min(lc.windowWidth - 2 * lc.gutter, lc.maxWidth.reading) - 5 * touchTarget.min - layout.pane.gap, `${width}`).toBeGreaterThanOrEqual(5 * touchTarget.min);
+    }
+    setYut(true);
+    plan.current = planOf(3, ['type-right', 'first', 'first']);
+    let r = await open({ width: 673, height: 900 });
+    expect(boardSize(r.root)).toBe(128);
+    expect(byTestId(r.root, 'yut-review-skin')[0]!.props.style).not.toMatchObject({ flexDirection: 'row' });
+    // The typed round's keyboard keeps its keys at the touch floor (the item has the whole column).
+    const keys = r.root.findAll((n) => typeof n.type !== 'string' && typeof n.props.testID === 'string' && (n.props.testID as string).startsWith('hangul-key-') && typeof n.props.style === 'object' && n.props.style !== null && typeof (n.props.style as { width?: unknown }).width === 'number');
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) expect((k.props.style as { width: number }).width, String(k.props.testID)).toBeGreaterThanOrEqual(touchTarget.min);
+    await cleanup();
+    r = await open({ width: 712, height: 900 });
     expect(boardSize(r.root)).toBe(320);
   });
 

@@ -189,6 +189,30 @@ test('Yut Review on: every round that ends throws (a miss too), read out once; 9
   expect(errors).toEqual([]);
 });
 
+test('two panes only when the item keeps the touch floor: the phone band over the item at 600 x 800 and 700 x 900, beside it at 768', async ({ page }) => {
+  const id = await onboard(page);
+  await seed(page, id, 3);
+  await card(page).click();
+  await expect(page.getByTestId('daily-review-round')).toBeVisible();
+  for (const size of [
+    { width: 600, height: 800 },
+    { width: 700, height: 900 },
+  ]) {
+    await page.setViewportSize(size);
+    // A regular window this narrow would leave the item about 208 to 300 beside a 320 board: the band stays over it.
+    await expect.poll(() => boardSide(page), { message: `${size.width}: the phone band` }).toBe(2 * touchTarget.min);
+    const [band, round] = await Promise.all([page.getByTestId('yut-band').boundingBox(), page.getByTestId('daily-review-round').boundingBox()]);
+    expect(band && round && band.y + band.height <= round.y + 1, `${size.width}: the band over the item`).toBe(true);
+    expect(round!.width, `${size.width}: the item keeps the column`).toBeGreaterThanOrEqual(5 * touchTarget.min);
+    await shot(page, `yut-review-${size.width}x${size.height}`, size);
+  }
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect.poll(() => boardSide(page)).toBe(5 * touchTarget.min);
+  const round = await page.getByTestId('daily-review-round').boundingBox();
+  expect(round!.width).toBeGreaterThanOrEqual(5 * touchTarget.min);
+  await shot(page, 'yut-review-768-panes', { width: 768, height: 1024 });
+});
+
 test('reduced motion: no walk; the piece is placed at its station as the next round opens', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const id = await onboard(page);

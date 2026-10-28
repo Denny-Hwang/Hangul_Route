@@ -32,7 +32,7 @@ import { useReducedMotion } from '../../platform/motion';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { RoundView } from './ReviewRounds';
-import { YutReviewSkin, yutResultHold } from './YutBoardSkin';
+import { YUT_CLOCK_IDLE, YutReviewSkin, yutClockAfter, yutResultHold, type YutClock } from './YutBoardSkin';
 
 /**
  * The Daily Review and Keep going (F-CURR-002 sections 4.3, 4.5, 7.4 and 7.7, row CM-14; design
@@ -67,7 +67,9 @@ const LOADING_DOTS = 10;
 const headlineKey = (stars: 1 | 2 | 3): 'one' | 'two' | 'three' => (stars === 3 ? 'three' : stars === 2 ? 'two' : 'one');
 
 type Phase =
-  | { kind: 'loading' }
+  // `finishing`: the last round has ended and the result is on its way (with the yut board on, after the last throw
+  // has shown): the dots stay as the session left them, every one filled, not the loading frame's empty ten.
+  | { kind: 'loading'; finishing?: number }
   | { kind: 'nothing' }
   | { kind: 'done-today'; offer: AfterSession }
   | { kind: 'playing'; plan: PlannedSession; index: number }
@@ -148,6 +150,15 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     yutRef.current = next;
     setYutState(next);
   }, []);
+  // When the board's walk ends (a round can end mid-walk; the band finishes it first), and the result's wait timer.
+  const yutClock = useRef<YutClock>(YUT_CLOCK_IDLE);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (holdTimer.current !== null) clearTimeout(holdTimer.current);
+    },
+    [],
+  );
   const [leaving, setLeaving] = useState(false);
   // Bumped by each first answer, so the round's dot fills when it is answered.
   const [, setAnswered] = useState(0);
@@ -174,6 +185,7 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
       if (w === null || a === null || starting.current) return;
       starting.current = true;
       setYut(null);
+      yutClock.current = YUT_CLOCK_IDLE;
       setPhase({ kind: 'loading' });
       try {
         const plan = await a.startSession(w, kind, locale);
@@ -252,7 +264,10 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     // Every round that ends throws the sticks, whatever its answer: the board only counts ended rounds. The count is
     // that of the round that ended, so a second call for the same round throws nothing more.
     const y = yutRef.current;
-    if (y !== null && y.finished < p.index + 1) setYut({ ...y, finished: p.index + 1 });
+    if (y !== null && y.finished < p.index + 1) {
+      yutClock.current = yutClockAfter(yutClock.current, Date.now(), y.seed, p.index + 1, reducedMotion);
+      setYut({ ...y, finished: p.index + 1 });
+    }
     if (p.index + 1 < p.plan.rounds.length) {
       setPhase({ ...p, index: p.index + 1 });
       return;
@@ -261,11 +276,15 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
     const a = api.current;
     if (w === null || a === null || finishing.current) return;
     finishing.current = true;
-    setPhase({ kind: 'loading' });
+    setPhase(y === null ? { kind: 'loading' } : { kind: 'loading', finishing: p.plan.rounds.length });
     // With the yut board on, the plain result waits until the last item's throw has shown (row CM-39); off, at once.
-    const hold = y === null ? 0 : yutResultHold(y.seed, p.plan.rounds.length, reducedMotion);
+    const hold = y === null ? 0 : yutResultHold(yutClock.current, Date.now(), y.seed, p.plan.rounds.length, reducedMotion);
     const finish = a.finishSession(w, p.plan, answers.current, recorded.current);
-    void (hold === 0 ? finish : Promise.all([finish, new Promise<void>((resolve) => setTimeout(resolve, hold))]).then(([done]) => done))
+    const wait = (): Promise<void> =>
+      new Promise<void>((resolve) => {
+        holdTimer.current = setTimeout(resolve, hold);
+      });
+    void (hold === 0 ? finish : Promise.all([finish, wait()]).then(([done]) => done))
       .then(({ finished, world: next }) => {
         world.current = next;
         setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
@@ -296,10 +315,11 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
   );
 
   if (phase.kind === 'loading' || phase.kind === 'playing') {
-    const total = phase.kind === 'playing' ? phase.plan.rounds.length : LOADING_DOTS;
-    const index = phase.kind === 'playing' ? phase.index : 0;
+    const ended = phase.kind === 'loading' ? phase.finishing : undefined;
+    const total = phase.kind === 'playing' ? phase.plan.rounds.length : (ended ?? LOADING_DOTS);
+    const index = phase.kind === 'playing' ? phase.index : ended !== undefined ? ended - 1 : 0;
     const round = phase.kind === 'playing' ? phase.plan.rounds[phase.index] : undefined;
-    const filled = phase.kind === 'playing' ? index + (answers.current.has(index) ? 1 : 0) : 0;
+    const filled = phase.kind === 'playing' ? index + (answers.current.has(index) ? 1 : 0) : (ended ?? 0);
     const theme = round?.question.theme;
     const themeKey = theme !== undefined && !theme.startsWith('pack:') ? (theme as ThemeKey) : undefined;
     const item =

@@ -1,4 +1,5 @@
 import { Body, KOREAN_LANGUAGE, KOREAN_LINE_BREAK, KoreanText, TEXT_SIZE_FACTORS, borderWidth, colors, layout, motion, radii, spacing, touchTarget, useEffectiveFontScale, useLayoutClass } from '@hangul-route/design-system';
+import type { LayoutClass } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Platform, Text, View } from 'react-native';
@@ -18,7 +19,8 @@ import { BOARD_LINES, BOARD_VIEW, YUT_STATIONS, boardAfter, framesDuration, home
  *   romanization and how far the piece went, the sticks, and the home tray, which draws only the pieces that went home.
  *   The stations are not tap targets; the board is one image, and each throw is described once in a polite live region.
  * - Sizes (constants table): 128 on a phone from 600 tall, 96 below 600 tall with the throw beside it and no sticks, and
- *   two panes from window class regular with the board at 320.
+ *   two panes from window class regular with the board at 320, once the item pane beside it keeps the round at the
+ *   touch floor (`yutPanes`; a narrower regular window, such as a foldable or a split view, keeps the phone band).
  * - Reduced motion: no walk and no falling sticks; every throw of the item shows at once.
  * - Large text (an effective font scale from `YUT_STACK_FONT_SCALE`): on a phone the throw wraps under the board.
  * - A band that fails to draw hides (an error boundary around the band alone): the round under it stays mounted and the
@@ -31,6 +33,8 @@ export const YUT_BOARD_PHONE = 2 * touchTarget.min;
 export const YUT_BOARD_SHORT = touchTarget.hero;
 /** The board from window class regular, beside the item: 5 x `touchTarget.min` (320). */
 export const YUT_BOARD_PANE = 5 * touchTarget.min;
+/** The narrowest item pane beside the board: the split Hangul keyboard's five cells at `touchTarget.min` (320). */
+export const YUT_ITEM_PANE_MIN = 5 * touchTarget.min;
 /** Below this window height the band shrinks (constants table: "128 from 600 tall; 96 below"). */
 export const YUT_FULL_BAND_MIN_HEIGHT = 600;
 /** From this effective font scale (the largest text size step, 150 %) the throw stacks under the board on a phone. */
@@ -63,16 +67,64 @@ const korean = { lang: KOREAN_LANGUAGE, accessibilityLanguage: KOREAN_LANGUAGE }
 const FRAME_TIMES = { fall: motion.duration.base, step: motion.duration.fast, again: motion.duration.slow };
 
 /**
- * How long the plain result waits after the last round ends, so the last item's throw is seen (and read) too: with
- * motion, the last move's walk and then `motion.duration.slow` on its final station (at most three throws, so bounded);
- * with reduced motion, a still `motion.duration.celebration` with nothing moving. 0 when there is no move to show.
+ * Two panes (the board at 320 beside the item) only when the item pane keeps the round at the touch floor: the screen's
+ * reading column less the board and the pane gap holds `YUT_ITEM_PANE_MIN`. From 600 wide that is not yet so (a 600 dp
+ * window leaves the item about 208), so a regular window narrower than about 712 keeps the phone band over the item.
  */
-export function yutResultHold(seed: number, ended: number, reducedMotion: boolean): number {
+export function yutPanes(lc: Pick<LayoutClass, 'width' | 'gutter' | 'windowWidth'>, tall: boolean): boolean {
+  if (!tall || lc.width === 'compact') return false;
+  const column = Math.min(lc.windowWidth - 2 * lc.gutter, layout.maxWidth.reading);
+  return column - YUT_BOARD_PANE - layout.pane.gap >= YUT_ITEM_PANE_MIN;
+}
+
+/**
+ * The board's clock (with motion): when the move on screen draws its last frame, and how long the move waiting after it
+ * takes. The band plays the move on screen to its end and then the latest move (any between are skipped), so a round
+ * that ends mid-walk never cuts a walk short. Times in ms on one clock (`Date.now`).
+ */
+export interface YutClock {
+  busyUntil: number;
+  next: number | null;
+}
+export const YUT_CLOCK_IDLE: YutClock = Object.freeze({ busyUntil: 0, next: null });
+
+function moveDuration(seed: number, ended: number): number {
+  try {
+    const move = boardAfter(seed, ended).last;
+    return move === null ? 0 : framesDuration(moveFrames(move, FRAME_TIMES, false));
+  } catch {
+    return 0;
+  }
+}
+
+const tick = (c: YutClock, now: number): YutClock => (c.next !== null && now >= c.busyUntil ? { busyUntil: c.busyUntil + c.next, next: null } : c);
+
+/** The clock once round `ended` (a count) has ended at `now`. Reduced motion places every move at once: never busy. */
+export function yutClockAfter(c: YutClock, now: number, seed: number, ended: number, reducedMotion: boolean): YutClock {
+  if (reducedMotion) return YUT_CLOCK_IDLE;
+  const d = moveDuration(seed, ended);
+  const s = tick(c, now);
+  return now >= s.busyUntil ? { busyUntil: now + d, next: null } : { busyUntil: s.busyUntil, next: d };
+}
+
+/** How long from `now` until the latest move has drawn its last frame (0 when the board is still). */
+export function yutClockLeft(c: YutClock, now: number): number {
+  const s = tick(c, now);
+  return Math.max(0, s.busyUntil + (s.next ?? 0) - now);
+}
+
+/**
+ * How long the plain result waits after the last round ends, so the last item's throw is seen (and read) too: with
+ * motion, until the last move has walked (after the move still on screen, if any; `yutClockLeft`) and then
+ * `motion.duration.slow` on its final station (at most two moves of at most three throws, so bounded); with reduced
+ * motion, a still `motion.duration.celebration` with nothing moving. 0 when there is no move to show.
+ */
+export function yutResultHold(clock: YutClock, now: number, seed: number, ended: number, reducedMotion: boolean): number {
   try {
     const move = boardAfter(seed, ended).last;
     if (move === null) return 0;
     if (reducedMotion) return motion.duration.celebration;
-    return framesDuration(moveFrames(move, FRAME_TIMES, false)) + motion.duration.slow;
+    return yutClockLeft(clock, now) + motion.duration.slow;
   } catch {
     // A board that cannot be worked out is hidden (the band's error boundary); the result does not wait for it.
     return 0;
@@ -82,31 +134,49 @@ export function yutResultHold(seed: number, ended: number, reducedMotion: boolea
 /** A sentence ends with its full stop (the visible lines have none: "Throw again"). */
 const sentence = (text: string): string => (/[.!?。]$/.test(text) ? text : `${text}.`);
 
+/** A move on screen: the move, the count of ended rounds it belongs to, its frames and the one shown. */
+interface Run {
+  move: Move | null;
+  key: number;
+  frames: Frame[];
+  index: number;
+  reduced: boolean;
+}
+
+function startRun(move: Move | null, key: number, reduced: boolean): Run {
+  const frames = move === null ? [] : moveFrames(move, FRAME_TIMES, reduced);
+  return { move, key, frames, index: reduced ? Math.max(0, frames.length - 1) : 0, reduced };
+}
+
 /**
- * Runs the frames of the latest move; returns the one on screen. The frame index belongs to its frames: a new move
- * starts at its own first frame in the same render (no frame of the move before, or of its end, flashes first).
+ * Runs the frames of the moves; returns the move on screen and its frame. A move plays to its end: a round that ends
+ * mid-walk waits, and once the walk is done the latest move starts at its own first frame in the same render (no
+ * frame of its end flashes first; any move between is skipped, as it starts where the one before ended). Reduced
+ * motion shows each move at once.
  */
-function useFrame(move: Move | null, reducedMotion: boolean): Frame | null {
-  const frames = useMemo(() => (move === null ? [] : moveFrames(move, FRAME_TIMES, reducedMotion)), [move, reducedMotion]);
-  const startAt = reducedMotion ? Math.max(0, frames.length - 1) : 0;
-  const [run, setRun] = useState({ frames, index: startAt });
+function useMoveRun(move: Move | null, key: number, reducedMotion: boolean): { run: Run; frame: Frame | null } {
+  const [run, setRun] = useState(() => startRun(move, key, reducedMotion));
   let current = run;
-  if (run.frames !== frames) {
-    current = { frames, index: startAt };
-    setRun(current);
+  if (run.key !== key || run.reduced !== reducedMotion) {
+    const walking = !reducedMotion && !run.reduced && run.index < run.frames.length - 1;
+    if (!walking) {
+      current = startRun(move, key, reducedMotion);
+      setRun(current);
+    }
   }
+  const { frames, reduced } = current;
   useEffect(() => {
-    if (reducedMotion || frames.length <= 1) return undefined;
+    if (reduced || frames.length <= 1) return undefined;
     const timers: ReturnType<typeof setTimeout>[] = [];
     let at = 0;
     frames.forEach((f, i) => {
       if (i === 0) return;
       at += f.delay;
-      timers.push(setTimeout(() => setRun((r) => (r.frames === frames ? { frames, index: i } : r)), at));
+      timers.push(setTimeout(() => setRun((r) => (r.frames === frames ? { ...r, index: i } : r)), at));
     });
     return () => timers.forEach(clearTimeout);
-  }, [frames, reducedMotion]);
-  return frames[Math.min(current.index, frames.length - 1)] ?? null;
+  }, [frames, reduced]);
+  return { run: current, frame: frames[Math.min(current.index, frames.length - 1)] ?? null };
 }
 
 /** Says a move on native: VoiceOver queues it after the next round's own announcements; Android and the web read the live region. Never throws. */
@@ -247,7 +317,8 @@ function YutBand({ seed, finished, reducedMotion, band }: { seed: number; finish
   const m = useMessages();
   const copy = m.learner.yutReview;
   const board = useMemo(() => boardAfter(seed, finished), [seed, finished]);
-  const frame = useFrame(board.last, reducedMotion);
+  const { run, frame } = useMoveRun(board.last, finished, reducedMotion);
+  // The live region says each move once, as its round ends; the drawing shows the move on screen (`run`).
   const description = useDescription(board.last);
 
   // VoiceOver hears each throw once, queued after the next round's own announcements; Android and the web read the
@@ -257,7 +328,7 @@ function YutBand({ seed, finished, reducedMotion, band }: { seed: number; finish
   }, [description]);
 
   const { tall, panes, stacked, size } = band;
-  const move = board.last;
+  const move = run.move;
   const position = frame?.position ?? board.state.position;
   const laps = frame?.laps ?? board.state.laps;
   const shownLegs = move === null || frame === null ? [] : move.legs.slice(0, frame.legs);
@@ -267,7 +338,7 @@ function YutBand({ seed, finished, reducedMotion, band }: { seed: number; finish
   const throwPanel = (
     <View style={{ gap: spacing.sm, flexShrink: 1, maxWidth: '100%' }} testID="yut-throw">
       {shownLegs.map((leg, i) => (
-        <View key={`${finished}-${i}`} testID="yut-throw-leg" style={{ flexDirection: column ? 'column' : 'row', flexWrap: 'wrap', alignItems: column ? 'flex-start' : 'center', gap: spacing.xs }}>
+        <View key={`${run.key}-${i}`} testID="yut-throw-leg" style={{ flexDirection: column ? 'column' : 'row', flexWrap: 'wrap', alignItems: column ? 'flex-start' : 'center', gap: spacing.xs }}>
           <KoreanText ko={leg.throw.ko} romanization={leg.throw.romanization} size="sm" testID={`yut-throw-name-${leg.throw.name}`} />
           <Body size="sm" tone="secondary" testID="yut-throw-stations">
             {copy.stations(leg.path.length)}
@@ -284,7 +355,7 @@ function YutBand({ seed, finished, reducedMotion, band }: { seed: number; finish
           {copy.pieceHome}
         </Body>
       ) : null}
-      {tall && move !== null ? <Sticks throwKey={`${finished}-${frame?.legs ?? 0}`} reducedMotion={reducedMotion} /> : null}
+      {tall && move !== null ? <Sticks throwKey={`${run.key}-${frame?.legs ?? 0}`} reducedMotion={reducedMotion} /> : null}
       <Tray laps={laps} label={copy.home} />
     </View>
   );
@@ -342,7 +413,7 @@ export function YutReviewSkin({ seed, finished, reducedMotion, children }: YutRe
   const lc = useLayoutClass();
   const fontScale = useEffectiveFontScale();
   const tall = lc.windowHeight === 0 || lc.windowHeight >= YUT_FULL_BAND_MIN_HEIGHT;
-  const panes = tall && lc.width !== 'compact';
+  const panes = yutPanes(lc, tall);
   const band: BandLayout = { tall, panes, stacked: !panes && fontScale >= YUT_STACK_FONT_SCALE, size: !tall ? YUT_BOARD_SHORT : panes ? YUT_BOARD_PANE : YUT_BOARD_PHONE };
   // Only the band sits in the boundary: if it fails to draw it hides, and the round (a sibling) stays mounted as is.
   const bandView = (
