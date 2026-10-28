@@ -279,6 +279,29 @@ async function reply(page: Page, ko: string): Promise<void> {
   await option.click();
 }
 
+/**
+ * Tap to Respond turns by their right reply, the counter moving on after each (`n / total`); after the last turn the
+ * next step's Play minigame (or the Check's Go, or the reward) shows. A tap inside the double-touch window is dropped (the same reply twice in a row),
+ * so a turn is tapped again until it moves on. A Role Play step plays this while `game.role-play` is off (row CM-35).
+ */
+async function replyTurns(page: Page, turns: readonly string[], last: 'minigame' | 'check' | 'finish' = 'minigame'): Promise<void> {
+  for (const [i, line] of turns.entries()) {
+    await expect(page.getByText(`${i + 1} / ${turns.length}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+    const after =
+      i + 1 < turns.length
+        ? page.getByText(`${i + 2} / ${turns.length}`, { exact: true })
+        : last === 'minigame'
+          ? page.getByRole('button', { name: 'Play minigame' })
+          : last === 'check'
+            ? page.getByRole('button', { name: 'Go', exact: true })
+            : page.getByText('Finish', { exact: true }).first();
+    await expect(async () => {
+      await reply(page, line);
+      await expect(after).toBeVisible({ timeout: 1500 });
+    }).toPass();
+  }
+}
+
 /** Story Sequence: place the lesson lines in order by card id, then leave the replay. */
 async function orderLines(page: Page, ids: readonly string[]): Promise<void> {
   for (const id of ids) await page.getByTestId(`story-sequence-card-${id}`).click();
@@ -472,12 +495,12 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByRole('button', { name: 'Read along' })).toBeVisible();
       await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '책이에요.');
-      await reply(page, '친구예요.');
-      await reply(page, '가방이에요.');
+      await replyTurns(page, ['책이에요.', '친구예요.', '가방이에요.']);
+      // The Apply is Role Play (F-CURR-002 row CM-3A S4); `game.role-play` is dark, so it plays Tap to Respond on its main path.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await replyTurns(page, ['지우개예요.', '책이에요.', '할머니예요.', '친구예요.'], 'check');
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t1' }, { answer: 'c2:t1' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -585,13 +608,15 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       await passDiscover(page);
-      await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '안녕하세요!');
-      await reply(page, '저는 호야예요.');
-      await reply(page, '저도 반가워요.');
+      // The Practice is Story Sequence and the Apply Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so
+      // the Apply plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['r1:t0', 'r2:t0', 'r3:t1', 'r4:t1']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['저는 호야예요.', '저도 반가워요.'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -662,20 +687,26 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Holidays & Traditions: Holiday Words\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, three Tap to Respond turns, the four-line
-  // Story Sequence and the Check, at 320 px.
+  // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, Role Play (its Tap to Respond fallback), four
+  // Sentence Builder rounds and the Dialogue reply pick Check, at 320 px (F-CURR-002 row CM-3A S4).
   'episode:stage4-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
       await passDiscover(page);
+      // The Practice is Role Play (F-CURR-002 row CM-3A S4); `game.role-play` is dark, so it plays Tap to Respond on its main path.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '네, 먹었어요.');
-      await reply(page, '네, 마셨어요.');
-      await reply(page, '네, 먹었어요.');
+      await shot(page, 's4-2-q1-role-play-fallback-320');
+      await replyTurns(page, ['네, 먹었어요.', '네, 먹었어요.', '네, 마셨어요.', '네, 먹었어요.']);
+      // The Apply is Sentence Builder: two built questions, the yes answer, then the 을 / 를 choice after 우유.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await build(page, 1, 4, ['밥, bap', '먹었어요, meogeosseoyo']);
+      await build(page, 2, 4, ['우유, uyu', '마셨어요, masyeosseoyo']);
+      await build(page, 3, 4, ['네,, ne', '먹었어요, meogeosseoyo']);
+      await build(page, 4, 4, ['를, reul']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['네, 먹었어요.', '네, 마셨어요.'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-2-q1-reward-320');
     },
@@ -685,20 +716,21 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Food & Daily Life: Kitchen Talk\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, the four-line
-  // Story Sequence and the Check, at 320 px.
+  // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, Realia Read on the
+  // weather card and the Cloze Pick Check (its fallback), at 320 px (F-CURR-002 row CM-3A S4).
   'episode:stage4-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
       await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '안녕하세요!');
-      await reply(page, '네, 좋아요!');
-      await reply(page, '집에 가요!');
+      await replyTurns(page, ['안녕하세요!', '네, 좋아요!', '집에 가요!']);
+      // The Apply is Realia Read on the park weather card (F-CURR-002 row CM-3A S4).
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await shot(page, 's4-3-q1-weather-card-320');
+      await pickRealia(page, ['sun', 'river', 'wind', 'mountain']);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t1' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-3-q1-reward-320');
     },
@@ -708,8 +740,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Nature & Animals: Park Conversations\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages),
-  // Tap to Respond (three turns), Story Sequence (three lines), the two-round Check, the reward.
+  // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages), Role Play
+  // and Story Order (their fallbacks), the Dialogue reply pick Check, the reward (F-CURR-002 row CM-3A S4).
   'episode:stage4-crafts': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 640 });
@@ -717,21 +749,16 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByText('Page 1 of 2')).toBeVisible();
       await shot(page, 's4-4-q1-discover-320');
       await passDiscover(page);
+      // The Practice is Role Play and the Apply Story Order (F-CURR-002 row CM-3A S4); both switches are dark, so they
+      // play Tap to Respond on the Role Play's main path and Story Sequence on the captions.
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await shot(page, 's4-4-q1-tap-respond-320');
-      const turns = ['좋아!', '윷놀이 하자!', '좋아!'];
-      for (const [i, line] of turns.entries()) {
-        await expect(page.getByText(`${i + 1} / ${turns.length}`, { exact: true })).toBeVisible();
-        // A tap inside the game's double-touch window is dropped (the same 좋아! twice): tap again until the turn moves on.
-        const after = i + 1 < turns.length ? page.getByText(`${i + 2} / ${turns.length}`, { exact: true }) : page.getByRole('button', { name: 'Play minigame' });
-        await expect(async () => {
-          await reply(page, line);
-          await expect(after).toBeVisible({ timeout: 1500 });
-        }).toPass();
-      }
+      await replyTurns(page, ['좋아!', '윷놀이 하자!', '좋아!', '좋아! 같이 가자!']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await orderLines(page, ['ask', 'what', 'yut', 'okay']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['윷놀이 하자!', '좋아!'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-4-q1-reward-320');
     },
