@@ -205,7 +205,8 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
     await expect(page.getByTestId('dictation-notice')).toHaveCount(0);
     // An ordinary see round: the see line, never the hear line the round was written with.
-    await expect(page.getByText('Type the word you hear.')).toHaveCount(0);
+    await expect(page.getByText('Type this word', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/type the word you hear/i)).toHaveCount(0);
     await shot(page, 'dictation-320-switch-off');
     await typeKeys(page, 'ㅅㅏㄱㅗㅏ');
     await page.getByTestId('type-hangul-done').click();
@@ -239,6 +240,10 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     await expect(page.getByText('Look at the meaning again.')).toBeVisible();
     expect(await page.locator('body').innerText()).not.toMatch(SHAME);
     await shot(page, 'spelling-320-miss');
+    // The miss is recorded, and the game's 50 ms touch window (LISTEN_PICK_TIMING) has passed, before the right tap:
+    // without shots (CI) the two clicks can land inside it, and the second is then dropped as a double touch.
+    await expect.poll(async () => (await log(page)).answers.length).toBe(1);
+    await page.waitForTimeout(100);
     await page.getByTestId('listen-pick-option-a').click();
     await expect.poll(async () => (await log(page)).completes, { timeout: 5_000 }).toBe(1);
     expect((await log(page)).answers.map((a) => a.correct)).toEqual([false, true]);

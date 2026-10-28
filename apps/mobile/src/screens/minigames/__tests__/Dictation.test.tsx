@@ -315,6 +315,29 @@ describe('the spelling round (Listen & Pick, promptKind spelling)', () => {
     expect(texts(r)).toContain(EN.learner.minigame.spellingPick.miss);
   });
 
+  it('with no Korean voice, a tap on the speaker and the replay after a miss show only the status panel, never the answer', async () => {
+    rig.current = createAudioRig({ voices: [] });
+    const r = await renderPick(true);
+    await tap(r, 'listen-pick-speaker');
+    await settle();
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+    expect(byTestId(r.root, 'listen-pick-prompt').length).toBeGreaterThan(0);
+    await tap(r, 'listen-pick-option-b');
+    await settle(900);
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+  });
+
+  it('with sound off, a tap on the speaker and the replay after a miss show only the status panel, never the answer', async () => {
+    useAudioStore.setState({ muted: true });
+    const r = await renderPick(true);
+    await tap(r, 'listen-pick-speaker');
+    await settle();
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+    await tap(r, 'listen-pick-option-b');
+    await settle(900);
+    expect(byTestId(r.root, 'listen-pick-prompt-text')).toHaveLength(0);
+  });
+
   it('without the chunk it is Listen & Pick on the same word: the look-alike spelling left out', async () => {
     const r = await renderPick(false);
     expect(texts(r)).toContain(EN.learner.minigame.listenPick.heading);
