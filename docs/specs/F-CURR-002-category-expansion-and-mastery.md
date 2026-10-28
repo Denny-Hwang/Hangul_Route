@@ -842,7 +842,7 @@ Default Checks by stage:
 - **The tiger (§5.1, §5.5 S2).** The magpie and the tiger of folk painting are a card-back fact about old pictures only; no tiger is drawn in the scene.
 - **Meanings.** The round's alt text and its eight meanings have es and ko values in the scene's chunk (`FOUR_SEASONS_OVERLAYS`, under the `hiddenHeritage.rounds.<roundId>.*` overlay paths), which the content row copies into its `content/i18n` overlay; the targets' values are the shipped Stage 2 ones. No UI string is added.
 - **Sources (5.1, 6.6).** Korea Meteorological Administration (날씨누리 한국 기후특성), National Institute of Biological Resources (한반도의 생물다양성: 까치, 반달가슴곰), Korea National Park Service (생태계복원 반달가슴곰) and the National Folk Museum of Korea's Encyclopedia of Korean Folk Culture (한국민속상징사전 까치호랑이, topic 10300), opened on 2026-10-23 with the quoted words. Kkachihorangi is credited to Yuan and Ming tiger paintings, as the entry says. MAR, three passes, no native-speaker or expert claim.
-- **Budget.** The scene chunk `scene-four-seasons` (marker `scene-chunk:four-seasons`) measures 20,653 B raw built, under the 25,000 B line. The start bundle carries one more loader entry: 4,749,838 B raw (release), under the 4,750,000 B line, which stays.
+- **Budget.** The scene chunk `scene-four-seasons` (marker `scene-chunk:four-seasons`) measures 20,653 B raw built, under the 25,000 B line. On the CM-36 head e7a7fb0d5 the start bundle carries one more loader entry: 4,756,430 B raw / 1,267,837 B gzip (release), 141 B over CM-36's 4,756,289 B and under the 4,760,000 B line, which stays. Locale chunks largest 927,284 B (line 1,000,000 B); learner precache 9,427,577 B (line 11,287,329 B).
 
 ### 7.2 Cards and albums
 
