@@ -17,8 +17,8 @@
       "steps.s1.title": "공원에서",
       "steps.s2.title": "짧은 대화 두 개",
       "steps.s3.title": "대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
-      "steps.s5.title": "빠르게 두 문제",
+      "steps.s4.title": "날씨 카드 읽기",
+      "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "하늘 이야기 완성!",
       "steps.s1.hoyaLine": "하늘을 봐요! 날씨 이야기를 해 봐요.",
       "steps.s2.hoyaLine": "문장을 하나씩 눌러서 들어 봐요.",
@@ -41,8 +41,8 @@
       "steps.s1.title": "다가오는 구름",
       "steps.s2.title": "앞으로의 일 말하기",
       "steps.s3.title": "대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
-      "steps.s5.title": "빠르게 두 문제",
+      "steps.s4.title": "날씨 카드 읽기",
+      "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "계획 완성!",
       "steps.s1.hoyaLine": "구름이 잔뜩 끼었어요. 이제 어떻게 될까요?",
       "steps.s2.hoyaLine": "‘-(으)ㄹ 거예요’를 잘 들어 봐요. 앞으로 일어날 일을 말할 때 써요.",
@@ -64,8 +64,8 @@
       "steps.s1.title": "길에서",
       "steps.s2.title": "가는 곳 묻기",
       "steps.s3.title": "대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
-      "steps.s5.title": "빠르게 두 문제",
+      "steps.s4.title": "날씨 카드 읽기",
+      "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "공원 친구!",
       "steps.s1.hoyaLine": "친구가 지나가요. 가는 곳을 물어봐요.",
       "steps.s2.hoyaLine": "문장을 하나씩 눌러서 들어 봐요.",
@@ -95,16 +95,6 @@
       "dialogue.2.options.uyureul-masyeoyo.gloss": "우유를 마신다고 말하는 문장",
       "dialogue.2.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말"
     },
-    "minigame:s4-nature-q1-apply": {
-      "storySteps.l1.label": "맑고 화창한 날이라고 하는 말",
-      "storySteps.l2.label": "좋다고 대답하는 말",
-      "storySteps.l3.label": "지금 빗방울이 떨어진다고 알리는 말",
-      "storySteps.l4.label": "살고 있는 곳으로 돌아간다는 말"
-    },
-    "minigame:s4-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "맑고 화창한 날이라고 하는 말",
-      "listenPick.rounds.c2.prompt": "지금 빗방울이 떨어진다고 알리는 말"
-    },
     "minigame:s4-nature-q2-play": {
       "dialogue.0.npc": "이따가 비가 내리겠다고 짐작하는 말",
       "dialogue.0.options.geureom-naeil-gal-geoyeyo.gloss": "그렇다면 다음 날 가겠다는 대답",
@@ -118,16 +108,6 @@
       "dialogue.2.options.ne-gachi-gayo.gloss": "함께 가자고 기쁘게 대답하는 말",
       "dialogue.2.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장",
       "dialogue.2.options.jeoneun-hoyayeyo.gloss": "내 이름을 알려 주는 말"
-    },
-    "minigame:s4-nature-q2-apply": {
-      "storySteps.l1.label": "이따가 비가 내리겠다고 짐작하는 말",
-      "storySteps.l2.label": "그렇다면 다음 날 가겠다는 대답",
-      "storySteps.l3.label": "다음 날은 화창하겠다고 짐작하는 말",
-      "storySteps.l4.label": "함께 가자고 기쁘게 대답하는 말"
-    },
-    "minigame:s4-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "이따가 비가 내리겠다고 짐작하는 말",
-      "listenPick.rounds.c2.prompt": "다음 날은 화창하겠다고 짐작하는 말"
     },
     "minigame:s4-nature-q3-play": {
       "dialogue.0.npc": "호야에게 가는 곳을 묻는 말",
@@ -143,15 +123,108 @@
       "dialogue.2.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
       "dialogue.2.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장"
     },
+    "minigame:s4-nature-q1-apply": {
+      "realiaRead.realia.alt": "날씨 카드: 공원에는 해, 산에는 구름, 바다에는 바람, 강가에는 비",
+      "realiaRead.realia.title.gloss": "그날그날의 비, 바람, 구름 같은 하늘 상태",
+      "realiaRead.realia.entries.park.text.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "realiaRead.realia.entries.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.realia.entries.sea.text.gloss": "넓고 짠 물",
+      "realiaRead.realia.entries.river.text.gloss": "길게 흐르는 큰 물줄기",
+      "realiaRead.realia.entries.park.value.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.realia.entries.mountain.value.gloss": "하늘에 뜬 하얗거나 회색인 덩어리",
+      "realiaRead.realia.entries.sea.value.gloss": "움직이는 공기",
+      "realiaRead.realia.entries.river.value.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r1.question": "공원 날씨는 어때요?",
+      "realiaRead.rounds.r2.question": "비가 오는 곳은 어디예요?",
+      "realiaRead.rounds.r3.question": "바다 날씨는 어때요?",
+      "realiaRead.rounds.r4.question": "구름은 어디에 있어요?",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r1.options.cloud.text.gloss": "하늘에 뜬 하얗거나 회색인 덩어리",
+      "realiaRead.rounds.r2.options.river.text.gloss": "길게 흐르는 큰 물줄기",
+      "realiaRead.rounds.r2.options.park.text.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "realiaRead.rounds.r2.options.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.rounds.r3.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r3.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r3.options.wind.text.gloss": "움직이는 공기",
+      "realiaRead.rounds.r4.options.sea.text.gloss": "넓고 짠 물",
+      "realiaRead.rounds.r4.options.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.rounds.r4.options.river.text.gloss": "길게 흐르는 큰 물줄기"
+    },
+    "minigame:s4-nature-q1-check": {
+      "clozePick.rounds.c1.sentence.gloss": "하늘에서 물방울이 떨어진다는 말",
+      "clozePick.rounds.c1.tiles.hae.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "clozePick.rounds.c1.tiles.bi.gloss": "구름에서 떨어지는 물방울",
+      "clozePick.rounds.c1.tiles.bada.gloss": "넓고 짠 물",
+      "clozePick.rounds.c2.sentence.gloss": "하늘 상태가 좋다는 말",
+      "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.c2.tiles.reul.gloss": "목적어 표시 (받침 없는 말 뒤)"
+    },
+    "minigame:s4-nature-q2-apply": {
+      "realiaRead.realia.alt": "공원 날씨 카드: 오늘은 비, 내일은 해",
+      "realiaRead.realia.title.gloss": "공원의 날씨",
+      "realiaRead.realia.entries.today.text.gloss": "지금 보내고 있는 이 하루",
+      "realiaRead.realia.entries.tomorrow.text.gloss": "오늘의 다음 날",
+      "realiaRead.realia.entries.today.value.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.realia.entries.tomorrow.value.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r1.question": "오늘 공원 날씨는 어때요?",
+      "realiaRead.rounds.r2.question": "내일 날씨는 어떨까요?",
+      "realiaRead.rounds.r3.question": "비는 언제 올까요?",
+      "realiaRead.rounds.r4.question": "친구들은 해가 나는 날 공원에 가고 싶어요. 언제 가요?",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r1.options.wind.text.gloss": "움직이는 공기",
+      "realiaRead.rounds.r2.options.cloud.text.gloss": "하늘에 뜬 하얗거나 회색인 덩어리",
+      "realiaRead.rounds.r2.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r2.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r3.options.today.text.gloss": "지금 보내고 있는 이 하루",
+      "realiaRead.rounds.r3.options.tomorrow.text.gloss": "오늘의 다음 날",
+      "realiaRead.rounds.r4.options.tomorrow.text.gloss": "오늘의 다음 날",
+      "realiaRead.rounds.r4.options.today.text.gloss": "지금 보내고 있는 이 하루"
+    },
+    "minigame:s4-nature-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "이따가 비가 내리겠다고 짐작하는 말",
+      "orderIt.rounds.c2.sentence.gloss": "그렇다면 다음 날 가겠다는 말",
+      "orderIt.rounds.c2.distractors.wayo.gloss": "이쪽으로 움직인다는 말",
+      "orderIt.rounds.c1.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
+    },
     "minigame:s4-nature-q3-apply": {
-      "storySteps.l1.label": "호야에게 가는 곳을 묻는 말",
-      "storySteps.l2.label": "공원으로 간다는 대답",
-      "storySteps.l3.label": "함께 가자고 권하는 말",
-      "storySteps.l4.label": "좋다고 대답하는 말"
+      "realiaRead.realia.alt": "날씨 카드: 공원에는 비, 바다에는 해, 산에는 바람",
+      "realiaRead.realia.title.gloss": "그날그날의 비, 바람, 구름 같은 하늘 상태",
+      "realiaRead.realia.entries.park.text.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "realiaRead.realia.entries.sea.text.gloss": "넓고 짠 물",
+      "realiaRead.realia.entries.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.realia.entries.park.value.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.realia.entries.sea.value.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.realia.entries.mountain.value.gloss": "움직이는 공기",
+      "realiaRead.rounds.r1.question": "호야는 공원에 가요. 그곳 날씨는 어때요?",
+      "realiaRead.rounds.r2.question": "해가 난 곳은 어디예요?",
+      "realiaRead.rounds.r3.question": "산 날씨는 어때요?",
+      "realiaRead.rounds.r4.question": "비가 오는 곳은 어디예요?",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r1.options.wind.text.gloss": "움직이는 공기",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r2.options.sea.text.gloss": "넓고 짠 물",
+      "realiaRead.rounds.r2.options.park.text.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "realiaRead.rounds.r2.options.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.rounds.r3.options.rain.text.gloss": "구름에서 떨어지는 물방울",
+      "realiaRead.rounds.r3.options.wind.text.gloss": "움직이는 공기",
+      "realiaRead.rounds.r3.options.sun.text.gloss": "낮에 하늘에서 밝게 빛나는 것",
+      "realiaRead.rounds.r4.options.mountain.text.gloss": "땅이 높이 솟은 곳",
+      "realiaRead.rounds.r4.options.sea.text.gloss": "넓고 짠 물",
+      "realiaRead.rounds.r4.options.park.text.gloss": "나무와 산책길이 있어 쉬거나 노는 곳"
     },
     "minigame:s4-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "가는 곳을 묻는 말",
-      "listenPick.rounds.c2.prompt": "함께 가자고 권하는 말"
+      "clozePick.rounds.c2.sentence.gloss": "살고 있는 곳으로 돌아간다는 말",
+      "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.c2.tiles.e.gloss": "가는 곳을 나타내는 말",
+      "clozePick.rounds.c2.tiles.eul.gloss": "목적어 표시 (받침 있는 말 뒤)",
+      "clozePick.rounds.c1.sentence.gloss": "놀러 가는 곳을 말하는 말",
+      "clozePick.rounds.c1.tiles.bada.gloss": "넓고 짠 물",
+      "clozePick.rounds.c1.tiles.gongwon.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "clozePick.rounds.c1.tiles.san.gloss": "땅이 높이 솟은 곳"
     }
   }
 }

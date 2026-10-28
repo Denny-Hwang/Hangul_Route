@@ -17,8 +17,8 @@
       "steps.s1.title": "En el parque",
       "steps.s2.title": "Dos charlas cortas",
       "steps.s3.title": "Elige una respuesta",
-      "steps.s4.title": "Ordena la charla",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s4.title": "Lee la tarjeta del tiempo",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Charla del cielo lista!",
       "steps.s1.hoyaLine": "¡Mira el cielo! Hablemos del tiempo.",
       "steps.s2.hoyaLine": "Toca cada frase para escucharla.",
@@ -41,8 +41,8 @@
       "steps.s1.title": "Vienen nubes",
       "steps.s2.title": "Hablar de lo que viene",
       "steps.s3.title": "Elige una respuesta",
-      "steps.s4.title": "Ordena la charla",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s4.title": "Lee la tarjeta del tiempo",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Planes hechos!",
       "steps.s1.hoyaLine": "Esas nubes se ven cargadas. ¿Qué va a pasar?",
       "steps.s2.hoyaLine": "Escucha -(eu)l geoyeyo. Significa \"va a\".",
@@ -64,8 +64,8 @@
       "steps.s1.title": "En el camino",
       "steps.s2.title": "¿Adónde vas?",
       "steps.s3.title": "Elige una respuesta",
-      "steps.s4.title": "Ordena la charla",
-      "steps.s5.title": "Dos rapiditas",
+      "steps.s4.title": "Lee la tarjeta del tiempo",
+      "steps.s5.title": "Dos preguntas rápidas",
       "steps.s6.title": "¡Charla en el parque lista!",
       "steps.s1.hoyaLine": "Pasa una amistad. Preguntémosle adónde va.",
       "steps.s2.hoyaLine": "Toca cada frase para escucharla.",
@@ -95,16 +95,6 @@
       "dialogue.2.options.uyureul-masyeoyo.gloss": "Tomo leche.",
       "dialogue.2.options.jeoneun-hoyayeyo.gloss": "Soy Hoya."
     },
-    "minigame:s4-nature-q1-apply": {
-      "storySteps.l1.label": "¡Hace buen tiempo!",
-      "storySteps.l2.label": "¡Sí, qué bien!",
-      "storySteps.l3.label": "¡Está lloviendo!",
-      "storySteps.l4.label": "¡Me voy a casa!"
-    },
-    "minigame:s4-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "¡Hace buen tiempo!",
-      "listenPick.rounds.c2.prompt": "¡Está lloviendo!"
-    },
     "minigame:s4-nature-q2-play": {
       "dialogue.0.npc": "Hoy va a llover.",
       "dialogue.0.options.geureom-naeil-gal-geoyeyo.gloss": "Entonces iré mañana.",
@@ -118,16 +108,6 @@
       "dialogue.2.options.ne-gachi-gayo.gloss": "¡Sí, vamos juntos!",
       "dialogue.2.options.babeul-meogeoyo.gloss": "Como arroz.",
       "dialogue.2.options.jeoneun-hoyayeyo.gloss": "Soy Hoya."
-    },
-    "minigame:s4-nature-q2-apply": {
-      "storySteps.l1.label": "Hoy va a llover.",
-      "storySteps.l2.label": "Entonces iré mañana.",
-      "storySteps.l3.label": "Mañana hará buen tiempo.",
-      "storySteps.l4.label": "¡Sí, vamos juntos!"
-    },
-    "minigame:s4-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "Hoy va a llover.",
-      "listenPick.rounds.c2.prompt": "Mañana hará buen tiempo."
     },
     "minigame:s4-nature-q3-play": {
       "dialogue.0.npc": "Hoya, ¿adónde vas?",
@@ -143,15 +123,108 @@
       "dialogue.2.options.annyeonghaseyo.gloss": "¡Hola!",
       "dialogue.2.options.babeul-meogeoyo.gloss": "Como arroz."
     },
+    "minigame:s4-nature-q1-apply": {
+      "realiaRead.realia.alt": "Una tarjeta del tiempo: sol en el parque, nubes en la montaña, viento en el mar, lluvia junto al río",
+      "realiaRead.realia.title.gloss": "el tiempo",
+      "realiaRead.realia.entries.park.text.gloss": "parque",
+      "realiaRead.realia.entries.mountain.text.gloss": "montaña",
+      "realiaRead.realia.entries.sea.text.gloss": "mar",
+      "realiaRead.realia.entries.river.text.gloss": "río",
+      "realiaRead.realia.entries.park.value.gloss": "sol",
+      "realiaRead.realia.entries.mountain.value.gloss": "nube",
+      "realiaRead.realia.entries.sea.value.gloss": "viento",
+      "realiaRead.realia.entries.river.value.gloss": "lluvia",
+      "realiaRead.rounds.r1.question": "¿Qué tiempo hace en el parque?",
+      "realiaRead.rounds.r2.question": "¿Dónde llueve?",
+      "realiaRead.rounds.r3.question": "¿Qué tiempo hace en el mar?",
+      "realiaRead.rounds.r4.question": "¿Dónde están las nubes?",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r1.options.cloud.text.gloss": "nube",
+      "realiaRead.rounds.r2.options.river.text.gloss": "río",
+      "realiaRead.rounds.r2.options.park.text.gloss": "parque",
+      "realiaRead.rounds.r2.options.mountain.text.gloss": "montaña",
+      "realiaRead.rounds.r3.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r3.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r3.options.wind.text.gloss": "viento",
+      "realiaRead.rounds.r4.options.sea.text.gloss": "mar",
+      "realiaRead.rounds.r4.options.mountain.text.gloss": "montaña",
+      "realiaRead.rounds.r4.options.river.text.gloss": "río"
+    },
+    "minigame:s4-nature-q1-check": {
+      "clozePick.rounds.c1.sentence.gloss": "¡Está lloviendo!",
+      "clozePick.rounds.c1.tiles.hae.gloss": "sol",
+      "clozePick.rounds.c1.tiles.bi.gloss": "lluvia",
+      "clozePick.rounds.c1.tiles.bada.gloss": "mar",
+      "clozePick.rounds.c2.sentence.gloss": "¡Hace buen tiempo!",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto (después de una vocal)",
+      "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto (después de una consonante final)",
+      "clozePick.rounds.c2.tiles.reul.gloss": "marca de objeto (después de una vocal)"
+    },
+    "minigame:s4-nature-q2-apply": {
+      "realiaRead.realia.alt": "Una tarjeta del tiempo del parque: lluvia hoy, sol mañana",
+      "realiaRead.realia.title.gloss": "el tiempo del parque",
+      "realiaRead.realia.entries.today.text.gloss": "hoy",
+      "realiaRead.realia.entries.tomorrow.text.gloss": "mañana",
+      "realiaRead.realia.entries.today.value.gloss": "lluvia",
+      "realiaRead.realia.entries.tomorrow.value.gloss": "sol",
+      "realiaRead.rounds.r1.question": "¿Qué tiempo hace hoy en el parque?",
+      "realiaRead.rounds.r2.question": "¿Qué tiempo hará mañana?",
+      "realiaRead.rounds.r3.question": "¿Cuándo va a llover?",
+      "realiaRead.rounds.r4.question": "Unos amigos quieren un día de sol en el parque. ¿Cuándo van?",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r1.options.wind.text.gloss": "viento",
+      "realiaRead.rounds.r2.options.cloud.text.gloss": "nube",
+      "realiaRead.rounds.r2.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r2.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r3.options.today.text.gloss": "hoy",
+      "realiaRead.rounds.r3.options.tomorrow.text.gloss": "mañana",
+      "realiaRead.rounds.r4.options.tomorrow.text.gloss": "mañana",
+      "realiaRead.rounds.r4.options.today.text.gloss": "hoy"
+    },
+    "minigame:s4-nature-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "Hoy va a llover.",
+      "orderIt.rounds.c2.sentence.gloss": "Entonces iré mañana.",
+      "orderIt.rounds.c2.distractors.wayo.gloss": "viene",
+      "orderIt.rounds.c1.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
+    },
     "minigame:s4-nature-q3-apply": {
-      "storySteps.l1.label": "Hoya, ¿adónde vas?",
-      "storySteps.l2.label": "Voy al parque.",
-      "storySteps.l3.label": "¡Vamos juntos!",
-      "storySteps.l4.label": "¡Sí, está bien!"
+      "realiaRead.realia.alt": "Una tarjeta del tiempo: lluvia en el parque, sol en el mar, viento en la montaña",
+      "realiaRead.realia.title.gloss": "el tiempo",
+      "realiaRead.realia.entries.park.text.gloss": "parque",
+      "realiaRead.realia.entries.sea.text.gloss": "mar",
+      "realiaRead.realia.entries.mountain.text.gloss": "montaña",
+      "realiaRead.realia.entries.park.value.gloss": "lluvia",
+      "realiaRead.realia.entries.sea.value.gloss": "sol",
+      "realiaRead.realia.entries.mountain.value.gloss": "viento",
+      "realiaRead.rounds.r1.question": "Hoya va al parque. ¿Qué tiempo hace allí?",
+      "realiaRead.rounds.r2.question": "¿Dónde hace sol?",
+      "realiaRead.rounds.r3.question": "¿Qué tiempo hace en la montaña?",
+      "realiaRead.rounds.r4.question": "¿Dónde llueve?",
+      "realiaRead.rounds.r1.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r1.options.wind.text.gloss": "viento",
+      "realiaRead.rounds.r1.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r2.options.sea.text.gloss": "mar",
+      "realiaRead.rounds.r2.options.park.text.gloss": "parque",
+      "realiaRead.rounds.r2.options.mountain.text.gloss": "montaña",
+      "realiaRead.rounds.r3.options.rain.text.gloss": "lluvia",
+      "realiaRead.rounds.r3.options.wind.text.gloss": "viento",
+      "realiaRead.rounds.r3.options.sun.text.gloss": "sol",
+      "realiaRead.rounds.r4.options.mountain.text.gloss": "montaña",
+      "realiaRead.rounds.r4.options.sea.text.gloss": "mar",
+      "realiaRead.rounds.r4.options.park.text.gloss": "parque"
     },
     "minigame:s4-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "¿Adónde vas?",
-      "listenPick.rounds.c2.prompt": "¡Vamos juntos!"
+      "clozePick.rounds.c2.sentence.gloss": "¡Me voy a casa!",
+      "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto (después de una consonante final)",
+      "clozePick.rounds.c2.tiles.e.gloss": "a (un lugar)",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto (después de una consonante final)",
+      "clozePick.rounds.c1.sentence.gloss": "Voy al parque.",
+      "clozePick.rounds.c1.tiles.bada.gloss": "mar",
+      "clozePick.rounds.c1.tiles.gongwon.gloss": "parque",
+      "clozePick.rounds.c1.tiles.san.gloss": "montaña"
     }
   }
 }

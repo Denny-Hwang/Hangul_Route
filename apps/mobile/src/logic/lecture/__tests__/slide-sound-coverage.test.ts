@@ -44,7 +44,10 @@ const drawsHangul = (slide: Slide): boolean => strings(slide).some((s) => [...s]
  */
 function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
-  return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined));
+  // A Cloze Pick question (row CM-30, first shipped by row CM-3A S4): its target is the sentence with its gap, which is
+  // not said (a gap read aloud says "underscore", and the completed sentence would say the answer).
+  const clozeGap = (s: Extract<Slide, { kind: 'quiz' }>): boolean => s.prompt.ask === 'check' && s.prompt.target?.ko.includes('___') === true;
+  return slide.kind === 'quiz' && (slide.prompt.ask === 'odd-one-out' || (slide.prompt.ask === 'check' && slide.prompt.target === undefined) || clozeGap(slide));
 }
 
 /**

@@ -25,35 +25,11 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "미나",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "나도 같은 마음이라는 답",
       "steps.s2.discover.pages.1.caption": "처음 만난 사람에게는 만나서 기쁘다고 말해요.",
-      "steps.s3.title": "알맞은 대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s3.title": "대화 순서 맞추기",
+      "steps.s4.title": "빈칸 채우기",
       "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "인사 카드!",
       "steps.s6.hoyaLine": "진짜 대화를 나눴어요! 인사 카드를 받아요."
-    },
-    "minigame:s4-rites-q1-practice": {
-      "dialogue.0.npc": "만났을 때 하는 공손한 인사",
-      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
-      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
-      "dialogue.0.options.jeodo-bangawoyo.gloss": "나도 같은 마음이라는 답",
-      "dialogue.1.npc": "상대의 이름을 묻는 말",
-      "dialogue.1.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
-      "dialogue.1.options.aniyo.gloss": "아니라고 대답하는 말",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름을 알려 주는 답",
-      "dialogue.2.npc": "처음 보게 되어 기쁘다는 인사",
-      "dialogue.2.options.jeodo-bangawoyo.gloss": "나도 같은 마음이라는 답",
-      "dialogue.2.options.aniyo.gloss": "아니라고 대답하는 말",
-      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말"
-    },
-    "minigame:s4-rites-q1-apply": {
-      "storySteps.l1.label": "인사하고 상대의 이름을 묻는 말",
-      "storySteps.l2.label": "자기 이름을 알려 주는 답",
-      "storySteps.l3.label": "처음 보게 되어 기쁘다는 인사",
-      "storySteps.l4.label": "나도 같은 마음이라는 답"
-    },
-    "minigame:s4-rites-q1-check": {
-      "listenPick.rounds.c1.prompt": "상대의 이름을 묻는 말",
-      "listenPick.rounds.c2.prompt": "처음 보게 되어 기쁘다는 인사"
     },
     "quest:stage4-rites-q2": {
       "title": "오랜만이에요",
@@ -72,35 +48,11 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "그동안 별일 없었다는 답",
       "steps.s2.discover.pages.1.caption": "그동안 어떻게 지냈는지 물어요. 지난 시간을 말하니까 묻는 말과 대답 모두 과거형으로 해요.",
-      "steps.s3.title": "알맞은 대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s3.title": "대화 순서 맞추기",
+      "steps.s4.title": "빈칸 채우기",
       "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "다시 만나 반가워요!",
       "steps.s6.hoyaLine": "선생님과 그동안의 안부를 나눴어요. 정말 따뜻한 인사예요!"
-    },
-    "minigame:s4-rites-q2-practice": {
-      "dialogue.0.npc": "이름을 부르며 하는 공손한 인사",
-      "dialogue.0.options.seonsaengnim-annyeonghaseyo.gloss": "가르쳐 주시는 분께 하는 인사",
-      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
-      "dialogue.0.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
-      "dialogue.1.npc": "오래 못 본 사람을 다시 보고 하는 인사",
-      "dialogue.1.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
-      "dialogue.1.options.seonsaengnim-oraenmanieyo.gloss": "오래 못 뵌 분께 다시 뵙고 하는 인사",
-      "dialogue.1.options.aniyo.gloss": "아니라고 대답하는 말",
-      "dialogue.2.npc": "그동안 별일 없었는지 묻는 말",
-      "dialogue.2.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
-      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
-      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "그동안 별일 없었다는 답"
-    },
-    "minigame:s4-rites-q2-apply": {
-      "storySteps.l1.label": "오래 못 본 사람을 다시 보고 하는 인사",
-      "storySteps.l2.label": "선생님 말에 그렇다고 하며 반갑게 받는 인사",
-      "storySteps.l3.label": "그동안 별일 없었는지 묻는 말",
-      "storySteps.l4.label": "그동안 별일 없었다는 답"
-    },
-    "minigame:s4-rites-q2-check": {
-      "listenPick.rounds.c1.prompt": "그동안 별일 없었는지 묻는 말",
-      "listenPick.rounds.c2.prompt": "오래 못 본 사람을 다시 보고 하는 인사"
     },
     "quest:stage4-rites-q3": {
       "title": "새해 인사",
@@ -118,35 +70,108 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
       "steps.s2.discover.pages.1.caption": "좋은 인사를 받으면 고맙다고 하고, 같은 인사를 돌려줘요.",
-      "steps.s3.title": "알맞은 대답 고르기",
-      "steps.s4.title": "대화 순서 맞추기",
+      "steps.s3.title": "대화 순서 맞추기",
+      "steps.s4.title": "빈칸 채우기",
       "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "새해 복 많이 받으세요!",
       "steps.s6.hoyaLine": "한국어로 모두에게 새해 인사를 했어요!"
     },
-    "minigame:s4-rites-q3-practice": {
-      "dialogue.0.npc": "이름을 부르며 하는 공손한 인사",
-      "dialogue.0.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
-      "dialogue.0.options.seonsaengnim-annyeonghaseyo-saehae-bok-mani-badeuseyo.gloss": "가르쳐 주시는 분께 인사하고 새해에 좋은 일이 많기를 비는 말",
-      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이라는 답",
-      "dialogue.1.npc": "새해에 좋은 일이 많기를 비는 인사",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름을 알려 주는 답",
-      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 답",
-      "dialogue.1.options.gomawoyo-minado-saehae-bok-mani-badeuseyo.gloss": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
-      "dialogue.2.npc": "그동안 별일 없었는지 묻는 말",
-      "dialogue.2.options.ne-jal-jinaesseoyo.gloss": "그동안 별일 없었다는 답",
-      "dialogue.2.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
-      "dialogue.2.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답"
+    "minigame:s4-rites-q1-practice": {
+      "storySteps.l1.label": "인사하고 상대의 이름을 묻는 말",
+      "storySteps.l2.label": "자기 이름을 공손하게 밝힌다는 뜻",
+      "storySteps.l3.label": "처음 만나 기쁘다는 인사",
+      "storySteps.l4.label": "나도 같은 마음이라는 답"
     },
-    "minigame:s4-rites-q3-apply": {
+    "minigame:s4-rites-q1-apply": {
+      "clozePick.rounds.r1.sentence.gloss": "상대의 이름을 묻는 말",
+      "clozePick.rounds.r1.tiles.ireum.gloss": "사람이나 물건을 부르는 말",
+      "clozePick.rounds.r1.tiles.gabang.gloss": "물건을 넣어 메는 것",
+      "clozePick.rounds.r1.tiles.yeonpil.gloss": "글씨 쓰는 도구",
+      "clozePick.rounds.r2.sentence.gloss": "자기 이름이 미나라고 소개하는 말",
+      "clozePick.rounds.r2.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
+      "clozePick.rounds.r2.tiles.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
+      "clozePick.rounds.r2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.r3.sentence.gloss": "상대처럼 나도 만나서 기쁘다는 말",
+      "clozePick.rounds.r3.tiles.neun.gloss": "이야기의 주제를 나타내는 말 (받침 없는 말 뒤)",
+      "clozePick.rounds.r3.tiles.do.gloss": "앞의 말에 '역시'의 뜻을 더하는 말",
+      "clozePick.rounds.r3.tiles.reul.gloss": "목적어 표시 (받침 없는 말 뒤)",
+      "clozePick.rounds.r4.sentence.gloss": "자기 이름을 공손하게 밝힌다는 뜻",
+      "clozePick.rounds.r4.tiles.halmeoni.gloss": "아버지나 어머니의 어머니",
+      "clozePick.rounds.r4.tiles.hoya.gloss": "호야라는 이름",
+      "clozePick.rounds.r4.tiles.chingu.gloss": "가깝게 지내는 사람"
+    },
+    "minigame:s4-rites-q1-check": {
+      "dialogue.0.npc": "상대의 이름을 묻는 말",
+      "dialogue.1.npc": "처음 보게 되어 기쁘다는 인사",
+      "dialogue.0.options.mannaseo-bangawoyo.gloss": "처음 만나 기쁘다는 인사",
+      "dialogue.0.options.jeoneun-hoyayeyo.gloss": "자기 이름을 공손하게 밝힌다는 뜻",
+      "dialogue.0.options.aniyo.gloss": "아니라고 대답하는 말",
+      "dialogue.1.options.jeodo-bangawoyo.gloss": "나도 같은 마음이라는 답",
+      "dialogue.1.options.ireumi-mwoyeyo.gloss": "상대의 이름을 묻는 말",
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 뜻"
+    },
+    "minigame:s4-rites-q2-practice": {
+      "storySteps.l1.label": "오래 못 본 사람을 다시 보고 하는 인사",
+      "storySteps.l2.label": "선생님 말에 그렇다고 하며 반갑게 받는 인사",
+      "storySteps.l3.label": "그동안 별일 없었는지 묻는 말",
+      "storySteps.l4.label": "그동안 별일 없었다는 답"
+    },
+    "minigame:s4-rites-q2-apply": {
+      "clozePick.rounds.r1.sentence.gloss": "오래간만에 만나 반기는 인사",
+      "clozePick.rounds.r2.sentence.gloss": "그동안 별일 없었는지 묻는 말",
+      "clozePick.rounds.r2.tiles.gayo.gloss": "여기에서 다른 곳으로 움직이다",
+      "clozePick.rounds.r2.tiles.meogeosseoyo.gloss": "먹은 일을 말하는 말",
+      "clozePick.rounds.r2.tiles.jinaesseoyo.gloss": "그동안 생활했다는 말",
+      "clozePick.rounds.r3.sentence.gloss": "그동안 별일 없이 지냈다는 대답",
+      "clozePick.rounds.r3.tiles.an.gloss": "뒤에 오는 말을 부정하는 말",
+      "clozePick.rounds.r3.tiles.jal.gloss": "좋고 바르게",
+      "clozePick.rounds.r3.tiles.mwo.gloss": "어떤 것인지 물을 때 쓰는 말",
+      "clozePick.rounds.r4.sentence.gloss": "가르쳐 주시는 분을 오래간만에 뵙고 드리는 인사",
+      "clozePick.rounds.r1.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
+      "clozePick.rounds.r1.tiles.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
+      "clozePick.rounds.r1.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.r4.tiles.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
+      "clozePick.rounds.r4.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.r4.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)"
+    },
+    "minigame:s4-rites-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "그동안 별일 없이 지냈다는 대답",
+      "orderIt.rounds.c2.sentence.gloss": "오래간만에 만나 반기는 인사",
+      "orderIt.rounds.c1.distractors.bangawoyo.gloss": "만나서 기쁘다는 말",
+      "orderIt.rounds.c2.distractors.gomawoyo.gloss": "고마운 마음을 전하는 말"
+    },
+    "minigame:s4-rites-q3-practice": {
       "storySteps.l1.label": "이름을 부르며 하는 공손한 인사",
       "storySteps.l2.label": "가르쳐 주시는 분께 인사하고 새해에 좋은 일이 많기를 비는 말",
-      "storySteps.l3.label": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
-      "storySteps.l4.label": "가르쳐 주시는 분께 고마운 마음을 전하는 말"
+      "storySteps.l3.label": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답"
+    },
+    "minigame:s4-rites-q3-apply": {
+      "clozePick.rounds.r1.sentence.gloss": "새해를 맞아 행운을 비는 덕담",
+      "clozePick.rounds.r1.tiles.bangawoyo.gloss": "만나서 기쁘다는 말",
+      "clozePick.rounds.r1.tiles.badeuseyo.gloss": "주는 것을 가지라고 공손하게 권하는 말",
+      "clozePick.rounds.r1.tiles.jinaesseoyo.gloss": "그동안 생활했다는 말",
+      "clozePick.rounds.r2.sentence.gloss": "고맙다고 하고 미나에게도 새해 복을 비는 덕담",
+      "clozePick.rounds.r2.tiles.do.gloss": "앞의 말에 '역시'의 뜻을 더하는 말",
+      "clozePick.rounds.r2.tiles.neun.gloss": "이야기의 주제를 나타내는 말 (받침 없는 말 뒤)",
+      "clozePick.rounds.r2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.r3.sentence.gloss": "고맙다고 하고 호야에게도 새해 복을 비는 덕담",
+      "clozePick.rounds.r3.tiles.neun.gloss": "이야기의 주제를 나타내는 말 (받침 없는 말 뒤)",
+      "clozePick.rounds.r3.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "clozePick.rounds.r3.tiles.do.gloss": "앞의 말에 '역시'의 뜻을 더하는 말",
+      "clozePick.rounds.r4.sentence.gloss": "선생님께 인사하고 새해 복을 비는 덕담",
+      "clozePick.rounds.r4.tiles.mani.gloss": "수나 양이 넉넉하게",
+      "clozePick.rounds.r4.tiles.an.gloss": "뒤에 오는 말을 부정하는 말",
+      "clozePick.rounds.r4.tiles.jal.gloss": "좋고 바르게"
     },
     "minigame:s4-rites-q3-check": {
-      "listenPick.rounds.c1.prompt": "새해에 좋은 일이 많기를 비는 인사",
-      "listenPick.rounds.c2.prompt": "이름을 부르며 하는 공손한 인사"
+      "dialogue.0.npc": "새해에 좋은 일이 많기를 비는 인사",
+      "dialogue.1.npc": "이름을 부르며 하는 공손한 인사",
+      "dialogue.0.options.jeoneun-hoyayeyo.gloss": "자기 이름을 공손하게 밝힌다는 뜻",
+      "dialogue.0.options.mannaseo-bangawoyo.gloss": "처음 만나 기쁘다는 인사",
+      "dialogue.0.options.gomawoyo-minado-saehae-bok-mani-badeuseyo.gloss": "고맙다고 하고 상대에게도 새해에 좋은 일이 많기를 비는 답",
+      "dialogue.1.options.seonsaengnim-annyeonghaseyo-saehae-bok-mani-badeuseyo.gloss": "가르쳐 주시는 분께 인사하고 새해에 좋은 일이 많기를 비는 말",
+      "dialogue.1.options.jeoneun-minayeyo.gloss": "자기 이름을 알려 주는 답",
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 뜻"
     }
   }
 }

@@ -536,7 +536,8 @@ describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections
   it("a reply question plays the other speaker's line at the sentence rate", () => {
     const [reply] = asked(stage4, 'reply');
     const prompt = reply!.prompt as Extract<Quiz['prompt'], { ask: 'reply' }>;
-    expect(prompt.line.ko).toBe('밥 먹었어요?');
+    // Row CM-3A S4: the life q1 Check asks about the rice cake (Dialogue reply pick).
+    expect(prompt.line.ko).toBe('떡 먹었어요?');
     expect(slideSound(reply)).toEqual({ spoken: prompt.line.spoken, kind: 'sentence' });
   });
 

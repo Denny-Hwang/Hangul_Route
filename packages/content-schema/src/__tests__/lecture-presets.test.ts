@@ -198,9 +198,10 @@ describe('every preset at every length against CATALOG', () => {
     ['stage3', 10, 10, 'stage3-letters-q1 · stage3-letters-q2'],
     ['stage3', 20, 20, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1'],
     ['stage3', 30, 30, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1 · stage3-life-q2 · stage3-life-q3'],
-    ['stage4', 10, 10, 'stage4-letters-q1 · stage4-letters-q2 · copy-on-paper 2'],
-    ['stage4', 20, 20, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · copy-on-paper 4'],
-    ['stage4', 30, 29, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · stage4-life-q2 · stage4-life-q3 · stage4-rites-q1'],
+    // Row CM-3A S4: the re-authored Stage 4 quests run about 5 minutes each (Role Play and the rotated Checks).
+    ['stage4', 10, 10, 'stage4-letters-q1 · stage4-letters-q2'],
+    ['stage4', 20, 20, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1'],
+    ['stage4', 30, 30, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · stage4-life-q2 · stage4-life-q3'],
     ['stage5', 10, 9, 'story:sejong-new-letters@read+checks · story:shapes-of-hangeul@read+checks'],
     [
       'stage5',
