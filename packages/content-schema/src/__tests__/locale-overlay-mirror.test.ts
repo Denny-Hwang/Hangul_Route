@@ -6,6 +6,7 @@ import {
   NEVER_OVERRIDABLE_FIELDS,
   OVERLAY_ENTITY_ID,
   OVERLAY_FIELDS,
+  OPTIONAL_OVERLAY_FIELDS,
   OVERLAY_LOCALES,
   isOverlayFieldAllowed,
   overlayElementKey,
@@ -52,6 +53,7 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
     expect(mirror.OVERLAY_ENTITY_ID.source).toBe(OVERLAY_ENTITY_ID.source);
     expect(JSON.parse(JSON.stringify(mirror.OVERLAY_FIELDS))).toEqual(JSON.parse(JSON.stringify(OVERLAY_FIELDS)));
     expect([...mirror.NEVER_OVERRIDABLE_FIELDS]).toEqual([...NEVER_OVERRIDABLE_FIELDS]);
+    expect([...mirror.OPTIONAL_OVERLAY_FIELDS]).toEqual([...OPTIONAL_OVERLAY_FIELDS]);
     for (const prefix of mirror.TS_RESIDENT_PREFIXES) expect(Object.keys(OVERLAY_FIELDS)).toContain(prefix);
   });
 
