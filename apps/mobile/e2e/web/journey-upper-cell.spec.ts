@@ -256,12 +256,6 @@ async function typeAnswer(page: Page, text: string): Promise<void> {
 }
 
 /** Realia Read: tap the option until the game marks it right (a tap inside its double-touch window is dropped). */
-/** A Realia Read Check (F-CURR-002 row CM-3A S6): the Check card's Go, then the two questions by option id. */
-async function playRealiaCheck(page: Page, ids: readonly [string, string]): Promise<void> {
-  await page.getByRole('button', { name: 'Go', exact: true }).click();
-  await pickRealia(page, ids);
-}
-
 async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
   for (const [i, id] of ids.entries()) {
     await expect(page.getByTestId('realia-read-question')).toBeVisible();
@@ -272,6 +266,12 @@ async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
     }).toPass();
     if (i < ids.length - 1) await expect(option).toHaveCount(0, { timeout: 5_000 }).catch(() => undefined);
   }
+}
+
+/** A Realia Read Check (F-CURR-002 row CM-3A S6): the Check card's Go, then the two questions by option id. */
+async function playRealiaCheck(page: Page, ids: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await pickRealia(page, ids);
 }
 
 /**
@@ -865,9 +865,9 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await pickRealia(page, ['hanji', 'buchae', 'apple', 'cheon']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       for (const word of ['한지', '부채', '오일장']) await typeAnswer(page, word);
-      // Row CM-3A S6: the Check is Cloze Pick on the price cards (부채는 ___ 원이에요, 한지는 ___ 원이에요); with
+      // Row CM-3A S6: the Check is Cloze Pick on the price cards (부채는 ___ 원이에요, 사과는 ___ 원이에요); with
       // game.cloze-pick at its built-in pct 0 it plays as Listen & Pick with a text prompt, on the same tiles.
-      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t2' }]);
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t1' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
