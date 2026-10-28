@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
 import { useLocale } from '../i18n/use-messages';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
+import { CONTENT_OVERLAYS } from '../logic/content-locale';
 import { localizeReferenceRound } from '../logic/hidden-heritage-reference';
 import type { MinigameScope } from '../logic/minigame-config';
 import { LessonWaiting } from '../screens/lesson-content';
@@ -16,7 +17,7 @@ import type { RootStackParamList } from './types';
  * The Hidden Heritage e2e screen (F-CURR-002 row CM-36; fixture builds only), loaded by `./hidden-heritage-e2e.tsx` through
  * its literal `import()`, so a release start bundle carries only the hook. Opens the step on the Food market scene's
  * reference round, read from the scene's own lazy chunk; `missing` names a scene this build does not have. `sceneId`
- * opens another scene's reference round (row CM-37), with the scene's own es / ko text in those UI languages.
+ * opens another scene's reference round (row CM-37), with its `scene:<id>` overlay (`content/i18n/{es,ko}/hidden-heritage.json`) in those UI languages.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HiddenHeritageE2e'>;
@@ -32,7 +33,7 @@ export function HiddenHeritageE2eBody({ route, navigation }: Props): ReactElemen
     void loadScene(sceneId).then((scene) => {
       if (!scene) return;
       const parsed = HiddenHeritageRoundSchema.parse(missing ? { ...scene.round, sceneId: 'scene:not-in-this-build' } : scene.round);
-      const round = localizeReferenceRound(parsed, scene.overlays, locale);
+      const round = localizeReferenceRound(scene.id, parsed, locale, CONTENT_OVERLAYS);
       setScope({ kind: 'hidden-heritage', rounds: round.targets.length, hiddenHeritage: { rounds: [round] } });
     });
   }, [missing, sceneId, locale]);

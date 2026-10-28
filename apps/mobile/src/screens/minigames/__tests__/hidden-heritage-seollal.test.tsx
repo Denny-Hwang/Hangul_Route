@@ -1,4 +1,5 @@
 import { HiddenHeritageRoundSchema, checkRomanization } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { allowlistedInstitution } from '@hangul-route/content-schema/lint';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
@@ -110,26 +111,44 @@ describe('the Seollal room scene content', () => {
 });
 
 describe('the reference round in the UI language', () => {
+  const entry = (locale: 'es' | 'ko') => OVERLAYS[locale][SCENE.id]!;
+
   it('English is the round as written', () => {
-    expect(localizeReferenceRound(ROUND, SCENE.overlays, 'en')).toBe(ROUND);
+    expect(localizeReferenceRound(SCENE.id, ROUND, 'en', OVERLAYS)).toBe(ROUND);
   });
 
-  it('Spanish and Korean replace the alt text and every meaning, never the Korean word or its romanization', () => {
+  it('Spanish and Korean replace the alt text and every meaning from the scene: overlay, never the Korean word or its romanization', () => {
     for (const locale of ['es', 'ko'] as const) {
-      const round = localizeReferenceRound(ROUND, SCENE.overlays, locale);
-      expect(round.altEn).toBe(SCENE.overlays![locale]!.alt);
+      const round = localizeReferenceRound(SCENE.id, ROUND, locale, OVERLAYS);
+      expect(round.altEn).toBe(entry(locale)['round.alt']);
       for (const [i, t] of [...round.targets, ...round.others].entries()) {
-        expect(t.word.en, t.id).toBe(SCENE.overlays![locale]!.things[t.id]);
+        const kind = i < ROUND.targets.length ? 'targets' : 'others';
+        expect(t.word.en, t.id).toBe(entry(locale)[`round.${kind}.${t.id}.word.gloss`]);
         expect(t.word.ko).toBe(THINGS[i]!.word.ko);
         expect(t.word.romanization).toBe(THINGS[i]!.word.romanization);
       }
     }
-    expect(localizeReferenceRound(ROUND, SCENE.overlays, 'es').targets.find((t) => t.id === 'yeon')!.word.en).toBe('cometa');
+    expect(localizeReferenceRound(SCENE.id, ROUND, 'es', OVERLAYS).targets.find((t) => t.id === 'yeon')!.word.en).toBe('cometa');
+  });
+
+  it('carries es and ko for the alt text, every thing, the subject and every fact (F-I18N-001 §3.10)', () => {
+    const ids = [
+      'art.alt',
+      'round.alt',
+      ...ROUND.targets.map((t) => `round.targets.${t.id}.word.gloss`),
+      ...ROUND.others.map((t) => `round.others.${t.id}.word.gloss`),
+      'note.subject',
+      ...SCENE.note.facts.map((f) => `note.facts.${f.id}.claim`),
+    ].sort();
+    for (const locale of ['es', 'ko'] as const) {
+      expect(Object.keys(entry(locale)).sort(), locale).toEqual(ids);
+      for (const value of Object.values(entry(locale))) expect(value.trim(), locale).not.toBe('');
+    }
   });
 
   it('a meaning the overlay leaves out stays English', () => {
-    const partial = { es: { ...SCENE.overlays!.es!, things: { hanbok: 'ropa tradicional coreana' } } };
-    expect(localizeReferenceRound(ROUND, partial, 'es').targets.find((t) => t.id === 'tteokguk')!.word.en).toBe('rice-cake soup');
+    const partial = { es: { [SCENE.id]: { 'round.targets.hanbok.word.gloss': 'ropa tradicional coreana' } }, ko: {} };
+    expect(localizeReferenceRound(SCENE.id, ROUND, 'es', partial).targets.find((t) => t.id === 'tteokguk')!.word.en).toBe('rice-cake soup');
   });
 });
 
