@@ -2148,4 +2148,8 @@ export const learner = {
     showMeanings: 'Ver significados',
     meaningsShown: 'Significados visibles',
   },
+  cultureTip: {
+    title: '¿Sabías que…?',
+    region: 'Nota de lección',
+  },
 } satisfies DeepPartial<Messages['learner']>;

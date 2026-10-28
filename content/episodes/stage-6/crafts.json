@@ -1322,6 +1322,13 @@
       "textEn": "A traditional market gathers many shops in one place. They sell food, fruit and everyday goods, often at fairly low prices.",
       "sources": [
         {
+          "title": "전통시장 (한국생업기술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/10159",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "개관: ‘전통시장傳統市場은 흔히 ‘재래시장’으로 불리는 시장을 말한다.’ / ‘해당 구역 및 건물에 대통령령으로 정하는 수 이상의 점포가 밀집한 곳일 것’"
+        },
+        {
           "title": "소매업, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0030046",
@@ -1347,7 +1354,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three pages opened again (HTTP 200) and every quoteOrLocator string found word for word. The note now says 'many shops' (the AKS entry 소매업 says 많은 소매점 and nothing about size, so 'small' was dropped from the note and the q1 caption in en, es and ko). The AKS entry 시장 sentence on retail share is old encyclopedia text, not current; it was removed from the locator and is not relied on (the line 1 phrase 'still hold a large share of retail today' is withdrawn). Source titles reshaped to 'headword, an entry of ...' so the romanization prose scan passes. Outcome: pass, note reworded."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): all three pages fetched (HTTP 200). The AKS entry 소매업 describes 재래시장 as many retail shops in one place selling food, everyday goods and durables at relatively low prices; the AKS entry 시장 says such markets still hold a large share of retail today; the korea.kr citizen-reporter piece (the reporter's own wording, a supporting source only) describes a market where sellers sell vegetables they grew and prices are far below big marts. The note says 'often', names no group as a whole, no shop, brand or real price, and copies no wording. Carried by: q1 Discover page 2 caption and the q1 intro Hoya line (market day). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched all three pages again (HTTP 200) and found every quoteOrLocator string verbatim on its page. The AKS entry 소매업 supports 'many small shops in one place' and 'food and everyday goods at fairly low prices'; 'fruit' is supported by the korea.kr piece (market apples far cheaper than at a big mart) and is a kind of food in the AKS list; 'often' keeps the price claim no stronger than the AKS 'relatively low'. The AKS entry 시장 and the korea.kr piece (dated 2014-09-06, a reporter's own account, supporting only) agree. No real price, shop or person is carried into the note; no wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): all three pages opened again (HTTP 200) and every quoteOrLocator string found word for word. The note now says 'many shops' (the AKS entry 소매업 says 많은 소매점 and nothing about size, so 'small' was dropped from the note and the q1 caption in en, es and ko). The AKS entry 시장 sentence on retail share is old encyclopedia text, not current; it was removed from the locator and is not relied on (the line 1 phrase 'still hold a large share of retail today' is withdrawn). Source titles reshaped to 'headword, an entry of ...' so the romanization prose scan passes. Outcome: pass, note reworded.\nCM-3C (2026-10-23): culture-source fix. The National Folk Museum of Korea entry 전통시장 (topic 10159) added first: the traditional market, commonly called 재래시장, a place where many shops stand close together. The note's words are unchanged; the goods and the prices stay with the Encyclopedia of Korean Culture entry 소매업."
       }
     },
     {
@@ -1417,25 +1424,25 @@
       "textEn": "Before a counter such as {ko:개}, counting uses {ko:한}, {ko:두}, {ko:세}, short forms of {ko:하나}, {ko:둘}, {ko:셋}. These counting words stop below a hundred, so prices in thousands use {ko:이}, {ko:오}, {ko:천}.",
       "sources": [
         {
-          "title": "수사, an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0031418",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 수사: “수사의 일부는 ‘한·두·세(서, 석)·네(너, 넉)’처럼 형태를 바꾸어 관형사로 전성된 것도 있다.” and “고유어계열은 ‘백’ 이상의 높은 수에는 쓰이지 않음이 한 특징이다.”"
-        },
-        {
           "title": "세, an entry of the Standard Korean Language Dictionary",
           "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 세 1, 관형사: “그 수량이 셋임을 나타내는 말.”"
+        },
+        {
+          "title": "수사, an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031418",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 수사: “수사의 일부는 ‘한·두·세(서, 석)·네(너, 넉)’처럼 형태를 바꾸어 관형사로 전성된 것도 있다.” and “고유어계열은 ‘백’ 이상의 높은 수에는 쓰이지 않음이 한 특징이다.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages opened again (HTTP 200) and both quoteOrLocator strings found word for word. The note matches the AKS entry 수사 (한, 두, 세 as changed forms before a noun; native numerals not used for a hundred or more) and the dictionary entry 세. The q1 card no longer shows the native count 세 개 before q2 teaches it, and the q1 caption now gives the values of 이, 오 and 천. Outcome: pass, no change to the note."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched (HTTP 200). The AKS entry 수사 says some numerals change form to 한, 두, 세, 네 when used before a noun, and that the native numerals are not used for a hundred or more (so a price in thousands is said with Sino-Korean 이천, 오천); the Standard Korean Language Dictionary lists 세 as the determiner meaning the amount is three. No wording copied. Carried by: q1 Discover page 3 caption, q2 Discover page 1 caption; the count round (q2 r1) asks only native counts and every price round asks only Sino-Korean prices or figures, never both in one round (spec section 3.6). Line 2 (pass 2b, independent fact check, 2026-10-14): a session that did not author the cell fetched both pages again (HTTP 200) and found both quoteOrLocator strings verbatim. The AKS entry 수사 supports that 한, 두, 세 are changed forms of the numerals used before a noun, and that native numerals are not used for a hundred or more; the same entry describes the Sino-Korean series (e.g. 이백오십), so prices in thousands with 이, 오, 천 follows. The dictionary entry 세 supports 세 as the determiner for three. No wording copied. Outcome: pass, no change. Line 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages opened again (HTTP 200) and both quoteOrLocator strings found word for word. The note matches the AKS entry 수사 (한, 두, 세 as changed forms before a noun; native numerals not used for a hundred or more) and the dictionary entry 세. The q1 card no longer shows the native count 세 개 before q2 teaches it, and the q1 caption now gives the values of 이, 오 and 천. Outcome: pass, no change to the note.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],

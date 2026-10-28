@@ -5,7 +5,13 @@
     "episode:stage2-letters": {
       "title": "Constructor de palabras",
       "subtitle": "El resto del hangul y las palabras que abre.",
-      "hoyaIntro": "Ya conoces 30 letras. ¡Conozcamos el resto y leamos más palabras!"
+      "hoyaIntro": "Ya conoces 30 letras. ¡Conozcamos el resto y leamos más palabras!",
+      "culture.n1.text": "Hoy, al hablar, la mayoría de las personas ya no distingue {ko:ㅐ} de {ko:ㅔ}; por eso es la escritura, no el sonido, la que muestra cuál lleva cada palabra.",
+      "culture.n2.text": "Las cinco letras dobles {ko:ㄲ}, {ko:ㄸ}, {ko:ㅃ}, {ko:ㅆ} y {ko:ㅉ} son sonidos tensos: la garganta se tensa y casi no sale aire, a diferencia de las letras simples y de las que llevan un soplo de aire.",
+      "culture.n3.text": "{ko:ㅘ}, {ko:ㅝ}, {ko:ㅟ} y {ko:ㅢ} se escriben uniendo dos letras vocales simples, y cada una puede decirse como un solo sonido que se desliza.",
+      "culture.n4.text": "{ko:ㅚ} puede decirse como una vocal que se desliza y, como hoy {ko:ㅐ} y {ko:ㅔ} suenan igual, {ko:ㅚ}, {ko:ㅙ} y {ko:ㅞ} suelen sonar casi igual; su forma es lo que las distingue.",
+      "culture.n5.text": "Al final de una palabra o antes de una consonante, la letra de abajo se dice como uno de siete sonidos: {ko:ㅅ ㅆ ㅈ ㅊ ㅌ} terminan como {ko:ㄷ}, en t; {ko:ㄲ ㅋ}, como {ko:ㄱ}, en k; y {ko:ㅍ}, como {ko:ㅂ}, en p.",
+      "culture.n6.text": "Cuando sigue una terminación o partícula que empieza por vocal, estas letras de abajo pasan al bloque siguiente y conservan su propio sonido: {ko:옷이} se dice osi, sin t."
     },
     "quest:stage2-letters-q1": {
       "title": "Pares de vocales ae y e",

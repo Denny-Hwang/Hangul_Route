@@ -5,7 +5,8 @@
     "episode:stage4-rites": {
       "title": "Diálogos de saludo",
       "subtitle": "Conoce a alguien, ponte al día y celebra el Año Nuevo.",
-      "hoyaIntro": "¡Practiquemos saludos: al conocer a alguien, al reencontrarse y en Año Nuevo!"
+      "hoyaIntro": "¡Practiquemos saludos: al conocer a alguien, al reencontrarse y en Año Nuevo!",
+      "culture.n1.text": "{ko:설날} (Seollal) es el Año Nuevo lunar coreano. Un saludo común ese día es {ko:새해 복 많이 받으세요}, un deseo de que la otra persona tenga un año lleno de bendiciones."
     },
     "quest:stage4-rites-q1": {
       "title": "Mucho gusto",
