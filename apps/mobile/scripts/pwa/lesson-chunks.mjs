@@ -337,6 +337,8 @@ export const SCENE_CHUNKS = Object.freeze([
   Object.freeze({ name: 'scene-letters-school', marker: 'scene-chunk:letters-school' }),
   // Row CM-37 part 2: the Holidays & Traditions scene, a hanok room on Seollal morning.
   Object.freeze({ name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' }),
+  // Row CM-37 part 3: the Nature & Animals four-season scene.
+  Object.freeze({ name: 'scene-four-seasons', marker: 'scene-chunk:four-seasons' }),
 ]);
 
 /**

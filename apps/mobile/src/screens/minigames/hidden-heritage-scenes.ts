@@ -10,6 +10,7 @@ const LOADERS: Readonly<Record<string, () => Promise<{ scene: HiddenHeritageScen
   'scene:food-market': () => import('./scenes/scene-food-market'),
   'scene:letters-school': () => import('./scenes/scene-letters-school'),
   'scene:seollal-room': () => import('./scenes/scene-seollal-room'),
+  'scene:four-seasons': () => import('./scenes/scene-four-seasons'),
 };
 
 const cache = new Map<string, HiddenHeritageScene>();
