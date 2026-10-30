@@ -135,6 +135,9 @@ export const OVERLAY_FIELDS = Object.freeze({
     "note.subject",
     "note.facts.<factId>.claim",
   ],
+  // F-CURR-002 row CM-48: a "This week in Korea" drop (content/weekly/<monday>.json): its title, its note (Korean only in
+  // `{ko:}` tokens, the same tokens in every locale) and each item's meaning.
+  week: ["title", "note", "items.<item>.gloss"],
 });
 
 /** Mirror of OPTIONAL_OVERLAY_FIELDS: applied when given, never counted missing (F-CURR-002 row CM-3A S2). */

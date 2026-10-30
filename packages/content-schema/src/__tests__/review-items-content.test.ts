@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { askedKo, normalizeKo } from '../lesson-lint-items';
 import { Stage1TableSchema, reviewItemsOf, serializeSnapshot } from '../review-items/build';
-import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from '../review-items/sources';
+import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree, weekSourcesOfTree } from '../review-items/sources';
 import { StableIdSnapshotSchema } from '../review-items/stable-ids';
 import { ReviewItemSchema, decodeReviewItems, encodeReviewItems, type ReviewItem } from '../review-items/review-item';
 import { REPO_ROOT } from './helpers/romanization-registry';
@@ -19,7 +19,7 @@ import { REPO_ROOT } from './helpers/romanization-registry';
 
 const json = (rel: string): unknown => JSON.parse(readFileSync(join(REPO_ROOT, rel), 'utf8'));
 const tree = new Map<string, unknown>();
-for (const dir of ['content/episodes', 'content/stories', 'content/vocab', 'content/packs']) {
+for (const dir of ['content/episodes', 'content/stories', 'content/vocab', 'content/packs', 'content/weekly']) {
   const walk = (rel: string): void => {
     let entries;
     try {
@@ -30,7 +30,7 @@ for (const dir of ['content/episodes', 'content/stories', 'content/vocab', 'cont
     for (const e of entries) {
       const child = `${rel}/${e.name}`;
       if (e.isDirectory() && !child.startsWith('content/stories/')) walk(child);
-      else if (e.isFile() && e.name.endsWith('.json') && /^content\/(episodes\/stage-[2-7]|stories|vocab|packs)\//.test(child)) tree.set(child, json(child));
+      else if (e.isFile() && e.name.endsWith('.json') && /^content\/(episodes\/stage-[2-7]|stories|vocab|packs|weekly)\//.test(child)) tree.set(child, json(child));
     }
   };
   walk(dir);
@@ -40,7 +40,9 @@ const snapshot = StableIdSnapshotSchema.parse(JSON.parse(snapshotText));
 const stage1 = Stage1TableSchema.parse(json(REVIEW_STAGE1_FILE));
 const lessons = lessonSourcesOfTree(tree);
 const stories = storySourcesOfTree(tree);
-const built = reviewItemsOf({ stage1, lessons, stories, ...vocabOfTree(tree), snapshot });
+// Row CM-48: the ready "This week in Korea" drops are the fourth source.
+const weeks = weekSourcesOfTree(tree);
+const built = reviewItemsOf({ stage1, lessons, stories, weeks, ...vocabOfTree(tree), snapshot });
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -168,8 +170,8 @@ describe('extraction coverage over the three sources (F-CURR-002 §4.2)', () => 
     const items = new Set(built.items.map((i) => i.id));
     expect(built.placed.length).toBeGreaterThan(stage1.occurrences.length);
     for (const { id } of built.placed) expect(items.has(id)).toBe(true);
-    const sources = new Set(built.placed.map(({ occ }) => (occ.cell.startsWith('story:') ? 'story' : occ.stage === 1 ? 'stage1' : 'lesson')));
-    expect([...sources].sort()).toEqual(['lesson', 'stage1', 'story']);
+    const sources = new Set(built.placed.map(({ occ }) => (occ.cell.startsWith('story:') ? 'story' : occ.cell.startsWith('week:') ? 'week' : occ.stage === 1 ? 'stage1' : 'lesson')));
+    expect([...sources].sort()).toEqual(['lesson', 'stage1', 'story', 'week']);
   });
 
   it('gives every Discover item of every shipped lesson an item', () => {
@@ -252,5 +254,43 @@ describe('extraction coverage over the three sources (F-CURR-002 §4.2)', () => 
       expect(occ.glossKey, occ.at).toMatch(/^quest:stage1-[a-z]+-q[0-9]+#steps\.[a-z0-9]+\.discover\.pages\.[0-9]+\.items\.[0-9]+\.word\.gloss$/);
       expect(byId.get(id), occ.at).toMatchObject({ stage: 1, cells: expect.arrayContaining([occ.cell]) });
     }
+  });
+});
+
+describe('the "This week in Korea" drops as a review-item source (F-CURR-002 §5.7, row CM-48)', () => {
+  const byId = new Map(built.items.map((i) => [i.id, i]));
+  const weekCells = (i: ReviewItem): string[] => i.cells.filter((c) => c.startsWith('week:'));
+
+  it('reads the 13 ready drops of the first quarter, from the week of 26 October 2026', () => {
+    expect(weeks.map((w) => w.file)).toHaveLength(13);
+    expect(weeks[0]?.file).toBe('content/weekly/2026-10-26.json');
+  });
+
+  it("gives every drop item an item that lists the drop's own cell", () => {
+    for (const { file, body } of weeks) {
+      const drop = body as { id: string; items: { ko: string }[] };
+      for (const { ko } of drop.items) expect(inCell(ko, drop.id, { asked: false }), `${file} ${ko}`).toBe(true);
+    }
+  });
+
+  it('homes an item only drops teach in the week shard at the stage the drop is written for, glossed at the drop field', () => {
+    const only = built.items.filter((i) => i.cells.every((c) => c.startsWith('week:')));
+    expect(only.length).toBeGreaterThanOrEqual(30);
+    for (const item of only) {
+      expect(item.home, item.id).toBe('week');
+      expect(item.stage, item.id).toBe(2);
+      expect(item.glossKey, item.id).toMatch(/^week:\d{4}-\d{2}-\d{2}#items\.[a-z0-9-]+\.gloss$|^vocab:/);
+    }
+  });
+
+  it('never moves an item the route teaches: it keeps its home, stage, gloss key and first cell, and the drop is a later cell', () => {
+    const shared = built.items.filter((i) => weekCells(i).length > 0 && i.cells.some((c) => !c.startsWith('week:')));
+    expect(shared.map((i) => i.id)).toEqual(expect.arrayContaining(['lex:baechu', 'vocab:gimchi', 'vocab:nun-snow', 'lex:bam', 'lex:saehae']));
+    for (const item of shared) {
+      expect(item.home, item.id).not.toBe('week');
+      expect(item.cells[0]?.startsWith('week:'), item.id).toBe(false);
+      expect(item.glossKey?.startsWith('week:'), item.id).toBe(false);
+    }
+    expect(byId.get('lex:baechu')?.glossKey).not.toMatch(/^week:/);
   });
 });

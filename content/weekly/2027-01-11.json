@@ -1,0 +1,70 @@
+{
+  "id": "week:2027-01-11",
+  "weekOf": "2027-01-11",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "sohan",
+  "day": "2027-01-05",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Stay Warm",
+  "noteEn": "These are the days of {ko:소한}. Next comes {ko:대한} on 20 January. Then {ko:입춘}, the start of spring, comes on 4 February.",
+  "items": [
+    {
+      "id": "nallo",
+      "ko": "난로",
+      "romanization": "nallo",
+      "en": "heater"
+    },
+    {
+      "id": "jip",
+      "ko": "집",
+      "romanization": "jip",
+      "en": "home"
+    },
+    {
+      "id": "gyul",
+      "ko": "귤",
+      "romanization": "gyul",
+      "en": "mandarin orange"
+    },
+    {
+      "id": "ttatteuthaeyo",
+      "ko": "따뜻해요",
+      "romanization": "ttatteuthaeyo",
+      "en": "It's warm."
+    },
+    {
+      "id": "mokdori",
+      "ko": "목도리",
+      "romanization": "mokdori",
+      "en": "scarf"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2027년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"소한 1월 5일 23시 10분\" / \"대한 1월 20일 16시 30분\" / \"입춘 2월 4일 10시 46분\""
+    },
+    {
+      "title": "표준국어대사전: 입춘(立春)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=274572&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 대한(大寒)과 우수(雨水) 사이에 들며, 이때부터 봄이 시작된다고 한다. 양력으로는 2월 4일경이다.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. All three dates from the KASI 2027 table; 'the start of spring' is NIKL's 입춘 entry (이때부터 봄이 시작된다고 한다). No weather claim is made. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

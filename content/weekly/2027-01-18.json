@@ -1,0 +1,77 @@
+{
+  "id": "week:2027-01-18",
+  "weekOf": "2027-01-18",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "daehan",
+  "day": "2027-01-20",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Great Cold",
+  "noteEn": "{ko:대한} comes on 20 January. The dictionary calls it the coldest time of the year. After it comes {ko:입춘}, the start of spring.",
+  "items": [
+    {
+      "id": "daehan",
+      "ko": "대한",
+      "romanization": "daehan",
+      "en": "Great Cold, a solar term"
+    },
+    {
+      "id": "ipchun",
+      "ko": "입춘",
+      "romanization": "ipchun",
+      "en": "Start of Spring, a solar term"
+    },
+    {
+      "id": "chuwoyo",
+      "ko": "추워요",
+      "romanization": "chuwoyo",
+      "en": "It's cold."
+    },
+    {
+      "id": "bom",
+      "ko": "봄",
+      "romanization": "bom",
+      "en": "spring"
+    },
+    {
+      "id": "nun",
+      "ko": "눈",
+      "romanization": "nun",
+      "en": "snow"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2027년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2027",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"대한 1월 20일 16시 30분\" / \"입춘 2월 4일 10시 46분\""
+    },
+    {
+      "title": "표준국어대사전: 대한(大寒)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=411777&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 소한(小寒)과 입춘(立春) 사이에 들며, 태양의 황경(黃經)이 300도에 이른 때로 한 해의 가장 추운 때이다. 1월 20일경이다.\""
+    },
+    {
+      "title": "표준국어대사전: 입춘(立春)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=274572&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 대한(大寒)과 우수(雨水) 사이에 들며, 이때부터 봄이 시작된다고 한다. 양력으로는 2월 4일경이다.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI 2027 table; 'the coldest time of the year' is attributed to the dictionary, as NIKL's entry says it (한 해의 가장 추운 때). 대한 is also a name of Korea (대한민국); the gloss names the solar term. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

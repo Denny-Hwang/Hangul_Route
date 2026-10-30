@@ -1,0 +1,70 @@
+{
+  "id": "week:2026-12-28",
+  "weekOf": "2026-12-28",
+  "status": "ready",
+  "kind": "holiday",
+  "topic": "dongji",
+  "day": "2026-12-22",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "A Calendar Gift",
+  "noteEn": "An old saying goes: a fan is the gift for Dano, and a calendar is the gift for {ko:동지}. People still give calendars at the end of the year.",
+  "items": [
+    {
+      "id": "dallyeok",
+      "ko": "달력",
+      "romanization": "dallyeok",
+      "en": "calendar"
+    },
+    {
+      "id": "seonmul",
+      "ko": "선물",
+      "romanization": "seonmul",
+      "en": "gift"
+    },
+    {
+      "id": "buchae",
+      "ko": "부채",
+      "romanization": "buchae",
+      "en": "hand fan"
+    },
+    {
+      "id": "saehae",
+      "ko": "새해",
+      "romanization": "saehae",
+      "en": "new year"
+    },
+    {
+      "id": "yeonmal",
+      "ko": "연말",
+      "romanization": "yeonmal",
+      "en": "the end of the year"
+    }
+  ],
+  "sources": [
+    {
+      "title": "어린이민속사전: 동지책력, 새해 달력",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=106",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"“단오 선물은 부채이고, 동지 선물은 달력이다.”라는 옛말은 이를 잘 보여 주는 예입니다.\" / \"이 풍속은 오늘날까지 이어져 지금도 연말이면 가까운 사람에게 달력을 선물하는 모습을 쉽게 볼 수 있습니다.\""
+    },
+    {
+      "title": "어린이민속사전: 동지",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다.\" / \"그래서 옛날 사람들은 동지를 새해의 시작으로 여겼고 ‘아세(亞歲)’라고 불렀습니다.\" / \"아세는 ‘작은 설’이라는 뜻입니다.\" / \"동지에는 ‘팥죽’을 만들어 먹고, ‘새해 달력’을 선물합니다.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. The saying and the custom that lives on today are the National Folk Museum of Korea's words (topic 106). 부채 is also the word for a debt; the gloss names the fan. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

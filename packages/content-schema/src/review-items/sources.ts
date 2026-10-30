@@ -1,9 +1,10 @@
 import { LESSON_FILE_RE, PACK_FILE_RE, PACK_LEVEL_NAME_RE, STORY_FILE_RE } from '../lesson-lint-items';
 import type { ThemeKey } from '../schemas/heritage-card';
-import type { LessonSource } from './extract';
+import type { LessonSource, WeekSource } from './extract';
 import { cellOfVolume } from './review-item';
 import type { SenseGroup, TopicWord } from './stable-ids';
 import type { StorySource } from './build';
+import { WEEK_DROP_FILE_RE } from '../week-drops/week-drop';
 
 /**
  * Which content files are review-item sources (F-CURR-002 §4.2, row CM-10), over a content tree
@@ -81,4 +82,13 @@ export function vocabOfTree(tree: ReadonlyMap<string, unknown>): { topicWords: T
     (g): g is SenseGroup => isRec(g) && typeof g.group === 'string' && Array.isArray(g.members) && g.members.every((m) => isRec(m) && typeof m.id === 'string' && typeof m.en === 'string'),
   );
   return { topicWords, senseGroups };
+}
+
+/** The ready "This week in Korea" drops of the tree (row CM-48), in week order. */
+export function weekSourcesOfTree(tree: ReadonlyMap<string, unknown>): WeekSource[] {
+  return [...tree.keys()]
+    .sort(byPath)
+    .filter((file) => WEEK_DROP_FILE_RE.test(file))
+    .map((file) => ({ file, body: tree.get(file) }))
+    .filter(({ body }) => isRec(body) && body.status === 'ready');
 }

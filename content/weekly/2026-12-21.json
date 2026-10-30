@@ -1,0 +1,84 @@
+{
+  "id": "week:2026-12-21",
+  "weekOf": "2026-12-21",
+  "status": "ready",
+  "kind": "holiday",
+  "topic": "dongji",
+  "day": "2026-12-22",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Winter Solstice",
+  "noteEn": "{ko:동지} is on 22 December. People eat {ko:팥죽}, red bean porridge with small round rice balls in it. Long ago, Dongji was called {ko:작은 설}, a little new year.",
+  "items": [
+    {
+      "id": "dongji",
+      "ko": "동지",
+      "romanization": "dongji",
+      "en": "Winter Solstice, a solar term"
+    },
+    {
+      "id": "patjuk",
+      "ko": "팥죽",
+      "romanization": "patjuk",
+      "en": "red bean porridge"
+    },
+    {
+      "id": "pat",
+      "ko": "팥",
+      "romanization": "pat",
+      "en": "red beans"
+    },
+    {
+      "id": "saealsim",
+      "ko": "새알심",
+      "romanization": "saealsim",
+      "en": "small round rice balls"
+    },
+    {
+      "id": "jageun-seol",
+      "ko": "작은 설",
+      "romanization": "jageun seol",
+      "en": "a little new year"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"동지 12월 22일 5시 50분\""
+    },
+    {
+      "title": "어린이민속사전: 동지",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다.\" / \"그래서 옛날 사람들은 동지를 새해의 시작으로 여겼고 ‘아세(亞歲)’라고 불렀습니다.\" / \"아세는 ‘작은 설’이라는 뜻입니다.\" / \"동지에는 ‘팥죽’을 만들어 먹고, ‘새해 달력’을 선물합니다.\""
+    },
+    {
+      "title": "어린이민속사전: 동지팥죽",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=104",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"동지에 붉은팥으로 끓인 팥죽을 ‘동지팥죽’이라고 부르는데, ‘새알심’이라는 찹쌀로 만든 동그란 모양의 경단을 함께 넣어서 끓입니다.\""
+    },
+    {
+      "title": "어린이민속사전: 아세(亞歲)",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=108",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"그래서 오래전부터 동지는 ‘작은 설’이라고도 불렀습니다.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI table. Patjuk with saealsim rice balls, and Dongji called 작은 설, are the National Folk Museum of Korea's words (topics 104, 103 and 108). Dongji is both a solar term and a holiday (§5.7); this drop is the holiday. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

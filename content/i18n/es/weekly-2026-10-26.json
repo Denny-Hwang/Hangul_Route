@@ -1,0 +1,123 @@
+{
+  "locale": "es",
+  "domain": "weekly-2026-10-26",
+  "entries": {
+    "week:2026-10-26": {
+      "title": "Cae la escarcha",
+      "note": "{ko:상강} empezó el 23 de octubre. Su nombre significa «cae la escarcha». Las mañanas y las tardes se vuelven frías, y empieza a formarse escarcha.",
+      "items.sanggang.gloss": "Cae la escarcha, un periodo solar",
+      "items.seori.gloss": "escarcha",
+      "items.gaeul.gloss": "otoño",
+      "items.achim.gloss": "mañana",
+      "items.jeonyeok.gloss": "tarde"
+    },
+    "week:2026-11-02": {
+      "title": "Empieza el invierno",
+      "note": "{ko:입동} cae el 7 de noviembre. Se dice que ese día empieza el invierno. El final del otoño es la temporada del kimjang: las familias preparan mucho kimchi para el invierno.",
+      "items.ipdong.gloss": "Comienzo del invierno, un periodo solar",
+      "items.gyeoul.gloss": "invierno",
+      "items.gimjang.gloss": "preparar mucho kimchi para el invierno",
+      "items.baechu.gloss": "col china",
+      "items.mu.gloss": "rábano"
+    },
+    "week:2026-11-09": {
+      "title": "Kimjang entre todos",
+      "note": "Preparar y compartir kimchi para el invierno se llama {ko:김장}. Los vecinos lo preparan juntos y lo comparten. La UNESCO inscribió «Kimjang: modo de preparar y compartir conservas kimchi en la República de Corea» en 2013.",
+      "items.gimchi.gloss": "kimchi",
+      "items.sogeum.gloss": "sal",
+      "items.maneul.gloss": "ajo",
+      "items.gochutgaru.gloss": "chile rojo en polvo",
+      "items.iut.gloss": "vecino"
+    },
+    "week:2026-11-16": {
+      "title": "Nieve ligera",
+      "note": "{ko:소설} llega el 22 de noviembre. Su nombre significa «nieve ligera». Está entre {ko:입동}, el comienzo del invierno, y {ko:대설}, «nieve abundante».",
+      "items.soseol.gloss": "Nieve ligera, un periodo solar",
+      "items.nun.gloss": "nieve",
+      "items.cheonnun.gloss": "la primera nieve del invierno",
+      "items.baram.gloss": "viento",
+      "items.chuwoyo.gloss": "Hace frío."
+    },
+    "week:2026-11-23": {
+      "title": "Abrígate bien",
+      "note": "Estamos en los días de {ko:소설}. Duran hasta {ko:대설}, el 7 de diciembre. ¡Es hora de bufanda y guantes!",
+      "items.mokdori.gloss": "bufanda",
+      "items.janggap.gloss": "guantes",
+      "items.moja.gloss": "gorro",
+      "items.ot.gloss": "ropa",
+      "items.ttatteuthaeyo.gloss": "Hace calorcito."
+    },
+    "week:2026-11-30": {
+      "title": "Los 24 periodos solares",
+      "note": "El año tiene 24 {ko:절기}, periodos solares, separados por unos 15 días. Siguen al sol durante el año. Son un calendario compartido en Asia oriental. La UNESCO inscribió «Los Veinticuatro Periodos Solares» de China en 2016.",
+      "items.jeolgi.gloss": "periodo solar",
+      "items.bom.gloss": "primavera",
+      "items.yeoreum.gloss": "verano",
+      "items.gaeul.gloss": "otoño",
+      "items.gyeoul.gloss": "invierno"
+    },
+    "week:2026-12-07": {
+      "title": "Nieve abundante",
+      "note": "{ko:대설} es el 7 de diciembre. Su nombre significa «nieve abundante». Un día de nieve es bueno para hacer un muñeco de nieve o una guerra de bolas de nieve.",
+      "items.daeseol.gloss": "Nieve abundante, un periodo solar",
+      "items.nunsaram.gloss": "muñeco de nieve",
+      "items.nunssaum.gloss": "guerra de bolas de nieve",
+      "items.sseolmae.gloss": "trineo",
+      "items.nun.gloss": "nieve"
+    },
+    "week:2026-12-14": {
+      "title": "Noches largas",
+      "note": "Ahora las noches son largas. La semana que viene llega {ko:동지}, el día con la noche más larga y el día más corto del año.",
+      "items.bam.gloss": "noche",
+      "items.nat.gloss": "las horas de luz",
+      "items.byeol.gloss": "estrella",
+      "items.dal.gloss": "luna",
+      "items.haneul.gloss": "cielo"
+    },
+    "week:2026-12-21": {
+      "title": "Solsticio de invierno",
+      "note": "{ko:동지} es el 22 de diciembre. Se come {ko:팥죽}, unas gachas de judías rojas con bolitas de arroz. Antiguamente, a Dongji lo llamaban {ko:작은 설}, un pequeño año nuevo.",
+      "items.dongji.gloss": "Solsticio de invierno, un periodo solar",
+      "items.patjuk.gloss": "gachas de judías rojas",
+      "items.pat.gloss": "judías rojas",
+      "items.saealsim.gloss": "bolitas de arroz",
+      "items.jageun-seol.gloss": "un pequeño año nuevo"
+    },
+    "week:2026-12-28": {
+      "title": "Un calendario de regalo",
+      "note": "Un viejo dicho dice: el regalo de Dano es un abanico, y el de {ko:동지}, un calendario. Todavía hoy se regalan calendarios a fin de año.",
+      "items.dallyeok.gloss": "calendario",
+      "items.seonmul.gloss": "regalo",
+      "items.buchae.gloss": "abanico",
+      "items.saehae.gloss": "año nuevo",
+      "items.yeonmal.gloss": "fin de año"
+    },
+    "week:2027-01-04": {
+      "title": "Pequeño frío",
+      "note": "{ko:소한} llega el 5 de enero. Su nombre significa «pequeño frío». Está entre {ko:동지} y {ko:대한}.",
+      "items.sohan.gloss": "Pequeño frío, un periodo solar",
+      "items.chuwi.gloss": "el frío",
+      "items.eoreum.gloss": "hielo",
+      "items.gamgi.gloss": "resfriado",
+      "items.ibul.gloss": "manta"
+    },
+    "week:2027-01-11": {
+      "title": "Calentitos en casa",
+      "note": "Estamos en los días de {ko:소한}. Después llega {ko:대한}, el 20 de enero. Y luego {ko:입춘}, el comienzo de la primavera, el 4 de febrero.",
+      "items.nallo.gloss": "estufa",
+      "items.jip.gloss": "casa",
+      "items.gyul.gloss": "mandarina",
+      "items.ttatteuthaeyo.gloss": "Hace calorcito.",
+      "items.mokdori.gloss": "bufanda"
+    },
+    "week:2027-01-18": {
+      "title": "Gran frío",
+      "note": "{ko:대한} llega el 20 de enero. El diccionario dice que es la época más fría del año. Después llega {ko:입춘}, el comienzo de la primavera.",
+      "items.daehan.gloss": "Gran frío, un periodo solar",
+      "items.ipchun.gloss": "Comienzo de la primavera, un periodo solar",
+      "items.chuwoyo.gloss": "Hace frío.",
+      "items.bom.gloss": "primavera",
+      "items.nun.gloss": "nieve"
+    }
+  }
+}

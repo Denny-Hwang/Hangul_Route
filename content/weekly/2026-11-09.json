@@ -1,0 +1,77 @@
+{
+  "id": "week:2026-11-09",
+  "weekOf": "2026-11-09",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "ipdong",
+  "day": "2026-11-07",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Kimjang Together",
+  "noteEn": "Making and sharing kimchi for the winter is called {ko:김장}. Neighbours make it together and share it. UNESCO inscribed Kimjang, making and sharing kimchi in the Republic of Korea, in 2013.",
+  "items": [
+    {
+      "id": "gimchi",
+      "ko": "김치",
+      "romanization": "gimchi",
+      "en": "kimchi"
+    },
+    {
+      "id": "sogeum",
+      "ko": "소금",
+      "romanization": "sogeum",
+      "en": "salt"
+    },
+    {
+      "id": "maneul",
+      "ko": "마늘",
+      "romanization": "maneul",
+      "en": "garlic"
+    },
+    {
+      "id": "gochutgaru",
+      "ko": "고춧가루",
+      "romanization": "gochutgaru",
+      "en": "red pepper powder"
+    },
+    {
+      "id": "iut",
+      "ko": "이웃",
+      "romanization": "iut",
+      "en": "neighbour"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+      "publisher": "UNESCO Intangible Cultural Heritage",
+      "url": "https://ich.unesco.org/en/RL/kimjang-making-and-sharing-kimchi-in-the-republic-of-korea-00881",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"Inscribed in 2013 (8.COM) on the Representative List of the Intangible Cultural Heritage of Humanity\" / \"Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi\" / \"the custom of exchanging kimchi among households\""
+    },
+    {
+      "title": "한국의 인류무형문화유산: 김치와 김장문화",
+      "publisher": "Korea Heritage Service (국가유산청) — 국가유산포털",
+      "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FCulHeritage%2FCulHeritage_16.jsp&pageNo=1_3_2_0",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"김치와 김장문화\" / \"2013년 ‘유네스코 인류무형문화유산 대표목록’으로 등재되었다.\""
+    },
+    {
+      "title": "표준국어대사전: 김장",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=400037&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"겨우내 먹기 위하여 김치를 한꺼번에 많이 담그는 일. 또는 그렇게 담근 김치.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. UNESCO status claimed only for the exact element under its UNESCO name in English and Spanish (the Spanish page's own title); the Korean note names the element as the Korea Heritage Service page does (김장문화) with its inscription sentence. 'Neighbours make it together and share it' restates UNESCO's 'communities collectively make and share' and 'exchanging kimchi among households'. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}
