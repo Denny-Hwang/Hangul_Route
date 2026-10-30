@@ -424,6 +424,28 @@ describe('Realia Read (F-CURR-001 G-2; design/screens/minigame-realia-read READM
     expect(ko.summary(ko.kind.priceCards, 3)).toBe('가격표, 3줄');
   });
 
+  it('names the eight CM-47 sheets (F-CURR-002 row CM-47) in each locale, as group names with a line count', () => {
+    const names = (locale: 'en' | 'es' | 'ko') => {
+      const kind = getMessages(locale).a11y.minigame.realia.kind;
+      return [kind.recipe, kind.receipt, kind.label, kind.forecast, kind.calendar, kind.timetable, kind.map, kind.poster];
+    };
+    expect(names('en')).toEqual(['Recipe card', 'Receipt', 'Food label', 'Weather forecast', 'Calendar', 'Timetable', 'Map', 'Poster']);
+    expect(names('es')).toEqual(['Receta', 'Recibo', 'Etiqueta de alimento', 'Pronóstico del tiempo', 'Calendario', 'Horario', 'Mapa', 'Cartel']);
+    expect(names('ko')).toEqual(['요리법 카드', '영수증', '식품 라벨', '일기 예보', '달력', '시간표', '지도', '포스터']);
+    const en = m.a11y.minigame.realia;
+    expect(en.summary(en.kind.timetable, 3)).toBe('Timetable, 3 lines');
+    expect(en.summary(en.kind.receipt, 4)).toBe('Receipt, 4 lines');
+    const es = getMessages('es').a11y.minigame.realia;
+    expect(es.summary(es.kind.timetable, 3)).toBe('Horario, 3 líneas');
+    const ko = getMessages('ko').a11y.minigame.realia;
+    expect(ko.summary(ko.kind.receipt, 4)).toBe('영수증, 4줄');
+    // Every name is distinct within its locale, so two sheets never read alike.
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const all = Object.values(getMessages(locale).a11y.minigame.realia.kind);
+      expect(new Set(all).size, locale).toBe(all.length);
+    }
+  });
+
   it('names the marks and the directions', () => {
     expect(m.a11y.minigame.realia).toMatchObject({ lineHint: 'Tap to hear it', found: 'Found here', lookHere: 'Look here' });
     expect(m.a11y.minigame.realia.dir).toEqual({ left: 'to the left', right: 'to the right' });
