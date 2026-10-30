@@ -430,6 +430,10 @@ export const a11y = {
     slot: 'gap',
     /** A sentence-build move, announced politely (AMENDMENTS-LECTURE-V2 section 10, LV-S3): the tile just placed. */
     tilePlaced: (word: string) => `${word} placed`,
+    /** A tap, click or key 1 to 4 points at an option (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2), announced politely. */
+    pointed: (n: number) => `Option ${n} pointed at`,
+    /** The pointed option tapped again: nothing is pointed at now. */
+    unpointed: 'No option pointed at',
   },
   /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
   who: {

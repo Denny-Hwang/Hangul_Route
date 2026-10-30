@@ -15,7 +15,8 @@ import { SAMPLES } from './samples';
  * message (F-I18N-001 section 3.4 rule 5).
  */
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
-const JUDGING = /\b(wrong|fail\w*|miss\w*|incorrect|score\w*|rank\w*|points?)\b/i;
+/** "Points" as a score judges; "point at" an option (AMENDMENTS-PRESENTER-NAV section 7.3) is the gesture and does not. */
+const JUDGING = /\b(wrong|fail\w*|miss\w*|incorrect|score\w*|rank\w*|points?)\b(?! at\b)/i;
 /** "+30 s", "{n} min", "{n} s": unit symbols, the same in Spanish. */
 const SHARED_ES = new Set(['timer.add.cta', 'timer.minutes', 'timer.seconds']);
 
@@ -38,7 +39,8 @@ const a11yPaths = ['answerMark', 'timerLeft'];
 describe('learner.presenter class tools (F-TCH-004 PR 9)', () => {
   it('has the README keys with their English values', () => {
     const p = en.learner.presenter;
-    expect(learnerPaths).toHaveLength(49);
+    // 49, plus Help's point line and point row (AMENDMENTS-PRESENTER-NAV section 13, row PN-5).
+    expect(learnerPaths).toHaveLength(51);
     expect(p.quiz.sound).toBe('Which letter makes this sound?');
     expect(p.quiz.answer).toBe("Hoya's answer");
     expect(p.timer.done).toBe('All done!');

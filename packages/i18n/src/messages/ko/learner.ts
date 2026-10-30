@@ -1812,10 +1812,14 @@ export const learner = {
       romanizationAlways: '항상',
       romanizationTap: '누를 때까지 숨기기',
       key: { space: '스페이스 바', backspace: '백스페이스' },
+      touch: {
+        point: '선택지를 누르면 표시만 돼요. 정답은 보여 주지 않아요.',
+      },
       row: {
         next: '다음',
         back: '이전',
         first: '처음과 마지막 슬라이드',
+        point: '선택지 표시하기',
         blank: '화면 가리기',
         sound: '소리 다시 듣기',
         strokes: '획순 다시 보기',

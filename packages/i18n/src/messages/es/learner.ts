@@ -1878,10 +1878,14 @@ export const learner = {
       romanizationAlways: 'siempre',
       romanizationTap: 'oculta hasta tocar',
       key: { space: 'Espacio', backspace: 'Retroceso' },
+      touch: {
+        point: 'Toca una opción para señalarla. No muestra la respuesta.',
+      },
       row: {
         next: 'Avanzar',
         back: 'Anterior',
         first: 'Primera y última',
+        point: 'Señalar una opción',
         blank: 'Pantalla en blanco',
         sound: 'Repetir el sonido',
         strokes: 'Repetir los trazos',

@@ -2441,10 +2441,16 @@ export const learner = {
       romanizationAlways: 'always',
       romanizationTap: 'hide until tapped',
       key: { space: 'Space', backspace: 'Backspace' },
+      /** The Touch and mouse lines above the key rows (AMENDMENTS-PRESENTER-NAV section 9.2); `point` is owner choice O2 (row PN-5). */
+      touch: {
+        point: 'Tap an answer to point at it. It does not show the answer.',
+      },
       row: {
         next: 'Next',
         back: 'Previous',
         first: 'First and last slide',
+        /** Keys 1 to 4 (section 7.3). */
+        point: 'Point at an answer',
         blank: 'Blank the screen',
         sound: 'Play the sound again',
         strokes: 'Replay the stroke guide',
