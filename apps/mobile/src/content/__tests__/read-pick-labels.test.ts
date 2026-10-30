@@ -49,6 +49,24 @@ describe('Read Pick Meaning: options in the UI language (row CM-3A S2)', () => {
     expect(missing).toEqual([]);
   });
 
+  // A ko label is Korean text beside a Korean prompt: one that shares a syllable with the prompt lets a learner match
+  // the text instead of reading the word (김밥 beside "김에 밥과 ..."), or lures them to a distractor (비 "구름에서 ..."
+  // when the prompt is 구름). The labels of a Read Pick round share no syllable with its prompt.
+  it('ko: no Read Pick label shares a syllable with its round\'s prompt', () => {
+    const cues: string[] = [];
+    for (const [ref, scope] of readPick) {
+      for (const round of scope.listenPick!.rounds) {
+        const syllables = new Set([...round.prompt.ko].filter((c) => /[\uac00-\ud7a3]/.test(c)));
+        for (const option of round.options) {
+          const label = OVERLAYS.ko[ref]?.[`listenPick.rounds.${round.id}.options.${option.id}.label`] ?? '';
+          const shared = [...label].filter((c) => syllables.has(c));
+          if (shared.length > 0) cues.push(`${ref} ${round.id} ${option.id}: ${[...new Set(shared)].join('')}`);
+        }
+      }
+    }
+    expect(cues).toEqual([]);
+  });
+
   it('every shipped Read Pick round keeps its shape (meanings only; a scope all read or all heard)', () => {
     const issues = Object.entries(ALL_LESSON_SCOPES)
       .filter(([, scope]) => scope.kind === 'listen-pick')
