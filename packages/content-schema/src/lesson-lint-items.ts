@@ -206,13 +206,47 @@ export function practiceCheckItems(quest: LessonBodyQuest): string[] {
 
 // ---- pronunciation ----------------------------------------------------------------------------------
 
+/** Medial indices (Unicode block order, as MEDIAL_RR) of the vowels folded by `foldMergedVowels`. */
+const MEDIAL_AE = 1;
+const MEDIAL_YAE = 3;
+const MEDIAL_E = 5;
+const MEDIAL_YE = 7;
+const MEDIAL_WAE = 10;
+const MEDIAL_OE = 11;
+const MEDIAL_WE = 15;
+const MEDIAL_UI = 19;
+const MEDIAL_I_VOWEL = 20;
+
+/**
+ * Spells each block with the vowel it is said with: ㅐ and ㅔ, ㅒ and ㅖ, and ㅙ, ㅚ and ㅞ are one sound in
+ * present-day speech and in a device voice (개 and 게, 얘 and 예, 왜, 외 and 웨). ㅖ after a consonant other
+ * than ㅇ or ㄹ may be said [ㅔ] (계 [게]), and ㅢ after a consonant is said [ㅣ] (희 [히]), as the standard
+ * pronunciation allows (표준 발음법 제5항). So a word is kept out of Dictation when it has such a twin.
+ */
+function foldMergedVowels(ko: string): string {
+  return [...ko]
+    .map((ch) => {
+      const parts = decomposeSyllable(ch);
+      if (parts === null) return ch;
+      let medial = parts.medial;
+      if (medial === MEDIAL_AE) medial = MEDIAL_E;
+      else if (medial === MEDIAL_YAE) medial = MEDIAL_YE;
+      else if (medial === MEDIAL_WAE || medial === MEDIAL_OE) medial = MEDIAL_WE;
+      if (medial === MEDIAL_YE && parts.initial !== 'ㅇ' && parts.initial !== 'ㄹ') medial = MEDIAL_E;
+      if (medial === MEDIAL_UI && parts.initial !== 'ㅇ') medial = MEDIAL_I_VOWEL;
+      return medial === parts.medial ? ch : (composeSyllable({ ...parts, medial }) as string);
+    })
+    .join('');
+}
+
 /**
  * A key equal for two spellings that sound the same: the F-CNT-002 converter is
  * pronunciation based (coda neutralisation, liaison, palatalisation, nasalisation), so
- * 낫, 낮 and 낯 all give `nat`, and 같이 and 가치 both give `gachi`. Spaces are not heard.
+ * 낫, 낮 and 낯 all give `nat`, and 같이 and 가치 both give `gachi`. The vowels said alike are
+ * folded first (`foldMergedVowels`), so 개 and 게 give one key. Spaces are not heard.
  */
 export function pronunciationKey(ko: string): string {
-  return romanize(normalizeKo(ko)).text.replace(/\s+/g, '').toLowerCase();
+  return romanize(foldMergedVowels(normalizeKo(ko))).text.replace(/\s+/g, '').toLowerCase();
 }
 
 /** Finals that split when the next block starts with ㅇ: [kept, moved]; ㄲ and ㅆ move whole. */
