@@ -10,7 +10,7 @@ import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
 import { MARKER_BODY_FACTOR } from '../../../logic/lecture/stage-constants';
 import { cleanup, render, unmount } from '../../../test-support/render';
-import { PresenterViewProvider } from '../presenter-context';
+import { PresenterViewProvider, TaughtKo as TaughtKoType } from '../presenter-context';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER } from '../stage-metrics';
 import { pictureCrowded, QuizOptions } from '../slides/QuizParts';
 import { QuizSlide } from '../slides/QuizSlide';
@@ -275,6 +275,28 @@ describe('RealiaQuestionSlide: the sheet fits on its own, and a crowded picture 
     expect(question()).toBe(presenter.size.body);
     expect(fitOf(grid!, 'presenter-realia-question-content')).toBe('0');
     await unmount(grid!);
+  });
+
+  it('a Cloze Pick value gap (row CM-3A S6): from level 2 its sentence key is at body size, at level 4 the question at caption size', async () => {
+    const cloze = REALIA_ALL.find((s) => s.prompt.key?.ko.includes('___') === true && s.options.every((o) => o.picture === undefined));
+    expect(cloze, 'a Stage 6 Cloze Pick value gap keyed by its sentence').toBeDefined();
+    const r = await mount(<RealiaQuestionSlide slide={cloze!} shown={QUESTION} romanization="always" />, { 'presenter-realia-question-content': 900 });
+    const key = (): unknown => composite(r.root, 'presenter-realia-key').findByType(TaughtKoType).props.size;
+    const question = (): unknown => styleOf(composite(r.root, 'presenter-quiz-question')).fontSize;
+    expect([key(), question()]).toEqual([presenter.size.prompt, presenter.size.prompt]);
+    await layout(r, 'presenter-realia-question', 504);
+    const seen: unknown[][] = [];
+    for (let step = 1; step <= 4; step += 1) {
+      await layout(r, 'presenter-realia-question-content', 900 + step);
+      seen.push([fitOf(r, 'presenter-realia-question-content'), key(), question()]);
+    }
+    expect(seen).toEqual([
+      ['1', presenter.size.prompt, presenter.size.prompt],
+      ['2', presenter.size.body, presenter.size.body],
+      ['3', presenter.size.body, presenter.size.body],
+      ['4', presenter.size.body, presenter.size.caption],
+    ]);
+    await unmount(r);
   });
 });
 

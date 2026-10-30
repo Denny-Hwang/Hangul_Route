@@ -30,10 +30,11 @@ export function isRealiaQuestion(slide: Slide): slide is RealiaQuestionBody {
 
 /**
  * A slide that fits itself (V8's measured fallback, `nextFitLevel`): level 1 draws compact rows, level 2 the
- * question at body size (a long question in the column beside the sheet), level 3 the rows' romanization at
- * caption size.
+ * question and a sentence key (a Cloze Pick value gap, row CM-3A S6) at body size (a long question in the column
+ * beside the sheet), level 3 the rows' romanization at caption size, level 4 the question at caption size (an es or
+ * ko meaning line of a Cloze Pick value gap beside the price cards, row CM-3A S6; never below the stage's 18 px floor).
  */
-const MAX_LEVEL = 3;
+const MAX_LEVEL = 4;
 
 /**
  * Realia question (design/screens/presenter/slide-realia.md "Realia question", V7; AMENDMENTS-LECTURE-V2
@@ -74,7 +75,7 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
   const [crowded, setCrowded] = useState(false);
   useEffect(() => setCrowded(false), [unit]);
   const crowd = useCallback(() => setCrowded(true), []);
-  const promptSize = size(fit.level >= 2 || crowded ? presenter.size.body : presenter.size.prompt);
+  const promptSize = size(fit.level >= 4 ? presenter.size.caption : fit.level >= 2 || crowded ? presenter.size.body : presenter.size.prompt);
   return (
     <View testID="presenter-realia-question" onLayout={onRoom} style={{ flex: 1, flexDirection: 'row', alignItems: rows ? 'center' : 'stretch', gap: units(unit, STAGE_GAP), minHeight: 0 }}>
       <View style={{ justifyContent: 'center' }}>
@@ -106,7 +107,7 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
           row keeps its height and the options never move at the reveal.
         */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: units(unit, spacing.xl), rowGap: units(unit, spacing.sm) }}>
-          {prompt.key !== undefined ? <KeyChip ko={prompt.key.ko} romanization={prompt.key.romanization} rom={rom} /> : null}
+          {prompt.key !== undefined ? <KeyChip ko={prompt.key.ko} romanization={prompt.key.romanization} rom={rom} small={fit.level >= 2 && prompt.key.ko.includes(CLOZE_GAP)} /> : null}
           <View style={{ flexGrow: 1, flexBasis: units(unit, REALIA_ASK_MIN), minWidth: 0, minHeight: units(unit, touchTarget.hero), justifyContent: 'center' }}>
             <View testID="presenter-realia-ask" {...revealProps(!revealed)}>
               <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.primary }}>
@@ -131,9 +132,10 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
 /**
  * The word the question is about: its Korean at `presenter.size.prompt` and its romanization, on the chip look of taught
  * Korean. A Cloze Pick value gap keys its question by its whole sentence (row CM-30, first shipped in row CM-3A S6), so
- * the chip wraps its two parts and never grows past the key row.
+ * the chip wraps its two parts and never grows past the key row; from fit level 2 a sentence key is drawn a size smaller
+ * (body and caption), as the question is, so the price cards' question fits beside its sheet.
  */
-function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; rom: boolean }): ReactElement {
+function KeyChip({ ko, romanization, rom, small }: { ko: string; romanization: string; rom: boolean; small: boolean }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const chip = useChipStyle();
@@ -146,9 +148,9 @@ function KeyChip({ ko, romanization, rom }: { ko: string; romanization: string; 
       accessibilityLabel={rom ? koreanTextLabel(said, spokenGap(romanization, blank)) : said}
       style={{ ...chip, flexDirection: 'row', flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1, alignItems: 'baseline', columnGap: units(unit, spacing.md), paddingVertical: units(unit, spacing.xs), paddingHorizontal: units(unit, spacing.lg) }}
     >
-      <TaughtKo size={size(presenter.size.prompt)}>{ko}</TaughtKo>
+      <TaughtKo size={size(small ? presenter.size.body : presenter.size.prompt)}>{ko}</TaughtKo>
       {/* text.secondary misses 7:1 on brand.secondaryLight (presenter.v1.md), so the romanization is text.primary here. */}
-      <Text {...KOREAN_LINE_BREAK} aria-hidden={!rom} style={{ fontSize: size(presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: rom ? 1 : 0 }}>
+      <Text {...KOREAN_LINE_BREAK} aria-hidden={!rom} style={{ fontSize: size(small ? presenter.size.caption : presenter.size.body), fontWeight: typography.weight.semibold, color: colors.text.primary, opacity: rom ? 1 : 0 }}>
         {romanization}
       </Text>
     </View>
