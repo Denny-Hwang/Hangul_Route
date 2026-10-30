@@ -115,7 +115,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the cloze-pick-chunk) measures 4,762,235 B raw / 1,269,443 B gzip (release `build:web`, Metro cache cleared)
   // on main 524961dae, whose own release build measures 4,751,444 B raw: +10,791 B. The line is that measurement plus a
   // 2,765 B rounding margin.
-  startBundleRaw: 4_765_000,
+  // F-CURR-002 CM-3A S6 (the Stage 6 Check rotation, stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, each under its
+  // own line alone) measures 4,783,796 B raw / 1,276,277 B gzip (release `build:web`, Metro cache cleared) with the five
+  // games merged together: their doors and fallbacks add up past 4,765,000 B, and the row itself adds about 207 B (the
+  // Stage 6 Check kinds and the other-direction value gap rule, which the lesson parse enforces as validate-content
+  // does). The line is that measurement plus a 6,204 B rounding margin.
+  startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
