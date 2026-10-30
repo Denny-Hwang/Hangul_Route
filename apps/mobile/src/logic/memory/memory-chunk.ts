@@ -21,6 +21,9 @@ import { createCellCheckApi, type CellCheckApi } from '../reviews/cell-check-api
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
+import type { SourceVisibility } from '../reviews/engine';
+import { createWeekPracticeApi, type WeekPracticeApi } from '../reviews/week-practice';
+import { weekDrops } from '../../content/week-drops';
 import { NO_GAME_FORMATS, type GameFormats } from '../reviews/review-rounds';
 import { createStageCheckApi, type StageCheckApi } from '../reviews/stage-check-api';
 import { notifyProgressPersisted } from '../sync/persist-hook';
@@ -51,6 +54,17 @@ function reviewGames(profileId: string): GameFormats {
   const shape = currFlagOn('game.match-shape', profileId);
   return build && shape ? BOTH_GAMES : build ? SYLLABLE_BUILD : shape ? MATCH_SHAPE : NO_GAME_FORMATS;
 }
+
+/** What the learner can see (section 12.2): the volumes, the packs and, row CM-48, the week drops. */
+const visibility = (profileId: string): SourceVisibility => ({
+  volumes: currFlagOn('volumes', profileId),
+  topicPacks: currFlagOn('topicPacks', profileId),
+  pack: (key) => currFlagOn(`pack.${key}`, profileId),
+  weeklyDrop: currFlagOn('weeklyDrop', profileId),
+});
+
+/** Loads the chunk that holds a cell's es and ko meanings: the week drops for a drop's cell (row CM-48), else its lesson chunk. */
+const ensureGlossCell = (cell: string): Promise<void> => (cell.startsWith('week:') ? weekDrops.ensure().then(() => undefined) : lessonContent.ensureCells([cell]));
 
 let runtime: MemoryRuntime | null = null;
 
@@ -123,7 +137,7 @@ export function dailyReviewApi(): DailyReviewApi {
     items: () => reviewItemStore.ensure(),
     // With answers not recorded the review would repeat itself, so `memoryRecord` gates it too (daily-review.md).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('dailyReview', profileId),
-    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    visibility,
     games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
@@ -139,7 +153,7 @@ export function dailyReviewApi(): DailyReviewApi {
     recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
     track: (event) => void track(event),
     overlays: (locale) => CONTENT_OVERLAYS[locale],
-    ensureCell: (cell) => lessonContent.ensureCells([cell]),
+    ensureCell: ensureGlossCell,
     random: () => Math.random(),
   });
   return dailyReview;
@@ -158,7 +172,7 @@ export function cellCheckApi(): CellCheckApi {
     items: () => reviewItemStore.ensure(),
     // With answers not recorded a Check could latch a result while no memory state moved (cell-check.md States).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('cellCheck', profileId),
-    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    visibility,
     games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
@@ -215,7 +229,7 @@ export function stageCheckApi(): StageCheckApi {
     // With answers not recorded a check could latch a result while no memory state moved (stage-check.md States).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('stageChecks', profileId),
     cells: (stage) => gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).map((e) => e.id),
-    visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    visibility,
     games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
@@ -272,3 +286,30 @@ export const questReviewPlanner = {
     () => undefined,
   ),
 };
+
+let weekPractice: WeekPracticeApi | null = null;
+
+/**
+ * The practice of a "This week in Korea" drop (F-CURR-002 §5.7, row CM-48), here beside the review engine and the
+ * store it reads, so the drop's screen chunk (`screens/week-drop/week-drop-chunk.tsx`) shares no module with this one.
+ * It plans from the learner's states while `memoryRecord` records them, and from none otherwise.
+ */
+export function weekPracticeApi(): WeekPracticeApi {
+  weekPractice ??= createWeekPracticeApi({
+    items: () => reviewItemStore.ensure(),
+    records: (profileId) => memoryRecordsFor(profileId),
+    hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
+    ensureSeeded: (profileId) => memoryRuntime().ensureSeeded(profileId),
+    file: (profileId) => memoryRuntime().file(profileId),
+    vocab: (profileId) => useProgressStore.getState().byProfile[profileId],
+    voice: () => {
+      const audio = useAudioStore.getState();
+      return audio.tts.state === 'ready' && !audio.muted;
+    },
+    visibility,
+    overlays: (locale) => CONTENT_OVERLAYS[locale],
+    ensureCell: ensureGlossCell,
+    recordAnswers: (profileId, answers) => recordAnswers(profileId, answers),
+  });
+  return weekPractice;
+}

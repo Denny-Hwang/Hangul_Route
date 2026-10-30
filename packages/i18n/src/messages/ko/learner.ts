@@ -2163,4 +2163,10 @@ export const learner = {
     pieceHome: '말 하나가 도착했어요!',
     home: '도착',
   },
+  weekDrop: {
+    heading: '이번 주의 한국',
+    practice: { cta: '낱말 연습하기' },
+    done: '이번 주는 다 했어요',
+    next: '다음 주에 새 이야기가 와요.',
+  },
 } satisfies DeepPartial<Messages['learner']>;

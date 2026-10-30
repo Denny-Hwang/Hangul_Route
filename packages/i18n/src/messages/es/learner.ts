@@ -2228,4 +2228,10 @@ export const learner = {
     pieceHome: '¡Una ficha llegó a la meta!',
     home: 'Meta',
   },
+  weekDrop: {
+    heading: 'Esta semana en Corea',
+    practice: { cta: 'Practica las palabras' },
+    done: 'Listo por esta semana',
+    next: 'La semana que viene habrá uno nuevo.',
+  },
 } satisfies DeepPartial<Messages['learner']>;

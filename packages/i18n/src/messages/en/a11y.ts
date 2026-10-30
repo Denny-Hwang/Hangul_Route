@@ -560,4 +560,8 @@ export const a11y = {
     throw: (ko: string, romanization: string, n: number) =>
       plural('en', n, { one: `Throw: ${ko}, ${romanization}. Your piece moved 1 station.`, other: `Throw: ${ko}, ${romanization}. Your piece moved ${n} stations.` }),
   },
+  /** This week in Korea (F-CURR-002 row CM-48): the Home card, one button; `state` is its minutes or "Done for this week". */
+  weekDrop: {
+    card: (title: string, state: string) => `This week in Korea: ${title}. ${state}.`,
+  },
 } as const;

@@ -1,6 +1,7 @@
 import type { UiLocale } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { episodeById, episodesAll, questsAll } from '../../content';
+import { weekDrops } from '../../content/week-drops';
 import { lessonContent } from '../../content/lessons';
 import { journeyContent } from '../../content/sync-context';
 import { useAudioStore } from '../../store/audio-store';
@@ -55,6 +56,8 @@ async function contextFor(read: ReviewInputs, profileId: string): Promise<Engine
       volumes: currFlagOn('volumes', profileId),
       topicPacks: currFlagOn('topicPacks', profileId),
       pack: (key) => currFlagOn(`pack.${key}`, profileId),
+      // Row CM-48: an item whose only source is a hidden week drop is skipped.
+      weeklyDrop: currFlagOn('weeklyDrop', profileId),
     },
   };
 }
@@ -65,7 +68,12 @@ async function glossesIn(ctx: EngineContext, itemIds: readonly string[], locale:
   if (locale === 'en') return;
   const cells = new Set<string>();
   for (const id of itemIds) for (const cell of ctx.index.byId.get(id)?.cells ?? []) cells.add(cell);
-  await lessonContent.ensureCells([...cells]).catch(() => undefined);
+  // Row CM-48: a week drop's word meanings are in the week-drop chunk, not a lesson cell's.
+  const week = [...cells].some((c) => c.startsWith('week:'));
+  await Promise.all([
+    lessonContent.ensureCells([...cells].filter((c) => !c.startsWith('week:'))).catch(() => undefined),
+    week ? weekDrops.ensure().catch(() => undefined) : undefined,
+  ]);
 }
 
 /** The grid cells in route order (F-ROUTE-001 section 3.2): each at the place of its first quest. */

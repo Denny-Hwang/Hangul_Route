@@ -166,6 +166,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   reviewItemsRaw: 150_000,
   reviewItemsGzip: 30_000,
+  // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
+  // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,
+  // the same lines). Set at CM-48 from the first 13 drops (24,158 B raw / 6,658 B gzip as generated); a year of drops is
+  // about four times that, so the batch that crosses it raises both lines with its measurement or splits the chunk.
+  weekDropsRaw: 60_000,
+  weekDropsGzip: 16_000,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -298,6 +304,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
+  // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
+  Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
   // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/dictation-entry.ts`).
@@ -431,7 +440,7 @@ export function withWholeClipPack(report, budget = PRECACHE_BUDGET) {
  * precached clips (AMENDMENTS-AUDIO-CLIPS AC-6) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], scenes?: readonly { name: string }[], audioPacks?: readonly { name: string }[], clips?: { count: number, bytes: number }, bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     audioPackChunks: chunkTotals(audioPacks, bundles),
@@ -443,6 +452,8 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
+    // Row CM-48: the week-drop chunk.
+    weekDropChunks: chunkTotals(weekDrops, bundles),
     screenChunks: chunkTotals(screens, bundles),
     sceneChunks: chunkTotals(scenes, bundles),
     precache: { count: precache.count, raw: precache.size },
@@ -467,6 +478,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
     lines.push(
       `  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip  (largest ${report.rootChunks.largest?.raw ?? 0} B raw, ceiling ${budget.rootChunkRaw} B each)`,
+    );
+  }
+  if (report.weekDropChunks !== undefined && report.weekDropChunks.count > 0) {
+    lines.push(
+      `  week-drop chunk  ${report.weekDropChunks.count} bundles  ${report.weekDropChunks.raw} B raw  ${report.weekDropChunks.gzip} B gzip  (ceiling ${budget.weekDropsRaw} B raw, ${budget.weekDropsGzip} B gzip)`,
     );
   }
   if (report.reviewItemChunks !== undefined && report.reviewItemChunks.count > 0) {
@@ -542,6 +558,12 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
           `(raise PRECACHE_BUDGET.${line} in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)`,
       );
     }
+  }
+  const weekDrops = report.weekDropChunks;
+  if (weekDrops !== undefined) {
+    const raise = '(raise it in scripts/build-week-drops.mjs BUDGET and PRECACHE_BUDGET together, as a reviewed one-line change with the measured numbers in the PR)';
+    if (weekDrops.raw > budget.weekDropsRaw) problems.push(`the week-drop bundle is ${weekDrops.raw} B raw, over its ceiling of ${budget.weekDropsRaw} B ${raise}`);
+    if (weekDrops.gzip > budget.weekDropsGzip) problems.push(`the week-drop bundle is ${weekDrops.gzip} B gzip, over its ceiling of ${budget.weekDropsGzip} B gzip ${raise}`);
   }
   const reviewItems = report.reviewItemChunks;
   if (reviewItems !== undefined) {
