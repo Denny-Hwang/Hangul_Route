@@ -1,5 +1,8 @@
 # Classroom/Lecture-phone — a lesson on a phone: the stage sideways with a floating bar, the rotate page upright, the phone start screen (wireframe v1)
 
+
+> **Amended 2026-10-29 (`docs/specs/AMENDMENTS-PRESENTER-NAV.md`, rows PN-2 and PN-4).** The **bar's strip and the grabber are removed** (Panel B, Interaction points): the strip lay over the bottom answer row, so a tap on option 3 showed the bar and the next tap pressed Previous. A phone sideways with room for it (a stage of at least 560 px beside a 104 px rail: 667 x 375 and wider; beside an 80 px compact icon rail: 640 x 360) shows a **rail** at the right of the stage with More, Next, Previous and Sound, always shown, never over the slide and at least 32 px from every answer (`classroom/lecture-nav.md` Panel D); a smaller phone (568 x 320) keeps the floating bar of Panels A and C, shown by a tap on empty slide area only (Panel E there). A stage tap never steps; swipe does.
+
 Spec: `docs/specs/F-TCH-004-lecture-mode.md` §3.5 (phone start screen, "History"), §3.6 (phone exception to README D1) · `docs/specs/AMENDMENTS-LECTURE-V2.md` section 18 (row **LV-M1**) · amends `classroom/lecture-presenter.md` B (start screen) and C (stage) for phone windows only
 Audience: **teacher, parent or caregiver presenting from a phone** (to a TV over a cable or casting, or to a small group around the phone)
 Route: `app.hangulroute.com/present` (no new route)
