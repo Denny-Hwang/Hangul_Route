@@ -1,7 +1,8 @@
+import { keysFor } from '@hangul-route/content-schema';
 import type { Locator, Page } from '@playwright/test';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, readStored, seedStored } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 import { expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
@@ -36,6 +37,21 @@ async function onboard(page: Page, on: boolean | null, textSize?: 'largest'): Pr
   return profileId;
 }
 
+/**
+ * Outdoor Words quest 1's Check is Dictation on 하늘 and 나무 (F-CURR-002 row CM-3A S2): the launcher's Go, then each
+ * word typed on the in-app keyboard and Done. While `game.type-hangul-hear` is dark (its built-in pct 0) the round is
+ * its `see` fallback, the word shown to copy; heard or seen, the same keys answer it.
+ */
+async function playDictationCheck(page: Page, words: readonly string[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const word of words) {
+    await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+    for (const jamo of keysFor(word)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+    await page.getByTestId('type-hangul-done').click();
+    await expect(page.getByText('You typed it!')).toBeVisible();
+  }
+}
+
 /** Quest 1 of Outdoor Words from its launcher to the reward step: Discover, the two games skipped, the Check played. */
 async function toReward(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
@@ -49,7 +65,7 @@ async function toReward(page: Page): Promise<void> {
   await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await playCheck(page);
+  await playDictationCheck(page, ['하늘', '나무']);
   await expect(page.getByRole('button', { name: 'See results' })).toBeVisible();
 }
 
