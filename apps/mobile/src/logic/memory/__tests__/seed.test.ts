@@ -7,7 +7,8 @@ import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, u
 
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
- * snapshot points and for a learner with every lesson quest done (107, and 108 with the Stage 1 addition of row CM-33).
+ * snapshot points and for a learner with every lesson quest done (107, 108 with the Stage 1 addition of row CM-33, and 111
+ * with Play Volume 2, S6 of row CM-42).
  */
 
 const SEEDED_AT = '2026-10-22T08:00:00.000Z';
@@ -119,13 +120,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', () => {
-  const snap = finished(108);
+describe('the all-quests fixture (scenario S-c; 111 quests since row CM-42)', () => {
+  const snap = finished(111);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
+    expect(LESSON_QUESTS).toHaveLength(111);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {
@@ -143,7 +144,8 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
   });
 
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
-    const lastQuest = LESSON_QUESTS[106];
+    // The last quest finished (the fixture finishes them in catalogue order; row CM-42's Volume 2 quests come last).
+    const lastQuest = LESSON_QUESTS[LESSON_QUESTS.length - 1];
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
     const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
     expect(firstDay.some((id) => lastCellItems.includes(id))).toBe(true);

@@ -73,9 +73,11 @@ describe('gridEpisodes / shelfEpisodes', () => {
     for (const e of shelfEpisodes(episodesAll)) expect(storyEpisodes).toContain(e);
   });
 
-  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
+  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest of a first volume', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // A later volume's quests are kept and synced (questsAll) but count toward no route total (row CM-40).
+    const laterQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !laterQuestIds.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -103,10 +105,12 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the shipped Volume 2 cells are the later volumes', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    // Row CM-42: Play Volume 2, S6 is a shipped Volume 2; each content row adds its cell here.
+    expect(volumeEpisodes.map((e) => [e.id, e.volume])).toEqual([['episode:stage6-crafts-v2', 2]]);
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
+    for (const e of volumeEpisodes) expect(episodesAll.some((x) => x.stage === e.stage && x.theme === e.theme && (x.volume ?? 1) === 1), e.id).toBe(true);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
