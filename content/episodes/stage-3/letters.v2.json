@@ -1,0 +1,1330 @@
+{
+  "id": "episode:stage3-letters-v2",
+  "stage": "stage3",
+  "theme": "letters",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Read, Write, Learn",
+  "subtitleEn": "Write in class, learn about Hangul, read at the library.",
+  "hoyaIntroEn": "Let's write in class, learn why Hangul was made and visit the library!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-letters-v2-q1",
+      "titleEn": "In the Classroom",
+      "blurbEn": "Say what you write in class.",
+      "teaserEn": "Next: why Hangul was made.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Class Time",
+          "hoyaLineEn": "Class is starting. Let's write in Hangul!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "I Write ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 써요.",
+                      "romanization": "___eul/reul sseoyo",
+                      "en": "I write ___."
+                    },
+                    "noteEn": "Name what you write, with {ko:을} after a final consonant or {ko:를} after a vowel, then {ko:써요}.",
+                    "examples": [
+                      {
+                        "ko": "이름을 써요.",
+                        "romanization": "ireumeul sseoyo",
+                        "en": "I write my name."
+                      },
+                      {
+                        "ko": "한글을 써요.",
+                        "romanization": "hangeureul sseoyo",
+                        "en": "I write Hangul."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "공책",
+                      "romanization": "gongchaek",
+                      "en": "notebook"
+                    },
+                    "picture": "word:school-notebook"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "교실에 가요.",
+                      "romanization": "gyosire gayo",
+                      "en": "I go to the classroom."
+                    },
+                    "picture": "word:school-desk"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-letters-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s3-letters-v2-q1-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Neat Writing!",
+          "hoyaLineEn": "You can say what you write. Lovely letters!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-v2-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "이름을 써요.",
+                "romanization": "ireumeul sseoyo",
+                "en": "I write my name."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "한글을 써요.",
+                "romanization": "hangeureul sseoyo",
+                "en": "I write Hangul."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "공책에 써요.",
+                "romanization": "gongchaege sseoyo",
+                "en": "I write in my notebook."
+              },
+              "pictureRef": "word:school-notebook",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "연필이 있어요.",
+                "romanization": "yeonpiri isseoyo",
+                "en": "There is a pencil."
+              },
+              "pictureRef": "word:school-pencil",
+              "distractors": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write (in 'I write')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "이건 연필이에요.",
+                "romanization": "igeon yeonpirieyo",
+                "en": "This is a pencil."
+              },
+              "pictureRef": "word:school-pencil",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "이름___ 써요.",
+                "romanization": "ireum___ sseoyo",
+                "en": "I write my name."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "ireumeul sseoyo"
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "공책에 ___.",
+                "romanization": "gongchaege ___",
+                "en": "I write in my notebook."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "___에 가요.",
+                "romanization": "___e gayo",
+                "en": "I go to the classroom."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "교실",
+                  "romanization": "gyosil",
+                  "en": "classroom"
+                },
+                {
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
+                },
+                {
+                  "ko": "산",
+                  "romanization": "san",
+                  "en": "mountain"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "한글을 ___.",
+                "romanization": "hangeureul ___",
+                "en": "I write Hangul."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "d1",
+              "promptEn": "Type the word for a notebook.",
+              "mode": "hear",
+              "target": {
+                "ko": "공책",
+                "romanization": "gongchaek",
+                "en": "notebook"
+              }
+            },
+            {
+              "id": "d2",
+              "promptEn": "Type the word for a bag.",
+              "mode": "hear",
+              "target": {
+                "ko": "가방",
+                "romanization": "gabang",
+                "en": "bag"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-letters-v2-q2",
+      "titleEn": "Letters for Everyone",
+      "blurbEn": "Learn why Hangul was made, and say what you learn.",
+      "teaserEn": "Next: a visit to the library.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Why Hangul?",
+          "hoyaLineEn": "Long ago, King Sejong made new letters for the people. Let's learn them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "I Learn ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 배워요.",
+                      "romanization": "___eul/reul baewoyo",
+                      "en": "I learn ___."
+                    },
+                    "noteEn": "Name what you learn, with {ko:을} after a final consonant or {ko:를} after a vowel, then {ko:배워요}.",
+                    "examples": [
+                      {
+                        "ko": "한글을 배워요.",
+                        "romanization": "hangeureul baewoyo",
+                        "en": "I learn Hangul."
+                      },
+                      {
+                        "ko": "글자를 배워요.",
+                        "romanization": "geuljareul baewoyo",
+                        "en": "I learn the letters."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "친구하고 한글을 배워요.",
+                      "romanization": "chinguhago hangeureul baewoyo",
+                      "en": "I learn Hangul with my friend."
+                    },
+                    "picture": "word:school-friend"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "글자가 예뻐요.",
+                      "romanization": "geuljaga yeppeoyo",
+                      "en": "The letters are pretty."
+                    },
+                    "picture": "word:culture-hangul"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-letters-v2-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-letters-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Hangul Learner!",
+          "hoyaLineEn": "You learned why Hangul was made. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "한글을 배워요.",
+                "romanization": "hangeureul baewoyo",
+                "en": "I learn Hangul."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "글자를 배워요.",
+                "romanization": "geuljareul baewoyo",
+                "en": "I learn the letters."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "친구하고 한글을 배워요.",
+                "romanization": "chinguhago hangeureul baewoyo",
+                "en": "I learn Hangul with my friend."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "이름을 써요.",
+                "romanization": "ireumeul sseoyo",
+                "en": "I write my name."
+              },
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "한글을 써요.",
+                "romanization": "hangeureul sseoyo",
+                "en": "I write Hangul."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q2-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "한글___ 배워요.",
+                "romanization": "hangeul___ baewoyo",
+                "en": "I learn Hangul."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "hangeureul baewoyo"
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "친구하고 한글을 ___.",
+                "romanization": "chinguhago hangeureul ___",
+                "en": "I learn Hangul with my friend."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "배워요",
+                  "romanization": "baewoyo",
+                  "en": "learn"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "글자가 ___.",
+                "romanization": "geuljaga ___",
+                "en": "The letters are pretty."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "예뻐요",
+                  "romanization": "yeppeoyo",
+                  "en": "pretty"
+                },
+                {
+                  "ko": "뜨거워요",
+                  "romanization": "tteugeowoyo",
+                  "en": "hot"
+                },
+                {
+                  "ko": "맛있어요",
+                  "romanization": "masisseoyo",
+                  "en": "tasty"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "공책에 ___.",
+                "romanization": "gongchaege ___",
+                "en": "I write in my notebook."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q2-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "글자___ 배워요.",
+                "romanization": "geulja___ baewoyo",
+                "en": "I learn the letters."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "geuljareul baewoyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "이름을 ___.",
+                "romanization": "ireumeul ___",
+                "en": "I write my name."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-letters-v2-q3",
+      "titleEn": "At the Library",
+      "blurbEn": "Say where you read and write.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "To the Library",
+          "hoyaLineEn": "Shh, we are at the library. Let's find a good book!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "At the ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에서 책을 봐요.",
+                      "romanization": "___eseo chaegeul bwayo",
+                      "en": "I read a book at ___."
+                    },
+                    "noteEn": "Name a place, then {ko:에서}, to say where you do something: {ko:도서관에서} {ko:책을} {ko:봐요}.",
+                    "examples": [
+                      {
+                        "ko": "도서관에서 책을 봐요.",
+                        "romanization": "doseogwaneseo chaegeul bwayo",
+                        "en": "I read a book at the library."
+                      },
+                      {
+                        "ko": "교실에서 책을 봐요.",
+                        "romanization": "gyosireseo chaegeul bwayo",
+                        "en": "I read a book in the classroom."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "집에서 한글을 써요.",
+                      "romanization": "jibeseo hangeureul sseoyo",
+                      "en": "I write Hangul at home."
+                    },
+                    "picture": "word:culture-hangul"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "책을 읽어요.",
+                      "romanization": "chaegeul ilgeoyo",
+                      "en": "I read a book."
+                    },
+                    "picture": "card:book"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-letters-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-letters-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Library Reader!",
+          "hoyaLineEn": "You can say where you read and write. Happy reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-letters-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "도서관에서 책을 봐요.",
+                "romanization": "doseogwaneseo chaegeul bwayo",
+                "en": "I read a book at the library."
+              },
+              "pictureRef": "card:book",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "교실에서 책을 봐요.",
+                "romanization": "gyosireseo chaegeul bwayo",
+                "en": "I read a book in the classroom."
+              },
+              "pictureRef": "card:book",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "집에서 한글을 써요.",
+                "romanization": "jibeseo hangeureul sseoyo",
+                "en": "I write Hangul at home."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "친구가 학교에 가요.",
+                "romanization": "chinguga hakgyoe gayo",
+                "en": "My friend goes to school."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "한글을 배워요.",
+                "romanization": "hangeureul baewoyo",
+                "en": "I learn Hangul."
+              },
+              "pictureRef": "word:culture-hangul",
+              "distractors": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write (in 'I write')"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "책을 읽어요.",
+                "romanization": "chaegeul ilgeoyo",
+                "en": "I read a book."
+              },
+              "options": [
+                {
+                  "id": "book",
+                  "pictureRef": "card:book",
+                  "labelEn": "Book"
+                },
+                {
+                  "id": "notebook",
+                  "pictureRef": "word:school-notebook",
+                  "labelEn": "Notebook"
+                },
+                {
+                  "id": "bag",
+                  "pictureRef": "word:school-bag",
+                  "labelEn": "Bag"
+                }
+              ],
+              "answerId": "book"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "도서관에 가요.",
+                "romanization": "doseogwane gayo",
+                "en": "I go to the library."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "도서관에 가요.",
+                    "romanization": "doseogwane gayo",
+                    "en": "I go to the library."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "교실에 가요.",
+                    "romanization": "gyosire gayo",
+                    "en": "I go to the classroom."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "교실에서 책을 봐요.",
+                "romanization": "gyosireseo chaegeul bwayo",
+                "en": "I read a book in the classroom."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "교실에서 책을 봐요.",
+                    "romanization": "gyosireseo chaegeul bwayo",
+                    "en": "I read a book in the classroom."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "도서관에서 책을 봐요.",
+                    "romanization": "doseogwaneseo chaegeul bwayo",
+                    "en": "I read a book at the library."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "집에서 책을 봐요.",
+                    "romanization": "jibeseo chaegeul bwayo",
+                    "en": "I read a book at home."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "집에서 한글을 써요.",
+                "romanization": "jibeseo hangeureul sseoyo",
+                "en": "I write Hangul at home."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "집에서 한글을 써요.",
+                    "romanization": "jibeseo hangeureul sseoyo",
+                    "en": "I write Hangul at home."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "집에서 책을 봐요.",
+                    "romanization": "jibeseo chaegeul bwayo",
+                    "en": "I read a book at home."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "교실에서 한글을 써요.",
+                    "romanization": "gyosireseo hangeureul sseoyo",
+                    "en": "I write Hangul in the classroom."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-letters-v2-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptShown": true,
+              "prompt": {
+                "ko": "도서관에서 책을 봐요.",
+                "romanization": "doseogwaneseo chaegeul bwayo",
+                "en": "I read a book at the library."
+              },
+              "options": [
+                {
+                  "id": "read",
+                  "pictureRef": "card:book",
+                  "labelEn": "Reading a book"
+                },
+                {
+                  "id": "write",
+                  "pictureRef": "word:school-notebook",
+                  "labelEn": "Writing in a notebook"
+                },
+                {
+                  "id": "school",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "Going to school"
+                }
+              ],
+              "answerId": "read"
+            },
+            {
+              "id": "c2",
+              "promptShown": true,
+              "prompt": {
+                "ko": "공책에 써요.",
+                "romanization": "gongchaege sseoyo",
+                "en": "I write in my notebook."
+              },
+              "options": [
+                {
+                  "id": "write",
+                  "pictureRef": "word:school-notebook",
+                  "labelEn": "Writing in a notebook"
+                },
+                {
+                  "id": "read",
+                  "pictureRef": "card:book",
+                  "labelEn": "Reading a book"
+                },
+                {
+                  "id": "friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Meeting a friend"
+                }
+              ],
+              "answerId": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "When Hangul was first made, under the name Hunminjeongeum, it had 28 letters. Today's spelling rules use 24 basic letters: 14 consonants and 10 vowels.",
+      "sources": [
+        {
+          "title": "한글 사용에 남북한은 어떠한 차이가 있을까? (한글 나누기 1, 소식지 2018년 6월 제59호)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201806/sub1_1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "본문: “남한은 기본 자모로 자음 ‘ㄱ, ㄴ, ㄷ, ㄹ, ㅁ, ㅂ, ㅅ, ㅇ, ㅈ,ㅊ, ㅋ, ㅌ, ㅍ, ㅎ’의 14자와 모음 ‘ㅏ, ㅑ, ㅓ, ㅕ, ㅗ, ㅛ, ㅜ, ㅠ, ㅡ, ㅣ’의 10자를 합쳐서 24자이다.”"
+        },
+        {
+          "title": "한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C%EA%B8%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘한글’ 「명사」: “세종 대왕이 우리말을 표기하기 위하여 창제한 훈민정음을 20세기 이후 달리 이르는 명칭이다.” / “1446년 반포될 당시에는 28자모(字母)였지만, 현행 한글 맞춤법에서는 24자모만 쓴다.”"
+        },
+        {
+          "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "본문: “어진 임금 세종은 백성을 사랑하는 마음을 담아 친히 28글자를 만들었고, 1446년에 ‘훈민정음’이라는 이름으로 반포했다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that Hangul was first made under the name Hunminjeongeum, that it then had 28 letters, and that today's spelling rules use 24 basic letters, 14 consonants and 10 vowels. National Hangeul Museum newsletter no. 59 (June 2018, HTTP 200) gives the 24 basic letters of the South as 14 consonants and 10 vowels and lists them; the Standard Korean Language Dictionary entry 한글 says Hangul is the 20th-century name of Hunminjeongeum and that it had 28 letters when proclaimed in 1446 and uses 24 under the current spelling rules; the museum's Hangeul Day article says Sejong made 28 letters, proclaimed in 1446 as Hunminjeongeum. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): the three pages fetched again and each clause matched to a quoted phrase: 28 (28자모, 28글자), the name (훈민정음을 ... 달리 이르는 명칭), 24 = 14 + 10 (14자와 ... 10자를 합쳐서 24자). The note names no letter that went out of use and no date for the change, which the sources do not give here; it makes no claim about North Korea's count. Names as of the access date: 국립한글박물관, 국립국어원. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): the reviser changed 'Hangul began with' to 'When Hangul was first made, under the name Hunminjeongeum, it had', the dictionary's own framing; no run of words copied; confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Before Hangul, Korean was written with Chinese characters. They did not fit Korean well and took great effort to learn, so many people could not write what they meant. King Sejong made new letters that ordinary people could learn easily.",
+      "sources": [
+        {
+          "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "본문: “말과 글이 달라 전하고자하는 바가 있어도 제 뜻을 펴지 못하는 백성을 가엾게 여긴 세종대왕.” / “어진 임금 세종은 백성을 사랑하는 마음을 담아 친히 28글자를 만들었고, 1446년에 ‘훈민정음’이라는 이름으로 반포했다.”"
+        },
+        {
+          "title": "About Hangeul: before Hangeul was created",
+          "publisher": "National Institute of Korean Language (국립국어원)",
+          "url": "https://www.korean.go.kr/eng_hangeul/setting/001.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“For this reason, our ancestors had to make so much effort to learn Chinese letters and literary Chinese.” / “Chinese characters were incomplete and inefficient characters to express our own language.” / “people who have no proper characters to express their own language have painful difficulties”"
+        },
+        {
+          "title": "About Hangeul: the creation of Hangeul",
+          "publisher": "National Institute of Korean Language (국립국어원)",
+          "url": "https://www.korean.go.kr/eng_hangeul/setting/002.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“King Sejong invented Han-geul to contribute to a better life for the sake of ordinary people.” / “the appearance of new letters, which was easy for ordinary people to learn, was hardly considered” (said of the ruling class of the time)"
+        },
+        {
+          "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째기사 (훈민정음 어제 서문)",
+          "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+          "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "어제 국역: “나랏말이 중국과 달라 문자와 서로 통하지 아니하므로, 우매한 백성들이 말하고 싶은 것이 있어도 마침내 제 뜻을 잘 표현하지 못하는 사람이 많다.” / “사람들로 하여금 쉬 익히어 날마다 쓰는 데 편하게 할 뿐이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that before Hangul Korean was written with Chinese characters, that they did not fit Korean well and took great effort to learn, that many people could not write what they meant, and that King Sejong made new letters that ordinary people could learn easily. National Institute of Korean Language, About Hangeul (setting/001, HTTP 200): our ancestors had to make so much effort to learn Chinese letters, which were inefficient to express our own language; setting/002: Sejong invented Hangeul for the sake of ordinary people, new letters easy for ordinary people to learn. National Hangeul Museum (HTTP 200): Sejong pitied the people who, because speech and writing differed, could not put across what they meant (제 뜻을 펴지 못하는 백성), and made 28 letters himself. The Sejong Annals preface (National Institute of Korean History, not on the allowlist, a third source) says the same in Sejong's words. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): all four pages fetched again; each clause matched: Chinese characters (Chinese letters; 문자와 서로 통하지 아니하므로), effort (so much effort to learn), could not write what they meant (제 뜻을 펴지 못하는), easy to learn (easy for ordinary people to learn; 쉬 익히어). The note says what the sources say and no more: no claim that Hangul is the easiest script, no reading-rate figure, no date (S4 carries 1443 and 1446). Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): the reviser cut 'so that everyone could read' (no source says everyone) to 'ordinary people'; the 28 count lives in n1. Names as of the access date. Confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:에서} after a place says where something is done: {ko:도서관에서} {ko:책을} {ko:봐요}, I read a book at the library. {ko:에} after a place says where you go: {ko:도서관에} {ko:가요}.",
+      "sources": [
+        {
+          "title": "에서 (조사)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=460166&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘에서2’(word_no 460166) 「조사」 「1」: “앞말이 행동이 이루어지고 있는 처소임을 나타내는 격 조사.”"
+        },
+        {
+          "title": "에 (조사)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%90",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘에4’ 「조사」 「1」: “앞말이 처소의 부사어임을 나타내는 격 조사.” (the cell's 에 가요 rounds, shipped in Stage 3 Food & Daily Life, use it with 가다)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 에서 after a place marks where an action is done and that 에 after a place goes with going there. Standard Korean Language Dictionary 에서2 「1」 (word_no 460166): the particle that marks the place where an action is being done; 에4 「1」: the particle that marks a place adverbial. Line 2 (passes: 2, MAR language checker, 2026-10-30): both entries fetched again. The note keeps to the place senses; it does not say 에 never marks an action's place, which the dictionary does not say either, and it gives the 가요 use only as an example. Romanization by the converter: doseogwaneseo, doseogwane. Line 3 (passes: 3, MAR third pass, 2026-10-30): unchanged; no wording copied."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "{ko:책을} {ko:봐요} and {ko:책을} {ko:읽어요} both say I read a book. {ko:읽어요} is said {ko:일거요}: the second of its two final letters moves on to the next syllable.",
+      "sources": [
+        {
+          "title": "보다 (동사)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=149229&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘보다1’(word_no 149229) 「동사」 「3」: “책이나 신문 따위를 읽다.” 예: “여가 시간에는 책을 보는 습관을 들이는 것이 좋다.”"
+        },
+        {
+          "title": "질의와 응답 (새국어생활 제6권 제2호, 1996년 여름)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 새국어생활",
+          "url": "https://www.korean.go.kr/nkview/nklife/1996_2/6_11.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "답변: “그리고 겹받침이 모음으로 시작되는 조사나 어미, 접미사와 결합하는 경우에는 뒤엣것만을 뒤 음절 첫소리로 옮겨 발음하는 것이 원칙입니다(표준 발음법 제14항 참조.).” 예: 흙-을[흘글], 앉-아[안자]."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 책을 봐요 and 책을 읽어요 both say I read a book, and that 읽어요 is said [일거요] because the second letter of a double final moves to the next syllable before a vowel. Standard Korean Language Dictionary 보다1 「3」 (the entry body, HTTP 200): to read a book or a newspaper, with 책을 보는 as its example. NIKL Saegugeosaenghwal 6-2 (1996), Q&A: by standard pronunciation article 14 a double final before a vowel-initial ending moves only its second letter to the next syllable (흙을 [흘글], the same ㄺ). Line 2 (passes: 2, MAR language and learning-design checker, 2026-10-30): 읽 [일] + 어요 gives [일거요]; the converter romanizes 읽어요 ilgeoyo. The double final ㄺ is not a symbol the route has taught for reading (F-CURR-001 section 3.1 rule 6), so 읽어요 is a theme sentence here: shown in Discover with Hear it and heard in a picture round, never in a scored read and never in Dictation. Line 3 (passes: 3, third pass, 2026-10-30): unchanged; no wording copied."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR row CM-44 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session). Volume 2 of Letters & Books at Stage 3: classroom and library sentences and why Hangul was made. No native-speaker or expert review is claimed.",
+      "Content: q1 In the Classroom (___을/를 써요: 이름을 써요, 한글을 써요, 공책에 써요), q2 Letters for Everyone (___을/를 배워요: 한글을 배워요, 글자를 배워요, 친구하고 한글을 배워요), q3 At the Library (___에서 책을 봐요: 도서관에서, 교실에서, 집에서). One new pattern a quest; new words q1 써요, 이름, 공책, 교실; q2 배워요, 글자; q3 도서관, 에서 and the theme sentence 책을 읽어요.",
+      "Language: 해요체 with sentence marks; 을/를, 이/가, 이에요/예요 rounds test the batchim rule (이름을, 글자를, 한글을, 연필이에요); 에서 for where something is done beside 에 for where you go (n3); romanization by the converter (ireumeul sseoyo, geuljareul baewoyo, doseogwaneseo chaegeul bwayo). Every word gap keeps grammatical wrong tiles read by the meaning line, as in Volume 1.",
+      "Language (cont.): 책을 읽어요 is the row's library sentence; its 읽 has the double final ㄺ, which no route has taught for reading (F-CURR-001 section 3.1 rule 6, the Volume 1 없어요 precedent), so it is a theme sentence: Discover with Hear it and the q3 picture round, never a tile, gap or text option. 책을 봐요 (보다1 「3」, to read a book) carries the scored reading; n4 says both mean I read a book.",
+      "Learning design: liaison is heard, never typed: 이름을 [이르믈], 한글을 [한그를], 공책에 [공채게], 교실에 [교시레], 도서관에서 [도서과네서], 읽어요 [일거요] (n4). 글자 is said [글짜] (tensification) and 써요 is a homograph (write; also use, wear, bitter), so neither is a Dictation target; 써요 is taught only with an object or a place. Dictation asks 공책 and 가방, said as written, with no taught homophone.",
+      "Learning design (cont.): triples q1 order-it / cloze-pick / type-hangul, q2 order-it / cloze-pick / cloze-pick, q3 order-it / listen-pick / listen-pick (a Read Pick Meaning Check); none is a Volume 1 triple and adjacent quests differ. Every Practice is a Sentence Builder, so each can scaffold (U-11). No Check repeats an Apply sentence. Recycle (lesson-recycle) 43, 50 and 50 in 100.",
+      "Culture and facts: n1 (28 letters at first; 24 basic letters today) and n2 (why Sejong made the letters) cite the National Hangeul Museum first, then NIKL; n2 adds the Sejong Annals preface. They say what the sources say and no more: no 'easiest' or 'scientific' claim, no dates (Stage 4 Letters carries 1443, 1446 and Hangeul Day). Names as of 2026-10-30.",
+      "Reviser: q1 and q3 swapped so each quest's reward tip fits it (q1 shows n1, q2 n2, q3 the 에서 note n3); n2 'so that everyone could read' became 'ordinary people could learn easily', the sources' words; the q3 Check options name an activity, not a bare noun. Third pass: validate-content, the lesson lint, the U-rules and the overlay rules clean.",
+      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, tras consonante final) and no gendered agreement for the learner; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English. Behind volumes (built-in pct 0): the row merges dark."
+    ]
+  },
+  "contentVer": 1
+}
