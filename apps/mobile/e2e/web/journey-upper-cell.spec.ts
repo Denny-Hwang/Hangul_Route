@@ -282,7 +282,7 @@ async function reply(page: Page, ko: string): Promise<void> {
 /**
  * Tap to Respond turns by their right reply, the counter moving on after each (`n / total`); after the last turn the
  * next step's Play minigame (or the Check's Go, or the reward) shows. A tap inside the double-touch window is dropped (the same reply twice in a row),
- * so a turn is tapped again until it moves on. A Role Play step plays this while `game.role-play` is off (row CM-35).
+ * so a turn is tapped again until it moves on, and only while its own counter still shows. A Role Play step plays this while `game.role-play` is off (row CM-35).
  */
 async function replyTurns(page: Page, turns: readonly string[], last: 'minigame' | 'check' | 'finish' = 'minigame'): Promise<void> {
   for (const [i, line] of turns.entries()) {
@@ -295,8 +295,13 @@ async function replyTurns(page: Page, turns: readonly string[], last: 'minigame'
           : last === 'check'
             ? page.getByRole('button', { name: 'Go', exact: true })
             : page.getByText('Finish', { exact: true }).first();
+    // Tap only while this turn's counter still shows and the next one does not, so a retry never answers the next turn
+    // (consecutive turns can share a reply, life q1 and crafts q1). The wait passes the double-touch window first.
+    const current = page.getByText(`${i + 1} / ${turns.length}`, { exact: true });
     await expect(async () => {
-      await reply(page, line);
+      if (await after.isVisible()) return;
+      await page.waitForTimeout(120);
+      if ((await current.isVisible()) && !(await after.isVisible())) await reply(page, line);
       await expect(after).toBeVisible({ timeout: 1500 });
     }).toPass();
   }
