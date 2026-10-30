@@ -1,0 +1,1490 @@
+{
+  "id": "episode:stage4-crafts-v2",
+  "stage": "stage4",
+  "theme": "crafts",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Who Goes First?",
+  "subtitleEn": "Friends ask to play and pick turns with rock-paper-scissors.",
+  "hoyaIntroEn": "Mina and I want to play. Who goes first? Let's read and find out!",
+  "order": 5,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-crafts-v2-q1",
+      "titleEn": "Want to Play?",
+      "blurbEn": "Read how a friend asks you to play.",
+      "teaserEn": "Next: rock, paper, scissors!",
+      "estimatedMinutes": 5,
+      "addedIn": 20261102,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Come and Play",
+          "hoyaLineEn": "Mina has a new way to ask me to play. Let's read it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Asking a Friend",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "같이 놀래?",
+                          "romanization": "gachi nollae",
+                          "en": "do you want to play together?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "응, 좋아!",
+                          "romanization": "eung joa",
+                          "en": "yeah, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Mina asks with the ending -lae: do you want to? Eung is a casual yes."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "뭐 할래?",
+                          "romanization": "mwo hallae",
+                          "en": "what do you want to play?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "숨바꼭질 하자!",
+                          "romanization": "sumbakkokjil haja",
+                          "en": "let's play hide-and-seek!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya asks what Mina wants to play. She picks hide-and-seek."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Chat with a Friend",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-crafts-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-order",
+          "minigameRef": "minigame:s4-crafts-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-crafts-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Let's Play!",
+          "hoyaLineEn": "You read how friends ask to play!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-v2-q1-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "학교",
+              "romanization": "hakgyo",
+              "en": "At school"
+            },
+            "partner": {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "같이 놀래?",
+                  "romanization": "gachi nollae",
+                  "en": "do you want to play together?"
+                },
+                "replies": [
+                  {
+                    "id": "polite",
+                    "text": {
+                      "ko": "좋아요!",
+                      "romanization": "joayo",
+                      "en": "okay, sounds good! (polite)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend talks casually. Pick the reply without the polite -yo."
+                  },
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "응, 좋아!",
+                      "romanization": "eung joa",
+                      "en": "yeah, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "book",
+                    "text": {
+                      "ko": "책이에요.",
+                      "romanization": "chaegieyo",
+                      "en": "It is a book."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says what something is. Your friend asks you to play, so say yes."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "뭐 할래?",
+                  "romanization": "mwo hallae",
+                  "en": "what do you want to play?"
+                },
+                "replies": [
+                  {
+                    "id": "hide",
+                    "text": {
+                      "ko": "숨바꼭질 하자!",
+                      "romanization": "sumbakkokjil haja",
+                      "en": "let's play hide-and-seek!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "응, 좋아!",
+                      "romanization": "eung joa",
+                      "en": "yeah, sounds good!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That only says yes. Your friend asks what to play, so name a game."
+                  },
+                  {
+                    "id": "rope",
+                    "text": {
+                      "ko": "줄넘기 하자!",
+                      "romanization": "julleomgi haja",
+                      "en": "let's jump rope!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "좋아! 놀이터에 갈까?",
+                  "romanization": "joa noriteoe galkka",
+                  "en": "okay! shall we go to the playground?"
+                },
+                "replies": [
+                  {
+                    "id": "what",
+                    "text": {
+                      "ko": "뭐 할래?",
+                      "romanization": "mwo hallae",
+                      "en": "what do you want to play?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You already picked a game. Your friend asks about going, so say okay."
+                  },
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "좋아!",
+                      "romanization": "joa",
+                      "en": "okay, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "drink",
+                    "text": {
+                      "ko": "물을 마셔요.",
+                      "romanization": "mureul masyeoyo",
+                      "en": "I drink water."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drink water. Your friend asks about the playground."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "같이 가자!",
+                  "romanization": "gachi gaja",
+                  "en": "let's go together!"
+                },
+                "replies": [
+                  {
+                    "id": "pencil",
+                    "text": {
+                      "ko": "연필이에요.",
+                      "romanization": "yeonpirieyo",
+                      "en": "It is a pencil."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says what something is. Your friend says let's go, so say okay."
+                  },
+                  {
+                    "id": "go",
+                    "text": {
+                      "ko": "좋아! 같이 가자!",
+                      "romanization": "joa gachi gaja",
+                      "en": "okay! let's go together!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "what",
+                    "text": {
+                      "ko": "뭐 할래?",
+                      "romanization": "mwo hallae",
+                      "en": "what do you want to play?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks what to play. You picked a game already, so say okay."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You and your friend picked a game. Time to play!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q1-apply",
+          "kind": "story-order",
+          "rounds": [
+            {
+              "id": "ask-to-play",
+              "captionsOnly": true,
+              "panels": [
+                {
+                  "id": "ask",
+                  "caption": {
+                    "ko": "같이 놀래?",
+                    "romanization": "gachi nollae",
+                    "en": "do you want to play together?"
+                  }
+                },
+                {
+                  "id": "what",
+                  "caption": {
+                    "ko": "응, 좋아! 뭐 할래?",
+                    "romanization": "eung joa mwo hallae",
+                    "en": "yeah, sounds good! what do you want to play?"
+                  }
+                },
+                {
+                  "id": "hide",
+                  "caption": {
+                    "ko": "숨바꼭질 하자!",
+                    "romanization": "sumbakkokjil haja",
+                    "en": "let's play hide-and-seek!"
+                  }
+                },
+                {
+                  "id": "go",
+                  "caption": {
+                    "ko": "좋아! 같이 가자!",
+                    "romanization": "joa gachi gaja",
+                    "en": "okay! let's go together!"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "같이 ___?",
+                "romanization": "gachi ___",
+                "en": "do you want to play together?"
+              },
+              "tiles": [
+                {
+                  "ko": "놀래",
+                  "romanization": "nollae",
+                  "en": "want to play?"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "I drink"
+                },
+                {
+                  "ko": "차례야",
+                  "romanization": "charyeya",
+                  "en": "it's the turn"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "___ 하자!",
+                "romanization": "___ haja",
+                "en": "let's play hide-and-seek!"
+              },
+              "tiles": [
+                {
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
+                },
+                {
+                  "ko": "학교",
+                  "romanization": "hakgyo",
+                  "en": "school"
+                },
+                {
+                  "ko": "숨바꼭질",
+                  "romanization": "sumbakkokjil",
+                  "en": "hide-and-seek"
+                }
+              ],
+              "answerIndex": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-crafts-v2-q2",
+      "titleEn": "Rock, Paper, Scissors",
+      "blurbEn": "Read the hand game friends play to pick a winner.",
+      "teaserEn": "Next: who goes first?",
+      "estimatedMinutes": 5,
+      "addedIn": 20261102,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Hands Ready",
+          "hoyaLineEn": "Mina and I play rock, paper, scissors. Let's read!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Rock, Paper, Scissors",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "가위바위보 하자!",
+                          "romanization": "gawibawibo haja",
+                          "en": "let's play rock, paper, scissors!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "좋아! 가위바위보!",
+                          "romanization": "joa gawibawibo",
+                          "en": "okay! rock, paper, scissors!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Gawibawibo is rock, paper, scissors: scissors (gawi), rock (bawi) and paper (bo)."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "내가 이겼어!",
+                          "romanization": "naega igyeosseo",
+                          "en": "I won!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "잘했어!",
+                          "romanization": "jalhaesseo",
+                          "en": "well done!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Mina shows rock and Hoya shows scissors. Rock beats scissors, so Mina wins."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-crafts-v2-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Chat with a Friend",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-crafts-v2-q2-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Build the Line",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-crafts-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Good Game!",
+          "hoyaLineEn": "You read a whole game of rock, paper, scissors!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-v2-q2-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "같이 놀래?",
+                "romanization": "gachi nollae",
+                "en": "do you want to play together?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "응, 좋아!",
+                    "romanization": "eung joa",
+                    "en": "yeah, sounds good!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "내가 이겼어!",
+                    "romanization": "naega igyeosseo",
+                    "en": "I won!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "가위바위보 하자!",
+                "romanization": "gawibawibo haja",
+                "en": "let's play rock, paper, scissors!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "좋아! 가위바위보!",
+                    "romanization": "joa gawibawibo",
+                    "en": "okay! rock, paper, scissors!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "물을 마셔요.",
+                    "romanization": "mureul masyeoyo",
+                    "en": "I drink water."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "내가 이겼어!",
+                "romanization": "naega igyeosseo",
+                "en": "I won!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "같이 놀래?",
+                    "romanization": "gachi nollae",
+                    "en": "do you want to play together?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q2-apply",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "놀이터",
+              "romanization": "noriteo",
+              "en": "At the playground"
+            },
+            "partner": {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "가위바위보 하자!",
+                  "romanization": "gawibawibo haja",
+                  "en": "let's play rock, paper, scissors!"
+                },
+                "replies": [
+                  {
+                    "id": "start",
+                    "text": {
+                      "ko": "좋아! 가위바위보!",
+                      "romanization": "joa gawibawibo",
+                      "en": "okay! rock, paper, scissors!"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "polite",
+                    "text": {
+                      "ko": "좋아요!",
+                      "romanization": "joayo",
+                      "en": "okay, sounds good! (polite)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend talks casually. Pick the reply without the polite -yo."
+                  },
+                  {
+                    "id": "school",
+                    "text": {
+                      "ko": "학교에 가요.",
+                      "romanization": "hakgyoe gayo",
+                      "en": "I go to school."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you go to school. Your friend wants to play, so say okay."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "내가 이겼어!",
+                  "romanization": "naega igyeosseo",
+                  "en": "I won!"
+                },
+                "replies": [
+                  {
+                    "id": "won",
+                    "text": {
+                      "ko": "내가 이겼어!",
+                      "romanization": "naega igyeosseo",
+                      "en": "I won!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend won this time. Cheer for your friend."
+                  },
+                  {
+                    "id": "pencil",
+                    "text": {
+                      "ko": "연필이에요.",
+                      "romanization": "yeonpirieyo",
+                      "en": "It is a pencil."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says what something is. Your friend won, so cheer."
+                  },
+                  {
+                    "id": "well",
+                    "text": {
+                      "ko": "잘했어!",
+                      "romanization": "jalhaesseo",
+                      "en": "well done!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "이제 뭐 할래?",
+                  "romanization": "ije mwo hallae",
+                  "en": "what do you want to play now?"
+                },
+                "replies": [
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "응, 좋아!",
+                      "romanization": "eung joa",
+                      "en": "yeah, sounds good!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That only says yes. Your friend asks what to play, so name a game."
+                  },
+                  {
+                    "id": "yut",
+                    "text": {
+                      "ko": "윷놀이 하자!",
+                      "romanization": "yunnori haja",
+                      "en": "let's play yut!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "won",
+                    "text": {
+                      "ko": "내가 이겼어!",
+                      "romanization": "naega igyeosseo",
+                      "en": "I won!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you won. Your friend asks what to play now, so name a game."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "좋아! 윷놀이 하자!",
+                  "romanization": "joa yunnori haja",
+                  "en": "okay! let's play yut!"
+                },
+                "replies": [
+                  {
+                    "id": "book",
+                    "text": {
+                      "ko": "책이에요.",
+                      "romanization": "chaegieyo",
+                      "en": "It is a book."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says what something is. Your friend says okay to yut, so say okay too."
+                  },
+                  {
+                    "id": "what",
+                    "text": {
+                      "ko": "뭐 할래?",
+                      "romanization": "mwo hallae",
+                      "en": "what do you want to play?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You picked a game already. Say okay."
+                  },
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "좋아!",
+                      "romanization": "joa",
+                      "en": "okay, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You played rock, paper, scissors and picked the next game!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "내가 이겼어!",
+                "romanization": "naega igyeosseo",
+                "en": "I won!"
+              },
+              "distractors": [
+                {
+                  "ko": "너야",
+                  "romanization": "neoya",
+                  "en": "it's you"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "가위바위보 하자!",
+                "romanization": "gawibawibo haja",
+                "en": "let's play rock, paper, scissors!"
+              },
+              "distractors": [
+                {
+                  "ko": "가자",
+                  "romanization": "gaja",
+                  "en": "let's go"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-crafts-v2-q3",
+      "titleEn": "Who Goes First?",
+      "blurbEn": "Read how friends pick who goes first.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261102,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "First Turn",
+          "hoyaLineEn": "Who goes first in yut? Let's find out!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Going First",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "누가 먼저 할래?",
+                          "romanization": "nuga meonjeo hallae",
+                          "en": "who wants to go first?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "가위바위보 하자!",
+                          "romanization": "gawibawibo haja",
+                          "en": "let's play rock, paper, scissors!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Mina asks who (nuga) goes first (meonjeo). Hoya wants to pick by rock, paper, scissors."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "내가 먼저 할게!",
+                          "romanization": "naega meonjeo halge",
+                          "en": "I'll go first!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Mina",
+                        "line": {
+                          "ko": "좋아! 다음은 나야!",
+                          "romanization": "joa daeumeun naya",
+                          "en": "okay! I'm next!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya won. The ending -ge says what he will do: he goes first."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Chat with a Friend",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-crafts-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-crafts-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-crafts-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Playdate Done!",
+          "hoyaLineEn": "You can pick who goes first with a friend. I'm so proud of you!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-crafts-v2-q3-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "공원",
+              "romanization": "gongwon",
+              "en": "At the park"
+            },
+            "partner": {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "윷놀이 하자!",
+                  "romanization": "yunnori haja",
+                  "en": "let's play yut!"
+                },
+                "replies": [
+                  {
+                    "id": "drink",
+                    "text": {
+                      "ko": "물을 마셔요.",
+                      "romanization": "mureul masyeoyo",
+                      "en": "I drink water."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drink water. Your friend wants to play yut, so say okay."
+                  },
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "좋아!",
+                      "romanization": "joa",
+                      "en": "okay, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "polite",
+                    "text": {
+                      "ko": "좋아요!",
+                      "romanization": "joayo",
+                      "en": "okay, sounds good! (polite)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend talks casually. Pick the reply without the polite -yo."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "누가 먼저 할래?",
+                  "romanization": "nuga meonjeo hallae",
+                  "en": "who wants to go first?"
+                },
+                "replies": [
+                  {
+                    "id": "rps",
+                    "text": {
+                      "ko": "가위바위보 하자!",
+                      "romanization": "gawibawibo haja",
+                      "en": "let's play rock, paper, scissors!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "won",
+                    "text": {
+                      "ko": "내가 이겼어!",
+                      "romanization": "naega igyeosseo",
+                      "en": "I won!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "No one has won yet. Pick a way to choose who goes first."
+                  },
+                  {
+                    "id": "book",
+                    "text": {
+                      "ko": "책이에요.",
+                      "romanization": "chaegieyo",
+                      "en": "It is a book."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says what something is. Your friend asks who goes first."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "내가 이겼어!",
+                  "romanization": "naega igyeosseo",
+                  "en": "I won!"
+                },
+                "replies": [
+                  {
+                    "id": "won",
+                    "text": {
+                      "ko": "내가 이겼어!",
+                      "romanization": "naega igyeosseo",
+                      "en": "I won!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend won this time. Cheer for your friend."
+                  },
+                  {
+                    "id": "well",
+                    "text": {
+                      "ko": "잘했어!",
+                      "romanization": "jalhaesseo",
+                      "en": "well done!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "what",
+                    "text": {
+                      "ko": "뭐 할래?",
+                      "romanization": "mwo hallae",
+                      "en": "what do you want to play?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You picked a game already. Your friend won, so cheer."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "내가 먼저 할게!",
+                  "romanization": "naega meonjeo halge",
+                  "en": "I'll go first!"
+                },
+                "replies": [
+                  {
+                    "id": "who",
+                    "text": {
+                      "ko": "누가 먼저 할래?",
+                      "romanization": "nuga meonjeo hallae",
+                      "en": "who wants to go first?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend goes first now. Say okay, and that you are next."
+                  },
+                  {
+                    "id": "school",
+                    "text": {
+                      "ko": "학교에 가요.",
+                      "romanization": "hakgyoe gayo",
+                      "en": "I go to school."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you go to school. Your friend goes first, so say you are next."
+                  },
+                  {
+                    "id": "next",
+                    "text": {
+                      "ko": "좋아! 다음은 나야!",
+                      "romanization": "joa daeumeun naya",
+                      "en": "okay! I'm next!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "Your friend goes first, and you are next. Have fun!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "누가 ___ 할래?",
+                "romanization": "nuga ___ hallae",
+                "en": "who wants to go first?"
+              },
+              "tiles": [
+                {
+                  "ko": "학교",
+                  "romanization": "hakgyo",
+                  "en": "school"
+                },
+                {
+                  "ko": "먼저",
+                  "romanization": "meonjeo",
+                  "en": "first"
+                },
+                {
+                  "ko": "이제",
+                  "romanization": "ije",
+                  "en": "now"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "내가 먼저 ___!",
+                "romanization": "naega meonjeo ___",
+                "en": "I'll go first!"
+              },
+              "tiles": [
+                {
+                  "ko": "놀자",
+                  "romanization": "nolja",
+                  "en": "let's play"
+                },
+                {
+                  "ko": "차례야",
+                  "romanization": "charyeya",
+                  "en": "it's the turn"
+                },
+                {
+                  "ko": "할게",
+                  "romanization": "halge",
+                  "en": "I'll do it"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "___ 하자!",
+                "romanization": "___ haja",
+                "en": "let's play rock, paper, scissors!"
+              },
+              "tiles": [
+                {
+                  "ko": "가위바위보",
+                  "romanization": "gawibawibo",
+                  "en": "rock, paper, scissors"
+                },
+                {
+                  "ko": "연필",
+                  "romanization": "yeonpil",
+                  "en": "pencil"
+                },
+                {
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "다음은 ___!",
+                "romanization": "daeumeun ___",
+                "en": "I'm next!"
+              },
+              "tiles": [
+                {
+                  "ko": "너야",
+                  "romanization": "neoya",
+                  "en": "it's you"
+                },
+                {
+                  "ko": "나야",
+                  "romanization": "naya",
+                  "en": "it's me"
+                },
+                {
+                  "ko": "책이에요",
+                  "romanization": "chaegieyo",
+                  "en": "it is a book"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-crafts-v2-q3-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "누가 먼저 할래?",
+                "romanization": "nuga meonjeo hallae",
+                "en": "who wants to go first?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "가위바위보 하자!",
+                    "romanization": "gawibawibo haja",
+                    "en": "let's play rock, paper, scissors!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "잘했어!",
+                    "romanization": "jalhaesseo",
+                    "en": "well done!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "연필이에요.",
+                    "romanization": "yeonpirieyo",
+                    "en": "It is a pencil."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "내가 먼저 할게!",
+                "romanization": "naega meonjeo halge",
+                "en": "I'll go first!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "내가 이겼어!",
+                    "romanization": "naega igyeosseo",
+                    "en": "I won!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "학교에 가요.",
+                    "romanization": "hakgyoe gayo",
+                    "en": "I go to school."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "좋아! 다음은 나야!",
+                    "romanization": "joa daeumeun naya",
+                    "en": "okay! I'm next!"
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:가위바위보} (gawibawibo) is rock-paper-scissors. Each player holds out a hand in one of three shapes, and the shapes decide who goes first or who wins.",
+      "sources": [
+        {
+          "title": "가위바위보(가위바위褓)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%80%EC%9C%84%EB%B0%94%EC%9C%84%EB%B3%B4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "가위바위보 「명사」 뜻풀이 첫 문장: 손을 내밀어 그 모양에 따라 순서나 승부를 정하는 방법. 둘째 문장은 두 손가락만 편 가위, 주먹을 쥔 바위, 손가락을 모두 편 보와 세 모양 사이의 이기고 지는 관계를 설명함."
+        },
+        {
+          "title": "가위바위보",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0000295",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: 한 손으로 세 가지 모양을 만들어 차례나 승부를 결정하는 놀이로 풀이함. 내용 단락: 둘 이상이 구호에 맞춰 동시에 손 모양을 내밀고, 같은 모양이 나오면 다시 하며, 늦게 내면 진 것으로 친다는 놀이 방법 설명."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-30): the claim is that 가위바위보 is rock-paper-scissors and that the hand shapes decide who goes first or who wins. The Standard Korean Language Dictionary entry 가위바위보 defines it as holding out a hand and settling order or victory by its shape; the Encyclopedia of Korean Culture entry defines it as a game of three hand shapes that decides turns or victory. Both sources resolved on 2026-10-30. The note is English; the locators are Korean summaries.\nLine 2 (passes: 2, independent fact-check, MAR culture and facts checker, a separate session that did not author the cell, 2026-10-30): both URLs reopened; the dictionary's 순서나 승부를 정하는 방법 and the encyclopedia's 차례나 승부를 결정 support the note. Finding: the draft said the hands are shown at the same time, which only the encyclopedia (not on the section 6.6 allowlist) says; the reviser removed it, so the note now says each player holds out a hand in one of three shapes (the dictionary's wording). No origin claim: the game is not framed as Korean in origin (section 5.1).\nLine 3 (passes: 3, MAR third pass, an independent session, 2026-10-30): both sources reopened; the revised wording matches the dictionary; no run of words is shared with either locator; no all-Koreans claim, no age wording. Outcome: pass."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Scissors, {ko:가위} (gawi), beat paper, {ko:보} (bo), the open hand; rock, {ko:바위} (bawi), beats scissors; and paper beats rock.",
+      "sources": [
+        {
+          "title": "가위바위보(가위바위褓)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%80%EC%9C%84%EB%B0%94%EC%9C%84%EB%B3%B4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "가위바위보 「명사」 뜻풀이 첫 문장: 손을 내밀어 그 모양에 따라 순서나 승부를 정하는 방법. 둘째 문장은 두 손가락만 편 가위, 주먹을 쥔 바위, 손가락을 모두 편 보와 세 모양 사이의 이기고 지는 관계를 설명함."
+        },
+        {
+          "title": "가위바위보",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0000295",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: 한 손으로 세 가지 모양을 만들어 차례나 승부를 결정하는 놀이로 풀이함. 내용 단락: 둘 이상이 구호에 맞춰 동시에 손 모양을 내밀고, 같은 모양이 나오면 다시 하며, 늦게 내면 진 것으로 친다는 놀이 방법 설명."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-30): the claim is the win cycle: scissors beat paper (the open hand), rock beats scissors, paper beats rock. The Standard Korean Language Dictionary entry 가위바위보 names the three shapes (two fingers out, a fist, all fingers out) and the cycle; the Encyclopedia of Korean Culture entry gives the same cycle. Both sources resolved on 2026-10-30.\nLine 2 (passes: 2, independent fact-check, MAR culture and facts checker, a separate session, 2026-10-30): both URLs reopened; the dictionary's second sentence gives the cycle word for word in Korean; the note's open hand for 보 matches 손가락을 모두 편 것. Outcome: pass.\nLine 3 (passes: 3, MAR third pass, an independent session, 2026-10-30): finding: the draft's last sentence (the same hands play again) leaned only on the encyclopedia, which is not on the allowlist; the reviser removed it in en, es and ko. The note now states only the dictionary's cycle; no shared run of words. Outcome: pass with that fix."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:놀래?} (nollae) and {ko:할래?} (hallae) ask a friend what they want to do. The ending is casual: it has no polite {ko:요} (yo).",
+      "sources": [
+        {
+          "title": "-ㄹ래",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%E3%84%B9%EB%9E%98",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "-ㄹ래 「어미」 뜻풀이: 해할 자리에 쓰여 앞으로 하려는 자기 뜻을 나타내거나 상대편의 뜻을 묻는 데 쓰는 종결 어미로 풀이함(요약)."
+        },
+        {
+          "title": "경어(敬語)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002676",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "상대경어법 단락: 격식이 필요 없는 가까운 관계에서는 비격식 등급을 쓰고, 이를 해요체(두루높임)와 해체(두루낮춤)로 나누며 해체를 반말로도 부른다는 설명."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-30): the claim is that 놀래? and 할래? ask a friend what they want to do and that the ending is casual, with no polite 요. The Standard Korean Language Dictionary entry -ㄹ래 defines it as a sentence ending of the 해할 (casual) level that states one's own intention or asks the listener's; the Encyclopedia of Korean Culture, 경어, places the 해체 (반말) level in close relationships. Both sources resolved on 2026-10-30.\nLine 2 (passes: 2, independent fact-check, MAR culture and facts checker, a separate session, 2026-10-30): both URLs reopened; the dictionary sense covers asking the listener's intention at the casual level; the encyclopedia paragraph covers casual speech between close people. Outcome: pass.\nLine 3 (passes: 3, MAR third pass, an independent session, 2026-10-30): both sources reopened; the note matches them and the cell (every -ㄹ래 line is between friends). No shared run of words. Outcome: pass."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "{ko:할게} (halge) says what you will do, like a promise. {ko:내가 먼저 할게!} (naega meonjeo halge) means I'll go first! It is casual, with no {ko:요} (yo).",
+      "sources": [
+        {
+          "title": "-ㄹ게",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%E3%84%B9%EA%B2%8C",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "-ㄹ게 「어미」 뜻풀이: 구어체로 해할 자리에 쓰여 어떤 행동에 대한 약속이나 의지를 나타내는 종결 어미로 풀이함(요약)."
+        },
+        {
+          "title": "먼저",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%A8%BC%EC%A0%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "먼저 「명사」 뜻풀이: 시간이나 순서에서 앞선 때로 풀이함(요약)."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, author sourcing, 2026-10-30): the claim is that 할게 says what you will do, like a promise, that 내가 먼저 할게! means I'll go first, and that it is casual. The Standard Korean Language Dictionary entry -ㄹ게 defines a spoken sentence ending of the 해할 level that states a promise or intention; its entry 먼저 gives the time or order that comes before. Both sources resolved on 2026-10-30.\nLine 2 (passes: 2, independent fact-check, MAR culture and facts checker, a separate session, 2026-10-30): both URLs reopened; promise or intention and the casual level are in the -ㄹ게 entry; first in order is in the 먼저 entry. Outcome: pass. The learning design checker asked for halkke; declined: Revised Romanization does not write tensification (F-CNT-002, as 학교 hakgyo), so halge stays.\nLine 3 (passes: 3, MAR third pass, an independent session, 2026-10-30): both sources reopened; the note matches them; no shared run of words. Outcome: pass."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Author (MAR, F-CURR-002 section 9.2, 2026-10-30): a content-skill agent wrote the cell from sections 5.1 and 5.6 S4: inviting a friend to play, rock-paper-scissors and who goes first, in three quests with Role Play in each; Practice, Apply and Check triples that differ from Volume 1; two culture and two language notes.",
+      "Language checker (independent session, 2026-10-30): casual speech between friends throughout, one polite -yo foil per Role Play turn; romanization is RR of the pronunciation (nollae, hallae, halge, igyeosseo, daeumeun); no heard round asks to tell 내 from 네. One nit: the ko gloss of 이제 read as next time; fixed.",
+      "Culture and facts checker (independent session, 2026-10-30): all six source URLs opened; the notes match the NIKL Standard Korean Language Dictionary and the Encyclopedia of Korean Culture; no Korean-origin claim for rock-paper-scissors, no stereotype, brand or real person; one nit: n1 said at the same time, which only the off-allowlist source says; removed.",
+      "Learning design checker (independent session, 2026-10-30): the q1 Role Play reply 축구 하자 was asked but never taught (now 줄넘기 하자, Stage 2 Play); the q3 Cloze tile 할래 also completed 내가 먼저 ___ (now 차례야). Declined: halkke for 할게, as RR writes no tensification (F-CNT-002).",
+      "Reviser (2026-10-30): applied the findings above to the cell and to its es and ko overlays.",
+      "Third pass (independent session, 2026-10-30): confirmed the revisions; n2's same-hands line leaned only on the off-allowlist source (removed); every Tap to Respond turn had two polite -yo distractors, so one per turn is now a casual line of the cell that cannot answer; an es reward line recast. Verdict after fixes: pass.",
+      "Machine checks: validate-content and the section 9.3 lint with zero findings; U-1 to U-11, the Role Play graph rules, the review-item freeze. No native-speaker or expert review is claimed: MAR is the multi-agent review."
+    ]
+  },
+  "contentVer": 1
+}
