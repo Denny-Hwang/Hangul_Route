@@ -26,8 +26,12 @@ const DECK: LectureDeckInput = {
     { kind: 'quest', id: 'quest:stage6-nature-q3' }, // the longest type prompt (Type the word for right, the way to the summit.)
     { kind: 'quest', id: 'quest:stage7-letters-q1' }, // trace 호야 and a four-syllable type target
     { kind: 'quest', id: 'quest:stage7-letters-q3' }, // two frames and the name round with its sound table
-    { kind: 'quest', id: 'quest:stage7-life-q2' }, // a frame of five bank words (아침에 ___을/를 먹어요.)
+    { kind: 'quest', id: 'quest:stage7-life-q2' }, // a frame of five bank words (아침에 ___을/를 먹어요.) and the Check's two banks (호야는 ___에 ___을/를 먹어요.)
     { kind: 'quest', id: 'quest:stage7-rites-q2' }, // trace 설날 and two-slot frames with two banks
+    // The other Write Frame Checks of Stage 7 (F-CURR-002 CM-3A S7; life q2 and letters q3 are above): every one fits too.
+    { kind: 'quest', id: 'quest:stage7-rites-q3' }, // 호야는 ___에 ___을/를 만들었어요.
+    { kind: 'quest', id: 'quest:stage7-nature-q3' }, // ___이/가 정말 ___.
+    { kind: 'quest', id: 'quest:stage7-crafts-q3' }, // 먼저 ___을/를 접어요.
   ],
   picker: null,
 };
