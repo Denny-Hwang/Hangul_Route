@@ -55,6 +55,8 @@ describe('the game.<kind> switches and their fallbacks (F-CURR-002 §7.1, §12.2
     expect(switched).toContain('quest:stage7-nature-v2-q3 step 3');
     // Row CM-42 S7 (Stage 7 Play & Crafts Volume 2, q3 Apply) is the second.
     expect(switched).toContain('quest:stage7-crafts-v2-q3 step 3');
+    // Row CM-43 S7 (Stage 7 Food & Daily Life Volume 2, q3 Apply) is the third.
+    expect(switched).toContain('quest:stage7-life-v2-q3 step 3');
   });
 
   /**
