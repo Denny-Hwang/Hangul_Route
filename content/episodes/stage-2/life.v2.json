@@ -1,0 +1,1238 @@
+{
+  "id": "episode:stage2-life-v2",
+  "stage": "stage2",
+  "theme": "life",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Taste and Table Words",
+  "subtitleEn": "Read tastes, a spoon, chopsticks and market food.",
+  "hoyaIntroEn": "Sweet, salty, spicy! Let us read how food tastes.",
+  "order": 2,
+  "pillarTags": [
+    "B1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-life-v2-q1",
+      "titleEn": "Sweet, Salty, Spicy",
+      "blurbEn": "Read three taste words: sweet, salty and spicy.",
+      "teaserEn": "Next: sour, bitter, a spoon and chopsticks.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How Does It Taste?",
+          "hoyaLineEn": "Food can taste sweet, salty or spicy. Let us read taste words!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Taste Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "달다",
+                      "romanization": "dalda",
+                      "en": "sweet",
+                      "syllables": [
+                        "dal",
+                        "da"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "짜다",
+                      "romanization": "jjada",
+                      "en": "salty",
+                      "syllables": [
+                        "jja",
+                        "da"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "맵다",
+                      "romanization": "maepda",
+                      "en": "spicy",
+                      "syllables": [
+                        "maep",
+                        "da"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s2-life-v2-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Word",
+          "minigameKind": "build-letter",
+          "minigameRef": "minigame:s2-life-v2-q1-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-life-v2-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Taste Words!",
+          "hoyaLineEn": "Sweet, salty and spicy: you read them all!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-v2-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "달다",
+                "romanization": "dalda",
+                "en": "sweet"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "짜다",
+                "romanization": "jjada",
+                "en": "salty"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "맵다",
+                "romanization": "maepda",
+                "en": "spicy"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            },
+            {
+              "id": "w5",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            },
+            {
+              "id": "w6",
+              "word": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q1-apply",
+          "kind": "build-letter",
+          "words": [
+            {
+              "ko": "달다",
+              "romanization": "dalda",
+              "en": "sweet",
+              "syllables": [
+                "dal",
+                "da"
+              ]
+            },
+            {
+              "ko": "김치",
+              "romanization": "gimchi",
+              "en": "kimchi",
+              "syllables": [
+                "gim",
+                "chi"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "hear-dalda",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "달다",
+                "romanization": "dalda",
+                "en": "sweet"
+              }
+            },
+            {
+              "id": "hear-bap",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-life-v2-q2",
+      "titleEn": "Spoon and Chopsticks",
+      "blurbEn": "Read spoon and chopsticks, and two more tastes: sour and bitter.",
+      "teaserEn": "Next: a food stall on market day.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Set the Table",
+          "hoyaLineEn": "Let us set the table and read two more tastes!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Table and Taste Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "숟가락",
+                      "romanization": "sutgarak",
+                      "en": "spoon",
+                      "syllables": [
+                        "sut",
+                        "ga",
+                        "rak"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "젓가락",
+                      "romanization": "jeotgarak",
+                      "en": "chopsticks",
+                      "syllables": [
+                        "jeot",
+                        "ga",
+                        "rak"
+                      ]
+                    },
+                    "picture": "card:chopsticks"
+                  }
+                ]
+              },
+              {
+                "captionEn": "Two more tastes.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "시다",
+                      "romanization": "sida",
+                      "en": "sour",
+                      "syllables": [
+                        "si",
+                        "da"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "쓰다",
+                      "romanization": "sseuda",
+                      "en": "bitter",
+                      "syllables": [
+                        "sseu",
+                        "da"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-life-v2-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-life-v2-q2-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Match the Picture",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-life-v2-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Table Words!",
+          "hoyaLineEn": "Spoon, chopsticks, sour and bitter: great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-v2-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "sagwa",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                },
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "word": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "seaweed rice roll"
+                  }
+                },
+                {
+                  "id": "sagwa",
+                  "pictureRef": "word:food-apple",
+                  "word": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "word": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q2-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "숟가락",
+              "romanization": "sutgarak",
+              "en": "spoon"
+            },
+            {
+              "ko": "젓가락",
+              "romanization": "jeotgarak",
+              "en": "chopsticks"
+            },
+            {
+              "ko": "시다",
+              "romanization": "sida",
+              "en": "sour"
+            },
+            {
+              "ko": "쓰다",
+              "romanization": "sseuda",
+              "en": "bitter"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q2-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "jeotgarak",
+                  "pictureRef": "card:chopsticks",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  }
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  }
+                },
+                {
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "word": {
+                    "ko": "바나나",
+                    "romanization": "banana",
+                    "en": "banana"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "word": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "pictureRef": "card:kimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-life-v2-q3",
+      "titleEn": "Market Day",
+      "blurbEn": "Read market, soup and side dishes, then find food at a market stall.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "To the Market",
+          "hoyaLineEn": "It is market day! Let us see what the stall has.",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Market Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "시장",
+                      "romanization": "sijang",
+                      "en": "market",
+                      "syllables": [
+                        "si",
+                        "jang"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "떡",
+                      "romanization": "tteok",
+                      "en": "rice cake"
+                    },
+                    "picture": "word:food-tteok"
+                  }
+                ]
+              },
+              {
+                "captionEn": "Rice, soup and side dishes make a meal.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "cooked rice"
+                    },
+                    "picture": "card:rice"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "국",
+                      "romanization": "guk",
+                      "en": "soup"
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "반찬",
+                      "romanization": "banchan",
+                      "en": "side dishes",
+                      "syllables": [
+                        "ban",
+                        "chan"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-life-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Find It at the Stall",
+          "minigameKind": "hidden-heritage",
+          "minigameRef": "minigame:s2-life-v2-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read the Word",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-life-v2-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Market Day!",
+          "hoyaLineEn": "You found the food at the market stall. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-life-v2-q3-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-sijang",
+              "prompt": {
+                "ko": "시장",
+                "romanization": "sijang",
+                "en": "market"
+              },
+              "options": [
+                {
+                  "id": "sijang",
+                  "text": {
+                    "ko": "시장",
+                    "romanization": "sijang",
+                    "en": "market"
+                  }
+                },
+                {
+                  "id": "sida",
+                  "text": {
+                    "ko": "시다",
+                    "romanization": "sida",
+                    "en": "sour"
+                  }
+                },
+                {
+                  "id": "banchan",
+                  "text": {
+                    "ko": "반찬",
+                    "romanization": "banchan",
+                    "en": "side dishes"
+                  }
+                }
+              ],
+              "answerId": "sijang"
+            },
+            {
+              "id": "hear-guk",
+              "prompt": {
+                "ko": "국",
+                "romanization": "guk",
+                "en": "soup"
+              },
+              "options": [
+                {
+                  "id": "guk",
+                  "text": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "gimchi",
+                  "text": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                }
+              ],
+              "answerId": "guk"
+            },
+            {
+              "id": "hear-banchan",
+              "prompt": {
+                "ko": "반찬",
+                "romanization": "banchan",
+                "en": "side dishes"
+              },
+              "options": [
+                {
+                  "id": "banchan",
+                  "text": {
+                    "ko": "반찬",
+                    "romanization": "banchan",
+                    "en": "side dishes"
+                  }
+                },
+                {
+                  "id": "guk",
+                  "text": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  }
+                },
+                {
+                  "id": "uyu",
+                  "text": {
+                    "ko": "우유",
+                    "romanization": "uyu",
+                    "en": "milk"
+                  }
+                }
+              ],
+              "answerId": "banchan"
+            },
+            {
+              "id": "hear-bap",
+              "prompt": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "options": [
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "sijang",
+                  "text": {
+                    "ko": "시장",
+                    "romanization": "sijang",
+                    "en": "market"
+                  }
+                },
+                {
+                  "id": "dalda",
+                  "text": {
+                    "ko": "달다",
+                    "romanization": "dalda",
+                    "en": "sweet"
+                  }
+                }
+              ],
+              "answerId": "bap"
+            },
+            {
+              "id": "hear-sida",
+              "prompt": {
+                "ko": "시다",
+                "romanization": "sida",
+                "en": "sour"
+              },
+              "options": [
+                {
+                  "id": "sida",
+                  "text": {
+                    "ko": "시다",
+                    "romanization": "sida",
+                    "en": "sour"
+                  }
+                },
+                {
+                  "id": "dalda",
+                  "text": {
+                    "ko": "달다",
+                    "romanization": "dalda",
+                    "en": "sweet"
+                  }
+                },
+                {
+                  "id": "guk",
+                  "text": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  }
+                }
+              ],
+              "answerId": "sida"
+            },
+            {
+              "id": "hear-gimchi",
+              "prompt": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              },
+              "options": [
+                {
+                  "id": "gimchi",
+                  "text": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  }
+                },
+                {
+                  "id": "banchan",
+                  "text": {
+                    "ko": "반찬",
+                    "romanization": "banchan",
+                    "en": "side dishes"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                }
+              ],
+              "answerId": "gimchi"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q3-apply",
+          "kind": "hidden-heritage",
+          "rounds": [
+            {
+              "id": "hh1",
+              "sceneId": "scene:food-market",
+              "altEn": "A food stall on a market day.",
+              "targets": [
+                {
+                  "id": "bap",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  },
+                  "spot": {
+                    "x": 12,
+                    "y": 168,
+                    "w": 86,
+                    "h": 90
+                  },
+                  "picture": "card:rice"
+                },
+                {
+                  "id": "gimchi",
+                  "word": {
+                    "ko": "김치",
+                    "romanization": "gimchi",
+                    "en": "kimchi"
+                  },
+                  "spot": {
+                    "x": 111,
+                    "y": 58,
+                    "w": 80,
+                    "h": 92
+                  },
+                  "picture": "card:kimchi"
+                },
+                {
+                  "id": "tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  },
+                  "spot": {
+                    "x": 202,
+                    "y": 58,
+                    "w": 80,
+                    "h": 92
+                  },
+                  "picture": "word:food-tteok"
+                },
+                {
+                  "id": "jeotgarak",
+                  "word": {
+                    "ko": "젓가락",
+                    "romanization": "jeotgarak",
+                    "en": "chopsticks"
+                  },
+                  "spot": {
+                    "x": 298,
+                    "y": 180,
+                    "w": 84,
+                    "h": 78
+                  },
+                  "picture": "card:chopsticks"
+                }
+              ],
+              "others": [
+                {
+                  "id": "guk",
+                  "word": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  },
+                  "spot": {
+                    "x": 110,
+                    "y": 168,
+                    "w": 82,
+                    "h": 90
+                  }
+                },
+                {
+                  "id": "sutgarak",
+                  "word": {
+                    "ko": "숟가락",
+                    "romanization": "sutgarak",
+                    "en": "spoon"
+                  },
+                  "spot": {
+                    "x": 204,
+                    "y": 180,
+                    "w": 82,
+                    "h": 78
+                  }
+                },
+                {
+                  "id": "hangari",
+                  "word": {
+                    "ko": "항아리",
+                    "romanization": "hangari",
+                    "en": "jar"
+                  },
+                  "spot": {
+                    "x": 20,
+                    "y": 58,
+                    "w": 80,
+                    "h": 92
+                  }
+                },
+                {
+                  "id": "baguni",
+                  "word": {
+                    "ko": "바구니",
+                    "romanization": "baguni",
+                    "en": "basket"
+                  },
+                  "spot": {
+                    "x": 293,
+                    "y": 58,
+                    "w": 86,
+                    "h": 92
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-life-v2-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-bap",
+              "promptShown": true,
+              "prompt": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "options": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "labelEn": "rice cake"
+                },
+                {
+                  "id": "sagwa",
+                  "pictureRef": "word:food-apple",
+                  "labelEn": "apple"
+                }
+              ],
+              "answerId": "bap"
+            },
+            {
+              "id": "see-uyu",
+              "promptShown": true,
+              "prompt": {
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
+              },
+              "options": [
+                {
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "water"
+                },
+                {
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "labelEn": "egg"
+                }
+              ],
+              "answerId": "uyu"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "A spoon, {ko:숟가락}, and chopsticks, {ko:젓가락}, together are called {ko:수저}. Rice and dishes with broth, such as soup, are eaten with the spoon; other side dishes are eaten with the chopsticks.",
+      "sources": [
+        {
+          "title": "수저",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%88%98%EC%A0%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Headword 수저 1 「명사」 「1」: ‘숟가락과 젓가락을 아울러 이르는 말.’"
+        },
+        {
+          "title": "식사예절 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/7821",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "내용: ‘밥과 국물이 있는 김치·찌개·국은 숟가락으로 먹고, 다른 찬은 젓가락으로 먹는다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-43 S2, 2026-10-30): the Standard Korean Language Dictionary entry 수저 opened on 2026-10-30; sense 「1」 is 'the word for a spoon and chopsticks together'. The second sentence restates the National Folk Museum of Korea entry 식사예절 (한국의식주생활사전), whose quote and access date (2026-10-23) are those recorded and checked for Stage 7 Food n3 (row CM-3C); this row did not re-open that page.\nPass 2 (culture and facts checker, 2026-10-30): each sentence says no more than its quote: 수저 as the pair word; rice and dishes with broth by spoon, other side dishes by chopsticks. Chopsticks are shared East Asian heritage and the note claims no origin. Both institutions are on the §6.6 allowlist under their names as of the access dates.\nPass 3 (language checker, 2026-10-30): English paraphrase, no wording copied; the {ko:} tokens and particles of the es and ko text checked (숟가락과, 젓가락을, 수저예요).\nPass 4 (reviser and third pass, 2026-10-30): no change to the claim; no native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Soy sauce, {ko:간장}, tastes salty. It is a jang, one of the fermented sauces at the base of Korean food. In 2024 UNESCO inscribed Knowledge, beliefs and practices related to jang making in the Republic of Korea.",
+      "sources": [
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO, Intangible Cultural Heritage (Representative List)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Inscribed in 2024 (19.COM) on the Representative List of the Intangible Cultural Heritage of Humanity. Description, first sentence: ‘Jang are fermented sauces – such as soybean paste, soy sauce and red chili paste – that form the basis of the Korean diet.’"
+        },
+        {
+          "title": "간장",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%84%EC%9E%A5",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Headword 간장 1 (간醬) 「명사」: ‘음식의 간을 맞추는 데 쓰는 짠맛이 나는 흑갈색 액체.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-43 S2, 2026-10-30): the UNESCO Representative List page of the element opened on 2026-10-30 (its English title 'Knowledge, beliefs and practices related to jang making in the Republic of Korea', inscribed 2024, 19.COM; its Spanish page title 'Conocimientos, creencias y prácticas relacionadas con la elaboración de jang en la República de Corea'); the description says jang are fermented sauces such as soybean paste, soy sauce and red chili paste that form the basis of the Korean diet. The Standard Korean Language Dictionary entry 간장 1 opened the same day: a salty-tasting dark brown liquid used to season food.\nPass 2 (culture and facts checker, 2026-10-30): the UNESCO status is claimed only for the exact element, under its UNESCO name (es: its UNESCO Spanish name; ko: the English name with a literal gloss, no unofficial Korean title), as 'inscribed 2024' (§5.1). Soy sauce is only said to taste salty. UNESCO and the National Institute of Korean Language are allowlisted under their names on 2026-10-30.\nPass 3 (language checker, 2026-10-30): English paraphrase; es and ko tokens checked (간장은).\nPass 4 (reviser and third pass, 2026-10-30): the en text shortened to the 240-character line without changing the claim; no native-speaker or expert review is claimed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Volume 2 of Food & Daily Life, Stage 2 (F-CURR-002 §5.3 S2, row CM-43 S2): the five tastes (달다, 짜다, 맵다 in q1; 시다, 쓰다 in q2), spoon and chopsticks (숟가락, 젓가락), the table set (밥, 국, 반찬) and a market scene (시장; Hidden Heritage on scene:food-market, q3 Apply, its round copied from the scene).",
+      "The language, culture and learning-design checkers ran as separate lenses in the authoring session; no native-speaker or expert review is claimed.",
+      "Author pass (2026-10-30): 3 quests of six steps, 251, 256 and 261 s; new items 3, 3 and 1 (젓가락 is a Volume 1 Letters item, 국 and 반찬 Volume 1 Food items); Practice and Check items taught earlier: 50, 100 and 86 in 100 (lesson-recycle at least 30).",
+      "Triples q1 trace-word / build-letter / type-hangul, q2 pic-word-match / card-match / pic-word-match, q3 listen-pick / hidden-heritage / listen-pick: none is a Volume 1 triple, and every Practice can scaffold (U-11).",
+      "Language checker (MAR, 2026-10-30): Korean spelling and RR through the F-CNT-002 converter (maepda, sutgarak, jeotgarak, sseuda: RR marks no tensification); 해요체 in every ko line; particles after the note tokens; ko meanings never hold their own word (꿀이나 설탕 같은 맛, 소금 같은 맛 …); es uses the tú form. Reviser: the q2 Hoya line now says what the quest does (read two more tastes); es 시다 is 'ácido, agrio'.",
+      "Culture and facts checker (MAR, 2026-10-30): n1 (수저, spoon for rice and broth, chopsticks for other dishes) and n2 (soy sauce tastes salty; jang and the UNESCO element inscribed 2024 under its UNESCO name) matched to the NIKL, NFM and UNESCO quotes; chopsticks are not framed as Korean in origin; no person, brand, shop or price.",
+      "The scene's two new props (rice cakes, a spoon) are generic and its facts f1 and f2 unchanged.",
+      "Learning design checker (MAR, 2026-10-30): §9.3 lints clean; Checks are Dictation (달다, 밥), Pic-Word Match (젓가락 …) and Read Pick Meaning (밥, 우유), so Stage 2's Checks stay at most 8 of 21 per kind (38.1 in 100); every scored read uses Stage 1 letters only (짜다, 맵다, 쓰다, 숟가락 and 젓가락 are traced, pictured, matched on cards or heard, never read in a scored round, U-4).",
+      "Learning design checker, continued: sound changes for the device voice (맵다 [맵따], 숟가락 [숟까락], 젓가락 [저까락]) are kept out of Dictation; 쓰다 (also 'write' and 'use') is never asked without its meaning.",
+      "Third pass (2026-10-30): the whole cell, its es and ko overlays and the scene's es and ko entries re-read after the reviser; no further change."
+    ]
+  },
+  "contentVer": 1
+}
