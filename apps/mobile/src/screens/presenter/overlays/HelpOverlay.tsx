@@ -19,7 +19,7 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * In a phone window (`phone`, F-TCH-004 section 3.6; the overlay layout until the rail, row PN-4) one
  * line under the title says how to move and how to show the controls: swipe, and a tap on the slide.
  * Above the key rows, in every layout, the Touch and mouse group (AMENDMENTS-PRESENTER-NAV section 9.2,
- * `HELP_TOUCH`): a heading and plain lines on swipe, the Previous and Next buttons, a mouse click, and
+ * `HELP_TOUCH`; mock overlays.md "Touch and mouse", `mock/overlay-help-touch.html`): a heading and plain lines on swipe, the Previous and Next buttons, a mouse click, and
  * what Keep controls visible does; nothing in it takes input.
  */
 export function HelpOverlay({

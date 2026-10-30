@@ -23,7 +23,8 @@ import { usePresenterView } from './presenter-context';
  *   sits between Exit and Next; on a wide touch window (O9, `wideTouch`) Previous sits just before
  *   Next. The focus order is the visual order. When one row does not hold them the tools take a row
  *   above, Previous and Next stay on the bottom row, and if the tools do not fit that row either,
- *   Timer, Blank and Slides go into More (`dockedBarLayout`, measured on the real labels); the band
+ *   Timer, Blank and Slides go into More (`dockedBarLayout`, measured on the real labels; mock
+ *   stage-and-bar.md "Navigation (PN-0b)", "Docked bar"); the band
  *   grows by `BAR_BAND` per row and the stage shrinks, so nothing overlaps it. The band stays when
  *   the bar auto-hides (its content fades; no fade under reduced motion), so no slide moves. Once
  *   touch is seen (`pinNav`) Previous and Next sit outside the fading part, in the same places:
@@ -320,11 +321,13 @@ function DockedBar(props: BarParts): ReactElement {
           </View>
         );
       case 'chips':
-        // The chips keep their basis on one row even when none shows, so a chip that appears never wraps the band.
+        // The chips keep their basis on one row even when none shows, so a chip that appears never wraps the band;
+        // the status region is mounted with the band, so a chip that arrives is announced into a region already there.
         return (
           <Animated.View
             key={slot}
-            {...(props.chips.length > 0 ? { testID: 'presenter-status', role: 'status' as const } : {})}
+            testID="presenter-status"
+            role="status"
             {...groupPointer}
             style={{
               opacity: groupOpacity,

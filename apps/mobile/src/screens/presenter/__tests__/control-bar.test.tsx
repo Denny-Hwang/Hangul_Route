@@ -111,6 +111,12 @@ describe('the docked order (O6): Previous first, Next last, Sound between Exit a
     expect(byTestId(r.root, 'presenter-status')[0]!.props.role).toBe('status');
   });
 
+  it('mounts the status region with the band, before any chip, so a chip that arrives is announced', async () => {
+    const r = await render(bar());
+    expect(byTestId(r.root, 'presenter-status')).toHaveLength(1);
+    expect(byTestId(r.root, 'presenter-status')[0]!.props.role).toBe('status');
+  });
+
   it('is one toolbar named Lesson controls', async () => {
     const r = await render(bar());
     expect(rowOf(r).props.role).toBe('toolbar');

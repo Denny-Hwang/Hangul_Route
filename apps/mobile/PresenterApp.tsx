@@ -163,7 +163,10 @@ import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/
  * Docked windows (section 5.1): once touch is seen (`touchSeenAtStart`, or the first touch or pen
  * press), Previous and Next never fade and take taps at once; the other controls keep D3's fade. A
  * touch tap on empty stage rings Next for `NUDGE_MS` instead of stepping; a mouse click steps on a
- * slide with nothing to point at.
+ * slide with nothing to point at. The bar's order and wrap are `ControlBar`'s (section 5.1, O6, O9:
+ * `wideTouch` on a touch window 1600 px or wider). On touch, a lesson that opens on its title slide
+ * shows the start hint for 6 s (section 9.3, O7) until the device's first bar button or swipe step,
+ * on at most three lessons (`lecture:navHint`, `logic/lecture/nav-hint.ts`).
  *
  * The way back (section 3.5 "History"; item 3): one history entry per phase (`logic/lecture/
  * history.ts`), so the browser or phone back goes lesson -> Exit confirm (a covering overlay closes
