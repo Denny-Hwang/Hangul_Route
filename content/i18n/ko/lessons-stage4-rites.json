@@ -83,7 +83,7 @@
       "storySteps.l4.label": "나도 같은 마음이라는 답"
     },
     "minigame:s4-rites-q1-apply": {
-      "clozePick.rounds.r1.sentence.gloss": "상대의 이름을 묻는 말",
+      "clozePick.rounds.r1.sentence.gloss": "상대를 무엇이라고 부르는지 묻는 말",
       "clozePick.rounds.r1.tiles.ireum.gloss": "사람이나 물건을 부르는 말",
       "clozePick.rounds.r1.tiles.gabang.gloss": "물건을 넣어 메는 것",
       "clozePick.rounds.r1.tiles.yeonpil.gloss": "글씨 쓰는 도구",
@@ -150,7 +150,7 @@
       "clozePick.rounds.r1.tiles.bangawoyo.gloss": "만나서 기쁘다는 말",
       "clozePick.rounds.r1.tiles.badeuseyo.gloss": "주는 것을 가지라고 공손하게 권하는 말",
       "clozePick.rounds.r1.tiles.jinaesseoyo.gloss": "그동안 생활했다는 말",
-      "clozePick.rounds.r2.sentence.gloss": "고맙다고 하고 미나에게도 새해 복을 비는 덕담",
+      "clozePick.rounds.r2.sentence.gloss": "고맙다고 하고 미나에게 같은 덕담을 돌려주는 말",
       "clozePick.rounds.r2.tiles.do.gloss": "앞의 말에 '역시'의 뜻을 더하는 말",
       "clozePick.rounds.r2.tiles.neun.gloss": "주제를 나타내는 조사 (받침 없는 말 뒤)",
       "clozePick.rounds.r2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",

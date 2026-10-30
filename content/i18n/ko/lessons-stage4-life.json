@@ -105,7 +105,7 @@
     },
     "minigame:s4-life-q1-apply": {
       "orderIt.rounds.r1.sentence.gloss": "식사했는지 묻는 인사말",
-      "orderIt.rounds.r2.sentence.gloss": "우유를 마셨는지 묻는 말",
+      "orderIt.rounds.r2.sentence.gloss": "흰 음료를 마셨는지 묻는 말",
       "orderIt.rounds.r4.sentence.gloss": "흰 음료를 마셨다는 말",
       "orderIt.rounds.r1.distractors.masyeosseoyo.gloss": "마신 일을 말하는 말",
       "orderIt.rounds.r2.distractors.meogeosseoyo.gloss": "먹은 일을 말하는 말",
@@ -154,24 +154,24 @@
       "rolePlay.scene.nodes.end.closing": "아빠에게 음식 맛을 모두 말했어요. 이제 먹어요!"
     },
     "minigame:s4-life-q2-apply": {
-      "orderIt.rounds.r1.sentence.gloss": "음식 맛이 어떤지 묻는 말",
-      "orderIt.rounds.r2.sentence.gloss": "김치가 어떤지 묻는 말",
+      "orderIt.rounds.r1.sentence.gloss": "먹어 보니 어떤지 묻는 말",
+      "orderIt.rounds.r2.sentence.gloss": "채소를 절여 만든 한국 음식이 어떤지 묻는 말",
       "orderIt.rounds.r4.sentence.gloss": "국물 음식이 뜨겁다는 말",
       "orderIt.rounds.r4.distractors.darayo.gloss": "설탕 같은 맛이 난다는 말",
       "orderIt.rounds.r1.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "orderIt.rounds.r1.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
       "orderIt.rounds.r2.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "orderIt.rounds.r2.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
-      "orderIt.rounds.r3.sentence.gloss": "사과가 어떤지 묻는 말",
+      "orderIt.rounds.r3.sentence.gloss": "빨갛고 둥근 과일이 어떤지 묻는 말",
       "orderIt.rounds.r3.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "orderIt.rounds.r3.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
     },
     "minigame:s4-life-q2-check": {
-      "clozePick.rounds.c1.sentence.gloss": "김치가 어떤지 묻는 말",
+      "clozePick.rounds.c1.sentence.gloss": "채소를 절여 양념에 버무린 한국 음식이 어떤지 묻는 말",
       "clozePick.rounds.c1.tiles.sagwa.gloss": "빨갛고 둥근 과일",
       "clozePick.rounds.c1.tiles.gimchi.gloss": "채소를 절여 양념에 버무린 한국 음식",
       "clozePick.rounds.c1.tiles.uyu.gloss": "소에서 얻는 흰 음료",
-      "clozePick.rounds.c2.sentence.gloss": "사과가 어떤지 묻는 말",
+      "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일이 어떤지 묻는 말",
       "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
       "clozePick.rounds.c2.tiles.reul.gloss": "목적어를 나타내는 조사 (받침 없는 말 뒤)"
@@ -207,8 +207,8 @@
     },
     "minigame:s4-life-q3-apply": {
       "orderIt.rounds.r1.sentence.gloss": "맵지 않다고 대답하는 말",
-      "orderIt.rounds.r2.sentence.gloss": "국이 뜨거운지 묻는 말",
-      "orderIt.rounds.r3.sentence.gloss": "김치 맛이 좋다는 말",
+      "orderIt.rounds.r2.sentence.gloss": "국물 음식이 뜨거운지 묻는 말",
+      "orderIt.rounds.r3.sentence.gloss": "채소를 절여 만든 한국 음식의 맛이 좋다는 말",
       "orderIt.rounds.r4.sentence.gloss": "뜨겁지 않다고 대답하는 말",
       "orderIt.rounds.r1.distractors.masisseoyo.gloss": "맛이 좋다는 말",
       "orderIt.rounds.r4.distractors.maewoyo.gloss": "고추처럼 혀가 얼얼한 맛이 난다는 말",
