@@ -1,12 +1,26 @@
-import { layout, spacing, touchTarget } from '@hangul-route/design-system';
+import { borderWidth, layout, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { StatusChip } from '../../../logic/lecture/tools';
-import { byTestId, hostNodes, press, render } from '../../../test-support/render';
+import { byTestId, hostNodes, press, render, textOf } from '../../../test-support/render';
 import { ControlBar, type ControlBarProps } from '../ControlBar';
 import { PresenterViewProvider } from '../presenter-context';
-import { BAR_BAND, BAR_GROUP_GAP, BAR_ROW_GAP, NAV_CLEARANCE, NEXT_MIN_WIDTH, STAGE_PADDING, STATUS_MIN } from '../stage-metrics';
+import {
+  BAR_BAND,
+  BAR_GROUP_GAP,
+  BAR_ROW_GAP,
+  NAV_CLEARANCE,
+  NEXT_MIN_WIDTH,
+  PHONE_RAIL,
+  PHONE_RAIL_COMPACT,
+  PHONE_RAIL_GAP,
+  RAIL_BUTTON,
+  RAIL_BUTTON_COMPACT,
+  RAIL_LABEL_ROOM,
+  STAGE_PADDING,
+  STATUS_MIN,
+} from '../stage-metrics';
 
 /**
  * The docked control bar (AMENDMENTS-PRESENTER-NAV section 5.1, owner choices O6 and O9, row PN-3; mock
@@ -279,7 +293,262 @@ describe('the clearance on the docked band (section 5.0)', () => {
   });
 });
 
+/**
+ * The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, owner choices O1 a, O3 a and O10 a, row PN-4;
+ * mock stage-and-bar.md "Navigation (PN-0b)", "Phone rail"): a vertical toolbar beside the stage, More
+ * at the top, Next / Reveal and Previous as a pair centred in its height, Sound at the bottom; never
+ * hidden; the compact rail's icon buttons named by their labels; the label fallback measured on the
+ * real words (the render lane has no layout engine, so the test hands each probe word the width
+ * PN-0b measured in Chromium, through its `onLayout`).
+ */
+const RAIL_IDS = ['presenter-more', 'presenter-next', 'presenter-back', 'presenter-sound'];
+const NOTCH = { top: 0, right: 47, bottom: 21, left: 47 };
+
+function railOrder(r: ReactTestRenderer): string[] {
+  const rail = byTestId(r.root, 'presenter-rail')[0]!;
+  return hostNodes(rail, (n) => n.props.role === 'button').map((n) => String(n.props['data-testid']));
+}
+
+/** PN-0b "Rail labels": the longest word of each label at 18 px bold in the iOS system font. */
+const WORDS: Record<'en' | 'es' | 'ko', { full: number[]; more: number[] }> = {
+  en: { full: [44.0, 56.7, 40.2, 74.7, 55.2], more: [44.0] },
+  es: { full: [35.7, 67.8, 81.4, 70.8, 59.8], more: [35.7] },
+  ko: { full: [31.1, 31.1, 31.1, 31.1, 31.1], more: [31.1] },
+};
+
+/** Hands the rail's word probe its measured widths: the full-rail words first (More, Next, Reveal, Previous, Sound), then More's. */
+function measureWords(r: ReactTestRenderer, words: { full: number[]; more: number[] }): void {
+  const probes = r.root.findAll((n) => typeof n.type !== 'string' && typeof n.props.testID === 'string' && n.props.testID.startsWith('presenter-rail-word-') && typeof n.props.onLayout === 'function');
+  const full = probes.filter((n) => String(n.props.testID).startsWith('presenter-rail-word-full-'));
+  const more = probes.filter((n) => String(n.props.testID).startsWith('presenter-rail-word-more-'));
+  full.forEach((node, i) => layoutOf(node, words.full[Math.min(i, words.full.length - 1)]!, 24));
+  more.forEach((node, i) => layoutOf(node, words.more[Math.min(i, words.more.length - 1)]!, 24));
+}
+
+describe('the phone rail (section 5.2): order, role, place', () => {
+  it.each(['full', 'compact'] as const)('the %s rail: More, Next, Previous, Sound top to bottom, in that focus order', async (size) => {
+    const r = await render(bar({ compact: true, rail: size, railHeight: 390 }));
+    expect(railOrder(r)).toEqual(RAIL_IDS);
+    // Nothing of the docked band or the floating bar.
+    expect(byTestId(r.root, 'presenter-bar-band')).toHaveLength(0);
+    expect(byTestId(r.root, 'presenter-bar-compact')).toHaveLength(0);
+  });
+
+  it('is a vertical toolbar named Lesson controls', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }));
+    const toolbar = byTestId(r.root, 'presenter-rail-toolbar')[0]!;
+    expect(toolbar.props.role).toBe('toolbar');
+    expect(toolbar.props['aria-orientation']).toBe('vertical');
+    expect(toolbar.props['aria-label']).toBe(getMessages('en').learner.presenter.bar.label);
+  });
+
+  it('centres Next and Previous as a pair: two equal flexible sections above and below it', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }));
+    const pair = byTestId(r.root, 'presenter-rail-pair')[0]!;
+    expect(hostNodes(pair, (n) => n.props.role === 'button').map((n) => n.props['data-testid'])).toEqual(['presenter-next', 'presenter-back']);
+    const top = flatStyle(byTestId(r.root, 'presenter-rail-top')[0]!);
+    const bottom = flatStyle(byTestId(r.root, 'presenter-rail-bottom')[0]!);
+    expect(top.flexGrow).toBe('1');
+    expect(bottom.flexGrow).toBe('1');
+    expect(top.flexBasis).toBe(bottom.flexBasis);
+    expect(top.justifyContent).toBe('flex-start');
+    expect(bottom.justifyContent).toBe('flex-end');
+    expect(isInside(byTestId(r.root, 'presenter-more')[0]!, byTestId(r.root, 'presenter-rail-top')[0]!)).toBe(true);
+    expect(isInside(byTestId(r.root, 'presenter-sound')[0]!, byTestId(r.root, 'presenter-rail-bottom')[0]!)).toBe(true);
+  });
+
+  it('sits at the right inside the right inset, full height between the insets, with the inert gap on its stage side', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 369, insets: NOTCH }));
+    const rail = flatStyle(byTestId(r.root, 'presenter-rail')[0]!);
+    expect(rail.width).toBe(`${PHONE_RAIL}px`);
+    expect(rail.marginRight).toBe(`${NOTCH.right}px`);
+    expect(rail.marginBottom).toBe(`${NOTCH.bottom}px`);
+    expect(rail.marginTop).toBe('0px');
+    // The border.strong rule and the padding together are the 12 px no button reaches.
+    expect(rail.borderLeftWidth).toBe(`${borderWidth.base}px`);
+    expect(Number.parseFloat(rail.paddingLeft!) + borderWidth.base).toBe(PHONE_RAIL_GAP);
+    expect(Number.parseFloat(rail.paddingLeft!) + borderWidth.base + RAIL_BUTTON + Number.parseFloat(rail.paddingRight!)).toBe(PHONE_RAIL);
+  });
+
+  it('the numbers: full 104 with 88 px buttons, compact 80 with 64 px squares, the gap 12, the label room 84 and 52', () => {
+    expect(PHONE_RAIL).toBe(104);
+    expect(PHONE_RAIL_COMPACT).toBe(80);
+    expect(PHONE_RAIL_GAP).toBe(spacing.md);
+    expect(RAIL_BUTTON).toBe(88);
+    expect(RAIL_BUTTON_COMPACT).toBe(touchTarget.min);
+    expect(RAIL_LABEL_ROOM).toEqual({ full: 84, more: 52 });
+    // The clearance at the smallest rail stage (unit 0.4375): 21 px of stage padding plus the 12 px gap.
+    expect(STAGE_PADDING * 0.4375 + PHONE_RAIL_GAP).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+  });
+
+  it('never hides: hidden from the presenter changes nothing, and it takes taps at once (no grace)', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, hidden: true }));
+    const rail = byTestId(r.root, 'presenter-rail')[0]!;
+    expect(opacityUp(rail)).toBe(1);
+    for (const id of RAIL_IDS) {
+      const node = byTestId(r.root, id)[0]!;
+      expect(opacityUp(node), id).toBe(1);
+      for (let at: ReactTestInstance | null = node; at; at = at.parent) {
+        if (typeof at.type === 'string') expect(at.props.style?.pointerEvents === 'none' || at.props.pointerEvents === 'none', id).toBe(false);
+      }
+    }
+  });
+
+  it('presses: More opens the sheet, Next, Previous and Sound run their own action', async () => {
+    const onMore = vi.fn();
+    const onNext = vi.fn();
+    const onPrev = vi.fn();
+    const onSound = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onMore, onNext, onPrev, onSound }));
+    await press(byTestId(r.root, 'presenter-more')[0]!);
+    expect(onMore).toHaveBeenCalledWith(true);
+    await press(byTestId(r.root, 'presenter-next')[0]!);
+    await press(byTestId(r.root, 'presenter-back')[0]!);
+    await press(byTestId(r.root, 'presenter-sound')[0]!);
+    expect([onNext.mock.calls.length, onPrev.mock.calls.length, onSound.mock.calls.length]).toEqual([1, 1, 1]);
+    expect(byTestId(r.root, 'presenter-more')[0]!.props['aria-haspopup']).toBe('dialog');
+  });
+
+  it('More open: the sheet sits over the stage beside the rail, never over it', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 369, insets: NOTCH, moreOpen: true }));
+    const sheet = byTestId(r.root, 'presenter-more-sheet')[0]!;
+    expect(isInside(sheet, byTestId(r.root, 'presenter-rail')[0]!)).toBe(false);
+    expect(flatStyle(sheet).right).toBe(`${NOTCH.right + PHONE_RAIL + spacing.sm}px`);
+    expect(flatStyle(sheet).left).toBe(`${NOTCH.left + spacing.sm}px`);
+    expect(byTestId(r.root, 'presenter-more')[0]!.props['aria-expanded']).toBe(true);
+    // The rail stays as it was (it never hides, the sheet is beside it).
+    expect(railOrder(r)).toEqual(RAIL_IDS);
+  });
+});
+
+describe('the full rail buttons (88 wide, at least 64 tall, Next 96 unless the rail is under 328 px)', () => {
+  it.each([
+    [375, 96],
+    [328, 96],
+    [320, touchTarget.min],
+  ])('a rail %i px tall: Next is %i tall and the primary fill; the others 88 x 64', async (railHeight, nextHeight) => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight }));
+    const next = flatStyle(byTestId(r.root, 'presenter-next')[0]!);
+    expect(next.width).toBe(`${RAIL_BUTTON}px`);
+    expect(next.minHeight).toBe(`${nextHeight}px`);
+    for (const id of ['presenter-more', 'presenter-back', 'presenter-sound']) {
+      const style = flatStyle(byTestId(r.root, id)[0]!);
+      expect(style.width, id).toBe(`${RAIL_BUTTON}px`);
+      expect(style.minHeight, id).toBe(`${touchTarget.min}px`);
+      // No side padding: the label has the button less its borders (84 px).
+      expect(style.paddingLeft ?? '0px', id).toBe('0px');
+    }
+  });
+
+  it('icon above a visible label at the body floor (18 px), centred, a word never broken', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }));
+    for (const id of RAIL_IDS) {
+      const button = byTestId(r.root, id)[0]!;
+      const label = hostNodes(button, (n) => n.props.dir === 'auto' || (typeof n.props.style?.fontSize === 'string'))[0]!;
+      const style = flatStyle(label);
+      expect(style.fontSize, id).toBe(`${typography.size.body}px`);
+      expect(style.textAlign, id).toBe('center');
+      expect(style.wordBreak, id).toBe('keep-all');
+      expect(style.overflowWrap, id).toBe('normal');
+    }
+    // Previous, Next and Sound carry their glyph above the label; More is text only.
+    expect(flatStyle(byTestId(r.root, 'presenter-back')[0]!).flexDirection).toBe('column');
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('no full-rail label overflows its button in %s at 18 px: every word PN-0b measured fits the 84 px room', async (lang) => {
+    const onRailLabels = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailLabels }, lang));
+    measureWords(r, WORDS[lang]);
+    expect(onRailLabels).not.toHaveBeenCalledWith(false);
+    for (const width of WORDS[lang].full) expect(width).toBeLessThanOrEqual(RAIL_LABEL_ROOM.full);
+    // The labels the rail shows are the shipped ones.
+    const m = getMessages(lang).learner.presenter.bar;
+    expect(byTestId(r.root, 'presenter-back')[0]!.props['aria-label']).toBe(m.prev.cta);
+    expect(byTestId(r.root, 'presenter-sound')[0]!.props['aria-label']).toBe(m.sound.cta);
+    expect(byTestId(r.root, 'presenter-more')[0]!.props['aria-label']).toBe(m.more.cta);
+    expect(byTestId(r.root, 'presenter-next')[0]!.props['aria-label']).toBe(getMessages(lang).common.buttons.next);
+  });
+
+  it('probes every word of every full-rail label once, Next and Reveal both (so the rail never flips between builds)', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }, 'ko'));
+    const words = r.root
+      .findAll((n) => typeof n.type !== 'string' && String(n.props.testID ?? '').startsWith('presenter-rail-word-full-') && typeof n.props.onLayout === 'function')
+      .map((n) => textOf(byTestId(n, String(n.props.testID))[0] ?? n));
+    const m = getMessages('ko').learner.presenter.bar;
+    const expected = [...new Set([m.more.cta, getMessages('ko').common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta].flatMap((label) => label.split(/\s+/)))];
+    expect(words).toEqual(expected);
+  });
+});
+
+describe('the compact rail (O10 a): 64 px squares, icons with their labels as the accessible names', () => {
+  it.each(['en', 'es', 'ko'] as const)('%s: Next, Previous and Sound icon only, named by their labels; More keeps its text', async (lang) => {
+    const r = await render(bar({ compact: true, rail: 'compact', railHeight: 360, muted: true }, lang));
+    const m = getMessages(lang).learner.presenter.bar;
+    const names: Record<string, string> = {
+      'presenter-next': getMessages(lang).common.buttons.next,
+      'presenter-back': m.prev.cta,
+      'presenter-sound': m.sound.cta,
+    };
+    for (const [id, name] of Object.entries(names)) {
+      const button = byTestId(r.root, id)[0]!;
+      expect(button.props['aria-label'], id).toBe(name);
+      // No visible label: the glyph is the face.
+      expect(labelText(button), id).toBe('');
+      const style = flatStyle(button);
+      expect(style.width, id).toBe(`${touchTarget.min}px`);
+      expect(style.height, id).toBe(`${touchTarget.min}px`);
+    }
+    const more = byTestId(r.root, 'presenter-more')[0]!;
+    expect(more.props['aria-label']).toBe(m.more.cta);
+    expect(labelText(more)).toBe(m.more.cta);
+    expect(flatStyle(byTestId(r.root, 'presenter-rail')[0]!).width).toBe(`${PHONE_RAIL_COMPACT}px`);
+  });
+
+  it('Reveal names Next while builds remain', async () => {
+    const r = await render(bar({ compact: true, rail: 'compact', railHeight: 360, revealNext: true }));
+    expect(byTestId(r.root, 'presenter-next')[0]!.props['aria-label']).toBe('Reveal');
+  });
+});
+
+describe('the rail label fallback (PN-0b N8): a word wider than its room', () => {
+  it('a full-rail word over 84 px (Previous at 125 % text, 93 px) asks for the compact rail', async () => {
+    const onRailLabels = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailLabels }));
+    measureWords(r, { full: [55, 70.9, 50.3, 93.4, 69], more: [55] });
+    expect(onRailLabels).toHaveBeenLastCalledWith(false);
+    // Back at the standard size, the rail asks for the full rail again.
+    measureWords(r, WORDS.en);
+    expect(onRailLabels).toHaveBeenLastCalledWith(true);
+  });
+
+  it('on the compact rail, a More word over 52 px shows the `more` glyph, named by the label', async () => {
+    const r = await render(bar({ compact: true, rail: 'compact', railHeight: 390 }));
+    expect(labelText(byTestId(r.root, 'presenter-more')[0]!)).toBe('More');
+    measureWords(r, { full: [55, 70.9, 50.3, 93.4, 69], more: [55] });
+    const more = byTestId(r.root, 'presenter-more')[0]!;
+    expect(more.props['aria-label']).toBe('More');
+    expect(labelText(more)).toBe('');
+    expect(more.props['data-glyph']).toBe('more');
+  });
+
+  it('the probe takes no pointer and is hidden from screen readers', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }));
+    const probe = byTestId(r.root, 'presenter-rail-probe')[0]!;
+    expect(probe.props['aria-hidden']).toBe(true);
+    expect(flatStyle(probe).pointerEvents ?? probe.props.pointerEvents).toBe('none');
+    expect(flatStyle(probe).opacity).toBe('0');
+    expect(flatStyle(probe).position).toBe('absolute');
+  });
+});
+
 // ---- helpers ----
+
+/** The words a button draws (its text nodes), not its accessible name. */
+function labelText(node: ReactTestInstance): string {
+  return hostNodes(node, (n) => n.props.dir === 'auto')
+    .flatMap((n) => n.children.filter((c): c is string => typeof c === 'string'))
+    .join(' ');
+}
 
 /** A host node's style, flattened from react-native-web's inline style (classes carry the rest). */
 function flatStyle(node: ReactTestInstance): Record<string, string | undefined> {

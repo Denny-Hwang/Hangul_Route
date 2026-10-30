@@ -16,8 +16,10 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * Close. The language is the device's one language (owner items 6 and 7), set on the Display (Aa)
  * sheet of the home and the start screen, so this overlay has no language chips. Real pixels; it
  * scrolls inside the stage box when taller.
- * In a phone window (`phone`, F-TCH-004 section 3.6; the overlay layout until the rail, row PN-4) one
- * line under the title says how to move and how to show the controls: swipe, and a tap on the slide.
+ * In the overlay layout (`phone`: a phone window too narrow for the rail, or any phone with the rail's
+ * kill switch off; F-TCH-004 section 3.6, AMENDMENTS-PRESENTER-NAV section 5.3) one line under the
+ * title says how to move and how to show the controls: swipe, and a tap on the slide. Beside the rail
+ * (row PN-4) the controls are always shown, so the line is not drawn.
  * Above the key rows, in every layout, the Touch and mouse group (AMENDMENTS-PRESENTER-NAV section 9.2,
  * `HELP_TOUCH`; mock overlays.md "Touch and mouse", `mock/overlay-help-touch.html`): a heading and plain lines on swipe, the Previous and Next buttons, a mouse click, and
  * what Keep controls visible does; nothing in it takes input.
@@ -36,7 +38,7 @@ export function HelpOverlay({
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
-  /** A phone window: the swipe and tap line under the title (`help.phoneBar`). */
+  /** The overlay layout (the floating phone bar): the swipe and tap line under the title (`help.phoneBar`). */
   phone?: boolean;
 }): ReactElement {
   const textScale = useTypeScale();

@@ -60,9 +60,10 @@ import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage
 import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
-import { isPhoneWindow, navLayout, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { flags } from './src/config/flags';
 import { NUDGE_MS, type GesturePointer, type StageCommand } from './src/logic/lecture/stage-gesture';
 import { wideTouchWindow } from './src/logic/lecture/bar-layout';
 import { claimNavHint, finishNavHint, navHintKey, navHintStarts, type NavHintStore } from './src/logic/lecture/nav-hint';
@@ -280,6 +281,31 @@ function Presenter(): ReactElement {
   const phone = isPhoneWindow({ w: window.width, h: window.height, screenW: screen?.width ?? null, screenH: screen?.height ?? null, coarse }, PHONE_RULE);
   const phoneRef = useRef(phone);
   phoneRef.current = phone;
+  // The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4): where it fits beside the stage, and
+  // while its kill switch (`flags.presenterRail`, read at build time) is on; else the floating bar.
+  // `railWordsFit` is the label fallback: a full-rail word wider than its button draws the compact rail.
+  const [railWordsFit, setRailWordsFit] = useState(true);
+  const rail = railSize({ phone, window, insets, enabled: flags.presenterRail, labelsFit: railWordsFit }, RAIL_RULE);
+  // Where Previous and Next live (section 4): the docked band, the rail, or the floating bar (overlay).
+  const nav = navLayout(phone, rail);
+  const overlayRef = useRef(nav === 'overlay');
+  overlayRef.current = nav === 'overlay';
+  // The home's Help speaks of the lesson, which runs sideways: an upright phone asks the gate for the
+  // window turned (its top and bottom insets become side ones), so the phone line shows only where the
+  // lesson will use the floating bar.
+  const lessonRail =
+    window.height > window.width
+      ? railSize(
+        {
+          phone,
+          window: { width: window.height, height: window.width },
+          insets: { left: Math.max(insets.top, insets.bottom), right: Math.max(insets.top, insets.bottom) },
+          enabled: flags.presenterRail,
+          labelsFit: railWordsFit,
+        },
+        RAIL_RULE,
+      )
+    : rail;
   const upright = window.height > window.width;
   // A short window (a phone sideways): the phone start screen steps its title and Start down.
   const short = window.height < layout.shortHeight;
@@ -700,9 +726,10 @@ function Presenter(): ReactElement {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
       }
-      // A phone step hides the compact bar at once: it never covers a new slide or build (section 3.6).
+      // A phone step hides the floating bar at once: it never covers a new slide or build (section 3.6).
+      // The rail never hides (AMENDMENTS-PRESENTER-NAV section 5.2).
       const stepped = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (phoneRef.current && stepped) hideBarNow();
+      if (overlayRef.current && stepped) hideBarNow();
       // Next on the End slide: the hint, and focus on Exit (the docked bar) or More, which holds it (the phone bar, shown).
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
@@ -1108,16 +1135,15 @@ function Presenter(): ReactElement {
   useEffect(() => subscribePresenterPop((landed) => onPop.current(landed)), []);
 
   // ---- render ----
-  // A phone window has no band: its compact bar floats over the stage, so the stage is the window less
-  // the safe area, judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so
-  // a bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
-  const box = stageBox(window, phone ? 0 : band, insets);
+  // A phone window has no band: its floating bar sits over the stage, so the stage is the window less
+  // the safe area, or (the rail, section 5.2) the window less the four insets and the rail's column;
+  // either is judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so a
+  // bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
+  const box = stageBox(window, phone ? 0 : band, insets, railWidth(rail, RAIL_RULE));
   const scale = stageScale(box, phone ? PHONE_STAGE_BOUNDS : STAGE_BOUNDS);
   const tooSmall = phone ? scale.tooSmall : stageScale(stageBox(window, BAR_BAND, insets), STAGE_BOUNDS).tooSmall || scale.tooSmall;
   const stageShows = stageView({ phone, window, tooSmall });
   const stageViewContext: PresenterView = { ...view, unit: scale.unit, phone };
-  // Where Previous and Next live (AMENDMENTS-PRESENTER-NAV section 4): the phone rail is row PN-4.
-  const nav = navLayout(phone);
   // The bar's overlays speak the chrome language; only the stage (the slides) speaks the slide language.
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
@@ -1244,7 +1270,7 @@ function Presenter(): ReactElement {
             keepVisible={keepVisible}
             onKeepVisible={setKeepVisible}
             onClose={() => setHomeHelp(false)}
-            phone={phone}
+            phone={navLayout(phone, lessonRail) === 'overlay'}
           />
         ) : null}
       </View>
@@ -1338,10 +1364,20 @@ function Presenter(): ReactElement {
       }
       // `{ point }` comes only with pointing on (owner choice O2, row PN-5).
     };
+    /**
+     * The rail stays beside an open More sheet (section 5.2), which covers the stage: a press on its
+     * Previous, Next or Sound then closes the sheet and does nothing else, as a tap on the stage does.
+     */
+    const railClosesMore = (): boolean => {
+      if (nav !== 'rail' || !moreOpenRef.current) return false;
+      activate();
+      openMore(false);
+      return true;
+    };
     const bar =
       page !== null ? null : (
         <ControlBar
-          hidden={phone ? barHidden || moreOpen : barHidden}
+          hidden={nav === 'overlay' ? barHidden || moreOpen : nav === 'rail' ? false : barHidden}
           pinNav={nav === 'docked' && touchSeen}
           wideTouch={nav === 'docked' && wideTouchWindow(window.width, touchSeen)}
           nudge={nudge}
@@ -1350,15 +1386,20 @@ function Presenter(): ReactElement {
           fullscreenSupported={fullscreenSupported()}
           fullscreen={fullscreen}
           onPrev={() => {
+            if (railClosesMore()) return;
             // The step a bar button makes ends the start hint (More open swallows it, so it is no step).
             if (!moreOpenRef.current) navStepSeen();
             userDispatch('prev');
           }}
           onNext={() => {
+            if (railClosesMore()) return;
             if (!moreOpenRef.current) navStepSeen();
             userDispatch('next');
           }}
-          onSound={() => userDispatch('replay-sound')}
+          onSound={() => {
+            if (railClosesMore()) return;
+            userDispatch('replay-sound');
+          }}
           onFullscreen={() => {
             activate();
             toggleFullscreen();
@@ -1389,6 +1430,9 @@ function Presenter(): ReactElement {
           {...(phone ? {} : { onBandHeight: setBand })}
           exitRef={exitRef}
           compact={phone}
+          rail={rail}
+          railHeight={window.height - insets.top - insets.bottom}
+          onRailLabels={setRailWordsFit}
           insets={insets}
           moreOpen={moreOpen}
           onMore={(open) => {
@@ -1466,7 +1510,7 @@ function Presenter(): ReactElement {
                   if (on) setBarHidden(false);
                 }}
                 onClose={() => userDispatch('close')}
-                phone={phone}
+                phone={nav === 'overlay'}
               />
             ) : null}
             {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
@@ -1475,7 +1519,27 @@ function Presenter(): ReactElement {
       </>
     );
     const exitConfirm = p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} /> : null;
-    body = phone ? (
+    body = nav === 'rail' ? (
+      // The rail (section 5.2): the stage column takes the window less the left, top and bottom insets;
+      // the rail sits at its right, inside the right inset, so the class tools cover the stage only and
+      // nothing of the rail ever overlaps it. The rail follows the stage in the DOM (left to right).
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.surface.paper }}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+          }}
+        >
+          {stageAndTools}
+        </View>
+        {bar}
+        {exitConfirm}
+      </View>
+    ) : phone ? (
       // The whole window, less the safe area, is the stage box; the compact bar floats over its
       // bottom edge, after the class tools, so a touch can always clear or leave them.
       <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>

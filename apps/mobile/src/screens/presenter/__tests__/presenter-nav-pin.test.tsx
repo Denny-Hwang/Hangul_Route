@@ -13,9 +13,11 @@ import { byTestId, press, render, textOf } from '../../../test-support/render';
  * seen, Previous and Next keep opacity 1 and take taps after `presenter.autoHideMs` and inside the
  * `BAR_SHOW_GRACE_MS` after a show, while the chips and tools fade and keep the grace; mouse only,
  * the whole bar fades (README D3); a touch tap on empty stage rings Next for `NUDGE_MS` and steps
- * nothing. In a phone window (844 x 390, the overlay layout) the same tap shows and hides the bar,
- * and with More open the stage is covered (a tap closes it). The page's input kind, its activity and
- * its pointer media are driven by the test.
+ * nothing. In a phone window too narrow for the rail (568 x 320, the overlay layout) the same tap
+ * shows and hides the bar, and with More open the stage is covered (a tap closes it). On a phone with
+ * room (844 x 390, row PN-4) the rail never hides, takes taps at once, rings Next on an empty tap and
+ * keeps the stage covered while More is open. The page's input kind, its activity and its pointer
+ * media are driven by the test.
  */
 
 const page = vi.hoisted(() => ({ input: null as ((kind: InputKind) => void) | null, activity: null as (() => void) | null, touchAtStart: false }));
@@ -38,6 +40,15 @@ vi.mock('../../../platform/presenter', async (importOriginal) => {
       };
     },
     touchSeenAtStart: () => page.touchAtStart,
+  };
+});
+// The phone rail's kill switch (`EXPO_PUBLIC_PRESENTER_RAIL`, read at build time), set per test.
+const railSwitch = vi.hoisted(() => ({ on: true }));
+vi.mock('../../../config/flags', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../../../config/flags')>();
+  return {
+    ...real,
+    flags: new Proxy(real.flags, { get: (target, key) => (key === 'presenterRail' ? railSwitch.on : Reflect.get(target, key)) }),
   };
 });
 // The picture art reads Metro's `__DEV__`, which the Node render lane does not define.
@@ -250,8 +261,8 @@ describe("'nudge-next': a touch tap on empty stage rings Next and steps nothing 
   });
 });
 
-describe('a phone window (the overlay layout, sections 5.2 and 5.3)', () => {
-  const phone = { width: 844, height: 390, scale: 1, fontScale: 1 };
+describe('a phone window too narrow for the rail (the overlay layout, sections 5.2 and 5.3)', () => {
+  const phone = { width: 568, height: 320, scale: 1, fontScale: 1 };
   const tablet = { width: 1180, height: 820, scale: 1, fontScale: 1 };
   afterEach(() => {
     Dimensions.set({ window: tablet, screen: tablet });
@@ -321,5 +332,106 @@ describe('a phone window (the overlay layout, sections 5.2 and 5.3)', () => {
     } finally {
       spy.mockRestore();
     }
+  });
+});
+
+describe('a phone window with room: the rail (section 5.2, row PN-4)', () => {
+  const phone = { width: 844, height: 390, scale: 1, fontScale: 1 };
+  const tablet = { width: 1180, height: 820, scale: 1, fontScale: 1 };
+  afterEach(() => {
+    Dimensions.set({ window: tablet, screen: tablet });
+  });
+
+  it('draws the rail, not the floating bar; it never fades and takes taps at once, after idle and after a step', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    expect(byTestId(r.root, 'presenter-rail')).toHaveLength(1);
+    expect(byTestId(r.root, 'presenter-bar-compact')).toHaveLength(0);
+    const ids = ['presenter-more', 'presenter-next', 'presenter-back', 'presenter-sound'];
+    const shown = async (): Promise<void> => {
+      for (const id of ids) {
+        expect(opacityOf(one(r, id)), id).toBe(1);
+        expect(await takesPointer(one(r, id)), id).toBe(true);
+      }
+    };
+    await shown();
+    await tick(presenter.autoHideMs + 2000);
+    await shown();
+    const was = counter(r);
+    await press(one(r, 'presenter-next'));
+    expect(counter(r)).not.toBe(was);
+    await shown();
+    // A swipe steps and the rail stays.
+    tapStage(r, 'touch', -100);
+    await tick(10);
+    await shown();
+  });
+
+  it('a touch tap on empty stage rings the rail Next and steps nothing (never a hidden zone)', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    const was = counter(r);
+    tapStage(r, 'touch');
+    expect(counter(r)).toBe(was);
+    expect(one(r, 'presenter-next').props['data-nudge']).toBe('on');
+    await tick(NUDGE_MS + 10);
+    expect(one(r, 'presenter-next').props['data-nudge']).toBeUndefined();
+    expect(opacityOf(one(r, 'presenter-next'))).toBe(1);
+  });
+
+  it('More open covers the stage: a swipe steps nothing, and a press on the rail Next closes More and steps nothing', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    await press(one(r, 'presenter-more'));
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+    const was = counter(r);
+    tapStage(r, 'touch', -100);
+    await tick(10);
+    expect(counter(r)).toBe(was);
+    await press(one(r, 'presenter-next'));
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
+    expect(counter(r)).toBe(was);
+    // Closed, the same press steps.
+    await press(one(r, 'presenter-next'));
+    expect(counter(r)).not.toBe(was);
+  });
+
+  it("Help beside the rail has no overlay line (the phone line says to tap the slide for the controls, which the rail never needs)", async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    await press(one(r, 'presenter-more'));
+    await press(one(r, 'presenter-help-button'));
+    expect(byTestId(r.root, 'presenter-help')).toHaveLength(1);
+    expect(byTestId(r.root, 'presenter-help-phone-bar')).toHaveLength(0);
+  });
+});
+
+describe('the rail kill switch off (EXPO_PUBLIC_PRESENTER_RAIL=0, section 15)', () => {
+  const phone = { width: 844, height: 390, scale: 1, fontScale: 1 };
+  const tablet = { width: 1180, height: 820, scale: 1, fontScale: 1 };
+  afterEach(() => {
+    railSwitch.on = true;
+    Dimensions.set({ window: tablet, screen: tablet });
+  });
+
+  it('844 x 390 draws the overlay layout of section 5.3 (no rail, no strip); the PN-2 tap rules stay', async () => {
+    railSwitch.on = false;
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    expect(byTestId(r.root, 'presenter-rail')).toHaveLength(0);
+    expect(byTestId(r.root, 'presenter-bar-compact')).toHaveLength(1);
+    expect(byTestId(r.root, 'presenter-grabber')).toHaveLength(0);
+    await tick(presenter.autoHideMs + 1000);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(false);
+    const was = counter(r);
+    // A touch tap on empty stage shows the bar and never steps; a swipe steps and hides it.
+    tapStage(r, 'touch');
+    await tick(BAR_SHOW_GRACE_MS + 100);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(true);
+    expect(counter(r)).toBe(was);
+    tapStage(r, 'touch', -100);
+    await tick(10);
+    expect(counter(r)).not.toBe(was);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(false);
   });
 });

@@ -415,7 +415,7 @@ describe('the phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4)', () =
     expect(railSize({ phone: true, window: { width: Number.NaN, height: 390 }, insets: NO_INSETS, enabled: true }, RAIL)).toBeNull();
     expect(railSize({ phone: false, window: { width: 844, height: 390 }, insets: NO_INSETS, enabled: true }, RAIL)).toBeNull();
     // A bad inset reads as none.
-    expect(railSize({ phone: true, window: { width: 664, height: 360 }, insets: { top: 0, right: Number.NaN, bottom: 0, left: -5 }, enabled: true }, RAIL)).toBe('full');
+    expect(railSize({ phone: true, window: { width: 664, height: 360 }, insets: { right: Number.NaN, left: -5 }, enabled: true }, RAIL)).toBe('full');
   });
 
   it('railWidth: the column the rail takes from the stage box', () => {
