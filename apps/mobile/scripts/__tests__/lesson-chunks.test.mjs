@@ -182,6 +182,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'order-game-chunk', marker: 'screen-chunk:story-order' },
       { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
       { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
+      { name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' },
     ]);
   });
 
@@ -221,6 +222,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-31: the dictation chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
     expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
+    // Row CM-3C: the Did you know? tip's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/quest/culture-tip-chunk.tsx')).toContain(`export const CULTURE_TIP_CHUNK = '${SCREEN_CHUNKS[9].marker}';`);
+    expect(read('src/screens/quest/culture-tip-entry.tsx')).toContain("import('./culture-tip-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -289,6 +293,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'order-game-chunk has no web bundle: the chunk is missing from the build',
       'role-play-chunk has no web bundle: the chunk is missing from the build',
       'dictation-chunk has no web bundle: the chunk is missing from the build',
+      'culture-tip-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -447,11 +452,14 @@ describe('precacheReport and its budget lines', () => {
     // measures 4,762,235 B on main 524961dae (4,751,444 B), so the line is 4,765,000 B.
     // The merged CM-30/31/34/35/3C stack with row CM-3A S4 measures 4,783,492 B (release build), so the line is 4,790,000 B.
     // CM-3A S2 (stacked on the five open parents) measures 4,785,010 B with them; the stack's line stays 4,790,000 B.
+    // CM-3A S6 on the merged CM-30, CM-31, CM-34, CM-35 and CM-3C stack measures 4,783,796 B (release build, Metro
+    // cache cleared), under the same line.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_790_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_783_492).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_783_796).toBeGreaterThanOrEqual(0);
     // The line stays a small margin over the latest measurement: CM-3A S2 with its five parents, 4,785,010 B.
     expect(PRECACHE_BUDGET.startBundleRaw - 4_785_010).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_785_010).toBeLessThan(10_000);

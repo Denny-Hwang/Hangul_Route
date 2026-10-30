@@ -135,9 +135,10 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
     }
     case 'cloze-pick': {
-      // Row CM-30, the produce rung (section 4.3): a word or particle gap asks the completed sentence (and a word gap
-      // its answer word, so what the review index holds and what the memory credits agree); a value gap
-      // asks the card it is read from (the `rea` item). Its Listen & Pick fallback answers with the same round ids.
+      // Row CM-30, the produce rung (section 4.3): a word or particle gap asks the completed sentence only (one answer
+      // grades the item the round asks, section 4.8; picking a tile is no lex produce format, so a due answer word gets
+      // its read-rung credit inside the sentence instead); a value gap asks the card it is read from (the `rea` item).
+      // Its Listen & Pick fallback answers with the same round ids.
       const round = scope.clozePick?.rounds.find((r) => r.id === itemId);
       if (!round) return undefined;
       if (round.gapKind === 'value') {
@@ -147,9 +148,7 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       }
       const answer = round.tiles[round.answerIndex];
       if (!answer) return undefined;
-      // A word gap also asks its answer word (the build's item of it, as extract.ts emits); a particle is no item.
-      const word = round.gapKind === 'particle' ? undefined : text(answer);
-      return { texts: texts({ ko: fillClozeGap(round.sentence.ko, answer.ko), kind: 'pat' }, word), jamoIds: [], rung: 'produce' };
+      return { texts: texts({ ko: fillClozeGap(round.sentence.ko, answer.ko), kind: 'pat' }), jamoIds: [], rung: 'produce' };
     }
     case 'story-order': {
       // F-CURR-002 row CM-34: a slot asks the line that comes next (`<round>/<panel>`), read in order: the read rung. No

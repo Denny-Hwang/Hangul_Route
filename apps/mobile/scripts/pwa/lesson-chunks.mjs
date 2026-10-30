@@ -123,6 +123,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // F-CURR-002 CM-3A S2 (stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, all open) adds 1,623 B (Read Pick Meaning
   // in Listen & Pick, the lecture and memory mapping, the Check header and room of Type Hangul and Pic-Word Match, the
   // optional label overlay field): 4,785,010 B raw / 1,276,601 B gzip with its five parents, under the same line.
+  // F-CURR-002 CM-3A S6 (the Stage 6 Check rotation, stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, each under its
+  // own line alone) measures 4,783,796 B raw / 1,276,277 B gzip (release `build:web`, Metro cache cleared) with the five
+  // games merged together: their doors and fallbacks add up past 4,765,000 B, and the row itself adds about 207 B (the
+  // Stage 6 Check kinds and the other-direction value gap rule, which the lesson parse enforces as validate-content
+  // does). The line is that measurement plus a 6,204 B rounding margin.
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -299,6 +304,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/dictation-entry.ts`).
   Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
+  // F-CURR-002 row CM-3C: the Did you know? tip at the reward step and on the card back
+  // (`src/screens/quest/culture-tip-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/quest/culture-tip-entry.tsx` while `upperCards` is on).
+  Object.freeze({ name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' }),
 ]);
 
 /**

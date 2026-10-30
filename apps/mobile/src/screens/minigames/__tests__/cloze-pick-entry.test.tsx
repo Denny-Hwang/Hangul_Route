@@ -6,7 +6,7 @@ import { tileId } from '../../../logic/cloze-pick/round';
 import { getMessages } from '@hangul-route/i18n';
 import { useAudioStore } from '../../../store/audio-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
-import { ClozePickStep, type ClozePickRendered } from '../cloze-pick-entry';
+import { ClozePickStep, FLAG_DECIDE_TIMEOUT_MS, type ClozePickRendered } from '../cloze-pick-entry';
 import type { MinigameHost } from '../host';
 
 /**
@@ -148,6 +148,22 @@ describe('game.cloze-pick off: the Listen & Pick fallback with a text prompt', (
     const { r, rendered } = await step(['word']);
     expect(byTestId(r.root, 'lesson-waiting').length).toBeGreaterThan(0);
     expect(rendered).toEqual([]);
+  });
+
+  it('a switch still undecided after its deadline counts as off: the fallback, never an endless wait', async () => {
+    flag.value = null;
+    const { r, rendered } = await step(['word']);
+    await act(async () => {
+      vi.advanceTimersByTime(FLAG_DECIDE_TIMEOUT_MS);
+    });
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(0);
+    expect(rendered).toEqual(['listen-pick']);
+    // A late decision does not swap the step mid-round.
+    flag.value = true;
+    await act(async () => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(rendered).toEqual(['listen-pick']);
   });
 });
 

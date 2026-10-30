@@ -54,6 +54,15 @@ describe('dictation-unambiguous: homophones (낫 / 낮 / 낯)', () => {
   });
 });
 
+describe('dictation-unambiguous: vowels said alike (개 / 게)', () => {
+  it('keeps 개 out of Dictation when 게 is taught, and admits it when a picture settles it or 게 is not taught', () => {
+    const taught = teach('quest:t', ['개', 'gae', 'dog'], ['게', 'ge', 'crab']);
+    expect(rows(lint(v2([taught, hear('quest:h', [dictation('개', 'gae', 'dog')])])))).toEqual([`error ${V2} quests[1].scopes[0].rounds[0]`]);
+    expect(rows(lint(v2([taught, hear('quest:h', [dictation('개', 'gae', 'dog', { pictureRef: 'word:dog' })])])))).toEqual([]);
+    expect(rows(lint(v2([teach('quest:t', ['개', 'gae', 'dog']), hear('quest:h', [dictation('개', 'gae', 'dog')])])))).toEqual([]);
+  });
+});
+
 describe('dictation-unambiguous: sound changes (같이, 학교)', () => {
   it('keeps 같이 [가치] out of Dictation, alone or beside 가치', () => {
     expect(rows(lint(v2([teach('quest:t', ['같이', 'gachi', 'together']), hear('quest:h', [dictation('같이', 'gachi', 'together')])])))).toEqual([`error ${V2} quests[1].scopes[0].rounds[0]`]);

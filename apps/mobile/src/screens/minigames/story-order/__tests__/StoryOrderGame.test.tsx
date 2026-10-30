@@ -143,6 +143,9 @@ describe('Story Order: ordering', () => {
     // The pressed button is gone: focus moves to the line that replaces it.
     expect(reader.focused).toBe(1);
     expect(textOf(byTestId(r.root, 'story-order-meanings-shown')[0]!)).toBe(EN.storyOrder.meaningsShown);
+    // Web: the line takes focus by script only (tabIndex -1) and is never a Tab stop that does nothing.
+    const holders = r.root.findAll((n) => typeof n.type === 'string' && n.props.tabIndex !== undefined && byTestId(n, 'story-order-meanings-shown').length > 0);
+    expect(holders.map((n) => String(n.props.tabIndex))).toEqual(['-1']);
     for (const p of MORNING.panels) expect(screenTexts(r.root)).toContain(p.caption.en);
     expect(byTestId(r.root, 'story-order-card-up')[0]!.props['aria-label']).toBe('먼저 일어나요., meonjeo ireonayo. First, I get up.');
     await press(pressable(r.root, 'story-order-card-up'));

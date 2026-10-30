@@ -3,7 +3,8 @@ import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } fro
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TypeRound } from '../../../logic/reviews/review-rounds';
 import { byTestId, press, resetPlatform, textOf } from '../../../test-support/render';
-import { TypeRoundView } from '../ReviewRounds';
+import { getMessages } from '@hangul-route/i18n';
+import { ROUND_WAITING_LINE_MS, RoundWaiting, TypeRoundView } from '../ReviewRounds';
 
 /**
  * F-CURR-002 row CM-14 (review of #831): the Daily Review's Type Hangul round after a far miss. The field starts
@@ -89,5 +90,23 @@ describe('Daily Review: the Type Hangul round after a far miss', () => {
     await typeKeys(r.root, 'ㅎㅗㅇ');
     await tap(r.root, 'hangul-key-delete');
     expect(typedText(r.root)).toBe('호');
+  });
+});
+
+describe('a Dictation round while its chunk loads (row CM-31 review)', () => {
+  it('shows nothing at first, then the calm status line, in a polite live region', async () => {
+    vi.useFakeTimers();
+    let r!: ReactTestRenderer;
+    await act(async () => {
+      r = TestRenderer.create(<RoundWaiting />);
+    });
+    mounted.push(r);
+    const region = byTestId(r.root, 'daily-review-round').find((n) => n.props['aria-live'] === 'polite');
+    expect(region).toBeDefined();
+    expect(byTestId(r.root, 'daily-review-round-waiting')).toHaveLength(0);
+    await act(async () => {
+      vi.advanceTimersByTime(ROUND_WAITING_LINE_MS);
+    });
+    expect(textOf(byTestId(r.root, 'daily-review-round-waiting')[0]!)).toBe(getMessages('en').learner.presenter.state.loading);
   });
 });
