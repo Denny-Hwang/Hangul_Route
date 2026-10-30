@@ -1043,4 +1043,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
+  'learner.episode.volumes.tab': [[1], [2]],
+  'learner.episode.volumes.tabA11y': [[1], [2]],
+  'a11y.journeyVolume': [[1], [2]],
 };

@@ -97,6 +97,9 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-crafts-q3',
       'quest:stage6-letters-q2',
       'quest:stage6-life-q2',
+      // Row CM-43 S6: the Stage 6 Food Volume 2 Apply (q1, the recipe card) and Check (q3, the food label).
+      'quest:stage6-life-v2-q1',
+      'quest:stage6-life-v2-q3',
       'quest:stage6-rites-q2',
     ]);
   });

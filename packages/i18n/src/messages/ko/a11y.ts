@@ -124,7 +124,21 @@ export const a11y = {
     },
     realia: {
       summary: (kind: string, lines: number) => `${kind}, ${lines}줄`,
-      kind: { menu: '메뉴판', ticket: '기차표', sign: '산길 표지판', priceCards: '가격표', plain: '읽을거리' },
+      kind: {
+        menu: '메뉴판',
+        ticket: '기차표',
+        sign: '산길 표지판',
+        priceCards: '가격표',
+        plain: '읽을거리',
+        recipe: '요리법 카드',
+        receipt: '영수증',
+        label: '식품 라벨',
+        forecast: '일기 예보',
+        calendar: '달력',
+        timetable: '시간표',
+        map: '지도',
+        poster: '포스터',
+      },
       lineHint: '누르면 들려요',
       found: '여기 있어요',
       lookHere: '여기를 봐요',
@@ -364,4 +378,5 @@ export const a11y = {
     board: '윷판',
     throw: (ko: string, romanization: string, n: number) => `던진 결과: ${ko}, ${romanization}. 말이 ${n}칸 움직였어요.`,
   },
+  journeyVolume: (n: number) => `${n}권을 열어요`,
 } satisfies DeepPartial<Messages['a11y']>;

@@ -53,6 +53,56 @@ TRAIL SIGN (Hike & Ask)                 PRICE CARDS (Buy at Market)
 - Prices are **round practice amounts in won** inside the drawn sheet only (OD-11): multiples of 1,000 up to 10,000, written as Korean menus write them (`3,000원`), with the romanization of how they are read (samcheon won). Never a product price, a shop name, a brand, a logo, a company's ticket layout or a real train number.
 - Directions are a **drawn arrow and a word**: a board points with its shape and an arrow glyph, and its accessible name says the direction ("to the right"); a question never depends on the arrow's colour.
 
+## The eight kinds of row CM-47 (F-CURR-002)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` sections 5.2-5.7 (the Volume 2 Stage 6 realia: "every scope gets a kind") and 6.6 (the packs' L4 "real use" realia), row **CM-47**. The same two layers, the same line buttons, the same marks and the same states as the four kinds above; only the sheet's anatomy and its dressing change. Each kind is one generic, drawn real-world text (no brand, shop, company, product, logo or real timetable).
+
+```
+RECIPE (Life S6: a recipe card)          RECEIPT (Life S6: an order slip, a receipt)
+   { bowl, spoon and chopsticks }         +-----------------------------+
++--------------------------------+        |      == 주문 == (jumun)      |   <- narrow strip, centred
+|     == 김밥 만들기 ==            |        | == 김밥 ==          == 1 ==  |
+| == 밥 == ............ == 1공기 == |  <- a  |- - - - - - - - - - - - - - -|   <- a dashed rule
+|________________________________|  rule  | == 라면 ==          == 2 ==  |      between lines
+| == 김 == ............ == 2장 ==  |  under |- - - - - - - - - - - - - - -|
+|________________________________|  each  | == 우유 ==          == 3 ==  |
++--------------------------------+  line  +\/\/\/\/\/\/\/\/\/\/\/\/\/\/+   <- torn edge (dressing)
+
+LABEL (Life S6: a packaged-food label)   FORECAST (Nature S6: a weather card)
+   { a box and a jar }                     +--{ sun, cloud and rain }-----------+
++================================+         |  == 이번 주 날씨 ==                 |
+| == 김 ==                        |  <- a  | +--------+ +--------+ +--------+ |
+|================================|  thick | |== 월 == | |== 화 == | |== 수 == | |   <- tiles, a row
+| == 내용량 ==          == 20g == |  frame | |== 맑음 ==| |== 비 == | |== 눈 == | |      that wraps
+|--------------------------------|  and a | +--------+ +--------+ +--------+ |
+| == 원산지 ==          == 국산 == |  rule  +-----------------------------------+
++================================+
+
+CALENDAR (Holidays S6, packs L4)         TIMETABLE (Holidays S6: a station board, a trip plan)
++--{ two binder rings on a bar }-----+   +--{ band with a drawn clock }-------+
+|        == 10월 == (siwol)          |   | == 출발 == (chulbal)               |
+| +------+ +------+                  |   | == 대전 ==               == 한 시 == |   <- the time in its
+| |== 3일 ==| |== 9일 ==|              |   |------------------------------------|      own column, a
+| |==개천절==| |==한글날==|             |   | == 부산 ==               == 두 시 == |      rule between
+| +------+ +------+                  |   |------------------------------------|      rows
++------------------------------------+   +------------------------------------+
+
+MAP (Nature S6, Town & Travel L4)        POSTER (Letters S6, Holidays S6)
++--{ a drawn park: paths, trees, lake }-+   +~~{ bunting }~~~~~~~~~~~~~~~~~~~~~~~+
+|                                    |   ||        == 한글날 ==                ||  <- thick frame
+| (pin) == 입구 ==        == 정문 ==   |   ||        == 10월 9일 ==             ||     lines centred
+| (pin) == 호수 ==        == 500m ==  |   ||        == 도서관 ==                ||     one under the
+| (pin) == 정상 == to the right       |   ||                                  ||     other
++------------------------------------+   +====================================+
+```
+
+- **One anatomy per kind**, from four shared shapes: **rows** (recipe, receipt, label, timetable: text at the start of the row, its value at the end; what separates two rows is the kind's own mark: a rule, a dashed rule, a label's frame rule, a timetable's rule), **tiles** (forecast, calendar: the price-card grid, cards that wrap onto more rows and stack below the minimum width), **legend** (map: a drawn map above a list of places, each with a pin), and **poster** (lines centred, one under the other, in a thick frame).
+- **The dressing is decoration only**, hidden from assistive tech, as for the four G-2 kinds: the bowl and utensils of a recipe, a receipt's torn edge, a label's box and jar, a forecast's sky, a calendar's rings, a timetable's clock, a map's park, a poster's bunting. A forecast tile or a calendar day never depends on a drawn weather glyph or a colour: its words say it (맑음, 비, 추석).
+- **Direction on a map** is in the line's name ("to the right") as on a trail sign, when the line has a `dir`; the map drawing itself is never the answer.
+- **A kind a renderer does not draw** (an older app build, the start bundle before the layouts' chunk is in, or a chunk that cannot load) is drawn as the **plain sheet**: the same lines on paper, never blank, so the round still plays. The group's name keeps the kind's own name.
+- Accessibility names of the group (`a11y.minigame.realia.kind.*`): Recipe card, Receipt, Food label, Weather forecast, Calendar, Timetable, Map, Poster; the group reads "Timetable, 3 lines" and so on. A tile, a row and a centred poster line are each one button, at least `touchTarget.min` tall.
+- **Launch state**: the layouts ship with the row; content that uses a new kind ships with its cell rows (Volume 2 Stage 6, the packs' L4). The only learner-visible change of the row itself is the three re-kinded Volume 1 stand-ins (F-CURR-002 section 7.1, the CM-3A S6 record): the station departure board and Hoya's trip plan (Holidays S6) are timetables, the order slip (Life S6) is a receipt.
+
 ## Box diagram
 
 Phone, portrait (one column; the body scrolls, the realia scrolls with it):
@@ -163,7 +213,7 @@ Related: the Discover `realia` page (`quest/discover-sentences.md`, row D-1) sho
 
 ## Data needs
 
-- reads: `scopeFor(ref).realiaRead` (row C-1 owns the schema; what this screen needs): `realia` `{ id, kind: 'menu' | 'ticket' | 'sign' | 'price-card', dressingRef, title?: KoText, lines: { id, ko: KoText, value?: KoText, dir?: 'left' | 'right', group?: string }[] (1-8), altEn }` and `questions` (4-5) `{ id, prompt: en (es / ko in the lesson overlay), key?: KoText, options: { id, ko?: KoText, number?: { kind: 'time' | 'count' | 'won', value }, pictureRef? }[] (2-4; 4 when the look-here ring should still make the learner read), answerId, answerLineId }` · a straight-ahead board is not in volume 1; if a cell needs one, C-1 adds `dir: 'ahead'` additively (never `up`) with its own mock state · `romanizationMode` (F-I18N-001; `tap` hides a line's romanization until it is tapped)
+- reads: `scopeFor(ref).realiaRead` (row C-1 owns the schema; what this screen needs): `realia` `{ id, kind: 'menu' | 'ticket' | 'sign' | 'price-card' | 'recipe' | 'receipt' | 'label' | 'forecast' | 'calendar' | 'timetable' | 'map' | 'poster' (row CM-47 adds the last eight), dressingRef, title?: KoText, lines: { id, ko: KoText, value?: KoText, dir?: 'left' | 'right', group?: string }[] (1-8), altEn }` and `questions` (4-5) `{ id, prompt: en (es / ko in the lesson overlay), key?: KoText, options: { id, ko?: KoText, number?: { kind: 'time' | 'count' | 'won', value }, pictureRef? }[] (2-4; 4 when the look-here ring should still make the learner read), answerId, answerLineId }` · a straight-ahead board is not in volume 1; if a cell needs one, C-1 adds `dir: 'ahead'` additively (never `up`) with its own mock state · `romanizationMode` (F-I18N-001; `tap` hides a line's romanization until it is tapped)
 - writes: `host.answer('q<k>', correct)` -> `quest-run-store` (first-try tally); `host.complete()` -> `markStepComplete()`
 - telemetry: `minigame.finished` `{ kind: 'realia-read', questId, stepIndex }` (existing event; no new event name, F-CURR-001 §3.11); no realia text, answer text or tapped line in any payload
 
