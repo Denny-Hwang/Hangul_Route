@@ -469,7 +469,8 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       </View>
       <Spacer size="lg" />
       {state.meanings ? (
-        <View ref={meaningsRef} accessible focusable>
+        // Web: focusable by script only (tabIndex -1), so the line is not a Tab stop that does nothing (WCAG 2.4.3).
+        <View ref={meaningsRef} accessible {...(Platform.OS === 'web' ? { tabIndex: -1 as const } : { focusable: true })}>
           <Body tone="muted" testID="story-order-meanings-shown">
             {copy.storyOrder.meaningsShown}
           </Body>
