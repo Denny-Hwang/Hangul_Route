@@ -89,7 +89,7 @@
       "rolePlay.scene.nodes.t4.line.gloss": "함께 가자고 친구에게 하는 말",
       "rolePlay.scene.nodes.t1.replies.polite.text.gloss": "좋다고 공손하게 대답하는 말",
       "rolePlay.scene.nodes.t1.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
-      "rolePlay.scene.nodes.t1.replies.book.text.gloss": "읽는 물건이라는 뜻",
+      "rolePlay.scene.nodes.t1.replies.book.text.gloss": "읽는 물건이라는 답",
       "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "윷을 던지는 놀이를 하자는 말",
       "rolePlay.scene.nodes.t2.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
       "rolePlay.scene.nodes.t3.replies.what.text.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
@@ -123,7 +123,7 @@
       "dialogue.1.npc": "윷을 던지는 놀이를 하자는 말",
       "dialogue.1.options.mwo-hago-nolkka.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
       "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 뜻"
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 답"
     },
     "minigame:s4-crafts-q2-practice": {
       "rolePlay.scene.title.gloss": "막대 네 개를 던져 말을 옮기는 놀이",

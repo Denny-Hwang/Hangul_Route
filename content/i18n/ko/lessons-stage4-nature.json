@@ -159,7 +159,7 @@
       "clozePick.rounds.c2.sentence.gloss": "하늘 상태가 좋다는 말",
       "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
       "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
-      "clozePick.rounds.c2.tiles.reul.gloss": "목적어 표시 (받침 없는 말 뒤)"
+      "clozePick.rounds.c2.tiles.reul.gloss": "목적어를 나타내는 조사 (받침 없는 말 뒤)"
     },
     "minigame:s4-nature-q2-apply": {
       "realiaRead.realia.alt": "공원 날씨 카드: 오늘은 비, 내일은 해",
@@ -220,8 +220,8 @@
       "clozePick.rounds.c2.sentence.gloss": "살고 있는 곳으로 돌아간다는 말",
       "clozePick.rounds.c2.tiles.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)",
       "clozePick.rounds.c2.tiles.e.gloss": "가는 곳을 나타내는 말",
-      "clozePick.rounds.c2.tiles.eul.gloss": "목적어 표시 (받침 있는 말 뒤)",
-      "clozePick.rounds.c1.sentence.gloss": "놀러 가는 곳을 말하는 말",
+      "clozePick.rounds.c2.tiles.eul.gloss": "목적어를 나타내는 조사 (받침 있는 말 뒤)",
+      "clozePick.rounds.c1.sentence.gloss": "공원으로 간다는 말",
       "clozePick.rounds.c1.tiles.bada.gloss": "넓고 짠 물",
       "clozePick.rounds.c1.tiles.gongwon.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
       "clozePick.rounds.c1.tiles.san.gloss": "땅이 높이 솟은 곳"

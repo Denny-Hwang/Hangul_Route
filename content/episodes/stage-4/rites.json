@@ -876,31 +876,29 @@
             },
             {
               "id": "r3",
-              "gapKind": "particle",
               "sentence": {
-                "ko": "고마워요. 호야___ 새해 복 많이 받으세요!",
-                "romanization": "gomawoyo hoya___ saehae bok mani badeuseyo",
+                "ko": "고마워요. 호야도 ___ 복 많이 받으세요!",
+                "romanization": "gomawoyo hoyado ___ bok mani badeuseyo",
                 "en": "Thank you. Happy New Year to you too, Hoya!"
               },
               "tiles": [
                 {
-                  "ko": "는",
-                  "romanization": "neun",
-                  "en": "topic marker (after a vowel)"
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
                 },
                 {
-                  "ko": "가",
-                  "romanization": "ga",
-                  "en": "subject marker (after a vowel)"
+                  "ko": "친구",
+                  "romanization": "chingu",
+                  "en": "friend"
                 },
                 {
-                  "ko": "도",
-                  "romanization": "do",
-                  "en": "too"
+                  "ko": "새해",
+                  "romanization": "saehae",
+                  "en": "new year"
                 }
               ],
-              "answerIndex": 2,
-              "filledRomanization": "gomawoyo hoyado saehae bok mani badeuseyo"
+              "answerIndex": 2
             },
             {
               "id": "r4",
@@ -1060,7 +1058,8 @@
       "CM-3C (2026-10-23): note n1's sources reordered, none added or removed; the allowlisted one is first, as the on-screen tip prints the first source.",
       "Check rotation MAR (row CM-3A S4, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Holidays plays Story Sequence and Cloze Pick; the Checks are Dialogue reply pick (Tap to Respond), Sentence Builder and Dialogue reply pick.",
       "CM-3A S4 MAR (cont.): Language: Cloze gaps read the copula after a vowel and a final consonant (미나예요, 오랜만이에요), 도 for too, and the taught words 이름, 호야, 잘, 지냈어요, 받으세요 and 많이; the New Year wish to the teacher is 새해 복 많이 받으세요, the reply 고마워요 with 도 (NIKL 표준 언어 예절). Culture and facts: the Seollal note and its sources are unchanged.",
-      "CM-3A S4 MAR (cont.): Learning design: every Cloze round completes a line of the quest's own Story Sequence or Discover, so few new review items. Reviser and third pass: es and ko glosses checked; no native-speaker or expert review is claimed."
+      "CM-3A S4 MAR (cont.): Learning design: every Cloze round completes a line of the quest's own Story Sequence or Discover, so few new review items. Reviser and third pass: es and ko glosses checked; no native-speaker or expert review is claimed.",
+      "CM-3A S4 review fix (2026-10-27): q3 Apply r3 no longer repeats r2's 도 gap with another name; it asks 새해, decided by its meaning (Happy New Year). es: Igualmente, mucho gusto; the 받으세요 tile is the polite reciba. ko: particle tiles are named ...를 나타내는 조사 throughout."
     ]
   },
   "contentVer": 2
