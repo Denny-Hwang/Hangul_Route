@@ -1188,6 +1188,7 @@ export const learner = {
       sentenceBuilder: '문장 만들기',
       clozePick: '문장의 빈칸 채우기',
       rolePlay: '대화 읽고 대답 누르기',
+      hiddenHeritage: '그림에서 물건 찾기',
     },
     legend: {
       title: '모양의 뜻',
@@ -1714,6 +1715,7 @@ export const learner = {
         build: '문장 만들기',
         write: '함께 쓰기',
         rolePlay: '역할극',
+        hiddenHeritage: '함께 찾기',
       },
       title: '전체 슬라이드',
       hint: '슬라이드를 고르면 그리로 가요. 숨기기는 이번 수업에만 적용돼요.',
@@ -2086,5 +2088,11 @@ export const learner = {
   cultureTip: {
     title: '알고 있었나요?',
     region: '레슨 노트',
+  },
+  hiddenHeritage: {
+    prompt: '이것을 찾아요',
+    found: '찾은 것',
+    again: '다시 찾아 봐요',
+    allFound: '모두 찾았어요',
   },
 } satisfies DeepPartial<Messages['learner']>;

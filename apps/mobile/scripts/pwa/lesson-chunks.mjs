@@ -116,6 +116,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
   // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
   // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
+  // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
+  // the game and each scene are chunks) merged onto main 524961dae measures 4,758,450 B raw / 1,268,719 B gzip (release
+  // `build:web`, Metro cache cleared), 7,006 B over that main (the round schema 1,613 B, the fixture-only e2e hook
+  // 927 B, the codec's unknown_kind 491 B, the deck builder 357 B, the strings 273 B, the root navigator 196 B, the
+  // rest the entry, loader, fallback board and wiring), so it fits under the same line with a 1,550 B margin.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -133,6 +138,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the first time its screens open. Measured when GU-3 landed (see SCREEN_CHUNKS); the line leaves room for GU-4's
   // save screens, which join the same chunk.
   screenChunkRaw: 60_000,
+  // Each Hidden Heritage scene chunk (F-CURR-002 §10 ceilings table, "Hidden Heritage scene 25,000 B each", row CM-36): the
+  // scene's description, the setting and props it adds, its reference round and its note, as built.
+  sceneChunkRaw: 25_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
   // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
@@ -296,7 +304,18 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/quest/culture-tip-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/quest/culture-tip-entry.tsx` while `upperCards` is on).
   Object.freeze({ name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' }),
+  // F-CURR-002 row CM-36: the Hidden Heritage game, its rules and the scene renderer
+  // (`src/screens/minigames/hidden-heritage-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/hidden-heritage-entry.tsx` while `game.hidden-heritage` is on).
+  Object.freeze({ name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' }),
 ]);
+
+/**
+ * The Hidden Heritage scenes (F-CURR-002 §7.1 F7 and §10, rows CM-36 and CM-37): one bundle per scene
+ * (`src/screens/minigames/scenes/scene-<key>.ts`), reached only through the literal `import()`s of
+ * `src/screens/minigames/hidden-heritage-scenes.ts`, each held to `sceneChunkRaw`. Each module exports its marker (`SCENE_CHUNK`).
+ */
+export const SCENE_CHUNKS = Object.freeze([Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' })]);
 
 /**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each
@@ -369,7 +388,7 @@ function chunkTotals(manifest, bundles) {
  * root chunks, the review-item chunk (row CM-10), the learner screen chunks (row GU-3) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], scenes = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
@@ -379,6 +398,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
     screenChunks: chunkTotals(screens, bundles),
+    sceneChunks: chunkTotals(scenes, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -411,6 +431,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.screenChunks !== undefined && report.screenChunks.count > 0) {
     lines.push(
       `  learner screen chunks  ${report.screenChunks.count} bundles  ${report.screenChunks.raw} B raw  ${report.screenChunks.gzip} B gzip  (largest ${report.screenChunks.largest?.raw ?? 0} B raw, ceiling ${budget.screenChunkRaw} B each)`,
+    );
+  }
+  if (report.sceneChunks !== undefined && report.sceneChunks.count > 0) {
+    lines.push(
+      `  hidden heritage scene chunks  ${report.sceneChunks.count} bundles  ${report.sceneChunks.raw} B raw  ${report.sceneChunks.gzip} B gzip  (largest ${report.sceneChunks.largest?.raw ?? 0} B raw, ceiling ${budget.sceneChunkRaw} B each)`,
     );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
@@ -452,6 +477,7 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
     [report.localeChunks, budget.localeChunkRaw, 'locale', 'localeChunkRaw'],
     [report.rootChunks, budget.rootChunkRaw, 'grown-up root', 'rootChunkRaw'],
     [report.screenChunks, budget.screenChunkRaw, 'learner screen', 'screenChunkRaw'],
+    [report.sceneChunks, budget.sceneChunkRaw, 'hidden heritage scene', 'sceneChunkRaw'],
   ];
   for (const [chunks, ceiling, kind, line] of ceilings) {
     const largest = chunks?.largest;

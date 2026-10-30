@@ -1639,6 +1639,8 @@ export const learner = {
       clozePick: 'Fill the gap in a sentence',
       /** Role Play (row CM-35): it counts for reading and listening. */
       rolePlay: 'Read a chat, tap a reply',
+      /** Hidden Heritage (F-CURR-002 row CM-36): the Korean word is read and heard, then found in a scene. */
+      hiddenHeritage: 'Find a thing in a picture',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {
@@ -2326,6 +2328,8 @@ export const learner = {
         write: 'Write together',
         /** The Role Play slide (F-CURR-002 section 8, row CM-35): the same value as `slide.rolePlay.label`. */
         rolePlay: 'Role play',
+        /** The Hidden Heritage slide (F-CURR-002 §8, row CM-36): the class finds the named thing in a projected scene; its kind label. */
+        hiddenHeritage: 'Find it together',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2877,5 +2881,21 @@ export const learner = {
   cultureTip: {
     title: 'Did you know?',
     region: 'Lesson note',
+  },
+  /**
+   * Hidden Heritage (F-CURR-002 row CM-36; design/wireframes/minigame/hidden-heritage.md "Proposed copy"): find the thing
+   * Hoya names in a scene. The word to find is taught Korean (content), never in here. A find is never a score, and a tap on
+   * another thing only says Look again. Skip, Continue, the Hear button and the empty state reuse shipped keys. Read by the
+   * `review-copy` rule.
+   */
+  hiddenHeritage: {
+    /** The caption over the Korean word to find. */
+    prompt: 'Find this',
+    /** The row of found words under the scene. */
+    found: 'Found',
+    /** Hoya's line after a tap on another thing; the word stays. */
+    again: 'Look again',
+    /** The title of the end panel, over every word with its meaning. */
+    allFound: 'You found them all',
   },
 } as const;

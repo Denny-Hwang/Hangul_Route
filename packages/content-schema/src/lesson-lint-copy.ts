@@ -148,6 +148,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'stageJump',
   // Story Order (row CM-34): Show meanings is a hint, never a penalty line.
   'storyOrder',
+  // Hidden Heritage (row CM-36): a find is never a score, a miss only "Look again".
+  'hiddenHeritage',
 ];
 
 export interface ReviewStringFinding {

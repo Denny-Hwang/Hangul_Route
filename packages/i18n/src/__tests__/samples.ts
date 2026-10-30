@@ -1015,4 +1015,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.rolePlay.me': [['donghwachaegeul chajayo.', 'donghwachaegeul chajayo']],
   // F-CURR-002 row CM-35, the lecture Role Play slide: the reply the class gave (its Korean with romanization, passed in at run time).
   'a11y.presenter.rolePlayClass': [['annyeonghaseyo!, annyeonghaseyo']],
+  // F-CURR-002 row CM-36: a found thing's meaning in the UI locale (content).
+  'a11y.hiddenHeritage.foundLive': [['soup'], ['rice']],
+  'a11y.hiddenHeritage.spotFound': [['soup'], ['chopsticks']],
 };

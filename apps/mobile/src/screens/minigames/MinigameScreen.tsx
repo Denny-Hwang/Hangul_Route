@@ -24,6 +24,7 @@ import { CardMatchGame } from './CardMatchGame';
 import { ClozePickStep } from './cloze-pick-entry';
 import { CultureQuizGame } from './CultureQuizGame';
 import type { MinigameHost } from './host';
+import { HiddenHeritageStep } from './hidden-heritage-entry';
 import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
@@ -211,6 +212,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <StoryOrderStep scope={scope} host={host} sequenceId={ref ?? ''} onFallbackFinish={() => closeAs('story-sequence')} />;
     case 'role-play':
       return <RolePlayStep scope={scope} host={host} onBack={exits.back} />;
+    case 'hidden-heritage':
+      return <HiddenHeritageStep scope={scope} host={host} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

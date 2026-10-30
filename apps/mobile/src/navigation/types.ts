@@ -13,6 +13,7 @@ import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { RealiaReadE2eParams } from './realia-read-e2e';
 import type { StoryOrderE2eParams } from './story-order-e2e';
+import type { HiddenHeritageE2eParams } from './hidden-heritage-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
@@ -335,6 +336,8 @@ export type RootStackParamList = {
   SentenceBuilderE2e: SentenceE2eParams;
   /** Realia Read on a D-2 fixture realia (fixture builds only, F-CURR-001 G-2). */
   RealiaReadE2e: RealiaReadE2eParams;
+  /** F-CURR-002 row CM-36: the Hidden Heritage e2e entry (fixture builds only). */
+  HiddenHeritageE2e: HiddenHeritageE2eParams;
   /** Fixture builds only (`navigation/type-hangul-e2e.tsx`): Type Hangul on fixture rounds (F-CURR-001 G-3). */
   TypeHangulE2e: TypeHangulE2eParams;
   /** Fixture builds only (`navigation/trace-word-e2e.tsx`): Trace a Word on the spec's Stage 7 words. */

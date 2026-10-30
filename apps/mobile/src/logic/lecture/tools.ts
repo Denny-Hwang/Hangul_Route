@@ -139,13 +139,23 @@ export interface GridItem {
   canHide: boolean;
 }
 
-/** The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`, `sentence-build` as `build`, `write-together` as `write` and `role-play` as `rolePlay`. */
-export type GridKindKey = Exclude<SlideKind, 'read-along' | 'sentence-build' | 'write-together' | 'role-play'> | 'readAlong' | 'build' | 'write' | 'rolePlay';
+/**
+ * The `grid.kind` message key of a slide kind: the dictionary spells `read-along` as `readAlong`, `sentence-build` as
+ * `build`, `write-together` as `write`, `role-play` as `rolePlay` and `hidden-heritage` as `hiddenHeritage`.
+ */
+export type GridKindKey =
+  | Exclude<SlideKind, 'read-along' | 'sentence-build' | 'write-together' | 'role-play' | 'hidden-heritage'>
+  | 'readAlong'
+  | 'build'
+  | 'write'
+  | 'rolePlay'
+  | 'hiddenHeritage';
 
 export function gridKindKey(kind: SlideKind): GridKindKey {
   if (kind === 'read-along') return 'readAlong';
   if (kind === 'role-play') return 'rolePlay';
   if (kind === 'write-together') return 'write';
+  if (kind === 'hidden-heritage') return 'hiddenHeritage';
   return kind === 'sentence-build' ? 'build' : kind;
 }
 
@@ -164,6 +174,9 @@ function gridTitle(slide: Slide, names: { activity: (preset: Extract<Slide, { ki
       return slide.scene;
     case 'sentence-build':
       // Like a question, nothing: its meaning shows only once the room has built the sentence.
+      return '';
+    case 'hidden-heritage':
+      // Nothing: the meaning would tell the room which thing to find (it shows at the slide's `gloss` build).
       return '';
     case 'write-together':
       // What its first build shows in the slide language; a trace word's meaning is its answer, so nothing.

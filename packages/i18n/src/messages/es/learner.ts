@@ -1217,6 +1217,7 @@ export const learner = {
       sentenceBuilder: 'Arma una oración',
       clozePick: 'Completa el hueco de una oración',
       rolePlay: 'Lee un diálogo y toca una respuesta',
+      hiddenHeritage: 'Busca una cosa en un dibujo',
     },
     legend: {
       title: 'Qué significan las formas',
@@ -1776,6 +1777,7 @@ export const learner = {
         build: 'Arma una oración',
         write: 'Escribir en grupo',
         rolePlay: 'Juego de roles',
+        hiddenHeritage: 'Buscar en grupo',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -2151,5 +2153,11 @@ export const learner = {
   cultureTip: {
     title: '¿Sabías que…?',
     region: 'Nota de lección',
+  },
+  hiddenHeritage: {
+    prompt: 'Busca esto',
+    found: 'Lo hallado',
+    again: 'Busca otra vez',
+    allFound: 'Encontraste todo',
   },
 } satisfies DeepPartial<Messages['learner']>;

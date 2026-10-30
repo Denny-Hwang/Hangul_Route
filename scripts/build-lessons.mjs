@@ -252,6 +252,9 @@ export function runtimeScope(scope, where) {
     case "story-order":
       // F-CURR-002 row CM-34: the rounds as authored (panels in the right order); the app derives the fallback.
       return { kind, rounds: scope.rounds.length, storyOrder: { rounds: scope.rounds } };
+    case "hidden-heritage":
+      // F-CURR-002 row CM-36: each target found is a round (`scopeRoundCount`).
+      return { kind, rounds: scope.rounds.reduce((n, r) => n + r.targets.length, 0), hiddenHeritage: { rounds: scope.rounds } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }

@@ -394,6 +394,15 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
         });
       });
       return;
+    case 'hidden-heritage':
+      // A target is asked (its word is found in the scene); the other things only name their spots, so they are no items.
+      rounds.forEach((round, ri) => {
+        const rid = key(round, ri);
+        arr(round.targets).filter(isRec).forEach((t, ti) => {
+          c.text(t.word, 'loose', 'round', `${at}.rounds[${ri}].targets[${ti}]`, { glossKey: k(`hiddenHeritage.rounds.${rid}.targets.${key(t, ti)}.word.gloss`), picture: pictureOf(t) });
+        });
+      });
+      return;
     default:
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);

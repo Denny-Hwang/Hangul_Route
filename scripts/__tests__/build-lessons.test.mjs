@@ -332,6 +332,11 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       ],
       // F-CURR-002 row CM-34: Story Order's rounds as authored.
       [{ kind: "story-order", rounds: [1, 2] }, { kind: "story-order", rounds: 2, storyOrder: { rounds: [1, 2] } }],
+      // F-CURR-002 row CM-36: a Hidden Heritage scene plays one round per target found (`scopeRoundCount`).
+      [
+        { kind: "hidden-heritage", rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] },
+        { kind: "hidden-heritage", rounds: 7, hiddenHeritage: { rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] } },
+      ],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });

@@ -4,6 +4,7 @@ import { isOneKeyFinal } from '../hangul/compose-typed';
 import { AudioRefSchema } from './audio';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
 import { RolePlaySceneSchema } from './role-play';
+import { ART_CANVAS } from './scene-art';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -47,6 +48,7 @@ export const MinigameKindSchema = z.enum([
   'story-order', // Discovery · put 3-5 Korean captions (with or without pictures) in order; fallback Story Sequence
   // F-CURR-002 §7.1 (row CM-35), additive.
   'role-play', // Interaction · a branching chat, read and tap a reply (fallback: Tap to Respond on the same turns)
+  'hidden-heritage', // Discovery · ⑩ find the named things in a large scene (F-CURR-002 §7.1 F7, row CM-36)
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -651,6 +653,58 @@ export function storyOrderToSequence(round: StoryOrderRound): z.infer<typeof Sto
     })),
   };
 }
+// ---- Hidden Heritage (F-CURR-002 §7.1 F7 and OD-10, row CM-36; design/wireframes/minigame/hidden-heritage.md) ----
+
+/** Hit-area rules of the scene style guide: H-1 a spot is at least 75 x 75 canvas units, H-2 spots keep 11 apart. */
+export const HIDDEN_HERITAGE_SPOT = { min: 75, gap: 11 } as const;
+
+/** A thing's hit area on the 400 x 300 scene canvas (H-1, H-4). */
+export const HiddenHeritageSpotSchema = z
+  .object({ x: z.number().min(0), y: z.number().min(0), w: z.number().min(HIDDEN_HERITAGE_SPOT.min), h: z.number().min(HIDDEN_HERITAGE_SPOT.min) })
+  .refine((s) => s.x + s.w <= ART_CANVAS.width && s.y + s.h <= ART_CANVAS.height, 'a spot lies inside the 400 x 300 canvas');
+export type HiddenHeritageSpot = z.infer<typeof HiddenHeritageSpotSchema>;
+
+/** The gap between two spots in canvas units; 0 when they touch or overlap (H-2). */
+export function spotGap(a: HiddenHeritageSpot, b: HiddenHeritageSpot): number {
+  const dx = Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w), 0);
+  const dy = Math.max(a.y - (b.y + b.h), b.y - (a.y + a.h), 0);
+  return Math.max(dx, dy);
+}
+
+/**
+ * A drawn thing of the scene: its Korean word and its spot. A target's word is the prompt (Korean, heard and written
+ * with romanization, never an English label); every spot is named by its word's meaning for a screen reader.
+ */
+const HiddenHeritageThingSchema = z.object({ id: z.string().regex(/^[a-z0-9-]+$/), word: KoTextSchema, spot: HiddenHeritageSpotSchema });
+
+/**
+ * One scene to search: the scene (art in a lazy chunk), its alt text (the setting, never the things), the 3-5 targets
+ * with the bundled picture the Pic-Word Match fallback draws (`card:` / `word:`), and 3-6 other things, at least as
+ * many as targets, so a random tap or the screen-reader list never gives the answer away.
+ */
+export const HiddenHeritageRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    sceneId: z.string().regex(/^scene:[a-z0-9-]+$/),
+    altEn: z.string().trim().min(1).max(140),
+    targets: z.array(HiddenHeritageThingSchema.extend({ picture: PictureRefSchema })).min(3).max(5),
+    others: z.array(HiddenHeritageThingSchema).min(3).max(6),
+  })
+  .superRefine((round, ctx) => {
+    // Short messages: this schema is in the app's start bundle (F-CURR-002 §10).
+    const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+    const things = [...round.targets, ...round.others];
+    const ids = new Set(things.map((t) => t.id));
+    const words = new Set(things.map((t) => t.word.ko));
+    if (ids.size < things.length) issue('thing ids repeat');
+    if (words.size < things.length) issue('two things share a word');
+    if (round.others.length < round.targets.length) issue('fewer other things than targets');
+    things.forEach((a, i) => things.slice(i + 1).forEach((b) => spotGap(a.spot, b.spot) < HIDDEN_HERITAGE_SPOT.gap && issue(`spots ${a.id} and ${b.id} too close`)));
+    const c = round.targets.map((t) => t.spot.x + t.spot.w / 2 - ART_CANVAS.width / 2);
+    if (!c.some((x) => x < 0) || !c.some((x) => x > 0)) issue('a target in each half');
+    if (/[\u3130-\u318F\uAC00-\uD7A3]|^\s*image of\b/i.test(round.altEn)) issue('altEn: no Hangul, no "Image of"');
+  });
+export type HiddenHeritageRound = z.infer<typeof HiddenHeritageRoundSchema>;
 
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
@@ -669,6 +723,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('cloze-pick'), data: ClozePickRoundSchema }),
   z.object({ kind: z.literal('story-order'), data: StoryOrderRoundSchema }),
   z.object({ kind: z.literal('role-play'), data: RolePlaySceneSchema }),
+  z.object({ kind: z.literal('hidden-heritage'), data: HiddenHeritageRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

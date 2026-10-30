@@ -1,5 +1,6 @@
 import type {
   ClozePickRound,
+  HiddenHeritageRound,
   KoText,
   ListenPickRound,
   MinigameKind,
@@ -73,6 +74,8 @@ export interface MinigameScope {
   storyOrder?: { rounds: StoryOrderRound[] };
   /** Role Play (F-CURR-002 row CM-35): one branching chat, filled by scripts/build-lessons.mjs. */
   rolePlay?: { scene: RolePlayScene };
+  /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes to search, filled by build-lessons from a lesson cell. */
+  hiddenHeritage?: { rounds: HiddenHeritageRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

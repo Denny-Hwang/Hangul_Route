@@ -501,4 +501,16 @@ export const a11y = {
   stageCheck: {
     best: (stars: number) => plural('en', stars, { one: 'Stage Check, best 1 star', other: `Stage Check, best ${stars} stars` }),
   },
+  /**
+   * Hidden Heritage (F-CURR-002 row CM-36): `gloss` is the meaning of the thing in the UI language (content), or its Korean
+   * word in the Korean UI when the meaning is the word itself. Each spot is a button named by its meaning.
+   */
+  hiddenHeritage: {
+    /** The live region after a right tap. */
+    foundLive: (gloss: string) => `Found: ${gloss}`,
+    /** A spot's name once its thing is found. */
+    spotFound: (gloss: string) => `${gloss}, found`,
+    /** An empty slot of the found row. */
+    slotEmpty: 'Not found yet',
+  },
 } as const;

@@ -36,4 +36,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'story-order',
   // F-CURR-002 row CM-35: Role Play (its fallback, Tap to Respond, while `game.role-play` is off)
   'role-play',
+  // F-CURR-002 row CM-36: the game, or its Pic-Word Match fallback while `game.hidden-heritage` is off.
+  'hidden-heritage',
 ]);

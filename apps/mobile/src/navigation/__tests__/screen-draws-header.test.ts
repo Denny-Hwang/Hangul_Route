@@ -67,6 +67,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-35: Role Play's chunk (the game, and the fixture build's host).
   'screens/minigames/role-play/role-play-entry.tsx#RolePlayGame': 'screens/minigames/role-play/RolePlayGame.tsx#RolePlayGame',
   'screens/minigames/role-play/role-play-entry.tsx#RolePlayE2eScreen': 'screens/minigames/role-play/RolePlayE2eScreen.tsx#RolePlayE2eScreen',
+  // Row CM-36: the Hidden Heritage game's chunk.
+  'screens/minigames/hidden-heritage-entry.tsx#HiddenHeritageGame': 'screens/minigames/HiddenHeritageGame.tsx#HiddenHeritageGame',
+  'navigation/hidden-heritage-e2e.tsx#HiddenHeritageE2eBody': 'navigation/hidden-heritage-e2e-screen.tsx#HiddenHeritageE2eBody',
 };
 
 /**

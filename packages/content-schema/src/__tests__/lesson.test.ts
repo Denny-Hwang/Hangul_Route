@@ -335,6 +335,7 @@ describe('LessonScopeSchema', () => {
         'type-hangul',
         'write-frame',
         'story-order',
+        'hidden-heritage',
       ].sort(),
     );
     for (const kind of LESSON_SCOPE_KINDS) expect(MinigameKindSchema.options).toContain(kind);

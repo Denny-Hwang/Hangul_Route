@@ -280,6 +280,12 @@ export type SlideBody =
   | ({ kind: 'write-together' } & WriteTogether)
   /** A Role Play turn the room reads together and picks the reply for (F-CURR-002 section 8, row CM-35): see `RolePlayTurn`. */
   | ({ kind: 'role-play' } & RolePlayTurn)
+  /**
+   * A Hidden Heritage target (F-CURR-002 §8, row CM-36): the class finds it in the projected scene, one slide per target.
+   * `ko` shows the scene (`alt` names it) and the word with its romanization, `gloss` its meaning, `answer` the found
+   * ring on its `spot`; `picture` stands in for the scene when its chunk cannot load. Nothing is scored.
+   */
+  | { kind: 'hidden-heritage'; sceneId: string; alt: string; word: SpokenLine; spot: { x: number; y: number; w: number; h: number }; picture: string }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -362,6 +368,8 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       return ['art', ...(body.ko !== undefined && body.romanization !== undefined ? rom : []), ...(body.fact !== undefined ? (['fact'] as const) : [])];
     case 'activity':
       return ['prompt'];
+    case 'hidden-heritage':
+      return ['ko', ...rom, 'gloss', 'answer'];
     case 'end':
       return ['summary'];
     case 'title':

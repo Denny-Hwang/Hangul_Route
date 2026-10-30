@@ -100,6 +100,10 @@ export const OVERLAY_FIELDS = {
     'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.text.gloss',
     'rolePlay.scene.nodes.<nodeId>.replies.<replyId>.why',
     'rolePlay.scene.nodes.<nodeId>.closing',
+    // F-CURR-002 row CM-36: a Hidden Heritage scene's alt text and the meanings that name its spots.
+    'hiddenHeritage.rounds.<roundId>.alt',
+    'hiddenHeritage.rounds.<roundId>.targets.<thing>.word.gloss',
+    'hiddenHeritage.rounds.<roundId>.others.<thing>.word.gloss',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],

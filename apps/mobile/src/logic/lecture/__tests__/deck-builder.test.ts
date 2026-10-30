@@ -2745,3 +2745,59 @@ describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
     expect(lines[4]!.builds).toEqual(['ko', 'gloss']);
   });
 });
+
+describe('expandDeck: Hidden Heritage, a whole-class scene hunt (F-CURR-002 §8, row CM-36)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const spot = (x: number, y: number) => ({ x, y, w: 80, h: 80 });
+  const round = {
+    id: 'hh1',
+    sceneId: 'scene:food-market',
+    altEn: 'A food stall on a market day.',
+    targets: [
+      { id: 'bap', word: kt('밥', 'bap', 'rice'), spot: spot(10, 170), picture: 'card:rice' },
+      { id: 'gimchi', word: kt('김치', 'gimchi', 'kimchi'), spot: spot(200, 170), picture: 'card:kimchi' },
+      { id: 'jeotgarak', word: kt('젓가락', 'jeotgarak', 'chopsticks'), spot: spot(300, 170), picture: 'card:chopsticks' },
+    ],
+    others: [
+      { id: 'guk', word: kt('국', 'guk', 'soup'), spot: spot(105, 170) },
+      { id: 'hangari', word: kt('항아리', 'hangari', 'jar'), spot: spot(40, 50) },
+      { id: 'baguni', word: kt('바구니', 'baguni', 'basket'), spot: spot(280, 50) },
+    ],
+  };
+  const hhScopes: Record<string, MinigameScope> = {
+    'mg:hh': { kind: 'hidden-heritage', hiddenHeritage: { rounds: [round] } },
+    'mg:hh-none': { kind: 'hidden-heritage', hiddenHeritage: { rounds: [] } },
+  };
+  const hunt = quest('hunt', [['intro'], ['practice', 'mg:hh']], { rewardCardId: undefined });
+  const none = quest('hunt-none', [['practice', 'mg:hh-none']], { rewardCardId: undefined });
+  const b = bundle({ scopeFor: (ref) => hhScopes[ref] ?? scopes[ref], questById: (id) => [hunt, none].find((q) => q.id === id) ?? quests.find((q) => q.id === id) });
+  type Hunt = Extract<Slide, { kind: 'hidden-heritage' }>;
+
+  it('one slide per target, in content order, with the scene, the word, its meaning, the spot and the picture', () => {
+    const { slides, skipped, taught } = expandDeck(deckOf([{ kind: 'quest', id: hunt.id }]), b, VOICE);
+    expect(skipped).toEqual([]);
+    const hh = only(slides, 'hidden-heritage') as Hunt[];
+    expect(hh.map((s) => [s.key, s.word.ko, s.word.romanization, s.word.gloss, s.picture])).toEqual([
+      ['quest:hunt/s2/hh1/bap', '밥', 'bap', 'rice', 'card:rice'],
+      ['quest:hunt/s2/hh1/gimchi', '김치', 'gimchi', 'kimchi', 'card:kimchi'],
+      ['quest:hunt/s2/hh1/jeotgarak', '젓가락', 'jeotgarak', 'chopsticks', 'card:chopsticks'],
+    ]);
+    expect(hh[0]).toMatchObject({ sceneId: 'scene:food-market', alt: 'A food stall on a market day.', spot: round.targets[0]!.spot });
+    // The other things are never a slide: the class finds the named things only.
+    expect(hh.some((s) => s.word.ko === '국')).toBe(false);
+    expect(taught.filter((t) => t.kind === 'word').map((t) => t.ko)).toEqual(expect.arrayContaining(['밥', '김치', '젓가락']));
+  });
+
+  it('builds the scene and the word, then the meaning, then the found ring; romanization a build of its own in tap mode', () => {
+    const always = only(expandDeck(deckOf([{ kind: 'quest', id: hunt.id }]), b, VOICE).slides, 'hidden-heritage')[0]!;
+    expect(always.builds).toEqual(['ko', 'gloss', 'answer']);
+    const tap = only(expandDeck(deckOf([{ kind: 'quest', id: hunt.id }], { options: { romanization: 'tap' } }), b, VOICE).slides, 'hidden-heritage')[0]!;
+    expect(tap.builds).toEqual(['ko', 'rom', 'gloss', 'answer']);
+  });
+
+  it('a scope with no scene is a counted skip, never a crash', () => {
+    const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id: none.id }]), b, VOICE);
+    expect(only(slides, 'hidden-heritage')).toEqual([]);
+    expect(skipped).toEqual([expect.objectContaining({ ref: 'mg:hh-none', reason: 'scope-too-small' })]);
+  });
+});

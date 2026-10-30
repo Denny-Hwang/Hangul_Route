@@ -138,6 +138,7 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   ClozePickE2e: 'close',
   StoryOrderE2e: 'close',
   RolePlayE2e: 'close',
+  HiddenHeritageE2e: 'close',
 };
 
 const EXCEPTIONS: ReadonlySet<string> = new Set(SCREEN_HEADER_EXCEPTIONS);

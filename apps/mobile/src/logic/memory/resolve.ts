@@ -166,6 +166,11 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const line = node && 'line' in node ? text(node.line, 'exc') : undefined;
       return line && reply ? { texts: [{ ...line, reply: reply.text.ko }], jamoIds: [], rung: 'read' } : undefined;
     }
+    case 'hidden-heritage': {
+      // A target found in the scene, or matched on its Pic-Word Match fallback (the pair id is the target id): the read rung.
+      const target = scope.hiddenHeritage?.rounds.flatMap((r) => r.targets).find((t) => t.id === itemId);
+      return target ? { texts: texts(text(target.word)), jamoIds: [], rung: 'read' } : undefined;
+    }
     default:
       return undefined;
   }
