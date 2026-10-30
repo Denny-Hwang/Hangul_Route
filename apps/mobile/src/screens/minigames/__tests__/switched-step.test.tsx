@@ -17,8 +17,9 @@ import { useSwitchedScope } from '../dictation-entry';
  * F-CURR-002 sections 12.2 and 14 (row CM-31): every quest renders with `game.type-hangul-hear` and
  * `game.spelling-pick` off (their built-in pct 0). A step goes through `useSwitchedScope` as MinigameScreen's does,
  * and each Type Hangul and Listen & Pick scope of the shipped quests is mounted twice: as shipped, and with its rounds
- * written as Dictation or with a spelling round added (no shipped content has either yet), so the off path is the one
- * rendered. A step never waits on the dictation chunk with the switches off, and the game renders its first round.
+ * written as Dictation or with a spelling round added, so the off path is the one rendered. The four Stage 3
+ * Dictation Checks of the Check rotation (row CM-3A S3) ship hear rounds, so those scopes are already Dictation as
+ * shipped; no shipped content has a spelling round yet. A step never waits on the dictation chunk with the switches off, and the game renders its first round.
  *
  * And the chunk's one load per step: when it fails, the step plays its fallback and stays on it, even if the chunk
  * would load on a second try (a later step tries again), so a game never changes under the learner.

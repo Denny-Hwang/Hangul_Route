@@ -810,7 +810,7 @@ Every format is reading, listening or writing. None records or measures speech. 
 **Check rotation (`lesson-check-variety`).**
 - No game kind may be used for more than 40% of a stage's Checks.
 - From Stage 2 on, every Check has at least 1 read-meaning or produce round.
-- No two adjacent quests share the same Practice, Apply and Check triple.
+- No two adjacent quests share the same Practice, Apply and Check triple. Adjacent means next to each other in one cell, which is how the lint reads it (it compares a cell's quests in order). A cell boundary is not adjacency: every shipped cell opens from the Journey (F-ROUTE-001), so a learner meets the cells in any order (clarified in row CM-3A S3, where rites q3 and nature q1 both play Sentence Builder, Listen & Pick and Cloze Pick).
 - The rule is an **error from day one** for files with `volume` ≥ 2 and for `content/packs/`. For Volume 1 it warns until the re-authoring rows (CM-3A) and becomes an error in CM-3B.
 
 Default Checks by stage:
