@@ -653,6 +653,16 @@ describe('learnerPosition (N3)', () => {
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
   });
+
+  it('a later volume is off the route (F-CURR-002 rows CM-40, CM-41 S6): its quests are never a position, and a stage stays one run', () => {
+    // Stage 6 Nature ships a Volume 2; the route still ends at the last Stage 7 quest of each cell's first volume.
+    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage6-nature')?.episodeIds).toContain('episode:stage6-nature-v2');
+    expect(learnerPosition('quest:stage6-nature-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, ['quest:stage6-nature-v2-q3'], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    // 15 Stage 6 quests on the route: the 16th place of the stage is the first Stage 7 quest, not a Volume 2 one.
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 14, 0]]) }], CATALOG)?.questId).toBe('quest:stage6-crafts-q3');
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 15, 0]]) }], CATALOG)?.questId).toBe('quest:stage7-letters-q1');
+  });
 });
 
 describe('fallbacks on a catalogue missing what a preset needs', () => {
