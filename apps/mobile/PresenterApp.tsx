@@ -285,6 +285,11 @@ function Presenter(): ReactElement {
     moreOpenRef.current = open;
     setMoreOpen(open);
   }, []);
+  // The More sheet lives only in the phone bar: a window that stops being a phone window (a foldable
+  // opened, split screen widened) closes it, so a stale sheet never swallows the docked bar's steps.
+  useEffect(() => {
+    if (!phone && moreOpenRef.current) openMore(false);
+  }, [phone, openMore]);
   const [capability, setCapability] = useState<AudioCapability>(getCapability);
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -707,7 +712,7 @@ function Presenter(): ReactElement {
     (event: PresenterEvent) => {
       activate();
       const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (step && moreOpenRef.current) return;
+      if (step && moreOpenRef.current && phoneRef.current) return;
       dispatch(event);
     },
     [activate, dispatch],
@@ -792,6 +797,10 @@ function Presenter(): ReactElement {
     setSoundFlash(null);
     // Touch seen lasts until Exit (section 4): the next lesson starts from the page's pointer media.
     setTouchSeen(touchSeenAtStart());
+    // Next's ring ends with the lesson too, so it never shows on the next lesson's bar.
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = null;
+    setNudge(false);
     repush.current = false;
     landHome(returnToPresenterHome(), () => {
       setHomeFocus(true);
@@ -1242,7 +1251,7 @@ function Presenter(): ReactElement {
       ) : null;
     // What covers the stage for a gesture (section 7.2): the More sheet (a tap there closes it), or any
     // other covering overlay or the Exit confirm, which swallow navigation.
-    const stageCovering = moreOpen ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
+    const stageCovering = moreOpen && phone ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
     const onGesture = (command: Exclude<StageCommand, null>): void => {
       if (command === 'next' || command === 'prev') {
         userDispatch(command);

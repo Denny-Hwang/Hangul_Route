@@ -537,9 +537,10 @@ export async function swipeStage(page: Page, from: WindowPoint, to: WindowPoint,
     if (fingers === 2) await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: all(0) });
     for (let i = 1; i <= steps; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: all(i / steps) });
     if (fingers === 2) {
-      // The finger that stays down is the one still listed.
-      const stays = options.liftFirst === 'other' ? at(1, 0) : at(1, 1);
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [stays] });
+      // Chromium's touchEnd lifts the points it lists (checked: changedTouches is the listed one,
+      // touches the rest); the last touchEnd with none lifts every finger still down.
+      const lifts = options.liftFirst === 'other' ? at(1, 1) : at(1, 0);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [lifts] });
     }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   } finally {
