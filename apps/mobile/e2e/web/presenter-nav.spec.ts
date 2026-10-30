@@ -387,21 +387,71 @@ for (const vp of MATRIX) {
           // One step: the answer is revealed (Next no longer reads Reveal) or the slide changes.
           await expect.poll(async () => { const now = await state(page); return now.counter !== at.counter || now.next !== at.next; }).toBe(true);
           const after = await state(page);
-          // Nothing: a vertical drag, a diagonal at 1.2, two fingers either way, and a start 10 px from each edge.
+          // Nothing: a vertical drag, a diagonal at 1.2, two fingers either way, and a start 10 px from each
+          // edge. Each is checked on its own, so a broken pair (one forward, one back) cannot cancel out.
           const c = await stageCentre(page);
-          await swipeStage(page, c, { x: c.x + 30, y: c.y + 120 });
-          await swipeStage(page, c, { x: c.x - 120, y: c.y - 100 });
-          await swipeStage(page, c, { x: c.x - travel, y: c.y - 40 }, { fingers: 2, liftFirst: 'tracked' });
-          await swipeStage(page, c, { x: c.x + travel, y: c.y - 40 }, { fingers: 2, liftFirst: 'other' });
-          await swipeStage(page, { x: 10, y: c.y }, { x: 10 + travel, y: c.y });
-          await swipeStage(page, { x: vp.width - 10, y: c.y }, { x: vp.width - 10 - travel, y: c.y });
+          const nothing = async (label: string, from: WindowPoint, to: WindowPoint, options?: Parameters<typeof swipeStage>[3]): Promise<void> => {
+            await swipeStage(page, from, to, options);
+            await page.waitForTimeout(150);
+            expect(await state(page), label).toEqual(after);
+          };
+          await nothing('vertical', c, { x: c.x + 30, y: c.y + 120 });
+          await nothing('diagonal 1.2', c, { x: c.x - 120, y: c.y - 100 });
+          for (const liftFirst of ['tracked', 'other'] as const) {
+            await nothing(`two fingers left, ${liftFirst} lifts first`, c, { x: c.x - travel, y: c.y - 40 }, { fingers: 2, liftFirst });
+            await nothing(`two fingers right, ${liftFirst} lifts first`, c, { x: c.x + travel, y: c.y - 40 }, { fingers: 2, liftFirst });
+          }
+          await nothing('10 px from the left edge, right (back)', { x: 10, y: c.y }, { x: 10 + travel, y: c.y });
+          await nothing('10 px from the right edge, left (next)', { x: vp.width - 10, y: c.y }, { x: vp.width - 10 - travel, y: c.y });
           if (vp.insets) {
             // The guard reaches the inset plus 8 (55 px here): a start at 50 px is still inside it.
-            await swipeStage(page, { x: vp.insets.left + 3, y: c.y }, { x: vp.insets.left + 3 + travel, y: c.y });
-            await swipeStage(page, { x: vp.width - vp.insets.right - 3, y: c.y }, { x: vp.width - vp.insets.right - 3 - travel, y: c.y });
+            await nothing('inside the left inset guard', { x: vp.insets.left + 3, y: c.y }, { x: vp.insets.left + 3 + travel, y: c.y });
+            await nothing('inside the right inset guard', { x: vp.width - vp.insets.right - 3, y: c.y }, { x: vp.width - vp.insets.right - 3 - travel, y: c.y });
           }
-          await page.waitForTimeout(150);
-          expect(await state(page)).toEqual(after);
+        });
+      }
+
+      if (vp.id === 'V3') {
+        test('a tap in the padding between the bottom option row and the band presses nothing and steps nothing', async ({ page }) => {
+          await open(page, vp, input);
+          const presses = await familyPresses(page);
+          for (const family of ['grid', 'rows'] as const) {
+            await goToFamily(page, presses, family);
+            const boxes = await settledTargets(page);
+            const band = (await page.getByTestId('presenter-bar-band').boundingBox())!;
+            const lowest = boxes.reduce((a, b) => (b.bottom > a.bottom ? b : a));
+            const at = { x: (lowest.left + lowest.right) / 2, y: (lowest.bottom + band.y) / 2 };
+            expect(band.y - lowest.bottom, `${family}: the gap`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+            const before = await state(page);
+            await tapAt(page, input, at);
+            await page.waitForTimeout(150);
+            expect(await state(page), `${family} gap at ${Math.round(at.x)},${Math.round(at.y)}`).toEqual(before);
+          }
+        });
+      }
+
+      if (vp.id === 'V3' && input === 'touch') {
+        test('a swipe inside the Slides grid or Help steps nothing and leaves it open', async ({ page }) => {
+          test.skip(SWIPES_SKIPPED, 'swipes drive CDP touch events (Chromium only)');
+          await open(page, vp, input);
+          await page.keyboard.press('ArrowRight');
+          await expect.poll(() => counter(page)).toMatch(/^2 \//);
+          for (const { key, id } of [{ key: 'g', id: 'presenter-grid' }, { key: 'h', id: 'presenter-help' }]) {
+            await page.keyboard.press(key);
+            const overlay = page.getByTestId(id);
+            await expect(overlay).toBeVisible();
+            const before = { counter: await counter(page), live: await live(page) };
+            const box = (await overlay.boundingBox())!;
+            const mid = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+            for (const dx of [-160, 160]) {
+              await swipeStage(page, mid, { x: mid.x + dx, y: mid.y });
+              await page.waitForTimeout(150);
+              expect({ counter: await counter(page), live: await live(page) }, `${id}, swipe ${dx < 0 ? 'left' : 'right'}`).toEqual(before);
+              await expect(overlay).toBeVisible();
+            }
+            await page.keyboard.press('Escape');
+            await expect(overlay).toHaveCount(0);
+          }
         });
       }
 

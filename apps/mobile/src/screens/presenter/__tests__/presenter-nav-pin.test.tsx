@@ -292,4 +292,34 @@ describe('a phone window (the overlay layout, sections 5.2 and 5.3)', () => {
     expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
     expect(counter(r)).toBe(was);
   });
+
+  it('More open when the window stops being a phone window (a foldable opened): More closes, and Next steps', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    // The Node lane has no window resize: the test hands useWindowDimensions its 'change' itself.
+    const changes: ((d: { window: typeof tablet; screen: typeof tablet }) => void)[] = [];
+    const spy = vi.spyOn(Dimensions, 'addEventListener').mockImplementation(((type: string, handler: (typeof changes)[number]) => {
+      if (type === 'change') changes.push(handler);
+      return { remove: () => undefined };
+    }) as never);
+    try {
+      const r = await lesson(true, false);
+      await press(one(r, 'presenter-more'));
+      expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+      act(() => {
+        Dimensions.set({ window: tablet, screen: tablet });
+        for (const change of changes) change({ window: tablet, screen: tablet });
+      });
+      await tick(10);
+      expect(byTestId(r.root, 'presenter-bar-band')).toHaveLength(1);
+      expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
+      const was = counter(r);
+      await press(one(r, 'presenter-next'));
+      expect(counter(r)).not.toBe(was);
+      // The stage is no longer covered: a touch tap on empty stage rings Next (not 'close-more').
+      tapStage(r, 'touch');
+      expect(one(r, 'presenter-next').props['data-nudge']).toBe('on');
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

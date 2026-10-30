@@ -6,7 +6,7 @@ import { Dimensions } from 'react-native';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
-import type { GesturePointer, StageCommand, StageCovering } from '../../../logic/lecture/stage-gesture';
+import { COMPAT_MOUSE_MS, type GesturePointer, type StageCommand, type StageCovering } from '../../../logic/lecture/stage-gesture';
 import type { NavLayout } from '../../../logic/lecture/stage-scale';
 import { subscribeInputKind, type PresenterEnv } from '../../../platform/presenter.web';
 import { byTestId, render } from '../../../test-support/render';
@@ -187,6 +187,46 @@ describe("Stage: the gesture's own pointer (section 4)", () => {
     fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
     expect(commands).toEqual(['nudge-next', 'next']);
     stop();
+  });
+});
+
+describe("Stage: a browser's compatibility mouse events after a tap", () => {
+  it('a mousedown under COMPAT_MOUSE_MS after a touch ended is dropped: the overlay bar toggles once', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(1_000_000);
+      const { stage, commands } = await mount({ layout: 'overlay', lastPointer: () => 'touch' });
+      // A tap whose finger moved a little (react-native-web then lets the mouse events through).
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderMove', ev('touchmove', [at(1, 643)], [at(1, 643)]));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 643)], []));
+      vi.setSystemTime(1_000_000 + COMPAT_MOUSE_MS - 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      expect(commands).toEqual(['toggle-bar']);
+      // A later click is a new gesture.
+      vi.setSystemTime(1_000_000 + COMPAT_MOUSE_MS + 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      expect(commands).toEqual(['toggle-bar', 'toggle-bar']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a touch taken by a stage button (touchcancel) counts as ended too', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(2_000_000);
+      const { stage, commands } = await mount();
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderTerminate', ev('touchcancel', [at(1, 640)], []));
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 640)], [at(0, 640)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
+      expect(commands).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

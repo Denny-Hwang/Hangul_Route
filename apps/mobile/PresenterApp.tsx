@@ -292,6 +292,16 @@ function Presenter(): ReactElement {
     moreOpenRef.current = open;
     setMoreOpen(open);
   }, []);
+  // The More sheet belongs to the bar that opened it: the phone bar's, or the wrapped docked band's
+  // (PN-3, its More fallback). A window that changes between the two (a foldable opened, split screen
+  // widened or narrowed) closes it, so a stale sheet never swallows a step; the docked band also closes
+  // its sheet when it no longer needs More (`ControlBar`).
+  const phoneBefore = useRef(phone);
+  useEffect(() => {
+    if (phoneBefore.current === phone) return;
+    phoneBefore.current = phone;
+    if (moreOpenRef.current) openMore(false);
+  }, [phone, openMore]);
   const [capability, setCapability] = useState<AudioCapability>(getCapability);
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -836,6 +846,10 @@ function Presenter(): ReactElement {
     endNavHint(false);
     // Touch seen lasts until Exit (section 4): the next lesson starts from the page's pointer media.
     setTouchSeen(touchSeenAtStart());
+    // Next's ring ends with the lesson too, so it never shows on the next lesson's bar.
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = null;
+    setNudge(false);
     repush.current = false;
     landHome(returnToPresenterHome(), () => {
       setHomeFocus(true);
