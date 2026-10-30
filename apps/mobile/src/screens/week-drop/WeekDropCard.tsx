@@ -15,6 +15,7 @@ import type { RootStackParamList } from '../../navigation/types';
  * one button on a sunken card, secondary to the Next lesson hero. It names the week's moment by its first word (taught
  * Korean with its romanization), its title in the UI language and its minutes, or "Done for this week" once the learner
  * finished it on this device. Never a count of weeks, a missed week or a score. Nothing when the drop cannot load.
+ * Built screens: design/screens/this-week-in-korea/.
  */
 
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };

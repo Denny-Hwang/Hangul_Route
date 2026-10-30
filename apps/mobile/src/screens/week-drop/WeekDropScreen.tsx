@@ -32,6 +32,8 @@ import { OopsScreen } from '../system/OopsScreen';
  * answer is recorded (the `week` shard). D, Done: one calm headline and Back home; the week is marked done on this
  * device. Never a score, a percentage, an "n of m", a timer, or a word about another week.
  *
+ * Built screens: design/screens/this-week-in-korea/ (320 and wide).
+ *
  * The drop is the one of the local week the page opened in (`useToday` is Home's; here the day is read once), so a page
  * left open past Sunday midnight keeps its drop. No drop this week, or `weeklyDrop` off (the route's door): back home.
  */
