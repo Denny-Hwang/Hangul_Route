@@ -1,4 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { MinigameKindSchema, MyStoryFrameSchema } from '@hangul-route/content-schema';
+import { lessonOccurrences, lessonSourcesOfTree, normalizeKo, type ItemOccurrence } from '@hangul-route/content-schema/lint';
 import { describe, expect, it } from 'vitest';
 import { ALL_LESSON_SCOPES } from '../../content/__tests__/helpers/lesson-stages';
 import { questsAll } from '../../content/quests';
@@ -46,10 +48,44 @@ describe('the game.<kind> switches and their fallbacks (F-CURR-002 §7.1, §12.2
     expect(problems).toEqual([]);
   });
 
-  it('no shipped quest plays a switched kind yet: the content row that adds the first changes this test on purpose', () => {
-    // Review of PR #849: today the pass above holds no My Story step, so it proves nothing for that kind. The first
-    // S7 or pack L5 row that adds a chain flips this to `true` and the switch-off pass then covers real content.
-    expect(everyStep.some(({ scope }) => SWITCHED_KINDS.includes(scope.kind))).toBe(false);
+  it('shipped quests play a switched kind, so the switch-off pass above covers real content (row CM-41 S7 flipped it)', () => {
+    // Review of PR #849: the pass above held no My Story step until the first chain shipped. Row CM-41 S7 (Stage 7
+    // Nature Volume 2, q3 Apply) is that chain; this was `false` until then.
+    const switched = everyStep.filter(({ scope }) => SWITCHED_KINDS.includes(scope.kind)).map(({ at }) => at);
+    expect(switched).toContain('quest:stage7-nature-v2-q3 step 3');
+    // Row CM-42 S7 (Stage 7 Play & Crafts Volume 2, q3 Apply) is the second.
+    expect(switched).toContain('quest:stage7-crafts-v2-q3 step 3');
+    // Row CM-43 S7 (Stage 7 Food & Daily Life Volume 2, q3 Apply) is the third.
+    expect(switched).toContain('quest:stage7-life-v2-q3 step 3');
+  });
+
+  /**
+   * The CM-38 hand-off, settled by row CM-41 S7: with `game.my-story` off (the launch state) only a chain's first frame
+   * is played, so the frames after it teach nothing new. Every review item one of them holds (its frame pattern, each
+   * bank word) is also taught by a step that plays with the switch off: another step of the same cell, or a Volume 1
+   * cell of the route at or below its stage. So no item only an unplayed frame teaches joins a cell's mastery
+   * denominator (section 4.4) or the Daily Review seed (section 4.8), and selection needs no hidden-source rule.
+   */
+  it('every item a My Story frame after the first holds is taught by a step that plays with game.my-story off', () => {
+    const root = new URL('../../../../../', import.meta.url);
+    const tree = new Map<string, unknown>();
+    for (const n of [2, 3, 4, 6, 7]) {
+      const dir = new URL(`content/episodes/stage-${n}/`, root);
+      for (const f of readdirSync(dir).filter((x) => x.endsWith('.json'))) tree.set(`content/episodes/stage-${n}/${f}`, JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
+    }
+    const sources = lessonSourcesOfTree(tree);
+    const occurrences = sources.flatMap((source) => lessonOccurrences(source, []));
+    // An occurrence inside frame k >= 2 of a chain (the extractor writes `<file> quests[q].scopes[s].frames[k]...`).
+    const isTail = (o: ItemOccurrence): boolean => {
+      const m = /quests\[(\d+)\]\.scopes\[(\d+)\]\.frames\[(\d+)\]/.exec(o.at);
+      return m !== null && Number(m[3]) >= 1;
+    };
+    const played = occurrences.filter((o) => !isTail(o));
+    const tail = occurrences.filter(isTail);
+    expect(tail.length).toBeGreaterThan(0);
+    const before = (o: ItemOccurrence, p: ItemOccurrence): boolean => p.cell === o.cell || (p.volume === 1 && p.stage <= o.stage);
+    const orphans = tail.filter((o) => !played.some((p) => normalizeKo(p.ko) === normalizeKo(o.ko) && before(o, p))).map((o) => `${o.at}: ${o.ko}`);
+    expect(orphans).toEqual([]);
   });
 
   it('with every switch off, a quest that holds a My Story step plays every step as a shipped kind', () => {

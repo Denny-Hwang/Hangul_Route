@@ -24,8 +24,9 @@ const raw = new Map<string, unknown>(files.map((f) => [f, JSON.parse(readFileSyn
 const cells = [...raw.entries()].map(([file, json]) => ({ file, cell: LessonCellSchema.parse(json) }));
 
 describe('culture notes (row CM-3C)', () => {
-  it('every Volume 1 cell is read (25 cells)', () => {
-    expect(cells).toHaveLength(25);
+  it('every Volume 1 cell is read (25 cells), and every Volume 2 cell beside it (row CM-41 S7 is the first)', () => {
+    expect(cells.filter(({ file }) => !file.endsWith('.v2.json'))).toHaveLength(25);
+    expect(cells.filter(({ file }) => file.endsWith('.v2.json')).map(({ file }) => file)).toContain('content/episodes/stage-7/nature.v2.json');
   });
 
   it('culture-source: no note of Volume 1 is reported, so CM-3B can make it an error', () => {
