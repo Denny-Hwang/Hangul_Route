@@ -24,6 +24,7 @@ import {
 } from '../logic/audio/controller';
 import type { FallbackReason } from '../logic/audio/prompt-state';
 import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
+import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createNativeClipPlayer, expoAvClipEnv } from './audio-player';
@@ -183,7 +184,7 @@ export function createNativeAudio(env: NativeAudioEnv) {
 
   return {
     playPrompt,
-    playJamo: (jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> => controller.playJamo(jamo, mode),
+    playJamo: (jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult> => controller.playJamo(jamo, question),
     speak: (text: string, opts: SpeakOptions = {}): void => speakCompat(playPrompt, text, opts),
     stop: (): void => controller.stop(),
     setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
@@ -235,8 +236,9 @@ function audio(): NativeAudio {
 export function playPrompt(spec: PlaySpec): Promise<PlayResult> {
   return audio().playPrompt(spec);
 }
-export function playJamo(jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> {
-  return audio().playJamo(jamo, mode);
+/** Say a jamo for a question (JV-A2): `'letter'` its name, `'sound'` (default) its carrier syllable; legacy `'name'` = `'letter'`. */
+export function playJamo(jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult> {
+  return audio().playJamo(jamo, question);
 }
 export function speak(text: string, opts: SpeakOptions = {}): void {
   audio().speak(text, opts);

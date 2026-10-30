@@ -172,6 +172,22 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(beside.block).toEqual({ vowel: 'beside', hasFinal: true, highlight: 'final', parts: ['ㄷ', 'ㅏ', 'ㄹ'] });
   });
 
+  it('a Word Builder final speaks its pronounced form and keeps showing its letter (AMENDMENTS-AUDIO-CLIPS M12)', () => {
+    const page: DiscoverPage = {
+      items: [
+        { type: 'jamo', jamoId: 'jamo:jieut-batchim', example: ko('낮', 'nat', 'daytime') },
+        { type: 'jamo', jamoId: 'jamo:kieuk-batchim', example: ko('부엌', 'bueok', 'kitchen') },
+        { type: 'jamo', jamoId: 'jamo:pieup-batchim', example: ko('앞', 'ap', 'front') },
+      ],
+    };
+    const [jieut, kieuk, pieup] = buildDiscover([page]).pages[0]!.items;
+    expect([jieut!.hear.spec.text, kieuk!.hear.spec.text, pieup!.hear.spec.text]).toEqual(['앋', '악', '압']);
+    expect([jieut!.spokenRomanization, kieuk!.spokenRomanization, pieup!.spokenRomanization]).toEqual(['at', 'ak', 'ap']);
+    expect([jieut!.glyph, kieuk!.glyph, pieup!.glyph]).toEqual(['ㅈ', 'ㅋ', 'ㅍ']);
+    // The block still shows the spelled closed syllable 앚 (ㅇ ㅏ ㅈ), not the pronounced 앋.
+    expect(jieut!.block?.parts).toEqual(['ㅇ', 'ㅏ', 'ㅈ']);
+  });
+
   it('a batchim whose example lacks the symbol still gets a generic block', () => {
     const item = buildDiscover([{ items: [{ type: 'jamo', jamoId: 'jamo:mieum-batchim', example: ko('나무', 'namu', 'tree') }] }]).pages[0]!.items[0]!;
     expect(item.block).toEqual({ vowel: 'beside', hasFinal: true, highlight: 'final', parts: ['ㅇ', 'ㅏ', 'ㅁ'] });

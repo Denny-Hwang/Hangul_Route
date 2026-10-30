@@ -2,7 +2,9 @@ import type { SpeechLang } from '@hangul-route/content-schema';
 import { capabilityTelemetry, type AudioCapability, type CapabilityCheckedPayload, type CapabilityPlatform } from './capability';
 import type { FallbackReason, PlayResult } from './prompt-state';
 import { speechParams, type LevelOrder, type PromptKind } from './rate';
-import { spokenFor, type SpokenJamo } from './spoken';
+import { jamoVoice, toJamoQuestion, type JamoQuestion, type LegacyJamoMode } from './jamo-voice';
+import { guardSpokenText } from './speech-guard';
+import type { SpokenJamo } from './spoken';
 import type { VoiceCandidate } from './voice-rank';
 
 export type { PlayResult } from './prompt-state';
@@ -175,8 +177,13 @@ export interface ControllerDeps {
 }
 
 export interface AudioController {
+  /** Throws synchronously in tests on a lone-jamo text (JV-A2 guard); never in a release build. */
   playPrompt(spec: PlaySpec): Promise<PlayResult>;
-  playJamo(jamo: SpokenJamo, mode?: 'sound' | 'name'): Promise<PlayResult>;
+  /**
+   * Say a jamo for a question (AMENDMENTS-AUDIO-CLIPS JV-A2): `'letter'` its name, `'sound'` (the
+   * default) its carrier syllable. The legacy `'name'` is the letter question (`toJamoQuestion`).
+   */
+  playJamo(jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult>;
   stop(): void;
   /** Called by the fallback panel when it first shows; fires `audio.fallback_shown` once per (source, reason). */
   noteFallbackShown(source: string, reason: FallbackReason): void;
@@ -474,7 +481,7 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
   // --- public ----------------------------------------------------------------
 
-  const playPrompt = async (spec: PlaySpec): Promise<PlayResult> => {
+  const runPrompt = async (spec: PlaySpec): Promise<PlayResult> => {
     if (deps.isMuted()) return fail('muted', 'muted');
 
     const ticket: Ticket = { superseded: false, hooks: new Set() };
@@ -499,12 +506,18 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     }
   };
 
+  /** Every prompt passes here, so the lone-jamo guard (JV-A2) runs once for both platforms, before anything plays. */
+  const playPrompt = (spec: PlaySpec): Promise<PlayResult> => {
+    guardSpokenText(spec.text, spec.source);
+    return runPrompt(spec);
+  };
+
   return {
     playPrompt,
-    playJamo: (jamo, mode = 'sound') => {
-      const spoken = spokenFor(jamo, mode);
-      const spec: PlaySpec = { text: spoken.text, language: 'ko-KR', kind: 'sound' };
-      if (spoken.audioRef !== undefined) spec.audioRef = spoken.audioRef;
+    playJamo: (jamo, question) => {
+      const voice = jamoVoice(jamo, toJamoQuestion(jamo, question));
+      const spec: PlaySpec = { text: voice.text, language: 'ko-KR', kind: 'sound' };
+      if (voice.audioRef !== undefined) spec.audioRef = voice.audioRef;
       return playPrompt(spec);
     },
     stop: () => {

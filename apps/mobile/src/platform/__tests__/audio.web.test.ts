@@ -271,6 +271,8 @@ describe('platform/audio.web: playJamo (sound first)', () => {
     expect(synth.spoken[0]?.rate).toBe(0.75);
     await audio.playJamo(giyeok, 'name');
     expect(synth.spoken[1]?.text).toBe('기역');
+    await audio.playJamo(giyeok, 'letter');
+    expect(synth.spoken[2]?.text).toBe('기역');
     audio.dispose();
   });
 });
@@ -310,7 +312,7 @@ describe('platform/audio.web: the legacy speak() surface', () => {
   it('calls onDone once when the utterance ends', async () => {
     const { synth, audio } = rig();
     const onDone = vi.fn();
-    audio.speak('ㄱ', { onDone });
+    audio.speak('가', { onDone });
     await flush();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(synth.spoken[0]?.voice?.name).toBe('Yuna');
@@ -321,7 +323,7 @@ describe('platform/audio.web: the legacy speak() surface', () => {
     const { synth, audio } = rig();
     useAudioStore.getState().setMuted(true, 'profile');
     const onDone = vi.fn();
-    audio.speak('ㄴ', { onDone });
+    audio.speak('나', { onDone });
     await flush();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(synth.spoken).toHaveLength(0);
@@ -1331,7 +1333,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
     mod.noteFallbackShown('x', 'muted');
     expect(mod.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     expect(mod.subscribeCapability(() => undefined)()).toBeUndefined();
-    await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKind: 'sound' })).resolves.toBe('unavailable');
+    await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKo: '아', spokenKind: 'sound' })).resolves.toBe('unavailable');
   });
 
   it('resolves a bundled clip through expo-asset and plays it with Web Audio and fetch', async () => {

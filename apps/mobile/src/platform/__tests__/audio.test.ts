@@ -256,6 +256,13 @@ describe('platform/audio (native): explicit voice, never an English voice on Han
     audio.dispose();
   });
 
+  it('a letter question says the letter name (AMENDMENTS-AUDIO-CLIPS JV-A2)', async () => {
+    const { speech, audio } = rig();
+    await audio.playJamo({ char: 'ㄱ', romanization: 'g/k', nameEn: 'giyeok', spokenKo: '가', spokenKind: 'sound', nameKo: '기역' }, 'letter');
+    expect(speech.calls[0]?.text).toBe('기역');
+    audio.dispose();
+  });
+
   it('an English prompt uses an English voice id', async () => {
     const { speech, audio } = rig();
     await audio.playPrompt({ text: 'sun', language: 'en-US', kind: 'narration' });
