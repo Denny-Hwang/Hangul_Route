@@ -1,0 +1,1597 @@
+{
+  "id": "episode:stage2-crafts-v2",
+  "stage": "stage2",
+  "theme": "crafts",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Games, Colors and Shapes",
+  "subtitleEn": "Read the names of folk games, five colors and three shapes.",
+  "hoyaIntroEn": "Kites, tops and gonggi! Let's read game words, then colors and shapes.",
+  "order": 5,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-crafts-v2-q1",
+      "titleEn": "Games in the Yard",
+      "blurbEn": "Read the names of folk games and toys: kite flying and gonggi.",
+      "teaserEn": "Next: the five colors.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Game Time in the Yard!",
+          "hoyaLineEn": "Kites, tops and little stones: let's read the names of folk games!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Game Names",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "연",
+                      "romanization": "yeon",
+                      "en": "kite"
+                    },
+                    "picture": "card:kite"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "연날리기",
+                      "romanization": "yeonnalligi",
+                      "en": "kite flying",
+                      "syllables": [
+                        "yeon",
+                        "nal",
+                        "li",
+                        "gi"
+                      ]
+                    },
+                    "noteEn": "A kite flies high on a string in the wind."
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "공기",
+                      "romanization": "gonggi",
+                      "en": "jackstones",
+                      "syllables": [
+                        "gong",
+                        "gi"
+                      ]
+                    },
+                    "noteEn": "Toss small stones up and catch them by hand."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "윷",
+                      "romanization": "yut",
+                      "en": "yut sticks"
+                    },
+                    "picture": "card:yutnori"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-v2-q1-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Find It in the Yard",
+          "minigameKind": "hidden-heritage",
+          "minigameRef": "minigame:s2-crafts-v2-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-v2-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Great Game!",
+          "hoyaLineEn": "You read the names of folk games. Well played!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-v2-q1-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-yeonnalligi",
+              "prompt": {
+                "ko": "연날리기",
+                "romanization": "yeonnalligi",
+                "en": "kite flying"
+              },
+              "options": [
+                {
+                  "id": "yeonnalligi",
+                  "text": {
+                    "ko": "연날리기",
+                    "romanization": "yeonnalligi",
+                    "en": "kite flying"
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "text": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                }
+              ],
+              "answerId": "yeonnalligi"
+            },
+            {
+              "id": "hear-yut",
+              "prompt": {
+                "ko": "윷",
+                "romanization": "yut",
+                "en": "yut sticks"
+              },
+              "options": [
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                }
+              ],
+              "answerId": "yut"
+            },
+            {
+              "id": "hear-gonggi",
+              "prompt": {
+                "ko": "공기",
+                "romanization": "gonggi",
+                "en": "jackstones"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "text": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  }
+                },
+                {
+                  "id": "yeonnalligi",
+                  "text": {
+                    "ko": "연날리기",
+                    "romanization": "yeonnalligi",
+                    "en": "kite flying"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                }
+              ],
+              "answerId": "gonggi"
+            },
+            {
+              "id": "hear-paengi",
+              "prompt": {
+                "ko": "팽이",
+                "romanization": "paengi",
+                "en": "spinning top"
+              },
+              "options": [
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "paengi"
+            },
+            {
+              "id": "hear-yeon",
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                }
+              ],
+              "answerId": "yeon"
+            },
+            {
+              "id": "hear-jegi",
+              "prompt": {
+                "ko": "제기",
+                "romanization": "jegi",
+                "en": "a shuttlecock toy you kick"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                }
+              ],
+              "answerId": "jegi"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q1-apply",
+          "kind": "hidden-heritage",
+          "rounds": [
+            {
+              "id": "hh1",
+              "sceneId": "scene:play-courtyard",
+              "altEn": "A courtyard set out for games.",
+              "targets": [
+                {
+                  "id": "yeon",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  },
+                  "spot": {
+                    "x": 22,
+                    "y": 4,
+                    "w": 86,
+                    "h": 94
+                  },
+                  "picture": "card:kite"
+                },
+                {
+                  "id": "paengi",
+                  "word": {
+                    "ko": "팽이",
+                    "romanization": "paengi",
+                    "en": "spinning top"
+                  },
+                  "spot": {
+                    "x": 108,
+                    "y": 210,
+                    "w": 80,
+                    "h": 86
+                  },
+                  "picture": "card:top"
+                },
+                {
+                  "id": "yut",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  },
+                  "spot": {
+                    "x": 204,
+                    "y": 216,
+                    "w": 86,
+                    "h": 78
+                  },
+                  "picture": "card:yutnori"
+                },
+                {
+                  "id": "jegi",
+                  "word": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "a shuttlecock toy you kick"
+                  },
+                  "spot": {
+                    "x": 302,
+                    "y": 104,
+                    "w": 84,
+                    "h": 93
+                  },
+                  "picture": "card:jegi"
+                }
+              ],
+              "others": [
+                {
+                  "id": "eolle",
+                  "word": {
+                    "ko": "얼레",
+                    "romanization": "eolle",
+                    "en": "string reel"
+                  },
+                  "spot": {
+                    "x": 12,
+                    "y": 110,
+                    "w": 86,
+                    "h": 87
+                  }
+                },
+                {
+                  "id": "ttakji",
+                  "word": {
+                    "ko": "딱지",
+                    "romanization": "ttakji",
+                    "en": "folded paper tile"
+                  },
+                  "spot": {
+                    "x": 110,
+                    "y": 110,
+                    "w": 84,
+                    "h": 87
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "word": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  },
+                  "spot": {
+                    "x": 12,
+                    "y": 212,
+                    "w": 84,
+                    "h": 80
+                  }
+                },
+                {
+                  "id": "yutpan",
+                  "word": {
+                    "ko": "윷판",
+                    "romanization": "yutpan",
+                    "en": "yut board"
+                  },
+                  "spot": {
+                    "x": 301,
+                    "y": 216,
+                    "w": 86,
+                    "h": 78
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-yeon",
+              "promptShown": true,
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                }
+              ],
+              "answerId": "yeon"
+            },
+            {
+              "id": "see-gong",
+              "promptShown": true,
+              "prompt": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                }
+              ],
+              "answerId": "gong"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-crafts-v2-q2",
+      "titleEn": "Five Colors",
+      "blurbEn": "Read five color words: blue, red, yellow, white and black.",
+      "teaserEn": "Next: circles, triangles and squares.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Color Time!",
+          "hoyaLineEn": "Blue, red, yellow, white and black: let's read five colors!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Five Colors",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "파란색",
+                      "romanization": "paransaek",
+                      "en": "blue",
+                      "syllables": [
+                        "pa",
+                        "ran",
+                        "saek"
+                      ]
+                    },
+                    "picture": "word:color-blue"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "빨간색",
+                      "romanization": "ppalgansaek",
+                      "en": "red",
+                      "syllables": [
+                        "ppal",
+                        "gan",
+                        "saek"
+                      ]
+                    },
+                    "picture": "word:color-red"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "노란색",
+                      "romanization": "noransaek",
+                      "en": "yellow",
+                      "syllables": [
+                        "no",
+                        "ran",
+                        "saek"
+                      ]
+                    },
+                    "picture": "word:color-yellow"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "하얀색",
+                      "romanization": "hayansaek",
+                      "en": "white",
+                      "syllables": [
+                        "ha",
+                        "yan",
+                        "saek"
+                      ]
+                    },
+                    "picture": "word:color-white"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "검은색",
+                      "romanization": "geomeunsaek",
+                      "en": "black",
+                      "syllables": [
+                        "geo",
+                        "meun",
+                        "saek"
+                      ]
+                    },
+                    "picture": "word:color-black"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-crafts-v2-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-v2-q2-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-crafts-v2-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "So Colorful!",
+          "hoyaLineEn": "You read five color words. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-v2-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "word": {
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
+                  }
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "word": {
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
+                  }
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "word": {
+                    "ko": "노란색",
+                    "romanization": "noransaek",
+                    "en": "yellow"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "word": {
+                    "ko": "하얀색",
+                    "romanization": "hayansaek",
+                    "en": "white"
+                  }
+                },
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                },
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "word": {
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "word": {
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
+                  }
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "word": {
+                    "ko": "하얀색",
+                    "romanization": "hayansaek",
+                    "en": "white"
+                  }
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "word": {
+                    "ko": "노란색",
+                    "romanization": "noransaek",
+                    "en": "yellow"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "word": {
+                    "ko": "노란색",
+                    "romanization": "noransaek",
+                    "en": "yellow"
+                  }
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "word": {
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "word": {
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
+                  }
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "word": {
+                    "ko": "하얀색",
+                    "romanization": "hayansaek",
+                    "en": "white"
+                  }
+                },
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "word": {
+                    "ko": "노란색",
+                    "romanization": "noransaek",
+                    "en": "yellow"
+                  }
+                },
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                },
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "word": {
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
+                  }
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "word": {
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q2-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-geomeunsaek",
+              "prompt": {
+                "ko": "검은색",
+                "romanization": "geomeunsaek",
+                "en": "black"
+              },
+              "options": [
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "labelEn": "black"
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "labelEn": "white"
+                },
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "labelEn": "blue"
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "labelEn": "red"
+                }
+              ],
+              "answerId": "geomeunsaek"
+            },
+            {
+              "id": "hear-paransaek",
+              "prompt": {
+                "ko": "파란색",
+                "romanization": "paransaek",
+                "en": "blue"
+              },
+              "options": [
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "labelEn": "yellow"
+                },
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "labelEn": "blue"
+                },
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "labelEn": "black"
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "labelEn": "white"
+                }
+              ],
+              "answerId": "paransaek"
+            },
+            {
+              "id": "hear-noransaek",
+              "prompt": {
+                "ko": "노란색",
+                "romanization": "noransaek",
+                "en": "yellow"
+              },
+              "options": [
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "labelEn": "red"
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "labelEn": "white"
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "labelEn": "yellow"
+                },
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "labelEn": "blue"
+                }
+              ],
+              "answerId": "noransaek"
+            },
+            {
+              "id": "hear-hayansaek",
+              "prompt": {
+                "ko": "하얀색",
+                "romanization": "hayansaek",
+                "en": "white"
+              },
+              "options": [
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "labelEn": "black"
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "labelEn": "yellow"
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "labelEn": "red"
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "labelEn": "white"
+                }
+              ],
+              "answerId": "hayansaek"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q2-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                },
+                {
+                  "id": "ppalgansaek",
+                  "pictureRef": "word:color-red",
+                  "word": {
+                    "ko": "빨간색",
+                    "romanization": "ppalgansaek",
+                    "en": "red"
+                  }
+                },
+                {
+                  "id": "hayansaek",
+                  "pictureRef": "word:color-white",
+                  "word": {
+                    "ko": "하얀색",
+                    "romanization": "hayansaek",
+                    "en": "white"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "paransaek",
+                  "pictureRef": "word:color-blue",
+                  "word": {
+                    "ko": "파란색",
+                    "romanization": "paransaek",
+                    "en": "blue"
+                  }
+                },
+                {
+                  "id": "noransaek",
+                  "pictureRef": "word:color-yellow",
+                  "word": {
+                    "ko": "노란색",
+                    "romanization": "noransaek",
+                    "en": "yellow"
+                  }
+                },
+                {
+                  "id": "geomeunsaek",
+                  "pictureRef": "word:color-black",
+                  "word": {
+                    "ko": "검은색",
+                    "romanization": "geomeunsaek",
+                    "en": "black"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-crafts-v2-q3",
+      "titleEn": "Shapes to Play With",
+      "blurbEn": "Read shape words: circle, triangle and square, and the ttakji.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Shape Time!",
+          "hoyaLineEn": "Round, three corners, four corners: let's read shape words!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Shape Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "동그라미",
+                      "romanization": "donggeurami",
+                      "en": "circle",
+                      "syllables": [
+                        "dong",
+                        "geu",
+                        "ra",
+                        "mi"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "세모",
+                      "romanization": "semo",
+                      "en": "triangle",
+                      "syllables": [
+                        "se",
+                        "mo"
+                      ]
+                    },
+                    "noteEn": "A shape with three sides and three corners."
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "네모",
+                      "romanization": "nemo",
+                      "en": "square",
+                      "syllables": [
+                        "ne",
+                        "mo"
+                      ]
+                    },
+                    "noteEn": "A shape with four sides and four corners."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "딱지",
+                      "romanization": "ttakji",
+                      "en": "folded paper tile",
+                      "syllables": [
+                        "ttak",
+                        "ji"
+                      ]
+                    },
+                    "noteEn": "Strike it down to flip another one over."
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-crafts-v2-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-crafts-v2-q3-apply",
+          "durationSeconds": 65
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-crafts-v2-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Shape Star!",
+          "hoyaLineEn": "You read every shape word. Great job!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-crafts-v2-q3-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-donggeurami",
+              "prompt": {
+                "ko": "동그라미",
+                "romanization": "donggeurami",
+                "en": "circle"
+              },
+              "options": [
+                {
+                  "id": "donggeurami",
+                  "text": {
+                    "ko": "동그라미",
+                    "romanization": "donggeurami",
+                    "en": "circle"
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "text": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                }
+              ],
+              "answerId": "donggeurami"
+            },
+            {
+              "id": "hear-gong",
+              "prompt": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                }
+              ],
+              "answerId": "gong"
+            },
+            {
+              "id": "hear-gonggi",
+              "prompt": {
+                "ko": "공기",
+                "romanization": "gonggi",
+                "en": "jackstones"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "text": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "donggeurami",
+                  "text": {
+                    "ko": "동그라미",
+                    "romanization": "donggeurami",
+                    "en": "circle"
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "text": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  }
+                },
+                {
+                  "id": "yeonnalligi",
+                  "text": {
+                    "ko": "연날리기",
+                    "romanization": "yeonnalligi",
+                    "en": "kite flying"
+                  }
+                }
+              ],
+              "answerId": "gonggi"
+            },
+            {
+              "id": "hear-yeon",
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
+                },
+                {
+                  "id": "yut",
+                  "pictureRef": "card:yutnori",
+                  "labelEn": "yut sticks"
+                },
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "yeon"
+            },
+            {
+              "id": "hear-yeonnalligi",
+              "prompt": {
+                "ko": "연날리기",
+                "romanization": "yeonnalligi",
+                "en": "kite flying"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "donggeurami",
+                  "text": {
+                    "ko": "동그라미",
+                    "romanization": "donggeurami",
+                    "en": "circle"
+                  }
+                },
+                {
+                  "id": "gonggi",
+                  "text": {
+                    "ko": "공기",
+                    "romanization": "gonggi",
+                    "en": "jackstones"
+                  }
+                },
+                {
+                  "id": "yeonnalligi",
+                  "text": {
+                    "ko": "연날리기",
+                    "romanization": "yeonnalligi",
+                    "en": "kite flying"
+                  }
+                }
+              ],
+              "answerId": "yeonnalligi"
+            },
+            {
+              "id": "hear-paengi",
+              "prompt": {
+                "ko": "팽이",
+                "romanization": "paengi",
+                "en": "spinning top"
+              },
+              "options": [
+                {
+                  "id": "paengi",
+                  "pictureRef": "card:top",
+                  "labelEn": "spinning top"
+                },
+                {
+                  "id": "jegi",
+                  "pictureRef": "card:jegi",
+                  "labelEn": "a shuttlecock toy you kick"
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "paengi"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q3-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "딱지",
+              "romanization": "ttakji",
+              "en": "folded paper tile"
+            },
+            {
+              "ko": "동그라미",
+              "romanization": "donggeurami",
+              "en": "circle"
+            },
+            {
+              "ko": "세모",
+              "romanization": "semo",
+              "en": "triangle"
+            },
+            {
+              "ko": "네모",
+              "romanization": "nemo",
+              "en": "square"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-crafts-v2-q3-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "hear-donggeurami",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "동그라미",
+                "romanization": "donggeurami",
+                "en": "circle"
+              }
+            },
+            {
+              "id": "hear-gonggi",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "공기",
+                "romanization": "gonggi",
+                "en": "jackstones"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:연날리기}, kite flying, is a folk game of winter, played most from the start of the lunar year to its first full moon. The most common Korean kite is the shield kite: a paper rectangle with a round hole in the middle.",
+      "sources": [
+        {
+          "title": "연날리기 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4522",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘주로 겨울철에 바람을 이용하여 연을 하늘에 띄우는 민속놀이.’ 내용 및 특징: ‘정초 세배와 성묘가 끝나면 본격적으로 마을 앞이나 갯벌에서 띄우는데, 정월 대보름 수일 전에 그 절정을 이룬다.’ 연의 명칭: ‘한국 연의 대표격이라 할 수 있는 사각 장방형의 중앙에 방구멍이 뚫려 있는 방패연이 대부분을 이룬다.’"
+        },
+        {
+          "title": "연날리기 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1577",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘종이에 가는 대나무로 만든 살을 붙여서 만든 연을 바람을 이용해 하늘에 띄우고 노는 놀이.’ 특징 및 의의: ‘연날리기는 겨울철 놀이이자 정초에서 대보름 사이에 즐긴 세시놀이이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-30): National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, topics 4522 (한국세시풍속사전 연날리기) and 1577 (한국민속예술사전 연날리기), read through the site's topic API on 2026-10-30; every quote is copied from the entry text.\nPass 2 (culture and facts checker): 'a folk game of winter' is 4522 정의 (주로 겨울철 … 민속놀이); 'played most from the start of the lunar year to its first full moon' is 1577 (정초에서 대보름 사이에 즐긴 세시놀이) and 4522 (정월 대보름 수일 전에 그 절정); 'the most common Korean kite is the shield kite, a paper rectangle with a round hole in the middle' is 4522 (사각 장방형의 중앙에 방구멍이 뚫려 있는 방패연이 대부분). Kite flying is not called Korean in origin (1577 names Chinese records too); no UNESCO status is claimed. Institution named as on the access date.\nPass 3 (third pass, after the reviser): wording re-read against both entries; the es and ko text keep the one {ko:} token and say the same facts; outcome pass.\nPasses 2 to 4 ran as three separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:오방색} names five colors: blue, red, yellow, white and black. In five elements thought, shared across East Asia, each stands for one element. They are also the base colors of {ko:단청}, the patterns painted on wooden buildings.",
+      "sources": [
+        {
+          "title": "오방색 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/12086",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘청색, 적색, 황색, 흰색, 흑색이라는 다섯 가지 색깔을 총칭하는 용어.’ 내용: ‘오방색은 오행사상을 상징한다. 그중 청색은 목木, 적색은 화火, 황색은 토土, 흰색은 금金, 흑색은 수水를 나타낸다.’"
+        },
+        {
+          "title": "음양오행 (한국일생의례사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/346",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘동아시아 문화권에서 … 우주 만물의 서로 대응하는 두 가지(음양), 그리고 서로 연관되는 다섯 가지(목화토금수) 바탕 기氣.’"
+        },
+        {
+          "title": "단청 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/8287",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘청색·적색·황색·백색·흑색 등 5가지 색을 기본으로 하여 건축물 등에 여러 가지 무늬와 그림을 그려 장식한 것 또는 그 일.’ 내용: ‘단청의 대상은 주로 목조 건축물의 기둥, 창방, 공포, 보, 천장, 벽 등에 한정되나’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-30): National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, topics 12086 (한류문화사전 오방색), 346 (한국일생의례사전 음양오행) and 8287 (한국의식주생활사전 단청), read through the site's topic API on 2026-10-30; every quote is copied from the entry text.\nPass 2 (culture and facts checker): the five colours and the element each stands for are 12086 정의 and 내용; 'five elements thought, shared across East Asia' is 346 정의 (동아시아 문화권), so the note frames 오방색 as shared East Asian thought and never as Korean in origin (F-CURR-002 §5.1); 'the base colors of dancheong, the patterns painted on wooden buildings' is 8287 정의 and 내용 (목조 건축물). 청색 is given as blue, the colour the entry pairs with the east and spring.\nPass 3 (third pass, after the reviser): American spelling 'colors' as the shipped English uses; es and ko keep both {ko:} tokens; outcome pass.\nPasses 2 to 4 ran as three separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "In {ko:딱지치기}, players strike a paper {ko:딱지} down on another to flip it over and win it. Ttakji were often made square, and they came in many shapes: {ko:네모}, {ko:세모} and {ko:동그라미}.",
+      "sources": [
+        {
+          "title": "딱지치기 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1510",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘종이로 만든 딱지를 서로 내려 쳐서 뒤집어 상대의 딱지를 따먹는 놀이.’ 내용: ‘종이를 이용하여 정사각형이나 직사각형 모양이 되게 만들었으며’ 특징 및 의의: ‘딱지는 네모 딱지, 세모 딱지, 동그란 딱지 등 여러 모양이 있었는데’"
+        },
+        {
+          "title": "딱지치기 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/11931",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘딱지는 주로 헌책의 표지나 공책, 달력 등을 이용하여 정사각형 모양으로 만들며’ 특징 및 의의: ‘딱지는 네모·세모·동그라미 등 여러 모양이 있었다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-30): National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, topics 1510 (한국민속예술사전 딱지치기) and 11931 (한류문화사전 딱지치기), read through the site's topic API on 2026-10-30; every quote is copied from the entry text.\nPass 2 (culture and facts checker): the game is 1510 정의 (내려 쳐서 뒤집어 상대의 딱지를 따먹는 놀이); 'often made square' is 1510 내용 (정사각형이나 직사각형) and 11931 내용 (정사각형 모양으로 만들며); the three shapes are 11931 특징 및 의의 (네모·세모·동그라미 등 여러 모양) and 1510 (네모 딱지, 세모 딱지, 동그란 딱지). No origin is claimed (11931 records printed ttakji under outside influence), no brand or show is named.\nPass 3 (third pass, after the reviser): es and ko keep the five {ko:} tokens; the shapes are the words quest 3 teaches; outcome pass.\nPasses 2 to 4 ran as three separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Pass 1 author (2026-10-30, content-skill): Play Volume 2 of Stage 2 (F-CURR-002 §5.6 S2): folk games and toys with scene:play-courtyard (q1), the five colors of 오방색 (q2), shapes and the ttakji (q3); es and ko overlays; the scene's es and ko entries copied into minigame:s2-crafts-v2-q1-apply.",
+      "Pass 2 language checker: romanization through the F-CNT-002 converter (yeonnalligi, gonggi, ttakji, donggeurami, semo, nemo, geomeunsaek); ko in polite 해요체 with the particle and copula lints clean; ko glosses never contain their own word; es glosses never open with the romanization; American English spelling as shipped.",
+      "Pass 3 culture and facts checker: the three notes against their NFM entries (verification records); no UNESCO claim; 오방색 framed as East Asian five-elements thought; the card-back facts are the scene's reviewed note (CM-37 part 4).",
+      "Pass 4 learning design checker: §9.3 lints clean (lesson-new-load, lesson-recycle 71 to 83 in 100 per quest, lesson-check-variety with Read Pick Meaning, Pic-Word Match and Dictation, one each, lesson-culture-coverage 3, dictation-unambiguous: 동그라미 and 공기 have one spelling and no sound change); U-1 to U-11; scaffoldable Practices; one picture names one word per quest.",
+      "Reviser: color spelling; q1 asks 연, 팽이, 윷 and 제기 with their Volume 1 pictures so no picture names two words; 윷놀이 (Volume 1 Holidays word) and 제기차기 (Volume 1 Play note) are not taught again, and the card back carries yunnori and the jegi.",
+      "Pass 5 third pass: validate-content, the lesson build, the review-item freeze and the content suites re-run clean. Passes 2 to 4 ran as three separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+    ]
+  },
+  "contentVer": 1
+}

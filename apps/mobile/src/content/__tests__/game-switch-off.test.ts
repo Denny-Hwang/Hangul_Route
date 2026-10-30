@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { clozeFallbackScope, validClozeRounds } from '../../logic/cloze-pick/round';
 import { validRounds } from '../../logic/listen-pick';
+import { picWordFallback } from '../../logic/hidden-heritage-fallback';
+import { validRounds as validHiddenHeritageRounds } from '../../logic/hidden-heritage-flow';
+import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { questsAll } from '../quests';
@@ -99,5 +102,30 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-life-q2',
       'quest:stage6-rites-q2',
     ]);
+  });
+});
+
+describe('game.hidden-heritage off: every shipped Hidden Heritage step plays Pic-Word Match on its targets (row CM-42 S2)', () => {
+  const hh = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'hidden-heritage');
+
+  it('ships Hidden Heritage steps (the Play Volume 2 places scene:play-courtyard), so the check is not empty', () => {
+    expect(hh.map(({ questId }) => questId)).toContain('quest:stage2-crafts-v2-q1');
+  });
+
+  it('each fallback board holds its scene round targets, one drawn picture each, under the targets ids', () => {
+    for (const { questId, i, ref } of hh) {
+      const scope = scopeOf(ref)!;
+      const fallback = picWordFallback(scope);
+      expect(fallback.kind, `${questId} step ${i}`).toBe('pic-word-match');
+      expect(PLAYABLE_KINDS.has(fallback.kind)).toBe(true);
+      const rounds = validHiddenHeritageRounds(scope);
+      expect(rounds.length, `${questId} step ${i}`).toBeGreaterThan(0);
+      expect(fallback.picWord!.boards.map((b) => b.pairs.map((p) => p.id)), `${questId} step ${i}`).toEqual(rounds.map((r) => r.targets.map((t) => t.id)));
+      for (const pair of fallback.picWord!.boards.flatMap((b) => b.pairs)) {
+        expect(pair.pictureRef !== undefined && canDrawPicture(pair.pictureRef), `${questId} ${pair.id}`).toBe(true);
+        expect(pair.word.romanization.length, `${questId} ${pair.id}`).toBeGreaterThan(0);
+      }
+      expect(new Set(fallback.picWord!.boards.flatMap((b) => b.pairs.map((p) => p.pictureRef))).size, `${questId}: one picture, one word`).toBe(fallback.picWord!.boards.flatMap((b) => b.pairs).length);
+    }
   });
 });

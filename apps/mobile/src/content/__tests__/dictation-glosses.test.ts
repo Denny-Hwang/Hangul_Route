@@ -36,8 +36,12 @@ const hearRounds = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
 );
 
 describe('Dictation: the shown meaning never carries the word (row CM-3A S2)', () => {
-  it('the Stage 2 Dictation Checks are shipped: fourteen rounds', () => {
-    expect(hearRounds.filter(({ ref }) => /^minigame:s2-.*-check$/.test(ref))).toHaveLength(14);
+  it('the Stage 2 Dictation Checks are shipped: fourteen rounds in Volume 1, two in the Play Volume 2 (row CM-42 S2)', () => {
+    expect(hearRounds.filter(({ ref }) => /^minigame:s2-[a-z]+-q[0-9]-check$/.test(ref))).toHaveLength(14);
+    expect(hearRounds.filter(({ ref }) => /^minigame:s2-[a-z]+-v2-q[0-9]-check$/.test(ref)).map(({ ref, round }) => `${ref} ${round.id}`)).toEqual([
+      'minigame:s2-crafts-v2-q3-check hear-donggeurami',
+      'minigame:s2-crafts-v2-q3-check hear-gonggi',
+    ]);
   });
 
   it('en and es: no meaning holds the romanization', () => {

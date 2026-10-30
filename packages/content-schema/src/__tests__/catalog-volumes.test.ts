@@ -15,6 +15,8 @@ import {
   questIdsOfBlocks,
   questIdsAtVersion,
   questsPlacedOutAtLevel,
+  learnerPosition,
+  resolvePreset,
   routeCatalogOf,
   routeDaysOf,
   selectionBlocks,
@@ -24,13 +26,14 @@ import {
   type ChooserEpisodeRow,
 } from '..';
 import { assembleCatalog, expandCellRows, type GeneratedCellRow } from '../catalog/assemble';
-import { GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
+import { GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
 import { STORY_SHELF } from '../catalog/data';
 
 /**
  * Two volumes per cell in the catalogue (F-CURR-002 §5.1 and §6.2, F-STORY-005 PR 5.8, row CM-40): a cell's Volume 2
  * joins its `episodeIds`, its quests are catalogue quests on its own episode, a level below its stage places them out
- * like Volume 1's, and it adds no route day. No Volume 2 ships yet, so these tests add fixture rows to the catalogue.
+ * like Volume 1's, and it adds no route day. These tests add fixture rows to the shipped catalogue, whose one Volume 2
+ * today is Play & Crafts, Stage 2 (row CM-42 S2).
  */
 
 const quests3 = [
@@ -43,13 +46,16 @@ const V2_ROWS: GeneratedCellRow[] = [
   ['stage4', 'crafts', 'Playdate Talk', 'shipped', 13, quests3, 2],
 ];
 const V2 = expandCellRows(V2_ROWS);
+/** The shipped catalogue's own later volumes (row CM-42 S2 ships the first: Play & Crafts, Stage 2). */
+const SHIPPED = expandCellRows(GENERATED_LESSON_CELL_ROWS);
+const CRAFTS2_V2 = ['quest:stage2-crafts-v2-q1', 'quest:stage2-crafts-v2-q2', 'quest:stage2-crafts-v2-q3'];
 
 /** The shipped catalogue with fixture Volume 2 rows added, assembled the way catalog/data.ts assembles it. */
 function withVolumes(rows = V2): Catalog {
   return assembleCatalog({
     version: CATALOG_VERSION,
     cells: CATALOG.cells,
-    volumes: rows.volumes,
+    volumes: [...SHIPPED.volumes, ...rows.volumes],
     lessonQuests: [...CATALOG.quests.filter((q) => q.kind === 'lesson'), ...rows.quests],
     stories: GENERATED_STORIES,
     storyShelf: STORY_SHELF,
@@ -79,17 +85,19 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(volumeEpisodeId('episode:stage2-nature', 2)).toBe('episode:stage2-nature-v2');
   });
 
-  it('lists each cell’s episodes by volume, and every shipped cell holds its first volume alone today', () => {
-    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual([cell.episodeId]);
+  it('lists each cell’s episodes by volume: every shipped cell holds its first volume, and Stage 2 Play its Volume 2 too', () => {
+    expect(SHIPPED.volumes.map((v) => v.episodeId)).toEqual(['episode:stage2-crafts-v2']);
+    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual(cell.episodeId === 'episode:stage2-crafts' ? [cell.episodeId, 'episode:stage2-crafts-v2'] : [cell.episodeId]);
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.episodeIds).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.volumes).toEqual([{ episodeId: 'episode:stage2-nature-v2', title: 'Outdoor Words', minutes: 13, questIds: NATURE_V2 }]);
-    for (const cell of CATALOG.cells) expect(cell.volumes, cell.episodeId).toBeUndefined();
+    for (const cell of CATALOG.cells) if (cell.episodeId !== 'episode:stage2-crafts') expect(cell.volumes, cell.episodeId).toBeUndefined();
+    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-crafts')?.volumes?.map((v) => v.questIds)).toEqual([CRAFTS2_V2]);
     expect(cellEpisodeIds({ episodeId: 'episode:stage3-life' })).toEqual(['episode:stage3-life']);
     // The first volume's quests stay the cell's list; the later volume's follow every first volume's, in grid order.
     const lessons = catalog.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...NATURE_V2, ...CRAFTS4_V2]);
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...NATURE_V2, ...CRAFTS2_V2, ...CRAFTS4_V2]);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds);
   });
 
@@ -114,7 +122,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const notReady = assembleCatalog({
       version: CATALOG_VERSION,
       cells: base.cells.map((c) => (c.episodeId === 'episode:stage2-nature' ? { ...c, status: 'preview' } : c)),
-      volumes: preview.volumes,
+      volumes: [...SHIPPED.volumes, ...preview.volumes],
       lessonQuests: [...CATALOG.quests.filter((q) => q.kind === 'lesson'), ...preview.quests],
       stories: GENERATED_STORIES,
       storyShelf: STORY_SHELF,
@@ -173,6 +181,17 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set(), history)).toEqual(NATURE_V2);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set([NATURE_V2[1] as string]), history)).toEqual([NATURE_V2[0], NATURE_V2[2]]);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, stamp, route, new Set(), history)).toEqual([]);
+  });
+});
+
+describe('the route presets stay on the route (row CM-40, with the shipped Volume 2 of row CM-42 S2)', () => {
+  it('next-lesson after the last Stage 2 Play quest goes on to Stage 3, never into the Play Volume 2', () => {
+    const r = resolvePreset('next-lesson', 30, { catalog: CATALOG, position: { questId: 'quest:stage2-crafts-q3' } });
+    const ids = r.blocks.flatMap((b) => ('id' in b ? [b.id] : []));
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) expect(id, id).not.toMatch(/-v2(-|$)/);
+    expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
+    expect(learnerPosition('quest:stage2-crafts-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
   });
 });
 
