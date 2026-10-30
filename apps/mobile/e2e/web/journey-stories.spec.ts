@@ -372,8 +372,9 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
       await expect(page.getByTestId('journey-volumes-stage2-nature-1-done')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature-2-open')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveAttribute('aria-hidden', 'true');
-      // Only the cell with two volumes has dots.
-      await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(0);
+      // Only a cell with two volumes has dots (Stage 2 Food & Daily Life ships its Volume 2, row CM-43 S2; Play has none).
+      await expect(page.getByTestId('journey-volumes-stage2-crafts')).toHaveCount(0);
+      await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(1);
       if (label === '320') {
         // The dots never make a cell wider than its neighbours (54 dp at 320).
         const nature = await natureCell(page).boundingBox();

@@ -22,8 +22,10 @@ const OVERLAYS = {
 };
 
 describe('Read Pick Meaning: options in the UI language (row CM-3A S2)', () => {
-  it('the Stage 2 Read Pick Checks are shipped: seven scopes', () => {
-    expect(readPick.filter(([ref]) => ref.startsWith('minigame:s2-')).map(([ref]) => ref).sort()).toEqual([
+  it('the Stage 2 Read Pick Checks are shipped: seven scopes in Volume 1, and each Volume 2 Read Pick Check beside them', () => {
+    // Food & Daily Life Volume 2 q3 (F-CURR-002 row CM-43 S2) adds one.
+    expect(readPick.map(([ref]) => ref)).toContain('minigame:s2-life-v2-q3-check');
+    expect(readPick.filter(([ref]) => ref.startsWith('minigame:s2-') && !ref.includes('-v2-')).map(([ref]) => ref).sort()).toEqual([
       'minigame:s2-crafts-q3-check',
       'minigame:s2-letters-q1-check',
       'minigame:s2-letters-q4-check',

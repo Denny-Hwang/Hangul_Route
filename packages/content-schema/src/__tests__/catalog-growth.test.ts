@@ -164,6 +164,10 @@ describe('placedOutGrowth', () => {
       'quest:stage2-crafts-q1',
       'quest:stage2-crafts-q2',
       'quest:stage2-crafts-q3',
+      // Taste and Table Words, Stage 2 Food & Daily Life Volume 2 (F-CURR-002 row CM-43 S2): placed out like Volume 1.
+      'quest:stage2-life-v2-q1',
+      'quest:stage2-life-v2-q2',
+      'quest:stage2-life-v2-q3',
     ]);
     // Row CM-33's Stage 1 addition shipped since too, behind a stage3 result: it is placed out with them.
     expect(placedOutGrowth(STAGE3, undefined, routeCatalogOf(CATALOG))).toEqual(['quest:stage1-crafts-q4', ...shippedSince]);
