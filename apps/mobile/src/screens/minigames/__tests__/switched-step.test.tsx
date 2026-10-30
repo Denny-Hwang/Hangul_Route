@@ -134,6 +134,17 @@ describe('the dictation chunk loads once per step', () => {
       });
       expect(chunkLoads.count).toBe(1);
       expect(byTestId(r.root, 'dictation-prompt-speaker')).toHaveLength(0);
+      await act(async () => {
+        r.unmount();
+      });
+      // The next step tries again, and that try reaches the chunk: so the count above would have seen a retry.
+      const next = await mount(scope);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+      expect(chunkLoads.count).toBe(2);
+      expect(byTestId(next.root, 'step-waiting')).toHaveLength(0);
+      expect(byTestId(next.root, 'type-hangul').length).toBeGreaterThan(0);
     } finally {
       spy.mockRestore();
     }
