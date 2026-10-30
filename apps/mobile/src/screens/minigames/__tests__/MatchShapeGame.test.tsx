@@ -23,6 +23,13 @@ import { ShapeRoundView } from '../ShapeRoundView';
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
+// A lone letter is said by its name (니은, 비읍), never a carrier syllable (나, 바): the owner's audio report of 2026-10-29.
+const audio = vi.hoisted(() => ({
+  playJamo: vi.fn((_jamo: unknown, _mode?: 'sound' | 'name') => Promise.resolve('played' as const)),
+  stop: vi.fn(),
+}));
+vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), ...audio }));
+
 type Host = MinigameHost & { answers: Array<[string | number, boolean, { itemId?: string } | undefined]>; completes: number };
 
 function host(): Host {
@@ -57,6 +64,8 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.useRealTimers();
+  for (const [, mode] of audio.playJamo.mock.calls) expect(mode).toBe('name');
+  audio.playJamo.mockClear();
 });
 
 describe('an origin round (the picture and its sourced line)', () => {
@@ -80,7 +89,7 @@ describe('an origin round (the picture and its sourced line)', () => {
     });
     expect(screenTexts(root)).toContain('The tongue touches the upper gum.');
     await tapId(root, 'match-shape-continue');
-    expect(screenTexts(r.root)).toContain('The back of the tongue touches the soft roof of the mouth.');
+    expect(screenTexts(r.root)).toContain('The root of the tongue closes the throat.');
   });
 
   it('a miss is the amber nudge with Hoya, never red; the round stays open and only the first answer is scored', async () => {
@@ -131,7 +140,7 @@ describe('a pair round (tap every copy among look-alikes)', () => {
     await act(async () => {
       vi.advanceTimersByTime(PAIR_SOLVED_PAUSE_MS);
     });
-    expect(screenTexts(r.root)).toContain('The lips close: the shape of the mouth.');
+    expect(screenTexts(r.root)).toContain('The shape of the mouth.');
   });
 
   it('a look-alike is the first, missed answer; the difference line follows the nudge', async () => {
@@ -178,6 +187,8 @@ describe('the step and the switch', () => {
     }
     expect(h.answers.map(([k, c]) => [k, c])).toEqual(scope.readPick!.rounds.map((round) => [round.id, false]));
     expect(h.completes).toBe(1);
+    // The right answer says the letter by its name, once a round.
+    expect(audio.playJamo).toHaveBeenCalledTimes(scope.readPick!.rounds.length);
   });
 });
 

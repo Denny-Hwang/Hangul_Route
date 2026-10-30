@@ -120,8 +120,12 @@ describe('the Stage 1 additions (row CM-33)', () => {
       if (r.shape !== 'origin') continue;
       const sources = sourcesOf(r.fact);
       expect(sources.length, r.id).toBeGreaterThan(0);
-      // The letter's own fact (NIKL) and the principle (National Hangeul Museum), as section 5.2 names.
-      expect(sources.map((s) => s.publisher).sort(), r.id).toEqual(['National Hangeul Museum', 'National Institute of Korean Language']);
+      // The letter's own fact (NIKL, or for ㄱ and ㅁ the National Hangeul Museum's Haerye wording) and the principle
+      // (National Hangeul Museum, its exhibition text), as section 5.2 names.
+      expect(sources.length, r.id).toBe(2);
+      expect(sources[1]!.url, r.id).toBe('https://www.hangeul.go.kr/exhibition/512');
+      const own = r.fact === 'giyeok' || r.fact === 'mieum' ? 'National Hangeul Museum' : 'National Institute of Korean Language';
+      expect(sources[0]!.publisher, r.id).toBe(own);
       for (const s of sources) {
         // The culture-source logic of lesson-lint.ts: the institution's name as of the access date, on a host it runs.
         expect(allowlistedInstitution(s.publisher, s.accessed, s.url), `${r.id} ${s.publisher} ${s.url}`).toBeDefined();
@@ -137,6 +141,16 @@ describe('the Stage 1 additions (row CM-33)', () => {
     expect(sourcesOf('nope')).toEqual([]);
   });
 
+  it('keeps to the Haerye account the shipped Shapes of Hangeul story tells (f3), never a modern gloss', () => {
+    const note = (fact: string): string => (shapeRounds().find((r) => r.shape === 'origin' && r.fact === fact) as { noteEn: string }).noteEn;
+    // 象舌根閉喉之形 and 象口形: the root of the tongue closing the throat, the shape of the mouth.
+    expect(note('giyeok')).toBe('The root of the tongue closes the throat.');
+    expect(note('mieum')).toBe('The shape of the mouth.');
+    for (const r of shapeRounds()) {
+      if (r.shape === 'origin') expect(r.noteEn, r.id).not.toMatch(/palate|velum|soft roof|lips close/i);
+    }
+  });
+
   it('the quoted words hold the letter each fact is about (consonants), or its vowel base', () => {
     for (const r of shapeRounds()) {
       if (r.shape !== 'origin') continue;
@@ -149,7 +163,9 @@ describe('the Stage 1 additions (row CM-33)', () => {
     for (const r of shapeRounds()) {
       if (r.shape !== 'origin') continue;
       expect(Object.prototype.hasOwnProperty.call(SHAPE_ORIGIN_REGISTRY, r.picture), r.picture).toBe(true);
-      expect(SHAPE_ORIGIN_REGISTRY[r.picture]?.sourceRef?.publisher, r.picture).toBe('National Institute of Korean Language');
+      // The picture names the same source as its line's own fact.
+      expect(SHAPE_ORIGIN_REGISTRY[r.picture]?.sourceRef?.publisher, r.picture).toBe(sourcesOf(r.fact)[0]?.publisher);
+      expect(SHAPE_ORIGIN_REGISTRY[r.picture]?.sourceRef?.url, r.picture).toBe(sourcesOf(r.fact)[0]?.url);
     }
   });
 

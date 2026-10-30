@@ -144,7 +144,9 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   handlers.current = { onFirst, onSolved };
 
   const say = useCallback((): void => {
-    if (target) void slotPlay(() => playJamo(target, 'sound'));
+    // Said by its name (giyeok, nieun, ieung), every letter alike, never a carrier syllable (na, ba): the tiles name letters,
+    // and a lone letter's carrier syllable is the confusion of the owner's audio report of 2026-10-29.
+    if (target) void slotPlay(() => playJamo(target, 'name'));
   }, [slotPlay, target]);
 
   const run = useCallback(

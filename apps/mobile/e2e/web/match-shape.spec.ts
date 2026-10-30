@@ -189,7 +189,7 @@ test.describe('Match Shape on (game.match-shape at 100)', () => {
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await playStep(page, APPLY);
 
-    // The Check: ㅍ among ㅍ ㅂ ㅁ ㄹ, then ㅗ among ㅗ ㅓ ㅏ ㅜ (read rounds: this browser has no Korean voice).
+    // The Check: ㅍ among ㅍ ㅁ ㄹ ㅅ, then ㅗ among ㅗ ㅏ ㅣ ㅡ (read rounds: this browser has no Korean voice).
     await playCheckByIds(page, [{ answer: 'jamo:pieup' }, { answer: 'jamo:o' }]);
     await page.getByRole('button', { name: 'See results' }).click();
     await expect(page.getByText('Next up')).toBeVisible();

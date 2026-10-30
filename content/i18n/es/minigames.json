@@ -157,9 +157,9 @@
     },
     "minigame:s1-crafts-q4-play": {
       "matchShape.rounds.ms-origin-nieun.note": "La lengua toca la encía de arriba.",
-      "matchShape.rounds.ms-origin-giyeok.note": "La parte de atrás de la lengua toca el paladar blando.",
+      "matchShape.rounds.ms-origin-giyeok.note": "La raíz de la lengua cierra la garganta.",
       "matchShape.rounds.ms-pair-bieup.diffNote": "{ko:ㅂ} está de pie, con dos lados altos. {ko:ㅍ} está acostada, con líneas largas arriba y abajo.",
-      "matchShape.rounds.ms-origin-mieum.note": "Los labios se cierran: la forma de la boca.",
+      "matchShape.rounds.ms-origin-mieum.note": "La forma de la boca.",
       "matchShape.rounds.ms-origin-siot.note": "La forma de un diente.",
       "matchShape.rounds.ms-origin-ieung.note": "La forma de la garganta."
     },

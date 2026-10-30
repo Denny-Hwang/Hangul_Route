@@ -5,8 +5,8 @@
  * the side, facing left, with the part that makes the letter's shape drawn heavier in `text.primary`, so it reads as
  * the letter (ㄱ ㄴ ㅁ ㅅ ㅇ); flat ground for ㅡ; a person standing for ㅣ; and the person with the round dot of the
  * sky on the right for ㅏ (ㆍ is shown only here, as a shape). At most 5 shapes and 5 colours each (D6); no
- * `brand.primary`, no `feedback.danger`. Every picture names the source of the fact it shows (`sourceRef`, National
- * Institute of Korean Language). People are faceless, as every scene-art figure.
+ * `brand.primary`, no `feedback.danger`. Every picture names the source of the fact it shows (`sourceRef`: the National
+ * Institute of Korean Language, or the National Hangeul Museum for ㄱ and ㅁ). People are faceless, as every scene-art figure.
  *
  * Kept out of the story registry and the package barrel: the Match Shape chunk reaches them by their file path, so
  * the start bundle carries none of them.
@@ -15,6 +15,7 @@ import type { ItemDef, Shape } from '../types';
 
 const BOX = { w: 200, h: 160 };
 const CONSONANTS = { title: 'Principles of Han-geul (consonant letters)', publisher: 'National Institute of Korean Language', url: 'https://www.korean.go.kr/eng_hangeul/principle/002.html', accessed: '2026-10-23' };
+const MUSEUM_HANGEUL = { title: 'About Hangeul: Hunminjeongeum', publisher: 'National Hangeul Museum', url: 'https://www.hangeul.go.kr/lang/en/html/education/Hangeul.do', accessed: '2026-10-29' };
 const VOWELS = { title: 'Principles of Han-geul (vowel letters)', publisher: 'National Institute of Korean Language', url: 'https://www.korean.go.kr/eng_hangeul/principle/003.html', accessed: '2026-10-23' };
 
 /** The head from the side, facing left (its outline), and its eye. */
@@ -47,9 +48,16 @@ const origin = (letter: string, alt: string, accuracyNote: string, nodes: Shape[
 export const SHAPE_ORIGIN_PROPS: readonly ItemDef[] = [
   origin(
     'giyeok',
-    'A head from the side. The back of the tongue touches the soft roof of the mouth.',
-    'A plain side view facing left: the tongue is one heavy bend, flat under the soft roof at the back and then down, which reads as ㄱ. Not an anatomy diagram.',
-    [HEAD, MOUTH, { t: 'poly', pts: [[52, 88], [92, 88], [92, 118], [84, 118], [84, 96], [52, 96]], fill: 'text.primary' }, EYE],
+    'A head from the side. The root of the tongue closes the throat.',
+    'A plain side view facing left: the tongue is one heavy bend, flat across the back of the mouth and then down, where its root closes the throat, which reads as ㄱ. Haerye wording (象舌根閉喉之形). Not an anatomy diagram.',
+    [
+      HEAD,
+      MOUTH,
+      { t: 'rect', x: 86, y: 100, w: 18, h: 40, r: 4, fill: 'surface.sunken', stroke: 'border.shape', sw: 'base' },
+      { t: 'poly', pts: [[52, 88], [100, 88], [100, 136], [90, 136], [90, 97], [52, 97]], fill: 'text.primary' },
+      EYE,
+    ],
+    MUSEUM_HANGEUL,
   ),
   origin(
     'nieun',
@@ -59,9 +67,10 @@ export const SHAPE_ORIGIN_PROPS: readonly ItemDef[] = [
   ),
   origin(
     'mieum',
-    'A head from the side. The lips close: the shape of the mouth.',
-    'A plain side view facing left: the closed mouth is drawn as a heavy square at the lips, which reads as ㅁ. Not an anatomy diagram.',
+    'A head from the side. The shape of the mouth.',
+    'A plain side view facing left: the mouth is drawn as a heavy square at the lips, which reads as ㅁ. Haerye wording (象口形). Not an anatomy diagram.',
     [HEAD, { t: 'rect', x: 26, y: 90, w: 32, h: 30, r: 2, fill: 'text.primary' }, { t: 'rect', x: 34, y: 98, w: 16, h: 14, fill: 'surface.sunken' }, EYE],
+    MUSEUM_HANGEUL,
   ),
   origin(
     'siot',

@@ -665,9 +665,9 @@ function stage1AdditionScopes(): Record<string, MinigameScope> {
       matchShape: {
         rounds: [
           o('nieun', ['giyeok', 'nieun', 'mieum'], 'The tongue touches the upper gum.'),
-          o('giyeok', ['giyeok', 'nieun', 'siot'], 'The back of the tongue touches the soft roof of the mouth.'),
+          o('giyeok', ['giyeok', 'nieun', 'siot'], 'The root of the tongue closes the throat.'),
           p('bieup', 'pieup', 'tlltlt', '{ko:ㅂ} stands up, with two tall sides. {ko:ㅍ} lies flat, with long lines at the top and bottom.'),
-          o('mieum', ['mieum', 'ieung', 'nieun'], 'The lips close: the shape of the mouth.'),
+          o('mieum', ['mieum', 'ieung', 'nieun'], 'The shape of the mouth.'),
           o('siot', ['siot', 'giyeok', 'mieum'], 'The shape of a tooth.'),
           o('ieung', ['ieung', 'mieum', 'siot'], 'The shape of the throat.'),
         ],
@@ -689,7 +689,10 @@ function stage1AdditionScopes(): Record<string, MinigameScope> {
     'minigame:s1-crafts-q4-check': {
       kind: 'listen-pick',
       listenPick: {
-        rounds: [lp.sym(J('pieup'), THRU_R3, { optionIds: [J('pieup'), J('bieup'), J('mieum'), J('rieul')] }), lp.sym(J('o'), THRU_R3, { optionIds: [J('o'), J('eo'), J('a'), J('u')] })],
+        // Heard, so no option is a look-alike told apart only by its sound (바 / 파, 어 / 오): the shapes were
+        // matched in the two steps before, and a device voice must not decide this Check (owner audio report,
+        // 2026-10-29; the pronunciation plan takes the lone-letter voice up for every Check).
+        rounds: [lp.sym(J('pieup'), THRU_R3, { optionIds: [J('pieup'), J('mieum'), J('rieul'), J('siot')] }), lp.sym(J('o'), THRU_R3, { optionIds: [J('o'), J('a'), J('i'), J('eu')] })],
       },
     },
   };

@@ -157,9 +157,9 @@
     },
     "minigame:s1-crafts-q4-play": {
       "matchShape.rounds.ms-origin-nieun.note": "혀가 윗잇몸에 닿아요.",
-      "matchShape.rounds.ms-origin-giyeok.note": "혀 뒤쪽이 입천장 뒤쪽에 닿아요.",
+      "matchShape.rounds.ms-origin-giyeok.note": "혀뿌리가 목구멍을 막는 모양이에요.",
       "matchShape.rounds.ms-pair-bieup.diffNote": "{ko:ㅂ}은 양옆이 길게 서 있어요. {ko:ㅍ}은 위아래에 긴 줄이 있고 납작하게 누워 있어요.",
-      "matchShape.rounds.ms-origin-mieum.note": "입술을 다물어요. 입의 모양이에요.",
+      "matchShape.rounds.ms-origin-mieum.note": "입의 모양이에요.",
       "matchShape.rounds.ms-origin-siot.note": "이의 모양이에요.",
       "matchShape.rounds.ms-origin-ieung.note": "목구멍의 모양이에요."
     },

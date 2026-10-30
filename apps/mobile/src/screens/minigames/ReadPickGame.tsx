@@ -91,7 +91,9 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
     if (right) {
       success();
       setSolved(true);
-      if (letter) void playJamo(letter, 'sound');
+      // The letter's name (nieun, bieup), never a carrier syllable (na, ba): a lone letter the screen shows is said by its
+      // name, as the owner's audio report of 2026-10-29 asks, until recorded letter sounds land.
+      if (letter) void playJamo(letter, 'name');
       timer.current = setTimeout(next, reduced ? 0 : motion.duration.celebration);
     } else if (!wrong.includes(option.id)) {
       nudge();
