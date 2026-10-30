@@ -1,0 +1,1744 @@
+{
+  "id": "episode:stage6-life-v2",
+  "stage": "stage6",
+  "theme": "life",
+  "volume": 2,
+  "status": "ready",
+  "titleEn": "Recipe, Receipt & Label",
+  "subtitleEn": "Read a recipe, a menu, a receipt and a food label.",
+  "hoyaIntroEn": "Food words are everywhere: on a recipe, a menu, a receipt and a label. Let's read them!",
+  "order": 2,
+  "pillarTags": [
+    "B2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-life-v2-q1",
+      "titleEn": "Recipe Card",
+      "blurbEn": "Read what a gimbap recipe needs, and ask for it.",
+      "teaserEn": "Next: read a snack bar menu and a receipt.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Recipe Card",
+          "hoyaLineEn": "A recipe card for gimbap! Let's read what we need.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Recipe",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q1-recipe",
+                    "keyWords": [
+                      {
+                        "ko": "김",
+                        "romanization": "gim",
+                        "en": "dried seaweed"
+                      },
+                      {
+                        "ko": "오이",
+                        "romanization": "oi",
+                        "en": "cucumber"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A recipe card lists what goes into the food."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q1-recipe",
+                    "keyWords": [
+                      {
+                        "ko": "두 장",
+                        "romanization": "du jang",
+                        "en": "two sheets"
+                      },
+                      {
+                        "ko": "두 공기",
+                        "romanization": "du gonggi",
+                        "en": "two bowls"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Next to each thing, the card says how much you need."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "김밥을 만들어요.",
+                      "romanization": "gimbabeul mandeureoyo",
+                      "en": "We make gimbap."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "김 두 장 주세요.",
+                      "romanization": "gim du jang juseyo",
+                      "en": "Two sheets of dried seaweed, please."
+                    }
+                  }
+                ],
+                "captionEn": "To ask for something, give the food, then how much, then please."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Card",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-v2-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Ask for It",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-life-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-life-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Recipe Reader!",
+          "hoyaLineEn": "You read a recipe card. Now we can roll some gimbap!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-v2-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-life-v2-q1-recipe",
+            "kind": "recipe",
+            "title": {
+              "ko": "김밥 만들기",
+              "romanization": "gimbap mandeulgi",
+              "en": "making gimbap"
+            },
+            "entries": [
+              {
+                "id": "gim",
+                "text": {
+                  "ko": "김",
+                  "romanization": "gim",
+                  "en": "dried seaweed"
+                },
+                "value": {
+                  "ko": "두 장",
+                  "romanization": "du jang",
+                  "en": "two sheets"
+                }
+              },
+              {
+                "id": "rice",
+                "text": {
+                  "ko": "밥",
+                  "romanization": "bap",
+                  "en": "cooked rice"
+                },
+                "value": {
+                  "ko": "두 공기",
+                  "romanization": "du gonggi",
+                  "en": "two bowls"
+                }
+              },
+              {
+                "id": "egg",
+                "text": {
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
+                },
+                "value": {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three"
+                }
+              },
+              {
+                "id": "cucumber",
+                "text": {
+                  "ko": "오이",
+                  "romanization": "oi",
+                  "en": "cucumber"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one"
+                }
+              }
+            ],
+            "altEn": "A recipe card for making gimbap: two sheets of dried seaweed, two bowls of rice, three eggs and one cucumber"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How much rice does the recipe need?",
+              "key": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "options": [
+                {
+                  "id": "han-gonggi",
+                  "text": {
+                    "ko": "한 공기",
+                    "romanization": "han gonggi",
+                    "en": "one bowl"
+                  }
+                },
+                {
+                  "id": "du-gonggi",
+                  "text": {
+                    "ko": "두 공기",
+                    "romanization": "du gonggi",
+                    "en": "two bowls"
+                  }
+                },
+                {
+                  "id": "se-gonggi",
+                  "text": {
+                    "ko": "세 공기",
+                    "romanization": "se gonggi",
+                    "en": "three bowls"
+                  }
+                }
+              ],
+              "answerId": "du-gonggi",
+              "answerEntryId": "rice"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How many eggs does it need?",
+              "key": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              },
+              "options": [
+                {
+                  "id": "han-gae",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one"
+                  }
+                },
+                {
+                  "id": "du-gae",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two"
+                  }
+                },
+                {
+                  "id": "se-gae",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three"
+                  }
+                }
+              ],
+              "answerId": "se-gae",
+              "answerEntryId": "egg"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How many sheets of dried seaweed?",
+              "key": {
+                "ko": "김",
+                "romanization": "gim",
+                "en": "dried seaweed"
+              },
+              "options": [
+                {
+                  "id": "han-jang",
+                  "text": {
+                    "ko": "한 장",
+                    "romanization": "han jang",
+                    "en": "one sheet"
+                  }
+                },
+                {
+                  "id": "du-jang",
+                  "text": {
+                    "ko": "두 장",
+                    "romanization": "du jang",
+                    "en": "two sheets"
+                  }
+                },
+                {
+                  "id": "se-jang",
+                  "text": {
+                    "ko": "세 장",
+                    "romanization": "se jang",
+                    "en": "three sheets"
+                  }
+                }
+              ],
+              "answerId": "du-jang",
+              "answerEntryId": "gim"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which vegetable is on the card?",
+              "options": [
+                {
+                  "id": "oi",
+                  "text": {
+                    "ko": "오이",
+                    "romanization": "oi",
+                    "en": "cucumber"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                },
+                {
+                  "id": "dalgyal",
+                  "text": {
+                    "ko": "달걀",
+                    "romanization": "dalgyal",
+                    "en": "egg"
+                  }
+                }
+              ],
+              "answerId": "oi",
+              "answerEntryId": "cucumber"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "달걀 ___ 주세요.",
+                "romanization": "dalgyal ___ juseyo",
+                "en": "___ eggs, please."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one"
+                },
+                {
+                  "ko": "두 개",
+                  "romanization": "du gae",
+                  "en": "two"
+                },
+                {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "김 ___ 주세요.",
+                "romanization": "gim ___ juseyo",
+                "en": "___ of dried seaweed, please."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "두 장",
+                  "romanization": "du jang",
+                  "en": "two sheets"
+                },
+                {
+                  "ko": "두 공기",
+                  "romanization": "du gonggi",
+                  "en": "two bowls"
+                },
+                {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "___ 한 개 주세요.",
+                "romanization": "___ han gae juseyo",
+                "en": "One ___, please."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
+                },
+                {
+                  "ko": "오이",
+                  "romanization": "oi",
+                  "en": "cucumber"
+                },
+                {
+                  "ko": "김",
+                  "romanization": "gim",
+                  "en": "dried seaweed"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-life-v2-q1-recipe",
+            "kind": "recipe",
+            "title": {
+              "ko": "김밥 만들기",
+              "romanization": "gimbap mandeulgi",
+              "en": "making gimbap"
+            },
+            "entries": [
+              {
+                "id": "gim",
+                "text": {
+                  "ko": "김",
+                  "romanization": "gim",
+                  "en": "dried seaweed"
+                },
+                "value": {
+                  "ko": "두 장",
+                  "romanization": "du jang",
+                  "en": "two sheets"
+                }
+              },
+              {
+                "id": "rice",
+                "text": {
+                  "ko": "밥",
+                  "romanization": "bap",
+                  "en": "cooked rice"
+                },
+                "value": {
+                  "ko": "두 공기",
+                  "romanization": "du gonggi",
+                  "en": "two bowls"
+                }
+              },
+              {
+                "id": "egg",
+                "text": {
+                  "ko": "달걀",
+                  "romanization": "dalgyal",
+                  "en": "egg"
+                },
+                "value": {
+                  "ko": "세 개",
+                  "romanization": "se gae",
+                  "en": "three"
+                }
+              },
+              {
+                "id": "cucumber",
+                "text": {
+                  "ko": "오이",
+                  "romanization": "oi",
+                  "en": "cucumber"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one"
+                }
+              }
+            ],
+            "altEn": "A recipe card for making gimbap: two sheets of dried seaweed, two bowls of rice, three eggs and one cucumber"
+          }
+        },
+        {
+          "ref": "minigame:s6-life-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptEn": "Type the food word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "김",
+                "romanization": "gim",
+                "en": "dried seaweed"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the food word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "오이",
+                "romanization": "oi",
+                "en": "cucumber"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-life-v2-q2",
+      "titleEn": "Snack Bar",
+      "blurbEn": "Read the prices at a snack bar, order and check the receipt.",
+      "teaserEn": "Next: read the label on a pack of food.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Snack Bar",
+          "hoyaLineEn": "A snack bar! Let's read the menu and order.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Menu and Receipt",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q2-menu",
+                    "keyWords": [
+                      {
+                        "ko": "분식집",
+                        "romanization": "bunsikjip",
+                        "en": "snack bar"
+                      },
+                      {
+                        "ko": "어묵",
+                        "romanization": "eomuk",
+                        "en": "fish cake"
+                      },
+                      {
+                        "ko": "사천 원",
+                        "romanization": "sacheon won",
+                        "en": "4,000 won"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A snack bar menu gives each food with its price."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q2-receipt",
+                    "keyWords": [
+                      {
+                        "ko": "영수증",
+                        "romanization": "yeongsujeung",
+                        "en": "receipt"
+                      },
+                      {
+                        "ko": "합계",
+                        "romanization": "hapgye",
+                        "en": "total"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "After you pay, the receipt lists what you ordered and the total."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "영수증 드릴까요?",
+                          "romanization": "yeongsujeung deurilkkayo",
+                          "en": "Would you like the receipt?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 주세요.",
+                          "romanization": "ne juseyo",
+                          "en": "Yes, please."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The server asks about the receipt. Hoya says yes."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Menu",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-v2-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Order and Pay",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-life-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Snack Bar Star!",
+          "hoyaLineEn": "You read a menu and a receipt. Enjoy your snack!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-v2-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-life-v2-q2-menu",
+            "kind": "menu",
+            "title": {
+              "ko": "메뉴",
+              "romanization": "menyu",
+              "en": "menu"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice roll"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "tteokbokki",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "사천 원",
+                  "romanization": "sacheon won",
+                  "en": "4,000 won"
+                }
+              },
+              {
+                "id": "eomuk",
+                "text": {
+                  "ko": "어묵",
+                  "romanization": "eomuk",
+                  "en": "fish cake"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "ramyeon",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                }
+              }
+            ],
+            "altEn": "A snack bar menu: gimbap 3,000 won, spicy rice cakes 4,000 won, fish cake 2,000 won and instant noodles 5,000 won"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "spicy rice cakes"
+              },
+              "options": [
+                {
+                  "id": "icheon-won",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                },
+                {
+                  "id": "sacheon-won",
+                  "text": {
+                    "ko": "사천 원",
+                    "romanization": "sacheon won",
+                    "en": "4,000 won"
+                  }
+                },
+                {
+                  "id": "ocheon-won",
+                  "text": {
+                    "ko": "오천 원",
+                    "romanization": "ocheon won",
+                    "en": "5,000 won"
+                  }
+                }
+              ],
+              "answerId": "sacheon-won",
+              "answerEntryId": "tteokbokki"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which food costs 2,000 won?",
+              "options": [
+                {
+                  "id": "gimbap",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "seaweed rice roll"
+                  }
+                },
+                {
+                  "id": "eomuk",
+                  "text": {
+                    "ko": "어묵",
+                    "romanization": "eomuk",
+                    "en": "fish cake"
+                  }
+                },
+                {
+                  "id": "ramyeon",
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                }
+              ],
+              "answerId": "eomuk",
+              "answerEntryId": "eomuk"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "라면",
+                "romanization": "ramyeon",
+                "en": "instant noodles"
+              },
+              "options": [
+                {
+                  "id": "samcheon-won",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                },
+                {
+                  "id": "sacheon-won",
+                  "text": {
+                    "ko": "사천 원",
+                    "romanization": "sacheon won",
+                    "en": "4,000 won"
+                  }
+                },
+                {
+                  "id": "ocheon-won",
+                  "text": {
+                    "ko": "오천 원",
+                    "romanization": "ocheon won",
+                    "en": "5,000 won"
+                  }
+                }
+              ],
+              "answerId": "ocheon-won",
+              "answerEntryId": "ramyeon"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How much is this?",
+              "key": {
+                "ko": "김밥",
+                "romanization": "gimbap",
+                "en": "seaweed rice roll"
+              },
+              "options": [
+                {
+                  "id": "ocheon-won",
+                  "text": {
+                    "ko": "오천 원",
+                    "romanization": "ocheon won",
+                    "en": "5,000 won"
+                  }
+                },
+                {
+                  "id": "icheon-won",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                },
+                {
+                  "id": "samcheon-won",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                }
+              ],
+              "answerId": "samcheon-won",
+              "answerEntryId": "gimbap"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-v2-q2-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "뭐 드릴까요?",
+                "romanization": "mwo deurilkkayo",
+                "en": "What can I get you?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "김밥 하나, 떡볶이 하나 주세요.",
+                    "romanization": "gimbap hana tteokbokki hana juseyo",
+                    "en": "One gimbap and one tteokbokki, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "여기 있어요.",
+                    "romanization": "yeogi isseoyo",
+                    "en": "Here you are."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "맛있게 드세요.",
+                "romanization": "masitge deuseyo",
+                "en": "Enjoy your meal."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "얼마예요?",
+                    "romanization": "eolmayeyo",
+                    "en": "How much is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "잘 먹겠습니다.",
+                    "romanization": "jal meokgetseumnida",
+                    "en": "I will eat well."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 주세요.",
+                    "romanization": "ne juseyo",
+                    "en": "Yes, please."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "칠천 원이에요.",
+                "romanization": "chilcheon wonieyo",
+                "en": "It is 7,000 won."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘 먹겠습니다.",
+                    "romanization": "jal meokgetseumnida",
+                    "en": "I will eat well."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "뭐 드릴까요?",
+                    "romanization": "mwo deurilkkayo",
+                    "en": "What can I get you?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "여기 있어요.",
+                    "romanization": "yeogi isseoyo",
+                    "en": "Here you are."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "영수증 드릴까요?",
+                "romanization": "yeongsujeung deurilkkayo",
+                "en": "Would you like the receipt?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 주세요.",
+                    "romanization": "ne juseyo",
+                    "en": "Yes, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "칠천 원이에요.",
+                    "romanization": "chilcheon wonieyo",
+                    "en": "It is 7,000 won."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "맛있게 드세요.",
+                    "romanization": "masitge deuseyo",
+                    "en": "Enjoy your meal."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-v2-q2-check",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-life-v2-q2-receipt",
+            "kind": "receipt",
+            "title": {
+              "ko": "영수증",
+              "romanization": "yeongsujeung",
+              "en": "receipt"
+            },
+            "entries": [
+              {
+                "id": "gimbap",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice roll"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "tteokbokki",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "사천 원",
+                  "romanization": "sacheon won",
+                  "en": "4,000 won"
+                }
+              },
+              {
+                "id": "total",
+                "text": {
+                  "ko": "합계",
+                  "romanization": "hapgye",
+                  "en": "total"
+                },
+                "value": {
+                  "ko": "칠천 원",
+                  "romanization": "chilcheon won",
+                  "en": "7,000 won"
+                }
+              }
+            ],
+            "altEn": "A receipt: gimbap 3,000 won and spicy rice cakes 4,000 won; the total is 7,000 won"
+          },
+          "rounds": [
+            {
+              "id": "c1",
+              "questionEn": "How much is the total?",
+              "key": {
+                "ko": "합계",
+                "romanization": "hapgye",
+                "en": "total"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "사천 원",
+                    "romanization": "sacheon won",
+                    "en": "4,000 won"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "칠천 원",
+                    "romanization": "chilcheon won",
+                    "en": "7,000 won"
+                  }
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "total"
+            },
+            {
+              "id": "c2",
+              "questionEn": "What did Hoya order with the gimbap?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "어묵",
+                    "romanization": "eomuk",
+                    "en": "fish cake"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "떡볶이",
+                    "romanization": "tteokbokki",
+                    "en": "spicy rice cakes"
+                  }
+                }
+              ],
+              "answerId": "c",
+              "answerEntryId": "tteokbokki"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-life-v2-q3",
+      "titleEn": "Food Label",
+      "blurbEn": "Read the label on a pack of dried seaweed.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Food Label",
+          "hoyaLineEn": "A pack of dried seaweed has a label. Let's read it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Label",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q3-label",
+                    "keyWords": [
+                      {
+                        "ko": "제품명",
+                        "romanization": "jepummyeong",
+                        "en": "product name"
+                      },
+                      {
+                        "ko": "내용량",
+                        "romanization": "naeyongnyang",
+                        "en": "contents"
+                      },
+                      {
+                        "ko": "열 장",
+                        "romanization": "yeol jang",
+                        "en": "ten sheets"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A food label names the food and says how much is inside."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-life-v2-q3-label",
+                    "keyWords": [
+                      {
+                        "ko": "원산지",
+                        "romanization": "wonsanji",
+                        "en": "place of origin"
+                      },
+                      {
+                        "ko": "국산",
+                        "romanization": "guksan",
+                        "en": "made in Korea"
+                      },
+                      {
+                        "ko": "가격",
+                        "romanization": "gagyeok",
+                        "en": "price"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "It also says where the food is from and what it costs."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "이 김은 국산이에요.",
+                      "romanization": "i gimeun guksanieyo",
+                      "en": "This dried seaweed is made in Korea."
+                    }
+                  }
+                ],
+                "captionEn": "Now read what the label shows, in a sentence."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Label",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-life-v2-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Label Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-life-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-life-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Label Reader!",
+          "hoyaLineEn": "You read a food label. Now you know what is in the pack!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-life-v2-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-life-v2-q3-label",
+            "kind": "label",
+            "entries": [
+              {
+                "id": "name",
+                "text": {
+                  "ko": "제품명",
+                  "romanization": "jepummyeong",
+                  "en": "product name"
+                },
+                "value": {
+                  "ko": "김",
+                  "romanization": "gim",
+                  "en": "dried seaweed"
+                }
+              },
+              {
+                "id": "contents",
+                "text": {
+                  "ko": "내용량",
+                  "romanization": "naeyongnyang",
+                  "en": "contents"
+                },
+                "value": {
+                  "ko": "열 장",
+                  "romanization": "yeol jang",
+                  "en": "ten sheets"
+                }
+              },
+              {
+                "id": "origin",
+                "text": {
+                  "ko": "원산지",
+                  "romanization": "wonsanji",
+                  "en": "place of origin"
+                },
+                "value": {
+                  "ko": "국산",
+                  "romanization": "guksan",
+                  "en": "made in Korea"
+                }
+              },
+              {
+                "id": "price",
+                "text": {
+                  "ko": "가격",
+                  "romanization": "gagyeok",
+                  "en": "price"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              }
+            ],
+            "altEn": "A food label on a pack of dried seaweed: ten sheets, made in Korea, price 2,000 won"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What food is in this pack?",
+              "options": [
+                {
+                  "id": "gim",
+                  "text": {
+                    "ko": "김",
+                    "romanization": "gim",
+                    "en": "dried seaweed"
+                  }
+                },
+                {
+                  "id": "oi",
+                  "text": {
+                    "ko": "오이",
+                    "romanization": "oi",
+                    "en": "cucumber"
+                  }
+                },
+                {
+                  "id": "eomuk",
+                  "text": {
+                    "ko": "어묵",
+                    "romanization": "eomuk",
+                    "en": "fish cake"
+                  }
+                }
+              ],
+              "answerId": "gim",
+              "answerEntryId": "name"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How much is the pack?",
+              "options": [
+                {
+                  "id": "cheon-won",
+                  "text": {
+                    "ko": "천 원",
+                    "romanization": "cheon won",
+                    "en": "1,000 won"
+                  }
+                },
+                {
+                  "id": "icheon-won",
+                  "text": {
+                    "ko": "이천 원",
+                    "romanization": "icheon won",
+                    "en": "2,000 won"
+                  }
+                },
+                {
+                  "id": "samcheon-won",
+                  "text": {
+                    "ko": "삼천 원",
+                    "romanization": "samcheon won",
+                    "en": "3,000 won"
+                  }
+                }
+              ],
+              "answerId": "icheon-won",
+              "answerEntryId": "price"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which line says how much is inside?",
+              "options": [
+                {
+                  "id": "naeyongnyang",
+                  "text": {
+                    "ko": "내용량",
+                    "romanization": "naeyongnyang",
+                    "en": "contents"
+                  }
+                },
+                {
+                  "id": "wonsanji",
+                  "text": {
+                    "ko": "원산지",
+                    "romanization": "wonsanji",
+                    "en": "place of origin"
+                  }
+                },
+                {
+                  "id": "gagyeok",
+                  "text": {
+                    "ko": "가격",
+                    "romanization": "gagyeok",
+                    "en": "price"
+                  }
+                }
+              ],
+              "answerId": "naeyongnyang",
+              "answerEntryId": "contents"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which line says where the food is from?",
+              "options": [
+                {
+                  "id": "gagyeok",
+                  "text": {
+                    "ko": "가격",
+                    "romanization": "gagyeok",
+                    "en": "price"
+                  }
+                },
+                {
+                  "id": "jepummyeong",
+                  "text": {
+                    "ko": "제품명",
+                    "romanization": "jepummyeong",
+                    "en": "product name"
+                  }
+                },
+                {
+                  "id": "wonsanji",
+                  "text": {
+                    "ko": "원산지",
+                    "romanization": "wonsanji",
+                    "en": "place of origin"
+                  }
+                }
+              ],
+              "answerId": "wonsanji",
+              "answerEntryId": "origin"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-v2-q3-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the label word for place of origin.",
+              "target": {
+                "ko": "원산지",
+                "romanization": "wonsanji",
+                "en": "place of origin"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the label word for contents.",
+              "target": {
+                "ko": "내용량",
+                "romanization": "naeyongnyang",
+                "en": "contents"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the label word for price.",
+              "target": {
+                "ko": "가격",
+                "romanization": "gagyeok",
+                "en": "price"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type the label word for made in Korea.",
+              "target": {
+                "ko": "국산",
+                "romanization": "guksan",
+                "en": "made in Korea"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-life-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "내용량은 ___이에요.",
+                "romanization": "naeyongnyangeun ___ieyo",
+                "en": "The contents are ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "두 장",
+                  "romanization": "du jang",
+                  "en": "two sheets"
+                },
+                {
+                  "ko": "세 장",
+                  "romanization": "se jang",
+                  "en": "three sheets"
+                },
+                {
+                  "ko": "열 장",
+                  "romanization": "yeol jang",
+                  "en": "ten sheets"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "원산지는 ___이에요.",
+                "romanization": "wonsanjineun ___ieyo",
+                "en": "The place of origin is ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "열 장",
+                  "romanization": "yeol jang",
+                  "en": "ten sheets"
+                },
+                {
+                  "ko": "국산",
+                  "romanization": "guksan",
+                  "en": "made in Korea"
+                },
+                {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-life-v2-q3-label",
+            "kind": "label",
+            "entries": [
+              {
+                "id": "name",
+                "text": {
+                  "ko": "제품명",
+                  "romanization": "jepummyeong",
+                  "en": "product name"
+                },
+                "value": {
+                  "ko": "김",
+                  "romanization": "gim",
+                  "en": "dried seaweed"
+                }
+              },
+              {
+                "id": "contents",
+                "text": {
+                  "ko": "내용량",
+                  "romanization": "naeyongnyang",
+                  "en": "contents"
+                },
+                "value": {
+                  "ko": "열 장",
+                  "romanization": "yeol jang",
+                  "en": "ten sheets"
+                }
+              },
+              {
+                "id": "origin",
+                "text": {
+                  "ko": "원산지",
+                  "romanization": "wonsanji",
+                  "en": "place of origin"
+                },
+                "value": {
+                  "ko": "국산",
+                  "romanization": "guksan",
+                  "en": "made in Korea"
+                }
+              },
+              {
+                "id": "price",
+                "text": {
+                  "ko": "가격",
+                  "romanization": "gagyeok",
+                  "en": "price"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              }
+            ],
+            "altEn": "A food label on a pack of dried seaweed: ten sheets, made in Korea, price 2,000 won"
+          }
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "To make {ko:김밥} (gimbap), you spread rice on {ko:김} (dried seaweed), lay several fillings on it, roll it up and cut it into slices.",
+      "sources": [
+        {
+          "title": "김밥 (Standard Korean Language Dictionary entry 김밥, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B9%80%EB%B0%A5",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Entry 김밥 「명사」: “김 위에 밥을 펴 놓고 여러 가지 반찬으로 소를 박아 둘둘 말아 싸서 썰어 먹는 음식.”"
+        },
+        {
+          "title": "김 (Standard Korean Language Dictionary entry 김 3, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B9%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Entry 김 3 「명사」 『생명』: “홍조류 보라털과의 조류. … 바닷속 바위에 이끼처럼 붙어 자라는데 식용한다.” (the other headwords 김 1, 2, 4 and 5 are steam, weeds, an occasion and a family name)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-43 S6, 2026-10-30): both Standard Korean Language Dictionary result pages fetched 2026-10-30. Entry 김밥 defines it as food made by spreading rice on 김, putting in a filling of several side dishes, rolling it up and slicing it; entry 김 3 is the red alga that grows on rocks in the sea and is eaten (김 1, 2, 4 and 5 are steam, weeds, an occasion and a family name, so the gloss 'dried seaweed' names sense 3). 'spread rice on' = 김 위에 밥을 펴 놓고; 'several fillings' = 여러 가지 반찬으로 소를 박아; 'roll it up and cut it into slices' = 둘둘 말아 싸서 썰어. Used in: q1 (the recipe card, its Discover sentences) and the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both entries re-read; the quotes match. Finding fixed: 'a few fillings' said less than the source's 여러 가지 (several), so the note says 'several fillings' (es varios rellenos; ko 속 재료를 몇 가지). The note makes no claim about where gimbap comes from, which sources dispute, and none about 김 farming or regions. The institution is named as on the access date (국립국어원, National Institute of Korean Language). Outcome: fixed.\npass 3 (MAR third pass, 2026-10-30): the recipe card is drawn and generic (no shop, brand or product); its amounts are practice values for two rolls; no Hoya line or caption claims more than the note. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:분식} is food made from flour. From 1962 the Korean government asked people to eat more flour food and mix other grains into rice, to have enough rice, and ramyeon, bread and snacks spread.",
+      "sources": [
+        {
+          "title": "분식 (Standard Korean Language Dictionary entry 분식 4, 粉食, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B6%84%EC%8B%9D",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Entry 분식 4 (粉食) 「명사」: “밀가루 따위로 만든 음식을 먹음. 또는 그 음식.”"
+        },
+        {
+          "title": "미곡자급정책, a National Archives theme page on rice self-sufficiency",
+          "publisher": "국가기록원 (National Archives of Korea), 기록물로 보는 주제 (theme.archives.go.kr)",
+          "url": "https://theme.archives.go.kr/next/education2009/riceSelfSupply.do",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“그리하여 1962년 11월, 정부는 ‘혼분식 장려 운동’을 전개하기로 결정하였다.” … “그래서 정부에서는 정책적으로 밀소비를 촉진시키는 이른바 분식 장려 운동을 전개하였다.” … “이러한 분식 장려 운동에 따라 밀가루 소비량이 폭발적으로 늘어났으며, 라면·빵·과자 등의 분식이 많이 생겨났다.”"
+        },
+        {
+          "title": "혼분식 이행 실태, a National Archives theme page in its series 기록물로 다시 살펴보기",
+          "publisher": "국가기록원 (National Archives of Korea), 기록물로 보는 주제 (theme.archives.go.kr)",
+          "url": "https://theme.archives.go.kr/next/education2010/food05.do",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“정부에서는 식량 소비 절약과 자급책의 일환으로 전국적인 혼분식 실천과 음식업소에 대한 단속으로 연간 45만t(약 732억 3,500만 원)의 쌀을 절약하는 성과를 거두고 있는데,”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-43 S6, 2026-10-30): the dictionary entry 분식 4 (粉食, food made from flour, or eating it) and two National Archives of Korea theme pages fetched 2026-10-30. 미곡자급정책 says the government decided in November 1962 to run the 혼분식 장려 운동 (mixing other grains into rice, and flour food), pushed the 분식 장려 운동 harder from 1963, and that flour use grew and flour foods such as 라면, 빵 and 과자 appeared in large numbers; 혼분식 이행 실태 gives saving food and self-sufficiency in rice as the aim. 'From 1962' = 1962년 11월; 'to have enough rice' = 미곡자급, 식량 소비 절약과 자급책; 'ramyeon, bread and snacks spread' = 라면·빵·과자 등의 분식이 많이 생겨났다. Used in: q2 (the snack bar, 분식집) and the q2 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): the three pages re-read; each quote found. Finding fixed: 'the government' became 'the Korean government' (es el gobierno de Corea, ko 한국 정부). The note leaves out the lunchbox checks and the restaurant rules the archive also describes, so it shames no one and stays any-age; it says nothing about how long the campaign lasted or about today's snack bars, which also sell rice dishes such as gimbap. The institutions are named as on the access date (국립국어원; 국가기록원, National Archives of Korea). Outcome: fixed.\npass 3 (MAR third pass, 2026-10-30): the menu and the receipt are drawn and generic (no shop or brand); the prices are round practice amounts; no Hoya line or caption makes a historical claim. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "On a food label, {ko:원산지} is the place where the food was produced, and {ko:국산} means it was produced in the country itself, so on a Korean label it means Korea.",
+      "sources": [
+        {
+          "title": "원산지 (Standard Korean Language Dictionary entry 원산지, 原産地, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9B%90%EC%82%B0%EC%A7%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Entry 원산지 (原産地) 「명사」 「1」: “물건의 생산지.”"
+        },
+        {
+          "title": "국산 (Standard Korean Language Dictionary entry 국산, 國産, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B5%AD%EC%82%B0",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Entry 국산 (國産) 「명사」: “자기 나라에서 생산함. 또는 그 물건.≒국내산.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-43 S6, 2026-10-30): the dictionary entries 원산지 (原産地, the place where a thing is produced) and 국산 (國産, produced in one's own country, or such a thing; also 국내산) fetched 2026-10-30. 'the place where the food was produced' = 물건의 생산지; 'produced in the country itself' = 자기 나라에서 생산함. Used in: q3 (the food label, its Check) and the q3 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both entries re-read; the quotes match. The note states the two word meanings only: it makes no claim about which foods must show an origin, about label law or about grams on a pack, and the drawn label's ten sheets and 2,000 won are practice values. The institution is named as on the access date (국립국어원). Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): the label names no product, maker or brand, and the q3 lines claim nothing about real labels. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Volume 2 MAR (row CM-43 S6, F-CURR-002 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). No native-speaker or expert review is claimed; language: native-reviewed is the schema's name for the signed-off language gate.",
+      "Language pass: spelling, spacing, particles and 해요체 checked line by line (김밥을, 이 김은 국산이에요; 원산지는 ___이에요 and 내용량은 ___이에요, every tile ending in a final consonant); every romanization is the F-CNT-002 converter's (내용량 naeyongnyang). Counters: 장 for sheets, 공기 for bowls of rice, 개 for eggs and a cucumber, with 한, 두, 세 before them.",
+      "Language pass (cont.): Applied: the order line's English (One gimbap and one tteokbokki, please); two captions no longer read as speech prompts; es keeps tú for the learner and usted from the server, as Volume 1 does, and says puesto de comida for 분식집; ko questions no longer repeat the key shown under them, and no ko question or Type Hangul prompt writes its answer.",
+      "Culture and facts pass: n1 (how gimbap is made) on the Standard Korean Language Dictionary entries 김밥 and 김 3; n2 (분식, and the flour and mixed-grain campaign from 1962) on the entry 분식 4 and two National Archives of Korea pages; n3 (원산지 and 국산) on their entries. Applied: several fillings (the source's 여러 가지), the Korean government. No claim about where gimbap comes from.",
+      "Culture and facts pass (cont.): the recipe card, menu, receipt and label are drawn and generic (no shop, maker, product or brand); prices are round practice amounts in won (2,000 to 5,000 on the menu; the receipt's 7,000 is the sum of its two lines); the label's ten sheets and 2,000 won are practice values; no line claims anything about real labels, shops or prices; suits any age.",
+      "Learning design pass: 3 quests; new items per quest 6, 6 and 7 (at most 8); Practice and Check items from earlier quests 3 of 7, 6 of 9 and 2 of 4 (lesson-recycle at least 30 in 100), with the Volume 1 words 밥, 달걀, 세 개, 김밥, 떡볶이, 라면 and the prices in new contexts; Checks Type Hangul (Dictation), Realia Read (the receipt) and Cloze Pick (label values), one of each.",
+      "Learning design pass (cont.): each Check asks what Practice did not (q1 writes two recipe words by ear after reading amounts; q2 reads the receipt's total and second dish after the menu prices; q3 reads the contents and origin values after the line names, food and price). Triples RR/CP/TH, RR/TR/RR, RR/TH/CP differ from Volume 1's (RR/TH/RR, RR/TR/CP, RR/TR/TH) and from each other.",
+      "Learning design pass (cont.): Device voice: prices link 원 to the number (사천 원 [사처눤], 칠천 원 [칠처눤]), and 합계, 국산, 분식집 and 떡볶이 have a tense consonant, so none is in Dictation; the targets 김 and 오이 have no sound change and one spelling each (the meaning dried seaweed settles 김's sense) and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0.",
+      "Reviser: applied the fixes above (the order line, the two captions, the ko questions, the es 분식집 wording, several fillings, the Korean government). Third pass: no change."
+    ]
+  },
+  "contentVer": 1
+}
