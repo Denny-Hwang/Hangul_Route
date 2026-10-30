@@ -330,6 +330,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
   Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
+  // F-CURR-002 row CM-47: the eight added realia layouts and their dressings (`src/screens/minigames/realia-kinds-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/realia-kinds-entry.tsx` when a sheet has one
+  // of those kinds); until it is in, the start bundle's RealiaSheet draws such a sheet as the plain sheet.
+  Object.freeze({ name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' }),
 ]);
 
 /**
