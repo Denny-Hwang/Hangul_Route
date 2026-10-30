@@ -128,6 +128,7 @@ import { useSoundCheck } from './src/screens/presenter/use-sound-check';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { useClipPacks } from './src/platform/audio-assets-store';
 
 /**
  * The lecture presenter, the `/present` root of the learner web build (F-TCH-004 PR 6; spec
@@ -223,6 +224,8 @@ export default function PresenterApp(): ReactElement {
 }
 
 function Presenter(): ReactElement {
+  // Every clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6): the presenter shows any lesson's slides.
+  useClipPacks('cards');
   const address = useMemo(readAddress, []);
   // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
   const [phase, setPhase] = useState<Phase>(() =>

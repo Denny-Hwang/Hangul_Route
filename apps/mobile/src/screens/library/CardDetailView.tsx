@@ -42,6 +42,7 @@ import { useActiveLearnerId } from '../../store/active-learner';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryLoaded } from '../story-content';
 import { useUpperCardBack } from './upper-cards-entry';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -58,6 +59,8 @@ export interface CardDetailViewProps {
 }
 
 export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): ReactElement {
+  // The card clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6), loaded with the card.
+  useClipPacks('cards');
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();

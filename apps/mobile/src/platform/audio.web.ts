@@ -1,7 +1,6 @@
 import type { AudioPack, SpeechLang } from '@hangul-route/content-schema';
 import { Asset } from 'expo-asset';
 import { APP_VERSION } from '../config/app-version';
-import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachWebVoices,
   createCapabilityTracker,
@@ -32,7 +31,8 @@ import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createWebClipPlayer, webAudioGlobals } from './audio-player.web';
-import { bundledPackHas, bundledPackOf, clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
+import { clipRegistry } from './audio-assets-store';
+import { clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
 import { track } from './telemetry';
 
 /**
@@ -100,8 +100,17 @@ export interface WebAudioEnv {
 
 export interface WebClipSetup {
   player: ClipPlayer;
-  /** The bundled asset map: `has(ref)`, how many clips it holds, and a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6). */
-  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined; packHas?(pack: AudioPack): boolean };
+  /**
+   * The bundled asset map: `has(ref)`, how many clips it holds, a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6), and the
+   * pack map chunks still on their way (`pending`, row AC-6), which a prompt waits on briefly before it looks for a clip.
+   */
+  assets: {
+    has(ref: string): boolean;
+    readonly size: number;
+    packOf?(ref: string): AudioPack | undefined;
+    packHas?(pack: AudioPack): boolean;
+    pending?(): Promise<void> | null;
+  };
   /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
   /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
@@ -110,16 +119,17 @@ export interface WebClipSetup {
   supported: boolean;
 }
 
-/** The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`). */
+/**
+ * The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`): the start map's `jamo-s1`
+ * clips and the clips of each pack map chunk loaded so far (`audio-assets-store.ts`, AC-B6).
+ */
 function bundledClips(): WebClipSetup {
   // The remote clip switches are read (stored copy, then a fetch when due) before the first prompt (AC-B8).
   primeAudioSwitches();
-  const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
   const uri = (ref: string): string | null => {
-    if (!has(ref)) return null;
     try {
       // On web Metro's asset transformer makes `require('x.mp3')` a URL string, not a registry number.
-      const mod = AUDIO_ASSETS[ref];
+      const mod = clipRegistry.asset(ref);
       return mod === undefined ? null : Asset.fromModule(mod).uri;
     } catch {
       return null;
@@ -128,7 +138,7 @@ function bundledClips(): WebClipSetup {
   const globals = webAudioGlobals();
   return {
     player: createWebClipPlayer({ uri, ...globals }),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf, packHas: bundledPackHas },
+    assets: clipRegistry,
     // The clip switches (AC-B8, `audio-switches.ts`): read at each prompt.
     enabled: clipsSwitchOn,
     packEnabled: packSwitchOn,
@@ -417,6 +427,7 @@ export function createWebAudio(env: WebAudioEnv) {
     engine,
     clips: clipSetup?.player ?? null,
     assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false, packOf },
+    clipsReady: () => clipSetup?.assets.pending?.() ?? null,
     clipsEnabled: clipsOn,
     packEnabled,
     appVersion: APP_VERSION,

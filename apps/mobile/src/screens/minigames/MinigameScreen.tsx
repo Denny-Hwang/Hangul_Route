@@ -37,6 +37,7 @@ import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
+import { useLessonClips } from '../../platform/audio-assets-store';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -64,6 +65,8 @@ export function MinigameScreen(props: Props): ReactElement {
   // takes longer), so the way back is always there.
   const lessonReady = useLessonQuestReady(props.route.params.questId);
   const storyReady = useStoryQuestReady(questById(props.route.params.questId));
+  // The game's clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6), also when it is opened straight (a resume, a reload).
+  useLessonClips(props.route.params.questId, props.route.params.episodeId);
   return lessonReady && storyReady ? <MinigameBody {...props} /> : <LessonWaiting />;
 }
 

@@ -30,6 +30,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { RoundView } from './ReviewRounds';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /**
  * The Daily Review and Keep going (F-CURR-002 sections 4.3, 4.5, 7.4 and 7.7, row CM-14; design
@@ -122,6 +123,8 @@ export function DisplayHeadline({ children, testID }: { children: string; testID
 }
 
 export function DailyReviewScreen({ navigation }: Props): ReactElement {
+  // The review clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6): a review asks words of every earlier pack.
+  useClipPacks('review');
   const m = useMessages();
   const copy = m.learner.dailyReview;
   const keep = m.learner.keepGoing;

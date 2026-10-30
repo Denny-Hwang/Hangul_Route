@@ -202,6 +202,11 @@ export interface ControllerDeps {
   clips: ClipPlayer | null;
   /** The bundled asset map: `has(ref)`, and the pack of a ref (`AUDIO_ASSET_PACKS`, AC-B6) when it has one. */
   assets: { has(ref: string): boolean; packOf?(ref: string): AudioPack | undefined };
+  /**
+   * The pack map chunks still on their way (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), or null when none is: a prompt
+   * with no playable clip yet waits on them, at most `PACK_WAIT_MS`, before it looks again. Absent: never waits.
+   */
+  clipsReady?(): Promise<void> | null;
   /** `flags.audioClips` and the remote `audioClips` (AC-B8); read at each prompt. */
   clipsEnabled(): boolean;
   /** The build ceiling `flags.audioClipPacks` and the remote `audioPack.<pack>` (AC-B8); read at each prompt. Absent: every pack is on. */
@@ -258,6 +263,12 @@ const DRAIN_MAX_MS = 300;
 const SAFETY_BASE_MS = 2000;
 const SAFETY_PER_CHAR_MS = 400;
 const MAX_FAILURE_EVENTS_PER_KEY = 3;
+/**
+ * A prompt asked while its lesson's pack map chunk is still loading waits this long at most for it (AC-B6): the chunk
+ * comes from the service worker's precache in a frame or two; one that does not arrive in time leaves the prompt to
+ * the device voice (AC-B7), never a silent wait.
+ */
+export const PACK_WAIT_MS = 1000;
 const MAX_FAILURE_EVENTS_PER_PAGE = 12;
 
 const SUPERSEDED = Symbol('superseded');
@@ -383,7 +394,22 @@ export function createAudioController(deps: ControllerDeps): AudioController {
   const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'clip' | 'say' | 'skipped' | Superseded> => {
     const clips = deps.clips;
     if (clips === null || !deps.clipsEnabled()) return 'skipped';
-    for (const ref of clipRefsFor(spec)) {
+    const refs = clipRefsFor(spec);
+    const pending = refs.some(playable) ? null : (deps.clipsReady?.() ?? null);
+    if (pending !== null) {
+      const waited = await waitFor<'ready'>(t, (resolve) => {
+        let timer: unknown;
+        const done = (): void => {
+          clock.clearTimeout(timer);
+          resolve('ready');
+        };
+        timer = clock.setTimeout(done, PACK_WAIT_MS);
+        void pending.then(done, done);
+        return () => clock.clearTimeout(timer);
+      });
+      if (waited === SUPERSEDED) return SUPERSEDED;
+    }
+    for (const ref of refs) {
       if (!playable(ref)) continue;
       const outcome = await playClip(t, clips, ref, spec);
       if (outcome === SUPERSEDED) return SUPERSEDED;

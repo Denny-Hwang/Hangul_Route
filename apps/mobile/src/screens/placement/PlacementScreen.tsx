@@ -82,6 +82,7 @@ import {
   type PlacementRoute,
   type ResultAction,
 } from './context';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /**
  * The level check (F-PLC-001 section 3.1, section 3.10, wireframe placement
@@ -150,6 +151,8 @@ interface RootRoute {
 }
 
 export function PlacementScreen({ route, navigation }: Props): ReactElement {
+  // The level check's clip pack, warmed when it opens (AMENDMENTS-AUDIO-CLIPS AC-B6).
+  useClipPacks('placement', 'placement');
   const { source, retakeMode } = route.params;
   const profile = useProfileStore(activeProfileSelector);
   const profiles = useProfileStore((s) => s.profiles);

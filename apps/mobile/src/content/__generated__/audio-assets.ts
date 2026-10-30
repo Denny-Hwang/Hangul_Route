@@ -6,3 +6,9 @@ export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {};
 
 /** The pack of each clip (AMENDMENTS-AUDIO-CLIPS AC-B6, AC-B8); a clip with no pack is governed by `audioClips` alone. */
 export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {};
+
+/** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
+export const AUDIO_CLIP_COUNT = 0;
+
+/** The packs whose clips are a map chunk of their own (audio-pack-loaders.ts), loaded with their lesson or story, never at start. */
+export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = [];

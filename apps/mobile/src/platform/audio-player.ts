@@ -288,9 +288,12 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
 }
 
 /** The real environment: expo-asset for the file, expo-av for the session and the sound. */
-export function expoAvClipEnv(assets: Readonly<Record<string, number | string>>): NativeClipEnv {
+export function expoAvClipEnv(
+  assets: Readonly<Record<string, number | string>> | ((ref: string) => number | string | undefined),
+): NativeClipEnv {
+  const lookup = typeof assets === 'function' ? assets : (ref: string) => (Object.prototype.hasOwnProperty.call(assets, ref) ? assets[ref] : undefined);
   return {
-    source: (ref) => (Object.prototype.hasOwnProperty.call(assets, ref) ? (assets[ref] ?? null) : null),
+    source: (ref) => lookup(ref) ?? null,
     localUri: async (source) => {
       const asset = Asset.fromModule(source);
       await asset.downloadAsync();

@@ -2,9 +2,12 @@
 // --platform web`. 1) injects manifest / meta / shell CSS / service-worker
 // registration into dist/index.html, 2) generates dist/sw.js with Workbox
 // precaching every exported file so the app plays offline after one visit.
-// Letter clips are precached; vocabulary / story / card / dialogue clips are
-// runtime-cached instead (F-AUDIO-004 AD10), and the build fails if a clip
-// that should be precached is missing from the manifest (§3.10).
+// Only the Stage 1 letter pack (`jamo-s1`) is precached; every other clip (the Word Builder letters `jamo-wb`,
+// vocabulary / story / card / dialogue clips and the text-keyed `say` clips) is runtime-cached instead (F-AUDIO-004
+// AD10, AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), by pack as the clip manifest names it. The build fails if a clip that
+// should be precached is missing from the manifest, if any other clip reached it (a `jamo-wb` file named on its own),
+// and, with --budget, if the precached clips are over their own line (`precachedClipsRaw`, the jamo-s1 set limit), so
+// the learner precache line never moves for audio (G5: CM-5B is never triggered by audio). Each pack's map chunk (`__generated__/audio-packs/`) is checked like the other marked chunks.
 // Grown-up paths (F-APP-001 §3.4, A-2): app.hangulroute.com also serves the grown-up
 // console under GROWN_UP_PREFIXES (from A-3), so the worker never answers a grown-up
 // navigation with the learner shell (denylist), sends it to the network only (with
@@ -26,7 +29,20 @@ import * as nodeModule from 'node:module';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { generateSW, getManifest } from 'workbox-build';
-import { AUDIO_PRECACHE_IGNORES, audioRuntimeCaching, precacheGaps, precacheLeaks } from './audio/lib.mjs';
+import {
+  JAMO_PACK_WORD_BUILDER,
+  PACK_CHUNK_DIR,
+  TTS_MANIFEST_FILE,
+  audioPrecacheIgnores,
+  audioRuntimeCaching,
+  clipPackMap,
+  packChunkMarker,
+  packChunkName,
+  precacheGaps,
+  precacheLeaks,
+  precachedClipBytes,
+  precachedPackFiles,
+} from './audio/lib.mjs';
 import {
   GROWN_UPS_OFFLINE_FILE,
   assertLearnerPrecache,
@@ -169,12 +185,20 @@ const offlineLocales = [i18n.DEFAULT_LOCALE, ...i18n.availableLocales(false).fil
 );
 writeFileSync(join(dist, GROWN_UPS_OFFLINE_FILE), renderGrownUpsOffline({ locales: offlineLocales, tokens }));
 
+// Each clip's pack (AC-B6), as gen-audio-map.mjs reads it: the clip manifest's, else jamo.ts's. A missing manifest
+// leaves only the jamo packs, so a say clip still stays out of the precache by its folder.
+const manifestPath = join(repo, TTS_MANIFEST_FILE);
+const clipPacks = clipPackMap(
+  existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null,
+  readFileSync(join(here, '..', 'src', 'content', 'jamo.ts'), 'utf8'),
+);
+
 const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
-  // Workbox's default ignore, the clip groups served by the runtime rule below, and
+  // Workbox's default ignore, every clip outside the precached pack (served by the runtime rules below), and
   // every console file (grown-up paths and _next/): never in the learner's offline bundle.
-  globIgnores: ['**/node_modules/**/*', ...AUDIO_PRECACHE_IGNORES, ...grownUpGlobIgnores(GROWN_UP_PREFIXES)],
+  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES)],
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
@@ -194,7 +218,7 @@ const { count, size, warnings } = await generateSW({
   clientsClaim: true,
   skipWaiting: false, // the app decides when to apply an update (never mid-quest)
   cleanupOutdatedCaches: true,
-  runtimeCaching: [audioRuntimeCaching(), grownUpNavigationRule(GROWN_UP_PREFIXES)],
+  runtimeCaching: [...audioRuntimeCaching(), grownUpNavigationRule(GROWN_UP_PREFIXES)],
 });
 for (const w of warnings) process.stdout.write(`workbox: ${w}\n`);
 
@@ -215,10 +239,17 @@ function builtMp3s(dir) {
 const { manifestEntries } = await getManifest(precache);
 const manifestUrls = manifestEntries.map((e) => e.url);
 const clips = builtMp3s(dist);
-const gaps = precacheGaps(clips, manifestUrls);
-const leaks = precacheLeaks(manifestUrls);
+const gaps = precacheGaps(clips, manifestUrls, clipPacks);
+const leaks = precacheLeaks(manifestUrls, clipPacks);
+const wordBuilderLeaks = precachedPackFiles(manifestUrls, clipPacks, JAMO_PACK_WORD_BUILDER);
 if (gaps.length > 0) throw new Error(`pwa-postbuild: clips missing from the precache: ${gaps.join(', ')}`);
+if (wordBuilderLeaks.length > 0) throw new Error(`pwa-postbuild: ${JAMO_PACK_WORD_BUILDER} clips found in the precache (only jamo-s1 is precached, AC-B6): ${wordBuilderLeaks.join(', ')}`);
 if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found in the precache: ${leaks.join(', ')}`);
+// Workbox's manifest entries carry no size: each precached clip is measured on disk.
+const precachedClips = precachedClipBytes(
+  manifestEntries.filter((e) => /\.mp3$/i.test(e.url.split('?')[0])).map((e) => ({ url: e.url, size: statSync(join(dist, e.url.split('?')[0])).size })),
+  clipPacks,
+);
 // No console file by path or by content (a Next 404.html), and the offline page present.
 assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
 // The lecture presenter's Hangul font works offline (F-TCH-004 §3.6, §3.8).
@@ -249,17 +280,37 @@ const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
 const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest];
+// The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack outside the precache.
+const packChunkDir = join(here, '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
+const AUDIO_PACK_CHUNKS = existsSync(packChunkDir)
+  ? readdirSync(packChunkDir)
+      .filter((f) => f.endsWith('.ts'))
+      .map((f) => f.replace(/^audio-pack-/, '').replace(/\.ts$/, ''))
+      .sort()
+      .map((pack) => ({ name: packChunkName(pack), marker: packChunkMarker(pack) }))
+  : [];
 const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
 // The locale chunks (the es / ko UI messages and content text, one per locale), the grown-up roots and the learner
 // screen chunks ([GU] the guest's first quest stack), under the same rules.
-chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS], bundles, precached: manifestUrls }));
+chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles, precached: manifestUrls }));
 // A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
 const headersFile = join(dist, '_headers');
-for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS], bundles))) {
+for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles))) {
   chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
 }
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, locale and root chunks:\n  ${chunkProblems.join('\n  ')}`);
-const report = precacheReport({ manifest: lessonManifest, stories: storyManifest, locales: LOCALE_CHUNKS, roots: ROOT_CHUNKS, reviewItems: reviewItemManifest, screens: SCREEN_CHUNKS, bundles, precache: { count, size } });
+const report = precacheReport({
+  manifest: lessonManifest,
+  stories: storyManifest,
+  locales: LOCALE_CHUNKS,
+  roots: ROOT_CHUNKS,
+  reviewItems: reviewItemManifest,
+  screens: SCREEN_CHUNKS,
+  audioPacks: AUDIO_PACK_CHUNKS,
+  clips: precachedClips,
+  bundles,
+  precache: { count, size },
+});
 for (const line of reportLines(report)) process.stdout.write(`${line}\n`);
 if (budget) {
   const over = precacheBudgetProblems(report);

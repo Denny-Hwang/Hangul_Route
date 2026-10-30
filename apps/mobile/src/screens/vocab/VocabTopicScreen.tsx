@@ -46,6 +46,7 @@ import { useAccessTier } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
 import { canRenderPicture, pickerTopic, topicIntroMemory, topicWords } from './topic-data';
 import { WordWall } from './WordWall';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VocabTopic'>;
 type Navigation = NativeStackNavigationProp<RootStackParamList, 'VocabTopic'>;
@@ -65,6 +66,8 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * Design: design/screens/vocab/topic.md.
  */
 export function VocabTopicScreen({ route, navigation }: Props): ReactElement {
+  // The vocabulary clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6), loaded with the topic.
+  useClipPacks('vocab');
   const topic = pickerTopic(route.params.topicKey);
   const profile = useProfileStore(activeProfileSelector);
   // The access tier (F-ENT-003 section 3.4); nothing is locked while the switch is off (D5).

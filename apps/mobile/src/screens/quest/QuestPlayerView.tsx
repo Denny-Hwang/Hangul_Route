@@ -46,6 +46,7 @@ import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
+import { useLessonClips } from '../../platform/audio-assets-store';
 
 type QuestMessages = Messages['learner']['quest'];
 
@@ -124,6 +125,8 @@ function decide(plan: () => Promise<{ chunk: QuestReviewChunk; plan: QuestReview
  * browse stack's own navigation container also provides.
  */
 export function QuestPlayerView(props: QuestPlayerViewProps): ReactElement {
+  // This lesson's and the next one's clip packs and clips (AMENDMENTS-AUDIO-CLIPS AC-B6): heard offline once opened.
+  useLessonClips(props.questId, props.episodeId);
   // The warm-up and Try these again load while the lesson does (F-CURR-002 row CM-15); with their switches off, nothing.
   const reviewsFor = props.reviewsFor ?? null;
   useEffect(() => preloadQuestReviews(reviewsFor), [reviewsFor]);
