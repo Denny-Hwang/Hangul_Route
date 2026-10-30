@@ -29,7 +29,7 @@ import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
@@ -157,7 +157,8 @@ export function missingGlosses(entities: ReadonlyArray<readonly [string, object]
 
 describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
   it('every file parses as a LessonCell and sits in its stage folder', () => {
-    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.json`);
+    // A Volume 2 is <theme>.v2.json beside its Volume 1 (F-CURR-002 row CM-40).
+    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}${cell.volume === undefined ? '' : `.v${cell.volume}`}.json`);
   });
 
   it('the generated index holds exactly the ready cells (a draft stays "Coming later")', () => {
@@ -184,7 +185,7 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
-      const episode = episodesAll.filter((e) => e.id === cell.id);
+      const episode = episodesWithVolumes.filter((e) => e.id === cell.id);
       expect(episode.map((e) => e.status), cell.id).toEqual(['shipped']);
       for (const quest of cell.quests) {
         expect(questsAll.some((q) => q.id === quest.id), quest.id).toBe(true);
@@ -195,9 +196,10 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('T-2: once Greeting Dialogues is a generated cell, Stage 4 plays in grid theme order (Read Along, Kitchen Talk, Greeting Dialogues, ...)', () => {
     if (!READY.some((c) => c.cell.id === 'episode:stage4-rites')) return;
-    const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
+    // A cell's later volume plays after every first volume (F-CURR-002 row CM-40; Snack Bar Talk, row CM-43 S4), off the route.
+    const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-') && !/-v[0-9]+-q[0-9]+$/.test(id));
     const THEME_ORDER = ['letters', 'life', 'rites', 'nature', 'crafts'];
-    const expected = READY.filter((c) => c.cell.stage === 'stage4')
+    const expected = READY.filter((c) => c.cell.stage === 'stage4' && (c.cell.volume ?? 1) === 1)
       .sort((a, b) => THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
       .flatMap((c) => c.cell.quests.map((q) => q.id));
     expect(expected.slice(0, 3)).toEqual(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']);
@@ -1002,7 +1004,9 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     expect(left).toEqual([]);
     // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
+    // 78 Volume 1 quests, plus each shipped Volume 2 quest (row CM-43 S4 the first three), all scaffolding but those three.
+    expect(QUESTS.length).toBeGreaterThanOrEqual(81);
+    expect(scaffolding.size).toBe(QUESTS.length - 3);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {

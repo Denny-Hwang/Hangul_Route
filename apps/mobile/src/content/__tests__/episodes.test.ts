@@ -75,7 +75,9 @@ describe('gridEpisodes / shelfEpisodes', () => {
 
   it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // A Volume 2's quests are off the route and add no count anywhere (F-CURR-002 row CM-40).
+    const laterVolumeQuests = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !laterVolumeQuests.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -103,10 +105,16 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); each shipped Volume 2 sits beside its Volume 1, off the route', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
+    for (const v2 of volumeEpisodes) {
+      expect(v2.volume, v2.id).toBe(2);
+      expect(episodesAll.some((e) => e.id === v2.id), v2.id).toBe(false);
+      expect(episodesAll.some((e) => `${e.id}-v2` === v2.id && (e.volume ?? 1) === 1), v2.id).toBe(true);
+    }
+    // Row CM-43 S4 ships the first one: Stage 4 Food & Daily Life, Volume 2.
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage4-life-v2');
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {

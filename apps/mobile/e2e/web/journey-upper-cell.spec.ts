@@ -4,8 +4,9 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
+import { expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton): on the release bundle, offline-capable, a shipped
@@ -1189,8 +1190,13 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
+/** The cells of the lesson manifest (their first volumes); a cell's later volume opens from its page (below). */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+/** The later volumes of the manifest (F-CURR-002 row CM-40; Snack Bar Talk, row CM-43 S4, the first to ship). */
+const LATER_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
+
 /** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1217,7 +1223,8 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
+    expect([...CELLS.map((c) => c.episodeId), ...LATER_VOLUMES.map((e) => e.id)].sort()).toEqual(LESSON_EPISODES.map((e) => e.id).sort());
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
@@ -1251,6 +1258,87 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-40 (wireframe journey/volumes.md): a shipped later volume. `volumes` is at built-in pct 0, so the
+  // learner turns it on through the stored remote copy, as a ramp would; the cell opens Volume 1 (not done yet) and its
+  // page's Vol 2 tab opens the later volume, whose first quest plays its first game. It adds no Learning Route day.
+  for (const episode of LATER_VOLUMES) {
+    const stage = Number(episode.stage.replace('stage', ''));
+    for (const [label, size] of [
+      ['320', { width: 320, height: 800 }],
+      ['wide', { width: 1280, height: 900 }],
+    ] as const) {
+      test(`${episode.id} (${label}): with volumes on its cell's Vol 2 tab opens it and its first quest plays its first game`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.setViewportSize(size);
+        await openJourney(page);
+        await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 } } } });
+        await page.reload();
+        await page.getByText('Journey', { exact: true }).last().click();
+        await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
+        const tabs = page.getByRole('tablist', { name: 'Volumes' });
+        await tabs.getByRole('tab', { name: `Volume ${episode.volume}` }).click();
+        await expect(tabs.getByRole('tab', { name: `Volume ${episode.volume}` })).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+        if (label === '320') await expectNoHorizontalOverflow(page);
+        await shot(page, `volume2-${episode.id.slice('episode:'.length)}-page-${label}`);
+        await openFirstQuest(page);
+        if (label === '320') await expectNoHorizontalOverflow(page);
+        await shot(page, `volume2-${episode.id.slice('episode:'.length)}-play-${label}`);
+        expect(errors).toEqual([]);
+      });
+    }
+  }
+
+  // F-CURR-002 row CM-43 S4: Snack Bar Talk q1 at 320 px with `volumes` and `game.role-play` on (both ship at built-in
+  // pct 0, so the stored remote copy turns them on, as a ramp would): the snack bar Role Play takes a less natural reply in
+  // amber without sending it, then plays a way of natural replies to its closing line. Read and tap only, no speaking UI.
+  test('episode:stage4-life-v2 q1 (320): with volumes and game.role-play on, the snack bar Role Play ends on its closing line', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 }, 'game.role-play': { on: true, pct: 100 } } },
+    });
+    await page.reload();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: journeyCellName(4, THEME_LABEL.life), exact: true }).click();
+    await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+    await expect(page.getByText('Snack Bar Talk').first()).toBeVisible();
+    await page.getByTestId('episode-quest-quest:stage4-life-v2-q1').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('role-play')).toBeVisible();
+    await expect(page.getByTestId('role-play-partner-newest')).toContainText('뭐 드릴까요?');
+    // A less natural reply locks in amber, Hoya says why, and nothing joins the chat.
+    await page.getByTestId('role-play-reply-bye').click();
+    await expect(page.getByTestId('role-play-why')).toContainText('That is a goodbye.');
+    await expect(page.getByTestId('role-play-me')).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'cm43-s4-snack-bar-q1-nudge-320');
+    const send = async (id: string, next: string) => {
+      await page.getByTestId(`role-play-reply-${id}`).click();
+      await expect(page.getByTestId('role-play-partner-newest')).toContainText(next);
+    };
+    await send('ramyeon', '물 드릴까요?');
+    await send('thanks', '맛이 어때요?');
+    await send('tasty', '매워요?');
+    await page.getByTestId('role-play-reply-not-spicy').click();
+    await expect(page.getByTestId('role-play-end')).toBeVisible();
+    await expect(page.getByText('You ordered and told the server how it tastes. Enjoy your snack!')).toBeVisible();
+    await expect(page.getByText(/microphone|say it|speak|record/i)).toHaveCount(0);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'cm43-s4-snack-bar-q1-end-320');
+    await page.getByTestId('role-play-continue').click();
+    await expect(page.getByTestId('role-play')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
 
   // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
   // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.
