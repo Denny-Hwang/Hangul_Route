@@ -91,9 +91,9 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
     if (right) {
       success();
       setSolved(true);
-      // The letter's name (nieun, bieup), never a carrier syllable (na, ba): a lone letter the screen shows is said by its
-      // name, as the owner's audio report of 2026-10-29 asks, until recorded letter sounds land.
-      if (letter) void playJamo(letter, 'name');
+      // Read Pick is a sound question (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1): the learner saw the letter and picked
+      // its sound, so the confirmation says the letter's sound syllable (ㄴ is na, ㅏ is a), never a name on a sound pick.
+      if (letter) void playJamo(letter, 'sound');
       timer.current = setTimeout(next, reduced ? 0 : motion.duration.celebration);
     } else if (!wrong.includes(option.id)) {
       nudge();

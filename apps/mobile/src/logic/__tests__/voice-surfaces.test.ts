@@ -33,6 +33,7 @@ import { letterSecondSound, slideSound } from '../lecture/slide-view';
 import { minigameScopes, scopeFor, type MinigameScope } from '../minigame-config';
 import { promptView } from '../placement/item-view';
 import { buildMatchSoundRounds, buildTraceStrokeRounds } from '../round-builder';
+import { fallbackScope } from '../match-shape/fallback';
 import { buildDiscover } from '../stage1/discover-flow';
 import { buildHangulCheck } from '../stage1/hangul-check';
 
@@ -231,9 +232,41 @@ const SURFACES: readonly Surface[] = [
     type: () => 'sound',
     said: () => {
       const clipsOnly: AudioCapability = { tts: { state: 'none', reason: 'no_korean_voice' }, clips: true, unlocked: true };
-      const spec = soundCheckSpec(clipsOnly, () => true);
+      // The letter clips are bundled and the greeting has no say clip: a greeting say clip (AC-1, AC-B7) plays the
+      // greeting itself and says no jamo, so only the jamo fallback is a voice surface here.
+      const spec = soundCheckSpec(clipsOnly, (ref) => ref !== undefined && ref.startsWith('audio/jamo/'));
       return [{ where: 'clips, no Korean voice', target: jamoAll[0]!, spoken: spec.text }];
     },
+  },
+  {
+    name: 'Match Shape, every board round (origin and pair: a letter question, by name; row CM-33)',
+    files: ['screens/minigames/MatchShapeBoard.tsx'],
+    type: () => 'letter',
+    said: () =>
+      everyScope()
+        .filter(([, scope]) => scope.kind === 'match-shape')
+        .flatMap(([ref, scope]) =>
+          (scope.matchShape?.rounds ?? []).map((round): Said => {
+            // The board's `say` plays `playJamo(target, 'letter')` (pinned below).
+            const target = jamoOf(round.target);
+            return { where: `${ref} ${round.id}`, target, spoken: jamoVoice(target, 'letter').text };
+          }),
+        ),
+  },
+  {
+    name: "Match Shape's Read Pick (see the letter, pick its sound: a sound question)",
+    files: ['screens/minigames/ReadPickGame.tsx'],
+    type: () => 'sound',
+    said: () =>
+      everyScope()
+        .filter(([, scope]) => scope.kind === 'match-shape')
+        .flatMap(([ref, scope]) =>
+          (fallbackScope(scope).readPick?.rounds ?? []).map((round): Said => {
+            // The right pick plays `playJamo(letter, 'sound')` (pinned below).
+            const target = jamoOf(round.target);
+            return { where: `${ref} read pick ${round.id}`, target, spoken: jamoVoice(target, 'sound').text };
+          }),
+        ),
   },
   {
     name: 'Placement sound-letter items (consonants by their sound, AU-OD-3; vowels by name = sound)',
@@ -410,6 +443,17 @@ describe('the surface table is complete (section 6.2)', () => {
         return m === null || m[1] !== m[2];
       });
       expect(off, `${rel}: every playJamo(j, loneLetterQuestion(j))`).toEqual([]);
+    }
+    // The Match Shape screens ask a fixed question of the jamo they play (section 6.1): the board a letter question,
+    // Read Pick a sound question.
+    const FIXED_QUESTION: Readonly<Record<string, string>> = {
+      'screens/minigames/MatchShapeBoard.tsx': "target, 'letter'",
+      'screens/minigames/ReadPickGame.tsx': "letter, 'sound'",
+    };
+    for (const [rel, args] of Object.entries(FIXED_QUESTION)) {
+      const file = files.find((f) => f.rel === rel);
+      expect(file, rel).toBeDefined();
+      expect(calls(file!.source), rel).toEqual([args]);
     }
     const unasked = files
       .filter((f) => !PLUMBING.has(f.rel))

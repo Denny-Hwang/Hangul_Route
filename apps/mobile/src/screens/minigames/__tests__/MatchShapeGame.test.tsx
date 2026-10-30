@@ -23,9 +23,11 @@ import { ShapeRoundView } from '../ShapeRoundView';
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-// A lone letter is said by its name (니은, 비읍), never a carrier syllable (나, 바): the owner's audio report of 2026-10-29.
+// The board is a letter question, said by the letter's name (니은, 비읍), never a carrier syllable (나, 바): the owner's audio
+// report of 2026-10-29. Read Pick is a sound question (see the letter, pick its sound), so it says the syllable (나)
+// (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1).
 const audio = vi.hoisted(() => ({
-  playJamo: vi.fn((_jamo: unknown, _mode?: 'sound' | 'name') => Promise.resolve('played' as const)),
+  playJamo: vi.fn((_jamo: unknown, _mode?: 'letter' | 'sound') => Promise.resolve('played' as const)),
   stop: vi.fn(),
 }));
 vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), ...audio }));
@@ -64,7 +66,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.useRealTimers();
-  for (const [, mode] of audio.playJamo.mock.calls) expect(mode).toBe('name');
+  for (const [, mode] of audio.playJamo.mock.calls) expect(mode).toBe('letter');
   audio.playJamo.mockClear();
 });
 
@@ -187,8 +189,9 @@ describe('the step and the switch', () => {
     }
     expect(h.answers.map(([k, c]) => [k, c])).toEqual(scope.readPick!.rounds.map((round) => [round.id, false]));
     expect(h.completes).toBe(1);
-    // The right answer says the letter by its name, once a round.
-    expect(audio.playJamo).toHaveBeenCalledTimes(scope.readPick!.rounds.length);
+    // The right answer says the letter's sound, once a round.
+    expect(audio.playJamo.mock.calls.map(([, mode]) => mode)).toEqual(scope.readPick!.rounds.map(() => 'sound'));
+    audio.playJamo.mockClear();
   });
 });
 

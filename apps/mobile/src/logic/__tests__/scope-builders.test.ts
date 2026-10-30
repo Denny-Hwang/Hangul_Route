@@ -69,9 +69,10 @@ describe('lp.sym (heard letter -> written symbol)', () => {
   it("carries the name's clip on the prompt when the record names one, and never a consonant's sound clip", () => {
     const giyeok = findJamo('jamo:giyeok')!;
     expect(giyeok.audioRef).toBe('audio/jamo/giyeok.mp3');
-    // ㄱ has a sound clip (가) but no name clip yet (AC-1 adds `nameAudioRef`): the name plays through the voice.
+    // ㄱ has a sound clip (가) and, since AC-1, a name clip (`nameAudioRef`): the prompt carries the name's clip, never the sound's.
+    expect(giyeok.nameAudioRef).toBe('audio/jamo/giyeok-name.mp3');
     const r = lp.sym('jamo:giyeok', TAUGHT_L1);
-    expect(r.prompt).toEqual({ ko: '기역', romanization: 'giyeok', en: 'the letter giyeok' });
+    expect(r.prompt).toEqual({ ko: '기역', romanization: 'giyeok', en: 'the letter giyeok', audioRef: 'audio/jamo/giyeok-name.mp3' });
     const named = lp.sym('jamo:nieun', TAUGHT_L1);
     expect(named.prompt.audioRef).toBe(jamoVoice(findJamo('jamo:nieun')!, 'letter').audioRef);
     // A vowel's name is its sound, so its one clip rides on the prompt.

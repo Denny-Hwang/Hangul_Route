@@ -14,8 +14,8 @@ export type JamoQuestion = 'letter' | 'sound';
 
 /**
  * The old `playJamo(jamo, mode)` name mode.
- * @deprecated Pass the question instead (`'letter'` or `'sound'`). No caller on `main` uses it since JV-2; it
- * stays only for the open Match Shape PR (#865), which is asked to adopt `jamoVoice`, and is deleted after it.
+ * @deprecated Pass the question instead (`'letter'` or `'sound'`). No caller uses it: JV-2 moved every surface off
+ * it, and the jamo voice integration moved Match Shape (#865, merged in #889). It can be deleted in a later row.
  */
 export type LegacyJamoMode = 'name';
 
