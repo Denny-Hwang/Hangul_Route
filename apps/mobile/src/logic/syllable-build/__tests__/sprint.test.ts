@@ -1,6 +1,7 @@
 import { blockParts, CURR_TELEMETRY_PAYLOADS, REPRESENTATIVE_FINALS, SyllableBuildRoundSchema, type BlockParts, type SyllableBuildRound } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { askedOfScope } from '../../memory/resolve';
+import { fnv1a32 } from '../../remote-config/remote-config';
 import { blockOptions, fallbackScope, syllableBuildToListenPick } from '../fallback';
 import { DRILL_BLOCKS, isProbeBlock, isRealBlock, PROBE_BLOCKS, PROBE_FORMS, REAL_BLOCKS, soundKeyOf } from '../pool';
 import {
@@ -132,7 +133,7 @@ describe('the Decoding Sprint plan', () => {
   });
 
   it('the n-th sprint probes form (n - 1) mod 4: the first four sprints each probe blocks never shown before', () => {
-    expect([1, 2, 3, 4, 5, 8, 9].map(probeFormOf)).toEqual([0, 1, 2, 3, 0, 3, 0]);
+    expect([1, 2, 3, 4, 5, 8, 9].map((n) => probeFormOf(n))).toEqual([0, 1, 2, 3, 0, 3, 0]);
     expect(probeFormOf(0)).toBe(0);
     const seen = new Set<string>();
     for (let n = 1; n <= 4; n += 1) {
@@ -147,6 +148,21 @@ describe('the Decoding Sprint plan', () => {
         expect(r.options.length, r.target).toBeGreaterThanOrEqual(3);
       }
     }
+  });
+
+  it('a learner starts on a form of their own, then takes the four in turn, so a sprint index spreads over every form', () => {
+    // Offset 2: sprints 1-4 probe forms 2, 3, 0, 1, each once.
+    expect([1, 2, 3, 4, 5].map((n) => probeFormOf(n, 2))).toEqual([2, 3, 0, 1, 2]);
+    expect(probeFormOf(1, 4_000_000_001)).toBe(4_000_000_001 % 4);
+    expect(probeFormOf(1, Number.NaN)).toBe(0);
+    for (let offset = 0; offset < 4; offset += 1) {
+      const forms = [1, 2, 3, 4].map((n) => probeFormOf(n, offset));
+      expect(new Set(forms).size, `offset ${offset}`).toBe(4);
+      expect(planSprint(9, false, 1, offset).probe.map((r) => r.target).sort()).toEqual([...(PROBE_FORMS[offset] as readonly string[])].sort());
+    }
+    // Across learners the first sprint lands on every form (the hash the screen uses, over a few profile ids).
+    const firstForms = new Set(Array.from({ length: 40 }, (_, i) => probeFormOf(1, fnv1a32(`profile:${i}|decode-sprint-form`))));
+    expect(firstForms.size).toBe(4);
   });
 
   it('real blocks only; with game.syllable-build on every other drill round builds, off they are all picks', () => {

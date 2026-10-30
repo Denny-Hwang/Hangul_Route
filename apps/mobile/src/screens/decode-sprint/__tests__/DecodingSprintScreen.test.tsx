@@ -17,7 +17,7 @@ import { MISS_REVEAL_MS, PROBE_NEXT_MS, RIGHT_REVEAL_MS } from '../SprintPick';
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-const store = vi.hoisted(() => ({ value: null as unknown, writes: [] as unknown[] }));
+const store = vi.hoisted(() => ({ value: null as unknown, writes: [] as unknown[], readFails: false }));
 const track = vi.hoisted(() => vi.fn<(event: unknown) => Promise<void>>(() => Promise.resolve()));
 vi.mock('../../../platform/telemetry', () => ({ track }));
 /** The device voice: 'played' (heard) or 'unavailable' (no Korean voice, so the block is read from its romanization). */
@@ -37,7 +37,7 @@ vi.mock('../../../platform/app-state', () => ({
   },
 }));
 vi.mock('../sprint-record', () => ({
-  readDecodeSprint: async () => store.value,
+  readDecodeSprint: async () => (store.readFails ? { ok: false } : { ok: true, raw: store.value }),
   writeDecodeSprint: async (_id: string, record: unknown) => {
     store.writes.push(record);
     store.value = record;
@@ -69,11 +69,12 @@ const advance = async (ms: number): Promise<void> => {
   });
 };
 const texts = (r: ReactTestRenderer): string[] => screenTexts(r.root);
-const plan = (index: number) => planSprint(fnv1a32(`p1|decode-sprint|${index}`), false, index);
+const plan = (index: number) => planSprint(fnv1a32(`p1|decode-sprint|${index}`), false, index, fnv1a32('p1|decode-sprint-form'));
 
 beforeEach(() => {
   store.value = null;
   store.writes = [];
+  store.readFails = false;
   track.mockClear();
   voice.result = 'played';
   app.listeners = [];
@@ -182,6 +183,14 @@ describe('the Block Sprint', () => {
     expect(track.mock.calls.map((c) => (c[0] as { name: string }).name)).not.toContain('decode.sprint.finished');
   });
 
+  it('the drill header wraps, so large text at 320 wide moves Pause under the clock and never squeezes the bar away', async () => {
+    const r = await mount();
+    await tap(r.root, 'decoding-sprint-start');
+    const styleOf = (id: string) => byTestId(r.root, id).map((n) => n.props.style as Record<string, unknown> | undefined).find((st) => st !== undefined);
+    expect(styleOf('decoding-sprint-drill-header')).toMatchObject({ flexDirection: 'row', flexWrap: 'wrap' });
+    expect(styleOf('decoding-sprint-clock')).toMatchObject({ flexGrow: 1, flexBasis: '40%' });
+  });
+
   it('the clock holds while an answer shows', async () => {
     const r = await mount();
     const p = plan(1);
@@ -218,6 +227,17 @@ describe('the Block Sprint', () => {
     await playSprint(r, 1, 2);
     expect(texts(r)).toContain('2 blocks read');
     expect(store.writes).toEqual([{ v: 1, sprints: 1, best: 2 }]);
+    expect(track.mock.calls.map((c) => (c[0] as { name: string }).name)).not.toContain('decode.sprint.finished');
+  });
+
+  it('a record that cannot be read: the sprint plays, but writes nothing and sends nothing, so the real record survives', async () => {
+    store.readFails = true;
+    store.value = { v: 1, sprints: 6, best: 9 };
+    const r = await mount();
+    await playSprint(r, 1, 2);
+    expect(texts(r)).toContain('2 blocks read');
+    expect(store.writes).toEqual([]);
+    expect(store.value).toEqual({ v: 1, sprints: 6, best: 9 });
     expect(track.mock.calls.map((c) => (c[0] as { name: string }).name)).not.toContain('decode.sprint.finished');
   });
 

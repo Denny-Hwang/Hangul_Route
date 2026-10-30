@@ -19,7 +19,7 @@ import { shuffled, tilesFor, tilesSound, type TileRows } from './tiles';
  *   pick it (Listen & Pick on the block) or, while `game.syllable-build` is on, build it (every other round). Real
  *   blocks only: the Stage 1 table and the allowlist, never a held-out probe block, as answer or as option.
  * - **Probe.** Then a short held-out probe with no clock on screen: `PROBE_ROUNDS` pick rounds of one matched form of
- *   blocks no sprint ever drills (`PROBE_FORMS`, the n-th sprint form (n - 1) mod 4), always picks, so the format is
+ *   blocks no sprint ever drills (`PROBE_FORMS`, the n-th sprint form (n - 1 + the learner's offset) mod 4), always picks, so the format is
  *   the same in every sprint and G9 compares like with like. Its options are drill blocks, never another probe block.
  *   It only measures: a tap moves on with no right or miss shown and no answer, so a probe block is never practised.
  *   Its rate is the right first tries per minute of answer time; a sprint whose probe was read (no sound) sends none.
@@ -67,16 +67,23 @@ function pick(target: string, seed: number, allowed: (ko: string) => boolean): P
   return { kind: 'pick', target, romanization: romanizationOf(target), options: shuffled(blockOptions(target, tiles, seed, allowed), seed + 3) };
 }
 
-/** The probe form of a learner's n-th sprint (n from 1): the four forms in turn. */
-export function probeFormOf(sprintIndex: number): number {
-  return (((Math.max(1, Math.floor(sprintIndex)) - 1) % PROBE_FORMS.length) + PROBE_FORMS.length) % PROBE_FORMS.length;
+/**
+ * The probe form of a learner's n-th sprint (n from 1): the four forms in turn, from the learner's own first form
+ * (`formOffset`, a hash of the profile; 0 when absent). Learners start on different forms, so a sprint index's cohort
+ * spreads over all four and G9's sprint-1-to-sprint-4 change is not a difference between two fixed forms.
+ */
+export function probeFormOf(sprintIndex: number, formOffset = 0): number {
+  const n = PROBE_FORMS.length;
+  const offset = Number.isSafeInteger(formOffset) ? ((formOffset % n) + n) % n : 0;
+  return (((Math.max(1, Math.floor(sprintIndex)) - 1 + offset) % n) + n) % n;
 }
 
 /**
  * The sprint's rounds for a seed (the profile and the sprint index): the drill from the drill blocks in a seeded order,
- * builds every other round while `build` is on; the probe from the held-out form of the sprint index (`probeFormOf`).
+ * builds every other round while `build` is on; the probe from the held-out form of the sprint index and the learner's
+ * form offset (`probeFormOf`).
  */
-export function planSprint(seed: number, build: boolean, sprintIndex = 1): SprintPlan {
+export function planSprint(seed: number, build: boolean, sprintIndex = 1, formOffset = 0): SprintPlan {
   const targets = shuffled(
     DRILL_BLOCKS.filter((ko) => heardFinal(partsOf(ko) as BlockParts)),
     seed,
@@ -93,7 +100,7 @@ export function planSprint(seed: number, build: boolean, sprintIndex = 1): Sprin
       drill.push(pick(target, s, inDrill));
     }
   }
-  const form = PROBE_FORMS[probeFormOf(sprintIndex)] ?? [];
+  const form = PROBE_FORMS[probeFormOf(sprintIndex, formOffset)] ?? [];
   const probe = shuffled(form, seed + 7)
     .slice(0, PROBE_ROUNDS)
     .map((target, i) => pick(target, seed + 997 * (i + 1), inDrill));

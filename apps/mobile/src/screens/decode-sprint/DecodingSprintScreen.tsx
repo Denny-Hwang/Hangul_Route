@@ -122,9 +122,14 @@ export function DecodingSprintScreen({
     setPhase("intro");
   }, []);
 
+  /** The record could not be read: this sprint (and Play again after it) plays, writes nothing and sends nothing. */
+  const unreadable = useRef(false);
   const load = useCallback((): void => {
     setPhase("loading");
-    void readDecodeSprint(profileId).then((raw) => reset(parseRecord(raw)));
+    void readDecodeSprint(profileId).then((read) => {
+      unreadable.current = !read.ok;
+      reset(parseRecord(read.ok ? read.raw : null));
+    });
   }, [profileId, reset]);
   useEffect(load, [load]);
 
@@ -142,6 +147,7 @@ export function DecodingSprintScreen({
             fnv1a32(`${profileId}|decode-sprint|${record.sprints + 1}`),
             build,
             record.sprints + 1,
+            fnv1a32(`${profileId}|decode-sprint-form`),
           ),
     [record, profileId, build],
   );
@@ -261,8 +267,10 @@ export function DecodingSprintScreen({
       profileId,
     );
     setOutcome(out);
-    void writeDecodeSprint(profileId, out.record);
-    if (out.event !== null) void track(out.event);
+    if (!unreadable.current) {
+      void writeDecodeSprint(profileId, out.record);
+      if (out.event !== null) void track(out.event);
+    }
     setPhase("result");
   };
 
@@ -397,10 +405,20 @@ export function DecodingSprintScreen({
   const r = plan.drill[round % plan.drill.length];
   return (
     <Screen tone="canvas" testID="decoding-sprint-drill">
+      {/* The row wraps: with large text at 320 wide, Pause goes under the clock rather than squeezing the bar to nothing. */}
       <View
-        style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}
+        testID="decoding-sprint-drill-header"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: spacing.md,
+        }}
       >
-        <View style={{ flex: 1 }}>
+        <View
+          testID="decoding-sprint-clock"
+          style={{ flexGrow: 1, flexBasis: "40%" }}
+        >
           {view ? <ClockBar view={view} /> : null}
         </View>
         {view ? <ClockDigits view={view} /> : null}

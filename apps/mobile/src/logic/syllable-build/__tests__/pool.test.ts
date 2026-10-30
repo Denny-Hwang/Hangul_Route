@@ -83,6 +83,15 @@ describe('the real blocks (allowlist test)', () => {
     expect(new Set(PROBE_BLOCKS).size).toBe(24);
   });
 
+  it('the forms match on the first letter too: 4 plain first letters and 2 aspirated (ㅊ ㅋ ㅌ ㅍ) each, no tense one', () => {
+    const classOf = (first: string) => ('ㄲㄸㅃㅆㅉ'.includes(first) ? 'tense' : 'ㅊㅋㅌㅍ'.includes(first) ? 'aspirated' : 'plain');
+    for (const form of PROBE_FORMS) {
+      const classes = form.map((ko) => classOf(blockParts(ko)!.first));
+      expect(classes.filter((c) => c === 'plain'), form.join(' ')).toHaveLength(4);
+      expect(classes.filter((c) => c === 'aspirated'), form.join(' ')).toHaveLength(2);
+    }
+  });
+
   it('no probe block is a review item or a taught word anywhere in the curriculum, so nothing else drills it by ear', () => {
     const root = join(__dirname, '../../../../../..');
     const stable = JSON.parse(readFileSync(join(root, 'packages/content-schema/src/review-items/items-stable-id.json'), 'utf8')) as { ids: Record<string, string>; alias?: Record<string, string> };
