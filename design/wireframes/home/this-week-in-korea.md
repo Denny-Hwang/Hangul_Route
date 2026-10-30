@@ -138,7 +138,7 @@ Exit to: `tabs/home` (D, [x])
 
 ## Data needs
 
-- reads: the start bundle's list of weeks with a drop (`WEEK_DROP_WEEKS`, generated) and the local day; the drop itself from its precached chunk (`week-drops`); the review items and the learner's memory rows (memory chunk) to plan C; the "done" weeks of this profile on this device (`weekDrop:<profileId>`, through `platform/storage`, removed with the profile).
+- reads: the start bundle's list of weeks with a drop (`WEEK_DROP_WEEKS`, generated) and the local day; the drop itself from its precached chunk (`week-drops`); the review items and the learner's memory rows (memory chunk) to plan C; the "done" weeks of this profile on this device (`week-drop:<profileId>`, through `platform/storage`, removed with the profile).
 - writes: each C round's first answer (`recordAnswers`, the `week` shard); the done week (device only, never synced: a second device just shows A1 again, which is a harmless second look).
 - telemetry: none new. No TELEMETRY-NAMES-2 section R name is added for this surface; the rounds' memory recording sends nothing per item (§11.1).
 
