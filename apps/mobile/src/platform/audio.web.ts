@@ -1,6 +1,6 @@
-import type { SpeechLang } from '@hangul-route/content-schema';
+import type { AudioPack, SpeechLang } from '@hangul-route/content-schema';
 import { Asset } from 'expo-asset';
-import { flags } from '../config/flags';
+import { APP_VERSION } from '../config/app-version';
 import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachWebVoices,
@@ -30,6 +30,7 @@ import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createWebClipPlayer, webAudioGlobals } from './audio-player.web';
+import { bundledPackOf, clipsSwitchOn, packSwitchOn } from './audio-switches';
 import { track } from './telemetry';
 
 /**
@@ -97,10 +98,12 @@ export interface WebAudioEnv {
 
 export interface WebClipSetup {
   player: ClipPlayer;
-  /** The bundled asset map: `has(ref)` and how many clips it holds. */
-  assets: { has(ref: string): boolean; readonly size: number };
-  /** `flags.audioClips`: off switches every clip off without a code change. */
+  /** The bundled asset map: `has(ref)`, how many clips it holds, and a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6). */
+  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined };
+  /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
+  /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
+  packEnabled?(pack: AudioPack): boolean;
   /** The browser has Web Audio and `fetch`; without them no clip can play, so none is tried. */
   supported: boolean;
 }
@@ -121,8 +124,10 @@ function bundledClips(): WebClipSetup {
   const globals = webAudioGlobals();
   return {
     player: createWebClipPlayer({ uri, ...globals }),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length },
-    enabled: () => flags.audioClips,
+    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf },
+    // The clip switches (AC-B8, `audio-switches.ts`): read at each prompt.
+    enabled: clipsSwitchOn,
+    packEnabled: packSwitchOn,
     supported: globals.createContext !== null && globals.fetch !== null,
   };
 }
@@ -192,7 +197,14 @@ export function createWebAudio(env: WebAudioEnv) {
   const clipsOn = (): boolean => clipSetup !== null && clipSetup.supported && clipSetup.enabled();
   /** Clips are on and the build holds at least one: only then is Web Audio touched at all. */
   const clipsLive = (): boolean => clipsOn() && (clipSetup?.assets.size ?? 0) > 0;
-  const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
+  const packOf = (ref: string): AudioPack | undefined => clipSetup?.assets.packOf?.(ref);
+  const packEnabled = (pack: AudioPack): boolean => clipSetup?.packEnabled?.(pack) ?? true;
+  /** Bundled, clips on, and its pack (if any) on now. */
+  const hasClip = (ref: string | undefined): boolean => {
+    if (ref === undefined || !clipsOn() || !(clipSetup?.assets.has(ref) ?? false)) return false;
+    const pack = packOf(ref);
+    return pack === undefined || packEnabled(pack);
+  };
   const tracker = createCapabilityTracker({
     online: env.isOnline(),
     clips: clipsLive(),
@@ -396,8 +408,10 @@ export function createWebAudio(env: WebAudioEnv) {
   const controller: AudioController = createAudioController({
     engine,
     clips: clipSetup?.player ?? null,
-    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false },
+    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false, packOf },
     clipsEnabled: clipsOn,
+    packEnabled,
+    appVersion: APP_VERSION,
     voices: tracker,
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
@@ -418,6 +432,19 @@ export function createWebAudio(env: WebAudioEnv) {
   });
 
   const detachVoices = attachWebVoices(tracker, voiceEvents, network, { timeoutMs: 1500 });
+
+  // The session ends when the page hides or is left: one `audio.source_summary` of what played (AC-B9). Both events
+  // may fire; the second finds nothing counted and sends nothing.
+  const sendSummary = (): void => controller.flushSourceSummary();
+  const onPageHidden = (): void => {
+    if (env.doc?.visibilityState === 'hidden') sendSummary();
+  };
+  env.doc?.addEventListener('visibilitychange', onPageHidden);
+  env.win?.addEventListener('pagehide', sendSummary);
+  const offSummary = (): void => {
+    env.doc?.removeEventListener('visibilitychange', onPageHidden);
+    env.win?.removeEventListener('pagehide', sendSummary);
+  };
 
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
 
@@ -608,6 +635,7 @@ export function createWebAudio(env: WebAudioEnv) {
       detachVoices();
       offCapability();
       offMute();
+      offSummary();
       controller.dispose();
     },
   };

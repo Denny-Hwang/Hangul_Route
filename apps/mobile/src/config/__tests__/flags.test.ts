@@ -197,6 +197,38 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_AUDIO_CLIPS');
   });
 
+  it('audioClipPacks (AMENDMENTS-AUDIO-CLIPS AC-B8, the build ceiling) defaults to every pack', async () => {
+    delete process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS;
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema');
+    const mod = await reload();
+    expect(mod.flags.audioClipPacks).toEqual([...AUDIO_PACKS]);
+    expect(mod.launchDefaultFlags.audioClipPacks).toEqual([...AUDIO_PACKS]);
+  });
+
+  it('audioClipPacks reads a comma list: trimmed, any case, unknown names dropped, in pack order', async () => {
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = ' Stage1 , jamo-s1,,nope, jamo-wb ';
+    const mod = await reload();
+    expect(mod.flags.audioClipPacks).toEqual(['jamo-s1', 'jamo-wb', 'stage1']);
+  });
+
+  it('audioClipPacks: a blank value is the default; a value naming no pack (none) allows no pack', async () => {
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema');
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = '  ';
+    let mod = await reload();
+    expect(mod.flags.audioClipPacks).toEqual([...AUDIO_PACKS]);
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = 'none';
+    mod = await reload();
+    expect(mod.flags.audioClipPacks).toEqual([]);
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = ',';
+    mod = await reload();
+    expect(mod.flags.audioClipPacks).toEqual([]);
+  });
+
+  it('audioClipPacks is read by its literal name, next to EXPO_PUBLIC_AUDIO_CLIPS', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS');
+  });
+
   it('myRouteEnabled (F-ROUTE-001 R-10b beta flip) is ON by default and switches off with "false" or "0"', async () => {
     delete process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED;
     let mod = await reload();

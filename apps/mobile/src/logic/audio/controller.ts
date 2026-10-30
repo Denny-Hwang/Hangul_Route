@@ -1,4 +1,12 @@
-import type { SpeechLang } from '@hangul-route/content-schema';
+import {
+  AUDIO_SOURCE_COUNT_MAX,
+  isSayRef,
+  sayRef,
+  type AudioPack,
+  type AudioSource,
+  type AudioSourceSummaryPayload,
+  type SpeechLang,
+} from '@hangul-route/content-schema';
 import { capabilityTelemetry, type AudioCapability, type CapabilityCheckedPayload, type CapabilityPlatform } from './capability';
 import type { FallbackReason, PlayResult } from './prompt-state';
 import { speechParams, type LevelOrder, type PromptKind } from './rate';
@@ -12,10 +20,17 @@ export type { PlayResult } from './prompt-state';
 /**
  * The one place that decides what a prompt does (F-AUDIO-004 §3.5).
  *
- * Resolution order is clip > TTS > visible text (AD4): a bundled recording
- * wins, a clip that fails falls through to the device voice, and with no
- * usable Korean voice the controller never calls the engine and reports
- * `unavailable` so the screen shows the text prompt. Pure logic: the speech
+ * Resolution order (AMENDMENTS-AUDIO-CLIPS AC-B7, amending AD4): the record's
+ * clip (`spec.audioRef`), then the text-keyed clip of what is said
+ * (`audio/say/<sayKey(spec.text)>.mp3`, AC-B4; Korean only), then the device
+ * voice, then the visible text. A clip plays only when it is bundled, clips are
+ * on (`clipsEnabled`: the build flag and the remote `audioClips`) and its pack
+ * is on (`packEnabled`: the build ceiling and the remote `audioPack.<pack>`,
+ * AC-B8), all read at prompt time, so a pack switched off plays the voice on the
+ * next prompt. A clip that fails falls through to the next step. With no usable
+ * Korean voice the controller never calls the engine and reports `unavailable`
+ * so the screen shows the text prompt. Because a say clip is keyed by the text
+ * itself, a clip can never play for a text that changed. Pure logic: the speech
  * engine, the clip player, the asset map, the clock and telemetry are all
  * arguments, so `platform/audio*.ts` stay thin adapters.
  */
@@ -155,17 +170,25 @@ export interface PlaybackFailedPayload {
 export type AudioTelemetryEvent =
   | { name: 'audio.capability_checked'; payload: CapabilityCheckedPayload }
   | { name: 'audio.fallback_shown'; payload: { source: string; reason: FallbackReason } }
-  | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload };
+  | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload }
+  | { name: 'audio.source_summary'; payload: AudioSourceSummaryPayload };
+
+/** How many prompts each source played since the last summary (AC-B9). */
+export type AudioSourceCounts = Record<AudioSource, number>;
 
 export interface ControllerDeps {
   /** `null` = the platform has no speech engine. */
   engine: TtsEngine | null;
   /** `null` = no clip player (clips not wired yet). */
   clips: ClipPlayer | null;
-  /** The bundled asset map: `has(ref)`. */
-  assets: { has(ref: string): boolean };
-  /** `flags.audioClips`. */
+  /** The bundled asset map: `has(ref)`, and the pack of a ref (`AUDIO_ASSET_PACKS`, AC-B6) when it has one. */
+  assets: { has(ref: string): boolean; packOf?(ref: string): AudioPack | undefined };
+  /** `flags.audioClips` and the remote `audioClips` (AC-B8); read at each prompt. */
   clipsEnabled(): boolean;
+  /** The build ceiling `flags.audioClipPacks` and the remote `audioPack.<pack>` (AC-B8); read at each prompt. Absent: every pack is on. */
+  packEnabled?(pack: AudioPack): boolean;
+  /** The app version `audio.source_summary` carries (AC-B9). */
+  appVersion: string;
   voices: VoiceSource;
   isMuted(): boolean;
   levelOrder(): LevelOrder;
@@ -187,6 +210,13 @@ export interface AudioController {
   stop(): void;
   /** Called by the fallback panel when it first shows; fires `audio.fallback_shown` once per (source, reason). */
   noteFallbackShown(source: string, reason: FallbackReason): void;
+  /** The counts since the last summary (AC-B9). */
+  sourceCounts(): AudioSourceCounts;
+  /**
+   * The session ended or the page hides: sends `audio.source_summary` (counts and the app version only) when anything
+   * was counted, and starts a new count, so one session sends at most one summary.
+   */
+  flushSourceSummary(): void;
   dispose(): void;
 }
 
@@ -235,6 +265,11 @@ export function createAudioController(deps: ControllerDeps): AudioController {
   const failureEventsByKey = new Map<string, number>();
   let lastCapabilityKey: string | null = null;
   const shown = new Set<string>();
+  const zeroCounts = (): AudioSourceCounts => ({ clip: 0, say: 0, tts: 0, text: 0 });
+  let counts = zeroCounts();
+  const count = (source: AudioSource): void => {
+    counts[source] = Math.min(AUDIO_SOURCE_COUNT_MAX, counts[source] + 1);
+  };
 
   // --- telemetry -------------------------------------------------------------
 
@@ -303,10 +338,15 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
   // --- clip ------------------------------------------------------------------
 
-  const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'played' | 'skipped' | Superseded> => {
-    const ref = spec.audioRef;
-    const clips = deps.clips;
-    if (ref === undefined || clips === null || !deps.clipsEnabled() || !deps.assets.has(ref)) return 'skipped';
+  /** Bundled, and its pack (if it has one) is on now (AC-B8). */
+  const playable = (ref: string): boolean => {
+    if (!deps.assets.has(ref)) return false;
+    const pack = deps.assets.packOf?.(ref);
+    return pack === undefined || (deps.packEnabled?.(pack) ?? true);
+  };
+
+  /** One clip; a failure is reported (`kind: 'clip'`) and settles `failed`, so the caller tries the next step. */
+  const playClip = async (t: Ticket, clips: ClipPlayer, ref: string, spec: PlaySpec): Promise<'ok' | 'failed' | Superseded> => {
     const outcome = await waitFor<'ok' | ClipFailure>(t, (resolve) => {
       const handle = clips.play(ref, {
         onStart: () => undefined,
@@ -315,10 +355,27 @@ export function createAudioController(deps: ControllerDeps): AudioController {
       });
       return () => handle.stop();
     });
-    if (outcome === SUPERSEDED) return SUPERSEDED;
-    if (outcome === 'ok') return 'played';
+    if (outcome === SUPERSEDED || outcome === 'ok') return outcome;
     noteFailure({ kind: 'clip', reason: outcome, code: 'none', source: sourceOf(spec) });
-    return 'skipped';
+    return 'failed';
+  };
+
+  /** AC-B7 steps 1 and 2: the record's clip, then the say clip of the spoken text (Korean only). */
+  const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'clip' | 'say' | 'skipped' | Superseded> => {
+    const clips = deps.clips;
+    if (clips === null || !deps.clipsEnabled()) return 'skipped';
+    const recordRef = spec.audioRef;
+    if (recordRef !== undefined && playable(recordRef)) {
+      const outcome = await playClip(t, clips, recordRef, spec);
+      if (outcome === SUPERSEDED) return SUPERSEDED;
+      if (outcome === 'ok') return isSayRef(recordRef) ? 'say' : 'clip';
+    }
+    if ((spec.language ?? 'ko-KR') !== 'ko-KR') return 'skipped';
+    const said = sayRef(spec.text);
+    if (said === recordRef || !playable(said)) return 'skipped';
+    const outcome = await playClip(t, clips, said, spec);
+    if (outcome === SUPERSEDED) return SUPERSEDED;
+    return outcome === 'ok' ? 'say' : 'skipped';
   };
 
   // --- tts -------------------------------------------------------------------
@@ -497,10 +554,15 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     try {
       const viaClip = await tryClip(ticket, spec);
       if (viaClip === SUPERSEDED) return 'played';
-      if (viaClip === 'played') return 'played';
+      if (viaClip !== 'skipped') {
+        count(viaClip);
+        return 'played';
+      }
       const viaTts = await speakTts(ticket, spec, wasBusy);
-      // An interrupted prompt never drives the fallback.
-      return viaTts === SUPERSEDED ? 'played' : viaTts;
+      // An interrupted prompt never drives the fallback, and is not counted.
+      if (viaTts === SUPERSEDED) return 'played';
+      count(viaTts === 'played' ? 'tts' : 'text');
+      return viaTts;
     } finally {
       if (current === ticket) current = null;
     }
@@ -545,6 +607,13 @@ export function createAudioController(deps: ControllerDeps): AudioController {
       if (shown.has(key)) return;
       shown.add(key);
       deps.emit({ name: 'audio.fallback_shown', payload: { source, reason } });
+    },
+    sourceCounts: () => ({ ...counts }),
+    flushSourceSummary: () => {
+      const sent = counts;
+      if (sent.clip + sent.say + sent.tts + sent.text === 0) return;
+      counts = zeroCounts();
+      deps.emit({ name: 'audio.source_summary', payload: { ...sent, appVersion: deps.appVersion } });
     },
     dispose: stopObserving,
   };

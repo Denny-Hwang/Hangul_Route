@@ -80,9 +80,14 @@ export function bucketOf(profileId: string, flag: string): number {
   return fmix32(fnv1a32(profileId + flag)) % 100;
 }
 
-/** A pack flag also needs `topicPacks` (section 12.2, "What off does"); no other flag has a parent. */
+/**
+ * A pack flag also needs `topicPacks` (section 12.2, "What off does"), and an audio pack switch `audioPack.<pack>`
+ * also needs `audioClips` (AMENDMENTS-AUDIO-CLIPS AC-B8); no other flag has a parent.
+ */
 export function parentFlagOf(flag: string): string | null {
-  return flag.startsWith('pack.') ? 'topicPacks' : null;
+  if (flag.startsWith('pack.')) return 'topicPacks';
+  if (flag.startsWith('audioPack.')) return 'audioClips';
+  return null;
 }
 
 /** The copy's value for a flag (own keys only), or undefined when the copy does not name it. */

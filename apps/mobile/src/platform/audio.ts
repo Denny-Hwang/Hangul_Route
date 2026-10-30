@@ -1,7 +1,7 @@
-import type { SpeechLang } from '@hangul-route/content-schema';
+import type { AudioPack, SpeechLang } from '@hangul-route/content-schema';
 import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
-import { flags } from '../config/flags';
+import { APP_VERSION } from '../config/app-version';
 import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachNativeVoices,
@@ -28,6 +28,8 @@ import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createNativeClipPlayer, expoAvClipEnv } from './audio-player';
+import { bundledPackOf, clipsSwitchOn, packSwitchOn } from './audio-switches';
+import { subscribeAppVisibility } from './app-visibility';
 import { track } from './telemetry';
 
 /**
@@ -77,23 +79,28 @@ export interface NativeAudioEnv {
   platform: 'ios' | 'android';
   /** Bundled recordings (A-7). Absent = no clip path: every prompt uses the voice. */
   clips?: NativeClipSetup;
+  /** Calls `fn` each time the app leaves the foreground (the session ends: `audio.source_summary`); returns the unsubscribe. */
+  onHidden?: (fn: () => void) => () => void;
 }
 
 export interface NativeClipSetup {
   player: ClipPlayer;
-  /** The bundled asset map: `has(ref)` and how many clips it holds. */
-  assets: { has(ref: string): boolean; readonly size: number };
-  /** `flags.audioClips`: off switches every clip off without a code change. */
+  /** The bundled asset map: `has(ref)`, how many clips it holds, and a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6). */
+  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined };
+  /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
+  /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
+  packEnabled?(pack: AudioPack): boolean;
 }
 
-/** The generated map, played through expo-av. */
+/** The generated map, played through expo-av, under the clip switches (AC-B8, `audio-switches.ts`). */
 function bundledClips(): NativeClipSetup {
   const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
   return {
     player: createNativeClipPlayer(expoAvClipEnv(AUDIO_ASSETS)),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length },
-    enabled: () => flags.audioClips,
+    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf },
+    enabled: clipsSwitchOn,
+    packEnabled: packSwitchOn,
   };
 }
 
@@ -112,7 +119,14 @@ export function createNativeAudio(env: NativeAudioEnv) {
   const clipsOn = (): boolean => clipSetup !== null && clipSetup.enabled();
   /** Clips are on and the build holds at least one. */
   const clipsLive = (): boolean => clipsOn() && (clipSetup?.assets.size ?? 0) > 0;
-  const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
+  const packOf = (ref: string): AudioPack | undefined => clipSetup?.assets.packOf?.(ref);
+  const packEnabled = (pack: AudioPack): boolean => clipSetup?.packEnabled?.(pack) ?? true;
+  /** Bundled, clips on, and its pack (if any) on now. */
+  const hasClip = (ref: string | undefined): boolean => {
+    if (ref === undefined || !clipsOn() || !(clipSetup?.assets.has(ref) ?? false)) return false;
+    const pack = packOf(ref);
+    return pack === undefined || packEnabled(pack);
+  };
   const tracker = createCapabilityTracker({ online: true, clips: clipsLive() });
 
   // Utterances between `speak` and their first terminal callback.
@@ -155,8 +169,10 @@ export function createNativeAudio(env: NativeAudioEnv) {
   const controller: AudioController = createAudioController({
     engine,
     clips: clipSetup?.player ?? null,
-    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false },
+    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false, packOf },
     clipsEnabled: clipsOn,
+    packEnabled,
+    appVersion: APP_VERSION,
     voices: tracker,
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
@@ -176,6 +192,9 @@ export function createNativeAudio(env: NativeAudioEnv) {
   const offMute = store.subscribe((state, prev) => {
     if (state.muted && !prev.muted) controller.stop();
   });
+
+  // The session ends when the app leaves the foreground: one `audio.source_summary` of what played (AC-B9).
+  const offHidden = env.onHidden?.(() => controller.flushSourceSummary()) ?? ((): void => undefined);
 
   const readVoices = (): Promise<readonly NativeVoiceLike[]> => speech.getAvailableVoicesAsync();
   const detachVoices = attachNativeVoices(tracker, readVoices, platform, ASSUME_ONLINE);
@@ -213,6 +232,7 @@ export function createNativeAudio(env: NativeAudioEnv) {
       detachVoices();
       offCapability();
       offMute();
+      offHidden();
       controller.dispose();
     },
   };
@@ -229,6 +249,9 @@ function audio(): NativeAudio {
     speech: Speech as unknown as NativeSpeechApi,
     platform: Platform.OS === 'ios' ? 'ios' : 'android',
     clips: bundledClips(),
+    onHidden: (fn) => subscribeAppVisibility((visible) => {
+      if (!visible) fn();
+    }),
   });
   return instance;
 }

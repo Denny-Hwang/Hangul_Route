@@ -1,3 +1,4 @@
+import { AUDIO_PACKS, type AudioPack } from '@hangul-route/content-schema';
 import { showAllLocalesEnabled, type UiLocale } from '@hangul-route/i18n';
 
 /**
@@ -53,6 +54,16 @@ function parseLectureSwitch(raw: string | undefined, fallback: boolean): boolean
   if (v === 'disabled') return false;
   if (v === 'enabled') return true;
   return parseKillSwitch(raw, fallback);
+}
+
+/**
+ * The build ceiling's pack list (AMENDMENTS-AUDIO-CLIPS AC-B8): unset or blank is the default; otherwise the listed
+ * packs (trimmed, any case) that are on `AUDIO_PACKS`, in that order, so a value naming no pack allows none.
+ */
+function parsePackList(raw: string | undefined, fallback: readonly AudioPack[]): readonly AudioPack[] {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const listed = new Set(raw.split(',').map((k) => k.trim().toLowerCase()));
+  return AUDIO_PACKS.filter((pack) => listed.has(pack));
 }
 
 /**
@@ -125,6 +136,14 @@ export interface Flags {
    * batch of clips off without a code change (prompts then use the voice).
    */
   audioClips: boolean;
+
+  /**
+   * The clip packs this build may play at most (AMENDMENTS-AUDIO-CLIPS AC-B8, the build ceiling), in `AUDIO_PACKS`
+   * order. Default: every pack. `EXPO_PUBLIC_AUDIO_CLIP_PACKS=jamo-s1,jamo-wb` (a comma list, trimmed, any case;
+   * unknown names dropped) allows only those; a value that names no pack (`none`) allows none; a blank value is the
+   * default. The remote switches `audioClips` and `audioPack.<pack>` can only turn a pack off under this ceiling.
+   */
+  audioClipPacks: readonly AudioPack[];
 
   /**
    * My route (F-ROUTE-001): the "where am I in the whole journey" page and its
@@ -260,6 +279,7 @@ const launchDefaults: Flags = {
   showUnreviewedStories: false,
   placementEnabled: true,
   audioClips: true,
+  audioClipPacks: AUDIO_PACKS,
   myRouteEnabled: true,
   // Web-first (F-VOC-003 C-7): native bundles wait for the device flip pass.
   vocabTopicsEnabled: !isNativeBundle(),
@@ -294,6 +314,7 @@ export const flags: Flags = {
   ),
   placementEnabled: parseBool(process.env.EXPO_PUBLIC_PLACEMENT_ENABLED, launchDefaults.placementEnabled),
   audioClips: parseBool(process.env.EXPO_PUBLIC_AUDIO_CLIPS, launchDefaults.audioClips),
+  audioClipPacks: parsePackList(process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS, launchDefaults.audioClipPacks),
   myRouteEnabled: parseBool(process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED, launchDefaults.myRouteEnabled),
   vocabTopicsEnabled: parseBool(process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED, launchDefaults.vocabTopicsEnabled),
   vocabShowDrafts:
@@ -422,8 +443,36 @@ export const CURR_FLAGS = [
 ] as const;
 
 export type CurrFlag = (typeof CURR_FLAGS)[number];
-/** A switch name: one of `CURR_FLAGS`, a pack (`pack.<key>`) or a new round format (`game.<kind>`). */
-export type CurrFlagName = CurrFlag | `pack.${string}` | `game.${string}`;
+/**
+ * The audio clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8): `audioClips` (every clip) and `audioPack.<pack>` (one pack,
+ * under `audioClips`). Remote names read through `currFlagOn` like the F-CURR-002 ones, but their build floor is the
+ * build ceiling (`flags.audioClips`, and `flags.audioClipPacks` for a pack) and their built-in pct is 100: on until the
+ * remote copy turns them off. They are used as on/off, never ramped.
+ */
+export type AudioFlagName = 'audioClips' | `audioPack.${string}`;
+/** A switch name: one of `CURR_FLAGS`, a pack (`pack.<key>`), a new round format (`game.<kind>`) or an audio switch. */
+export type CurrFlagName = CurrFlag | `pack.${string}` | `game.${string}` | AudioFlagName;
+
+/** The remote switch of one clip pack. */
+export function audioPackFlag(pack: AudioPack): `audioPack.${AudioPack}` {
+  return `audioPack.${pack}`;
+}
+
+const AUDIO_PACK_PREFIX = 'audioPack.';
+/** The built-in pct of every audio switch: on, until the remote copy says otherwise. */
+export const AUDIO_SWITCH_BUILT_IN_PCT = 100;
+
+function isAudioFlag(flag: string): flag is AudioFlagName {
+  return flag === 'audioClips' || flag.startsWith(AUDIO_PACK_PREFIX);
+}
+
+/** An audio switch's build floor: the build ceiling of AC-B8. */
+function audioBuildFloor(flag: AudioFlagName): boolean {
+  if (!flags.audioClips) return false;
+  if (flag === 'audioClips') return true;
+  const pack = flag.slice(AUDIO_PACK_PREFIX.length);
+  return (flags.audioClipPacks as readonly string[]).includes(pack);
+}
 
 /** The build-time floors, read by literal name so the web bundle inlines each one. */
 export const currBuildFloors: Readonly<Record<CurrFlag, boolean>> = {
@@ -468,6 +517,7 @@ function isCurrFlag(flag: string): flag is CurrFlag {
 /** The build-time floor of any switch name; an unknown name is off. */
 export function currBuildFloor(flag: CurrFlagName): boolean {
   if (isCurrFlag(flag)) return currBuildFloors[flag];
+  if (isAudioFlag(flag)) return audioBuildFloor(flag);
   if (flag.startsWith('pack.')) return flag.length > 5 && !packsOff.has(flag.slice(5).toLowerCase());
   if (flag.startsWith('game.')) return flag.length > 5 && !gamesOff.has(flag.slice(5).toLowerCase());
   return false;
@@ -476,5 +526,6 @@ export function currBuildFloor(flag: CurrFlagName): boolean {
 /** The built-in pct of any switch name; an unknown name is 0. */
 export function currBuiltInPct(flag: CurrFlagName): number {
   if (isCurrFlag(flag)) return currBuiltInPcts[flag];
+  if (isAudioFlag(flag)) return AUDIO_SWITCH_BUILT_IN_PCT;
   return CURR_KEYED_BUILT_IN_PCT;
 }

@@ -89,6 +89,8 @@ const c = (
   exampleWordRomanization,
   exampleWordEn,
   audioRef: `audio/jamo/${id}.mp3`,
+  // The name clip (AMENDMENTS-AUDIO-CLIPS section 5): every consonant but ㅇ, whose name is its sound (이응).
+  ...(nameKo === spokenKo ? {} : { nameAudioRef: `audio/jamo/${id}-name.mp3` }),
   spokenKo,
   spokenRomanization,
   spokenKind,
@@ -198,10 +200,14 @@ export const jamoAll: Jamo[] = [...jamoConsonants, ...jamoVowels, ...jamoBatchim
  * ㅋ ㄲ ㅍ said k / p). They are kept out of `jamoAll`, which stays the 30 Stage 1 anchor
  * symbols (the letter wall, the Hangul check and Stage 1 completion count those), and
  * `findJamo` resolves them so the Word Builder Discover pages, the Results teaser and the
- * catalogue `teaches` show them. No sound hint and no recording yet: the Discover Hoya line
- * states each quest's rule, and Hear it speaks `spokenKo` with the visible text fallback
- * (F-AUDIO-004). Final ㅎ is not here: it is not one of the article 9 letters said t
- * (standard pronunciation rules), so Word Builder does not teach it.
+ * catalogue `teaches` show them. No sound hint: the Discover Hoya line states each quest's rule.
+ * Clips (AMENDMENTS-AUDIO-CLIPS section 5, pack `jamo-wb`): each vowel and tense consonant has
+ * its sound clip `audio/jamo/<id>.mp3`, and each tense consonant its name clip `<id>-name.mp3`;
+ * the finals (`wbf`) share the clip of how they sound: the six said t one clip
+ * `digeut-batchim` (generated from 앋), ㅋ and ㄲ the Stage 1 `giyeok-batchim`, ㅍ the Stage 1
+ * `bieup-batchim`. A clip with no file yet plays through the device voice (F-AUDIO-004 AD4).
+ * Final ㅎ is not here: it is not one of the article 9 letters said t (standard pronunciation
+ * rules), so Word Builder does not teach it.
  */
 const wb = (
   id: string,
@@ -219,10 +225,35 @@ const wb = (
   romanization,
   nameEn,
   kind,
+  audioRef: `audio/jamo/${id}.mp3`,
+  ...(nameKo === undefined || nameKo === spokenKo ? {} : { nameAudioRef: `audio/jamo/${id}-name.mp3` }),
   spokenKo,
   spokenRomanization,
   spokenKind: 'sound',
   ...(nameKo === undefined ? {} : { nameKo }),
+  order,
+});
+
+/** A Word Builder final: no letter name (a final is asked only by its sound), and `clip` names the clip it shares. */
+const wbf = (
+  id: string,
+  char: string,
+  romanization: string,
+  nameEn: string,
+  order: number,
+  spokenKo: string,
+  spokenRomanization: string,
+  clip: string,
+): Jamo => ({
+  id: `jamo:${id}`,
+  char,
+  romanization,
+  nameEn,
+  kind: 'batchim',
+  audioRef: `audio/jamo/${clip}.mp3`,
+  spokenKo,
+  spokenRomanization,
+  spokenKind: 'sound',
   order,
 });
 
@@ -248,16 +279,16 @@ export const jamoWordBuilder: Jamo[] = [
   wb('wae', 'ㅙ', 'vowel', 'wae', 'wae', 45, '왜', 'wae', '왜'),
   wb('we', 'ㅞ', 'vowel', 'we', 'we', 46, '웨', 'we', '웨'),
   // q5: the six final letters said t
-  wb('siot-batchim', 'ㅅ', 'batchim', 't', 'siot-final', 47, '앗', 'at'),
-  wb('jieut-batchim', 'ㅈ', 'batchim', 't', 'jieut-final', 48, '앚', 'at'),
-  wb('chieut-batchim', 'ㅊ', 'batchim', 't', 'chieut-final', 49, '앛', 'at'),
-  wb('tieut-batchim', 'ㅌ', 'batchim', 't', 'tieut-final', 50, '앝', 'at'),
-  wb('digeut-batchim', 'ㄷ', 'batchim', 't', 'digeut-final', 51, '앋', 'at'),
-  wb('ssangsiot-batchim', 'ㅆ', 'batchim', 't', 'ssangsiot-final', 52, '았', 'at'),
+  wbf('siot-batchim', 'ㅅ', 't', 'siot-final', 47, '앗', 'at', 'digeut-batchim'),
+  wbf('jieut-batchim', 'ㅈ', 't', 'jieut-final', 48, '앚', 'at', 'digeut-batchim'),
+  wbf('chieut-batchim', 'ㅊ', 't', 'chieut-final', 49, '앛', 'at', 'digeut-batchim'),
+  wbf('tieut-batchim', 'ㅌ', 't', 'tieut-final', 50, '앝', 'at', 'digeut-batchim'),
+  wbf('digeut-batchim', 'ㄷ', 't', 'digeut-final', 51, '앋', 'at', 'digeut-batchim'),
+  wbf('ssangsiot-batchim', 'ㅆ', 't', 'ssangsiot-final', 52, '았', 'at', 'digeut-batchim'),
   // q6: three final letters said k or p
-  wb('kieuk-batchim', 'ㅋ', 'batchim', 'k', 'kieuk-final', 53, '앜', 'ak'),
-  wb('ssanggiyeok-batchim', 'ㄲ', 'batchim', 'k', 'ssanggiyeok-final', 54, '앆', 'ak'),
-  wb('pieup-batchim', 'ㅍ', 'batchim', 'p', 'pieup-final', 55, '앞', 'ap'),
+  wbf('kieuk-batchim', 'ㅋ', 'k', 'kieuk-final', 53, '앜', 'ak', 'giyeok-batchim'),
+  wbf('ssanggiyeok-batchim', 'ㄲ', 'k', 'ssanggiyeok-final', 54, '앆', 'ak', 'giyeok-batchim'),
+  wbf('pieup-batchim', 'ㅍ', 'p', 'pieup-final', 55, '앞', 'ap', 'bieup-batchim'),
 ];
 
 /** Every symbol the app teaches: the Stage 1 30, then the Word Builder ones. */

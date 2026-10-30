@@ -33,6 +33,7 @@ export * from './pillars';
 export * from './narration';
 export * from './schemas/story';
 export * from './schemas/audio';
+export * from './audio/say-key';
 export * from './schemas/vocab';
 export * from './story-sources';
 export * from './story-lint';

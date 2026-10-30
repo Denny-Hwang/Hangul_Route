@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUDIO_PACKS,
   AUDIO_REF_PATTERN,
+  AUDIO_SOURCE_COUNT_MAX,
+  AudioPackSchema,
   AudioRefSchema,
+  AudioSourceSummaryPayloadSchema,
   DeviceAudioPrefsSchema,
   JamoSchema,
   SPEECH_LANGS,
@@ -9,7 +13,15 @@ import {
 } from '../index';
 
 describe('AudioRefSchema (F-AUDIO-004 §3.2)', () => {
-  it.each(['audio/jamo/giyeok.mp3', 'audio/jamo/giyeok-batchim.mp3', 'audio/vocab/ice-cream.mp3', 'audio/story/ep-01/line-3.mp3'])(
+  it.each([
+    'audio/jamo/giyeok.mp3',
+    'audio/jamo/giyeok-name.mp3',
+    'audio/jamo/giyeok-batchim.mp3',
+    'audio/vocab/ice-cream.mp3',
+    'audio/story/ep-01/line-3.mp3',
+    // AMENDMENTS-AUDIO-CLIPS AC-B4: the text-keyed group.
+    'audio/say/0123456789abcdef.mp3',
+  ])(
     'accepts %s',
     (ref) => {
       expect(AudioRefSchema.safeParse(ref).success).toBe(true);
@@ -23,6 +35,9 @@ describe('AudioRefSchema (F-AUDIO-004 §3.2)', () => {
     'audio/jamo/Giyeok.mp3',
     'audio/jamo/giyeok.wav',
     'audio/other/giyeok.mp3',
+    'audio/say/0123456789abcdef.wav',
+    'audio/say/0123456789abcdef.ogg',
+    'audio/says/0123456789abcdef.mp3',
     'audio/jamo/-giyeok.mp3',
     '/audio/jamo/giyeok.mp3',
     '',
@@ -136,5 +151,65 @@ describe('JamoSchema audio fields (F-AUDIO-004 §3.2)', () => {
 
   it('rejects an unknown spokenKind', () => {
     expect(JamoSchema.safeParse({ ...base, spokenKind: 'letter' }).success).toBe(false);
+  });
+});
+
+describe('audio packs (AMENDMENTS-AUDIO-CLIPS AC-B6)', () => {
+  it('lists the thirteen packs once, in the order of the AC-B6 table (a shared text belongs to the first)', () => {
+    expect([...AUDIO_PACKS]).toEqual([
+      'jamo-s1',
+      'jamo-wb',
+      'stage1',
+      'placement',
+      'stage2',
+      'stage3',
+      'stage4',
+      'stage6',
+      'stage7',
+      'vocab',
+      'stories',
+      'review',
+      'cards',
+    ]);
+    expect(new Set(AUDIO_PACKS).size).toBe(AUDIO_PACKS.length);
+  });
+
+  it('every pack id is a valid remote switch key (audioPack.<pack>)', () => {
+    for (const pack of AUDIO_PACKS) expect(pack).toMatch(/^[a-z0-9][a-z0-9_-]{0,47}$/);
+  });
+
+  it('AudioPackSchema accepts the listed packs only', () => {
+    for (const pack of AUDIO_PACKS) expect(AudioPackSchema.safeParse(pack).success).toBe(true);
+    for (const bad of ['stage5', 'jamo', 'Jamo-s1', '', 'all']) expect(AudioPackSchema.safeParse(bad).success).toBe(false);
+  });
+});
+
+describe('audio.source_summary payload (AMENDMENTS-AUDIO-CLIPS AC-B9)', () => {
+  const ok = { clip: 3, say: 12, tts: 4, text: 0, appVersion: '1.0.0' };
+
+  it('accepts four whole counts and the app version', () => {
+    expect(AudioSourceSummaryPayloadSchema.safeParse(ok).success).toBe(true);
+    expect(AudioSourceSummaryPayloadSchema.safeParse({ ...ok, clip: 0, say: 0, tts: 0, text: AUDIO_SOURCE_COUNT_MAX }).success).toBe(true);
+  });
+
+  it('rejects an extra field: no text, ref, learner id or URL can ride along', () => {
+    for (const extra of [{ ref: 'audio/say/0123456789abcdef.mp3' }, { text0: '가' }, { profileId: 'p1' }, { url: 'https://x' }, { source: 'discover' }]) {
+      expect(AudioSourceSummaryPayloadSchema.safeParse({ ...ok, ...extra }).success).toBe(false);
+    }
+  });
+
+  it('rejects a missing count, a fraction, a negative, a count past the cap and a string count', () => {
+    const { text: _drop, ...noText } = ok;
+    expect(AudioSourceSummaryPayloadSchema.safeParse(noText).success).toBe(false);
+    for (const bad of [1.5, -1, AUDIO_SOURCE_COUNT_MAX + 1, '3', Number.NaN]) {
+      expect(AudioSourceSummaryPayloadSchema.safeParse({ ...ok, say: bad }).success).toBe(false);
+    }
+  });
+
+  it('takes a dotted version only (never free text)', () => {
+    for (const appVersion of ['1.0.0', '12.3.45']) expect(AudioSourceSummaryPayloadSchema.safeParse({ ...ok, appVersion }).success).toBe(true);
+    for (const appVersion of ['', '1.0', 'v1.0.0', '1.0.0-beta', 'Alice', '1.0.0 ', '12345.0.0']) {
+      expect(AudioSourceSummaryPayloadSchema.safeParse({ ...ok, appVersion }).success).toBe(false);
+    }
   });
 });

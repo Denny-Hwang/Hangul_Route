@@ -22,6 +22,7 @@ import {
   E2E_FIXTURE_DIR,
   E2E_FIXTURE_REQUIRE_BASE,
   buildAssetMap,
+  jamoClipRefs,
   mergeAssetMaps,
   renderAssetMap,
 } from './lib.mjs';
@@ -44,11 +45,15 @@ function listFiles(dir) {
 }
 
 const withFixtures = process.argv.includes('--with-e2e-fixtures');
-const shipped = buildAssetMap(listFiles(join(appRoot, AUDIO_DIR)), AUDIO_REQUIRE_BASE);
+// Each jamo clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6) comes from jamo.ts; `say` clips get theirs from the clip
+// manifest (row AC-2) and carry none until then.
+const jamoPacks = new Map(jamoClipRefs(readFileSync(join(appRoot, 'src/content/jamo.ts'), 'utf8')).map((r) => [r.ref, r.pack]));
+const packOf = (ref) => jamoPacks.get(ref);
+const shipped = buildAssetMap(listFiles(join(appRoot, AUDIO_DIR)), AUDIO_REQUIRE_BASE, packOf);
 const shippedRefs = new Set(shipped.map((e) => e.ref));
 // A real recording always wins over a fixture for the same ref.
 const fixtures = withFixtures
-  ? buildAssetMap(listFiles(join(appRoot, E2E_FIXTURE_DIR)), E2E_FIXTURE_REQUIRE_BASE).filter((e) => !shippedRefs.has(e.ref))
+  ? buildAssetMap(listFiles(join(appRoot, E2E_FIXTURE_DIR)), E2E_FIXTURE_REQUIRE_BASE, packOf).filter((e) => !shippedRefs.has(e.ref))
   : [];
 const source = renderAssetMap(mergeAssetMaps(shipped, fixtures));
 const target = join(appRoot, ASSET_MAP_FILE);

@@ -5,6 +5,8 @@ export interface AssetEntry {
   ref: string;
   /** Literal require path from the generated file. */
   require: string;
+  /** The clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6), when it has one. */
+  pack?: string;
 }
 
 export interface AudioRuntimeCachingRule {
@@ -18,6 +20,8 @@ export interface AudioRuntimeCachingRule {
 }
 
 export const AUDIO_REF_PATTERN: RegExp;
+export const JAMO_PACK_STAGE1: 'jamo-s1';
+export const JAMO_PACK_WORD_BUILDER: 'jamo-wb';
 export const RUNTIME_AUDIO_GROUPS: readonly string[];
 export const ASSET_MAP_FILE: string;
 export const AUDIO_DIR: string;
@@ -27,7 +31,7 @@ export const E2E_FIXTURE_REQUIRE_BASE: string;
 export const AUDIO_PRECACHE_IGNORES: readonly string[];
 
 export function refFromFile(file: string): string;
-export function buildAssetMap(files: readonly string[], base?: string): AssetEntry[];
+export function buildAssetMap(files: readonly string[], base?: string, packOf?: (ref: string) => string | undefined): AssetEntry[];
 export function mergeAssetMaps(...lists: ReadonlyArray<readonly AssetEntry[]>): AssetEntry[];
 export function renderAssetMap(entries: readonly AssetEntry[]): string;
 export function refsInRenderedMap(source: string): string[];
@@ -122,6 +126,8 @@ export function vocabAudioRef(id: string): string;
 export function vocabClipRefs(topicFiles: ReadonlyArray<{ items?: readonly object[] }>): string[];
 export function renderRecordingScript(rows: readonly RecordingRow[], names: readonly NameRow[], vocab: readonly VocabRecordingRow[]): string;
 export function parseJamoSource(source: string): ParsedJamo[];
+/** Every jamo clip ref jamo.ts declares (sound and name clips, Stage 1 and Word Builder), each once, with its pack. */
+export function jamoClipRefs(source: string): Array<{ ref: string; pack: string }>;
 export function evaluateReport(kind: ClipKind, report: ClipReport): string[];
 export function evaluateSet(kind: ClipKind, sizes: readonly number[], label?: string): string[];
 export function clipSets(

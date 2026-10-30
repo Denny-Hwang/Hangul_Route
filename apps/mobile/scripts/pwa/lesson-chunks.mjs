@@ -103,7 +103,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
-  startBundleRaw: 4_760_000,
+  // AMENDMENTS-AUDIO-CLIPS AC-1 (text-keyed clips: the pure SHA-256 say key, the clip lookup order, the pack switches
+  // and the source summary; the clips themselves load per pack, AC-6) measures 4,760,286 B raw / 1,269,465 B gzip on
+  // JV-1's 4,754,506 B (+5,780 B, release `build:web`): the line is that measurement plus a 4,714 B rounding margin.
+  startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

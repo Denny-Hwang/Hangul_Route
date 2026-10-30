@@ -5,7 +5,7 @@ import {
   composeSyllable,
   romanizeWord,
 } from '@hangul-route/content-schema';
-import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../jamo';
+import { jamoAll, jamoBatchim, jamoConsonants, jamoKnown, jamoVowels, jamoWordBuilder } from '../jamo';
 
 /**
  * F-AUDIO-004 PR A-2: the 30 spoken forms (§3.2 table), typed out independently
@@ -130,7 +130,77 @@ describe('jamo spoken forms (F-AUDIO-004 §3.2)', () => {
     ]);
   });
 
-  it('nameAudioRef is not set yet (optional batch 2, A-10)', () => {
-    for (const j of jamoAll) expect(j.nameAudioRef, j.id).toBeUndefined();
+  it('nameAudioRef is the name clip of the 13 consonants other than ㅇ (AMENDMENTS-AUDIO-CLIPS section 5)', () => {
+    for (const j of jamoAll) {
+      const stem = j.id.replace('jamo:', '');
+      if (j.kind === 'consonant' && j.id !== 'jamo:ieung') expect(j.nameAudioRef, j.id).toBe(`audio/jamo/${stem}-name.mp3`);
+      // ㅇ and every vowel: the name clip is the sound clip; a final has no name.
+      else expect(j.nameAudioRef, j.id).toBeUndefined();
+    }
+    expect(jamoAll.filter((j) => j.nameAudioRef !== undefined)).toHaveLength(13);
+  });
+});
+
+/**
+ * The Word Builder clips (AMENDMENTS-AUDIO-CLIPS section 5 and AC-B4, row AC-1), typed out from the section 5 table:
+ * id -> [sound clip file id, name clip file id or undefined].
+ */
+const WB_CLIPS: Record<string, readonly [string, string | undefined]> = {
+  'jamo:ae': ['ae', undefined],
+  'jamo:e': ['e', undefined],
+  'jamo:yae': ['yae', undefined],
+  'jamo:ye': ['ye', undefined],
+  'jamo:ssanggiyeok': ['ssanggiyeok', 'ssanggiyeok-name'],
+  'jamo:ssangdigeut': ['ssangdigeut', 'ssangdigeut-name'],
+  'jamo:ssangbieup': ['ssangbieup', 'ssangbieup-name'],
+  'jamo:ssangsiot': ['ssangsiot', 'ssangsiot-name'],
+  'jamo:ssangjieut': ['ssangjieut', 'ssangjieut-name'],
+  'jamo:wa': ['wa', undefined],
+  'jamo:wo': ['wo', undefined],
+  'jamo:wi': ['wi', undefined],
+  'jamo:ui': ['ui', undefined],
+  'jamo:oe': ['oe', undefined],
+  'jamo:wae': ['wae', undefined],
+  'jamo:we': ['we', undefined],
+  'jamo:siot-batchim': ['digeut-batchim', undefined],
+  'jamo:jieut-batchim': ['digeut-batchim', undefined],
+  'jamo:chieut-batchim': ['digeut-batchim', undefined],
+  'jamo:tieut-batchim': ['digeut-batchim', undefined],
+  'jamo:digeut-batchim': ['digeut-batchim', undefined],
+  'jamo:ssangsiot-batchim': ['digeut-batchim', undefined],
+  'jamo:kieuk-batchim': ['giyeok-batchim', undefined],
+  'jamo:ssanggiyeok-batchim': ['giyeok-batchim', undefined],
+  'jamo:pieup-batchim': ['bieup-batchim', undefined],
+};
+
+describe('jamo clips: the Word Builder refs and the 65 files (AMENDMENTS-AUDIO-CLIPS section 5)', () => {
+  const ref = (fileId: string) => `audio/jamo/${fileId}.mp3`;
+
+  it('every Word Builder record carries the table clip, and a name clip only for the five tense consonants', () => {
+    expect(jamoWordBuilder.map((j) => j.id)).toEqual(Object.keys(WB_CLIPS));
+    for (const j of jamoWordBuilder) {
+      const [sound, name] = WB_CLIPS[j.id] as readonly [string, string | undefined];
+      expect(j.audioRef, j.id).toBe(ref(sound));
+      expect(j.nameAudioRef, j.id).toBe(name === undefined ? undefined : ref(name));
+      expect(JamoSchema.safeParse(j).success, j.id).toBe(true);
+    }
+  });
+
+  it('the finals reuse a clip of how they sound: ㅋ ㄲ the Stage 1 ㄱ final, ㅍ the Stage 1 ㅂ final', () => {
+    const stage1 = new Set(jamoAll.map((j) => j.audioRef));
+    expect(stage1.has(ref('giyeok-batchim'))).toBe(true);
+    expect(stage1.has(ref('bieup-batchim'))).toBe(true);
+    expect(stage1.has(ref('digeut-batchim'))).toBe(false);
+  });
+
+  it('declares 65 distinct jamo files: Stage 1 43 (30 sounds + 13 names), Word Builder 22 (16 + 1 + 5)', () => {
+    const files = (records: typeof jamoKnown) =>
+      new Set(records.flatMap((j) => [j.audioRef, j.nameAudioRef]).filter((r): r is string => r !== undefined));
+    const s1 = files(jamoAll);
+    const wb = [...files(jamoWordBuilder)].filter((r) => !s1.has(r));
+    expect(s1.size).toBe(43);
+    expect(wb).toHaveLength(22);
+    expect(files(jamoKnown).size).toBe(65);
+    for (const r of files(jamoKnown)) expect(r).toMatch(AUDIO_REF_PATTERN);
   });
 });

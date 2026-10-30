@@ -9,6 +9,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'audio.fallback_shown',
         'audio.mute_changed',
         'audio.playback_failed',
+        'audio.source_summary',
         'card.first_earned',
         'card.unlocked',
         'episode.complete',

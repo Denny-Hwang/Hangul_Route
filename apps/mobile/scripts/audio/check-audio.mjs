@@ -8,15 +8,17 @@
 // The report needs ffmpeg and ffprobe (local only); --status needs neither.
 import { statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { appRoot, listFiles, readJamo, readVocabTopics } from './content-sources.mjs';
+import { appRoot, listFiles, readJamo, readJamoClipRefs, readVocabTopics } from './content-sources.mjs';
 import { ffmpeg, ffprobe } from './ffmpeg.mjs';
 import { AUDIO_DIR, clipSets, clipStatus, evaluateReport, evaluateSet, parseEbur128, parseProbe, recordingRows, vocabClipRefs, vocabRecordingRows } from './lib.mjs';
 
 const args = process.argv.slice(2);
 
 if (args.includes('--status')) {
+  // Every declared jamo clip (the 65 of AMENDMENTS-AUDIO-CLIPS section 5: sounds and names, Stage 1 and Word
+  // Builder) and every word clip; listed, never failed, while the clips are still to come.
   const refs = [
-    ...readJamo().map((j) => j.audioRef),
+    ...readJamoClipRefs().map((r) => r.ref),
     ...vocabClipRefs(readVocabTopics()),
   ];
   const status = clipStatus(refs, listFiles(join(appRoot, AUDIO_DIR)).filter((f) => f.endsWith('.mp3')));

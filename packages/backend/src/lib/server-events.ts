@@ -1,4 +1,5 @@
 import {
+  AudioSourceSummaryPayloadSchema,
   BILLING_TELEMETRY_PREFIX,
   BrowseScopeSchema,
   BrowseSourceSchema,
@@ -287,6 +288,19 @@ export const OA_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, F
 const GUEST_EVENT_PREFIX = 'guest.';
 export const GUEST_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(GUEST_TELEMETRY_PAYLOADS);
 
+/**
+ * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9): four whole counts and the app version, kept only when the
+ * payload parses against its strict schema (an extra key, a fraction or a free-text version drops the whole payload),
+ * and never a profile id, so the summary cannot link a device's audio to a learner. Worker first: this ships before
+ * the app sends it.
+ */
+const AUDIO_SOURCE_SUMMARY = 'audio.source_summary';
+
+function audioSummaryPayload(payload: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  const parsed = AudioSourceSummaryPayloadSchema.safeParse(payload);
+  return parsed.success ? parsed.data : undefined;
+}
+
 /** Only the payload fields that fit their rule; a name without rules keeps none. */
 function ruledPayload(
   rules: Readonly<Record<string, FieldRule>> | undefined,
@@ -332,6 +346,7 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * payload only when it parses (section 11.3), and `session.end` drops a CM-3 field off its codes.
  * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS keeps only its documented fields and never a profile id (`OA_PAYLOAD_RULES`).
  * [GU] So does a `guest.*` name of AMENDMENTS-GUEST-FIRST-LESSON section 12 (`GUEST_PAYLOAD_RULES`).
+ * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9) keeps its strict payload only, and never a profile id.
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -345,6 +360,7 @@ export function keptEventFields(
     const kept = parsed.success && Object.keys(parsed.data).length > 0 ? parsed.data : undefined;
     return { profileId: !CURR_NO_PROFILE.has(name) && typeof profileId === 'string' ? profileId : undefined, payload: kept };
   }
+  if (name === AUDIO_SOURCE_SUMMARY) return { profileId: undefined, payload: audioSummaryPayload(payload) };
   if (name === 'session.end') return { profileId: typeof profileId === 'string' ? profileId : undefined, payload: sessionEndPayload(payload) };
   if (name.startsWith(BROWSE_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(BROWSE_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(NOTES_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(NOTES_PAYLOAD_RULES[name], payload) };

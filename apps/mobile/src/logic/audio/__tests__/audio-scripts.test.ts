@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { AUDIO_REF_PATTERN as SCHEMA_PATTERN, type Jamo } from '@hangul-route/content-schema';
+import { AUDIO_PACKS, AUDIO_REF_PATTERN as SCHEMA_PATTERN, type Jamo } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { jamoAll } from '../../../content/jamo';
+import { jamoAll, jamoWordBuilder } from '../../../content/jamo';
 import {
   AUDIO_PRECACHE_IGNORES,
   AUDIO_REF_PATTERN,
+  JAMO_PACK_STAGE1,
+  JAMO_PACK_WORD_BUILDER,
   RUNTIME_AUDIO_GROUPS,
   audioRuntimeCaching,
   buildAssetMap,
@@ -16,6 +18,7 @@ import {
   evaluateSet,
   isInsideDir,
   isRuntimeAudio,
+  jamoClipRefs,
   LIMITING_WARN_DB,
   MAX_TOP_UP_DB,
   MAX_TOP_UP_PASSES,
@@ -49,6 +52,17 @@ describe('scripts/audio/lib: the ref grammar', () => {
   it('is the same pattern as the content schema', () => {
     expect(AUDIO_REF_PATTERN.source).toBe(SCHEMA_PATTERN.source);
     expect(AUDIO_REF_PATTERN.flags).toBe(SCHEMA_PATTERN.flags);
+  });
+
+  it('accepts the text-keyed say group (AMENDMENTS-AUDIO-CLIPS AC-B4) and keeps .mp3', () => {
+    expect(AUDIO_REF_PATTERN.test('audio/say/0123456789abcdef.mp3')).toBe(true);
+    expect(AUDIO_REF_PATTERN.test('audio/say/0123456789abcdef.wav')).toBe(false);
+  });
+
+  it('the two jamo pack ids are on the shared pack list', () => {
+    expect(AUDIO_PACKS).toContain(JAMO_PACK_STAGE1);
+    expect(AUDIO_PACKS).toContain(JAMO_PACK_WORD_BUILDER);
+    expect([JAMO_PACK_STAGE1, JAMO_PACK_WORD_BUILDER]).toEqual(['jamo-s1', 'jamo-wb']);
   });
 
   it('refFromFile prefixes audio/ and normalises separators', () => {
@@ -98,6 +112,21 @@ describe('scripts/audio/lib: buildAssetMap', () => {
     expect(() => buildAssetMap(['giyeok.mp3'])).toThrow(/valid audioRef/);
   });
 
+  it('maps a say clip like any other group', () => {
+    expect(buildAssetMap(['say/0123456789abcdef.mp3'])).toEqual([
+      { ref: 'audio/say/0123456789abcdef.mp3', require: '../../../assets/audio/say/0123456789abcdef.mp3' },
+    ]);
+  });
+
+  it('carries each clip\'s pack when a pack lookup is given; a clip with no pack has none', () => {
+    const packOf = (ref: string) => (ref === 'audio/jamo/giyeok.mp3' ? 'jamo-s1' : ref === 'audio/jamo/ae.mp3' ? 'jamo-wb' : undefined);
+    expect(buildAssetMap(['jamo/ae.mp3', 'jamo/giyeok.mp3', 'say/0123456789abcdef.mp3'], undefined, packOf)).toEqual([
+      { ref: 'audio/jamo/ae.mp3', require: '../../../assets/audio/jamo/ae.mp3', pack: 'jamo-wb' },
+      { ref: 'audio/jamo/giyeok.mp3', require: '../../../assets/audio/jamo/giyeok.mp3', pack: 'jamo-s1' },
+      { ref: 'audio/say/0123456789abcdef.mp3', require: '../../../assets/audio/say/0123456789abcdef.mp3' },
+    ]);
+  });
+
   it('refuses two files for one ref', () => {
     expect(() => buildAssetMap(['jamo/a.mp3', './jamo/a.mp3'])).toThrow(/two audio files/);
   });
@@ -117,6 +146,17 @@ describe('scripts/audio/lib: renderAssetMap', () => {
     expect(src).not.toContain('require(');
     expect(src.endsWith('\n')).toBe(true);
     expect(refsInRenderedMap(src)).toEqual([]);
+    // Everything must work with an empty map: the pack map is empty too, typed by the shared pack list.
+    expect(src).toContain("import type { AudioPack } from '@hangul-route/content-schema';");
+    expect(src).toContain('export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {};');
+  });
+
+  it('renders the pack of each clip that has one (AMENDMENTS-AUDIO-CLIPS AC-B6)', () => {
+    const packOf = (ref: string) => (ref.startsWith('audio/jamo/') ? 'jamo-s1' : undefined);
+    const src = renderAssetMap(buildAssetMap(['jamo/giyeok.mp3', 'say/0123456789abcdef.mp3'], undefined, packOf));
+    expect(src).toContain("export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {\n  'audio/jamo/giyeok.mp3': 'jamo-s1',\n};");
+    expect(src).not.toContain("'audio/say/0123456789abcdef.mp3': '");
+    expect(refsInRenderedMap(src)).toEqual(['audio/jamo/giyeok.mp3', 'audio/say/0123456789abcdef.mp3']);
   });
 
   it('renders one literal require per clip and reads the refs back', () => {
@@ -569,6 +609,53 @@ describe('scripts/audio/lib: ffprobe and ebur128 reports', () => {
   it('parseEbur128 reads -inf (a silent clip) as negative infinity', () => {
     const silent = ['  Integrated loudness:', '    I:         -inf LUFS', '  True peak:', '    Peak:       -inf dBFS'].join('\n');
     expect(parseEbur128(silent)).toEqual({ integratedLufs: Number.NEGATIVE_INFINITY, truePeakDb: Number.NEGATIVE_INFINITY });
+  });
+});
+
+describe('scripts/audio/lib: jamoClipRefs (every jamo clip the content declares, with its pack; AMENDMENTS-AUDIO-CLIPS section 5)', () => {
+  const source = readFileSync(join(__dirname, '../../../content/jamo.ts'), 'utf8');
+  const parsed = jamoClipRefs(source);
+
+  it('agrees with the records the app ships: every audioRef and nameAudioRef, first pack wins', () => {
+    const expected = new Map<string, string>();
+    const add = (ref: string | undefined, pack: string) => {
+      if (ref !== undefined && !expected.has(ref)) expected.set(ref, pack);
+    };
+    for (const j of jamoAll) {
+      add(j.audioRef, 'jamo-s1');
+      add(j.nameAudioRef, 'jamo-s1');
+    }
+    for (const j of jamoWordBuilder) {
+      add(j.audioRef, 'jamo-wb');
+      add(j.nameAudioRef, 'jamo-wb');
+    }
+    expect(parsed).toEqual([...expected].map(([ref, pack]) => ({ ref, pack })));
+  });
+
+  it('is 65 distinct files: jamo-s1 43 (30 sounds + 13 names), jamo-wb 22 (16 sounds + 1 shared t-final + 5 names)', () => {
+    expect(parsed).toHaveLength(65);
+    expect(new Set(parsed.map((r) => r.ref)).size).toBe(65);
+    const s1 = parsed.filter((r) => r.pack === 'jamo-s1').map((r) => r.ref);
+    const wb = parsed.filter((r) => r.pack === 'jamo-wb').map((r) => r.ref);
+    expect(s1).toHaveLength(43);
+    expect(s1.filter((r) => r.endsWith('-name.mp3'))).toHaveLength(13);
+    expect(wb).toHaveLength(22);
+    expect(wb.filter((r) => r.endsWith('-name.mp3'))).toHaveLength(5);
+    expect(wb).toContain('audio/jamo/digeut-batchim.mp3');
+    expect(s1).not.toContain('audio/jamo/ieung-name.mp3');
+    for (const { ref } of parsed) expect(ref).toMatch(AUDIO_REF_PATTERN);
+  });
+
+  it('the shared finals reuse one clip: ㅋ ㄲ finals take the Stage 1 ㄱ final, ㅍ the ㅂ final', () => {
+    expect(parsed.find((r) => r.ref === 'audio/jamo/giyeok-batchim.mp3')?.pack).toBe('jamo-s1');
+    expect(parsed.find((r) => r.ref === 'audio/jamo/bieup-batchim.mp3')?.pack).toBe('jamo-s1');
+    expect(parsed.some((r) => /(kieuk|ssanggiyeok|pieup|siot|jieut|chieut|tieut|ssangsiot)-batchim/.test(r.ref))).toBe(false);
+  });
+
+  it('fails loudly when a factory call cannot be read', () => {
+    expect(() => jamoClipRefs('export const jamoAll = [];')).toThrow(/no jamo records/);
+    expect(() => jamoClipRefs(`${source}\n  wbf('siot-batchim', 'ㅅ'),\n`)).toThrow(/clip of siot-batchim/);
+    expect(() => jamoClipRefs(`${source}\n  wb('ae'),\n`)).toThrow(/spokenKo of ae/);
   });
 });
 
