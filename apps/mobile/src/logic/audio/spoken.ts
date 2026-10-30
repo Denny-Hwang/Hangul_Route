@@ -11,7 +11,9 @@ import type { Jamo } from '@hangul-route/content-schema';
 export type SpokenJamo = Pick<
   Jamo,
   'char' | 'romanization' | 'nameEn' | 'spokenKo' | 'spokenRomanization' | 'spokenKind' | 'nameKo' | 'audioRef' | 'nameAudioRef'
->;
+> &
+  // `jamoVoice` (JV-A2) reads the kind (a final is never asked by name) and the id (the Word Builder finals' pronounced form).
+  Partial<Pick<Jamo, 'id' | 'kind'>>;
 
 export interface SpokenForm {
   text: string;

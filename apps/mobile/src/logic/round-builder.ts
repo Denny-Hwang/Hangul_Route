@@ -48,11 +48,26 @@ function pickPrompts(pool: readonly Jamo[], rounds: number, focusIds: readonly s
 }
 
 /**
- * The letters a Match Sound round may ask by ear: Stage 1's 30. Word Builder's letters
- * (F-CURR-001 section 3.3) are never asked by sound: ㅐ / ㅔ and ㅚ / ㅙ / ㅞ sound alike
- * for most speakers today, and its final letters are said as sounds Stage 1 already has.
+ * The letters a letter question may ask by ear (AMENDMENTS-AUDIO-CLIPS JV-A3 rule 1): Stage 1's
+ * 24 initials and vowels, said by name. Word Builder's letters (F-CURR-001 section 3.3) are never
+ * asked by ear: ㅐ / ㅔ and ㅚ / ㅙ / ㅞ sound alike for most speakers today, and the tense
+ * consonants blur with the plain and aspirated series on most voices.
  */
-export const SOUND_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoAll.map((j) => j.id));
+export const LETTER_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...jamoConsonants, ...jamoVowels].map((j) => j.id));
+
+/**
+ * The finals a sound question may ask by ear (JV-A3 rules 1 and 3): Stage 1's 6, said as their
+ * closed syllable (the final ㄴ says an). A final never shares a letter-question pool. Word Builder's finals are
+ * said as sounds Stage 1 already has, so they are never asked by ear.
+ */
+export const FINAL_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoBatchim.map((j) => j.id));
+
+/**
+ * Every Stage 1 symbol asked by ear: the union of the two sets above.
+ * @deprecated Letters and finals are different questions (JV-A3); use `LETTER_QUIZ_JAMO_IDS` or
+ * `FINAL_QUIZ_JAMO_IDS`. JV-3 moves the lecture quiz off this set and deletes it.
+ */
+export const SOUND_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...LETTER_QUIZ_JAMO_IDS, ...FINAL_QUIZ_JAMO_IDS]);
 
 /**
  * Build a Match Sound minigame: N rounds, each with `tileCount` distinct jamo.

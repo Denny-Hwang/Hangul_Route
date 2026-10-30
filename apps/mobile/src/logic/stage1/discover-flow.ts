@@ -3,6 +3,7 @@ import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
 import type { PromptKind } from '../audio/rate';
+import { jamoVoice } from '../audio/jamo-voice';
 import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
@@ -195,7 +196,8 @@ function symbolItem(
   source: Jamo,
 ): DiscoverItemView {
   const example = exampleIn(item.example, source, jamo);
-  const sound = spokenFor(jamo, 'sound');
+  // The sound question's voice (JV-A2): the Word Builder finals say their pronounced form (M12: a final ㅈ says at).
+  const sound = jamoVoice(jamo, 'sound');
   const romanization = soundValue(jamo.romanization);
   // Vowels already are their own name and the initial ㅇ is spoken by its name, so only a
   // consonant read by its sound gets the second button (F-AUDIO-004 W5, W6).
