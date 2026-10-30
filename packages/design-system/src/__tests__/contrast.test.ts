@@ -99,6 +99,8 @@ describe('token contrast contract (WCAG AA)', () => {
   normalText.push(['text.secondary (RealiaSheet trail-board romanization) on feedback.nudgeLight', colors.text.secondary, colors.feedback.nudgeLight]);
   normalText.push(['text.primary (RealiaSheet found line) on feedback.successLight', colors.text.primary, colors.feedback.successLight]);
   normalText.push(['text.secondary (RealiaSheet found romanization) on feedback.successLight', colors.text.secondary, colors.feedback.successLight]);
+  // RealiaKindSheet (F-CURR-002 CM-47): a forecast card's title and its romanization on the sky board.
+  normalText.push(['text.secondary (realia forecast title romanization) on brand.secondaryLight', colors.text.secondary, colors.brand.secondaryLight]);
   // Muted captions also sit inside brand cards (Card tone="brand").
   normalText.push(['text.muted on brand.primaryLight', colors.text.muted, colors.brand.primaryLight]);
 

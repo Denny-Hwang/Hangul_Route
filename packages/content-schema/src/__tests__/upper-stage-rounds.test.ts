@@ -202,15 +202,27 @@ describe('Realia Read', () => {
 
   // Row G-2 (additive): the sheet's layout, a board's direction, a card's goods, the key word and the answer's entry.
   it('takes an optional kind, entry direction and goods, and rejects unknown values', () => {
-    expect(REALIA_KINDS).toEqual(['menu', 'ticket', 'sign', 'price-card']);
+    expect(REALIA_KINDS.slice(0, 4)).toEqual(['menu', 'ticket', 'sign', 'price-card']);
     expect(ok(RealiaSchema, { ...realia, kind: 'menu' })).toBe(true);
-    expect(ok(RealiaSchema, { ...realia, kind: 'poster' })).toBe(false);
+    expect(ok(RealiaSchema, { ...realia, kind: 'brochure' })).toBe(false);
     const board = { id: 'e2', text: kt('정상', 'jeongsang', 'summit'), dir: 'right' };
     expect(ok(RealiaSchema, { ...realia, kind: 'sign', entries: [board] })).toBe(true);
     expect(ok(RealiaSchema, { ...realia, entries: [{ ...board, dir: 'up' }] })).toBe(false);
     const card = { id: 'e3', text: kt('사과', 'sagwa', 'apple'), goods: 'apples' };
     expect(ok(RealiaSchema, { ...realia, kind: 'price-card', entries: [card] })).toBe(true);
     expect(ok(RealiaSchema, { ...realia, entries: [{ ...card, goods: 'logo' }] })).toBe(false);
+  });
+
+  // Row CM-47 (F-CURR-002 sections 5.2-5.7 and 6.6, additive): eight more layouts, after the four of G-2, in this order.
+  it('takes the eight CM-47 kinds after the four G-2 ones, each with the same entries', () => {
+    const added = ['recipe', 'receipt', 'label', 'forecast', 'calendar', 'timetable', 'map', 'poster'] as const;
+    expect(REALIA_KINDS).toEqual(['menu', 'ticket', 'sign', 'price-card', ...added]);
+    for (const kind of added) {
+      expect(ok(RealiaSchema, { ...realia, kind }), kind).toBe(true);
+      expect(ok(RealiaSchema, { ...realia, kind, title: kt('제목', 'jemok', 'title') }), kind).toBe(true);
+    }
+    expect(ok(RealiaSchema, { ...realia, kind: 'Poster' })).toBe(false);
+    expect(ok(RealiaSchema, { ...realia, kind: '' })).toBe(false);
   });
 
   it('a round takes an optional key word and answer entry', () => {
