@@ -730,7 +730,8 @@ export const learner = {
     /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
     discover: {
       hearIt: { cta: 'Hear it' },
-      letterName: { cta: 'Letter name' },
+      /** A consonant page's second button: the letter's sound on a vowel (ㄴ said 나); the taught line under it is content. */
+      soundWith: { cta: 'Hear it with a vowel' },
       /** Shown for a button whose audio could not play; `spoken` is a romanization. */
       sayLine: (spoken: string) => `Say it out loud: ${spoken}`,
       showHowToSay: { cta: 'Show how to say it' },
@@ -958,8 +959,15 @@ export const learner = {
     readHere: 'No sound? Read it here.',
     /** The Match Sound heading: listening, or reading the sound as text. */
     heading: { listen: 'Tap the letter you hear', text: 'Tap the letter for this sound' },
-    /** Hoya after a miss; the spoken syllable and its romanization follow as taught content. */
+    /** Hoya after a miss on a sound question; the spoken syllable and its romanization follow as taught content. */
     listenAgain: 'Listen again. This one says',
+    /** Hoya after a miss on a letter question (AMENDMENTS-AUDIO-CLIPS JV-A4); the letter's name and its romanization follow as taught content. */
+    listenAgainLetter: 'Listen again. This letter is',
+    /**
+     * A final consonant and the closed syllable it is heard in (JV-A1): `letter` is the final (ㄴ), `syllable` the
+     * syllable with its romanization (안 · an). Both arrive as taught content.
+     */
+    finalLine: (letter: string, syllable: string) => `${letter} at the bottom: ${syllable}`,
     hearIt: { cta: 'Hear it' },
     tapToHear: 'Tap to hear',
     tapToReplay: 'Tap to replay',
@@ -2305,7 +2313,8 @@ export const learner = {
     slide: {
       /** Read before the teacher's deck title on the first slide. */
       deckTitle: 'Lesson',
-      letterName: (name: string) => `Letter name: ${name}`,
+      /** `name` is the romanized letter name (nieun); `hangul` the name in Hangul, which only the Korean line shows. */
+      letterName: (name: string, _hangul: string) => `Letter name: ${name}`,
       /** Until a native speaker reviews the letter's strokes (section 3.6). */
       strokeCaption: 'Simplified stroke guide',
       /** The teacher-says text when the room cannot hear the Korean (section 3.7, PR 9). */

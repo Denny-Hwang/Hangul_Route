@@ -43,7 +43,7 @@ import {
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
-import { shuffleOptions, validRounds } from '../../logic/listen-pick';
+import { roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
@@ -137,7 +137,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
       }
       case 'answer': {
         const round = roundsRef.current[effect.roundKey];
-        hostRef.current.answer(effect.roundKey, effect.correct, round ? { itemId: round.id } : undefined);
+        // The Hangul Check names the item a symbol round credits (`itemId`, M7); any other round credits its own id.
+        hostRef.current.answer(effect.roundKey, effect.correct, round ? { itemId: roundItemId(round) } : undefined);
         return;
       }
       case 'haptic':

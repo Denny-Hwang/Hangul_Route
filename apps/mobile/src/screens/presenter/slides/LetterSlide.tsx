@@ -10,6 +10,7 @@ import type { Slide } from '../../../logic/lecture/deck-builder';
 import { STROKE_DOT_RADIUS, STROKE_DOT_RING, STROKE_LINE, STROKE_PANEL, STROKE_VIEWBOX, SVG_UI_FONT, units } from '../../../logic/lecture/stage-constants';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { buildStrokeDiagram } from '../../../logic/stroke-diagram';
+import { voiceLine } from '../../../logic/audio/jamo-lines';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 import { SayIt } from './SayIt';
 import { SpeakerButton } from './SpeakerButton';
@@ -19,9 +20,14 @@ type LetterBody = Extract<Slide, { kind: 'letter' }>;
 /**
  * Letter slide in three columns (design/screens/presenter/slide-letter.md, README D4): the glyph
  * in the presenter font with its romanization; the stroke guide panel (`StrokeHint` at 360 units
- * over the still numbered diagram, "Simplified stroke guide" until reviewed); then the sound row,
+ * over the still numbered diagram, "Simplified stroke guide" until reviewed); then the speaker row,
  * the letter name and sound hint, and the example word. A build that is not reached keeps its
  * space, so nothing shifts when it appears.
+ *
+ * AMENDMENTS-AUDIO-CLIPS JV-A1 / JV-A4: the main speaker says an initial's or a vowel's name (니은),
+ * and a consonant whose sound differs has a second speaker for its sound on a vowel (나 = ㄴ + ㅏ),
+ * beside the letter-name line. A final has one speaker, its closed syllable (안), and shows the
+ * `finalLine` (ㄴ at the bottom: 안 · an) instead of a letter name.
  */
 export function LetterSlide({
   slide,
@@ -29,6 +35,7 @@ export function LetterSlide({
   strokeToken,
   sayIt = false,
   onPlaySound,
+  onPlayLetterSound,
 }: {
   slide: LetterBody;
   /** The builds on screen (build 0 to the current reveal). */
@@ -38,6 +45,8 @@ export function LetterSlide({
   /** The room cannot hear the Korean: the sound row becomes the "Say it:" box (section 3.7, PR 9). */
   sayIt?: boolean;
   onPlaySound: () => void;
+  /** The second speaker: the consonant's sound on a vowel (`slide.sound`). */
+  onPlayLetterSound?: () => void;
 }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
@@ -48,6 +57,7 @@ export function LetterSlide({
   const reveal = (on: boolean) => ({ opacity: on ? 1 : 0 });
   const promptSize = size(presenter.size.prompt);
   const bodySize = size(presenter.size.body);
+  const shownSpoken = slide.spokenShown ?? slide.spoken.text;
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP) }}>
       <View style={{ alignItems: 'center', flexShrink: 0 }} accessibilityElementsHidden={!shown.has('ko')}>
@@ -71,19 +81,36 @@ export function LetterSlide({
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
         {sayIt ? (
           <View style={reveal(shown.has('sound'))}>
-            <SayIt spoken={slide.spoken} {...(slide.ipa !== undefined ? { ipa: slide.ipa } : {})} />
+            <SayIt spoken={{ ...slide.spoken, text: shownSpoken }} {...(slide.ipa !== undefined ? { ipa: slide.ipa } : {})} />
           </View>
         ) : (
         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.xl) }, reveal(shown.has('sound'))]}>
           <SpeakerButton enabled={shown.has('sound')} onPress={onPlaySound} />
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
-            <TaughtKo size={promptSize}>{slide.spoken.text}</TaughtKo>
+            <TaughtKo size={promptSize}>{shownSpoken}</TaughtKo>
             <Text {...KOREAN_LINE_BREAK} style={{ fontSize: promptSize, fontWeight: typography.weight.bold, color: colors.text.secondary }}>{slide.spoken.romanization}</Text>
           </View>
         </View>
         )}
         <View style={[{ gap: units(unit, spacing.md) }, reveal(shown.has('name'))]}>
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>{m.slide.letterName(slide.nameEn)}</Text>
+          {slide.final ? (
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-final-line" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+              {messages.learner.audio.finalLine(slide.char, voiceLine({ shown: shownSpoken, romanization: slide.spoken.romanization }))}
+            </Text>
+          ) : (
+            <Text {...KOREAN_LINE_BREAK} testID="presenter-letter-name" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+              {m.slide.letterName(slide.nameEn, slide.nameKo ?? slide.spoken.text)}
+            </Text>
+          )}
+          {slide.sound !== undefined ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.lg), flexWrap: 'wrap' }}>
+              {sayIt || onPlayLetterSound === undefined ? null : <SpeakerButton testID="presenter-letter-sound" enabled={shown.has('name')} onPress={onPlayLetterSound} />}
+              <View accessibilityLabel={koreanTextLabel(slide.sound.line, slide.sound.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
+                <TaughtKo size={bodySize}>{slide.sound.line}</TaughtKo>
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{slide.sound.romanization}</Text>
+              </View>
+            </View>
+          ) : null}
           {slide.soundHint !== undefined ? (
             <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, color: colors.text.secondary, lineHeight: Math.round(bodySize * typography.leading.normal) }}>{slide.soundHint}</Text>
           ) : null}

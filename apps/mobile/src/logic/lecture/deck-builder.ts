@@ -26,7 +26,10 @@ import {
   type UiLocale,
   type WriteFrameRound,
 } from '@hangul-route/content-schema';
-import { spokenFor, type SpokenForm } from '../audio/spoken';
+import { loneLetterVoice } from '../audio/jamo-lines';
+import { jamoVoice } from '../audio/jamo-voice';
+import type { SpokenForm } from '../audio/spoken';
+import { decompose } from '../stage1/hangul';
 import { koTokenParts } from '../ko-tokens';
 import { validRounds } from '../listen-pick';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
@@ -200,6 +203,37 @@ function spokenOf(text: SpeakableKo): SpokenForm {
 }
 
 const wordVoice = (text: SpeakableKo, speech: WordVoice['speech'] = 'word'): WordVoice => ({ spoken: spokenOf(text), speech });
+
+const spokenForm = (text: string, romanization: string, audioRef: string | undefined): SpokenForm =>
+  audioRef === undefined ? { text, romanization } : { text, romanization, audioRef };
+
+/**
+ * A letter slide's voices (AMENDMENTS-AUDIO-CLIPS JV-A1, JV-A4, section 6.1). A final (`kind: 'batchim'`) is
+ * branched on before any name is asked for: one speaker plays its closed syllable and the slide shows the
+ * `finalLine`, never a letter name (a final's name is its initial's). An initial or a vowel plays its name on
+ * the main speaker; a consonant whose sound differs (ㄴ: 니은, then 나) gets a second speaker with its sound
+ * and the taught line "나 = ㄴ + ㅏ".
+ */
+function letterVoices(jamo: Jamo): Pick<Extract<SlideBody, { kind: 'letter' }>, 'spoken' | 'spokenShown' | 'nameKo' | 'sound' | 'final'> {
+  if (jamo.kind === 'batchim') {
+    const voice = jamoVoice(jamo, 'sound');
+    return {
+      spoken: spokenForm(voice.text, voice.romanization, voice.audioRef),
+      ...(voice.shown !== voice.text ? { spokenShown: voice.shown } : {}),
+      final: true,
+    };
+  }
+  const name = jamoVoice(jamo, 'letter');
+  const sound = jamo.kind === 'consonant' ? jamoVoice(jamo, 'sound') : undefined;
+  const carrier = sound && sound.text !== name.text ? decompose(sound.text) : null;
+  return {
+    spoken: spokenForm(name.text, name.romanization, name.audioRef),
+    nameKo: name.text,
+    ...(sound && carrier
+      ? { sound: { ...spokenForm(sound.text, sound.romanization, sound.audioRef), line: `${sound.shown} = ${carrier.initial} + ${carrier.medial}` } }
+      : {}),
+  };
+}
 
 /** Taught Korean on a reading slide: the Korean, its romanization, its gloss and what Sound says. */
 const spokenLine = (text: KoText): SpokenLine => ({ ko: text.ko, romanization: text.romanization, gloss: text.en, spoken: spokenOf(text) });
@@ -427,7 +461,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       nameEn: jamo.nameEn,
       ...(jamo.ipa !== undefined ? { ipa: jamo.ipa } : {}),
       ...(jamo.soundHint !== undefined ? { soundHint: jamo.soundHint } : {}),
-      spoken: spokenFor(jamo, 'sound'),
+      ...letterVoices(jamo),
       ...(example ? { example } : {}),
       hasStrokes: bundle.hasStrokes(jamo.id),
       strokeReviewed: bundle.strokeReviewed(jamo.id),
@@ -444,6 +478,12 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   const jamoOption = (jamo: Jamo, correct: boolean): QuizOption => ({ ko: jamo.char, romanization: jamo.romanization, correct });
 
+  /** A Match Sound round's prompt (JV-A1): a letter by its name, a final by its closed syllable. */
+  const promptSpoken = (jamo: Jamo): SpokenForm => {
+    const voice = loneLetterVoice(jamo);
+    return spokenForm(voice.text, voice.romanization, voice.audioRef);
+  };
+
   /** Runs a round builder; one that throws on a small scope becomes a counted skip. */
   const attempt = <T>(ref: string, build: () => T): T | null => {
     try {
@@ -458,7 +498,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     attempt(ref, build)?.forEach((round, i) =>
       push(`${path}/q${i + 1}`, {
         kind: 'quiz',
-        prompt: { ask: 'sound', spoken: spokenFor(round.promptJamo, 'sound') },
+        prompt: { ask: 'sound', spoken: promptSpoken(round.promptJamo) },
         options: round.tiles.map((t) => jamoOption(t, t.id === round.promptJamo.id)),
         textPrompt,
       }),

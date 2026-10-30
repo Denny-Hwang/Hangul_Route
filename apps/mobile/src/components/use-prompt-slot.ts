@@ -20,7 +20,7 @@ import { useAudioStore } from '../store/audio-store';
  */
 export interface PromptSlot {
   view: PromptPanelView;
-  /** Run a play (`playJamo(...)` / `playPrompt(...)`) and feed its result to the slot. */
+  /** Run a play (`playJamo` or `playPrompt`) and feed its result to the slot. */
   play: (run: () => Promise<PlayResult>) => Promise<PlayResult>;
   /** New round: forget the text and any play still in flight. */
   reset: () => void;

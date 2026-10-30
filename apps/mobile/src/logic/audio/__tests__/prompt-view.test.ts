@@ -1,5 +1,6 @@
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { jamoAll } from '../../../content/jamo';
 import type { AudioCapability } from '../capability';
 import { INITIAL_PROMPT_STATE, promptReducer, type PromptEvent, type PromptState } from '../prompt-state';
 import {
@@ -197,13 +198,19 @@ describe('failureFromStore', () => {
   });
 });
 
-describe('wrongAnswerBubble', () => {
-  it('says the spoken syllable and its romanization, never the letter name', () => {
-    expect(wrongAnswerBubble({ text: '가', romanization: 'ga' }, COPY)).toEqual({
-      message: 'Listen again. This one says',
-      korean: '가',
-      romanization: 'ga',
-    });
+describe('wrongAnswerBubble (AMENDMENTS-AUDIO-CLIPS JV-A4)', () => {
+  const jamo = (id: string) => jamoAll.find((j) => j.id === id)!;
+
+  it('a letter question names the letter: 니은 · nieun for ㄴ, never the syllable 나', () => {
+    expect(wrongAnswerBubble(jamo('jamo:nieun'), COPY)).toEqual({ message: 'Listen again. This letter is', korean: '니은', romanization: 'nieun' });
+    expect(wrongAnswerBubble(jamo('jamo:ieung'), COPY)).toEqual({ message: 'Listen again. This letter is', korean: '이응', romanization: 'ieung' });
+    // A vowel's name is its sound.
+    expect(wrongAnswerBubble(jamo('jamo:a'), COPY)).toEqual({ message: 'Listen again. This letter is', korean: '아', romanization: 'a' });
+  });
+
+  it('a final, asked by its sound, shows the finalLine: the final and its closed syllable with its romanization', () => {
+    expect(wrongAnswerBubble(jamo('jamo:nieun-batchim'), COPY)).toEqual({ message: 'ㄴ at the bottom: 안 · an' });
+    expect(getMessages('ko').learner.audio.finalLine('ㄴ', '안 · an')).toBe('받침 ㄴ: 안 · an');
   });
 });
 
@@ -219,6 +226,6 @@ describe('promptPanelView takes its words as a parameter (F-I18N-001 §3.4 rule 
     expect(muted.speakerCaption).toBe(pseudoText('Tap to replay'));
     const noVoice = promptPanelViewWith(INITIAL_PROMPT_STATE, noneCap, false, false, pseudo);
     expect(noVoice.helpLabel).toBe(pseudoText('How to add a voice'));
-    expect(wrongAnswerBubble({ text: '가', romanization: 'ga' }, pseudo).message).toBe(pseudoText('Listen again. This one says'));
+    expect(wrongAnswerBubble(jamoAll.find((j) => j.id === 'jamo:giyeok')!, pseudo).message).toBe(pseudoText('Listen again. This letter is'));
   });
 });

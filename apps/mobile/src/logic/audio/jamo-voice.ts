@@ -12,7 +12,11 @@ import { spokenFor, type SpokenJamo } from './spoken';
  */
 export type JamoQuestion = 'letter' | 'sound';
 
-/** The old `playJamo(jamo, mode)` name mode, kept for callers until JV-2 migrates them. */
+/**
+ * The old `playJamo(jamo, mode)` name mode.
+ * @deprecated Pass the question instead (`'letter'` or `'sound'`). No caller on `main` uses it since JV-2; it
+ * stays only for the open Match Shape PR (#865), which is asked to adopt `jamoVoice`, and is deleted after it.
+ */
 export type LegacyJamoMode = 'name';
 
 export interface JamoVoice {
@@ -95,6 +99,7 @@ export function jamoVoice(jamo: SpokenJamo, question: JamoQuestion): JamoVoice {
 }
 
 /**
+ * @deprecated The adapter for `LegacyJamoMode` (see there).
  * The question an old `playJamo(jamo, mode)` call means: `'sound'` and the default are sound
  * questions; the legacy `'name'` is a letter question for a consonant or a vowel and keeps its
  * old fallback (the sound) on a final or a record with no name.

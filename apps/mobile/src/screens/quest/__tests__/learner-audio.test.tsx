@@ -107,6 +107,41 @@ describe('DiscoverStep: a Hear it the browser drops (blocked)', () => {
   });
 });
 
+describe('DiscoverStep: a lone letter is heard by its name first (AMENDMENTS-AUDIO-CLIPS JV-A5)', () => {
+  const page: DiscoverPage = {
+    items: [
+      { type: 'jamo', jamoId: 'jamo:nieun', example: { ko: '나무', romanization: 'namu', en: 'tree' } },
+      { type: 'jamo', jamoId: 'jamo:nieun-batchim', example: { ko: '문', romanization: 'mun', en: 'door' } },
+    ],
+  };
+  const settle = async (): Promise<void> => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+  };
+
+  it('ㄴ: Hear it says 니은 (shown 니은 · nieun); Hear it with a vowel says 나 under 나 = ㄴ + ㅏ · na; the final shows its line', async () => {
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<DiscoverStep pages={[page]} onDone={() => undefined} />);
+    mounted.push(r);
+    const spokenLine = textOf(byTestId(r.root, 'discover-spoken-jamo:nieun')[0]!);
+    expect(spokenLine).toContain('니은');
+    expect(spokenLine).toContain('nieun');
+    const card = textOf(byTestId(r.root, 'discover-item-jamo:nieun')[0] ?? r.root);
+    expect(card).toContain('나 = ㄴ + ㅏ');
+    expect(buttonsNamed(r.root, getMessages('en').learner.quest.discover.soundWith.cta).length).toBeGreaterThan(0);
+    expect(textOf(byTestId(r.root, 'discover-final-line-jamo:nieun-batchim')[0]!)).toBe('ㄴ at the bottom: 안 · an');
+
+    await press(pressable(r.root, 'discover-hear-jamo:nieun|sound'));
+    await settle();
+    await press(pressable(r.root, 'discover-hear-jamo:nieun|vowel'));
+    await settle();
+    await press(pressable(r.root, 'discover-hear-jamo:nieun-batchim|sound'));
+    await settle();
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['니은', '나', '안']);
+  });
+});
+
 const episodeOf = (questId: string): string => episodesAll.find((e) => e.questIds.includes(questId))?.id ?? 'episode:none';
 
 describe('QuestPlayerView: a new step stops the voice', () => {

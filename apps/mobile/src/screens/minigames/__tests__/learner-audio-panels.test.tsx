@@ -291,6 +291,32 @@ describe('Trace Stroke: the compact row', () => {
   });
 });
 
+describe('Trace Stroke says the letter (AMENDMENTS-AUDIO-CLIPS M11)', () => {
+  it('an initial or a vowel by its name (ㅁ 미음, ㅇ 이응), with no final line', async () => {
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<TraceStrokeGame scope={{ kind: 'trace-stroke', jamoIds: ['jamo:mieum'], rounds: 1 }} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    await settle();
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['미음']);
+    expect(byTestId(r.root, 'trace-stroke-final-line')).toHaveLength(0);
+  });
+
+  it('a final by its closed syllable, shown with the finalLine (ㅁ at the bottom: 암 · am)', async () => {
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<TraceStrokeGame scope={{ kind: 'trace-stroke', jamoIds: ['jamo:mieum-batchim'], rounds: 1 }} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    await settle();
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['암']);
+    expect(textOf(byTestId(r.root, 'trace-stroke-final-line')[0]!)).toBe('ㅁ at the bottom: 암 · am');
+    const [showMe] = buttonsNamed(r.root, getMessages('en').learner.minigame.trace.showMe.cta);
+    await press(showMe!);
+    await settle();
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['암', '암']);
+  });
+});
+
 describe('Trace a Word: the compact row waits for the stroke to end', () => {
   const scope: MinigameScope = { kind: 'trace-word', rounds: 1, traceWord: { rounds: [{ id: 'hoya', word: { ko: '호야', romanization: 'hoya', en: 'Hoya' } }] } };
 

@@ -3,8 +3,8 @@ import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
 import type { PromptKind } from '../audio/rate';
+import { loneLetterVoice, voiceLine } from '../audio/jamo-lines';
 import { jamoVoice } from '../audio/jamo-voice';
-import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
 import { localizeJamo } from '../content-locale';
 import { decompose, symbolsOf } from './hangul';
@@ -15,9 +15,10 @@ import { decompose, symbolsOf } from './hangul';
  * plays the audio it asks for (the test lanes cannot render components, §5).
  *
  * Rules in one place: pages show one or two new things; nothing autoplays;
- * Hear it plays a symbol's SOUND (the letter name is a second, optional
- * button); unavailable or muted audio switches that item to a "say it out
- * loud" text line and changes nothing else; Continue is enabled at once and
+ * Hear it says a lone letter by its NAME (ㄴ is 니은, a vowel its sound, a final
+ * its closed syllable; AMENDMENTS-AUDIO-CLIPS JV-A5), and a consonant's second,
+ * optional button says its sound on a vowel (나); unavailable or muted audio
+ * switches that item to a "say it out loud" text line and changes nothing else; Continue is enabled at once and
  * never waits for a Hear it; an item that cannot be resolved is skipped, and
  * a step with nothing left still has a Continue.
  */
@@ -33,7 +34,7 @@ export const DISCOVER_AUDIO_SOURCE = 'discover';
 
 /** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
 export interface HearAction {
-  /** Stable per button: `<item key>|sound`, `|name` or `|example`. */
+  /** Stable per button: `<item key>|sound` (the main Hear it), `|vowel` (Hear it with a vowel) or `|example`. */
   id: string;
   spec: { text: string; audioRef?: string };
   /**
@@ -73,11 +74,22 @@ export interface DiscoverItemView {
   gloss?: string;
   accessibilityLabel: string;
   soundHint?: string;
-  /** The main Hear it button: a symbol's sound, or the word. */
+  /** The main Hear it button: a letter's name (니은), a final's closed syllable (악), or the word. */
   hear: HearAction;
-  /** What the voice says for `hear`, as romanization (`ga` for ㄱ, `ak` for the final ㄱ). */
+  /** What the voice says for `hear`, as romanization (`giyeok` for ㄱ, `ak` for the final ㄱ). */
   spokenRomanization: string;
-  letterName?: { action: HearAction; ko: string; romanization: string };
+  /** An initial or a vowel: what Hear it says, shown under it with its romanization (D2): 니은 · nieun, 아 · a. */
+  spokenLine?: { ko: string; romanization: string };
+  /**
+   * A final: the `learner.audio.finalLine` parts, the final and the closed syllable Hear it says, shown as
+   * spelled with the pronounced romanization (ㄱ, 악 · ak; ㅈ, 앚 · at).
+   */
+  finalLine?: { letter: string; syllable: string };
+  /**
+   * A consonant's second button, Hear it with a vowel (JV-A5): its sound on the carrier vowel (나), with
+   * the taught line `ko` "나 = ㄴ + ㅏ" and its romanization, drawn as content.
+   */
+  soundWith?: { action: HearAction; ko: string; romanization: string };
   block?: DiscoverBlockView;
   batchimLine?: string;
   example?: DiscoverExampleView;
@@ -196,13 +208,15 @@ function symbolItem(
   source: Jamo,
 ): DiscoverItemView {
   const example = exampleIn(item.example, source, jamo);
-  // The sound question's voice (JV-A2): the Word Builder finals say their pronounced form (M12, 앚 -> 앋).
-  const sound = jamoVoice(jamo, 'sound');
+  // A lone letter on screen is first heard by its name (JV-A5): ㄴ is 니은, a vowel its sound, ㅇ 이응. A final is
+  // never said by name: Hear it says its closed syllable, and the Word Builder finals their pronounced form (M12, 앚 -> 앋).
+  const main = loneLetterVoice(jamo);
+  const final = jamo.kind === 'batchim';
   const romanization = soundValue(jamo.romanization);
-  // Vowels already are their own name and the initial ㅇ is spoken by its name, so only a
-  // consonant read by its sound gets the second button (F-AUDIO-004 W5, W6).
-  const hasName = jamo.kind === 'consonant' && jamo.spokenKind === 'sound' && jamo.nameKo !== undefined;
-  const name = hasName ? spokenFor(jamo, 'name') : undefined;
+  // Only a consonant whose sound differs from its name gets the second button: a vowel's name is its sound,
+  // and the initial ㅇ has no sound of its own (F-AUDIO-004 W5, W6).
+  const sound = jamo.kind === 'consonant' ? jamoVoice(jamo, 'sound') : undefined;
+  const carrier = sound && sound.text !== main.text ? decompose(sound.text) : undefined;
   return {
     key,
     kind: 'symbol',
@@ -210,9 +224,18 @@ function symbolItem(
     romanization,
     accessibilityLabel: symbolLabel(jamo, romanization, a11y),
     ...(jamo.soundHint ? { soundHint: jamo.soundHint } : {}),
-    hear: hear(`${key}|sound`, sound.text, sound.audioRef, 'sound'),
-    spokenRomanization: sound.romanization,
-    ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef, 'sound'), ko: name.text, romanization: name.romanization } } : {}),
+    hear: hear(`${key}|sound`, main.text, main.audioRef, 'sound'),
+    spokenRomanization: main.romanization,
+    ...(final ? { finalLine: { letter: jamo.char, syllable: voiceLine(main) } } : { spokenLine: { ko: main.shown, romanization: main.romanization } }),
+    ...(sound && carrier
+      ? {
+          soundWith: {
+            action: hear(`${key}|vowel`, sound.text, sound.audioRef, 'sound'),
+            ko: `${sound.shown} = ${carrier.initial} + ${carrier.medial}`,
+            romanization: sound.romanization,
+          },
+        }
+      : {}),
     ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
@@ -479,8 +502,6 @@ export interface DiscoverItemRender {
   heard: boolean;
   /** "Say it out loud: ga" lines for a button whose audio could not play. */
   sayLines: string[];
-  /** The letter name was asked for, so it shows as text. */
-  nameShown: boolean;
   /** `false` hides only the example's romanization (reading practice). */
   exampleRomanizationShown: boolean;
   /** The "Show how to say it" tap is offered. */
@@ -534,7 +555,7 @@ export function pageRender(
     return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, isLast: true, continueEnabled: true };
   }
   const items = page.items.map((item, index): DiscoverItemRender => {
-    const ids = [item.hear.id, item.letterName?.action.id, item.example?.hear.id];
+    const ids = [item.hear.id, item.soundWith?.action.id, item.example?.hear.id];
     const sayLines: string[] = [];
     if (state.text.includes(item.hear.id)) sayLines.push(copy.sayLine(item.spokenRomanization));
     if (item.example && state.text.includes(item.example.hear.id)) {
@@ -545,7 +566,6 @@ export function pageRender(
       item,
       heard: ids.some((id) => id !== undefined && state.played.includes(id)),
       sayLines,
-      nameShown: item.letterName !== undefined && state.tapped.includes(item.letterName.action.id),
       exampleRomanizationShown: shown,
       showReveal: !shown && item.example !== undefined,
       pulse: index === 0 && page.exchange === undefined,

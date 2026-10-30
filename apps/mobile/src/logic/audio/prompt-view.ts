@@ -7,7 +7,8 @@ import {
   type FallbackReason,
   type PromptState,
 } from './prompt-state';
-import type { SpokenForm } from './spoken';
+import { finalLine, loneLetterQuestion, loneLetterVoice } from './jamo-lines';
+import type { SpokenJamo } from './spoken';
 
 /**
  * What the shared prompt panel shows for one prompt slot (F-AUDIO-004 §3.8,
@@ -102,11 +103,18 @@ export function failureFromStore(last: { reason: FallbackReason; at: number } | 
 
 export interface WrongAnswerBubble {
   message: string;
-  korean: string;
-  romanization: string;
+  /** The spoken form, as taught content; absent when `message` already holds it (a final's `finalLine`). */
+  korean?: string;
+  romanization?: string;
 }
 
-/** F-001 §3.2 (revised): the bubble repeats the sound that was played, as the spoken syllable and its romanization. */
-export function wrongAnswerBubble(spoken: Pick<SpokenForm, 'text' | 'romanization'>, copy: AudioCopy): WrongAnswerBubble {
-  return { message: copy.listenAgain, korean: spoken.text, romanization: spoken.romanization };
+/**
+ * F-001 §3.2 (revised by AMENDMENTS-AUDIO-CLIPS JV-A4): the bubble repeats what was said. A letter
+ * question names the letter ("Listen again. This letter is" 니은 · nieun); a final, asked by its
+ * sound, shows the `finalLine` ("ㄴ at the bottom: 안 · an").
+ */
+export function wrongAnswerBubble(jamo: SpokenJamo, copy: AudioCopy): WrongAnswerBubble {
+  if (loneLetterQuestion(jamo) === 'sound') return { message: finalLine(jamo, copy) };
+  const voice = loneLetterVoice(jamo);
+  return { message: copy.listenAgainLetter, korean: voice.text, romanization: voice.romanization };
 }

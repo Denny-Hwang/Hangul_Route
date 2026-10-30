@@ -545,6 +545,17 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
 }
 
 /**
+ * A letter slide's second speaker (AMENDMENTS-AUDIO-CLIPS JV-A4): a consonant's sound on a vowel (나), at
+ * the sound rate; `undefined` on any other slide and on a letter whose name is its sound (a vowel, ㅇ) or
+ * a final (one speaker, its closed syllable).
+ */
+export function letterSecondSound(slide: Slide | undefined): SlideSound | undefined {
+  if (slide?.kind !== 'letter' || slide.sound === undefined) return undefined;
+  const { line: _line, ...spoken } = slide.sound;
+  return { spoken, kind: 'sound' };
+}
+
+/**
  * A write-together slide's sound (LV-S4): the Korean on screen, never ahead of it. A type prompt has
  * none until its answer (the learner's Type Hangul plays nothing before the learner types either),
  * then the target; a trace its word, at the word rate, as the learner's Trace a Word plays its block;

@@ -70,7 +70,7 @@ import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 interface CardSlot {
   play: PromptSlot['play'];
 }
-/** The card an action id belongs to: `<item key>|sound`, `|name`, `|example` or `|line<n>`. */
+/** The card an action id belongs to: `<item key>|sound`, `|vowel`, `|example` or `|line<n>`. */
 const cardKeyOf = (actionId: string): string => actionId.split('|')[0] ?? actionId;
 
 interface Props {
@@ -95,7 +95,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props
     for (const page of model.pages) {
       for (const item of page.items) {
         map.set(item.hear.id, item.hear);
-        if (item.letterName) map.set(item.letterName.action.id, item.letterName.action);
+        if (item.soundWith) map.set(item.soundWith.action.id, item.soundWith.action);
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
       for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
@@ -403,7 +403,8 @@ function DiscoverItemCard({
   divided?: boolean;
 }): ReactElement {
   const { item } = render;
-  const slot = useCardSlot(item.key, [item.hear, item.letterName?.action, item.example?.hear], audio);
+  const audioCopy = useMessages().learner.audio;
+  const slot = useCardSlot(item.key, [item.hear, item.soundWith?.action, item.example?.hear], audio);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -451,19 +452,30 @@ function DiscoverItemCard({
         dispatch={dispatch}
       />
 
-      {item.letterName ? (
+      {/* What Hear it says, with its romanization (AMENDMENTS-AUDIO-CLIPS JV-A5, D2): 니은 · nieun; a final its closed syllable. */}
+      {item.spokenLine ? (
+        <View testID={`discover-spoken-${item.key}`}>
+          <KoreanText ko={item.spokenLine.ko} romanization={item.spokenLine.romanization} size="sm" />
+        </View>
+      ) : null}
+      {item.finalLine ? (
+        <Body tone="secondary" align="center" testID={`discover-final-line-${item.key}`}>
+          {audioCopy.finalLine(item.finalLine.letter, item.finalLine.syllable)}
+        </Body>
+      ) : null}
+
+      {item.soundWith ? (
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <HearButton
-            action={item.letterName.action}
-            label={copy.letterName.cta}
-            accessibilityLabel={copy.letterName.cta}
+            action={item.soundWith.action}
+            label={copy.soundWith.cta}
+            accessibilityLabel={copy.soundWith.cta}
             size="md"
             tone="ghost"
             dispatch={dispatch}
           />
-          {render.nameShown ? (
-            <KoreanText ko={item.letterName.ko} romanization={item.letterName.romanization} size="sm" />
-          ) : null}
+          {/* The taught line "나 = ㄴ + ㅏ · na" is content, never inside the UI string. */}
+          <KoreanText ko={item.soundWith.ko} romanization={item.soundWith.romanization} size="sm" />
         </View>
       ) : null}
 
