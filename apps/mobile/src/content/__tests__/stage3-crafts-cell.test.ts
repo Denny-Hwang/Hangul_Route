@@ -203,8 +203,9 @@ describe('Game Sentences (F-CURR-001 S3-5)', () => {
   it('is ready with both multi-agent review sign-offs (section 3.8)', () => {
     expect(CELL.status).toBe('ready');
     expect([CELL.review.language, CELL.review.culture, CELL.review.reviewedBy]).toEqual(['native-reviewed', 'culture-reviewed', 'MAR']);
-    // Row CM-3A S3 adds the Check rotation MAR (three notes: the rotation, then its passes) to the two sign-off notes.
-    expect(CELL.review.notes).toHaveLength(5);
+    // Row CM-3A S3 adds the Check rotation MAR (three notes: the rotation, then its passes) to the two sign-off notes,
+    // and its review fix one more (the reason for the ko Dictation prompts' 써 봐요).
+    expect(CELL.review.notes).toHaveLength(6);
     expect(CELL.review.notes?.[2]).toMatch(/^Check rotation MAR \(row CM-3A S3/);
   });
 });
