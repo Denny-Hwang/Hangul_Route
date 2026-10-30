@@ -5,6 +5,7 @@ import { ThemeKeySchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
 import { storyQuests } from '../../content/stories';
+import { volumeEpisodes } from '../../content/episodes';
 import {
   gridQuestProgress,
   isCellComplete,
@@ -208,8 +209,11 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
     // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done.
     const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
+    // A cell's later volume adds no count to Home (F-CURR-002 row CM-40): its quests are kept, off the route's list.
+    const later = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    expect(later.size).toBeGreaterThan(0);
     expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(
-      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id)).length,
+      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id) && !later.has(q.id)).length,
     );
   });
 
