@@ -123,8 +123,9 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
   const snap = finished(108);
   const seed = deriveSeed(input(snap));
 
-  it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
+  it('holds every first-volume lesson quest of the catalogue (the Volume 2 quests of row CM-43 S6 follow them)', () => {
+    expect(LESSON_QUESTS).toHaveLength(111);
+    expect(LESSON_QUESTS.slice(108).map((q) => q.episodeId)).toEqual(Array(3).fill('episode:stage6-life-v2'));
     expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
   });
 
@@ -136,8 +137,10 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
     expect(days.size).toBe(seed.spreadDays);
     const last = [...days.keys()].sort().at(-1) as string;
     expect(daysBetween(SEED_DAY, last)).toBe(seed.spreadDays);
-    // Every taught lesson item that is not a topic word or retired is seeded.
-    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some((c) => c.startsWith('episode:')));
+    // Every taught lesson item that is not a topic word or retired is seeded; an item only the Volume 2 teaches (row
+    // CM-43 S6) waits for that volume, which the fixture leaves undone.
+    const firstVolume = (c: string): boolean => c.startsWith('episode:') && !c.endsWith('-v2');
+    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some(firstVolume));
     expect(seed.count).toBe(expected.length);
     expect(seed.spreadDays).toBeLessThanOrEqual(62);
   });

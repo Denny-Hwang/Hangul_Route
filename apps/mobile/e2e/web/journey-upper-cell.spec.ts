@@ -4,7 +4,8 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { expectNoHorizontalOverflow } from './viewport';
 import { shot } from './shots';
 
 /**
@@ -1189,8 +1190,15 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
+/**
+ * A cell's Volume 2 is a later episode of the manifest (F-CURR-002 row CM-40), reached from its cell's page with
+ * `volumes` on; it has its own play below (row CM-43 S6), so the grid list holds first volumes.
+ */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+const LATER_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
+
 /** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1217,7 +1225,9 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
+    // Every Volume 2 of the manifest has its own play (the describe below).
+    expect(LATER_VOLUMES.map((e) => e.id)).toEqual([...VOLUME2_PLAYS.keys()]);
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
@@ -1288,5 +1298,93 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     }
     await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     expect(errors).toEqual([]);
+  });
+});
+
+/**
+ * F-CURR-002 row CM-43 S6: Stage 6 Food Volume 2, "Recipe, Receipt & Label", at its launch state. `volumes` is at its
+ * built-in pct 0 (the row merges dark), so the Volume 2 case turns it on through the stored remote copy, as a ramp
+ * would; every `game.<kind>` stays at pct 0, so the Apply's Cloze Pick plays as Listen & Pick with a text prompt and the
+ * card above it, and the Dictation Check as Type Hangul see rounds. The realia sit beside the option cards at 320 px.
+ */
+const VOLUME2_PLAYS = new Map<string, (page: Page) => Promise<void>>([
+  [
+    'episode:stage6-life-v2',
+    async (page) => {
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Practice: Realia Read on the recipe card (CM-47 kind `recipe`).
+      await expect(page.getByTestId('realia-read-question')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `cm43-s6-q1-recipe-${page.viewportSize()?.width === 320 ? '320' : 'wide'}`);
+      await pickRealia(page, ['du-gonggi', 'se-gae', 'du-jang', 'oi']);
+      // Apply: Cloze Pick on the card's values, played as its Listen & Pick fallback with game.cloze-pick dark.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `cm43-s6-q1-cloze-fallback-${page.viewportSize()?.width === 320 ? '320' : 'wide'}`);
+      await pickByIds(page, ['a1:t2', 'a2:t0', 'a3:t1']);
+      // Check: Dictation of 김 and 오이, played as see rounds with game.type-hangul-hear dark.
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      for (const word of ['김', '오이']) {
+        await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
+        await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
+        await typeAnswer(page, word);
+      }
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+  ],
+]);
+
+/** A new learner whose stored remote copy holds `flags` (the `volumes` ramp), on the Journey. */
+async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+test.describe('Volume 2 cells (F-CURR-002 rows CM-40 and CM-43)', () => {
+  for (const [label, size] of [
+    ['320', { width: 320, height: 720 }],
+    ['wide', { width: 1280, height: 900 }],
+  ] as const) {
+    for (const episode of LATER_VOLUMES) {
+      test(`${label}: ${episode.id} opens from its cell's Vol 2 tab with volumes on, and its first quest plays to the reward`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.setViewportSize(size);
+        await journeyWithFlags(page, { volumes: { on: true, pct: 100 } });
+        const stage = Number(episode.stage.replace('stage', ''));
+        await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+        const tabs = page.getByRole('tablist', { name: 'Volumes' });
+        await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+        await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+        if (label === '320') await expectNoHorizontalOverflow(page);
+        await VOLUME2_PLAYS.get(episode.id)?.(page);
+        expect(errors).toEqual([]);
+      });
+    }
+  }
+
+  test('volumes off (launch state): the cell opens Volume 1 alone, with no Vol tabs and no Volume 2 title', async ({ page }) => {
+    await journeyWithFlags(page, {});
+    for (const episode of LATER_VOLUMES) {
+      const stage = Number(episode.stage.replace('stage', ''));
+      await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+      await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+      await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+    }
   });
 });
