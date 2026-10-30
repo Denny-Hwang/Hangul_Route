@@ -331,7 +331,11 @@ export const SCREEN_CHUNKS = Object.freeze([
  * (`src/screens/minigames/scenes/scene-<key>.ts`), reached only through the literal `import()`s of
  * `src/screens/minigames/hidden-heritage-scenes.ts`, each held to `sceneChunkRaw`. Each module exports its marker (`SCENE_CHUNK`).
  */
-export const SCENE_CHUNKS = Object.freeze([Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' })]);
+export const SCENE_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' }),
+  // F-CURR-002 row CM-37 part 1: the Letters school room.
+  Object.freeze({ name: 'scene-letters-school', marker: 'scene-chunk:letters-school' }),
+]);
 
 /**
  * Problems with the marked chunks of one web build (the locale chunks and the grown-up roots; empty = sound): each

@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { seedStored } from './helpers';
+import { seedStored, seedStoredAll } from './helpers';
+import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -29,15 +30,15 @@ const TARGETS: Record<string, { id: string; meaning: string }> = {
   젓가락: { id: 'jeotgarak', meaning: 'chopsticks' },
 };
 
-type E2eWindow = Window & { __hrHiddenHeritageE2E?: { open(p: { missing?: boolean }): void; log(): { answers: Array<{ key: string; correct: boolean }>; completed: number } } };
+type E2eWindow = Window & { __hrHiddenHeritageE2E?: { open(p: { missing?: boolean; sceneId?: string }): void; log(): { answers: Array<{ key: string; correct: boolean }>; completed: number } } };
 
-async function open(page: Page, gameOn: boolean, missing = false): Promise<void> {
+async function open(page: Page, gameOn: boolean, missing = false, sceneId?: string): Promise<void> {
   await page.goto('/');
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: gameOn, pct: gameOn ? 100 : 0 } } });
   await page.reload();
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
-  await page.evaluate((m) => (window as E2eWindow).__hrHiddenHeritageE2E?.open({ missing: m }), missing);
+  await page.evaluate(([m, id]) => (window as E2eWindow).__hrHiddenHeritageE2E?.open({ missing: m as boolean, ...(id ? { sceneId: id as string } : {}) }), [missing, sceneId ?? ''] as const);
 }
 
 const spot = (page: Page, id: string) => page.getByTestId(`hh-spot-${id}`);
@@ -166,6 +167,95 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
       await open(page, true, true);
       for (const t of Object.values(TARGETS)) await expect(page.getByTestId(`pic-word-picture-${t.id}`)).toBeVisible();
       await expect(page.getByTestId('hh-scene')).toHaveCount(0);
+    });
+  });
+});
+
+/** F-CURR-002 row CM-37 part 1: the Letters school room scene, opened through the same e2e hook. */
+const LETTERS = 'scene:letters-school';
+const LETTERS_THINGS = ['mountain', 'bird', 'book', 'brush', 'tree', 'flower'];
+const LETTERS_TARGETS: Record<string, { id: string; meaning: string }> = {
+  책: { id: 'chaek', meaning: 'book' },
+  붓: { id: 'but', meaning: 'brush' },
+  나무: { id: 'namu', meaning: 'tree' },
+};
+
+test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test('at 320: a Korean Letters word with romanization; six named spots of 54 dp or more; every find fills a slot', async ({ page }) => {
+    await open(page, true, false, LETTERS);
+    await expect(page.getByTestId('hh-scene')).toBeVisible();
+    const first = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
+    expect(Object.keys(LETTERS_TARGETS)).toContain(first);
+    await expect(page.getByTestId('hh-prompt')).toContainText(LETTERS_TARGETS[first]!.id);
+    for (const name of LETTERS_THINGS) {
+      const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+      expect(Math.min(box.width, box.height), name).toBeGreaterThanOrEqual(53);
+    }
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'hidden-heritage-letters-ask-320');
+    for (let i = 0; i < 3; i += 1) {
+      const ko = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
+      await spot(page, LETTERS_TARGETS[ko]!.id).click();
+      await expect(page.getByRole('button', { name: `${LETTERS_TARGETS[ko]!.meaning}, found` })).toBeVisible();
+      // State, not sleeps: the next word comes once the meaning has shown (FOUND_ADVANCE_MS).
+      if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
+    }
+    await expect(page.getByText('You found them all')).toBeVisible();
+    await expectNoShame(page);
+    await shot(page, 'hidden-heritage-letters-end-320');
+    expect((await log(page)).answers.map((a) => a.correct)).toEqual([true, true, true]);
+    await page.getByTestId('hh-continue').click();
+    await expect.poll(async () => (await log(page)).completed).toBe(1);
+  });
+
+  test('at 320, game.hidden-heritage off: Pic-Word Match on 책, 붓 and 나무 from their own pictures', async ({ page }) => {
+    await open(page, false, false, LETTERS);
+    for (const t of Object.values(LETTERS_TARGETS)) await expect(page.getByTestId(`pic-word-picture-${t.id}`)).toBeVisible();
+    await expect(page.getByTestId('hh-scene')).toHaveCount(0);
+  });
+
+  test('at 320 with the Largest text size: the word, its romanization and the end panel fit, with no sideways scroll or clipped text', async ({ page }) => {
+    await page.goto('/');
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: true, pct: 100 } } },
+      'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' },
+    });
+    await page.reload();
+    await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
+    await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
+    await page.evaluate((id) => (window as E2eWindow).__hrHiddenHeritageE2E?.open({ sceneId: id }), LETTERS);
+    await expect(page.getByTestId('hh-scene')).toBeVisible();
+    await expect(page.getByTestId('hh-prompt')).toBeVisible();
+    await expectNoSidewaysScroll(page, 'Letters ask, Largest');
+    await expectNoClippedText(page, 'Letters ask, Largest');
+    for (let i = 0; i < 3; i += 1) {
+      const ko = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
+      await spot(page, LETTERS_TARGETS[ko]!.id).click();
+      await expect(page.getByRole('button', { name: `${LETTERS_TARGETS[ko]!.meaning}, found` })).toBeVisible();
+      if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
+    }
+    await expect(page.getByText('You found them all')).toBeVisible();
+    await page.getByTestId('hh-continue').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('hh-continue')).toBeVisible();
+    await expectNoSidewaysScroll(page, 'Letters end, Largest');
+    await expectNoClippedText(page, 'Letters end, Largest');
+  });
+
+  test.describe('at 768', () => {
+    test.use({ viewport: { width: 768, height: 1024 } });
+
+    test('the same six named spots, each 135 dp or more, and no sideways scroll', async ({ page }) => {
+      await open(page, true, false, LETTERS);
+      await expect(page.getByTestId('hh-scene')).toBeVisible();
+      for (const name of LETTERS_THINGS) {
+        const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+        expect(Math.min(box.width, box.height), name).toBeGreaterThanOrEqual(134);
+      }
+      await expectNoHorizontalOverflow(page);
+      await shot(page, 'hidden-heritage-letters-ask-768');
     });
   });
 });

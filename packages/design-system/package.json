@@ -27,6 +27,7 @@
     "./src/components/HeritageCardArt/UpperCellArt": "./src/components/HeritageCardArt/UpperCellArt.tsx",
     "./src/scene-art/hidden-heritage/types": "./src/scene-art/hidden-heritage/types.ts",
     "./src/scene-art/hidden-heritage/food-market": "./src/scene-art/hidden-heritage/food-market.ts",
+    "./src/scene-art/hidden-heritage/letters-school": "./src/scene-art/hidden-heritage/letters-school.ts",
     "./src/scene-art/hidden-heritage/profile": "./src/scene-art/hidden-heritage/profile.ts",
     "./src/components/ShapeOriginArt/ShapeOriginArt": "./src/components/ShapeOriginArt/ShapeOriginArt.tsx",
     "./src/scene-art/shape-origin-registry": "./src/scene-art/shape-origin-registry.ts",

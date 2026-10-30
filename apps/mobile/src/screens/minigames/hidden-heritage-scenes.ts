@@ -8,6 +8,7 @@ import type { HiddenHeritageScene } from '@hangul-route/design-system/src/scene-
  */
 const LOADERS: Readonly<Record<string, () => Promise<{ scene: HiddenHeritageScene }>>> = {
   'scene:food-market': () => import('./scenes/scene-food-market'),
+  'scene:letters-school': () => import('./scenes/scene-letters-school'),
 };
 
 const cache = new Map<string, HiddenHeritageScene>();

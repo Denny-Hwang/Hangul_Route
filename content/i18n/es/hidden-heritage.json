@@ -1,0 +1,20 @@
+{
+  "locale": "es",
+  "domain": "hidden-heritage",
+  "entries": {
+    "scene:letters-school": {
+      "art.alt": "Un aula de antes, con una puerta abierta al patio.",
+      "round.alt": "Un aula de antes, con una puerta abierta al patio.",
+      "round.targets.chaek.word.gloss": "libro",
+      "round.targets.but.word.gloss": "pincel",
+      "round.targets.namu.word.gloss": "árbol",
+      "round.others.san.word.gloss": "montaña",
+      "round.others.sae.word.gloss": "pájaro",
+      "round.others.kkot.word.gloss": "flor",
+      "note.subject": "Un seodang, una escuela privada de antes, uno de los temas de la pintura costumbrista de Joseon: una mesa baja, libros cosidos y un pincel de escritura.",
+      "note.facts.f1.claim": "Danwon pungsokdocheop, un álbum de pinturas costumbristas de Joseon del Museo Nacional de Corea, muestra el trabajo y los juegos de la vida diaria; su primera pintura es Seodang (el aula).",
+      "note.facts.f2.claim": "Un seodang era un lugar donde, en tiempos pasados, se enseñaba chino clásico de forma privada.",
+      "note.facts.f3.claim": "Un pincel de escritura suele tener pelo de animal en la punta de un mango fino de bambú o de madera; se moja en tinta o en pintura."
+    }
+  }
+}
