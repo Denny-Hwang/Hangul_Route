@@ -688,3 +688,53 @@ export function isInsideDir(dir, root) {
   const r = norm(root);
   return d === r || d.startsWith(`${r}/`);
 }
+
+/**
+ * The MP3 bitrates `process-recordings.mjs --bitrate` accepts (AMENDMENTS-AUDIO-CLIPS AC-B5 step 3, AU-OD-7):
+ * 64 kbps at 44.1 kHz for jamo clips (F-AUDIO-004 §3.11, the default), 48 kbps for the text-keyed `say` group.
+ * 48 implies 24 kHz: a 24 kHz master stays 24 kHz (MPEG-2 Layer III, which iOS 14 Safari and AVFoundation decode).
+ */
+export const MP3_BITRATES = Object.freeze({ 64: 44100, 48: 24000 });
+export const DEFAULT_MP3_BITRATE = 64;
+
+/** `--bitrate` as a number of kbps; throws on anything else. */
+export function parseBitrate(value) {
+  if (value === undefined) return DEFAULT_MP3_BITRATE;
+  const kbps = /^\d+$/.test(String(value)) ? Number(value) : NaN;
+  if (!Object.prototype.hasOwnProperty.call(MP3_BITRATES, kbps)) {
+    throw new Error(`--bitrate must be ${Object.keys(MP3_BITRATES).sort((a, b) => b - a).join(' or ')} (kbps), not ${value}`);
+  }
+  return kbps;
+}
+
+/**
+ * The bitrates each `process-recordings.mjs --group` accepts, its default first (AU-OD-7): jamo and vocab clips are
+ * 64 kbps at 44.1 kHz only; the text-keyed `say` group is 48 kbps at 24 kHz, or 64 kbps if the pilot listen recorded
+ * in AMENDMENTS-AUDIO-CLIPS section 13 finds 48 kbps not good enough (AC-B5 step 3).
+ */
+export const GROUP_BITRATES = Object.freeze({ jamo: [64], vocab: [64], say: [48, 64] });
+export const RECORDING_GROUPS = Object.freeze(Object.keys(GROUP_BITRATES));
+
+/** A group's MP3 bitrate from `--bitrate` (undefined: the group's default); throws on one the group does not take. */
+export function groupBitrate(group, value) {
+  const allowed = GROUP_BITRATES[group];
+  if (allowed === undefined) throw new Error(`--group must be ${RECORDING_GROUPS.join(', ')}, not ${group}`);
+  if (value === undefined) return allowed[0];
+  const kbps = parseBitrate(value);
+  if (!allowed.includes(kbps)) {
+    throw new Error(`--group ${group} is encoded at ${allowed.join(' or ')} kbps (AU-OD-7), not ${kbps}`);
+  }
+  return kbps;
+}
+
+/** The file ids of the text-keyed `say` group: the keys of the clip manifest's `audio/say/` rows (AC-B4). */
+export function sayRecordingIds(manifest) {
+  return (manifest?.rows ?? []).filter((r) => String(r.ref).startsWith('audio/say/')).map((r) => r.key);
+}
+
+/** The ffmpeg output arguments of the final MP3 encode: mono CBR at the bitrate's sample rate, no metadata. */
+export function mp3EncodeArgs(kbps = DEFAULT_MP3_BITRATE) {
+  const sampleRate = MP3_BITRATES[kbps];
+  if (sampleRate === undefined) throw new Error(`no sample rate for ${kbps} kbps`);
+  return ['-ar', String(sampleRate), '-ac', '1', '-c:a', 'libmp3lame', '-b:a', `${kbps}k`, '-map_metadata', '-1', '-id3v2_version', '0'];
+}

@@ -156,3 +156,12 @@ export function planRecording(
   opts: { names?: boolean; allowExtra?: boolean },
 ): { action: 'process' } | { action: 'skip'; reason: string };
 export function isInsideDir(dir: string, root: string): boolean;
+
+export const MP3_BITRATES: Readonly<Record<64 | 48, number>>;
+export const DEFAULT_MP3_BITRATE: 64;
+export function parseBitrate(value: string | undefined): 64 | 48;
+export function mp3EncodeArgs(kbps?: 64 | 48): string[];
+export const GROUP_BITRATES: Readonly<{ jamo: readonly 64[]; vocab: readonly 64[]; say: readonly (48 | 64)[] }>;
+export const RECORDING_GROUPS: readonly ('jamo' | 'vocab' | 'say')[];
+export function groupBitrate(group: string, value: string | undefined): 64 | 48;
+export function sayRecordingIds(manifest: { rows?: Array<{ ref: string; key: string }> } | null | undefined): string[];
