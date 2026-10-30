@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { seedStored } from './helpers';
+import { seedStored, seedStoredAll } from './helpers';
+import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -214,6 +215,33 @@ test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () 
     await open(page, false, false, LETTERS);
     for (const t of Object.values(LETTERS_TARGETS)) await expect(page.getByTestId(`pic-word-picture-${t.id}`)).toBeVisible();
     await expect(page.getByTestId('hh-scene')).toHaveCount(0);
+  });
+
+  test('at 320 with the Largest text size: the word, its romanization and the end panel fit, with no sideways scroll or clipped text', async ({ page }) => {
+    await page.goto('/');
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: true, pct: 100 } } },
+      'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' },
+    });
+    await page.reload();
+    await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
+    await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
+    await page.evaluate((id) => (window as E2eWindow).__hrHiddenHeritageE2E?.open({ sceneId: id }), LETTERS);
+    await expect(page.getByTestId('hh-scene')).toBeVisible();
+    await expect(page.getByTestId('hh-prompt')).toBeVisible();
+    await expectNoSidewaysScroll(page, 'Letters ask, Largest');
+    await expectNoClippedText(page, 'Letters ask, Largest');
+    for (let i = 0; i < 3; i += 1) {
+      const ko = (await page.getByTestId('hh-prompt').innerText()).split('\n')[0]!.trim();
+      await spot(page, LETTERS_TARGETS[ko]!.id).click();
+      await expect(page.getByRole('button', { name: `${LETTERS_TARGETS[ko]!.meaning}, found` })).toBeVisible();
+      if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
+    }
+    await expect(page.getByText('You found them all')).toBeVisible();
+    await page.getByTestId('hh-continue').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('hh-continue')).toBeVisible();
+    await expectNoSidewaysScroll(page, 'Letters end, Largest');
+    await expectNoClippedText(page, 'Letters end, Largest');
   });
 
   test.describe('at 768', () => {

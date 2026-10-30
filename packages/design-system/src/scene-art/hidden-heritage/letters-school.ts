@@ -9,8 +9,9 @@ import type { HiddenHeritageScene } from './types';
  * of flowers. It copies, traces or follows no painting: genre painting is its subject only (style guide rule 1). No
  * person, Hoya or writing is drawn; the books' title slips are blank.
  *
- * The targets are taught Letters words with a bundled picture each, for the Pic-Word Match fallback (책 `card:book`,
- * 붓 `card:brush`, 나무 `word:nature-tree`), among 산, 새 and 꽃, also taught in the Letters cells. The es and ko text of
+ * The targets are word pairs of the Stage 2 Letters cell with a bundled picture each, for the Pic-Word Match fallback
+ * (책 `card:book`, 붓 `card:brush`, 나무 `word:nature-tree`), among 산, 새 and 꽃: 새 and 꽃 are Letters word pairs too, and
+ * 산 a Stage 2 Nature word pair (a wrong option in the Letters cell). The es and ko text of
  * every English string here is in `content/i18n/<locale>/hidden-heritage.json` (entity `scene:letters-school`).
  *
  * Its chunk (this module) is held to 25,000 B (§10 ceilings table; `hidden-heritage.test.ts`). Eight colours, none of the
@@ -172,7 +173,7 @@ export const LETTERS_SCHOOL_SCENE: HiddenHeritageScene = {
     id: 'hh1',
     sceneId: 'scene:letters-school',
     altEn: 'A school room of earlier times, with a door open to the yard.',
-    // Stage 2 Letters words with a bundled picture each, for the Pic-Word Match fallback.
+    // Stage 2 Letters word pairs with a bundled picture each, for the Pic-Word Match fallback.
     targets: [
       { id: 'chaek', word: word('책', 'chaek', 'book'), spot: { x: 14, y: 160, w: 86, h: 84 }, picture: 'card:book' },
       { id: 'but', word: word('붓', 'but', 'brush'), spot: { x: 112, y: 160, w: 84, h: 84 }, picture: 'card:brush' },

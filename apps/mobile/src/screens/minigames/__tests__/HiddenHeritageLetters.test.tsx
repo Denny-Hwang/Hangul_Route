@@ -66,19 +66,44 @@ async function draw(width = 320, contentWidth = 288): Promise<ReactTestInstance>
 const spots = (root: ReactTestInstance): ReactTestInstance[] =>
   root.findAll((n) => n.type === Pressable && typeof n.props.testID === 'string' && n.props.testID.startsWith('hh-spot-'));
 
-/** Every `{ ko, romanization, en }` taught in a Letters cell file (content/episodes/stage-<n>/letters.json). */
-function lettersWords(): Array<{ ko: string; romanization: string; en: string }> {
-  const out: Array<{ ko: string; romanization: string; en: string }> = [];
-  const walk = (node: unknown): void => {
-    if (Array.isArray(node)) return node.forEach(walk);
-    if (node === null || typeof node !== 'object') return;
-    const rec = node as Record<string, unknown>;
-    if (typeof rec.ko === 'string' && typeof rec.romanization === 'string' && typeof rec.en === 'string') out.push({ ko: rec.ko, romanization: rec.romanization, en: rec.en });
-    Object.values(rec).forEach(walk);
+type Word = { ko: string; romanization: string; en: string };
+
+/**
+ * The words a Stage 2 cell file (content/episodes/stage-2/<cell>.json) teaches: the `word` of a word pair or a discover
+ * item, and the entries of a card-pair list. Option texts, prompts and examples are left out, so a word that is only a
+ * wrong option or an example in a cell does not count as taught there.
+ */
+function stage2Taught(cells: readonly string[]): Word[] {
+  const out: Word[] = [];
+  const isWord = (n: unknown): n is Word => {
+    const r = n as Record<string, unknown> | null;
+    return r !== null && typeof r === 'object' && typeof r.ko === 'string' && typeof r.romanization === 'string' && typeof r.en === 'string';
   };
-  for (const stage of [2, 3, 4, 6, 7]) walk(JSON.parse(readFileSync(new URL(`../../../../../../content/episodes/stage-${stage}/letters.json`, import.meta.url), 'utf8')));
+  const walk = (node: unknown, key: string): void => {
+    if (Array.isArray(node)) {
+      for (const el of node) {
+        if ((key === 'pairs' || key === 'cardPairs') && isWord(el)) out.push(el);
+        walk(el, '');
+      }
+      return;
+    }
+    if (node === null || typeof node !== 'object') return;
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if (k === 'word' && isWord(v)) out.push(v);
+      if (k === 'options' || k === 'example' || k === 'prompt') continue;
+      walk(v, k);
+    }
+  };
+  const dir = new URL('../../../../../../content/episodes/stage-2/', import.meta.url);
+  for (const cell of cells) walk(JSON.parse(readFileSync(new URL(`${cell}.json`, dir), 'utf8')), '');
   return out;
 }
+
+const STAGE2_CELLS = readdirSync(new URL('../../../../../../content/episodes/stage-2/', import.meta.url))
+  .filter((n) => n.endsWith('.json'))
+  .map((n) => n.replace(/\.json$/, ''));
+
+const sameWord = (a: Word, b: Word): boolean => a.ko === b.ko && a.romanization === b.romanization && a.en === b.en;
 
 /** Every entry of the reviewed overlay files of a locale (content/i18n/<locale>/*.json), lesson overlays included. */
 /** Only the Stage 2 lesson cells and the minigame rounds teach these words in a word pair with a reviewed gloss. */
@@ -112,12 +137,18 @@ describe('the Letters school room scene (row CM-37 part 1)', () => {
     await expect(scenes.loadScene('scene:letters-school')).resolves.toBe(SCENE);
   });
 
-  it('every thing is a taught Letters word, its romanization the F-CNT-002 converter output (rr.ts)', () => {
-    const taught = lettersWords();
-    for (const thing of THINGS) {
-      expect(thing.word.romanization, thing.id).toBe(romanizeWord(thing.word.ko));
-      expect(taught.some((w) => w.ko === thing.word.ko && w.romanization === thing.word.romanization && w.en === thing.word.en), thing.word.ko).toBe(true);
-    }
+  it('every target is a word pair taught in the Stage 2 Letters cell, every other thing a word taught in Stage 2, with the rr.ts romanization', () => {
+    const letters = stage2Taught(['letters']);
+    const stage2 = stage2Taught(STAGE2_CELLS);
+    for (const thing of THINGS) expect(thing.word.romanization, thing.id).toBe(romanizeWord(thing.word.ko));
+    for (const t of ROUND.targets) expect(letters.some((w) => sameWord(w, t.word)), t.word.ko).toBe(true);
+    for (const o of ROUND.others) expect(stage2.some((w) => sameWord(w, o.word)), o.word.ko).toBe(true);
+  });
+
+  it('the taught-word check counts no option text: 산 is only a wrong option in the Letters cell, a word pair in Nature', () => {
+    const san = ROUND.others.find((o) => o.id === 'san')!.word;
+    expect(stage2Taught(['letters']).some((w) => sameWord(w, san))).toBe(false);
+    expect(stage2Taught(['nature']).some((w) => sameWord(w, san))).toBe(true);
   });
 
   it('every target names a bundled picture the fallback draws (never the text tile)', () => {
