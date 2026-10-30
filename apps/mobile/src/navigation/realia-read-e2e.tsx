@@ -3,15 +3,11 @@ import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
-import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
 import { LessonWaiting } from '../screens/lesson-content';
-import { minigameFinishedEvent } from '../logic/minigame-finished';
-import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
-import type { HostMode, MinigameHost } from '../screens/minigames/host';
-import { RealiaReadGame } from '../screens/minigames/RealiaReadGame';
-import { REALIA_FIXTURES, type RealiaFixtureKey } from './realia-read-e2e-fixture';
+import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
+import type { HostMode } from '../screens/minigames/host';
+import type { RealiaFixtureKey } from './realia-read-e2e-fixture';
 import type { RealiaKindFixtureKey } from './realia-kinds-e2e-fixture';
-import type { MinigameScope } from '../logic/minigame-config';
 import type { RootStackParamList } from './types';
 
 /**
@@ -36,10 +32,9 @@ export interface RealiaE2eHandle {
   events(): TelemetryEvent[];
 }
 
-/** The quest id the e2e host reports in `minigame.finished` (no lesson cell plays Realia Read yet). */
-const E2E_QUEST_ID = 'quest:stage6-e2e-realia-read';
-
-const log: { answers: Array<{ key: string; correct: boolean }>; completed: number } = { answers: [], completed: 0 };
+/** What the e2e host saw since the screen opened (the screen module, `./realia-read-e2e-screen.tsx`, writes it). */
+export const e2eLog: { answers: Array<{ key: string; correct: boolean }>; completed: number } = { answers: [], completed: 0 };
+const log = e2eLog;
 
 export function RealiaE2eHook(): null {
   const navigation = useNavigation();
@@ -62,43 +57,19 @@ export function RealiaE2eHook(): null {
   return null;
 }
 
+type Body = typeof import('./realia-read-e2e-screen');
 type Props = NativeStackScreenProps<RootStackParamList, 'RealiaReadE2e'>;
 
-/** The scope of a fixture: a G-2 one at once, a CM-47 one once its module is in (null before). */
-function useFixture(fixture: RealiaReadE2eParams['fixture']): MinigameScope | null {
-  const g2 = Object.prototype.hasOwnProperty.call(REALIA_FIXTURES, fixture) ? REALIA_FIXTURES[fixture as RealiaFixtureKey] : null;
-  const [added, setAdded] = useState<MinigameScope | null>(null);
+/**
+ * The screen itself (its game host and the fixtures of every kind) is a chunk of its own (`./realia-read-e2e-screen.tsx`),
+ * reached only through the literal `import()` below, so a release start bundle carries only this hook (row CM-47).
+ */
+export function RealiaReadE2eScreen(props: Props): ReactElement {
+  const [body, setBody] = useState<Body | null>(null);
   useEffect(() => {
-    if (g2) return;
-    let live = true;
-    void import('./realia-kinds-e2e-fixture').then((m) => live && setAdded(m.REALIA_KIND_FIXTURES[fixture as RealiaKindFixtureKey]));
-    return () => {
-      live = false;
-    };
-  }, [g2, fixture]);
-  return g2 ?? added;
-}
-
-export function RealiaReadE2eScreen({ route, navigation }: Props): ReactElement {
-  const { fixture, mode = 'quest', romanization = 'always' } = route.params;
-  const scope = useFixture(fixture);
-  useEffect(() => {
-    log.answers = [];
-    log.completed = 0;
-  }, [route.params]);
-  const host: MinigameHost = {
-    mode,
-    answer: (key, correct) => log.answers.push({ key: String(key), correct }),
-    complete: () => {
-      log.completed += 1;
-      // The event MinigameScreen sends when a lesson step of this game closes, so the e2e checks its payload.
-      void track(minigameFinishedEvent('realia-read', E2E_QUEST_ID, 0));
-    },
-  };
-  if (scope === null) return <LessonWaiting />;
-  return (
-    <RomanizationModeOverride mode={romanization}>
-      <RealiaReadGame scope={scope} host={host} onBack={() => navigation.goBack()} />
-    </RomanizationModeOverride>
-  );
+    void import('./realia-read-e2e-screen').then(setBody);
+  }, []);
+  if (body === null) return <LessonWaiting />;
+  const { RealiaReadE2eBody } = body;
+  return <RealiaReadE2eBody {...props} />;
 }

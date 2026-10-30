@@ -3,8 +3,8 @@ import type { MinigameScope } from '../logic/minigame-config';
 
 /**
  * One Realia Read scope per realia kind of F-CURR-002 row CM-47 (a recipe card, a receipt, a food label, a weather
- * forecast, a calendar, a timetable, a map and a poster), for the fixture build's e2e entry (`realia-read-e2e.tsx`, which
- * reaches this module only through its literal `import()`, so a release start bundle never carries it) and the unit
+ * forecast, a calendar, a timetable, a map and a poster), for the fixture build's e2e screen (`realia-read-e2e-screen.tsx`, a
+ * chunk `realia-read-e2e.tsx` reaches only through its literal `import()`, so a release start bundle never carries it) and the unit
  * tests. The words are fixture words: no lesson cell plays them (Volume 2 Stage 6 and the packs' L4 bring their own).
  * Prices are round practice amounts in won inside the drawn sheet only (OD-11); each question uses one number system.
  */
