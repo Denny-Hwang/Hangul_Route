@@ -550,3 +550,64 @@ describe('release guard: no es/ko ship while TypeScript-resident content lacks i
     expect(missingContent('ko').filter((row) => row.startsWith('jamo:'))).toEqual([]);
   });
 });
+
+/**
+ * Row CM-3A S4 review: a Cloze Pick round shows its meaning in the UI language as the prompt, and no translation shows
+ * the answer before the tap (row CM-30). A Korean meaning is Hangul, so it describes the answer without naming it: a word
+ * gap's answer tile, a particle gap's word with its particle, and a particle Sentence Builder round's word with its
+ * particle never appear in the round's es or ko meaning. Stage 4 is held to it here; the older stages are follow-ups.
+ */
+function meaningsThatGiveAway(scopes: Readonly<Record<string, MinigameScope>>, overlays: Overlays): string[] {
+  const out: string[] = [];
+  for (const [id, scope] of Object.entries(scopes)) {
+    for (const locale of ['es', 'ko'] as const) {
+      const fields = (overlays[locale][id] ?? {}) as Readonly<Record<string, string>>;
+      for (const round of scope.clozePick?.rounds ?? []) {
+        const gloss = fields[`clozePick.rounds.${round.id}.sentence.gloss`];
+        const answer = round.tiles[round.answerIndex]?.ko;
+        if (gloss === undefined || answer === undefined || round.gapKind === 'value') continue;
+        const word = round.gapKind === 'particle' ? (/(\S*)___/.exec(round.sentence.ko)?.[1] ?? '') : '';
+        if (gloss.includes(word + answer)) out.push(`${locale} ${id} ${round.id}: "${gloss}" shows ${word + answer}`);
+      }
+      for (const round of scope.orderIt?.rounds ?? []) {
+        const gloss = fields[`orderIt.rounds.${round.id}.sentence.gloss`];
+        const tile = round.particle ? round.sentence.ko.split(' ')[round.particle.tile]?.replace(/[.?!]+$/, '') : undefined;
+        if (gloss !== undefined && tile !== undefined && gloss.includes(tile)) out.push(`${locale} ${id} ${round.id}: "${gloss}" shows ${tile}`);
+      }
+    }
+  }
+  return out;
+}
+
+describe('a round meaning never shows the answer before the tap (row CM-3A S4, row CM-30)', () => {
+  it('Stage 4: no es or ko Cloze Pick or particle Sentence Builder meaning spells its answer', () => {
+    const stage4 = LESSON_STAGE_MODULES[4];
+    const clozeRounds = Object.values(stage4.LESSON_SCOPES).flatMap((s) => s.clozePick?.rounds ?? []);
+    expect(clozeRounds.length).toBeGreaterThanOrEqual(20);
+    expect(meaningsThatGiveAway(stage4.LESSON_SCOPES, stage4.LESSON_SCOPE_OVERLAYS)).toEqual([]);
+  });
+
+  it('reports a word gap, a particle gap and a particle tile named in the meaning', () => {
+    const scope = {
+      kind: 'cloze-pick',
+      rounds: 2,
+      clozePick: {
+        rounds: [
+          { id: 'w', sentence: { ko: '___가 어때요?', romanization: '___ga eottaeyo', en: 'How is the kimchi?' }, tiles: [{ ko: '김치', romanization: 'gimchi', en: 'kimchi' }, { ko: '우유', romanization: 'uyu', en: 'milk' }], answerIndex: 0 },
+          { id: 'p', gapKind: 'particle', sentence: { ko: '사과___ 어때요?', romanization: 'sagwa___ eottaeyo', en: 'How is the apple?' }, tiles: [{ ko: '이', romanization: 'i', en: 'i' }, { ko: '가', romanization: 'ga', en: 'ga' }], answerIndex: 1 },
+        ],
+      },
+      orderIt: { rounds: [{ id: 'o', sentence: { ko: '국이 뜨거워요?', romanization: 'gugi tteugeowoyo', en: 'Is the soup hot?' }, distractors: [], particle: { tile: 0, choices: [{ ko: '이', romanization: 'i', en: 'i' }, { ko: '가', romanization: 'ga', en: 'ga' }] } }] },
+    } as unknown as MinigameScope;
+    const ko = (w: string, p: string, o: string): Overlays => ({
+      es: {},
+      ko: { 'minigame:x': { 'clozePick.rounds.w.sentence.gloss': w, 'clozePick.rounds.p.sentence.gloss': p, 'orderIt.rounds.o.sentence.gloss': o } },
+    });
+    expect(meaningsThatGiveAway({ 'minigame:x': scope }, ko('채소를 절여 만든 한국 음식이 어떤지 묻는 말', '빨갛고 둥근 과일이 어떤지 묻는 말', '국물 음식이 뜨거운지 묻는 말'))).toEqual([]);
+    expect(meaningsThatGiveAway({ 'minigame:x': scope }, ko('김치가 어떤지 묻는 말', '사과가 어떤지 묻는 말', '국이 뜨거운지 묻는 말'))).toEqual([
+      'ko minigame:x w: "김치가 어떤지 묻는 말" shows 김치',
+      'ko minigame:x p: "사과가 어떤지 묻는 말" shows 사과가',
+      'ko minigame:x o: "국이 뜨거운지 묻는 말" shows 국이',
+    ]);
+  });
+});
