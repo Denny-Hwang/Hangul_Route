@@ -120,6 +120,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 1,276,097 B gzip (release `build:web`); row CM-3A S4 on it (content in the lesson chunks, the Role Play case of the
   // scaffold) adds 67 B, and with CM-35's review fixes (83b6ffa43) the stack measures 4,783,492 B raw / 1,276,171 B gzip.
   // The line is that measurement plus a 6,508 B margin.
+  // F-CURR-002 CM-3A S2 (stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, all open) adds 1,623 B (Read Pick Meaning
+  // in Listen & Pick, the lecture and memory mapping, the Check header and room of Type Hangul and Pic-Word Match, the
+  // optional label overlay field): 4,785,010 B raw / 1,276,601 B gzip with its five parents, under the same line.
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -288,9 +291,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
   // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
   Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
-  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
-  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
-  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
+  // F-CURR-002 row CM-35: the Role Play game and the fixture build's host screen
+  // (`src/screens/minigames/role-play/role-play-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/role-play/role-play-entry.tsx`).
   Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
   // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of

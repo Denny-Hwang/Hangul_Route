@@ -91,9 +91,21 @@ describe('every quest with the switches off (section 14)', () => {
     expect(scopes.length).toBeGreaterThan(100);
   });
 
+  it('the shipped Stage 2 Dictation Checks (row CM-3A S2): 7 steps, 14 hear rounds, each a see round with the switch off', () => {
+    const dictation = scopes.filter(({ at, scope }) => at.startsWith('quest:stage2-') && (scope.typeHangul?.rounds ?? []).some((r) => typeHangulMode(r) === 'hear'));
+    expect(dictation).toHaveLength(7);
+    expect(dictation.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(14);
+    for (const { at, scope } of dictation) {
+      expect(needsDictationChunk(scope), at).toBe(true);
+      const off = applyGameSwitches(scope, ALL_OFF);
+      expect(off.typeHangul!.rounds.map((r) => typeHangulMode(r)), at).toEqual(['see', 'see']);
+    }
+  });
+
   it('renders as shipped rounds only: no Dictation or spelling round is left, and every round still parses', () => {
-    // No shipped quest has a Dictation or spelling round yet, so each scope is also checked written as one: the off
-    // path then has something to turn (the render loop in screens/minigames/__tests__/switched-step.test.tsx mounts them).
+    // The seven Stage 2 Dictation Checks (row CM-3A S2) are shipped hear rounds; no shipped quest has a spelling round
+    // yet, and each scope is also checked written as one, so the off path has more to turn (the render loop in
+    // screens/minigames/__tests__/switched-step.test.tsx mounts them).
     const written = scopes.flatMap(({ at, scope }) => {
       const variants = [{ at, scope }];
       if (scope.typeHangul) variants.push({ at: `${at} (as Dictation)`, scope: { ...scope, typeHangul: { rounds: scope.typeHangul.rounds.map((r) => ({ ...r, mode: 'hear' as const })) } } });

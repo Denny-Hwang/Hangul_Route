@@ -37,7 +37,7 @@
       "steps.s2.title": "Palabras de frutas y meriendas",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Arma la palabra",
-      "steps.s5.title": "Escucha y escribe",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras de merienda!",
       "steps.s1.hoyaLine": "¡Hora de merendar! Leamos palabras de frutas.",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -54,7 +54,7 @@
       "steps.s2.title": "Palabras de la mesa",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
-      "steps.s5.title": "Lee y une",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras de la mesa!",
       "steps.s1.hoyaLine": "La mesa está lista. ¡Leamos qué hay en ella!",
       "steps.s2.hoyaLine": "Arroz, sopa y acompañamientos: toca Escuchar y luego lee cada palabra.",
@@ -72,7 +72,14 @@
     },
     "minigame:s2-life-q1-check": {
       "listenPick.rounds.pic-gimbap.prompt": "rollo de arroz con alga",
-      "listenPick.rounds.see-uyu.prompt": "leche"
+      "listenPick.rounds.see-uyu.prompt": "leche",
+      "listenPick.rounds.pic-gimbap.options.gimbap.label": "rollo de arroz con alga",
+      "listenPick.rounds.pic-gimbap.options.uyu.label": "leche",
+      "listenPick.rounds.pic-gimbap.options.dalgyal.label": "huevo",
+      "listenPick.rounds.pic-gimbap.options.bap.label": "arroz cocido",
+      "listenPick.rounds.see-uyu.options.uyu.label": "leche",
+      "listenPick.rounds.see-uyu.options.dalgyal.label": "huevo",
+      "listenPick.rounds.see-uyu.options.banana.label": "plátano, banana"
     },
     "minigame:s2-life-q2-check": {
       "typeHangul.rounds.hear-subak.prompt": "Escucha la palabra y escríbela en hangul.",
@@ -87,12 +94,10 @@
       "cardPairs.namul.gloss": "verduras sazonadas"
     },
     "minigame:s2-life-q3-check": {
-      "picWord.boards.0.pairs.bibimbap.word.gloss": "tazón de arroz mezclado",
-      "picWord.boards.0.pairs.gimchi.word.gloss": "kimchi",
-      "picWord.boards.0.pairs.bap.word.gloss": "arroz cocido",
-      "picWord.boards.1.pairs.gimbap.word.gloss": "rollo de arroz con alga",
-      "picWord.boards.1.pairs.dalgyal.word.gloss": "huevo",
-      "picWord.boards.1.pairs.mul.word.gloss": "agua"
+      "typeHangul.rounds.hear-gimchi.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-gimchi.target.gloss": "kimchi",
+      "typeHangul.rounds.hear-mul.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-mul.target.gloss": "agua"
     },
     "minigame:s2-life-q1-practice": {
       "picWord.boards.0.pairs.gimbap.word.gloss": "rollo de arroz con alga",

@@ -2585,9 +2585,9 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    // 73 shipped type-hangul rounds, and the Dictation rounds of the re-authored Checks (row CM-3A): 10 of the five Stage 2
+    // 73 shipped type-hangul rounds, and the Dictation rounds of the re-authored Checks (row CM-3A): 14 of the seven Stage 2
     // Checks (S2), 8 of the four Stage 3 Checks (S3) and 8 of the four Stage 6 Checks (S6), in three languages.
-    expect(typeSlides).toBe(99 * 3);
+    expect(typeSlides).toBe(103 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

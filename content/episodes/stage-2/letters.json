@@ -10,7 +10,9 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": ["card:norae"],
+  "rewardCardIds": [
+    "card:norae"
+  ],
   "quests": [
     {
       "id": "quest:stage2-letters-q1",
@@ -543,7 +545,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Hear and Type",
+          "titleEn": "Type the Word",
           "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-letters-q2-check",
           "durationSeconds": 35
@@ -1225,12 +1227,12 @@
                   }
                 },
                 {
-                  "id": "gwi",
-                  "pictureRef": "word:body-ear",
+                  "id": "juhwangsaek",
+                  "pictureRef": "word:color-orange",
                   "word": {
-                    "ko": "귀",
-                    "romanization": "gwi",
-                    "en": "ear"
+                    "ko": "주황색",
+                    "romanization": "juhwangsaek",
+                    "en": "orange (the color)"
                   }
                 }
               ]
@@ -2039,12 +2041,12 @@
                   }
                 },
                 {
-                  "id": "bit",
-                  "pictureRef": "word:science-light",
+                  "id": "chaek",
+                  "pictureRef": "card:book",
                   "word": {
-                    "ko": "빛",
-                    "romanization": "bit",
-                    "en": "light"
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
                   }
                 }
               ]

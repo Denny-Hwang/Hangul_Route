@@ -15,7 +15,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
  * shipped game. (Rows CM-3A S3, S6 and S7 ship the first Cloze Pick steps, in Stage 3, Stage 6 and Stage 7 Checks; the
  * fixture keeps the check from depending on them, still checks every gap kind, and the e2e answers a fallback round of
- * the fixture step.)
+ * the fixture step.) `game.type-hangul-hear` turns a round, not a kind: the
+ * seven shipped Stage 2 Dictation Checks (row CM-3A S2) are checked switch off in logic/__tests__/game-switches.test.ts
+ * and rendered in screens/minigames/__tests__/switched-step.test.tsx.
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */

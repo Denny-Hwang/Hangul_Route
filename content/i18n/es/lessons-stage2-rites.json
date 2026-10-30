@@ -44,7 +44,7 @@
       "steps.s2.title": "Cuatro palabras de Chuseok",
       "steps.s3.title": "Une las imágenes",
       "steps.s4.title": "Arma palabras de Chuseok",
-      "steps.s5.title": "Escucha y escribe",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras de Chuseok!",
       "steps.s1.hoyaLine": "Chuseok es la fiesta de la cosecha y de la luna llena. ¡Vamos a leer sus palabras!",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
@@ -81,7 +81,13 @@
     },
     "minigame:s2-rites-q1-check": {
       "listenPick.rounds.see-seollal.prompt": "día del Año Nuevo lunar",
-      "listenPick.rounds.see-hanbok.prompt": "ropa tradicional coreana"
+      "listenPick.rounds.see-hanbok.prompt": "ropa tradicional coreana",
+      "listenPick.rounds.see-seollal.options.seollal.label": "día del Año Nuevo lunar",
+      "listenPick.rounds.see-seollal.options.san.label": "montaña",
+      "listenPick.rounds.see-seollal.options.bap.label": "arroz cocido",
+      "listenPick.rounds.see-hanbok.options.hanbok.label": "ropa tradicional coreana",
+      "listenPick.rounds.see-hanbok.options.tteokguk.label": "sopa de masa de arroz",
+      "listenPick.rounds.see-hanbok.options.san.label": "montaña"
     },
     "minigame:s2-rites-q2-check": {
       "typeHangul.rounds.hear-chuseok.prompt": "Escucha la palabra y escríbela en hangul.",
@@ -99,8 +105,8 @@
       "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
       "picWord.boards.0.pairs.yunnori.word.gloss": "yut, juego de tablero con palitos",
       "picWord.boards.0.pairs.hanbok.word.gloss": "ropa tradicional coreana",
-      "picWord.boards.1.pairs.yunnori.word.gloss": "yut, juego de tablero con palitos",
-      "picWord.boards.1.pairs.yeon.word.gloss": "cometa",
+      "picWord.boards.1.pairs.songpyeon.word.gloss": "masa de arroz en media luna",
+      "picWord.boards.1.pairs.tteokguk.word.gloss": "sopa de masa de arroz",
       "picWord.boards.1.pairs.gajok.word.gloss": "familia"
     },
     "minigame:s2-rites-q1-practice": {
