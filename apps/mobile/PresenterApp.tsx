@@ -155,9 +155,14 @@ import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/
  * Phones (F-TCH-004 section 3.6 phone exception; owner report 2026-10-16 item 1): in a phone window
  * (`isPhoneWindow`: window, screen and a coarse pointer) the stage is the whole window less the
  * safe-area insets, judged too small only below `PHONE_STAGE_MIN`; upright, a lesson shows the
- * rotate page. The compact bar floats over the stage bottom and never covers a new slide: every
+ * rotate page. Where it fits (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4: `railSize`, the
+ * full rail at 104 px or the compact one at 80 px, while `flags.presenterRail` is on) the phone rail
+ * stands at the right of the stage, inside the right inset, and the stage box is the window less the
+ * four insets and the rail; it never hides, a touch tap on empty stage rings its Next, and More opens
+ * beside it. Elsewhere (568 x 320 class phones, or the rail switched off: the overlay layout) the
+ * compact bar floats over the stage bottom and never covers a new slide: every
  * step hides it at once; it shows at the start of the lesson, on a touch tap on empty stage area
- * (another such tap hides it; AMENDMENTS-PRESENTER-NAV section 5.3) and while keyboard or
+ * (another such tap hides it; section 5.3) and while keyboard or
  * screen-reader focus is inside it. No part of the stage is a hidden zone: a tap on a content target
  * never steps and never touches the bar, and a swipe moves (sections 6 and 7).
  *
