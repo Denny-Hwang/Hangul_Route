@@ -55,7 +55,8 @@ describe('cellRowsOf', () => {
     const count = (stage: StageKey) =>
       cells(stage, ctx, episodesAll).flatMap((c) => c.pips).filter((p) => p.kind === 'quest').length;
     expect(count('stage1')).toBeGreaterThanOrEqual(8);
-    const lessonQuestsOf = (stage: StageKey) => lessonEpisodes.filter((e) => e.stage === stage).flatMap((e) => e.questIds).length;
+    // My Route reads the first volumes (row CM-40), so Stage 4 Nature's Volume 2 (row CM-41 S4) adds no pip.
+    const lessonQuestsOf = (stage: StageKey) => lessonEpisodes.filter((e) => e.stage === stage && (e.volume ?? 1) === 1).flatMap((e) => e.questIds).length;
     expect([count('stage1'), count('stage2'), count('stage4')]).toEqual([
       ctx.order.filter((e) => e.stage === 'stage1').length,
       // The taste cells are generated lesson cells since F-CURR-001 T-1 (Stage 2) and T-2 (Stage 4).

@@ -125,7 +125,8 @@ export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
 
 /**
  * The warm unit of a manifest source (AC-B6, warming): a Stage 1 quest or game (`quest:<id>`, `minigame:<ref>`), a
- * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under), a
+ * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under; a Volume 2
+ * file `stage-4/nature.v2.json` => `episode:stage4-nature-v2`), a
  * story (`content/stories/<slug>.json` => `story:<slug>`), the level check (`placement`), a vocabulary topic
  * (`content/vocab/<topic>.json` => `topic:<topic>`, the topic screen's), a card (`card:<id>`, its detail page's) and,
  * for a `jamo-wb` clip (`jamo:<id>#sound|letter`), the Word Builder cell (`WORD_BUILDER_UNIT`). Any other source (a
@@ -136,8 +137,9 @@ export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
  * @param {string} [pack] the row's pack
  */
 export function clipUnitOfSource(source, pack) {
-  const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)\.json$/.exec(source);
-  if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}`;
+  // A cell's Volume 2 file (`<theme>.v2.json`, F-CURR-002 row CM-40) warms under its own episode, `episode:stage<n>-<theme>-v2`.
+  const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)(?:\.v(\d+))?\.json$/.exec(source);
+  if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}${cell[3] === undefined ? '' : `-v${cell[3]}`}`;
   const story = /^content\/stories\/([a-z0-9-]+)\.json$/.exec(source);
   if (story !== null) return `story:${story[1]}`;
   const topic = /^content\/vocab\/([a-z0-9][a-z0-9-]*)\.json$/.exec(source);

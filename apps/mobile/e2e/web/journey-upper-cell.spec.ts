@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -1189,8 +1189,34 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
-/** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+/** The later volumes of the lesson manifest (F-CURR-002 row CM-40); each has a deep play in `LATER_PLAYS`. */
+const LATER_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
+
+/** A later volume's first quest, from its launcher to the reward step, at its viewport. */
+const LATER_PLAYS: Readonly<Record<string, (page: Page, label: string) => Promise<void>>> = {
+  // F-CURR-002 row CM-41 S4: Hiking Plans, q1 "Hot or Cold?": Discover (three exchange pages), Role Play (its Tap to
+  // Respond fallback, the main path), Sentence Builder (three built sentences and a particle round) and the Cloze Pick
+  // Check (its Listen & Pick fallback).
+  'episode:stage4-nature-v2': async (page, label) => {
+    await startFirstQuest(page);
+    await shot(page, `s4-nature-v2-q1-discover-${label}`);
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await shot(page, `s4-nature-v2-q1-role-play-fallback-${label}`);
+    await replyTurns(page, ['안녕하세요!', '하늘이 파래요!', '네, 더워요.', '네, 좋아요!']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await build(page, 1, 4, ['오늘, oneul', '비가, biga', '올, ol', '거예요, geoyeyo']);
+    await build(page, 2, 4, ['아니요,, aniyo', '안, an', '추워요, chuwoyo']);
+    await build(page, 3, 4, ['그럼, geureom', '내일, naeil', '갈, gal', '거예요, geoyeyo']);
+    await build(page, 4, 4, ['가, ga']);
+    await playCheckByIds(page, [{ answer: 'c1:t1' }, { answer: 'c2:t2' }]);
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    await shot(page, `s4-nature-v2-q1-reward-${label}`);
+  },
+};
+
+/** One test per cell of the lesson manifest (its first volume), with its deep play when it has one. */
+const CELLS: readonly UpperCell[] = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1).map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1202,11 +1228,13 @@ const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
   };
 });
 
-async function openJourney(page: Page): Promise<void> {
+async function openJourney(page: Page, flags?: Record<string, { on: boolean; pct: number }>): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
+  // A stored remote copy turns a dark switch on for this learner, as a ramp would (F-CURR-002 §12.2).
+  if (flags !== undefined) await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
   await page.goto('/');
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -1217,9 +1245,11 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect([...CELLS.map((c) => c.episodeId), ...LATER_VOLUMES.map((e) => e.id)].sort()).toEqual(LESSON_EPISODES.map((e) => e.id).sort());
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
+    // Every later volume of the manifest has its deep play below (row CM-41 S4 ships the first, Stage 4 Nature).
+    for (const episode of LATER_VOLUMES) expect(LATER_PLAYS[episode.id], `${episode.id} has no deep play`).toBeDefined();
   });
 
   // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its
@@ -1249,6 +1279,42 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       await cell.playFirstQuest(page);
       await cell.expectRouteDay(page);
       expect(errors).toEqual([]);
+    });
+  }
+
+  // F-CURR-002 row CM-41 S4: a cell's Volume 2 at launch state. `volumes` is at built-in pct 0, so each case turns it on
+  // through the stored remote copy, as a ramp would; the Volume 2 is reached by its tab on the cell's page (Volume 1
+  // not done, so the cell opens Volume 1), its first quest plays to the reward with its game switches dark (Role Play
+  // as Tap to Respond on the same turns, Cloze Pick as Listen & Pick), and it adds no Learning Route day.
+  for (const episode of LATER_VOLUMES) {
+    for (const [label, size] of [
+      ['320', { width: 320, height: 720 }],
+      ['wide', { width: 1280, height: 900 }],
+    ] as const) {
+      test(`${episode.id} (${label}): Volume 2 opens from its tab with volumes on, its first quest plays to the reward, no route day`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.setViewportSize(size);
+        await openJourney(page, { volumes: { on: true, pct: 100 } });
+        const stage = Number(episode.stage.replace('stage', ''));
+        await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
+        const tabs = page.getByRole('tablist', { name: 'Volumes' });
+        await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+        await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+        await shot(page, `${episode.id.replace('episode:', '')}-page-${label}`);
+        await LATER_PLAYS[episode.id]!(page, label);
+        await openRouteMap(page);
+        await expect(page.getByLabel(new RegExp(`: ${episode.titleEn}\\.`))).toHaveCount(0);
+        expect(errors).toEqual([]);
+      });
+    }
+    test(`${episode.id}: with volumes off its cell page shows no Volume 2 and no tabs`, async ({ page }) => {
+      await openJourney(page);
+      const stage = Number(episode.stage.replace('stage', ''));
+      await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
+      await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+      await expect(page.getByText(episode.titleEn)).toHaveCount(0);
     });
   }
 

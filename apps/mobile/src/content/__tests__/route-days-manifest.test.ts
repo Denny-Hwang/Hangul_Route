@@ -33,9 +33,10 @@ describe('route days from the manifest', () => {
     expect(routeDaysOf(CATALOG).map((day) => [day.episodeId, day.minutes, [...day.questIds]])).toEqual(manifestDays.map(([id, minutes, quests]) => [id, minutes, [...quests]]));
   });
 
-  it('every cell of the generated lesson manifest is a route day', () => {
+  it('every cell of the generated lesson manifest is a route day, and no later volume is one (row CM-40)', () => {
     const days = new Set(routeDaysOf(CATALOG).map((day) => day.episodeId));
-    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe(true);
+    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe((episode.volume ?? 1) === 1);
+    expect(LESSON_EPISODES.some((episode) => (episode.volume ?? 1) > 1)).toBe(true);
   });
 
   it('numbers the days from 1 with no gap', () => {
