@@ -66,12 +66,21 @@ const idle = async (): Promise<void> => {
     for (let i = 0; i < 8; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
   });
 };
+/** Waits (a few real ticks at a time) until the screen shows one of these test ids: the drop chunk's first import can take a moment. */
+async function until(r: ReactTestRenderer, ...ids: string[]): Promise<void> {
+  for (let i = 0; i < 50 && ids.every((id) => byTestId(r.root, id).length === 0); i += 1) await idle();
+}
 async function draw(node: ReactElement, width = 320): Promise<ReactTestRenderer> {
   const r = await render(<LayoutProvider value={layoutClassFor({ width, height: 800 })}>{node}</LayoutProvider>);
   mounted.push(r);
   await idle();
   return r;
 }
+const meet = async (): Promise<ReactTestRenderer> => {
+  const r = await draw(screen());
+  await until(r, 'week-drop-meet');
+  return r;
+};
 const screen = (): ReactElement => <WeekDropScreen navigation={{ navigate, goBack, canGoBack: () => true } as never} route={{ key: 'k', name: 'WeekDrop' } as never} />;
 
 beforeEach(() => {
@@ -96,6 +105,7 @@ afterEach(async () => {
 describe('WeekDropCard (A1, A2)', () => {
   it.each([320, 1024])('at %i: one button named with the title and minutes, the first word and its romanization, at least the touch floor', async (width) => {
     const r = await draw(<WeekDropCard profileId={ID} week="2026-11-02" />, width);
+    await until(r, 'home-week-drop');
     const [card] = byTestId(r.root, 'home-week-drop');
     expect(card?.props['aria-label']).toBe('This week in Korea: Winter Begins. About 2 minutes.');
     expect(card?.props.role).toBe('button');
@@ -110,6 +120,7 @@ describe('WeekDropCard (A1, A2)', () => {
   it('done this week: "Done for this week" in place of the minutes; never a count or a missed week', async () => {
     storage.set(WEEK_DROP_KEY(ID), ['2026-10-26', '2026-11-02']);
     const r = await draw(<WeekDropCard profileId={ID} week="2026-11-02" />);
+    await until(r, 'home-week-drop-done');
     expect(byTestId(r.root, 'home-week-drop-done')).toHaveLength(1);
     const text = screenTexts(r.root).join(' ');
     expect(text).toContain(EN.learner.weekDrop.done);
@@ -124,7 +135,7 @@ describe('WeekDropCard (A1, A2)', () => {
 
 describe('WeekDropScreen (B, C, D)', () => {
   it('B: the drop of this local week, its note with taught Korean and its source line, 5 named words, one primary', async () => {
-    const r = await draw(screen());
+    const r = await meet();
     expect(byTestId(r.root, 'week-drop-title')[0] && screenTexts(byTestId(r.root, 'week-drop-title')[0]!).join('')).toBe('Winter Begins');
     const note = screenTexts(byTestId(r.root, 'week-drop-note')[0]!).join('');
     expect(note).toContain('입동');
@@ -140,7 +151,7 @@ describe('WeekDropScreen (B, C, D)', () => {
   });
 
   it('C and D: 5 rounds with fill-only dots, each first answer recorded, then Done, the week marked done, Back home', async () => {
-    const r = await draw(screen());
+    const r = await meet();
     await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
     await idle();
     for (let i = 0; i < 5; i += 1) {
@@ -161,7 +172,7 @@ describe('WeekDropScreen (B, C, D)', () => {
 
   it('no playable practice (the items cannot load): Practice goes straight to Done', async () => {
     planned.rounds = null;
-    const r = await draw(screen());
+    const r = await meet();
     await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
     await idle();
     expect(byTestId(r.root, 'week-drop-done')).toHaveLength(1);
@@ -182,7 +193,7 @@ describe('WeekDropScreen (B, C, D)', () => {
 
   it('in Korean: the title, words and buttons in the UI language, the taught Korean unchanged', async () => {
     useLocaleStore.setState({ device: 'ko', byProfile: {} });
-    const r = await draw(screen());
+    const r = await meet();
     const text = screenTexts(r.root).join(' ');
     expect(text).toContain('겨울이 시작돼요');
     expect(text).toContain(getMessages('ko').learner.weekDrop.practice.cta);

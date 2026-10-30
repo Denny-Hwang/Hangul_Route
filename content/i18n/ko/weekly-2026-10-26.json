@@ -36,7 +36,7 @@
       "items.nun.gloss": "하늘에서 내리는 하얀 얼음 조각",
       "items.cheonnun.gloss": "그해 겨울에 처음 내리는 눈",
       "items.baram.gloss": "움직이는 공기",
-      "items.chuwoyo.gloss": "날씨가 차서 몸이 떨려요"
+      "items.chuwoyo.gloss": "날씨나 몸이 차갑게 느껴져요"
     },
     "week:2026-11-23": {
       "title": "따뜻하게 입어요",
@@ -115,7 +115,7 @@
       "note": "{ko:대한}은 1월 20일이에요. 사전에서는 한 해의 가장 추운 때라고 해요. 그다음에는 봄이 시작되는 {ko:입춘}이 와요.",
       "items.daehan.gloss": "한 해의 가장 추운 때인 절기",
       "items.ipchun.gloss": "봄이 시작되는 절기",
-      "items.chuwoyo.gloss": "날씨가 차서 몸이 떨려요",
+      "items.chuwoyo.gloss": "날씨나 몸이 차갑게 느껴져요",
       "items.bom.gloss": "겨울과 여름 사이의 계절",
       "items.nun.gloss": "하늘에서 내리는 하얀 얼음 조각"
     }
