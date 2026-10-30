@@ -98,19 +98,22 @@ export function LetterSlide({
               {messages.learner.audio.finalLine(slide.char, voiceLine({ shown: shownSpoken, romanization: slide.spoken.romanization }))}
             </Text>
           ) : (
-            <Text {...KOREAN_LINE_BREAK} testID="presenter-letter-name" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-              {m.slide.letterName(slide.nameEn, slide.nameKo ?? slide.spoken.text)}
-            </Text>
-          )}
-          {slide.sound !== undefined ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.lg), flexWrap: 'wrap' }}>
-              {sayIt || onPlayLetterSound === undefined ? null : <SpeakerButton testID="presenter-letter-sound" enabled={shown.has('name')} onPress={onPlayLetterSound} />}
-              <View accessibilityLabel={koreanTextLabel(slide.sound.line, slide.sound.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
-                <TaughtKo size={bodySize}>{slide.sound.line}</TaughtKo>
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{slide.sound.romanization}</Text>
-              </View>
+            // The letter-name line and, on the same row so the slide keeps its height, the sound on a vowel.
+            <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: units(unit, spacing.xl), rowGap: units(unit, spacing.xs), flexWrap: 'wrap' }}>
+              <Text {...KOREAN_LINE_BREAK} testID="presenter-letter-name" style={{ fontSize: bodySize, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                {m.slide.letterName(slide.nameEn, slide.nameKo ?? slide.spoken.text)}
+              </Text>
+              {slide.sound !== undefined ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.md), flexShrink: 1 }}>
+                  {sayIt || onPlayLetterSound === undefined ? null : <SpeakerButton testID="presenter-letter-sound" enabled={shown.has('name')} onPress={onPlayLetterSound} />}
+                  <View accessibilityLabel={koreanTextLabel(slide.sound.line, slide.sound.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
+                    <TaughtKo size={bodySize}>{slide.sound.line}</TaughtKo>
+                    <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{slide.sound.romanization}</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
-          ) : null}
+          )}
           {slide.soundHint !== undefined ? (
             <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, color: colors.text.secondary, lineHeight: Math.round(bodySize * typography.leading.normal) }}>{slide.soundHint}</Text>
           ) : null}

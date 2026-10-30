@@ -166,7 +166,7 @@ test('no Korean voice: the sound is shown as text, nothing is spoken, and the ro
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
 
-  // The text prompt: spoken syllable + romanization + the line, with the "this sound" heading.
+  // The text prompt: what the voice would say (the letter name) + romanization + the line, with the "this sound" heading.
   await expect(panelText(page)).toBeVisible();
   await expect(page.getByText('No sound? Read it here.')).toBeVisible();
   await expect(page.getByText('No Korean voice on this device.')).toBeVisible();
@@ -212,18 +212,18 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
 });
 
-test('a wrong tap says the sound, not the letter name', async ({ page }) => {
+test('a wrong tap names the letter: a letter question says the name, not a syllable (AMENDMENTS-AUDIO-CLIPS JV-A1)', async ({ page }) => {
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
   const [first] = await utterances(page);
-  // 가 not 기역: one syllable, spoken at the sound rate.
-  expect(first!.text).toMatch(/^[가-힣]$|^이응$/);
+  // Quest 1 asks among ㅏ ㅓ ㄱ ㄴ: 기역 or 니은 (never 가 or 나), or a vowel's name, its sound (아, 어).
+  expect(['아', '어', '기역', '니은']).toContain(first!.text);
   const answer = jamoOfSpoken(first!.text);
   const wrong = page.getByRole('button', { name: /^Korean letter / }).filter({ hasNotText: answer }).first();
   await wrong.click();
-  await expect(page.getByText('Listen again. This one says')).toBeVisible();
+  await expect(page.getByText('Listen again. This letter is')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Hear it' })).toBeVisible();
   const before = (await utterances(page)).length;
   await page.getByRole('button', { name: 'Hear it' }).click();
