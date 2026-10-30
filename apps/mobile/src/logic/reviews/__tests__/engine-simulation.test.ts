@@ -60,6 +60,20 @@ describe('S-a: one quest a day, the Daily Review every day, Keep going on days t
     });
   }
 
+  for (const seed of SEEDS) {
+    it(`seed ${seed}: holds with game.syllable-build on too (row CM-32): the pool line and G2 with Syllable Build in the surface index, and no due item dropped`, () => {
+      const sim = new Sim(seed, { ...DEFAULT_KNOBS, games: true });
+      scenarioA(sim, DAYS);
+      const late = lateDays(sim);
+      expect(late.filter((d) => d.left <= POOL_LINE).length / late.length, series(sim, 'left')).toBeGreaterThanOrEqual(0.9);
+      const introduced = [...sim.intro].filter(([, day]) => day < 30).map(([id]) => id);
+      expect(introduced.length).toBeGreaterThan(150);
+      const g2 = introduced.filter((id) => sim.spacedWithin(id, 30) >= 3).length / introduced.length;
+      expect(g2).toBeGreaterThanOrEqual(0.7);
+      expect(sim.dropped).toBe(0);
+    });
+  }
+
   it('holds with no device voice too, on the two-rung ladder', () => {
     const sim = new Sim(1, { ...DEFAULT_KNOBS, voice: false });
     scenarioA(sim, DAYS);
@@ -86,6 +100,15 @@ describe('S-b: two quests a day; on review-first days the Daily Review and Keep 
       expect(sim.days.some((d) => d.reviewFirst)).toBe(true);
     });
   }
+
+  it('holds with game.syllable-build on too (row CM-32), and no due item dropped', () => {
+    const sim = new Sim(1, { ...DEFAULT_KNOBS, games: true });
+    scenarioB(sim, DAYS);
+    const [day30, day60] = [sim.days[29], sim.days[59]];
+    expect(day60?.left, series(sim, 'left')).toBeLessThanOrEqual((day30?.left ?? 0) + 30);
+    expect(day60?.pool, series(sim, 'pool')).toBeLessThanOrEqual((day30?.pool ?? 0) + 30);
+    expect(sim.dropped).toBe(0);
+  });
 });
 
 describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {

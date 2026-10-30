@@ -21,6 +21,7 @@ import { createCellCheckApi, type CellCheckApi } from '../reviews/cell-check-api
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
+import { NO_GAME_FORMATS, type GameFormats } from '../reviews/review-rounds';
 import { createStageCheckApi, type StageCheckApi } from '../reviews/stage-check-api';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
@@ -40,6 +41,12 @@ export const MEMORY_CHUNK = 'memory-chunk:runtime';
 
 /** The review items of this build, loaded once (the lazy `review-items` chunk of row CM-10). */
 export const reviewItemStore = createReviewItemStore(reviewItemsChunk);
+
+/** Row CM-32: Syllable Build joins the review rounds at the produce rung while `game.syllable-build` is on for the profile. */
+const SYLLABLE_BUILD: GameFormats = new Set(['syllable-build']);
+function reviewGames(profileId: string): GameFormats {
+  return currFlagOn('game.syllable-build', profileId) ? SYLLABLE_BUILD : NO_GAME_FORMATS;
+}
 
 let runtime: MemoryRuntime | null = null;
 
@@ -113,6 +120,7 @@ export function dailyReviewApi(): DailyReviewApi {
     // With answers not recorded the review would repeat itself, so `memoryRecord` gates it too (daily-review.md).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('dailyReview', profileId),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
@@ -147,6 +155,7 @@ export function cellCheckApi(): CellCheckApi {
     // With answers not recorded a Check could latch a result while no memory state moved (cell-check.md States).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('cellCheck', profileId),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
@@ -203,6 +212,7 @@ export function stageCheckApi(): StageCheckApi {
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('stageChecks', profileId),
     cells: (stage) => gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).map((e) => e.id),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;

@@ -235,6 +235,23 @@ export const a11y = {
       partner: (role: string, line: string, romanization: string, meaning: string) => `${role} says: ${line}, ${romanization}. ${meaning}`,
       me: (line: string, romanization: string) => `You said: ${line}, ${romanization}`,
     },
+    /**
+     * Syllable Build (F-CURR-002 row CM-32): a tile is named by its jamo and the letter's name (`name`, the RR name such
+     * as `bieup`), never by its sound in the block, so a label never answers the round. `part` is a row caption.
+     */
+    syllableBuild: {
+      tile: (jamo: string, name: string) => `${jamo}, letter ${name}`,
+      finalTile: (jamo: string, name: string) => `${jamo}, letter ${name}, as a final`,
+      noFinal: 'No final letter',
+      /** A zone of the block: its part, then the tile in it (`filled`, a tile's name), or empty. */
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part}, empty` : `${part}, ${filled}`),
+      /** A zone that did not fit: its label, then where to go next. */
+      marked: (label: string) => `${label}, listen again`,
+      /** The built block, once it is right: its Korean and romanization. */
+      block: (ko: string, romanization: string) => `Block ${ko}, ${romanization}, built`,
+      /** The meaning button under the speaker. */
+      meaning: (gloss: string) => `Meaning: ${gloss}`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

@@ -7,6 +7,7 @@ export * from './schemas/minigame';
 export * from './schemas/lesson';
 export * from './hangul/allomorph';
 export * from './hangul/compose-typed';
+export * from './hangul/syllable-build';
 export * from './schemas/profile';
 export * from './schemas/progress';
 export * from './schemas/progress-merge';

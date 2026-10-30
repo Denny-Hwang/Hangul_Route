@@ -702,6 +702,20 @@ export const learner = {
       meaningsShown: 'Significados visibles',
       moreReplies: 'Más respuestas abajo',
     },
+    syllableBuild: {
+      heading: 'Arma el bloque que oyes',
+      row: { first: 'Primera letra', vowel: 'Vocal', final: 'Final' },
+      noFinal: 'Sin final',
+      showSound: 'Ver cómo suena',
+      miss: {
+        first: 'Escucha cómo empieza.',
+        vowel: 'Escucha el sonido del medio.',
+        final: 'Escucha cómo termina.',
+        finalOrNone: 'Escucha el final: ¿hay un sonido final?',
+      },
+      lookHere: 'Esta va aquí.',
+      built: '¡Lo armaste!',
+    },
   },
 
   audio: {
@@ -2159,5 +2173,16 @@ export const learner = {
     found: 'Lo hallado',
     again: 'Busca otra vez',
     allFound: 'Encontraste todo',
+  },
+  decodingSprint: {
+    title: 'Carrera de bloques',
+    offer: 'Ronda extra: lee todos los bloques que puedas en un minuto.',
+    intro: 'Un minuto en el reloj. Escucha un bloque y elígelo o ármalo.',
+    introPick: 'Un minuto en el reloj. Escucha un bloque y elígelo.',
+    introProbe: 'Después, unos bloques más, sin reloj.',
+    probe: 'Unos bloques más. Ya no hay reloj.',
+    read: (n: number) => count(n, 'bloque leído', 'bloques leídos'),
+    best: (n: number) => `Tu mejor marca: ${n}`,
+    done: 'Listo',
   },
 } satisfies DeepPartial<Messages['learner']>;

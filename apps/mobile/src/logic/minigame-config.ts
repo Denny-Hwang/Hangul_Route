@@ -11,6 +11,7 @@ import type {
   RolePlayScene,
   StoryLevel,
   StoryOrderRound,
+  SyllableBuildRound,
   TraceWordRound,
   TypeHangulRound,
   WriteFrameRound,
@@ -76,6 +77,8 @@ export interface MinigameScope {
   rolePlay?: { scene: RolePlayScene };
   /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes to search, filled by build-lessons from a lesson cell. */
   hiddenHeritage?: { rounds: HiddenHeritageRound[] };
+  /** Syllable Build rounds (F-CURR-002 section 7.1 F3, row CM-32); Listen & Pick on the block while `game.syllable-build` is off. */
+  syllableBuild?: { rounds: SyllableBuildRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

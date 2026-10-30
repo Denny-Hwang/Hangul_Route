@@ -73,7 +73,7 @@ function planRounds(
   for (let attempt = 0; attempt < REBUILD_TRIES; attempt += 1) {
     const session = buildCheck(ctx, { itemIds: idsOf(skipped), size });
     if (session.questions.length === 0) break;
-    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index }) }));
+    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index, states: ctx.states }) }));
     best = built.flatMap((b) => (b.round ? [b.round] : []));
     if (best.length === session.questions.length) break;
     for (const b of built) if (b.round === null) skipped.add(b.q.itemId);

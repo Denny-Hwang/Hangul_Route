@@ -11,12 +11,16 @@ import {
   TELEMETRY_EVENT_NAMES,
   isCurrTelemetryName,
   isTelemetryEventName,
+  DecodeRateBucketSchema,
   ItemCountBucketSchema,
+  ROLLUP_DECODE_RATE_EDGES,
   ROLLUP_ITEM_COUNT_EDGES,
   ROLLUP_SEEDED_COUNT_EDGES,
   ROLLUP_SPREAD_DAYS_EDGES,
+  ROLLUP_SPRINT_INDEX_EDGES,
   SeededCountBucketSchema,
   SpreadDaysBucketSchema,
+  SprintIndexBucketSchema,
   rollupBucketCodes,
 } from '../index';
 
@@ -76,7 +80,7 @@ const VALID: Record<(typeof SECTION_R)[number], Record<string, unknown>> = {
   'goal.set': { daily: 6, weeklyDays: 5 },
   'goal.met': { points: 7, target: 6 },
   'week.goal_met': { days: 5, target: 5 },
-  'decode.sprint.finished': { rateBucket: '20-29', probeRateBucket: '10-19', sprintIndexBucket: '2' },
+  'decode.sprint.finished': { rateBucket: '21-23', probeRateBucket: '11-12', sprintIndexBucket: '2' },
   'stamp.earned': { stampId: 'stamp:weekly-stories' },
   'weekly_quest.complete': { questKind: 'refresh-items' },
   'pack.opened': { packId: 'pack:numbers-time' },
@@ -331,5 +335,27 @@ describe('the bucket enums of row CM-12 (Worker first, TELEMETRY-NAMES-2 section
     // The spread runs past 31 days (31-45, 46-62, 63-90, 91+), so the old open top is not a code.
     expect(S.safeParse({ countBucket: '0', spreadDaysBucket: '31+' }).success).toBe(false);
     expect(S.safeParse({ countBucket: '500-999', spreadDaysBucket: '31-45' }).success).toBe(true);
+  });
+});
+
+describe('the bucket enums of row CM-32 (Worker first, TELEMETRY-NAMES-2 section R)', () => {
+  const D = CURR_TELEMETRY_PAYLOADS['decode.sprint.finished'];
+
+  it('rateBucket and probeRateBucket take the decode rate codes, sprintIndexBucket the sprint index codes', () => {
+    expect(DecodeRateBucketSchema.options).toEqual(rollupBucketCodes(ROLLUP_DECODE_RATE_EDGES));
+    expect(SprintIndexBucketSchema.options).toEqual(rollupBucketCodes(ROLLUP_SPRINT_INDEX_EDGES));
+    for (const rate of rollupBucketCodes(ROLLUP_DECODE_RATE_EDGES)) {
+      for (const index of rollupBucketCodes(ROLLUP_SPRINT_INDEX_EDGES)) expect(D.safeParse({ rateBucket: rate, probeRateBucket: rate, sprintIndexBucket: index }).success).toBe(true);
+    }
+  });
+
+  it('a raw rate or count that fits the generic bucket shape is refused, so a personal best never leaves the device', () => {
+    const ok = { rateBucket: '13-14', probeRateBucket: '9-10', sprintIndexBucket: '4' };
+    for (const raw of ['14', '37', '10-19', '20-29', '30-39', '60+', '13-15']) {
+      expect(D.safeParse({ ...ok, rateBucket: raw }).success, raw).toBe(false);
+      expect(D.safeParse({ ...ok, probeRateBucket: raw }).success, raw).toBe(false);
+    }
+    for (const raw of ['5', '6', '5-10', '21+', 'first']) expect(D.safeParse({ ...ok, sprintIndexBucket: raw }).success, raw).toBe(false);
+    expect(D.safeParse(ok).success).toBe(true);
   });
 });

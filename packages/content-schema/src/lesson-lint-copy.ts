@@ -150,6 +150,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'storyOrder',
   // Hidden Heritage (row CM-36): a find is never a score, a miss only "Look again".
   'hiddenHeritage',
+  // The Block Sprint (row CM-32, the Decoding Sprint of section 7.1 F9): a count and the learner's own best, no percentage.
+  'decodingSprint',
 ];
 
 export interface ReviewStringFinding {

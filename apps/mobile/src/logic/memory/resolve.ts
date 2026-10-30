@@ -171,6 +171,11 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const target = scope.hiddenHeritage?.rounds.flatMap((r) => r.targets).find((t) => t.id === itemId);
       return target ? { texts: texts(text(target.word)), jamoIds: [], rung: 'read' } : undefined;
     }
+    case 'syllable-build': {
+      // Row CM-32: the block built, at the produce rung (a bare block is a `syl` item; a word block keeps its cell's item).
+      const round = scope.syllableBuild?.rounds.find((r) => r.id === itemId);
+      return round ? { texts: texts(text(round.target, round.target.en === undefined ? 'syl' : undefined)), jamoIds: [], rung: 'produce' } : undefined;
+    }
     default:
       return undefined;
   }

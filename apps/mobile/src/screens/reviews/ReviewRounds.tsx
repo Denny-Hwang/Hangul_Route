@@ -29,13 +29,14 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
-import type { ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
+import type { BuildRound, ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { PictureArt } from '../minigames/PictureArt';
 import type { HearRound } from '../minigames/dictation-chunk';
 import { useDictationKit, type DictationKit } from '../minigames/dictation-entry';
+import { useSyllableBuildChunk } from '../minigames/syllable-build-entry';
 
 /**
  * The rounds of the Daily Review and Keep going (F-CURR-002 sections 4.3 and 4.5, row CM-14; design
@@ -539,11 +540,40 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
   );
 }
 
+// ---- build (row CM-32) -------------------------------------------------------------------------------------
+
+/**
+ * Syllable Build at the produce rung: its board is the Syllable Build chunk's, loaded here at run time through the
+ * entry's `syllableBuildChunk()` (a chunk never imports a module of another chunk). The engine asks it only while
+ * `game.syllable-build` is on. While the chunk loads (it is precached, so a frame or two) the round shows its heading.
+ * The session has already chosen this round, so a chunk that fails to load (a stale cache, a dropped asset) shows
+ * Hoya's oops line and Try again rather than leaving the round on its heading.
+ */
+export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildRound>): ReactElement {
+  const m = useMessages();
+  const { chunk, failed, retry } = useSyllableBuildChunk();
+  if (chunk === null) {
+    const heading = <Heading level="prompt">{m.learner.minigame.syllableBuild.heading}</Heading>;
+    if (!failed) return heading;
+    return (
+      <View>
+        {heading}
+        <Spacer size="sm" />
+        <HoyaBubble tone="thinking" message={m.learner.oops.bubble} />
+        <Spacer size="sm" />
+        <Button label={m.common.buttons.tryAgain} tone="primary" size="md" onPress={retry} testID="daily-review-build-retry" />
+      </View>
+    );
+  }
+  return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
+}
+
 /** The round for its type. */
 export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   const { round } = props;
   if (round.type === 'pick') return <PickRoundView {...props} round={round} />;
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;
   if (round.type === 'cloze') return <ClozeRoundView {...props} round={round} />;
+  if (round.type === 'build') return <BuildRoundLoader {...props} round={round} />;
   return <OrderRoundView {...props} round={round} />;
 }

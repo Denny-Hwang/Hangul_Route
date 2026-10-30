@@ -35,6 +35,7 @@ import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { StoryOrderStep } from './story-order/StoryOrderStep';
+import { SyllableBuildStep } from './syllable-build-entry';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { TraceWordGame } from './TraceWordGame';
@@ -130,9 +131,13 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     }
     exits.back();
   };
-  /** A switch played another kind's rounds (Story Order's fallback, row CM-34): the event names the game that played. */
-  const closeAs = (kind: MinigameKind): void => {
-    void track(minigameFinishedEvent(kind, questId, stepIndex, activeProfileId));
+  /**
+   * A switch played another kind's rounds (Story Order's fallback, row CM-34; a switched-off format's fallback, Listen &
+   * Pick on the block, row CM-32): the event names the game that played.
+   */
+  const closeAs = (played: MinigameKind): void => {
+    if (played === scope?.kind) return close();
+    void track(minigameFinishedEvent(played, questId, stepIndex, activeProfileId));
     exits.back();
   };
 
@@ -152,16 +157,25 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
   // (first answer per round scores), `complete` ends the step as the older games do.
-  const host: MinigameHost = {
+  // `played` is the scope the game plays: the step's own, or a fallback's (row CM-32), whose rounds name what was asked.
+  const hostFor = (played: typeof scope): MinigameHost => ({
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
     answer: (roundKey, correct, meta) =>
-      useQuestRunStore.getState().answerRound(roundKey, correct, inPreview || meta?.itemId === undefined ? undefined : { scope, itemId: meta.itemId }, meta?.hinted === true),
+      useQuestRunStore
+        .getState()
+        .answerRound(
+          roundKey,
+          correct,
+          inPreview || meta?.itemId === undefined ? undefined : { scope: played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
+          meta?.hinted === true,
+        ),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();
-      close();
+      closeAs(played.kind);
     },
-  };
+  });
+  const host = hostFor(scope);
 
   switch (scope.kind) {
     case 'match-sound':
@@ -214,6 +228,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <RolePlayStep scope={scope} host={host} onBack={exits.back} />;
     case 'hidden-heritage':
       return <HiddenHeritageStep scope={scope} host={host} onBack={exits.back} />;
+    // F-CURR-002 row CM-32: from its own chunk; Listen & Pick on the block while `game.syllable-build` is off.
+    case 'syllable-build':
+      return <SyllableBuildStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

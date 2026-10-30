@@ -70,6 +70,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-36: the Hidden Heritage game's chunk.
   'screens/minigames/hidden-heritage-entry.tsx#HiddenHeritageGame': 'screens/minigames/HiddenHeritageGame.tsx#HiddenHeritageGame',
   'navigation/hidden-heritage-e2e.tsx#HiddenHeritageE2eBody': 'navigation/hidden-heritage-e2e-screen.tsx#HiddenHeritageE2eBody',
+  // Row CM-32: the Syllable Build chunk's quest game and Block Sprint.
+  'screens/minigames/syllable-build-entry.tsx#SyllableBuildStepBody': 'screens/minigames/SyllableBuildStepBody.tsx#SyllableBuildStepBody',
+  'screens/decode-sprint/DecodingSprintRoute.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',
 };
 
 /**

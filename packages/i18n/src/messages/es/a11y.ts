@@ -155,6 +155,15 @@ export const a11y = {
       partner: (role: string, line: string, romanization: string, meaning: string) => `${role} dice: ${line}, ${romanization}. ${meaning}`,
       me: (line: string, romanization: string) => `Dijiste: ${line}, ${romanization}`,
     },
+    syllableBuild: {
+      tile: (jamo: string, name: string) => `${jamo}, letra ${name}`,
+      finalTile: (jamo: string, name: string) => `${jamo}, letra ${name}, como final`,
+      noFinal: 'Sin letra final',
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part}: espacio vacío` : `${part}: ${filled}`),
+      marked: (label: string) => `${label}. Escucha otra vez`,
+      block: (ko: string, romanization: string) => `Bloque ${ko}, ${romanization}, armado`,
+      meaning: (gloss: string) => `Significado: ${gloss}`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

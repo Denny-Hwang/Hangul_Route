@@ -65,6 +65,7 @@ const SAMPLES: Record<(typeof ROLLUP_EVENT_NAMES)[number], Record<string, unknow
   'pack.opened': { packId: 'pack:numbers-time' },
   'pack.level_complete': { packId: 'pack:numbers-time', stage: 'stage2' },
   'exp.exposure': { experimentId: 'E3', arm: 'b' },
+  'decode.sprint.finished': { rateBucket: '15-17', probeRateBucket: '11-12', sprintIndexBucket: '4' },
 };
 
 const CODE = /^[A-Za-z0-9:._+-]{0,64}$/;
@@ -85,6 +86,7 @@ describe('rollup allowlist', () => {
       'pack.opened',
       'pack.level_complete',
       'exp.exposure',
+      'decode.sprint.finished',
     ]);
     for (const name of ROLLUP_EVENT_NAMES) expect(TELEMETRY_EVENT_NAMES).toContain(name);
   });
@@ -130,6 +132,16 @@ describe('rows per event', () => {
     expect(rollupKeysFor('pack.opened', SAMPLES['pack.opened'])).toEqual([{ metric: 'pack.opened', dim: OTHER_DIM, bucket: '' }]);
     expect(rollupKeysFor('pack.level_complete', SAMPLES['pack.level_complete'])).toEqual([{ metric: 'pack.level_complete', dim: OTHER_DIM, bucket: 'stage2' }]);
     expect(rollupKeysFor('exp.exposure', SAMPLES['exp.exposure'])).toEqual([{ metric: 'exp.exposure', dim: 'E3:b', bucket: '' }]);
+    expect(rollupKeysFor('decode.sprint.finished', SAMPLES['decode.sprint.finished'])).toEqual([
+      { metric: 'decode.sprint.finished.rate', dim: '4', bucket: '15-17' },
+      { metric: 'decode.sprint.finished.probeRate', dim: '4', bucket: '11-12' },
+    ]);
+  });
+
+  it('[CM-32] decode.sprint.finished: a rate or index off the shared codes adds nothing', () => {
+    for (const bad of [{ rateBucket: '15' }, { probeRateBucket: '10-19' }, { sprintIndexBucket: '6' }, { best: 22 }]) {
+      expect(rollupKeysFor('decode.sprint.finished', { ...SAMPLES['decode.sprint.finished'], ...bad }), JSON.stringify(bad)).toEqual([]);
+    }
   });
 
   it('memory.daily: north star (overall and per arm), due volume, items newly held, minutes, and recall per lag bucket', () => {

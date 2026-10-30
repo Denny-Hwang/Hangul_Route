@@ -6,7 +6,7 @@ import { localDay, vocabOf } from '../vocab/progress';
 import { checkAnswers } from './cell-check';
 import type { RoundAnswer } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
-import { glossFrom, surfaceIndex } from './review-rounds';
+import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 import {
   planStageCheck,
@@ -47,6 +47,8 @@ export interface StageCheckDeps {
   /** The stage's grid cells, theme order. */
   cells(stage: StageKey): readonly string[];
   visibility(profileId: string): SourceVisibility;
+  /** Row CM-32: the section 7.1 formats switched on for the profile (`game.syllable-build`); none when absent. */
+  games?(profileId: string): GameFormats;
   voice(): boolean;
   /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
   clozePick?(profileId: string): boolean;
@@ -117,7 +119,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true }),
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }),
         states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
         today,
         voice: deps.voice(),

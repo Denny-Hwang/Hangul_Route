@@ -121,6 +121,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // `build:web`, Metro cache cleared), 7,006 B over that main (the round schema 1,613 B, the fixture-only e2e hook
   // 927 B, the codec's unknown_kind 491 B, the deck builder 357 B, the strings 273 B, the root navigator 196 B, the
   // rest the entry, loader, fallback board and wiring), so it fits under the same line with a 1,550 B margin.
+  // F-CURR-002 row CM-32 (Syllable Build and the Block Sprint; their screens are the precached syllable-build-chunk) adds
+  // about 7,100 B that cannot leave the start bundle (the round schema the content parser needs, the entry, the route,
+  // the two offers' slots, the English strings): 4,758,598 B raw / 1,268,475 B gzip on main 524961dae (CM-23c's
+  // 4,751,444 B) plus CM-32, +7,154 B, 1,402 B under the line, so the line stays.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -308,6 +312,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/minigames/hidden-heritage-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/hidden-heritage-entry.tsx` while `game.hidden-heritage` is on).
   Object.freeze({ name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' }),
+  // F-CURR-002 row CM-32: Syllable Build (the quest game, its board, the review round at the produce rung and the Listen &
+  // Pick fallback) and the Block Sprint (`src/screens/minigames/syllable-build-chunk.tsx`, reached only through the
+  // literal `import()` of `src/screens/minigames/syllable-build-entry.tsx`); the Daily Review chunk reaches its round at
+  // run time through the entry.
+  Object.freeze({ name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' }),
 ]);
 
 /**

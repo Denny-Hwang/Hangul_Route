@@ -1,3 +1,4 @@
+import { blockParts, REPRESENTATIVE_FINALS, type SyllableZone } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { CLOZE_GAP } from '@hangul-route/content-schema';
 import { jitter, type EngineContext, type ReviewQuestion } from './engine';
@@ -18,7 +19,8 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
  * section 7.1 join with their own rows behind `game.<kind>`: Dictation (Type Hangul `hear`, row CM-31) when
  * `game.type-hangul-hear` is on (`SurfaceOptions.dictation`), Cloze Pick (row CM-30) when `game.cloze-pick` is on
- * (`SurfaceOptions.clozePick`), Syllable Build and Match Shape later.
+ * (`SurfaceOptions.clozePick`), Syllable Build (row CM-32) when `game.syllable-build` is on (`SurfaceOptions.games`),
+ * and Match Shape later.
  * `surfaceIndex` gives the engine the item index with only these formats, so an item it cannot ask that way falls
  * back to another way, or to the read rung, inside the engine, never here. The engine itself keeps Dictation to an
  * item that passes `dictation-unambiguous` (no homophone, no sound change) on a device with a voice.
@@ -29,9 +31,27 @@ export const SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFormat>(
 /** With `game.cloze-pick` on (row CM-30): the produce rung of a sentence (`pat`) can also be a Cloze Pick round. */
 export const CLOZE_SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFormat>([...SURFACE_FORMATS, 'cloze-pick']);
 
+/**
+ * The section 7.1 formats a surface may add while their `game.<kind>` switch is on (row CM-32: Syllable Build, the
+ * produce rung of `sym`, `syl` and one-block `lex` items). Off, the engine never picks them, so it asks the item
+ * another way or at the read rung.
+ */
+export type GameFormats = ReadonlySet<ReviewFormat>;
+export const NO_GAME_FORMATS: GameFormats = new Set<ReviewFormat>();
+
 /** What a surface may ask beyond the shipped formats: the section 7.1 formats whose `game.<kind>` is on. */
 export interface SurfaceGames {
   clozePick?: boolean;
+}
+
+/**
+ * What this surface draws beyond the shipped formats: Cloze Pick with `game.cloze-pick` on (row CM-30), Dictation with
+ * `game.type-hangul-hear` on (row CM-31), and the formats in `games` (row CM-32: Syllable Build with
+ * `game.syllable-build` on).
+ */
+export interface SurfaceOptions extends SurfaceGames {
+  dictation?: boolean;
+  games?: GameFormats;
 }
 
 /** At most this many options a pick round shows (2 x 2 at 320). */
@@ -43,31 +63,50 @@ export const MAX_ORDER_TILES = 8;
 const HAS_SLOT = /_/;
 
 /**
- * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
- * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
- * Read), which the item does not carry, so it is left to its own surfaces.
+ * The section 7.1 formats switched on, as one set: a set of formats as given (a set that also holds the shipped formats,
+ * such as `CLOZE_SURFACE_FORMATS`, adds its new ones), or a surface's switches.
  */
-/** What this surface draws beyond the shipped formats: Dictation with `game.type-hangul-hear` on (row CM-31). */
-export interface SurfaceOptions extends SurfaceGames {
-  dictation?: boolean;
+function gamesOf(on: GameFormats | SurfaceOptions): GameFormats {
+  if (on instanceof Set) return on as GameFormats;
+  const options = on as SurfaceOptions;
+  if (options.clozePick !== true && options.dictation !== true && options.games === undefined) return NO_GAME_FORMATS;
+  const out = new Set<ReviewFormat>(options.games ?? NO_GAME_FORMATS);
+  if (options.clozePick === true) out.add('cloze-pick');
+  if (options.dictation === true) out.add('dictation');
+  return out;
 }
 
-/** The formats a surface allows for these switches (Cloze Pick with `game.cloze-pick` on). */
-const allowedFormats = (options: SurfaceOptions): ReadonlySet<ReviewFormat> => (options.clozePick === true ? CLOZE_SURFACE_FORMATS : SURFACE_FORMATS);
+/**
+ * Row CM-32: an item Syllable Build can ask: one block whose final, if any, is one of the seven final sounds, or another
+ * final when the round shows the item's meaning (a `lex` item with its gloss); a symbol goes in its own zone of a
+ * block the build finds among the taught blocks (`buildRound`).
+ */
+function buildable(item: Pick<ReviewItem, 'kind' | 'ko' | 'en'>): boolean {
+  if (item.kind === 'sym') return true;
+  const parts = blockParts(item.ko);
+  if (parts === null) return false;
+  return parts.final === null || REPRESENTATIVE_FINALS.includes(parts.final) || (item.kind === 'lex' && item.en !== undefined);
+}
 
+/**
+ * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
+ * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
+ * Read), which the item does not carry, so it is left to its own surfaces. `on` is the surface's switches, or the
+ * section 7.1 formats switched on as a set.
+ */
 export function surfaceFormats(
-  item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'>,
-  allowed: ReadonlySet<ReviewFormat> | SurfaceOptions = {},
+  item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'> & { en?: string | undefined },
+  on: GameFormats | SurfaceOptions = {},
 ): ReviewFormat[] {
   if (item.kind === 'rea') return [];
-  const options: SurfaceOptions = allowed instanceof Set ? {} : (allowed as SurfaceOptions);
-  const formats = allowed instanceof Set ? (allowed as ReadonlySet<ReviewFormat>) : allowedFormats(options);
+  const games = gamesOf(on);
   return item.formats.filter((f) => {
     // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
-    if (f === 'dictation') return options.dictation === true && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
-    if (!formats.has(f)) return false;
+    if (f === 'dictation') return games.has(f) && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
+    if (f === 'syllable-build') return games.has(f) && buildable(item);
     // A Cloze Pick round leaves out one word of a sentence, so its words and their romanization must line up.
-    if (f === 'cloze-pick') return item.kind === 'pat' && clozeWords(item) !== null;
+    if (f === 'cloze-pick') return games.has(f) && item.kind === 'pat' && clozeWords(item) !== null;
+    if (!SURFACE_FORMATS.has(f)) return false;
     if (f === 'hear-pick' && (item.kind === 'sym' || HAS_SLOT.test(item.ko))) return false;
     if (f === 'sentence-builder' && HAS_SLOT.test(item.ko)) return false;
     if (f === 'type-picture' && item.picture === undefined) return false;
@@ -76,30 +115,34 @@ export function surfaceFormats(
 }
 
 type SurfaceIndex = EngineContext['index'];
-/** One cache per switch combination (Cloze Pick, Dictation), so a surface index is built once per index. */
-const surfaceCaches = new Map<string, WeakMap<object, SurfaceIndex>>();
+/** One cut index per index and switch combination, so a surface index is built once for each. */
+const surfaceCache = new WeakMap<object, Map<string, SurfaceIndex>>();
 
 /**
- * The item index with each item's formats cut to this surface's; an item left with none is not askable here. With
- * `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the engine falls back).
+ * The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none is
+ * not askable here. With `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the
+ * engine falls back).
  */
-export function surfaceIndex(index: SurfaceIndex, options: SurfaceOptions = {}): SurfaceIndex {
-  const key = `${options.clozePick === true ? 'c' : ''}${options.dictation === true ? 'd' : ''}`;
-  let cache = surfaceCaches.get(key);
-  if (cache === undefined) {
-    cache = new WeakMap();
-    surfaceCaches.set(key, cache);
-  }
-  const held = cache.get(index);
+export function surfaceIndex(index: SurfaceIndex, on: GameFormats | SurfaceOptions = {}): SurfaceIndex {
+  const games = gamesOf(on);
+  const key = [...games].filter((f) => !SURFACE_FORMATS.has(f)).sort().join('|');
+  const byGames = surfaceCache.get(index) ?? new Map<string, SurfaceIndex>();
+  surfaceCache.set(index, byGames);
+  const held = byGames.get(key);
   if (held) return held;
+  // Row CM-32: a symbol keeps Syllable Build only when a block of this index can host it (`hostsOf`), so a symbol no
+  // block holds (ㅌ, a compound vowel, a final heard as another) is asked another way, or at the read rung, inside the
+  // engine, and never dropped from a session for want of a round.
+  const hostable = games.has('syllable-build') ? hostableSymbols(index, games) : null;
   const cut: ReviewItem[] = [];
   for (const item of index.items) {
-    const formats = surfaceFormats(item, options);
+    let formats = surfaceFormats(item, games);
+    if (item.kind === 'sym' && hostable !== null && !hostable.has(symbolKey(item))) formats = formats.filter((f) => f !== 'syllable-build');
     if (formats.length > 0) cut.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
   // A sentence none of whose words has two fair tiles cannot be a Cloze Pick round: its produce rung is then Sentence
   // Builder, or the engine asks it at read (section 4.5), rather than choosing a format whose round is never built.
-  const pool = options.clozePick === true ? clozePool(cut) : null;
+  const pool = games.has('cloze-pick') ? clozePool(cut) : null;
   const items: ReviewItem[] = [];
   for (const item of cut) {
     if (pool === null || !item.formats.includes('cloze-pick') || clozeTileable(item, pool)) items.push(item);
@@ -109,7 +152,7 @@ export function surfaceIndex(index: SurfaceIndex, options: SurfaceOptions = {}):
     }
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  cache.set(index, out);
+  byGames.set(key, out);
   return out;
 }
 
@@ -262,7 +305,21 @@ export interface ClozeRound extends RoundBase {
   answerId: string;
 }
 
-export type ReviewRound = PickRound | TypeRound | OrderRound | ClozeRound;
+/**
+ * Syllable Build at the produce rung (row CM-32): hear the block and build it. The tiles are chosen by the round's
+ * screen (the Syllable Build chunk) from the target, so no tile logic sits in this chunk. A symbol item builds a taught
+ * block with the symbol already in its zone (`fixed`).
+ */
+export interface BuildRound extends RoundBase {
+  type: 'build';
+  /** The block to build. */
+  target: KoText;
+  /** The item's meaning when it is a word (a bare block or a symbol has none). */
+  gloss?: string;
+  fixed?: SyllableZone;
+}
+
+export type ReviewRound = PickRound | TypeRound | OrderRound | ClozeRound | BuildRound;
 
 /** The meaning of an item (or a reply) in the UI language; undefined when it has none. */
 export type GlossOf = (key: string | undefined, en: string | undefined) => string | undefined;
@@ -272,6 +329,8 @@ export interface RoundInput {
   gloss: GlossOf;
   /** The same seed gives the same options and tiles. */
   seed: string;
+  /** The learner's item states (row CM-32: a symbol's Syllable Build prefers a block the learner has met). */
+  states?: EngineContext['states'];
 }
 
 const koOf = (item: Pick<ReviewItem, 'ko' | 'romanization'>): KoText => ({ ko: item.ko, romanization: item.romanization });
@@ -474,6 +533,59 @@ function clozeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   return null;
 }
 
+/** Where a symbol sits in a block: a vowel in the vowel zone, a `-batchim` symbol in the final zone, else the first. */
+function symbolZone(item: Pick<ReviewItem, 'id' | 'ko'>): SyllableZone {
+  if (item.id.endsWith('-batchim')) return 'final';
+  return /^[ㅏ-ㅣ]$/.test(item.ko) ? 'vowel' : 'first';
+}
+
+const symbolKey = (item: Pick<ReviewItem, 'id' | 'ko'>): string => `${symbolZone(item)}:${item.ko}`;
+
+/** The blocks of the index that can host a symbol in its zone: one block whose final, if any, is one of the seven final sounds. */
+function hostsOf(index: SurfaceIndex, zone: SyllableZone, letter: string): ReviewItem[] {
+  return [...itemsOfKind(index, 'syl'), ...itemsOfKind(index, 'lex')].filter((i) => {
+    const p = blockParts(i.ko);
+    if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) return false;
+    return zone === 'first' ? p.first === letter : zone === 'vowel' ? p.vowel === letter : p.final === letter;
+  });
+}
+
+/** Every `zone:letter` a block of the index can host (what `hostsOf` finds), for `surfaceIndex`. */
+function hostableSymbols(index: SurfaceIndex, games: GameFormats): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const i of index.items) {
+    if ((i.kind !== 'syl' && i.kind !== 'lex') || surfaceFormats(i, games).length === 0) continue;
+    const p = blockParts(i.ko);
+    if (p === null || (p.final !== null && !REPRESENTATIVE_FINALS.includes(p.final))) continue;
+    out.add(`first:${p.first}`);
+    out.add(`vowel:${p.vowel}`);
+    if (p.final !== null) out.add(`final:${p.final}`);
+  }
+  return out;
+}
+
+function buildRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): BuildRound | null {
+  if (item.kind === 'sym') {
+    // A taught block with the symbol in its zone, chosen by the seed: a block the learner has met first, then a block of
+    // the Stage 1 table (a `syl` item), then a one-block word of a later stage, so a Stage 1 learner builds a block of
+    // letters they know rather than a word they have never met.
+    const zone = symbolZone(item);
+    const hosts = hostsOf(input.index, zone, item.ko);
+    const met = (i: ReviewItem): boolean => input.states?.[i.id] !== undefined;
+    const tiers = [hosts.filter(met), hosts.filter((i) => i.kind === 'syl'), hosts];
+    const tier = tiers.find((t) => t.length > 0) ?? [];
+    const host = seededOrder(tier, `${input.seed}|${item.id}|host`, (i) => i.id)[0];
+    if (host === undefined) return null;
+    return { type: 'build', question, target: koOf(host), fixed: zone, answer: { ko: koOf(host) } };
+  }
+  if (!buildable(item)) return null;
+  const gloss = itemGloss(item, input);
+  // A final heard as another (붓 [붇]) is asked only with the meaning on screen; without it in this UI language, not built.
+  const final = blockParts(item.ko)?.final ?? null;
+  if (final !== null && !REPRESENTATIVE_FINALS.includes(final) && gloss === undefined) return null;
+  return { type: 'build', question, target: koOf(item), ...(gloss ? { gloss } : {}), answer: { ko: koOf(item), ...(gloss ? { gloss } : {}) } };
+}
+
 /** The round for an engine question, or null when the item cannot be played this way (it is then skipped). */
 export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRound | null {
   const item = input.index.byId.get(question.itemId);
@@ -498,6 +610,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
         clozeRound(question, item, input) ??
         (item.formats.includes('sentence-builder') ? orderRound({ ...question, format: 'sentence-builder' }, item, input) : null)
       );
+    case 'syllable-build':
+      return buildRound(question, item, input);
     default:
       return null;
   }

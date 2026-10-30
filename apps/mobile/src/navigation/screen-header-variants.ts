@@ -67,6 +67,7 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   CellCheck: 'close',
   StageCheck: 'close',
   StageRecap: 'close',
+  DecodingSprint: 'close',
   CardDetail: 'close',
   StoryReader: 'close',
   StorySources: 'back',

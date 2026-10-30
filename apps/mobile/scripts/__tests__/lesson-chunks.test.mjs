@@ -185,6 +185,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
       { name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' },
       { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
+      { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([{ name: 'scene-food-market', marker: 'scene-chunk:food-market' }]);
@@ -250,6 +251,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(precacheBudgetProblems(report)).toEqual([]);
     const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: text.length - 1 };
     expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
+    // Row CM-32: the Syllable Build chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/syllable-build-chunk.tsx')).toContain(`export const SYLLABLE_BUILD_CHUNK = '${SCREEN_CHUNKS[11].marker}';`);
+    expect(read('src/screens/minigames/syllable-build-entry.tsx')).toContain("import('./syllable-build-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -320,6 +324,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'dictation-chunk has no web bundle: the chunk is missing from the build',
       'culture-tip-chunk has no web bundle: the chunk is missing from the build',
       'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
+      'syllable-build-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -488,6 +493,9 @@ describe('precacheReport and its budget lines', () => {
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeLessThan(10_000);
     // CM-36 (Hidden Heritage) merged onto main 524961dae measures 4,758,450 B (release build): under the same line.
     expect(PRECACHE_BUDGET.startBundleRaw - 4_758_450).toBeGreaterThanOrEqual(0);
+    // CM-32 (Syllable Build and the Block Sprint, their screens in syllable-build-chunk) on main 524961dae measures
+    // 4,758,598 B (+7,154 B over CM-23c's 4,751,444 B), under the same line.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_598).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

@@ -38,4 +38,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'role-play',
   // F-CURR-002 row CM-36: the game, or its Pic-Word Match fallback while `game.hidden-heritage` is off.
   'hidden-heritage',
+  // F-CURR-002 row CM-32 (Listen & Pick on the block while `game.syllable-build` is off)
+  'syllable-build',
 ]);
