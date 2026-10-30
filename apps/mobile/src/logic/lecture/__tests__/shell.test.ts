@@ -1,7 +1,7 @@
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { encodeDeck, LectureDeckSchema, type LectureBlock, type LectureDeckInput } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
 import { lectureBundle } from '../content';
 import { initialPresenterState } from '../controls';
@@ -28,7 +28,15 @@ import {
   slideDetail,
   startPayload,
   startTally,
+  tallyLayout,
   tallyStep,
+  settleWithin,
+  START_SETTLE_MAX_MS,
+  NAV_COUNT_MAX,
+  QUICK_BACK_MS,
+  type NavSource,
+  type RunTally,
+  type TallyEvent,
   voiceState,
   voiceCheck,
   soundCheckOutcome,
@@ -36,7 +44,7 @@ import {
   strokeTokenFor,
 } from '../shell';
 import { NO_INSETS, barBand, stageBox, stageButtonSize, units } from '../stage-constants';
-import { stageScale } from '../stage-scale';
+import { navLayout, stageScale } from '../stage-scale';
 import { layout, presenter, spacing, touchTarget } from '@hangul-route/design-system/tokens';
 
 const BAR_BAND = barBand(touchTarget.hero, spacing.md);
@@ -762,9 +770,163 @@ describe('telemetry payloads', () => {
     t = tallyStep(t, { slideIdx: 1, reveal: 0 }, { slideIdx: 0, reveal: 1 }, slides);
     t = tallyStep(t, { slideIdx: 0, reveal: 1 }, { slideIdx: 0, reveal: 0 }, slides);
     t = tallyStep(t, { slideIdx: 0, reveal: 0 }, { slideIdx: 9, reveal: 0 }, slides);
-    expect(completePayload(t, 1_000 + 5 * 60_000 + 20_000)).toEqual({ slidesShown: 2, minutes: 5, reveals: 1 });
-    expect(completePayload(startTally(5_000, undefined), 1_000)).toEqual({ slidesShown: 0, minutes: 0, reveals: 0 });
+    expect(completePayload(t, 1_000 + 5 * 60_000 + 20_000, 'docked')).toMatchObject({ slidesShown: 2, minutes: 5, reveals: 1 });
+    expect(completePayload(startTally(5_000, undefined), 1_000, 'docked')).toMatchObject({ slidesShown: 0, minutes: 0, reveals: 0 });
     expect(initialPresenterState({ slides }).slideIdx).toBe(0);
+  });
+});
+
+/**
+ * AMENDMENTS-PRESENTER-NAV section 12 (owner choice O8, row PN-6): `lecture.complete` counts the steps
+ * by where they came from, the quick backs and the points, with the layout of the first slide shown.
+ */
+describe('lecture.complete navigation counts (PN-6)', () => {
+  const slides = [{ key: 'a' }, { key: 'b' }, { key: 'c' }, { key: 'd' }];
+  const at = (slideIdx: number, reveal = 0) => ({ slideIdx, reveal });
+  /** A step from `from` to `to` by `event` from `source`, taken at `ms`. */
+  const step = (t: RunTally, from: ReturnType<typeof at>, to: ReturnType<typeof at>, event: TallyEvent, source: NavSource | undefined, ms: number): RunTally =>
+    tallyStep(t, from, to, slides, { event, ...(source !== undefined ? { source } : {}), at: ms });
+  const NAV_KEYS = ['navLayout', 'stepsButton', 'stepsSwipe', 'stepsKey', 'stepsClick', 'quickBacks', 'points'];
+
+  it('tallyStep counts each next and prev under its own source', () => {
+    let t = startTally(0, 'a');
+    t = step(t, at(0), at(1), 'next', 'button', 10_000);
+    t = step(t, at(1), at(2), 'next', 'swipe', 20_000);
+    t = step(t, at(2), at(3), 'next', 'key', 30_000);
+    t = step(t, at(3), at(2), 'prev', 'click', 40_000);
+    t = step(t, at(2), at(2, 1), 'next', 'click', 50_000);
+    t = step(t, at(2, 1), at(1), 'prev', 'swipe', 60_000);
+    t = step(t, at(1), at(0), 'prev', 'button', 70_000);
+    expect(completePayload(t, 70_000, 'docked')).toEqual({
+      slidesShown: 4,
+      minutes: 1,
+      reveals: 1,
+      navLayout: 'docked',
+      stepsButton: 2,
+      stepsSwipe: 2,
+      stepsKey: 1,
+      stepsClick: 2,
+      quickBacks: 0,
+      points: 0,
+    });
+  });
+
+  it('a press that moved nothing counts nothing; first, last and goto are no step of any source', () => {
+    let t = startTally(0, 'a');
+    // Next on the End slide, or a step an overlay swallowed: the state did not move.
+    t = step(t, at(3), at(3), 'next', 'button', 1_000);
+    t = step(t, at(0), at(0), 'prev', 'key', 2_000);
+    t = step(t, at(0), at(3), 'last', 'key', 3_000);
+    t = step(t, at(3), at(0), 'first', 'key', 4_000);
+    t = step(t, at(0), at(2), { goto: 2 }, undefined, 5_000);
+    // The replay of a sound is no step either.
+    t = step(t, at(2), at(2), 'replay-sound', 'button', 6_000);
+    expect(completePayload(t, 6_000, 'docked')).toMatchObject({ stepsButton: 0, stepsSwipe: 0, stepsKey: 0, stepsClick: 0, quickBacks: 0, points: 0 });
+  });
+
+  it('quickBacks: a prev 1999 ms after a forward step counts; at 2000 ms it does not', () => {
+    expect(QUICK_BACK_MS).toBe(2000);
+    const back = (gap: number): number => {
+      let t = startTally(0, 'a');
+      t = step(t, at(0), at(1), 'next', 'button', 10_000);
+      t = step(t, at(1), at(0), 'prev', 'button', 10_000 + gap);
+      return completePayload(t, 20_000, 'rail').quickBacks;
+    };
+    expect(back(1999)).toBe(1);
+    expect(back(2000)).toBe(0);
+    expect(back(0)).toBe(1);
+  });
+
+  it('quickBacks: one per forward step, from any source; a reveal counts as forward; any other move ends the window', () => {
+    let t = startTally(0, 'a');
+    t = step(t, at(0), at(0, 1), 'next', 'swipe', 1_000);
+    t = step(t, at(0, 1), at(0), 'prev', 'key', 1_500);
+    // A second back right after: no forward step before it.
+    t = step(t, at(1), at(0), 'prev', 'key', 1_800);
+    expect(t.nav.quickBacks).toBe(1);
+    // A grid jump between the forward step and the back: no quick back.
+    t = step(t, at(0), at(1), 'next', 'click', 10_000);
+    t = step(t, at(1), at(3), { goto: 3 }, undefined, 10_200);
+    t = step(t, at(3), at(2), 'prev', 'button', 10_400);
+    expect(t.nav.quickBacks).toBe(1);
+    // A forward press that moved nothing (Next on the End slide) keeps the earlier forward step's time.
+    t = step(t, at(2), at(3), 'next', 'key', 20_000);
+    t = step(t, at(3), at(3), 'next', 'key', 21_000);
+    t = step(t, at(3), at(2), 'prev', 'swipe', 22_000);
+    expect(t.nav.quickBacks).toBe(1);
+    t = step(t, at(2), at(3), 'next', 'key', 30_000);
+    t = step(t, at(3), at(3), 'next', 'key', 31_000);
+    t = step(t, at(3), at(2), 'prev', 'swipe', 31_999);
+    expect(t.nav.quickBacks).toBe(2);
+  });
+
+  it('points: a { point } the reducer took (row PN-5); 0 until pointing ships', () => {
+    let t = startTally(0, 'a');
+    expect(completePayload(t, 0, 'docked').points).toBe(0);
+    const before = at(1);
+    t = tallyStep(t, before, { ...before }, slides, { event: { point: 2 }, at: 1_000 });
+    t = tallyStep(t, before, before, slides, { event: { point: 3 }, at: 2_000 });
+    expect(completePayload(t, 2_000, 'docked')).toMatchObject({ points: 1, stepsButton: 0, stepsSwipe: 0, stepsKey: 0, stepsClick: 0 });
+  });
+
+  it('every count is a whole number capped at 100000', () => {
+    expect(NAV_COUNT_MAX).toBe(100_000);
+    let t: RunTally = { ...startTally(0, 'a'), nav: { stepsButton: NAV_COUNT_MAX, stepsSwipe: 5, stepsKey: 0, stepsClick: 0, quickBacks: NAV_COUNT_MAX, points: 0 } };
+    t = step(t, at(0), at(1), 'next', 'button', 1_000);
+    t = step(t, at(1), at(0), 'prev', 'button', 1_100);
+    const payload = completePayload(t, 1_100, 'overlay');
+    expect(payload.stepsButton).toBe(NAV_COUNT_MAX);
+    expect(payload.quickBacks).toBe(NAV_COUNT_MAX);
+    const over = completePayload({ ...t, nav: { ...t.nav, stepsSwipe: 250_000.7, stepsKey: -3 } }, 1_100, 'overlay');
+    expect(over.stepsSwipe).toBe(NAV_COUNT_MAX);
+    expect(over.stepsKey).toBe(0);
+    for (const key of NAV_KEYS.slice(1)) expect(Number.isInteger(over[key as keyof typeof over]), key).toBe(true);
+  });
+
+  it('completePayload carries the three counts and the seven keys, and nothing else: no id, place, time or title', () => {
+    let t = startTally(0, 'lecture:secret-slide');
+    t = tallyLayout(t, 'docked');
+    t = step(t, at(0), at(1), 'next', 'button', 1_234);
+    const payload = completePayload(t, 61_234, 'docked');
+    expect(Object.keys(payload).sort()).toEqual(['minutes', 'reveals', 'slidesShown', ...NAV_KEYS].sort());
+    expect(Object.values(payload).every((v) => typeof v === 'number' || v === 'docked')).toBe(true);
+    expect(JSON.stringify(payload)).not.toMatch(/secret|lecture:|1234|forwardAt|startedAt/);
+  });
+
+  it('settleWithin: the start settles when the fullscreen request does, either way, or after the bound', async () => {
+    vi.useFakeTimers();
+    try {
+      const order: string[] = [];
+      void settleWithin(Promise.resolve(true), START_SETTLE_MAX_MS).then(() => order.push('granted'));
+      void settleWithin(Promise.reject(new Error('refused')), START_SETTLE_MAX_MS).then(() => order.push('refused'));
+      void settleWithin(new Promise(() => undefined), START_SETTLE_MAX_MS).then(() => order.push('bound'));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(order).toEqual(['granted', 'refused']);
+      await vi.advanceTimersByTimeAsync(START_SETTLE_MAX_MS - 1);
+      expect(order).toEqual(['granted', 'refused']);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(order).toEqual(['granted', 'refused', 'bound']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('navLayout is the layout of the first slide shown after the start settled, not of the Start tap', () => {
+    // The Start tap on a window that was a phone sees no layout: the tally starts only with the first slide.
+    let t = startTally(0, 'a');
+    expect(t.navLayout).toBeNull();
+    // A lesson left before its start settled reports the layout at Exit.
+    expect(completePayload(t, 0, 'overlay').navLayout).toBe('overlay');
+    // The fullscreen resize settled with the first slide on screen: that layout is kept,
+    t = tallyLayout(t, 'docked');
+    // and a later resize (a turn, leaving fullscreen) changes nothing.
+    t = tallyLayout(t, 'overlay');
+    t = step(t, at(0), at(1), 'next', 'key', 1_000);
+    expect(completePayload(t, 1_000, 'overlay').navLayout).toBe('docked');
+    // A phone (the rail kill switch off, or before row PN-4): every phone window is the overlay layout.
+    expect(navLayout(true)).toBe('overlay');
+    expect(navLayout(false)).toBe('docked');
+    expect(completePayload(tallyLayout(startTally(0, 'a'), navLayout(true)), 0, 'docked').navLayout).toBe('overlay');
   });
 });
 

@@ -47,9 +47,13 @@ import {
   readyFromBoot,
   startTally,
   strokeTokenFor,
+  tallyLayout,
   tallyStep,
   voiceCheck,
+  settleWithin,
+  START_SETTLE_MAX_MS,
   type BootResult,
+  type NavSource,
   type ReadyStart,
   type RunTally,
   type StartSource,
@@ -65,7 +69,7 @@ import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS, rail
 import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import { flags } from './src/config/flags';
-import { NUDGE_MS, type GesturePointer, type StageCommand } from './src/logic/lecture/stage-gesture';
+import { NUDGE_MS, type GesturePointer, type StageCommand, type StageStepSource } from './src/logic/lecture/stage-gesture';
 import { wideTouchWindow } from './src/logic/lecture/bar-layout';
 import { claimNavHint, finishNavHint, navHintKey, navHintStarts, type NavHintStore } from './src/logic/lecture/nav-hint';
 import {
@@ -303,6 +307,9 @@ function Presenter(): ReactElement {
   const nav = navLayout(phone, rail);
   const overlayRef = useRef(nav === 'overlay');
   overlayRef.current = nav === 'overlay';
+  // The layout at Exit, for `lecture.complete` when the start never settled (section 12): the same gate, rail included.
+  const navRef = useRef(nav);
+  navRef.current = nav;
   // The home's Help speaks of the lesson, which runs sideways: an upright phone asks the gate for the
   // window turned (its top and bottom insets become side ones), so the phone line shows only where the
   // lesson will use the floating bar.
@@ -541,6 +548,10 @@ function Presenter(): ReactElement {
   const [pstate, setPstate] = useState<PresenterState | null>(null);
   const stateRef = useRef<PresenterState | null>(null);
   const tally = useRef<RunTally | null>(null);
+  // Start's fullscreen request (and the resize it brings) has settled: `lecture.complete` takes the layout
+  // of the first slide shown from then on, never the window of the Start tap (AMENDMENTS-PRESENTER-NAV section 12).
+  const [startSettled, setStartSettled] = useState(false);
+  const startToken = useRef(0);
   const [romanization, setRomanization] = useState<'always' | 'tap' | null>(null);
   const [strokePlay, setStrokePlay] = useState<StrokePlay | null>(null);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
@@ -742,9 +753,9 @@ function Presenter(): ReactElement {
     [deck, stories, narrator, canPlay, voiceChecked],
   );
 
-  /** Runs one event on the lesson; true when it moved the lesson (another slide or another build). */
+  /** Runs one event on the lesson; true when it moved the lesson (another slide or another build). `source` names where a step came from, for `lecture.complete` (section 12). */
   const dispatch = useCallback(
-    (event: PresenterEvent): boolean => {
+    (event: PresenterEvent, source?: NavSource): boolean => {
       const before = stateRef.current;
       if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
@@ -761,7 +772,7 @@ function Presenter(): ReactElement {
       setPstate(state);
       reportTools(toolsOpened(before, state));
       if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
-      if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
+      if (tally.current) tally.current = tallyStep(tally.current, before, state, slides, { event, ...(source !== undefined ? { source } : {}), at: Date.now() });
       // A story's Read-to-me never runs on into the next slide, nor under an overlay or the full timer.
       if (narrationStops(before, state)) narrator.stop();
       if (state.slideIdx !== before.slideIdx && deck && begun.current) {
@@ -824,13 +835,14 @@ function Presenter(): ReactElement {
    * from a control the teacher can see or a key (the docked band's pinned Previous and Next stay beside
    * its sheet; a clicker's key): it closes the sheet first and then steps, so a visible, enabled Next
    * never does nothing. Each of the sheet's own buttons closes it first too.
+   * `source`: a bar or rail button, or a swipe or click on the stage (`lecture.complete`, section 12).
    */
   const userDispatch = useCallback(
-    (event: PresenterEvent): boolean => {
+    (event: PresenterEvent, source?: NavSource): boolean => {
       activate();
       const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
       if (step && moreOpenRef.current) openMore(false);
-      return dispatch(event);
+      return dispatch(event, source);
     },
     [activate, dispatch, openMore],
   );
@@ -851,7 +863,11 @@ function Presenter(): ReactElement {
     // sideways), and the screen wake lock; each is feature-detected and may be refused.
     unlockAudio();
     unlockChime();
-    void enterFullscreenLandscape();
+    const token = ++startToken.current;
+    setStartSettled(false);
+    void settleWithin(enterFullscreenLandscape(), START_SETTLE_MAX_MS).then(() => {
+      if (startToken.current === token) setStartSettled(true);
+    });
     void keepScreenAwake();
     // The lesson's own history entry, pushed in the tap: the browser's Back now asks before leaving.
     void pushPresenterEntry('running', rawOf(phase.deck));
@@ -937,7 +953,8 @@ function Presenter(): ReactElement {
     releaseDevice();
     // A Start the window never showed was not a lesson: nothing to count or apply.
     if (!started) return;
-    const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
+    const now = Date.now();
+    const payload = completePayload(tally.current ?? startTally(now, undefined), now, navRef.current);
     tally.current = null;
     void track({ name: 'lecture.complete', payload }).finally(() => {
       // A waiting update applies only now, never mid-lesson (section 3.8).
@@ -1009,10 +1026,10 @@ function Presenter(): ReactElement {
           if (stateRef.current) dispatch(timerOpenEvent(stateRef.current, timerRef.current));
           return;
         }
-        dispatch(command);
+        dispatch(command, 'key');
         return;
       }
-      dispatch(command);
+      dispatch(command, 'key');
     });
   }, [phase, dispatch, userDispatch, openMore, toggleFullscreen, activate, showBar]);
 
@@ -1230,6 +1247,11 @@ function Presenter(): ReactElement {
       }, 2 * presenter.autoHideMs);
     });
   }, [slideShown, touchSeen, slides]);
+
+  // The layout `lecture.complete` reports: the first slide's once Start's fullscreen resize settled (section 12).
+  useEffect(() => {
+    if (slideShown && startSettled && tally.current) tally.current = tallyLayout(tally.current, nav);
+  }, [slideShown, startSettled, nav]);
   // On a phone the bar shows when the slide does (the start of the lesson, or back from the rotate page), so its place is learned.
   useEffect(() => {
     if (slideShown && phone) showBar();
@@ -1406,10 +1428,10 @@ function Presenter(): ReactElement {
     // What covers the stage for a gesture (section 7.2): the More sheet (a tap there closes it), or any
     // other covering overlay or the Exit confirm, which swallow navigation.
     const stageCovering = moreOpen ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
-    const onGesture = (command: Exclude<StageCommand, null>, via: { swipe: boolean }): void => {
+    const onGesture = (command: Exclude<StageCommand, null>, source: StageStepSource): void => {
       if (command === 'next' || command === 'prev') {
         // Only a swipe that moved the lesson ends the start hint (section 9.3: the first swipe *step*).
-        if (userDispatch(command) && via.swipe) navStepSeen();
+        if (userDispatch(command, source) && source === 'swipe') navStepSeen();
         return;
       }
       // Every other command is a user activation too (rule 4) and changes no slide.
@@ -1441,10 +1463,10 @@ function Presenter(): ReactElement {
           onPrev={() => {
             // Only a press that moved the lesson ends the start hint (section 9.3: the first button *step*;
             // Previous on the first slide steps nothing and keeps it).
-            if (userDispatch('prev')) navStepSeen();
+            if (userDispatch('prev', 'button')) navStepSeen();
           }}
           onNext={() => {
-            if (userDispatch('next')) navStepSeen();
+            if (userDispatch('next', 'button')) navStepSeen();
           }}
           onSound={() => userDispatch('replay-sound')}
           onFullscreen={() => {

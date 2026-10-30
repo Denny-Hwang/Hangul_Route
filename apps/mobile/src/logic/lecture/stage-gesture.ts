@@ -100,6 +100,17 @@ export function stageGesture(g: StageGesture): StageCommand {
   return g.layout === 'overlay' ? 'toggle-bar' : 'nudge-next';
 }
 
+/** Where a step from the stage came from, for `lecture.complete` (AMENDMENTS-PRESENTER-NAV section 12). */
+export type StageStepSource = 'swipe' | 'click';
+
+/**
+ * The source of a step `stageGesture` gave: a tap that stepped is a mouse click (a touch tap never
+ * steps); anything else that stepped is a swipe, a touch or a mouse drag.
+ */
+export function stageStepSource(g: Pick<StageGesture, 'dx' | 'dy'>): StageStepSource {
+  return isTap(g.dx, g.dy) ? 'click' : 'swipe';
+}
+
 /**
  * The `data-stage-target` marker of the node a gesture started on (`closest('[data-stage-target]')`),
  * read: `option:1` to `option:4` an option with its number, `step`, `tile` and `chip` another target,

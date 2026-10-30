@@ -123,7 +123,7 @@ Four names in the new `lecture.` namespace (a teacher's presenter, `/present`). 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
 | 1 | `lecture.start` | F-TCH-004 §3.14 | `{ source: 'console' \| 'quick' \| 'recent', blocks, slides, skipped, picker: 'none' \| 'names' \| 'initials' \| 'numbers', romanization: 'always' \| 'tap', voice: 'ready' \| 'none' \| 'unknown', offlineReady: boolean }` (the Start tap) | PR 1 | PR 6 |
-| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit). PN-1 adds `navLayout: 'docked' \| 'rail' \| 'overlay'` and six whole-number counts `stepsButton`, `stepsSwipe`, `stepsKey`, `stepsClick`, `quickBacks`, `points` (each 0 to 100000), AMENDMENTS-PRESENTER-NAV §12 | PR 1 | PR 6 |
+| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit). PN-1 adds `navLayout: 'docked' \| 'rail' \| 'overlay'` and six whole-number counts `stepsButton`, `stepsSwipe`, `stepsKey`, `stepsClick`, `quickBacks`, `points` (each 0 to 100000), AMENDMENTS-PRESENTER-NAV §12; the presenter sends them from PN-6 (`navLayout` of the first slide shown once Start's fullscreen request settled) | PR 1 | PR 6 |
 | 3 | `lecture.tool_used` | F-TCH-004 §3.14 | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` (first use of each tool per lecture) | PR 1 | PR 9 |
 | 4 | `lecture.deck_rejected` | F-TCH-004 §3.14 | `{ reason: 'empty' \| 'too_large' \| 'bad_encoding' \| 'bad_json' \| 'unsupported_version' \| 'invalid' }` (the codec reasons, §3.2) | PR 1 | PR 6 |
 

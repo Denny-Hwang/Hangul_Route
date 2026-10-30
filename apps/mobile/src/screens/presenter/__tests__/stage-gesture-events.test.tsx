@@ -6,7 +6,7 @@ import { Dimensions } from 'react-native';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
-import { COMPAT_MOUSE_MS, type GesturePointer, type StageCommand, type StageCovering } from '../../../logic/lecture/stage-gesture';
+import { COMPAT_MOUSE_MS, type GesturePointer, type StageCommand, type StageCovering, type StageStepSource } from '../../../logic/lecture/stage-gesture';
 import type { NavLayout } from '../../../logic/lecture/stage-scale';
 import { subscribeInputKind, type PresenterEnv } from '../../../platform/presenter.web';
 import { byTestId, render } from '../../../test-support/render';
@@ -48,8 +48,9 @@ interface Setup {
   lastPointer?: () => GesturePointer | null;
 }
 
-async function mount(setup: Setup = {}): Promise<{ stage: ReactTestInstance; commands: Exclude<StageCommand, null>[] }> {
+async function mount(setup: Setup = {}): Promise<{ stage: ReactTestInstance; commands: Exclude<StageCommand, null>[]; sources: StageStepSource[] }> {
   const commands: Exclude<StageCommand, null>[] = [];
+  const sources: StageStepSource[] = [];
   const element = (
     <PresenterViewProvider value={{ messages: getMessages('en'), locale: 'en', unit: 1, reducedMotion: true }}>
       <Stage
@@ -60,7 +61,10 @@ async function mount(setup: Setup = {}): Promise<{ stage: ReactTestInstance; com
         deckTitle="Gestures"
         strokeToken={0}
         joinCta="Join"
-        onGesture={(command) => commands.push(command)}
+        onGesture={(command, source) => {
+          commands.push(command);
+          sources.push(source);
+        }}
         layout={setup.layout ?? 'docked'}
         covering={setup.covering ?? 'none'}
         pointing={setup.pointing ?? false}
@@ -75,7 +79,7 @@ async function mount(setup: Setup = {}): Promise<{ stage: ReactTestInstance; com
   const r = await render(element);
   // The composite View that holds the responder handlers (the host node gets them as DOM listeners).
   const stage = r.root.find((n) => n.props.testID === 'presenter-stage' && typeof n.props.onResponderGrant === 'function');
-  return { stage, commands };
+  return { stage, commands, sources };
 }
 
 type Touch = { identifier: number; pageX: number; pageY: number };
@@ -281,5 +285,49 @@ describe('Stage: the target read at the grant (section 7.1)', () => {
     fire(stage, 'onResponderRelease', ev('touchend', [at(1, 200)], []));
     expect(commands).toEqual([]);
     expect(byTestId(stage, 'presenter-grabber')).toHaveLength(0);
+  });
+});
+
+describe('Stage: the source of a step, for lecture.complete (section 12, row PN-6)', () => {
+  it('a touch swipe and a mouse drag are swipes; a mouse click that goes on is a click', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(3_000_000);
+      const { stage, commands, sources } = await mount();
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 700)], [at(1, 700)], outside));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 600)], []));
+      // The mouse comes later than a tap's compatibility events would.
+      vi.setSystemTime(3_000_000 + COMPAT_MOUSE_MS + 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 500)], [at(0, 500)], outside));
+      fire(stage, 'onResponderMove', ev('mousemove', [at(0, 560)], [at(0, 560)]));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 600)], []));
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 640)], [at(0, 640)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
+      expect(commands).toEqual(['next', 'prev', 'next']);
+      expect(sources).toEqual(['swipe', 'swipe', 'click']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a touch tap's compatibility mouse events on a docked, target-free slide are no click step", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(4_000_000);
+      const { stage, commands, sources } = await mount({ lastPointer: () => 'touch' });
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderMove', ev('touchmove', [at(1, 643)], [at(1, 643)]));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 643)], []));
+      vi.setSystemTime(4_000_000 + COMPAT_MOUSE_MS - 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      // The touch tap alone answers (it never steps); the mouse events after it are dropped, so
+      // nothing reaches the stepper to be counted as a mouse click.
+      expect(commands).toHaveLength(1);
+      expect(commands).not.toContain('next');
+      expect(commands).not.toContain('prev');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

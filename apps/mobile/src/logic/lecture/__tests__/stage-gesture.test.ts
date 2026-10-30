@@ -13,6 +13,7 @@ import {
   optionTarget,
   parseStageTarget,
   stageGesture,
+  stageStepSource,
   type StageGesture,
 } from '../stage-gesture';
 
@@ -253,5 +254,22 @@ describe('the target and the pointer of a gesture', () => {
     expect(isCompatMouse('mousedown', -1)).toBe(false);
     expect(isCompatMouse('touchstart', 0)).toBe(false);
     expect(isCompatMouse(undefined, 0)).toBe(false);
+  });
+});
+
+describe('the source of a stage step, for lecture.complete (section 12, row PN-6)', () => {
+  it('a step from a tap is a mouse click; a step from a swipe or a mouse drag is a swipe', () => {
+    // A mouse click on empty area of a target-free slide steps forward: a click.
+    const click = g({ pointer: 'mouse', dx: TAP_SLOP - 1, dy: -(TAP_SLOP - 1) });
+    expect(stageGesture(click)).toBe('next');
+    expect(stageStepSource(click)).toBe('click');
+    for (const pointer of ['touch', 'mouse'] as const) {
+      const left = g({ pointer, dx: -SWIPE_MIN, dy: 0 });
+      const right = g({ pointer, dx: SWIPE_MIN, dy: 0 });
+      expect([stageGesture(left), stageStepSource(left)], pointer).toEqual(['next', 'swipe']);
+      expect([stageGesture(right), stageStepSource(right)], pointer).toEqual(['prev', 'swipe']);
+    }
+    // A touch tap never steps, so its source is never read.
+    expect(stageGesture(g({ pointer: 'touch' }))).toBe('nudge-next');
   });
 });
