@@ -376,13 +376,14 @@ async function openJourneyTab(page: Page, name: string): Promise<void> {
 }
 
 /**
- * F-AUDIO-004 A-5b: the Stage 4 "Greeting Dialogues" quest 1, Nice to Meet You (Journey,
- * Holidays & Traditions, stage 4; a generated lesson cell since F-CURR-001 T-2): Discover,
- * then step 3 is Tap & Respond.
+ * F-AUDIO-004 A-5b: the Stage 4 Nature & Animals quest 1, Sky Watching (Journey, Nature & Animals,
+ * stage 4; a generated lesson cell): Discover, then step 3 is Tap & Respond with three turns. Since
+ * F-CURR-002 row CM-3A S4, Holidays & Traditions plays Story Sequence there; Nature keeps Tap to Respond
+ * as its Practice in all three quests (section 7.1).
  */
 async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
   await openJourneyTab(page, name);
-  await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
+  await page.getByRole('button', { name: journeyCellName(4, 'Nature & Animals') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   if (await anyway.isVisible()) await anyway.click();
@@ -452,7 +453,7 @@ test('Tap & Respond: a right reply is said in full before the next line, and Hea
   expect(texts.slice(0, 2)).toEqual(['안녕하세요!', '안녕하세요!']);
   await expect.poll(async () => (await utterances(page)).length).toBe(3);
   const next = (await utterances(page))[2]!;
-  expect(next.text).toBe('이름이 뭐예요?');
+  expect(next.text).toBe('날씨가 좋아요!');
   await expect(page.getByText(next.text, { exact: true })).toBeVisible();
   await expect(tapRespondHear(page)).toBeEnabled();
 });

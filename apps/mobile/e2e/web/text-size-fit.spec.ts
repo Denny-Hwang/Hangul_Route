@@ -175,9 +175,9 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     test.setTimeout(120_000);
     await learnerAtLargest(page, 'Ana');
 
-    // Stage 4 Holidays & Traditions, quest 1, step 3: Tap & Respond.
+    // Stage 4 Nature & Animals, quest 1, step 3: Tap & Respond (Holidays & Traditions plays Story Sequence there since row CM-3A S4).
     await page.getByText('Journey', { exact: true }).last().click();
-    await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
+    await page.getByRole('button', { name: journeyCellName(4, 'Nature & Animals') }).click();
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     const anyway = page.getByRole('button', { name: 'Play anyway' });
     await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -204,6 +204,26 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     await expect(page.getByTestId('culture-quiz-hear')).toBeVisible();
     await expectTextFits(page, 'the Culture Quiz');
     await shot(page, 'dn3b-culture-quiz-largest-320x568');
+  });
+
+  test('a Role Play Practice with its switch dark: the Tap to Respond fallback and its longer replies fit (row CM-3A S4)', async ({ page }) => {
+    test.setTimeout(120_000);
+    await learnerAtLargest(page, 'Ana');
+
+    // Stage 4 Food & Daily Life, quest 1, step 3: Role Play; `game.role-play` is dark, so it plays Tap to Respond.
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: journeyCellName(4, 'Food & Daily Life') }).click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByText('Choose your reply', { exact: true })).toBeVisible();
+    await expect(page.getByText('1 / 4')).toBeVisible();
+    await expectTextFits(page, 'the Role Play fallback');
+    await shot(page, 'cm3a-s4-role-play-fallback-largest-320x568');
   });
 
   test('Stage complete: the letter wall\'s tiles grow to hold their letters at Largest', async ({ page }) => {
