@@ -629,6 +629,7 @@ export const learner = {
       heading: {
         see: '이 낱말을 입력해 봐요',
         picture: '그림에 맞는 낱말을 입력해 봐요',
+        hear: '들은 낱말을 입력해 봐요',
       },
       pass: '잘 입력했어요!',
       near: '거의 다 됐어요! 표시된 글자를 살펴봐요.',
@@ -637,6 +638,14 @@ export const learner = {
       targetLabel: '낱말',
       fixIt: { cta: '고치기' },
       showRomanization: { cta: '읽는 법 보기' },
+      hear: {
+        meaning: (gloss: string) => `뜻: ${gloss}`,
+        showSound: '소리 보기',
+      },
+    },
+    spellingPick: {
+      heading: '이 낱말은 어떻게 쓸까요?',
+      miss: '뜻을 다시 살펴봐요.',
     },
     writeFrame: {
       heading: '나만의 문장을 만들어 봐요',

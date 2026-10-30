@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { isOneKeyFinal } from '../hangul/compose-typed';
+import { AudioRefSchema } from './audio';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
 
 /**
@@ -109,6 +110,21 @@ export const ListenPickRoundSchema = z
     prompt: KoTextSchema,
     options: z.array(ListenPickOptionSchema).min(2).max(4),
     answerId: z.string(),
+    /**
+     * F-CURR-002 section 4.5 (row CM-31): the read-plus-meaning spelling round of Letters S2. The prompt's meaning
+     * (`prompt.en`, in the UI language) and its picture are shown with the sound, and the options are spellings that
+     * may sound the same (책이 and 채기 are both [채기]); the meaning or the picture is what settles it.
+     */
+    promptKind: z.literal('spelling').optional(),
+    /** A spelling round's picture of the word (shown above its meaning). */
+    pictureRef: PictureRefSchema.optional(),
+    /**
+     * A spelling round's other options for its `game.spelling-pick` fallback (`spellingPickToListenPick`): taught words
+     * that sound different from the answer, so every option left has one right answer by sound alone. The lint's
+     * `dictation-unambiguous` checks the spelling round's shape (`spellingRoundIssues`, lesson-lint.ts), so these
+     * rules stay out of the start bundle.
+     */
+    fallbackOptions: z.array(ListenPickOptionSchema).min(1).max(3).optional(),
   })
   .superRefine((round, ctx) => {
     const ids = new Set<string>();
@@ -145,6 +161,24 @@ export const ListenPickRoundSchema = z
     }
   });
 export type ListenPickRound = z.infer<typeof ListenPickRoundSchema>;
+
+/** Whether a Listen & Pick round is the spelling round of section 4.5 (row CM-31). */
+export function isSpellingRound(round: Pick<ListenPickRound, 'promptKind'>): boolean {
+  return round.promptKind === 'spelling';
+}
+
+/**
+ * The `game.spelling-pick` fallback (row CM-31, design/wireframes/minigame/type-hangul.md): Listen & Pick on the same
+ * word in its shipped audio prompt. The right spelling stays, the look-alike spellings go, and the round's fallback
+ * options (taught words that sound different) take their place; no picture and no meaning, as Listen & Pick shows.
+ * A round that is not a spelling round comes back as it is.
+ */
+export function spellingPickToListenPick(round: ListenPickRound): ListenPickRound {
+  if (!isSpellingRound(round)) return round;
+  const answer = round.options.find((o) => o.id === round.answerId);
+  const options = [...(answer ? [answer] : []), ...(round.fallbackOptions ?? [])].slice(0, 4);
+  return { id: round.id, prompt: round.prompt, options, answerId: round.answerId };
+}
 
 /** Pic-Word Match (F-QUEST-002 §3.11): pair 3-5 pictures with their Korean words. */
 export const PicWordPairSchema = z.object({
@@ -361,6 +395,14 @@ export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRoun
 export const TypeHangulRoundSchema = z.object({
   id: z.string().min(1),
   promptEn: z.string().trim().min(1).max(90),
+  /**
+   * F-CURR-002 section 7.1 F2 (row CM-31), additive: `hear` is Dictation (hear the word, type it; its Korean and
+   * romanization are hidden until Done). Absent is `see`, so every round written before it reads as before; a `see`
+   * round with a `pictureRef` is the picture prompt. Only an item that passes `dictation-unambiguous` is heard.
+   */
+  mode: z.enum(['see', 'hear']).optional(),
+  /** A recording of the word for `hear` (it wins over the device voice, F-AUDIO-004). */
+  audioRef: AudioRefSchema.optional(),
   pictureRef: PictureRefSchema.optional(),
   target: KoTextSchema.refine((t) => isComposable(t.ko) && t.ko.length <= 12, {
     message: 'a typed target is 1-12 characters of Hangul syllables and single spaces',
@@ -368,6 +410,11 @@ export const TypeHangulRoundSchema = z.object({
   }),
 });
 export type TypeHangulRound = z.infer<typeof TypeHangulRoundSchema>;
+
+/** A Type Hangul round's mode: an absent mode is `see` (rounds written before row CM-31). */
+export function typeHangulMode(round: Pick<TypeHangulRound, 'mode'>): 'see' | 'hear' {
+  return round.mode === 'hear' ? 'hear' : 'see';
+}
 
 /** Trace a Word: one syllable block or a two-syllable word over a ghost, at the relaxed tolerance. */
 export const TraceWordRoundSchema = z.object({

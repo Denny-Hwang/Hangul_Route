@@ -30,7 +30,7 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  */
 export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
-  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // 4,760,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
   // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
   // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
   // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
@@ -109,6 +109,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the cloze-pick-chunk) measures 4,762,235 B raw / 1,269,443 B gzip (release `build:web`, Metro cache cleared)
   // on main 524961dae, whose own release build measures 4,751,444 B raw: +10,791 B. The line is that measurement plus a
   // 2,765 B rounding margin.
+  // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
+  // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
+  // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
+  // 2,388 B under this line, which stays.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -272,6 +276,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
+  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
+  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/dictation-entry.ts`).
+  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
 ]);
 
 /**

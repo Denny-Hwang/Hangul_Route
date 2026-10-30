@@ -649,6 +649,7 @@ export const learner = {
       heading: {
         see: 'Escribe esta palabra',
         picture: 'Escribe la palabra de la imagen',
+        hear: 'Escribe la palabra que oyes',
       },
       pass: '¡Lo escribiste!',
       near: '¡Casi! Mira el bloque marcado.',
@@ -657,6 +658,14 @@ export const learner = {
       targetLabel: 'La palabra',
       fixIt: { cta: 'Corregir' },
       showRomanization: { cta: 'Ver cómo se dice' },
+      hear: {
+        meaning: (gloss: string) => `Significado: ${gloss}`,
+        showSound: 'Ver cómo suena',
+      },
+    },
+    spellingPick: {
+      heading: '¿Cómo se escribe esta palabra?',
+      miss: 'Mira el significado otra vez.',
     },
     writeFrame: {
       heading: 'Haz tu propia oración',

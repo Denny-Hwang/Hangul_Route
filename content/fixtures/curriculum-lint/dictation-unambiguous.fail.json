@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (a warning in Volume 1, an error in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. A gloss found only inside another prompt word (day in today) does not settle it. A heard pick is not settled by a label on the answer option alone (it gives the answer away), nor by labels on every option (the sound still does not say which was meant). Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (a warning in Volume 1, an error in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. A gloss found only inside another prompt word (day in today) does not settle it. A heard pick is not settled by a label on the answer option alone (it gives the answer away), nor by labels on every option (the sound still does not say which was meant). Not real content. Row CM-31: a spelling round with neither a picture nor a meaning, and one whose fallback options sound like the answer or are not taught. Row CM-31 review: two spellings said alike only because their vowels merged (gae and ge, the vowels ae and e) keep each out of Dictation.",
   "rule": "dictation-unambiguous",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -277,6 +277,162 @@
                     }
                   ],
                   "answerId": "a"
+                },
+                {
+                  "id": "r4",
+                  "promptKind": "spelling",
+                  "prompt": {
+                    "ko": "낮",
+                    "romanization": "nat",
+                    "en": " "
+                  },
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "낮",
+                        "romanization": "nat",
+                        "en": "daytime"
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "text": {
+                        "ko": "낫",
+                        "romanization": "nat",
+                        "en": "sickle"
+                      }
+                    }
+                  ],
+                  "answerId": "a",
+                  "fallbackOptions": [
+                    {
+                      "id": "c",
+                      "text": {
+                        "ko": "같이",
+                        "romanization": "gachi",
+                        "en": "together"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "r5",
+                  "promptKind": "spelling",
+                  "prompt": {
+                    "ko": "낮",
+                    "romanization": "nat",
+                    "en": "daytime"
+                  },
+                  "pictureRef": "word:daytime",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": {
+                        "ko": "낮",
+                        "romanization": "nat",
+                        "en": "daytime"
+                      }
+                    },
+                    {
+                      "id": "b",
+                      "text": {
+                        "ko": "낫",
+                        "romanization": "nat",
+                        "en": "sickle"
+                      }
+                    }
+                  ],
+                  "answerId": "a",
+                  "fallbackOptions": [
+                    {
+                      "id": "c",
+                      "text": {
+                        "ko": "낯",
+                        "romanization": "nat",
+                        "en": "face"
+                      }
+                    },
+                    {
+                      "id": "d",
+                      "text": {
+                        "ko": "하늘",
+                        "romanization": "haneul",
+                        "en": "sky"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "quest:stage2-nature-v2-q3",
+          "titleEn": "A quest",
+          "estimatedMinutes": 4,
+          "steps": [
+            {
+              "id": "s1",
+              "kind": "intro",
+              "titleEn": "Hello"
+            },
+            {
+              "id": "s2",
+              "kind": "discover",
+              "titleEn": "Look and learn",
+              "discover": {
+                "pages": [
+                  {
+                    "items": [
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "개",
+                          "romanization": "gae",
+                          "en": "dog"
+                        }
+                      },
+                      {
+                        "type": "word",
+                        "word": {
+                          "ko": "게",
+                          "romanization": "ge",
+                          "en": "crab"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "s3",
+              "kind": "check",
+              "titleEn": "Play",
+              "minigameKind": "type-hangul",
+              "minigameRef": "minigame:s2-nature-q3-check"
+            },
+            {
+              "id": "s4",
+              "kind": "reward",
+              "titleEn": "Well done"
+            }
+          ],
+          "scopes": [
+            {
+              "ref": "minigame:s2-nature-q3-check",
+              "kind": "type-hangul",
+              "rounds": [
+                {
+                  "id": "r1",
+                  "promptEn": "Type the word you hear.",
+                  "mode": "hear",
+                  "target": {
+                    "ko": "개",
+                    "romanization": "gae",
+                    "en": "dog"
+                  }
                 }
               ]
             }
@@ -329,6 +485,36 @@
       "error",
       "content/episodes/stage-2/nature.v2.json",
       "quests[1].scopes[0].rounds[2]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1].scopes[0].rounds[3]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1].scopes[0].rounds[4].fallbackOptions[0]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1].scopes[0].rounds[4].fallbackOptions[0]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[1].scopes[0].rounds[4].fallbackOptions[1]"
+    ],
+    [
+      "dictation-unambiguous",
+      "error",
+      "content/episodes/stage-2/nature.v2.json",
+      "quests[2].scopes[0].rounds[0]"
     ]
   ]
 }

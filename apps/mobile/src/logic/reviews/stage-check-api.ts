@@ -50,6 +50,8 @@ export interface StageCheckDeps {
   voice(): boolean;
   /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
   clozePick?(profileId: string): boolean;
+  /** `game.type-hangul-hear` for the profile: the produce rung may be Dictation (row CM-31). Absent: off. */
+  dictation?(profileId: string): boolean;
   hydrate(profileId: string): Promise<void>;
   snapshot(profileId: string): ProgressSnapshot | undefined;
   recordReview(profileId: string, entry: ReviewEntry): void;
@@ -115,7 +117,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
       const ctx: EngineContext = {
-        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true }),
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true }),
         states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
         today,
         voice: deps.voice(),
@@ -151,7 +153,7 @@ export function createStageCheckApi(deps: StageCheckDeps): StageCheckApi {
     async offerable(profileId, stage) {
       if (profileId === null || !deps.on(profileId)) return false;
       const day = localDay(new Date());
-      const key = `${profileId}|${stage}|${day}|${String(deps.voice())}`;
+      const key = `${profileId}|${stage}|${day}|${String(deps.voice())}|${String(deps.dictation?.(profileId) === true)}`;
       const known = offers.get(key);
       if (known !== undefined) return known;
       // One store read for every stage asked together (the Journey's headers mount at once).
