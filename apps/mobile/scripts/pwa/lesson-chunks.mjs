@@ -103,68 +103,16 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
-  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
-  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
-  // `build:web`), 7,102 B over that main and 1,454 B under this line, so the line stays.
-  // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
-  // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
-  // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
-  // 2,388 B under this line, which stays.
-  // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
-  // Pick's text prompt mode, the door, the Listen & Pick fallback with its card and round helpers (in the start bundle
-  // so the switch never depends on the chunk it guards) and 10 English strings; the game, its flow and its view are
-  // the cloze-pick-chunk) measures 4,762,235 B raw / 1,269,443 B gzip (release `build:web`, Metro cache cleared)
-  // on main 524961dae, whose own release build measures 4,751,444 B raw: +10,791 B. The line is that measurement plus a
-  // 2,765 B rounding margin.
-  // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
-  // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
-  // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
-  // 2,388 B under the 4,760,000 B line of that main.
-  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
-  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
-  // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
-  // CM-36 (Hidden Heritage: the round schema, the entry and loader, the fallback board, the slide kind and its strings;
-  // the game and each scene are chunks) merged onto main 524961dae measures 4,758,450 B raw / 1,268,719 B gzip (release
-  // `build:web`, Metro cache cleared), 7,006 B over that main (the round schema 1,613 B, the fixture-only e2e hook
-  // 927 B, the codec's unknown_kind 491 B, the deck builder 357 B, the strings 273 B, the root navigator 196 B, the
-  // rest the entry, loader, fallback board and wiring), so it fits under the same line with a 1,550 B margin.
-  // F-CURR-002 row CM-32 (Syllable Build and the Block Sprint; their screens are the precached syllable-build-chunk) adds
-  // about 7,100 B that cannot leave the start bundle (the round schema the content parser needs, the entry, the route,
-  // the two offers' slots, the English strings): 4,758,598 B raw / 1,268,475 B gzip on main 524961dae (CM-23c's
-  // 4,751,444 B) plus CM-32, +7,154 B, 1,402 B under the line, so the line stays.
-  // F-CURR-002 CM-3A S2 (stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, all open): the five parents merged measure
-  // 4,783,387 B raw / 1,276,173 B gzip together (release `build:web`), 18,387 B over the 4,765,000 B line, since each
-  // parent fits its own main and their growth adds up. The row adds 1,623 B (Read Pick Meaning in Listen & Pick, the
-  // lecture and memory mapping, the Check header and room of Type Hangul and Pic-Word Match, the optional label overlay
-  // field): 4,785,010 B raw / 1,276,601 B gzip. The line is that measurement plus a 4,990 B rounding margin, for the
-  // stack only; when the parents land, the update from main takes main's line and the row's 1,623 B is measured on it.
-  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S3 (#852, #850, #851, #854, #856, each measured
-  // alone above) measures 4,783,181 B raw / 1,276,079 B gzip (release `build:web`, Metro cache cleared); S3's Stage 3
-  // Check kinds add 67 B (4,783,248 B raw / 1,276,087 B gzip). The line is that measurement plus a 6,752 B margin.
-  // With CM-35's review fixes merged in, 4,783,426 B raw / 1,276,170 B gzip. This is the stack's line: once the five
-  // rows land on main, S3 takes main's line and raises it only if S3's own +67 B does not fit.
-  // The merged CM-30, CM-31, CM-34, CM-35 and CM-3C stack (each under its own line alone) measures 4,783,247 B raw /
-  // 1,276,097 B gzip (release `build:web`); row CM-3A S4 on it (content in the lesson chunks, the Role Play case of the
-  // scaffold) adds 67 B, and with CM-35's review fixes (83b6ffa43) the stack measures 4,783,492 B raw / 1,276,171 B gzip.
-  // Re-measured on the parents' current heads (CM-30 c5f24e1f8, CM-31 07d65cdae, CM-34 0b252809d, CM-35 eff0df902,
-  // CM-3C ed383508c) merged with this row onto main c84df434e: 4,783,739 B raw / 1,276,225 B gzip (release
-  // `build:web`, Metro cache cleared). The raise is the parents' growth, each measured on main 524961dae (4,751,444 B):
-  // CM-30 +10,791, CM-34 +7,102, CM-35 +6,977, CM-31 +6,168, CM-3C +927 (sum 4,783,409 B); this row adds about 330 B
-  // (content lives in the lesson chunks). The line is that measurement plus a 6,261 B margin. Each parent alone stays
-  // under its own line; merged one by one onto main, the later ones pass the 4,765,000 B line, so the stack lands with
-  // this line (F-CURR-002 section 10, the CM-3A S4 record).
-  // F-CURR-002 CM-3A S6 (the Stage 6 Check rotation, stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, each under its
-  // own line alone) measures 4,783,796 B raw / 1,276,277 B gzip (release `build:web`, Metro cache cleared) with the five
-  // games merged together: their doors and fallbacks add up past 4,765,000 B, and the row itself adds about 207 B (the
-  // Stage 6 Check kinds and the other-direction value gap rule, which the lesson parse enforces as validate-content
-  // does). The line is that measurement plus a 6,204 B rounding margin.
-  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S7 (#852, #850, #851, #854, #856, each measured
-  // alone above) measures 4,783,209 B raw / 1,276,097 B gzip (release `build:web`); S7's Stage 7 Check kinds and
-  // re-authored steps add 27 B (4,783,236 B raw / 1,276,092 B gzip); with CM-35's review fixes (83b6ffa43) and S7's
-  // Write Frame Check header (no Skip in the Check) the stack measures 4,784,044 B raw / 1,276,420 B gzip. The line is
-  // that measurement plus a 5,956 B margin. It is the stacked branch's line only: once the five rows merge, S7 is
-  // measured again on main and keeps main's line if it fits (S7's own share is under 1 KB).
-  startBundleRaw: 4_790_000,
+  // The F-CURR-002 Phase 3 integration (rows CM-30 to CM-39, CM-3A S2 to S7 and CM-3B, integrate/curr-phase3) on main
+  // c84df434e (4,751,444 B, as 524961dae) measures 4,815,388 B raw / 1,286,375 B gzip (release `build:web`, Metro cache
+  // cleared; the app-host build 4,815,544 B): +63,944 B. Each row fits under the 4,760,000 B line alone; their doors,
+  // fallbacks, schemas, lecture mappings and English strings add up (each game itself is a precached screen chunk).
+  // Per row, measured alone on main 524961dae (or on its parent): CM-30 +10,791, CM-32 +7,531, CM-34 +7,102, CM-38
+  // +7,082, CM-36 +7,006, CM-35 +6,977, CM-33 +6,652, CM-31 +6,168, CM-3A S2 +1,623, CM-3C +927, CM-3A S7 about +579,
+  // CM-39 +333, CM-3A S4 about +330, the four CM-37 scene loader lines +1,140, CM-3A S6 about +207, CM-3A S3 +67, CM-3B
+  // 0: 64,515 B in all, 571 B more than the merge measures (code the rows share counts once). The line is the
+  // measurement plus a 4,612 B rounding margin (F-CURR-002 section 10).
+  startBundleRaw: 4_820_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

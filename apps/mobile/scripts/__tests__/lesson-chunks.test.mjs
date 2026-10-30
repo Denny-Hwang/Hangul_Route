@@ -483,7 +483,7 @@ describe('precacheReport and its budget lines', () => {
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is its size after the start bundle shrink with a small margin, under every earlier size; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+  it('the start bundle line is its latest size with a small margin, under every size before the start bundle shrink; the precache line is the CM-5 measurement plus 2.5 MB', () => {
     // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
     // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801),
     // 6,495,837 B with the SN-2 site strings in the bundled `landing` messages (#804, app-host build), 6,518,688 B on
@@ -513,25 +513,16 @@ describe('precacheReport and its budget lines', () => {
     // build, Metro cache cleared; +2,161 B over that main; the app-host build 4,751,600 B), so the line is 4,760,000 B.
     // CM-30 (Cloze Pick; the game in the cloze-pick chunk, its Listen & Pick fallback in the start bundle with the door)
     // measures 4,762,235 B on main 524961dae (4,751,444 B), so the line is 4,765,000 B.
-    // CM-3A S2 (stacked on the five open parents) measures 4,785,010 B with them, so the stack's line is 4,790,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_790_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeGreaterThanOrEqual(0);
-    // The line stays a small margin over the latest measurement: CM-3A S2 with its five parents, 4,785,010 B.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_785_010).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_785_010).toBeLessThan(10_000);
-    // CM-31 (Dictation, #850) merged onto main 524961dae measures 4,757,612 B: under the line.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_757_612).toBeGreaterThanOrEqual(0);
-    // CM-34 (Story Order, the game in the order-game chunk) on main 524961dae measures 4,758,546 B.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_546).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeLessThan(10_000);
-    // CM-36 (Hidden Heritage) merged onto main 524961dae measures 4,758,450 B (release build): under the same line.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_450).toBeGreaterThanOrEqual(0);
-    // CM-32 (Syllable Build and the Block Sprint, their screens in syllable-build-chunk) on main 524961dae measures
-    // 4,758,598 B (+7,154 B over CM-23c's 4,751,444 B), under the same line.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_758_598).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
+    // Each Phase 3 row alone fits its own line on main (CM-31 4,757,612 B, CM-34 4,758,546 B, CM-36 4,758,450 B, CM-32
+    // 4,758,598 B on main 524961dae). The Phase 3 integration (integrate/curr-phase3: CM-30 to CM-39, CM-3A S2 to S7 and
+    // CM-3B together) measures 4,815,388 B on main c84df434e (release build, Metro cache cleared), so the line is
+    // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_820_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388]) {
+      expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
+    }
+    // The line stays a small margin over the latest measurement.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_815_388).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
