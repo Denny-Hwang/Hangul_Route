@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization } from '../view';
+import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization, writeFrameHeader } from '../view';
 
 const words = { blank: 'blank', either: (a: string, b: string) => `${a} or ${b}` };
 
@@ -81,5 +81,17 @@ describe('fittedEnding (the polite "를 after 떡볶이")', () => {
     expect(fittedEnding(frameParts('오늘 ___에 가요.', ['학교']), 0)).toBeNull();
     expect(fittedEnding(frameParts('___ 좋아요', ['사과']), 0)).toBeNull();
     expect(fittedEnding(frameParts('제 이름은 ___이에요/예요.', ['호ㅇ']), 0)).toBeNull();
+  });
+});
+
+describe('writeFrameHeader (row CM-3A S7: Write Frame as a Stage 7 Check)', () => {
+  const words = { checkPill: 'Quick check', progress: (n: number, total: number) => `${n} / ${total}` };
+  it('the Check: two fill-only dots, "Quick check" and no Skip', () => {
+    expect(writeFrameHeader('check', { roundIdx: 0, total: 2, written: 0 }, words)).toEqual({ kind: 'dots', value: 0, max: 2, title: 'Quick check', label: undefined, skip: false });
+    expect(writeFrameHeader('check', { roundIdx: 0, total: 2, written: 1 }, words).value).toBe(1);
+    expect(writeFrameHeader('check', { roundIdx: 1, total: 2, written: 2 }, words).value).toBe(2);
+  });
+  it.each(['quest', 'review', 'vocab', 'preview'] as const)('%s: the bar, "n / N" and Skip', (mode) => {
+    expect(writeFrameHeader(mode, { roundIdx: 1, total: 3, written: 1 }, words)).toEqual({ kind: 'bar', value: 2, max: 3, title: undefined, label: '2 / 3', skip: true });
   });
 });

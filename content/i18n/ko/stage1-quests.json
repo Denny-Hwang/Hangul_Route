@@ -267,6 +267,17 @@
       "steps.s1.hoyaLine": "세종대왕은 모두가 글을 읽을 수 있도록 한글을 만들었어요. 이제 여러분도 한글을 읽을 수 있어요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
       "steps.s6.hoyaLine": "연 카드가 라이브러리에 들어왔어요!"
+    },
+    "quest:stage1-crafts-q4": {
+      "title": "모양은 어디서 왔을까",
+      "blurb": "기본 글자가 무엇을 본떴는지 보고, 닮은 글자를 구별해요.",
+      "steps.s1.title": "글자 모양",
+      "steps.s1.hoyaLine": "어떤 글자는 입, 혀, 이, 목구멍의 모양을 본떴어요. 같이 봐요!",
+      "steps.s2.title": "모양 맞추기",
+      "steps.s3.title": "땅, 사람, 하늘",
+      "steps.s4.title": "듣고 읽기",
+      "steps.s5.title": "모양 탐정!",
+      "steps.s5.hoyaLine": "이제 이 모양들이 어디서 왔는지 알아요!"
     }
   }
 }

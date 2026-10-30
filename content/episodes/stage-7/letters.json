@@ -104,7 +104,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-letters-q1-check",
           "durationSeconds": 40
         },
@@ -170,12 +170,13 @@
             },
             {
               "id": "y2",
-              "promptEn": "Type the word for name.",
+              "promptEn": "Type the word you hear.",
               "target": {
                 "ko": "이름",
                 "romanization": "ireum",
                 "en": "name"
-              }
+              },
+              "mode": "hear"
             },
             {
               "id": "y3",
@@ -199,37 +200,60 @@
         },
         {
           "ref": "minigame:s7-letters-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "이건 이름이에요.",
-                "romanization": "igeon ireumieyo",
+                "ko": "이건 ___이에요.",
+                "romanization": "igeon ___ieyo",
                 "en": "This is a name."
               },
-              "distractors": [
-                {
-                  "ko": "저는",
-                  "romanization": "jeoneun",
-                  "en": "I (polite)"
-                }
-              ]
-            },
-            {
-              "id": "c2",
-              "sentence": {
-                "ko": "이건 한글이에요.",
-                "romanization": "igeon hangeurieyo",
-                "en": "This is Hangul."
-              },
-              "distractors": [
+              "tiles": [
                 {
                   "ko": "이름",
                   "romanization": "ireum",
                   "en": "name"
+                },
+                {
+                  "ko": "한글",
+                  "romanization": "hangeul",
+                  "en": "Hangul, the Korean alphabet"
+                },
+                {
+                  "ko": "책",
+                  "romanization": "chaek",
+                  "en": "book"
                 }
-              ]
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "이건 ___이에요.",
+                "romanization": "igeon ___ieyo",
+                "en": "This is Hangul."
+              },
+              "tiles": [
+                {
+                  "ko": "책",
+                  "romanization": "chaek",
+                  "en": "book"
+                },
+                {
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
+                },
+                {
+                  "ko": "한글",
+                  "romanization": "hangeul",
+                  "en": "Hangul, the Korean alphabet"
+                }
+              ],
+              "answerIndex": 2,
+              "filledRomanization": "igeon hangeurieyo"
             }
           ]
         }
@@ -558,9 +582,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-letters-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -1358,37 +1382,76 @@
         },
         {
           "ref": "minigame:s7-letters-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "이건 제 이름이에요.",
-                "romanization": "igeon je ireumieyo",
-                "en": "This is my name."
+              "frame": {
+                "ko": "이건 호야 ___이에요/예요.",
+                "romanization": "igeon hoya ___ieyo/yeyo",
+                "en": "This is Hoya's ___."
               },
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "소리",
-                  "romanization": "sori",
-                  "en": "sound"
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "name"
+                    },
+                    {
+                      "ko": "책",
+                      "romanization": "chaek",
+                      "en": "book"
+                    },
+                    {
+                      "ko": "가방",
+                      "romanization": "gabang",
+                      "en": "bag"
+                    },
+                    {
+                      "ko": "연필",
+                      "romanization": "yeonpil",
+                      "en": "pencil"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "이건 한글 글자예요.",
-                "romanization": "igeon hangeul geuljayeyo",
-                "en": "This is a Hangul letter."
+              "frame": {
+                "ko": "이건 한글 ___이에요/예요.",
+                "romanization": "igeon hangeul ___ieyo/yeyo",
+                "en": "This is a Hangul ___."
               },
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "저는",
-                  "romanization": "jeoneun",
-                  "en": "I (polite)"
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "글자",
+                      "romanization": "geulja",
+                      "en": "letter"
+                    },
+                    {
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "name"
+                    },
+                    {
+                      "ko": "책",
+                      "romanization": "chaek",
+                      "en": "book"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -1455,11 +1518,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, 이에요/예요 and RR clean; applied: Hoya's lines use 제/저, reward lines make the learner the writer, distractors that formed a valid sentence replaced with 저는, a 는 particle round on 저는, the q3 caption no longer says one sound per block, the sound table gains the ㅡ, ㅓ, ㅐ and full ㅔ rows and 치 초 추.",
-      "Culture pass 5 (MAR): both loanword notes re-checked against all three cited NIKL pages, two sources each, nothing copied; n2's 1990 source cited as 국어생활 no. 23; the name round keeps the spec's 'no wrong way' line and the notes promise no single spelling; no real person, brand or price; no age wording; Hoya is the cast name."
+      "Culture pass 5 (MAR): both loanword notes re-checked against all three cited NIKL pages, two sources each, nothing copied; n2's 1990 source cited as 국어생활 no. 23; the name round keeps the spec's 'no wrong way' line and the notes promise no single spelling; no real person, brand or price; no age wording; Hoya is the cast name.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): Check rotation of F-CURR-002 7.1. q1 Check is Cloze Pick (이건 ___이에요, same sentences, ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame from the bank (이건 호야 ___, 이건 한글 ___; the two old sentences are retired and both frames frozen as new items). q1 Apply y2 is Dictation (이름). Lint, U-1..U-11 clean.",
+      "CM-3A S7 language (MAR, 2026-10-23): 이에요/예요 fits every bank pick (글자예요, 이름이에요), RR checked (hangeurieyo given as filledRomanization); every tile is a taught word; es Esto es ___ de Hoya (each pick with its article: el nombre, la mochila) / Esto es ___ en hangul compose with each pick; ko glosses echo no tile. No culture claim added; no age, speaking or emoji wording.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; with their switches off Cloze Pick plays as Listen & Pick and Dictation as a see round; es and ko meanings keep no gap; frames are word-bank only, not kept, and ask no family, feeling or detail.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; the Checks name only Hangul, a name and school things the cell teaches, and Hoya, the cast name; the section 6.6 allowlist is untouched and culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the #867 reviews): q3 Check c1 was 이건 제 ___, about the learner's own things; it is now 이건 호야 ___ (section 6.6 neutral option), a frame the q3 Apply did not play. 이건 제 이름이에요 and 이건 한글 글자예요 are retired, not aliased onto the frames (one policy with life, rites, nature). The Write Frame Check has the Check header and no Skip."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

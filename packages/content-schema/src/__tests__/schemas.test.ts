@@ -13,6 +13,7 @@ import {
   QuestSchema,
   StageDefSchema,
   ThemeDefSchema,
+  requiredQuestIds,
 } from '../index';
 
 describe('JamoSchema', () => {
@@ -139,6 +140,31 @@ describe('HeritageCardSchema', () => {
 });
 
 describe('EpisodeSchema', () => {
+  // F-CURR-002 section 4.2 (row CM-33): an addition joins a shipped episode as an optional quest.
+  const crafts = {
+    id: 'episode:stage1-crafts',
+    stage: 'stage1',
+    theme: 'crafts',
+    order: 5,
+    titleEn: 't',
+    hoyaIntroEn: 'h',
+    questIds: ['quest:a', 'quest:b'],
+    rewardCardIds: [],
+    estimatedMinutes: 10,
+    status: 'shipped',
+  } as const;
+
+  it('accepts optional quests that are among questIds, and requiredQuestIds leaves them out', () => {
+    const episode = EpisodeSchema.parse({ ...crafts, optionalQuestIds: ['quest:b'] });
+    expect(requiredQuestIds(episode)).toEqual(['quest:a']);
+    expect(requiredQuestIds({ questIds: ['quest:a'] })).toEqual(['quest:a']);
+  });
+
+  it('rejects an optional quest the episode does not list, and an episode whose every quest is optional', () => {
+    expect(EpisodeSchema.safeParse({ ...crafts, optionalQuestIds: ['quest:c'] }).success).toBe(false);
+    expect(EpisodeSchema.safeParse({ ...crafts, optionalQuestIds: ['quest:a', 'quest:b'] }).success).toBe(false);
+  });
+
   it('accepts a minimal valid episode', () => {
     expect(() =>
       EpisodeSchema.parse({

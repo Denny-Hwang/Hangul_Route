@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Story Order where the pictures alone give the order: a warning in Volume 1, errors in Volume 2 and a new story. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Story Order where the pictures alone give the order: errors in Volume 1 (since row CM-3B), Volume 2 and a new story. Not real content.",
   "rule": "story-order-text",
   "files": {
     "content/episodes/stage-4/nature.json": {
@@ -351,7 +351,7 @@
   "expect": [
     [
       "story-order-text",
-      "warning",
+      "error",
       "content/episodes/stage-4/nature.json",
       "quests[0].scopes[0]"
     ],

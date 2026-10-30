@@ -235,8 +235,9 @@ describe('freeLessonsFacts', () => {
     });
   });
 
-  it('live catalogue: the free figures are those of Stage 1 (15 lessons, 24 letters, about 65 minutes, 5 days)', () => {
-    expect(freeLessonsFacts(CATALOG), CHANGED).toEqual(STAGE1_FREE_FACTS);
+  it('live catalogue: the free figures are those of Stage 1 (16 lessons since row CM-33, 24 letters, about 70 minutes, 5 days)', () => {
+    // F-CURR-002 row CM-33 adds one Stage 1 quest (4 minutes, no new letter): 16 lessons, about 70 minutes, still free.
+    expect(freeLessonsFacts(CATALOG), CHANGED).toEqual({ ...STAGE1_FREE_FACTS, lessons: 16, minutes: 70 });
     expect(freeLessonsFacts(CATALOG_V32), CHANGED).toEqual(STAGE1_FREE_FACTS);
   });
 

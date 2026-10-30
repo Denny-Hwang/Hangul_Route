@@ -35,6 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
 import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
+import { DecodingSprintRoute } from '../screens/decode-sprint/DecodingSprintRoute';
 import { StageCheckRoute, StageCompleteRoute, StageRecapRoute } from '../screens/stage-check/stage-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
@@ -67,6 +68,10 @@ import { RealiaE2eHook, RealiaReadE2eScreen } from './realia-read-e2e';
 import { TypeHangulE2eHook, TypeHangulE2eScreen } from './type-hangul-e2e';
 import { TraceWordE2eHook, TraceWordE2eScreen } from './trace-word-e2e';
 import { WriteFrameE2eHook, WriteFrameE2eScreen } from './write-frame-e2e';
+import { ClozePickE2eHook, ClozePickE2eScreen } from '../screens/minigames/cloze-pick-entry';
+import { StoryOrderE2eHook, StoryOrderE2eScreen } from './story-order-e2e';
+import { RolePlayE2eHook, RolePlayE2eScreen } from './role-play-e2e';
+import { HiddenHeritageE2eHook, HiddenHeritageE2eScreen } from './hidden-heritage-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -132,6 +137,10 @@ export function RootNavigator(): ReactElement {
       {STORY_FIXTURES_BUILD ? <TypeHangulE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <TraceWordE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <WriteFrameE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <ClozePickE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <StoryOrderE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <RolePlayE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <HiddenHeritageE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
@@ -161,6 +170,8 @@ export function RootNavigator(): ReactElement {
         {/* F-CURR-002 row CM-22: a chunk of its own, behind `stageChecks` (the check also needs `memoryRecord`). */}
         <Stack.Screen name="StageCheck" component={StageCheckRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="StageRecap" component={StageRecapRoute} />
+        {/* F-CURR-002 row CM-32: the Syllable Build chunk's Block Sprint, behind `decodingSprint`. */}
+        <Stack.Screen name="DecodingSprint" component={DecodingSprintRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
@@ -211,6 +222,10 @@ export function RootNavigator(): ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TypeHangulE2e" component={TypeHangulE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="TraceWordE2e" component={TraceWordE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="WriteFrameE2e" component={WriteFrameE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="ClozePickE2e" component={ClozePickE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="StoryOrderE2e" component={StoryOrderE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="RolePlayE2e" component={RolePlayE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="HiddenHeritageE2e" component={HiddenHeritageE2eScreen} /> : null}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
         {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}

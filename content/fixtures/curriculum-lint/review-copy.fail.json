@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): age wording, speaking UI and an emoji: warnings in Volume 1 and a shipped story, errors in Volume 2 and a new story; scores, age wording and speaking UI in the English and Spanish learner review strings (the Korean ones are unit tests: Hangul stays out of fixture text fields) (`learner`, read by lintReviewStrings, always errors; a key outside the review namespaces is not read); age wording or an emoji in the Spanish and Korean overlays of Volume 2 entries (a Volume 1 entry is not new copy). Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): age wording, speaking UI and an emoji: a warning in a shipped story, errors in Volume 1 (since row CM-3B), Volume 2 and a new story; scores, age wording and speaking UI in the English and Spanish learner review strings (the Korean ones are unit tests: Hangul stays out of fixture text fields) (`learner`, read by lintReviewStrings, always errors; a key outside the review namespaces is not read); age wording or an emoji in the Spanish and Korean overlays of Volume 2 entries (a Volume 1 entry is not new copy). Not real content.",
   "rule": "review-copy",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -963,7 +963,7 @@
   "expect": [
     [
       "review-copy",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[0].steps[0].hoyaLineEn"
     ],

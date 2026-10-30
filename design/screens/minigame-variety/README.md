@@ -23,6 +23,7 @@ Built by:
 | `mock/*.html` (8 pages) | each format's main state; each page fills the window, so the same file is the 320 and the 768 shot |
 | `mock/states.html` | boards C, D, S, M, O, R, Y, B: the miss (amber) and found states, each format's fallback round when its `game.<kind>` is off (C3, D1 for Dictation's `see` round, D3, S2, M3, O3, R3, Y2, B2), the no-voice notice, the spelling round, the Role Play end card, My page (not kept), the Yut "throw again" state |
 | `shots/` | the mocks rendered in Chromium: `<format>-320.png` (320 x 568 at 2x) and `<format>-768.png` (768 x 1024 at 1x), and `states.png` (the boards at 1x, full page) |
+| `shots/app-match-shape-*-320.png` | row CM-33: the built Match Shape at 320 px (origin round with its sources open, and a pair round), captured by `apps/mobile/e2e/web/match-shape.spec.ts` with `HR_SHOTS=1` |
 
 Open any file in a browser. Nothing is interactive (the Role Play page sizes its reply area by the layout B rule and scrolls its chat log to the newest line on load, as the app does).
 
@@ -84,6 +85,7 @@ Values that are not tokens. The build rows write them as named constants, never 
 |---|---|---|
 | `shots/cloze-pick-320.png`, `-768.png` | 320 x 568 2x, 768 x 1024 | asking: the sentence with the gap, three tiles (one column at 320, two from regular) |
 | `shots/dictation-320.png`, `-768.png` | same | hear mode: below 640 tall one row (speaker, meaning button with its "Show how it sounds" link line, Skip); the hero speaker with Hear it again from 640 tall; the keyboard of Type Hangul |
+| `shots/cm31-built-*.png` | the built screens (row CM-31, from `apps/mobile/e2e/web/type-hangul-hear.spec.ts`) | Dictation at 320 (hear, a near miss scrolled into view, no Korean voice: the `see` round with the sound notice) and 768; the spelling round at 320 and its `game.spelling-pick` fallback. At 320 x 568 the screen header (AMENDMENTS-DISPLAY-NAV DN-4) leaves the prompt part about 39 tall above the pinned answer row, less than the 103 this README's budget assumes, so the one prompt row is clipped until scrolled; the shipped `see` round has the same clip (open item for the Type Hangul layout, outside row CM-31) |
 | `shots/syllable-build-320.png`, `-768.png` | same | building: the first letter placed, the meaning button with its "Show how it sounds" link line, three labelled rows of jamo-only tiles, No final |
 | `shots/match-shape-320.png`, `-768.png` | same | origin round: the ㄴ picture and line, three letter tiles |
 | `shots/story-order-320.png`, `-768.png` | same | captions only: two slots filled with their first words, two cards left, Show meanings, Skip this one |

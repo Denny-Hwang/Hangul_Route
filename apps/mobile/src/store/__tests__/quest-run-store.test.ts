@@ -223,6 +223,28 @@ describe('quest-run-store', () => {
     expect(useQuestRunStore.getState()).toMatchObject({ tries: [], short: null });
   });
 
+  it('a first answer given with a hint showing (Story Order, row CM-34) scores as usual and reaches the memory store hinted when right', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      store.answerRound('so:r1:0', true, { texts: ['먼저 일어나요.'] }, true);
+      // Story Order passes the hint with a right answer only (a hinted answer of Dictation, row CM-31, is never wrong),
+      // so its miss reaches the store as a plain miss.
+      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] });
+      store.answerRound('so:r1:2', true, { texts: ['그리고 밥을 먹어요.'] });
+      expect(heard.map((a) => [a.correct, a.hinted ?? false])).toEqual([
+        [true, true],
+        [false, false],
+        [true, false],
+      ]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+
   it('answerAside hands a round beside the steps to the memory store, hinted and unscored', () => {
     const heard: FirstRoundAnswer[] = [];
     setFirstRoundAnswerListener((a) => heard.push(a));
@@ -245,5 +267,41 @@ describe('quest-run-store', () => {
       setFirstRoundAnswerListener(null);
     }
   });
-});
 
+  it('a hinted first answer (Dictation, row CM-31) scores as given and reaches the memory store as a hinted right answer', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      // One letter off: a missed round for the stars, a hinted answer for the memory store.
+      store.answerRound(0, false, { texts: ['사과'] }, true);
+      // A right answer after the hint.
+      store.answerRound(1, true, { texts: ['우유'] }, true);
+      // A plain answer, and a retry of round 0 that is never recorded.
+      store.answerRound(2, true, { texts: ['물'] });
+      store.answerRound(0, true, { texts: ['사과'] }, true);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+      expect(heard.map((a) => [a.correct, a.hinted])).toEqual([[true, true], [true, true], [true, undefined]]);
+      expect(useQuestRunStore.getState().missed).toEqual([{ texts: ['사과'] }]);
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+
+  it('a first answer given with a hint showing reaches the memory store hinted when right, as a plain miss when wrong (row CM-35)', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      store.answerRound('t1', true, { texts: ['안녕하세요!'], hinted: true });
+      store.answerRound('t2', false, { texts: ['무슨 책을 찾아요?'], hinted: true });
+      store.answerRound('t3', true, { texts: ['또 오세요!'] });
+      expect(heard.map((a) => a.hinted)).toEqual([true, undefined, undefined]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+});

@@ -170,12 +170,13 @@ describe('card award integrity (F-STORY-006 T-AWARD-1..5)', () => {
     }
   });
 
-  it('catch-up (§3.11 row 1): all 15 Stage 1 quests at 2+ stars with their 15 quest cards adds the 15 other cards', () => {
+  it('catch-up (§3.11 row 1): all 16 Stage 1 quests at 2+ stars with their 15 quest cards adds the 15 other cards', () => {
     const stage1 = episodesAll.filter((e) => e.stage === 'stage1' && e.status === 'shipped' && (e.placement ?? 'grid') === 'grid').flatMap((e) => e.questIds);
     // F-QUEST-002 grows Stage 1 to 15 quests (Q-6b adds life q3, Q-7b rites q2-q3, Q-8 nature and crafts q2-q3); each new quest card moves one card from "episode" to "quest".
-    expect(stage1).toHaveLength(15);
+    // F-CURR-002 row CM-33 adds Play & Crafts quest 4, which carries no card of its own: 16 quests, still 15 quest cards.
+    expect(stage1).toHaveLength(16);
     const base = finished(stage1, 2);
-    const questCards = questsAll.filter((q) => stage1.includes(q.id)).map((q) => q.rewardCardId as string);
+    const questCards = questsAll.filter((q) => stage1.includes(q.id) && q.rewardCardId !== undefined).map((q) => q.rewardCardId as string);
     expect(questCards).toHaveLength(15);
     const snapshot = { ...base, cards: questCards.map((cardId) => ({ cardId, unlockedAt: AT, newSinceLastView: false })) };
     const missing = missingAwards(world, snapshot, PROFILE);

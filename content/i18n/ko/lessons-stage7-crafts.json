@@ -5,7 +5,10 @@
     "episode:stage7-crafts": {
       "title": "만들고 보여 주기",
       "subtitle": "종이로 무언가를 만드는 순서를 써 봐요.",
-      "hoyaIntro": "나랑 같이 접고 자르고 그린 다음, 어떻게 만들었는지 써 봐요!"
+      "hoyaIntro": "나랑 같이 접고 자르고 그린 다음, 어떻게 만들었는지 써 봐요!",
+      "culture.n1.text": "{ko:종이접기}는 보통 종이나 색종이를 손으로 접어 학, 배, 비행기 같은 모양을 만드는 거예요.",
+      "culture.n2.text": "{ko:한지}는 주로 닥나무 껍질로 전통 방식에 따라 손으로 만드는 한국 종이예요.",
+      "culture.n3.text": "{ko:고}는 한 문장 안에서 앞의 행동과 다음 행동을 이어 줘요. 행동을 나타내는 말 뒤에 붙어 한 단계 다음에 또 한 단계가 이어지는 것을 보여 줄 수 있어요. {ko:접고 잘라요}처럼요."
     },
     "quest:stage7-crafts-q1": {
       "title": "접기, 자르기, 그리기",
@@ -89,14 +92,17 @@
       "orderIt.rounds.r1.particle.choices.reul.gloss": "목적어 표시 (받침 없는 말 뒤)"
     },
     "minigame:s7-crafts-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "종이로 꽃 모양을 만들어요.",
-      "orderIt.rounds.c2.sentence.gloss": "별의 모양을 선으로 나타내요.",
-      "orderIt.rounds.c2.distractors.jeobeoyo.gloss": "종이 같은 것을 꺾어 겹쳐요",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "목적어 표시 (받침 있는 말 뒤)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "목적어 표시 (받침 없는 말 뒤)"
+      "clozePick.rounds.c1.sentence.gloss": "종이로 꽃 모양을 만들어요.",
+      "clozePick.rounds.c2.sentence.gloss": "별의 모양을 선으로 나타내요.",
+      "clozePick.rounds.c1.tiles.eul.gloss": "목적어 표시 (받침 있는 말 뒤)",
+      "clozePick.rounds.c1.tiles.reul.gloss": "목적어 표시 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.jeobeoyo.gloss": "종이 같은 것을 꺾어 겹쳐요",
+      "clozePick.rounds.c2.tiles.jallayo.gloss": "가위나 칼로 끊어 내요",
+      "clozePick.rounds.c2.tiles.geuryeoyo.gloss": "선으로 모양을 나타내요",
+      "clozePick.rounds.c1.tiles.ga.gloss": "주어 표시 (받침 없는 말 뒤)"
     },
     "minigame:s7-crafts-q2-practice": {
-      "typeHangul.rounds.t1.prompt": "맨 처음을 뜻하는 낱말을 쳐 보세요.",
+      "typeHangul.rounds.t1.prompt": "들리는 낱말을 입력해 봐요.",
       "typeHangul.rounds.t2.prompt": "앞의 일이 끝난 뒤를 뜻하는 낱말을 쳐 보세요.",
       "typeHangul.rounds.t3.prompt": "맨 끝을 뜻하는 낱말을 쳐 보세요.",
       "typeHangul.rounds.t4.prompt": "가위나 칼로 끊어 내는 일을 뜻하는 낱말을 쳐 보세요.",
@@ -143,11 +149,13 @@
       "writeFrame.rounds.w3.slots.thing.bank.byeol.gloss": "밤하늘에 반짝이는 것"
     },
     "minigame:s7-crafts-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "종이를 꺾어 겹친 다음에 끊어 내요.",
-      "orderIt.rounds.c2.sentence.gloss": "맨 처음에 꺾어 겹친 다음에 선으로 모양을 나타내요.",
-      "orderIt.rounds.c2.distractors.majimageuro.gloss": "맨 끝으로",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "목적어 표시 (받침 있는 말 뒤)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "목적어 표시 (받침 없는 말 뒤)"
+      "writeFrame.rounds.c1.frame.gloss": "종이를 꺾어 겹치고 나서 하는 일: ___",
+      "writeFrame.rounds.c1.slots.act.bank.jallayo.gloss": "가위나 칼로 끊어 내요",
+      "writeFrame.rounds.c1.slots.act.bank.geuryeoyo.gloss": "선으로 모양을 나타내요",
+      "writeFrame.rounds.c2.frame.gloss": "맨 처음에 꺾어 겹치는 것: ___",
+      "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "글씨를 쓰는 얇은 것",
+      "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "하늘을 나는 탈것 모양",
+      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "줄기 끝에 피는 것 모양"
     }
   }
 }

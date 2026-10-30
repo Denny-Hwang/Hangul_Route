@@ -11,6 +11,7 @@ import {
   QUEST_REVIEW_CHUNKS,
   REVIEW_CHUNKS,
   ROOT_CHUNKS,
+  SCENE_CHUNKS,
   SCREEN_CHUNKS,
   WEB_JS_DIR,
   budgetIsAdvisory,
@@ -178,7 +179,31 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
+      { name: 'dictation-chunk', marker: 'screen-chunk:dictation' },
+      { name: 'order-game-chunk', marker: 'screen-chunk:story-order' },
+      { name: 'role-play-chunk', marker: 'screen-chunk:role-play' },
+      { name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' },
+      { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
+      { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
+      { name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' },
+      { name: 'my-story-chunk', marker: 'screen-chunk:my-story' },
     ]);
+    // Row CM-36: one chunk per Hidden Heritage scene.
+    expect(SCENE_CHUNKS).toEqual([
+      { name: 'scene-food-market', marker: 'scene-chunk:food-market' },
+      { name: 'scene-letters-school', marker: 'scene-chunk:letters-school' },
+      // Row CM-37 part 2: the Holidays & Traditions scene.
+      { name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' },
+      // Row CM-37 part 3: the Nature & Animals four-season scene.
+      { name: 'scene-four-seasons', marker: 'scene-chunk:four-seasons' },
+      // Row CM-37 part 4: the Play & Crafts courtyard.
+      { name: 'scene-play-courtyard', marker: 'scene-chunk:play-courtyard' },
+    ]);
+  });
+
+  it('no screen chunk takes the story- prefix of the story chunks (row CM-8 counts story-*.js bundles as stories)', () => {
+    expect(SCREEN_CHUNKS.filter((c) => c.name.startsWith('story-'))).toEqual([]);
   });
 
   it('the markers are the ones the chunk modules export', async () => {
@@ -201,6 +226,64 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-30: the Cloze Pick game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/cloze-pick-chunk.tsx')).toContain(`export const CLOZE_PICK_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/cloze-pick-entry.tsx')).toContain("import('./cloze-pick-chunk')");
+    // Row CM-31: the dictation chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[6].marker}';`);
+    expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
+    // Row CM-3C: the Did you know? tip's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/quest/culture-tip-chunk.tsx')).toContain(`export const CULTURE_TIP_CHUNK = '${SCREEN_CHUNKS[9].marker}';`);
+    expect(read('src/screens/quest/culture-tip-entry.tsx')).toContain("import('./culture-tip-chunk')");
+    // Row CM-36: the Hidden Heritage game and its scenes, each reached only through a literal import().
+    expect(read('src/screens/minigames/hidden-heritage-chunk.tsx')).toContain(`export const HIDDEN_HERITAGE_CHUNK = '${SCREEN_CHUNKS[10].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./hidden-heritage-chunk')");
+    expect(read('src/screens/minigames/scenes/scene-food-market.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[0].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-food-market')");
+    // Row CM-32: the Syllable Build chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/syllable-build-chunk.tsx')).toContain(`export const SYLLABLE_BUILD_CHUNK = '${SCREEN_CHUNKS[11].marker}';`);
+    expect(read('src/screens/minigames/syllable-build-entry.tsx')).toContain("import('./syllable-build-chunk')");
+    // Row CM-33: the Match Shape chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/match-shape-chunk.tsx')).toContain(`export const MATCH_SHAPE_CHUNK = '${SCREEN_CHUNKS[12].marker}';`);
+    expect(read('src/screens/minigames/match-shape-entry.tsx')).toContain("import('./match-shape-chunk')");
+    // Row CM-38: the My Story game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/my-story-chunk.tsx')).toContain(`export const MY_STORY_CHUNK = '${SCREEN_CHUNKS[13].marker}';`);
+    expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
+    // Row CM-37 part 1: the Letters school room.
+    expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-letters-school')");
+    // Row CM-37 part 2: the Seollal room scene, its own chunk through its own literal import().
+    expect(read('src/screens/minigames/scenes/scene-seollal-room.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[2].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-seollal-room')");
+    // Row CM-37 part 3: the Nature & Animals four-season scene.
+    expect(read('src/screens/minigames/scenes/scene-four-seasons.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS.find((c) => c.name === 'scene-four-seasons').marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-four-seasons')");
+    // Every scene chunk is named once and has its loader entry, however many the CM-37 rows add.
+    expect(new Set(SCENE_CHUNKS.map((c) => c.name)).size).toBe(SCENE_CHUNKS.length);
+    expect(new Set(SCENE_CHUNKS.map((c) => c.marker)).size).toBe(SCENE_CHUNKS.length);
+    for (const c of SCENE_CHUNKS) expect(read('src/screens/minigames/hidden-heritage-scenes.ts'), c.name).toContain(`import('./scenes/${c.name}')`);
+    // Row CM-37 part 4: the Play & Crafts courtyard.
+    expect(read('src/screens/minigames/scenes/scene-play-courtyard.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS.find((c) => c.name === 'scene-play-courtyard').marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-play-courtyard')");
+  });
+
+  it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
+    expect(PRECACHE_BUDGET.sceneChunkRaw).toBe(25_000);
+    const start = { url: START, text: 'var s=1;' };
+    // One bundle per scene (rows CM-36 and CM-37), each named after its chunk and carrying its marker.
+    const sceneBundles = SCENE_CHUNKS.map(({ name, marker }) => {
+      const body = `__d(function(){var m="${marker}"})`;
+      return { url: `${WEB_JS_DIR}/${name}-${md5(body)}.js`, text: body };
+    });
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, ...sceneBundles], precached: all([start, ...sceneBundles]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, sceneBundles[0]], precached: all([start, sceneBundles[0]]) })).toEqual(
+      SCENE_CHUNKS.slice(1).map(({ name }) => `${name} has no web bundle: the chunk is missing from the build`),
+    );
+    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, ...sceneBundles], precache: { count: 1 + sceneBundles.length, size: 10 } });
+    expect(reportLines(report).some((l) => l.startsWith(`  hidden heritage scene chunks  ${SCENE_CHUNKS.length} bundles`) && l.endsWith('ceiling 25000 B each)'))).toBe(true);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: Math.max(...sceneBundles.map((b) => b.text.length)) - 1 };
+    expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +348,15 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
+      'dictation-chunk has no web bundle: the chunk is missing from the build',
+      'order-game-chunk has no web bundle: the chunk is missing from the build',
+      'role-play-chunk has no web bundle: the chunk is missing from the build',
+      'culture-tip-chunk has no web bundle: the chunk is missing from the build',
+      'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
+      'syllable-build-chunk has no web bundle: the chunk is missing from the build',
+      'match-shape-chunk has no web bundle: the chunk is missing from the build',
+      'my-story-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -391,7 +483,7 @@ describe('precacheReport and its budget lines', () => {
     expect(reportLines({ ...report, start: null })).toHaveLength(3);
   });
 
-  it('the start bundle line is its size after the start bundle shrink with a small margin, under every earlier size; the precache line is the CM-5 measurement plus 2.5 MB', () => {
+  it('the start bundle line is its latest size with a small margin, under every size before the start bundle shrink; the precache line is the CM-5 measurement plus 2.5 MB', () => {
     // F-CURR-002 §10: 8,321,783 B raw before CM-5, 7,337,815 B after CM-5, 6,345,469 B measured after CM-8,
     // 6,371,165 B on the phase-0 integration (#802), 6,487,010 B with [OA] the one-account integration (#801),
     // 6,495,837 B with the SN-2 site strings in the bundled `landing` messages (#804, app-host build), 6,518,688 B on
@@ -419,11 +511,18 @@ describe('precacheReport and its budget lines', () => {
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
     // CM-23c (Stages 6-7 cards, #845) on main e31bc3b33 (4,749,283 B with #859 to #862) measures 4,751,444 B (release
     // build, Metro cache cleared; +2,161 B over that main; the app-host build 4,751,600 B), so the line is 4,760,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeLessThan(10_000);
-    expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
+    // CM-30 (Cloze Pick; the game in the cloze-pick chunk, its Listen & Pick fallback in the start bundle with the door)
+    // measures 4,762,235 B on main 524961dae (4,751,444 B), so the line is 4,765,000 B.
+    // Each Phase 3 row alone fits its own line on main (CM-31 4,757,612 B, CM-34 4,758,546 B, CM-36 4,758,450 B, CM-32
+    // 4,758,598 B on main 524961dae). The Phase 3 integration (integrate/curr-phase3: CM-30 to CM-39, CM-3A S2 to S7 and
+    // CM-3B together) measures 4,815,388 B on main c84df434e (release build, Metro cache cleared), so the line is
+    // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_820_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388]) {
+      expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
+    }
+    // The line stays a small margin over the latest measurement.
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_815_388).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

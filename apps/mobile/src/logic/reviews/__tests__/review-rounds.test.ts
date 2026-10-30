@@ -1,7 +1,7 @@
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { describe, expect, it } from 'vitest';
 import type { EngineContext, ReviewQuestion } from '../engine';
-import { MAX_ORDER_TILES, SURFACE_FORMATS, glossFrom, roundFor, surfaceFormats, surfaceIndex, type OrderRound, type PickRound, type RoundInput, type TypeRound } from '../review-rounds';
+import { MAX_ORDER_TILES, NO_GAME_FORMATS, SURFACE_FORMATS, glossFrom, roundFor, surfaceFormats, surfaceIndex, type BuildRound, type OrderRound, type PickRound, type RoundInput, type ShapeRound, type TypeRound } from '../review-rounds';
 
 /**
  * F-CURR-002 sections 4.3 and 4.5 (row CM-14): the rounds of a Daily Review. Only the formats whose rounds have
@@ -197,5 +197,128 @@ describe('glossFrom', () => {
     // English: the meaning as authored.
     expect(glossFrom(undefined)('vocab:sagwa-apple#gloss', 'apple')).toBe('apple');
     expect(glossFrom(undefined)(undefined, 'apple')).toBe('apple');
+  });
+});
+
+describe('Syllable Build at the produce rung (row CM-32, behind game.syllable-build)', () => {
+  const ON = new Set(['syllable-build'] as const);
+  const BLOCKS = [
+    mk('syl:bap', { ko: '밥', romanization: 'bap' }),
+    mk('syl:san', { ko: '산', romanization: 'san' }),
+    mk('syl:go', { ko: '고', romanization: 'go' }),
+    mk('lex:but', { ko: '붓', romanization: 'but', en: 'writing brush' }),
+    mk('lex:but2', { ko: '붓', romanization: 'but' }),
+    mk('lex:hanbok', { ko: '한복', romanization: 'hanbok', en: 'hanbok' }),
+    mk('sym:bieup', { ko: 'ㅂ', romanization: 'b/p' }),
+    mk('sym:o2', { ko: 'ㅗ', romanization: 'o' }),
+    mk('sym:nieun-batchim', { ko: 'ㄴ', romanization: 'n' }),
+    mk('sym:kieuk', { ko: 'ㅋ', romanization: 'k' }),
+  ];
+  const games = surfaceIndex(indexOf(BLOCKS), ON);
+  const gameInput = (over: Partial<RoundInput> = {}): RoundInput => ({ index: games, gloss: (_k, en) => en, seed: 's', ...over });
+
+  it('is off until its switch is on: the engine never picks it, so the item is asked another way', () => {
+    expect(surfaceFormats(mk('syl:bap', { ko: '밥' }))).not.toContain('syllable-build');
+    expect(surfaceFormats(mk('syl:bap', { ko: '밥' }), NO_GAME_FORMATS)).not.toContain('syllable-build');
+    expect(surfaceFormats(mk('syl:bap', { ko: '밥' }), ON)).toEqual(['hear-pick', 'read-pick', 'syllable-build']);
+    expect(surfaceIndex(indexOf(BLOCKS))).not.toBe(games);
+    expect(surfaceIndex(indexOf(BLOCKS), ON)).not.toBe(games);
+    const base = indexOf(BLOCKS);
+    expect(surfaceIndex(base, ON)).toBe(surfaceIndex(base, new Set(['syllable-build'] as const)));
+  });
+
+  it('asks a symbol, a block and a one-block word; never a word of two blocks; a final heard as another only with the meaning', () => {
+    expect(surfaceFormats(mk('sym:a', { ko: 'ㅏ' }), ON)).toEqual(['read-pick', 'syllable-build']);
+    expect(surfaceFormats(mk('lex:hanbok', { ko: '한복', en: 'hanbok' }), ON)).not.toContain('syllable-build');
+    expect(surfaceFormats(mk('lex:but', { ko: '붓', en: 'writing brush' }), ON)).toContain('syllable-build');
+    expect(surfaceFormats(mk('syl:but', { ko: '붓' }), ON)).not.toContain('syllable-build');
+    expect(surfaceFormats(mk('syl:dalk', { ko: '닭' }), ON)).not.toContain('syllable-build');
+  });
+
+  it('a block round builds the item itself, with its meaning when it is a word; the tiles are the round screen own', () => {
+    const r = roundFor(q('syl:bap', 'syllable-build'), gameInput()) as BuildRound;
+    expect(r).toEqual({ type: 'build', question: q('syl:bap', 'syllable-build'), target: { ko: '밥', romanization: 'bap' }, answer: { ko: { ko: '밥', romanization: 'bap' } } });
+    const w = roundFor(q('lex:but', 'syllable-build'), gameInput()) as BuildRound;
+    expect(w).toMatchObject({ target: { ko: '붓' }, gloss: 'writing brush', answer: { gloss: 'writing brush' } });
+    // In es or ko with the meaning not loaded, a final heard as another is not built (no settling cue).
+    expect(roundFor(q('lex:but', 'syllable-build'), gameInput({ gloss: () => undefined }))).toBeNull();
+    expect(roundFor(q('lex:hanbok', 'syllable-build'), gameInput())).toBeNull();
+  });
+
+  it('a symbol round builds a taught block with the symbol already in its zone: first letter, vowel or final', () => {
+    const first = roundFor(q('sym:bieup', 'syllable-build'), gameInput()) as BuildRound;
+    expect(first).toMatchObject({ type: 'build', target: { ko: '밥' }, fixed: 'first' });
+    const vowel = roundFor(q('sym:o2', 'syllable-build'), gameInput()) as BuildRound;
+    expect(vowel).toMatchObject({ target: { ko: '고' }, fixed: 'vowel' });
+    const final = roundFor(q('sym:nieun-batchim', 'syllable-build'), gameInput()) as BuildRound;
+    expect(final).toMatchObject({ target: { ko: '산' }, fixed: 'final' });
+    // No taught block holds ㅋ: the surface index leaves the format out, so the engine asks it at read and the session
+    // never drops it for want of a round; a symbol a block holds keeps it.
+    expect(games.byId.get('sym:kieuk')?.formats).toEqual(['read-pick']);
+    expect(games.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'syllable-build']);
+    expect(roundFor(q('sym:kieuk', 'syllable-build'), gameInput())).toBeNull();
+  });
+});
+describe('Match Shape at the produce rung (row CM-33, behind game.match-shape)', () => {
+  const GAMES = new Set<ReviewFormat>(['match-shape']);
+  const letter = (id: string, ko: string, romanization: string): ReviewItem => mk(id, { ko, romanization, home: 'letters', stage: 1, cells: ['episode:stage1-letters'] });
+  const LETTERS = [
+    letter('sym:bieup', 'ㅂ', 'b/p'),
+    letter('sym:pieup', 'ㅍ', 'p'),
+    letter('sym:eo', 'ㅓ', 'eo'),
+    letter('sym:o', 'ㅗ', 'o'),
+    letter('sym:rieul', 'ㄹ', 'r/l'),
+    letter('sym:bieup-batchim', 'ㅂ', 'p'),
+    letter('sym:siot', 'ㅅ', 's'),
+  ];
+
+  it('is drawn only while the switch is on, for a letter with a look-alike, never a final', () => {
+    expect(surfaceFormats(LETTERS[0]!)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[0]!, NO_GAME_FORMATS)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[0]!, GAMES)).toEqual(['read-pick', 'match-shape']);
+    expect(surfaceFormats(LETTERS[5]!, GAMES)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[6]!, GAMES)).toEqual(['read-pick']);
+  });
+
+  it('surfaceIndex keeps one cut per set of games', () => {
+    const base = indexOf(LETTERS);
+    const off = surfaceIndex(base);
+    const on = surfaceIndex(base, GAMES);
+    expect(on).not.toBe(off);
+    expect(surfaceIndex(base, new Set<ReviewFormat>(['match-shape']))).toBe(on);
+    expect(off.byId.get('sym:bieup')?.formats).toEqual(['read-pick']);
+    expect(on.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'match-shape']);
+  });
+
+  it('a pair round of the letter and its taught look-alike, the answer its letter', () => {
+    const index = surfaceIndex(indexOf(LETTERS), GAMES);
+    const round = roundFor(q('sym:bieup', 'match-shape'), { index, gloss: (_k, en) => en, seed: 's' }) as ShapeRound;
+    expect(round).toMatchObject({ type: 'shape', target: 'jamo:bieup', lookAlike: 'jamo:pieup', answer: { ko: { ko: 'ㅂ', romanization: 'b/p' } } });
+    const other = roundFor(q('sym:eo', 'match-shape'), { index, gloss: (_k, en) => en, seed: 's' }) as ShapeRound;
+    expect([other.target, other.lookAlike]).toEqual(['jamo:eo', 'jamo:o']);
+  });
+
+  it('with the learner\'s states, a letter is asked as a pair round only once its look-alike is met (box 1 or more)', () => {
+    const base = indexOf(LETTERS);
+    const row = (b: number) => ({ st: { b, d: null, c: 0, r: 0, n: 0, f: '2026-10-01', s: b, at: '' } });
+    // ㅂ met, ㅍ not met yet (no state, then box 0): ㅂ is asked another way, so no pair round shows ㅍ untaught.
+    for (const states of [{ 'sym:bieup': row(3) }, { 'sym:bieup': row(3), 'sym:pieup': row(0) }]) {
+      const index = surfaceIndex(base, GAMES, states);
+      expect(index.byId.get('sym:bieup')?.formats).toEqual(['read-pick']);
+    }
+    // Both met: the pair round is open; the per-learner cut is never the shared cached one.
+    const met = surfaceIndex(base, GAMES, { 'sym:bieup': row(3), 'sym:pieup': row(1) });
+    expect(met.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'match-shape']);
+    expect(met).not.toBe(surfaceIndex(base, GAMES));
+    // With the switch off the states change nothing.
+    expect(surfaceIndex(base, NO_GAME_FORMATS, { 'sym:bieup': row(3) })).toBe(surfaceIndex(base));
+  });
+
+  it('cannot be played when the look-alike is not taught, or the item is not a letter with one', () => {
+    const index = surfaceIndex(indexOf(LETTERS.filter((i) => i.id !== 'sym:pieup')), GAMES);
+    const input = { index, gloss: (_k: string | undefined, en: string | undefined) => en, seed: 's' };
+    expect(roundFor(q('sym:bieup', 'match-shape'), input)).toBeNull();
+    expect(roundFor(q('sym:rieul', 'match-shape'), input)).toBeNull();
+    expect(roundFor(q('sym:siot', 'match-shape'), input)).toBeNull();
   });
 });

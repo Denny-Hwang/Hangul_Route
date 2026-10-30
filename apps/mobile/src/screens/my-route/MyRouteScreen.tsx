@@ -35,6 +35,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
+import { useCurrFlagFor } from '../../store/remote-config-store';
 import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { NextLessons } from './NextLessons';
@@ -256,6 +257,10 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
   const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });
 
+  // The Write sheet names My Story only while its `game.my-story` switch is on for this learner (row CM-38), bucketed
+  // on the learner the body shows (the child, on the grown-up's read-only view), not the active profile; each later
+  // switched format adds its switch here.
+  const myStoryOn = useCurrFlagFor('game.my-story', profileId);
   const view = useMemo(() => {
     if (model === null) return null;
     const themeTitles = Object.fromEntries(localized.themes.map((t) => [t.key, t.titleEn])) as Record<ThemeKey, string>;
@@ -270,6 +275,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       nextTitle: quest ? localizeQuest(quest, locale).titleEn : null,
       hasStories: defaultStoryIndex().some((e) => e.placement === 'shelf'),
       practiceTopic,
+      gameOn: (kind) => kind === 'my-story' && myStoryOn,
       seen,
       firstReached,
       letterWall: routeLetterWall(model),
@@ -279,7 +285,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
-  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, firstReached, week, practiceTopic]);
+  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, firstReached, week, practiceTopic, myStoryOn]);
 
   // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
   // read-only: the grown-up screen sends and writes nothing, section 8).

@@ -50,6 +50,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { reviewHost, useReviewRunStore } from '../../store/review-run-store';
 import { ListenPickGame } from '../minigames/ListenPickGame';
 import { CardArtThumb } from '../results/CardArtThumb';
+import { DecodingSprintOffer } from '../minigames/syllable-build-entry';
 
 /**
  * F-QUEST-002 §3.9 — the Hangul Check (wireframe `design/wireframes/reviews/hangul-check.md`).
@@ -298,6 +299,9 @@ function HangulCheck({ navigation }: { navigation: Props['navigation'] }): React
             </View>
           </>
         ) : null}
+
+        {/* F-CURR-002 row CM-32: the Block Sprint, the optional bonus after the Stage 1 review, while `decodingSprint` is on. */}
+        <DecodingSprintOffer testID="hangul-check-sprint" onOpen={() => navigation.navigate('DecodingSprint')} />
 
         <Spacer size="xl" />
         <Button

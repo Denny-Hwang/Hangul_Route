@@ -1,4 +1,5 @@
 import { allomorphOrBoth, fillFrame, romanize, SLOT_MARKER } from '@hangul-route/content-schema';
+import type { HostMode } from '../../screens/minigames/host';
 
 /**
  * What the Write Frame card draws and reads (F-CURR-001 §3.7; design/wireframes/minigame/write-frame.md):
@@ -94,4 +95,38 @@ export function fittedEnding(parts: readonly FramePart[], slot: number): { parti
   const ending = parts.find((p): p is Extract<FramePart, { kind: 'ending' }> => p.kind === 'ending' && p.slot === slot);
   if (word === null || ending === undefined || !ending.pair || ending.text.includes('/')) return null;
   return { particle: ending.text, word };
+}
+
+/**
+ * The step's header (F-CURR-002 row CM-3A S7: Write Frame is a Stage 7 Check game). In the Check: two
+ * fill-only dots (a dot fills when its sentence is written, anti-shame), the "Quick check" pill and no
+ * Skip, because the Check is the only evidence of the quest (`logic/quest-flow/check-launcher.ts`), as
+ * Sentence Builder's `headerView` / `showSkip`. In any other host: the bar, "n / N" and Skip.
+ */
+export interface WriteFrameHeaderView {
+  kind: 'bar' | 'dots';
+  value: number;
+  max: number;
+  /** The "Quick check" pill (Check only). */
+  title: string | undefined;
+  /** The "n / N" pill (not in the Check). */
+  label: string | undefined;
+  skip: boolean;
+}
+
+export interface WriteFrameHeaderWords {
+  checkPill: string;
+  progress: (n: number, total: number) => string;
+}
+
+export function writeFrameHeader(
+  mode: HostMode,
+  at: { roundIdx: number; total: number; written: number },
+  words: WriteFrameHeaderWords,
+): WriteFrameHeaderView {
+  if (mode === 'check') {
+    return { kind: 'dots', value: Math.min(at.total, at.written), max: at.total, title: words.checkPill, label: undefined, skip: false };
+  }
+  const shown = Math.min(at.total, at.roundIdx + 1);
+  return { kind: 'bar', value: shown, max: at.total, title: undefined, label: words.progress(shown, at.total), skip: true };
 }

@@ -68,6 +68,9 @@ function scopeWords(scope: LessonScope): string[] {
       return scope.pairs.map((p) => p.ko);
     case 'listen-pick':
       return scope.rounds.flatMap((r) => [r.prompt.ko, ...r.options.flatMap((o) => (o.text ? [o.text.ko] : []))]);
+    // F-CURR-002 row CM-3A S2: a Dictation round's word is written, then shown.
+    case 'type-hangul':
+      return scope.rounds.map((r) => r.target.ko);
     default:
       return [];
   }
@@ -100,8 +103,15 @@ describe('Playground Words (F-CURR-001 S2-3)', () => {
   it('U-4: every scored reading round uses Stage 1 symbols only (Word Builder symbols are heard or pictured)', () => {
     for (const quest of cell.quests) {
       for (const scope of quest.scopes) {
+        if (scope.kind === 'type-hangul') {
+          // F-CURR-002 row CM-3A S2: Dictation writes its word, so it uses Stage 1 symbols only.
+          for (const round of scope.rounds) expect(decodableAtStage1(round.target.ko), `${round.id} ${round.target.ko}`).toBe(true);
+          continue;
+        }
         if (scope.kind !== 'listen-pick') continue;
         for (const round of scope.rounds) {
+          // A Read Pick Meaning round (row CM-3A S2) reads its prompt; a heard picture round does not.
+          if (round.promptShown === true) expect(decodableAtStage1(round.prompt.ko), `${round.id} ${round.prompt.ko}`).toBe(true);
           const reading = round.options.some((o) => o.text !== undefined);
           if (!reading) continue;
           for (const ko of [round.prompt.ko, ...round.options.map((o) => o.text!.ko)]) expect(decodableAtStage1(ko), `${round.id} ${ko}`).toBe(true);
@@ -115,15 +125,18 @@ describe('Playground Words (F-CURR-001 S2-3)', () => {
     expect(['그네', '모래', '미끄럼틀', '팽이', '윷', '숨바꼭질'].some(decodableAtStage1)).toBe(false);
   });
 
-  it('Check: a picture round, then a reading round on a decodable word (section 3.3)', () => {
-    for (const quest of cell.quests) {
-      const check = quest.scopes.find((s) => s.ref.endsWith('-check'));
-      expect(check?.kind, quest.id).toBe('listen-pick');
-      if (check?.kind !== 'listen-pick') continue;
-      const [picture, reading] = check.rounds;
-      expect(picture?.options.every((o) => o.pictureRef !== undefined && o.labelEn !== undefined), quest.id).toBe(true);
-      expect(reading?.options.every((o) => o.text !== undefined), quest.id).toBe(true);
-      expect(decodableAtStage1(reading!.prompt.ko), quest.id).toBe(true);
+  it('Check rotation (F-CURR-002 section 7.1, row CM-3A S2): Pic-Word Match, Dictation, then Read Pick Meaning on decodable words', () => {
+    const checks = cell.quests.map((quest) => quest.scopes.find((s) => s.ref.endsWith('-check')));
+    expect(checks.map((c) => c?.kind)).toEqual(['pic-word-match', 'type-hangul', 'listen-pick']);
+    for (const check of checks) {
+      if (check?.kind === 'type-hangul') for (const r of check.rounds) expect([r.mode, decodableAtStage1(r.target.ko)], r.id).toEqual(['hear', true]);
+      if (check?.kind === 'listen-pick') {
+        for (const r of check.rounds) {
+          expect(r.promptShown, r.id).toBe(true);
+          expect(r.options.every((o) => o.pictureRef !== undefined && o.labelEn !== undefined && o.text === undefined), r.id).toBe(true);
+          expect(decodableAtStage1(r.prompt.ko), r.id).toBe(true);
+        }
+      }
     }
   });
 
@@ -157,16 +170,22 @@ describe('Playground Words (F-CURR-001 S2-3)', () => {
     for (const ko of ['그네', '미끄럼틀', '모래', '제기', '팽이', '윷', '숨바꼭질']) expect(REUSED.has(ko), ko).toBe(false);
   });
 
-  it('a word with a Word Builder symbol is exposure only: Discover, Pic-Word Match, Card Match or a picture round (F-QUEST-002 R3)', () => {
+  it('a word with a Word Builder symbol is exposure only: Discover, Pic-Word Match, Card Match or a heard picture round (F-QUEST-002 R3)', () => {
     for (const quest of cell.quests) {
       for (const scope of quest.scopes) {
+        if (scope.kind === 'type-hangul') {
+          // Row CM-3A S2: a Dictation word is written, so it has no Word Builder symbol.
+          for (const round of scope.rounds) expect(decodableAtStage1(round.target.ko), `${round.id} ${round.target.ko}`).toBe(true);
+          continue;
+        }
         if (scope.kind !== 'listen-pick') {
           expect(['pic-word-match', 'card-match'], scope.ref).toContain(scope.kind);
           continue;
         }
         for (const round of scope.rounds) {
           const picture = round.options.every((o) => o.pictureRef !== undefined);
-          if (picture) continue;
+          // A heard picture round is exposure; a Read Pick Meaning round (row CM-3A S2) reads its prompt.
+          if (picture && round.promptShown !== true) continue;
           for (const ko of [round.prompt.ko, ...round.options.map((o) => o.text?.ko ?? '')]) expect(decodableAtStage1(ko), `${round.id} ${ko}`).toBe(true);
         }
       }

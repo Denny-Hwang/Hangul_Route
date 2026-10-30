@@ -5,7 +5,10 @@
     "episode:stage3-nature": {
       "title": "동물 문장",
       "subtitle": "동물이 어디에 있는지, 어떤 모습인지, 무엇을 하는지 말해요.",
-      "hoyaIntro": "저는 동물이 정말 좋아요! 동물 문장을 읽고 만들어 봐요."
+      "hoyaIntro": "저는 동물이 정말 좋아요! 동물 문장을 읽고 만들어 봐요.",
+      "culture.n1.text": "{ko:에}는 장소를 나타내는 말 뒤에 붙어 무엇이 어디에 있는지 알려 줘요. {ko:있어요}는 동물이나 물건이 그곳에 있다는 말이에요.",
+      "culture.n2.text": "주어를 나타내는 조사는 두 가지예요. 받침이 있는 말 뒤에는 {ko:이}, 받침이 없는 말 뒤에는 {ko:가}를 써요.",
+      "culture.n3.text": "한국어 문장에서는 주어가 무엇을 하는지, 어떤지를 말하는 낱말이 주어 뒤, 맨 끝에 와요."
     },
     "quest:stage3-nature-q1": {
       "title": "새는 어디에?",
@@ -91,8 +94,14 @@
       "listenPick.rounds.a4.prompt": "귀가 긴 동물이 주변 땅보다 높이 올라간 곳에 있다는 말"
     },
     "minigame:s3-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "둥근 귀에 털이 덥수룩한 들짐승이 주변 땅보다 높이 올라간 곳에 있다는 말",
-      "listenPick.rounds.c2.prompt": "야옹 하는 동물이 나뭇가지에 있다는 말"
+      "clozePick.rounds.c1.sentence.gloss": "나뭇가지에 깃털 달린 동물이 있다는 말",
+      "clozePick.rounds.c1.tiles.namu.gloss": "줄기와 가지가 있는 키 큰 식물",
+      "clozePick.rounds.c1.tiles.mul.gloss": "강이나 바다를 이루는 맑은 것",
+      "clozePick.rounds.c1.tiles.jip.gloss": "사람이 사는 건물",
+      "clozePick.rounds.c2.sentence.gloss": "둥근 귀에 털이 덥수룩한 들짐승이 주변 땅보다 높이 올라간 곳에 있다는 말",
+      "clozePick.rounds.c2.tiles.i.gloss": "받침 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시"
     },
     "minigame:s3-nature-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "줄무늬 맹수의 몸집이 우람하다는 말",
@@ -115,8 +124,11 @@
       "listenPick.rounds.a4.prompt": "지느러미가 있는 동물의 몸집이 조그맣다는 말"
     },
     "minigame:s3-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "줄무늬 맹수의 몸집이 우람하다는 말",
-      "listenPick.rounds.c2.prompt": "귀가 긴 동물의 몸집이 조그맣다는 말"
+      "orderIt.rounds.c1.sentence.gloss": "귀가 긴 동물이 사랑스럽다는 말",
+      "orderIt.rounds.c1.distractors.keoyo.gloss": "몸집이 우람하다는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "야옹 하는 동물의 몸집이 조그맣다는 말",
+      "orderIt.rounds.c2.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "orderIt.rounds.c2.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-nature-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
@@ -139,8 +151,10 @@
       "listenPick.rounds.a4.prompt": "줄무늬 맹수가 달린다는 말"
     },
     "minigame:s3-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "깃털 달린 동물이 하늘을 가르며 움직인다는 말",
-      "listenPick.rounds.c2.prompt": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 말"
+      "typeHangul.rounds.d1.prompt": "귀가 긴 동물을 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d1.target.gloss": "귀가 긴 동물",
+      "typeHangul.rounds.d2.prompt": "줄무늬 맹수를 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d2.target.gloss": "줄무늬 맹수"
     }
   }
 }

@@ -82,7 +82,11 @@ const handCells: CatalogCell[] = [
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 12, ['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 14, ['quest:stage1-rites-q1', 'quest:stage1-rites-q2', 'quest:stage1-rites-q3']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 12, ['quest:stage1-nature-q1', 'quest:stage1-nature-q2', 'quest:stage1-nature-q3']),
-  cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 12, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3']),
+  // F-CURR-002 row CM-33: the Stage 1 addition is optional (section 4.2), as in the bundle's episode.
+  {
+    ...cell('stage1', 'crafts', 'Yut, Kites & Paper', 'shipped', 16, ['quest:stage1-crafts-q1', 'quest:stage1-crafts-q2', 'quest:stage1-crafts-q3', 'quest:stage1-crafts-q4']),
+    optionalQuestIds: ['quest:stage1-crafts-q4'],
+  },
   cell('stage5', 'letters', 'Stories of Letters', 'shipped', 13, [
     'quest:story-sejong-new-letters-read',
     'quest:story-shapes-of-hangeul-read',
@@ -128,6 +132,9 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('stage1-crafts-q1', 'stage1', 'crafts', 'Yut, Kite, Top', 4),
   lesson('stage1-crafts-q2', 'stage1', 'crafts', 'Paper and Pottery', 4),
   lesson('stage1-crafts-q3', 'stage1', 'crafts', 'Read Hangul!', 4),
+  // F-CURR-002 row CM-33 (stamped in hand-stamps.json): the Stage 1 addition teaches no new symbol; it closes the
+  // route, after all 30 symbols, so every letter it asks was taught first.
+  lesson('stage1-crafts-q4', 'stage1', 'crafts', 'Where Shapes Come From', 4),
   // The Stage 5 books (F-STORY-005 PR 5.6): grid quests that play their stories at the read level.
   lesson('story-sejong-new-letters-read', 'stage5', 'letters', "King Sejong's New Letters", 4),
   lesson('story-shapes-of-hangeul-read', 'stage5', 'letters', 'The Secret in the Shapes', 5),

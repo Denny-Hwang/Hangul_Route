@@ -10,14 +10,16 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:masisseoyo"],
+  "rewardCardIds": [
+    "card:masisseoyo"
+  ],
   "quests": [
     {
       "id": "quest:stage4-life-q1",
       "titleEn": "Have You Eaten?",
       "blurbEn": "Answer a warm hello at the family table.",
       "teaserEn": "Next: ask how the food tastes.",
-      "estimatedMinutes": 4,
+      "estimatedMinutes": 5,
       "steps": [
         {
           "id": "s1",
@@ -95,24 +97,24 @@
         {
           "id": "s3",
           "kind": "practice",
-          "titleEn": "Pick the Reply",
-          "minigameKind": "tap-respond",
+          "titleEn": "Chat at the Table",
+          "minigameKind": "role-play",
           "minigameRef": "minigame:s4-life-q1-practice",
-          "durationSeconds": 80
+          "durationSeconds": 90
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s4-life-q1-apply",
-          "durationSeconds": 60
+          "durationSeconds": 80
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-life-q1-check",
           "durationSeconds": 40
         },
@@ -127,14 +129,272 @@
       "scopes": [
         {
           "ref": "minigame:s4-life-q1-practice",
-          "kind": "tap-respond",
-          "turns": [
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "집",
+              "romanization": "jip",
+              "en": "At home"
+            },
+            "partner": {
+              "ko": "할머니",
+              "romanization": "halmeoni",
+              "en": "grandma"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "밥 먹었어요?",
+                  "romanization": "bap meogeosseoyo",
+                  "en": "Have you eaten?"
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That one is for a drink. Grandma asks about a meal, so say you ate."
+                  },
+                  {
+                    "id": "name",
+                    "text": {
+                      "ko": "저는 호야예요.",
+                      "romanization": "jeoneun Hoyayeyo",
+                      "en": "I am Hoya."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells your name. Grandma is asking if you ate: a warm hello."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "김치 먹었어요?",
+                  "romanization": "gimchi meogeosseoyo",
+                  "en": "Did you eat the kimchi?"
+                },
+                "replies": [
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Kimchi is food, so say you ate it."
+                  },
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Grandma asked about the kimchi, so answer her."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "우유 마셨어요?",
+                  "romanization": "uyu masyeosseoyo",
+                  "en": "Did you drink your milk?"
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Milk is a drink, so pick the answer that says you drank it."
+                  },
+                  {
+                    "id": "apple",
+                    "text": {
+                      "ko": "사과 주세요.",
+                      "romanization": "sagwa juseyo",
+                      "en": "An apple, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks for an apple. Grandma asked about your milk."
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "떡 먹었어요?",
+                  "romanization": "tteok meogeosseoyo",
+                  "en": "Did you eat the rice cake?"
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Rice cake is food, so say you ate it."
+                  },
+                  {
+                    "id": "meet",
+                    "text": {
+                      "ko": "만나서 반가워요.",
+                      "romanization": "mannaseo bangawoyo",
+                      "en": "Nice to meet you."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is for meeting someone new. Grandma asked about the rice cake."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You answered every warm question at the table!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-q1-apply",
+          "kind": "order-it",
+          "rounds": [
             {
-              "speakerEn": "Grandma",
-              "line": {
+              "id": "r1",
+              "sentence": {
                 "ko": "밥 먹었어요?",
                 "romanization": "bap meogeosseoyo",
                 "en": "Have you eaten?"
+              },
+              "distractors": [
+                {
+                  "ko": "마셨어요",
+                  "romanization": "masyeosseoyo",
+                  "en": "drank"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "우유 마셨어요?",
+                "romanization": "uyu masyeosseoyo",
+                "en": "Did you drink your milk?"
+              },
+              "distractors": [
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "ate"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "네, 먹었어요.",
+                "romanization": "ne meogeosseoyo",
+                "en": "Yes, I ate."
+              },
+              "distractors": [
+                {
+                  "ko": "마셨어요",
+                  "romanization": "masyeosseoyo",
+                  "en": "drank"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "저는 우유를 마셨어요.",
+                "romanization": "jeoneun uyureul masyeosseoyo",
+                "en": "I drank milk."
+              },
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-life-q1-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mom",
+              "line": {
+                "ko": "떡 먹었어요?",
+                "romanization": "tteok meogeosseoyo",
+                "en": "Did you eat the rice cake?"
               },
               "replies": [
                 {
@@ -150,7 +410,7 @@
                   "id": "r2",
                   "text": {
                     "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
+                    "romanization": "jeoneun Hoyayeyo",
                     "en": "I am Hoya."
                   },
                   "correct": false
@@ -158,9 +418,9 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
+                    "ko": "네, 마셨어요.",
+                    "romanization": "ne masyeosseoyo",
+                    "en": "Yes, I drank it."
                   },
                   "correct": false
                 }
@@ -175,16 +435,16 @@
               },
               "replies": [
                 {
-                  "id": "r2",
+                  "id": "r1",
                   "text": {
-                    "ko": "사과 주세요.",
-                    "romanization": "sagwa juseyo",
-                    "en": "An apple, please."
+                    "ko": "네, 먹었어요.",
+                    "romanization": "ne meogeosseoyo",
+                    "en": "Yes, I ate."
                   },
                   "correct": false
                 },
                 {
-                  "id": "r1",
+                  "id": "r2",
                   "text": {
                     "ko": "네, 마셨어요.",
                     "romanization": "ne masyeosseoyo",
@@ -195,168 +455,13 @@
                 {
                   "id": "r3",
                   "text": {
-                    "ko": "만나서 반가워요.",
-                    "romanization": "mannaseo bangawoyo",
-                    "en": "Nice to meet you."
-                  },
-                  "correct": false
-                }
-              ]
-            },
-            {
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "김치 먹었어요?",
-                "romanization": "gimchi meogeosseoyo",
-                "en": "Did you eat the kimchi?"
-              },
-              "replies": [
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
                     "ko": "잘 가요.",
                     "romanization": "jal gayo",
                     "en": "Goodbye."
                   },
                   "correct": false
-                },
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "네, 먹었어요.",
-                    "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I ate."
-                  },
-                  "correct": true
                 }
               ]
-            }
-          ]
-        },
-        {
-          "ref": "minigame:s4-life-q1-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "할머니, 안녕하세요!",
-                "romanization": "halmeoni annyeonghaseyo",
-                "en": "Hello, Grandma!"
-              }
-            },
-            {
-              "id": "l2",
-              "speakerEn": "Grandma",
-              "line": {
-                "ko": "밥 먹었어요?",
-                "romanization": "bap meogeosseoyo",
-                "en": "Have you eaten?"
-              }
-            },
-            {
-              "id": "l3",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "네, 먹었어요.",
-                "romanization": "ne meogeosseoyo",
-                "en": "Yes, I ate."
-              }
-            },
-            {
-              "id": "l4",
-              "speakerEn": "Grandma",
-              "line": {
-                "ko": "잘 가요.",
-                "romanization": "jal gayo",
-                "en": "Goodbye."
-              }
-            }
-          ]
-        },
-        {
-          "ref": "minigame:s4-life-q1-check",
-          "kind": "listen-pick",
-          "rounds": [
-            {
-              "id": "c1",
-              "prompt": {
-                "ko": "밥 먹었어요?",
-                "romanization": "bap meogeosseoyo",
-                "en": "Have you eaten?"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "네, 먹었어요.",
-                    "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I ate."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  }
-                }
-              ],
-              "answerId": "a"
-            },
-            {
-              "id": "c2",
-              "prompt": {
-                "ko": "우유 마셨어요?",
-                "romanization": "uyu masyeosseoyo",
-                "en": "Did you drink your milk?"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "사과 주세요.",
-                    "romanization": "sagwa juseyo",
-                    "en": "An apple, please."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
-                  }
-                }
-              ],
-              "answerId": "a"
             }
           ]
         }
@@ -444,24 +549,24 @@
         {
           "id": "s3",
           "kind": "practice",
-          "titleEn": "Pick the Reply",
-          "minigameKind": "tap-respond",
+          "titleEn": "Chat at the Table",
+          "minigameKind": "role-play",
           "minigameRef": "minigame:s4-life-q2-practice",
-          "durationSeconds": 80
+          "durationSeconds": 90
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s4-life-q2-apply",
-          "durationSeconds": 75
+          "durationSeconds": 80
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s4-life-q2-check",
           "durationSeconds": 40
         },
@@ -476,236 +581,335 @@
       "scopes": [
         {
           "ref": "minigame:s4-life-q2-practice",
-          "kind": "tap-respond",
-          "turns": [
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "집",
+              "romanization": "jip",
+              "en": "At home"
+            },
+            "partner": {
+              "ko": "아빠",
+              "romanization": "appa",
+              "en": "dad"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "밥 먹었어요?",
+                  "romanization": "bap meogeosseoyo",
+                  "en": "Have you eaten?"
+                },
+                "replies": [
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Dad asks if you have eaten, not how it tastes. Say you ate."
+                  },
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "apple",
+                    "text": {
+                      "ko": "사과가 어때요?",
+                      "romanization": "sagwaga eottaeyo",
+                      "en": "How is the apple?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks a question back. Dad asked you, so answer him."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "맛이 어때요?",
+                  "romanization": "masi eottaeyo",
+                  "en": "How does it taste?"
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Dad asks how it tastes, not if you ate. Tell him how it is."
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Dad asks how it tastes, so tell him."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "김치가 어때요?",
+                  "romanization": "gimchiga eottaeyo",
+                  "en": "How is the kimchi?"
+                },
+                "replies": [
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drank something. Dad asks how the kimchi is."
+                  },
+                  {
+                    "id": "name",
+                    "text": {
+                      "ko": "저는 호야예요.",
+                      "romanization": "jeoneun Hoyayeyo",
+                      "en": "I am Hoya."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells your name. Dad asks how the kimchi is."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "사과가 어때요?",
+                  "romanization": "sagwaga eottaeyo",
+                  "en": "How is the apple?"
+                },
+                "replies": [
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That only says you drank something. Dad asks how the apple is."
+                  },
+                  {
+                    "id": "apple",
+                    "text": {
+                      "ko": "사과 주세요.",
+                      "romanization": "sagwa juseyo",
+                      "en": "An apple, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks for an apple. Dad asks how the apple is."
+                  },
+                  {
+                    "id": "sweet",
+                    "text": {
+                      "ko": "달아요.",
+                      "romanization": "darayo",
+                      "en": "It is sweet."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You told Dad how everything tastes. Time to eat!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-q2-apply",
+          "kind": "order-it",
+          "rounds": [
             {
-              "speakerEn": "Dad",
-              "line": {
+              "id": "r1",
+              "sentence": {
                 "ko": "맛이 어때요?",
                 "romanization": "masi eottaeyo",
                 "en": "How does it taste?"
               },
-              "replies": [
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "네, 먹었어요.",
-                    "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I ate."
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
                   },
-                  "correct": false
-                },
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "맛있어요.",
-                    "romanization": "masisseoyo",
-                    "en": "It is tasty."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  },
-                  "correct": false
-                }
-              ]
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
             },
             {
-              "speakerEn": "Grandma",
-              "line": {
-                "ko": "사과가 어때요?",
-                "romanization": "sagwaga eottaeyo",
-                "en": "How is the apple?"
-              },
-              "replies": [
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "달아요.",
-                    "romanization": "darayo",
-                    "en": "It is sweet."
-                  },
-                  "correct": true
-                }
-              ]
-            },
-            {
-              "speakerEn": "Mom",
-              "line": {
+              "id": "r2",
+              "sentence": {
                 "ko": "김치가 어때요?",
                 "romanization": "gimchiga eottaeyo",
                 "en": "How is the kimchi?"
               },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "맛있어요.",
-                    "romanization": "masisseoyo",
-                    "en": "It is tasty."
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
                   },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "사과 주세요.",
-                    "romanization": "sagwa juseyo",
-                    "en": "An apple, please."
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "사과가 어때요?",
+                "romanization": "sagwaga eottaeyo",
+                "en": "How is the apple?"
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
                   },
-                  "correct": false
-                },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "국이 뜨거워요.",
+                "romanization": "gugi tteugeowoyo",
+                "en": "The soup is hot."
+              },
+              "distractors": [
                 {
-                  "id": "r3",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  },
-                  "correct": false
+                  "ko": "달아요",
+                  "romanization": "darayo",
+                  "en": "it is sweet"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "ref": "minigame:s4-life-q2-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "밥 먹어요!",
-                "romanization": "bap meogeoyo",
-                "en": "Time to eat!"
-              }
-            },
-            {
-              "id": "l2",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "네!",
-                "romanization": "ne",
-                "en": "Okay!"
-              }
-            },
-            {
-              "id": "l3",
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "맛이 어때요?",
-                "romanization": "masi eottaeyo",
-                "en": "How does it taste?"
-              }
-            },
-            {
-              "id": "l4",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "맛있어요.",
-                "romanization": "masisseoyo",
-                "en": "It is tasty."
-              }
             }
           ]
         },
         {
           "ref": "minigame:s4-life-q2-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "맛이 어때요?",
-                "romanization": "masi eottaeyo",
-                "en": "How does it taste?"
+              "sentence": {
+                "ko": "___가 어때요?",
+                "romanization": "___ga eottaeyo",
+                "en": "How is the kimchi?"
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "맛있어요.",
-                    "romanization": "masisseoyo",
-                    "en": "It is tasty."
-                  }
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  }
+                  "ko": "김치",
+                  "romanization": "gimchi",
+                  "en": "kimchi"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
-                  }
+                  "ko": "우유",
+                  "romanization": "uyu",
+                  "en": "milk"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "사과가 어때요?",
-                "romanization": "sagwaga eottaeyo",
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "사과___ 어때요?",
+                "romanization": "sagwa___ eottaeyo",
                 "en": "How is the apple?"
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "달아요.",
-                    "romanization": "darayo",
-                    "en": "It is sweet."
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  }
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "네, 먹었어요.",
-                    "romanization": "ne meogeosseoyo",
-                    "en": "Yes, I ate."
-                  }
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1,
+              "filledRomanization": "sagwaga eottaeyo"
             }
           ]
         }
@@ -715,7 +919,7 @@
       "id": "quest:stage4-life-q3",
       "titleEn": "Not Spicy",
       "blurbEn": "Say that something is not spicy or not hot.",
-      "estimatedMinutes": 4,
+      "estimatedMinutes": 5,
       "steps": [
         {
           "id": "s1",
@@ -792,24 +996,24 @@
         {
           "id": "s3",
           "kind": "practice",
-          "titleEn": "Pick the Reply",
-          "minigameKind": "tap-respond",
+          "titleEn": "Chat at the Table",
+          "minigameKind": "role-play",
           "minigameRef": "minigame:s4-life-q3-practice",
-          "durationSeconds": 80
+          "durationSeconds": 90
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s4-life-q3-apply",
-          "durationSeconds": 70
+          "durationSeconds": 80
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-life-q3-check",
           "durationSeconds": 40
         },
@@ -824,90 +1028,291 @@
       "scopes": [
         {
           "ref": "minigame:s4-life-q3-practice",
-          "kind": "tap-respond",
-          "turns": [
-            {
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "매워요?",
-                "romanization": "maewoyo",
-                "en": "Is it spicy?"
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "집",
+              "romanization": "jip",
+              "en": "At home"
+            },
+            "partner": {
+              "ko": "엄마",
+              "romanization": "eomma",
+              "en": "mom"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "매워요?",
+                  "romanization": "maewoyo",
+                  "en": "Is it spicy?"
+                },
+                "replies": [
+                  {
+                    "id": "no",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "taste",
+                    "text": {
+                      "ko": "맛이 어때요?",
+                      "romanization": "masi eottaeyo",
+                      "en": "How does it taste?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks a question back. Mom asks if it is spicy, so say yes or no."
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drank it. Mom asks if it is spicy, so say yes or no."
+                  }
+                ]
               },
-              "replies": [
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  },
-                  "correct": false
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "국이 뜨거워요?",
+                  "romanization": "gugi tteugeowoyo",
+                  "en": "Is the soup hot?"
                 },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "사과 주세요.",
-                    "romanization": "sagwa juseyo",
-                    "en": "An apple, please."
+                "replies": [
+                  {
+                    "id": "spicy",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom asks if the soup is hot, not if it is spicy."
                   },
-                  "correct": false
+                  {
+                    "id": "no",
+                    "text": {
+                      "ko": "아니요, 안 뜨거워요.",
+                      "romanization": "aniyo an tteugeowoyo",
+                      "en": "No, it is not hot."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drank it. Mom asks if the soup is hot."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "국이 매워요?",
+                  "romanization": "gugi maewoyo",
+                  "en": "Is the soup spicy?"
                 },
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "아니요, 안 매워요.",
-                    "romanization": "aniyo an maewoyo",
-                    "en": "No, it is not spicy."
+                "replies": [
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "네, 매워요.",
+                      "romanization": "ne maewoyo",
+                      "en": "Yes, it is spicy."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
                   },
-                  "correct": true
+                  {
+                    "id": "hot",
+                    "text": {
+                      "ko": "아니요, 안 뜨거워요.",
+                      "romanization": "aniyo an tteugeowoyo",
+                      "en": "No, it is not hot."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom asks about spice, not about heat."
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Mom asks if the soup is spicy."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "맛이 어때요?",
+                  "romanization": "masi eottaeyo",
+                  "en": "How does it taste?"
+                },
+                "replies": [
+                  {
+                    "id": "spicy",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom asks how it tastes, not a yes-or-no question. Tell her how it is."
+                  },
+                  {
+                    "id": "name",
+                    "text": {
+                      "ko": "저는 호야예요.",
+                      "romanization": "jeoneun Hoyayeyo",
+                      "en": "I am Hoya."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells your name. Mom asks how it tastes."
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You said yes and no at the family table!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-q3-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "아니요, 안 매워요.",
+                "romanization": "aniyo an maewoyo",
+                "en": "No, it is not spicy."
+              },
+              "distractors": [
+                {
+                  "ko": "맛있어요",
+                  "romanization": "masisseoyo",
+                  "en": "it is tasty"
                 }
               ]
             },
             {
-              "speakerEn": "Mom",
-              "line": {
+              "id": "r2",
+              "sentence": {
                 "ko": "국이 뜨거워요?",
                 "romanization": "gugi tteugeowoyo",
                 "en": "Is the soup hot?"
               },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "아니요, 안 뜨거워요.",
-                    "romanization": "aniyo an tteugeowoyo",
-                    "en": "No, it is not hot."
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
                   },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
-                  },
-                  "correct": false
-                }
-              ]
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
             },
             {
-              "speakerEn": "Dad",
+              "id": "r3",
+              "sentence": {
+                "ko": "김치가 맛있어요.",
+                "romanization": "gimchiga masisseoyo",
+                "en": "The kimchi is tasty."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "아니요, 안 뜨거워요.",
+                "romanization": "aniyo an tteugeowoyo",
+                "en": "No, it is not hot."
+              },
+              "distractors": [
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "it is spicy"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-life-q3-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Grandma",
               "line": {
                 "ko": "국이 매워요?",
                 "romanization": "gugi maewoyo",
                 "en": "Is the soup spicy?"
               },
               "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "맛이 어때요?",
+                    "romanization": "masi eottaeyo",
+                    "en": "How does it taste?"
+                  },
+                  "correct": false
+                },
                 {
                   "id": "r2",
                   "text": {
@@ -918,142 +1323,52 @@
                   "correct": false
                 },
                 {
-                  "id": "r1",
+                  "id": "r3",
                   "text": {
                     "ko": "네, 매워요.",
                     "romanization": "ne maewoyo",
                     "en": "Yes, it is spicy."
                   },
                   "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "만나서 반가워요.",
-                    "romanization": "mannaseo bangawoyo",
-                    "en": "Nice to meet you."
-                  },
-                  "correct": false
                 }
               ]
-            }
-          ]
-        },
-        {
-          "ref": "minigame:s4-life-q3-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "밥 먹어요!",
-                "romanization": "bap meogeoyo",
-                "en": "Time to eat!"
-              }
             },
             {
-              "id": "l2",
-              "speakerEn": "Hoya",
+              "speakerEn": "Dad",
               "line": {
                 "ko": "국이 뜨거워요?",
                 "romanization": "gugi tteugeowoyo",
                 "en": "Is the soup hot?"
-              }
-            },
-            {
-              "id": "l3",
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "아니요, 안 뜨거워요.",
-                "romanization": "aniyo an tteugeowoyo",
-                "en": "No, it is not hot."
-              }
-            },
-            {
-              "id": "l4",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "맛있어요.",
-                "romanization": "masisseoyo",
-                "en": "It is tasty."
-              }
-            }
-          ]
-        },
-        {
-          "ref": "minigame:s4-life-q3-check",
-          "kind": "listen-pick",
-          "rounds": [
-            {
-              "id": "c1",
-              "prompt": {
-                "ko": "매워요?",
-                "romanization": "maewoyo",
-                "en": "Is it spicy?"
               },
-              "options": [
+              "replies": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "아니요, 안 매워요.",
-                    "romanization": "aniyo an maewoyo",
-                    "en": "No, it is not spicy."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "잘 가요.",
-                    "romanization": "jal gayo",
-                    "en": "Goodbye."
-                  }
-                }
-              ],
-              "answerId": "a"
-            },
-            {
-              "id": "c2",
-              "prompt": {
-                "ko": "국이 뜨거워요?",
-                "romanization": "gugi tteugeowoyo",
-                "en": "Is the soup hot?"
-              },
-              "options": [
-                {
-                  "id": "a",
+                  "id": "r1",
                   "text": {
                     "ko": "아니요, 안 뜨거워요.",
                     "romanization": "aniyo an tteugeowoyo",
                     "en": "No, it is not hot."
-                  }
+                  },
+                  "correct": true
                 },
                 {
-                  "id": "b",
+                  "id": "r2",
                   "text": {
-                    "ko": "네, 마셨어요.",
-                    "romanization": "ne masyeosseoyo",
-                    "en": "Yes, I drank it."
-                  }
+                    "ko": "달아요.",
+                    "romanization": "darayo",
+                    "en": "It is sweet."
+                  },
+                  "correct": false
                 },
                 {
-                  "id": "c",
+                  "id": "r3",
                   "text": {
-                    "ko": "사과 주세요.",
-                    "romanization": "sagwa juseyo",
-                    "en": "An apple, please."
-                  }
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
                 }
-              ],
-              "answerId": "a"
+              ]
             }
           ]
         }
@@ -1066,6 +1381,13 @@
       "kind": "culture",
       "textEn": "People often ask {ko:밥 먹었어요?} as a friendly hello. It shows care, and a short answer is enough.",
       "sources": [
+        {
+          "title": "인사예절 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/12123",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "내용, 2. 언어 인사예절 ⑦: ‘전통적인 인사언어로는 ‘밥 먹었니?’ ‘식사하셨습니까?’ ‘진지 잡수셨습니까?’ 등이 있다.’ / ‘식사 여부를 묻는 것이 안부를 확인하는 보통의 인사로 정착한 것으로 보인다.’"
+        },
         {
           "title": "인사, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
@@ -1086,13 +1408,20 @@
           "url": "https://www.korea.kr/news/reporterView.do?newsId=148954337",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Report of 2025-11-13, on the museum's section <함께 하는>: “식탁을 함께 둘러앉아 ‘밥 먹었어?’ 라고 묻는 평범한 인사 …”"
+        },
+        {
+          "title": "표준 언어 예절(2011) - 일상생활의 인사말 (Standard Language Etiquette, chapter IV: everyday greetings)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/front/reportData/reportDataView.do?mn_id=207&report_seq=770",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "Chapter IV, section 19 만나고 헤어질 때의 인사말, p. 172: “식사 시간 무렵에 동년배나 아랫사람을 만났을 때는 ‘식사하셨습니까?’, ‘식사하셨어요?’, ‘식사했어요?’, ‘점심 먹었어요?’ 등과 같이 인사할 수 있다.” Table IV-5 (p. 173), 식사 시간 전후에 만났을 때: ‘점심/진지 잡수셨습니까?’, ‘점심/진지 드셨습니까?’, ‘식사하셨어요?’, ‘점심/밥 먹었어?’."
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the 정책기자단 citizen-reporter piece on an NFMK exhibit (the reporter's wording) describes it as an ordinary greeting at a shared table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting as the reporter describes the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged.\nLine 3 (pass 5, MAR culture review, final independent fact check, 2026-10-14): the review found both korea.kr sources were private writing on a public host (an opinion column and a citizen-reporter piece), not an institution's own statement, so the AKS Encyclopedia of Korean Culture entry 인사 was added as the institutional source; all three pages re-fetched and every quoteOrLocator passage found. The entry lists asking whether someone has eaten among everyday greetings still exchanged today and defines a greeting as asking after someone and showing warmth. 'Family and friends' was narrowed to 'People often ask'. Source labels in lines 1-2 corrected. No copied wording, no group-wide claim, stereotype, living person, shop, brand or price. Outcome: changed as stated, passes 3."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the 정책기자단 citizen-reporter piece on an NFMK exhibit (the reporter's wording) describes it as an ordinary greeting at a shared table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting as the reporter describes the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged.\nLine 3 (pass 5, MAR culture review, final independent fact check, 2026-10-14): the review found both korea.kr sources were private writing on a public host (an opinion column and a citizen-reporter piece), not an institution's own statement, so the AKS Encyclopedia of Korean Culture entry 인사 was added as the institutional source; all three pages re-fetched and every quoteOrLocator passage found. The entry lists asking whether someone has eaten among everyday greetings still exchanged today and defines a greeting as asking after someone and showing warmth. 'Family and friends' was narrowed to 'People often ask'. Source labels in lines 1-2 corrected. No copied wording, no group-wide claim, stereotype, living person, shop, brand or price. Outcome: changed as stated, passes 3.\nCM-3C (2026-10-23): culture-source fix. The National Folk Museum of Korea entry 인사예절 (Hallyu culture dictionary, topic 12123) added first: asking whether someone has eaten (밥 먹었니?) is a traditional greeting that asks after the person. The note's words are unchanged; the short answer stays with the korea.kr column."
       }
     }
   ],
@@ -1100,11 +1429,18 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language (pass 4, MAR): q2 no longer asks a q3 word before q3 teaches it; English glosses name the verb (Yes, I ate / Yes, I drank it); ko captions fixed (상태를 나타내는 말, 말끝); q1 Apply has 4 lines; yes/no wording uses 네/아니요.",
-      "Culture (pass 5, MAR): AKS Encyclopedia of Korean Culture source added for the have-you-eaten greeting, note narrowed to People often ask; source labels corrected; spicy turn moved from kimchi to this soup; elder lines in 해요체 kept as polite models."
+      "Culture (pass 5, MAR): AKS Encyclopedia of Korean Culture source added for the have-you-eaten greeting, note narrowed to People often ask; source labels corrected; spicy turn moved from kimchi to this soup; elder lines in 해요체 kept as polite models.",
+      "Check rotation MAR (row CM-3A S4, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Food plays Role Play (Grandma, Dad and Mom at home, 4 turns each, every branch ends well) and Sentence Builder with particle choices; the Checks are Dialogue reply pick (Tap to Respond), Cloze Pick and Dialogue reply pick.",
+      "CM-3A S4 MAR (cont.): Language: one natural reply per turn, so a less natural reply is never a second right answer; 'No' never answers a how question; 사과가 after a vowel, 국이 and 맛이 after a final consonant; elders speak 해요체, kept as polite models. Culture and facts: no new claim; the have-you-eaten note and its source are unchanged.",
+      "CM-3A S4 MAR (cont.): Learning design: the Role Plays, Builders and Checks re-ask the cell's own exchanges and sentences (one new turn, the rice cake, and two new sentences), so the review load stays under the section 4.3 gate. Reviser and third pass: es and ko overlays checked; no native-speaker or expert review is claimed.",
+      "CM-3A S4 review fix (2026-10-27): the spicy turn stays on the soup (국이 매워요?), as culture pass 5 decided, so exc:gugi-maewoyo keeps its own sentence with no alias; the Builder's kimchi round is 김치가 맛있어요 (taught in Stage 3). ko nudges give 아빠 and 엄마 the same 높임 as 할머니 (물으세요, 물으셨으니), per NIKL 표준 언어 예절.",
+      "CM-3A S4 second review (2026-10-29), MAR learning-design decision: the family partners (할머니, 아빠, 엄마) keep the taught 해요체 frame (밥 먹었어요?, 맛이 어때요?, 매워요?), so every partner line is one the learner can also say. In many families elders speak 반말 to a child (먹었어? or 먹었니?); 반말 meets the learner first between friends in Play & Make (하자, 너야). A learning-design choice, not a register claim.",
+      "CM-3A S4 second review (cont.): q1 Practice keeps 네, 먹었어요 as the natural reply on three of its four turns: the quest teaches 먹었어요 against 마셨어요, the milk turn needs 마셨어요, and the replies are shuffled per turn; a 아니요 reply waits for q3, which teaches 안.",
+      "CM-3A S4 second review (cont.): the closing keeps 아빠에게 (a familiar address; 아빠께 reads stiff), and no ko meaning line names its answer before the tap (CM-30): 김치 and 사과 are described, not named."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

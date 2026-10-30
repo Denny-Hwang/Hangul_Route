@@ -16,6 +16,11 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'report.figure.cards': '"Tarjetas nuevas", one letter over, inside the 20-character report label budget',
   'report.figure.words': '"Palabras nuevas", one letter over, inside the 20-character report label budget',
   'a11y.minigame.strokeOrder.loop': 'read aloud by a screen reader, never drawn ("un círculo")',
+  // F-CURR-002 row CM-36 (Hidden Heritage): each line keeps free of the found thing's gender and number (a colon, no pronoun).
+  'a11y.hiddenHeritage.foundLive': 'read aloud by the live region, never drawn ("Encontraste: sopa"; the colon leaves no word to agree with the meaning)',
+  'a11y.hiddenHeritage.spotFound': 'read aloud as a spot\'s name, never drawn ("Ya encontraste: palillos"; no pronoun to agree with the meaning)',
+  'a11y.hiddenHeritage.slotEmpty': 'read aloud as an empty slot\'s name, never drawn ("Aún sin encontrar")',
+  'learner.hiddenHeritage.found': '"Lo hallado" (10) against "Found" (5): the neuter keeps the row free of a noun\'s gender; a caption before the slots that wraps',
   'a11y.minigame.strokeOrder.direction.right': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la derecha")',
   'a11y.minigame.strokeOrder.direction.left': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la izquierda")',
   'a11y.minigame.strokeOrder.direction.upLeft': 'read aloud, never drawn ("arriba a la izquierda")',

@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): nine new items: a warning in Volume 1, an error in Volume 2. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): nine new items: an error in Volume 1 (since row CM-3B) and in Volume 2. Not real content.",
   "rule": "lesson-new-load",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -525,7 +525,7 @@
   "expect": [
     [
       "lesson-new-load",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[0]"
     ],

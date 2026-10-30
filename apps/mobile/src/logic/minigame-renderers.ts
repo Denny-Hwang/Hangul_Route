@@ -30,4 +30,18 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'trace-word',
   // F-CURR-001 G-5
   'write-frame',
+  // F-CURR-002 row CM-30 (its Listen & Pick fallback while `game.cloze-pick` is off)
+  'cloze-pick',
+  // F-CURR-002 CM-34: behind `game.story-order`, whose off state plays Story Sequence (`logic/game-switches.ts`).
+  'story-order',
+  // F-CURR-002 row CM-35: Role Play (its fallback, Tap to Respond, while `game.role-play` is off)
+  'role-play',
+  // F-CURR-002 row CM-36: the game, or its Pic-Word Match fallback while `game.hidden-heritage` is off.
+  'hidden-heritage',
+  // F-CURR-002 row CM-32 (Listen & Pick on the block while `game.syllable-build` is off)
+  'syllable-build',
+  // F-CURR-002 row CM-33 (Read Pick while `game.match-shape` is off)
+  'match-shape',
+  // F-CURR-002 row CM-38: its own chunk; with `game.my-story` off it plays Write Frame on the first frame.
+  'my-story',
 ]);

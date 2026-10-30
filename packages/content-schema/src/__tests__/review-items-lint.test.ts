@@ -48,11 +48,13 @@ describe('items-stable-id on the frozen files', () => {
     // 배 glossed "ship" names no sense: scripts/build-review-items.mjs stops on it even in Volume 1, so the lint says error.
     expect(rows(tree)).toEqual([
       ['error', REVIEW_STAGE1_FILE, 'lone'],
-      ['warning', REVIEW_STAGE1_FILE, 'new-word'],
+      // A Stage 1 item is a Volume 1 one: not frozen yet, an error since row CM-3B.
+      ['error', REVIEW_STAGE1_FILE, 'new-word'],
       ['error', 'content/stories/new-tale.json', 'tiers[0].checks[0].target'],
     ]);
     const shipped = lintCurriculum(tree, { shippedStoryIds: new Set(['story:new-tale']) }).filter((f) => f.rule === 'items-stable-id');
-    expect(shipped.map((f) => f.severity)).toEqual(['error', 'warning', 'warning']);
+    // A shipped story's new item is still a warning (row CM-3B is Volume 1 only).
+    expect(shipped.map((f) => f.severity)).toEqual(['error', 'error', 'warning']);
   });
 
   it('reports a pack item as an error', () => {

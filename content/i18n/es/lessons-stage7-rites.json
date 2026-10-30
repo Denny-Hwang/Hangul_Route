@@ -5,7 +5,13 @@
     "episode:stage7-rites": {
       "title": "Mi recuerdo de fiesta",
       "subtitle": "Escribe qué comiste, hiciste y viste en un día especial.",
-      "hoyaIntro": "Los días especiales dejan buenos recuerdos. ¡Vamos a escribir sobre los tuyos!"
+      "hoyaIntro": "Los días especiales dejan buenos recuerdos. ¡Vamos a escribir sobre los tuyos!",
+      "culture.n1.text": "Una acción pasada termina en {ko:았어요} cuando la última vocal de la raíz es {ko:ㅏ} u {ko:ㅗ}, y en {ko:었어요} tras cualquier otra vocal: {ko:먹었어요}, {ko:만들었어요}. {ko:보았어요} puede escribirse corto como {ko:봤어요}.",
+      "culture.n2.text": "Después de una palabra de día o de tiempo, {ko:에} dice cuándo pasa algo: {ko:설날에} significa en Seollal.",
+      "culture.n3.text": "La terminación {ko:이에요} va tras una palabra que acaba en consonante final, y {ko:예요} tras una que acaba en vocal: {ko:생일이에요}.",
+      "culture.n4.text": "El tteokguk, una sopa de pastel de arroz en rodajas, es el plato clásico de Seollal.",
+      "culture.n5.text": "En Chuseok, las familias a menudo se reúnen para preparar songpyeon juntas.",
+      "culture.n6.text": "Chuseok está unido desde hace mucho a la luna llena, y hasta se le llamó la fiesta de la luna."
     },
     "quest:stage7-rites-q1": {
       "title": "Comí tteokguk",
@@ -95,8 +101,14 @@
       "typeHangul.rounds.t4.target.gloss": "sopa de pastel de arroz"
     },
     "minigame:s7-rites-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Comí songpyeon.",
-      "orderIt.rounds.c2.sentence.gloss": "Vi la luna llena."
+      "clozePick.rounds.c1.sentence.gloss": "Comí songpyeon.",
+      "clozePick.rounds.c2.sentence.gloss": "Vi la luna llena.",
+      "clozePick.rounds.c1.tiles.meogeosseoyo.gloss": "comí",
+      "clozePick.rounds.c1.tiles.bwasseoyo.gloss": "vi",
+      "clozePick.rounds.c1.tiles.mandeureosseoyo.gloss": "hice",
+      "clozePick.rounds.c2.tiles.meogeosseoyo.gloss": "comí",
+      "clozePick.rounds.c2.tiles.bwasseoyo.gloss": "vi",
+      "clozePick.rounds.c2.tiles.mandeureosseoyo.gloss": "hice"
     },
     "minigame:s7-rites-q2-practice": {
       "traceWord.rounds.w1.word.gloss": "el Año Nuevo lunar",
@@ -171,8 +183,17 @@
       "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "la luna llena"
     },
     "minigame:s7-rites-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Mi día favorito es Chuseok.",
-      "orderIt.rounds.c2.sentence.gloss": "En Seollal comí tteokguk."
+      "writeFrame.rounds.c1.frame.gloss": "El día favorito de Hoya es ___.",
+      "writeFrame.rounds.c1.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
+      "writeFrame.rounds.c1.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
+      "writeFrame.rounds.c1.slots.day.bank.jumal.gloss": "el fin de semana",
+      "writeFrame.rounds.c2.frame.gloss": "En ___ Hoya hizo ___.",
+      "writeFrame.rounds.c2.slots.day.bank.seollal.gloss": "el Año Nuevo lunar",
+      "writeFrame.rounds.c2.slots.day.bank.chuseok.gloss": "la fiesta de la cosecha de otoño",
+      "writeFrame.rounds.c2.slots.thing.bank.songpyeon.gloss": "pasteles de arroz en forma de media luna",
+      "writeFrame.rounds.c2.slots.thing.bank.tteok.gloss": "pastel de arroz",
+      "writeFrame.rounds.c2.slots.thing.bank.keikeu.gloss": "pastel",
+      "writeFrame.rounds.c2.slots.day.bank.jumal.gloss": "el fin de semana"
     }
   }
 }

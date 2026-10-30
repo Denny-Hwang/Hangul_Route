@@ -12,7 +12,7 @@ export interface FirstRoundAnswer {
   correct: boolean;
   asked: RoundAsked;
   at: Date;
-  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24). */
+  /** Answered with the hint showing (the scaffold round of F-CURR-002 section 4.6, row CM-24; Story Order's Show meanings, CM-34). */
   hinted?: boolean;
 }
 
@@ -58,8 +58,10 @@ interface Actions {
   /**
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
+   * `hinted`: answered with help (Dictation's hint or a one-letter slip, row CM-31; Story Order's Show meanings, row
+   * CM-34, which passes it with a right answer only): the memory store records it as a hinted right answer.
    */
-  answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked) => void;
+  answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
   markStepComplete: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
@@ -92,7 +94,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
       stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
     }),
 
-  answerRound: (roundKey, correct, asked) => {
+  answerRound: (roundKey, correct, asked, hinted = false) => {
     const before = get();
     const first = !before.scoredRounds.includes(`${before.stepIndex}:${roundKey}`);
     set((s) => {
@@ -113,7 +115,10 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     // The first answer of a round is its first try (F-001 section 3.2): only it reaches the memory store.
     if (first && asked && firstAnswerListener && before.questId && before.episodeId) {
       try {
-        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct, asked, at: new Date() });
+        // A hinted answer (help shown, or a typed slip of one letter) is never wrong for the memory store, whatever it
+        // scored; a hint carried by the round asked (Role Play's Show meanings, row CM-35) counts with a right answer only.
+        const help = hinted || (correct && asked.hinted === true);
+        firstAnswerListener({ questId: before.questId, episodeId: before.episodeId, correct: correct || hinted, asked, at: new Date(), ...(help ? { hinted: true } : {}) });
       } catch {
         // The round is scored; only the memory store misses the answer.
       }

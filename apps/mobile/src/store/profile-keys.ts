@@ -1,4 +1,5 @@
 import { CLASS_MOVES_SEEN_KEY } from './class-update-store';
+import { DECODE_SPRINT_KEY } from './decode-sprint-store';
 import { FREE_END_SEEN_KEY } from './free-end-seen';
 import { SETTINGS_KEY } from './locale-store';
 import { MEMBERSHIPS_KEY, TRANSFERS_ON_KEY, TRANSFER_SCOPE_KEY, TRANSFER_SELF_SET_KEY } from './membership-store';
@@ -39,4 +40,5 @@ export const PER_PROFILE_KEYS: Readonly<Record<string, (profileId: string) => st
   'transfer-self-set': TRANSFER_SELF_SET_KEY,
   'story-bookmarks': STORY_BOOKMARKS_KEY,
   memory: MEMORY_KEY,
+  'decode-sprint': DECODE_SPRINT_KEY,
 };

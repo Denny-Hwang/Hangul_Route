@@ -152,6 +152,13 @@ describe('Apply one round shorter', () => {
     expect(shortenScope({ kind: 'realia-read' })).toBeNull();
   });
 
+  it('keeps every frame of a My Story chain: the chain is one text and holds at least 3 frames (row CM-38)', () => {
+    for (const n of [3, 4, 5]) {
+      const frames = Array.from({ length: n }, (_, i) => ({ id: `f${i}` }) as never);
+      expect(shortenScope({ kind: 'my-story', rounds: n, myStory: { frames } }), `${n} frames`).toBeNull();
+    }
+  });
+
   it('shortens every kind of a shipped Apply that has rounds of its own', () => {
     const k = { ko: '물', romanization: 'mul', en: 'water' };
     const four = <T,>(make: (i: number) => T): T[] => Array.from({ length: 4 }, (_, i) => make(i));

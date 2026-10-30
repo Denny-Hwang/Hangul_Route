@@ -102,6 +102,7 @@ export const a11y = {
       close: (description: string) => `${description} Toca para cerrar.`,
     },
     hearAgain: 'Escuchar el sonido otra vez',
+    dictation: { speaker: 'Escuchar la palabra' },
     picture: 'Imagen',
     option: {
       correct: (label: string) => `Respuesta correcta: ${label}`,
@@ -128,6 +129,11 @@ export const a11y = {
       lookHere: 'Mira aquí',
       dir: { left: 'a la izquierda', right: 'a la derecha' },
     },
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `Oración: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `Oración completa: ${sentence}. ${meaning}`,
+      blank: 'hueco',
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: 'Shift, más letras',
@@ -143,6 +149,30 @@ export const a11y = {
       either: (a: string, b: string) => `${a} o ${b}`,
       particleFits: (particle: string, word: string) => `${particle} después de ${word}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
+    rolePlay: {
+      log: 'Diálogo',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role} dice: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `Dijiste: ${line}, ${romanization}`,
+    },
+    syllableBuild: {
+      tile: (jamo: string, name: string) => `${jamo}, letra ${name}`,
+      finalTile: (jamo: string, name: string) => `${jamo}, letra ${name}, como final`,
+      noFinal: 'Sin letra final',
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part}: espacio vacío` : `${part}: ${filled}`),
+      marked: (label: string) => `${label}. Escucha otra vez`,
+      block: (ko: string, romanization: string) => `Bloque ${ko}, ${romanization}, armado`,
+      meaning: (gloss: string) => `Significado: ${gloss}`,
+    },
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, name: string) => `${letter}, letra ${name}`,
+      found: (letter: string, name: string, sound: string) => `${letter}, letra ${name}, ${sound}, encontrada`,
+      pairHeading: (letter: string, name: string, sound: string) => `Toca cada ${letter}, letra ${name}, ${sound}`,
+      sounds: (first: string, second: string) => `${first} o ${second}`,
+    },
+    myStory: {
+      soFar: (lines: number) => plural('es', lines, { one: 'Mi historia hasta ahora, 1 línea', other: `Mi historia hasta ahora, ${lines} líneas` }),
     },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
@@ -288,6 +318,7 @@ export const a11y = {
     timerLeft: (t: string) => `Tiempo que queda: ${t}`,
     slot: 'espacio',
     tilePlaced: (word: string) => `Se colocó: ${word}`,
+    rolePlayClass: (line: string) => `La clase dijo: ${line}`,
   },
   /** [OA] Nombres accesibles del selector (OA-4a, 17.2). */
   who: {
@@ -320,5 +351,15 @@ export const a11y = {
   },
   stageCheck: {
     best: (stars: number) => plural('es', stars, { one: 'Repaso de etapa, mejor: 1 estrella', other: `Repaso de etapa, mejor: ${stars} estrellas` }),
+  },
+  hiddenHeritage: {
+    foundLive: (gloss: string) => `Encontraste: ${gloss}`,
+    spotFound: (gloss: string) => `Ya encontraste: ${gloss}`,
+    slotEmpty: 'Aún sin encontrar',
+  },
+  yutReview: {
+    board: 'Tablero de yut',
+    throw: (ko: string, romanization: string, n: number) =>
+      plural('es', n, { one: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó 1 casilla.`, other: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó ${n} casillas.` }),
   },
 } satisfies DeepPartial<Messages['a11y']>;

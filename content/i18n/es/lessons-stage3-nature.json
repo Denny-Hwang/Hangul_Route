@@ -5,7 +5,10 @@
     "episode:stage3-nature": {
       "title": "Oraciones de animales",
       "subtitle": "Di dónde están los animales, cómo son y qué hacen.",
-      "hoyaIntro": "¡Me encantan los animales! Leamos y armemos oraciones sobre ellos."
+      "hoyaIntro": "¡Me encantan los animales! Leamos y armemos oraciones sobre ellos.",
+      "culture.n1.text": "Después de una palabra de lugar, {ko:에} dice dónde está algo: en, sobre o junto a. {ko:있어요} dice que un animal o una cosa está ahí.",
+      "culture.n2.text": "El marcador de sujeto tiene dos formas: {ko:이} tras una palabra que acaba en consonante y {ko:가} tras una que acaba en vocal.",
+      "culture.n3.text": "En una oración coreana, la palabra que dice qué hace o cómo es el sujeto va después del sujeto, al final."
     },
     "quest:stage3-nature-q1": {
       "title": "¿Dónde está el pájaro?",
@@ -91,8 +94,14 @@
       "listenPick.rounds.a4.prompt": "Hay un conejo en la montaña."
     },
     "minigame:s3-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "Hay un oso en la montaña.",
-      "listenPick.rounds.c2.prompt": "Hay un gato en el árbol."
+      "clozePick.rounds.c1.sentence.gloss": "Hay un pájaro en el árbol.",
+      "clozePick.rounds.c1.tiles.namu.gloss": "árbol",
+      "clozePick.rounds.c1.tiles.mul.gloss": "agua",
+      "clozePick.rounds.c1.tiles.jip.gloss": "casa",
+      "clozePick.rounds.c2.sentence.gloss": "Hay un oso en la montaña.",
+      "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto, tras consonante final",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto, tras vocal",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto, tras consonante final"
     },
     "minigame:s3-nature-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "El tigre es grande.",
@@ -115,8 +124,11 @@
       "listenPick.rounds.a4.prompt": "El pez es pequeño."
     },
     "minigame:s3-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "El tigre es grande.",
-      "listenPick.rounds.c2.prompt": "El conejo es pequeño."
+      "orderIt.rounds.c1.sentence.gloss": "El conejo es tierno.",
+      "orderIt.rounds.c1.distractors.keoyo.gloss": "es grande",
+      "orderIt.rounds.c2.sentence.gloss": "El gato es pequeño.",
+      "orderIt.rounds.c2.particle.choices.ga.gloss": "marca de sujeto, tras vocal",
+      "orderIt.rounds.c2.particle.choices.i.gloss": "marca de sujeto, tras consonante final"
     },
     "minigame:s3-nature-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "El pájaro vuela.",
@@ -139,8 +151,10 @@
       "listenPick.rounds.a4.prompt": "El tigre corre."
     },
     "minigame:s3-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "El pájaro vuela.",
-      "listenPick.rounds.c2.prompt": "El pez nada."
+      "typeHangul.rounds.d1.prompt": "Escribe la palabra para el conejo.",
+      "typeHangul.rounds.d1.target.gloss": "conejo",
+      "typeHangul.rounds.d2.prompt": "Escribe la palabra para el tigre.",
+      "typeHangul.rounds.d2.target.gloss": "tigre"
     }
   }
 }

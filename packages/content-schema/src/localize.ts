@@ -1,4 +1,4 @@
-import { OVERLAY_FIELDS, overlayPrefix, type Overlays } from './schemas/locale-overlay';
+import { OPTIONAL_OVERLAY_FIELDS, OVERLAY_FIELDS, overlayPrefix, type Overlays } from './schemas/locale-overlay';
 import type { UiLocale } from './schemas/locale';
 
 /**
@@ -221,13 +221,15 @@ function expand(node: unknown, segs: readonly string[], at: Path, field: readonl
  * Every translatable field the entity carries an English source for (pattern order, then
  * element order), each source once: a later pattern that lands on a source an earlier one
  * already names (the tier-qualified form of a primary-tier scene) is listed as that
- * field's `alternates`, so a story's scenes count once per tier.
+ * field's `alternates`, so a story's scenes count once per tier. An optional field (`OPTIONAL_OVERLAY_FIELDS`) is
+ * applied when given but never listed here, so it is never counted missing.
  */
 export function translatableFields(entityId: string, entity: unknown): TranslatableField[] {
   const patterns: readonly string[] = (OVERLAY_FIELDS as Record<string, readonly string[]>)[overlayPrefix(entityId)] ?? [];
   const out: TranslatableField[] = [];
   const bySource = new Map<string, TranslatableField>();
   for (const pattern of patterns) {
+    if (OPTIONAL_OVERLAY_FIELDS.includes(pattern)) continue;
     for (const [field, path] of expand(entity, pattern.split('.'), [], [])) {
       const at = path.join('\u0000');
       const first = bySource.get(at);

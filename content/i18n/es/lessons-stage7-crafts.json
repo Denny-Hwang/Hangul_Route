@@ -5,7 +5,10 @@
     "episode:stage7-crafts": {
       "title": "Crea y comparte",
       "subtitle": "Escribe los pasos para hacer una manualidad de papel.",
-      "hoyaIntro": "¡Dobla, corta y dibuja conmigo, y luego escribe cómo lo hicimos!"
+      "hoyaIntro": "¡Dobla, corta y dibuja conmigo, y luego escribe cómo lo hicimos!",
+      "culture.n1.text": "{ko:종이접기} es doblar papel a mano para formar figuras como una grulla, un barco o un avión, con papel normal o de colores.",
+      "culture.n2.text": "{ko:한지} es el papel coreano hecho a mano de forma tradicional, sobre todo con la corteza de la morera de papel.",
+      "culture.n3.text": "La terminación {ko:고} une una acción con la siguiente en una sola oración; tras una palabra de acción puede mostrar un paso y luego el siguiente, como en {ko:접고 잘라요}."
     },
     "quest:stage7-crafts-q1": {
       "title": "Dobla, corta, dibuja",
@@ -89,14 +92,17 @@
       "orderIt.rounds.r1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
     },
     "minigame:s7-crafts-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Doblo una flor de papel.",
-      "orderIt.rounds.c2.sentence.gloss": "Dibujo una estrella.",
-      "orderIt.rounds.c2.distractors.jeobeoyo.gloss": "doblo",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
+      "clozePick.rounds.c1.sentence.gloss": "Doblo una flor de papel.",
+      "clozePick.rounds.c2.sentence.gloss": "Dibujo una estrella.",
+      "clozePick.rounds.c1.tiles.eul.gloss": "marca de objeto (después de una consonante final)",
+      "clozePick.rounds.c1.tiles.reul.gloss": "marca de objeto (después de una vocal)",
+      "clozePick.rounds.c2.tiles.jeobeoyo.gloss": "doblo",
+      "clozePick.rounds.c2.tiles.jallayo.gloss": "corto",
+      "clozePick.rounds.c2.tiles.geuryeoyo.gloss": "dibujo",
+      "clozePick.rounds.c1.tiles.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "minigame:s7-crafts-q2-practice": {
-      "typeHangul.rounds.t1.prompt": "Escribe la palabra para primero.",
+      "typeHangul.rounds.t1.prompt": "Escribe la palabra que oyes.",
       "typeHangul.rounds.t2.prompt": "Escribe la palabra para después.",
       "typeHangul.rounds.t3.prompt": "Escribe la palabra para por último.",
       "typeHangul.rounds.t4.prompt": "Escribe la palabra para cortar.",
@@ -143,11 +149,13 @@
       "writeFrame.rounds.w3.slots.thing.bank.byeol.gloss": "estrella"
     },
     "minigame:s7-crafts-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Doblo el papel y luego lo corto.",
-      "orderIt.rounds.c2.sentence.gloss": "Primero, doblo y luego dibujo.",
-      "orderIt.rounds.c2.distractors.majimageuro.gloss": "por último",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
+      "writeFrame.rounds.c1.frame.gloss": "Doblo el papel y luego ___.",
+      "writeFrame.rounds.c1.slots.act.bank.jallayo.gloss": "corto",
+      "writeFrame.rounds.c1.slots.act.bank.geuryeoyo.gloss": "dibujo",
+      "writeFrame.rounds.c2.frame.gloss": "Primero doblo ___.",
+      "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "el papel",
+      "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "un avión de papel",
+      "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "una flor de papel"
     }
   }
 }
