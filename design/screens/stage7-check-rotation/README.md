@@ -21,3 +21,11 @@ phase (the Check is the quest's only evidence). Shots from the fixture bundle (`
 |---|---|
 | `shots/write-frame-check-320.png` | A two-slot Write Frame Check at 320 x 568: the first slot written (추석), the second slot's bank, no Skip. |
 | `shots/write-frame-check-320-largest.png` | The same Check at the largest text size, before the first pick: the frame wraps, nothing scrolls sideways. |
+
+On a lecture deck the same Check frames become write-together slides. `presenter-write.spec.ts` (release bundle,
+`HR_SHOTS=1`) now walks every Stage 7 Write Frame Check (life q2, letters q3, rites q3, nature q3, crafts q3) in en,
+es and ko at 568 x 320, 844 x 390, 1280 x 720 and 1920 x 1080:
+
+| Shot | What it shows |
+|---|---|
+| `shots/presenter-life-q2-check-c2-ko-568x320.png` | My Day q2 Check c2 (호야는 ___에 ___을/를 먹어요.) on a phone sideways in Korean, every build shown: the frame's romanization and its shorter meaning (때: ___, 먹는 것: ___) on one line, the two banks and the example inside the stage. |
