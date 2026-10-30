@@ -150,6 +150,20 @@ describe('the cloze-pick lesson scope', () => {
     ]);
     const named = value({ sentence: kt('사과는 ___ 원이에요.', 'sagwaneun ___ wonieyo.', 'The apples are ___ won.') });
     expect(clozePickIssues(scope({ rounds: [named], realia: menu }))).toEqual([]);
+    // The other direction (row CM-3A S6): the gap is the line's name and the sentence states its value. Another line's
+    // name is a wrong tile while the sentence states none of its values, and right too when it does.
+    const fruit = [kt('사과', 'sagwa', 'apple'), kt('배', 'bae', 'pear'), kt('감', 'gam', 'persimmon')];
+    const reverse = value({ sentence: kt('___ 오천 원이에요.', '___ ocheon wonieyo.', 'The ___ is 5,000 won.'), tiles: fruit });
+    expect(clozePickIssues(scope({ rounds: [reverse], realia: menu }))).toEqual([]);
+    const both = { ...menu, entries: [...menu.entries, { id: 'e3', text: kt('감', 'gam', 'persimmon'), value: kt('오천 원', 'ocheon won', '5,000 won') }] };
+    expect(clozePickIssues(scope({ rounds: [reverse], realia: both }))).toEqual([
+      { path: ['rounds', 0, 'tiles', 2], message: 'a value gap tile "감" is also on the realia card: the sentence names the line it asks' },
+    ]);
+    // A sentence that states no value of the answer's line keeps every other line's name a right tile too.
+    const unstated = value({ sentence: kt('___ 주세요.', '___ juseyo.', 'The ___, please.'), tiles: fruit });
+    expect(clozePickIssues(scope({ rounds: [unstated], realia: menu }))).toEqual([
+      { path: ['rounds', 0, 'tiles', 1], message: 'a value gap tile "배" is also on the realia card: the sentence names the line it asks' },
+    ]);
     // A round whose answer points past its tiles is the round schema's issue, never a crash here.
     expect(clozePickIssues({ ...scope({ rounds: [value()], realia }), rounds: [{ ...value(), answerIndex: 9 } as ClozePickRound] })).toHaveLength(0);
   });

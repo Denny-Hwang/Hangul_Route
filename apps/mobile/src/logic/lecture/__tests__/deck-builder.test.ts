@@ -2585,8 +2585,9 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    // 73 Type Hangul rounds, the 14 Dictation rounds of the Stage 2 Checks (row CM-3A S2) and the 8 of the Stage 3 Checks (row CM-3A S3).
-    expect(typeSlides).toBe(95 * 3);
+    // 73 Type Hangul rounds, and the Dictation rounds of the Checks: 14 in Stage 2 (row CM-3A S2), 8 in Stage 3 (row CM-3A
+    // S3) and 8 in Stage 6 (row CM-3A S6), in three languages.
+    expect(typeSlides).toBe(103 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

@@ -487,8 +487,10 @@ describe('slideDetail: the question slides (LV-S2)', () => {
       const detail = slideDetail(of(ask), names);
       for (const o of of(ask).options) if (o.ko !== undefined) expect(detail).not.toContain(o.ko);
     }
-    // A listen round that asks for the reply to what was heard (the Stage 4 Check) is named by the reply question.
-    const replyRound = slides.find((s) => s.kind === 'quiz' && s.prompt.ask === 'listen' && s.prompt.reply === true)!;
+    // A listen round that asks for the reply to what was heard is named by the reply question. The shipped Stage 4 and
+    // Stage 6 Checks that asked so are re-authored by rows CM-3A S4 and S6, so the round is the listen slide marked so.
+    const listen = of('listen');
+    const replyRound: Slide = { ...listen, prompt: { ...listen.prompt, reply: true } as typeof listen.prompt };
     expect(slideDetail(replyRound, names)).toBe('Which answer fits?');
     // Without the names a listen or reply question says its kind alone.
     expect(slideDetail(of('listen'))).toBe('');

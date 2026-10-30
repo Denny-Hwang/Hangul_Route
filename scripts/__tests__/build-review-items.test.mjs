@@ -142,7 +142,7 @@ describe("build-review-items.mjs over the repository's content", () => {
     const gone = run(root);
     assert.equal(gone.status, 1);
     assert.match(gone.stdout, /lex:somsatang \(lex\|솜사탕\) is no longer taught.*add lex:somsatang to "retired"/);
-    // Appended to the ids already retired (row CM-3A S3 retired one), as an author does.
+    // Appended to the ids the re-authoring rows retired already (rows CM-3A S3, S4 and S6), as an author does.
     writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...frozen, retired: [...frozen.retired, "lex:somsatang"] }));
     const retired = run(root);
     assert.equal(retired.status, 0, retired.stdout);

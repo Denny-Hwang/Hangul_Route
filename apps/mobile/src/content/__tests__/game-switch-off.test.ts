@@ -13,9 +13,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * `game.<kind>` switch renders its fallback round of a shipped kind when the switch is off (section 7.1), so no switch
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
- * shipped game. Rows CM-3A S3 and S4 ship Cloze Pick steps (the Stage 3 and Stage 4 Checks), so the check reads shipped
+ * shipped game. Rows CM-3A S3, S4 and S6 ship Cloze Pick steps (the Stage 3, 4 and 6 Checks), so the check reads shipped
  * steps (and asserts that there are some, as the CM-30 decision record in section 7.1 asks); the fixture still pins the
- * negative case, and the e2e answers a fallback round of the fixture step.
+ * negative case and checks every gap kind, and the e2e answers a fallback round of the fixture step.
  * `game.type-hangul-hear` turns a round, not a kind: the seven shipped Stage 2 Dictation Checks (row CM-3A S2) are
  * checked switch off in logic/__tests__/game-switches.test.ts and rendered in screens/minigames/__tests__/switched-step.test.tsx.
  */
@@ -81,5 +81,18 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     const broken = clozeFixtureScope(['word']);
     broken.clozePick!.rounds[0] = { ...broken.clozePick!.rounds[0]!, answerIndex: 7 };
     expect(fallbackProblems(broken, 'fixture')).toEqual(['fixture: nothing to play with the switch off']);
+  });
+
+  it('the shipped quests play Cloze Pick, so the check above is not empty (row CM-3A S6)', () => {
+    const shipped = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick');
+    expect(shipped.length).toBeGreaterThan(0);
+    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3).
+    expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-')).map(({ questId }) => questId).sort()).toEqual([
+      'quest:stage6-crafts-q1',
+      'quest:stage6-crafts-q3',
+      'quest:stage6-letters-q2',
+      'quest:stage6-life-q2',
+      'quest:stage6-rites-q2',
+    ]);
   });
 });

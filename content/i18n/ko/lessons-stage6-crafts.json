@@ -112,8 +112,21 @@
       "typeHangul.rounds.t3.target.gloss": "닷새마다 서는 시장"
     },
     "minigame:s6-crafts-q1-check": {
-      "listenPick.rounds.c1.prompt": "손으로 부쳐 바람을 일으키는 물건",
-      "listenPick.rounds.c2.prompt": "한국 전통 방식으로 만든 종이"
+      "clozePick.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 바람을 일으키는 물건, 전통 종이, 한 묶음의 과일",
+      "clozePick.rounds.c1.sentence.gloss": "손으로 부쳐 바람을 일으키는 물건은 ___원이에요.",
+      "clozePick.rounds.c1.tiles.ocheon.gloss": "5,000",
+      "clozePick.rounds.c1.tiles.cheon.gloss": "1,000",
+      "clozePick.rounds.c1.tiles.icheon.gloss": "2,000",
+      "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일은 ___원이에요.",
+      "clozePick.rounds.c2.tiles.ocheon.gloss": "5,000",
+      "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
+      "clozePick.rounds.c2.tiles.cheon.gloss": "1,000",
+      "clozePick.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "clozePick.realia.entries.fan.value.gloss": "5,000원",
+      "clozePick.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
+      "clozePick.realia.entries.hanji.value.gloss": "1,000원",
+      "clozePick.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
+      "clozePick.realia.entries.apple.value.gloss": "2,000원"
     },
     "minigame:s6-crafts-q2-practice": {
       "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 과일, 바람을 일으키는 물건, 전통 종이와 그 값",
@@ -140,8 +153,21 @@
       "typeHangul.rounds.t3.target.gloss": "값을 묻는 말"
     },
     "minigame:s6-crafts-q2-check": {
-      "listenPick.rounds.c1.prompt": "과일 셋을 달라고 하는 말",
-      "listenPick.rounds.c2.prompt": "값을 묻는 말"
+      "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 과일, 바람을 일으키는 물건, 전통 종이와 그 값",
+      "realiaRead.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
+      "realiaRead.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "realiaRead.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
+      "realiaRead.realia.entries.apple.value.gloss": "3개에 2,000원",
+      "realiaRead.realia.entries.fan.value.gloss": "5,000원",
+      "realiaRead.realia.entries.hanji.value.gloss": "1,000원",
+      "realiaRead.rounds.c1.question": "이 값에 파는 것은 무엇일까요?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "한국 전통 방식으로 만든 종이",
+      "realiaRead.rounds.c1.options.b.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "realiaRead.rounds.c1.options.c.text.gloss": "빨갛고 둥근 과일",
+      "realiaRead.rounds.c2.question": "이 값에 파는 것은 무엇일까요?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "빨갛고 둥근 과일",
+      "realiaRead.rounds.c2.options.b.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "realiaRead.rounds.c2.options.c.text.gloss": "한국 전통 방식으로 만든 종이"
     },
     "minigame:s6-crafts-q3-practice": {
       "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 일으키는 물건",
@@ -163,26 +189,50 @@
       "realiaRead.rounds.r2.options.hanji.text.gloss": "한국 전통 방식으로 만든 종이"
     },
     "minigame:s6-crafts-q3-apply": {
-      "dialogue.0.npc": "이것이 빨갛고 둥근 과일이라는 말",
-      "dialogue.1.npc": "값이 2,000원이라는 말",
-      "dialogue.2.npc": "값이 2,000원이라고 다시 알려 주는 말",
-      "dialogue.3.npc": "덤으로 주는 것이라는 말",
-      "dialogue.0.options.buchaeyeyo.gloss": "바람을 일으키는 물건이라는 답",
-      "dialogue.0.options.igeo-eolmayeyo.gloss": "값을 묻는 말",
-      "dialogue.0.options.igeon-deomieyo.gloss": "덤으로 주는 것이라는 말",
-      "dialogue.1.options.sagwa-se-gae-juseyo.gloss": "과일 셋을 달라고 하는 말",
-      "dialogue.1.options.hanjiyeyo.gloss": "전통 종이라는 답",
-      "dialogue.1.options.igeon-deomieyo.gloss": "덤으로 주는 것이라는 말",
-      "dialogue.2.options.buchaeyeyo.gloss": "바람을 일으키는 물건이라는 답",
-      "dialogue.2.options.igeon-deomieyo.gloss": "덤으로 주는 것이라는 말",
-      "dialogue.2.options.ne-yeogi-isseoyo.gloss": "돈이나 물건을 건네며 하는 말",
-      "dialogue.3.options.hanjiyeyo.gloss": "전통 종이라는 답",
-      "dialogue.3.options.gamsahamnida.gloss": "고마움을 나타내는 공손한 인사",
-      "dialogue.3.options.buchaeyeyo.gloss": "바람을 일으키는 물건이라는 답"
+      "rolePlay.scene.title.gloss": "닷새마다 서는 시장",
+      "rolePlay.scene.partner.gloss": "시장에서 물건을 파는 나이 든 여자 어른",
+      "rolePlay.scene.nodes.t1.line.gloss": "이것이 빨갛고 둥근 과일이라는 말",
+      "rolePlay.scene.nodes.t1.replies.fan.text.gloss": "바람을 일으키는 물건이라는 답",
+      "rolePlay.scene.nodes.t1.replies.price.text.gloss": "값을 묻는 말",
+      "rolePlay.scene.nodes.t1.replies.extra.text.gloss": "덤으로 주는 것이라는 말",
+      "rolePlay.scene.nodes.t1.replies.fan.why": "부채가 아니라 과일을 보여 주고 있어요. 값이 얼마인지 물어봐요.",
+      "rolePlay.scene.nodes.t1.replies.extra.why": "{ko:이건 덤이에요}는 파는 분이 더 줄 때 하는 말이에요. 먼저 과일에 대해 물어봐요.",
+      "rolePlay.scene.nodes.t2.line.gloss": "값이 2,000원이라는 말",
+      "rolePlay.scene.nodes.t2.replies.apples.text.gloss": "과일 셋을 달라고 하는 말",
+      "rolePlay.scene.nodes.t2.replies.hanji.text.gloss": "전통 종이라는 답",
+      "rolePlay.scene.nodes.t2.replies.extra.text.gloss": "덤으로 주는 것이라는 말",
+      "rolePlay.scene.nodes.t2.replies.hanji.why": "방금 과일 값을 알려 주셨어요. 이제 과일을 달라고 해 봐요.",
+      "rolePlay.scene.nodes.t2.replies.extra.why": "덤은 파는 분이 주는 거예요. 과일을 달라고 해 봐요.",
+      "rolePlay.scene.nodes.t3.line.gloss": "값이 2,000원이라고 다시 알려 주는 말",
+      "rolePlay.scene.nodes.t3.replies.fan.text.gloss": "바람을 일으키는 물건이라는 답",
+      "rolePlay.scene.nodes.t3.replies.extra.text.gloss": "덤으로 주는 것이라는 말",
+      "rolePlay.scene.nodes.t3.replies.pay.text.gloss": "돈이나 물건을 건네며 하는 말",
+      "rolePlay.scene.nodes.t3.replies.fan.why": "과일 값을 기다리고 계세요. 돈을 건네 봐요.",
+      "rolePlay.scene.nodes.t3.replies.extra.why": "이제 값을 낼 때예요. 짧은 말과 함께 돈을 건네 봐요.",
+      "rolePlay.scene.nodes.t4.line.gloss": "덤으로 주는 것이라는 말",
+      "rolePlay.scene.nodes.t4.replies.hanji.text.gloss": "전통 종이라는 답",
+      "rolePlay.scene.nodes.t4.replies.thanks.text.gloss": "고마움을 나타내는 공손한 인사",
+      "rolePlay.scene.nodes.t4.replies.fan.text.gloss": "바람을 일으키는 물건이라는 답",
+      "rolePlay.scene.nodes.t4.replies.hanji.why": "공짜로 하나 더 주셨어요. 이럴 때는 뭐라고 할까요?",
+      "rolePlay.scene.nodes.t4.replies.fan.why": "{ko:부채예요}는 바람을 일으키는 물건을 가리키는 말이에요. 방금 덤을 받았어요.",
+      "rolePlay.scene.nodes.done.closing": "과일을 사고 덤을 주신 분께 고맙다고 말했어요."
     },
     "minigame:s6-crafts-q3-check": {
-      "listenPick.rounds.c1.prompt": "덤으로 주는 것이라는 말",
-      "listenPick.rounds.c2.prompt": "과일 하나를 달라고 하는 말"
+      "clozePick.realia.alt": "닷새마다 서는 장의 가게 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 일으키는 물건",
+      "clozePick.rounds.c1.sentence.gloss": "산 것에 더해 공짜로 받는 것은 ___예요.",
+      "clozePick.rounds.c1.tiles.sagwa-se-gae.gloss": "빨갛고 둥근 과일 셋",
+      "clozePick.rounds.c1.tiles.sagwa-han-gae.gloss": "빨갛고 둥근 과일 하나",
+      "clozePick.rounds.c1.tiles.sagwa-du-gae.gloss": "빨갛고 둥근 과일 둘",
+      "clozePick.rounds.c2.sentence.gloss": "빨갛고 둥근 과일은 ___이에요.",
+      "clozePick.rounds.c2.tiles.se-gaee-cheon-won.gloss": "3개에 1,000원",
+      "clozePick.rounds.c2.tiles.se-gaee-icheon-won.gloss": "3개에 2,000원",
+      "clozePick.rounds.c2.tiles.se-gaee-ocheon-won.gloss": "3개에 5,000원",
+      "clozePick.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
+      "clozePick.realia.entries.apple.value.gloss": "3개에 2,000원",
+      "clozePick.realia.entries.extra.text.gloss": "산 것에 더해 공짜로 받는 것",
+      "clozePick.realia.entries.extra.value.gloss": "빨갛고 둥근 과일 하나",
+      "clozePick.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
+      "clozePick.realia.entries.fan.value.gloss": "5,000원"
     }
   }
 }

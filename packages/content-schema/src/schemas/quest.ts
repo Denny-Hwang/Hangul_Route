@@ -186,6 +186,9 @@ export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
   if (stage === 'stage2') return ['listen-pick', 'type-hangul', 'pic-word-match'];
   if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
   if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
+  // F-CURR-002 §7.1 Check rotation (row CM-3A S6): a Stage 6 Check is a realia question (Realia Read, or Cloze Pick
+  // on a value read from the card) or Dictation (Type Hangul `hear`), so no game holds more than 40% of the Checks.
+  if (stage === 'stage6') return ['listen-pick', 'realia-read', 'cloze-pick', 'type-hangul'];
   return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
 }
 

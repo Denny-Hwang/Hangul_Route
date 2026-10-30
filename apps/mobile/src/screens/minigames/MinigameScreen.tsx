@@ -183,7 +183,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
           roundKey,
           correct,
           inPreview || meta?.itemId === undefined ? undefined : { scope: fellBackTo.current ?? played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
-          meta?.hinted === true,
+          // F-CURR-002 section 4.3: Type Hangul's hint (Dictation's Show how it sounds, or a typed answer one letter off,
+          // row CM-31) is a hinted right answer whatever it scored; the other games' hints (Story Order's Show meanings,
+          // row CM-34; Role Play's, row CM-35; Syllable Build's Show how it sounds, row CM-32) are help shown, so a wrong
+          // answer with one is still a plain miss (row CM-3A S6).
+          meta?.hinted === true && (correct || (fellBackTo.current ?? played).kind === 'type-hangul'),
         ),
     complete: () => {
       useQuestRunStore.getState().markStepComplete();

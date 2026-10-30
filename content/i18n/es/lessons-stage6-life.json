@@ -141,8 +141,24 @@
       "typeHangul.rounds.t3.target.gloss": "Agua, por favor."
     },
     "minigame:s6-life-q1-check": {
-      "listenPick.rounds.c1.prompt": "Gimbap, por favor.",
-      "listenPick.rounds.c2.prompt": "Fideos instantáneos, por favor."
+      "realiaRead.realia.alt": "Un menú pequeño en una mesa: gimbap, fideos instantáneos, pasteles de arroz picantes y leche, cada uno con su precio.",
+      "realiaRead.realia.title.gloss": "menú",
+      "realiaRead.realia.entries.gimbap.text.gloss": "rollo de arroz con alga",
+      "realiaRead.realia.entries.ramyeon.text.gloss": "fideos instantáneos",
+      "realiaRead.realia.entries.tteokbokki.text.gloss": "pasteles de arroz picantes",
+      "realiaRead.realia.entries.milk.text.gloss": "leche",
+      "realiaRead.realia.entries.gimbap.value.gloss": "2000 wones",
+      "realiaRead.realia.entries.ramyeon.value.gloss": "3000 wones",
+      "realiaRead.realia.entries.tteokbokki.value.gloss": "3000 wones",
+      "realiaRead.realia.entries.milk.value.gloss": "1000 wones",
+      "realiaRead.rounds.c1.question": "¿Qué plato del menú son los fideos instantáneos?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "rollo de arroz con alga",
+      "realiaRead.rounds.c1.options.b.text.gloss": "leche",
+      "realiaRead.rounds.c1.options.c.text.gloss": "fideos instantáneos",
+      "realiaRead.rounds.c2.question": "Busca esto en el menú. ¿Qué imagen lo muestra?",
+      "realiaRead.rounds.c2.options.a.label": "fideos",
+      "realiaRead.rounds.c2.options.b.label": "leche",
+      "realiaRead.rounds.c2.options.c.label": "gimbap"
     },
     "minigame:s6-life-q2-practice": {
       "realiaRead.realia.alt": "Una nota de pedido en la mesa: un gimbap, dos fideos instantáneos, tres cajitas de leche y un huevo.",
@@ -191,8 +207,24 @@
       "dialogue.1.options.jal-gayo.gloss": "Adiós."
     },
     "minigame:s6-life-q2-check": {
-      "listenPick.rounds.c1.prompt": "Dos fideos instantáneos, por favor.",
-      "listenPick.rounds.c2.prompt": "Tres cajitas de leche, por favor."
+      "clozePick.realia.alt": "Una nota de pedido en la mesa: un gimbap, dos fideos instantáneos, tres cajitas de leche y un huevo.",
+      "clozePick.rounds.c1.sentence.gloss": "Rollo de arroz con alga: ___, por favor.",
+      "clozePick.rounds.c1.tiles.du-gae.gloss": "dos",
+      "clozePick.rounds.c1.tiles.hana.gloss": "uno",
+      "clozePick.rounds.c1.tiles.se-gae.gloss": "tres",
+      "clozePick.rounds.c2.sentence.gloss": "___: tres, por favor.",
+      "clozePick.rounds.c2.tiles.ramyeon.gloss": "fideos instantáneos",
+      "clozePick.rounds.c2.tiles.dalgyal.gloss": "huevo",
+      "clozePick.rounds.c2.tiles.uyu.gloss": "leche",
+      "clozePick.realia.title.gloss": "pedido",
+      "clozePick.realia.entries.gimbap.text.gloss": "rollo de arroz con alga",
+      "clozePick.realia.entries.gimbap.value.gloss": "uno",
+      "clozePick.realia.entries.ramyeon.text.gloss": "fideos instantáneos",
+      "clozePick.realia.entries.ramyeon.value.gloss": "dos (cosas)",
+      "clozePick.realia.entries.milk.text.gloss": "leche",
+      "clozePick.realia.entries.milk.value.gloss": "tres (cosas)",
+      "clozePick.realia.entries.egg.text.gloss": "huevo",
+      "clozePick.realia.entries.egg.value.gloss": "uno (una cosa)"
     },
     "minigame:s6-life-q3-practice": {
       "realiaRead.realia.alt": "Un menú pequeño en una mesa: gimbap, fideos instantáneos, pasteles de arroz picantes y leche, cada uno con su precio.",
@@ -207,7 +239,7 @@
       "realiaRead.realia.entries.milk.value.gloss": "1000 wones",
       "realiaRead.rounds.r1.question": "¿Cuánto cuesta esto?",
       "realiaRead.rounds.r2.question": "¿Cuánto cuesta esto?",
-      "realiaRead.rounds.r3.question": "¿Cuál cuesta esto?",
+      "realiaRead.rounds.r3.question": "¿Cuál tiene este precio?",
       "realiaRead.rounds.r4.question": "¿Cuánto cuesta esto?",
       "realiaRead.rounds.r5.question": "¿Cuánto cuesta la leche? Elige el número.",
       "realiaRead.rounds.r1.options.a.text.gloss": "1000 wones",
@@ -242,8 +274,10 @@
       "dialogue.3.options.masitge-deuseyo.gloss": "¡Buen provecho!"
     },
     "minigame:s6-life-q3-check": {
-      "listenPick.rounds.c1.prompt": "¿Cuánto cuesta?",
-      "listenPick.rounds.c2.prompt": "Son 2000 wones."
+      "typeHangul.rounds.c1.prompt": "Escribe el precio que oyes.",
+      "typeHangul.rounds.c1.target.gloss": "3000 wones",
+      "typeHangul.rounds.c2.prompt": "Escribe el precio que oyes.",
+      "typeHangul.rounds.c2.target.gloss": "1000 wones"
     }
   }
 }

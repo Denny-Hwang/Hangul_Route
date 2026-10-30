@@ -123,7 +123,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s6-crafts-q1-check",
           "durationSeconds": 40
         },
@@ -356,70 +356,112 @@
         },
         {
           "ref": "minigame:s6-crafts-q1-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "부채",
-                "romanization": "buchae",
-                "en": "fan"
+              "sentence": {
+                "ko": "부채는 ___ 원이에요.",
+                "romanization": "buchaeneun ___ wonieyo",
+                "en": "The fan is ___ won."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "한지",
-                    "romanization": "hanji",
-                    "en": "Korean paper"
-                  }
+                  "ko": "오천",
+                  "romanization": "ocheon",
+                  "en": "five thousand"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "부채",
-                    "romanization": "buchae",
-                    "en": "fan"
-                  }
+                  "ko": "천",
+                  "romanization": "cheon",
+                  "en": "one thousand"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "사과",
-                    "romanization": "sagwa",
-                    "en": "apple"
-                  }
+                  "ko": "이천",
+                  "romanization": "icheon",
+                  "en": "two thousand"
                 }
               ],
-              "answerId": "b"
+              "answerIndex": 0
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "한지",
-                "romanization": "hanji",
-                "en": "Korean paper"
+              "sentence": {
+                "ko": "사과는 ___ 원이에요.",
+                "romanization": "sagwaneun ___ wonieyo",
+                "en": "The apples are ___ won."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "pictureRef": "word:food-apple",
-                  "labelEn": "apple"
+                  "ko": "오천",
+                  "romanization": "ocheon",
+                  "en": "five thousand"
                 },
                 {
-                  "id": "b",
-                  "pictureRef": "word:food-bread",
-                  "labelEn": "bread"
+                  "ko": "이천",
+                  "romanization": "icheon",
+                  "en": "two thousand"
                 },
                 {
-                  "id": "c",
-                  "pictureRef": "card:hanji",
-                  "labelEn": "Korean paper"
+                  "ko": "천",
+                  "romanization": "cheon",
+                  "en": "one thousand"
                 }
               ],
-              "answerId": "c"
+              "answerIndex": 1
             }
-          ]
+          ],
+          "realia": {
+            "ref": "realia:market-goods",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              },
+              {
+                "id": "hanji",
+                "text": {
+                  "ko": "한지",
+                  "romanization": "hanji",
+                  "en": "Korean paper"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                },
+                "goods": "hanji"
+              },
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                },
+                "goods": "apples"
+              }
+            ],
+            "altEn": "Three price cards at a five-day market stall: a folding fan, Korean paper and a bundle of apples"
+          }
         }
       ]
     },
@@ -514,7 +556,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-crafts-q2-check",
           "durationSeconds": 40
         },
@@ -730,68 +772,130 @@
         },
         {
           "ref": "minigame:s6-crafts-q2-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:market-prices",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "세 개 이천 원",
+                  "romanization": "se gae icheon won",
+                  "en": "3 for 2,000 won"
+                },
+                "goods": "apples"
+              },
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              },
+              {
+                "id": "hanji",
+                "text": {
+                  "ko": "한지",
+                  "romanization": "hanji",
+                  "en": "Korean paper"
+                },
+                "value": {
+                  "ko": "천 원",
+                  "romanization": "cheon won",
+                  "en": "1,000 won"
+                },
+                "goods": "hanji"
+              }
+            ],
+            "altEn": "Three price cards at a five-day market stall: apples, a folding fan and Korean paper, with prices"
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "사과 세 개 주세요.",
-                "romanization": "sagwa se gae juseyo",
-                "en": "Three apples, please."
+              "questionEn": "Which one costs this?",
+              "key": {
+                "ko": "오천 원",
+                "romanization": "ocheon won",
+                "en": "5,000 won"
               },
               "options": [
                 {
                   "id": "a",
-                  "pictureRef": "word:count-1",
-                  "labelEn": "one"
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
                 },
                 {
                   "id": "b",
-                  "pictureRef": "word:count-2",
-                  "labelEn": "two"
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "fan"
+                  }
                 },
                 {
                   "id": "c",
-                  "pictureRef": "word:count-3",
-                  "labelEn": "three"
+                  "text": {
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
+                  }
                 }
               ],
-              "answerId": "c"
+              "answerId": "b",
+              "answerEntryId": "fan"
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "이거 얼마예요?",
-                "romanization": "igeo eolmayeyo",
-                "en": "How much is this?"
+              "questionEn": "Which one costs this?",
+              "key": {
+                "ko": "천 원",
+                "romanization": "cheon won",
+                "en": "1,000 won"
               },
               "options": [
                 {
                   "id": "a",
                   "text": {
-                    "ko": "이거 얼마예요?",
-                    "romanization": "igeo eolmayeyo",
-                    "en": "How much is this?"
+                    "ko": "사과",
+                    "romanization": "sagwa",
+                    "en": "apple"
                   }
                 },
                 {
                   "id": "b",
                   "text": {
-                    "ko": "부채 주세요.",
-                    "romanization": "buchae juseyo",
-                    "en": "A fan, please."
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "fan"
                   }
                 },
                 {
                   "id": "c",
                   "text": {
-                    "ko": "사과 한 개 주세요.",
-                    "romanization": "sagwa han gae juseyo",
-                    "en": "One apple, please."
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
                   }
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "hanji"
             }
           ]
         }
@@ -897,7 +1001,7 @@
           "id": "s4",
           "kind": "apply",
           "titleEn": "Shop at the Stall",
-          "minigameKind": "tap-respond",
+          "minigameKind": "role-play",
           "minigameRef": "minigame:s6-crafts-q3-apply",
           "durationSeconds": 80
         },
@@ -905,7 +1009,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s6-crafts-q3-check",
           "durationSeconds": 40
         },
@@ -933,8 +1037,8 @@
                   "en": "apple"
                 },
                 "value": {
-                  "ko": "세 개 이천 원",
-                  "romanization": "se gae icheon won",
+                  "ko": "세 개에 이천 원",
+                  "romanization": "se gaee icheon won",
                   "en": "3 for 2,000 won"
                 },
                 "goods": "apples"
@@ -1093,224 +1197,295 @@
         },
         {
           "ref": "minigame:s6-crafts-q3-apply",
-          "kind": "tap-respond",
-          "turns": [
-            {
-              "speakerEn": "Seller",
-              "line": {
-                "ko": "이거 사과예요.",
-                "romanization": "igeo sagwayeyo",
-                "en": "These are apples."
-              },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "부채예요.",
-                    "romanization": "buchaeyeyo",
-                    "en": "It is a fan."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "이거 얼마예요?",
-                    "romanization": "igeo eolmayeyo",
-                    "en": "How much is this?"
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "이건 덤이에요.",
-                    "romanization": "igeon deomieyo",
-                    "en": "This one is a little extra."
-                  },
-                  "correct": false
-                }
-              ]
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "오일장",
+              "romanization": "oiljang",
+              "en": "five-day market"
             },
-            {
-              "speakerEn": "Seller",
-              "line": {
-                "ko": "이천 원이에요.",
-                "romanization": "icheon wonieyo",
-                "en": "That is 2,000 won."
-              },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "사과 세 개 주세요.",
-                    "romanization": "sagwa se gae juseyo",
-                    "en": "Three apples, please."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "한지예요.",
-                    "romanization": "hanjiyeyo",
-                    "en": "It is Korean paper."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "이건 덤이에요.",
-                    "romanization": "igeon deomieyo",
-                    "en": "This one is a little extra."
-                  },
-                  "correct": false
-                }
-              ]
+            "partner": {
+              "ko": "할머니",
+              "romanization": "halmeoni",
+              "en": "grandmother"
             },
-            {
-              "speakerEn": "Seller",
-              "line": {
-                "ko": "네, 이천 원이에요.",
-                "romanization": "ne icheon wonieyo",
-                "en": "Okay, that is 2,000 won."
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "이거 사과예요.",
+                  "romanization": "igeo sagwayeyo",
+                  "en": "These are apples."
+                },
+                "replies": [
+                  {
+                    "id": "fan",
+                    "text": {
+                      "ko": "부채예요.",
+                      "romanization": "buchaeyeyo",
+                      "en": "It is a fan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "She is showing apples, not a fan. Ask how much they are."
+                  },
+                  {
+                    "id": "price",
+                    "text": {
+                      "ko": "이거 얼마예요?",
+                      "romanization": "igeo eolmayeyo",
+                      "en": "How much is this?"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "extra",
+                    "text": {
+                      "ko": "이건 덤이에요.",
+                      "romanization": "igeon deomieyo",
+                      "en": "This one is a little extra."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "A seller says {ko:이건 덤이에요} when giving something extra. Ask about the apples first."
+                  }
+                ]
               },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "부채예요.",
-                    "romanization": "buchaeyeyo",
-                    "en": "It is a fan."
-                  },
-                  "correct": false
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "이천 원이에요.",
+                  "romanization": "icheon wonieyo",
+                  "en": "That is 2,000 won."
                 },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "이건 덤이에요.",
-                    "romanization": "igeon deomieyo",
-                    "en": "This one is a little extra."
+                "replies": [
+                  {
+                    "id": "apples",
+                    "text": {
+                      "ko": "사과 세 개 주세요.",
+                      "romanization": "sagwa se gae juseyo",
+                      "en": "Three apples, please."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
                   },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "네, 여기 있어요.",
-                    "romanization": "ne yeogi isseoyo",
-                    "en": "Yes, here you are."
+                  {
+                    "id": "hanji",
+                    "text": {
+                      "ko": "한지예요.",
+                      "romanization": "hanjiyeyo",
+                      "en": "It is Korean paper."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "She just told you the price of the apples. Now ask for some."
                   },
-                  "correct": true
-                }
-              ]
-            },
-            {
-              "speakerEn": "Seller",
-              "line": {
-                "ko": "이건 덤이에요.",
-                "romanization": "igeon deomieyo",
-                "en": "This one is a little extra."
+                  {
+                    "id": "extra",
+                    "text": {
+                      "ko": "이건 덤이에요.",
+                      "romanization": "igeon deomieyo",
+                      "en": "This one is a little extra."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "The seller is the one who gives a little extra. Ask for the apples."
+                  }
+                ]
               },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "한지예요.",
-                    "romanization": "hanjiyeyo",
-                    "en": "It is Korean paper."
-                  },
-                  "correct": false
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "네, 이천 원이에요.",
+                  "romanization": "ne icheon wonieyo",
+                  "en": "Okay, that is 2,000 won."
                 },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "감사합니다.",
-                    "romanization": "gamsahamnida",
-                    "en": "Thank you."
+                "replies": [
+                  {
+                    "id": "fan",
+                    "text": {
+                      "ko": "부채예요.",
+                      "romanization": "buchaeyeyo",
+                      "en": "It is a fan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "She is waiting for the money for the apples. Hand it over."
                   },
-                  "correct": true
+                  {
+                    "id": "extra",
+                    "text": {
+                      "ko": "이건 덤이에요.",
+                      "romanization": "igeon deomieyo",
+                      "en": "This one is a little extra."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "It is time to pay. Hand over the money with a short line."
+                  },
+                  {
+                    "id": "pay",
+                    "text": {
+                      "ko": "네, 여기 있어요.",
+                      "romanization": "ne yeogi isseoyo",
+                      "en": "Yes, here you are."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "이건 덤이에요.",
+                  "romanization": "igeon deomieyo",
+                  "en": "This one is a little extra."
                 },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "부채예요.",
-                    "romanization": "buchaeyeyo",
-                    "en": "It is a fan."
+                "replies": [
+                  {
+                    "id": "hanji",
+                    "text": {
+                      "ko": "한지예요.",
+                      "romanization": "hanjiyeyo",
+                      "en": "It is Korean paper."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "She is giving you something for free. What do you say then?"
                   },
-                  "correct": false
-                }
-              ]
-            }
-          ]
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "done"
+                  },
+                  {
+                    "id": "fan",
+                    "text": {
+                      "ko": "부채예요.",
+                      "romanization": "buchaeyeyo",
+                      "en": "It is a fan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "{ko:부채예요} names a fan. She just gave you a little extra."
+                  }
+                ]
+              },
+              {
+                "id": "done",
+                "end": true,
+                "closingEn": "You bought apples and thanked the seller for the little extra."
+              }
+            ]
+          }
         },
         {
           "ref": "minigame:s6-crafts-q3-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "이건 덤이에요.",
-                "romanization": "igeon deomieyo",
-                "en": "This one is a little extra."
+              "sentence": {
+                "ko": "덤은 ___예요.",
+                "romanization": "deomeun ___yeyo",
+                "en": "The little extra is ___."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "이건 부채예요.",
-                    "romanization": "igeon buchaeyeyo",
-                    "en": "This one is a fan."
-                  }
+                  "ko": "사과 세 개",
+                  "romanization": "sagwa se gae",
+                  "en": "three apples"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "이건 덤이에요.",
-                    "romanization": "igeon deomieyo",
-                    "en": "This one is a little extra."
-                  }
+                  "ko": "사과 한 개",
+                  "romanization": "sagwa han gae",
+                  "en": "one apple"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "이건 한지예요.",
-                    "romanization": "igeon hanjiyeyo",
-                    "en": "This one is Korean paper."
-                  }
+                  "ko": "사과 두 개",
+                  "romanization": "sagwa du gae",
+                  "en": "two apples"
                 }
               ],
-              "answerId": "b"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "사과 한 개 주세요.",
-                "romanization": "sagwa han gae juseyo",
-                "en": "One apple, please."
+              "sentence": {
+                "ko": "사과는 ___이에요.",
+                "romanization": "sagwaneun ___ieyo",
+                "en": "The apples are ___."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "pictureRef": "word:count-3",
-                  "labelEn": "three"
+                  "ko": "세 개에 천 원",
+                  "romanization": "se gaee cheon won",
+                  "en": "3 for 1,000 won"
                 },
                 {
-                  "id": "b",
-                  "pictureRef": "word:count-1",
-                  "labelEn": "one"
+                  "ko": "세 개에 이천 원",
+                  "romanization": "se gaee icheon won",
+                  "en": "3 for 2,000 won"
                 },
                 {
-                  "id": "c",
-                  "pictureRef": "word:count-2",
-                  "labelEn": "two"
+                  "ko": "세 개에 오천 원",
+                  "romanization": "se gaee ocheon won",
+                  "en": "3 for 5,000 won"
                 }
               ],
-              "answerId": "b"
+              "answerIndex": 1
             }
-          ]
+          ],
+          "realia": {
+            "ref": "realia:market-extra",
+            "kind": "price-card",
+            "entries": [
+              {
+                "id": "apple",
+                "text": {
+                  "ko": "사과",
+                  "romanization": "sagwa",
+                  "en": "apple"
+                },
+                "value": {
+                  "ko": "세 개에 이천 원",
+                  "romanization": "se gaee icheon won",
+                  "en": "3 for 2,000 won"
+                },
+                "goods": "apples"
+              },
+              {
+                "id": "extra",
+                "text": {
+                  "ko": "덤",
+                  "romanization": "deom",
+                  "en": "a little extra"
+                },
+                "value": {
+                  "ko": "사과 한 개",
+                  "romanization": "sagwa han gae",
+                  "en": "one apple"
+                }
+              },
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채",
+                  "romanization": "buchae",
+                  "en": "fan"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                },
+                "goods": "fan"
+              }
+            ],
+            "altEn": "Price cards at a five-day market stall: apples, a card for one extra apple, and a folding fan"
+          }
         }
       ]
     }
@@ -1450,10 +1625,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied 네, 여기 있어요 taught on the q3 Discover, the values of 이, 오 and 천 in the q1 caption, the q1 card priced without the native count, a four-turn q3 transaction from taught lines (no 맛있어요), 부채 glossed as fan, 닷새마다 and plainer ko glosses and questions.",
-      "Culture pass 5 (MAR): every claim re-checked against its sources (verification line 3); 'small' and 'still' dropped, the outdated AKS retail-share quote removed, the 덤 note kept soft on one supporting account, no 'real' stall claim; no real person, shop, brand or product price; no age wording."
+      "Culture pass 5 (MAR): every claim re-checked against its sources (verification line 3); 'small' and 'still' dropped, the outdated AKS retail-share quote removed, the 덤 note kept soft on one supporting account, no 'real' stall claim; no real person, shop, brand or product price; no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Cloze Pick (price cards), q2 Realia Read, q3 Role Play at the stall (Apply) and Cloze Pick on the extra-apple card.",
+      "CM-3A S6 language: the spoken price is 세 개에 이천 원, so the q3 card and tiles say it so; 부채 오천 원이에요 is plain market speech. Learning design: q1 asks the two prices Practice did not (부채, 사과).",
+      "CM-3A S6 review fix (2026-10-29), learning design: q3 c1 no longer asks the fan's 5,000 won, asked four times before it in the cell, so it could be answered from memory. It reads the 덤 line's value, 덤은 사과 한 개예요: Practice r2 picked it as a word, the Check reads it in a Korean sentence, and its tiles (사과 한 개, 두 개, 세 개) all take 예요.",
+
+      "CM-3A S6 culture and facts: the Role Play partner 할머니 is an older stall seller, glossed so in es and ko, not the learner's grandmother; drawn generic cards, round won prices, no brand. Reviser: es c1 reads El regalo es ___., its tiles una / dos / tres manzanas; the ko meaning line keeps 예요, which every tile takes, and the ko q2 Check question says 이 값에 파는 것은 무엇일까요?. Third pass: no change."
     ]
   },
   "contentVer": 1

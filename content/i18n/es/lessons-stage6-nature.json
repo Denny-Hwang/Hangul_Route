@@ -113,8 +113,21 @@
       "typeHangul.rounds.t4.target.gloss": "salida"
     },
     "minigame:s6-nature-q1-check": {
-      "listenPick.rounds.c1.prompt": "cumbre",
-      "listenPick.rounds.c2.prompt": "salida"
+      "realiaRead.realia.alt": "Un letrero en un poste: las tablas a la cumbre y al río apuntan a la derecha; la entrada, la salida y el baño, a la izquierda",
+      "realiaRead.realia.title.gloss": "sendero de montaña",
+      "realiaRead.realia.entries.summit.text.gloss": "cumbre",
+      "realiaRead.realia.entries.river.text.gloss": "río",
+      "realiaRead.realia.entries.entrance.text.gloss": "entrada",
+      "realiaRead.realia.entries.exit.text.gloss": "salida",
+      "realiaRead.realia.entries.restroom.text.gloss": "baño",
+      "realiaRead.rounds.c1.question": "¿Qué tabla indica el camino al río?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "cumbre",
+      "realiaRead.rounds.c1.options.b.text.gloss": "río",
+      "realiaRead.rounds.c1.options.c.text.gloss": "entrada",
+      "realiaRead.rounds.c2.question": "¿Qué tabla indica el camino para salir?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "entrada",
+      "realiaRead.rounds.c2.options.b.text.gloss": "baño",
+      "realiaRead.rounds.c2.options.c.text.gloss": "salida"
     },
     "minigame:s6-nature-q2-practice": {
       "realiaRead.realia.alt": "Un letrero en un cruce: la cumbre y la salida apuntan a la derecha; el baño y la entrada, a la izquierda",
@@ -156,8 +169,10 @@
       "dialogue.3.options.jeongsangieyo.gloss": "Es la cumbre."
     },
     "minigame:s6-nature-q2-check": {
-      "listenPick.rounds.c1.prompt": "¿Dónde está la cumbre?",
-      "listenPick.rounds.c2.prompt": "izquierda"
+      "typeHangul.rounds.c1.prompt": "Escribe la dirección que oyes.",
+      "typeHangul.rounds.c1.target.gloss": "izquierda",
+      "typeHangul.rounds.c2.prompt": "Escribe la dirección que oyes.",
+      "typeHangul.rounds.c2.target.gloss": "derecha"
     },
     "minigame:s6-nature-q3-practice": {
       "realiaRead.realia.alt": "Un letrero con tiempos: cumbre a dos horas y río a tres horas, a la derecha; salida a una hora y baño, a la izquierda",
@@ -196,8 +211,23 @@
       "typeHangul.rounds.t4.target.gloss": "derecha"
     },
     "minigame:s6-nature-q3-check": {
-      "listenPick.rounds.c1.prompt": "¿Cuánto tiempo se tarda?",
-      "listenPick.rounds.c2.prompt": "dos horas"
+      "realiaRead.realia.alt": "Un letrero con tiempos: cumbre a dos horas y río a tres horas, a la derecha; salida a una hora y baño, a la izquierda",
+      "realiaRead.realia.title.gloss": "sendero de montaña",
+      "realiaRead.realia.entries.summit.text.gloss": "cumbre",
+      "realiaRead.realia.entries.river.text.gloss": "río",
+      "realiaRead.realia.entries.exit.text.gloss": "salida",
+      "realiaRead.realia.entries.restroom.text.gloss": "baño",
+      "realiaRead.realia.entries.summit.value.gloss": "dos horas",
+      "realiaRead.realia.entries.river.value.gloss": "tres horas",
+      "realiaRead.realia.entries.exit.value.gloss": "una hora",
+      "realiaRead.rounds.c1.question": "¿Cuánto se tarda hasta el río?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "una hora",
+      "realiaRead.rounds.c1.options.b.text.gloss": "dos horas",
+      "realiaRead.rounds.c1.options.c.text.gloss": "tres horas",
+      "realiaRead.rounds.c2.question": "¿Qué lugar está a una hora?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "cumbre",
+      "realiaRead.rounds.c2.options.b.text.gloss": "salida",
+      "realiaRead.rounds.c2.options.c.text.gloss": "río"
     }
   }
 }

@@ -141,8 +141,24 @@
       "typeHangul.rounds.t3.target.gloss": "목마를 때 마시는 것을 달라는 말"
     },
     "minigame:s6-life-q1-check": {
-      "listenPick.rounds.c1.prompt": "김에 만 밥을 달라는 말",
-      "listenPick.rounds.c2.prompt": "끓여 먹는 국수를 달라는 말"
+      "realiaRead.realia.alt": "식탁 위의 작은 메뉴: 김밥, 라면, 떡볶이, 우유와 각각의 값이 적혀 있어요.",
+      "realiaRead.realia.title.gloss": "음식 이름과 값을 적은 표",
+      "realiaRead.realia.entries.gimbap.text.gloss": "김에 밥과 속을 넣어 만 음식",
+      "realiaRead.realia.entries.ramyeon.text.gloss": "끓여 먹는 꼬불꼬불한 국수",
+      "realiaRead.realia.entries.tteokbokki.text.gloss": "떡을 매콤한 양념에 볶은 음식",
+      "realiaRead.realia.entries.milk.text.gloss": "소에서 짠 하얀 젖",
+      "realiaRead.realia.entries.gimbap.value.gloss": "한국 돈 2,000",
+      "realiaRead.realia.entries.ramyeon.value.gloss": "한국 돈 3,000",
+      "realiaRead.realia.entries.tteokbokki.value.gloss": "한국 돈 3,000",
+      "realiaRead.realia.entries.milk.value.gloss": "한국 돈 1,000",
+      "realiaRead.rounds.c1.question": "메뉴에서 끓여 먹는 꼬불꼬불한 국수는 어느 것일까요?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "김에 밥과 속을 넣어 만 음식",
+      "realiaRead.rounds.c1.options.b.text.gloss": "소에서 짠 하얀 젖",
+      "realiaRead.rounds.c1.options.c.text.gloss": "끓여 먹는 꼬불꼬불한 국수",
+      "realiaRead.rounds.c2.question": "메뉴에서 이것을 찾아요. 어느 그림일까요?",
+      "realiaRead.rounds.c2.options.a.label": "꼬불꼬불한 국수",
+      "realiaRead.rounds.c2.options.b.label": "하얀 마실 것",
+      "realiaRead.rounds.c2.options.c.label": "김에 만 밥"
     },
     "minigame:s6-life-q2-practice": {
       "realiaRead.realia.alt": "식탁 위의 주문서: 김밥 하나, 라면 두 개, 우유 세 개, 달걀 한 개가 적혀 있어요.",
@@ -191,8 +207,24 @@
       "dialogue.1.options.jal-gayo.gloss": "헤어질 때 하는 인사"
     },
     "minigame:s6-life-q2-check": {
-      "listenPick.rounds.c1.prompt": "끓여 먹는 국수를 둘 달라는 말",
-      "listenPick.rounds.c2.prompt": "소젖 셋을 달라는 말"
+      "clozePick.realia.alt": "식탁 위의 주문서: 김밥 하나, 라면 두 개, 우유 세 개, 달걀 한 개가 적혀 있어요.",
+      "clozePick.rounds.c1.sentence.gloss": "김에 밥과 속을 넣어 만 음식을 ___ 달라고 하는 말",
+      "clozePick.rounds.c1.tiles.du-gae.gloss": "2개",
+      "clozePick.rounds.c1.tiles.hana.gloss": "1개",
+      "clozePick.rounds.c1.tiles.se-gae.gloss": "3개",
+      "clozePick.rounds.c2.sentence.gloss": "___ 3개를 달라고 하는 말",
+      "clozePick.rounds.c2.tiles.ramyeon.gloss": "끓여 먹는 꼬불꼬불한 국수",
+      "clozePick.rounds.c2.tiles.dalgyal.gloss": "닭이 낳은 알",
+      "clozePick.rounds.c2.tiles.uyu.gloss": "소에서 짠 하얀 젖",
+      "clozePick.realia.title.gloss": "음식이나 물건을 시키는 일",
+      "clozePick.realia.entries.gimbap.text.gloss": "김에 밥과 속을 넣어 만 음식",
+      "clozePick.realia.entries.gimbap.value.gloss": "1이라는 수",
+      "clozePick.realia.entries.ramyeon.text.gloss": "끓여 먹는 꼬불꼬불한 국수",
+      "clozePick.realia.entries.ramyeon.value.gloss": "물건 둘",
+      "clozePick.realia.entries.milk.text.gloss": "소에서 짠 하얀 젖",
+      "clozePick.realia.entries.milk.value.gloss": "물건 셋",
+      "clozePick.realia.entries.egg.text.gloss": "닭이 낳은 알",
+      "clozePick.realia.entries.egg.value.gloss": "물건 하나"
     },
     "minigame:s6-life-q3-practice": {
       "realiaRead.realia.alt": "식탁 위의 작은 메뉴: 김밥, 라면, 떡볶이, 우유와 각각의 값이 적혀 있어요.",
@@ -207,7 +239,7 @@
       "realiaRead.realia.entries.milk.value.gloss": "한국 돈 1,000",
       "realiaRead.rounds.r1.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r2.question": "이것은 얼마일까요?",
-      "realiaRead.rounds.r3.question": "이 값인 것은 어느 것일까요?",
+      "realiaRead.rounds.r3.question": "이 값에 파는 것은 어느 것일까요?",
       "realiaRead.rounds.r4.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r5.question": "우유는 얼마일까요? 숫자를 골라요.",
       "realiaRead.rounds.r1.options.a.text.gloss": "한국 돈 1,000",
@@ -242,8 +274,10 @@
       "dialogue.3.options.masitge-deuseyo.gloss": "음식을 내주며 즐겁게 먹으라는 말"
     },
     "minigame:s6-life-q3-check": {
-      "listenPick.rounds.c1.prompt": "값을 묻는 말",
-      "listenPick.rounds.c2.prompt": "값이 한국 돈 2,000이라는 답"
+      "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
+      "typeHangul.rounds.c1.target.gloss": "한국 돈 3,000",
+      "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
+      "typeHangul.rounds.c2.target.gloss": "한국 돈 1,000"
     }
   }
 }

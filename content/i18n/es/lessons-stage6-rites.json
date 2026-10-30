@@ -118,8 +118,21 @@
       "typeHangul.rounds.t3.target.gloss": "llegada"
     },
     "minigame:s6-rites-q1-check": {
-      "listenPick.rounds.c1.prompt": "salida",
-      "listenPick.rounds.c2.prompt": "tren"
+      "realiaRead.realia.alt": "Un boleto de tren: el tren sale de Seúl y llega a Busan",
+      "realiaRead.realia.title.gloss": "boleto de tren",
+      "realiaRead.realia.entries.dep.text.gloss": "salida",
+      "realiaRead.realia.entries.arr.text.gloss": "llegada",
+      "realiaRead.realia.entries.dep.value.gloss": "Seúl (una ciudad)",
+      "realiaRead.realia.entries.arr.value.gloss": "Busan (una ciudad)",
+      "realiaRead.realia.entries.train.text.gloss": "tren",
+      "realiaRead.rounds.c1.question": "¿Qué palabra del boleto va con esta ciudad?",
+      "realiaRead.rounds.c1.options.a.text.gloss": "llegada",
+      "realiaRead.rounds.c1.options.b.text.gloss": "salida",
+      "realiaRead.rounds.c1.options.c.text.gloss": "boleto de tren",
+      "realiaRead.rounds.c2.question": "¿Qué palabra del boleto va con esta ciudad?",
+      "realiaRead.rounds.c2.options.a.text.gloss": "salida",
+      "realiaRead.rounds.c2.options.b.text.gloss": "tren",
+      "realiaRead.rounds.c2.options.c.text.gloss": "llegada"
     },
     "minigame:s6-rites-q2-practice": {
       "realiaRead.realia.alt": "Un tablero de salidas de la estación: trenes a Daejeon, Busan y Daegu, cada uno con su hora",
@@ -157,8 +170,22 @@
       "typeHangul.rounds.t3.target.gloss": "la una"
     },
     "minigame:s6-rites-q2-check": {
-      "listenPick.rounds.c1.prompt": "las tres",
-      "listenPick.rounds.c2.prompt": "treinta minutos"
+      "clozePick.realia.alt": "Un tablero de salidas de la estación: trenes a Daejeon, Busan y Daegu, cada uno con su hora",
+      "clozePick.rounds.c1.sentence.gloss": "El tren a Busan sale a ___.",
+      "clozePick.rounds.c1.tiles.ne-si-isip.gloss": "las cuatro y veinte",
+      "clozePick.rounds.c1.tiles.se-si-isip.gloss": "las tres y veinte",
+      "clozePick.rounds.c1.tiles.se-si-samsip.gloss": "las tres y treinta",
+      "clozePick.rounds.c2.sentence.gloss": "El tren a ___ sale a las cuatro y veinte.",
+      "clozePick.rounds.c2.tiles.daegu.gloss": "Daegu",
+      "clozePick.rounds.c2.tiles.daejeon.gloss": "Daejeon",
+      "clozePick.rounds.c2.tiles.busan.gloss": "Busan",
+      "clozePick.realia.title.gloss": "salidas",
+      "clozePick.realia.entries.daejeon.text.gloss": "Daejeon (una ciudad)",
+      "clozePick.realia.entries.daejeon.value.gloss": "1:00",
+      "clozePick.realia.entries.busan.text.gloss": "Busan (una ciudad)",
+      "clozePick.realia.entries.busan.value.gloss": "3:30",
+      "clozePick.realia.entries.daegu.text.gloss": "Daegu (una ciudad)",
+      "clozePick.realia.entries.daegu.value.gloss": "4:20"
     },
     "minigame:s6-rites-q3-practice": {
       "realiaRead.realia.alt": "El plan de viaje de Hoya: la estación a la una, el tren a las dos, el pueblo o ciudad natal a las cinco y la casa de la abuela a las seis",
@@ -201,8 +228,10 @@
       "typeHangul.rounds.t3.target.gloss": "la casa de la abuela"
     },
     "minigame:s6-rites-q3-check": {
-      "listenPick.rounds.c1.prompt": "pueblo o ciudad natal",
-      "listenPick.rounds.c2.prompt": "la casa de la abuela"
+      "typeHangul.rounds.c1.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.c1.target.gloss": "salida",
+      "typeHangul.rounds.c2.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.c2.target.gloss": "llegada"
     }
   }
 }
