@@ -653,6 +653,16 @@ describe('learnerPosition (N3)', () => {
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
   });
+
+  it('a later volume is no route quest: no preset, class or learner position lands on it (F-CURR-002 rows CM-40, CM-41 S7)', () => {
+    const later = CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds));
+    expect(later).toContain('quest:stage7-nature-v2-q1');
+    expect(learnerPosition('quest:stage7-nature-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, ['quest:stage7-nature-v2-q3'], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    const stage7 = resolvePreset('by-stage', 30, { catalog: CATALOG, stage: 'stage7' });
+    expect(stage7.blocks.filter((b) => b.kind === 'quest').length).toBeGreaterThan(0);
+    expect(stage7.blocks.some((b) => b.kind === 'quest' && later.includes(b.id))).toBe(false);
+  });
 });
 
 describe('fallbacks on a catalogue missing what a preset needs', () => {
