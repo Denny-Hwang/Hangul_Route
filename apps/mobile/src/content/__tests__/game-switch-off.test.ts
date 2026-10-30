@@ -69,7 +69,7 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     expect(problems).toEqual([]);
   });
 
-  it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
+  it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3) and Nature Volume 2, S3 (row CM-41)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
     expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
@@ -77,6 +77,10 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage3-life-q1',
       'quest:stage3-life-q3',
       'quest:stage3-nature-q1',
+      // Row CM-41: Cloze Pick is a main format of Nature Volume 2, S3 (the q1 and q3 Practice, the q2 Apply).
+      'quest:stage3-nature-v2-q1',
+      'quest:stage3-nature-v2-q2',
+      'quest:stage3-nature-v2-q3',
       'quest:stage3-rites-q3',
     ]);
   });

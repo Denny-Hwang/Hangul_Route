@@ -1,0 +1,1342 @@
+{
+  "id": "episode:stage3-nature-v2",
+  "stage": "stage3",
+  "theme": "nature",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Weather Sentences",
+  "subtitleEn": "Say what the weather does and which one is bigger or colder.",
+  "hoyaIntroEn": "Rain, snow, sun and wind! Let us read sentences about the weather.",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-nature-v2-q1",
+      "titleEn": "Rain and Snow",
+      "blurbEn": "Say what the weather does: rain, snow and wind.",
+      "teaserEn": "Next: which one is bigger?",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Look at the Sky",
+          "hoyaLineEn": "Look up! Rain, snow and wind. Let us read about the weather.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What Is Falling?",
+          "hoyaLineEn": "Tap Hear it to listen to each sentence.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying rain or snow is falling",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 와요.",
+                      "romanization": "___i/ga wayo",
+                      "en": "___ is falling."
+                    },
+                    "noteEn": "{ko:와요} means it comes. With rain or snow, it means it is falling.",
+                    "examples": [
+                      {
+                        "ko": "비가 와요.",
+                        "romanization": "biga wayo",
+                        "en": "It is raining."
+                      },
+                      {
+                        "ko": "눈이 와요.",
+                        "romanization": "nuni wayo",
+                        "en": "It is snowing."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "Wind and clouds",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "바람이 불어요.",
+                      "romanization": "barami bureoyo",
+                      "en": "The wind is blowing."
+                    },
+                    "picture": "word:science-wind"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "하늘에 구름이 있어요.",
+                      "romanization": "haneure gureumi isseoyo",
+                      "en": "There are clouds in the sky."
+                    },
+                    "picture": "word:nature-cloud"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-nature-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-v2-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-nature-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Read the Weather!",
+          "hoyaLineEn": "You read about rain, snow and wind. Great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-v2-q1-practice",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "___가 와요.",
+                "romanization": "___ga wayo",
+                "en": "It is raining."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                },
+                {
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
+                },
+                {
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "___이 와요.",
+                "romanization": "___i wayo",
+                "en": "It is snowing."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "눈",
+                  "romanization": "nun",
+                  "en": "snow"
+                },
+                {
+                  "ko": "구름",
+                  "romanization": "gureum",
+                  "en": "cloud"
+                },
+                {
+                  "ko": "바람",
+                  "romanization": "baram",
+                  "en": "wind"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "바람이 ___.",
+                "romanization": "barami ___",
+                "en": "The wind is blowing."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "불어요",
+                  "romanization": "bureoyo",
+                  "en": "is blowing"
+                },
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "is falling"
+                },
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "눈___ 와요.",
+                "romanization": "nun___ wayo",
+                "en": "It is snowing."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "nuni wayo"
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "하늘에 ___이 있어요.",
+                "romanization": "haneure ___i isseoyo",
+                "en": "There are clouds in the sky."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "구름",
+                  "romanization": "gureum",
+                  "en": "cloud"
+                },
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                },
+                {
+                  "ko": "바람",
+                  "romanization": "baram",
+                  "en": "wind"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q1-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "비가 와요.",
+                "romanization": "biga wayo",
+                "en": "It is raining."
+              },
+              "options": [
+                {
+                  "id": "rain",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "Rain"
+                },
+                {
+                  "id": "snow",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "Snow"
+                },
+                {
+                  "id": "wind",
+                  "pictureRef": "word:science-wind",
+                  "labelEn": "Wind"
+                }
+              ],
+              "answerId": "rain"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "눈이 와요.",
+                "romanization": "nuni wayo",
+                "en": "It is snowing."
+              },
+              "options": [
+                {
+                  "id": "snow",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "Snow"
+                },
+                {
+                  "id": "rain",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "Rain"
+                },
+                {
+                  "id": "sun",
+                  "pictureRef": "word:nature-sun",
+                  "labelEn": "Sun"
+                }
+              ],
+              "answerId": "snow"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "바람이 불어요.",
+                "romanization": "barami bureoyo",
+                "en": "The wind is blowing."
+              },
+              "options": [
+                {
+                  "id": "wind",
+                  "pictureRef": "word:science-wind",
+                  "labelEn": "Wind"
+                },
+                {
+                  "id": "cloud",
+                  "pictureRef": "word:nature-cloud",
+                  "labelEn": "Cloud"
+                },
+                {
+                  "id": "rain",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "Rain"
+                }
+              ],
+              "answerId": "wind"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "하늘에 구름이 있어요.",
+                "romanization": "haneure gureumi isseoyo",
+                "en": "There are clouds in the sky."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "하늘에 구름이 있어요.",
+                    "romanization": "haneure gureumi isseoyo",
+                    "en": "There are clouds in the sky."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "하늘에 별이 있어요.",
+                    "romanization": "haneure byeori isseoyo",
+                    "en": "There are stars in the sky."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "하늘에 새가 있어요.",
+                    "romanization": "haneure saega isseoyo",
+                    "en": "There is a bird in the sky."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "비가 와요.",
+                "romanization": "biga wayo",
+                "en": "It is raining."
+              },
+              "pictureRef": "word:nature-rain",
+              "distractors": [
+                {
+                  "ko": "불어요",
+                  "romanization": "bureoyo",
+                  "en": "is blowing"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "바람이 불어요.",
+                "romanization": "barami bureoyo",
+                "en": "The wind is blowing."
+              },
+              "pictureRef": "word:science-wind",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-nature-v2-q2",
+      "titleEn": "Which Is Bigger?",
+      "blurbEn": "Put two animals side by side: which one is bigger?",
+      "teaserEn": "Next: hot days and cold days.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Side by Side",
+          "hoyaLineEn": "A tiger and a rabbit stand side by side. Which one is bigger?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Bigger or Smaller?",
+          "hoyaLineEn": "Listen, then look at the word before the last word.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying which one is bigger",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 더 커요.",
+                      "romanization": "___i/ga deo keoyo",
+                      "en": "___ is bigger."
+                    },
+                    "noteEn": "{ko:더} means more. Put it before a describing word: {ko:더 커요} is bigger.",
+                    "examples": [
+                      {
+                        "ko": "호랑이가 더 커요.",
+                        "romanization": "horangiga deo keoyo",
+                        "en": "The tiger is bigger."
+                      },
+                      {
+                        "ko": "곰이 더 커요.",
+                        "romanization": "gomi deo keoyo",
+                        "en": "The bear is bigger."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "A smaller rabbit, a smaller bird",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "토끼가 더 작아요.",
+                      "romanization": "tokkiga deo jagayo",
+                      "en": "The rabbit is smaller."
+                    },
+                    "picture": "word:animal-rabbit"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "새가 더 작아요.",
+                      "romanization": "saega deo jagayo",
+                      "en": "The bird is smaller."
+                    },
+                    "picture": "word:animal-bird"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-nature-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-nature-v2-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Well Compared!",
+          "hoyaLineEn": "You said which one is bigger. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "호랑이가 더 커요.",
+                "romanization": "horangiga deo keoyo",
+                "en": "The tiger is bigger."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "is small"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "호랑이가 커요.",
+                "romanization": "horangiga keoyo",
+                "en": "The tiger is big."
+              },
+              "pictureRef": "card:tiger",
+              "distractors": [
+                {
+                  "ko": "토끼가",
+                  "romanization": "tokkiga",
+                  "en": "the rabbit"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "토끼가 더 작아요.",
+                "romanization": "tokkiga deo jagayo",
+                "en": "The rabbit is smaller."
+              },
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "곰이 커요.",
+                "romanization": "gomi keoyo",
+                "en": "The bear is big."
+              },
+              "pictureRef": "word:animal-bear",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "새가 작아요.",
+                "romanization": "saega jagayo",
+                "en": "The bird is small."
+              },
+              "pictureRef": "word:animal-bird",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q2-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "호랑이가 더 ___.",
+                "romanization": "horangiga deo ___",
+                "en": "The tiger is bigger."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                },
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "is small"
+                },
+                {
+                  "ko": "불어요",
+                  "romanization": "bureoyo",
+                  "en": "is blowing"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "토끼가 더 ___.",
+                "romanization": "tokkiga deo ___",
+                "en": "The rabbit is smaller."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "is small"
+                },
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                },
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "is falling"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "___이 더 커요.",
+                "romanization": "___i deo keoyo",
+                "en": "The bear is bigger."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "곰",
+                  "romanization": "gom",
+                  "en": "bear"
+                },
+                {
+                  "ko": "새",
+                  "romanization": "sae",
+                  "en": "bird"
+                },
+                {
+                  "ko": "토끼",
+                  "romanization": "tokki",
+                  "en": "rabbit"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "고양이___ 더 작아요.",
+                "romanization": "goyangi___ deo jagayo",
+                "en": "The cat is smaller."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "goyangiga deo jagayo"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptShown": true,
+              "prompt": {
+                "ko": "곰이 더 커요.",
+                "romanization": "gomi deo keoyo",
+                "en": "The bear is bigger."
+              },
+              "options": [
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                },
+                {
+                  "id": "rabbit",
+                  "pictureRef": "word:animal-rabbit",
+                  "labelEn": "Rabbit"
+                },
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                }
+              ],
+              "answerId": "bear"
+            },
+            {
+              "id": "c2",
+              "promptShown": true,
+              "prompt": {
+                "ko": "새가 더 작아요.",
+                "romanization": "saega deo jagayo",
+                "en": "The bird is smaller."
+              },
+              "options": [
+                {
+                  "id": "bird",
+                  "pictureRef": "word:animal-bird",
+                  "labelEn": "Bird"
+                },
+                {
+                  "id": "tiger",
+                  "pictureRef": "card:tiger",
+                  "labelEn": "Tiger"
+                },
+                {
+                  "id": "bear",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "Bear"
+                }
+              ],
+              "answerId": "bird"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-nature-v2-q3",
+      "titleEn": "Hot and Cold",
+      "blurbEn": "Say which is colder or hotter: winter, summer, the mountain.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Two Seasons",
+          "hoyaLineEn": "Snow in winter, sun in summer. Let us read which is colder!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Which Is Colder?",
+          "hoyaLineEn": "Listen, then look at the last word.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Saying which one is colder",
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 더 추워요.",
+                      "romanization": "___i/ga deo chuwoyo",
+                      "en": "___ is colder."
+                    },
+                    "noteEn": "{ko:추워요} means it is cold. With {ko:더} before it, it means colder.",
+                    "examples": [
+                      {
+                        "ko": "겨울이 더 추워요.",
+                        "romanization": "gyeouri deo chuwoyo",
+                        "en": "Winter is colder."
+                      },
+                      {
+                        "ko": "산이 더 추워요.",
+                        "romanization": "sani deo chuwoyo",
+                        "en": "The mountain is colder."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "captionEn": "A hot summer, a snowy winter",
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "여름이 더 더워요.",
+                      "romanization": "yeoreumi deo deowoyo",
+                      "en": "Summer is hotter."
+                    },
+                    "picture": "word:nature-sun"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "겨울에 눈이 와요.",
+                      "romanization": "gyeoure nuni wayo",
+                      "en": "It snows in winter."
+                    },
+                    "picture": "word:nature-snow"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-nature-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-nature-v2-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s3-nature-v2-q3-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Hot and Cold!",
+          "hoyaLineEn": "You read about hot days and cold days. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-nature-v2-q3-practice",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "겨울이 더 ___.",
+                "romanization": "gyeouri deo ___",
+                "en": "Winter is colder."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "is cold"
+                },
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "is hot"
+                },
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "여름이 더 ___.",
+                "romanization": "yeoreumi deo ___",
+                "en": "Summer is hotter."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "is hot"
+                },
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "is cold"
+                },
+                {
+                  "ko": "작아요",
+                  "romanization": "jagayo",
+                  "en": "is small"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "곰이 더 ___.",
+                "romanization": "gomi deo ___",
+                "en": "The bear is bigger."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
+                },
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "is cold"
+                },
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "is hot"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "산___ 더 추워요.",
+                "romanization": "san___ deo chuwoyo",
+                "en": "The mountain is colder."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "sani deo chuwoyo"
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "바람___ 불어요.",
+                "romanization": "baram___ bureoyo",
+                "en": "The wind is blowing."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "barami bureoyo"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "겨울에 눈이 와요.",
+                "romanization": "gyeoure nuni wayo",
+                "en": "It snows in winter."
+              },
+              "options": [
+                {
+                  "id": "snow",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "Snow"
+                },
+                {
+                  "id": "sun",
+                  "pictureRef": "word:nature-sun",
+                  "labelEn": "Sun"
+                },
+                {
+                  "id": "rain",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "Rain"
+                }
+              ],
+              "answerId": "snow"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "여름이 더 더워요.",
+                "romanization": "yeoreumi deo deowoyo",
+                "en": "Summer is hotter."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "여름이 더 더워요.",
+                    "romanization": "yeoreumi deo deowoyo",
+                    "en": "Summer is hotter."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "여름이 더 추워요.",
+                    "romanization": "yeoreumi deo chuwoyo",
+                    "en": "Summer is colder."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "겨울이 더 더워요.",
+                    "romanization": "gyeouri deo deowoyo",
+                    "en": "Winter is hotter."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "겨울이 더 추워요.",
+                "romanization": "gyeouri deo chuwoyo",
+                "en": "Winter is colder."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "겨울이 더 추워요.",
+                    "romanization": "gyeouri deo chuwoyo",
+                    "en": "Winter is colder."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "겨울이 더 더워요.",
+                    "romanization": "gyeouri deo deowoyo",
+                    "en": "Winter is hotter."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "여름이 더 추워요.",
+                    "romanization": "yeoreumi deo chuwoyo",
+                    "en": "Summer is colder."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "비가 와요.",
+                "romanization": "biga wayo",
+                "en": "It is raining."
+              },
+              "options": [
+                {
+                  "id": "rain",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "Rain"
+                },
+                {
+                  "id": "snow",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "Snow"
+                },
+                {
+                  "id": "sun",
+                  "pictureRef": "word:nature-sun",
+                  "labelEn": "Sun"
+                }
+              ],
+              "answerId": "rain"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-nature-v2-q3-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "d1",
+              "promptEn": "Type the word for winter.",
+              "mode": "hear",
+              "target": {
+                "ko": "겨울",
+                "romanization": "gyeoul",
+                "en": "winter"
+              }
+            },
+            {
+              "id": "d2",
+              "promptEn": "Type the word for wind.",
+              "mode": "hear",
+              "target": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "In Korea, summer rain that falls for many days in a row is called {ko:장마}. The old lunar calendar puts this rainy season in the fifth and sixth months.",
+      "sources": [
+        {
+          "title": "장마1 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%9E%A5%EB%A7%88",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘장마1’ 「명사」: ‘여름철에 여러 날을 계속해서 비가 내리는 현상이나 날씨. 또는 그 비.’ (word_no=276808)"
+        },
+        {
+          "title": "오뉴월 장마는 개똥장마다 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국세시풍속사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4586",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘음력 오뉴월은 장마철이다. 이때 오는 비는 흔하기 이를 데 없다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): 'summer rain that falls for many days in a row' = stdict 장마1 (여름철에 여러 날을 계속해서 비가 내리는 현상이나 날씨); 'the fifth and sixth months of the old lunar calendar' = NFMK 한국세시풍속사전 4586 (음력 오뉴월은 장마철이다). Both pages opened 2026-10-30.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read (stdict search result and the folkency topic content); the note says no more than they do: no dates on the solar calendar, no claim that 장마 is only Korean (the definition is of the Korean word). Institution names as of the access date: 국립국어원, 국립민속박물관 (unchanged). Paraphrased; no source wording copied.\nreviser (2026-10-30): 'it came' (past) became 'the old lunar calendar puts this rainy season in' (NFMK says 음력 오뉴월은 장마철이다, in the present).\npass 3 (third pass after revision, 2026-10-30): {ko:장마} is jangma in the converter; es and ko say the same and add nothing. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "In 1442, in Joseon, a rain gauge called {ko:측우기} was made to measure rain. The only Joseon-period gauge known today, made of bronze in 1837, is kept at the National Meteorological Museum in Seoul.",
+      "sources": [
+        {
+          "title": "국보 공주 충청감영 측우기 (국가유산포털)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "설명: ‘국보 ‘공주 충청감영 측우기(公州 忠淸監營 測雨器)’는 1837년(헌종 3)에 제작된 것으로, 측우대는 없고 측우기만 전해오고 있다.’ / ‘지금까지 ‘공주 충청감영 측우기’만 유일하게 알려져 있다.’ / ‘1442년(세종 24)에 발명된 측우기는’ / 소재지: 서울특별시 종로구 송월길 52 (송월동, 국립기상박물관)"
+        },
+        {
+          "title": "국립기상박물관 (첫 화면)",
+          "publisher": "기상청 (Korea Meteorological Administration) — 국립기상박물관",
+          "url": "https://science.kma.go.kr/museum/",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘영상으로 보는 ‘국보 측우기’’ / 주소: ‘서울 종로구 송월길 52’ / 바닥글: ‘Copyright ⓒ National Meteorological Museum of Korea All rights reserved’"
+        },
+        {
+          "title": "공주 충청감영 측우기 (한국민족문화대백과사전)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0007902",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘청동으로 제작된 이 측우기는 표면에 새겨진 “도광정유제(道光丁酉製)”라는 글귀를 통해 1837년(헌종 3)에 제작되었음을 알 수 있다.’ / ‘빗물을 담는 그릇으로 현존하는 것은 금영 측우기가 유일하다.’ / 소장처: 국립기상박물관"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): 1442 and 'made to measure rain' (in Joseon, the 세종 24 date) = Korea Heritage Service portal (1442년(세종 24)에 발명된 측우기, the description of the national treasure); 'the only Joseon-period gauge known today, made in 1837' = the same page (1837년(헌종 3)에 제작, 지금까지 … 유일하게 알려져 있다) and encykorea E0007902 (현존하는 것은 금영 측우기가 유일하다); 'made of bronze' = encykorea E0007902 (청동으로 제작된 이 측우기); 'kept at the National Meteorological Museum in Seoul' = the portal's 소재지 and the museum's own page (KMA).\npass 2 (MAR culture and facts, 2026-10-30): pages re-read (the portal description read through its open record, the same text). No 'first in the world' claim, which only the portal makes. Names as of the access date: 국가유산청 / Korea Heritage Service (since 2024-05-17), the museum's English name from its footer. Same fact as story:cheugugi-rain-gauge f1, f5 and f6, in plainer words.\nreviser (2026-10-30): the author draft said the 1442 gauge was 'metal'; none of the three sources cited here says so for 1442 (the Sillok does, story:cheugugi-rain-gauge f3, not cited), so 'metal' left the 1442 sentence and 'made of bronze' (encykorea) went to the 1837 one.\npass 3 (third pass after revision, 2026-10-30): every clause matched to a quote above; {ko:측우기} is cheugugi. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "In early spring, as the flowers start to open, the cold often comes back once or twice. Koreans call it {ko:꽃샘추위}, the cold that is jealous of the flowers.",
+      "sources": [
+        {
+          "title": "꽃샘 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EA%BD%83%EC%83%98",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘꽃샘’ 「명사」: ‘이른 봄, 꽃이 필 무렵에 갑자기 날씨가 추워짐. 또는 그런 추위.’ (word_no=54920)"
+        },
+        {
+          "title": "샘1 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%83%98",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘샘1’ 「명사」: ‘남의 처지나 물건을 탐내거나, 자기보다 나은 처지에 있는 사람이나 적수를 미워함. 또는 그런 마음.’ (word_no=439012)"
+        },
+        {
+          "title": "꽃샘추위는 꾸어다 해도 한다 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국세시풍속사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3408",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘봄에 꽃들이 필 무렵에 반드시 한두 차례의 추위가 있다는 말.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): 'in early spring, as the flowers start to open, the cold comes back' = stdict 꽃샘 (이른 봄, 꽃이 필 무렵에 갑자기 날씨가 추워짐) and NFMK 3408 (꽃들이 필 무렵에 반드시 한두 차례의 추위); 'once or twice' = NFMK 3408 (한두 차례, said 'often', not 'always'); 'jealous of the flowers' = 꽃 + 샘1 (envy).\npass 2 (MAR culture and facts, 2026-10-30): all three pages re-read; 꽃샘추위 itself is in stdict (이른 봄, 꽃이 필 무렵의 추위, word_no=404396). The note names no date, region or record temperature. Names as of the access date unchanged.\nreviser (2026-10-30): the author draft said 'for a day or two'; 한두 차례 counts times, not days, so it now says 'once or twice' (es una o dos veces, ko 한두 차례).\npass 3 (third pass after revision, 2026-10-30): {ko:꽃샘추위} is kkotsaemchuwi; es 'celosa de las flores' and ko 꽃을 시샘하는 추위 say the same. Outcome: confirmed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, then three separate checker passes (language with the F-CNT-002 converter; culture and facts against each source; learning design: the section 9.3 lints, item load, Check variety, sound-change and homophone flags), a reviser and a third pass. No native-speaker or expert review is claimed.",
+      "Language: 비가 와요, 눈이 와요, 바람이 불어요 and the 더 comparisons are plain polite speech. Finding: q1 Practice r3 offered 있어요 beside 불어요, and 바람이 있어요 (there is wind) is near the shown meaning; the tile is now 커요. Finding: the reward title Weather Read! read as a noun; it is You Read the Weather!. ko notes no longer say 견주어 보면 twice. Romanization: every string matches the converter.",
+      "Culture and facts: three culture notes, each with two or three sources, an allowlisted one first (NIKL, Korea Heritage Service, NIKL). Findings fixed by the reviser: n1 tense, n2 'metal' unsupported for 1442 (now bronze for 1837), n3 'for a day or two' misread 한두 차례 (now once or twice). Names as of 2026-10-30. No UNESCO claim, no origin claim, no person, brand or price.",
+      "Learning design: three quests, one new pattern each (N이/가 와요, 더 커요, 더 추워요), new words within the caps; lesson-recycle 37, 43 and 40 in 100 (Volume 1 sentences 호랑이가 커요, 곰이 커요, 새가 작아요 and the Stage 2 weather words in new frames); triples differ from Volume 1's; the stage's Volume 2 Checks are Sentence Builder, Read Pick Meaning and Dictation.",
+      "Learning design (cont.): Dictation asks 겨울 and 바람, said as written, with no taught homophone (눈 is a homograph and stays out of Dictation; 비 has none taught); no audioRef, so while game.type-hangul-hear is at pct 0 the Check plays its Type Hangul see fallback. Liaison (하늘에, 겨울이, 산이, 곰이) is heard, never typed. 더 (more) and 더워요 (hot) share a first syllable; no round asks them apart by ear alone.",
+      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0)."
+    ]
+  },
+  "contentVer": 1
+}
