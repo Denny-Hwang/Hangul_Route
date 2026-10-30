@@ -232,7 +232,20 @@ const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
     voice: oneOf(['ready', 'none', 'unknown']),
     offlineReady: isBoolean,
   },
-  'lecture.complete': { slidesShown: wholeUpTo(LECTURE_SLIDES_MAX), minutes: wholeUpTo(600), reveals: wholeUpTo(LECTURE_REVEALS_MAX) },
+  'lecture.complete': {
+    slidesShown: wholeUpTo(LECTURE_SLIDES_MAX),
+    minutes: wholeUpTo(600),
+    reveals: wholeUpTo(LECTURE_REVEALS_MAX),
+    // AMENDMENTS-PRESENTER-NAV section 12 (PN-1, Worker first): the layout code and
+    // navigation counts by source. No coordinates, ids or timings are ever kept.
+    navLayout: oneOf(['docked', 'rail', 'overlay']),
+    stepsButton: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsSwipe: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsKey: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsClick: wholeUpTo(LECTURE_REVEALS_MAX),
+    quickBacks: wholeUpTo(LECTURE_REVEALS_MAX),
+    points: wholeUpTo(LECTURE_REVEALS_MAX),
+  },
   'lecture.tool_used': { tool: oneOf(['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen']) },
   'lecture.deck_rejected': { reason: oneOf(LECTURE_DECODE_FAILURES) },
 };
