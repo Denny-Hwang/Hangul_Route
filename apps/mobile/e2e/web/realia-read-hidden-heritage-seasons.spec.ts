@@ -6,8 +6,9 @@ import { expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-002 row CM-37 part 3: the Nature & Animals Hidden Heritage scene, the four seasons (design/wireframes/minigame/
- * hidden-heritage.md). No Nature Volume 2 cell plays it yet, so this suite opens the step on the scene's reference round
- * through `window.__hrHiddenHeritageE2E` (fixture bundle only, served from dist-e2e/):
+ * hidden-heritage.md), and its card back (row CM-41 S2). This suite opens the step on the scene's reference round, which
+ * Nature & Animals Volume 2 quest 2 plays as its Apply, through `window.__hrHiddenHeritageE2E` (fixture bundle only,
+ * served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-seasons
@@ -91,6 +92,16 @@ test.describe('Hidden Heritage, the four seasons (F-CURR-002 CM-37 part 3)', () 
       expect(await page.locator('body').innerText()).not.toMatch(SHAME);
       await expectNoHorizontalOverflow(page);
       await shot(page, `hidden-heritage-seasons-end-${size.name}`);
+      // Row CM-41 S2: the scene's card back under the found words, every fact of its note with its source line, no URL.
+      const back = page.getByTestId('hh-card-back');
+      await back.scrollIntoViewIfNeeded();
+      await expect(back.getByText('Did you know?')).toBeVisible();
+      for (const id of ['f1', 'f2', 'f3', 'f4', 'f5', 'f6']) await expect(back.getByTestId(`hh-card-back-${id}`)).toContainText('Source:');
+      await expect(back.getByTestId('hh-card-back-f1')).toContainText('four seasons');
+      await expect(back.getByTestId('hh-card-back-f6')).toContainText('Chinese tiger paintings');
+      expect(await back.innerText()).not.toMatch(/https?:|www\./);
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `hidden-heritage-seasons-card-back-${size.name}`);
       const answers = (await log(page)).answers;
       expect(answers.map((a) => a.correct)).toEqual([false, true, true, true, true]);
     });
