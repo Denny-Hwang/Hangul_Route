@@ -119,7 +119,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (the tile pool rules), JV-4 0 (e2e), AC-1 +7,619 (the say key, the clip lookup order, the pack switches), AC-2, AC-3
   // and AC-4 0 (scripts), AC-6 +1,959 (the clip registry and the pack hooks; the loader is a lazy chunk), the
   // integration's Match Shape migration 0 (a screen chunk). The line is the measurement plus a 4,896 B rounding margin.
-  startBundleRaw: 4_840_000,
+  // F-CURR-002 row CM-48 (This week in Korea): main 1bfda3fc8 measures 4,838,051 B raw (release `build:web`, Metro cache
+  // cleared), 1,949 B under the old 4,840,000 B line; the row adds 2,700 B (4,840,751 B raw / 1,294,654 B gzip): its door
+  // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
+  // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
+  // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
+  startBundleRaw: 4_845_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

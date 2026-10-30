@@ -5,6 +5,7 @@ import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useProfileStore } from '../../../store/profile-store';
+import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 
 /**
@@ -77,6 +78,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-11-04T10:00:00.000Z'));
   storage.clear();
+  useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { weeklyDrop: { on: true, pct: 100 } } } });
   recorded.length = 0;
   planned.rounds = 5;
   navigate.mockClear();
@@ -86,6 +88,7 @@ beforeEach(() => {
 afterEach(async () => {
   for (const r of mounted.splice(0)) await unmount(r);
   vi.useRealTimers();
+  resetRemoteConfigForTests();
   useProfileStore.setState({ profiles: [], activeId: null });
   useLocaleStore.setState({ device: 'en', byProfile: {} });
 });
@@ -162,6 +165,13 @@ describe('WeekDropScreen (B, C, D)', () => {
     await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
     await idle();
     expect(byTestId(r.root, 'week-drop-done')).toHaveLength(1);
+  });
+
+  it('weeklyDrop off (a remote turn, a stale visit): back home at once, nothing drawn', async () => {
+    useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { weeklyDrop: { on: false, pct: 0 } } } });
+    const r = await draw(screen());
+    expect(goBack).toHaveBeenCalled();
+    expect(byTestId(r.root, 'week-drop-meet')).toEqual([]);
   });
 
   it('a week with no drop: back home at once', async () => {

@@ -560,7 +560,8 @@ describe('precacheReport and its budget lines', () => {
     // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
     // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
     // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_840_000);
+    // Row CM-48 (This week in Korea) measured 4,840,751 B on main 1bfda3fc8 (4,838,051 B), so the line is 4,845,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_845_000);
     for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }

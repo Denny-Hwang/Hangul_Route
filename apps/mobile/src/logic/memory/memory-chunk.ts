@@ -23,7 +23,7 @@ import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainReq
 import { createReviewItemStore } from '../reviews/review-items-store';
 import type { SourceVisibility } from '../reviews/engine';
 import { createWeekPracticeApi, type WeekPracticeApi } from '../reviews/week-practice';
-import { weekDrops } from '../../content/week-drops';
+import { weekGlosses } from '../reviews/week-glosses';
 import { NO_GAME_FORMATS, type GameFormats } from '../reviews/review-rounds';
 import { createStageCheckApi, type StageCheckApi } from '../reviews/stage-check-api';
 import { notifyProgressPersisted } from '../sync/persist-hook';
@@ -64,7 +64,7 @@ const visibility = (profileId: string): SourceVisibility => ({
 });
 
 /** Loads the chunk that holds a cell's es and ko meanings: the week drops for a drop's cell (row CM-48), else its lesson chunk. */
-const ensureGlossCell = (cell: string): Promise<void> => (cell.startsWith('week:') ? weekDrops.ensure().then(() => undefined) : lessonContent.ensureCells([cell]));
+const ensureGlossCell = (cell: string): Promise<void> => (cell.startsWith('week:') ? weekGlosses() : lessonContent.ensureCells([cell]));
 
 let runtime: MemoryRuntime | null = null;
 

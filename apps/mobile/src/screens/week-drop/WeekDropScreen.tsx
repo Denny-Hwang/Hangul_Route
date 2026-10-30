@@ -3,7 +3,8 @@ import { Body, Button, Caption, Heading, Hoya, Icon, KOREAN_LANGUAGE, KOREAN_LIN
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { WEEK_DROP_WEEKS_BUILT, weekDrops } from '../../content/week-drops';
+import { WEEK_DROP_WEEKS } from '../../content/__generated__/week-drops-index';
+import { weekDrops } from '../../logic/week-drop/drop-store';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { canPlayKorean } from '../../logic/audio/capability';
 import { memoryChunk } from '../../logic/memory/boot';
@@ -17,6 +18,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { playPrompt } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { useAudioStore } from '../../store/audio-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { dailyReviewChunk } from '../reviews/DailyReviewRoute';
 import { OopsScreen } from '../system/OopsScreen';
@@ -94,7 +96,8 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
   const [ui, setUi] = useState<Rounds | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [, setAnswered] = useState(0);
-  const week = useRef(dropWeekFor(WEEK_DROP_WEEKS_BUILT, localDay(new Date()))).current;
+  const on = useCurrFlag('weeklyDrop');
+  const week = useRef(dropWeekFor(WEEK_DROP_WEEKS, localDay(new Date()))).current;
   const api = useRef<WeekPracticeApi | null>(null);
   const practice = useRef<Promise<WeekPractice | null> | null>(null);
   const answers = useRef(new Map<number, RoundAnswer>());
@@ -105,7 +108,8 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
   };
 
   useEffect(() => {
-    if (week === null || profileId === null) {
+    // `weeklyDrop` off (a remote turn, a stale visit): the surface hides, so back home; nothing is deleted.
+    if (!on || week === null || profileId === null) {
       home();
       return undefined;
     }
@@ -135,7 +139,7 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
     };
     // One drop per visit; Try again is a new attempt.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [week, profileId, attempt]);
+  }, [on, week, profileId, attempt]);
 
   const finish = (view: WeekDropView): void => {
     if (profileId !== null && week !== null) void markWeekDone(profileId, week);

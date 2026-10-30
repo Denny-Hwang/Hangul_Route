@@ -1,7 +1,6 @@
 import type { UiLocale } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { episodeById, episodesAll, questsAll } from '../../content';
-import { weekDrops } from '../../content/week-drops';
 import { lessonContent } from '../../content/lessons';
 import { journeyContent } from '../../content/sync-context';
 import { useAudioStore } from '../../store/audio-store';
@@ -9,6 +8,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
 import { canPlayKorean } from '../audio/capability';
 import { CONTENT_OVERLAYS } from '../content-locale';
+import { weekGlosses } from './week-glosses';
 import type { RoundAsked } from '../memory/asked';
 import type { MemoryRow } from '../memory/memory-file';
 import { buildLookup, cellOfEpisode } from '../memory/resolve';
@@ -72,7 +72,7 @@ async function glossesIn(ctx: EngineContext, itemIds: readonly string[], locale:
   const week = [...cells].some((c) => c.startsWith('week:'));
   await Promise.all([
     lessonContent.ensureCells([...cells].filter((c) => !c.startsWith('week:'))).catch(() => undefined),
-    week ? weekDrops.ensure().catch(() => undefined) : undefined,
+    week ? weekGlosses().catch(() => undefined) : undefined,
   ]);
 }
 

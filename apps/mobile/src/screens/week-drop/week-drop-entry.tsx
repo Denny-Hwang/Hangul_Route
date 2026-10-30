@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
-import { WEEK_DROP_WEEKS_BUILT } from '../../content/week-drops';
+import { WEEK_DROP_WEEKS } from '../../content/__generated__/week-drops-index';
 import { dropWeekFor } from '../../logic/week-drop/calendar';
 import type { RootStackParamList } from '../../navigation/types';
 import { useCurrFlag } from '../../store/remote-config-store';
@@ -51,20 +51,19 @@ function useChunk(on: boolean): { chunk: Chunk | null; failed: boolean; retry: (
 /** Home's "This week in Korea" card: only while `weeklyDrop` is on and this local week has a drop, once its chunk is in. */
 export function WeekDropHomeSlot({ profileId, today }: { profileId: string | null; today: string }): ReactElement | null {
   const on = useCurrFlag('weeklyDrop');
-  const week = on && profileId !== null ? dropWeekFor(WEEK_DROP_WEEKS_BUILT, today) : null;
+  const week = on && profileId !== null ? dropWeekFor(WEEK_DROP_WEEKS, today) : null;
   const ui = useChunk(week !== null).chunk;
   return ui === null || week === null || profileId === null ? null : <ui.WeekDropCard profileId={profileId} week={week} />;
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WeekDrop'>;
 
-/** The `WeekDrop` route: the drop's pages once the chunk is in; the crash screen's Try again when it cannot load. */
+/**
+ * The `WeekDrop` route: the drop's pages once the chunk is in (they go back home when `weeklyDrop` is off, or the week
+ * has no drop); the crash screen's Try again when the chunk cannot load.
+ */
 export function WeekDropRoute(props: Props): ReactElement {
-  const on = useCurrFlag('weeklyDrop');
-  const { chunk, failed, retry } = useChunk(on);
-  useEffect(() => {
-    if (!on && props.navigation.canGoBack()) props.navigation.goBack();
-  }, [on, props.navigation]);
+  const { chunk, failed, retry } = useChunk(true);
   if (failed) return <OopsScreen onRetry={retry} />;
   if (chunk === null) return <LessonWaiting />;
   const { WeekDropScreen } = chunk;

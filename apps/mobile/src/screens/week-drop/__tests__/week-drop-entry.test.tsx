@@ -83,7 +83,7 @@ describe('WeekDropHomeSlot (row CM-48)', () => {
 });
 
 describe('WeekDropRoute (row CM-48)', () => {
-  it('on: draws the screen from the chunk; off: goes back, so a stale visit never shows a hidden surface', async () => {
+  it('draws the screen from the chunk (the screen itself goes back when the switch is off)', async () => {
     on(true);
     const goBack = vi.fn();
     const navigation = { canGoBack: () => true, goBack } as unknown as Parameters<typeof WeekDropRoute>[0]['navigation'];
@@ -93,8 +93,5 @@ describe('WeekDropRoute (row CM-48)', () => {
     await idle();
     expect(byTestId(r.root, 'week-drop-screen-stub')).toHaveLength(1);
     expect(goBack).not.toHaveBeenCalled();
-    on(false);
-    await idle();
-    expect(goBack).toHaveBeenCalled();
   });
 });

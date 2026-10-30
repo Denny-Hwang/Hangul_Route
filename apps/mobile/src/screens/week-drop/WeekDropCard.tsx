@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { weekDrops } from '../../content/week-drops';
+import { weekDrops } from '../../logic/week-drop/drop-store';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { readDoneWeeks } from '../../logic/week-drop/done-weeks';
 import { weekDropView } from '../../logic/week-drop/view';
