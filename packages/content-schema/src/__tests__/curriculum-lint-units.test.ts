@@ -17,6 +17,7 @@ import {
   newCopyProblems,
   normalizeKo,
   parseGradeAList,
+  practiceCheckItems,
   pronunciationKey,
   questUnits,
   reviewScoreProblems,
@@ -236,6 +237,22 @@ describe('taught items and pronunciation', () => {
     const teach = q('quest:b', [discover(...words.map((w) => ({ type: 'word', word: kt(w) })))]);
     const files = { 'content/episodes/stage-2/nature.v2.json': body('episode:stage2-nature-v2', 2, [pick, teach], { volume: 2 }) };
     expect(rows(lint(files), 'lesson-new-load')).toEqual(['lesson-new-load error content/episodes/stage-2/nature.v2.json quests[1]']);
+  });
+
+  it('asks only the targets of a Hidden Heritage round: its other things stay new for the quest that teaches them', () => {
+    const thing = (id: string, ko: string) => ({ id, word: kt(ko), spot: { x: 0, y: 0, w: 80, h: 80 } });
+    const scope = {
+      ref: 'm:p',
+      kind: 'hidden-heritage',
+      rounds: [{ id: 'hh1', targets: [thing('bap', '밥'), thing('guk', '국'), thing('sutgarak', '숟가락')], others: [thing('hangari', '항아리'), thing('baguni', '바구니'), thing('banchan', '반찬')] }],
+    };
+    expect(askedKo([scope])).toEqual(['밥', '국', '숟가락']);
+    const find = q('quest:a', [step('practice', { minigameKind: 'hidden-heritage', minigameRef: 'm:p' })], [scope]);
+    expect(practiceCheckItems(find as unknown as LessonBodyQuest)).toEqual(['밥', '국', '숟가락']);
+    const words = ['항아리', '바다', '산', '강', '꽃', '나무', '돌', '새', '비'];
+    const teach = q('quest:b', [discover(...words.map((w) => ({ type: 'word', word: kt(w) })))]);
+    const files = { 'content/episodes/stage-2/life.v2.json': body('episode:stage2-life-v2', 2, [find, teach], { volume: 2 }) };
+    expect(rows(lint(files), 'lesson-new-load')).toEqual(['lesson-new-load error content/episodes/stage-2/life.v2.json quests[1]']);
   });
 
   it('takes a step game from its scope when the step names none', () => {
