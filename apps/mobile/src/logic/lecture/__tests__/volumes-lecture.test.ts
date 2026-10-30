@@ -53,10 +53,10 @@ describe('the presenter keeps and offers a Volume 2 (row CM-40)', () => {
     const on = keys(true) ?? [];
     expect(on.indexOf(V2)).toBe(on.indexOf('episode:stage2-nature') + 1);
     expect(keys(false)).not.toContain(V2);
-    // The shipped catalogue's Volume 2 (row CM-42 S3: Stage 3 Play & Crafts) follows its cell with volumes on, and only then.
+    // The shipped catalogue's Volume 2 (row CM-43 S3: Stage 3 Food & Daily Life) follows its cell with volumes on, and only then.
     const shipped = (volumes: boolean) => presenterChooserGroups('en', { consonants: 'C', vowels: 'V' }, { volumes }).flatMap((g) => g.rows.map((r) => r.key));
     const withV2 = shipped(true);
-    expect(withV2.indexOf('episode:stage3-crafts-v2')).toBe(withV2.indexOf('episode:stage3-crafts') + 1);
+    expect(withV2.indexOf('episode:stage3-life-v2')).toBe(withV2.indexOf('episode:stage3-life') + 1);
     expect(shipped(false).some((k) => k.endsWith('-v2'))).toBe(false);
   });
 

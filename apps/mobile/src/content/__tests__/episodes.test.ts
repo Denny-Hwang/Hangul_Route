@@ -113,8 +113,8 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
       expect(episodesAll.some((e) => e.id === v2.id), v2.id).toBe(false);
       expect(episodesAll.some((e) => `${e.id}-v2` === v2.id && (e.volume ?? 1) === 1), v2.id).toBe(true);
     }
-    // Row CM-42 S3 ships the first one: Stage 3 Play & Crafts, Volume 2.
-    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage3-crafts-v2');
+    // Row CM-43 S3 ships Stage 3 Food & Daily Life, Volume 2.
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage3-life-v2');
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {

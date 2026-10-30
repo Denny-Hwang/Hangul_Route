@@ -549,10 +549,10 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
-      // Then the later volumes, after every first volume (F-CURR-002 row CM-40): Game Rules (row CM-42 S3).
-      'quest:stage3-crafts-v2-q1',
-      'quest:stage3-crafts-v2-q2',
-      'quest:stage3-crafts-v2-q3',
+      // Then the later volumes, after every first volume (F-CURR-002 row CM-40): Tastes and Recipes (row CM-43 S3).
+      'quest:stage3-life-v2-q1',
+      'quest:stage3-life-v2-q2',
+      'quest:stage3-life-v2-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
