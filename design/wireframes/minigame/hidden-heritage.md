@@ -61,8 +61,15 @@ done:      every word found -> the end panel (below), then back to the quest
 | ~~ 밥 ~~ (bap)        rice       |  <- each target: Korean, romanization, meaning in the UI language
 | ~~ 국 ~~ (guk)        soup       |
 | ~~ 숟가락 ~~ (sutgarak) spoon     |
+| (*) Did you know?                |  <- the card back (row CM-41 S2): the scene's note.facts, sunken box
+|   claim in the UI language       |
+|   Source: <institution>, <title> |  <- caption, never a URL; one block per fact
 | [[ Continue ]]                   |  <- back to the quest player
 ```
+
+The card back is a named region ("Lesson note") under the found words, the reward step tip's look (sparkle, Did you know?,
+sunken box). Each fact of the scene's note shows its claim in the UI language (the scene's `scene:<key>` overlay) and the
+card back's source line. It scrolls with the panel; at 320 px every fact wraps and nothing scrolls sideways.
 
 ## Box diagram — C. 768 x 1024 (regular)
 
