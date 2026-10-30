@@ -422,18 +422,12 @@ export function YutReviewSkin({ seed, finished, reducedMotion, children }: YutRe
     </ErrorBoundary>
   );
 
-  if (panes) {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: layout.pane.gap }} testID="yut-review-skin">
-        {bandView}
-        <View style={{ flex: 1, maxWidth: layout.maxWidth.reading, gap: spacing.md }}>{children}</View>
-      </View>
-    );
-  }
+  // One tree in both layouts (only the styles change), so a window that crosses the two-pane line mid-round (a
+  // rotation, a foldable, a split view, a browser resize) keeps the round mounted with its typed keys, tiles and retry.
   return (
-    <View style={{ gap: spacing.md }} testID="yut-review-skin">
+    <View style={panes ? { flexDirection: 'row', alignItems: 'flex-start', gap: layout.pane.gap } : { gap: spacing.md }} testID="yut-review-skin">
       {bandView}
-      {children}
+      <View style={panes ? { flex: 1, maxWidth: layout.maxWidth.reading, gap: spacing.md } : { gap: spacing.md }}>{children}</View>
     </View>
   );
 }

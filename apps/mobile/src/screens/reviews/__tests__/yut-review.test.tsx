@@ -656,6 +656,39 @@ describe('layout (constants table)', () => {
     expect(boardSize(r.root)).toBe(320);
   });
 
+  it('a window that crosses the two-pane line mid-round keeps the round mounted: the keys typed before the flip still count', async () => {
+    setYut(true);
+    const p = planOf(3, ['type-right', 'first', 'first']);
+    plan.current = p;
+    const tree = (size: { width: number; height: number }) => (
+      <TextSizeProvider step="standard">
+        <LayoutProvider value={layoutClassFor(size)}>
+          <DailyReviewScreen navigation={nav()} route={{ key: 'DailyReview', name: 'DailyReview' } as never} />
+        </LayoutProvider>
+      </TextSizeProvider>
+    );
+    const r = await render(tree({ width: 673, height: 900 }));
+    await settle();
+    expect(byTestId(r.root, 'yut-review-skin')[0]!.props.style).not.toMatchObject({ flexDirection: 'row' });
+    await typeKeys(r.root, 'ㅎㅗ');
+    // Phone band to two panes (a tablet turned, a foldable opened, a browser widened), then back.
+    await act(async () => {
+      r.update(tree({ width: 768, height: 1024 }));
+    });
+    await settle();
+    expect(byTestId(r.root, 'yut-review-skin')[0]!.props.style).toMatchObject({ flexDirection: 'row' });
+    await typeKeys(r.root, 'ㅇ');
+    await act(async () => {
+      r.update(tree({ width: 673, height: 900 }));
+    });
+    await settle();
+    await typeKeys(r.root, 'ㅑ');
+    await tap(r.root, 'daily-review-type-done');
+    // Had the round remounted, only the keys after the flip would be typed and the word would read as a miss.
+    expect(byTestId(r.root, 'daily-review-miss')).toHaveLength(0);
+    expect(calls).toContainEqual(['record', 0, expect.objectContaining({ correct: true })]);
+  });
+
   it('largest text (150 %) on a phone: the throw wraps under the board, and the tray wraps inside the band', async () => {
     setYut(true);
     plan.current = planOf(3);
