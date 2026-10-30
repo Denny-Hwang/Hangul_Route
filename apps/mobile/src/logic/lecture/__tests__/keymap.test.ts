@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { HELP_KEYS } from '../help-keys';
 import { commandForKey, type KeyCommand } from '../keymap';
 
 const key = (k: string, mods: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean } = {}) =>
@@ -132,5 +133,28 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
 
   it('unmapped keys return null (so the browser keeps them)', () => {
     for (const k of ['a', 'x', 'Tab', 'F5', 'Shift', 'Control', '1', 'Delete', '', 'ArrowRightX']) expect(key(k)).toBeNull();
+  });
+});
+
+describe('the docked bar order and the Touch and mouse group change no key (AMENDMENTS-PRESENTER-NAV section 8, row PN-3)', () => {
+  // The PR 4 cases, verbatim: every next and previous key of the clicker map.
+  it.each([
+    ['ArrowRight', 'next'],
+    ['ArrowDown', 'next'],
+    ['PageDown', 'next'],
+    [' ', 'next'],
+    ['Spacebar', 'next'],
+    ['Enter', 'next'],
+    ['ArrowLeft', 'prev'],
+    ['ArrowUp', 'prev'],
+    ['PageUp', 'prev'],
+    ['Backspace', 'prev'],
+  ] as Array<[string, KeyCommand]>)('%j -> %j', (k, command) => {
+    expect(key(k)).toEqual(command);
+  });
+
+  it('Help still shows exactly those keys on its next and previous rows', () => {
+    expect(HELP_KEYS.find((r) => r.row === 'next')!.keys).toEqual(['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter']);
+    expect(HELP_KEYS.find((r) => r.row === 'back')!.keys).toEqual(['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace']);
   });
 });

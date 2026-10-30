@@ -38,7 +38,8 @@ const a11yPaths = ['answerMark', 'timerLeft'];
 describe('learner.presenter class tools (F-TCH-004 PR 9)', () => {
   it('has the README keys with their English values', () => {
     const p = en.learner.presenter;
-    expect(learnerPaths).toHaveLength(49);
+    // 49 at PR 9's README, and the five lines of Help's Touch and mouse group (AMENDMENTS-PRESENTER-NAV section 13, row PN-3).
+    expect(learnerPaths).toHaveLength(54);
     expect(p.quiz.sound).toBe('Which letter makes this sound?');
     expect(p.quiz.answer).toBe("Hoya's answer");
     expect(p.timer.done).toBe('All done!');

@@ -51,3 +51,14 @@ export const HELP_KEYS: readonly HelpKeys[] = [
   { row: 'help', caps: [plain('H'), plain('?')], keys: ['h', '?'], command: { overlay: 'help' } },
   { row: 'close', caps: [plain('Esc')], keys: ['Escape'], command: 'escape' },
 ];
+
+/**
+ * The Touch and mouse group above the key rows (AMENDMENTS-PRESENTER-NAV section 9.2; design overlays.md
+ * "Touch and mouse"), in its order, in every layout: swipe (section 6), the Previous and Next buttons
+ * (section 5), a mouse click on a slide with nothing to point at (section 7.2, O4), and what Keep
+ * controls visible does for a screen where the buttons fade. Plain lines, not controls. Row PN-5 adds
+ * `point` (O2) after `click`.
+ */
+export type HelpTouchRow = 'swipe' | 'buttons' | 'click' | 'keep';
+
+export const HELP_TOUCH: readonly HelpTouchRow[] = ['swipe', 'buttons', 'click', 'keep'];

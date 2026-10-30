@@ -3,7 +3,7 @@ import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typogra
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
-import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
+import { HELP_KEYS, HELP_TOUCH, type KeyCap } from '../../../logic/lecture/help-keys';
 import { HELP_WIDTH, KBD_MIN, KEY_COL } from '../stage-metrics';
 import { usePresenterView } from '../presenter-context';
 import { ChipRadios, Cover, ToolButton } from './OverlayParts';
@@ -16,8 +16,11 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * Close. The language is the device's one language (owner items 6 and 7), set on the Display (Aa)
  * sheet of the home and the start screen, so this overlay has no language chips. Real pixels; it
  * scrolls inside the stage box when taller.
- * In a phone window (`phone`, F-TCH-004 section 3.6) one line under the title says how to show
- * the controls: a tap at the bottom of the slide, the bar's strip.
+ * In a phone window (`phone`, F-TCH-004 section 3.6; the overlay layout until the rail, row PN-4) one
+ * line under the title says how to move and how to show the controls: swipe, and a tap on the slide.
+ * Above the key rows, in every layout, the Touch and mouse group (AMENDMENTS-PRESENTER-NAV section 9.2,
+ * `HELP_TOUCH`): a heading and plain lines on swipe, the Previous and Next buttons, a mouse click, and
+ * what Keep controls visible does; nothing in it takes input.
  */
 export function HelpOverlay({
   romanization,
@@ -82,6 +85,16 @@ export function HelpOverlay({
               {m.phoneBar}
             </Text>
           ) : null}
+          <View testID="presenter-help-touch" style={{ gap: spacing.xs }}>
+            <Text {...KOREAN_LINE_BREAK} role="heading" aria-level={3} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary, lineHeight: Math.round(textScale.size.bodyLg * typography.leading.tight) }}>
+              {m.touch.title}
+            </Text>
+            {HELP_TOUCH.map((row) => (
+              <Text {...KOREAN_LINE_BREAK} key={row} testID={`presenter-help-touch-${row}`} style={{ fontSize: textScale.size.body, color: colors.text.primary, lineHeight: Math.round(textScale.size.body * typography.leading.normal) }}>
+                {m.touch[row]}
+              </Text>
+            ))}
+          </View>
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.xl }}>
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>

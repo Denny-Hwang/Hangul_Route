@@ -1874,6 +1874,13 @@ export const learner = {
       clicker: 'Un control de presentaciones funciona sin configurarlo.',
       phoneBar: 'En este teléfono, desliza para avanzar o volver. Toca la diapositiva para ver los controles.',
       keepVisible: 'Dejar los controles a la vista',
+      touch: {
+        title: 'Pantalla táctil y mouse',
+        swipe: 'Desliza a la izquierda para avanzar y a la derecha para volver.',
+        buttons: 'O toca Anterior y Siguiente.',
+        click: 'Con el mouse, haz clic en la diapositiva para avanzar (no en las preguntas).',
+        keep: 'Con «Dejar los controles a la vista» activado, todos los botones se ven siempre.',
+      },
       romanization: 'Romanización',
       romanizationAlways: 'siempre',
       romanizationTap: 'oculta hasta tocar',
@@ -1892,6 +1899,10 @@ export const learner = {
         help: 'Esta ayuda',
         close: 'Cerrar o salir',
       },
+    },
+    nav: {
+      hint: 'Desliza o toca Anterior y Siguiente.',
+      hintOverlay: 'Desliza para avanzar o volver. Toca la diapositiva para ver los controles.',
     },
     state: {
       invalid: {
