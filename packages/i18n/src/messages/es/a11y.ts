@@ -357,4 +357,9 @@ export const a11y = {
     spotFound: (gloss: string) => `Ya encontraste: ${gloss}`,
     slotEmpty: 'Aún sin encontrar',
   },
+  yutReview: {
+    board: 'Tablero de yut',
+    throw: (ko: string, romanization: string, n: number) =>
+      plural('es', n, { one: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó 1 casilla.`, other: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó ${n} casillas.` }),
+  },
 } satisfies DeepPartial<Messages['a11y']>;

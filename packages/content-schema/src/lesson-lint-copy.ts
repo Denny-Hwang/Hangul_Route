@@ -152,6 +152,8 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'hiddenHeritage',
   // The Block Sprint (row CM-32, the Decoding Sprint of section 7.1 F9): a count and the learner's own best, no percentage.
   'decodingSprint',
+  // The Yut Review board over the Daily Review (row CM-39): play only, never a station out of a total or a score.
+  'yutReview',
 ];
 
 export interface ReviewStringFinding {

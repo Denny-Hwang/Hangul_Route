@@ -2136,4 +2136,10 @@ export const learner = {
     best: (n: number) => `내 최고 기록: ${n}개`,
     done: '다 했어요',
   },
+  yutReview: {
+    stations: (n: number) => `${n}칸`,
+    throwAgain: '한 번 더 던져요',
+    pieceHome: '말 하나가 도착했어요!',
+    home: '도착',
+  },
 } satisfies DeepPartial<Messages['learner']>;

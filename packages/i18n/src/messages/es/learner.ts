@@ -2201,4 +2201,10 @@ export const learner = {
     best: (n: number) => `Tu mejor marca: ${n}`,
     done: 'Listo',
   },
+  yutReview: {
+    stations: (n: number) => plural('es', n, { one: '1 casilla', other: `${n} casillas` }),
+    throwAgain: 'Otra tirada',
+    pieceHome: '¡Una ficha llegó a la meta!',
+    home: 'Meta',
+  },
 } satisfies DeepPartial<Messages['learner']>;

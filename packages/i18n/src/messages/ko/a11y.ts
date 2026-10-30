@@ -358,4 +358,8 @@ export const a11y = {
     spotFound: (gloss: string) => `${gloss}, 찾았어요`,
     slotEmpty: '아직 비어 있어요',
   },
+  yutReview: {
+    board: '윷판',
+    throw: (ko: string, romanization: string, n: number) => `던진 결과: ${ko}, ${romanization}. 말이 ${n}칸 움직였어요.`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;
