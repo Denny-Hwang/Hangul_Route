@@ -405,6 +405,8 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     expect(clipUnitOfSource('quest:stage1-letters-q1')).toBe('quest:stage1-letters-q1');
     expect(clipUnitOfSource('minigame:s1-letters-q1-check')).toBe('minigame:s1-letters-q1-check');
     expect(clipUnitOfSource('content/episodes/stage-7/crafts.json')).toBe('episode:stage7-crafts');
+    // A cell's Volume 2 file is its own episode (F-CURR-002 row CM-40), never the cell's Volume 1.
+    expect(clipUnitOfSource('content/episodes/stage-3/crafts.v2.json')).toBe('episode:stage3-crafts-v2');
     expect(clipUnitOfSource('content/stories/hangeul-day.json')).toBe('story:hangeul-day');
     expect(clipUnitOfSource('content/placement/sentences.json')).toBe('placement');
     expect(clipUnitOfSource('content/vocab/family.json')).toBe('topic:family');
