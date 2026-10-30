@@ -117,6 +117,12 @@ function opacityOf(node: ReactTestInstance): number {
 }
 
 const one = (r: ReactTestRenderer, id: string): ReactTestInstance => byTestId(r.root, id)[0]!;
+/** Previous and Next pinned or not (each stands on its own since PN-3's order puts the tools between them). */
+function pinnedPair(r: ReactTestRenderer): string {
+  const prev = String(one(r, 'presenter-nav-prev').props['data-pinned']);
+  expect(one(r, 'presenter-nav-next').props['data-pinned']).toBe(prev);
+  return prev;
+}
 const counter = (r: ReactTestRenderer): string => textOf(one(r, 'presenter-counter'));
 
 async function tick(ms: number): Promise<void> {
@@ -153,7 +159,7 @@ function tapStage(r: ReactTestRenderer, type: 'touch' | 'mouse', dx = 0): void {
 describe('docked, touch seen: Previous and Next never fade (section 5.1)', () => {
   it('after presenter.autoHideMs the pair keeps opacity 1 and takes taps; the tools fade and take none', async () => {
     const r = await lesson(true);
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('true');
+    expect(pinnedPair(r)).toBe('true');
     await tick(presenter.autoHideMs + 1000);
     for (const id of ['presenter-back', 'presenter-next']) {
       expect(opacityOf(one(r, id)), id).toBe(1);
@@ -186,9 +192,9 @@ describe('docked, touch seen: Previous and Next never fade (section 5.1)', () =>
 
   it('touch seen by the first touch press on a mouse-looking page pins the pair from then on', async () => {
     const r = await lesson(false);
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('false');
+    expect(pinnedPair(r)).toBe('false');
     act(() => page.input?.('touch'));
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('true');
+    expect(pinnedPair(r)).toBe('true');
     await tick(presenter.autoHideMs + 1000);
     expect(opacityOf(one(r, 'presenter-next'))).toBe(1);
     expect(await takesPointer(one(r, 'presenter-back'))).toBe(true);

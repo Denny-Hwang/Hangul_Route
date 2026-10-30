@@ -65,7 +65,7 @@ export function edgeGuard(insets: Pick<StageInsets, 'left' | 'right'>): { left: 
 }
 
 /** A swipe: at least `SWIPE_MIN` across and at least `SWIPE_RATIO` times more across than down. */
-function isSwipe(dx: number, dy: number): boolean {
+export function isSwipe(dx: number, dy: number): boolean {
   const ax = Math.abs(dx);
   return ax >= SWIPE_MIN && ax >= SWIPE_RATIO * Math.abs(dy);
 }

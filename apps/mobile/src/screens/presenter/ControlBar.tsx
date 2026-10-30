@@ -2,10 +2,11 @@ import { Icon, borderWidth, colors, layout, motion, radii, shadows, spacing, tou
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import type { Ref, ReactElement } from 'react';
 import { Animated, Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { DOCKED_TOOLS, bandTools, dockedBarLayout, dockedBarMeasured, dockedOrder, moreTools, type DockedSlot, type DockedTool } from '../../logic/lecture/bar-layout';
 import { BAR_SHOW_GRACE_MS, NO_INSETS, type StageInsets } from '../../logic/lecture/stage-constants';
 import type { StatusChip } from '../../logic/lecture/tools';
 import { focusablesIn, rememberFocus, trapFocus } from '../../platform/presenter';
-import { BAR_BAND, CTL_MAX_WIDTH, NEXT_MIN_WIDTH, NEXT_MIN_WIDTH_COMPACT, STAGE_BORDER, STATUS_MIN } from './stage-metrics';
+import { BAR_BAND, BAR_GROUP_GAP, BAR_ROW_GAP, CTL_MAX_WIDTH, NEXT_MIN_WIDTH, NEXT_MIN_WIDTH_COMPACT, STAGE_BORDER, STATUS_MIN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 
 /**
@@ -17,11 +18,18 @@ import { usePresenterView } from './presenter-context';
  * device cannot use (Full screen on a browser without it) is not drawn, never drawn disabled.
  *
  * - **Docked** (every window but a phone's): eight labelled 96 px buttons in their own band under
- *   the stage. The band stays when the bar auto-hides (its content fades; no fade under reduced
- *   motion), so no slide moves. Once touch is seen (`pinNav`, AMENDMENTS-PRESENTER-NAV section
- *   5.1) Previous and Next sit outside the fading part, in the same places: always opaque, always
- *   taking taps, with no grace after a show; the chips and the tools keep the fade and the grace.
- *   After a touch tap on empty stage Next shows a ring for `NUDGE_MS` (`nudge`).
+ *   the stage (AMENDMENTS-PRESENTER-NAV section 5.1, O6): Previous at the start, the status chips,
+ *   Exit, Full screen, Slides, Blank, Timer, Sound, and Next / Reveal at the end, so Sound always
+ *   sits between Exit and Next; on a wide touch window (O9, `wideTouch`) Previous sits just before
+ *   Next. The focus order is the visual order. When one row does not hold them the tools take a row
+ *   above, Previous and Next stay on the bottom row, and if the tools do not fit that row either,
+ *   Timer, Blank and Slides go into More (`dockedBarLayout`, measured on the real labels); the band
+ *   grows by `BAR_BAND` per row and the stage shrinks, so nothing overlaps it. The band stays when
+ *   the bar auto-hides (its content fades; no fade under reduced motion), so no slide moves. Once
+ *   touch is seen (`pinNav`) Previous and Next sit outside the fading part, in the same places:
+ *   always opaque, always taking taps, with no grace after a show; the chips, the tools and More
+ *   keep the fade and the grace. After a touch tap on empty stage Next shows a ring for `NUDGE_MS`
+ *   (`nudge`).
  * - **Compact** (a phone window, section 3.6 phone exception; stage-and-bar.md "Phone"): one row of
  *   `touchTarget.min` controls (Previous, Next / Reveal at 1.5 x, Sound, More) floating over the
  *   stage bottom, inside the bottom safe-area inset. More opens a sheet over the stage ("Lesson
@@ -60,11 +68,13 @@ export interface ControlBarProps {
   compact?: boolean;
   /** The safe-area insets the compact bar keeps clear of. */
   insets?: StageInsets;
-  /** The compact bar's More sheet is open (the presenter holds it, so Esc and the browser's Back close it). */
+  /** The More sheet is open, the compact bar's or the wrapped docked band's (the presenter holds it, so Esc and the browser's Back close it). */
   moreOpen?: boolean;
   onMore?: (open: boolean) => void;
   /** Docked, touch seen: Previous and Next never fade and take taps at once (section 5.1). */
   pinNav?: boolean;
+  /** Docked, a touch window `WIDE_TOUCH_MIN` px wide or wider (O9): Previous sits just before Next. */
+  wideTouch?: boolean;
   /** Docked: Next shows its ring (a touch tap on empty stage, `'nudge-next'`, section 7.2). */
   nudge?: boolean;
 }
@@ -96,6 +106,8 @@ interface CtlProps {
   /** Focus in or out of the bar; the press-in just before a focus marks it as the pointer's. */
   focus: FocusTracker;
   testID?: string;
+  /** The docked bar measures each control's real width for its wrap rule. */
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 /** Tells a focus a pointer press brought (it does not hold the bar) from a keyboard, switch or screen-reader focus (it does). */
@@ -119,7 +131,7 @@ function useFocusTracker(onFocusWithin: (focused: boolean, pointer: boolean) => 
   };
 }
 
-const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, nudge, small, expanded, popup, onPress, focus, testID }, ref) {
+const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, nudge, small, expanded, popup, onPress, focus, testID, onLayout }, ref) {
   const textScale = useTypeScale();
   const fg = primary ? colors.text.onPrimary : colors.text.primary;
   const target = small ? touchTarget.min : touchTarget.hero;
@@ -138,6 +150,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
       onPress={onPress}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
+      {...(onLayout !== undefined ? { onLayout } : {})}
       style={(state) => {
         const { focused } = state as PressState;
         return {
@@ -207,18 +220,29 @@ function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusCh
   );
 }
 
+/** The docked bar's measured widths, per control, for one set of labels at one text size. */
+interface Measured {
+  key: string;
+  sizes: Readonly<Record<string, number>>;
+}
+
 /**
  * The docked bar: one tree for both pointer facts, so the first touch (which pins Previous and Next)
  * never remounts the button it lands on. Mouse only, the whole row fades as one (README D3); touch
- * seen (`pinNav`), only the chips and the tools fade, each group taking the pointer only `live`, and
- * Previous and Next stand outside them in the same places, opaque, taking taps at all times.
+ * seen (`pinNav`), only the chips, the tools and More fade, each group taking the pointer only
+ * `live`, and Previous and Next stand outside them in the same places, opaque, taking taps at all
+ * times. The parts are drawn in `dockedOrder`, which is the focus order; a wrapped band draws its
+ * tools on a row above (out of the flow, so the focus order stays Previous, the chips, the tools,
+ * More, Next) and grows by `BAR_BAND`.
  */
 function DockedBar(props: BarParts): ReactElement {
   const { messages } = usePresenterView();
+  const textScale = useTypeScale();
   const m = messages.learner.presenter.bar;
   const focus = props.focus;
-  const onLayout = (event: LayoutChangeEvent): void => props.onBandHeight?.(event.nativeEvent.layout.height);
   const pinned = props.pinNav === true;
+  const wideTouch = props.wideTouch === true;
+  const moreOpen = props.moreOpen === true;
   const pointer = props.live ? ('auto' as const) : ('none' as const);
   // The row fades as one (mouse only), or its groups do (touch seen). Pinned, the row is `box-none`
   // (no pointer of its own) and each group sets its own (react-native-web writes `auto` and `none`
@@ -226,54 +250,142 @@ function DockedBar(props: BarParts): ReactElement {
   const row = pinned ? { opacity: 1, pointerEvents: 'box-none' as const } : { opacity: props.opacity, pointerEvents: pointer };
   const groupOpacity = pinned ? props.opacity : 1;
   const groupPointer = pinned ? { pointerEvents: pointer } : {};
-  return (
-    <View
-      testID="presenter-bar-band"
-      onLayout={onLayout}
-      style={{
-        minHeight: BAR_BAND,
-        backgroundColor: colors.surface.sunken,
-        paddingVertical: spacing.md,
-        paddingHorizontal: layout.gutter.regular,
-        justifyContent: 'center',
-      }}
-    >
-      <Animated.View
-        testID="presenter-bar-docked"
-        pointerEvents={row.pointerEvents}
-        style={{ opacity: row.opacity, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm }}
-      >
-        {props.chips.length > 0 ? (
+
+  // The wrap rule runs on real widths (labels in the device language at the chosen text size). Each
+  // control reports its own; a width is kept per set of labels and text size, so a tool More holds
+  // keeps its last width, and only grows (Next and Reveal take turns), so the band never flips
+  // between two builds of a slide.
+  const labelsKey = [m.prev.cta, m.reveal.cta, messages.common.buttons.next, m.exit.cta, m.fullscreen.cta, m.grid.cta, m.blank.cta, m.timer.cta, m.sound.cta, String(textScale.size.body)].join('\n');
+  const [measured, setMeasured] = useState<Measured>({ key: labelsKey, sizes: {} });
+  const sizes = measured.key === labelsKey ? measured.sizes : {};
+  const measure =
+    (id: 'prev' | 'next' | DockedTool) =>
+    (event: LayoutChangeEvent): void => {
+      const width = event.nativeEvent.layout.width;
+      setMeasured((current) => {
+        const known = current.key === labelsKey ? current.sizes : {};
+        if ((known[id] ?? -1) >= width - 0.5) return current.key === labelsKey ? current : { key: labelsKey, sizes: known };
+        return { key: labelsKey, sizes: { ...known, [id]: width } };
+      });
+    };
+  const [room, setRoom] = useState(0);
+  const [band, setBand] = useState<number>(BAR_BAND);
+  const onBand = (event: LayoutChangeEvent): void => {
+    const height = event.nativeEvent.layout.height;
+    setBand(height);
+    props.onBandHeight?.(height);
+  };
+
+  const present = DOCKED_TOOLS.filter((tool) => tool !== 'fullscreen' || props.fullscreenSupported);
+  const input = { room, prev: sizes.prev, next: sizes.next, tools: sizes, present, statusMin: STATUS_MIN, gap: BAR_GROUP_GAP, toolGap: spacing.sm };
+  const fit = dockedBarLayout(input);
+  const decided = dockedBarMeasured(input);
+  const wrapped = fit.rows === 2;
+  const onMore = props.onMore;
+  // A band that no longer needs More (a wider window, once measured) closes its sheet.
+  useEffect(() => {
+    if (decided && !fit.more && moreOpen) onMore?.(false);
+  }, [decided, fit.more, moreOpen, onMore]);
+
+  const tool = (id: DockedTool): ReactElement => {
+    switch (id) {
+      case 'exit':
+        return <Ctl key={id} ref={props.exitRef} testID="presenter-exit" label={m.exit.cta} icon="close" onPress={props.onExit} focus={focus} onLayout={measure(id)} />;
+      case 'fullscreen':
+        return <Ctl key={id} testID="presenter-fullscreen" label={m.fullscreen.cta} pressed={props.fullscreen} onPress={props.onFullscreen} focus={focus} onLayout={measure(id)} />;
+      case 'grid':
+        return <Ctl key={id} testID="presenter-grid-button" label={m.grid.cta} onPress={props.onGrid} focus={focus} onLayout={measure(id)} />;
+      case 'blank':
+        return <Ctl key={id} testID="presenter-blank-button" label={m.blank.cta} onPress={props.onBlank} focus={focus} onLayout={measure(id)} />;
+      case 'timer':
+        return <Ctl key={id} testID="presenter-timer" label={m.timer.cta} onPress={props.onTimer} focus={focus} onLayout={measure(id)} />;
+      case 'sound':
+        return <Ctl key={id} testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} focus={focus} onLayout={measure(id)} />;
+    }
+  };
+  // Pinned, Previous and Next take taps whatever the row does; mouse only, they follow the row (no pointer of their own).
+  const pin = { dataSet: { pinned: pinned ? 'true' : 'false' }, ...(pinned ? { pointerEvents: 'auto' as const } : {}) };
+  const part = (slot: DockedSlot): ReactElement => {
+    switch (slot) {
+      case 'prev':
+        return (
+          <View key={slot} testID="presenter-nav-prev" {...pin}>
+            <Ctl testID="presenter-back" label={m.prev.cta} icon="arrow-left" onPress={props.onPrev} focus={focus} onLayout={measure('prev')} />
+          </View>
+        );
+      case 'next':
+        return (
+          <View key={slot} testID="presenter-nav-next" {...pin}>
+            <Ctl testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} onLayout={measure('next')} />
+          </View>
+        );
+      case 'chips':
+        // The chips keep their basis on one row even when none shows, so a chip that appears never wraps the band.
+        return (
           <Animated.View
-            testID="presenter-status"
-            role="status"
+            key={slot}
+            {...(props.chips.length > 0 ? { testID: 'presenter-status', role: 'status' as const } : {})}
             {...groupPointer}
-            style={{ opacity: groupOpacity, flexGrow: 1, flexShrink: 0, flexBasis: STATUS_MIN, minWidth: STATUS_MIN, maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}
+            style={{
+              opacity: groupOpacity,
+              ...(wrapped ? { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 } : { flexGrow: 1, flexShrink: 0, flexBasis: STATUS_MIN, minWidth: STATUS_MIN }),
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: spacing.sm,
+            }}
           >
             <StatusChips chips={props.chips} onTurnSoundOn={props.onTurnSoundOn} focus={focus} />
           </Animated.View>
-        ) : null}
-        <View role="toolbar" aria-label={m.label} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm, maxWidth: '100%' }}>
-          {/* Pinned, the pair takes taps whatever the row does; mouse only, it follows the row (no pointer of its own). */}
-          <View testID="presenter-nav-pair" {...{ dataSet: { pinned: pinned ? 'true' : 'false' } }} {...(pinned ? { pointerEvents: 'auto' as const } : {})} style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <Ctl testID="presenter-back" label={m.prev.cta} icon="arrow-left" onPress={props.onPrev} focus={focus} />
-            <Ctl testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} />
-          </View>
+        );
+      case 'tools':
+        // Wrapped, the tools row is drawn above the bottom row (out of the flow, right-aligned), in the same place in the focus order.
+        return (
           <Animated.View
+            key={slot}
             testID="presenter-bar-tools"
             {...groupPointer}
-            style={{ opacity: groupOpacity, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm, maxWidth: '100%' }}
+            style={{ opacity: groupOpacity, flexDirection: 'row', flexShrink: 0, alignItems: 'center', gap: spacing.sm, ...(wrapped ? { position: 'absolute' as const, top: 0, right: 0 } : {}) }}
           >
-            <Ctl testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} focus={focus} />
-            <Ctl testID="presenter-timer" label={m.timer.cta} onPress={props.onTimer} focus={focus} />
-            <Ctl testID="presenter-blank-button" label={m.blank.cta} onPress={props.onBlank} focus={focus} />
-            <Ctl testID="presenter-grid-button" label={m.grid.cta} onPress={props.onGrid} focus={focus} />
-            {props.fullscreenSupported ? <Ctl testID="presenter-fullscreen" label={m.fullscreen.cta} pressed={props.fullscreen} onPress={props.onFullscreen} focus={focus} /> : null}
-            <Ctl ref={props.exitRef} testID="presenter-exit" label={m.exit.cta} icon="close" onPress={props.onExit} focus={focus} />
+            {bandTools(present, fit.more).map(tool)}
           </Animated.View>
-        </View>
-      </Animated.View>
-    </View>
+        );
+      case 'more':
+        return (
+          <Animated.View key={slot} {...groupPointer} style={{ opacity: groupOpacity }}>
+            <Ctl testID="presenter-more" label={m.more.cta} popup="dialog" expanded={moreOpen} onPress={() => onMore?.(!moreOpen)} focus={focus} />
+          </Animated.View>
+        );
+    }
+  };
+  return (
+    <>
+      <View
+        testID="presenter-bar-band"
+        onLayout={onBand}
+        style={{
+          minHeight: BAR_BAND,
+          backgroundColor: colors.surface.sunken,
+          paddingVertical: spacing.md,
+          paddingHorizontal: layout.gutter.regular,
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        <Animated.View
+          testID="presenter-bar-docked"
+          role="toolbar"
+          aria-label={m.label}
+          onLayout={(event: LayoutChangeEvent) => setRoom(event.nativeEvent.layout.width)}
+          pointerEvents={row.pointerEvents}
+          {...{ dataSet: { rows: String(fit.rows), more: fit.more ? 'true' : 'false', order: wideTouch ? 'o9' : 'o6' } }}
+          style={{ opacity: row.opacity, flexDirection: 'row', alignItems: 'center', gap: BAR_GROUP_GAP, ...(wrapped ? { paddingTop: touchTarget.hero + BAR_ROW_GAP } : {}) }}
+        >
+          {dockedOrder(fit, wideTouch).map(part)}
+        </Animated.View>
+      </View>
+      {fit.more && moreOpen ? <MoreSheet {...props} insets={NO_INSETS} docked={{ bottom: band + spacing.sm, tools: moreTools(present) }} /> : null}
+    </>
   );
 }
 
@@ -330,11 +442,15 @@ function CompactBar(props: BarParts): ReactElement {
  * a modal sheet over the stage, the slide underneath. Its title, Close (focused on open), the status
  * chips, then the rest of the controls as `touchTarget.min` buttons; Tab stays inside and focus goes
  * back to More when it closes. A control runs its tool and closes the sheet.
+ * The wrapped docked band's More (`docked`, AMENDMENTS-PRESENTER-NAV section 5.1; stage-and-bar.md
+ * "Navigation (PN-0b)", the More fallback) is the same sheet over the stage, just above the band at
+ * its right, holding only the tools it took (Slides, Timer, Blank); the band keeps the chips and the rest.
  */
-function MoreSheet(props: BarParts & { insets: StageInsets }): ReactElement {
+function MoreSheet(props: BarParts & { insets: StageInsets; docked?: { bottom: number; tools: readonly DockedTool[] } }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
+  const docked = props.docked;
   const self = useRef<View>(null);
   const close = useRef<View>(null);
   useEffect(() => {
@@ -360,16 +476,20 @@ function MoreSheet(props: BarParts & { insets: StageInsets }): ReactElement {
       role="dialog"
       aria-modal
       aria-label={m.label}
-      style={{
-        position: 'absolute',
-        left: props.insets.left + spacing.sm,
-        right: props.insets.right + spacing.sm,
-        bottom: props.insets.bottom + spacing.sm,
-        top: props.insets.top + spacing.sm,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        zIndex: z.modal,
-      }}
+      style={
+        docked
+          ? { position: 'absolute', left: layout.gutter.regular, right: layout.gutter.regular, bottom: docked.bottom, alignItems: 'flex-end', zIndex: z.modal }
+          : {
+              position: 'absolute',
+              left: props.insets.left + spacing.sm,
+              right: props.insets.right + spacing.sm,
+              bottom: props.insets.bottom + spacing.sm,
+              top: props.insets.top + spacing.sm,
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              zIndex: z.modal,
+            }
+      }
       pointerEvents="box-none"
     >
       <View
@@ -391,19 +511,31 @@ function MoreSheet(props: BarParts & { insets: StageInsets }): ReactElement {
             </Text>
             <SheetButton ref={close} testID="presenter-more-close" label={messages.common.buttons.close} onPress={() => props.onMore?.(false)} />
           </View>
-          {props.chips.length > 0 ? (
+          {!docked && props.chips.length > 0 ? (
             <View testID="presenter-status" role="status" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
               <StatusChips chips={props.chips} onTurnSoundOn={props.onTurnSoundOn} focus={props.focus} />
             </View>
           ) : null}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {button('presenter-grid-button', m.grid.cta, props.onGrid)}
-            {button('presenter-timer', m.timer.cta, props.onTimer)}
-            {button('presenter-blank-button', m.blank.cta, props.onBlank)}
-            {props.fullscreenSupported ? button('presenter-fullscreen', m.fullscreen.cta, props.onFullscreen, props.fullscreen) : null}
-            {button('presenter-help-button', messages.learner.presenter.home.help.cta, props.onHelp)}
-            {button('presenter-exit', m.exit.cta, props.onExit)}
-          </View>
+          {docked ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {docked.tools.map((tool) =>
+                tool === 'grid'
+                  ? button('presenter-grid-button', m.grid.cta, props.onGrid)
+                  : tool === 'timer'
+                    ? button('presenter-timer', m.timer.cta, props.onTimer)
+                    : button('presenter-blank-button', m.blank.cta, props.onBlank),
+              )}
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {button('presenter-grid-button', m.grid.cta, props.onGrid)}
+              {button('presenter-timer', m.timer.cta, props.onTimer)}
+              {button('presenter-blank-button', m.blank.cta, props.onBlank)}
+              {props.fullscreenSupported ? button('presenter-fullscreen', m.fullscreen.cta, props.onFullscreen, props.fullscreen) : null}
+              {button('presenter-help-button', messages.learner.presenter.home.help.cta, props.onHelp)}
+              {button('presenter-exit', m.exit.cta, props.onExit)}
+            </View>
+          )}
         </ScrollView>
       </View>
     </View>
