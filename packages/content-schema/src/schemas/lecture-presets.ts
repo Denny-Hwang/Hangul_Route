@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { catalogEpisode, storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, cellEpisodeIds, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -239,7 +239,10 @@ export function fillToLength(candidates: readonly LectureBlock[], minutes: numbe
 
 /** Route quests (section 4.2): lesson quests only, playable only, in route order. */
 function routeQuests(catalog: Catalog): RouteQuest[] {
-  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable);
+  // The route is each cell's first volume (F-CURR-002 row CM-40): a later volume adds no route day, so a class or a
+  // learner past the end of the route has no next lesson, and a stage's quests stay one run (rows CM-40, CM-41).
+  const later = new Set(catalog.cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable && !later.has(q.episodeId));
 }
 
 const stageNumberOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
