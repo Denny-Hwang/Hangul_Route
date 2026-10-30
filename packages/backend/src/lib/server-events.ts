@@ -202,7 +202,7 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
 
 /**
  * Lecture events (F-TCH-004 section 3.14 as amended by AMENDMENTS-LECTURE-V2
- * section 11) carry no profile id and, per name, only the documented keys:
+ * section 11 and AMENDMENTS-PRESENTER-NAV section 12) carry no profile id and, per name, only the documented keys:
  * codes from their lists, booleans, and whole-number counts within bounds that
  * hold the largest deck the schema allows (`LECTURE_MAX_BLOCKS` 30 episode blocks
  * of the largest cell, 172 slides today, is about 5200 slides; reveals are several
@@ -232,7 +232,20 @@ const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
     voice: oneOf(['ready', 'none', 'unknown']),
     offlineReady: isBoolean,
   },
-  'lecture.complete': { slidesShown: wholeUpTo(LECTURE_SLIDES_MAX), minutes: wholeUpTo(600), reveals: wholeUpTo(LECTURE_REVEALS_MAX) },
+  'lecture.complete': {
+    slidesShown: wholeUpTo(LECTURE_SLIDES_MAX),
+    minutes: wholeUpTo(600),
+    reveals: wholeUpTo(LECTURE_REVEALS_MAX),
+    // AMENDMENTS-PRESENTER-NAV section 12 (PN-1, Worker first): the layout code and
+    // navigation counts by source. No coordinates, ids or timings are ever kept.
+    navLayout: oneOf(['docked', 'rail', 'overlay']),
+    stepsButton: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsSwipe: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsKey: wholeUpTo(LECTURE_REVEALS_MAX),
+    stepsClick: wholeUpTo(LECTURE_REVEALS_MAX),
+    quickBacks: wholeUpTo(LECTURE_REVEALS_MAX),
+    points: wholeUpTo(LECTURE_REVEALS_MAX),
+  },
   'lecture.tool_used': { tool: oneOf(['timer', 'picker', 'blank', 'pause', 'grid', 'fullscreen']) },
   'lecture.deck_rejected': { reason: oneOf(LECTURE_DECODE_FAILURES) },
 };

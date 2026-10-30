@@ -264,6 +264,67 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
     expect(keptEventFields('lecture.start', undefined, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
     expect(JSON.stringify(keptEventFields('lecture.start', { ...start, ...smuggled }, 'profile:a'))).not.toContain('Minho');
   });
+
+  describe('[PN-1] navigation counts on lecture.complete (AMENDMENTS-PRESENTER-NAV section 12: a layout code and six counts only)', () => {
+    const complete = { slidesShown: 40, minutes: 22, reveals: 130 };
+    const nav = { navLayout: 'rail', stepsButton: 31, stepsSwipe: 12, stepsKey: 0, stepsClick: 4, quickBacks: 2, points: 9 };
+    const COUNTS = ['stepsButton', 'stepsSwipe', 'stepsKey', 'stepsClick', 'quickBacks', 'points'] as const;
+
+    it('keeps navLayout from its list and the six counts beside the existing keys, with no profile id', () => {
+      expect(keptEventFields('lecture.complete', { ...complete, ...nav }, 'profile:a')).toEqual({ profileId: undefined, payload: { ...complete, ...nav } });
+      for (const navLayout of ['docked', 'rail', 'overlay']) {
+        expect(keptEventFields('lecture.complete', { ...complete, ...nav, navLayout }, undefined).payload).toEqual({ ...complete, ...nav, navLayout });
+      }
+    });
+
+    it('drops a layout off its list', () => {
+      for (const navLayout of ['grid', 'Docked', 'phone', '', 'docked ', 1, true, null, ['rail'], { layout: 'rail' }]) {
+        expect(keptEventFields('lecture.complete', { ...complete, ...nav, navLayout }, undefined).payload).toEqual({ ...complete, ...COUNTS.reduce((kept, key) => ({ ...kept, [key]: nav[key] }), {}) });
+      }
+    });
+
+    it('keeps each count from 0 to 100000 as a whole number and drops a negative, a fraction, a string or one past the bound', () => {
+      for (const key of COUNTS) {
+        for (const good of [0, 1, 99_999, 100_000]) expect(keptEventFields('lecture.complete', { ...complete, [key]: good }, undefined).payload).toEqual({ ...complete, [key]: good });
+        for (const bad of [-1, 0.5, 2.5, '4', '0', 100_001, Number.NaN, Number.POSITIVE_INFINITY, null, true, [3]]) {
+          expect(keptEventFields('lecture.complete', { ...complete, [key]: bad }, undefined).payload).toEqual(complete);
+        }
+      }
+      expect(keptEventFields('lecture.complete', { navLayout: 'overlay', stepsButton: -3, stepsSwipe: 1.25, stepsKey: '7', stepsClick: 100_001, quickBacks: 0, points: 100_000 }, undefined).payload).toEqual({
+        navLayout: 'overlay',
+        quickBacks: 0,
+        points: 100_000,
+      });
+    });
+
+    it('drops any other key: coordinates, slide or option ids, timings, a deck title, the profile id', () => {
+      const smuggled = {
+        x: 120,
+        y: 48,
+        slideId: 'slide:12',
+        optionId: 'option:3',
+        stepMs: [400, 1999],
+        title: 'Week 3 with Minho',
+        deckId: 'lecture:abc123',
+        profileId: 'profile:a',
+        railSize: 'compact',
+        pointed: 'option:2',
+        stepsTotal: 47,
+      };
+      const kept = keptEventFields('lecture.complete', { ...complete, ...nav, ...smuggled }, 'profile:a');
+      expect(kept).toEqual({ profileId: undefined, payload: { ...complete, ...nav } });
+      expect(JSON.stringify(kept)).not.toContain('Minho');
+    });
+
+    it('a payload from a build without the keys is unchanged, and the keys stay off the other lecture names', () => {
+      expect(keptEventFields('lecture.complete', complete, undefined).payload).toEqual(complete);
+      expect(keptEventFields('lecture.complete', { slidesShown: 3 }, undefined).payload).toEqual({ slidesShown: 3 });
+      expect(keptEventFields('lecture.complete', {}, undefined).payload).toBeUndefined();
+      expect(keptEventFields('lecture.complete', { ...nav }, undefined).payload).toEqual(nav);
+      expect(keptEventFields('lecture.start', { source: 'console', ...nav }, undefined).payload).toEqual({ source: 'console' });
+      expect(keptEventFields('lecture.tool_used', { tool: 'timer', ...nav }, undefined).payload).toEqual({ tool: 'timer' });
+    });
+  });
 });
 
 describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes only, no profile id)', () => {
