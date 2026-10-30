@@ -81,7 +81,8 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
 
   it('orders the lesson quests by route (cell by cell), then the story quests in shelf order', () => {
     const lessons = CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual(CATALOG.cells.flatMap((c) => c.questIds));
+    // A cell's later volumes (row CM-40; Stage 4 Nature since row CM-41 S4) follow every first volume, in grid order.
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))]);
     expect(CATALOG.quests.filter((q) => q.kind === 'story').map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 });
