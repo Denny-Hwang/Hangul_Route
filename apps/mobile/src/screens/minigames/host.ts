@@ -9,13 +9,25 @@
  */
 export type HostMode = 'quest' | 'check' | 'review' | 'vocab' | 'preview';
 
+/** What a game says about an answer beside right or wrong. */
+export interface AnswerMeta {
+  /** The round's item, for the memory store (F-CURR-002 row CM-12). */
+  itemId?: string;
+  /**
+   * The memory store records this first answer as a hinted right answer (no promotion, no demotion; section 4.3):
+   * Dictation's "Show how it sounds", or a typed answer one letter off (row CM-31). The stars still follow `correct`.
+   */
+  hinted?: boolean;
+}
+
 export interface MinigameHost {
   mode: HostMode;
   /**
    * Report an answer. The first answer for a `roundKey` is scored; later ones
-   * are retries (`logic/first-try.ts`).
+   * are retries (`logic/first-try.ts`). `hinted`: given with a hint showing (Story Order's Show meanings, F-CURR-002
+   * row CM-34), still scored as usual; a right one reaches the memory store as hinted.
    */
-  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string }): void;
+  answer(roundKey: string | number, correct: boolean, meta?: AnswerMeta): void;
   /** The game is over. A quest host marks the step complete, then closes. */
   complete(): void;
 }

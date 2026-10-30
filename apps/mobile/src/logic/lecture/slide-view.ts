@@ -428,7 +428,8 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
     case 'meaning':
       return wordSound(prompt.ko, prompt.romanization);
     case 'check':
-      return prompt.target ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
+      // A Cloze Pick sentence with its gap (row CM-30) is not said: a gap read aloud says "underscore".
+      return prompt.target && !prompt.target.ko.includes(SLOT_MARKER) ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
     case 'odd-one-out':
       // Its letters are the answer.
       return undefined;
@@ -489,7 +490,8 @@ export function frameSpoken(frame: FrameText): SpokenForm {
  * The question slides (LV-S2): a listen question its prompt (a letter or syllable round at the
  * sound rate), a reply question the other speaker's line, a realia question its key word or, with
  * none, its sheet (`quizSound`). A sentence build (LV-S3) its sentence, at every build. A
- * write-together slide (LV-S4) the Korean it shows, never its answer early (`writeSound`).
+ * write-together slide (LV-S4) the Korean it shows, never its answer early (`writeSound`). A Role Play turn
+ * (F-CURR-002 section 8) the partner's line.
  */
 export function slideSound(slide: Slide | undefined, reveal?: number): SlideSound | undefined {
   if (slide === undefined) return undefined;
@@ -534,8 +536,14 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
     case 'sentence-build':
       // The whole sentence at every build, as the learner's Sentence Builder plays it (Hear it) before it is built.
       return { spoken: slide.sentence.spoken, kind: 'sentence' };
+    case 'hidden-heritage':
+      // The word to find, as the learner's game plays it.
+      return { spoken: slide.word.spoken, kind: 'word' };
     case 'write-together':
       return writeSound(slide, reveal ?? slide.builds.length - 1);
+    case 'role-play':
+      // The partner's line, at the sentence rate, as the learner's Role Play says it (the replies are the room's to read).
+      return { spoken: slide.line.spoken, kind: 'sentence' };
     case 'title':
     case 'story':
     case 'activity':
@@ -547,7 +555,8 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
 /**
  * A write-together slide's sound (LV-S4): the Korean on screen, never ahead of it. A type prompt has
  * none until its answer (the learner's Type Hangul plays nothing before the learner types either),
- * then the target; a trace its word, at the word rate, as the learner's Trace a Word plays its block;
+ * then the target, but a Dictation round (`hear`, "Type the word you hear") plays its target from the
+ * first build, as the learner's hear mode does, while its Korean waits for the answer; a trace its word, at the word rate, as the learner's Trace a Word plays its block;
  * a frame its own Korean with a pause at each gap (`frameSpoken`), then its banks' words, then the
  * example; the name round its frame, then the blocks of the table page on screen, at the word rate.
  */
@@ -556,7 +565,8 @@ function writeSound(slide: Of<'write-together'>, reveal: number): SlideSound | u
   const rate = (ko: string): PromptKind => (/\s/.test(ko.trim()) ? 'sentence' : 'word');
   switch (slide.variant) {
     case 'type':
-      return view.answer ? { spoken: slide.answer.spoken, kind: rate(slide.answer.ko) } : undefined;
+      // A Dictation round ("Type the word you hear") plays its target from the first build; the Korean still waits.
+      return view.answer || slide.hear ? { spoken: slide.answer.spoken, kind: rate(slide.answer.ko) } : undefined;
     case 'trace':
       return { spoken: slide.word.spoken, kind: 'word' };
     case 'frame':

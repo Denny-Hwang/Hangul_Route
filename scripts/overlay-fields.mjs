@@ -21,7 +21,8 @@ export const OVERLAY_ENTITY_ID = /^[a-z0-9-]+:[a-z0-9-:.]+$/;
 export const OVERLAY_FIELDS = Object.freeze({
   jamo: ["gloss", "soundHint", "exampleWord.gloss", "nameHint"],
   card: ["title", "blurb", "fact"],
-  episode: ["title", "subtitle", "hoyaIntro"],
+  // F-CURR-002 row CM-3C: a lesson cell's notes (`culture[]`, by note id), shown as the Did you know? tip.
+  episode: ["title", "subtitle", "hoyaIntro", "culture.<noteId>.text"],
   quest: [
     "title",
     "blurb",
@@ -48,6 +49,8 @@ export const OVERLAY_FIELDS = Object.freeze({
     "dialogue.<turn>.npc",
     "dialogue.<turn>.options.<option>.gloss",
     "listenPick.rounds.<roundId>.prompt",
+    // F-CURR-002 row CM-3A S2: a picture option's label (optional: see OPTIONAL_OVERLAY_FIELDS).
+    "listenPick.rounds.<roundId>.options.<option>.label",
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
     // F-CURR-001 §3.10: a lesson's Pic-Word Match pair, whose gloss the word tile and the picture's
     // text fallback show; a board has no id, so `<board>` is its index.
@@ -67,6 +70,32 @@ export const OVERLAY_FIELDS = Object.freeze({
     "traceWord.rounds.<roundId>.word.gloss",
     "writeFrame.rounds.<roundId>.frame.gloss",
     "writeFrame.rounds.<roundId>.slots.<slot>.bank.<word>.gloss",
+    // F-CURR-002 row CM-30: Cloze Pick's sentence meaning, its tiles' content glosses and a value gap's card (its alt, title and lines).
+    "clozePick.rounds.<roundId>.sentence.gloss",
+    "clozePick.rounds.<roundId>.tiles.<tile>.gloss",
+    "clozePick.realia.alt",
+    "clozePick.realia.title.gloss",
+    "clozePick.realia.entries.<entry>.text.gloss",
+    "clozePick.realia.entries.<entry>.value.gloss",
+    // F-CURR-002 row CM-34: a Story Order panel's caption gloss (Show meanings, the replay, the fallback's label).
+    "storyOrder.rounds.<roundId>.panels.<panelId>.caption.gloss",
+    // F-CURR-002 row CM-35: a Role Play scene.
+    "rolePlay.scene.title.gloss",
+    "rolePlay.scene.partner.gloss",
+    "rolePlay.scene.nodes.<nodeId>.line.gloss",
+    "rolePlay.scene.nodes.<nodeId>.replies.<replyId>.text.gloss",
+    "rolePlay.scene.nodes.<nodeId>.replies.<replyId>.why",
+    "rolePlay.scene.nodes.<nodeId>.closing",
+    // F-CURR-002 row CM-36: a Hidden Heritage scene's alt text and the meanings that name its spots.
+    "hiddenHeritage.rounds.<roundId>.alt",
+    "hiddenHeritage.rounds.<roundId>.targets.<thing>.word.gloss",
+    "hiddenHeritage.rounds.<roundId>.others.<thing>.word.gloss",
+    // F-CURR-002 row CM-33: the Stage 1 additions' Match Shape lines.
+    "matchShape.rounds.<roundId>.note",
+    "matchShape.rounds.<roundId>.diffNote",
+    // F-CURR-002 row CM-38: My Story's frames (the Write Frame shape under `myStory.frames`).
+    "myStory.frames.<roundId>.frame.gloss",
+    "myStory.frames.<roundId>.slots.<slot>.bank.<word>.gloss",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],
@@ -96,7 +125,20 @@ export const OVERLAY_FIELDS = Object.freeze({
   vocab: ["gloss", "senseNote"],
   "vocab-topic": ["title", "blurb", "hoyaIntro"],
   pitem: ["gloss", "options.<optionId>.gloss"],
+  // F-CURR-002 row CM-37: a Hidden Heritage scene (packages/design-system/src/scene-art/hidden-heritage/): its alt
+  // text, the meanings that name its spots in the reference round, its subject and the facts of its card back.
+  scene: [
+    "art.alt",
+    "round.alt",
+    "round.targets.<thing>.word.gloss",
+    "round.others.<thing>.word.gloss",
+    "note.subject",
+    "note.facts.<factId>.claim",
+  ],
 });
+
+/** Mirror of OPTIONAL_OVERLAY_FIELDS: applied when given, never counted missing (F-CURR-002 row CM-3A S2). */
+export const OPTIONAL_OVERLAY_FIELDS = Object.freeze(["listenPick.rounds.<roundId>.options.<option>.label"]);
 
 /** Never overridable, whatever the prefix. */
 export const NEVER_OVERRIDABLE_FIELDS = Object.freeze([
@@ -119,7 +161,7 @@ export const NEVER_OVERRIDABLE_FIELDS = Object.freeze([
  * (§3.6 interim): an id of these prefixes that is in no content/**\/*.json entity is
  * checked by apps/mobile/src/content/__tests__/overlays.test.ts, not by the validator.
  */
-export const TS_RESIDENT_PREFIXES = Object.freeze(["jamo", "card", "episode", "quest", "minigame", "stage", "theme"]);
+export const TS_RESIDENT_PREFIXES = Object.freeze(["jamo", "card", "episode", "quest", "minigame", "stage", "theme", "scene"]);
 
 export function overlayPrefix(entityId) {
   const at = entityId.indexOf(":");
@@ -315,6 +357,7 @@ export function translatableFields(entityId, entity) {
   const out = [];
   const bySource = new Map();
   for (const pattern of patterns) {
+    if (OPTIONAL_OVERLAY_FIELDS.includes(pattern)) continue;
     for (const [field, path] of expand(entity, pattern.split("."), [], [])) {
       const at = path.join("\u0000");
       const first = bySource.get(at);

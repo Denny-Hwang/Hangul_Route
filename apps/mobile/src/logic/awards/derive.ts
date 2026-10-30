@@ -1,4 +1,4 @@
-import type { Episode, ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
+import { requiredQuestIds, type Episode, type ProgressSnapshot, type StageKey } from '@hangul-route/content-schema';
 import { isEpisodeComplete, stageAvailability } from '../journey';
 import { shouldUnlockCard } from '../reward';
 import { parseUnlockedBy } from './rules';
@@ -43,15 +43,17 @@ const latest = (times: readonly string[]): string => times.reduce(laterOf);
 
 /**
  * Complete episodes and when each completed (the latest `completedAt` among
- * its quests). Grid and shelf episodes both count; a preview or draft
- * episode never completes.
+ * its required quests; an optional addition of F-CURR-002 section 4.2 never
+ * moves it). Grid and shelf episodes both count; a preview or draft episode
+ * never completes.
  */
 export function completedEpisodes(world: Pick<AwardWorld, 'episodes'>, snapshot: Pick<ProgressSnapshot, 'quests'>): Map<string, string> {
   const out = new Map<string, string>();
   for (const episode of world.episodes) {
     if (!isPlayable(episode) || !isEpisodeComplete(episode, snapshot.quests)) continue;
+    const required = requiredQuestIds(episode);
     const times = snapshot.quests
-      .filter((q) => q.episodeId === episode.id && episode.questIds.includes(q.questId))
+      .filter((q) => q.episodeId === episode.id && required.includes(q.questId))
       .flatMap((q) => (q.completedAt ? [q.completedAt] : []));
     out.set(episode.id, latest(times));
   }
@@ -65,10 +67,11 @@ export function completedEpisodes(world: Pick<AwardWorld, 'episodes'>, snapshot:
  * latch is synced as the earliest time per quest, so every device derives the same instant.
  */
 export function firstFinishedAt(episode: Episode | undefined, snapshot: Pick<ProgressSnapshot, 'quests' | 'questDoneAt'>): string | undefined {
-  if (!episode || !isPlayable(episode) || episode.questIds.length === 0) return undefined;
+  const required = episode ? requiredQuestIds(episode) : [];
+  if (!episode || !isPlayable(episode) || required.length === 0) return undefined;
   const latch: Readonly<Record<string, string>> = snapshot.questDoneAt ?? {};
   const times: string[] = [];
-  for (const questId of episode.questIds) {
+  for (const questId of required) {
     const done = Object.prototype.hasOwnProperty.call(latch, questId) ? latch[questId] : undefined;
     const run = snapshot.quests.find((q) => q.questId === questId && q.episodeId === episode.id)?.completedAt;
     const first = done !== undefined && run ? (isBefore(run, done) ? run : done) : (done ?? run);

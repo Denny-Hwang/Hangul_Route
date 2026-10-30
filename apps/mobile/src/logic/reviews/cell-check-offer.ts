@@ -1,4 +1,4 @@
-import type { CellLevel, Episode } from '@hangul-route/content-schema';
+import { requiredQuestIds, type CellLevel, type Episode } from '@hangul-route/content-schema';
 import { playableEpisodes } from '../next-quest';
 
 /**
@@ -87,11 +87,14 @@ export interface JumpCell {
   questIds: readonly string[];
 }
 
-/** The route's grid cells a jump reads: the playable grid episodes with quests (a preview placeholder is not one). */
+/**
+ * The route's grid cells a jump reads: the playable grid episodes with quests (a preview placeholder is not one), each
+ * with the quests it needs (`requiredQuestIds`: an optional addition of F-CURR-002 section 4.2 never holds a stage open).
+ */
 export function jumpCells(episodes: readonly Episode[]): JumpCell[] {
   return playableEpisodes(episodes)
-    .filter((e) => e.questIds.length > 0)
-    .map((e) => ({ id: e.id, stage: e.stage, questIds: e.questIds }));
+    .map((e) => ({ id: e.id, stage: e.stage, questIds: requiredQuestIds(e) }))
+    .filter((c) => c.questIds.length > 0);
 }
 
 export interface StageJumpOfferInput {

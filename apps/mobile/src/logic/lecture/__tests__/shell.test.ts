@@ -7,6 +7,7 @@ import { lectureBundle } from '../content';
 import { initialPresenterState } from '../controls';
 import { expandDeck, withBuilds, type ExpandedDeck, type Slide } from '../deck-builder';
 import { emptyRecent, rememberDeck, setLastSlide } from '../recent';
+import { rolePlaySlides } from './role-play-slides';
 import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
@@ -144,16 +145,19 @@ describe('homeStart', () => {
 });
 
 describe('runDeck: the slides this build draws', () => {
-  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds and the write-together slides (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3 and LV-S4)', () => {
+  it('draws title, letter, syllable, word, order, card, activity, quiz, story, story check, End, the reading slides, the sentence builds, the write-together slides and the Role Play turns (PR 6, PR 7, PR 9, PR 11, LV-S1, LV-S3, LV-S4 and CM-35)', () => {
     expect([...SHELL_SLIDE_KINDS].sort()).toEqual([
       'activity',
       'card',
       'end',
+      // F-CURR-002 row CM-36: the Hidden Heritage scene hunt.
+      'hidden-heritage',
       'letter',
       'pattern',
       'quiz',
       'read-along',
       'realia',
+      'role-play',
       'sentence',
       'sentence-build',
       'sequence',
@@ -446,10 +450,22 @@ describe('the End slide', () => {
   });
 });
 
+describe('slideDetail: the Role Play slide (F-CURR-002 section 8, row CM-35)', () => {
+  it('names a turn by its question and the partner line; never by a reply, which would be the answer', () => {
+    const [first, second] = rolePlaySlides();
+    const names = { activity: () => '', reply: 'Which answer fits?' };
+    expect(slideDetail(first!, names)).toBe('Which answer fits?, librarian, 안녕하세요!, annyeonghaseyo, Hello!');
+    for (const r of second!.replies) expect(slideDetail(second!, names)).not.toContain(r.ko);
+    // Without the names, the partner line alone.
+    expect(slideDetail(second!)).toBe('librarian, 무슨 책을 찾아요?, museun chaegeul chajayo, What book are you looking for?');
+  });
+});
+
 describe('slideDetail: the question slides (LV-S2)', () => {
   const slides = expandDeck(
     deckOf([
-      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      // Row CM-3A S3: a Stage 3 quest whose Apply is heard (the Checks rotate Cloze Pick, Sentence Builder and Dictation).
+      { kind: 'quest', id: 'quest:stage3-nature-q1' },
       { kind: 'quest', id: 'quest:stage4-life-q1' },
       { kind: 'quest', id: 'quest:stage6-life-q3' },
     ]),
@@ -468,8 +484,10 @@ describe('slideDetail: the question slides (LV-S2)', () => {
       const detail = slideDetail(of(ask), names);
       for (const o of of(ask).options) if (o.ko !== undefined) expect(detail).not.toContain(o.ko);
     }
-    // A listen round that asks for the reply to what was heard (the Stage 4 Check) is named by the reply question.
-    const replyRound = slides.find((s) => s.kind === 'quiz' && s.prompt.ask === 'listen' && s.prompt.reply === true)!;
+    // A listen round that asks for the reply to what was heard is named by the reply question. The shipped Stage 4 and
+    // Stage 6 Checks that asked so are re-authored by rows CM-3A S4 and S6, so the round is the listen slide marked so.
+    const listen = of('listen');
+    const replyRound: Slide = { ...listen, prompt: { ...listen.prompt, reply: true } as typeof listen.prompt };
     expect(slideDetail(replyRound, names)).toBe('Which answer fits?');
     // Without the names a listen or reply question says its kind alone.
     expect(slideDetail(of('listen'))).toBe('');

@@ -30,7 +30,7 @@ const NAMED = /^_expo\/static\/js\/web\/(.+)-([0-9a-f]{32})\.js$/;
  */
 export const PRECACHE_BUDGET = Object.freeze({
   // The start bundle must not grow. The line is the latest measurement plus a rounding margin (the last entry below,
-  // 4,750,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
+  // 4,760,000 B); the entries before it are its history. It began as the size after CM-8 moved the stories out
   // (6,345,469 B raw / 1,573,399 B gzip, the release build of CM-8's final code on CM-5's head, no recorded clips;
   // 7,337,815 B after CM-5, 8,321,783 B before CM-5) plus a 4,531 B rounding margin. A row that adds to it raises
   // this line with its measurement; the es / ko story overlays still in the start bundle leave it with row CM-8b,
@@ -103,7 +103,16 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
-  startBundleRaw: 4_760_000,
+  // The F-CURR-002 Phase 3 integration (rows CM-30 to CM-39, CM-3A S2 to S7 and CM-3B, integrate/curr-phase3) on main
+  // c84df434e (4,751,444 B, as 524961dae) measures 4,815,388 B raw / 1,286,375 B gzip (release `build:web`, Metro cache
+  // cleared; the app-host build 4,815,544 B): +63,944 B. Each row fits under the 4,760,000 B line alone; their doors,
+  // fallbacks, schemas, lecture mappings and English strings add up (each game itself is a precached screen chunk).
+  // Per row, measured alone on main 524961dae (or on its parent): CM-30 +10,791, CM-32 +7,531, CM-34 +7,102, CM-38
+  // +7,082, CM-36 +7,006, CM-35 +6,977, CM-33 +6,652, CM-31 +6,168, CM-3A S2 +1,623, CM-3C +927, CM-3A S7 about +579,
+  // CM-39 +333, CM-3A S4 about +330, the four CM-37 scene loader lines +1,140, CM-3A S6 about +207, CM-3A S3 +67, CM-3B
+  // 0: 64,515 B in all, 571 B more than the merge measures (code the rows share counts once). The line is the
+  // measurement plus a 4,612 B rounding margin (F-CURR-002 section 10).
+  startBundleRaw: 4_820_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -120,6 +129,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // the first time its screens open. Measured when GU-3 landed (see SCREEN_CHUNKS); the line leaves room for GU-4's
   // save screens, which join the same chunk.
   screenChunkRaw: 60_000,
+  // Each Hidden Heritage scene chunk (F-CURR-002 §10 ceilings table, "Hidden Heritage scene 25,000 B each", row CM-36): the
+  // scene's description, the setting and props it adds, its reference round and its note, as built.
+  sceneChunkRaw: 25_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
   // crossing it triggers CM-5B (Save for offline). On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
   // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
@@ -261,6 +273,60 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/library/upper-cards-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/library/upper-cards-entry.tsx`).
   Object.freeze({ name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' }),
+  // F-CURR-002 row CM-30: the Cloze Pick game, its flow and its prompt view (`src/screens/minigames/cloze-pick-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/cloze-pick-entry.tsx` while `game.cloze-pick`
+  // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
+  // start bundle, so a step plays it with the switch off or the chunk unable to load.
+  Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
+  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
+  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/dictation-entry.ts`).
+  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
+  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
+  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
+  Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
+  // F-CURR-002 row CM-3C: the Did you know? tip at the reward step and on the card back
+  // (`src/screens/quest/culture-tip-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/quest/culture-tip-entry.tsx` while `upperCards` is on).
+  Object.freeze({ name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' }),
+  // F-CURR-002 row CM-36: the Hidden Heritage game, its rules and the scene renderer
+  // (`src/screens/minigames/hidden-heritage-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/hidden-heritage-entry.tsx` while `game.hidden-heritage` is on).
+  Object.freeze({ name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' }),
+  // F-CURR-002 row CM-32: Syllable Build (the quest game, its board, the review round at the produce rung and the Listen &
+  // Pick fallback) and the Block Sprint (`src/screens/minigames/syllable-build-chunk.tsx`, reached only through the
+  // literal `import()` of `src/screens/minigames/syllable-build-entry.tsx`); the Daily Review chunk reaches its round at
+  // run time through the entry.
+  Object.freeze({ name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' }),
+  // F-CURR-002 row CM-33: Match Shape (the quest game, its board and origin pictures, the facts' sources, the review
+  // round at the produce rung and the Read Pick fallback; `src/screens/minigames/match-shape-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
+  Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
+  // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
+  Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
+]);
+
+/**
+ * The Hidden Heritage scenes (F-CURR-002 §7.1 F7 and §10, rows CM-36 and CM-37): one bundle per scene
+ * (`src/screens/minigames/scenes/scene-<key>.ts`), reached only through the literal `import()`s of
+ * `src/screens/minigames/hidden-heritage-scenes.ts`, each held to `sceneChunkRaw`. Each module exports its marker (`SCENE_CHUNK`).
+ */
+export const SCENE_CHUNKS = Object.freeze([
+  Object.freeze({ name: 'scene-food-market', marker: 'scene-chunk:food-market' }),
+  // F-CURR-002 row CM-37 part 1: the Letters school room.
+  Object.freeze({ name: 'scene-letters-school', marker: 'scene-chunk:letters-school' }),
+  // Row CM-37 part 2: the Holidays & Traditions scene, a hanok room on Seollal morning.
+  Object.freeze({ name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' }),
+  // Row CM-37 part 3: the Nature & Animals four-season scene.
+  Object.freeze({ name: 'scene-four-seasons', marker: 'scene-chunk:four-seasons' }),
+  // Row CM-37 part 4: the Play & Crafts courtyard of the traditional games.
+  Object.freeze({ name: 'scene-play-courtyard', marker: 'scene-chunk:play-courtyard' }),
 ]);
 
 /**
@@ -334,7 +400,7 @@ function chunkTotals(manifest, bundles) {
  * root chunks, the review-item chunk (row CM-10), the learner screen chunks (row GU-3) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], scenes = [], bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
@@ -344,6 +410,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
     screenChunks: chunkTotals(screens, bundles),
+    sceneChunks: chunkTotals(scenes, bundles),
     precache: { count: precache.count, raw: precache.size },
   };
 }
@@ -376,6 +443,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.screenChunks !== undefined && report.screenChunks.count > 0) {
     lines.push(
       `  learner screen chunks  ${report.screenChunks.count} bundles  ${report.screenChunks.raw} B raw  ${report.screenChunks.gzip} B gzip  (largest ${report.screenChunks.largest?.raw ?? 0} B raw, ceiling ${budget.screenChunkRaw} B each)`,
+    );
+  }
+  if (report.sceneChunks !== undefined && report.sceneChunks.count > 0) {
+    lines.push(
+      `  hidden heritage scene chunks  ${report.sceneChunks.count} bundles  ${report.sceneChunks.raw} B raw  ${report.sceneChunks.gzip} B gzip  (largest ${report.sceneChunks.largest?.raw ?? 0} B raw, ceiling ${budget.sceneChunkRaw} B each)`,
     );
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
@@ -417,6 +489,7 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
     [report.localeChunks, budget.localeChunkRaw, 'locale', 'localeChunkRaw'],
     [report.rootChunks, budget.rootChunkRaw, 'grown-up root', 'rootChunkRaw'],
     [report.screenChunks, budget.screenChunkRaw, 'learner screen', 'screenChunkRaw'],
+    [report.sceneChunks, budget.sceneChunkRaw, 'hidden heritage scene', 'sceneChunkRaw'],
   ];
   for (const [chunks, ceiling, kind, line] of ceilings) {
     const largest = chunks?.largest;

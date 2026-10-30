@@ -5,7 +5,8 @@
     "episode:stage2-life": {
       "title": "도시락 낱말",
       "subtitle": "음식과 식사에 관한 한국어 낱말을 읽어요.",
-      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!"
+      "hoyaIntro": "이제 글자를 알아요. 음식 낱말을 읽어 봐요!",
+      "culture.n1.text": "한국의 전통적인 일상 밥상에는 {ko:밥}을 중심으로 여러 {ko:반찬}, 그리고 {ko:국}이나 찌개를 함께 차려요."
     },
     "quest:stage2-life-q1": {
       "title": "도시락 낱말",
@@ -15,7 +16,7 @@
       "steps.s2.title": "도시락 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝짓기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 읽기",
       "steps.s6.title": "도시락 카드!",
       "steps.s1.hoyaLine": "도시락에 무엇이 있을까요? 진짜 낱말을 읽어 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -36,7 +37,7 @@
       "steps.s2.title": "과일과 간식 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "낱말 완성하기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "간식 낱말!",
       "steps.s1.hoyaLine": "간식 시간이에요! 과일 낱말을 읽어 봐요.",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -53,7 +54,7 @@
       "steps.s2.title": "밥상 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝짓기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "밥상 낱말!",
       "steps.s1.hoyaLine": "밥상이 차려졌어요. 무엇이 있는지 읽어 봐요!",
       "steps.s2.hoyaLine": "밥, 국, 반찬이에요. ‘들어 보기’를 누르고 낱말을 하나씩 읽어 봐요.",
@@ -70,12 +71,21 @@
       "cardPairs.dalgyal.gloss": "닭이 낳는 둥근 알"
     },
     "minigame:s2-life-q1-check": {
-      "listenPick.rounds.pic-gimbap.prompt": "김에 밥과 재료를 넣고 말아 만든 음식",
-      "listenPick.rounds.read-dosirak.prompt": "밖에서 먹으려고 그릇에 담아 가는 밥"
+      "listenPick.rounds.pic-gimbap.prompt": "해초에 재료를 넣고 둥글게 말아 썬 음식",
+      "listenPick.rounds.see-uyu.prompt": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.pic-gimbap.options.gimbap.label": "해초에 재료를 넣고 둥글게 말아 썬 음식",
+      "listenPick.rounds.pic-gimbap.options.uyu.label": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.pic-gimbap.options.dalgyal.label": "닭이 낳는 둥근 알",
+      "listenPick.rounds.pic-gimbap.options.bap.label": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.see-uyu.options.uyu.label": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.see-uyu.options.dalgyal.label": "닭이 낳는 둥근 알",
+      "listenPick.rounds.see-uyu.options.banana.label": "껍질이 노랗고 길쭉한 과일"
     },
     "minigame:s2-life-q2-check": {
-      "listenPick.rounds.pic-banana.prompt": "껍질이 노랗고 길쭉한 과일",
-      "listenPick.rounds.read-subak.prompt": "겉은 초록색이고 속은 빨간 커다란 여름 과일"
+      "typeHangul.rounds.hear-subak.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-subak.target.gloss": "겉은 초록색이고 속은 빨간 커다란 여름 과일",
+      "typeHangul.rounds.hear-banana.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-banana.target.gloss": "껍질이 노랗고 길쭉한 과일"
     },
     "minigame:s2-life-q3-apply": {
       "cardPairs.guk.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
@@ -84,8 +94,10 @@
       "cardPairs.namul.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
     },
     "minigame:s2-life-q3-check": {
-      "listenPick.rounds.pic-bibimbap.prompt": "밥 위에 채소와 고명을 올려 비벼 먹는 음식",
-      "listenPick.rounds.read-banchan.prompt": "밥에 곁들여 먹는 여러 가지 음식"
+      "typeHangul.rounds.hear-banchan.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-banchan.target.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "typeHangul.rounds.hear-dubu.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-dubu.target.gloss": "콩으로 만든 하얗고 말랑한 음식"
     },
     "minigame:s2-life-q1-practice": {
       "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",

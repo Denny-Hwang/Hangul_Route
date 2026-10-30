@@ -12,8 +12,10 @@
  *   else the tools take a row above and Previous and Next stay on the bottom row at its two ends
  *   (together at its end under O9); and if the tools do not fit their row either, Timer, Blank and
  *   Slides move into a **More** button on the bottom row, just before Next (just before Previous
- *   under O9). A tool never shrinks and never takes a third row. The focus order of a wrapped band
- *   stays Previous, the chips, the tools, More, Next, so the step pair stays first and last.
+ *   under O9). A tool never shrinks; only a band too narrow for even More's two rows (no tablet
+ *   PN-0b measured) lets the tools left on it take a second tools row rather than clip one. The
+ *   focus order of a wrapped band stays Previous, the chips, the tools, More, Next, so the step
+ *   pair stays first and last.
  *
  * Like `stage-gesture.ts`, it imports no design-system runtime: widths and gaps come in as numbers.
  */
@@ -33,8 +35,12 @@ export const MORE_TOOLS: readonly DockedTool[] = ['grid', 'blank', 'timer'];
 export type DockedSlot = 'prev' | 'chips' | 'tools' | 'more' | 'next';
 
 export interface DockedBarLayout {
-  /** 1: everything on one row; 2: the tools on a row above Previous and Next. */
-  rows: 1 | 2;
+  /**
+   * 1: everything on one row; 2: the tools on a row above Previous and Next; 3: only on a band too
+   * narrow for even More's two rows (a narrow mouse window at a large text size, never a tablet PN-0b
+   * measured), the tools left on the band wrap onto a second tools row instead of being clipped.
+   */
+  rows: 1 | 2 | 3;
   /** Timer, Blank and Slides are in More. */
   more: boolean;
 }
@@ -101,7 +107,10 @@ export function dockedBarLayout(fit: DockedBarFit): DockedBarLayout {
   const oneRow = fit.prev + fit.statusMin + tools + fit.next + 3 * fit.gap;
   if (oneRow <= fit.room + EPSILON) return { rows: 1, more: false };
   if (tools <= fit.room + EPSILON) return { rows: 2, more: false };
-  return { rows: 2, more: true };
+  // More takes Timer, Blank and Slides; the tools left (Exit, Full screen, Sound) must still fit their row.
+  const left = toolsWidth(bandTools(fit.present, true), fit.tools, fit.toolGap) ?? 0;
+  if (left <= fit.room + EPSILON) return { rows: 2, more: true };
+  return { rows: 3, more: true };
 }
 
 /** The band's parts in focus order (which is the visual order on one row). */

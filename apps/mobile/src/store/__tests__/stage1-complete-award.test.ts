@@ -8,10 +8,12 @@ vi.mock('../../platform/telemetry', () => ({
   track: vi.fn(async () => true),
 }));
 
-import { episodesAll, questById, stage1Cards } from '../../content';
+import { requiredQuestIds } from '@hangul-route/content-schema';
+import { episodesAll, questById, questsAll, stage1Cards } from '../../content';
 import { gridEpisodes } from '../../content/episodes';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { completeStages } from '../../logic/my-route/latch';
+import { nextQuestAfter } from '../../logic/next-quest';
 import { opensStagePrize, stagePrizeCards } from '../../logic/stage1/stage-complete';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
@@ -25,9 +27,11 @@ import { useProgressStore } from '../progress-store';
  */
 
 const CREATED = '2026-09-01T08:00:00.000Z';
+/** The quests Stage 1 needs: the optional addition of F-CURR-002 row CM-33 (Play & Crafts quest 4) is not one. */
 const STAGE1_QUESTS = gridEpisodes(episodesAll)
   .filter((e) => e.stage === 'stage1')
-  .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+  .flatMap((e) => requiredQuestIds(e).map((questId) => ({ questId, episodeId: e.id })));
+const ADDITION = { questId: 'quest:stage1-crafts-q4', episodeId: 'episode:stage1-crafts' };
 
 type Event = { name: string; payload: Record<string, unknown> };
 
@@ -112,6 +116,44 @@ describe('Stage 1 completion through the real store (F-QUEST-002 §3.8)', () => 
     expect(events(replayTrack, 'stage.complete')).toEqual([]);
     expect(events(replayTrack, 'card.unlocked')).toEqual([]);
     expect(owned()).toHaveLength(30);
+  });
+
+  it('the optional Stage 1 addition (row CM-33) never reopens a finished stage, announces nothing and opens no prize', () => {
+    // A learner who finished the 15 quests before the addition shipped: Stage 1 is complete and stays complete.
+    const track = vi.fn();
+    STAGE1_QUESTS.forEach(({ questId, episodeId }) => visit(questId, episodeId, 2, track));
+    expect(events(track, 'stage.complete')).toHaveLength(1);
+    const before = useProgressStore.getState().byProfile['p1'];
+    expect(before && completeStages({ ...before, stageDoneAt: {} }, episodesAll).has('stage1')).toBe(true);
+    const cardsBefore = owned();
+
+    // Then they play the addition: no stage or episode completion, no telemetry for either, no ceremony, no card.
+    const later = vi.fn();
+    const outcome = visit(ADDITION.questId, ADDITION.episodeId, 3, later);
+    expect(outcome).toMatchObject({ extras: [], episodeCompleted: null, stageCompleted: null });
+    expect(opensStagePrize(outcome)).toBe(false);
+    expect(events(later, 'stage.complete')).toEqual([]);
+    expect(events(later, 'episode.complete')).toEqual([]);
+    expect(events(later, 'card.unlocked')).toEqual([]);
+    expect(owned()).toEqual(cardsBefore);
+    const after = useProgressStore.getState().byProfile['p1'];
+    expect(after && completeStages({ ...after, stageDoneAt: {} }, episodesAll).has('stage1')).toBe(true);
+  });
+
+  it('the cursor offers the addition after Read Hangul!, and never pulls a learner back once they are past it', () => {
+    STAGE1_QUESTS.forEach(({ questId, episodeId }) => visit(questId, episodeId, 2, vi.fn()));
+    const snapshot = useProgressStore.getState().byProfile['p1'];
+    if (!snapshot) throw new Error('no snapshot');
+    // Straight after Stage 1: the addition is next on the route.
+    expect(nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll })?.id).toBe(ADDITION.questId);
+    // A learner already in Stage 2 (a quest after it done): the cursor stays where they are.
+    const stage2 = gridEpisodes(episodesAll).find((e) => e.stage === 'stage2' && e.status === 'shipped');
+    const first = stage2?.questIds[0];
+    if (!stage2 || !first) throw new Error('no Stage 2 episode');
+    const moved = { ...snapshot, quests: [...snapshot.quests, { questId: first, episodeId: stage2.id, startedAt: CREATED, completedAt: CREATED, stars: 2 as const, attempts: 1, accuracy: 1 }] };
+    const next = nextQuestAfter({ snapshot: moved, quests: questsAll, episodes: episodesAll });
+    expect(next?.id).not.toBe(ADDITION.questId);
+    expect(next?.id.startsWith('quest:stage1-')).toBe(false);
   });
 
   it('out of order: the stage completes when the last quest of any episode completes', () => {

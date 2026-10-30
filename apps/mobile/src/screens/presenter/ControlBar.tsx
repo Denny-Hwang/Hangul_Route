@@ -255,10 +255,16 @@ function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusCh
   );
 }
 
-/** The docked bar's measured widths, per control, for one set of labels at one text size. */
+/**
+ * The docked bar's measured widths, per control, for one set of labels at one text size (`sizes`), and
+ * the last widths known under the labels before (`stale`): a control whose box did not change with new
+ * labels (a language or text-size change mid-lesson) fires no new layout, so it keeps its last width
+ * until it reports one, and the band never falls back to the unmeasured one-row layout.
+ */
 interface Measured {
   key: string;
   sizes: Readonly<Record<string, number>>;
+  stale: Readonly<Record<string, number>>;
 }
 
 /**
@@ -291,16 +297,16 @@ function DockedBar(props: BarParts): ReactElement {
   // keeps its last width, and only grows (Next and Reveal take turns), so the band never flips
   // between two builds of a slide.
   const labelsKey = [m.prev.cta, m.reveal.cta, messages.common.buttons.next, m.exit.cta, m.fullscreen.cta, m.grid.cta, m.blank.cta, m.timer.cta, m.sound.cta, String(textScale.size.body)].join('\n');
-  const [measured, setMeasured] = useState<Measured>({ key: labelsKey, sizes: {} });
-  const sizes = measured.key === labelsKey ? measured.sizes : {};
+  const [measured, setMeasured] = useState<Measured>({ key: labelsKey, sizes: {}, stale: {} });
+  const sizes: Readonly<Record<string, number>> = { ...measured.stale, ...measured.sizes };
   const measure =
     (id: 'prev' | 'next' | DockedTool) =>
     (event: LayoutChangeEvent): void => {
       const width = event.nativeEvent.layout.width;
       setMeasured((current) => {
-        const known = current.key === labelsKey ? current.sizes : {};
-        if ((known[id] ?? -1) >= width - 0.5) return current.key === labelsKey ? current : { key: labelsKey, sizes: known };
-        return { key: labelsKey, sizes: { ...known, [id]: width } };
+        const now = current.key === labelsKey ? current : { key: labelsKey, sizes: {}, stale: { ...current.stale, ...current.sizes } };
+        if ((now.sizes[id] ?? -1) >= width - 0.5) return now;
+        return { ...now, sizes: { ...now.sizes, [id]: width } };
       });
     };
   const [room, setRoom] = useState(0);
@@ -315,8 +321,9 @@ function DockedBar(props: BarParts): ReactElement {
   const input = { room, prev: sizes.prev, next: sizes.next, tools: sizes, present, statusMin: STATUS_MIN, gap: BAR_GROUP_GAP, toolGap: spacing.sm };
   const fit = dockedBarLayout(input);
   const decided = dockedBarMeasured(input);
-  const wrapped = fit.rows === 2;
+  const wrapped = fit.rows > 1;
   const onMore = props.onMore;
+  const nextRef = useRef<View>(null);
   // A band that no longer needs More (a wider window, once measured) closes its sheet.
   useEffect(() => {
     if (decided && !fit.more && moreOpen) onMore?.(false);
@@ -351,7 +358,7 @@ function DockedBar(props: BarParts): ReactElement {
       case 'next':
         return (
           <View key={slot} testID="presenter-nav-next" {...pin}>
-            <Ctl testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} onLayout={measure('next')} />
+            <Ctl ref={nextRef} testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} onLayout={measure('next')} />
           </View>
         );
       case 'chips':
@@ -382,7 +389,16 @@ function DockedBar(props: BarParts): ReactElement {
             key={slot}
             testID="presenter-bar-tools"
             {...groupPointer}
-            style={{ opacity: groupOpacity, flexDirection: 'row', flexShrink: 0, alignItems: 'center', gap: spacing.sm, ...(wrapped ? { position: 'absolute' as const, top: 0, right: 0 } : {}) }}
+            style={{
+              opacity: groupOpacity,
+              flexDirection: 'row',
+              flexShrink: 0,
+              alignItems: 'center',
+              gap: spacing.sm,
+              ...(wrapped ? { position: 'absolute' as const, top: 0, right: 0 } : {}),
+              // A band too narrow for even More's rows (`dockedBarLayout`): the tools left on it wrap onto a second tools row, never clipped.
+              ...(fit.rows === 3 ? { left: 0, flexWrap: 'wrap' as const, justifyContent: 'flex-end' as const, rowGap: BAR_ROW_GAP } : {}),
+            }}
           >
             {bandTools(present, fit.more).map(tool)}
           </Animated.View>
@@ -416,12 +432,12 @@ function DockedBar(props: BarParts): ReactElement {
           onLayout={(event: LayoutChangeEvent) => setRoom(event.nativeEvent.layout.width)}
           pointerEvents={row.pointerEvents}
           {...{ dataSet: { rows: String(fit.rows), more: fit.more ? 'true' : 'false', order: wideTouch ? 'o9' : 'o6' } }}
-          style={{ opacity: row.opacity, flexDirection: 'row', alignItems: 'center', gap: BAR_GROUP_GAP, ...(wrapped ? { paddingTop: touchTarget.hero + BAR_ROW_GAP } : {}) }}
+          style={{ opacity: row.opacity, flexDirection: 'row', alignItems: 'center', gap: BAR_GROUP_GAP, ...(wrapped ? { paddingTop: (fit.rows - 1) * (touchTarget.hero + BAR_ROW_GAP) } : {}) }}
         >
           {dockedOrder(fit, wideTouch).map(part)}
         </Animated.View>
       </View>
-      {fit.more && moreOpen ? <MoreSheet {...props} insets={NO_INSETS} docked={{ bottom: band + spacing.sm, tools: moreTools(present) }} /> : null}
+      {fit.more && moreOpen ? <MoreSheet {...props} insets={NO_INSETS} docked={{ bottom: band + spacing.sm, tools: moreTools(present), fallbackFocus: () => nextRef.current?.focus?.() }} /> : null}
     </>
   );
 }
@@ -688,20 +704,24 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
  * "Navigation (PN-0b)", the More fallback) is the same sheet over the stage, just above the band at
  * its right, holding only the tools it took (Slides, Timer, Blank); the band keeps the chips and the rest.
  */
-function MoreSheet(props: BarParts & { insets: StageInsets; docked?: { bottom: number; tools: readonly DockedTool[] } }): ReactElement {
+function MoreSheet(props: BarParts & { insets: StageInsets; docked?: { bottom: number; tools: readonly DockedTool[]; fallbackFocus?: () => void } }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const docked = props.docked;
   const self = useRef<View>(null);
   const close = useRef<View>(null);
+  // The docked sheet closes itself when a wider window no longer needs More, and More leaves the band in
+  // the same pass: focus then goes to Next, a control that stays, never to the page body.
+  const fallbackFocus = useRef(docked?.fallbackFocus);
+  fallbackFocus.current = docked?.fallbackFocus;
   useEffect(() => {
     const restore = rememberFocus();
     close.current?.focus?.();
     const release = trapFocus(() => focusablesIn(self.current));
     return () => {
       release();
-      restore();
+      if (!restore()) fallbackFocus.current?.();
     };
   }, []);
   const item = (run: () => void) => (): void => {

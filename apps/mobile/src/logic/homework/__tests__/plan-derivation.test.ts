@@ -71,6 +71,27 @@ describe('plan derivation (F-PLAN-001 §3.3)', () => {
   });
 });
 
+describe('an optional addition on an episode a plan lists (F-CURR-002 section 4.2, row CM-33)', () => {
+  // quest:x ships later as an optional addition of episode:s1, after the plan was saved.
+  const withAddition: Episode[] = [{ ...episodes[0]!, questIds: ['quest:a', 'quest:b', 'quest:x'], optionalQuestIds: ['quest:x'] }, ...episodes.slice(1)];
+  const all = [...quests, quest('quest:x')];
+  const finishedPlan = plan({ items: [{ kind: 'episode', id: 'episode:s1', targetDate: '2026-09-10' }] });
+
+  it('expands an episode item to the quests it needs, so a finished plan with a past date gains no new assignment', () => {
+    const before = derive([finishedPlan], snap({ quests: [done('quest:a'), done('quest:b')] }));
+    expect(before.homework.map((h) => h.questId)).toEqual(['quest:a', 'quest:b']);
+    const after = derive([finishedPlan], snap({ quests: [done('quest:a'), done('quest:b')], homework: before.homework }), { quests: all, episodes: withAddition });
+    expect(after.homework.map((h) => h.questId)).toEqual(['quest:a', 'quest:b']);
+    expect(after.homework.every((h) => h.completedAt !== undefined)).toBe(true);
+    expect(after).toMatchObject({ added: 0, removed: 0, changed: false });
+  });
+
+  it('still assigns the addition when a plan names it as a quest item', () => {
+    const named = plan({ items: [{ kind: 'quest', id: 'quest:x', targetDate: '2026-09-28' }] });
+    expect(derive([named], snap(), { quests: all, episodes: withAddition }).homework.map((h) => h.questId)).toEqual(['quest:x']);
+  });
+});
+
 describe('sources and the assignedBy mapping (F-PLAN-002 section 3.6 rule 4)', () => {
   it('maps class to teacher, family and school to parent, the self-route to system', () => {
     const kinds = [plan({ id: 'plan:c' }), plan({ id: 'plan:f', spaceKind: 'family' }), plan({ id: 'plan:s', spaceKind: 'school' })];

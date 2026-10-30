@@ -185,6 +185,32 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
     expect(reply).toEqual({ ko: '밥 먹어요.', romanization: 'bap meogeoyo.', en: 'I eat rice.', glossKey: 'minigame:s2-life-q2-b#dialogue.0.options.bap-meogeoyo.gloss' });
   });
 
+  it('reads a My Story chain as Write Frame rounds: each frame a pattern, each bank word a word (row CM-38)', () => {
+    const story = {
+      ...cell,
+      quests: [
+        {
+          id: 'quest:stage2-life-q3',
+          steps: [step('s1', 'apply', 'minigame:s2-life-q3-a')],
+          scopes: [
+            {
+              ref: 'minigame:s2-life-q3-a',
+              kind: 'my-story',
+              frames: [{ id: 'f1', frame: kt('기분이 ___.', 'gibuni ___', 'I feel ___.'), slots: [{ id: 'how', bank: [kt('좋아요', 'joayo', 'good'), { ...kt('괜찮아요', 'gwaenchanayo', 'okay'), neutral: true }] }] }],
+            },
+          ],
+        },
+      ],
+    };
+    const m = (field: string) => `minigame:s2-life-q3-a#myStory.frames.f1.${field}`;
+    const got = lessonOccurrences({ ...source, body: story }, SYMBOLS).map((o) => [o.kind, o.ko, o.glossKey ?? '', o.loose === true ? 'loose' : '', o.at]);
+    expect(got).toEqual([
+      ['pat', '기분이 ___.', m('frame.gloss'), '', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0]'],
+      ['lex', '좋아요', m('slots.how.bank.joayo.gloss'), 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0].slots[0].bank[0]'],
+      ['lex', '괜찮아요', m('slots.how.bank.gwaenchanayo.gloss'), 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0].slots[0].bank[1]'],
+    ]);
+  });
+
   it('places each occurrence in its cell, at its file and path', () => {
     expect(new Set(occs.map((o) => `${o.cell} ${o.home} ${o.stage} ${o.volume}`))).toEqual(new Set(['episode:stage2-life life 2 1']));
     expect(occs[0]?.at).toBe('content/episodes/stage-2/life.json quests[0].steps[1].discover.pages[0].items[0]');
@@ -256,6 +282,31 @@ describe('stage1Occurrences: the Stage 1 symbol, syllable and word tables', () =
       ['lex', '김치', 'round', 'minigame:s1-letters-q1-check#listenPick.rounds.3.prompt', 'card:kimchi'],
     ]);
     expect(new Set(occs.map((o) => `${o.cell} ${o.home} ${o.stage}`))).toEqual(new Set(['episode:stage1-letters letters 1']));
+  });
+});
+
+describe('stage1Occurrences: a Match Shape scope (F-CURR-002 row CM-33)', () => {
+  it('asks the target letter of each pair round; an origin round, a malformed round and a missing target ask nothing', () => {
+    const quests = [{ id: 'quest:stage1-crafts-q4', steps: [{ id: 's2', kind: 'practice', minigameRef: 'minigame:s1-crafts-q4-play' }] }];
+    const scopes = {
+      'minigame:s1-crafts-q4-play': {
+        kind: 'match-shape',
+        matchShape: {
+          rounds: [
+            { id: 'ms:origin', shape: 'origin', target: 'jamo:giyeok', options: ['jamo:giyeok', 'jamo:a'] },
+            { id: 'ms:pair', shape: 'pair', target: 'jamo:a', lookAlike: 'jamo:giyeok' },
+            { id: 'ms:pair-no-target', shape: 'pair' },
+            'not a round',
+          ],
+        },
+      },
+    };
+    const occs = stage1Occurrences({ symbols: SYMBOLS, quests, scopes });
+    expect(occs.map((o) => [o.kind, o.ko, o.cell, o.at])).toEqual([
+      ['sym', 'ㅏ', 'episode:stage1-crafts', 'quest:stage1-crafts-q4 steps[0] minigame:s1-crafts-q4-play.matchShape.rounds[1]'],
+    ]);
+    // A scope with no Match Shape block asks nothing through it.
+    expect(stage1Occurrences({ symbols: SYMBOLS, quests, scopes: { 'minigame:s1-crafts-q4-play': { kind: 'match-shape' } } })).toEqual([]);
   });
 });
 

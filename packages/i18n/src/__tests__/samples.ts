@@ -1004,4 +1004,41 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.learnerGone': [['Mina']],
   'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
   'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
+  // F-CURR-002 row CM-30: Cloze Pick's prompt card, the romanization with its gap read as a word and the meaning.
+  'a11y.minigame.clozePick.sentence': [['chaegeul blank', 'I read a book.'], ['mulblank masyeoyo', 'I drink water.']],
+  'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],
+  // F-CURR-002 row CM-31: Dictation's meaning line, a gloss in the UI locale.
+  'learner.minigame.typeHangul.hear.meaning': [['apple'], ['rice cake soup']],
+  // F-CURR-002 row CM-35: a Role Play bubble: the partner's role (UI language), the line, its romanization and meaning; a sent reply.
+  // The Korean line is passed in at run time; the samples stand in with romanization, as the other games' rows do.
+  'a11y.minigame.rolePlay.partner': [['librarian', 'museun chaegeul chajayo?', 'museun chaegeul chajayo', 'What book are you looking for?']],
+  'a11y.minigame.rolePlay.me': [['donghwachaegeul chajayo.', 'donghwachaegeul chajayo']],
+  // F-CURR-002 row CM-35, the lecture Role Play slide: the reply the class gave (its Korean with romanization, passed in at run time).
+  'a11y.presenter.rolePlayClass': [['annyeonghaseyo!, annyeonghaseyo']],
+  // F-CURR-002 row CM-36: a found thing's meaning in the UI locale (content).
+  'a11y.hiddenHeritage.foundLive': [['soup'], ['rice']],
+  'a11y.hiddenHeritage.spotFound': [['soup'], ['chopsticks']],
+  // F-CURR-002 row CM-32: Syllable Build's labels (a jamo and its RR letter name; a row caption and a tile's name; the
+  // built block) and the Block Sprint's count and the learner's own best.
+  'a11y.minigame.syllableBuild.tile': [['x', 'bieup'], ['x', 'a']],
+  'a11y.minigame.syllableBuild.finalTile': [['x', 'bieup'], ['x', 'ieung']],
+  'a11y.minigame.syllableBuild.zone': [['First letter'], ['Final', 'No final letter'], ['Vowel', 'x, letter a']],
+  'a11y.minigame.syllableBuild.marked': [['Final, x, letter nieun, as a final']],
+  'a11y.minigame.syllableBuild.block': [['x', 'bap']],
+  'a11y.minigame.syllableBuild.meaning': [['rice, a meal']],
+  'learner.decodingSprint.read': [[0], [1], [14]],
+  'learner.decodingSprint.best': [[1], [16]],
+  // F-CURR-002 row CM-33: Match Shape's tile names (a jamo with its sound, or its RR letter name), the pair heading and
+  // a sound value of two readings.
+  'a11y.minigame.matchShape.originTile': [['x', 'n'], ['x', 'g or k']],
+  'a11y.minigame.matchShape.pairTile': [['x', 'bieup'], ['x', 'eo']],
+  'a11y.minigame.matchShape.found': [['x', 'bieup', 'b or p']],
+  'a11y.minigame.matchShape.pairHeading': [['x', 'bieup', 'b or p']],
+  'a11y.minigame.matchShape.sounds': [['g', 'k'], ['silent', 'ng']],
+  // F-CURR-002 row CM-38: My Story's sentences so far (a chain has 3-5 frames, so 1-4 lines while writing).
+  'learner.minigame.myStory.soFarFolded': [[1], [2], [4]],
+  'a11y.minigame.myStory.soFar': [[1], [2], [4]],
+  // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
+  'learner.yutReview.stations': [[1], [2], [5]],
+  'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
 };

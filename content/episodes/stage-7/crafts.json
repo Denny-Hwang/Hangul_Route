@@ -105,7 +105,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-crafts-q1-check",
           "durationSeconds": 40
         },
@@ -227,48 +227,61 @@
         },
         {
           "ref": "minigame:s7-crafts-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "꽃을 접어요.",
-                "romanization": "kkocheul jeobeoyo",
+                "ko": "꽃___ 접어요.",
+                "romanization": "kkot___ jeobeoyo",
                 "en": "I fold a paper flower."
               },
-              "pictureRef": "word:nature-flower",
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker (after a vowel)"
-                  }
-                ]
-              }
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "kkocheul jeobeoyo"
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "별을 그려요.",
-                "romanization": "byeoreul geuryeoyo",
+                "ko": "별을 ___.",
+                "romanization": "byeoreul ___",
                 "en": "I draw a star."
               },
-              "pictureRef": "word:nature-star",
-              "distractors": [
+              "tiles": [
                 {
                   "ko": "접어요",
                   "romanization": "jeobeoyo",
                   "en": "I fold"
+                },
+                {
+                  "ko": "잘라요",
+                  "romanization": "jallayo",
+                  "en": "I cut"
+                },
+                {
+                  "ko": "그려요",
+                  "romanization": "geuryeoyo",
+                  "en": "I draw"
                 }
-              ]
+              ],
+              "answerIndex": 2
             }
           ]
         }
@@ -386,12 +399,13 @@
           "rounds": [
             {
               "id": "t1",
-              "promptEn": "Type the word for first.",
+              "promptEn": "Type the word you hear.",
               "target": {
                 "ko": "먼저",
                 "romanization": "meonjeo",
                 "en": "first"
-              }
+              },
+              "mode": "hear"
             },
             {
               "id": "t2",
@@ -626,9 +640,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-crafts-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -772,47 +786,66 @@
         },
         {
           "ref": "minigame:s7-crafts-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "종이를 접고 잘라요.",
-                "romanization": "jongireul jeopgo jallayo",
-                "en": "I fold the paper and then cut it."
+              "frame": {
+                "ko": "종이를 접고 ___.",
+                "romanization": "jongireul jeopgo ___",
+                "en": "I fold the paper, and then ___."
               },
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker (after a vowel)"
-                  }
-                ]
-              }
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "I cut"
+                    },
+                    {
+                      "ko": "그려요",
+                      "romanization": "geuryeoyo",
+                      "en": "I draw"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "먼저 접고 그려요.",
-                "romanization": "meonjeo jeopgo geuryeoyo",
-                "en": "First, I fold and then draw."
+              "frame": {
+                "ko": "먼저 ___을/를 접어요.",
+                "romanization": "meonjeo ___eul/reul jeobeoyo",
+                "en": "First, I fold ___."
               },
-              "pictureRef": "word:nature-flower",
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "마지막으로",
-                  "romanization": "majimageuro",
-                  "en": "last, finally"
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "종이",
+                      "romanization": "jongi",
+                      "en": "the paper"
+                    },
+                    {
+                      "ko": "비행기",
+                      "romanization": "bihaenggi",
+                      "en": "a paper plane"
+                    },
+                    {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "a paper flower"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -826,25 +859,25 @@
       "textEn": "{ko:종이접기} is folding paper by hand into shapes such as a crane, a boat or a plane, with plain paper or colored paper.",
       "sources": [
         {
-          "title": "종이접기 (jongijeopgi), an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0052997",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 종이접기, 정의: “종이를 손으로 접어서 여러 가지 모양을 만드는” …; 내용: “배·비행기·모자·바구니·바지·저고리 따위를 만들어” …; “풍선(공)·학·문어·물고기·꽃 따위에 대한 기본 접기가 있어” …; “재료로는 흰 종이뿐만 아니라 색종이나 은박지도 쓴다.”"
-        },
-        {
           "title": "종이접기",
           "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=516424&searchKeywordTo=3",
           "accessed": "2026-10-14",
           "quoteOrLocator": "표제어 ‘종이-접기’(word_no 516424) 「명사」: “종이를 접어서 학, 배, 비행기 따위의 모양을 만드는 일.”"
+        },
+        {
+          "title": "종이접기 (jongijeopgi), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0052997",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 종이접기, 정의: “종이를 손으로 접어서 여러 가지 모양을 만드는” …; 내용: “배·비행기·모자·바구니·바지·저고리 따위를 만들어” …; “풍선(공)·학·문어·물고기·꽃 따위에 대한 기본 접기가 있어” …; “재료로는 흰 종이뿐만 아니라 색종이나 은박지도 쓴다.”"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 종이접기 carries the quoted definition (folding paper by hand into many shapes), lists boats and planes among the things made, names a basic fold for the crane, and says white paper as well as colored paper and foil are used; the dictionary entry 종이-접기 (word_no 516424) defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note matches both: by hand, crane / boat / plane, plain or colored paper ('plain' renders 흰 종이). The AKS framing as a children's game is left out, which narrows nothing that is true. The q1 caption (a plane or a boat) stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0052997; NIKL word_no 516424, body via contentViewOne.do) and both quoteOrLocator entries match the live pages word for word. The note holds: by hand, crane / boat / plane, plain or colored paper; the AKS framing as a children's game stays out (audience any age). The q1 caption now reads 'into shapes, like a plane or a boat', so it no longer narrows the term to two shapes. No wording is copied, no stereotype, no real person, shop or brand. Outcome: pass."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 종이접기 defines it as folding paper by hand into many shapes, lists boats and planes among them, names a basic fold for the crane, and says white paper, colored paper and foil are used; the dictionary entry 종이-접기 defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note restates this in its own words; the AKS definition also calls it a children's game, which the note leaves out (audience any age, no age wording). Nothing is copied. Carried by: q1 Discover page 1 caption, and the plane and boat sentences of q1 and q2.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 종이접기 carries the quoted definition (folding paper by hand into many shapes), lists boats and planes among the things made, names a basic fold for the crane, and says white paper as well as colored paper and foil are used; the dictionary entry 종이-접기 (word_no 516424) defines it as folding paper into the shape of a crane, a boat, a plane and the like. The note matches both: by hand, crane / boat / plane, plain or colored paper ('plain' renders 흰 종이). The AKS framing as a children's game is left out, which narrows nothing that is true. The q1 caption (a plane or a boat) stays inside the sources. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0052997; NIKL word_no 516424, body via contentViewOne.do) and both quoteOrLocator entries match the live pages word for word. The note holds: by hand, crane / boat / plane, plain or colored paper; the AKS framing as a children's game stays out (audience any age). The q1 caption now reads 'into shapes, like a plane or a boat', so it no longer narrows the term to two shapes. No wording is copied, no stereotype, no real person, shop or brand. Outcome: pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -853,25 +886,25 @@
       "textEn": "{ko:한지} is Korean paper made by hand in the traditional way, mainly from the bark of the paper mulberry.",
       "sources": [
         {
-          "title": "한지 (Hanji), an entry of the Encyclopedia of Korean Culture",
-          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
-          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Entry 한지, 정의: “손으로 떠서 만든 우리나라 전래의 종이.”; 내용: “오늘날 닥나무 껍질로 만든 전래의 종이를 모두 한지로 통칭되고 있으나” …"
-        },
-        {
           "title": "한지 (韓紙)",
           "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
           "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=365052&searchKeywordTo=3",
           "accessed": "2026-10-14",
           "quoteOrLocator": "표제어 ‘한지 7(韓紙)’(word_no 365052) 「명사」: “우리나라 고유의 제조법으로 만든 종이. 닥나무 껍질 따위의 섬유를 원료로 한다.”"
+        },
+        {
+          "title": "한지 (Hanji), an entry of the Encyclopedia of Korean Culture",
+          "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Entry 한지, 정의: “손으로 떠서 만든 우리나라 전래의 종이.”; 내용: “오늘날 닥나무 껍질로 만든 전래의 종이를 모두 한지로 통칭되고 있으나” …"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 한지 defines it as Korea's traditional paper made by hand (손으로 떠서) and says the traditional paper made from paper-mulberry (닥나무) bark is today called hanji; the dictionary entry 한지 7 (韓紙, word_no 365052) defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note matches: made by hand in the traditional way, mainly from paper-mulberry bark ('mainly' is a fair reading of the dictionary's 'such as'). The q3 caption ('made by hand from tree bark') stays inside the sources. No heritage designation number. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0061987; NIKL word_no 365052, body via contentViewOne.do) and both quoteOrLocator entries match word for word. Change: 'tree' is dropped from the note and from the en / es q3 captions, because the sources name only 닥나무 (paper mulberry) bark and the dictionary classes 닥나무 as a shrub; the ko caption now says 닥나무 껍질 and 한국 전통 종이 instead of the in-group 우리 종이. The note now says made by hand, the traditional way, mainly from paper-mulberry bark, all inside the sources. No designation number, nothing copied. Outcome: pass after the change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched. The AKS entry 한지 defines it as traditional Korean paper made by hand and says the traditional paper made from the bark of the paper mulberry (닥나무) is called hanji today; the dictionary entry 한지 7 defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note says 'mainly' because the dictionary says 'such as'. Own wording, nothing copied, no heritage designation number. Carried by: q3 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): both pages re-fetched (the stdict entry body via contentViewOne.do). The AKS entry 한지 defines it as Korea's traditional paper made by hand (손으로 떠서) and says the traditional paper made from paper-mulberry (닥나무) bark is today called hanji; the dictionary entry 한지 7 (韓紙, word_no 365052) defines it as paper made by Korea's own method from fibres such as paper-mulberry bark. The note matches: made by hand in the traditional way, mainly from paper-mulberry bark ('mainly' is a fair reading of the dictionary's 'such as'). The q3 caption ('made by hand from tree bark') stays inside the sources. No heritage designation number. The English is the author's own; no wording is copied. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, final independent check, 2026-10-14): both pages re-fetched (AKS E0061987; NIKL word_no 365052, body via contentViewOne.do) and both quoteOrLocator entries match word for word. Change: 'tree' is dropped from the note and from the en / es q3 captions, because the sources name only 닥나무 (paper mulberry) bark and the dictionary classes 닥나무 as a shrub; the ko caption now says 닥나무 껍질 and 한국 전통 종이 instead of the in-group 우리 종이. The note now says made by hand, the traditional way, mainly from paper-mulberry bark, all inside the sources. No designation number, nothing copied. Outcome: pass after the change.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -906,11 +939,17 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language (pass 4, MAR, 2026-10-14): Hoya in 해요체 throughout the ko overlay; the -고 note shows the stem rule (접어요 -> 접 + 고); 가위로 is a fixed chunk glossed 'with scissors' on its Discover page, and q2 Check no longer pairs it with 마지막으로; ko glosses define 접어요 / 잘라요 / 그려요 without echoing them; 을/를 answers rebalanced.",
-      "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price."
+      "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 and q2 shared one triple; q1 Check is now Cloze Pick (꽃___ 접어요 particle gap, 별을 ___ verb gap; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame (종이를 접고 ___ and 먼저 ___을/를 접어요 with the paper, a paper plane or a paper flower; the Apply played neither frame). q2 Practice t1 is Dictation (먼저). Discover still teaches both old q3 Check sentences.",
+      "CM-3A S7 language (MAR, 2026-10-23): only 을 fits 꽃___ 접어요; the third tile is 가, the subject marker the stage teaches in nature, wrong after 꽃 as a particle and as a form. es Doblo el papel y luego ___ composes with corto / dibujo; ko glosses echo no tile.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; no two quests share a triple; off, Cloze Pick plays as Listen & Pick and Dictation as a see round; es Primero doblo ___ takes each pick with its own article (el papel, un avión de papel, una flor de papel); nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; n1 and n2 and their sources are untouched; the Checks name only paper, folded things and the cell's verbs; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the two independent reviews of #867): q3 Check c2 copied the q3 Apply's w3 (마지막으로 ___을/를 그려요, 꽃 / 별); it is now 먼저 ___을/를 접어요 with 종이, 비행기 and 꽃 (the q1 and q2 folded things). q1 Check c1's 로 tile, which Stage 7 teaches only inside the chunk 가위로, is now 가. ko 맨 처음에 꺾어 겹치는 것: ___ composes with every pick.",
+      "CM-3A S7 reviser 2 (MAR, 2026-10-29, after the second pair of #867 reviews): the q2 Dictation prompt (t1) is the stage's one hear prompt, ko 들리는 낱말을 입력해 봐요. in the stage's -요 register (was the -세요 쳐 보세요.), as in letters q1 y2 and life q1 t1 and t2; es already reads Escribe la palabra que oyes."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

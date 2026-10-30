@@ -41,6 +41,8 @@ function scopeLines(scope: LessonScope): string[] {
       return scope.rounds.flatMap((r) => [r.sentence.ko, ...r.distractors.map((d) => d.ko)]);
     case 'write-frame':
       return scope.rounds.flatMap((r) => [r.frame.ko, ...r.slots.flatMap((s) => s.bank.map((b) => b.ko))]);
+    case 'cloze-pick':
+      return scope.rounds.flatMap((r) => [r.sentence.ko, ...r.tiles.map((t) => t.ko)]);
     default:
       return [];
   }
@@ -61,11 +63,12 @@ describe('Write Your Name (F-CURR-001 S7-1)', () => {
     expect(cell.quests.every((q) => q.rewardCardId === undefined)).toBe(true);
   });
 
-  it('Stage 7 shape: writing games (Trace a Word, Type Hangul, Sentence Builder, Write Frame) and a two-round Sentence Builder Check', () => {
+  it('Stage 7 shape: writing games (Trace a Word, Type Hangul, Sentence Builder, Write Frame) and a two-round Check that rotates (row CM-3A S7)', () => {
+    // F-CURR-002 section 7.1: Cloze Pick, Sentence Builder and Write Frame (the default S7 Check), one each.
     expect(cell.quests.map((q) => q.scopes.map((s) => s.kind))).toEqual([
-      ['trace-word', 'type-hangul', 'order-it'],
+      ['trace-word', 'type-hangul', 'cloze-pick'],
       ['order-it', 'type-hangul', 'order-it'],
-      ['trace-word', 'write-frame', 'order-it'],
+      ['trace-word', 'write-frame', 'write-frame'],
     ]);
     for (const quest of cell.quests) {
       const [practice, apply, check] = quest.scopes;

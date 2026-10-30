@@ -530,14 +530,15 @@ for (const vp of MATRIX) {
           await expect(page.getByTestId('presenter-more-sheet')).toHaveCount(0);
           expect({ counter: await counter(page), live: await live(page) }).toEqual(before);
           if (layout === 'rail') {
-            // Beside the rail: its Previous, Next and Sound with More open close the sheet and do nothing else.
-            for (const id of ['presenter-next', 'presenter-back', 'presenter-sound']) {
-              await page.getByTestId('presenter-more').tap();
-              await expect(page.getByTestId('presenter-more-sheet')).toBeVisible();
-              await page.getByTestId(id).tap();
-              await expect(page.getByTestId('presenter-more-sheet'), id).toHaveCount(0);
-              expect({ counter: await counter(page), live: await live(page) }, id).toEqual(before);
-            }
+            // Beside the rail (PN-3's rule for an open sheet, section 5.1 as built): the rail's Next stays enabled,
+            // and a press closes the sheet and then steps once.
+            await page.getByTestId('presenter-more').tap();
+            await expect(page.getByTestId('presenter-more-sheet')).toBeVisible();
+            await pairShown(page, 'More open', ['presenter-more', 'presenter-next', 'presenter-back', 'presenter-sound']);
+            const at = await state(page);
+            await page.getByTestId('presenter-next').tap();
+            await expect(page.getByTestId('presenter-more-sheet')).toHaveCount(0);
+            await expect.poll(async () => { const now = await state(page); return now.counter !== at.counter || now.next !== at.next; }).toBe(true);
           }
         });
       }
@@ -757,13 +758,18 @@ for (const vp of MATRIX) {
           // Written through the storage wrapper (IndexedDB), never localStorage.
           await expect.poll(() => storedNavHint(page)).toBe('"done"');
           expect(await page.evaluate(() => localStorage.getItem('hr:lecture:navHint'))).toBeNull();
+          // A reload resumes this lesson from Recent on slide 2, where no hint shows anyway; so a fresh lesson
+          // (a deck Recent has never seen, which opens on its title slide) proves 'done' keeps the hint off for good.
           await page.reload();
+          await page.goto(link({ ...DECK, id: 'lecture:e2enav2' }));
           const start = page.getByTestId('presenter-start-button');
           await expect(start).toBeEnabled({ timeout: 10_000 });
           await start.tap();
           await expect(page.getByTestId('presenter-stage')).toBeVisible();
+          await expect.poll(() => counter(page)).toMatch(/^1 \//);
           await page.waitForTimeout(800);
           await expect(hint).toHaveCount(0);
+          expect(await storedNavHint(page)).toBe('"done"');
         }
       });
     });
@@ -809,6 +815,28 @@ test.describe('PN-3: Spanish at 768 x 1024 (touch) takes the docked More fallbac
     await page.touchscreen.tap(exposed.x, exposed.y);
     await expect(sheet).toHaveCount(0);
     expect(await counter(page)).toBe(at);
+    // The pinned Next stays beside the sheet, opaque and enabled: a tap on it closes the sheet and steps.
+    await page.getByTestId('presenter-more').tap();
+    await expect(sheet).toBeVisible();
+    await expect(page.getByTestId('presenter-next')).not.toHaveAttribute('aria-disabled', 'true');
+    await page.getByTestId('presenter-next').tap();
+    await expect(sheet).toHaveCount(0);
+    await expect.poll(() => counter(page)).not.toBe(at);
+    // A step key (an arrow, a clicker) does the same: the sheet closes and the lesson steps back.
+    const stepped = await counter(page);
+    await page.getByTestId('presenter-more').tap();
+    await expect(sheet).toBeVisible();
+    await page.keyboard.press('ArrowLeft');
+    await expect(sheet).toHaveCount(0);
+    await expect.poll(() => counter(page)).not.toBe(stepped);
+    // A tool key closes the sheet first and opens its tool (never under the sheet).
+    await page.getByTestId('presenter-more').tap();
+    await expect(sheet).toBeVisible();
+    await page.keyboard.press('b');
+    await expect(sheet).toHaveCount(0);
+    await expect(page.getByTestId('presenter-blank')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('presenter-blank')).toHaveCount(0);
     await page.getByTestId('presenter-more').tap();
     await expect(sheet).toBeVisible();
     await page.getByTestId('presenter-timer').tap();
@@ -816,6 +844,42 @@ test.describe('PN-3: Spanish at 768 x 1024 (touch) takes the docked More fallbac
     await expect(page.getByTestId('presenter-timer-corner').or(page.getByTestId('presenter-timer-full'))).toBeVisible();
   });
 });
+
+/** The spec's other wrap windows (section 5.1): 1080 x 810 and 1133 x 744, by touch, in English. */
+for (const vp of [
+  { id: 'V3-1080', width: 1080, height: 810 },
+  { id: 'V3-1133', width: 1133, height: 744 },
+] as const) {
+  test.describe(`PN-3 ${vp.id} ${vp.width} x ${vp.height}, touch (docked, wrapped)`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height }, isMobile: false, hasTouch: true });
+
+    test('the band wraps: tools above, Previous and Next at the bottom row ends, the clearance kept', async ({ page }) => {
+      await open(page, { id: vp.id, width: vp.width, height: vp.height, phone: false, inputs: ['touch'] }, 'touch');
+      const row = page.getByTestId('presenter-bar-docked');
+      await expect(row).toHaveAttribute('data-rows', '2');
+      await expect(row).toHaveAttribute('data-more', 'false');
+      const buttons = await bandButtons(page);
+      expect(buttons.map((b) => b.id)).toEqual(O6);
+      const box = (id: string) => buttons.find((b) => b.id === id)!;
+      const prev = box('presenter-back');
+      const next = box('presenter-next');
+      expect(Math.abs(prev.top - next.top)).toBeLessThan(1);
+      for (const b of buttons) {
+        expect(prev.left, b.id).toBeLessThanOrEqual(b.left + 0.5);
+        expect(next.right, b.id).toBeGreaterThanOrEqual(b.right - 0.5);
+        expect(b.right, b.id).toBeLessThanOrEqual(vp.width);
+      }
+      for (const id of ['presenter-exit', 'presenter-sound']) expect(box(id).bottom, id).toBeLessThanOrEqual(prev.top);
+      const band = (await page.getByTestId('presenter-bar-band').boundingBox())!;
+      const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+      expect(Math.round(band.height)).toBe(240);
+      expect(stage.y + stage.height).toBeLessThanOrEqual(band.y + 0.5);
+      const content = await contentBox(page);
+      for (const b of buttons) expect(gap(content, b), b.id).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+      await shot(page, `presenter-nav-pn3-${vp.id}-touch`);
+    });
+  });
+}
 
 /**
  * Row PN-4 (AMENDMENTS-PRESENTER-NAV sections 5.0, 5.2, 11 and 14; owner choices O1 a, O3 a and O10 a,

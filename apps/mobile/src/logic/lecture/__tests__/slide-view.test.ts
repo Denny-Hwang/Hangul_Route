@@ -32,6 +32,7 @@ import {
   vocabArt,
   writeView,
 } from '../slide-view';
+import { rolePlaySlides } from './role-play-slides';
 
 /**
  * What the PR 7 slides show at each build (F-TCH-004 section 3.4; design/screens/presenter/
@@ -193,6 +194,20 @@ describe('activityTimerMs', () => {
   });
 });
 
+describe('slideSound: a Role Play turn (F-CURR-002 section 8, row CM-35)', () => {
+  it("plays the partner's line at the sentence rate, at every build, never a reply", () => {
+    for (const turn of rolePlaySlides()) {
+      for (let reveal = 0; reveal < turn.builds.length; reveal++) expect(slideSound(turn, reveal)).toEqual({ spoken: turn.line.spoken, kind: 'sentence' });
+    }
+  });
+
+  it('builds the question, then the answer, in both romanization modes (the replies keep their romanization for the answer with tap)', () => {
+    const [turn] = rolePlaySlides();
+    expect(buildsFor(turn!, { romanization: 'always', strokeGuide: true })).toEqual(['question', 'answer']);
+    expect(buildsFor(turn!, { romanization: 'tap', strokeGuide: true })).toEqual(['question', 'answer']);
+  });
+});
+
 describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendment 2026-10-17)', () => {
   const question = ['question', 'answer'] as const;
   const quiz = (prompt: Extract<Slide, { kind: 'quiz' }>['prompt']): Slide => ({ kind: 'quiz', key: `q/${prompt.ask}`, builds: [...question], prompt, options: [], textPrompt: false });
@@ -236,6 +251,8 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     const target = { ko: '해', romanization: 'hae', gloss: 'sun' };
     expect(slideSound(quiz({ ask: 'check', text: 'What is {target}?', target }))).toEqual({ spoken: { text: '해', romanization: 'hae' }, kind: 'word' });
     expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
+    // A Cloze Pick sentence with its gap (row CM-30) is not said: the gap would be read out as underscores.
+    expect(slideSound(quiz({ ask: 'check', text: '{target}', target: { ko: '책을 ___.', romanization: 'chaegeul ___.', gloss: 'I read a book.' } }))).toBeUndefined();
   });
 
   it('an order slide plays the last Korean step on screen at the reveal, in the order drawn, at the sentence rate', () => {
@@ -493,7 +510,8 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
 
 describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections 5.1 and 5.2, LV-S2)', () => {
   const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
-  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+  // Row CM-3A S3: the Stage 3 Checks rotate Cloze Pick, Sentence Builder and Dictation; nature q1 still hears its Apply.
+  const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
   const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
   const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
@@ -519,6 +537,7 @@ describe('the question slides on shipped content (AMENDMENTS-LECTURE-V2 sections
   it("a reply question plays the other speaker's line at the sentence rate", () => {
     const [reply] = asked(stage4, 'reply');
     const prompt = reply!.prompt as Extract<Quiz['prompt'], { ask: 'reply' }>;
+    // Row CM-3A S4: the life q1 Role Play's first turn (its reply slides while `game.role-play` is off, row CM-35).
     expect(prompt.line.ko).toBe('밥 먹었어요?');
     expect(slideSound(reply)).toEqual({ spoken: prompt.line.spoken, kind: 'sentence' });
   });
@@ -632,6 +651,7 @@ describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE
     ({ ...body, key: 'w/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) }) as Extract<Slide, { kind: 'write-together' }>;
   const type = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') });
   const tea = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word for tea', answer: line('차', 'cha', 'tea') });
+  const heard = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word you hear.', answer: line('아침', 'achim', 'morning'), hear: true });
   const trace = withBuildsOf({ kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') });
   const filled = withBuildsOf({
     kind: 'write-together',
@@ -677,6 +697,11 @@ describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE
     expect(slideSound(type, 1)).toEqual({ spoken: { text: '물 주세요', romanization: 'mul juseyo' }, kind: 'sentence' });
     expect(slideSound(tea, 1)).toEqual({ spoken: { text: '차', romanization: 'cha' }, kind: 'word' });
     expect(slideSound(tea)).toEqual(slideSound(tea, 1));
+    // A Dictation round (row CM-31 hear mode, its prompt "Type the word you hear") plays its target from the first
+    // build, as the learner's hear mode does; its Korean still waits for the answer build (row CM-3A S7).
+    expect(slideSound(heard, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
+    expect(writeView(heard, 0, 'always')).toMatchObject({ answer: false, rom: false });
+    expect(slideSound(heard, 1)).toEqual(slideSound(heard, 0));
     expect(slideSound(trace, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
     // A frame says its own Korean with a pause at each gap, then its banks, then the example.
     expect(slideSound(filled, 0)).toEqual({ spoken: { text: '아침에, 을, 를 먹어요.', romanization: 'achime, eul, reul meogeoyo' }, kind: 'sentence' });

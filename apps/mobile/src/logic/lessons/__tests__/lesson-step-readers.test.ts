@@ -28,6 +28,7 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'logic/my-route/skills.ts': 'My Route and the reports count through useLessonContentVersion',
   'logic/sentence-builder/view.ts': 'the game screen, behind useLessonQuestReady',
   'logic/stage1/curriculum.ts': 'a lesson quest reads LESSON_TEACHES from the manifest (questTeaches); steps only for Stage 1',
+  'logic/story-order/fallback.ts': 'not a quest: the steps of the Story Sequence round a Story Order round falls back to (row CM-34)',
   'logic/story/reader-effects.ts': 'not a quest: a story reader step list',
   'logic/story/story-ref.ts': 'storyReadStep: browse (withLessonContent) and the story minigame refs',
   'screens/browse/BrowseItemScreen.tsx': 'All lessons: the browse root mounts through withLessonContent',

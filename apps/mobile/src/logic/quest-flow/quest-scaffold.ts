@@ -1,6 +1,7 @@
-import type { KoText, ListenPickRound, RealiaReadRound } from '@hangul-route/content-schema';
+import { fillClozeGap, isRolePlayEnd, type ClozePickRound, type KoText, type ListenPickRound, type RealiaReadRound, type RolePlayScene, type RolePlayTurnNode } from '@hangul-route/content-schema';
 import type { RoundAsked } from '../memory/asked';
 import type { MinigameScope } from '../minigame-config';
+import { rolePlayMainPath } from '../role-play/fallback';
 
 /**
  * The scaffold round of a hard Practice (F-CURR-002 section 4.6, row CM-24): one Listen & Pick round, a shipped and
@@ -8,7 +9,8 @@ import type { MinigameScope } from '../minigame-config';
  * from the start). The prompt is the last item missed on the first try; the options are the missed items first,
  * then the Practice's other items, three at most. Nothing new is asked: every text is the Practice scope's own.
  * Trace a Word lists its traced words; Realia Read each round's key word (shown under its question) or, with none,
- * its answer when the answer is a word (a picture or a figure answer lists nothing).
+ * its answer when the answer is a word (a picture or a figure answer lists nothing). Role Play (row CM-35) lists its
+ * partner lines, the main path's first (as its Tap to Respond fallback lists them), then the other branches' turns.
  */
 
 /** The Korean a scope's rounds ask, each once, in order. */
@@ -36,12 +38,22 @@ export function scopeItems(scope: MinigameScope): KoText[] {
         return word ? [word] : [];
       });
       break;
+    // Row CM-30: a Cloze Pick round asks its completed sentence (a value gap's card is not a heard round).
+    case 'cloze-pick':
+      all = (scope.clozePick?.rounds ?? []).flatMap((r) => {
+        const done = clozeSentence(r);
+        return done ? [done] : [];
+      });
+      break;
     case 'tap-respond':
       all = (scope.dialogue ?? []).flatMap((t) =>
         t.npcRomanization
           ? [{ ko: t.npcKo, romanization: t.npcRomanization, en: t.npcEn, ...(t.npcSpokenKo ? { spokenKo: t.npcSpokenKo } : {}), ...(t.npcAudioRef ? { audioRef: t.npcAudioRef } : {}) }]
           : [],
       );
+      break;
+    case 'role-play':
+      all = rolePlayTurns(scope.rolePlay?.scene).map((t) => t.line);
       break;
     default:
       break;
@@ -62,8 +74,37 @@ function askedKo(asked: RoundAsked): string | undefined {
     byId(scope.typeHangul?.rounds)?.target.ko ??
     byId(scope.listenPick?.rounds)?.prompt.ko ??
     byId(scope.traceWord?.rounds)?.word.ko ??
-    realiaWord(byId(scope.realiaRead?.rounds))?.ko
+    realiaWord(byId(scope.realiaRead?.rounds))?.ko ??
+    clozeKo(byId(scope.clozePick?.rounds)) ??
+    rolePlayLine(scope.rolePlay?.scene, itemId)
   );
+}
+
+/** A scene's turns: the main path's, then the other branches' turns, each once. */
+function rolePlayTurns(scene: RolePlayScene | undefined): RolePlayTurnNode[] {
+  if (!scene) return [];
+  const main = rolePlayMainPath(scene);
+  const rest = scene.nodes.filter((n): n is RolePlayTurnNode => !isRolePlayEnd(n) && !main.includes(n));
+  return [...main, ...rest];
+}
+
+/** The partner line of the turn a Role Play answer names (its item id is `<node>/<reply>`). */
+function rolePlayLine(scene: RolePlayScene | undefined, itemId: string): string | undefined {
+  const node = itemId.split('/')[0];
+  return rolePlayTurns(scene).find((t) => t.id === node)?.line.ko;
+}
+
+/** A Cloze Pick round's completed sentence (a value gap asks its card, not a sentence). */
+function clozeKo(round: ClozePickRound | undefined): string | undefined {
+  return round ? clozeSentence(round)?.ko : undefined;
+}
+
+/** A word or particle gap's completed sentence, its gap filled with the answer tile; none for a value gap. */
+function clozeSentence(round: ClozePickRound): KoText | undefined {
+  const answer = round.tiles[round.answerIndex];
+  if (round.gapKind === 'value' || !answer) return undefined;
+  const { sentence: s } = round;
+  return { ko: fillClozeGap(s.ko, answer.ko), romanization: round.filledRomanization ?? fillClozeGap(s.romanization, answer.romanization), en: s.en };
 }
 
 /** A Realia Read round's word: its key word, else its answer when that is a word. */

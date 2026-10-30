@@ -241,6 +241,11 @@ export interface OptionView {
 export interface OptionViewContext {
   mode: HostMode;
   romanizationMode: RomanizationMode;
+  /**
+   * The spelling round (F-CURR-002 section 4.5, row CM-31): a text option's screen-reader name, spelled block by block
+   * with the letter names, because its options may sound the same. Default: the Korean and its shown romanization.
+   */
+  labelOf?: (text: { ko: string; romanization: string }) => string;
 }
 
 function cardStateOf(round: ListenPickRound, option: ListenPickOption, state: ListenPickFlowState, mode: HostMode): OptionCardState {
@@ -284,7 +289,7 @@ export function optionView(
       pictureRef: undefined,
       gloss: undefined,
     };
-    base = romanization === '' ? text.ko : `${text.ko}, ${romanization}`;
+    base = context.labelOf ? context.labelOf(text) : romanization === '' ? text.ko : `${text.ko}, ${romanization}`;
   }
 
   const announced = cardState === 'correct' || cardState === 'wrong' || cardState === 'hint' ? a11y.option[cardState](base) : base;

@@ -105,7 +105,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-rites-q1-check",
           "durationSeconds": 40
         },
@@ -251,27 +251,59 @@
         },
         {
           "ref": "minigame:s7-rites-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "송편을 먹었어요.",
-                "romanization": "songpyeoneul meogeosseoyo",
+                "ko": "송편을 ___.",
+                "romanization": "songpyeoneul ___",
                 "en": "I ate songpyeon."
               },
-              "pictureRef": "card:songpyeon",
-              "distractors": []
+              "tiles": [
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                },
+                {
+                  "ko": "봤어요",
+                  "romanization": "bwasseoyo",
+                  "en": "I saw"
+                },
+                {
+                  "ko": "만들었어요",
+                  "romanization": "mandeureosseoyo",
+                  "en": "I made"
+                }
+              ],
+              "answerIndex": 0
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "보름달을 봤어요.",
-                "romanization": "boreumdareul bwasseoyo",
+                "ko": "보름달을 ___.",
+                "romanization": "boreumdareul ___",
                 "en": "I saw the full moon."
               },
-              "pictureRef": "card:moon",
-              "distractors": []
+              "tiles": [
+                {
+                  "ko": "만들었어요",
+                  "romanization": "mandeureosseoyo",
+                  "en": "I made"
+                },
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                },
+                {
+                  "ko": "봤어요",
+                  "romanization": "bwasseoyo",
+                  "en": "I saw"
+                }
+              ],
+              "answerIndex": 2
             }
           ]
         }
@@ -739,9 +771,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-rites-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -996,27 +1028,91 @@
         },
         {
           "ref": "minigame:s7-rites-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "제가 좋아하는 날은 추석이에요.",
-                "romanization": "jega joahaneun nareun chuseogieyo",
-                "en": "My favorite day is Chuseok."
+              "frame": {
+                "ko": "호야가 좋아하는 날은 ___이에요/예요.",
+                "romanization": "hoyaga joahaneun nareun ___ieyo/yeyo",
+                "en": "Hoya's favorite day is ___."
               },
-              "pictureRef": "card:chuseok",
-              "distractors": []
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "설날에 떡국을 먹었어요.",
-                "romanization": "seollare tteokgugeul meogeosseoyo",
-                "en": "On Seollal, I ate tteokguk."
+              "frame": {
+                "ko": "호야는 ___에 ___을/를 만들었어요.",
+                "romanization": "hoyaneun ___e ___eul/reul mandeureosseoyo",
+                "en": "On ___, Hoya made ___."
               },
-              "pictureRef": "card:tteokguk",
-              "distractors": []
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Lunar New Year's Day"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    }
+                  ]
+                },
+                {
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "떡",
+                      "romanization": "tteok",
+                      "en": "rice cake"
+                    },
+                    {
+                      "ko": "케이크",
+                      "romanization": "keikeu",
+                      "en": "cake"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -1116,36 +1212,102 @@
       "id": "n4",
       "kind": "culture",
       "textEn": "Tteokguk, a soup of sliced rice cake, is the classic Seollal dish.",
-      "factRef": "story:seollal-new-year#f6",
+      "sources": [
+        {
+          "title": "떡국 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3690",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘멥쌀을 가루내어 떡메로 친 후, 손으로 길게 만든 흰 가래떡을 썰어서 맑은 장국에 넣고 끓인 음식으로 정조차례(正朝茶禮)시에 세찬(歲饌)으로 먹는 시절음식.’"
+        },
+        {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘설의 핵심 요소인 설 차례, 새배, 떡국을 먹는 풍속이 확인된다.’ (원문 표기 그대로)"
+        },
+        {
+          "title": "떡국",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0017198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘맑은 장국에 가래떡을 얇게 썰어넣고 끓인 음식.’ 내용: ‘설날에 먹는 절식(節食)의 하나이다.’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘세찬의 대표적인 음식인 떡국을 먹어야 나이 한 살을 먹는다고 했다.’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story seollal-new-year (tteokguk is the representative Seollal food, sliced garaetteok in a clear broth; sources: the Encyclopedia of Korean Culture entries 떡국 and 설 and the Korea Heritage Service entry 설과 대보름). No new fact. Carried by: the q1 intro Hoya line (\"Tteokguk is a classic Seollal dish.\").\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:seollal-new-year#f6 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 떡국 defines it as sliced garaetteok in clear broth and a Seollal seasonal food; the entry 설 calls tteokguk the representative New Year food; the Korea Heritage Service text for 설과 대보름 (loaded from its cul_127ZZ01500000 description page) names eating tteokguk as a core Seol custom. \"The classic Seollal dish\" matches; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:seollal-new-year#f6 resolves; AKS 떡국 (설날 절식) and 설 and the Korea Heritage Service 설과 대보름 page support \"the classic Seollal dish\". The note says \"classic\", no claim about every household. No new fact; no wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story seollal-new-year (tteokguk is the representative Seollal food, sliced garaetteok in a clear broth; sources: the Encyclopedia of Korean Culture entries 떡국 and 설 and the Korea Heritage Service entry 설과 대보름). No new fact. Carried by: the q1 intro Hoya line (\"Tteokguk is a classic Seollal dish.\").\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:seollal-new-year#f6 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 떡국 defines it as sliced garaetteok in clear broth and a Seollal seasonal food; the entry 설 calls tteokguk the representative New Year food; the Korea Heritage Service text for 설과 대보름 (loaded from its cul_127ZZ01500000 description page) names eating tteokguk as a core Seol custom. \"The classic Seollal dish\" matches; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:seollal-new-year#f6 resolves; AKS 떡국 (설날 절식) and 설 and the Korea Heritage Service 설과 대보름 page support \"the classic Seollal dish\". The note says \"classic\", no claim about every household. No new fact; no wording copied. Outcome: pass, no change.\nCM-3C (2026-10-23): the note now carries its own sources, the four sources of story:seollal-new-year#f6 with the National Folk Museum of Korea entry 떡국 first, so the on-screen tip names an allowlisted source. The words and the fact are unchanged."
       }
     },
     {
       "id": "n5",
       "kind": "culture",
       "textEn": "For Chuseok, families often gather to make songpyeon together.",
-      "factRef": "story:chuseok-ganggangsullae#f4",
+      "sources": [
+        {
+          "title": "송편 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4337",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘멥쌀가루를 익반죽하고 풋콩, 깨, 밤 같은 소를 넣어 반달 모양으로 빚어서 시루에 솔잎을 켜켜로 놓고 찐 떡. … 추석 때 햇곡식으로 빚는 명절떡이기도 하다.’"
+        },
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.’ / ‘송편 속에도 콩 · 팥 · 밤 · 대추 등을 넣는데, 모두 햇것으로 한다. 모두 햇곡식이기 때문에 더욱 맛이 있다.’"
+        },
+        {
+          "title": "송편",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031123",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘팔월 추석에는 햅쌀로 송편을 빚어 차례를 지내고’ / ‘팥송편·깨송편·대추송편·잣송편’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f4 of the reviewed story chuseok-ganggangsullae (on the evening before Chuseok families gather to make songpyeon; sources: the Encyclopedia of Korean Culture entries 추석 and 송편). The note says \"often\", not every family. No new fact. Carried by: the q2 intro Hoya line.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 추석 says families gather on the evening of the 14th to make songpyeon; the entry 송편 says songpyeon is made from new rice for Chuseok. The note says \"often\", so it makes no claim about every family; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves; AKS 추석 (families gather on the evening of the 14th to make songpyeon) and 송편 (new rice) support the note, which says \"often\", not every family. No new fact; no wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f4 of the reviewed story chuseok-ganggangsullae (on the evening before Chuseok families gather to make songpyeon; sources: the Encyclopedia of Korean Culture entries 추석 and 송편). The note says \"often\", not every family. No new fact. Carried by: the q2 intro Hoya line.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 추석 says families gather on the evening of the 14th to make songpyeon; the entry 송편 says songpyeon is made from new rice for Chuseok. The note says \"often\", so it makes no claim about every family; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves; AKS 추석 (families gather on the evening of the 14th to make songpyeon) and 송편 (new rice) support the note, which says \"often\", not every family. No new fact; no wording copied. Outcome: pass, no change.\nCM-3C (2026-10-23): culture-source fix. The note now carries its own sources: the National Folk Museum of Korea entry 송편 (topic 4337, read through the site's topic API: the festive rice cake made for Chuseok from the new grain) first, then the two sources of story:chuseok-ganggangsullae#f4 (families gather to make songpyeon). The words are unchanged."
       }
     },
     {
       "id": "n6",
       "kind": "culture",
       "textEn": "Chuseok has long been linked with the full moon, and it was even called the holiday of the moon.",
-      "factRef": "story:chuseok-ganggangsullae#f6",
+      "sources": [
+        {
+          "title": "국가무형유산 추석",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The full moon on Chuseok is understood as a symbol of prosperity, fecundity, and a bountiful crop.’ / ‘추석을 ‘달의 명절’이라 이르기도 하였다.’"
+        },
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용 요약: ‘추석은 1년 중 가장 큰 보름달을 맞이하는 달의 명절이다. 농경민족으로서 수확의 계절을 맞이하여 풍년을 축하·감사하며’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story chuseok-ganggangsullae (the Chuseok full moon as a symbol of plenty; Chuseok called 'the holiday of the moon'; source: the Korea Heritage Service entry 추석). No new fact. Carried by: the q1 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves (story reviewed by MAR 2026-10-13). The Korea Heritage Service text for 추석 (loaded from its cul_127ZZ01530000 description page) says the full moon symbolised plenty in traditional farming life and that Chuseok was also called 달의 명절, and gives the English line quoted in the story locator; the Encyclopedia of Korean Culture entry 추석 also calls it a moon holiday. The note matches; \"the holiday of the moon\" is a translated name, not copied prose; no new fact.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves; the Korea Heritage Service 추석 page (the full moon as a symbol of plenty; 달의 명절) and AKS 추석 support the note. The q1 Discover caption that carries it said \"has long been called\", a duration the sources do not give; it now says \"was even called the holiday of the moon\" in en, es and ko, matching the note. No new fact; no wording copied. Outcome: pass, caption fixed."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story chuseok-ganggangsullae (the Chuseok full moon as a symbol of plenty; Chuseok called 'the holiday of the moon'; source: the Korea Heritage Service entry 추석). No new fact. Carried by: the q1 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves (story reviewed by MAR 2026-10-13). The Korea Heritage Service text for 추석 (loaded from its cul_127ZZ01530000 description page) says the full moon symbolised plenty in traditional farming life and that Chuseok was also called 달의 명절, and gives the English line quoted in the story locator; the Encyclopedia of Korean Culture entry 추석 also calls it a moon holiday. The note matches; \"the holiday of the moon\" is a translated name, not copied prose; no new fact.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves; the Korea Heritage Service 추석 page (the full moon as a symbol of plenty; 달의 명절) and AKS 추석 support the note. The q1 Discover caption that carries it said \"has long been called\", a duration the sources do not give; it now says \"was even called the holiday of the moon\" in en, es and ko, matching the note. No new fact; no wording copied. Outcome: pass, caption fixed.\nCM-3C (2026-10-23): the note now carries its own sources, the two sources of story:chuseok-ganggangsullae#f6 (the Korea Heritage Service entry 추석 first), so the on-screen tip names an allowlisted source. The words and the fact are unchanged."
       }
     }
   ],
@@ -1153,11 +1315,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spacing, past forms, allomorphs and romanization clean; applied: ko glosses describe and echo no tile, no 이미, q3 glosses name the learner as the one who likes the day, type prompts give the dictionary verb, no extra tiles in the Checks, q3 r3 extra tile wrong in form, n1 names ㅏ / ㅗ in Hangul.",
-      "Culture pass 5 (MAR): n1-n6 re-checked against every cited NIKL, AKS and Korea Heritage Service page or reviewed story fact, nothing copied; applied: 주말 in every q2 day bank so every learner has a true answer, the moon caption says 'was even called', a neutral ko 가족 gloss, ko titles on 특별한 날; no real person, brand, price, ancestral rite or age wording."
+      "Culture pass 5 (MAR): n1-n6 re-checked against every cited NIKL, AKS and Korea Heritage Service page or reviewed story fact, nothing copied; applied: 주말 in every q2 day bank so every learner has a true answer, the moon caption says 'was even called', a neutral ko 가족 gloss, ko titles on 특별한 날; no real person, brand, price, ancestral rite or age wording.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick on the past verb (송편을 ___, 보름달을 ___; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame about Hoya (호야가 좋아하는 날은 ___ and 호야는 ___에 ___을/를 만들었어요; the q3 Apply played neither frame). Retired: 설날에 떡국을 먹었어요. 주말 stays in every day bank, so every learner has a true answer.",
+      "CM-3A S7 culture (MAR, 2026-10-23, re-read 2026-10-27): no culture claim and no note added; the Checks name only songpyeon, the full moon and days the cell teaches. n5's sources are CM-3C's fix (NFM 송편 first, then the two AKS entries), kept as CM-3C wrote them; culture-source reports nothing.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; off, Cloze Pick plays as Listen & Pick; es comí, vi, hice and ko 먹은 일, 본 일, 만든 일 gloss the past verbs alike; 주말 keeps a neutral answer; no frame asks about family or feelings.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the #867 reviews): q3 Check c1 copied Apply f1 (제가 좋아하는 날은 ___) and asked the learner's own day; c1 and c2 now name Hoya, and 생일 ('my birthday') leaves the Check banks. es El día favorito de Hoya es ___ / En ___ Hoya hizo ___ and ko 호야가 가장 좋아하는 날: ___ / ___에 호야가 만든 것: ___ fit every pick.",
+      "CM-3A S7 language (MAR, 2026-10-27): kept q1 c1's 만들었어요 tile; the meaning line 'I ate songpyeon.' is shown, and telling the cell's three past verbs apart by meaning is what the round checks (the CM-30 rule)."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -131,9 +131,10 @@ describe('chooserGroups: the groups over CATALOG', () => {
   });
 
   it('pins the counts of the shipped catalogue', () => {
-    expect(groups.map((g) => g.count)).toEqual([15, 18, 15, 15, 14, 15, 15, 24, 12]);
+    // Stage 1 has 16 lessons since F-CURR-002 row CM-33 (Crafts quest 4, letter shapes).
+    expect(groups.map((g) => g.count)).toEqual([16, 18, 15, 15, 14, 15, 15, 24, 12]);
     expect(episode(groups, 'episode:stage2-letters').lessons).toHaveLength(6);
-    expect(keysOf(groups)).toHaveLength(35 + 107 + 2 + 24 + 12);
+    expect(keysOf(groups)).toHaveLength(35 + 108 + 2 + 24 + 12);
   });
 
   it('Stage 1 also holds the two letter sets, after its episodes', () => {

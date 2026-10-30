@@ -219,6 +219,14 @@ describe("overlay-rules: korean-in-ui-field", () => {
     assert.ok(rules(base(es({ "story:demo": { [note]: "Usa {ko:이}." } }))).includes("korean-in-ui-field"));
   });
 
+  test("a Stage 1 Match Shape difference line may carry {ko:} tokens in Spanish, and no Hangul outside them (F-CURR-002 CM-33)", () => {
+    const field = "matchShape.rounds.ms-pair-bieup.diffNote";
+    assert.deepEqual(rules(base(es({ "minigame:s1-crafts-q4-play": { [field]: "{ko:ㅂ} está de pie. {ko:ㅍ} está acostada." } }))), []);
+    assert.deepEqual(rules(base(es({ "minigame:s1-crafts-q4-play": { [field]: "ㅂ está de pie." } }))), ["korean-in-ui-field"]);
+    // Only that field: another field of the scope is still UI text.
+    assert.deepEqual(rules(base(es({ "minigame:s1-crafts-q4-play": { "matchShape.rounds.ms-origin-nieun.note": "{ko:ㄴ} y más" } }))), ["korean-in-ui-field"]);
+  });
+
   test("a lesson note keeps exactly the {ko:} tokens of its noteEn (overlay-token-mismatch)", () => {
     const note = "steps.s2.discover.pages.0.items.0.note";
     const lessonCell = {

@@ -137,6 +137,8 @@ export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
  * room writes on paper or on its own devices and the stage only shows; nothing on it takes input,
  * and no name is ever typed, shown or stored.
  * - `type` (Type Hangul): the prompt in the slide language and its picture, then the answer.
+ *   A Dictation round (`mode: 'hear'`, F-CURR-002 row CM-31) is marked `hear`: its prompt says "Type the word you
+ *   hear", so the slide's sound plays the target from the first build (`writeSound`).
  * - `trace` (Trace a Word): the word as a large outline ghost, then its romanization and meaning.
  * - `frame` (Write Frame): the frame with its gap, each slot's word bank, then "For example" with
  *   each gap filled by its bank's first word, the ending that fits it chosen (observation O2).
@@ -144,10 +146,36 @@ export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
  *   syllable blocks, five groups a build (V12); never a name.
  */
 export type WriteTogether =
-  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine }
+  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine; hear?: true }
   | { variant: 'trace'; word: SpokenLine }
   | { variant: 'frame'; frame: FrameText; banks: SheetText[][]; example: SheetText & { spoken: SpokenForm } }
   | { variant: 'own-name'; frame: FrameText; groups: SheetText[][] };
+
+/** A reply bubble of a Role Play turn on the stage: natural (it fits), or less natural with Hoya's reason (`{ko:}` tokens as chips). */
+export interface RolePlayReplyView {
+  ko: string;
+  romanization: string;
+  gloss: string;
+  natural: boolean;
+  why?: NarrationPiece[];
+}
+
+/**
+ * A Role Play turn on the stage (F-CURR-002 section 8 "Role Play (a read-together chat; the class picks the reply)",
+ * row CM-35): the scene's place and the partner's role in the slide language, the exchange just before this turn
+ * (the partner's line and the reply the room gave, on the main path), the partner's line now, and the replies in the
+ * slide's seeded order. Builds `question`, `answer`: the room picks a reply by its marker; at the answer the natural
+ * replies are marked and each less natural one keeps its place with Hoya's reason in amber, never red, so every turn
+ * ends well. The last turn carries the scene's closing line, shown at its answer build.
+ */
+export interface RolePlayTurn {
+  scene: string;
+  partner: string;
+  before?: { line: SpokenLine; reply: SpokenLine };
+  line: SpokenLine;
+  replies: RolePlayReplyView[];
+  closing?: string;
+}
 
 export interface SequenceStep {
   id: string;
@@ -252,6 +280,14 @@ export type SlideBody =
   | { kind: 'sentence-build'; sentence: SpokenLine; tiles: BuildTile[]; bank: BankPlace[] }
   /** A Type Hangul, Trace a Word or Write Frame round the room writes together (LV-S4): see `WriteTogether`. */
   | ({ kind: 'write-together' } & WriteTogether)
+  /** A Role Play turn the room reads together and picks the reply for (F-CURR-002 section 8, row CM-35): see `RolePlayTurn`. */
+  | ({ kind: 'role-play' } & RolePlayTurn)
+  /**
+   * A Hidden Heritage target (F-CURR-002 §8, row CM-36): the class finds it in the projected scene, one slide per target.
+   * `ko` shows the scene (`alt` names it) and the word with its romanization, `gloss` its meaning, `answer` the found
+   * ring on its `spot`; `picture` stands in for the scene when its chunk cannot load. Nothing is scored.
+   */
+  | { kind: 'hidden-heritage'; sceneId: string; alt: string; word: SpokenLine; spot: { x: number; y: number; w: number; h: number }; picture: string }
   | { kind: 'activity'; preset: ActivityPreset; minutes: number }
   | { kind: 'end'; letters: KoLine[]; words: KoLine[]; classCode?: string };
 
@@ -327,12 +363,15 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
       return ['art', 'narration', ...(body.korean ? (['korean'] as const) : []), ...(body.korean || chips ? rom : [])];
     }
     case 'quiz':
+    case 'role-play':
       return ['question', 'answer'];
     case 'card':
       // The chip (and so its romanization build) is drawn only when the card has both its Korean and romanization.
       return ['art', ...(body.ko !== undefined && body.romanization !== undefined ? rom : []), ...(body.fact !== undefined ? (['fact'] as const) : [])];
     case 'activity':
       return ['prompt'];
+    case 'hidden-heritage':
+      return ['ko', ...rom, 'gloss', 'answer'];
     case 'end':
       return ['summary'];
     case 'title':

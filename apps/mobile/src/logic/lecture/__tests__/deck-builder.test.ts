@@ -1,5 +1,8 @@
 import {
   CATALOG,
+  decodeDeck,
+  encodeDeck,
+  LECTURE_DECODE_FAILURES,
   LECTURE_PRESETS,
   LectureDeckSchema,
   PRESET_LENGTHS,
@@ -16,6 +19,7 @@ import {
   type QuestStep,
 } from '@hangul-route/content-schema';
 import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lecture-decks';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import { questsAll } from '../../../content/quests';
@@ -31,6 +35,7 @@ import {
   type LectureVocabTopic,
   type Slide,
 } from '../deck-builder';
+import { STORY_ORDER_FIXTURES } from '../../../navigation/story-order-e2e-fixture';
 
 // ---- fixtures ---------------------------------------------------------------
 
@@ -1995,6 +2000,155 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
   const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
 
+  it('Read Pick Meaning (row CM-3A S2): a meaning question on the shown Korean, nothing said before the answer, the pictures as options', () => {
+    const read = quest('read-pick', [['check', 'mg:read-pick']], { rewardCardId: undefined });
+    const scope: MinigameScope = {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'see-uyu',
+            promptShown: true,
+            prompt: kt('우유', 'uyu', 'milk'),
+            options: [
+              { id: 'uyu', pictureRef: 'word:food-milk', labelEn: 'milk' },
+              { id: 'mul', pictureRef: 'word:food-water', labelEn: 'water' },
+            ],
+            answerId: 'uyu',
+          },
+        ],
+      },
+    };
+    const bun = (over: Partial<LectureBundle> = {}) =>
+      b({ scopeFor: (ref) => (ref === 'mg:read-pick' ? scope : undefined), questById: (id) => (id === read.id ? read : undefined), ...over });
+    const [q] = quizzes(run(read.id, {}, VOICE, bun()).slides, 'meaning');
+    expect(q!.prompt).toEqual({ ask: 'meaning', ko: '우유', romanization: 'uyu' });
+    expect(q!.textPrompt).toBe(false);
+    expect([...q!.options].sort((x, y) => x.picture!.localeCompare(y.picture!))).toEqual([
+      { picture: 'word:food-milk', gloss: 'milk', correct: true },
+      { picture: 'word:food-water', gloss: 'water', correct: false },
+    ]);
+    expect(quizzes(run(read.id, {}, VOICE, bun()).slides, 'listen')).toEqual([]);
+    // In another language a picture is never named by its English label (the listen rule).
+    const [es] = quizzes(run(read.id, {}, VOICE, bun({ locale: 'es' })).slides, 'meaning');
+    expect(es!.options.some((o) => o.gloss !== undefined)).toBe(false);
+  });
+
+  describe('Role Play (F-CURR-002 section 8, row CM-35): a read-together chat, the class picks the reply', () => {
+    type RolePlay = Extract<Slide, { kind: 'role-play' }>;
+    const rp = quest('role-play', [['apply', 'mg:role-play'], ['check', 'mg:role-play-none']], { rewardCardId: undefined });
+    const withScene = (scene: typeof LIBRARY_SCENE) =>
+      b({
+        scopeFor: (ref) => (ref === 'mg:role-play' ? { kind: 'role-play', rounds: 4, rolePlay: { scene } } : ref === 'mg:role-play-none' ? { kind: 'role-play' } : undefined),
+        questById: (id) => (id === rp.id ? rp : undefined),
+      });
+    const turns = (slides: readonly Slide[]): RolePlay[] => only(slides, 'role-play');
+    // `game.role-play` on (section 12.2): the presenter reads it once per deck; left out, it is off.
+    const ON = { rolePlay: true };
+    const run = (id: string, over: Partial<LectureDeckInput> = {}, voice = VOICE, bun = b()) => expandDeck(deckOf([{ kind: 'quest', id }], over), bun, voice, ON);
+
+    it('a role-play slide per turn of the main path, in order, each with the question and answer builds; a scope with no scene is skipped', () => {
+      const { slides, skipped } = run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE));
+      const chat = turns(slides);
+      expect(chat.map((t) => t.key)).toEqual(['quest:role-play/s1/t1', 'quest:role-play/s1/t2', 'quest:role-play/s1/t3', 'quest:role-play/s1/t4']);
+      expect(chat.map((t) => t.line.ko)).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!']);
+      expect(chat.every((t) => t.builds.join() === 'question,answer')).toBe(true);
+      expect(chat.every((t) => t.scene === 'At the library' && t.partner === 'librarian')).toBe(true);
+      expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:role-play-none', reason: 'scope-too-small' }]);
+      // No reply slide of the Tap to Respond fallback: the lecture has its own slide now.
+      expect(only(slides, 'quiz')).toEqual([]);
+    });
+
+    it('each turn carries the exchange before it (the partner line and the reply the room gave), the line with what Sound says, and every reply', () => {
+      const chat = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides);
+      expect(chat[0]!.before).toBeUndefined();
+      expect(chat[1]!.before).toEqual({
+        line: { ko: '안녕하세요!', romanization: 'annyeonghaseyo', gloss: 'Hello!', spoken: { text: '안녕하세요!', romanization: 'annyeonghaseyo' } },
+        reply: { ko: '안녕하세요!', romanization: 'annyeonghaseyo', gloss: 'Hello!', spoken: { text: '안녕하세요!', romanization: 'annyeonghaseyo' } },
+      });
+      expect(chat[2]!.before?.reply.ko).toBe('동화책을 찾아요.');
+      expect(chat[1]!.line).toEqual({
+        ko: '무슨 책을 찾아요?',
+        romanization: 'museun chaegeul chajayo',
+        gloss: 'What book are you looking for?',
+        spoken: { text: '무슨 책을 찾아요?', romanization: 'museun chaegeul chajayo' },
+      });
+      // Turn 2 keeps both natural replies (either fits; the stage follows the first) and the less natural one with its reason.
+      const sorted = [...chat[1]!.replies].sort((x, y) => x.ko.localeCompare(y.ko));
+      expect(sorted).toEqual([
+        { ko: '괜찮아요.', romanization: 'gwaenchanayo', gloss: 'It is okay.', natural: false, why: [{ text: 'They asked which book. Tell them the book you want.' }] },
+        { ko: '동화책을 찾아요.', romanization: 'donghwachaegeul chajayo', gloss: 'I am looking for a storybook.', natural: true },
+        { ko: '한글 책을 찾아요.', romanization: 'hangeul chaegeul chajayo', gloss: 'I am looking for a Hangul book.', natural: true },
+      ]);
+    });
+
+    it("a reason's {ko:} token is a Korean chip with its romanization; a token that cannot be romanized drops only that reason, counted", () => {
+      const last = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides)[3]!;
+      expect(last.replies.find((r) => !r.natural)?.why).toEqual([
+        { text: 'You are the one leaving, so ' },
+        { ko: '안녕히 계세요', romanization: 'annyeonghi gyeseyo' },
+        { text: ' fits: it is said to the one who stays.' },
+      ]);
+      const odd = {
+        ...LIBRARY_SCENE,
+        nodes: LIBRARY_SCENE.nodes.map((n) =>
+          n.id === 't1' && !('end' in n) ? { ...n, replies: n.replies.map((r) => (r.kind === 'lessNatural' ? { ...r, whyEn: 'Try {ko:ㅋ}.' } : r)) } : n,
+        ),
+      };
+      const { slides, skipped } = run(rp.id, {}, VOICE, withScene(odd));
+      const first = turns(slides)[0]!;
+      expect(first.replies).toHaveLength(2);
+      expect(first.replies.find((r) => !r.natural)).toEqual({ ko: '잘 먹겠습니다!', romanization: 'jal meokgetseumnida', gloss: 'I will eat well. (said before eating)', natural: false });
+      expect(skipped).toContainEqual({ blockIndex: 0, ref: 'mg:role-play', reason: 'no-romanization' });
+    });
+
+    it('every turn ends well: every turn has a natural reply, every less natural one has its reason, and only the last turn closes the chat', () => {
+      const chat = turns(run(rp.id, {}, VOICE, withScene(LIBRARY_SCENE)).slides);
+      expect(chat.every((t) => t.replies.some((r) => r.natural))).toBe(true);
+      expect(chat.every((t) => t.replies.every((r) => r.natural || (r.why !== undefined && r.why.length > 0)))).toBe(true);
+      expect(chat.map((t) => t.closing)).toEqual([undefined, undefined, undefined, 'You found your book!']);
+    });
+
+    it('the replies are in the slide seed order, the same for the same deck, and the room is never shown them in content order every time', () => {
+      const orders = (seed: number) => turns(run(rp.id, { seed }, VOICE, withScene(LIBRARY_SCENE)).slides).map((t) => t.replies.map((r) => r.ko).join('|'));
+      expect(orders(7)).toEqual(orders(7));
+      const seeds = Array.from({ length: 12 }, (_, i) => i);
+      expect(new Set(seeds.map((seed) => orders(seed)[1])).size).toBeGreaterThan(1);
+    });
+
+    it('the run draws the slide (a shell kind), its Sound plays the partner line, and its words count as sentences for a later word card', () => {
+      const deck = deckOf([{ kind: 'quest', id: rp.id }]);
+      const expanded = expandDeck(deck, withScene(LIBRARY_SCENE), VOICE, ON);
+      const { slides, parts } = runDeck(deck, expanded);
+      expect(only(slides, 'role-play')).toHaveLength(4);
+      expect(parts).toEqual([{ blockIndex: 0, reason: 'scope-too-small' }]);
+    });
+
+    it('with game.role-play off (the switches left out, or off) the step builds the reply slides of Tap to Respond on its main path, never a Role Play slide', () => {
+      for (const off of [undefined, { rolePlay: false }]) {
+        const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id: rp.id }]), withScene(LIBRARY_SCENE), VOICE, off);
+        expect(turns(slides)).toEqual([]);
+        const replies = quizzes(slides, 'reply');
+        expect(replies.map((q) => q.key)).toEqual(['quest:role-play/s1/q1', 'quest:role-play/s1/q2', 'quest:role-play/s1/q3', 'quest:role-play/s1/q4']);
+        expect(replies.map((q) => (q.prompt.ask === 'reply' ? q.prompt.line.ko : ''))).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!']);
+        // One right answer per turn, the first natural reply; a second natural reply is left out, as the learner fallback plays it.
+        expect(replies.every((q) => q.options.filter((o) => o.correct).length === 1)).toBe(true);
+        expect(replies[1]!.options.map((o) => o.ko).sort()).toEqual(['괜찮아요.', '동화책을 찾아요.']);
+        expect(skipped).toEqual([{ blockIndex: 0, ref: 'mg:role-play-none', reason: 'scope-too-small' }]);
+      }
+    });
+
+    it('the deck shape does not change: a deck naming a quest with a Role Play step stays v1 and decodes, so no new decode failure is needed', () => {
+      const deck = deckOf([{ kind: 'quest', id: rp.id }]);
+      const fragment = encodeDeck(deck);
+      expect(fragment.startsWith('1.')).toBe(true);
+      const decoded = decodeDeck(fragment);
+      expect(decoded.ok).toBe(true);
+      // Role Play adds none; `unknown_kind` is Hidden Heritage's (row CM-36).
+      expect(LECTURE_DECODE_FAILURES).toEqual(['empty', 'too_large', 'bad_encoding', 'bad_json', 'unsupported_version', 'invalid', 'unknown_kind']);
+    });
+  });
+
   it('every shipped kind of question step becomes slides, in step order, with no skip', () => {
     const { slides, skipped } = run(asked.id);
     // The realia page (Discover) already showed the menu, so its questions follow at once.
@@ -2298,7 +2452,8 @@ describe('expandDeck: the sentence builds (AMENDMENTS-LECTURE-V2 sections 5.1 an
 
   it('every shipped order-it round, the Stage 7 Checks included, becomes a sentence-build slide with no skip', () => {
     const shipped = lectureBundle('en');
-    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q1', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
+    // Row CM-3A S7: Stage 7 life q3 and letters q2 keep a Sentence Builder Check; life q2 builds in its Practice.
+    const ids = ['quest:stage3-life-q3', 'quest:stage7-life-q3', 'quest:stage7-life-q2', 'quest:stage7-letters-q2'];
     for (const id of ids) {
       const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }]), shipped, VOICE);
       const quest = shipped.questById(id)!;
@@ -2431,7 +2586,9 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    expect(typeSlides).toBe(73 * 3);
+    // 73 Type Hangul rounds, and the Dictation rounds of the Checks: 14 in Stage 2 (row CM-3A S2), 8 in Stage 3 (row CM-3A
+    // S3) and 8 in Stage 6 (row CM-3A S6), in three languages.
+    expect(typeSlides).toBe(103 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {
@@ -2520,5 +2677,165 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         expect(s.answer.gloss, `${locale} ${s.key}`).not.toBe(was.answer.gloss);
       });
     }
+  });
+});
+
+describe('expandDeck: Cloze Pick on the existing question slides (F-CURR-002 section 8, row CM-30)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const card = {
+    ref: 'realia:e2e-prices',
+    kind: 'price-card' as const,
+    entries: [{ id: 'apples', text: kt('사과', 'sagwa', 'apples'), value: kt('삼천 원', 'samcheon won', '3,000 won') }],
+    altEn: 'A market price card for apples',
+  };
+  const clozeScopes: Record<string, MinigameScope> = {
+    'mg:cloze': {
+      kind: 'cloze-pick',
+      clozePick: {
+        rounds: [
+          { id: 'c1', sentence: kt('책을 ___.', 'chaegeul ___.', 'I read a book.'), gapKind: 'word', tiles: [kt('읽어요', 'ilgeoyo', 'read'), kt('먹어요', 'meogeoyo', 'eat'), kt('마셔요', 'masyeoyo', 'drink')], answerIndex: 0 },
+          { id: 'c2', sentence: kt('___ 원이에요.', '___ wonieyo.', 'It is ___ won.'), gapKind: 'value', tiles: [kt('삼천', 'samcheon', 'three thousand'), kt('오천', 'ocheon', 'five thousand'), kt('이천', 'icheon', 'two thousand')], answerIndex: 0 },
+        ],
+        realia: card,
+      },
+    },
+    'mg:cloze-no-card': {
+      kind: 'cloze-pick',
+      clozePick: { rounds: [{ id: 'v1', sentence: kt('___ 원이에요.', '___ wonieyo.', 'It is ___ won.'), gapKind: 'value', tiles: [kt('삼천', 'samcheon', 'three thousand'), kt('오천', 'ocheon', 'five thousand'), kt('이천', 'icheon', 'two thousand')], answerIndex: 0 }] },
+    },
+    'mg:cloze-none': { kind: 'cloze-pick', clozePick: { rounds: [] } },
+  };
+  const clozeQuest = quest('cloze', [['practice', 'mg:cloze'], ['apply', 'mg:cloze-no-card'], ['check', 'mg:cloze-none']], { rewardCardId: undefined });
+  const run = () =>
+    expandDeck(
+      deckOf([{ kind: 'quest', id: clozeQuest.id }]),
+      bundle({ scopeFor: (ref) => clozeScopes[ref], questById: (id) => (id === clozeQuest.id ? clozeQuest : undefined) }),
+      VOICE,
+    );
+
+  it('a word gap is a check question: its sentence with the gap is the target, its meaning shows, the tiles are the options', () => {
+    const { slides } = run();
+    const checks = only(slides, 'quiz').filter((q) => q.prompt.ask === 'check');
+    expect(checks).toHaveLength(1);
+    expect(checks[0]!.prompt).toEqual({ ask: 'check', text: '{target}', target: { ko: '책을 ___.', romanization: 'chaegeul ___.', gloss: 'I read a book.' } });
+    expect([...checks[0]!.options].sort((a, b) => a.ko!.localeCompare(b.ko!))).toEqual([
+      { ko: '마셔요', romanization: 'masyeoyo', correct: false },
+      { ko: '먹어요', romanization: 'meogeoyo', correct: false },
+      { ko: '읽어요', romanization: 'ilgeoyo', correct: true },
+    ]);
+    expect(checks[0]!.builds.join()).toBe('question,answer');
+  });
+
+  it('a value gap is a realia question beside its card, shown once before the questions', () => {
+    const { slides } = run();
+    expect(kinds(slides)).toEqual(['title', 'quiz', 'realia', 'quiz', 'end']);
+    const realia = only(slides, 'quiz').find((q) => q.prompt.ask === 'realia');
+    expect(realia?.prompt).toMatchObject({ ask: 'realia', text: 'It is ___ won.', key: { ko: '___ 원이에요.', romanization: '___ wonieyo.' } });
+    expect(realia?.options.filter((o) => o.correct).map((o) => o.ko)).toEqual(['삼천']);
+  });
+
+  it('a value gap with no card and an empty scope are counted skips, never a crash; no new slide kind', () => {
+    const { skipped, slides } = run();
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:cloze-no-card', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:cloze-none', reason: 'scope-too-small' },
+    ]);
+    expect(new Set(kinds(slides))).toEqual(new Set(['title', 'quiz', 'realia', 'end']));
+  });
+});
+
+describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
+  // The two-round fixture: an illustrated round settled by its time words, then a captions-only round.
+  const soScopes: Record<string, MinigameScope> = { 'mg:story-order': STORY_ORDER_FIXTURES.twoRounds, 'mg:story-order-empty': STORY_ORDER_FIXTURES.empty };
+  const soQuest: Quest = { ...quest('story-order', [['intro'], ['apply', 'mg:story-order'], ['practice', 'mg:story-order-empty']]), rewardCardId: undefined };
+  soQuest.steps[1]!.minigameKind = 'story-order';
+  soQuest.steps[2]!.minigameKind = 'story-order';
+  const b = bundle({ scopeFor: (ref) => soScopes[ref] ?? scopes[ref], questById: (id) => (id === soQuest.id ? soQuest : quests.find((q) => q.id === id)) });
+  const run = () => expandDeck(deckOf([{ kind: 'quest', id: soQuest.id }]), b, VOICE);
+
+  it('maps onto the sentence slides, no slide kind of its own: each line in its right order, round by round', () => {
+    const { slides, skipped } = run();
+    expect(kinds(slides)).toEqual(['title', ...Array(8).fill('sentence'), 'end']);
+    const lines = only(slides, 'sentence');
+    expect(lines.map((s) => s.sentence.ko)).toEqual([
+      '아침에 해가 떠요.',
+      '점심에 빵을 먹어요.',
+      '저녁에 비가 와요.',
+      '밤에 별이 떠요.',
+      '먼저 일어나요.',
+      '그다음에 세수해요.',
+      '그리고 밥을 먹어요.',
+      '마지막에 공원에 가요.',
+    ]);
+    expect(keys(lines).slice(0, 2)).toEqual(['quest:story-order/s2/day/sun', 'quest:story-order/s2/day/bread']);
+    // An empty scope adds no slide and no skip.
+    expect(skipped).toEqual([]);
+  });
+
+  it('the Korean first and its meaning a click later; the picture only where the round draws pictures', () => {
+    const lines = only(run().slides, 'sentence');
+    expect(lines[0]).toMatchObject({
+      sentence: { ko: '아침에 해가 떠요.', romanization: 'achime haega tteoyo', gloss: 'In the morning the sun comes up.' },
+      picture: 'word:nature-sun',
+      builds: ['ko', 'gloss', 'art'],
+    });
+    expect(lines[4]).not.toHaveProperty('picture');
+    expect(lines[4]!.builds).toEqual(['ko', 'gloss']);
+  });
+});
+
+describe('expandDeck: Hidden Heritage, a whole-class scene hunt (F-CURR-002 §8, row CM-36)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const spot = (x: number, y: number) => ({ x, y, w: 80, h: 80 });
+  const round = {
+    id: 'hh1',
+    sceneId: 'scene:food-market',
+    altEn: 'A food stall on a market day.',
+    targets: [
+      { id: 'bap', word: kt('밥', 'bap', 'rice'), spot: spot(10, 170), picture: 'card:rice' },
+      { id: 'gimchi', word: kt('김치', 'gimchi', 'kimchi'), spot: spot(200, 170), picture: 'card:kimchi' },
+      { id: 'jeotgarak', word: kt('젓가락', 'jeotgarak', 'chopsticks'), spot: spot(300, 170), picture: 'card:chopsticks' },
+    ],
+    others: [
+      { id: 'guk', word: kt('국', 'guk', 'soup'), spot: spot(105, 170) },
+      { id: 'hangari', word: kt('항아리', 'hangari', 'jar'), spot: spot(40, 50) },
+      { id: 'baguni', word: kt('바구니', 'baguni', 'basket'), spot: spot(280, 50) },
+    ],
+  };
+  const hhScopes: Record<string, MinigameScope> = {
+    'mg:hh': { kind: 'hidden-heritage', hiddenHeritage: { rounds: [round] } },
+    'mg:hh-none': { kind: 'hidden-heritage', hiddenHeritage: { rounds: [] } },
+  };
+  const hunt = quest('hunt', [['intro'], ['practice', 'mg:hh']], { rewardCardId: undefined });
+  const none = quest('hunt-none', [['practice', 'mg:hh-none']], { rewardCardId: undefined });
+  const b = bundle({ scopeFor: (ref) => hhScopes[ref] ?? scopes[ref], questById: (id) => [hunt, none].find((q) => q.id === id) ?? quests.find((q) => q.id === id) });
+  type Hunt = Extract<Slide, { kind: 'hidden-heritage' }>;
+
+  it('one slide per target, in content order, with the scene, the word, its meaning, the spot and the picture', () => {
+    const { slides, skipped, taught } = expandDeck(deckOf([{ kind: 'quest', id: hunt.id }]), b, VOICE);
+    expect(skipped).toEqual([]);
+    const hh = only(slides, 'hidden-heritage') as Hunt[];
+    expect(hh.map((s) => [s.key, s.word.ko, s.word.romanization, s.word.gloss, s.picture])).toEqual([
+      ['quest:hunt/s2/hh1/bap', '밥', 'bap', 'rice', 'card:rice'],
+      ['quest:hunt/s2/hh1/gimchi', '김치', 'gimchi', 'kimchi', 'card:kimchi'],
+      ['quest:hunt/s2/hh1/jeotgarak', '젓가락', 'jeotgarak', 'chopsticks', 'card:chopsticks'],
+    ]);
+    expect(hh[0]).toMatchObject({ sceneId: 'scene:food-market', alt: 'A food stall on a market day.', spot: round.targets[0]!.spot });
+    // The other things are never a slide: the class finds the named things only.
+    expect(hh.some((s) => s.word.ko === '국')).toBe(false);
+    expect(taught.filter((t) => t.kind === 'word').map((t) => t.ko)).toEqual(expect.arrayContaining(['밥', '김치', '젓가락']));
+  });
+
+  it('builds the scene and the word, then the meaning, then the found ring; romanization a build of its own in tap mode', () => {
+    const always = only(expandDeck(deckOf([{ kind: 'quest', id: hunt.id }]), b, VOICE).slides, 'hidden-heritage')[0]!;
+    expect(always.builds).toEqual(['ko', 'gloss', 'answer']);
+    const tap = only(expandDeck(deckOf([{ kind: 'quest', id: hunt.id }], { options: { romanization: 'tap' } }), b, VOICE).slides, 'hidden-heritage')[0]!;
+    expect(tap.builds).toEqual(['ko', 'rom', 'gloss', 'answer']);
+  });
+
+  it('a scope with no scene is a counted skip, never a crash', () => {
+    const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id: none.id }]), b, VOICE);
+    expect(only(slides, 'hidden-heritage')).toEqual([]);
+    expect(skipped).toEqual([expect.objectContaining({ ref: 'mg:hh-none', reason: 'scope-too-small' })]);
   });
 });

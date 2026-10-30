@@ -81,11 +81,37 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
     reason:
       "the Korean drawn inside the Stage 6-7 and album legendary card pictures (F-CURR-002 row CM-23 part 3): a menu, a ticket, a sign or a word-bank sentence of the card's own cell, never a reading aid; the cards' Korean and romanization are in heritage-cards.ts (registered, B1)",
   },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/food-market.ts',
+    reason: "the Food market scene's reference round and its quoted sources (F-CURR-002 row CM-36): the round is a scene's sample spots, played by the fixture-build e2e and copied by the content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/logic/__tests__/hidden-heritage-flow.test.ts",
+  },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/letters-school.ts',
+    reason: "the Letters school room scene's reference round and its quoted sources (F-CURR-002 row CM-37): the round is a scene's sample spots, copied by the content row that ships the cell, whose lesson file is scanned; its romanization is checked against rr.ts by apps/mobile/src/screens/minigames/__tests__/HiddenHeritageLetters.test.tsx",
+  },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/seollal-room.ts',
+    reason: "the Seollal room scene's reference round and its quoted Korean sources (F-CURR-002 row CM-37 part 2): the round is a scene's sample spots, played by the fixture-build e2e and copied by the Holidays content row that ships the cell, whose lesson file is scanned; the round's romanization is checked by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-seollal.test.tsx, and its targets against the Stage 2 Holidays Discover words by packages/design-system/src/scene-art/__tests__/hidden-heritage-seollal.test.ts",
+  },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/four-seasons.ts',
+    reason: "the four-season scene's reference round and its quoted sources (F-CURR-002 row CM-37 part 3): the round is a scene's sample spots, played by the fixture-build e2e and copied by the content row that ships the Nature cell, whose lesson file is scanned; its romanization is checked against rr.ts by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-four-seasons.test.tsx",
+  },
+  {
+    path: 'packages/design-system/src/scene-art/hidden-heritage/play-courtyard.ts',
+    reason: "the Play courtyard scene's reference round and its quoted sources (F-CURR-002 row CM-37 part 4): the round is a scene's sample spots, played by the fixture-build e2e and copied by the content row that ships the cell, whose lesson file is scanned; its romanization is still checked by apps/mobile/src/screens/minigames/__tests__/hidden-heritage-play-courtyard.test.tsx (checkRomanization on every target and other thing)",
+  },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },
   { path: 'apps/mobile/src/logic/type-hangul/e2e-rounds.ts', reason: 'test-only Type Hangul rounds played by the fixture-build e2e (F-CURR-001 G-3), never shipped; their romanization is still checked by apps/mobile/src/logic/type-hangul/__tests__/e2e-rounds.test.ts' },
+  { path: 'apps/mobile/src/logic/cloze-pick/e2e-rounds.ts', reason: 'test-only Cloze Pick rounds played by the fixture-build e2e and the component tests (F-CURR-002 row CM-30), never shipped; their romanization is still checked by apps/mobile/src/logic/cloze-pick/__tests__/round.test.ts' },
+  { path: 'apps/mobile/src/logic/syllable-build/decode-pool.json', reason: 'the real blocks of Syllable Build and the Block Sprint (F-CURR-002 CM-32), Korean only: their romanization comes from rr.ts at run time, checked block by block (and against the Stage 1 table) by apps/mobile/src/logic/syllable-build/__tests__/pool.test.ts' },
+  { path: 'apps/mobile/src/logic/syllable-build/pool.ts', reason: 'comments only: examples of blocks heard alike (F-CURR-002 CM-32)' },
+  { path: 'apps/mobile/src/logic/syllable-build/fallback.ts', reason: 'comments only: the wireframe example of the fallback options (F-CURR-002 CM-32)' },
+  { path: 'apps/mobile/src/logic/syllable-build/view.ts', reason: 'comments only: a tile label example (F-CURR-002 CM-32)' },
   { path: 'apps/mobile/src/logic/write-frame/e2e-rounds.ts', reason: 'test-only Write Frame rounds played by the fixture-build e2e and the component tests (F-CURR-001 G-5), never shipped; their romanization is still checked by apps/mobile/src/logic/write-frame/__tests__/e2e-rounds.test.ts' },
+  { path: 'apps/mobile/src/logic/my-story/e2e-chain.ts', reason: 'the test-only My Story chain played by the fixture-build e2e and the component tests (F-CURR-002 row CM-38), never shipped; its romanization is still checked by apps/mobile/src/logic/my-story/__tests__/e2e-chain.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/flow.ts', reason: 'Hangul character-class regex and a comment naming the cast name (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/write-frame/view.ts', reason: 'Hangul character-class regex and doc examples of the fitted ending (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/lecture/deck-builder.ts', reason: 'a doc comment on the write-frame slide: the fitted-ending example (observation O2: 밥 with 을/를), no shipped text; the slides read their Korean from the bundle (AMENDMENTS-LECTURE-V2 LV-S2, LV-S4)' },
@@ -106,6 +132,11 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/content-schema/src/hangul/', reason: 'the particle-pair table (이/가, 을/를) and the keyboard jamo of F-CURR-001 §3.7: grammar data, no taught words' },
   { path: 'packages/content-schema/src/pillars.ts', reason: 'blueprint 04 sub-theme titles in PILLAR_TAGS: registry data for the console catalogue and analytics, never shown to learners (F-STORY-005 §3.8). The romanization is generated by pillarTagRomanization (catalogue-fields.test.ts checks every tag converts); a render site pairs ko with it (F-PLAN-002)' },
   { path: 'packages/content-schema/src/__fixtures__/', reason: 'zod and lint fixtures for schema tests, several deliberately broken' },
+  {
+    path: 'apps/mobile/src/navigation/story-order-e2e-fixture.ts',
+    reason:
+      'the Story Order e2e and unit-test rounds (F-CURR-002 row CM-34), reached only in the fixture build, never a learner; story-order-player.test.ts checks every caption against romanize() of rr.ts',
+  },
   { path: 'apps/mobile/src/navigation/realia-read-e2e-fixture.ts', reason: 'F-CURR-001 G-2 test fixtures (the four D-2 realia), reached only in the e2e fixture build; realia-read-flow.test.ts checks their Hangul-only texts with checkRomanization' },
   { path: 'packages/i18n/src/banned-words.json', reason: 'Korean banned-word list for the UI-copy lint (F-I18N-001), not taught content' },
   { path: 'packages/i18n/src/audience.ts', reason: 'Korean kids-only-framing patterns for the audience guard (F-I18N-001 §3.8), not taught content' },
@@ -148,6 +179,11 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/content-schema/src/review-items/stage1-items.json', reason: 'the frozen Stage 1 table, equal by its parity test (apps/mobile/src/content/__tests__/review-items-stage1.test.ts) to the Stage 1 TypeScript the mobile romanization suite checks (F-CURR-002 CM-10)' },
   { path: 'apps/mobile/src/content/__generated__/review-item-chunks/', reason: 'the review-item chunk, generated by scripts/build-review-items.mjs from content/ (class A) and the frozen Stage 1 table (F-CURR-002 CM-10)' },
   { path: 'apps/mobile/src/logic/reviews/engine.ts', reason: 'the review engine (F-CURR-002 CM-13): particle and copula endings for the credit inside sentences, and the jamo tables of the typing tolerance; grammar data, never shown to a learner' },
+  {
+    path: 'apps/mobile/src/logic/reviews/yut-board.ts',
+    reason:
+      'the five yut throw names of the Yut Review board and the source quotes in its doc comment (F-CURR-002 CM-39); each name is checked against romanizeWord by apps/mobile/src/logic/reviews/__tests__/yut-board.test.ts, which the mobile CI runs',
+  },
 ];
 
 /** The directories the content scan skips; kept equal to SKIPPED_DIRS in scripts/validate-content.mjs. */

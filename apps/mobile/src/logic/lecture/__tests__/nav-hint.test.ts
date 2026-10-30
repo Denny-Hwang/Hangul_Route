@@ -18,8 +18,14 @@ import {
   type NavHintStore,
 } from '../nav-hint';
 
-/** A store in memory; `fail` makes its reads or writes reject, `hang` makes its reads never settle. */
-function memoryStore(initial: unknown = null, opts: { failRead?: boolean; failWrite?: boolean; hang?: boolean } = {}): NavHintStore & { value: unknown; writes: unknown[] } {
+/**
+ * A store in memory; `fail` makes its reads or writes reject, `hang` makes its reads never settle,
+ * `hangWrite` makes its writes never settle (recorded, then stalled), `slowReadMs` delays each read.
+ */
+function memoryStore(
+  initial: unknown = null,
+  opts: { failRead?: boolean; failWrite?: boolean; hang?: boolean; hangWrite?: boolean; slowReadMs?: number } = {},
+): NavHintStore & { value: unknown; writes: unknown[] } {
   const store = {
     value: initial,
     writes: [] as unknown[],
@@ -27,6 +33,10 @@ function memoryStore(initial: unknown = null, opts: { failRead?: boolean; failWr
       expect(key).toBe(NAV_HINT_KEY);
       if (opts.hang) return new Promise<unknown>(() => undefined);
       if (opts.failRead) throw new Error('blocked');
+      if (opts.slowReadMs) {
+        const value = store.value;
+        return new Promise<unknown>((resolve) => setTimeout(() => resolve(value), opts.slowReadMs));
+      }
       return store.value;
     },
     writeJson: async (key: string, value: unknown): Promise<void> => {
@@ -34,6 +44,7 @@ function memoryStore(initial: unknown = null, opts: { failRead?: boolean; failWr
       if (opts.failWrite) throw new Error('blocked');
       store.writes.push(value);
       store.value = value;
+      if (opts.hangWrite) return new Promise<void>(() => undefined);
     },
   };
   return store;
@@ -107,11 +118,50 @@ describe('claimNavHint and finishNavHint', () => {
     expect(store.writes).toEqual([]);
   });
 
-  it('a read that never settles counts as storage off after the bound', async () => {
+  it('a read that never settles shows the hint after the bound and writes nothing', async () => {
     vi.useFakeTimers();
     const store = memoryStore(null, { hang: true });
     const claim = claimNavHint(store);
     await vi.advanceTimersByTimeAsync(NAV_HINT_READ_BOUND_MS);
+    await expect(claim).resolves.toBe(true);
+    expect(store.writes).toEqual([]);
+  });
+
+  it('a slow read of done shows the hint this once but leaves done stored (never back to 1)', async () => {
+    vi.useFakeTimers();
+    const store = memoryStore('done', { slowReadMs: NAV_HINT_READ_BOUND_MS * 2 });
+    const claim = claimNavHint(store);
+    await vi.advanceTimersByTimeAsync(NAV_HINT_READ_BOUND_MS);
+    await expect(claim).resolves.toBe(true);
+    await vi.advanceTimersByTimeAsync(NAV_HINT_READ_BOUND_MS * 2);
+    expect(store.writes).toEqual([]);
+    expect(store.value).toBe('done');
+    vi.useRealTimers();
+    expect(await claimNavHint(memoryStore('done'))).toBe(false);
+  });
+
+  it('a slow read of a count leaves the count as stored', async () => {
+    vi.useFakeTimers();
+    const store = memoryStore('2', { slowReadMs: NAV_HINT_READ_BOUND_MS * 2 });
+    const claim = claimNavHint(store);
+    await vi.advanceTimersByTimeAsync(NAV_HINT_READ_BOUND_MS * 3);
+    await expect(claim).resolves.toBe(true);
+    expect(store.value).toBe('2');
+  });
+
+  it('a store whose reads and writes never settle still shows the hint within the bound', async () => {
+    vi.useFakeTimers();
+    const store = memoryStore(null, { hang: true, hangWrite: true });
+    const claim = claimNavHint(store);
+    await vi.advanceTimersByTimeAsync(NAV_HINT_READ_BOUND_MS);
+    await expect(claim).resolves.toBe(true);
+  });
+
+  it('a read that settles but a write that never does still shows the hint and counts the lesson', async () => {
+    vi.useFakeTimers();
+    const store = memoryStore(null, { hangWrite: true });
+    const claim = claimNavHint(store);
+    await vi.advanceTimersByTimeAsync(0);
     await expect(claim).resolves.toBe(true);
     expect(store.writes).toEqual(['1']);
   });

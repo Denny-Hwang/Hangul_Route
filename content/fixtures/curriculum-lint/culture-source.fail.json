@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): notes with no allowlisted source (a warning in Volume 1, an error in Volume 2), an institution named as it was not called on the access date, and a factRef whose fact has no allowlisted source. Also a publisher name on a site the institution does not run, bodies whose names contain an allowlisted one, and a factRef to a fact citing the Cultural Heritage Administration after its rename. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): notes with no allowlisted source (an error in Volume 1 since row CM-3B, as in Volume 2), an institution named as it was not called on the access date, and a factRef whose fact has no allowlisted source. Also a publisher name on a site the institution does not run, bodies whose names contain an allowlisted one, and a factRef to a fact citing the Cultural Heritage Administration after its rename. Not real content.",
   "rule": "culture-source",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -1126,7 +1126,7 @@
   "expect": [
     [
       "culture-source",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "culture[0].sources"
     ],

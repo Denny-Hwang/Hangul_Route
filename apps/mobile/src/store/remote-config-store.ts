@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { create } from 'zustand';
 import { currBuildFloor, currBuiltInPct, type CurrFlagName } from '../config/flags';
 import {
@@ -196,9 +197,52 @@ export function useCurrFlag(flag: CurrFlagName): boolean {
   return ready ? currFlagOn(flag, guestRun ? null : activeId, cache) : false;
 }
 
+/**
+ * `useCurrFlag` that says when it cannot decide yet: null until the stored copy has been read (or a fetch kept one),
+ * then the flag. A surface that must not switch mid-way (a game round, row CM-30) waits for the first decision.
+ */
+export function useCurrFlagDecided(flag: CurrFlagName): boolean | null {
+  const on = useCurrFlag(flag);
+  const ready = useRemoteConfigStore(decidable);
+  return ready ? on : null;
+}
+
+/**
+ * A switch read once, for a surface that must not change under the learner once it opens (row CM-35: a game step):
+ * `null` until the store can decide (the stored copy read, or a fetch kept one), then the answer at that moment, kept
+ * for the life of the component, so a copy that arrives mid-step never swaps what is on screen. Until then the
+ * caller waits (a cold start reads off before the stored copy is in, which would freeze the fallback).
+ */
+export function useFrozenCurrFlag(flag: CurrFlagName): boolean | null {
+  const ready = useRemoteConfigStore(decidable);
+  const frozen = useRef<boolean | null>(null);
+  if (frozen.current === null && ready) frozen.current = currFlagOn(flag);
+  return frozen.current;
+}
+
 /** Tests only. */
 export function resetRemoteConfigForTests(): void {
   inFlight = null;
   failedAt = null;
   useRemoteConfigStore.setState({ cache: null, hydrated: false });
+}
+
+/**
+ * Whether `useCurrFlag` can decide yet (the stored copy has been read, or a fetch kept one). A surface that reads its
+ * switch once and keeps the answer (Story Order's step, F-CURR-002 row CM-34) waits for this, so a step opened before
+ * the stored copy is read never latches a switch the owner has turned on as off.
+ */
+export function useRemoteConfigDecidable(): boolean {
+  return useRemoteConfigStore(decidable);
+}
+/**
+ * `useCurrFlag` for a named learner rather than the active profile (row CM-38): a surface that shows one learner's
+ * data, such as the grown-up's read-only My Route for a child, buckets on that learner, so it names a switched game
+ * exactly when that learner would play it. A guest run still buckets on no profile (section 5.3).
+ */
+export function useCurrFlagFor(flag: CurrFlagName, profileId: string): boolean {
+  const cache = useRemoteConfigStore((s) => s.cache);
+  const ready = useRemoteConfigStore(decidable);
+  const guestRun = useGuestStore((s) => s.running);
+  return ready ? currFlagOn(flag, guestRun ? null : profileId, cache) : false;
 }

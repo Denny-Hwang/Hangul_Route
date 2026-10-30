@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { ROLLUP_ITEM_COUNT_EDGES, ROLLUP_SEEDED_COUNT_EDGES, ROLLUP_SPREAD_DAYS_EDGES, rollupBucketCodes } from './curr-rollup-buckets';
+import {
+  ROLLUP_DECODE_RATE_EDGES,
+  ROLLUP_ITEM_COUNT_EDGES,
+  ROLLUP_SEEDED_COUNT_EDGES,
+  ROLLUP_SPREAD_DAYS_EDGES,
+  ROLLUP_SPRINT_INDEX_EDGES,
+  rollupBucketCodes,
+} from './curr-rollup-buckets';
 import { StageKeySchema } from './heritage-card';
 import { MinigameKindSchema } from './minigame';
 import { QUEST_ID_RE } from './quest';
@@ -66,8 +73,8 @@ const BUCKET_RE = /^(0|[1-9]\d{0,4})(?:-(0|[1-9]\d{0,4})|\+)?$/;
  * single number such as `37` still fits it, so it cannot tell a bucket from a raw value: the
  * emitting row (CM-12, CM-32) adds a per-field enum of its bucket codes to
  * `CURR_TELEMETRY_PAYLOADS`, Worker first, before it sends (TELEMETRY-NAMES-2 section R). Row CM-12
- * has done so for `items.seeded` and the two buckets of `memory.daily` (below); the three buckets of
- * `decode.sprint.finished` keep this shape until row CM-32.
+ * has done so for `items.seeded` and the two buckets of `memory.daily`, and row CM-32 for the three
+ * buckets of `decode.sprint.finished` (below); no field uses this generic shape any more.
  */
 export const TelemetryBucketSchema = z.string().refine((code) => {
   const m = BUCKET_RE.exec(code);
@@ -87,6 +94,10 @@ export const ItemCountBucketSchema = bucketEnum(ROLLUP_ITEM_COUNT_EDGES);
 export const SeededCountBucketSchema = bucketEnum(ROLLUP_SEEDED_COUNT_EDGES);
 /** `spreadDaysBucket` of `items.seeded`. */
 export const SpreadDaysBucketSchema = bucketEnum(ROLLUP_SPREAD_DAYS_EDGES);
+/** `rateBucket` and `probeRateBucket` of `decode.sprint.finished` (row CM-32): correct decodes per minute. */
+export const DecodeRateBucketSchema = bucketEnum(ROLLUP_DECODE_RATE_EDGES);
+/** `sprintIndexBucket` of `decode.sprint.finished` (row CM-32): which sprint of the learner's this was, from 1. */
+export const SprintIndexBucketSchema = bucketEnum(ROLLUP_SPRINT_INDEX_EDGES);
 
 /** Review item kinds (section 4.2). */
 export const REVIEW_ITEM_KINDS = ['sym', 'syl', 'lex', 'pat', 'exc', 'rea'] as const;
@@ -169,7 +180,7 @@ export const CURR_TELEMETRY_PAYLOADS = {
   // `target` is the weekly days in force that week: the goal's 3, 5 or 7, or a weekly plan's days a week (F-PLAN-002, 1 to 7).
   'week.goal_met': z.object({ days: wholeUpTo(7), target: z.number().int().min(1).max(7) }).strict(),
   'decode.sprint.finished': z
-    .object({ rateBucket: TelemetryBucketSchema, probeRateBucket: TelemetryBucketSchema, sprintIndexBucket: TelemetryBucketSchema })
+    .object({ rateBucket: DecodeRateBucketSchema, probeRateBucket: DecodeRateBucketSchema, sprintIndexBucket: SprintIndexBucketSchema })
     .strict(),
   'stamp.earned': z.object({ stampId: z.string().regex(/^stamp:[a-z0-9]+(?:-[a-z0-9]+)*$/).max(48) }).strict(),
   'weekly_quest.complete': z.object({ questKind: codeSlug }).strict(),

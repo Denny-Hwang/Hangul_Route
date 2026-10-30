@@ -21,6 +21,12 @@ const words = (ko: string): string[] => ko.replace(/[.?!,]/g, '').split(/\s+/).f
  * and the cast name), so a Park Conversations quest may use them without a Discover.
  */
 const KNOWN = new Set(['안녕하세요', '네', '좋아요', '책이에요', '밥을', '먹어요', '우유를', '마셔요', '저는', '호야예요', '호야', '집에', '가요', '와요', '공원에']);
+/**
+ * The vocabulary-topic words a weather card reads (F-CURR-001 section 3.1 rule 5: Stage 4 reuses topic levels 1-3;
+ * row CM-3A S4): places from the nature and Stage 3 sentences, and the sky words of the nature topic.
+ */
+const TOPIC_WORDS = ['날씨', '공원', '산', '바다', '강', '해', '구름', '바람', '비'];
+for (const w of TOPIC_WORDS) KNOWN.add(w);
 
 /** The one grammar point of q2 (section 3.5): -(으)ㄹ 거예요 and the verb forms it takes, counted once. */
 const GRAMMAR_Q2 = new Set(['거예요', '올', '갈', '좋을']);
@@ -39,6 +45,16 @@ function scopeLines(scope: LessonScope): string[] {
       return scope.lines.map((l) => l.line.ko);
     case 'listen-pick':
       return scope.rounds.flatMap((r) => [r.prompt.ko, ...r.options.flatMap((o) => (o.text ? [o.text.ko] : []))]);
+    // Row CM-3A S4: the weather card's lines and answers, the Check's completed sentences and built sentences.
+    case 'realia-read':
+      return [
+        ...scope.realia.entries.flatMap((e) => [e.text.ko, ...(e.value ? [e.value.ko] : [])]),
+        ...scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.text ? [o.text.ko] : []))),
+      ];
+    case 'cloze-pick':
+      return scope.rounds.map((r) => r.sentence.ko.replace('___', r.tiles[r.answerIndex]?.ko ?? ''));
+    case 'order-it':
+      return scope.rounds.map((r) => r.sentence.ko);
     default:
       return [];
   }
@@ -152,7 +168,8 @@ describe('Park Conversations (F-CURR-001 S4-3)', () => {
 
   it('U-8: the answer is a natural reply and no distractor is one', () => {
     const choices = replyChoices();
-    expect(choices.length).toBe(15);
+    // The three Tap to Respond Practices (row CM-3A S4: the Check is Cloze Pick or Sentence Builder).
+    expect(choices.length).toBe(9);
     for (const { where, prompt, answer, distractors } of choices) {
       const natural = NATURAL_REPLIES[prompt];
       expect(natural, `${where}: list the natural replies of ${prompt}`).toBeDefined();
@@ -170,16 +187,19 @@ describe('Park Conversations (F-CURR-001 S4-3)', () => {
     expect(heardAs('공원에 가요.')).toBe(heardAs('공원에 가요'));
   });
 
-  it('Stage 4 shape: Tap to Respond, Story Sequence of 4 lines, Listen & Pick Check of 2 rounds; every listen prompt has its text', () => {
+  it('Stage 4 shape (F-CURR-002 section 7.1, row CM-3A S4): Tap to Respond, Realia Read on a weather card, a 2-round Check that rotates', () => {
+    const checks = cell.quests.map((q) => q.scopes[2]?.kind);
+    expect(checks).toEqual(['cloze-pick', 'order-it', 'cloze-pick']);
     for (const quest of cell.quests) {
-      expect(quest.scopes.map((s) => s.kind), quest.id).toEqual(['tap-respond', 'story-sequence', 'listen-pick']);
+      expect(quest.scopes.slice(0, 2).map((s) => s.kind), quest.id).toEqual(['tap-respond', 'realia-read']);
       for (const scope of quest.scopes) {
         if (scope.kind === 'tap-respond') for (const t of scope.turns) expect(t.replies.length, scope.ref).toBe(3);
-        if (scope.kind === 'story-sequence') expect(scope.lines.length, scope.ref).toBe(4);
-        if (scope.kind === 'listen-pick') {
-          expect(scope.rounds.length, scope.ref).toBe(2);
-          for (const r of scope.rounds) expect(r.prompt.romanization && r.prompt.en, `${scope.ref} ${r.id}`).toBeTruthy();
+        if (scope.kind === 'realia-read') {
+          expect(scope.realia.ref, scope.ref).toMatch(/-weather$/);
+          expect(scope.rounds.length, scope.ref).toBe(4);
+          for (const r of scope.rounds) expect(scope.realia.entries.some((e) => e.id === r.answerEntryId), `${scope.ref} ${r.id}`).toBe(true);
         }
+        if (scope.kind === 'cloze-pick' || scope.kind === 'order-it') expect(scope.rounds.length, scope.ref).toBe(2);
       }
     }
   });

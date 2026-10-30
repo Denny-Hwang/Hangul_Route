@@ -511,7 +511,7 @@ test.describe('More, Help, Blank and the Exit confirm beside the rail, 844 x 390
   test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
   test.skip(RAIL_OFF, 'the rail is switched off in this build');
 
-  test('More opens the sheet beside the rail, over the stage; Help has no overlay line; the rail stays over Blank and its Next clears it', async ({ page }) => {
+  test('More opens the sheet beside the rail, over the stage; Help has no overlay line; the rail stays beside Blank and its Next clears it', async ({ page }) => {
     await page.goto(link());
     await startLesson(page);
     await expectRailShown(page);
@@ -530,9 +530,10 @@ test.describe('More, Help, Blank and the Exit confirm beside the rail, 844 x 390
     await expectRailShown(page);
     expect(await noSidewaysScroll(page)).toBe(true);
     await shot(page, 'presenter-phone-rail-more-844x390');
-    // A press on the rail's Next while the sheet covers the stage closes it and steps nothing.
+    // A tap on the stage the sheet covers closes it and steps nothing.
     const at = await liveText(page);
-    await page.getByTestId('presenter-next').tap();
+    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+    await page.touchscreen.tap(stage.x + 10, stage.y + 10);
     await expect(sheet).toHaveCount(0);
     expect(await liveText(page)).toBe(at);
     // Keys and help from More: Help without the overlay's "tap the slide to show the controls" line.

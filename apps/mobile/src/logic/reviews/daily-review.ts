@@ -104,7 +104,7 @@ export function planSession(
     const session: ReviewSession | null = kind === 'daily' ? buildDailyReview(ctx, log, skipped) : buildKeepGoing(ctx, log, skipped);
     if (session === null || session.questions.length === 0) break;
     if (attempt === 0) offered = session.questions.length;
-    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index }) }));
+    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index, states: ctx.states }) }));
     best = built.flatMap((b) => (b.round ? [b.round] : []));
     if (best.length === session.questions.length) break;
     for (const b of built) if (b.round === null) skipped.add(b.q.itemId);

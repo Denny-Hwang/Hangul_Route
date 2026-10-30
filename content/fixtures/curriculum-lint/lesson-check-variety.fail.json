@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Listen & Pick between spellings in every Check (no read-meaning round), the same triple three times: warnings in Volume 1, errors in Volume 2. Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Listen & Pick between spellings in every Check (no read-meaning round), the same triple three times: errors in Volume 1 (since row CM-3B) and in Volume 2. Not real content.",
   "rule": "lesson-check-variety",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -767,37 +767,37 @@
   "expect": [
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[0]"
     ],
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[1]"
     ],
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[1]"
     ],
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[2]"
     ],
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[2]"
     ],
     [
       "lesson-check-variety",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "(stage)"
     ],

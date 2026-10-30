@@ -5,7 +5,9 @@
     "episode:stage2-crafts": {
       "title": "놀이터 낱말",
       "subtitle": "놀이터와 전통 놀이의 낱말을 읽어요.",
-      "hoyaIntro": "그네, 팽이, 줄넘기! 놀 때 쓰는 낱말을 읽어 봐요!"
+      "hoyaIntro": "그네, 팽이, 줄넘기! 놀 때 쓰는 낱말을 읽어 봐요!",
+      "culture.n1.text": "{ko:제기차기}는 한국의 전통 놀이예요. 종이나 천으로 술을 단 작고 묵직한 {ko:제기}를 발로 차면서, 땅에 떨어뜨리지 않고 될 수 있는 대로 여러 번 차려고 해요.",
+      "culture.n2.text": "{ko:팽이치기}는 나무 팽이로 하는 한국의 전통 놀이예요. 작은 채로 팽이를 쳐서 계속 돌게 하는데, 겨울에 얼음판에서 많이 하고, 누구 팽이가 가장 오래 도는지 겨루기도 해요."
     },
     "quest:stage2-crafts-q1": {
       "title": "놀이터에서",
@@ -21,7 +23,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "차거나 던지며 노는 둥근 물건",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "읽고 짝짓기",
       "steps.s6.title": "잘했어요!",
       "steps.s6.hoyaLine": "놀이터 낱말을 읽었어요. 정말 잘했어요!"
     },
@@ -32,8 +34,12 @@
       "cardPairs.gong.gloss": "차거나 던지며 노는 둥근 물건"
     },
     "minigame:s2-crafts-q1-check": {
-      "listenPick.rounds.pic-gong.prompt": "차거나 던지며 노는 둥근 물건",
-      "listenPick.rounds.read-gong.prompt": "차거나 던지며 노는 둥근 물건"
+      "picWord.boards.0.pairs.gong.word.gloss": "차거나 던지며 노는 둥근 물건",
+      "picWord.boards.0.pairs.jajeongeo.word.gloss": "페달을 밟아 굴리는 두 바퀴 탈것",
+      "picWord.boards.0.pairs.haneul.word.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "picWord.boards.1.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
+      "picWord.boards.1.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
+      "picWord.boards.1.pairs.chukgu.word.gloss": "공을 발로 차서 골을 넣는 운동"
     },
     "quest:stage2-crafts-q2": {
       "title": "전통 놀이",
@@ -51,7 +57,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "바람에 날리는 종이 장난감",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "멋져요!",
       "steps.s6.hoyaLine": "놀이 낱말 네 개를 읽었어요. 잘했어요!"
     },
@@ -62,8 +68,10 @@
       "cardPairs.yeon.gloss": "바람에 날리는 종이 장난감"
     },
     "minigame:s2-crafts-q2-check": {
-      "listenPick.rounds.pic-paengi.prompt": "빙글빙글 돌려서 노는 장난감",
-      "listenPick.rounds.read-yeon.prompt": "바람에 날리는 종이 장난감"
+      "typeHangul.rounds.hear-yeon.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-yeon.target.gloss": "바람에 날리는 종이 장난감",
+      "typeHangul.rounds.hear-jul.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-jul.target.gloss": "길고 가는 끈"
     },
     "quest:stage2-crafts-q3": {
       "title": "함께 놀아요",
@@ -78,7 +86,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "가깝게 지내는 사람",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝 맞추기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 읽기",
       "steps.s6.title": "놀이터 스타!",
       "steps.s6.hoyaLine": "놀이터 낱말을 모두 읽었어요. 정말 잘 놀았어요!"
     },
@@ -89,8 +97,15 @@
       "cardPairs.chingu.gloss": "가깝게 지내는 사람"
     },
     "minigame:s2-crafts-q3-check": {
-      "listenPick.rounds.pic-julleomgi.prompt": "줄을 돌리며 뛰어넘는 놀이",
-      "listenPick.rounds.read-chingu.prompt": "가깝게 지내는 사람"
+      "listenPick.rounds.see-chingu.prompt": "가깝게 지내는 사람",
+      "listenPick.rounds.see-dalligi.prompt": "누가 먼저 결승선에 닿는지 겨루는 운동",
+      "listenPick.rounds.see-chingu.options.chingu.label": "가깝게 지내는 사람",
+      "listenPick.rounds.see-chingu.options.dalligi.label": "누가 먼저 결승선에 닿는지 겨루는 운동",
+      "listenPick.rounds.see-chingu.options.julleomgi.label": "줄을 돌려서 넘는 놀이",
+      "listenPick.rounds.see-chingu.options.gong.label": "차거나 던지며 노는 둥근 물건",
+      "listenPick.rounds.see-dalligi.options.dalligi.label": "누가 먼저 결승선에 닿는지 겨루는 운동",
+      "listenPick.rounds.see-dalligi.options.chingu.label": "가깝게 지내는 사람",
+      "listenPick.rounds.see-dalligi.options.julleomgi.label": "줄을 돌려서 넘는 놀이"
     },
     "minigame:s2-crafts-q1-practice": {
       "picWord.boards.0.pairs.gong.word.gloss": "차거나 던지며 노는 둥근 물건",

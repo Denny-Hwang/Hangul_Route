@@ -5,7 +5,11 @@
     "episode:stage3-letters": {
       "title": "첫 문장",
       "subtitle": "무엇인지, 무엇이 있는지, 내가 누구인지 알려 주는 문장이에요.",
-      "hoyaIntro": "이제 낱말을 읽을 수 있어요. 낱말을 이어서 문장을 만들어 봐요!"
+      "hoyaIntro": "이제 낱말을 읽을 수 있어요. 낱말을 이어서 문장을 만들어 봐요!",
+      "culture.n1.text": "받침이 있는 말 뒤에는 {ko:이에요}, 받침이 없는 말 뒤에는 {ko:예요}를 써요. {ko:책이에요}, {ko:학교예요}처럼요.",
+      "culture.n2.text": "주어를 나타내는 조사는 받침 뒤에서 {ko:이}, 모음 뒤에서 {ko:가}예요. {ko:책이}, {ko:친구가}처럼요.",
+      "culture.n3.text": "{ko:이건}은 {ko:이것은}을 줄인 말이고, {ko:이것}은 말하는 사람 가까이 있는 물건을 가리켜요.",
+      "culture.n4.text": "{ko:저}는 자기를 낮추어 공손하게 '나'를 가리키는 말로, 윗사람이나 친하지 않은 사람에게 써요. {ko:나}는 비슷한 사이에서 쓰는 보통 말이에요."
     },
     "quest:stage3-letters-q1": {
       "title": "무엇인지 알려 주는 문장",
@@ -90,8 +94,14 @@
       "listenPick.rounds.a4.prompt": "맞다고 하며, 배우러 다니는 곳이라는 뜻"
     },
     "minigame:s3-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이라는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
+      "clozePick.rounds.c1.tiles.gabang.gloss": "물건을 넣어 메는 것",
+      "clozePick.rounds.c1.tiles.chaek.gloss": "읽는 물건",
+      "clozePick.rounds.c1.tiles.hakgyo.gloss": "배우러 다니는 곳",
+      "clozePick.rounds.c2.sentence.gloss": "배우러 다니는 곳이라는 뜻",
+      "clozePick.rounds.c2.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
+      "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
     },
     "minigame:s3-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "읽는 물건이 이곳에 존재한다는 뜻",
@@ -115,8 +125,11 @@
       "listenPick.rounds.a4.prompt": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이 이곳에 존재한다는 뜻"
+      "orderIt.rounds.c1.sentence.gloss": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.c1.distractors.gabangi.gloss": "물건을 넣어 메는 것 (문장의 주어)",
+      "orderIt.rounds.c2.sentence.gloss": "맞다고 하며, 가깝게 지내는 사람을 두고 있다는 뜻",
+      "orderIt.rounds.c2.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "orderIt.rounds.c2.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)"
     },
     "minigame:s3-letters-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가까이 있는 것이 읽는 물건이라는 뜻",
@@ -140,8 +153,10 @@
       "listenPick.rounds.a4.prompt": "가까이 있는 것이 물건을 넣어 메는 것이라는 뜻"
     },
     "minigame:s3-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 가까이 있는 것이 글씨 쓰는 도구라는 뜻",
-      "listenPick.rounds.c2.prompt": "자기 이름을 공손하게 밝힌다는 뜻"
+      "typeHangul.rounds.d1.prompt": "세종 대왕이 만든 문자의 오늘날 이름을 써 봐요.",
+      "typeHangul.rounds.d1.target.gloss": "세종 대왕이 만든 문자의 오늘날 이름",
+      "typeHangul.rounds.d2.prompt": "글씨 쓰는 도구를 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d2.target.gloss": "글씨 쓰는 도구"
     }
   }
 }

@@ -22,7 +22,8 @@ vi.mock('../../config/flags', async (importOriginal) => {
 });
 
 import { useProfileStore } from '../profile-store';
-import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useRemoteConfigStore } from '../remote-config-store';
+import { useGuestStore } from '../guest-store';
+import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useCurrFlagFor, useFrozenCurrFlag, useRemoteConfigStore } from '../remote-config-store';
 
 /**
  * `useCurrFlag` (F-CURR-002 section 12.2, row CM-2): a surface re-renders when the remote copy arrives or the active
@@ -105,5 +106,95 @@ describe('useCurrFlag', () => {
       expect(seen.at(-1), id).toBe(currFlagOn('dailyReview', id));
     }
     expect(new Set(answers.values()).size).toBe(2);
+  });
+});
+
+const frozenSeen: Array<boolean | null> = [];
+function FrozenProbe({ flag }: { flag: 'goals' | 'dailyReview' }): null {
+  frozenSeen.push(useFrozenCurrFlag(flag));
+  return null;
+}
+
+describe('useFrozenCurrFlag (row CM-35: a game read once as its step opens)', () => {
+  beforeEach(() => {
+    frozenSeen.length = 0;
+  });
+  async function mountFrozen(flag: 'goals' | 'dailyReview'): Promise<void> {
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(FrozenProbe, { flag }));
+    });
+  }
+
+  it('undecided (null) until the stored copy is read, then the stored answer, not the off a cold start reads', async () => {
+    mem.set(REMOTE_CONFIG_KEY, { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { dailyReview: { on: true, pct: 100 } } });
+    await mountFrozen('dailyReview');
+    expect(frozenSeen).toEqual([null]);
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+    });
+    expect(frozenSeen.at(-1)).toBe(true);
+  });
+
+  it('once decided it never changes: a copy that arrives mid-step does not swap the game', async () => {
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+    });
+    await mountFrozen('dailyReview');
+    expect(frozenSeen).toEqual([false]);
+    await act(async () => {
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { dailyReview: { on: true, pct: 100 } } } });
+    });
+    expect(useRemoteConfigStore.getState().cache).not.toBeNull();
+    expect(frozenSeen.every((v) => v === false)).toBe(true);
+  });
+});
+function ForProbe({ profileId }: { profileId: string }): null {
+  seen.push(useCurrFlagFor('game.my-story', profileId));
+  return null;
+}
+
+describe('useCurrFlagFor (row CM-38): buckets on the learner a surface shows, not the active profile', () => {
+  afterEach(() => {
+    useGuestStore.setState({ running: false });
+  });
+
+  it('a grown-up viewing a child during a 50% ramp gets the child\'s answer whatever the active profile is', async () => {
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.my-story': { on: true, pct: 50 } } } });
+    });
+    const ids = ['a1', 'b2', 'c3', 'd4', 'e5', 'f6', 'g7', 'h8'];
+    const child = ids.find((id) => currFlagOn('game.my-story', id))!;
+    const other = ids.find((id) => !currFlagOn('game.my-story', id))!;
+    expect(child).toBeDefined();
+    expect(other).toBeDefined();
+    useProfileStore.setState({ activeId: other });
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(ForProbe, { profileId: child }));
+    });
+    expect(seen.at(-1)).toBe(true);
+    await act(async () => {
+      useProfileStore.setState({ activeId: child });
+    });
+    await act(async () => {
+      renderer!.update(createElement(ForProbe, { profileId: other }));
+    });
+    expect(seen.at(-1)).toBe(false);
+  });
+
+  it('off before the stored copy is read, and a guest run buckets on no profile', async () => {
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(ForProbe, { profileId: 'a1' }));
+    });
+    expect(seen).toEqual([false]);
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.my-story': { on: true, pct: 100 } } } });
+    });
+    expect(seen.at(-1)).toBe(true);
+    await act(async () => {
+      useGuestStore.setState({ running: true });
+    });
+    expect(seen.at(-1)).toBe(currFlagOn('game.my-story', null));
   });
 });

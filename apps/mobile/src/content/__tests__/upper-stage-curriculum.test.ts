@@ -17,6 +17,7 @@ import {
   type QuestStepKind,
   type StageKey,
 } from '@hangul-route/content-schema';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { getMessages as getMessagesEn } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RoundAsked } from '../../logic/memory/asked';
@@ -124,7 +125,8 @@ export function questProblems(stage: StageKey, quest: LessonQuest): string[] {
       if (rounds !== CHECK_ROUNDS || !checkKindsFor(stage).includes(scope.kind)) out.push(`U-1 ${quest.id}: Check is ${scope.kind} x ${rounds}`);
     } else {
       const range = ROUND_RANGE[stage]?.[step.kind];
-      if (range && scope.kind !== 'story-sequence' && (rounds < range[0] || rounds > range[1])) {
+      // Story Sequence and Story Order (row CM-34) order one talk a round: a step is one ordering, not a round count.
+      if (range && scope.kind !== 'story-sequence' && scope.kind !== 'story-order' && (rounds < range[0] || rounds > range[1])) {
         out.push(`U-1 ${quest.id}: ${step.kind} plays ${rounds} rounds, not ${range[0]}-${range[1]}`);
       }
     }
@@ -250,6 +252,12 @@ describe('U-1, U-5, U-7, U-9 per quest of every cell', () => {
     expect(runtimeScope(scope, 'test').rounds).toBe(scopeRoundCount(scope));
   });
 
+  it('counts a Role Play scope as the generated scope plays it: the learner turns of a way through it (row CM-35)', () => {
+    const scope = LessonScopeSchema.parse({ ref: 'minigame:s4-letters-q1-apply', kind: 'role-play', scene: LIBRARY_SCENE });
+    expect(scopeRoundCount(scope)).toBe(4);
+    expect(runtimeScope(scope, 'test').rounds).toBe(scopeRoundCount(scope));
+  });
+
   for (const { cell } of READY) {
     it(`${cell.id}: every generated scope plays the rounds the cell counts`, () => {
       for (const scope of cell.quests.flatMap((q) => q.scopes)) expect(ALL_LESSON_SCOPES[scope.ref]?.rounds, scope.ref).toBe(scopeRoundCount(scope));
@@ -276,12 +284,12 @@ describe('a ready cell plays only games the app has (F-CURR-001 section 6: a gam
       id: 'quest:stage7-life-q1',
       steps: [
         { id: 's1', kind: 'intro', titleEn: 'x' },
-        { id: 's5', kind: 'practice', titleEn: 'x', minigameKind: 'match-shape', minigameRef: 'minigame:s7-life-q1-practice' },
+        { id: 's5', kind: 'practice', titleEn: 'x', minigameKind: 'tap-rhythm', minigameRef: 'minigame:s7-life-q1-practice' },
         { id: 's6', kind: 'apply', titleEn: 'x', minigameKind: 'listen-pick', minigameRef: 'minigame:s7-life-q1-apply' },
       ],
     } as unknown as LessonQuest;
-    expect(unplayableSteps(quest)).toEqual(['quest:stage7-life-q1: step s5 plays match-shape, which has no game screen yet']);
-    expect(unplayableSteps(quest, new Set(['match-shape', 'listen-pick']))).toEqual([]);
+    expect(unplayableSteps(quest)).toEqual(['quest:stage7-life-q1: step s5 plays tap-rhythm, which has no game screen yet']);
+    expect(unplayableSteps(quest, new Set(['tap-rhythm', 'listen-pick']))).toEqual([]);
   });
 
   for (const { cell } of READY) {
@@ -408,6 +416,11 @@ function scopeWords(scope: LessonScope): { read: KoText[]; shown: KoText[] } {
       const prompts = scope.rounds.map((r) => r.prompt);
       return { read: [...options, ...prompts], shown: [...options, ...prompts] };
     }
+    // F-CURR-002 row CM-3A S2: a Dictation (or `see`) round's word is written, then shown.
+    case 'type-hangul': {
+      const targets = scope.rounds.map((r) => r.target);
+      return { read: targets, shown: targets };
+    }
     default:
       return { read: [], shown: [] };
   }
@@ -528,7 +541,8 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
         if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
         // The other Stage 2 cells show a Word Builder word only as exposure (rule 6's theme words): a Pic-Word or
         // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
-        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter.
+        // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
+        // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
         const scored =
           cell.theme === 'letters'
             ? quest
@@ -536,7 +550,8 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
                 ...quest,
                 scopes: quest.scopes.flatMap((sc): LessonScope[] =>
                   sc.kind === 'listen-pick'
-                    ? [{ ...sc, rounds: sc.rounds.map((r) => ({ ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
+                    ? // A heard prompt is exposure; a Read Pick Meaning prompt (row CM-3A S2) is read.
+                      [{ ...sc, rounds: sc.rounds.map((r) => (r.promptShown === true ? r : { ...r, prompt: { ...r.prompt, ko: '' } })) } as LessonScope]
                     : sc.kind === 'pic-word-match' || sc.kind === 'card-match'
                       ? []
                       : [sc],
@@ -551,7 +566,7 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
     for (const cell of stage2) expect(stage2ReuseProblems(cell)).toEqual([]);
   });
 
-  it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3)', () => {
+  it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3), Dictation included', () => {
     expect(wordBuilder, 'S2-1 lands content/episodes/stage-2/letters.json').toBeDefined();
     if (wordBuilder === undefined) return;
     const norm = (ko: string): string =>
@@ -573,6 +588,11 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
     }
     for (const quest of wordBuilder.quests) {
       for (const scope of quest.scopes) {
+        // Row CM-3A S2: Dictation spells a word by ear, so it never asks a word with ㅐ, ㅔ, ㅒ, ㅖ, ㅚ, ㅙ or ㅞ.
+        if (scope.kind === 'type-hangul') {
+          for (const round of scope.rounds) if (round.mode === 'hear') expect(norm(round.target.ko), `${scope.ref} ${round.id}`).not.toMatch(/[EW]|ㅒ|ㅖ/);
+          continue;
+        }
         if (scope.kind !== 'listen-pick') continue;
         for (const round of scope.rounds) {
           const heard = norm(round.prompt.ko);
@@ -910,6 +930,9 @@ function missesOf(scope: MinigameScope): RoundAsked[] {
       return [...new Set(scope.picWord?.boards.flatMap((b) => b.pairs.map((p) => p.id)))].map((itemId) => ({ scope, itemId }));
     case 'tap-respond':
       return (scope.dialogue ?? []).map((t) => ({ texts: [t.npcKo] }));
+    case 'role-play':
+      // A first-try miss names the turn and the less natural reply tapped (row CM-35).
+      return (scope.rolePlay?.scene.nodes ?? []).flatMap((n) => ('replies' in n ? n.replies.filter((r) => r.kind === 'lessNatural').map((r) => ({ scope, itemId: `${n.id}/${r.id}` })) : []));
     default:
       return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
   }
@@ -972,14 +995,20 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
 
   // After the per-quest checks above (vitest runs a describe's tests in order).
   it('every shipped Practice with a listed word can scaffold, Trace a Word and keyed Realia Read included', () => {
-    const left = QUESTS.filter((q) => !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
+    // A Story Sequence Practice (Stage 4 Holidays, F-CURR-002 section 7.1) orders lines: a slot answers no item, so a miss
+    // names nothing a scaffold could ask, and the CM-24 pacing leaves it unscaffolded (the step plays as authored).
+    const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
+    const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
+    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
     expect(shortened.size).toBeGreaterThan(0);
     const roundsOf = (s: MinigameScope): unknown[] =>
-      s.listenPick?.rounds ?? s.picWord?.boards ?? s.orderIt?.rounds ?? s.typeHangul?.rounds ?? s.writeFrame?.rounds ?? s.cardPairs ?? s.dialogue ?? [];
+      s.listenPick?.rounds ?? s.picWord?.boards ?? s.orderIt?.rounds ?? s.typeHangul?.rounds ?? s.writeFrame?.rounds ?? s.cardPairs ?? s.dialogue ?? s.clozePick?.rounds ?? s.realiaRead?.rounds ?? [];
     for (const [id, [full, short]] of shortened) {
       const [a, b] = [roundsOf(full), roundsOf(short)];
       expect(b.length, id).toBeGreaterThanOrEqual(2);

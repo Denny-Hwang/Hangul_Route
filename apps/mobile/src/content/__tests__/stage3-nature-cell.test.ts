@@ -5,6 +5,7 @@ import {
   checkFrameRomanization,
   checkRomanization,
   discoverItemTexts,
+  fillClozeGap,
   type LessonQuest,
   type LessonScope,
 } from '@hangul-route/content-schema';
@@ -62,6 +63,14 @@ function scopeKo(scope: LessonScope): string[] {
       return scope.rounds.flatMap((r) => [r.sentence.ko, ...r.distractors.map((d) => d.ko)]);
     case 'listen-pick':
       return scope.rounds.flatMap((r) => [r.prompt.ko, ...r.options.flatMap((o) => (o.text ? [o.text.ko] : []))]);
+    // F-CURR-002 row CM-3A S3: the completed sentence and a word gap's tiles (a particle tile is no word); a Dictation word.
+    case 'cloze-pick':
+      return scope.rounds.flatMap((r) => [
+        fillClozeGap(r.sentence.ko, r.tiles[r.answerIndex]!.ko),
+        ...(r.gapKind === 'word' ? r.tiles.map((t) => t.ko) : []),
+      ]);
+    case 'type-hangul':
+      return scope.rounds.map((r) => r.target.ko);
     default:
       return [];
   }
@@ -118,15 +127,17 @@ describe('Animal Sentences (F-CURR-001 S3-4)', () => {
     expect(issues).toEqual([]);
   });
 
-  it('Stage 3 shape: Sentence Builder x 5 (q1: 5 order rounds; q2, q3: 3 order + 2 particle rounds), Listen & Pick x 4 (2 picture rounds, 2 rounds that hold the animal and vary the new word), a 2-round Check', () => {
+  it('Stage 3 shape: Sentence Builder x 5 (q1: 5 order rounds; q2, q3: 3 order + 2 particle rounds), Listen & Pick x 4 (2 picture rounds, 2 rounds that hold the animal and vary the new word), a 2-round Check of the rotation', () => {
+    // F-CURR-002 section 7.1 (row CM-3A S3): the Checks rotate Cloze Pick, Sentence Builder and Dictation.
+    expect(cell.quests.map((q) => q.scopes.map((s) => s.kind))).toEqual([
+      ['order-it', 'listen-pick', 'cloze-pick'],
+      ['order-it', 'listen-pick', 'order-it'],
+      ['order-it', 'listen-pick', 'type-hangul'],
+    ]);
     for (const quest of cell.quests) {
-      expect(
-        quest.scopes.map((s) => s.kind),
-        quest.id,
-      ).toEqual(['order-it', 'listen-pick', 'listen-pick']);
       const [play, apply, check] = quest.scopes;
-      if (play?.kind !== 'order-it' || apply?.kind !== 'listen-pick' || check?.kind !== 'listen-pick')
-        throw new Error(quest.id);
+      if (play?.kind !== 'order-it' || apply?.kind !== 'listen-pick' || check === undefined || !('rounds' in check)) throw new Error(quest.id);
+      expect(check.rounds.length, quest.id).toBe(2);
       // q1 teaches one pattern (에 + 있어요); the 이 / 가 choice is drilled in q2 and q3.
       expect(play.rounds.filter((r) => r.particle === undefined).length, quest.id).toBe(
         quest.id.endsWith('q1') ? 5 : 3,
@@ -152,15 +163,25 @@ describe('Animal Sentences (F-CURR-001 S3-4)', () => {
           expect(lemmas(o.text!.ko), `${quest.id} ${r.id}`).toContain(animal);
         }
       }
-      expect(check.rounds[0]?.options.every((o) => o.pictureRef !== undefined)).toBe(true);
-      expect(check.rounds[1]?.options.every((o) => o.text !== undefined && o.pictureRef === undefined)).toBe(true);
     }
+    const [q1, q2, q3] = cell.quests.map((q) => q.scopes[2]);
+    if (q1?.kind !== 'cloze-pick' || q2?.kind !== 'order-it' || q3?.kind !== 'type-hangul') throw new Error('Check kinds');
+    // q1: the place word (에 있어요) and the subject particle after 곰, a final consonant (이).
+    expect(q1.rounds.map((r) => [r.gapKind, fillClozeGap(r.sentence.ko, r.tiles[r.answerIndex]!.ko)])).toEqual([
+      ['word', '나무에 새가 있어요.'],
+      ['particle', '산에 곰이 있어요.'],
+    ]);
+    expect(q2.rounds.map((r) => r.sentence.ko)).toEqual(['토끼가 귀여워요.', '고양이가 작아요.']);
+    expect(q3.rounds.map((r) => [r.mode, r.target.ko])).toEqual([
+      ['hear', '토끼'],
+      ['hear', '호랑이'],
+    ]);
   });
 
   it('every sentence is polite 해요체 and ends with its sentence mark', () => {
     const sentences = cell.quests.flatMap((q) => [
       ...discoverKo(q),
-      ...q.scopes.flatMap((s) => (s.kind === 'order-it' ? s.rounds.map((r) => r.sentence.ko) : scopeKo(s))),
+      ...q.scopes.flatMap((s) => (s.kind === 'order-it' ? s.rounds.map((r) => r.sentence.ko) : scopeKo(s).filter((ko) => ko.includes(' ')))),
     ]);
     for (const s of sentences) expect(s, s).toMatch(/요\.$/);
   });
@@ -293,6 +314,13 @@ describe('Animal Sentences (F-CURR-001 S3-4)', () => {
           }
         if (scope.kind === 'listen-pick')
           for (const r of scope.rounds) texts.set(`${scope.ref}|listenPick.rounds.${r.id}.prompt`, r.prompt.ko);
+        if (scope.kind === 'cloze-pick')
+          for (const r of scope.rounds) {
+            texts.set(`${scope.ref}|clozePick.rounds.${r.id}.sentence.gloss`, fillClozeGap(r.sentence.ko, r.tiles[r.answerIndex]!.ko));
+            if (r.gapKind === 'word') for (const t of r.tiles) texts.set(`${scope.ref}|clozePick.rounds.${r.id}.tiles.${t.romanization}.gloss`, t.ko);
+          }
+        if (scope.kind === 'type-hangul')
+          for (const r of scope.rounds) texts.set(`${scope.ref}|typeHangul.rounds.${r.id}.target.gloss`, r.target.ko);
       }
     }
     let checked = 0;
@@ -305,6 +333,7 @@ describe('Animal Sentences (F-CURR-001 S3-4)', () => {
         for (const w of echoes(ko))
           expect(gloss.replace(/동물/g, '').includes(w), `${id} ${field}: "${gloss}" repeats ${w}`).toBe(false);
       }
-    expect(checked).toBe(59);
+    // Row CM-3A S3: the Check rotation glosses (Cloze Pick sentences and word tiles, Sentence Builder, Dictation words) replace the Listen & Pick prompts.
+    expect(checked).toBe(63);
   });
 });

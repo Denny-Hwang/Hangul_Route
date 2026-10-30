@@ -29,9 +29,9 @@ vi.mock('../../../platform/screen-reader', () => screenReader);
 
 type Fixture = keyof typeof FIXTURE_ROUNDS;
 
-function host(): MinigameHost & { answers: unknown[]; completes: number } {
+function host(mode: MinigameHost['mode'] = 'quest'): MinigameHost & { answers: unknown[]; completes: number } {
   const h = {
-    mode: 'quest' as const,
+    mode,
     answers: [] as unknown[],
     completes: 0,
     answer: (key: string | number, correct: boolean) => void h.answers.push([key, correct]),
@@ -123,6 +123,44 @@ describe('Type Hangul: Skip is drawn once and completes once', () => {
     await act(async () => {
       vi.advanceTimersByTime(PASS_PAUSE_MS * 2);
     });
+    expect(h.completes).toBe(1);
+  });
+});
+
+describe('Type Hangul as a Check: no Skip, the Check header (F-QUEST-002 L2 and D3; F-CURR-002 row CM-3A S2)', () => {
+  it.each([
+    [320, 568],
+    [375, 667],
+    [768, 1024],
+    [1180, 820],
+    [844, 390],
+    [568, 320],
+    [1024, 600],
+    [768, 600],
+  ])('%i x %i: no Skip, Done still drawn once, fill-only dots and "Quick check", never "n / N"', async (width, height) => {
+    const { r } = await play(['hoya', 'hoya'], { width, height }, { h: host('check') });
+    expect(byTestId(root(r), 'type-hangul-skip')).toHaveLength(0);
+    expect(byTestId(root(r), 'type-hangul-done')).toHaveLength(1);
+    const texts = screenTexts(root(r));
+    expect(texts.some((t) => /\d+ \/ \d+/.test(t))).toBe(false);
+    if (height >= 640) expect(texts).toContain('Quick check');
+  });
+
+  it('a miss shows the word to copy and the learner fixes it; the Check completes only on the pass', async () => {
+    vi.useFakeTimers();
+    const h = host('check');
+    const { r } = await play(['hoya'], { width: 375, height: 667 }, { h });
+    await typeKeys(r, 'ㅎㅗ');
+    await tap(r, 'type-hangul-done');
+    expect(byTestId(root(r), 'type-hangul-skip')).toHaveLength(0);
+    expect(h.completes).toBe(0);
+    await tap(r, 'type-hangul-fix');
+    await typeKeys(r, 'ㅇㅑ');
+    await tap(r, 'type-hangul-done');
+    await act(async () => {
+      vi.advanceTimersByTime(PASS_PAUSE_MS * 2);
+    });
+    expect(h.answers).toEqual([[0, false]]);
     expect(h.completes).toBe(1);
   });
 });

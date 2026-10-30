@@ -51,6 +51,8 @@ const TODAY_STAGE1_LESSONS = [
   'quest:stage1-crafts-q1',
   'quest:stage1-crafts-q2',
   'quest:stage1-crafts-q3',
+  // F-CURR-002 row CM-33: the Stage 1 addition (letter shapes), free like all of Stage 1.
+  'quest:stage1-crafts-q4',
 ];
 const CHANGED = 'The free lessons changed: check F-ENT-003 section 3.1 (all of Stage 1 is free, OD-1)';
 
@@ -122,10 +124,10 @@ describe('isFreeContent (default registry)', () => {
     expect([...gridLessonIds(CATALOG)].sort()).toEqual([...GRID_LESSONS].sort());
   });
 
-  it("the free lessons are exactly Stage 1's lesson quests, all fifteen (OD-1)", () => {
+  it("the free lessons are exactly Stage 1's lesson quests, all sixteen with the CM-33 addition (OD-1)", () => {
     const free = freeRouteQuestIds(CATALOG);
     for (const id of TODAY_STAGE1_LESSONS) expect(free.has(id), `${CHANGED}: ${id}`).toBe(true);
-    expect(free.size, CHANGED).toBe(15);
+    expect(free.size, CHANGED).toBe(16);
     for (const id of free) expect(id.startsWith('quest:stage1-'), `${CHANGED}: ${id}`).toBe(true);
     // A later stage always has lessons to close, or the switch would have nothing to do.
     expect(LATER_LESSONS.length).toBeGreaterThan(0);

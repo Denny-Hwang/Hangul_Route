@@ -236,6 +236,47 @@ describe('the wrap rule (measured, section 5.1)', () => {
     for (const id of ['presenter-exit', 'presenter-sound']) expect(flatStyle(byTestId(r.root, id)[0]!).flexShrink ?? '0').toBe('0');
   });
 
+  it('a language change mid-lesson keeps the last widths until the new labels report: the band stays wrapped, Next never clipped', async () => {
+    const r = await render(bar());
+    measure(r, 1024);
+    expect(rowOf(r).props['data-rows']).toBe('2');
+    // The device language follows to Korean: only Full screen's box changes (102 px); Exit, Previous,
+    // Next and the 96 px tools keep their boxes, so they fire no new layout.
+    await act(async () => {
+      r.update(bar({}, 'ko'));
+    });
+    expect(rowOf(r).props['data-rows']).toBe('2');
+    layoutOf(r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'presenter-fullscreen' && typeof n.props.onLayout === 'function')[0]!, 102);
+    expect(rowOf(r).props['data-rows']).toBe('2');
+    expect(flatStyle(rowOf(r)).paddingTop).toBe(`${touchTarget.hero + BAR_ROW_GAP}px`);
+  });
+
+  it('a shorter label after a language change takes its new, smaller width (a fresh set of widths per labels)', async () => {
+    const r = await render(bar({}, 'es'));
+    measure(r, 1180, 'es');
+    expect(rowOf(r).props['data-rows']).toBe('2');
+    await act(async () => {
+      r.update(bar({}, 'en'));
+    });
+    measure(r, 1180, 'en');
+    expect(rowOf(r).props['data-rows']).toBe('1');
+  });
+
+  it('a band too narrow for the tools More leaves wraps them on a second tools row (rows 3), never clipping one', async () => {
+    const r = await render(bar({}, 'es'));
+    layoutOf(measured(r, 'presenter-bar-docked'), 400);
+    layoutOf(measured(r, 'presenter-back'), touchTarget.hero);
+    layoutOf(measured(r, 'presenter-next'), NEXT_MIN_WIDTH);
+    for (const id of ['presenter-exit', 'presenter-fullscreen', 'presenter-grid-button', 'presenter-blank-button', 'presenter-timer', 'presenter-sound']) {
+      const node = r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === id && typeof n.props.onLayout === 'function')[0];
+      if (node) layoutOf(node, NEXT_MIN_WIDTH);
+    }
+    expect(rowOf(r).props['data-rows']).toBe('3');
+    expect(rowOf(r).props['data-more']).toBe('true');
+    expect(flatStyle(rowOf(r)).paddingTop).toBe(`${2 * (touchTarget.hero + BAR_ROW_GAP)}px`);
+    expect(flatStyle(byTestId(r.root, 'presenter-bar-tools')[0]!).flexWrap).toBe('wrap');
+  });
+
   it('reports the band height so the stage shrinks to match', async () => {
     const onBandHeight = vi.fn();
     const r = await render(bar({ onBandHeight }));

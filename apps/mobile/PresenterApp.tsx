@@ -6,6 +6,7 @@ import {
   CATALOG,
   decodeDeck,
   encodeDeck,
+  isNewerDeckFailure,
   presetBlockMinutes,
   type LectureBlock,
   type LectureDeck,
@@ -26,13 +27,13 @@ import { lectureStories } from './src/logic/lecture/sources/story';
 import { readToMePlan } from './src/logic/lecture/story-slides';
 import { createAudioRunner, type RunnerResult } from './src/logic/story/audio-runner';
 import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
-import { expandDeck, withBuilds, type Slide } from './src/logic/lecture/deck-builder';
+import { expandDeck, withBuilds, type DeckSwitches, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
 import { recentView } from './src/logic/lecture/home-view';
 import { blockMinutesOn, blockTitleIn, presenterChooserGroups, wordReviewWordsOn } from './src/logic/lecture/quick-source';
 import { HOME_DEFAULT, type HomeSnapshot } from './src/logic/lecture/home-state';
 import { presenterPresetContext, presetLectureDeck, presetPreview, presetTitle, resolveOnPresenter, type WordReviewBlock } from './src/logic/lecture/preset-source';
-import { boundedRecent, commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { RECENT_READ_TIMEOUT_MS, boundedRecent, commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
   homeStart,
@@ -133,6 +134,7 @@ import { useSoundCheck } from './src/screens/presenter/use-sound-check';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
+import { currFlagOn, startRemoteConfig, useRemoteConfigStore } from './src/store/remote-config-store';
 
 /**
  * The lecture presenter, the `/present` root of the learner web build (F-TCH-004 PR 6; spec
@@ -225,7 +227,8 @@ type Phase =
 function phaseOf(result: BootResult, address: DeckAddress | null): Phase {
   if (result.kind === 'deck') return readyFromBoot(result, address?.fresh === true);
   // A link from a newer presenter (AMENDMENTS-LECTURE-V2 section 4.5): the page offers Reload.
-  if (result.kind === 'invalid') return result.reason === 'unsupported_version' ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
+  // A block kind or preset this build does not know (`unknown_kind`, F-CURR-002 §8) is from a newer console too.
+  if (result.kind === 'invalid') return isNewerDeckFailure(result.reason) ? { kind: 'invalid', stale: true } : { kind: 'invalid' };
   return { kind: result.kind };
 }
 
@@ -393,6 +396,9 @@ function Presenter(): ReactElement {
   // The bar's Offline chip (section 3.8): the lesson keeps working; only the chip changes.
   const [online, setOnline] = useState(isOnline);
   useEffect(() => subscribeOnline(setOnline), []);
+  // The remote switches can decide: the stored copy is read, or the read's bound has passed.
+  const configRead = useRemoteConfigStore((s) => s.hydrated || s.cache !== null);
+  const [configWaited, setConfigWaited] = useState(false);
   // The browser blocked the last sound (a long idle): the speaker reads "Tap to hear" (section 3.7).
   const [soundBlocked, setSoundBlocked] = useState(false);
 
@@ -433,6 +439,13 @@ function Presenter(): ReactElement {
       });
     }
     const offLink = reloadOnDeckLink();
+    // The remote switches (F-CURR-002 section 12.2, row CM-35): the stored copy, then a fetch when due (it carries no
+    // identifier), so the owner's ramp of a `game.<kind>` and an urgent off reach a classroom display. A read that
+    // never settles counts as never fetched after the Recent bound, so a deck is never held for it.
+    const stopRemoteConfig = startRemoteConfig();
+    const configBound = setTimeout(() => {
+      if (live) setConfigWaited(true);
+    }, RECENT_READ_TIMEOUT_MS);
     const offPwa = subscribePwa((event) => {
       if (event === 'back-online') void flushQueue();
       if (event === 'update-ready') setUpdateWaiting(true);
@@ -444,6 +457,8 @@ function Presenter(): ReactElement {
       offCapability();
       offPwa();
       offLink();
+      stopRemoteConfig();
+      clearTimeout(configBound);
     };
   }, [address]);
 
@@ -459,7 +474,11 @@ function Presenter(): ReactElement {
   const stories = useMemo(() => lectureStories(slidesIn), [slidesIn]);
   const narrator = useMemo(() => createAudioRunner({ playPrompt, stop: stopAudio }), []);
   const canPlay = canPlayKorean(capability);
-  const expanded = useMemo(() => (deck ? expandDeck(deck, bundle, { canPlayKorean: canPlay }) : null), [deck, bundle, canPlay]);
+  // The deck's switches, read once per deck once they can decide, so a copy fetched mid-lesson never swaps its slides
+  // (row CM-35). A room has no profile, so it is in no experiment: a switch is on here once its ramp reaches everyone.
+  const switchesKnown = configRead || configWaited;
+  const switches = useMemo((): DeckSwitches | null => (deck && switchesKnown ? { rolePlay: currFlagOn('game.role-play', null) } : null), [deck, switchesKnown]);
+  const expanded = useMemo(() => (deck && switches ? expandDeck(deck, bundle, { canPlayKorean: canPlay }, switches) : null), [deck, bundle, canPlay, switches]);
   const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS) : null), [deck, expanded]);
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
@@ -715,10 +734,11 @@ function Presenter(): ReactElement {
     [deck, stories, narrator, canPlay, voiceChecked],
   );
 
+  /** Runs one event on the lesson; true when it moved the lesson (another slide or another build). */
   const dispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent): boolean => {
       const before = stateRef.current;
-      if (!before || slides.length === 0) return;
+      if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
       stateRef.current = state;
       setPstate(state);
@@ -760,6 +780,7 @@ function Presenter(): ReactElement {
       if (sound && !explicit && phoneRef.current && !canPlay && slideSound(slides[state.slideIdx], state.reveal) !== undefined) {
         setSoundFlash({ key: 'noVoice', at: Date.now() });
       }
+      return state.slideIdx !== before.slideIdx || state.reveal !== before.reveal;
     },
     [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay, endNavHint],
   );
@@ -780,18 +801,21 @@ function Presenter(): ReactElement {
     void pushPresenterEntry('running', rawOf(phase.deck));
   }, [phase, rawOf]);
   /**
-   * A press, a tap or a key in the lesson: an activation, then the event. While the More sheet is open
-   * it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): no step reaches the lesson until it
-   * closes (each of its own buttons closes it first; the rotate page's Back still opens the Exit confirm).
+   * A press or a key in the lesson: an activation, then the event; true when it moved the lesson. While
+   * the More sheet is open it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): a swipe or tap on
+   * the stage steps nothing (`stageGesture` gives only `'close-more'`). A step that does arrive comes
+   * from a control the teacher can see or a key (the docked band's pinned Previous and Next stay beside
+   * its sheet; a clicker's key): it closes the sheet first and then steps, so a visible, enabled Next
+   * never does nothing. Each of the sheet's own buttons closes it first too.
    */
   const userDispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent): boolean => {
       activate();
       const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (step && moreOpenRef.current) return;
-      dispatch(event);
+      if (step && moreOpenRef.current) openMore(false);
+      return dispatch(event);
     },
-    [activate, dispatch],
+    [activate, dispatch, openMore],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -948,6 +972,14 @@ function Presenter(): ReactElement {
         showBar();
         return;
       }
+      // A step key (arrows, PageDown, Home, End, a clicker) goes the way a bar press does: with More
+      // open it closes the sheet and then steps (`userDispatch`).
+      if (command === 'next' || command === 'prev' || command === 'first' || command === 'last') {
+        userDispatch(command);
+        return;
+      }
+      // A tool key (G, B, T, H) closes the More sheet first, as the sheet's own buttons do, so no tool opens under it.
+      if (typeof command === 'object' && moreOpenRef.current) openMore(false);
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
         if (command.overlay === 'timer') {
@@ -959,7 +991,7 @@ function Presenter(): ReactElement {
       }
       dispatch(command);
     });
-  }, [phase, dispatch, toggleFullscreen, activate, showBar]);
+  }, [phase, dispatch, userDispatch, openMore, toggleFullscreen, activate, showBar]);
 
   // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
   // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
@@ -1352,8 +1384,8 @@ function Presenter(): ReactElement {
     const stageCovering = moreOpen ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
     const onGesture = (command: Exclude<StageCommand, null>, via: { swipe: boolean }): void => {
       if (command === 'next' || command === 'prev') {
-        if (via.swipe) navStepSeen();
-        userDispatch(command);
+        // Only a swipe that moved the lesson ends the start hint (section 9.3: the first swipe *step*).
+        if (userDispatch(command) && via.swipe) navStepSeen();
         return;
       }
       // Every other command is a user activation too (rule 4) and changes no slide.
@@ -1369,16 +1401,6 @@ function Presenter(): ReactElement {
       }
       // `{ point }` comes only with pointing on (owner choice O2, row PN-5).
     };
-    /**
-     * The rail stays beside an open More sheet (section 5.2), which covers the stage: a press on its
-     * Previous, Next or Sound then closes the sheet and does nothing else, as a tap on the stage does.
-     */
-    const railClosesMore = (): boolean => {
-      if (nav !== 'rail' || !moreOpenRef.current) return false;
-      activate();
-      openMore(false);
-      return true;
-    };
     const bar =
       page !== null ? null : (
         <ControlBar
@@ -1391,20 +1413,14 @@ function Presenter(): ReactElement {
           fullscreenSupported={fullscreenSupported()}
           fullscreen={fullscreen}
           onPrev={() => {
-            if (railClosesMore()) return;
-            // The step a bar button makes ends the start hint (More open swallows it, so it is no step).
-            if (!moreOpenRef.current) navStepSeen();
-            userDispatch('prev');
+            // Only a press that moved the lesson ends the start hint (section 9.3: the first button *step*;
+            // Previous on the first slide steps nothing and keeps it).
+            if (userDispatch('prev')) navStepSeen();
           }}
           onNext={() => {
-            if (railClosesMore()) return;
-            if (!moreOpenRef.current) navStepSeen();
-            userDispatch('next');
+            if (userDispatch('next')) navStepSeen();
           }}
-          onSound={() => {
-            if (railClosesMore()) return;
-            userDispatch('replay-sound');
-          }}
+          onSound={() => userDispatch('replay-sound')}
           onFullscreen={() => {
             activate();
             toggleFullscreen();

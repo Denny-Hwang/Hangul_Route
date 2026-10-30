@@ -198,9 +198,10 @@ describe('every preset at every length against CATALOG', () => {
     ['stage3', 10, 10, 'stage3-letters-q1 · stage3-letters-q2'],
     ['stage3', 20, 20, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1'],
     ['stage3', 30, 30, 'stage3-letters-q1 · stage3-letters-q2 · stage3-letters-q3 · stage3-life-q1 · stage3-life-q2 · stage3-life-q3'],
-    ['stage4', 10, 10, 'stage4-letters-q1 · stage4-letters-q2 · copy-on-paper 2'],
-    ['stage4', 20, 20, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · copy-on-paper 4'],
-    ['stage4', 30, 29, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · stage4-life-q2 · stage4-life-q3 · stage4-rites-q1'],
+    // Row CM-3A S4: the re-authored Stage 4 quests run about 5 minutes each (Role Play and the rotated Checks).
+    ['stage4', 10, 10, 'stage4-letters-q1 · stage4-letters-q2'],
+    ['stage4', 20, 20, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1'],
+    ['stage4', 30, 30, 'stage4-letters-q1 · stage4-letters-q2 · stage4-letters-q3 · stage4-life-q1 · stage4-life-q2 · stage4-life-q3'],
     ['stage5', 10, 9, 'story:sejong-new-letters@read+checks · story:shapes-of-hangeul@read+checks'],
     [
       'stage5',
@@ -467,7 +468,8 @@ describe('story-time', () => {
     expect(levels.every((n) => n !== undefined && n <= 2)).toBe(true);
     expect(storiesOf(console)[0]).toBe('story:sillok-mountain-archives');
     // A class past the end of Stage 1: the quest is in Stage 2, the bound stays Stage 1 + 1.
-    const past = classPosition([{ journey: journey('stage1', [['stage1', 15, 0]]) }], CATALOG);
+    // Stage 1 has 16 lessons since F-CURR-002 row CM-33 (the letter-shapes quest closes it).
+    const past = classPosition([{ journey: journey('stage1', [['stage1', 16, 0]]) }], CATALOG);
     expect(past).toEqual({ questId: 'quest:stage2-letters-q1', stage: 'stage1' });
     const all = resolvePreset('story-time', 30, { catalog: CATALOG, position: past, shown: { questIds: [], storyIds: ready.filter((st) => st.recommendedStage <= 2).map((st) => st.id) } });
     expect(all.fallback).toBe('restart');
@@ -716,7 +718,9 @@ describe('classPosition (N2)', () => {
 
   it('a missing entry counts 0; past the end of the stage gives the next stage; past the end of the route gives null', () => {
     expect(at([{ journey: journey('stage4', [['stage3', 15, 0]]) }])).toBe('quest:stage4-letters-q1');
-    expect(at([{ journey: journey('stage1', [['stage1', 15, 0]]) }])).toBe('quest:stage2-letters-q1');
+    // Stage 1 has 16 lessons since F-CURR-002 row CM-33: 15 done leaves its last, the letter-shapes quest.
+    expect(at([{ journey: journey('stage1', [['stage1', 15, 0]]) }])).toBe('quest:stage1-crafts-q4');
+    expect(at([{ journey: journey('stage1', [['stage1', 16, 0]]) }])).toBe('quest:stage2-letters-q1');
     expect(at([{ journey: journey('stage7', [['stage7', 15, 0]]) }])).toBeNull();
   });
 

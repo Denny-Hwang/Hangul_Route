@@ -8,7 +8,7 @@ Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text plac
 
 ## Scenario (Given-When-Then)
 
-Given: a Stage 1 Letters step (the shape-origin quest of §5.2) or a review item for a `sym` item that has a look-alike
+Given: a Stage 1 Play & Crafts step (the shape-origin quest of §5.2, `quest:stage1-crafts-q4`, after every Stage 1 letter is taught; the §5.2 amendment in the §7.1 CM-33 decision record) or a review item for a `sym` item that has a look-alike
 When: the learner sees a picture of where a letter's shape comes from and picks the letter, or sees one letter and taps every copy of it among look-alikes
 Then: a right pick shows the letter beside its picture with one sourced sentence and says its sound; a look-alike only nudges ("Look at the strokes again"), and the round stays open until it is found
 
@@ -117,7 +117,7 @@ Read Pick renders with the Listen & Pick option cards and the text prompt mode f
 
 ## Navigation graph
 
-Enter from: `quest/player` (a Stage 1 Letters play step with a `match-shape` scope, §5.2) via `minigame/shell`; a review item at the produce rung of a `sym` item that has a look-alike pair
+Enter from: `quest/player` (a Stage 1 Play & Crafts play step with a `match-shape` scope, §5.2 as amended by the CM-33 decision record) via `minigame/shell`; a review item at the produce rung of a `sym` item that has a look-alike pair
 Exit to: `quest/player` · the review session's next item. No other exit: the sources expand in place (no navigation, no link, no `CultureNotes` or `StorySources` route from a running round).
 
 ## States

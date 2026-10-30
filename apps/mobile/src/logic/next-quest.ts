@@ -56,12 +56,21 @@ export interface NextQuestInput {
   isQuestOpen?: (questId: string) => boolean;
 }
 
-/** The next incomplete offerable quest, or `undefined` when none is left. */
+/**
+ * The next incomplete offerable quest, or `undefined` when none is left. An optional quest (an episode's
+ * `optionalQuestIds`, the Stage 1 additions of F-CURR-002 section 4.2) is offered in its place on the route, but never
+ * once the learner has finished a quest after it: an addition that ships later never pulls the cursor back behind
+ * where the learner already is. It stays playable from its episode.
+ */
 export function nextQuestAfter(input: NextQuestInput): Quest | undefined {
   const done = new Set(input.snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
   if (input.justCompleted) done.add(input.justCompleted);
   const skip = input.skipQuestIds;
-  return offerableQuests(input.quests, input.episodes, input.isEntitled, input.isQuestOpen).find(
-    (q) => !done.has(q.id) && !(skip?.has(q.id) ?? false),
-  );
+  const offerable = offerableQuests(input.quests, input.episodes, input.isEntitled, input.isQuestOpen);
+  const optional = new Set(input.episodes.flatMap((e) => e.optionalQuestIds ?? []));
+  let lastDone = -1;
+  if (optional.size > 0) {
+    for (let i = 0; i < offerable.length; i += 1) if (done.has((offerable[i] as Quest).id)) lastDone = i;
+  }
+  return offerable.find((q, i) => !done.has(q.id) && !(skip?.has(q.id) ?? false) && !(i < lastDone && optional.has(q.id)));
 }
