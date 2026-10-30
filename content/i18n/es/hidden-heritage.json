@@ -2,6 +2,21 @@
   "locale": "es",
   "domain": "hidden-heritage",
   "entries": {
+    "scene:food-market": {
+      "art.alt": "Un puesto de comida en un día de mercado.",
+      "round.alt": "Un puesto de comida en un día de mercado.",
+      "round.targets.bap.word.gloss": "arroz cocido",
+      "round.targets.gimchi.word.gloss": "kimchi",
+      "round.targets.tteok.word.gloss": "pastel de arroz",
+      "round.targets.jeotgarak.word.gloss": "palillos",
+      "round.others.guk.word.gloss": "sopa",
+      "round.others.sutgarak.word.gloss": "cuchara",
+      "round.others.hangari.word.gloss": "tinaja",
+      "round.others.baguni.word.gloss": "cesta",
+      "note.subject": "Un día de mercado, uno de los temas de la pintura costumbrista de Joseon: comida a la venta y la mesa de todos los días, con arroz, sopa y acompañamientos.",
+      "note.facts.f1.claim": "El álbum de pinturas costumbristas de Kim Hongdo del Museo Nacional de Corea muestra el trabajo y los juegos de la vida diaria; su pintura número 25 es Jangteogil, el camino al mercado.",
+      "note.facts.f2.claim": "Banchan es la palabra para todos los platos que se comen con el arroz."
+    },
     "scene:letters-school": {
       "art.alt": "Un aula de antes, con una puerta abierta al patio.",
       "round.alt": "Un aula de antes, con una puerta abierta al patio.",

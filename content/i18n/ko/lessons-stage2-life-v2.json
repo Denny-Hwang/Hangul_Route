@@ -1,0 +1,145 @@
+{
+  "locale": "ko",
+  "domain": "lessons-stage2-life-v2",
+  "entries": {
+    "episode:stage2-life-v2": {
+      "title": "맛과 밥상 낱말",
+      "subtitle": "맛, 숟가락, 젓가락, 시장 음식을 읽어요.",
+      "hoyaIntro": "달다, 짜다, 맵다! 음식 맛을 읽어 봐요.",
+      "culture.n1.text": "{ko:숟가락}과 {ko:젓가락}을 함께 이르는 말이 {ko:수저}예요. 밥과, 국처럼 국물이 있는 음식은 숟가락으로 먹고, 다른 반찬은 젓가락으로 먹어요.",
+      "culture.n2.text": "{ko:간장}은 짠맛이 나요. 간장은 한국 음식의 바탕이 되는 발효 양념인 장 가운데 하나예요. 유네스코는 2024년에 ‘Knowledge, beliefs and practices related to jang making in the Republic of Korea’(한국의 장 담그기와 관련된 지식, 믿음, 관습)를 인류무형유산으로 등재했어요."
+    },
+    "quest:stage2-life-v2-q1": {
+      "blurb": "맛 낱말 세 개를 읽어요: 달다, 짜다, 맵다.",
+      "steps.s1.hoyaLine": "음식은 달거나 짜거나 매울 수 있어요. 맛 낱말을 읽어 봐요!",
+      "steps.s1.title": "맛이 어때요?",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "꿀이나 설탕 같은 맛",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "소금 같은 맛",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "고추처럼 입안이 얼얼한 맛",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "맛 낱말",
+      "steps.s3.title": "낱말 따라 쓰기",
+      "steps.s4.title": "낱말 완성하기",
+      "steps.s5.title": "낱말 쓰기",
+      "steps.s6.hoyaLine": "달다, 짜다, 맵다: 모두 읽었어요!",
+      "steps.s6.title": "맛 낱말!",
+      "teaser": "다음: 시다, 쓰다, 숟가락과 젓가락.",
+      "title": "단맛, 짠맛, 매운맛"
+    },
+    "minigame:s2-life-v2-q1-practice": {
+      "traceWord.rounds.w1.word.gloss": "꿀이나 설탕 같은 맛",
+      "traceWord.rounds.w2.word.gloss": "소금 같은 맛",
+      "traceWord.rounds.w3.word.gloss": "고추처럼 입안이 얼얼한 맛",
+      "traceWord.rounds.w4.word.gloss": "배추를 맵게 절인 한국 음식",
+      "traceWord.rounds.w5.word.gloss": "쌀로 지어 먹는 음식",
+      "traceWord.rounds.w6.word.gloss": "소에게서 얻는 하얀 마실 것"
+    },
+    "minigame:s2-life-v2-q1-check": {
+      "typeHangul.rounds.hear-dalda.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-dalda.target.gloss": "꿀이나 설탕 같은 맛",
+      "typeHangul.rounds.hear-bap.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-bap.target.gloss": "쌀로 지어 먹는 음식"
+    },
+    "quest:stage2-life-v2-q2": {
+      "blurb": "숟가락과 젓가락, 그리고 맛 낱말 두 개를 더 읽어요: 시다, 쓰다.",
+      "steps.s1.hoyaLine": "밥상을 차리고 맛 낱말 두 개를 더 읽어 봐요!",
+      "steps.s1.title": "밥상 차리기",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "밥이나 국을 떠먹는 기구",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "steps.s2.discover.pages.1.caption": "맛이 두 가지 더 있어요.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "식초나 레몬 같은 맛",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "한약이나 진한 커피 같은 맛",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "밥상 낱말과 맛 낱말",
+      "steps.s3.title": "그림과 낱말",
+      "steps.s4.title": "카드 짝짓기",
+      "steps.s5.title": "그림 맞추기",
+      "steps.s6.hoyaLine": "숟가락, 젓가락, 시다, 쓰다: 정말 잘 읽었어요!",
+      "steps.s6.title": "밥상 낱말!",
+      "teaser": "다음: 장날의 음식 가게.",
+      "title": "숟가락과 젓가락"
+    },
+    "minigame:s2-life-v2-q2-practice": {
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.0.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.0.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
+      "picWord.boards.1.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
+      "picWord.boards.1.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.1.pairs.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "picWord.boards.2.pairs.sagwa.word.gloss": "빨갛고 둥근 과일",
+      "picWord.boards.2.pairs.mul.word.gloss": "목마를 때 마시는 맑고 투명한 것",
+      "picWord.boards.2.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.3.pairs.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "picWord.boards.3.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
+      "picWord.boards.3.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.4.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.4.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
+      "picWord.boards.4.pairs.sagwa.word.gloss": "빨갛고 둥근 과일",
+      "picWord.boards.5.pairs.uyu.word.gloss": "소에게서 얻는 하얀 마실 것",
+      "picWord.boards.5.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
+      "picWord.boards.5.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍"
+    },
+    "minigame:s2-life-v2-q2-apply": {
+      "cardPairs.sutgarak.gloss": "밥이나 국을 떠먹는 기구",
+      "cardPairs.jeotgarak.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "cardPairs.sida.gloss": "식초나 레몬 같은 맛",
+      "cardPairs.sseuda.gloss": "한약이나 진한 커피 같은 맛"
+    },
+    "minigame:s2-life-v2-q2-check": {
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "picWord.boards.0.pairs.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "picWord.boards.0.pairs.banana.word.gloss": "껍질이 노랗고 길쭉한 과일",
+      "picWord.boards.1.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "picWord.boards.1.pairs.dalgyal.word.gloss": "닭이 낳는 둥근 알",
+      "picWord.boards.1.pairs.gimchi.word.gloss": "배추를 맵게 절인 한국 음식"
+    },
+    "quest:stage2-life-v2-q3": {
+      "blurb": "시장, 국, 반찬을 읽고 장터 가게에서 음식을 찾아요.",
+      "steps.s1.hoyaLine": "오늘은 장날이에요! 가게에 무엇이 있는지 봐요.",
+      "steps.s1.title": "시장에 가요",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "여러 가지 물건을 사고파는 곳",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "steps.s2.discover.pages.1.caption": "밥, 국, 반찬으로 한 끼를 차려요.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "쌀로 지어 먹는 음식",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
+      "steps.s2.title": "시장 낱말",
+      "steps.s3.title": "듣고 고르기",
+      "steps.s4.title": "가게에서 찾기",
+      "steps.s5.title": "낱말 읽기",
+      "steps.s6.hoyaLine": "장터 가게에서 음식을 찾았어요. 잘했어요!",
+      "steps.s6.title": "장날 낱말!",
+      "title": "장날"
+    },
+    "minigame:s2-life-v2-q3-practice": {
+      "listenPick.rounds.hear-sijang.prompt": "여러 가지 물건을 사고파는 곳",
+      "listenPick.rounds.hear-guk.prompt": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "listenPick.rounds.hear-banchan.prompt": "밥에 곁들여 먹는 여러 가지 음식",
+      "listenPick.rounds.hear-bap.prompt": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.hear-sida.prompt": "식초나 레몬 같은 맛",
+      "listenPick.rounds.hear-gimchi.prompt": "배추를 맵게 절인 한국 음식"
+    },
+    "minigame:s2-life-v2-q3-apply": {
+      "hiddenHeritage.rounds.hh1.alt": "장날에 문을 연 음식 가게.",
+      "hiddenHeritage.rounds.hh1.targets.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "hiddenHeritage.rounds.hh1.targets.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
+      "hiddenHeritage.rounds.hh1.targets.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "hiddenHeritage.rounds.hh1.targets.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "hiddenHeritage.rounds.hh1.others.guk.word.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "hiddenHeritage.rounds.hh1.others.sutgarak.word.gloss": "밥이나 국을 떠먹는 기구",
+      "hiddenHeritage.rounds.hh1.others.hangari.word.gloss": "흙으로 빚어 구운 배가 불룩한 그릇",
+      "hiddenHeritage.rounds.hh1.others.baguni.word.gloss": "가는 나무 줄기를 엮어 만든 그릇"
+    },
+    "minigame:s2-life-v2-q3-check": {
+      "listenPick.rounds.see-bap.prompt": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.see-bap.options.bap.label": "쌀로 지어 먹는 음식",
+      "listenPick.rounds.see-bap.options.tteok.label": "곡식 가루를 쪄서 만든 음식",
+      "listenPick.rounds.see-bap.options.sagwa.label": "빨갛고 둥근 과일",
+      "listenPick.rounds.see-uyu.prompt": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.see-uyu.options.uyu.label": "소에게서 얻는 하얀 마실 것",
+      "listenPick.rounds.see-uyu.options.mul.label": "목마를 때 마시는 맑고 투명한 것",
+      "listenPick.rounds.see-uyu.options.dalgyal.label": "닭이 낳는 둥근 알"
+    }
+  }
+}

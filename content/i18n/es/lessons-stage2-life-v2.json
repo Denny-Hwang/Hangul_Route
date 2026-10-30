@@ -1,0 +1,145 @@
+{
+  "locale": "es",
+  "domain": "lessons-stage2-life-v2",
+  "entries": {
+    "episode:stage2-life-v2": {
+      "title": "Sabores y mesa",
+      "subtitle": "Lee sabores, cuchara, palillos y comida del mercado.",
+      "hoyaIntro": "¡Dulce, salado, picante! Leamos a qué sabe la comida.",
+      "culture.n1.text": "Una cuchara, {ko:숟가락}, y unos palillos, {ko:젓가락}, juntos se llaman {ko:수저}. El arroz y los platos con caldo, como la sopa, se comen con la cuchara; los demás acompañamientos, con los palillos.",
+      "culture.n2.text": "La salsa de soja, {ko:간장}, tiene un sabor salado. Es un jang, una de las salsas fermentadas que son la base de la comida coreana. En 2024 la UNESCO inscribió «Conocimientos, creencias y prácticas relacionadas con la elaboración de jang en la República de Corea»."
+    },
+    "quest:stage2-life-v2-q1": {
+      "blurb": "Lee tres palabras de sabores: dulce, salado y picante.",
+      "steps.s1.hoyaLine": "La comida puede ser dulce, salada o picante. ¡Leamos palabras de sabores!",
+      "steps.s1.title": "¿A qué sabe?",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "dulce",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "salado",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "picante",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras de sabores",
+      "steps.s3.title": "Traza las palabras",
+      "steps.s4.title": "Arma la palabra",
+      "steps.s5.title": "Escribe la palabra",
+      "steps.s6.hoyaLine": "Dulce, salado y picante: ¡los leíste todos!",
+      "steps.s6.title": "¡Palabras de sabores!",
+      "teaser": "Siguiente: ácido, amargo, una cuchara y palillos.",
+      "title": "Dulce, salado, picante"
+    },
+    "minigame:s2-life-v2-q1-practice": {
+      "traceWord.rounds.w1.word.gloss": "dulce",
+      "traceWord.rounds.w2.word.gloss": "salado",
+      "traceWord.rounds.w3.word.gloss": "picante",
+      "traceWord.rounds.w4.word.gloss": "kimchi",
+      "traceWord.rounds.w5.word.gloss": "arroz cocido",
+      "traceWord.rounds.w6.word.gloss": "leche"
+    },
+    "minigame:s2-life-v2-q1-check": {
+      "typeHangul.rounds.hear-dalda.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-dalda.target.gloss": "dulce",
+      "typeHangul.rounds.hear-bap.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-bap.target.gloss": "arroz cocido"
+    },
+    "quest:stage2-life-v2-q2": {
+      "blurb": "Lee cuchara y palillos, y dos sabores más: ácido y amargo.",
+      "steps.s1.hoyaLine": "¡Pongamos la mesa y leamos dos sabores más!",
+      "steps.s1.title": "Pon la mesa",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "cuchara",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "palillos",
+      "steps.s2.discover.pages.1.caption": "Dos sabores más.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "ácido, agrio",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "amargo",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras de la mesa y de sabores",
+      "steps.s3.title": "Imagen y palabra",
+      "steps.s4.title": "Une las tarjetas",
+      "steps.s5.title": "Une la imagen",
+      "steps.s6.hoyaLine": "Cuchara, palillos, ácido y amargo: ¡muy bien leído!",
+      "steps.s6.title": "¡Palabras de la mesa!",
+      "teaser": "Siguiente: un puesto de comida en día de mercado.",
+      "title": "Cuchara y palillos"
+    },
+    "minigame:s2-life-v2-q2-practice": {
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "palillos",
+      "picWord.boards.0.pairs.bap.word.gloss": "arroz cocido",
+      "picWord.boards.0.pairs.uyu.word.gloss": "leche",
+      "picWord.boards.1.pairs.gimchi.word.gloss": "kimchi",
+      "picWord.boards.1.pairs.jeotgarak.word.gloss": "palillos",
+      "picWord.boards.1.pairs.tteok.word.gloss": "pastel de arroz",
+      "picWord.boards.2.pairs.sagwa.word.gloss": "manzana",
+      "picWord.boards.2.pairs.mul.word.gloss": "agua",
+      "picWord.boards.2.pairs.jeotgarak.word.gloss": "palillos",
+      "picWord.boards.3.pairs.tteok.word.gloss": "pastel de arroz",
+      "picWord.boards.3.pairs.dalgyal.word.gloss": "huevo",
+      "picWord.boards.3.pairs.bap.word.gloss": "arroz cocido",
+      "picWord.boards.4.pairs.jeotgarak.word.gloss": "palillos",
+      "picWord.boards.4.pairs.gimbap.word.gloss": "rollo de arroz con alga",
+      "picWord.boards.4.pairs.sagwa.word.gloss": "manzana",
+      "picWord.boards.5.pairs.uyu.word.gloss": "leche",
+      "picWord.boards.5.pairs.gimchi.word.gloss": "kimchi",
+      "picWord.boards.5.pairs.jeotgarak.word.gloss": "palillos"
+    },
+    "minigame:s2-life-v2-q2-apply": {
+      "cardPairs.sutgarak.gloss": "cuchara",
+      "cardPairs.jeotgarak.gloss": "palillos",
+      "cardPairs.sida.gloss": "ácido, agrio",
+      "cardPairs.sseuda.gloss": "amargo"
+    },
+    "minigame:s2-life-v2-q2-check": {
+      "picWord.boards.0.pairs.jeotgarak.word.gloss": "palillos",
+      "picWord.boards.0.pairs.tteok.word.gloss": "pastel de arroz",
+      "picWord.boards.0.pairs.banana.word.gloss": "plátano, banana",
+      "picWord.boards.1.pairs.bap.word.gloss": "arroz cocido",
+      "picWord.boards.1.pairs.dalgyal.word.gloss": "huevo",
+      "picWord.boards.1.pairs.gimchi.word.gloss": "kimchi"
+    },
+    "quest:stage2-life-v2-q3": {
+      "blurb": "Lee mercado, sopa y acompañamientos, y luego busca comida en un puesto del mercado.",
+      "steps.s1.hoyaLine": "¡Es día de mercado! Veamos qué hay en el puesto.",
+      "steps.s1.title": "Al mercado",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "mercado",
+      "steps.s2.discover.pages.0.items.1.word.gloss": "pastel de arroz",
+      "steps.s2.discover.pages.1.caption": "El arroz, la sopa y los acompañamientos forman una comida.",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "arroz cocido",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "sopa",
+      "steps.s2.discover.pages.2.items.0.word.gloss": "acompañamientos",
+      "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
+      "steps.s2.title": "Palabras del mercado",
+      "steps.s3.title": "Escucha y elige",
+      "steps.s4.title": "Búscalo en el puesto",
+      "steps.s5.title": "Lee la palabra",
+      "steps.s6.hoyaLine": "Encontraste la comida en el puesto del mercado. ¡Muy bien!",
+      "steps.s6.title": "¡Día de mercado!",
+      "title": "Día de mercado"
+    },
+    "minigame:s2-life-v2-q3-practice": {
+      "listenPick.rounds.hear-sijang.prompt": "mercado",
+      "listenPick.rounds.hear-guk.prompt": "sopa",
+      "listenPick.rounds.hear-banchan.prompt": "acompañamientos",
+      "listenPick.rounds.hear-bap.prompt": "arroz cocido",
+      "listenPick.rounds.hear-sida.prompt": "ácido, agrio",
+      "listenPick.rounds.hear-gimchi.prompt": "kimchi"
+    },
+    "minigame:s2-life-v2-q3-apply": {
+      "hiddenHeritage.rounds.hh1.alt": "Un puesto de comida en un día de mercado.",
+      "hiddenHeritage.rounds.hh1.targets.bap.word.gloss": "arroz cocido",
+      "hiddenHeritage.rounds.hh1.targets.gimchi.word.gloss": "kimchi",
+      "hiddenHeritage.rounds.hh1.targets.tteok.word.gloss": "pastel de arroz",
+      "hiddenHeritage.rounds.hh1.targets.jeotgarak.word.gloss": "palillos",
+      "hiddenHeritage.rounds.hh1.others.guk.word.gloss": "sopa",
+      "hiddenHeritage.rounds.hh1.others.sutgarak.word.gloss": "cuchara",
+      "hiddenHeritage.rounds.hh1.others.hangari.word.gloss": "tinaja",
+      "hiddenHeritage.rounds.hh1.others.baguni.word.gloss": "cesta"
+    },
+    "minigame:s2-life-v2-q3-check": {
+      "listenPick.rounds.see-bap.prompt": "arroz cocido",
+      "listenPick.rounds.see-bap.options.bap.label": "arroz cocido",
+      "listenPick.rounds.see-bap.options.tteok.label": "pastel de arroz",
+      "listenPick.rounds.see-bap.options.sagwa.label": "manzana",
+      "listenPick.rounds.see-uyu.prompt": "leche",
+      "listenPick.rounds.see-uyu.options.uyu.label": "leche",
+      "listenPick.rounds.see-uyu.options.mul.label": "agua",
+      "listenPick.rounds.see-uyu.options.dalgyal.label": "huevo"
+    }
+  }
+}
