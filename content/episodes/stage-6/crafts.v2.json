@@ -1,0 +1,1698 @@
+{
+  "id": "episode:stage6-crafts-v2",
+  "stage": "stage6",
+  "theme": "crafts",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Rules and Crafts",
+  "subtitleEn": "Read a game rules card, a craft card and a sign-up sheet.",
+  "hoyaIntroEn": "Craft day! Let's read a yut rules card, a fan card and a class sign-up sheet.",
+  "order": 5,
+  "pillarTags": [
+    "E1",
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-crafts-v2-q1",
+      "titleEn": "Yut Rules",
+      "blurbEn": "Read a yut rules card: each throw and how far it goes.",
+      "teaserEn": "Next: a card that shows how to make a fan.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261104,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Yut Rules",
+          "hoyaLineEn": "A yut board is ready! Let's read the rules card first.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Throws and Spaces",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-crafts-v2-q1-rules",
+                    "keyWords": [
+                      {
+                        "ko": "도",
+                        "romanization": "do",
+                        "en": "one-space throw"
+                      },
+                      {
+                        "ko": "걸",
+                        "romanization": "geol",
+                        "en": "three-space throw"
+                      },
+                      {
+                        "ko": "모",
+                        "romanization": "mo",
+                        "en": "five-space throw"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "How the four sticks land gives the throw. Each throw has a name."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "칸",
+                      "romanization": "kan",
+                      "en": "a space on a game board"
+                    },
+                    "noteEn": "One step of your piece on the board."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "모는 다섯 칸 가요.",
+                      "romanization": "moneun daseot kan gayo",
+                      "en": "With mo, you go five spaces."
+                    }
+                  }
+                ],
+                "captionEn": "Count spaces as you count things: {ko:한}, {ko:두}, {ko:세}, {ko:네}, {ko:다섯}."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Rules",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-v2-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Rules",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s6-crafts-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-crafts-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Read the Rules!",
+          "hoyaLineEn": "You read every throw on the card. Let's play yut!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-v2-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q1-rules",
+            "kind": "poster",
+            "entries": [
+              {
+                "id": "game",
+                "text": {
+                  "ko": "윷놀이",
+                  "romanization": "yunnori",
+                  "en": "yut, the stick-throwing board game"
+                }
+              },
+              {
+                "id": "throw",
+                "text": {
+                  "ko": "윷을 던져요.",
+                  "romanization": "yucheul deonjyeoyo",
+                  "en": "I throw the yut sticks."
+                }
+              },
+              {
+                "id": "do",
+                "text": {
+                  "ko": "도",
+                  "romanization": "do",
+                  "en": "one-space throw"
+                },
+                "value": {
+                  "ko": "한 칸",
+                  "romanization": "han kan",
+                  "en": "one space"
+                }
+              },
+              {
+                "id": "gae",
+                "text": {
+                  "ko": "개",
+                  "romanization": "gae",
+                  "en": "two-space throw"
+                },
+                "value": {
+                  "ko": "두 칸",
+                  "romanization": "du kan",
+                  "en": "two spaces"
+                }
+              },
+              {
+                "id": "geol",
+                "text": {
+                  "ko": "걸",
+                  "romanization": "geol",
+                  "en": "three-space throw"
+                },
+                "value": {
+                  "ko": "세 칸",
+                  "romanization": "se kan",
+                  "en": "three spaces"
+                }
+              },
+              {
+                "id": "yut",
+                "text": {
+                  "ko": "윷",
+                  "romanization": "yut",
+                  "en": "four-space throw"
+                },
+                "value": {
+                  "ko": "네 칸",
+                  "romanization": "ne kan",
+                  "en": "four spaces"
+                }
+              },
+              {
+                "id": "mo",
+                "text": {
+                  "ko": "모",
+                  "romanization": "mo",
+                  "en": "five-space throw"
+                },
+                "value": {
+                  "ko": "다섯 칸",
+                  "romanization": "daseot kan",
+                  "en": "five spaces"
+                }
+              }
+            ],
+            "altEn": "A yut rules card with a line of flags on top: throw the sticks, then the five throws and how many spaces each one moves"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which game is this rules card for?",
+              "options": [
+                {
+                  "id": "yunnori",
+                  "text": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
+                },
+                {
+                  "id": "julleomgi",
+                  "text": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                },
+                {
+                  "id": "jegi",
+                  "text": {
+                    "ko": "제기",
+                    "romanization": "jegi",
+                    "en": "a shuttlecock toy you kick"
+                  }
+                }
+              ],
+              "answerId": "yunnori",
+              "answerEntryId": "game"
+            },
+            {
+              "id": "r2",
+              "questionEn": "What does the card say to do first?",
+              "options": [
+                {
+                  "id": "dollyeoyo",
+                  "text": {
+                    "ko": "팽이를 돌려요.",
+                    "romanization": "paengireul dollyeoyo",
+                    "en": "I spin the top."
+                  }
+                },
+                {
+                  "id": "deonjyeoyo",
+                  "text": {
+                    "ko": "윷을 던져요.",
+                    "romanization": "yucheul deonjyeoyo",
+                    "en": "I throw the yut sticks."
+                  }
+                },
+                {
+                  "id": "chayo",
+                  "text": {
+                    "ko": "공을 차요.",
+                    "romanization": "gongeul chayo",
+                    "en": "I kick the ball."
+                  }
+                }
+              ],
+              "answerId": "deonjyeoyo",
+              "answerEntryId": "throw"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How many spaces does this throw move?",
+              "key": {
+                "ko": "걸",
+                "romanization": "geol",
+                "en": "three-space throw"
+              },
+              "options": [
+                {
+                  "id": "s2",
+                  "figure": "2"
+                },
+                {
+                  "id": "s3",
+                  "figure": "3"
+                },
+                {
+                  "id": "s5",
+                  "figure": "5"
+                }
+              ],
+              "answerId": "s3",
+              "answerEntryId": "geol"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which throw moves five spaces?",
+              "options": [
+                {
+                  "id": "do",
+                  "text": {
+                    "ko": "도",
+                    "romanization": "do",
+                    "en": "one-space throw"
+                  }
+                },
+                {
+                  "id": "geol",
+                  "text": {
+                    "ko": "걸",
+                    "romanization": "geol",
+                    "en": "three-space throw"
+                  }
+                },
+                {
+                  "id": "mo",
+                  "text": {
+                    "ko": "모",
+                    "romanization": "mo",
+                    "en": "five-space throw"
+                  }
+                }
+              ],
+              "answerId": "mo",
+              "answerEntryId": "mo"
+            },
+            {
+              "id": "r5",
+              "questionEn": "How many spaces does this throw move?",
+              "key": {
+                "ko": "도",
+                "romanization": "do",
+                "en": "one-space throw"
+              },
+              "options": [
+                {
+                  "id": "s1",
+                  "figure": "1"
+                },
+                {
+                  "id": "s4",
+                  "figure": "4"
+                },
+                {
+                  "id": "s3",
+                  "figure": "3"
+                }
+              ],
+              "answerId": "s1",
+              "answerEntryId": "do"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q1-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "모는 다섯 칸 가요.",
+                "romanization": "moneun daseot kan gayo",
+                "en": "With mo, you go five spaces."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker, after a final consonant"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "걸은 세 칸 가요.",
+                "romanization": "georeun se kan gayo",
+                "en": "With geol, you go three spaces."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker, after a vowel"
+                  },
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "윷을 던져요.",
+                "romanization": "yucheul deonjyeoyo",
+                "en": "I throw the yut sticks."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "도는 한 칸 가요.",
+                "romanization": "doneun han kan gayo",
+                "en": "With do, you go one space."
+              },
+              "distractors": [
+                {
+                  "ko": "던져요",
+                  "romanization": "deonjyeoyo",
+                  "en": "throw"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "윷은 ___ 가요.",
+                "romanization": "yucheun ___ gayo",
+                "en": "With yut, you go ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "네 칸",
+                  "romanization": "ne kan",
+                  "en": "four spaces"
+                },
+                {
+                  "ko": "세 칸",
+                  "romanization": "se kan",
+                  "en": "three spaces"
+                },
+                {
+                  "ko": "다섯 칸",
+                  "romanization": "daseot kan",
+                  "en": "five spaces"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "개는 ___ 가요.",
+                "romanization": "gaeneun ___ gayo",
+                "en": "With gae, you go ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "한 칸",
+                  "romanization": "han kan",
+                  "en": "one space"
+                },
+                {
+                  "ko": "네 칸",
+                  "romanization": "ne kan",
+                  "en": "four spaces"
+                },
+                {
+                  "ko": "두 칸",
+                  "romanization": "du kan",
+                  "en": "two spaces"
+                }
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q1-rules",
+            "kind": "poster",
+            "entries": [
+              {
+                "id": "game",
+                "text": {
+                  "ko": "윷놀이",
+                  "romanization": "yunnori",
+                  "en": "yut, the stick-throwing board game"
+                }
+              },
+              {
+                "id": "throw",
+                "text": {
+                  "ko": "윷을 던져요.",
+                  "romanization": "yucheul deonjyeoyo",
+                  "en": "I throw the yut sticks."
+                }
+              },
+              {
+                "id": "do",
+                "text": {
+                  "ko": "도",
+                  "romanization": "do",
+                  "en": "one-space throw"
+                },
+                "value": {
+                  "ko": "한 칸",
+                  "romanization": "han kan",
+                  "en": "one space"
+                }
+              },
+              {
+                "id": "gae",
+                "text": {
+                  "ko": "개",
+                  "romanization": "gae",
+                  "en": "two-space throw"
+                },
+                "value": {
+                  "ko": "두 칸",
+                  "romanization": "du kan",
+                  "en": "two spaces"
+                }
+              },
+              {
+                "id": "geol",
+                "text": {
+                  "ko": "걸",
+                  "romanization": "geol",
+                  "en": "three-space throw"
+                },
+                "value": {
+                  "ko": "세 칸",
+                  "romanization": "se kan",
+                  "en": "three spaces"
+                }
+              },
+              {
+                "id": "yut",
+                "text": {
+                  "ko": "윷",
+                  "romanization": "yut",
+                  "en": "four-space throw"
+                },
+                "value": {
+                  "ko": "네 칸",
+                  "romanization": "ne kan",
+                  "en": "four spaces"
+                }
+              },
+              {
+                "id": "mo",
+                "text": {
+                  "ko": "모",
+                  "romanization": "mo",
+                  "en": "five-space throw"
+                },
+                "value": {
+                  "ko": "다섯 칸",
+                  "romanization": "daseot kan",
+                  "en": "five spaces"
+                }
+              }
+            ],
+            "altEn": "A yut rules card with a line of flags on top: throw the sticks, then the five throws and how many spaces each one moves"
+          }
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-crafts-v2-q2",
+      "titleEn": "Make a Fan",
+      "blurbEn": "Read a craft card: what you need to make a paper fan.",
+      "teaserEn": "Next: sign up for a craft class.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261104,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Make a Fan",
+          "hoyaLineEn": "Craft day! This card says how to make a paper fan.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What You Need",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-crafts-v2-q2-fan-card",
+                    "keyWords": [
+                      {
+                        "ko": "부채 만들기",
+                        "romanization": "buchae mandeulgi",
+                        "en": "making a fan"
+                      },
+                      {
+                        "ko": "풀",
+                        "romanization": "pul",
+                        "en": "glue, paste"
+                      },
+                      {
+                        "ko": "두 장",
+                        "romanization": "du jang",
+                        "en": "two sheets"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A craft card lists what you need and how long it takes."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "장",
+                      "romanization": "jang",
+                      "en": "a sheet (counting paper)"
+                    },
+                    "noteEn": "Count sheets of paper with {ko:장}: {ko:한 장}, {ko:두 장}."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "한지 두 장 주세요.",
+                      "romanization": "hanji du jang juseyo",
+                      "en": "Two sheets of hanji, please."
+                    }
+                  }
+                ],
+                "captionEn": "Ask for what you need with {ko:주세요}, as at the market."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Craft Card",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-v2-q2-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type What You Need",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-crafts-v2-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-crafts-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ready to Make!",
+          "hoyaLineEn": "Paper, scissors and glue: you have all you need for a fan!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-v2-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q2-fan-card",
+            "kind": "poster",
+            "title": {
+              "ko": "부채 만들기",
+              "romanization": "buchae mandeulgi",
+              "en": "making a fan"
+            },
+            "entries": [
+              {
+                "id": "hanji",
+                "text": {
+                  "ko": "한지",
+                  "romanization": "hanji",
+                  "en": "Korean paper"
+                },
+                "value": {
+                  "ko": "두 장",
+                  "romanization": "du jang",
+                  "en": "two sheets"
+                }
+              },
+              {
+                "id": "scissors",
+                "text": {
+                  "ko": "가위",
+                  "romanization": "gawi",
+                  "en": "scissors"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
+                }
+              },
+              {
+                "id": "glue",
+                "text": {
+                  "ko": "풀",
+                  "romanization": "pul",
+                  "en": "glue, paste"
+                },
+                "value": {
+                  "ko": "한 개",
+                  "romanization": "han gae",
+                  "en": "one (thing)"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "시간",
+                  "romanization": "sigan",
+                  "en": "time"
+                },
+                "value": {
+                  "ko": "삼십 분",
+                  "romanization": "samsip bun",
+                  "en": "thirty minutes"
+                }
+              }
+            ],
+            "altEn": "A fan craft card with a line of flags on top: two sheets of hanji, scissors, glue and the time it takes"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How many sheets of this do you need?",
+              "key": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              },
+              "options": [
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 장",
+                    "romanization": "han jang",
+                    "en": "one sheet"
+                  }
+                },
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 장",
+                    "romanization": "du jang",
+                    "en": "two sheets"
+                  }
+                },
+                {
+                  "id": "se",
+                  "text": {
+                    "ko": "세 장",
+                    "romanization": "se jang",
+                    "en": "three sheets"
+                  }
+                }
+              ],
+              "answerId": "du",
+              "answerEntryId": "hanji"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which word on the card means scissors?",
+              "options": [
+                {
+                  "id": "pul",
+                  "text": {
+                    "ko": "풀",
+                    "romanization": "pul",
+                    "en": "glue, paste"
+                  }
+                },
+                {
+                  "id": "gawi",
+                  "text": {
+                    "ko": "가위",
+                    "romanization": "gawi",
+                    "en": "scissors"
+                  }
+                },
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채",
+                    "romanization": "buchae",
+                    "en": "fan"
+                  }
+                }
+              ],
+              "answerId": "gawi",
+              "answerEntryId": "scissors"
+            },
+            {
+              "id": "r3",
+              "questionEn": "How many of this do you need?",
+              "key": {
+                "ko": "풀",
+                "romanization": "pul",
+                "en": "glue, paste"
+              },
+              "options": [
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 개",
+                    "romanization": "han gae",
+                    "en": "one (thing)"
+                  }
+                },
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 개",
+                    "romanization": "du gae",
+                    "en": "two (things)"
+                  }
+                },
+                {
+                  "id": "se",
+                  "text": {
+                    "ko": "세 개",
+                    "romanization": "se gae",
+                    "en": "three (things)"
+                  }
+                }
+              ],
+              "answerId": "han",
+              "answerEntryId": "glue"
+            },
+            {
+              "id": "r4",
+              "questionEn": "How long does making the fan take?",
+              "options": [
+                {
+                  "id": "sip",
+                  "text": {
+                    "ko": "십 분",
+                    "romanization": "sip bun",
+                    "en": "ten minutes"
+                  }
+                },
+                {
+                  "id": "sasip",
+                  "text": {
+                    "ko": "사십 분",
+                    "romanization": "sasip bun",
+                    "en": "forty minutes"
+                  }
+                },
+                {
+                  "id": "samsip",
+                  "text": {
+                    "ko": "삼십 분",
+                    "romanization": "samsip bun",
+                    "en": "thirty minutes"
+                  }
+                }
+              ],
+              "answerId": "samsip",
+              "answerEntryId": "time"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for glue.",
+              "target": {
+                "ko": "풀",
+                "romanization": "pul",
+                "en": "glue, paste"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: two sheets.",
+              "target": {
+                "ko": "두 장",
+                "romanization": "du jang",
+                "en": "two sheets"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for fan.",
+              "target": {
+                "ko": "부채",
+                "romanization": "buchae",
+                "en": "fan"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q2-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "가위",
+                "romanization": "gawi",
+                "en": "scissors"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "한지",
+                "romanization": "hanji",
+                "en": "Korean paper"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-crafts-v2-q3",
+      "titleEn": "Sign Up for a Class",
+      "blurbEn": "Read a sign-up sheet: which craft class is at what time.",
+      "teaserEn": "You can read rules, craft cards and sign-up sheets now!",
+      "estimatedMinutes": 5,
+      "addedIn": 20261104,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Sign Up for a Class",
+          "hoyaLineEn": "There are craft classes today! Let's read the sign-up sheet.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Classes and Times",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-crafts-v2-q3-signup",
+                    "keyWords": [
+                      {
+                        "ko": "신청",
+                        "romanization": "sincheong",
+                        "en": "sign-up"
+                      },
+                      {
+                        "ko": "연 만들기",
+                        "romanization": "yeon mandeulgi",
+                        "en": "making a kite"
+                      },
+                      {
+                        "ko": "제기 만들기",
+                        "romanization": "jegi mandeulgi",
+                        "en": "making a jegi"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A sign-up sheet lists each class and its time, and where to sign up."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "연 만들기는 세 시예요.",
+                      "romanization": "yeon mandeulgineun se siyeyo",
+                      "en": "Kite making is at three o'clock."
+                    }
+                  }
+                ],
+                "captionEn": "Hours use {ko:한}, {ko:두}, {ko:세}, {ko:네}, as on a train timetable."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Sheet",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-v2-q3-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill In the Time",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-crafts-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-crafts-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Signed Up!",
+          "hoyaLineEn": "You found your class and its time. See you at the craft table!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-crafts-v2-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q3-signup",
+            "kind": "timetable",
+            "title": {
+              "ko": "만들기 교실",
+              "romanization": "mandeulgi gyosil",
+              "en": "craft class"
+            },
+            "entries": [
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채 만들기",
+                  "romanization": "buchae mandeulgi",
+                  "en": "making a fan"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              },
+              {
+                "id": "kite",
+                "text": {
+                  "ko": "연 만들기",
+                  "romanization": "yeon mandeulgi",
+                  "en": "making a kite"
+                },
+                "value": {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "three o'clock"
+                }
+              },
+              {
+                "id": "jegi",
+                "text": {
+                  "ko": "제기 만들기",
+                  "romanization": "jegi mandeulgi",
+                  "en": "making a jegi"
+                },
+                "value": {
+                  "ko": "네 시",
+                  "romanization": "ne si",
+                  "en": "four o'clock"
+                }
+              },
+              {
+                "id": "signup",
+                "text": {
+                  "ko": "신청",
+                  "romanization": "sincheong",
+                  "en": "sign-up"
+                },
+                "value": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                }
+              }
+            ],
+            "altEn": "A craft class sign-up sheet with a clock on top: fan, kite and jegi making at two, three and four, and sign-up at the entrance"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What time is this class?",
+              "key": {
+                "ko": "연 만들기",
+                "romanization": "yeon mandeulgi",
+                "en": "making a kite"
+              },
+              "options": [
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
+                  }
+                },
+                {
+                  "id": "se",
+                  "text": {
+                    "ko": "세 시",
+                    "romanization": "se si",
+                    "en": "three o'clock"
+                  }
+                },
+                {
+                  "id": "ne",
+                  "text": {
+                    "ko": "네 시",
+                    "romanization": "ne si",
+                    "en": "four o'clock"
+                  }
+                }
+              ],
+              "answerId": "se",
+              "answerEntryId": "kite"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which class is at two o'clock?",
+              "options": [
+                {
+                  "id": "jegi",
+                  "text": {
+                    "ko": "제기 만들기",
+                    "romanization": "jegi mandeulgi",
+                    "en": "making a jegi"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연 만들기",
+                    "romanization": "yeon mandeulgi",
+                    "en": "making a kite"
+                  }
+                },
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채 만들기",
+                    "romanization": "buchae mandeulgi",
+                    "en": "making a fan"
+                  }
+                }
+              ],
+              "answerId": "buchae",
+              "answerEntryId": "fan"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What time is this class?",
+              "key": {
+                "ko": "제기 만들기",
+                "romanization": "jegi mandeulgi",
+                "en": "making a jegi"
+              },
+              "options": [
+                {
+                  "id": "han",
+                  "text": {
+                    "ko": "한 시",
+                    "romanization": "han si",
+                    "en": "one o'clock"
+                  }
+                },
+                {
+                  "id": "ne",
+                  "text": {
+                    "ko": "네 시",
+                    "romanization": "ne si",
+                    "en": "four o'clock"
+                  }
+                },
+                {
+                  "id": "du",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "two o'clock"
+                  }
+                }
+              ],
+              "answerId": "ne",
+              "answerEntryId": "jegi"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which word on the sheet means sign-up?",
+              "options": [
+                {
+                  "id": "ipgu",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                },
+                {
+                  "id": "sincheong",
+                  "text": {
+                    "ko": "신청",
+                    "romanization": "sincheong",
+                    "en": "sign-up"
+                  }
+                },
+                {
+                  "id": "hanji",
+                  "text": {
+                    "ko": "한지",
+                    "romanization": "hanji",
+                    "en": "Korean paper"
+                  }
+                }
+              ],
+              "answerId": "sincheong",
+              "answerEntryId": "signup"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "부채 만들기는 ___ 시예요.",
+                "romanization": "buchae mandeulgineun ___ siyeyo",
+                "en": "Fan making is at ___ o'clock."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "세",
+                  "romanization": "se",
+                  "en": "three"
+                },
+                {
+                  "ko": "두",
+                  "romanization": "du",
+                  "en": "two"
+                },
+                {
+                  "ko": "네",
+                  "romanization": "ne",
+                  "en": "four"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "제기 만들기는 ___ 시예요.",
+                "romanization": "jegi mandeulgineun ___ siyeyo",
+                "en": "Jegi making is at ___ o'clock."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "네",
+                  "romanization": "ne",
+                  "en": "four"
+                },
+                {
+                  "ko": "두",
+                  "romanization": "du",
+                  "en": "two"
+                },
+                {
+                  "ko": "세",
+                  "romanization": "se",
+                  "en": "three"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "연 만들기는 ___ 시예요.",
+                "romanization": "yeon mandeulgineun ___ siyeyo",
+                "en": "Kite making is at ___ o'clock."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "두",
+                  "romanization": "du",
+                  "en": "two"
+                },
+                {
+                  "ko": "네",
+                  "romanization": "ne",
+                  "en": "four"
+                },
+                {
+                  "ko": "세",
+                  "romanization": "se",
+                  "en": "three"
+                }
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q3-signup",
+            "kind": "timetable",
+            "title": {
+              "ko": "만들기 교실",
+              "romanization": "mandeulgi gyosil",
+              "en": "craft class"
+            },
+            "entries": [
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채 만들기",
+                  "romanization": "buchae mandeulgi",
+                  "en": "making a fan"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              },
+              {
+                "id": "kite",
+                "text": {
+                  "ko": "연 만들기",
+                  "romanization": "yeon mandeulgi",
+                  "en": "making a kite"
+                },
+                "value": {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "three o'clock"
+                }
+              },
+              {
+                "id": "jegi",
+                "text": {
+                  "ko": "제기 만들기",
+                  "romanization": "jegi mandeulgi",
+                  "en": "making a jegi"
+                },
+                "value": {
+                  "ko": "네 시",
+                  "romanization": "ne si",
+                  "en": "four o'clock"
+                }
+              },
+              {
+                "id": "signup",
+                "text": {
+                  "ko": "신청",
+                  "romanization": "sincheong",
+                  "en": "sign-up"
+                },
+                "value": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                }
+              }
+            ],
+            "altEn": "A craft class sign-up sheet with a clock on top: fan, kite and jegi making at two, three and four, and sign-up at the entrance"
+          }
+        },
+        {
+          "ref": "minigame:s6-crafts-v2-q3-check",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-crafts-v2-q3-signup",
+            "kind": "timetable",
+            "title": {
+              "ko": "만들기 교실",
+              "romanization": "mandeulgi gyosil",
+              "en": "craft class"
+            },
+            "entries": [
+              {
+                "id": "fan",
+                "text": {
+                  "ko": "부채 만들기",
+                  "romanization": "buchae mandeulgi",
+                  "en": "making a fan"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              },
+              {
+                "id": "kite",
+                "text": {
+                  "ko": "연 만들기",
+                  "romanization": "yeon mandeulgi",
+                  "en": "making a kite"
+                },
+                "value": {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "three o'clock"
+                }
+              },
+              {
+                "id": "jegi",
+                "text": {
+                  "ko": "제기 만들기",
+                  "romanization": "jegi mandeulgi",
+                  "en": "making a jegi"
+                },
+                "value": {
+                  "ko": "네 시",
+                  "romanization": "ne si",
+                  "en": "four o'clock"
+                }
+              },
+              {
+                "id": "signup",
+                "text": {
+                  "ko": "신청",
+                  "romanization": "sincheong",
+                  "en": "sign-up"
+                },
+                "value": {
+                  "ko": "입구",
+                  "romanization": "ipgu",
+                  "en": "entrance"
+                }
+              }
+            ],
+            "altEn": "A craft class sign-up sheet with a clock on top: fan, kite and jegi making at two, three and four, and sign-up at the entrance"
+          },
+          "rounds": [
+            {
+              "id": "c1",
+              "questionEn": "Where do you do this?",
+              "key": {
+                "ko": "신청",
+                "romanization": "sincheong",
+                "en": "sign-up"
+              },
+              "options": [
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "ipgu",
+                  "text": {
+                    "ko": "입구",
+                    "romanization": "ipgu",
+                    "en": "entrance"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "ipgu",
+              "answerEntryId": "signup"
+            },
+            {
+              "id": "c2",
+              "questionEn": "Which class is at three o'clock?",
+              "options": [
+                {
+                  "id": "buchae",
+                  "text": {
+                    "ko": "부채 만들기",
+                    "romanization": "buchae mandeulgi",
+                    "en": "making a fan"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연 만들기",
+                    "romanization": "yeon mandeulgi",
+                    "en": "making a kite"
+                  }
+                },
+                {
+                  "id": "jegi",
+                  "text": {
+                    "ko": "제기 만들기",
+                    "romanization": "jegi mandeulgi",
+                    "en": "making a jegi"
+                  }
+                }
+              ],
+              "answerId": "yeon",
+              "answerEntryId": "kite"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "In {ko:윷놀이}, how the four sticks land names the throw: {ko:도} moves a piece one space, {ko:개} two, {ko:걸} three, {ko:윷} four and {ko:모} five. A {ko:윷} or a {ko:모} gives one more throw.",
+      "sources": [
+        {
+          "title": "윷놀이 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1595",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘윷가락 세 개가 엎어지고 한 개가 뒤집어지면 ‘도’라 하며 한 밭을 움직일 수 있다.’ … ‘네 개 모두가 엎어지면 ‘모’라 하며 다섯 밭을 갈 수 있다. 윷이나 모가 나오면 ‘사리’라 하여 다시 한 번 던질 수 있다.’"
+        },
+        {
+          "title": "모2 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%AA%A8",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘모2’ 「명사」 『민속』: ‘윷놀이에서, 윷짝의 네 개가 다 엎어진 경우를 이르는 말. 끗수는 다섯 끗으로 친다.’"
+        },
+        {
+          "title": "걸1 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EA%B1%B8",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘걸1’ 「명사」 『민속』: ‘윷놀이에서, 윷짝의 세 개는 젖혀지고 한 개는 엎어진 경우를 이르는 말. 끗수는 세 끗으로 친다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the five throws and how far each moves = NFMK 한국민속예술사전 윷놀이 (topic 1595), section 내용 (도 한 밭 … 모 다섯 밭; 윷이나 모가 나오면 다시 한 번 던질 수 있다); stdict 모2 and 걸1 give the same counts (끗수 다섯 끗, 세 끗). All three pages opened 2026-10-30 (HTTP 200; the NFMK text read through the page's own content service).\npass 2 (MAR culture and facts, 2026-10-30): every quoted string re-found word for word on its page. The note says no more than the sources: how the sticks land names the throw, the five distances, one more throw for yut or mo. It claims no origin (the NFMK overview reports competing theories; none is repeated) and no rule variant (no 빽도). The sources count moves in 밭 (points of the board); the note says space and the drawn card says 칸, the everyday word; recorded in the cell review. Institution names as of the access date: 국립민속박물관, 국립국어원.\nreviser (2026-10-30): no change to the note.\npass 3 (third pass, 2026-10-30): en, es and ko re-read against the sources; the ko note keeps the same tokens and says 엎어지다 / 젖혀지다 as the dictionary does. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Dano falls on the fifth day of the fifth lunar month, as summer begins. Long ago, people gave each other fans as Dano gifts. A fan is thin bamboo strips with paper or cloth pasted on.",
+      "sources": [
+        {
+          "title": "단오부채 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국세시풍속사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3534",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘단옷날에 선물로 주고받는 부채.’ 유래: ‘여름이 시작되는 단오절에 부채를 생산하는 영호남 지역에서 부채를 진상[端午進扇]하면’"
+        },
+        {
+          "title": "단오 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국세시풍속사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3529",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘음력 5월 5일을 명절로 이르는 말.’"
+        },
+        {
+          "title": "부채1 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B6%80%EC%B1%84",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘부채1’ 「명사」: ‘손으로 흔들어 바람을 일으키는 물건. 대오리로 살을 하고 종이나 헝겊 따위를 발라서 자루를 붙여 만든다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): 'the fifth day of the fifth lunar month' = NFMK 한국세시풍속사전 단오 (topic 3529, 정의 음력 5월 5일); 'as summer begins' and 'gave each other fans as Dano gifts' = NFMK 단오부채 (topic 3534, 정의 and 유래); 'thin bamboo strips with paper or cloth pasted on' = stdict 부채1. All pages opened 2026-10-30 (HTTP 200).\npass 2 (MAR culture and facts, 2026-10-30): quotes re-found word for word. 'Long ago' keeps the gift custom in the past (NFMK traces it through the Joseon records); the note does not frame Dano as Korean in origin (NFMK 단오 says the day came from the customs of Chu), as section 5.1 asks for shared East Asian heritage. No UNESCO status is claimed (the Gangneung Danoje inscription is a different element and is not named). Names as of the access date unchanged.\nreviser (2026-10-30): no change to the note.\npass 3 (third pass, 2026-10-30): en, es and ko re-read; es and ko add nothing. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "Most Korean kites today are a rectangle with a hole in the middle, the shield kite {ko:방패연}, or a diamond with a long tail. A kite is bamboo sticks with paper pasted on.",
+      "sources": [
+        {
+          "title": "연날리기 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1577",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘현재 한국의 연은 가오리연과 네모연(방패연)이 주종을 이루지만’ … ‘가장 광범위하게 보급된 연은 장방형의 방패연, 마름모형의 가오리연이다.’ … ‘연 만드는 법은 대를 뼈로 하고, 종이를 풀로 발라 마치 키의 모양 같다.’"
+        },
+        {
+          "title": "방패연 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B0%A9%ED%8C%A8%EC%97%B0",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 방패-연 (防牌鳶) 「명사」: ‘방패 모양으로 만든 연. 네모반듯한 종이의 한 귀퉁이를 접어서 머리 쪽이 되게 하고 … 가운데는 구멍을 내어’"
+        },
+        {
+          "title": "가오리연 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EA%B0%80%EC%98%A4%EB%A6%AC%EC%97%B0",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘가오리연’ 「명사」: ‘가오리 모양으로 만들어 꼬리를 길게 단 연.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): 'most Korean kites today are' the shield kite or the diamond kite = NFMK 한국민속예술사전 연날리기 (topic 1577, 내용: 현재 한국의 연은 가오리연과 네모연(방패연)이 주종; 장방형의 방패연, 마름모형의 가오리연); 'a hole in the middle' = stdict 방패-연; 'a long tail' = stdict 가오리연; 'bamboo sticks with paper pasted on' = NFMK 연날리기 (대를 뼈로 하고, 종이를 풀로 발라). All pages opened 2026-10-30 (HTTP 200).\npass 2 (MAR culture and facts, 2026-10-30): quotes re-found word for word. 'Rectangle' follows 장방형 and 네모연; the diamond kite is described, not named, so the note adds one Korean word only. No claim that kites are Korean in origin (NFMK cites Chinese records too); no UNESCO or heritage status. Names as of the access date unchanged.\nreviser (2026-10-30): no change to the note.\npass 3 (third pass, 2026-10-30): en, es and ko re-read; the ko note says 네모난 and 마름모꼴 as the sources do. Outcome: confirmed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, then three separate checker passes (language with the F-CNT-002 converter; culture and facts against each source; learning design: the section 9.3 lints, item load, Check variety, sound-change and homophone flags), a reviser and a third pass, each run by the authoring agent against its own checklist. No native-speaker or expert review is claimed.",
+      "Language: 모는 다섯 칸 가요, 한지 두 장 주세요 and 연 만들기는 세 시예요 are plain polite speech; counts before 칸, 장, 개 and 시 are native numbers, minutes Sino-Korean, never both in one round. Every romanization matches the converter.",
+      "Language findings fixed by the reviser: 윷은 ___ 가요 was romanized yuseun, the converter says yucheun ([유츤]); the throw glosses opened with their romanization (do, the one-space throw), now the meaning only; the es Discover captions carried {ko:} tokens, now the romanization in quotes; the ko Dictation meaning of 한지 held 한, now 닥나무 껍질로 손수 뜬 전통 종이.",
+      "Culture and facts: three notes, three sources each, an allowlisted one first (NFMK), all quotes re-found word for word on 2026-10-30. The sources count yut moves in 밭 and 끗; the drawn card says 칸, the everyday word for a board space, and the note says space. Dano and kites are not framed as Korean in origin (section 5.1).",
+      "Culture and facts (cont.): no UNESCO or heritage status, no person, brand, shop, organiser or real price; the sheet's times are drawn practice times. Institution names as of the access date: 국립민속박물관, 국립국어원.",
+      "Learning design: Realia Read Practice on CM-47 kinds (poster: yut rules card, fan craft card; timetable: sign-up sheet). Triples RR / Sentence Builder / Cloze Pick, RR / Type Hangul / Dictation, RR / Cloze Pick / RR, none a Volume 1 triple; the Checks are Cloze Pick, Dictation and Realia Read. lesson-recycle 40, 67 and 57 in 100; new items 5, 5 and 4.",
+      "Learning design finding fixed: the q1 figure options said '3 spaces' in English, which an es or ko learner would see untranslated; they are digits now.",
+      "Learning design (cont.): Dictation asks 가위 and 한지, said as written, no taught homophone, no audioRef, so while game.type-hangul-hear is at pct 0 the Check plays Type Hangul see. Liaison (윷은, 걸은, 윷을) is heard or built from tiles, never typed. The throw 개 stays on the card and in a value gap, so it is no review item beside 개 (dog, counter).",
+      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, items-stable-id, the overlay and Dictation gloss tests pass. Outcome: ready, behind volumes (built-in pct 0)."
+    ]
+  },
+  "contentVer": 1
+}

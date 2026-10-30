@@ -29,7 +29,7 @@ import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
@@ -156,8 +156,10 @@ export function missingGlosses(entities: ReadonlyArray<readonly [string, object]
 }
 
 describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
-  it('every file parses as a LessonCell and sits in its stage folder', () => {
-    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.json`);
+  it('every file parses as a LessonCell and sits in its stage folder (a Volume 2 as <theme>.v2.json, F-CURR-002 row CM-40)', () => {
+    for (const { rel, cell } of CELLS) {
+      expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}${cell.volume === 2 ? '.v2' : ''}.json`);
+    }
   });
 
   it('the generated index holds exactly the ready cells (a draft stays "Coming later")', () => {
@@ -184,7 +186,9 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
-      const episode = episodesAll.filter((e) => e.id === cell.id);
+      // A Volume 2 is the cell's second episode (row CM-40): in episodesWithVolumes, never in the route's episodesAll.
+      expect(episodesAll.some((e) => e.id === cell.id), cell.id).toBe(cell.volume === undefined);
+      const episode = episodesWithVolumes.filter((e) => e.id === cell.id);
       expect(episode.map((e) => e.status), cell.id).toEqual(['shipped']);
       for (const quest of cell.quests) {
         expect(questsAll.some((q) => q.id === quest.id), quest.id).toBe(true);
@@ -376,7 +380,8 @@ describe('U-10 three-language completeness of every ready cell', () => {
   for (const { cell } of READY) {
     it(`${cell.id}: every English field has its es and ko value`, () => {
       const stage = LESSON_STAGE_MODULES[Number(cell.stage.slice(5)) as 2 | 3 | 4 | 6 | 7];
-      const episode = episodesAll.find((e) => e.id === cell.id) as object;
+      const episode = episodesWithVolumes.find((e) => e.id === cell.id) as object;
+      expect(episode, cell.id).toBeDefined();
       const quests = cell.quests.map((q) => [q.id, questsAll.find((x) => x.id === q.id) as object] as const);
       const scopes = cell.quests.flatMap((q) => q.scopes.map((s) => [s.ref, stage.LESSON_SCOPES[s.ref] as object] as const));
       expect(missingGlosses([[cell.id, episode], ...quests], CONTENT_OVERLAYS)).toEqual([]);
@@ -1000,9 +1005,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Volume 1 Practices
+    // scaffold, and the three of Play Volume 2, S6 (row CM-42) as well.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([81, 78]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
