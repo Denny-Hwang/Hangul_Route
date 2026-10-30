@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { catalogEpisode, storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, cellEpisodeIds, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -237,9 +237,15 @@ export function fillToLength(candidates: readonly LectureBlock[], minutes: numbe
 
 // ---- route helpers ------------------------------------------------------------------------------
 
-/** Route quests (section 4.2): lesson quests only, playable only, in route order. */
+/**
+ * Route quests (section 4.2): lesson quests only, playable only, in route order. A cell's later volume (Volume 2,
+ * F-CURR-002 row CM-40) is no part of the route: it adds no route day and is offered as its own chooser row only while
+ * `volumes` is on, so a preset, a class position and a learner position never land on it (row CM-41 S7, the first
+ * Volume 2 to ship, would otherwise put it after the last Stage 7 quest with the switch off).
+ */
 function routeQuests(catalog: Catalog): RouteQuest[] {
-  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable);
+  const later = new Set(catalog.cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable && !later.has(q.episodeId));
 }
 
 const stageNumberOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
