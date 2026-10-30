@@ -1,0 +1,1272 @@
+{
+  "id": "episode:stage3-crafts-v2",
+  "stage": "stage3",
+  "theme": "crafts",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Game Rules",
+  "subtitleEn": "Take turns, throw the sticks and say who won.",
+  "hoyaIntroEn": "Let's play by the rules: take turns, throw the sticks and cheer for the winner!",
+  "order": 5,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-crafts-v2-q1",
+      "titleEn": "Whose Turn?",
+      "blurbEn": "Say whose turn it is in a game.",
+      "teaserEn": "Next: throw the yut sticks.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Wait for Your Turn",
+          "hoyaLineEn": "In a game we take turns. Let's say whose turn it is!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "It Is ___'s Turn",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___ 차례예요.",
+                      "romanization": "___ charyeyeyo",
+                      "en": "It is ___'s turn."
+                    },
+                    "noteEn": "Name a person, then {ko:차례예요}. {ko:내} means my, so {ko:내} {ko:차례예요} says it is my turn.",
+                    "examples": [
+                      {
+                        "ko": "내 차례예요.",
+                        "romanization": "nae charyeyeyo",
+                        "en": "It is my turn."
+                      },
+                      {
+                        "ko": "호야 차례예요.",
+                        "romanization": "hoya charyeyeyo",
+                        "en": "It is Hoya's turn."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "친구 차례예요.",
+                      "romanization": "chingu charyeyeyo",
+                      "en": "It is my friend's turn."
+                    },
+                    "picture": "word:school-friend"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "동생 차례예요.",
+                      "romanization": "dongsaeng charyeyeyo",
+                      "en": "It is my little sibling's turn."
+                    },
+                    "picture": "word:family-dongsaeng"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-crafts-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-crafts-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-crafts-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Fair Play!",
+          "hoyaLineEn": "You can say whose turn it is. Nice work!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-crafts-v2-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "내 차례예요.",
+                "romanization": "nae charyeyeyo",
+                "en": "It is my turn."
+              },
+              "pictureRef": "word:family-me",
+              "distractors": [
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick (in 'I kick')"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "윷놀이를 하고 싶어요.",
+                "romanization": "yunnorireul hago sipeoyo",
+                "en": "I want to play yut."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "친구 차례예요.",
+                "romanization": "chingu charyeyeyo",
+                "en": "It is my friend's turn."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [
+                {
+                  "ko": "던져요",
+                  "romanization": "deonjyeoyo",
+                  "en": "throw (in 'I throw')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "제기를 차요.",
+                "romanization": "jegireul chayo",
+                "en": "I kick the jegi."
+              },
+              "pictureRef": "card:jegi",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "연을 날리고 싶어요.",
+                "romanization": "yeoneul nalligo sipeoyo",
+                "en": "I want to fly a kite."
+              },
+              "pictureRef": "card:kite",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "___ 차례예요.",
+                "romanization": "___ charyeyeyo",
+                "en": "It is my turn."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "내",
+                  "romanization": "nae",
+                  "en": "my"
+                },
+                {
+                  "ko": "호야",
+                  "romanization": "hoya",
+                  "en": "Hoya"
+                },
+                {
+                  "ko": "친구",
+                  "romanization": "chingu",
+                  "en": "friend"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "동생 ___.",
+                "romanization": "dongsaeng ___",
+                "en": "It is my little sibling's turn."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "차례예요",
+                  "romanization": "charyeyeyo",
+                  "en": "it is the turn of"
+                },
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "축구___ 하고 싶어요.",
+                "romanization": "chukgu___ hago sipeoyo",
+                "en": "I want to play soccer."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "chukgureul hago sipeoyo"
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "연을 ___ 싶어요.",
+                "romanization": "yeoneul ___ sipeoyo",
+                "en": "I want to fly a kite."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "날리고",
+                  "romanization": "nalligo",
+                  "en": "fly (in 'want to fly')"
+                },
+                {
+                  "ko": "하고",
+                  "romanization": "hago",
+                  "en": "do (in 'want to do')"
+                },
+                {
+                  "ko": "가고",
+                  "romanization": "gago",
+                  "en": "go (in 'want to go')"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "호야 차례예요.",
+                "romanization": "hoya charyeyeyo",
+                "en": "It is Hoya's turn."
+              },
+              "distractors": [
+                {
+                  "ko": "하고",
+                  "romanization": "hago",
+                  "en": "do (in 'want to do')"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "동생 차례예요.",
+                "romanization": "dongsaeng charyeyeyo",
+                "en": "It is my little sibling's turn."
+              },
+              "pictureRef": "word:family-dongsaeng",
+              "distractors": [
+                {
+                  "ko": "날리고",
+                  "romanization": "nalligo",
+                  "en": "fly (in 'want to fly')"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261030
+    },
+    {
+      "id": "quest:stage3-crafts-v2-q2",
+      "titleEn": "Throw the Sticks",
+      "blurbEn": "Say what you throw, and throw one more time.",
+      "teaserEn": "Next: who won?",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Ready to Throw?",
+          "hoyaLineEn": "Four sticks, one throw! Let's say what we throw.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "I Throw ...",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___ 던져요.",
+                      "romanization": "___ deonjyeoyo",
+                      "en": "I throw ___."
+                    },
+                    "noteEn": "Name what you throw, then {ko:던져요}. Use {ko:을} after a final consonant: {ko:공을} {ko:던져요}.",
+                    "examples": [
+                      {
+                        "ko": "공을 던져요.",
+                        "romanization": "gongeul deonjyeoyo",
+                        "en": "I throw the ball."
+                      },
+                      {
+                        "ko": "윷을 던져요.",
+                        "romanization": "yucheul deonjyeoyo",
+                        "en": "I throw the yut sticks."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "한 번 더 던져요.",
+                      "romanization": "han beon deo deonjyeoyo",
+                      "en": "I throw one more time."
+                    },
+                    "picture": "card:yutnori"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "높이 던져요.",
+                      "romanization": "nopi deonjyeoyo",
+                      "en": "I throw it high."
+                    },
+                    "picture": "word:sport-ball"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-crafts-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-crafts-v2-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s3-crafts-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Great Throws!",
+          "hoyaLineEn": "You can say what you throw. What a throw!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-crafts-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "공을 던져요.",
+                "romanization": "gongeul deonjyeoyo",
+                "en": "I throw the ball."
+              },
+              "pictureRef": "word:sport-ball",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "한 번 더 던져요.",
+                "romanization": "han beon deo deonjyeoyo",
+                "en": "I throw one more time."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick (in 'I kick')"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "윷을 던져요.",
+                "romanization": "yucheul deonjyeoyo",
+                "en": "I throw the yut sticks."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "높이 던져요.",
+                "romanization": "nopi deonjyeoyo",
+                "en": "I throw it high."
+              },
+              "pictureRef": "word:sport-ball",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "팽이를 돌려요.",
+                "romanization": "paengireul dollyeoyo",
+                "en": "I spin the top."
+              },
+              "pictureRef": "card:top",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q2-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "공___ 던져요.",
+                "romanization": "gong___ deonjyeoyo",
+                "en": "I throw the ball."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "gongeul deonjyeoyo"
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "윷을 ___.",
+                "romanization": "yucheul ___",
+                "en": "I throw the yut sticks."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "던져요",
+                  "romanization": "deonjyeoyo",
+                  "en": "throw"
+                },
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick"
+                },
+                {
+                  "ko": "돌려요",
+                  "romanization": "dollyeoyo",
+                  "en": "spin"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "한 번 더 ___.",
+                "romanization": "han beon deo ___",
+                "en": "I throw one more time."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "던져요",
+                  "romanization": "deonjyeoyo",
+                  "en": "throw"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                },
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "___ 던져요.",
+                "romanization": "___ deonjyeoyo",
+                "en": "I throw it high."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "높이",
+                  "romanization": "nopi",
+                  "en": "high"
+                },
+                {
+                  "ko": "바다에",
+                  "romanization": "badae",
+                  "en": "to the sea"
+                },
+                {
+                  "ko": "놀이터에",
+                  "romanization": "noriteoe",
+                  "en": "to the playground"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q2-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "d1",
+              "promptEn": "Type the word for a ball.",
+              "mode": "hear",
+              "target": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              }
+            },
+            {
+              "id": "d2",
+              "promptEn": "Type the word for a kite.",
+              "mode": "hear",
+              "target": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              }
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261030
+    },
+    {
+      "id": "quest:stage3-crafts-v2-q3",
+      "titleEn": "Who Won?",
+      "blurbEn": "Say who won the game, then play again.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Game Over!",
+          "hoyaLineEn": "The game is over. Let's say who won, then play again!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "___ Won",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___ 이겼어요.",
+                      "romanization": "___ igyeosseoyo",
+                      "en": "___ won."
+                    },
+                    "noteEn": "Name the winner with {ko:이} or {ko:가}, then {ko:이겼어요}: {ko:호야가} {ko:이겼어요}.",
+                    "examples": [
+                      {
+                        "ko": "호야가 이겼어요.",
+                        "romanization": "hoyaga igyeosseoyo",
+                        "en": "Hoya won."
+                      },
+                      {
+                        "ko": "우리 팀이 이겼어요.",
+                        "romanization": "uri timi igyeosseoyo",
+                        "en": "Our team won."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "친구가 이겼어요.",
+                      "romanization": "chinguga igyeosseoyo",
+                      "en": "My friend won."
+                    },
+                    "picture": "word:school-friend"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "다시 해요.",
+                      "romanization": "dasi haeyo",
+                      "en": "Let's play again."
+                    },
+                    "picture": "card:yutnori"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-crafts-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-crafts-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-crafts-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Good Game!",
+          "hoyaLineEn": "You can say who won. Good game, everyone!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-crafts-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "호야가 이겼어요.",
+                "romanization": "hoyaga igyeosseoyo",
+                "en": "Hoya won."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "우리 팀이 이겼어요.",
+                "romanization": "uri timi igyeosseoyo",
+                "en": "Our team won."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "윷을 던져요.",
+                "romanization": "yucheul deonjyeoyo",
+                "en": "I throw the yut sticks."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick (in 'I kick')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "한 번 더 던져요.",
+                "romanization": "han beon deo deonjyeoyo",
+                "en": "I throw one more time."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "내 차례예요.",
+                "romanization": "nae charyeyeyo",
+                "en": "It is my turn."
+              },
+              "pictureRef": "word:family-me",
+              "distractors": [
+                {
+                  "ko": "하고",
+                  "romanization": "hago",
+                  "en": "do (in 'want to do')"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "친구가 이겼어요.",
+                "romanization": "chinguga igyeosseoyo",
+                "en": "My friend won."
+              },
+              "options": [
+                {
+                  "id": "friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                },
+                {
+                  "id": "mom",
+                  "pictureRef": "word:family-mom",
+                  "labelEn": "Mom"
+                },
+                {
+                  "id": "sibling",
+                  "pictureRef": "word:family-dongsaeng",
+                  "labelEn": "Little sibling"
+                }
+              ],
+              "answerId": "friend"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "엄마가 이겼어요.",
+                "romanization": "eommaga igyeosseoyo",
+                "en": "Mom won."
+              },
+              "options": [
+                {
+                  "id": "mom",
+                  "pictureRef": "word:family-mom",
+                  "labelEn": "Mom"
+                },
+                {
+                  "id": "sibling",
+                  "pictureRef": "word:family-dongsaeng",
+                  "labelEn": "Little sibling"
+                },
+                {
+                  "id": "friend",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "Friend"
+                }
+              ],
+              "answerId": "mom"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "우리 팀이 이겼어요.",
+                "romanization": "uri timi igyeosseoyo",
+                "en": "Our team won."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "우리 팀이 이겼어요.",
+                    "romanization": "uri timi igyeosseoyo",
+                    "en": "Our team won."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "호야가 이겼어요.",
+                    "romanization": "hoyaga igyeosseoyo",
+                    "en": "Hoya won."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "친구가 이겼어요.",
+                    "romanization": "chinguga igyeosseoyo",
+                    "en": "My friend won."
+                  }
+                }
+              ],
+              "answerId": "a"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "다시 해요.",
+                "romanization": "dasi haeyo",
+                "en": "Let's play again."
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "다시 해요.",
+                    "romanization": "dasi haeyo",
+                    "en": "Let's play again."
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "윷을 던져요.",
+                    "romanization": "yucheul deonjyeoyo",
+                    "en": "I throw the yut sticks."
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "제기를 차요.",
+                    "romanization": "jegireul chayo",
+                    "en": "I kick the jegi."
+                  }
+                }
+              ],
+              "answerId": "a"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-crafts-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "호야___ 이겼어요.",
+                "romanization": "hoya___ igyeosseoyo",
+                "en": "Hoya won."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "hoyaga igyeosseoyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "다시 ___.",
+                "romanization": "dasi ___",
+                "en": "Let's play again."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "해요",
+                  "romanization": "haeyo",
+                  "en": "do, play"
+                },
+                {
+                  "ko": "차요",
+                  "romanization": "chayo",
+                  "en": "kick"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261030
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "In {ko:윷놀이}, players split into sides and take turns throwing the yut sticks. They move their pieces by each throw, and the side that brings all its pieces home first wins.",
+      "sources": [
+        {
+          "title": "윷놀이",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9C%B7%EB%86%80%EC%9D%B4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘윷-놀이’ 「명사」 『민속』: “편을 갈라 윷으로 승부를 겨루는 놀이. 둘 또는 두 편 이상의 사람이 교대로 윷을 던져서 도·개·걸·윷·모의 끗수를 가리며, 그에 따라 윷판 위에 네 개의 말을 움직여 모든 말이 먼저 최종점을 통과하는 편이 이긴다.”"
+        },
+        {
+          "title": "국가무형유산 윷놀이",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "기본 정보의 설명 첫 문장: “‘윷놀이’는 양편으로 나뉘어 윷가락 4개를 던져, 윷가락이 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초(正初)부터 정월대보름까…” (분류: 무형유산 / 전통 놀이·무예 / 놀이)."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that in yunnori players split into sides, take turns throwing the yut sticks, move their pieces by each throw, and that the side that brings all its pieces home first wins. The Standard Korean Language Dictionary, 윷-놀이 (search results page, HTTP 200), says the sides take turns throwing (교대로 윷을 던져서), move four pieces by the throw (그에 따라 윷판 위에 네 개의 말을 움직여) and that the side whose pieces all pass the final point first wins. The Korea Heritage Service page for the National Intangible Heritage 윷놀이 (HTTP 200) says the game is played in two sides that throw four yut sticks and that the side that first brings all its pieces to the goal wins. The note is an English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again (HTTP 200) and each claim matched to a quoted phrase: sides (편을 갈라; 양편으로 나뉘어), turns (교대로), moving by the throw (그에 따라 ... 움직여; 엎어지고 젖혀진 상태에 따라), winning (먼저 최종점을 통과하는 편이 이긴다; 먼저 도달시키는 편이 이기는): confirmed. The number of pieces is left out of the note. The institution is named as of the access date (국가유산청, Korea Heritage Service, since 2024-05-17). No UNESCO or designation claim is made. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; no run of words is shared with a quoted source; unchanged."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "How the four yut sticks land names the throw: {ko:도}, {ko:개}, {ko:걸}, {ko:윷} or {ko:모}. {ko:도} counts one and {ko:모} counts five, and the pieces move by the count.",
+      "sources": [
+        {
+          "title": "윷",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9C%B7",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘윷’ 「명사」 「1」 『민속』: “작고 둥근 통나무 두 개를 반씩 쪼개어 네 쪽으로 만든 것. 도, 개, 걸, 윷, 모의 다섯 등급을 만들어 승부를 겨루는 놀이에 쓴다.”"
+        },
+        {
+          "title": "도",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%84",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘도 1’ 「명사」 「1」 『민속』: “윷놀이에서, 윷짝의 세 개는 엎어지고 한 개만 젖혀진 경우를 이르는 말. 끗수는 한 끗으로 친다.”"
+        },
+        {
+          "title": "모",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A8",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘모 2’ 「명사」 「1」 『민속』: “윷놀이에서, 윷짝의 네 개가 다 엎어진 경우를 이르는 말. 끗수는 다섯 끗으로 친다.”"
+        },
+        {
+          "title": "윷놀이",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9C%B7%EB%86%80%EC%9D%B4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘윷-놀이’ 「명사」 『민속』: “편을 갈라 윷으로 승부를 겨루는 놀이. 둘 또는 두 편 이상의 사람이 교대로 윷을 던져서 도·개·걸·윷·모의 끗수를 가리며, 그에 따라 윷판 위에 네 개의 말을 움직여 모든 말이 먼저 최종점을 통과하는 편이 이긴다.”"
+        },
+        {
+          "title": "국가무형유산 윷놀이",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "기본 정보의 설명 첫 문장: “‘윷놀이’는 양편으로 나뉘어 윷가락 4개를 던져, 윷가락이 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초(正初)부터 정월대보름까…” (분류: 무형유산 / 전통 놀이·무예 / 놀이)."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that how the four yut sticks land names the throw, the five names 도, 개, 걸, 윷 and 모, that 도 counts one and 모 five, and that the pieces move by the count. Standard Korean Language Dictionary (search results pages, HTTP 200): 윷 「1」 is four pieces of split wood used in a game of five grades 도, 개, 걸, 윷, 모; 도 1 「1」 is three sticks face down and one face up, counted as one; 모 2 「1」 is all four face down, counted as five; 윷-놀이 says the throw sets the count and the pieces move by it. Korea Heritage Service, 윷놀이: four yut sticks, and the game goes by whether they land face down or face up. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): every page fetched again (HTTP 200); 도 한 끗, 모 다섯 끗, the five names and the four sticks confirmed word for word in the locators. The counts of 개 (two), 걸 (three) and 윷 (four) are in the same dictionary (개 4, 걸 1) but are not claimed by the note, which names only the first and the last. 개 is also the word for dog (Word Builder q1): it appears here only inside a note token, never as a taught item or a heard option. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and five sources re-read; no copied run of words; unchanged."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:이겼어요} says someone won a game or a match. Name the winner first, with {ko:이} after a final consonant or {ko:가} after a vowel: {ko:호야가} {ko:이겼어요}, Hoya won.",
+      "sources": [
+        {
+          "title": "이기다",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9D%B4%EA%B8%B0%EB%8B%A4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘이기다 1’ 「동사」: “내기나 시합, 싸움 따위에서 재주나 힘을 겨루어 우위를 차지하다.”"
+        },
+        {
+          "title": "문법(文法)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0019486",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용, (2) 접사의 모습 ① 곡용접사: “어기에 받침이 있느냐 없느냐에 따라 두 가지 형태로 갈라진다. 예를 들면, 학생이·은·을·과·이야·으로(받침 있는 말 아래), 학교가·는·를·와·야·로(받침 없는 말 아래) 등과 같다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 이겼어요 says someone won a game or a match, and that the winner comes first with 이 after a final consonant and 가 after a vowel. Standard Korean Language Dictionary, 이기다 1 (search results page, HTTP 200): to come out ahead in a bet, a match or a fight. Encyclopedia of Korean Culture, 문법 (HTTP 200), (2) 접사의 모습, ① 곡용접사: a particle takes one of two forms by whether the word before it ends in a final consonant, 학생이 against 학교가. Line 2 (passes: 2, MAR language checker, 2026-10-30): both pages fetched again (HTTP 200): confirmed. 이겼어요 is 이기다 in the polite past (이기어 -> 이겨, with -었-), which the note does not name; the Stage 3 Letters cell note n2 already teaches the 이 / 가 rule with its own dictionary sources. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and sources re-read; no copied run of words; unchanged."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR row CM-42 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). Volume 2 of Play & Crafts at Stage 3: rule sentences for taking turns (___ 차례예요), throwing (___ 던져요) and winning (___ 이겼어요), one new pattern a quest.",
+      "Language: 해요체 with sentence marks; spacing 한 번 더, 우리 팀이; particle rounds test 을/를 and 이/가 (호야가, 팀이, 공을, 팽이를, 축구를); romanization by the converter (charyeyeyo, igyeosseoyo, uri timi, han beon deo). 다시 해요 is the polite suggestion, glossed Let's play again.",
+      "Language (cont.): every word gap keeps grammatical wrong tiles (한 번 더 가요, 바다에 던져요, 다시 가요), so the gap is read by its meaning line, as in Volume 1; no tile is right for the meaning shown.",
+      "Learning design: 내 and 네 sound alike (Word Builder q1), so 네 차례 is not taught and no heard round, Check or distractor holds 내 차례예요 against another spelling (F-CURR-001 section 3.5); 내 차례예요 is built and read only. Dictation asks 공 and 연 (one taught spelling each, said as written); 던져요 [던저요] and 차례예요 stay out of it.",
+      "Learning design (cont.): 차례 is a homograph (turn; and the memorial rite 차례 of OD-9, not taught yet): it is taught only inside sentences, never as a bare word item, so the Holidays row that teaches the rite keeps its own item. 개 and 모 (throw names, also dog and seedling) appear only in note n2. New words: q1 내, 차례; q2 높이, 한 번, 더; q3 이겼어요, 우리, 팀, 다시.",
+      "Learning design (cont.): triples q1 order-it / cloze-pick / order-it, q2 order-it / cloze-pick / type-hangul, q3 order-it / listen-pick / cloze-pick, none equal to a Volume 1 triple or its neighbour; three different produce Checks; every Practice is a Sentence Builder, so each can scaffold (CM-24). Practice and Check recycle 43, 57 and 43 in 100 (lesson-recycle); 3 new units a quest.",
+      "Culture and facts: n1 (turns and winning) and n2 (the five throw names, 도 one and 모 five) each re-checked against the Standard Korean Language Dictionary and the Korea Heritage Service page for the National Intangible Heritage 윷놀이, named as of the access date; no UNESCO, designation or origin claim; no real person, shop, brand or price; no age wording.",
+      "Reviser: q2 Practice became the Sentence Builder and its Apply the Cloze Pick (a Cloze Pick Practice cannot scaffold, U-11); the es picture labels follow the cell style (amigo, amiga; mamá; hermano o hermana menor); the ko title of q2 is 윷 던지기; the q1 reward title is Fair Play. Third pass: validate-content, the lesson lint and the overlay rules clean; no change.",
+      "Translation (es, ko): es keeps the Volume 1 wording (palitos de yut, marca de objeto, tras consonante final); ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English."
+    ]
+  },
+  "contentVer": 1
+}
