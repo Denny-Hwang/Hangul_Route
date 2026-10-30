@@ -929,6 +929,9 @@ function missesOf(scope: MinigameScope): RoundAsked[] {
       return [...new Set(scope.picWord?.boards.flatMap((b) => b.pairs.map((p) => p.id)))].map((itemId) => ({ scope, itemId }));
     case 'tap-respond':
       return (scope.dialogue ?? []).map((t) => ({ texts: [t.npcKo] }));
+    case 'role-play':
+      // A first-try miss names the turn and the less natural reply tapped (row CM-35).
+      return (scope.rolePlay?.scene.nodes ?? []).flatMap((n) => ('replies' in n ? n.replies.filter((r) => r.kind === 'lessNatural').map((r) => ({ scope, itemId: `${n.id}/${r.id}` })) : []));
     default:
       return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
   }
