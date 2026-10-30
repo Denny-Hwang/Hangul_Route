@@ -68,6 +68,17 @@ describe('LetterSlide: name first, then the sound on a vowel; a final by its syl
     expect(played).toEqual(['second']);
   });
 
+  it('the two speakers have different accessible names, in every UI language', async () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const root = await draw(nieun!, locale);
+      const m = getMessages(locale);
+      const labels = root.findAll((n) => typeof n.props.onClick === 'function' && typeof n.props['aria-label'] === 'string').map((n) => n.props['aria-label'] as string);
+      expect(labels).toContain(m.learner.presenter.quiz.playPrompt);
+      expect(pressable(root, 'presenter-letter-sound').props['aria-label']).toBe(m.learner.quest.discover.soundWith.cta);
+      expect(m.learner.quest.discover.soundWith.cta).not.toBe(m.learner.presenter.quiz.playPrompt);
+    }
+  });
+
   it('the Korean UI names the letter in Hangul with its romanization', async () => {
     const root = await draw(nieun!, 'ko');
     expect(textOf(byTestId(root, 'presenter-letter-name')[0]!)).toBe('글자 이름: 니은 (nieun)');
