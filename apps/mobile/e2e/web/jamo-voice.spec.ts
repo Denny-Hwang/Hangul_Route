@@ -1,11 +1,28 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { colors } from '@hangul-route/design-system/tokens';
-import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, onboardChild, openLettersEpisode, passDiscover, readStored, seedStored, waitForNextListenPickRound } from './helpers';
+import {
+  captureSpeech,
+  discoverPageOf,
+  en,
+  expectNoLoneJamo,
+  FINAL_SYLLABLE,
+  FINAL_SYLLABLES,
+  hear,
+  hearIt,
+  hearWithVowel,
+  JAMO,
+  LETTER_OF,
+  NAME,
+  nextSaid,
+  openQuestOneDiscover,
+  roundPill,
+  said,
+  saidCount,
+  shown,
+} from './jamo-voice-rig';
 import { shot } from './shots';
 
 /**
@@ -17,130 +34,11 @@ import { shot } from './shots';
  * test is checked against the invariant: none is a lone jamo, so the device never reads a bare letter
  * (whose voice differs by engine).
  *
- * The release-build tests run on the device voice (no generated clips exist yet). The clip group runs on
- * the e2e fixture build, which maps the fixture tones of e2e/fixtures/audio (nieun-name.mp3 among them):
- *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test jamo-voice -g "fixture clips"
+ * These tests run on the release build and the device voice (no generated clips exist yet). The second
+ * run, on the fixture clips, is `jamo-voice-audio.spec.ts`; the two share `jamo-voice-rig.ts`.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-const en = getMessages('en');
-
-/**
- * The Stage 1 letters and what a letter question says for each (section 5 of the amendment, pinned
- * by `jamo-voice.test.ts`): a consonant's name, a vowel's sound (its name), and 이응 for ㅇ.
- */
-const NAME: Readonly<Record<string, string>> = {
-  ㄱ: '기역',
-  ㄴ: '니은',
-  ㄷ: '디귿',
-  ㄹ: '리을',
-  ㅁ: '미음',
-  ㅂ: '비읍',
-  ㅅ: '시옷',
-  ㅇ: '이응',
-  ㅈ: '지읒',
-  ㅊ: '치읓',
-  ㅋ: '키읔',
-  ㅌ: '티읕',
-  ㅍ: '피읖',
-  ㅎ: '히읗',
-  ㅏ: '아',
-  ㅑ: '야',
-  ㅓ: '어',
-  ㅕ: '여',
-  ㅗ: '오',
-  ㅛ: '요',
-  ㅜ: '우',
-  ㅠ: '유',
-  ㅡ: '으',
-  ㅣ: '이',
-};
-/** The letter a name says (니은 is ㄴ). */
-const LETTER_OF: ReadonlyMap<string, string> = new Map(Object.entries(NAME).map(([letter, name]) => [name, letter]));
-/** The six Stage 1 finals and the closed syllable a sound question says for each (악 for the final ㄱ). */
-const FINAL_SYLLABLE: Readonly<Record<string, string>> = { ㄱ: '악', ㄴ: '안', ㄹ: '알', ㅁ: '암', ㅂ: '압', ㅇ: '앙' };
-const FINAL_SYLLABLES: ReadonlySet<string> = new Set(Object.values(FINAL_SYLLABLE));
-
-/** A compatibility (U+3131-318E) or conjoining (U+1100-11FF) jamo: never spoken (JV-A1, JV-A2's runtime guard). */
-const JAMO = /[ㄱ-ㆎᄀ-ᇿ]/u;
-/** A lone jamo, as the speech engine would be handed it. */
-const LONE_JAMO = /^\s*[ㄱ-ㆎᄀ-ᇿ]\s*$/u;
-
-interface Said {
-  text: string;
-  lang: string;
-}
-type VoiceWindow = Window & { __said?: Said[]; __clips?: string[] };
-
-/**
- * A device with one ko-KR voice that ends each line at once and keeps what it was asked to say. The silent
- * unlock utterance of the first gesture (volume 0) is not a prompt and is not kept.
- */
-async function captureSpeech(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const said: Said[] = [];
-    (window as VoiceWindow).__said = said;
-    class Utterance {
-      lang = '';
-      rate = 1;
-      pitch = 1;
-      volume = 1;
-      voice: { name: string } | null = null;
-      onstart: (() => void) | null = null;
-      onend: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      constructor(public text: string) {}
-    }
-    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, writable: true, value: Utterance });
-    Object.defineProperty(window, 'speechSynthesis', {
-      configurable: true,
-      value: {
-        speaking: false,
-        pending: false,
-        speak: (u: Utterance) => {
-          if (u.volume !== 0) said.push({ text: u.text, lang: u.lang });
-          setTimeout(() => {
-            u.onstart?.();
-            u.onend?.();
-          }, 0);
-        },
-        cancel: () => undefined,
-        getVoices: () => [
-          { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false },
-          { name: 'Samantha', lang: 'en-US', voiceURI: 'Samantha', localService: true, default: true },
-        ],
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-      },
-    });
-  });
-}
-
-const said = (page: Page): Promise<Said[]> => page.evaluate(() => [...((window as VoiceWindow).__said ?? [])]);
-const saidCount = async (page: Page): Promise<number> => (await said(page)).length;
-
-/** Waits for the next utterance after `before` and returns its text. */
-async function nextSaid(page: Page, before: number): Promise<string> {
-  await expect.poll(() => saidCount(page)).toBeGreaterThan(before);
-  return (await said(page)).at(-1)!.text;
-}
-
-/** The invariant over a whole run: every utterance is Korean in ko-KR, and none is (or holds) a jamo. */
-async function expectNoLoneJamo(page: Page): Promise<void> {
-  const all = await said(page);
-  expect(all.length).toBeGreaterThan(0);
-  for (const u of all) {
-    expect(u.text, `"${u.text}" is a lone jamo`).not.toMatch(LONE_JAMO);
-    expect(u.text, `"${u.text}" holds a jamo`).not.toMatch(JAMO);
-    expect(u.lang).toBe('ko-KR');
-  }
-}
-
-/** Screens under the top one stay in the page (hidden): every lookup takes the visible one. */
-const shown = (page: Page, testId: string): Locator => page.getByTestId(testId).filter({ visible: true });
-/** Match Sound's round pill ("3 / 6") on the screen in front. */
-const roundPill = (page: Page, round: number): Locator => page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true });
 
 /** A token hex as the browser computes it (`rgb(r, g, b)`). */
 const rgbOf = (hex: string): string => {
@@ -157,39 +55,6 @@ const drawnColors = (target: Locator): Promise<string[]> =>
       return [cs.borderTopColor, cs.backgroundColor, cs.color];
     }),
   );
-
-/** A new learner at Stage 1 / Letters / Quest 1's Discover step (the episode's first Start). */
-async function openQuestOneDiscover(page: Page): Promise<void> {
-  await onboardChild(page, { name: 'Dami', startJourney: false });
-  await page.goto('/');
-  await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  const guide = page.getByTestId('install-guide');
-  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
-  await openLettersEpisode(page);
-  await page.getByTestId('episode-quest-quest:stage1-letters-q1').getByRole('button', { name: en.learner.episode.quests.start.cta, exact: true }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
-}
-
-/** Discover's two buttons for one letter (`jamo:nieun`): Hear it, and Hear it with a vowel. */
-const hearIt = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|sound`);
-const hearWithVowel = (page: Page, jamoId: string): Locator => shown(page, `discover-hear-${jamoId}|vowel`);
-
-/** Continue to the next Discover page, the one that shows `jamoId`. */
-async function discoverPageOf(page: Page, jamoId: string): Promise<void> {
-  for (let i = 0; i < 6 && (await hearIt(page, jamoId).count()) === 0; i += 1) {
-    await page.getByRole('button', { name: 'Continue' }).click();
-  }
-  await expect(hearIt(page, jamoId)).toBeVisible();
-}
-
-/** Taps Hear it on a Discover letter and returns what was said. */
-async function hear(page: Page, button: Locator): Promise<string> {
-  const before = await saidCount(page);
-  await button.click();
-  return nextSaid(page, before);
-}
 
 test.describe('the voice matches the letter (release build, device voice)', () => {
   test.skip(FIXTURE_BUILD, 'the fixture build plays clips for six letters; these tests pin the device voice');
@@ -243,8 +108,8 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     await page.getByTestId('episode-quest-quest:stage1-letters-q2').getByRole('button', { name: en.learner.episode.quests.start.cta, exact: true }).click();
     // Quest 2 builds on Quest 1: the episode offers to start there, and the learner plays it anyway.
     await page.getByRole('button', { name: en.learner.episode.prereq.playAnyway.cta, exact: true }).click();
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: en.learner.quest.continue.cta }).click();
+    await expect(page.getByText(en.learner.quest.step.discover.pill, { exact: true })).toBeVisible();
 
     await discoverPageOf(page, 'jamo:ieung');
     expect(await hear(page, hearIt(page, 'jamo:ieung'))).toBe('이응');
@@ -263,7 +128,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     await captureSpeech(page);
     await openQuestOneDiscover(page);
     await passDiscover(page);
-    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await page.getByRole('button', { name: en.learner.quest.launcher.game.play.cta }).click();
     await expect(roundPill(page, 1)).toBeVisible();
     await expect(shown(page, 'match-sound-tiles')).toBeVisible();
     const playFrom = await saidCount(page);
@@ -296,7 +161,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
         await expect(bubble).toContainText(en.learner.audio.listenAgainLetter);
         await expect(bubble).toContainText('니은');
         await expect(bubble).toContainText('nieun');
-        await expect(bubble).not.toContainText('나 ');
+        await expect(bubble).not.toContainText(/나/u);
         // No red and no cross: the missed tile is drawn in amber, and only its letter and romanization are on it.
         const missColors = await drawnColors(a);
         expect(missColors).toContain(AMBER);
@@ -319,8 +184,8 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     expect(new Set(playSaid)).toEqual(new Set(['기역', '니은', '아', '어']));
 
     // On to the Check: Build a Letter is skipped; the Check's letter round (lp:sym ㅓ) says 어.
-    await page.getByRole('button', { name: 'Skip for now' }).click();
-    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta }).click();
+    await page.getByRole('button', { name: en.learner.quest.launcher.check.go.cta, exact: true }).click();
     await expect(page.getByText(en.learner.minigame.listenPick.heading)).toBeVisible();
     const beforeCheck = await saidCount(page);
     await shown(page, 'listen-pick-speaker').click();
@@ -349,7 +214,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     await page.getByText('Journey', { exact: true }).last().click();
     await page.getByTestId('journey-hangul-check').click();
     await expect(page.getByTestId('hangul-check-intro')).toBeVisible();
-    await page.getByRole('button', { name: "Let's go" }).click();
+    await page.getByRole('button', { name: en.learner.stageReview.intro.start.cta }).click();
 
     const OPTIONS = '[data-testid^="listen-pick-option-"]';
     const lettersSaid = new Set<string>();
@@ -392,7 +257,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
       }
       if (part < 4) {
         await expect(page.getByTestId('hangul-check-pause')).toBeVisible();
-        await page.getByRole('button', { name: 'Keep going' }).click();
+        await page.getByRole('button', { name: en.learner.stageReview.pause.keepGoing.cta }).click();
       }
     }
     await expect(page.getByTestId('hangul-check-result')).toBeVisible();
@@ -598,156 +463,4 @@ async function stage1Learner(page: Page): Promise<void> {
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
-}
-
-// ---- fixture build: the clip a letter question asks for ---------------------------------------
-
-/** Does the content give ㄴ its name clip yet? `nameAudioRef` on the 18 consonants is AC-1's (#879). */
-const NAME_CLIPS_DECLARED = /nameAudioRef/.test(readFileSync(join(__dirname, '..', '..', 'src', 'content', 'jamo.ts'), 'utf8'));
-
-/**
- * Records the URL of every clip that starts: the fetched bytes are tagged with their URL, the decoded
- * buffer with the bytes' URL, and a starting `AudioBufferSourceNode` reports its buffer's URL. Clips
- * the screen only warms (fetched and decoded, never started) are not counted.
- */
-async function recordClipUrls(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const clips: string[] = [];
-    (window as VoiceWindow).__clips = clips;
-    const bytesUrl = new WeakMap<ArrayBuffer, string>();
-    const bufferUrl = new WeakMap<AudioBuffer, string>();
-    const fetchOriginal = window.fetch.bind(window);
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-      const res = await fetchOriginal(input, init);
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      if (/\.mp3(\?|$)/.test(url)) {
-        const read = res.arrayBuffer.bind(res);
-        Object.defineProperty(res, 'arrayBuffer', {
-          configurable: true,
-          value: async () => {
-            const bytes = await read();
-            bytesUrl.set(bytes, url);
-            return bytes;
-          },
-        });
-      }
-      return res;
-    };
-    const ctx = (window.BaseAudioContext ?? window.AudioContext)?.prototype;
-    if (ctx) {
-      const decode = ctx.decodeAudioData;
-      ctx.decodeAudioData = function (this: BaseAudioContext, data: ArrayBuffer, ok?: DecodeSuccessCallback | null, fail?: DecodeErrorCallback | null) {
-        const url = bytesUrl.get(data);
-        const tag = (buffer: AudioBuffer): AudioBuffer => {
-          if (url !== undefined) bufferUrl.set(buffer, url);
-          return buffer;
-        };
-        const pending = decode.call(this, data, ok ? (b: AudioBuffer) => ok(tag(b)) : ok, fail);
-        return pending && typeof pending.then === 'function' ? pending.then(tag) : pending;
-      };
-    }
-    const source = window.AudioBufferSourceNode?.prototype;
-    if (source) {
-      const start = source.start;
-      source.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
-        const url = this.buffer ? bufferUrl.get(this.buffer) : undefined;
-        if (url !== undefined) clips.push(url);
-        return start.apply(this, args);
-      };
-    }
-  });
-}
-
-const clipsStarted = (page: Page): Promise<string[]> => page.evaluate(() => [...((window as VoiceWindow).__clips ?? [])]);
-/** A built fixture clip's URL ends in its id, Metro's content hash and `.mp3`. */
-const clipUrl = (id: string): RegExp => new RegExp(`/jamo/${id}(\\.[0-9a-f]+)?\\.mp3$`);
-
-interface Heard {
-  said: string[];
-  clips: string[];
-}
-
-/** Taps `button` and returns what it played: the utterances and the clip URLs that started after the tap. */
-async function heardAfter(page: Page, button: Locator): Promise<Heard> {
-  const saidBefore = await saidCount(page);
-  const clipsBefore = (await clipsStarted(page)).length;
-  await button.click();
-  await expect.poll(async () => (await saidCount(page)) + (await clipsStarted(page)).length).toBeGreaterThan(saidBefore + clipsBefore);
-  return { said: (await said(page)).slice(saidBefore).map((u) => u.text), clips: (await clipsStarted(page)).slice(clipsBefore) };
-}
-
-/** What a ㄴ letter question plays: the name, 니은, as its name clip once content declares one, else on the device voice. */
-const isNieunName = (heard: Heard): boolean => heard.said.includes('니은') || heard.clips.some((u) => clipUrl('nieun-name').test(u));
-
-/**
- * From Quest 1's Discover to Match Sound's first ㄴ round (the pool's first pass asks every letter), and what
- * its speaker played there. A round that is not ㄴ is answered by tapping its tiles until the next one opens.
- */
-async function matchSoundNieun(page: Page): Promise<Heard> {
-  await passDiscover(page);
-  await page.getByRole('button', { name: 'Play minigame' }).click();
-  for (let round = 1; round <= 4; round += 1) {
-    await expect(roundPill(page, round)).toBeVisible();
-    const heard = await heardAfter(page, shown(page, 'match-sound-speaker'));
-    if (isNieunName(heard)) return heard;
-    const tiles = shown(page, 'match-sound-tiles').locator('[data-testid^="match-sound-tile-"]');
-    await expect(tiles).toHaveCount(4);
-    for (const id of await tiles.evaluateAll((els) => els.map((e) => e.getAttribute('data-testid') ?? ''))) {
-      await shown(page, id).click();
-      if (await roundPill(page, round + 1).isVisible({ timeout: 1_500 }).catch(() => false)) break;
-    }
-  }
-  throw new Error('Quest 1 Match Sound never asked for ㄴ in the first pass of its pool');
-}
-
-test.describe('the voice matches the letter (fixture clips)', () => {
-  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
-
-  test('Discover: Hear it with a vowel on ㄴ plays the sound clip jamo/nieun.mp3, Hear it never does', async ({ page }) => {
-    await captureSpeech(page);
-    await recordClipUrls(page);
-    await openQuestOneDiscover(page);
-    await discoverPageOf(page, 'jamo:nieun');
-
-    // Hear it is a letter question: the name. The sound clip (na) never stands in for it.
-    const name = await heardAfter(page, hearIt(page, 'jamo:nieun'));
-    expect(isNieunName(name), JSON.stringify(name)).toBe(true);
-    for (const url of name.clips) expect(url).not.toMatch(clipUrl('nieun'));
-
-    // The second button is a sound question: the sound clip, and no device voice.
-    const sound = await heardAfter(page, hearWithVowel(page, 'jamo:nieun'));
-    expect(sound.clips).toHaveLength(1);
-    expect(sound.clips[0]).toMatch(clipUrl('nieun'));
-    expect(sound.said).toEqual([]);
-    await expectNoJamoSaid(page);
-  });
-
-  test('Match Sound: a ㄴ round says the name and never plays the sound clip jamo/nieun.mp3', async ({ page }) => {
-    test.setTimeout(120_000);
-    await captureSpeech(page);
-    await recordClipUrls(page);
-    await openQuestOneDiscover(page);
-    const heard = await matchSoundNieun(page);
-    for (const url of heard.clips) expect(url).not.toMatch(clipUrl('nieun'));
-    await expectNoJamoSaid(page);
-  });
-
-  test('Match Sound: a ㄴ round plays the name clip jamo/nieun-name.mp3', async ({ page }) => {
-    test.skip(!NAME_CLIPS_DECLARED, 'ㄴ has no nameAudioRef in content until AC-1 (#879); e2e/fixtures/audio/jamo/nieun-name.mp3 is in place for it');
-    test.setTimeout(120_000);
-    await captureSpeech(page);
-    await recordClipUrls(page);
-    await openQuestOneDiscover(page);
-    const heard = await matchSoundNieun(page);
-    expect(heard.clips.some((u) => clipUrl('nieun-name').test(u)), JSON.stringify(heard)).toBe(true);
-    expect(heard.said).toEqual([]);
-  });
-});
-
-/** The fixture runs play clips for some letters, so they may say little aloud; whatever they say keeps the invariant. */
-async function expectNoJamoSaid(page: Page): Promise<void> {
-  for (const u of await said(page)) {
-    expect(u.text).not.toMatch(LONE_JAMO);
-    expect(u.text).not.toMatch(JAMO);
-  }
 }
