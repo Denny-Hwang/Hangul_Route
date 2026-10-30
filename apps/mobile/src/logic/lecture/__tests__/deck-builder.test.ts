@@ -1712,6 +1712,19 @@ describe('expandDeck: the reading slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-
     expect(new Set(keys(slides)).size).toBe(slides.length);
   });
 
+  it('a realia page whose sheet only the quest\'s Cloze Pick card holds shows that sheet (F-CURR-002 row CM-44 S6)', () => {
+    const cover = { ref: 'realia:cover', kind: 'poster' as const, entries: [{ id: 'words', text: kt('글', 'geul', 'words'), value: kt('미나', 'Mina', 'Mina') }], altEn: 'A book cover.' };
+    const coverScope: MinigameScope = { kind: 'cloze-pick', clozePick: { rounds: [], realia: cover } };
+    const coverQuest = withPages('cover', [['discover'], ['apply', 'mg:cover']], [{ items: [{ type: 'realia', realiaRef: 'realia:cover', keyWords: [kt('그림', 'geurim', 'pictures')] }] }]);
+    const withCover = bundle({
+      scopeFor: (ref) => (ref === 'mg:cover' ? coverScope : (readingScopes[ref] ?? scopes[ref])),
+      questById: (id) => (id === coverQuest.id ? coverQuest : quests.find((q) => q.id === id)),
+    });
+    const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id: coverQuest.id }]), withCover, VOICE);
+    expect(skipped.filter((s) => s.reason === 'unknown-id')).toEqual([]);
+    expect(only(slides, 'realia')[0]!.sheet).toMatchObject({ kind: 'poster', entries: [{ id: 'words' }] });
+  });
+
   it('a saved resume key stays on its reading slide when a content update adds an item before it', () => {
     const saved = run(reading.id).slides.find((s) => s.kind === 'pattern')!.key;
     const discover = reading.steps.find((st) => st.kind === 'discover')!.discover!;
