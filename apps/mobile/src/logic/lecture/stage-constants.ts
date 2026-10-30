@@ -227,16 +227,63 @@ export function railButtonWidth(rail: number, gap: number, xs: number): number {
 export const RAIL_NEXT_FACTOR = NEXT_MIN_FACTOR;
 
 /**
- * The height the full rail's four buttons need with Next at 96: three 64 px buttons, Next, three
- * `spacing.sm` gaps between them and `spacing.sm` above and below (`3 x 64 + 96 + 3 x 8 + 2 x 8` = 328).
+ * The drawn heights of the full rail's four buttons as their labels lay out, in window px: More, Next
+ * (the taller of Next and Reveal, so the rail never changes between two builds of a slide), Previous
+ * and Sound. A button is never under `touchTarget.min` (`railNeed` applies the floor).
  */
-export function railNeed(min: number, sm: number): number {
-  return 3 * min + RAIL_NEXT_FACTOR * min + 5 * sm;
+export interface RailHeights {
+  readonly more: number;
+  readonly next: number;
+  readonly prev: number;
+  readonly sound: number;
 }
 
-/** Next's height on the full rail: 96, or 64 on a rail shorter than `railNeed` (section 5.2). */
-export function railNextHeight(railHeight: number, min: number, sm: number): number {
-  return railHeight >= railNeed(min, sm) ? RAIL_NEXT_FACTOR * min : min;
+/** The parts of a full-rail label button around its label (tokens applied in `stage-metrics.ts`). */
+export interface RailButtonParts {
+  /** `borderWidth.base`, above and below. */
+  readonly border: number;
+  /** `spacing.xs` padding above and below. */
+  readonly pad: number;
+  /** The glyph (`spacing.xxl`). */
+  readonly icon: number;
+  /** `spacing.xs` between the glyph and the label. */
+  readonly gap: number;
+}
+
+/**
+ * A full-rail label button's drawn height: two borders, its padding above and below, the glyph, the
+ * gap and the label's lines (`label`: one line is `round(body x leading.tight)`, 21 at 18 px, so 69).
+ */
+export function railLabelButton(parts: RailButtonParts, label: number): number {
+  return 2 * parts.border + 2 * parts.pad + parts.icon + parts.gap + (Number.isFinite(label) && label > 0 ? label : 0);
+}
+
+const drawn = (n: number, min: number): number => Math.max(min, Number.isFinite(n) ? n : 0);
+
+/**
+ * The height the rail's four buttons need (section 5.2), in window px: More and Sound each sit in one
+ * of two equal sections above and below the centred pair, so both sections are as tall as the taller
+ * of the two; then Next (at least `nextMin`) and Previous, three `spacing.sm` gaps (two between the
+ * sections, one inside the pair) and `spacing.sm` above and below. With the full rail's one-line
+ * labels at 18 px (69 px each) that is 343 with Next at 96 and 316 with Next at its label height; the
+ * compact rail (64 px squares, `COMPACT_RAIL_HEIGHTS`) needs `4 x 64 + 5 x 8` = 296.
+ */
+export function railNeed(heights: RailHeights, min: number, sm: number, nextMin: number = min): number {
+  const ends = Math.max(drawn(heights.more, min), drawn(heights.sound, min));
+  return 2 * ends + Math.max(nextMin, drawn(heights.next, min)) + drawn(heights.prev, min) + 5 * sm;
+}
+
+/** The compact rail's buttons are `touchTarget.min` squares: no label adds to them. */
+export const COMPACT_RAIL_HEIGHTS: RailHeights = { more: 0, next: 0, prev: 0, sound: 0 };
+
+/** What the rail gate needs of the rail's height (section 5.2): the full rail with Next at its least, and the compact rail. */
+export function railNeeds(heights: RailHeights, min: number, sm: number): { full: number; compact: number } {
+  return { full: railNeed(heights, min, sm), compact: railNeed(COMPACT_RAIL_HEIGHTS, min, sm) };
+}
+
+/** Next's least height on the full rail: 96 where the rail holds it at 96 (`railNeed`), else 64 (its label may draw it taller). */
+export function railNextHeight(railHeight: number, heights: RailHeights, min: number, sm: number): number {
+  return railHeight >= railNeed(heights, min, sm, RAIL_NEXT_FACTOR * min) ? RAIL_NEXT_FACTOR * min : min;
 }
 
 /**

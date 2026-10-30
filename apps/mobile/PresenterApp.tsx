@@ -1,4 +1,4 @@
-import { TextSizeProvider, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { TextSizeProvider, textSizeFactor, typeScale, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
 import { useLocalePacks } from './src/i18n/use-messages';
@@ -61,7 +61,7 @@ import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage
 import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS, railHeightNeeds, railHeightsEstimate } from './src/screens/presenter/stage-metrics';
 import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import { flags } from './src/config/flags';
@@ -120,7 +120,7 @@ import {
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { readJson, readJsonExact, writeJson } from './src/platform/storage';
 import { flushQueue, track } from './src/platform/telemetry';
-import { ControlBar } from './src/screens/presenter/ControlBar';
+import { ControlBar, type RailMeasure } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
 import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
@@ -291,9 +291,14 @@ function Presenter(): ReactElement {
   phoneRef.current = phone;
   // The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4): where it fits beside the stage, and
   // while its kill switch (`flags.presenterRail`, read at build time) is on; else the floating bar.
-  // `railWordsFit` is the label fallback: a full-rail word wider than its button draws the compact rail.
-  const [railWordsFit, setRailWordsFit] = useState(true);
-  const rail = railSize({ phone, window, insets, enabled: flags.presenterRail, labelsFit: railWordsFit }, RAIL_RULE);
+  // `railMeasure` is what the rail last measured, complete (ControlBar `onRailMeasure`): the label
+  // fallback (a full-rail word wider than its button draws the compact rail) and its buttons' drawn
+  // heights, so a window too short for them gets the compact rail or the overlay, never buttons drawn
+  // over each other. Before the first measure: every label on one line at the chosen text size.
+  const [railMeasure, setRailMeasure] = useState<RailMeasure>(() => ({ full: true, heights: railHeightsEstimate(typeScale(textSizeFactor(textSize)).size.body) }));
+  const railWordsFit = railMeasure.full;
+  const railNeed = railHeightNeeds(railMeasure.heights);
+  const rail = railSize({ phone, window, insets, enabled: flags.presenterRail, labelsFit: railWordsFit, need: railNeed }, RAIL_RULE);
   // Where Previous and Next live (section 4): the docked band, the rail, or the floating bar (overlay).
   const nav = navLayout(phone, rail);
   const overlayRef = useRef(nav === 'overlay');
@@ -307,9 +312,10 @@ function Presenter(): ReactElement {
         {
           phone,
           window: { width: window.height, height: window.width },
-          insets: { left: Math.max(insets.top, insets.bottom), right: Math.max(insets.top, insets.bottom) },
+          insets: { left: Math.max(insets.top, insets.bottom), right: Math.max(insets.top, insets.bottom), top: insets.left, bottom: insets.right },
           enabled: flags.presenterRail,
           labelsFit: railWordsFit,
+          need: railNeed,
         },
         RAIL_RULE,
       )
@@ -1453,7 +1459,8 @@ function Presenter(): ReactElement {
           compact={phone}
           rail={rail}
           railHeight={window.height - insets.top - insets.bottom}
-          onRailLabels={setRailWordsFit}
+          railHeights={railMeasure.heights}
+          onRailMeasure={setRailMeasure}
           insets={insets}
           moreOpen={moreOpen}
           onMore={(open) => {

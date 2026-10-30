@@ -18,6 +18,10 @@ import {
   phoneRail,
   phoneRailCompact,
   railButtonWidth,
+  railLabelButton,
+  railNeeds,
+  type RailButtonParts,
+  type RailHeights,
 } from '../../logic/lecture/stage-constants';
 import type { PhoneRule, RailRule, StageBounds } from '../../logic/lecture/stage-scale';
 
@@ -72,6 +76,25 @@ export const RAIL_LABEL_ROOM = {
   full: RAIL_BUTTON - 2 * borderWidth.base,
   more: RAIL_BUTTON_COMPACT - 2 * borderWidth.base - 2 * spacing.xs,
 } as const;
+/** A full-rail label button around its label (the rail's `RailCtl`): its borders, `spacing.xs` padding, the `spacing.xxl` glyph and the `spacing.xs` gap. */
+export const RAIL_BUTTON_PARTS: RailButtonParts = { border: borderWidth.base, pad: spacing.xs, icon: spacing.xxl, gap: spacing.xs };
+/** One line of a rail label at the body size `body` (the label's line height). */
+export function railLabelLine(body: number): number {
+  return Math.round(body * typography.leading.tight);
+}
+/**
+ * The rail's button heights before its probe has measured the labels: every label on one line at
+ * `body` (69 px at 18 px). The rail then measures each label as drawn (two lines where it wraps) and
+ * reports the real heights, which the gate keeps until a new complete measure.
+ */
+export function railHeightsEstimate(body: number): RailHeights {
+  const h = railLabelButton(RAIL_BUTTON_PARTS, railLabelLine(body));
+  return { more: h, next: h, prev: h, sound: h };
+}
+/** What the rail gate needs of the rail's height for these heights (`railNeeds`): the full rail and the compact one (296). */
+export function railHeightNeeds(heights: RailHeights): { full: number; compact: number } {
+  return railNeeds(heights, touchTarget.min, spacing.sm);
+}
 
 /** Every slide keeps this margin inside the stage, in units. */
 export const STAGE_PADDING = spacing.xxxl;

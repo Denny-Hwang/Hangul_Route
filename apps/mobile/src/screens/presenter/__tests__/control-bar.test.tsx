@@ -357,6 +357,13 @@ const WORDS: Record<'en' | 'es' | 'ko', { full: number[]; more: number[] }> = {
   ko: { full: [31.1, 31.1, 31.1, 31.1, 31.1], more: [31.1] },
 };
 
+/** Hands the rail's label probe each label's drawn height (More, Next, Reveal, Previous, Sound): one 21 px line each unless given. */
+function measureLabels(r: ReactTestRenderer, heights: number[] = [21, 21, 21, 21, 21]): void {
+  const probes = r.root.findAll((n) => typeof n.type !== 'string' && String(n.props.testID ?? '').startsWith('presenter-rail-label-') && typeof n.props.onLayout === 'function');
+  expect(probes).toHaveLength(5);
+  probes.forEach((node, i) => layoutOf(node, RAIL_LABEL_ROOM.full, heights[i]!));
+}
+
 /** Hands the rail's word probe its measured widths: the full-rail words first (More, Next, Reveal, Previous, Sound), then More's. */
 function measureWords(r: ReactTestRenderer, words: { full: number[]; more: number[] }): void {
   const probes = r.root.findAll((n) => typeof n.type !== 'string' && typeof n.props.testID === 'string' && n.props.testID.startsWith('presenter-rail-word-') && typeof n.props.onLayout === 'function');
@@ -462,10 +469,11 @@ describe('the phone rail (section 5.2): order, role, place', () => {
   });
 });
 
-describe('the full rail buttons (88 wide, at least 64 tall, Next 96 unless the rail is under 328 px)', () => {
+describe('the full rail buttons (88 wide, at least 64 tall, Next 96 where the rail holds it as drawn: 343 px with one-line labels)', () => {
   it.each([
     [375, 96],
-    [328, 96],
+    [343, 96],
+    [342, touchTarget.min],
     [320, touchTarget.min],
   ])('a rail %i px tall: Next is %i tall and the primary fill; the others 88 x 64', async (railHeight, nextHeight) => {
     const r = await render(bar({ compact: true, rail: 'full', railHeight }));
@@ -496,12 +504,15 @@ describe('the full rail buttons (88 wide, at least 64 tall, Next 96 unless the r
     expect(flatStyle(byTestId(r.root, 'presenter-back')[0]!).flexDirection).toBe('column');
   });
 
-  it.each(['en', 'es', 'ko'] as const)('no full-rail label overflows its button in %s at 18 px: every word PN-0b measured fits the 84 px room', async (lang) => {
-    const onRailLabels = vi.fn();
-    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailLabels }, lang));
+  // A wiring test: the widths are PN-0b's Chromium measures, handed in; the e2e (presenter-nav.spec.ts
+  // "PN-4 rail labels") measures the shipped strings in the browser, so a string change fails there.
+  it.each(['en', 'es', 'ko'] as const)('wiring, %s: words inside the 84 px room keep the full rail, and the rail shows the shipped labels', async (lang) => {
+    const onRailMeasure = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailMeasure }, lang));
     measureWords(r, WORDS[lang]);
-    expect(onRailLabels).not.toHaveBeenCalledWith(false);
-    for (const width of WORDS[lang].full) expect(width).toBeLessThanOrEqual(RAIL_LABEL_ROOM.full);
+    measureLabels(r);
+    expect(onRailMeasure).toHaveBeenCalledTimes(1);
+    expect(onRailMeasure).toHaveBeenLastCalledWith({ full: true, heights: { more: 69, next: 69, prev: 69, sound: 69 } });
     // The labels the rail shows are the shipped ones.
     const m = getMessages(lang).learner.presenter.bar;
     expect(byTestId(r.root, 'presenter-back')[0]!.props['aria-label']).toBe(m.prev.cta);
@@ -553,13 +564,43 @@ describe('the compact rail (O10 a): 64 px squares, icons with their labels as th
 
 describe('the rail label fallback (PN-0b N8): a word wider than its room', () => {
   it('a full-rail word over 84 px (Previous at 125 % text, 93 px) asks for the compact rail', async () => {
-    const onRailLabels = vi.fn();
-    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailLabels }));
+    const onRailMeasure = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailMeasure }));
     measureWords(r, { full: [55, 70.9, 50.3, 93.4, 69], more: [55] });
-    expect(onRailLabels).toHaveBeenLastCalledWith(false);
+    measureLabels(r);
+    expect(onRailMeasure).toHaveBeenLastCalledWith(expect.objectContaining({ full: false }));
     // Back at the standard size, the rail asks for the full rail again.
     measureWords(r, WORDS.en);
-    expect(onRailLabels).toHaveBeenLastCalledWith(true);
+    expect(onRailMeasure).toHaveBeenLastCalledWith(expect.objectContaining({ full: true }));
+  });
+
+  it('reports nothing until every word and label is measured, so the last decision stands (no full-then-compact flip at mount)', async () => {
+    const onRailMeasure = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'compact', railHeight: 390, onRailMeasure }));
+    expect(onRailMeasure).not.toHaveBeenCalled();
+    measureWords(r, { full: [55, 70.9, 50.3, 93.4, 69], more: [55] });
+    expect(onRailMeasure).not.toHaveBeenCalled();
+    measureLabels(r);
+    expect(onRailMeasure).toHaveBeenCalledTimes(1);
+    expect(onRailMeasure).toHaveBeenLastCalledWith(expect.objectContaining({ full: false }));
+    // The same measure again reports nothing new.
+    measureLabels(r);
+    expect(onRailMeasure).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports each button as drawn: a two-line label makes its button 90 tall; Next is the taller of Next and Reveal', async () => {
+    const onRailMeasure = vi.fn();
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailMeasure }, 'ko'));
+    measureWords(r, WORDS.ko);
+    measureLabels(r, [42, 21, 42, 21, 21]);
+    expect(onRailMeasure).toHaveBeenLastCalledWith({ full: true, heights: { more: 90, next: 90, prev: 69, sound: 69 } });
+    // Next's least height follows the measure: 2 x 90 + 96 + 69 + 40 = 385 holds Next at 96 in 390 px.
+    expect(flatStyle(byTestId(r.root, 'presenter-next')[0]!).minHeight).toBe('96px');
+  });
+
+  it('Next drops to 64 where the presenter\'s measured heights leave no room for 96', async () => {
+    const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, railHeights: { more: 90, next: 90, prev: 90, sound: 90 } }));
+    expect(flatStyle(byTestId(r.root, 'presenter-next')[0]!).minHeight).toBe(`${touchTarget.min}px`);
   });
 
   it('on the compact rail, a More word over 52 px shows the `more` glyph, named by the label', async () => {
@@ -576,6 +617,12 @@ describe('the rail label fallback (PN-0b N8): a word wider than its room', () =>
     const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }));
     const probe = byTestId(r.root, 'presenter-rail-probe')[0]!;
     expect(probe.props['aria-hidden']).toBe(true);
+    // The probe clips itself (0 x 0), so the rail clips nothing: a focused button's ring stays whole.
+    const clip = flatStyle(byTestId(r.root, 'presenter-rail-probe-clip')[0]!);
+    expect([clip.width, clip.height, clip.overflow ?? clip.overflowX, clip.overflow ?? clip.overflowY, clip.position]).toEqual(['0px', '0px', 'hidden', 'hidden', 'absolute']);
+    expect(isInside(probe, byTestId(r.root, 'presenter-rail-probe-clip')[0]!)).toBe(true);
+    const railStyle = flatStyle(byTestId(r.root, 'presenter-rail')[0]!);
+    expect([railStyle.overflow ?? 'visible', railStyle.overflowX ?? 'visible', railStyle.overflowY ?? 'visible']).toEqual(['visible', 'visible', 'visible']);
     expect(flatStyle(probe).pointerEvents ?? probe.props.pointerEvents).toBe('none');
     expect(flatStyle(probe).opacity).toBe('0');
     expect(flatStyle(probe).position).toBe('absolute');

@@ -160,8 +160,11 @@ export type NavLayout = 'docked' | 'rail' | 'overlay';
 /** Which phone rail (section 5.2): the full rail (labelled buttons) or the compact icon rail (O10). */
 export type RailSize = 'full' | 'compact';
 
-/** The layout for a window: from `isPhoneWindow` and the rail the gate gives (`railSize`; none: the overlay). */
-export function navLayout(phone: boolean, rail: RailSize | null = null): NavLayout {
+/**
+ * The layout for a window: from `isPhoneWindow` and the rail the gate gives (`railSize`; none: the
+ * overlay). The rail is required, so no caller can forget it and report a rail phone as the overlay.
+ */
+export function navLayout(phone: boolean, rail: RailSize | null): NavLayout {
   if (!phone) return 'docked';
   return rail === null ? 'overlay' : 'rail';
 }
@@ -180,23 +183,35 @@ export interface RailRule {
 const side = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
 
 /**
- * The rail gate (section 5.2), pure. With `free = w - insets.left - insets.right`: the full rail when
- * the window is a phone's and `free - full >= stageMin`; else the compact rail when `free - compact
- * >= stageMin`; else none (the overlay layout). An upright phone gets none (it shows the rotate page),
- * and so does every phone with the kill switch off (`enabled`: `flags.presenterRail`, section 15).
- * `labelsFit` false (the label fallback, PN-0b N8: a full-rail word wider than its button) turns a
- * full rail compact; it never moves a window to or from the overlay.
+ * The rail gate (section 5.2), pure. With `free = w - insets.left - insets.right` and the rail's height
+ * `h - insets.top - insets.bottom`: the full rail when the window is a phone's, `free - full >=
+ * stageMin` and the rail's height holds its four buttons as drawn (`need.full`, `railNeeds` in
+ * stage-constants.ts); else the compact rail when `free - compact >= stageMin` and the height holds
+ * its four 64 px squares (`need.compact`, 296); else none (the overlay layout). So a short window (a
+ * landscape phone with its browser bars showing, 780 x 280) never draws rail buttons over each other.
+ * An upright phone gets none (it shows the rotate page), and so does every phone with the kill switch
+ * off (`enabled`: `flags.presenterRail`, section 15). `labelsFit` false (the label fallback, PN-0b N8:
+ * a full-rail word wider than its button) turns a full rail compact; it never moves a window to or
+ * from the overlay.
  */
 export function railSize(
-  input: { phone: boolean; window: WindowSize; insets: { readonly left: number; readonly right: number }; enabled: boolean; labelsFit?: boolean },
+  input: {
+    phone: boolean;
+    window: WindowSize;
+    insets: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number };
+    enabled: boolean;
+    labelsFit?: boolean;
+    need: { readonly full: number; readonly compact: number };
+  },
   rule: RailRule,
 ): RailSize | null {
-  const { phone, window, enabled } = input;
+  const { phone, window, enabled, need } = input;
   if (!enabled || !phone || !usable(window.width) || !usable(window.height)) return null;
   if (window.height > window.width) return null;
   const free = window.width - side(input.insets.left) - side(input.insets.right);
-  if (free - rule.full >= rule.stageMin && input.labelsFit !== false) return 'full';
-  if (free - rule.compact >= rule.stageMin) return 'compact';
+  const tall = window.height - side(input.insets.top) - side(input.insets.bottom);
+  if (free - rule.full >= rule.stageMin && tall >= need.full && input.labelsFit !== false) return 'full';
+  if (free - rule.compact >= rule.stageMin && tall >= need.compact) return 'compact';
   return null;
 }
 

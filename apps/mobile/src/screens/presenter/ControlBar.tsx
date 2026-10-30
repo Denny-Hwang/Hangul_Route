@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useRef, useState } from 'react';
 import type { Ref, ReactElement } from 'react';
 import { Animated, Pressable, ScrollView, Text, View, type LayoutChangeEvent, type TextStyle, type ViewStyle } from 'react-native';
 import { DOCKED_TOOLS, bandTools, dockedBarLayout, dockedBarMeasured, dockedOrder, moreTools, type DockedSlot, type DockedTool } from '../../logic/lecture/bar-layout';
-import { BAR_SHOW_GRACE_MS, NO_INSETS, railNextHeight, type StageInsets } from '../../logic/lecture/stage-constants';
+import { BAR_SHOW_GRACE_MS, NO_INSETS, railLabelButton, railNextHeight, type RailHeights, type StageInsets } from '../../logic/lecture/stage-constants';
 import { railLabelsFit, type RailSize } from '../../logic/lecture/stage-scale';
 import type { StatusChip } from '../../logic/lecture/tools';
 import { focusablesIn, rememberFocus, trapFocus } from '../../platform/presenter';
@@ -19,9 +19,12 @@ import {
   PHONE_RAIL_GAP,
   RAIL_BUTTON,
   RAIL_BUTTON_COMPACT,
+  RAIL_BUTTON_PARTS,
   RAIL_LABEL_ROOM,
   STAGE_BORDER,
   STATUS_MIN,
+  railHeightsEstimate,
+  railLabelLine,
 } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 
@@ -63,8 +66,9 @@ import { usePresenterView } from './presenter-context';
  *   glyph above the label; the compact rail's are 64 px squares, icon only, named by their labels
  *   (More keeps its word). It never hides and takes taps at once. More opens the sheet beside it,
  *   over the stage. The label fallback measures each word on the real text: a full-rail word wider
- *   than its room asks for the compact rail (`onRailLabels`), a More word wider than the compact
- *   room shows the `more` glyph.
+ *   than its room asks for the compact rail, a More word wider than the compact room shows the
+ *   `more` glyph, and each label is measured as drawn (one line or two), so the presenter's gate
+ *   knows the height the four buttons take (`onRailMeasure`) and never draws them over each other.
  */
 export interface ControlBarProps {
   hidden: boolean;
@@ -107,10 +111,23 @@ export interface ControlBarProps {
   nudge?: boolean;
   /** A phone window with room (section 5.2, `railSize`): the rail beside the stage instead of the floating bar. */
   rail?: RailSize | null;
-  /** The rail's height (the window less the top and bottom insets): Next is 96 tall from `railNeed` (328) up, else 64. */
+  /** The rail's height (the window less the top and bottom insets): Next is 96 tall where `railNeed` holds it at 96, else 64. */
   railHeight?: number;
-  /** The label fallback: false when a full-rail word is wider than its button, so the presenter draws the compact rail. */
-  onRailLabels?: (fullFits: boolean) => void;
+  /** The rail's button heights the presenter's gate last used (`RailMeasure.heights`); before any, one line each at the body size. */
+  railHeights?: RailHeights;
+  /**
+   * The rail's measure, reported once every probe word and label has a measured size (so the last
+   * decision stands until a new one is complete, and the rail never flips at mount): `full` false
+   * when a full-rail word is wider than its button (the label fallback), and the four buttons'
+   * drawn heights for the gate's height rule.
+   */
+  onRailMeasure?: (measure: RailMeasure) => void;
+}
+
+/** What the rail measured (`onRailMeasure`). */
+export interface RailMeasure {
+  full: boolean;
+  heights: RailHeights;
 }
 
 type PressState = { pressed: boolean; focused?: boolean; hovered?: boolean };
@@ -497,6 +514,11 @@ const ONE_LINE = { whiteSpace: 'nowrap' } as unknown as TextStyle;
 
 const wordsOf = (label: string): string[] => label.split(/\s+/).filter((word) => word !== '');
 
+/** A full-rail label as drawn (and as the probe measures it): the body size, bold, centred, one `railLabelLine` per line, no word broken. */
+function railLabelText(body: number, color: string): TextStyle {
+  return { fontSize: body, fontWeight: typography.weight.bold, color, textAlign: 'center', lineHeight: railLabelLine(body), ...KEEP_WORDS };
+}
+
 interface RailCtlProps {
   label: string;
   icon?: IconName;
@@ -563,7 +585,7 @@ const RailCtl = forwardRef<View, RailCtlProps>(function RailCtl({ label, icon, p
       {showLabel ? (
         <Text
           {...KOREAN_LINE_BREAK}
-          style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: fg, textAlign: 'center', lineHeight: Math.round(textScale.size.body * typography.leading.tight), ...KEEP_WORDS }}
+          style={railLabelText(textScale.size.body, fg)}
         >
           {label}
         </Text>
@@ -572,12 +594,16 @@ const RailCtl = forwardRef<View, RailCtlProps>(function RailCtl({ label, icon, p
   );
 });
 
-/** Measured word widths, per set of labels and text size (so a new language or text size measures again). */
+/** Measured word widths and label heights, per set of labels and text size (so a new language or text size measures again). */
 interface RailWords {
   key: string;
   full: Readonly<Record<number, number>>;
   more: Readonly<Record<number, number>>;
+  /** Each full-rail label's height as drawn in the 84 px room (More, Next, Reveal, Previous, Sound). */
+  label: Readonly<Record<number, number>>;
 }
+
+const sizeOf = (n: number | undefined): n is number => n !== undefined && Number.isFinite(n) && n > 0;
 
 /**
  * The phone rail (section 5.2): see `ControlBarProps` and the file header. It ignores `hidden` (it
@@ -594,32 +620,47 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
   const width = compact ? PHONE_RAIL_COMPACT : PHONE_RAIL;
 
   // The label fallback (PN-0b N8): every word of every full-rail label (Next and Reveal both, so the
-  // rail never flips between two builds of a slide) and More's own, measured at the chosen text size.
-  const fullWords = [...new Set([m.more.cta, messages.common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta].flatMap(wordsOf))];
+  // rail never flips between two builds of a slide) and More's own, measured at the chosen text size;
+  // and each full-rail label as drawn in its 84 px room, for the height the buttons take.
+  const labels = [m.more.cta, messages.common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta];
+  const fullWords = [...new Set(labels.flatMap(wordsOf))];
   const moreWords = wordsOf(m.more.cta);
-  const key = [...fullWords, '|', ...moreWords, String(textScale.size.body)].join('\n');
-  const [words, setWords] = useState<RailWords>({ key, full: {}, more: {} });
-  const known = words.key === key ? words : { key, full: {}, more: {} };
+  const key = [...labels, '|', ...moreWords, String(textScale.size.body)].join('\n');
+  const empty = (k: string): RailWords => ({ key: k, full: {}, more: {}, label: {} });
+  const [words, setWords] = useState<RailWords>(() => empty(key));
+  const known = words.key === key ? words : empty(key);
   const record =
-    (group: 'full' | 'more', index: number) =>
+    (group: 'full' | 'more' | 'label', index: number) =>
     (event: LayoutChangeEvent): void => {
-      const measuredWidth = event.nativeEvent.layout.width;
+      const size = group === 'label' ? event.nativeEvent.layout.height : event.nativeEvent.layout.width;
       setWords((current) => {
-        const base = current.key === key ? current : { key, full: {}, more: {} };
-        if (base[group][index] === measuredWidth) return base;
-        return { ...base, [group]: { ...base[group], [index]: measuredWidth } };
+        const base = current.key === key ? current : empty(key);
+        if (base[group][index] === size) return base;
+        return { ...base, [group]: { ...base[group], [index]: size } };
       });
     };
   const fit = railLabelsFit({ full: Object.values(known.full), more: Object.values(known.more) }, RAIL_LABEL_ROOM);
-  const onRailLabels = props.onRailLabels;
+  const complete =
+    fullWords.every((_, i) => sizeOf(known.full[i])) && moreWords.every((_, i) => sizeOf(known.more[i])) && labels.every((_, i) => sizeOf(known.label[i]));
+  const button = (i: number): number => railLabelButton(RAIL_BUTTON_PARTS, known.label[i] ?? 0);
+  const measuredHeights: RailHeights | null = complete ? { more: button(0), next: Math.max(button(1), button(2)), prev: button(3), sound: button(4) } : null;
+  const heights = measuredHeights ?? props.railHeights ?? railHeightsEstimate(textScale.size.body);
+  const onRailMeasure = props.onRailMeasure;
+  const report = measuredHeights === null ? null : `${fit.full}|${measuredHeights.more}|${measuredHeights.next}|${measuredHeights.prev}|${measuredHeights.sound}`;
+  const reported = useRef<string | null>(null);
   useEffect(() => {
-    onRailLabels?.(fit.full);
-  }, [fit.full, onRailLabels]);
+    if (report === null || measuredHeights === null || reported.current === report) return;
+    reported.current = report;
+    onRailMeasure?.({ full: fit.full, heights: measuredHeights });
+    // `report` carries every value the measure holds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report, onRailMeasure]);
 
-  const nextHeight = compact ? RAIL_BUTTON_COMPACT : railNextHeight(props.railHeight ?? Number.POSITIVE_INFINITY, touchTarget.min, spacing.sm);
+  const nextHeight = compact ? RAIL_BUTTON_COMPACT : railNextHeight(props.railHeight ?? Number.POSITIVE_INFINITY, heights, touchTarget.min, spacing.sm);
   const moreDots = compact && !fit.moreText;
   const section = (grow: 'flex-start' | 'flex-end'): ViewStyle => ({ flexGrow: 1, flexShrink: 1, flexBasis: 0, justifyContent: grow, alignItems: 'center' });
   const probeText: TextStyle = { fontSize: textScale.size.body, fontWeight: typography.weight.bold, ...ONE_LINE };
+  const probeLabel: TextStyle = { ...railLabelText(textScale.size.body, colors.text.primary), width: RAIL_LABEL_ROOM.full };
   return (
     <>
       <View
@@ -638,7 +679,6 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
           borderLeftWidth: borderWidth.base,
           borderLeftColor: colors.border.strong,
           backgroundColor: colors.surface.sunken,
-          overflow: 'hidden',
         }}
       >
         <View testID="presenter-rail-toolbar" role="toolbar" aria-orientation="vertical" aria-label={m.label} style={{ flexGrow: 1, flexDirection: 'column', alignItems: 'center', gap: spacing.sm }}>
@@ -676,18 +716,27 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
             <RailCtl testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} compact={compact} showLabel={!compact} height={touchTarget.min} onPress={props.onSound} focus={focus} />
           </View>
         </View>
-        {/* The word probe: drawn transparent and out of the flow, taking no pointer and hidden from screen readers. */}
-        <View testID="presenter-rail-probe" aria-hidden style={{ position: 'absolute', left: 0, top: 0, opacity: 0, pointerEvents: 'none', alignItems: 'flex-start' }}>
-          {fullWords.map((word, index) => (
-            <Text {...KOREAN_LINE_BREAK} key={`full-${word}`} testID={`presenter-rail-word-full-${index}`} onLayout={record('full', index)} style={probeText}>
-              {word}
-            </Text>
-          ))}
-          {moreWords.map((word, index) => (
-            <Text {...KOREAN_LINE_BREAK} key={`more-${word}`} testID={`presenter-rail-word-more-${index}`} onLayout={record('more', index)} style={probeText}>
-              {word}
-            </Text>
-          ))}
+        {/* The probe: drawn transparent and out of the flow, taking no pointer and hidden from screen
+            readers. Its own 0 x 0 clip keeps a long word from widening the page, so the rail itself
+            clips nothing (a focused button's ring stays whole). */}
+        <View testID="presenter-rail-probe-clip" aria-hidden style={{ position: 'absolute', left: 0, top: 0, width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          <View testID="presenter-rail-probe" aria-hidden style={{ position: 'absolute', left: 0, top: 0, opacity: 0, pointerEvents: 'none', alignItems: 'flex-start' }}>
+            {fullWords.map((word, index) => (
+              <Text {...KOREAN_LINE_BREAK} key={`full-${word}`} testID={`presenter-rail-word-full-${index}`} onLayout={record('full', index)} style={probeText}>
+                {word}
+              </Text>
+            ))}
+            {moreWords.map((word, index) => (
+              <Text {...KOREAN_LINE_BREAK} key={`more-${word}`} testID={`presenter-rail-word-more-${index}`} onLayout={record('more', index)} style={probeText}>
+                {word}
+              </Text>
+            ))}
+            {labels.map((text, index) => (
+              <Text {...KOREAN_LINE_BREAK} key={`label-${index}`} testID={`presenter-rail-label-${index}`} onLayout={record('label', index)} style={probeLabel}>
+                {text}
+              </Text>
+            ))}
+          </View>
         </View>
       </View>
       {moreOpen ? <MoreSheet {...props} insets={{ ...insets, right: insets.right + width }} /> : null}

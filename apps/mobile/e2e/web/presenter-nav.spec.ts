@@ -693,6 +693,14 @@ for (const vp of MATRIX) {
           for (const b of buttons) expect(next.right, b.id).toBeGreaterThanOrEqual(b.right - 0.5);
           if (wide) expect(next.left - prev.right).toBeLessThanOrEqual(16.5);
           else for (const b of buttons) expect(prev.left, b.id).toBeLessThanOrEqual(b.left + 0.5);
+          // The stage re-lays out for the band's height (a wrapped band is two rows): wait for it to settle above the band.
+          await expect
+            .poll(async () => {
+              const s = (await page.getByTestId('presenter-stage').boundingBox())!;
+              const b = (await page.getByTestId('presenter-bar-band').boundingBox())!;
+              return s.y + s.height - b.y;
+            })
+            .toBeLessThanOrEqual(0.5);
           const band = (await page.getByTestId('presenter-bar-band').boundingBox())!;
           const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
           if (wraps) {
@@ -760,7 +768,9 @@ for (const vp of MATRIX) {
           expect(await page.evaluate(() => localStorage.getItem('hr:lecture:navHint'))).toBeNull();
           // A reload resumes this lesson from Recent on slide 2, where no hint shows anyway; so a fresh lesson
           // (a deck Recent has never seen, which opens on its title slide) proves 'done' keeps the hint off for good.
-          await page.reload();
+          // A full load of the new link (from about:blank): a goto that changes only the hash of the page a
+          // reload is still loading raced it and could keep the old lesson.
+          await page.goto('about:blank');
           await page.goto(link({ ...DECK, id: 'lecture:e2enav2' }));
           const start = page.getByTestId('presenter-start-button');
           await expect(start).toBeEnabled({ timeout: 10_000 });
@@ -1015,6 +1025,8 @@ for (const c of RAIL_TABLE) {
         expect(b.left - r.x, b.id).toBeGreaterThanOrEqual(12 - 0.5);
         expect(b.overflow, `${b.id} overflows`).toBe(false);
       }
+      // The rail clips nothing (only its probe clips itself), so a focused button's ring stays whole.
+      expect(await page.getByTestId('presenter-rail').evaluate((el) => getComputedStyle(el).overflow)).toBe('visible');
       // Next is the primary fill (brand.primaryDark), the others paper.
       const fills = await page.evaluate(() => ['presenter-next', 'presenter-back'].map((id) => getComputedStyle(document.querySelector(`[data-testid="${id}"]`)!).backgroundColor));
       expect(fills[0]).not.toBe(fills[1]);
@@ -1035,6 +1047,57 @@ for (const c of RAIL_TABLE) {
   });
 }
 
+/** The shipped `bar.reveal.cta` in each locale (packages/i18n). */
+const REVEAL: Record<'en-US' | 'es-ES' | 'ko-KR', string> = { 'en-US': 'Reveal', 'es-ES': 'Mostrar', 'ko-KR': '다음 보기' };
+
+/**
+ * Short windows (a landscape phone with its browser bars showing; review of #892): the gate checks the
+ * rail's height as well as its width, so its four buttons never overlap. 780 x 280 and 640 x 280 are
+ * too short for even the compact rail (296 px) and take the overlay; 844 x 330 and 667 x 328 hold the
+ * full rail with Next at its label height (316 px), not 96.
+ */
+const SHORT_TABLE: readonly { width: number; height: number; rail: 'full' | 'compact' | null }[] = [
+  { width: 780, height: 280, rail: null },
+  { width: 640, height: 280, rail: null },
+  { width: 844, height: 300, rail: 'compact' },
+  { width: 844, height: 330, rail: 'full' },
+  { width: 667, height: 328, rail: 'full' },
+];
+
+for (const c of SHORT_TABLE) {
+  const rail = RAIL_OFF ? null : c.rail;
+  test.describe(`PN-4 short window ${c.width} x ${c.height}, touch: ${rail === null ? 'the overlay layout' : `the ${rail} rail`}`, () => {
+    test.use({ viewport: { width: c.width, height: c.height }, isMobile: true, hasTouch: true });
+
+    test('no two rail buttons meet: each gap at least spacing.sm, every button inside the rail', async ({ page }) => {
+      await openPhone(page, c);
+      if (rail === null) {
+        await expect(page.getByTestId('presenter-rail')).toHaveCount(0);
+        await expect(page.getByTestId('presenter-bar-compact')).toHaveCount(1);
+        await shot(page, `presenter-nav-pn4-short-${c.width}x${c.height}-overlay`);
+        return;
+      }
+      // The rail settles once it has measured its labels as drawn.
+      await expect.poll(async () => Math.round((await page.getByTestId('presenter-rail').boundingBox())?.width ?? 0)).toBe(rail === 'full' ? 104 : 80);
+      const r = (await page.getByTestId('presenter-rail').boundingBox())!;
+      const buttons = await railButtons(page);
+      expect(buttons.map((b) => b.id)).toEqual(['presenter-more', 'presenter-next', 'presenter-back', 'presenter-sound']);
+      for (let i = 1; i < buttons.length; i++) expect(buttons[i]!.top - buttons[i - 1]!.bottom, `${buttons[i - 1]!.id} to ${buttons[i]!.id}`).toBeGreaterThanOrEqual(8 - 0.5);
+      for (const b of buttons) {
+        expect(b.top, b.id).toBeGreaterThanOrEqual(r.y - 0.5);
+        expect(b.bottom, b.id).toBeLessThanOrEqual(r.y + r.height + 0.5);
+        expect(b.bottom - b.top, b.id).toBeGreaterThanOrEqual(64 - 0.5);
+        expect(b.overflow, b.id).toBe(false);
+      }
+      // A tap at the top edge of Previous presses Previous (Sound does not lie over it).
+      const prev = buttons[2]!;
+      const hit = await page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.closest('[role="button"]')?.getAttribute('data-testid') ?? null, [(prev.left + prev.right) / 2, prev.top + 2]);
+      expect(hit).toBe('presenter-back');
+      await shot(page, `presenter-nav-pn4-short-${c.width}x${c.height}-${rail}`);
+    });
+  });
+}
+
 for (const locale of ['en-US', 'es-ES', 'ko-KR'] as const) {
   for (const size of [{ width: 844, height: 390, rail: 'full' as const }, { width: 640, height: 360, rail: 'compact' as const }]) {
     test.describe(`PN-4 rail labels, ${locale}, ${size.width} x ${size.height} (${size.rail})`, () => {
@@ -1051,12 +1114,23 @@ for (const locale of ['en-US', 'es-ES', 'ko-KR'] as const) {
           expect(b.wordBroken, `${b.id} "${b.text}" breaks a word`).toBe(false);
           expect(b.lines, `${b.id} "${b.text}" lines`).toBeLessThanOrEqual(2);
         }
-        // Reveal (the slide's next build) fits too: step to a slide with builds.
-        await page.keyboard.press('ArrowRight');
-        await expect.poll(async () => (await page.getByTestId('presenter-next').getAttribute('aria-label')) ?? '').not.toBe('');
-        for (const b of await railButtons(page)) expect(b.overflow, `${b.id} "${b.text}" overflows`).toBe(false);
-        const fontSize = await page.getByTestId('presenter-back').evaluate((el) => (el.querySelector('[dir="auto"]') ? getComputedStyle(el.querySelector('[dir="auto"]')!).fontSize : null));
-        expect(fontSize === null || fontSize === '18px').toBe(true);
+        // Reveal (the slide's next build) fits too: step until Next reads the locale's Reveal, then measure it drawn.
+        const next = page.getByTestId('presenter-next');
+        for (let i = 0; i < 12 && (await next.getAttribute('aria-label')) !== REVEAL[locale]; i++) await page.keyboard.press('ArrowRight');
+        await expect(next).toHaveAttribute('aria-label', REVEAL[locale]);
+        const revealed = (await railButtons(page)).find((b) => b.id === 'presenter-next')!;
+        if (size.rail === 'full') expect(revealed.text).toBe(REVEAL[locale]);
+        for (const b of await railButtons(page)) {
+          expect(b.overflow, `${b.id} "${b.text}" overflows`).toBe(false);
+          expect(b.wordBroken, `${b.id} "${b.text}" breaks a word`).toBe(false);
+        }
+        // The labels are drawn at the body floor, 18 px (the compact rail draws More's only).
+        const labelled = size.rail === 'full' ? 'presenter-back' : 'presenter-more';
+        const fontSize = await page.getByTestId(labelled).evaluate((el) => {
+          const label = el.querySelector('[dir="auto"]');
+          return label ? getComputedStyle(label).fontSize : null;
+        });
+        expect(fontSize).toBe('18px');
         await shot(page, `presenter-nav-pn4-labels-${locale}-${size.width}x${size.height}`);
       });
     });
