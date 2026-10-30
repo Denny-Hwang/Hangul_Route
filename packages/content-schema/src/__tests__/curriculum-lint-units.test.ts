@@ -262,6 +262,16 @@ describe('taught items and pronunciation', () => {
     expect(new Set(['낫', '낮', '낯'].map(pronunciationKey))).toEqual(new Set(['nat']));
     expect(pronunciationKey('같이')).toBe(pronunciationKey('가치'));
     expect(pronunciationKey('책 이')).not.toBe(pronunciationKey('채기'));
+    // Vowels said alike (row CM-31 review): ㅐ/ㅔ, ㅒ/ㅖ, ㅙ/ㅚ/ㅞ; ㅖ after a consonant other than ㅇ or ㄹ; ㅢ after a consonant.
+    expect(pronunciationKey('개')).toBe(pronunciationKey('게'));
+    expect(pronunciationKey('얘기')).toBe(pronunciationKey('예기'));
+    expect(new Set(['왜', '외', '웨'].map(pronunciationKey)).size).toBe(1);
+    expect(pronunciationKey('계')).toBe(pronunciationKey('게'));
+    expect(pronunciationKey('희망')).toBe(pronunciationKey('히망'));
+    expect(pronunciationKey('예')).not.toBe(pronunciationKey('에'));
+    expect(pronunciationKey('례')).not.toBe(pronunciationKey('레'));
+    expect(pronunciationKey('의사')).not.toBe(pronunciationKey('이사'));
+    expect(pronunciationKey('개')).not.toBe(pronunciationKey('가'));
     expect(hasSoundChange('같이')).toBe(true);
     expect(hasSoundChange('국물')).toBe(true);
     expect(hasSoundChange('좋아요')).toBe(true);

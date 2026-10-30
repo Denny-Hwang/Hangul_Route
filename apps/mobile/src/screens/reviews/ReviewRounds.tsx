@@ -222,9 +222,31 @@ export function TypeRoundView(props: RoundProps<TypeRound>): ReactElement {
 
 function HearTypeRoundView(props: RoundProps<TypeRound>): ReactElement {
   const kit = useDictationKit(true);
-  if (kit === null) return <View testID="daily-review-round" />;
+  if (kit === null) return <RoundWaiting />;
   if (kit === 'failed') return <TypeRoundBody {...props} round={{ ...props.round, mode: 'see' }} kit={null} heard={null} />;
   return <HeardTypeRound key={props.round.question.itemId} {...props} kit={kit} />;
+}
+
+/** Shown after this long while the dictation chunk loads, so a load from the precache never flashes a line. */
+export const ROUND_WAITING_LINE_MS = 500;
+
+/** A Dictation round while its chunk loads: the quest steps' calm status line (LessonWaiting), late and polite. */
+export function RoundWaiting(): ReactElement {
+  const m = useMessages();
+  const [late, setLate] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setLate(true), ROUND_WAITING_LINE_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <View testID="daily-review-round" accessibilityLiveRegion="polite">
+      {late ? (
+        <Body tone="secondary" align="center" testID="daily-review-round-waiting">
+          {m.learner.presenter.state.loading}
+        </Body>
+      ) : null}
+    </View>
+  );
 }
 
 function HeardTypeRound({ kit, ...props }: RoundProps<TypeRound> & { kit: DictationKit }): ReactElement {
