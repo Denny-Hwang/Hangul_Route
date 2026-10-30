@@ -280,13 +280,13 @@ export const SEOLLAL_ROOM_SCENE: HiddenHeritageScene = {
       },
       {
         id: 'f3',
-        claimEn: 'Hanbok Lifestyle, the making and wearing of hanbok, was designated a National Intangible Heritage of Korea on 20 July 2022. New clothes made for Seollal were called seolbim.',
+        claimEn: 'Hanbok Lifestyle, the making and wearing of hanbok, is a National Intangible Heritage of Korea, designated on 20 July 2022. New clothes made for Seollal were called seolbim.',
         sources: [SRC.hanbok, SRC.seolbim],
       },
       {
         id: 'f4',
         claimEn:
-          'Yunnori, a game of four thrown sticks, was designated a National Intangible Heritage of Korea on 11 November 2022 under the name "Yut nori (Playing Yut)". It is traditionally played from the start of the lunar year to Daeboreum, the first full moon of the year.',
+          'Yunnori, a game of four thrown sticks, is a National Intangible Heritage of Korea under the name "Yut nori (Playing Yut)", designated on 11 November 2022. It is traditionally played from the start of the lunar year to Daeboreum, the first full moon of the year.',
         sources: [SRC.yut, SRC.yutSeason],
       },
       {
@@ -296,12 +296,12 @@ export const SEOLLAL_ROOM_SCENE: HiddenHeritageScene = {
       },
     ],
     accuracyNote:
-      'Composed from the kit, not from a painting: no figure, viewpoint or group of a known painting is used, and no person is drawn. The room, the table and the cushion are generic. Foods and games of one holiday only (Seollal); songpyeon, ogokbap and the ancestral rite (charye) are not drawn. Nothing is framed as a UNESCO element. Hanbok Lifestyle and Yut nori were designated in 2022 as National Intangible Cultural Property, the category named National Intangible Heritage since May 2024; f3 and f4 use the current name, as the Korea Heritage Service record does, and give the status to the designated element (the practice of making and wearing hanbok, not the garment).',
+      'Composed from the kit, not from a painting: no figure, viewpoint or group of a known painting is used, and no person is drawn. The room, the table and the cushion are generic. Foods and games of one holiday only (Seollal); songpyeon, ogokbap and the ancestral rite (charye) are not drawn. Nothing is framed as a UNESCO element. Hanbok Lifestyle and Yut nori were designated in 2022 as National Intangible Cultural Property, the category named National Intangible Heritage since May 2024; f3 and f4 give the current status under the current name, as the Korea Heritage Service record does, and the 2022 date only as when it was designated, and give the status to the designated element (the practice of making and wearing hanbok, not the garment).',
   },
   review: {
     reviewedBy: 'MAR',
     reviewedAt: '2026-10-23',
-    passes: 5,
+    passes: 6,
     notes: [
       'Author: all ten sources opened on 2026-10-23 (the encyclopedia through its search and content API, the heritage records through the portal and its open-data detail); every quote is copied from them, "…" marks an elision.',
       'Pass 1, three checkers in parallel. Language: words, romanization and glosses pass; fixed es f2 ("en la mañana"), ko f2 (세시풍속 as one word), the ko alt word order and "durujumeoni" in a note. Culture and facts: f1-f5 supported by their quoted words; Hanbok Lifestyle and Yut nori are national heritage, never UNESCO; one holiday, no charye table, no person, no painting copied. Learning design: taught Stage 2 Holidays targets with card pictures, spots H-1 to H-4; the kite shared the paper doors\' colour.',
@@ -309,6 +309,7 @@ export const SEOLLAL_ROOM_SCENE: HiddenHeritageScene = {
       'Pass 3, final read of the revised file across all three lanes: every fix confirmed with no new problem; eight colours, none of the ring or focus tokens.',
       'Pass 4, a fresh checker before the PR: every quote re-read against the live pages on 2026-10-23 (the encyclopedia content API for 설, 떡국, 연날리기 and 복주머니, all of 한국세시풍속사전; the open-data records, designation dates 20220720 and 20221111; the KASI tables for 2026 and 2027). Two claims tightened to their sources: f4 says yut is traditionally played from the New Year to the first full moon (the record speaks of how it was handed down, not of when it may be played), and f5 names the late Joseon records the kite entry cites; es and ko follow. The es and ko meanings match the ones the Stage 2 Holidays cell already ships.',
       'Pass 5, the fix stage after two PR reviews (culture, language, learning design): f3 gives the status to Hanbok Lifestyle, the making and wearing of hanbok, not to the garment; f3 and f4 say when each element was designated, and the note records the 2024 rename of the category; f4 leads with yunnori, the romanization the Stage 2 cells teach, and names the designated element in quotes; f4 and f5 say "the start of the lunar year", never a bare "New Year"; f1 gives both dates without a tense; the kite note names the orange disc it draws; the floor alt matches its note; the es and ko text moved to content/i18n/{es,ko}/hidden-heritage.json (the `scene:` overlay prefix), with es and ko for the subject; es f2 and the ko alt reworded.',
+      'Pass 6, the fix stage after two more PR reviews (culture and language, production safety): f3 and f4 give the status in the present under its current name and the 2022 date only as when it was designated, so no event of 2022 carries the name of 2024 (es "es Patrimonio Inmaterial Nacional de Corea desde", ko "…에 지정된 국가무형유산이에요"); ko f5 makes the kite flying the subject, as the source does ("연날리기가 가장 성행했어요").',
     ],
   },
 };
