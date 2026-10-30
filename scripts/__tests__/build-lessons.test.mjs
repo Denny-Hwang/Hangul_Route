@@ -350,6 +350,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       ],
       // F-CURR-002 row CM-38: a chain plays one round per frame.
       [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
+      // F-CURR-002 row CM-44 S2: Syllable Build plays one round per block (the app's `syllableBuild` scope).
+      [{ kind: "syllable-build", rounds: [1, 2, 3, 4] }, { kind: "syllable-build", rounds: 4, syllableBuild: { rounds: [1, 2, 3, 4] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });

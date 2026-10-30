@@ -396,9 +396,32 @@ describe('LessonScopeSchema', () => {
         'write-frame',
         'story-order',
         'hidden-heritage',
+        // F-CURR-002 row CM-44 S2: the first S2 cell that plays Syllable Build (CM-32 decision record, "Schema").
+        'syllable-build',
       ].sort(),
     );
     for (const kind of LESSON_SCOPE_KINDS) expect(MinigameKindSchema.options).toContain(kind);
+  });
+
+  it('takes Syllable Build rounds (row CM-44 S2): 1 to 6 with unique ids, each a word with its meaning', () => {
+    const round = (id: string, en: string | null = 'hand') => ({
+      id,
+      target: en === null ? { ko: '손', romanization: 'son' } : { ko: '손', romanization: 'son', en },
+      firstTiles: ['ㅅ', 'ㅈ', 'ㄴ'],
+      vowelTiles: ['ㅗ', 'ㅜ', 'ㅏ'],
+      finalTiles: ['ㄴ', 'ㅁ', 'ㅇ'],
+    });
+    const parse = (rounds: unknown[]) => LessonScopeSchema.safeParse({ ref, kind: 'syllable-build', rounds });
+    const ok = parse([round('b1'), round('b2')]);
+    expect(ok.success).toBe(true);
+    if (ok.success) expect(scopeRoundCount(ok.data)).toBe(2);
+    expect(parse([]).success).toBe(false);
+    expect(parse(Array.from({ length: 7 }, (_, i) => round(`b${i}`))).success).toBe(false);
+    expect(parse([round('b1'), round('b1')]).success).toBe(false);
+    // A lesson's block is a taught word: its meaning is shown under the speaker and translated in the overlays.
+    expect(parse([round('b1', null)]).success).toBe(false);
+    // The round's own rules (CM-32) still hold: no two finals heard alike.
+    expect(parse([{ ...round('b1'), finalTiles: ['ㄴ', 'ㅂ', 'ㅍ'] }]).success).toBe(false);
   });
 
   it('rejects a ref outside the minigame:s<n>-<theme>-q<k>-<step> grammar', () => {
