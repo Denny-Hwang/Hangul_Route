@@ -346,7 +346,10 @@ test.describe('Sound and the reveal on the question slides (section 3.4 amendmen
 
   test("Sound plays a listen prompt, the other speaker's line and a realia key word; the found line shows only at the answer", async ({ page }) => {
     await koreanVoice(page);
-    await page.goto(link({ ...DECK, id: 'lecture:e2eq03', blocks: [{ kind: 'quest', id: 'quest:stage4-life-q1' }, { kind: 'quest', id: 'quest:stage6-life-q3' }] }));
+    // The heard Listen & Pick prompt comes from Stage 3 Nature q1's Apply: the CM-3A S4 and S6 rows re-authored the
+    // Stage 4 and Stage 6 Checks that asked one, so Stage 4 Life q1 gives the reply question and Stage 6 Life q3 the realia.
+    const blocks = ['quest:stage3-nature-q1', 'quest:stage4-life-q1', 'quest:stage6-life-q3'].map((id) => ({ kind: 'quest' as const, id }));
+    await page.goto(link({ ...DECK, id: 'lecture:e2eq03', blocks }));
     await startLesson(page);
     const stage = page.getByTestId('presenter-stage');
     let listen = false;
