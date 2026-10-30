@@ -8,14 +8,16 @@
 //      the export below tells metro.config.js not to (HANGUL_ROUTE_GENERATE=off,
 //      fixture-build-options.mjs), so Metro keeps the fixture stories of step 1,
 //   1. regenerates the story modules (apps/mobile/src/content/__generated__/stories-index.ts, the fixtures inline) with
-//      `build-stories.mjs --include-fixtures`, and the clip map with the
+//      `build-stories.mjs --include-fixtures`, the lesson modules and the catalogue rows with `build-lessons.mjs
+//      --include-fixtures` (a fixture Volume 2 of Stage 2 Nature, F-CURR-002 row CM-40: no Volume 2 ships yet), and the
+//      clip map with the
 //      fixture tones of e2e/fixtures/audio (`gen-audio-map.mjs
 //      --with-e2e-fixtures`, F-AUDIO-004 A-6: the offline clip e2e),
 //   2. exports the web app into its OWN directory (default dist-e2e/, never
 //      dist/, which build:web, serve:web and wrangler use) and runs the PWA
 //      post-build (the fixture ids in that bundle switch on the
 //      `window.__hrStoryE2E` entry, navigation/story-e2e.tsx),
-//   3. ALWAYS restores the real bundle (plain `build-stories.mjs`) and the
+//   3. ALWAYS restores the real bundle (plain `build-stories.mjs` and `build-lessons.mjs`) and the
 //      real clip map (plain `gen-audio-map.mjs`), even when
 //      the export fails or the build is interrupted (Ctrl-C), so the fixture
 //      bundle is never left for a commit.
@@ -41,6 +43,7 @@ import { exportEnv, fixtureBuildOptions } from './fixture-build-options.mjs';
 const app = join(dirname(fileURLToPath(import.meta.url)), '..');
 const generateAll = join(app, '..', '..', 'scripts', 'generate.mjs');
 const generator = join(app, '..', '..', 'scripts', 'build-stories.mjs');
+const lessons = join(app, '..', '..', 'scripts', 'build-lessons.mjs');
 const audioMap = join(app, 'scripts', 'audio', 'gen-audio-map.mjs');
 let options;
 try {
@@ -71,6 +74,7 @@ function run(command, args, env = process.env) {
 let status = run(process.execPath, [generateAll]);
 if (status === 0 && interrupted === null) status = run(process.execPath, [generator, '--include-fixtures']);
 try {
+  if (status === 0 && interrupted === null) status = run(process.execPath, [lessons, '--include-fixtures']);
   if (status === 0 && interrupted === null) status = run(process.execPath, [audioMap, '--with-e2e-fixtures']);
   if (status === 0 && interrupted === null) {
     status = run('expo', ['export', '--platform', 'web', '--output-dir', out], exportEnv(process.env, options, ownTmp));
@@ -80,6 +84,8 @@ try {
   if (ownTmp !== null) rmSync(ownTmp, { recursive: true, force: true });
   const restored = spawnSync(process.execPath, [generator], { cwd: app, stdio: 'inherit' }).status ?? 1;
   if (restored !== 0) status = restored;
+  const lessonsRestored = spawnSync(process.execPath, [lessons], { cwd: app, stdio: 'inherit' }).status ?? 1;
+  if (lessonsRestored !== 0) status = lessonsRestored;
   const mapRestored = spawnSync(process.execPath, [audioMap], { cwd: app, stdio: 'inherit' }).status ?? 1;
   if (mapRestored !== 0) status = mapRestored;
 }

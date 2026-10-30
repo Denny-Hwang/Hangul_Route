@@ -958,6 +958,53 @@ export async function lessonReviewOccurrences(root, symbols, cells = readCells(r
   return lessonSourcesOfTree(lessonReviewTree(root, cells)).flatMap((source) => lessonOccurrences(source, symbols));
 }
 
+// ---- the e2e fixture (--include-fixtures, row CM-40) ------------------------------------------------
+
+/**
+ * The cell the e2e bundle gives a Volume 2 (F-CURR-002 row CM-40: no Volume 2 content ships with the row): Stage 2
+ * Nature & Animals, whose Volume 1 is Outdoor Words.
+ */
+export const FIXTURE_VOLUME2 = Object.freeze({ stageNo: 2, theme: "nature" });
+
+/**
+ * Pure: a Volume 1 cell file (and its overlay files) as its Volume 2 fixture: every id of the cell gains `-v2`, the file
+ * says `volume: 2`, and its English title says Volume 2, so an e2e run can tell the two apart. Its content is Volume 1's:
+ * the fixture checks the plumbing (the ids, the chunk, the catalogue, the app's volume surfaces), never the teaching.
+ */
+export function volume2Fixture(cell, files = []) {
+  const stage = `stage${FIXTURE_VOLUME2.stageNo}`;
+  const { theme } = FIXTURE_VOLUME2;
+  const rename = (value) =>
+    JSON.parse(
+      JSON.stringify(value)
+        .split(`episode:${stage}-${theme}"`)
+        .join(`episode:${stage}-${theme}-v2"`)
+        .split(`quest:${stage}-${theme}-q`)
+        .join(`quest:${stage}-${theme}-v2-q`)
+        .split(`minigame:s${FIXTURE_VOLUME2.stageNo}-${theme}-q`)
+        .join(`minigame:s${FIXTURE_VOLUME2.stageNo}-${theme}-v2-q`),
+    );
+  const body = rename(cell);
+  return {
+    cell: { ...body, volume: 2, titleEn: `${body.titleEn} 2`.slice(0, 28) },
+    files: files.map((f) => ({ ...f, rel: f.rel.replace(/\.json$/, "-v2.json"), json: rename(f.json) })),
+  };
+}
+
+/** The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent. */
+export function fixtureCells(root) {
+  const { stageNo, theme } = FIXTURE_VOLUME2;
+  const full = join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.json`);
+  if (!existsSync(full)) return [];
+  const files = OVERLAY_LOCALES.flatMap((locale) => {
+    const overlay = join(root, cellOverlayFile(locale, stageNo, theme));
+    return existsSync(overlay) ? [{ ...readJson(root, overlay), locale }] : [];
+  });
+  const fixture = volume2Fixture(readJson(root, full).json, files);
+  const shaped = shapeCell(fixture.cell, `content/episodes/stage-${stageNo}/${theme}.v2.json`);
+  return [{ ...shaped, overlays: cellOverlays(shaped, fixture.files) }];
+}
+
 // ---- budget -------------------------------------------------------------------------------
 
 const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
@@ -1095,7 +1142,7 @@ export function staleFiles(root, modules) {
   return out.filter((name) => modules[name] === undefined);
 }
 
-const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report]";
+const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report] [--include-fixtures]";
 
 /** Every file this generator writes, by path relative to the root: the lesson modules and the catalogue. */
 export async function generatedOutputs(root, cells = readCells(root)) {
@@ -1114,19 +1161,30 @@ export async function generatedOutputs(root, cells = readCells(root)) {
 }
 
 export async function main(argv, root) {
-  const opts = { check: false, report: false };
+  const opts = { check: false, report: false, includeFixtures: false };
   for (const arg of argv) {
     if (arg === "--check") opts.check = true;
     else if (arg === "--report") opts.report = true;
+    else if (arg === "--include-fixtures") opts.includeFixtures = true;
     else {
       process.stderr.write(`unknown argument ${arg}\n${USAGE}\n`);
       return 2;
     }
   }
+  if (opts.includeFixtures && (opts.check || opts.report)) {
+    process.stderr.write(`--include-fixtures builds an e2e bundle only; it does not combine with --check or --report\n${USAGE}\n`);
+    return 2;
+  }
   let cells;
   let generated;
   try {
     cells = readCells(root);
+    if (opts.includeFixtures) {
+      // The e2e bundle (apps/mobile/scripts/build-web-fixtures.mjs): the fixture Volume 2 right after its Volume 1.
+      const fixtures = fixtureCells(root);
+      const at = cells.findIndex((c) => c.stageNo === FIXTURE_VOLUME2.stageNo && c.episode.theme === FIXTURE_VOLUME2.theme);
+      cells = at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
+    }
     generated = await generatedOutputs(root, cells);
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
@@ -1183,6 +1241,7 @@ export async function main(argv, root) {
   for (const [name, source] of Object.entries(outputs)) {
     writeIfChanged(join(root, name), source);
   }
+  if (opts.includeFixtures) process.stdout.write("E2E FIXTURE MODULES (--include-fixtures): never commit; run node scripts/build-lessons.mjs to restore.\n");
   process.stdout.write(
     `wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready}) and the catalogue rows` +
       (stale.length > 0 ? `, removed ${stale.length} no longer built\n` : "\n"),

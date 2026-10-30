@@ -682,6 +682,33 @@ describe("build-lessons.mjs: the lesson headers chunks (F-CURR-002 §10, row CM-
   });
 });
 
+describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", () => {
+  test("copies Stage 2 Nature as its Volume 2: -v2 ids, volume 2, its overlays renamed; never with --check or --report", async () => {
+    const { FIXTURE_VOLUME2, volume2Fixture } = await import(SCRIPT);
+    assert.deepEqual({ ...FIXTURE_VOLUME2 }, { stageNo: 2, theme: "nature" });
+    const v1 = cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" });
+    const { cell: v2, files } = volume2Fixture(v1, [{ rel: "content/i18n/es/lessons-stage2-nature.json", locale: "es", json: overlay("es", "x", { "episode:stage2-nature": { title: "Palabras" }, "quest:stage2-nature-q1": { title: "Uno" } }) }]);
+    assert.equal(v2.id, "episode:stage2-nature-v2");
+    assert.equal(v2.volume, 2);
+    assert.equal(v2.titleEn, "Outdoor Words 2");
+    assert.equal(v2.quests[0].id, "quest:stage2-nature-v2-q1");
+    assert.ok(v2.quests[0].scopes.every((s) => s.ref.startsWith("minigame:s2-nature-v2-q1-")));
+    assert.equal(files[0].rel, "content/i18n/es/lessons-stage2-nature-v2.json");
+    assert.deepEqual(Object.keys(files[0].json.entries), ["episode:stage2-nature-v2", "quest:stage2-nature-v2-q1"]);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", v1);
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /E2E FIXTURE MODULES/);
+    assert.match(read(root, "lessons-index.ts"), /case "episode:stage2-nature-v2"/);
+    assert.ok(existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    // A plain run removes it again.
+    assert.equal(run(root).status, 0);
+    assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    assert.equal(run(root, ["--include-fixtures", "--check"]).status, 2);
+  });
+});
+
 // ---- F-CURR-002 §9.1 (row CM-6): the generated catalogue rows and the addedIn stamps ----------
 
 const { CATALOG_OUT, HAND_STAMPS, HISTORY_LAST_VERSION, addedInStamp, catalogueOf, cellRowsOf, loadSymbolKeys, readHandStamps, renderCatalogue, shapeStoryRow, shapeTopicRow, symbolKeyOf } =

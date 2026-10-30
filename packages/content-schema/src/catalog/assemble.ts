@@ -43,6 +43,9 @@ export interface CatalogVolumeSource {
   cellId: string;
   episodeId: string;
   volume: number;
+  /** The volume's own title and minutes (its file's `titleEn` and estimate), for the lesson chooser and the console. */
+  title: string;
+  minutes: number;
   questIds: readonly string[];
 }
 
@@ -58,7 +61,7 @@ export function expandCellRows(rows: readonly GeneratedCellRow[]): { cells: Cata
     const episodeId = volumeEpisodeId(cellId, volume);
     const questIds = rowQuests.map((_, i) => `quest:${episodeId.slice('episode:'.length)}-q${i + 1}`);
     if (volume === 1) cells.push({ stage, theme, episodeId, title, status, minutes, questIds });
-    else volumes.push({ cellId, episodeId, volume, questIds });
+    else volumes.push({ cellId, episodeId, volume, title, minutes, questIds });
     rowQuests.forEach(([questTitle, questMinutes, teaches], i) => {
       quests.push({ id: questIds[i] as string, episodeId, stage, theme, title: questTitle, minutes: questMinutes, teaches: [...teaches], kind: 'lesson' });
     });
@@ -112,7 +115,14 @@ export function assembleCatalog(sources: CatalogSources): Catalog {
       if (found === undefined) return [];
       const later = cellIsReady(found) ? (byVolume.get(found.episodeId) ?? []) : [];
       laterVolumes.push(...later);
-      return [{ ...found, episodeIds: [found.episodeId, ...later.map((v) => v.episodeId)] }];
+      if (later.length === 0) return [{ ...found, episodeIds: [found.episodeId] }];
+      return [
+        {
+          ...found,
+          episodeIds: [found.episodeId, ...later.map((v) => v.episodeId)],
+          volumes: later.map((v) => ({ episodeId: v.episodeId, title: v.title, minutes: v.minutes, questIds: [...v.questIds] })),
+        },
+      ];
     }),
   );
   const lessonById = new Map(sources.lessonQuests.map((q) => [q.id, q]));

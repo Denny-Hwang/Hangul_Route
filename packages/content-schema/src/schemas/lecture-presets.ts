@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -160,7 +160,8 @@ export function presetBlockMinutes(block: LectureBlock, catalog: Catalog): numbe
     case 'quest':
       return catalog.quests.find((q) => q.id === block.id)?.minutes ?? 0;
     case 'episode':
-      return catalog.cells.find((c) => c.episodeId === block.id)?.minutes ?? 0;
+      // Any volume of a cell (F-CURR-002 row CM-40).
+      return catalogEpisode(catalog, block.id)?.minutes ?? 0;
     case 'story':
       return catalog.stories.find((s) => s.id === block.storyId)?.minutes ?? 0;
     case 'vocab':
@@ -506,7 +507,7 @@ export function questIdsOfBlocks(blocks: readonly LectureBlock[], catalog: Catal
   const ids: string[] = [];
   for (const block of blocks) {
     if (block.kind === 'quest') ids.push(block.id);
-    else if (block.kind === 'episode') ids.push(...(catalog.cells.find((c) => c.episodeId === block.id)?.questIds ?? []));
+    else if (block.kind === 'episode') ids.push(...(catalogEpisode(catalog, block.id)?.questIds ?? []));
     else if (block.kind === 'story' && block.level === 'read') {
       // `storyId` is `story:<slug>` (the deck schema), so this is the id `questBlock` read it from.
       const id = `quest:story-${block.storyId.slice('story:'.length)}-read`;

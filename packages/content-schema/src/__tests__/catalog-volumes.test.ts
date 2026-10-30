@@ -3,14 +3,21 @@ import {
   CATALOG,
   CATALOG_VERSION,
   CatalogSchema,
+  LectureBlockSchema,
+  catalogEpisode,
   cellEpisodeIds,
+  chooserGroups,
   freeRouteQuestIds,
   gridLessonIds,
+  groupOfKey,
   placedOutGrowth,
+  presetBlockMinutes,
+  questIdsOfBlocks,
   questIdsAtVersion,
   questsPlacedOutAtLevel,
   routeCatalogOf,
   routeDaysOf,
+  selectionBlocks,
   volumeEpisodeId,
   type Catalog,
   type CatalogHistory,
@@ -56,7 +63,7 @@ const CRAFTS4_V2 = ['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'q
 describe('the catalogue with two volumes per cell (row CM-40)', () => {
   it('expands a Volume 2 row into a later volume of its cell, quests named <cell>-v2-q<k> on its own episode', () => {
     expect(V2.cells).toEqual([]);
-    expect(V2.volumes[0]).toEqual({ cellId: 'episode:stage2-nature', episodeId: 'episode:stage2-nature-v2', volume: 2, questIds: NATURE_V2 });
+    expect(V2.volumes[0]).toEqual({ cellId: 'episode:stage2-nature', episodeId: 'episode:stage2-nature-v2', volume: 2, title: 'Outdoor Words', minutes: 13, questIds: NATURE_V2 });
     expect(V2.quests[0]).toEqual({
       id: 'quest:stage2-nature-v2-q1',
       episodeId: 'episode:stage2-nature-v2',
@@ -76,6 +83,8 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.episodeIds).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);
+    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.volumes).toEqual([{ episodeId: 'episode:stage2-nature-v2', title: 'Outdoor Words', minutes: 13, questIds: NATURE_V2 }]);
+    for (const cell of CATALOG.cells) expect(cell.volumes, cell.episodeId).toBeUndefined();
     expect(cellEpisodeIds({ episodeId: 'episode:stage3-life' })).toEqual(['episode:stage3-life']);
     // The first volume's quests stay the cell's list; the later volume's follow every first volume's, in grid order.
     const lessons = catalog.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
@@ -92,7 +101,9 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(CatalogSchema.safeParse(listed).error?.issues.map((i) => i.message)).toContain(
       'Lesson quest quest:stage2-nature-v2-q1 of episode:stage2-nature-v2 is listed by the first volume',
     );
-    const orphan = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, episodeIds: [c.episodeId] } : c)) };
+    const undescribed = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, volumes: [] } : c)) };
+    expect(CatalogSchema.safeParse(undescribed).error?.issues.map((i) => i.message)).toContain('Cell stage2-nature must describe each later volume its episodeIds lists, in order');
+    const orphan = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, episodeIds: [c.episodeId], volumes: undefined } : c)) };
     expect(CatalogSchema.safeParse(orphan).error?.issues.map((i) => i.message)).toContain('Lesson quest quest:stage2-nature-v2-q1 names the unknown cell episode:stage2-nature-v2');
   });
 
@@ -161,5 +172,30 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set(), history)).toEqual(NATURE_V2);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set([NATURE_V2[1] as string]), history)).toEqual([NATURE_V2[0], NATURE_V2[2]]);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, stamp, route, new Set(), history)).toEqual([]);
+  });
+});
+
+describe('the lecture deck and the chooser take a Volume 2 id (row CM-40)', () => {
+  const catalog = withVolumes();
+  const V2_ID = 'episode:stage2-nature-v2';
+
+  it('the deck schema and its link carry an episode block of a Volume 2', () => {
+    expect(LectureBlockSchema.safeParse({ kind: 'episode', id: V2_ID }).success).toBe(true);
+    expect(presetBlockMinutes({ kind: 'episode', id: V2_ID }, catalog)).toBe(13);
+    expect(questIdsOfBlocks([{ kind: 'episode', id: V2_ID }], catalog)).toEqual(NATURE_V2);
+    expect(presetBlockMinutes({ kind: 'episode', id: V2_ID }, CATALOG)).toBe(0);
+    expect(catalogEpisode(catalog, 'episode:stage2-nature')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds);
+    expect(catalogEpisode(catalog, 'episode:nope')).toBeUndefined();
+  });
+
+  it('chooserGroups lists a Volume 2 as its own row after its cell only with `volumes`, keyed by its episode id', () => {
+    const rowsOf = (volumes: boolean) => chooserGroups({ catalog, title: (id) => id, volumes }).find((g) => g.id === 'stage2')?.rows ?? [];
+    const on = rowsOf(true);
+    const at = on.findIndex((r) => r.key === 'episode:stage2-nature');
+    expect(on[at + 1]).toMatchObject({ kind: 'episode', key: V2_ID, minutes: 13 });
+    expect((on[at + 1] as { lessons: { key: string }[] }).lessons.map((l) => l.key)).toEqual(NATURE_V2);
+    expect(rowsOf(false).some((r) => r.key === V2_ID)).toBe(false);
+    expect(groupOfKey(chooserGroups({ catalog, title: (id) => id, volumes: true }), NATURE_V2[0] as string)).toBe('stage2');
+    expect(selectionBlocks([V2_ID], chooserGroups({ catalog, title: (id) => id, volumes: true }))).toEqual([{ kind: 'episode', id: V2_ID }]);
   });
 });
