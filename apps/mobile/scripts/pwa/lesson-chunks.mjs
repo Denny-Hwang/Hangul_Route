@@ -116,7 +116,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
   // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
   // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
-  startBundleRaw: 4_765_000,
+  // F-CURR-002 CM-3A S2 (stacked on CM-30, CM-31, CM-34, CM-35 and CM-3C, all open): the five parents merged measure
+  // 4,783,387 B raw / 1,276,173 B gzip together (release `build:web`), 18,387 B over the 4,765,000 B line, since each
+  // parent fits its own main and their growth adds up. The row adds 1,623 B (Read Pick Meaning in Listen & Pick, the
+  // lecture and memory mapping, the Check header and room of Type Hangul and Pic-Word Match, the optional label overlay
+  // field): 4,785,010 B raw / 1,276,601 B gzip. The line is that measurement plus a 4,990 B rounding margin, for the
+  // stack only; when the parents land, the update from main takes main's line and the row's 1,623 B is measured on it.
+  startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
