@@ -1,0 +1,1001 @@
+{
+  "id": "episode:stage7-crafts-v2",
+  "stage": "stage7",
+  "theme": "crafts",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "My Own Game",
+  "subtitleEn": "Write how to play a game: what you need and the rules.",
+  "hoyaIntroEn": "Let us make up a game together and write how to play it!",
+  "order": 5,
+  "pillarTags": [
+    "E1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-crafts-v2-q1",
+      "titleEn": "What You Need",
+      "blurbEn": "Write what a game needs: a ball, yut sticks or a friend.",
+      "teaserEn": "Next: write how to take turns.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "What You Need",
+          "hoyaLineEn": "Every game needs something. Let us write what!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "You Need a Ball",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___이/가 필요해요.",
+                      "romanization": "___i/ga piryohaeyo",
+                      "en": "You need ___."
+                    },
+                    "noteEn": "{ko:이} after a final consonant, {ko:가} after a vowel. {ko:필요해요} says what is needed.",
+                    "examples": [
+                      {
+                        "ko": "공이 필요해요.",
+                        "romanization": "gongi piryohaeyo",
+                        "en": "You need a ball."
+                      },
+                      {
+                        "ko": "종이가 필요해요.",
+                        "romanization": "jongiga piryohaeyo",
+                        "en": "You need paper."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the thing first, then say it is needed."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "윷이 필요해요.",
+                      "romanization": "yuchi piryohaeyo",
+                      "en": "You need yut sticks."
+                    },
+                    "picture": "card:yutnori"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "친구가 필요해요.",
+                      "romanization": "chinguga piryohaeyo",
+                      "en": "You need a friend."
+                    },
+                    "picture": "word:school-friend"
+                  }
+                ],
+                "captionEn": "Some games need things, and some need a friend."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Word",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-crafts-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type It",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-v2-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s7-crafts-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ready to Play!",
+          "hoyaLineEn": "You wrote what a game needs, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-v2-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "t1",
+              "word": {
+                "ko": "공",
+                "romanization": "gong",
+                "en": "ball"
+              }
+            },
+            {
+              "id": "t2",
+              "word": {
+                "ko": "윷",
+                "romanization": "yut",
+                "en": "yut sticks"
+              }
+            },
+            {
+              "id": "t3",
+              "word": {
+                "ko": "제기",
+                "romanization": "jegi",
+                "en": "a shuttlecock toy you kick"
+              }
+            },
+            {
+              "id": "t4",
+              "word": {
+                "ko": "종이",
+                "romanization": "jongi",
+                "en": "paper"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type the word for needed.",
+              "target": {
+                "ko": "필요해요",
+                "romanization": "piryohaeyo",
+                "en": "it is needed"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: You need a ball.",
+              "pictureRef": "word:sport-ball",
+              "target": {
+                "ko": "공이 필요해요",
+                "romanization": "gongi piryohaeyo",
+                "en": "you need a ball"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: You need paper.",
+              "target": {
+                "ko": "종이가 필요해요",
+                "romanization": "jongiga piryohaeyo",
+                "en": "you need paper"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: You need a friend.",
+              "pictureRef": "word:school-friend",
+              "target": {
+                "ko": "친구가 필요해요",
+                "romanization": "chinguga piryohaeyo",
+                "en": "you need a friend"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "친구___ 필요해요.",
+                "romanization": "chingu___ piryohaeyo",
+                "en": "You need a friend."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "chinguga piryohaeyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "___이 필요해요.",
+                "romanization": "___i piryohaeyo",
+                "en": "You need a ball."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
+                },
+                {
+                  "ko": "공",
+                  "romanization": "gong",
+                  "en": "ball"
+                },
+                {
+                  "ko": "꽃",
+                  "romanization": "kkot",
+                  "en": "flower"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-crafts-v2-q2",
+      "titleEn": "Take Turns",
+      "blurbEn": "Write the rules for taking turns and going again.",
+      "teaserEn": "Next: write how to play your own game.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Take Turns",
+          "hoyaLineEn": "In a game, everyone gets a turn. Let us write the rules!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "One After Another",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "차례대로 ___.",
+                      "romanization": "charyedaero ___",
+                      "en": "Take turns to ___."
+                    },
+                    "noteEn": "{ko:차례대로} means in turn, one after another. The action comes after it.",
+                    "examples": [
+                      {
+                        "ko": "차례대로 던져요.",
+                        "romanization": "charyedaero deonjyeoyo",
+                        "en": "Take turns to throw."
+                      },
+                      {
+                        "ko": "차례대로 해요.",
+                        "romanization": "charyedaero haeyo",
+                        "en": "Take turns to play."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A rule often starts with how the players take turns."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "한 번 더 던져요.",
+                      "romanization": "han beon deo deonjyeoyo",
+                      "en": "Throw one more time."
+                    },
+                    "picture": "card:yutnori"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "공을 차요.",
+                      "romanization": "gongeul chayo",
+                      "en": "Kick the ball."
+                    },
+                    "picture": "word:sport-ball"
+                  }
+                ],
+                "captionEn": "Some rules give you one more go."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Rule",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Rules",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-v2-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-crafts-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Fair Play!",
+          "hoyaLineEn": "You wrote the rules for taking turns!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-v2-q2-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for taking turns.",
+              "target": {
+                "ko": "차례대로",
+                "romanization": "charyedaero",
+                "en": "in turn, one after another"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: Throw the yut sticks.",
+              "pictureRef": "card:yutnori",
+              "target": {
+                "ko": "윷을 던져요",
+                "romanization": "yucheul deonjyeoyo",
+                "en": "throw the yut sticks"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: Kick the ball.",
+              "pictureRef": "word:sport-ball",
+              "target": {
+                "ko": "공을 차요",
+                "romanization": "gongeul chayo",
+                "en": "kick the ball"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Spin the top.",
+              "pictureRef": "card:top",
+              "target": {
+                "ko": "팽이를 돌려요",
+                "romanization": "paengireul dollyeoyo",
+                "en": "spin the top"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q2-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "차례대로 던져요.",
+                "romanization": "charyedaero deonjyeoyo",
+                "en": "Take turns to throw."
+              },
+              "distractors": [
+                {
+                  "ko": "그려요",
+                  "romanization": "geuryeoyo",
+                  "en": "I draw"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "한 번 더 던져요.",
+                "romanization": "han beon deo deonjyeoyo",
+                "en": "Throw one more time."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "접어요",
+                  "romanization": "jeobeoyo",
+                  "en": "I fold"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "제기를 차요.",
+                "romanization": "jegireul chayo",
+                "en": "Kick the jegi."
+              },
+              "pictureRef": "card:jegi",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "차례대로 해요.",
+                "romanization": "charyedaero haeyo",
+                "en": "Take turns to play."
+              },
+              "distractors": [
+                {
+                  "ko": "잘라요",
+                  "romanization": "jallayo",
+                  "en": "I cut"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q2-check",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "차례대로 ___.",
+                "romanization": "charyedaero ___",
+                "en": "Take turns to ___."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "던져요",
+                      "romanization": "deonjyeoyo",
+                      "en": "throw"
+                    },
+                    {
+                      "ko": "차요",
+                      "romanization": "chayo",
+                      "en": "kick"
+                    },
+                    {
+                      "ko": "돌려요",
+                      "romanization": "dollyeoyo",
+                      "en": "spin"
+                    },
+                    {
+                      "ko": "접어요",
+                      "romanization": "jeobeoyo",
+                      "en": "fold"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "한 번 더 ___.",
+                "romanization": "han beon deo ___",
+                "en": "One more time: ___."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "던져요",
+                      "romanization": "deonjyeoyo",
+                      "en": "throw"
+                    },
+                    {
+                      "ko": "돌려요",
+                      "romanization": "dollyeoyo",
+                      "en": "spin"
+                    },
+                    {
+                      "ko": "해요",
+                      "romanization": "haeyo",
+                      "en": "play"
+                    },
+                    {
+                      "ko": "그려요",
+                      "romanization": "geuryeoyo",
+                      "en": "draw"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-crafts-v2-q3",
+      "titleEn": "How to Play",
+      "blurbEn": "Write the rules of your own game, from a word bank.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "How to Play",
+          "hoyaLineEn": "Now make up your own game. Any rules you pick are good ones!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "How to Play Yut",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___하는 법",
+                      "romanization": "___haneun beop",
+                      "en": "How to play ___"
+                    },
+                    "noteEn": "{ko:법} is a way of doing something, so {ko:하는 법} is how to do it. A rules card often starts with it.",
+                    "examples": [
+                      {
+                        "ko": "윷놀이하는 법",
+                        "romanization": "yunnorihaneun beop",
+                        "en": "How to play yut"
+                      },
+                      {
+                        "ko": "제기차기하는 법",
+                        "romanization": "jegichagihaneun beop",
+                        "en": "How to play jegichagi"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the game first. This is the title of the rules."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "윷이 필요해요.",
+                      "romanization": "yuchi piryohaeyo",
+                      "en": "You need yut sticks."
+                    },
+                    "picture": "card:yutnori"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "차례대로 던져요.",
+                      "romanization": "charyedaero deonjyeoyo",
+                      "en": "Take turns to throw."
+                    }
+                  }
+                ],
+                "captionEn": "Then write what you need and how to play."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Rules",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-crafts-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Rules",
+          "minigameKind": "my-story",
+          "minigameRef": "minigame:s7-crafts-v2-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-crafts-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Game!",
+          "hoyaLineEn": "You wrote the rules of your own game, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-crafts-v2-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type: How to play yut.",
+              "pictureRef": "card:yutnori",
+              "target": {
+                "ko": "윷놀이하는 법",
+                "romanization": "yunnorihaneun beop",
+                "en": "how to play yut"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: How to play jegichagi.",
+              "pictureRef": "card:jegi",
+              "target": {
+                "ko": "제기차기하는 법",
+                "romanization": "jegichagihaneun beop",
+                "en": "how to play jegichagi"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: You need yut sticks.",
+              "target": {
+                "ko": "윷이 필요해요",
+                "romanization": "yuchi piryohaeyo",
+                "en": "you need yut sticks"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Take turns to throw.",
+              "target": {
+                "ko": "차례대로 던져요",
+                "romanization": "charyedaero deonjyeoyo",
+                "en": "take turns to throw"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q3-apply",
+          "kind": "my-story",
+          "frames": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "___이/가 필요해요.",
+                "romanization": "___i/ga piryohaeyo",
+                "en": "You need ___."
+              },
+              "slots": [
+                {
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "공",
+                      "romanization": "gong",
+                      "en": "a ball"
+                    },
+                    {
+                      "ko": "윷",
+                      "romanization": "yut",
+                      "en": "yut sticks"
+                    },
+                    {
+                      "ko": "제기",
+                      "romanization": "jegi",
+                      "en": "a jegi"
+                    },
+                    {
+                      "ko": "종이",
+                      "romanization": "jongi",
+                      "en": "paper"
+                    },
+                    {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "a friend",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "차례대로 ___.",
+                "romanization": "charyedaero ___",
+                "en": "Take turns to ___."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "던져요",
+                      "romanization": "deonjyeoyo",
+                      "en": "throw"
+                    },
+                    {
+                      "ko": "차요",
+                      "romanization": "chayo",
+                      "en": "kick"
+                    },
+                    {
+                      "ko": "돌려요",
+                      "romanization": "dollyeoyo",
+                      "en": "spin"
+                    },
+                    {
+                      "ko": "해요",
+                      "romanization": "haeyo",
+                      "en": "play",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "한 번 더 ___.",
+                "romanization": "han beon deo ___",
+                "en": "One more time: ___."
+              },
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "던져요",
+                      "romanization": "deonjyeoyo",
+                      "en": "throw"
+                    },
+                    {
+                      "ko": "차요",
+                      "romanization": "chayo",
+                      "en": "kick"
+                    },
+                    {
+                      "ko": "돌려요",
+                      "romanization": "dollyeoyo",
+                      "en": "spin"
+                    },
+                    {
+                      "ko": "해요",
+                      "romanization": "haeyo",
+                      "en": "play",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-crafts-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "차례대로 윷을 던져요.",
+                "romanization": "charyedaero yucheul deonjyeoyo",
+                "en": "Take turns to throw the yut sticks."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "한 번 더 던져요.",
+                "romanization": "han beon deo deonjyeoyo",
+                "en": "Throw one more time."
+              },
+              "pictureRef": "card:yutnori",
+              "distractors": [
+                {
+                  "ko": "차례대로",
+                  "romanization": "charyedaero",
+                  "en": "in turn, one after another"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "In {ko:윷놀이}, four sticks are thrown and land as {ko:도}, {ko:개}, {ko:걸}, {ko:윷} or {ko:모}, which move a piece 1, 2, 3, 4 or 5 spaces. A {ko:윷} or a {ko:모} gives one more throw.",
+      "sources": [
+        {
+          "title": "윷놀이 (어린이민속사전, 명절)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) 어린이박물관",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=46",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“4개의 윷을 던져 나온 결과는 도, 개, 걸, 윷, 모로 나뉩니다. 도는 1칸, 개는 2칸, 걸은 3칸, 윷은 4칸, 모는 5칸 말을 이동할 수 있는데, 윷이나 모가 나올 때는 한 번 더 던질 수가 있어서 더 멀리 이동할 수 있습니다. 서로 번갈아 가면서 윷을 던지고 …”"
+        },
+        {
+          "title": "윷놀이",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0042794",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: “윷말의 가는 말［行馬］을 보면 도는 한 발, 개는 두 발, 걸은 세 발, 윷은 네 발, 모는 다섯 발을 간다.” / “그리고 모나 윷이 나오면 한번 더 할 수가 있으며 계속 나오면 계속할 수가 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea children's folk dictionary page 윷놀이 (nfm.go.kr/kids, topic 46, HTTP 200) says the four thrown sticks give 도, 개, 걸, 윷 or 모, which move a piece 1 to 5 spaces, and that a 윷 or a 모 lets the player throw once more; the Academy of Korean Studies entry 윷놀이 (E0042794, HTTP 200) gives the same moves (one to five steps) and the extra throw for a 모 or a 윷. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order), and the 'one more time' rule of q2 and of the q3 chain.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched and read against the note. 'Four sticks', the five results in that order, '1, 2, 3, 4 or 5 spaces' and 'one more throw' for 윷 or 모 match both quotes. The note leaves out the animal-name explanation of 도 개 걸 윷 모 (the AKS entry gives it as a view, '… 딴 것으로 본다'), the board and the origin, so no origin or belief is claimed. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): the institution is named as on the access date (국립민속박물관); 윷놀이 is presented as a folk game, not as a belief or a rite; the NFM page's 'the winning side has a good harvest' belief is left out; es and ko keep the five {ko:} tokens and the two {ko:윷놀이} and {ko:모} tokens. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:꼬리따기} is a Chuseok folk game. Players stand in a line, each holding the waist of the one in front, and someone tries to catch the last one. There are three ways to play: two teams, one catcher, or the front catching the end.",
+      "sources": [
+        {
+          "title": "꼬리따기 (어린이민속사전, 명절)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) 어린이박물관",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=96",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“꼬리따기는 추석에 하는 아이들의 민속놀이입니다. … 앞사람의 허리를 잡고 한 줄로 늘어선 사람 중에 맨 끝 사람을 술래나 상대편이 떼어내는 놀이 방법으로 하는데, 여기에는 세 가지 종류가 있습니다. 첫째는 두 편으로 나누어서 … 둘째는 술래 한 명을 정해 놓고 … 셋째는 줄의 맨 앞에 있는 사람이 줄의 맨 끝에 있는 사람을 잡는 방법입니다.”"
+        },
+        {
+          "title": "꼬리따기",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011242",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: “놀이 방법은 세 가지이다. 첫째 두 패로 나뉘어 한 패의 우두머리가 상대 패 대열의 맨 끝 사람을 잡는 방법이 있다. 둘째는 술래 하나를 정해 놓고 술래가 대열의 끝 사람을 잡는 방법이다. 셋째는 대열의 맨 앞사람이 자기 대열의 끝 사람을 잡는 방법이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea children's folk dictionary page 꼬리따기 (topic 96, HTTP 200) calls it a Chuseok folk game in which the players hold the waist of the one in front in one line and a catcher or the other side takes the last one off, and lists three ways to play (two sides, one catcher, the front of the line catching its end); the Academy of Korean Studies entry 꼬리따기 (E0011242, HTTP 200) gives the same three ways. Restated in own words; nothing copied. Carried by: the q2 Did you know? tip (one game, several sets of rules, the q2 and q3 theme).\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched. 'A Chuseok folk game', 'one line, each holding the waist of the one in front', 'someone tries to catch the last one' and the three ways match both quotes. Both sources call it a game of children ('아이들의', '어린이 놀이'); the note leaves the age out (audience any age, CLAUDE.md section 1), which narrows nothing that is true. 'Catch' is a tag, not a hurt. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): no origin, belief or region claim; the many regional names are left out rather than picking one; es and ko keep the one {ko:} token. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:차례} is a turn, the chance that comes to each one in order, and {ko:대로} means following it, so {ko:차례대로} is in turn, one after another.",
+      "sources": [
+        {
+          "title": "차례 2 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=490075&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘차례 2(次例)’(word_no 490075) 「명사」「1」: “순서 있게 구분하여 벌여 나가는 관계. 또는 그 구분에 따라 각각에게 돌아오는 기회.” 용례: “차례대로 차에 오르다.”"
+        },
+        {
+          "title": "대로 10 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=78254&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘대로 10’(word_no 78254) 「조사」 ((체언 뒤에 붙어)) 「1」: “앞에 오는 말에 근거하거나 달라짐이 없음을 나타내는 보조사.” 용례: “처벌하려면 법대로 해라.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): stdict entries 차례 2 (次例, word_no 490075, sense 1: an order of parts, or the chance that comes to each in that order; example 차례대로 차에 오르다) and 대로 10 (조사, word_no 78254, sense 1: following what comes before, without change) read through contentViewOne.do (HTTP 200). The note restates them; nothing copied. 차례 1 (茶禮), a rite written the same, is a different word and is not this lesson's (F-CURR-002 OD-9 keeps it for Holidays Volume 2). Carried by: the q3 Did you know? tip, the q2 frame 차례대로 ___ and the q3 chain.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both entries re-read; 'a turn, the chance that comes to each one in order' renders sense 1 of 차례 2, and 'following it' renders sense 1 of 대로 10; the stdict example 차례대로 차에 오르다 uses the same compound. Outcome: pass, no change.\nLine 3 (pass 5, MAR language review, 2026-10-30): plain language note, no cultural claim; es and ko keep the three {ko:} tokens; the ko overlay does not gloss 차례 as the rite. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Author pass (MAR, 2026-10-30): §5.6 S7 (the rules of my own game, 'how to play ~', from a word bank) in three quests: what you need (___이/가 필요해요), take turns (차례대로 ___, 한 번 더 ___), how to play (___하는 법) with the q3 My Story chain. Triples trace-word / type-hangul / cloze-pick, type-hangul / order-it / write-frame, type-hangul / my-story / order-it: no Volume 1 triple; three Checks, three games.",
+      "Language lens (MAR, 2026-10-30): 해요체 rules in the present; particles clean (윷이 [유치], 공이, 종이가, 친구가); applied: 윷놀이 하는 법 and 제기차기 하는 법 written 윷놀이하는 법 and 제기차기하는 법, since stdict lists 윷놀이하다 and 제기차기하다 as verbs; romanization from the F-CNT-002 converter; ko glosses describe and never echo the taught Korean.",
+      "Culture and facts lens (MAR, 2026-10-30): n1 (윷놀이: 도 개 걸 윷 모 move 1-5 spaces, 윷 or 모 gives one more throw) and n2 (꼬리따기, a Chuseok game played three ways) checked against the National Folk Museum of Korea and the Academy of Korean Studies; n3 (차례대로) against stdict; names as of the access date; no brand, artist or living person; no origin, belief or age claim.",
+      "Learning design lens (MAR, 2026-10-30): curriculum lint clean; one new frame a quest and at most 3 new words (Stage 7 cap); lesson-recycle 30 in 100 or more in every quest (Volume 1 items such as 공, 윷, 제기, 종이, 윷을 던져요, 공을 차요, 팽이를 돌려요, 접어요, 그려요); no Dictation round; 차례 alone is never asked (차례 1, the rite, is a homograph), only 차례대로.",
+      "My Story lens (MAR, 2026-10-30, §6.6): one neutral option per bank, never first (친구, 해요, 해요); no frame or bank word asks about family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (공이 필요해요); frames 2-3 teach nothing a played step does not (차례대로 ___, 한 번 더 ___ and their actions are the q2 Check).",
+      "Reviser and third pass (MAR, 2026-10-30): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+    ]
+  },
+  "contentVer": 1
+}
