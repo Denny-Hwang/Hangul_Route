@@ -886,9 +886,48 @@ describe('controller: playJamo(jamo, question) through jamoVoice (AMENDMENTS-AUD
     expect(r.engine.requests[0]?.text).toBe('안');
   });
 
-  it('a letter question on a final throws', () => {
+  it('a letter question on a final throws in tests', () => {
     const r = rig();
     expect(() => r.ctl.playJamo(findJamo('jamo:nieun-batchim')!, 'letter')).toThrow(/final/);
+  });
+
+  it('in a release build a letter question on a final never throws: it speaks the sound', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubGlobal('__DEV__', false);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const r = rig();
+      r.state.assets.clear();
+      let played: Promise<unknown> | undefined;
+      expect(() => {
+        played = r.ctl.playJamo(findJamo('jamo:nieun-batchim')!, 'letter');
+      }).not.toThrow();
+      await played;
+      expect(r.engine.requests[0]?.text).toBe('안');
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('in a development build a letter question on a final warns and speaks the sound', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubGlobal('__DEV__', true);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      const r = rig();
+      r.state.assets.clear();
+      await r.ctl.playJamo(findJamo('jamo:pieup-batchim')!, 'letter');
+      expect(r.engine.requests[0]?.text).toBe('압');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toMatch(/final/);
+    } finally {
+      warn.mockRestore();
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('a Word Builder final speaks its pronounced form (M12): ㅈ at the bottom says 앋', async () => {
@@ -914,6 +953,23 @@ describe('controller: the lone-jamo speech guard (JV-A2)', () => {
     await r.ctl.playPrompt({ text: '나' });
     await r.ctl.playPrompt({ text: '니은' });
     expect(r.engine.requests.map((q) => q.text)).toEqual(['나', '니은']);
+  });
+
+  it('in a release build a text that is not a string never throws synchronously', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubGlobal('__DEV__', false);
+    try {
+      const r = rig();
+      r.state.muted = true;
+      let played: Promise<unknown> | undefined;
+      expect(() => {
+        played = r.ctl.playPrompt({ text: undefined as unknown as string });
+      }).not.toThrow();
+      await expect(played).resolves.toBe('muted');
+    } finally {
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('in a release build a lone jamo is still spoken (the guard never breaks playback)', async () => {

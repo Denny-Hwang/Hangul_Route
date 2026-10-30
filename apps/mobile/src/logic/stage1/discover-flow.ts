@@ -196,7 +196,7 @@ function symbolItem(
   source: Jamo,
 ): DiscoverItemView {
   const example = exampleIn(item.example, source, jamo);
-  // The sound question's voice (JV-A2): the Word Builder finals say their pronounced form (M12, 앚 -> 앋).
+  // The sound question's voice (JV-A2): the Word Builder finals say their pronounced form (M12: a final ㅈ says at).
   const sound = jamoVoice(jamo, 'sound');
   const romanization = soundValue(jamo.romanization);
   // Vowels already are their own name and the initial ㅇ is spoken by its name, so only a

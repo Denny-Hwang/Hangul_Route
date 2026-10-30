@@ -43,6 +43,10 @@ describe('isLoneJamo', () => {
   it.each(['나', '니은', '이응', '앋', 'ㄴ 받침', 'ㄴ + ㅏ', 'n', '', '  '])('%j is not', (text) => {
     expect(isLoneJamo(text)).toBe(false);
   });
+
+  it.each([undefined, null, 12, { text: 'ㄴ' }])('a text that is not a string (%j) is not, and never throws', (text) => {
+    expect(isLoneJamo(text as unknown as string)).toBe(false);
+  });
 });
 
 describe('guardSpokenText', () => {
@@ -65,6 +69,13 @@ describe('guardSpokenText', () => {
     expect(() => guardSpokenText('ㄴ', 'story')).not.toThrow();
     expect(warn).toHaveBeenCalledTimes(1);
     expect(String(warn.mock.calls[0]?.[0])).toMatch(/lone jamo/);
+  });
+
+  it('never throws on a text that is not a string, in any build (a malformed cached deck)', () => {
+    expect(() => guardSpokenText(undefined as unknown as string)).not.toThrow();
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubGlobal('__DEV__', false);
+    expect(() => guardSpokenText(42 as unknown as string, 'story')).not.toThrow();
   });
 
   it('is silent in a release build', () => {

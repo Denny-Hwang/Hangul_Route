@@ -83,6 +83,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
+  { path: 'apps/mobile/src/logic/audio/jamo-voice.ts', reason: 'the M12 pronounced-form table of the Word Builder finals (AMENDMENTS-AUDIO-CLIPS JV-A2) and doc examples: each spoken text and its romanization are pinned row by row, and romanization === romanizeWord(text) for all 55 jamo, by apps/mobile/src/logic/audio/__tests__/jamo-voice.test.ts' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },
   { path: 'apps/mobile/src/logic/type-hangul/e2e-rounds.ts', reason: 'test-only Type Hangul rounds played by the fixture-build e2e (F-CURR-001 G-3), never shipped; their romanization is still checked by apps/mobile/src/logic/type-hangul/__tests__/e2e-rounds.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/e2e-rounds.ts', reason: 'test-only Write Frame rounds played by the fixture-build e2e and the component tests (F-CURR-001 G-5), never shipped; their romanization is still checked by apps/mobile/src/logic/write-frame/__tests__/e2e-rounds.test.ts' },

@@ -34,9 +34,13 @@ export function reportVoiceFault(message: string): void {
 
 const LONE_JAMO = /^[\u3131-\u318E\u1100-\u11FF]$/u;
 
-/** The whole text, trimmed, is one compatibility or conjoining jamo. A jamo inside a longer text passes. */
+/**
+ * The whole text, trimmed, is one compatibility or conjoining jamo. A jamo inside a longer text
+ * passes. Total: a text that is not a string at runtime (a malformed cached deck) is not a jamo,
+ * so the guard never throws a TypeError in a release build.
+ */
 export function isLoneJamo(text: string): boolean {
-  return LONE_JAMO.test(text.trim());
+  return typeof text === 'string' && LONE_JAMO.test(text.trim());
 }
 
 export interface KnownLoneJamoSpeaker {

@@ -2,8 +2,8 @@ import type { SpeechLang } from '@hangul-route/content-schema';
 import { capabilityTelemetry, type AudioCapability, type CapabilityCheckedPayload, type CapabilityPlatform } from './capability';
 import type { FallbackReason, PlayResult } from './prompt-state';
 import { speechParams, type LevelOrder, type PromptKind } from './rate';
-import { jamoVoice, toJamoQuestion, type JamoQuestion, type LegacyJamoMode } from './jamo-voice';
-import { guardSpokenText } from './speech-guard';
+import { jamoVoice, toJamoQuestion, type JamoQuestion, type JamoVoice, type LegacyJamoMode } from './jamo-voice';
+import { guardSpokenText, reportVoiceFault } from './speech-guard';
 import type { SpokenJamo } from './spoken';
 import type { VoiceCandidate } from './voice-rank';
 
@@ -506,6 +506,21 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     }
   };
 
+  /**
+   * `jamoVoice` throws on a letter question for a final in every build (JV-A1). At the playback
+   * boundary that is a caller fault, so it throws in tests and otherwise warns in development and
+   * speaks the sound: a learner never loses a prompt to it.
+   */
+  const voiceForPlay = (jamo: SpokenJamo, question: JamoQuestion): JamoVoice => {
+    try {
+      return jamoVoice(jamo, question);
+    } catch (error) {
+      if (question === 'sound') throw error;
+      reportVoiceFault((error as Error).message);
+      return jamoVoice(jamo, 'sound');
+    }
+  };
+
   /** Every prompt passes here, so the lone-jamo guard (JV-A2) runs once for both platforms, before anything plays. */
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => {
     guardSpokenText(spec.text, spec.source);
@@ -515,7 +530,7 @@ export function createAudioController(deps: ControllerDeps): AudioController {
   return {
     playPrompt,
     playJamo: (jamo, question) => {
-      const voice = jamoVoice(jamo, toJamoQuestion(jamo, question));
+      const voice = voiceForPlay(jamo, toJamoQuestion(jamo, question));
       const spec: PlaySpec = { text: voice.text, language: 'ko-KR', kind: 'sound' };
       if (voice.audioRef !== undefined) spec.audioRef = voice.audioRef;
       return playPrompt(spec);

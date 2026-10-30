@@ -57,7 +57,7 @@ export const LETTER_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...jamoConsona
 
 /**
  * The finals a sound question may ask by ear (JV-A3 rules 1 and 3): Stage 1's 6, said as their
- * closed syllable (안). A final never shares a letter-question pool. Word Builder's finals are
+ * closed syllable (the final ㄴ says an). A final never shares a letter-question pool. Word Builder's finals are
  * said as sounds Stage 1 already has, so they are never asked by ear.
  */
 export const FINAL_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoBatchim.map((j) => j.id));
