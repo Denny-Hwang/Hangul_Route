@@ -1,0 +1,1025 @@
+{
+  "id": "episode:stage7-life-v2",
+  "stage": "stage7",
+  "theme": "life",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "My Favorite Food",
+  "subtitleEn": "Write about a food you like and the steps to make it.",
+  "hoyaIntroEn": "Let us write about food: one you like, and how to make it!",
+  "order": 2,
+  "pillarTags": [
+    "B2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-life-v2-q1",
+      "titleEn": "My Favorite Food",
+      "blurbEn": "Write about a food you like, or a food Hoya likes.",
+      "teaserEn": "Next: write the steps to make bibimbap.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Favorite Food",
+          "hoyaLineEn": "Gimbap, bibimbap, tteokbokki. Which food do you like? Let us write it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Food I Like",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "음식",
+                      "romanization": "eumsik",
+                      "en": "food"
+                    },
+                    "noteEn": "Anything you eat: rice, soup, gimbap and more."
+                  },
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "제가 좋아하는 음식은 ___이에요/예요.",
+                      "romanization": "jega joahaneun eumsigeun ___ieyo/yeyo",
+                      "en": "My favorite food is ___."
+                    },
+                    "noteEn": "Put a food in the slot. Use {ko:이에요} after a final consonant, {ko:예요} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "제가 좋아하는 음식은 비빔밥이에요.",
+                        "romanization": "jega joahaneun eumsigeun bibimbabieyo",
+                        "en": "My favorite food is bibimbap."
+                      },
+                      {
+                        "ko": "제가 좋아하는 음식은 떡볶이예요.",
+                        "romanization": "jega joahaneun eumsigeun tteokbokkiyeyo",
+                        "en": "My favorite food is tteokbokki."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A new word, and a frame to say the food you like best."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "호야가 좋아하는 음식은 김밥이에요.",
+                      "romanization": "hoyaga joahaneun eumsigeun gimbabieyo",
+                      "en": "Hoya's favorite food is gimbap."
+                    },
+                    "picture": "card:kimbap"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "비빔밥이 맛있어요.",
+                      "romanization": "bibimbabi masisseoyo",
+                      "en": "Bibimbap is tasty."
+                    },
+                    "picture": "word:culture-bibimbap"
+                  }
+                ],
+                "captionEn": "Write about the food you like, or the food Hoya likes."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-life-v2-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-v2-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s7-life-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Tasty Writing!",
+          "hoyaLineEn": "You wrote about a favorite food, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-v2-q1-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for food.",
+              "target": {
+                "ko": "음식",
+                "romanization": "eumsik",
+                "en": "food"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for this food.",
+              "pictureRef": "word:culture-bibimbap",
+              "target": {
+                "ko": "비빔밥",
+                "romanization": "bibimbap",
+                "en": "mixed rice"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for this food.",
+              "pictureRef": "word:culture-tteokbokki",
+              "target": {
+                "ko": "떡볶이",
+                "romanization": "tteokbokki",
+                "en": "spicy rice cakes"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Bibimbap is tasty.",
+              "pictureRef": "word:culture-bibimbap",
+              "target": {
+                "ko": "비빔밥이 맛있어요",
+                "romanization": "bibimbabi masisseoyo",
+                "en": "bibimbap is tasty"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q1-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "제가 좋아하는 음식은 비빔밥이에요.",
+                "romanization": "jega joahaneun eumsigeun bibimbabieyo",
+                "en": "My favorite food is bibimbap."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "호야가 좋아하는 음식은 김밥이에요.",
+                "romanization": "hoyaga joahaneun eumsigeun gimbabieyo",
+                "en": "Hoya's favorite food is gimbap."
+              },
+              "pictureRef": "card:kimbap",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "I drink"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "떡볶이가 맛있어요.",
+                "romanization": "tteokbokkiga masisseoyo",
+                "en": "Tteokbokki is tasty."
+              },
+              "pictureRef": "word:culture-tteokbokki",
+              "distractors": [
+                {
+                  "ko": "뜨거워요",
+                  "romanization": "tteugeowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "제가 좋아하는 음식은 떡볶이예요.",
+                "romanization": "jega joahaneun eumsigeun tteokbokkiyeyo",
+                "en": "My favorite food is tteokbokki."
+              },
+              "pictureRef": "word:culture-tteokbokki",
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "제가 좋아하는 음식은 ___이에요.",
+                "romanization": "jega joahaneun eumsigeun ___ieyo",
+                "en": "My favorite food is bibimbap."
+              },
+              "tiles": [
+                {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice rolls"
+                },
+                {
+                  "ko": "비빔밥",
+                  "romanization": "bibimbap",
+                  "en": "mixed rice"
+                },
+                {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "호야가 좋아하는 음식은 떡볶이___.",
+                "romanization": "hoyaga joahaneun eumsigeun tteokbokki___",
+                "en": "Hoya's favorite food is tteokbokki."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이에요",
+                  "romanization": "ieyo",
+                  "en": "it is (after a final consonant)"
+                },
+                {
+                  "ko": "예요",
+                  "romanization": "yeyo",
+                  "en": "it is (after a vowel)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "hoyaga joahaneun eumsigeun tteokbokkiyeyo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-life-v2-q2",
+      "titleEn": "Make Bibimbap",
+      "blurbEn": "Write the steps to make bibimbap: put it in, then mix.",
+      "teaserEn": "Next: write a recipe of your own.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Make Bibimbap",
+          "hoyaLineEn": "Bibimbap is rice you mix with other food. Let us write how to make it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Put It In",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 넣어요.",
+                      "romanization": "___eul/reul neoeoyo",
+                      "en": "Put in ___."
+                    },
+                    "noteEn": "{ko:넣어요} means put it in. Use {ko:을} after a final consonant, {ko:를} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "나물을 넣어요.",
+                        "romanization": "namureul neoeoyo",
+                        "en": "Put in the seasoned vegetables."
+                      },
+                      {
+                        "ko": "김치를 넣어요.",
+                        "romanization": "gimchireul neoeoyo",
+                        "en": "Put in the kimchi."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the food first, then say put it in."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "비벼요",
+                      "romanization": "bibyeoyo",
+                      "en": "mix it"
+                    },
+                    "noteEn": "Stir the rice and the rest together, the way you eat {ko:비빔밥}."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "먼저 밥에 나물을 넣어요.",
+                      "romanization": "meonjeo babe namureul neoeoyo",
+                      "en": "First, put the seasoned vegetables in the rice."
+                    },
+                    "picture": "card:rice"
+                  }
+                ],
+                "captionEn": "A word for mixing, and the first step."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "그다음에 비벼요.",
+                      "romanization": "geudaeume bibyeoyo",
+                      "en": "Then, mix it."
+                    },
+                    "picture": "word:culture-bibimbap"
+                  }
+                ],
+                "captionEn": "First this, then that: a recipe goes step by step."
+              }
+            ]
+          },
+          "durationSeconds": 75
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-life-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Steps",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-life-v2-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-life-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Step by Step!",
+          "hoyaLineEn": "You wrote the steps of a recipe, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-v2-q2-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "rice"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "나물",
+                "romanization": "namul",
+                "en": "seasoned vegetables"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "달걀",
+                "romanization": "dalgyal",
+                "en": "egg"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "김치",
+                "romanization": "gimchi",
+                "en": "kimchi"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type the word for put it in.",
+              "target": {
+                "ko": "넣어요",
+                "romanization": "neoeoyo",
+                "en": "put it in"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: Put in the seasoned vegetables.",
+              "target": {
+                "ko": "나물을 넣어요",
+                "romanization": "namureul neoeoyo",
+                "en": "put in the seasoned vegetables"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: Put in the egg.",
+              "pictureRef": "word:food-egg",
+              "target": {
+                "ko": "달걀을 넣어요",
+                "romanization": "dalgyareul neoeoyo",
+                "en": "put in the egg"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: Then, mix it.",
+              "pictureRef": "word:culture-bibimbap",
+              "target": {
+                "ko": "그다음에 비벼요",
+                "romanization": "geudaeume bibyeoyo",
+                "en": "then, mix it"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q2-check",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "먼저 ___을/를 넣어요.",
+                "romanization": "meonjeo ___eul/reul neoeoyo",
+                "en": "First, put in ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "나물",
+                      "romanization": "namul",
+                      "en": "seasoned vegetables"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김치",
+                      "romanization": "gimchi",
+                      "en": "kimchi"
+                    },
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "그다음에 ___.",
+                "romanization": "geudaeume ___",
+                "en": "Then, ___."
+              },
+              "slots": [
+                {
+                  "id": "step",
+                  "bank": [
+                    {
+                      "ko": "비벼요",
+                      "romanization": "bibyeoyo",
+                      "en": "mix it"
+                    },
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "cut it"
+                    },
+                    {
+                      "ko": "넣어요",
+                      "romanization": "neoeoyo",
+                      "en": "put it in"
+                    },
+                    {
+                      "ko": "먹어요",
+                      "romanization": "meogeoyo",
+                      "en": "eat it"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-life-v2-q3",
+      "titleEn": "My Own Recipe",
+      "blurbEn": "Write a recipe of your own, from a word bank.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Own Recipe",
+          "hoyaLineEn": "Now write your own recipe. Any food you pick is a good one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Today I Make Gimbap",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "오늘은 ___을/를 만들어요.",
+                      "romanization": "oneureun ___eul/reul mandeureoyo",
+                      "en": "Today I make ___."
+                    },
+                    "noteEn": "{ko:만들어요} means make. {ko:오늘은} puts today first, as the title of the recipe.",
+                    "examples": [
+                      {
+                        "ko": "오늘은 김밥을 만들어요.",
+                        "romanization": "oneureun gimbabeul mandeureoyo",
+                        "en": "Today I make seaweed rice rolls."
+                      },
+                      {
+                        "ko": "오늘은 떡볶이를 만들어요.",
+                        "romanization": "oneureun tteokbokkireul mandeureoyo",
+                        "en": "Today I make spicy rice cakes."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say what you make first."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "먼저 김치를 넣어요.",
+                      "romanization": "meonjeo gimchireul neoeoyo",
+                      "en": "First, put in the kimchi."
+                    },
+                    "picture": "card:kimchi"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "그다음에 잘라요.",
+                      "romanization": "geudaeume jallayo",
+                      "en": "Then, cut it."
+                    },
+                    "picture": "card:kimbap"
+                  }
+                ],
+                "captionEn": "Then write the steps, one after another."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Recipe",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-life-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Recipe",
+          "minigameKind": "my-story",
+          "minigameRef": "minigame:s7-life-v2-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-life-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Recipe!",
+          "hoyaLineEn": "You wrote a recipe of your own, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-life-v2-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for make.",
+              "target": {
+                "ko": "만들어요",
+                "romanization": "mandeureoyo",
+                "en": "I make"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: Today I make seaweed rice rolls.",
+              "pictureRef": "card:kimbap",
+              "target": {
+                "ko": "오늘은 김밥을 만들어요",
+                "romanization": "oneureun gimbabeul mandeureoyo",
+                "en": "today I make seaweed rice rolls"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: Put in the seasoned vegetables.",
+              "target": {
+                "ko": "나물을 넣어요",
+                "romanization": "namureul neoeoyo",
+                "en": "put in the seasoned vegetables"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Then, mix it.",
+              "pictureRef": "word:culture-bibimbap",
+              "target": {
+                "ko": "그다음에 비벼요",
+                "romanization": "geudaeume bibyeoyo",
+                "en": "then, mix it"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q3-apply",
+          "kind": "my-story",
+          "frames": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "오늘은 ___을/를 만들어요.",
+                "romanization": "oneureun ___eul/reul mandeureoyo",
+                "en": "Today I make ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "김밥",
+                      "romanization": "gimbap",
+                      "en": "seaweed rice rolls"
+                    },
+                    {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cakes"
+                    },
+                    {
+                      "ko": "떡볶이",
+                      "romanization": "tteokbokki",
+                      "en": "spicy rice cakes"
+                    },
+                    {
+                      "ko": "비빔밥",
+                      "romanization": "bibimbap",
+                      "en": "mixed rice",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "먼저 ___을/를 넣어요.",
+                "romanization": "meonjeo ___eul/reul neoeoyo",
+                "en": "First, put in ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "나물",
+                      "romanization": "namul",
+                      "en": "seasoned vegetables"
+                    },
+                    {
+                      "ko": "달걀",
+                      "romanization": "dalgyal",
+                      "en": "an egg"
+                    },
+                    {
+                      "ko": "김치",
+                      "romanization": "gimchi",
+                      "en": "kimchi"
+                    },
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "그다음에 ___.",
+                "romanization": "geudaeume ___",
+                "en": "Then, ___."
+              },
+              "slots": [
+                {
+                  "id": "step",
+                  "bank": [
+                    {
+                      "ko": "비벼요",
+                      "romanization": "bibyeoyo",
+                      "en": "mix it"
+                    },
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "cut it"
+                    },
+                    {
+                      "ko": "먹어요",
+                      "romanization": "meogeoyo",
+                      "en": "eat it",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-life-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "오늘은 비빔밥을 만들어요.",
+                "romanization": "oneureun bibimbabeul mandeureoyo",
+                "en": "Today I make mixed rice."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "먼저 밥에 나물을 넣어요.",
+                "romanization": "meonjeo babe namureul neoeoyo",
+                "en": "First, put the seasoned vegetables in the rice."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "비벼요",
+                  "romanization": "bibyeoyo",
+                  "en": "mix it"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "A {ko:반상} is a table of rice and side dishes. It is named by how many plates of side dishes it has, from 3 to 12: a {ko:삼첩반상} has three, not counting the rice, soup, kimchi and soy sauce.",
+      "sources": [
+        {
+          "title": "삼첩반상 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=441436&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘삼첩-반상(三첩飯床)’(word_no 441436) 「명사」: “밥, 국, 김치, 간장 이외의 반찬을 담은 접시가 셋인 밥상. 또는 그런 그릇 한 벌.”"
+        },
+        {
+          "title": "반상",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0021491",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: “밥과 반찬으로 구성된 상차림.” / 내용: “반상에는 반찬의 가짓수에 따라서 3첩∼12첩까지 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the Standard Korean Language Dictionary entry 삼첩반상 (word_no 441436, read on the search page, HTTP 200) defines it as a table whose side dishes, other than the rice, soup, kimchi and soy sauce, fill three plates; the Academy of Korean Studies entry 반상 (E0021491, HTTP 200) defines 반상 as a table of rice and side dishes and says it runs from 3첩 to 12첩 by the number of side dishes. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order), beside the q1 food words.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-read against the note. 'A table of rice and side dishes' renders the AKS definition; 'from 3 to 12' is the AKS range; 'three, not counting the rice, soup, kimchi and soy sauce' renders the stdict definition (간장 is soy sauce). The note is a new fact beside Volume 1's banchan note (n1 of episode:stage7-life, side dishes eaten with rice): it names how a table is counted, not what banchan are. The 12첩 court table and any class rule are left out (not in both sources). Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): institutions named as on the access date (국립국어원, 한국학중앙연구원); no origin, belief or 'only in Korea' claim; es and ko keep the two {ko:} tokens. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "At the table, the spoon and the chopsticks are not held in one hand at the same time. While the chopsticks are in use, the spoon is put down.",
+      "sources": [
+        {
+          "title": "식사예절 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/7821",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘숟가락과 젓가락은 한 손에 동시에 들고 사용하지 않는다. 젓가락을 사용할 때는 숟가락을 상 위에 놓아야 한다.’ / ‘젓가락을 들 때 숟가락은 먹던 밥그릇이나 국그릇에 넣어 걸친다.’"
+        },
+        {
+          "title": "수저",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031662",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: “젓가락을 쓸 때에는 숟가락을 밥그릇이나 국그릇에 걸쳐둔다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea entry 식사예절 (한국의식주생활사전, topic 7821) says the spoon and chopsticks are not held and used in one hand at the same time, and that while the chopsticks are used the spoon is set on the table or rested on the rice or soup bowl; the Academy of Korean Studies entry 수저 (E0031662, HTTP 200) says the spoon is rested on the rice or soup bowl while the chopsticks are used. Restated in own words; nothing copied. Carried by: the q2 Did you know? tip (the recipe quest, beside the bowl and the mixing words).\nLine 2 (pass 2b, fact check lens, 2026-10-30): the NFM page gives two places for the spoon (on the table in its table-setting paragraph, on the bowl in its modern-table paragraph) and AKS gives the bowl, so the note says only 'the spoon is put down', which all three sentences support, and never which place is right. It is a new fact beside Volume 1's notes (n2, waiting for the eldest's spoon; n3, spoon for rice and soup and chopsticks for side dishes). Outcome: pass, wording narrowed to 'is put down'.\nLine 3 (pass 5, MAR culture review, 2026-10-30): institution named as on the access date (국립민속박물관); a custom, framed as what is done, with no blame for doing it another way (anti-shame, F-CURR-002 7.7); no origin claim. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:수저} means the spoon and the chopsticks together, as one set.",
+      "sources": [
+        {
+          "title": "수저 1 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=453008&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘수저’(word_no 453008) 「명사」「1」: “숟가락과 젓가락을 아울러 이르는 말.≒시저.”"
+        },
+        {
+          "title": "수저",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031662",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: “식사할 때에 쓰는 용구.” / 내용: “숟가락과 젓가락으로 한 벌을 이룬다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the Standard Korean Language Dictionary entry 수저 (word_no 453008, sense 1: the spoon and chopsticks taken together) and the Academy of Korean Studies entry 수저 (E0031662: a tool for eating; the spoon and chopsticks make one set), both HTTP 200. Restated in own words; nothing copied. 수저 (水底, word_no 199272, the bottom of the water) is a homograph and is not this note's. Carried by: the q3 Did you know? tip, after the n2 note on holding them.\nLine 2 (pass 2b, fact check lens, 2026-10-30): 'the spoon and the chopsticks together' renders stdict sense 1; 'as one set' renders the AKS 한 벌. Outcome: pass, no change.\nLine 3 (pass 5, MAR language review, 2026-10-30): plain language note, no cultural claim; es and ko keep the one {ko:} token; the ko overlay does not use 수저 to gloss itself. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Author pass (MAR, 2026-10-30): §5.3 S7 in three quests: my favorite food (제가 좋아하는 음식은 ___이에요/예요, and Hoya's), make bibimbap (___을/를 넣어요; 먼저, 그다음에), my own recipe (오늘은 ___을/를 만들어요) with the q3 My Story chain. Triples type-hangul / order-it / cloze-pick, trace-word / type-hangul / write-frame, type-hangul / my-story / order-it: no Volume 1 triple; three Checks, three games.",
+      "Language lens (MAR, 2026-10-30): 해요체 in the present; particles clean (비빔밥이에요, 떡볶이예요, 김치를 넣어요, 떡볶이를 만들어요); 그다음에 closed up as in Volume 1; romanization from the F-CNT-002 converter (넣어요 neoeoyo, 비벼요 bibyeoyo); applied: 먼저 그릇에 밥을 넣어요 became 먼저 밥에 나물을 넣어요 (rice goes into a bowl with 담아요); glosses reuse the shipped ones.",
+      "Culture and facts lens (MAR, 2026-10-30): n1 (반상 named by plates of side dishes, 3 to 12; 삼첩반상) against stdict and AKS; n2 (spoon and chopsticks not held in one hand at once; the spoon is put down) against NFM and AKS, worded so it never picks between the two places the sources give; n3 (수저) against stdict and AKS. All new beside Volume 1's notes; names as of the access date; no brand.",
+      "Learning design lens (MAR, 2026-10-30): curriculum lint clean; one new frame a quest and at most 3 new words (Stage 7 cap); lesson-recycle 30 in 100 or more in every quest (비빔밥, 떡볶이, 김밥, 밥, 나물, 달걀, 김치, 맛있어요, 먼저, 그다음에, 잘라요 and the cell's earlier steps); no Dictation round; the Checks ask only what the quest has shown.",
+      "My Story lens (MAR, 2026-10-30, §6.6): one neutral option per bank, never first (비빔밥, the lesson's own dish; 밥; 먹어요); no frame asks about family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (오늘은 김밥을 만들어요); frames 2-3 and their words are the q2 Check, so the switch-off path teaches them.",
+      "Reviser and third pass (MAR, 2026-10-30): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+    ]
+  },
+  "contentVer": 1
+}
