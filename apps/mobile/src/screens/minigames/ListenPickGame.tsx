@@ -45,7 +45,7 @@ import {
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
@@ -113,7 +113,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
   // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot.
-  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef) });
+  const slotRound = rounds[state.roundIdx];
+  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: slotRound !== undefined && hasClipFor(listenPickSpeech(slotRound)) });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;

@@ -634,8 +634,8 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 1. 생성한 한국어 음성 클립 묶음 (팩) 하나에 문제가 있으면 그 팩만 끈다. 팩 이름: `jamo-s1` (1단계 자모 소리와 이름), `jamo-wb` (2단계 낱자 만들기 자모), `stage1`, `placement`, `stage2`, `stage3`, `stage4`, `stage6`, `stage7`, `vocab`, `stories`, `review`, `cards`. D1 Console 에서 (예: `jamo-s1` 끄기):
    `INSERT INTO remote_config (flag, "on", pct, updated_at, reason) VALUES ('audioPack.jamo-s1', 0, 100, strftime('%Y-%m-%dT%H:%M:%fZ','now'), '<이유>') ON CONFLICT(flag) DO UPDATE SET "on" = excluded."on", updated_at = excluded.updated_at, reason = excluded.reason;`
    모든 클립을 한 번에 끄려면 같은 줄을 `'audioClips'` 로 실행한다 (`audioPack.<팩>` 은 모두 `audioClips` 아래에 있어서, `audioClips` 를 끄면 모든 팩이 꺼진다).
-2. 이 두 스위치는 켜기·끄기로만 쓴다: 표에 줄이 없으면 켜짐 (기본 비율 100) 이고, `"on"` 0 이면 꺼짐이다. 비율 (`pct`) 은 100 그대로 두고 램프하지 않는다 (1-99 는 프로필이 없는 화면에서 꺼짐으로 읽힌다). 다시 켤 때는 `"on"` 을 1 로 바꾼다 (K-1 의 INSERT, `pct` 100).
-3. 엣지 캐시 비우기와 확인은 K-2 의 2-3 과 같다. 기기는 새 값을 받은 뒤 **다음 소리부터** 그 팩의 클립 대신 기기 음성으로 읽는다 (다시 빌드, 배포, 서비스 워커 업데이트, 앱 스토어 출시 모두 필요 없다). 발표 화면과 All lessons 는 원격 설정을 따로 받지 않고, 같은 기기의 학습자 앱이 마지막으로 받아 저장한 값을 따른다.
+2. 이 두 스위치는 켜기·끄기로만 쓴다: 표에 줄이 없으면 켜짐 (기본 비율 100) 이고, `"on"` 0 이면 꺼짐이다. 비율 (`pct`) 은 100 그대로 두고 램프하지 않는다 (`pct` 1-99 는 모든 기기와 모든 화면에서 꺼짐으로 읽힌다: 이 스위치에는 일부 사용자에게만 켜는 램프가 없다). 다시 켤 때는 `"on"` 을 1 로 바꾼다 (K-1 의 INSERT, `pct` 100).
+3. 엣지 캐시 비우기와 확인은 K-2 의 2-3 과 같다. 기기는 새 값을 받은 뒤 **다음 소리부터** 그 팩의 클립 대신 기기 음성으로 읽는다 (다시 빌드, 배포, 서비스 워커 업데이트, 앱 스토어 출시 모두 필요 없다). 발표 화면과 All lessons 도 소리를 처음 준비할 때 저장된 값을 읽고 새 값을 받아 오며 (15분이 지났을 때, 식별 정보 없는 `GET /api/config`), 계속 켜 둔 발표 화면도 그 뒤 소리를 낼 때마다 15분이 지났으면 다시 받아 온다. 새 값을 받기 전 아주 짧은 순간 (저장된 값을 읽는 중) 에는 클립 대신 기기 음성이 나온다.
 4. 원격 설정은 줄이기만 한다: 빌드에서 뺀 팩은 표가 켜져 있어도 재생되지 않는다. 몇 시간 넘게 끌 때는 `hangul-route-app` → Settings → Build → Variables 에 `EXPO_PUBLIC_AUDIO_CLIP_PACKS` 를 켜 둘 팩만 쉼표로 적어 넣고 (예: `jamo-wb,stage1`; `none` 이면 모든 팩 꺼짐) **Retry deployment**, 또는 `EXPO_PUBLIC_AUDIO_CLIPS=false` 로 모든 클립을 끈다. 다시 켤 때는 변수를 지우고 Retry deployment. iOS 앱에는 새 Xcode 빌드로만 닿으므로 iOS 는 위 1-3 이 바로 끄는 방법이다.
 5. 끄는 것은 클립뿐이다: 화면과 글자, 기기 음성은 그대로이고, 진도는 바뀌지 않는다. 클립이 얼마나 재생되는지는 `audio.source_summary` (세션마다 한 번, 횟수만) 로 본다.
 

@@ -1,4 +1,4 @@
-import { LectureDeckSchema, discoverItemTexts, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
+import { LectureDeckSchema, discoverItemTexts, sayRef, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeById, episodesAll, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
@@ -52,6 +52,19 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       expect(spec).toEqual({ text: first.spokenKo, audioRef: first.audioRef, kind: 'sound', source: 'presenter-check' });
       // Still checking the voices, with recordings: the row reads clips too.
       expect(soundCheckSpec({ ...UNKNOWN_CAPABILITY, clips: true }, (ref) => ref !== undefined && bundled.has(ref))).toEqual(spec);
+    });
+
+    it('the greeting through its say clip when that is bundled (AMENDMENTS-AUDIO-CLIPS AC-B7): it plays what the voice would', () => {
+      const greetingClip = sayRef(SOUND_CHECK_WORD.ko);
+      const first = jamoAll.find((j) => j.audioRef !== undefined)!;
+      const bundled = new Set([greetingClip, first.audioRef!]);
+      expect(soundCheckSpec(clipsOnly, (ref) => ref !== undefined && bundled.has(ref))).toEqual(greeting);
+    });
+
+    it('a letter whose say clip alone is bundled counts too', () => {
+      const first = jamoAll.find((j) => j.audioRef !== undefined)!;
+      const spec = soundCheckSpec(clipsOnly, (ref) => ref === sayRef(first.spokenKo!));
+      expect(spec).toEqual({ text: first.spokenKo, audioRef: first.audioRef, kind: 'sound', source: 'presenter-check' });
     });
 
     it('a later letter when only its recording is bundled; the greeting when none is (it then reports did not play)', () => {

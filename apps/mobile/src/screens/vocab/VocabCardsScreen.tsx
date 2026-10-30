@@ -65,7 +65,7 @@ import { emptyVocab, vocabOf } from '../../logic/vocab/progress';
 import type { VocabQuestion } from '../../logic/vocab/question-builder';
 import { optionCountFor } from '../../logic/vocab/topic-view';
 import type { RootStackParamList } from '../../navigation/types';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
@@ -395,7 +395,7 @@ function CardsPhase({
 
   // The voice (T6) through the F-AUDIO-004 prompt slot: the Korean is already on the card, so the slot only says why
   // there is no sound and offers its one action.
-  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClip(item.audioRef), textOnScreen: true });
+  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor({ text: item.spokenKo ?? item.ko, audioRef: item.audioRef }), textOnScreen: true });
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);

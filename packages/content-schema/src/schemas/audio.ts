@@ -1,11 +1,15 @@
 import { z } from 'zod';
+import { AUDIO_PACKS } from '../audio/packs';
+
+export { AUDIO_PACKS, type AudioPack } from '../audio/packs';
 
 /**
  * Audio schemas (F-AUDIO-004 §3.2, §3.7).
  * `AudioRefSchema` is the one grammar for a bundled clip path: `audio/<kind>/<slug>.mp3`. The `say` group holds the
- * text-keyed clips, `audio/say/<sayKey>.mp3` (AMENDMENTS-AUDIO-CLIPS AC-B4, `audio/say-key.ts`).
+ * text-keyed clips, `audio/say/<sayKey>.mp3` (AMENDMENTS-AUDIO-CLIPS AC-B4, `audio/say-key.ts`): exactly 16 lower-case
+ * hex characters and no folder, the names `isSayRef` recognizes, so a malformed say file fails here and in the scripts.
  */
-export const AUDIO_REF_PATTERN = /^audio\/(jamo|vocab|story|card|dialogue|say)\/[a-z0-9][a-z0-9/-]*\.mp3$/;
+export const AUDIO_REF_PATTERN = /^audio\/(?:(?:jamo|vocab|story|card|dialogue)\/[a-z0-9][a-z0-9/-]*|say\/[0-9a-f]{16})\.mp3$/;
 export const AudioRefSchema = z.string().regex(AUDIO_REF_PATTERN);
 export type AudioRef = z.infer<typeof AudioRefSchema>;
 
@@ -18,28 +22,8 @@ export type SpeechLang = z.infer<typeof SpeechLangSchema>;
 export const DeviceAudioPrefsSchema = z.object({ muted: z.boolean().default(false) });
 export type DeviceAudioPrefs = z.infer<typeof DeviceAudioPrefsSchema>;
 
-/**
- * The clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6), the one list: the unit a pack PR ships, the build ceiling
- * (`flags.audioClipPacks`, `EXPO_PUBLIC_AUDIO_CLIP_PACKS`) and the runtime switch `audioPack.<pack>` (AC-B8) name.
- * Order is the AC-B6 table's: a text used by two packs belongs to the first.
- */
-export const AUDIO_PACKS = [
-  'jamo-s1',
-  'jamo-wb',
-  'stage1',
-  'placement',
-  'stage2',
-  'stage3',
-  'stage4',
-  'stage6',
-  'stage7',
-  'vocab',
-  'stories',
-  'review',
-  'cards',
-] as const;
+/** The clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6): `AUDIO_PACKS`, kept in the leaf module `audio/packs.ts`. */
 export const AudioPackSchema = z.enum(AUDIO_PACKS);
-export type AudioPack = z.infer<typeof AudioPackSchema>;
 
 /** Where a prompt's audio came from (AC-B7): the record's clip, the text-keyed clip, the device voice, or the text. */
 export const AUDIO_SOURCES = ['clip', 'say', 'tts', 'text'] as const;

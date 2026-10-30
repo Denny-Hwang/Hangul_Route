@@ -125,7 +125,8 @@ describe('no direct speak from screens', () => {
 
   it('Listen & Pick plays through a prompt slot and shows the text panel (the prompt as text, why, the one action)', () => {
     const file = files.find((f) => f.rel === 'minigames/ListenPickGame.tsx')!;
-    expect(file.source).toMatch(/usePromptSlot\(\{\s*source: LISTEN_PICK_AUDIO_SOURCE,\s*hasClip: hasClip\(/);
+    // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
+    expect(file.source).toMatch(/usePromptSlot\(\{\s*source: LISTEN_PICK_AUDIO_SOURCE,\s*hasClip: slotRound !== undefined && hasClipFor\(listenPickSpeech\(slotRound\)\)/);
     expect(file.source).toMatch(/<PromptPanel\b[\s\S]*?testID="listen-pick-prompt"[\s\S]*?\/>/);
     expect(file.source).not.toMatch(/void playPrompt\(/);
   });
@@ -158,10 +159,18 @@ describe('no direct speak from screens', () => {
     },
   );
 
-  it('the vocabulary question view passes hasClip and its per-mode source to its prompt slot', () => {
+  it('the vocabulary question view passes hasClip (its word\'s text and clip) and its per-mode source to its prompt slot', () => {
     const file = files.find((f) => f.rel === 'vocab/VocabQuestionView.tsx');
-    expect(audioImports(file!.source)).toContain('hasClip');
-    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: QUESTION_AUDIO_SOURCE\[mode\],\s*hasClip: hasClip\(/);
+    expect(audioImports(file!.source)).toContain('hasClipFor');
+    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: QUESTION_AUDIO_SOURCE\[mode\],\s*hasClip: question\.prompt\.ko !== undefined && hasClipFor\(\{ text: question\.prompt\.spokenKo \?\? question\.prompt\.ko, audioRef: question\.prompt\.audioRef \}\)/);
+  });
+
+  it('Discover and the vocabulary cards ask hasClipFor with what plays, so a say clip of the text counts (AMENDMENTS-AUDIO-CLIPS AC-B7)', () => {
+    const discover = files.find((f) => f.rel === 'quest/DiscoverStep.tsx')!;
+    expect(audioImports(discover.source)).toContain('hasClipFor');
+    expect(discover.source).toMatch(/playable\.every\(\(a\) => hasClipFor\(a\.spec\)\)/);
+    const cards = files.find((f) => f.rel === 'vocab/VocabCardsScreen.tsx')!;
+    expect(cards.source).toMatch(/hasClip: hasClipFor\(\{ text: item\.spokenKo \?\? item\.ko, audioRef: item\.audioRef \}\)/);
   });
 
   it('Match Sound passes hasClip to its prompt slot', () => {
@@ -178,11 +187,13 @@ describe('no direct speak from screens', () => {
   it('Sentence Builder passes hasClip for the current round to its prompt slot', () => {
     const file = files.find((f) => f.rel === 'minigames/SentenceBuilderGame.tsx');
     expect(file).toBeDefined();
-    expect(audioImports(file!.source)).toContain('hasClip');
+    expect(audioImports(file!.source)).toContain('hasClipFor');
     expect(file!.source).toMatch(
-      /usePromptSlot\(\{\s*source: 'sentence-builder',\s*hasClip: hasClip\(rounds\[state\.roundIdx\]\?\.sentence\.audioRef\),\s*textOnScreen: true\s*\}\)/,
+      /usePromptSlot\(\{\s*source: 'sentence-builder',\s*hasClip: slotRound !== undefined && hasClipFor\(sentenceSpeech\(slotRound\.sentence\)\),\s*textOnScreen: true\s*\}\)/,
     );
     expect(audioImports(file!.source)).toContain('warmClips');
-    expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => r\.sentence\)\)\)/);
+    expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => sentenceSpeech\(r\.sentence\)\)\)\)/);
+    // What the slot asks about is what plays.
+    expect(file!.source).toMatch(/playPrompt\(sentenceSpeech\(sentence\)\)/);
   });
 });

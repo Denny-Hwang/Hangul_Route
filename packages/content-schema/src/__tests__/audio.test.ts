@@ -38,6 +38,12 @@ describe('AudioRefSchema (F-AUDIO-004 §3.2)', () => {
     'audio/say/0123456789abcdef.wav',
     'audio/say/0123456789abcdef.ogg',
     'audio/says/0123456789abcdef.mp3',
+    // A say clip is named by its 16-hex key only (isSayRef), never a slug or a folder.
+    'audio/say/foo.mp3',
+    'audio/say/0123456789ABCDEF.mp3',
+    'audio/say/0123456789abcde.mp3',
+    'audio/say/0123456789abcdef0.mp3',
+    'audio/say/ab/0123456789abcdef.mp3',
     'audio/jamo/-giyeok.mp3',
     '/audio/jamo/giyeok.mp3',
     '',
