@@ -9,6 +9,7 @@ import {
   drawProp,
   presenter,
   radii,
+  realiaBaseKind,
   realiaGoodsRef,
   realiaLineLook,
   realiaPaper,
@@ -18,12 +19,14 @@ import {
   KOREAN_LINE_BREAK,
   type DrawItem,
 } from '@hangul-route/design-system';
+import type { RealiaKindDressing, RealiaKindLook } from '@hangul-route/design-system/src/components/RealiaSheet/kinds-style';
 import type { ReactElement, ReactNode, ComponentType } from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import { Svg, Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import type { RealiaSheetView, SheetText } from '../../../logic/lecture/build-steps';
 import { sheetRoomy } from '../../../logic/lecture/slide-view';
 import { units } from '../../../logic/lecture/stage-constants';
+import { useRealiaKinds } from '../../minigames/realia-kinds-entry';
 import { STAGE_BORDER_MIN } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 
@@ -58,6 +61,12 @@ export interface SheetAnswer {
   shown: boolean;
 }
 
+/** The realia kinds chunk: the CM-47 looks and dressings, reached through `useRealiaKinds`. */
+type RealiaKinds = NonNullable<ReturnType<typeof useRealiaKinds>>;
+
+/** A top dressing taller than a strip (a map's park) draws taller on the stage too. */
+const REALIA_STRIP_UNITS = spacing.xxxl;
+
 const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: Path, polygon: Polygon } as const;
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
@@ -65,8 +74,14 @@ export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: {
   const { unit } = usePresenterView();
   const mark = (id: string): Mark | undefined => (answer === undefined ? undefined : answer.shown && answer.entryId === id ? 'found' : 'none');
   const roomy = sheetRoomy(sheet);
-  const paper = realiaPaper(sheet.kind);
-  const dressing = REALIA_DRESSINGS[sheet.kind];
+  // A CM-47 kind is drawn from the realia kinds chunk once it is in; before (or if it cannot load), as the plain sheet.
+  const kind = realiaBaseKind(sheet.kind);
+  const kinds = useRealiaKinds(kind !== sheet.kind);
+  if (kinds !== null && kind !== sheet.kind) {
+    return <KindSheet sheet={sheet} kinds={kinds} look={kinds.REALIA_KIND_LOOKS[sheet.kind as keyof typeof kinds.REALIA_KIND_LOOKS]} rom={rom} width={width} mark={mark} roomy={roomy} tight={tight} />;
+  }
+  const paper = realiaPaper(kind);
+  const dressing = REALIA_DRESSINGS[kind];
   const line = Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base));
   const box: ViewStyle = { backgroundColor: paper.backgroundColor, borderColor: paper.borderColor, borderWidth: line, borderRadius: units(unit, paper.borderRadius) };
   const strip = units(unit, tight ? spacing.sm : spacing.xl);
@@ -88,7 +103,7 @@ export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: {
   const title = sheet.heading ? <Heading text={sheet.heading} rom={rom} centered={sheet.kind !== 'ticket'} /> : null;
 
   let body: ReactElement;
-  switch (sheet.kind) {
+  switch (kind) {
     case 'ticket':
       body = (
         <View style={{ ...box, flexDirection: 'row', overflow: 'hidden' }}>
@@ -216,7 +231,7 @@ function Rom({ text, on, align = 'flex-start' }: { text: string; on: boolean; al
 }
 
 /** One line of the sheet: its text, a dotted leader and its value at the end of the row; on a price card, stacked and centred. */
-function SheetLine({ text, value, rom, roomy, stack = false }: { text: SheetText; value?: SheetText | undefined; rom: boolean; roomy: boolean; stack?: boolean }): ReactElement {
+function SheetLine({ text, value, rom, roomy, stack = false, leader = true }: { text: SheetText; value?: SheetText | undefined; rom: boolean; roomy: boolean; stack?: boolean; leader?: boolean }): ReactElement {
   const { unit } = usePresenterView();
   if (stack) {
     return (
@@ -231,7 +246,7 @@ function SheetLine({ text, value, rom, roomy, stack = false }: { text: SheetText
       <Piece text={text} rom={rom} roomy={roomy} align="flex-start" shrink={value === undefined} />
       {value ? (
         <>
-          <View {...hidden} style={{ flexGrow: 1, minWidth: units(unit, spacing.lg), alignSelf: 'center', borderBottomWidth: Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base)), borderStyle: 'dotted', borderColor: colors.border.strong }} />
+          <View {...hidden} style={{ flexGrow: 1, minWidth: units(unit, spacing.lg), alignSelf: 'center', borderBottomWidth: leader ? Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base)) : 0, borderStyle: 'dotted', borderColor: colors.border.strong }} />
           <Piece text={value} rom={rom} roomy={roomy} align="flex-end" />
         </>
       ) : null}
@@ -266,8 +281,8 @@ function Board({ dir, box, line, children }: { dir?: 'left' | 'right' | undefine
 }
 
 /** One dressing prop, stretched to its box or kept at its aspect ratio (RealiaSheet's `Dressing`, in stage units). */
-function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): ReactElement | null {
-  const drawn = drawProp(refId, REALIA_REGISTRY);
+function Dressing({ refId, height, stretch, width, centered = false, registry = REALIA_REGISTRY }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean; registry?: typeof REALIA_REGISTRY }): ReactElement | null {
+  const drawn = drawProp(refId, registry);
   if (!drawn) return null;
   return (
     <View {...hidden} style={{ height, width: width ?? '100%' }}>
@@ -318,6 +333,163 @@ function Marked({ mark, corner = false, children }: { mark: Mark | undefined; co
         </View>
       ) : null}
       <View style={{ flex: 1, minWidth: 0 }}>{children}</View>
+    </View>
+  );
+}
+
+/**
+ * A sheet of one of the eight F-CURR-002 row CM-47 kinds on the stage (slide-realia.md "The CM-47 kinds"): the anatomy of
+ * `RealiaKindSheet` (rows, tiles, a map legend, a poster) with its looks (`REALIA_KIND_LOOKS`) and dressings
+ * (`REALIA_KIND_REGISTRY`), in stage units at the presenter's text sizes, the lines as text. `tight` changes what it
+ * changes on the G-2 kinds: the top strip, the sheet's top and bottom padding, the gap after the title and between lines.
+ */
+function KindSheet({
+  sheet,
+  kinds,
+  look,
+  rom,
+  width,
+  mark,
+  roomy,
+  tight,
+}: {
+  sheet: RealiaSheetView;
+  kinds: RealiaKinds;
+  look: RealiaKindLook;
+  rom: boolean;
+  width: number;
+  mark: (id: string) => Mark | undefined;
+  roomy: boolean;
+  tight: boolean;
+}): ReactElement {
+  const { unit } = usePresenterView();
+  const size = useStageText();
+  // A receipt's strip widens with its text as the sheet does (`sheetUnits`): on a small phone the 18 px floor draws the
+  // text bigger than its units, and a cap in plain units would wrap its lines more than the other kinds'.
+  const textScale = Math.max(1, size(presenter.size.caption) / (unit * presenter.size.caption));
+  const maxWidth = look.maxWidth === undefined ? undefined : units(unit, Math.round(look.maxWidth * textScale));
+  const line = Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base));
+  const box: ViewStyle = {
+    backgroundColor: look.paper.backgroundColor,
+    borderColor: look.paper.borderColor,
+    borderWidth: Math.max(STAGE_BORDER_MIN, units(unit, look.paper.borderWidth)),
+    borderRadius: units(unit, look.paper.borderRadius),
+    paddingHorizontal: units(unit, spacing.md),
+    paddingVertical: units(unit, tight ? spacing.xxs : spacing.md),
+    gap: units(unit, tight ? spacing.xxs : spacing.sm),
+  };
+  const rowGap = tight ? 0 : units(unit, spacing.xs);
+  const heading = sheet.heading ? <Heading text={sheet.heading} rom={rom} centered={look.centeredTitle} /> : null;
+  const entry = (e: RealiaSheetView['entries'][number], stack: boolean, corner = false): ReactElement => (
+    <Marked mark={mark(e.id)} corner={corner}>
+      <SheetLine text={e.text} value={e.value} rom={rom} roomy={stack || roomy} stack={stack} leader={look.leader} />
+    </Marked>
+  );
+
+  let body: ReactElement;
+  switch (look.anatomy) {
+    case 'tiles':
+      body = (
+        <View style={box}>
+          {heading}
+          <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, spacing.sm) }}>
+            {sheet.entries.map((e) => (
+              <View
+                role="listitem"
+                key={e.id}
+                style={{
+                  flexGrow: 1,
+                  flexBasis: 0,
+                  minWidth: units(unit, look.tileMin ?? touchTarget.hero),
+                  backgroundColor: kinds.REALIA_TILE.backgroundColor,
+                  borderColor: kinds.REALIA_TILE.borderColor,
+                  borderWidth: line,
+                  borderRadius: units(unit, kinds.REALIA_TILE.borderRadius),
+                  padding: units(unit, spacing.xs),
+                }}
+              >
+                {entry(e, true, true)}
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+      break;
+    case 'poster':
+      body = (
+        <View style={box}>
+          {heading}
+          <View role="list" style={{ gap: rowGap }}>
+            {sheet.entries.map((e) => (
+              <View role="listitem" key={e.id}>
+                {entry(e, true)}
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+      break;
+    case 'legend':
+      body = (
+        <View style={box}>
+          {heading}
+          <View role="list" style={{ gap: rowGap }}>
+            {sheet.entries.map((e) => (
+              <View role="listitem" key={e.id} style={{ flexDirection: 'row', alignItems: 'center', columnGap: units(unit, spacing.xs) }}>
+                <View {...hidden}>
+                  <Icon name="pin" size={units(unit, spacing.xl)} color={colors.text.secondary} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>{entry(e, false)}</View>
+              </View>
+            ))}
+          </View>
+        </View>
+      );
+      break;
+    default:
+      // Rows: a recipe card, a receipt, a label (its title over a thick rule), a timetable.
+      body = (
+        <View style={box}>
+          {heading && sheet.kind === 'label' ? (
+            <View style={{ borderBottomWidth: Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.thick)), borderColor: look.paper.borderColor }}>{heading}</View>
+          ) : (
+            heading
+          )}
+          <View role="list">
+            {sheet.entries.map((e, i) => {
+              const rule = kinds.realiaRowRule(look, i);
+              return (
+                <View
+                  role="listitem"
+                  key={e.id}
+                  style={{ borderTopWidth: rule.borderTopWidth > 0 ? Math.max(STAGE_BORDER_MIN, units(unit, rule.borderTopWidth)) : 0, borderStyle: rule.borderStyle, borderColor: rule.borderColor, paddingVertical: rowGap / 2 }}
+                >
+                  {entry(e, false)}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      );
+  }
+  const strip = (d: RealiaKindDressing): ReactElement => (
+    <View style={d.band ? { backgroundColor: d.band } : undefined}>
+      <Dressing
+        refId={d.ref}
+        height={units(unit, d.height > REALIA_STRIP_UNITS ? (tight ? spacing.xl : spacing.jumbo) : tight ? spacing.sm : spacing.xl)}
+        stretch={d.stretch}
+        centered={d.centered ?? false}
+        registry={kinds.REALIA_KIND_REGISTRY}
+      />
+    </View>
+  );
+  return (
+    <View testID="presenter-realia-sheet" role="group" aria-label={sheet.alt} accessibilityLabel={sheet.alt} style={{ width }}>
+      <View testID={`presenter-realia-kind-${sheet.kind}`} style={{ width: '100%', maxWidth, alignSelf: 'center' }}>
+        {look.top ? strip(look.top) : null}
+        {body}
+        {look.bottom ? <Dressing refId={look.bottom.ref} height={units(unit, spacing.sm)} stretch registry={kinds.REALIA_KIND_REGISTRY} /> : null}
+      </View>
     </View>
   );
 }

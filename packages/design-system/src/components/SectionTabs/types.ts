@@ -2,6 +2,8 @@ export interface SectionTabItem<T extends string> {
   id: T;
   /** Already-localised tab label. */
   label: string;
+  /** Already-localised spoken name, when the visible label is short ("Vol 1" read as "Volume 1"); `label` otherwise. */
+  accessibilityLabel?: string;
 }
 
 export interface SectionTabsProps<T extends string> {

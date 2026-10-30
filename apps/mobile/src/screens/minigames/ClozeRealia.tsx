@@ -1,11 +1,11 @@
 import type { Realia } from '@hangul-route/content-schema';
-import { RealiaSheet } from '@hangul-route/design-system';
 import { useMemo } from 'react';
 import type { ReactElement } from 'react';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { lineSpeech, lineViews, sheetKind, sheetSummary, startRealiaRead, titleView } from '../../logic/realia-read-flow';
 import { playPrompt } from '../../platform/audio';
+import { RealiaSheetView } from './realia-kinds-entry';
 
 /**
  * The card a Cloze Pick value gap is read from (F-CURR-002 row CM-30; design/wireframes/minigame/cloze-pick.md,
@@ -27,7 +27,7 @@ export function ClozeRealia({ realia, testID }: { realia: Realia; testID?: strin
     void playPrompt({ text, kind: 'word', source: 'cloze-pick', ...(audioRef !== undefined ? { audioRef } : {}) });
   };
   return (
-    <RealiaSheet
+    <RealiaSheetView
       testID={testID}
       kind={sheetKind(realia)}
       title={title ? { ko: title.ko, romanization: title.romanization } : undefined}
