@@ -467,7 +467,8 @@ describe('story-time', () => {
     expect(levels.every((n) => n !== undefined && n <= 2)).toBe(true);
     expect(storiesOf(console)[0]).toBe('story:sillok-mountain-archives');
     // A class past the end of Stage 1: the quest is in Stage 2, the bound stays Stage 1 + 1.
-    const past = classPosition([{ journey: journey('stage1', [['stage1', 15, 0]]) }], CATALOG);
+    // Stage 1 has 16 lessons since F-CURR-002 row CM-33 (the letter-shapes quest closes it).
+    const past = classPosition([{ journey: journey('stage1', [['stage1', 16, 0]]) }], CATALOG);
     expect(past).toEqual({ questId: 'quest:stage2-letters-q1', stage: 'stage1' });
     const all = resolvePreset('story-time', 30, { catalog: CATALOG, position: past, shown: { questIds: [], storyIds: ready.filter((st) => st.recommendedStage <= 2).map((st) => st.id) } });
     expect(all.fallback).toBe('restart');
@@ -716,7 +717,9 @@ describe('classPosition (N2)', () => {
 
   it('a missing entry counts 0; past the end of the stage gives the next stage; past the end of the route gives null', () => {
     expect(at([{ journey: journey('stage4', [['stage3', 15, 0]]) }])).toBe('quest:stage4-letters-q1');
-    expect(at([{ journey: journey('stage1', [['stage1', 15, 0]]) }])).toBe('quest:stage2-letters-q1');
+    // Stage 1 has 16 lessons since F-CURR-002 row CM-33: 15 done leaves its last, the letter-shapes quest.
+    expect(at([{ journey: journey('stage1', [['stage1', 15, 0]]) }])).toBe('quest:stage1-crafts-q4');
+    expect(at([{ journey: journey('stage1', [['stage1', 16, 0]]) }])).toBe('quest:stage2-letters-q1');
     expect(at([{ journey: journey('stage7', [['stage7', 15, 0]]) }])).toBeNull();
   });
 

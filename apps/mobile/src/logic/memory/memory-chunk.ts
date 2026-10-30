@@ -42,10 +42,14 @@ export const MEMORY_CHUNK = 'memory-chunk:runtime';
 /** The review items of this build, loaded once (the lazy `review-items` chunk of row CM-10). */
 export const reviewItemStore = createReviewItemStore(reviewItemsChunk);
 
-/** Row CM-32: Syllable Build joins the review rounds at the produce rung while `game.syllable-build` is on for the profile. */
+/** Rows CM-32 and CM-33: Syllable Build and Match Shape join the review rounds at the produce rung while their switches are on for the profile. */
 const SYLLABLE_BUILD: GameFormats = new Set(['syllable-build']);
+const MATCH_SHAPE: GameFormats = new Set(['match-shape']);
+const BOTH_GAMES: GameFormats = new Set(['syllable-build', 'match-shape']);
 function reviewGames(profileId: string): GameFormats {
-  return currFlagOn('game.syllable-build', profileId) ? SYLLABLE_BUILD : NO_GAME_FORMATS;
+  const build = currFlagOn('game.syllable-build', profileId);
+  const shape = currFlagOn('game.match-shape', profileId);
+  return build && shape ? BOTH_GAMES : build ? SYLLABLE_BUILD : shape ? MATCH_SHAPE : NO_GAME_FORMATS;
 }
 
 let runtime: MemoryRuntime | null = null;

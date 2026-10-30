@@ -18,9 +18,14 @@ const charOf = new Map(jamoAll.map((j) => [j.id, j.char]));
  * letter (one compatibility jamo, the shape `needsPractice` consumers read).
  */
 describe('questJamo: the symbols each Stage 1 quest teaches', () => {
-  it('lists every Stage 1 quest: all 15, so the summary counts 15', () => {
-    expect(Object.keys(questJamo).sort()).toEqual([...stage1QuestIds].sort());
+  it('lists every Stage 1 quest; the summary counts the 15 the stage needs, not the optional CM-33 addition', () => {
+    // The Stage 1 addition (Play & Crafts quest 4, F-CURR-002 section 4.2) is optional: a learner who finished the
+    // 15 before it shipped still reads 15 of 15 in the reports.
+    expect(Object.keys(questJamo).sort()).toEqual([...stage1QuestIds, 'quest:stage1-crafts-q4'].sort());
     expect(stage1QuestIds).toHaveLength(15);
+    expect(stage1QuestIds).not.toContain('quest:stage1-crafts-q4');
+    // The addition teaches no new symbol, so it credits none.
+    expect(questJamo['quest:stage1-crafts-q4']).toEqual([]);
   });
 
   it('credits letters q1-q3 with their Discover symbols only', () => {
@@ -31,7 +36,8 @@ describe('questJamo: the symbols each Stage 1 quest teaches', () => {
 
   it('credits every Stage 1 quest with exactly its Discover symbols, a final as its letter', () => {
     for (const quest of STAGE1_QUESTS) {
-      expect(quest.steps.some((s) => s.kind === 'discover'), quest.id).toBe(true);
+      // Play & Crafts quest 4 (row CM-33) teaches through its Match Shape rounds and has no Discover step.
+      if (quest.id !== 'quest:stage1-crafts-q4') expect(quest.steps.some((s) => s.kind === 'discover'), quest.id).toBe(true);
       expect(questJamo[quest.id], quest.id).toEqual([...new Set(questTeaches(quest).map((id) => charOf.get(id)))]);
     }
     expect(questJamo['quest:stage1-rites-q1']).toEqual(['ㄴ', 'ㄹ']);

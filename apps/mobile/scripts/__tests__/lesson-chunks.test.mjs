@@ -186,6 +186,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' },
       { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
       { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
+      { name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([{ name: 'scene-food-market', marker: 'scene-chunk:food-market' }]);
@@ -238,6 +239,12 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./hidden-heritage-chunk')");
     expect(read('src/screens/minigames/scenes/scene-food-market.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[0].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-food-market')");
+    // Row CM-32: the Syllable Build chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/syllable-build-chunk.tsx')).toContain(`export const SYLLABLE_BUILD_CHUNK = '${SCREEN_CHUNKS[11].marker}';`);
+    expect(read('src/screens/minigames/syllable-build-entry.tsx')).toContain("import('./syllable-build-chunk')");
+    // Row CM-33: the Match Shape chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/match-shape-chunk.tsx')).toContain(`export const MATCH_SHAPE_CHUNK = '${SCREEN_CHUNKS[12].marker}';`);
+    expect(read('src/screens/minigames/match-shape-entry.tsx')).toContain("import('./match-shape-chunk')");
   });
 
   it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
@@ -251,9 +258,6 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(precacheBudgetProblems(report)).toEqual([]);
     const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: text.length - 1 };
     expect(precacheBudgetProblems(report, tight)).toEqual([expect.stringMatching(/^the hidden heritage scene bundle .*raise PRECACHE_BUDGET\.sceneChunkRaw/)]);
-    // Row CM-32: the Syllable Build chunk, reached only through the entry's literal import().
-    expect(read('src/screens/minigames/syllable-build-chunk.tsx')).toContain(`export const SYLLABLE_BUILD_CHUNK = '${SCREEN_CHUNKS[11].marker}';`);
-    expect(read('src/screens/minigames/syllable-build-entry.tsx')).toContain("import('./syllable-build-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -325,6 +329,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'culture-tip-chunk has no web bundle: the chunk is missing from the build',
       'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
       'syllable-build-chunk has no web bundle: the chunk is missing from the build',
+      'match-shape-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

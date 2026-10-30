@@ -728,6 +728,14 @@ export const SyllableBuildRoundSchema = z
     for (const { path, message } of syllableBuildIssues(round)) ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
   });
 export type SyllableBuildRound = z.infer<typeof SyllableBuildRoundSchema>;
+/**
+ * Match Shape (F-CURR-002 section 7.1 F4, row CM-33): its round schema is `./match-shape.ts`
+ * (`@hangul-route/content-schema/match-shape`), outside the barrel and `RoundSchema`, because its rounds are Stage 1
+ * TypeScript rows (section 4.2), never lesson JSON, so the start bundle carries only the type.
+ */
+export type { MatchShapeRound } from './match-shape';
+/** The look-alike letters a pair round sets against each other (7.1 F4), each letter's first; review asks these. */
+export const SHAPE_LOOK_ALIKES: Readonly<Record<string, string>> = { ㅂ: 'ㅍ', ㅍ: 'ㅂ', ㅓ: 'ㅗ', ㅗ: 'ㅓ', ㅏ: 'ㅓ', ㄹ: 'ㄷ', ㄷ: 'ㄹ' };
 
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),

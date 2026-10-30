@@ -317,6 +317,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // literal `import()` of `src/screens/minigames/syllable-build-entry.tsx`); the Daily Review chunk reaches its round at
   // run time through the entry.
   Object.freeze({ name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' }),
+  // F-CURR-002 row CM-33: Match Shape (the quest game, its board and origin pictures, the facts' sources, the review
+  // round at the produce rung and the Read Pick fallback; `src/screens/minigames/match-shape-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
+  Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
 ]);
 
 /**

@@ -42,7 +42,7 @@ export interface DailyReviewDeps {
   /** `dailyReview` and `memoryRecord` for the profile (a learner, not a grown-up persona). */
   on(profileId: string): boolean;
   visibility(profileId: string): SourceVisibility;
-  /** Row CM-32: the section 7.1 formats switched on for the profile (`game.syllable-build`); none when absent. */
+  /** Rows CM-32 and CM-33: the section 7.1 formats switched on for the profile (`game.syllable-build`, `game.match-shape`); none when absent. */
   games?(profileId: string): GameFormats;
   /** A Korean voice and the sound on (F-AUDIO-004): without it the ladder has two rungs. */
   voice(): boolean;
@@ -113,9 +113,11 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       if (file === null) return { kind: 'unreadable' };
       const today = localDay(now);
       const vocab = deps.vocab(profileId);
+      const states = engineStates(file.rows, vocab ? vocabOf(vocab) : undefined);
       const ctx: EngineContext = {
-        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }),
-        states: engineStates(file.rows, vocab ? vocabOf(vocab) : undefined),
+        // Row CM-33: a pair round only when this learner met the letter's look-alike too.
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }, states),
+        states,
         today,
         voice: deps.voice(),
         seed: `${profileId}|${today}`,

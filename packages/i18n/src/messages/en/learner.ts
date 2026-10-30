@@ -1018,6 +1018,19 @@ export const learner = {
       lookHere: 'This one goes here.',
       built: 'You built it!',
     },
+    /**
+     * Match Shape (F-CURR-002 section 7.1 F4, row CM-33): where a letter's shape comes from, and look-alike letters.
+     * The letters, their sounds and the sourced lines are taught content the screen draws, never inside these strings.
+     */
+    matchShape: {
+      heading: { origin: 'Which letter comes from this shape?', pair: 'Tap every copy of this letter' },
+      missOrigin: 'Look at the picture again. Which letter has that shape?',
+      missPair: 'Look at the strokes again.',
+      found: 'Found it!',
+      continue: { cta: 'Continue' },
+      /** Read Pick, the round played while Match Shape is switched off: see the letter, pick its sound. */
+      readPick: { heading: 'Which sound does this letter make?', miss: 'Look at the letter again.' },
+    },
   },
 
   /**

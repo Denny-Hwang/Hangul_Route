@@ -90,6 +90,13 @@ describe('game.role-play off: every quest renders (sections 12.2 and 14, row CM-
     for (const [kind, [questId, stepIndex]] of byKind) {
       const where = `${kind} (${questId} step ${stepIndex})`;
       const r = await open(questId, stepIndex);
+      // A step that loads its game's chunk before it draws (Match Shape, row CM-33) waits a moment, then draws its game or
+      // its fallback; a step still waiting after that fails below.
+      for (let i = 0; i < 100 && byTestId(r.root, 'lesson-waiting').length > 0; i++) {
+        await act(async () => {
+          await new Promise((done) => setTimeout(done, 20));
+        });
+      }
       const shown = screenTexts(r.root);
       expect(shown, where).not.toContain(copy.comingSoon);
       expect(shown, where).not.toContain(copy.notFound);

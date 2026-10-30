@@ -88,6 +88,9 @@ export const OVERLAY_FIELDS = Object.freeze({
     "hiddenHeritage.rounds.<roundId>.alt",
     "hiddenHeritage.rounds.<roundId>.targets.<thing>.word.gloss",
     "hiddenHeritage.rounds.<roundId>.others.<thing>.word.gloss",
+    // F-CURR-002 row CM-33: the Stage 1 additions' Match Shape lines.
+    "matchShape.rounds.<roundId>.note",
+    "matchShape.rounds.<roundId>.diffNote",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],

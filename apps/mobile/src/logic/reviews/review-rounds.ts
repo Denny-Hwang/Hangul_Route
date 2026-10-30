@@ -1,7 +1,7 @@
-import { blockParts, REPRESENTATIVE_FINALS, type SyllableZone } from '@hangul-route/content-schema';
+import { blockParts, REPRESENTATIVE_FINALS, SHAPE_LOOK_ALIKES, type SyllableZone } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { CLOZE_GAP } from '@hangul-route/content-schema';
-import { jitter, type EngineContext, type ReviewQuestion } from './engine';
+import { jitter, type EngineContext, type EngineStates, type ReviewQuestion } from './engine';
 
 /**
  * The rounds of a review session (F-CURR-002 sections 4.3 and 4.5, row CM-14): what a Daily Review or
@@ -19,8 +19,8 @@ import { jitter, type EngineContext, type ReviewQuestion } from './engine';
  * The formats drawn here are the ones whose rounds have shipped (`SURFACE_FORMATS`); the new formats of
  * section 7.1 join with their own rows behind `game.<kind>`: Dictation (Type Hangul `hear`, row CM-31) when
  * `game.type-hangul-hear` is on (`SurfaceOptions.dictation`), Cloze Pick (row CM-30) when `game.cloze-pick` is on
- * (`SurfaceOptions.clozePick`), Syllable Build (row CM-32) when `game.syllable-build` is on (`SurfaceOptions.games`),
- * and Match Shape later.
+ * (`SurfaceOptions.clozePick`), Syllable Build (row CM-32) when `game.syllable-build` is on and Match Shape (row
+ * CM-33, as a `shape` round) when `game.match-shape` is on (both in `SurfaceOptions.games`).
  * `surfaceIndex` gives the engine the item index with only these formats, so an item it cannot ask that way falls
  * back to another way, or to the read rung, inside the engine, never here. The engine itself keeps Dictation to an
  * item that passes `dictation-unambiguous` (no homophone, no sound change) on a device with a voice.
@@ -33,8 +33,8 @@ export const CLOZE_SURFACE_FORMATS: ReadonlySet<ReviewFormat> = new Set<ReviewFo
 
 /**
  * The section 7.1 formats a surface may add while their `game.<kind>` switch is on (row CM-32: Syllable Build, the
- * produce rung of `sym`, `syl` and one-block `lex` items). Off, the engine never picks them, so it asks the item
- * another way or at the read rung.
+ * produce rung of `sym`, `syl` and one-block `lex` items; row CM-33: Match Shape, the produce rung of a `sym` item with
+ * a look-alike). Off, the engine never picks them, so it asks the item another way or at the read rung.
  */
 export type GameFormats = ReadonlySet<ReviewFormat>;
 export const NO_GAME_FORMATS: GameFormats = new Set<ReviewFormat>();
@@ -47,7 +47,7 @@ export interface SurfaceGames {
 /**
  * What this surface draws beyond the shipped formats: Cloze Pick with `game.cloze-pick` on (row CM-30), Dictation with
  * `game.type-hangul-hear` on (row CM-31), and the formats in `games` (row CM-32: Syllable Build with
- * `game.syllable-build` on).
+ * `game.syllable-build` on; row CM-33: Match Shape with `game.match-shape` on).
  */
 export interface SurfaceOptions extends SurfaceGames {
   dictation?: boolean;
@@ -89,14 +89,34 @@ function buildable(item: Pick<ReviewItem, 'kind' | 'ko' | 'en'>): boolean {
 }
 
 /**
+ * Row CM-33: an item Match Shape can ask at the produce rung: a letter (a `sym` item, never a final's) that has a
+ * look-alike pair (ㅂ / ㅍ, ㅓ / ㅗ, ㅏ / ㅓ, ㄹ / ㄷ), asked as a pair round. The look-alike must be in the build
+ * (`shapeRound`) and, when the surface knows the learner's states, met by this learner (`surfaceIndex`): otherwise the
+ * item is asked another way, so a pair round never shows a letter the learner has not been taught.
+ */
+function shapeable(item: Pick<ReviewItem, 'kind' | 'ko'> & { id?: string }): boolean {
+  return item.kind === 'sym' && !(item.id ?? '').endsWith('-batchim') && Object.prototype.hasOwnProperty.call(SHAPE_LOOK_ALIKES, item.ko);
+}
+
+/** The letter's look-alike `sym` item in the index (never a final's), or undefined. */
+function lookAlikeOf(index: Pick<SurfaceIndex, 'items'>, item: Pick<ReviewItem, 'ko'>): ReviewItem | undefined {
+  const look = SHAPE_LOOK_ALIKES[item.ko];
+  return look === undefined ? undefined : index.items.find((i) => i.kind === 'sym' && i.ko === look && !i.id.endsWith('-batchim'));
+}
+
+/** Met: the learner holds a state at box 1 or higher (box 0 or no state is not met; memory/spacing.ts). */
+const isMet = (states: EngineStates, id: string): boolean => (states[id]?.st.b ?? 0) >= 1;
+
+/**
  * The formats of an item this surface can ask: a symbol is never heard (a lone letter read by the device voice says
  * its name, not its sound); a frame with a blank is never heard or ordered; a realia card needs its card (Realia
  * Read), which the item does not carry, so it is left to its own surfaces. `on` is the surface's switches, or the
  * section 7.1 formats switched on as a set.
  */
 export function surfaceFormats(
-  item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'> & { en?: string | undefined },
+  item: Pick<ReviewItem, 'kind' | 'ko' | 'romanization' | 'formats' | 'picture'> & { en?: string | undefined; id?: string },
   on: GameFormats | SurfaceOptions = {},
+  lookAlikeMet: (item: Pick<ReviewItem, 'ko'>) => boolean = () => true,
 ): ReviewFormat[] {
   if (item.kind === 'rea') return [];
   const games = gamesOf(on);
@@ -104,6 +124,7 @@ export function surfaceFormats(
     // Dictation is a word typed by ear (a `lex` item; its frames and symbols are never heard).
     if (f === 'dictation') return games.has(f) && item.kind === 'lex' && !HAS_SLOT.test(item.ko);
     if (f === 'syllable-build') return games.has(f) && buildable(item);
+    if (f === 'match-shape') return games.has(f) && shapeable(item) && lookAlikeMet(item);
     // A Cloze Pick round leaves out one word of a sentence, so its words and their romanization must line up.
     if (f === 'cloze-pick') return games.has(f) && item.kind === 'pat' && clozeWords(item) !== null;
     if (!SURFACE_FORMATS.has(f)) return false;
@@ -121,22 +142,32 @@ const surfaceCache = new WeakMap<object, Map<string, SurfaceIndex>>();
 /**
  * The item index with each item's formats cut to this surface's (and the switched-on games'); an item left with none is
  * not askable here. With `game.cloze-pick` off a sentence's produce rung is Sentence Builder, or the read rung (the
- * engine falls back).
+ * engine falls back). With Match Shape on and the learner's `states` given, a letter is asked as a pair round only
+ * when its look-alike is met too (row CM-33); that index depends on the states, so it is not cached.
  */
-export function surfaceIndex(index: SurfaceIndex, on: GameFormats | SurfaceOptions = {}): SurfaceIndex {
+export function surfaceIndex(index: SurfaceIndex, on: GameFormats | SurfaceOptions = {}, states?: EngineStates): SurfaceIndex {
   const games = gamesOf(on);
+  const learner = games.has('match-shape') ? states : undefined;
+  const perLearner = learner !== undefined;
   const key = [...games].filter((f) => !SURFACE_FORMATS.has(f)).sort().join('|');
   const byGames = surfaceCache.get(index) ?? new Map<string, SurfaceIndex>();
   surfaceCache.set(index, byGames);
-  const held = byGames.get(key);
+  const held = perLearner ? undefined : byGames.get(key);
   if (held) return held;
+  const lookAlikeMet =
+    learner === undefined
+      ? undefined
+      : (item: Pick<ReviewItem, 'ko'>): boolean => {
+          const other = lookAlikeOf(index, item);
+          return other !== undefined && isMet(learner, other.id);
+        };
   // Row CM-32: a symbol keeps Syllable Build only when a block of this index can host it (`hostsOf`), so a symbol no
   // block holds (ㅌ, a compound vowel, a final heard as another) is asked another way, or at the read rung, inside the
   // engine, and never dropped from a session for want of a round.
   const hostable = games.has('syllable-build') ? hostableSymbols(index, games) : null;
   const cut: ReviewItem[] = [];
   for (const item of index.items) {
-    let formats = surfaceFormats(item, games);
+    let formats = surfaceFormats(item, games, lookAlikeMet);
     if (item.kind === 'sym' && hostable !== null && !hostable.has(symbolKey(item))) formats = formats.filter((f) => f !== 'syllable-build');
     if (formats.length > 0) cut.push(formats.length === item.formats.length ? item : { ...item, formats });
   }
@@ -152,7 +183,7 @@ export function surfaceIndex(index: SurfaceIndex, on: GameFormats | SurfaceOptio
     }
   }
   const out: SurfaceIndex = { items, byId: new Map(items.map((i) => [i.id, i])), retired: index.retired };
-  byGames.set(key, out);
+  if (!perLearner) byGames.set(key, out);
   return out;
 }
 
@@ -319,7 +350,18 @@ export interface BuildRound extends RoundBase {
   fixed?: SyllableZone;
 }
 
-export type ReviewRound = PickRound | TypeRound | OrderRound | ClozeRound | BuildRound;
+/**
+ * Match Shape at the produce rung (row CM-33): tap every copy of the letter among its look-alike. The six tiles are
+ * laid out by the round's screen (the Match Shape chunk), so no layout logic sits in this chunk.
+ */
+export interface ShapeRound extends RoundBase {
+  type: 'shape';
+  /** The letter's jamo id (`jamo:bieup`) and its look-alike's. */
+  target: string;
+  lookAlike: string;
+}
+
+export type ReviewRound = PickRound | TypeRound | OrderRound | ClozeRound | BuildRound | ShapeRound;
 
 /** The meaning of an item (or a reply) in the UI language; undefined when it has none. */
 export type GlossOf = (key: string | undefined, en: string | undefined) => string | undefined;
@@ -586,6 +628,16 @@ function buildRound(question: ReviewQuestion, item: ReviewItem, input: RoundInpu
   return { type: 'build', question, target: koOf(item), ...(gloss ? { gloss } : {}), answer: { ko: koOf(item), ...(gloss ? { gloss } : {}) } };
 }
 
+function shapeRound(question: ReviewQuestion, item: ReviewItem, input: RoundInput): ShapeRound | null {
+  if (!shapeable(item)) return null;
+  const look = SHAPE_LOOK_ALIKES[item.ko];
+  const other = itemsOfKind(input.index, 'sym').find((i) => i.ko === look && !i.id.endsWith('-batchim'));
+  // The look-alike must be in the build; whether this learner met it is settled earlier, by `surfaceIndex`.
+  if (other === undefined) return null;
+  const jamoId = (id: string): string => `jamo:${id.slice('sym:'.length)}`;
+  return { type: 'shape', question, target: jamoId(item.id), lookAlike: jamoId(other.id), answer: { ko: koOf(item) } };
+}
+
 /** The round for an engine question, or null when the item cannot be played this way (it is then skipped). */
 export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRound | null {
   const item = input.index.byId.get(question.itemId);
@@ -612,6 +664,8 @@ export function roundFor(question: ReviewQuestion, input: RoundInput): ReviewRou
       );
     case 'syllable-build':
       return buildRound(question, item, input);
+    case 'match-shape':
+      return shapeRound(question, item, input);
     default:
       return null;
   }

@@ -267,6 +267,17 @@
       "steps.s1.hoyaLine": "El rey Sejong creó el hangul para que todo el mundo pudiera leer. ¡Ahora tú también puedes leerlo!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada palabra por tu cuenta.",
       "steps.s6.hoyaLine": "¡Una tarjeta de la cometa llega a tu colección!"
+    },
+    "quest:stage1-crafts-q4": {
+      "title": "De dónde vienen las formas",
+      "blurb": "Mira qué copian las letras básicas y distingue las letras que se parecen.",
+      "steps.s1.title": "Formas de letras",
+      "steps.s1.hoyaLine": "Algunas letras copian la forma de la boca, la lengua, un diente y la garganta. ¡Vamos a ver!",
+      "steps.s2.title": "Empareja la forma",
+      "steps.s3.title": "Tierra, persona, cielo",
+      "steps.s4.title": "Escucha y lee",
+      "steps.s5.title": "¡Detective de formas!",
+      "steps.s5.hoyaLine": "¡Ya sabes de dónde vienen estas formas!"
     }
   }
 }

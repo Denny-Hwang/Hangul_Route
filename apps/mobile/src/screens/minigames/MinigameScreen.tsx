@@ -35,6 +35,7 @@ import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { StoryOrderStep } from './story-order/StoryOrderStep';
+import { MatchShapeStep } from './match-shape-entry';
 import { SyllableBuildStep } from './syllable-build-entry';
 import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
@@ -133,7 +134,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   };
   /**
    * A switch played another kind's rounds (Story Order's fallback, row CM-34; a switched-off format's fallback, Listen &
-   * Pick on the block, row CM-32): the event names the game that played.
+   * Pick on the block, row CM-32, or Read Pick, row CM-33): the event names the game that played.
    */
   const closeAs = (played: MinigameKind): void => {
     if (played === scope?.kind) return close();
@@ -157,7 +158,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
   // (first answer per round scores), `complete` ends the step as the older games do.
-  // `played` is the scope the game plays: the step's own, or a fallback's (row CM-32), whose rounds name what was asked.
+  // `played` is the scope the game plays: the step's own, or a fallback's (rows CM-32 and CM-33), whose rounds name what was asked.
   const hostFor = (played: typeof scope): MinigameHost => ({
     mode: step.kind === 'check' ? 'check' : 'quest',
     // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
@@ -231,6 +232,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     // F-CURR-002 row CM-32: from its own chunk; Listen & Pick on the block while `game.syllable-build` is off.
     case 'syllable-build':
       return <SyllableBuildStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
+    // F-CURR-002 row CM-33: from its own chunk; Read Pick while `game.match-shape` is off.
+    case 'match-shape':
+      return <MatchShapeStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
     default:
       return fallback(copy.comingSoon);
   }

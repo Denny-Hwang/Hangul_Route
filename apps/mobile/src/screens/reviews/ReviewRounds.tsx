@@ -29,7 +29,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
-import type { BuildRound, ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, TypeRound } from '../../logic/reviews/review-rounds';
+import type { BuildRound, ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, ShapeRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
@@ -37,6 +37,7 @@ import { PictureArt } from '../minigames/PictureArt';
 import type { HearRound } from '../minigames/dictation-chunk';
 import { useDictationKit, type DictationKit } from '../minigames/dictation-entry';
 import { useSyllableBuildChunk } from '../minigames/syllable-build-entry';
+import { useMatchShapeChunk } from '../minigames/match-shape-entry';
 
 /**
  * The rounds of the Daily Review and Keep going (F-CURR-002 sections 4.3 and 4.5, row CM-14; design
@@ -567,6 +568,31 @@ export function BuildRoundLoader({ round, onFirst, onSolved }: RoundProps<BuildR
   }
   return <chunk.BuildRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
 }
+// ---- shape (row CM-33) -------------------------------------------------------------------------------------
+
+/**
+ * Match Shape at the produce rung: its board is the Match Shape chunk's, loaded here at run time through the entry's
+ * `matchShapeChunk()`. The engine asks it only while `game.match-shape` is on. If the chunk cannot load, the round keeps
+ * a way on: Try again loads it again (the session's close button stays in the top row), never a bare heading.
+ */
+export function ShapeRoundLoader({ round, onFirst, onSolved }: RoundProps<ShapeRound>): ReactElement {
+  const m = useMessages();
+  const { chunk, failed, retry } = useMatchShapeChunk();
+  if (chunk === null) {
+    return (
+      <View>
+        <Heading level="prompt">{m.learner.minigame.matchShape.heading.pair}</Heading>
+        {failed ? (
+          <>
+            <Spacer size="lg" />
+            <Button label={m.common.buttons.tryAgain} tone="primary" size="lg" fullWidth onPress={retry} testID="daily-review-shape-retry" />
+          </>
+        ) : null}
+      </View>
+    );
+  }
+  return <chunk.ShapeRoundView round={round} onFirst={onFirst} onSolved={onSolved} />;
+}
 
 /** The round for its type. */
 export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
@@ -575,5 +601,6 @@ export function RoundView(props: RoundProps<ReviewRound>): ReactElement {
   if (round.type === 'type') return <TypeRoundView {...props} round={round} />;
   if (round.type === 'cloze') return <ClozeRoundView {...props} round={round} />;
   if (round.type === 'build') return <BuildRoundLoader {...props} round={round} />;
+  if (round.type === 'shape') return <ShapeRoundLoader {...props} round={round} />;
   return <OrderRoundView {...props} round={round} />;
 }

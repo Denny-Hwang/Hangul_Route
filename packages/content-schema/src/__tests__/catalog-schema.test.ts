@@ -93,7 +93,7 @@ describe('the shipped catalogue data', () => {
     for (const cell of previews) expect(cell.questIds).toEqual([]);
   });
 
-  it('lists the 15 Stage 1 quests of the bundle (F-QUEST-002: Q-6b adds life q3, Q-7b rites q2-q3, Q-8 nature and crafts q2-q3)', () => {
+  it('lists the 16 Stage 1 quests of the bundle (F-QUEST-002: Q-6b adds life q3, Q-7b rites q2-q3, Q-8 nature and crafts q2-q3; F-CURR-002 CM-33 crafts q4)', () => {
     const stage1 = CATALOG.quests.filter((q) => q.stage === 'stage1' && q.kind === 'lesson');
     expect(stage1.map((q) => q.id)).toEqual([
       'quest:stage1-letters-q1',
@@ -111,6 +111,8 @@ describe('the shipped catalogue data', () => {
       'quest:stage1-crafts-q1',
       'quest:stage1-crafts-q2',
       'quest:stage1-crafts-q3',
+      // F-CURR-002 row CM-33: the Stage 1 addition (letter shapes), last on the route.
+      'quest:stage1-crafts-q4',
     ]);
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id)).toContain('quest:stage4-rites-q1');
     // 15 Stage 1 + 3 taste quests + the 14 read quests of the five Stage 5 books (F-STORY-005 PR 5.6)
@@ -136,7 +138,8 @@ describe('the shipped catalogue data', () => {
     // + My Holiday Memory (S7-3): +3 lesson quests.
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(107);
+    // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -451,6 +454,7 @@ describe('routeCatalogOf', () => {
       'quest:stage1-crafts-q1',
       'quest:stage1-crafts-q2',
       'quest:stage1-crafts-q3',
+      'quest:stage1-crafts-q4',
       'quest:stage2-letters-q1',
       'quest:stage2-letters-q2',
       'quest:stage2-letters-q3',

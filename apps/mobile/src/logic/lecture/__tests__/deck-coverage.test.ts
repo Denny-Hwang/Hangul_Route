@@ -74,7 +74,7 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:life': { quests: 3, slides: 49, wordCards: 12, differentWords: 12, quiz: 25, skipped: {}, flattened: {} },
   'stage1:rites': { quests: 3, slides: 36, wordCards: 4, differentWords: 4, quiz: 23, skipped: {}, flattened: {} },
   'stage1:nature': { quests: 3, slides: 32, wordCards: 16, differentWords: 14, quiz: 24, skipped: {}, flattened: {} },
-  'stage1:crafts': { quests: 3, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
+  'stage1:crafts': { quests: 4, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
   'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 16, skipped: {}, flattened: {} },
   'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 19, skipped: {}, flattened: {} },
   'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 20, skipped: {}, flattened: {} },

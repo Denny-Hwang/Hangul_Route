@@ -73,6 +73,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-32: the Syllable Build chunk's quest game and Block Sprint.
   'screens/minigames/syllable-build-entry.tsx#SyllableBuildStepBody': 'screens/minigames/SyllableBuildStepBody.tsx#SyllableBuildStepBody',
   'screens/decode-sprint/DecodingSprintRoute.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',
+  // Row CM-33: the Match Shape chunk's quest step (the game, or Read Pick while `game.match-shape` is off).
+  'screens/minigames/match-shape-entry.tsx#MatchShapeStepBody': 'screens/minigames/MatchShapeStepBody.tsx#MatchShapeStepBody',
 };
 
 /**

@@ -11,8 +11,12 @@ import { stages, themes } from './stages';
 /**
  * Inputs for `logic/sync/summarize` derived from the bundled content:
  * Stage 1 quest ids and the jamo (as characters) each quest teaches.
+ * The summary's Stage 1 count is the quests the stage needs: an optional
+ * addition (F-CURR-002 section 4.2, row CM-33) is left out, so a learner who
+ * finished Stage 1 before it shipped still reads as done in the reports.
  */
-export const stage1QuestIds: string[] = stage1Quests.map((q) => q.id);
+const optionalQuestIds = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
+export const stage1QuestIds: string[] = stage1Quests.filter((q) => !optionalQuestIds.has(q.id)).map((q) => q.id);
 
 const charById = new Map(jamoAll.map((j) => [j.id, j.char]));
 

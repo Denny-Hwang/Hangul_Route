@@ -40,4 +40,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'hidden-heritage',
   // F-CURR-002 row CM-32 (Listen & Pick on the block while `game.syllable-build` is off)
   'syllable-build',
+  // F-CURR-002 row CM-33 (Read Pick while `game.match-shape` is off)
+  'match-shape',
 ]);

@@ -1,7 +1,7 @@
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { describe, expect, it } from 'vitest';
 import type { EngineContext, ReviewQuestion } from '../engine';
-import { MAX_ORDER_TILES, NO_GAME_FORMATS, SURFACE_FORMATS, glossFrom, roundFor, surfaceFormats, surfaceIndex, type BuildRound, type OrderRound, type PickRound, type RoundInput, type TypeRound } from '../review-rounds';
+import { MAX_ORDER_TILES, NO_GAME_FORMATS, SURFACE_FORMATS, glossFrom, roundFor, surfaceFormats, surfaceIndex, type BuildRound, type OrderRound, type PickRound, type RoundInput, type ShapeRound, type TypeRound } from '../review-rounds';
 
 /**
  * F-CURR-002 sections 4.3 and 4.5 (row CM-14): the rounds of a Daily Review. Only the formats whose rounds have
@@ -257,5 +257,68 @@ describe('Syllable Build at the produce rung (row CM-32, behind game.syllable-bu
     expect(games.byId.get('sym:kieuk')?.formats).toEqual(['read-pick']);
     expect(games.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'syllable-build']);
     expect(roundFor(q('sym:kieuk', 'syllable-build'), gameInput())).toBeNull();
+  });
+});
+describe('Match Shape at the produce rung (row CM-33, behind game.match-shape)', () => {
+  const GAMES = new Set<ReviewFormat>(['match-shape']);
+  const letter = (id: string, ko: string, romanization: string): ReviewItem => mk(id, { ko, romanization, home: 'letters', stage: 1, cells: ['episode:stage1-letters'] });
+  const LETTERS = [
+    letter('sym:bieup', 'ㅂ', 'b/p'),
+    letter('sym:pieup', 'ㅍ', 'p'),
+    letter('sym:eo', 'ㅓ', 'eo'),
+    letter('sym:o', 'ㅗ', 'o'),
+    letter('sym:rieul', 'ㄹ', 'r/l'),
+    letter('sym:bieup-batchim', 'ㅂ', 'p'),
+    letter('sym:siot', 'ㅅ', 's'),
+  ];
+
+  it('is drawn only while the switch is on, for a letter with a look-alike, never a final', () => {
+    expect(surfaceFormats(LETTERS[0]!)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[0]!, NO_GAME_FORMATS)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[0]!, GAMES)).toEqual(['read-pick', 'match-shape']);
+    expect(surfaceFormats(LETTERS[5]!, GAMES)).toEqual(['read-pick']);
+    expect(surfaceFormats(LETTERS[6]!, GAMES)).toEqual(['read-pick']);
+  });
+
+  it('surfaceIndex keeps one cut per set of games', () => {
+    const base = indexOf(LETTERS);
+    const off = surfaceIndex(base);
+    const on = surfaceIndex(base, GAMES);
+    expect(on).not.toBe(off);
+    expect(surfaceIndex(base, new Set<ReviewFormat>(['match-shape']))).toBe(on);
+    expect(off.byId.get('sym:bieup')?.formats).toEqual(['read-pick']);
+    expect(on.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'match-shape']);
+  });
+
+  it('a pair round of the letter and its taught look-alike, the answer its letter', () => {
+    const index = surfaceIndex(indexOf(LETTERS), GAMES);
+    const round = roundFor(q('sym:bieup', 'match-shape'), { index, gloss: (_k, en) => en, seed: 's' }) as ShapeRound;
+    expect(round).toMatchObject({ type: 'shape', target: 'jamo:bieup', lookAlike: 'jamo:pieup', answer: { ko: { ko: 'ㅂ', romanization: 'b/p' } } });
+    const other = roundFor(q('sym:eo', 'match-shape'), { index, gloss: (_k, en) => en, seed: 's' }) as ShapeRound;
+    expect([other.target, other.lookAlike]).toEqual(['jamo:eo', 'jamo:o']);
+  });
+
+  it('with the learner\'s states, a letter is asked as a pair round only once its look-alike is met (box 1 or more)', () => {
+    const base = indexOf(LETTERS);
+    const row = (b: number) => ({ st: { b, d: null, c: 0, r: 0, n: 0, f: '2026-10-01', s: b, at: '' } });
+    // ㅂ met, ㅍ not met yet (no state, then box 0): ㅂ is asked another way, so no pair round shows ㅍ untaught.
+    for (const states of [{ 'sym:bieup': row(3) }, { 'sym:bieup': row(3), 'sym:pieup': row(0) }]) {
+      const index = surfaceIndex(base, GAMES, states);
+      expect(index.byId.get('sym:bieup')?.formats).toEqual(['read-pick']);
+    }
+    // Both met: the pair round is open; the per-learner cut is never the shared cached one.
+    const met = surfaceIndex(base, GAMES, { 'sym:bieup': row(3), 'sym:pieup': row(1) });
+    expect(met.byId.get('sym:bieup')?.formats).toEqual(['read-pick', 'match-shape']);
+    expect(met).not.toBe(surfaceIndex(base, GAMES));
+    // With the switch off the states change nothing.
+    expect(surfaceIndex(base, NO_GAME_FORMATS, { 'sym:bieup': row(3) })).toBe(surfaceIndex(base));
+  });
+
+  it('cannot be played when the look-alike is not taught, or the item is not a letter with one', () => {
+    const index = surfaceIndex(indexOf(LETTERS.filter((i) => i.id !== 'sym:pieup')), GAMES);
+    const input = { index, gloss: (_k: string | undefined, en: string | undefined) => en, seed: 's' };
+    expect(roundFor(q('sym:bieup', 'match-shape'), input)).toBeNull();
+    expect(roundFor(q('sym:rieul', 'match-shape'), input)).toBeNull();
+    expect(roundFor(q('sym:siot', 'match-shape'), input)).toBeNull();
   });
 });

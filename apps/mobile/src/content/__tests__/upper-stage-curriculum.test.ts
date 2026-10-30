@@ -283,12 +283,12 @@ describe('a ready cell plays only games the app has (F-CURR-001 section 6: a gam
       id: 'quest:stage7-life-q1',
       steps: [
         { id: 's1', kind: 'intro', titleEn: 'x' },
-        { id: 's5', kind: 'practice', titleEn: 'x', minigameKind: 'match-shape', minigameRef: 'minigame:s7-life-q1-practice' },
+        { id: 's5', kind: 'practice', titleEn: 'x', minigameKind: 'tap-rhythm', minigameRef: 'minigame:s7-life-q1-practice' },
         { id: 's6', kind: 'apply', titleEn: 'x', minigameKind: 'listen-pick', minigameRef: 'minigame:s7-life-q1-apply' },
       ],
     } as unknown as LessonQuest;
-    expect(unplayableSteps(quest)).toEqual(['quest:stage7-life-q1: step s5 plays match-shape, which has no game screen yet']);
-    expect(unplayableSteps(quest, new Set(['match-shape', 'listen-pick']))).toEqual([]);
+    expect(unplayableSteps(quest)).toEqual(['quest:stage7-life-q1: step s5 plays tap-rhythm, which has no game screen yet']);
+    expect(unplayableSteps(quest, new Set(['tap-rhythm', 'listen-pick']))).toEqual([]);
   });
 
   for (const { cell } of READY) {

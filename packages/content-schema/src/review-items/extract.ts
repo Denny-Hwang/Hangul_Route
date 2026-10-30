@@ -486,6 +486,14 @@ function stage1Scope(c: Collector, ref: string, scope: Rec, at: string): void {
     else if (id.startsWith('lp:syl:')) c.text(round.prompt, 'syl', 'round', where, { glossKey });
     else c.text(round.prompt, 'lex', 'round', where, { glossKey, picture: pictureOf(answer) });
   });
+  // F-CURR-002 row CM-33, the Stage 1 additions: a Match Shape pair round asks its target letter. An origin round
+  // teaches where a shape comes from (the learner meets the fact there), so it is no evidence about the letter.
+  // `asked` follows the authored game. While `game.match-shape` is off the step plays Read Pick, which also records the
+  // origin rounds' letters (at the read rung); those letters are all taught and asked by earlier Stage 1 quests, so
+  // leaving them out of this cell's `asked` changes no item's visibility or warm-up, on purpose.
+  arr(isRec(scope.matchShape) ? scope.matchShape.rounds : []).filter(isRec).forEach((round, ri) => {
+    if (round.shape === 'pair' && typeof round.target === 'string') c.symbol(round.target, 'round', `${at}.matchShape.rounds[${ri}]`);
+  });
 }
 
 /**

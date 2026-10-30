@@ -104,6 +104,9 @@ const text = (value: { ko?: unknown } | undefined, kind?: ReviewItemKind): Asked
 export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRound | undefined {
   switch (scope.kind) {
     case 'listen-pick': {
+      // Row CM-33: Read Pick, Match Shape's fallback, asks its letter at the read rung.
+      const pick = scope.readPick?.rounds.find((r) => r.id === itemId);
+      if (pick) return { texts: [], jamoIds: [pick.target], rung: 'read' };
       const round = scope.listenPick?.rounds.find((r) => r.id === itemId);
       if (!round) return undefined;
       if (round.id.startsWith('lp:sym:')) return { texts: [], jamoIds: [round.id.slice('lp:sym:'.length)], rung: 'recognize' };
@@ -175,6 +178,12 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       // Row CM-32: the block built, at the produce rung (a bare block is a `syl` item; a word block keeps its cell's item).
       const round = scope.syllableBuild?.rounds.find((r) => r.id === itemId);
       return round ? { texts: texts(text(round.target, round.target.en === undefined ? 'syl' : undefined)), jamoIds: [], rung: 'produce' } : undefined;
+    }
+    case 'match-shape': {
+      // Row CM-33: a pair round's letter, at the produce rung (section 4.3: "Syllable Build with the symbol in place, or
+      // Match Shape"). An origin round teaches the fact it shows and is not recorded.
+      const round = scope.matchShape?.rounds.find((r) => r.id === itemId);
+      return round?.shape === 'pair' ? { texts: [], jamoIds: [round.target], rung: 'produce' } : undefined;
     }
     default:
       return undefined;

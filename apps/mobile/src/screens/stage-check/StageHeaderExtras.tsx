@@ -1,3 +1,4 @@
+import { requiredQuestIds } from '@hangul-route/content-schema';
 import { Button, Caption, Icon, colors, spacing, useEffectiveFontScale } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,7 +33,10 @@ export function StageHeaderExtras({ place, profileId, stage, complete }: StageHe
     const done = new Set(snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
     const cells = gridEpisodesOf(episodesAll)
       .filter((e) => e.stage === stage)
-      .map((e) => ({ done: e.questIds.length > 0 && e.questIds.every((q) => done.has(q)), testedOut: snapshot.testedOut?.[e.id] !== undefined }));
+      .map((e) => {
+        const required = requiredQuestIds(e);
+        return { done: required.length > 0 && required.every((q) => done.has(q)), testedOut: snapshot.testedOut?.[e.id] !== undefined };
+      });
     return testedOutHint({ complete, cellCheckOn: true, cells });
   }, [place, snapshot, stage, complete]);
 

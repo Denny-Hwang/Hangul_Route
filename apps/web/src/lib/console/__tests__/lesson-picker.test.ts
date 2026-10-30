@@ -67,7 +67,8 @@ describe('consoleChooserGroups', () => {
   it('the plan builder lists every ready stage, episodes and lessons only', () => {
     expect(plan.map((g) => g.id)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
     expect(plan.every((g) => g.rows.every((r) => r.kind === 'episode'))).toBe(true);
-    expect(planKeys.size).toBe(35 + 107);
+    // 108 lessons since F-CURR-002 row CM-33 (the Stage 1 letter-shapes quest).
+    expect(planKeys.size).toBe(35 + 108);
   });
 
   it('the lecture catalogue adds the listed stories and topics', () => {
@@ -123,7 +124,7 @@ describe('labels', () => {
   });
 
   it('visibleCount counts every row and every lesson shown', () => {
-    expect(visibleCount([group(plan, 'stage1')])).toBe(5 + 15);
+    expect(visibleCount([group(plan, 'stage1')])).toBe(5 + 16);
     expect(visibleCount([group(lecture, 'stories')])).toBe(LECTURE_STORIES.length);
     expect(visibleCount([])).toBe(0);
     const title = CATALOG.quests.find((q) => q.id === 'quest:stage2-letters-q4')!.title;
@@ -298,7 +299,7 @@ describe('the stages the plan builder lists and its line (AMENDMENTS-LESSON-CHOO
     // The lesson counts of the stage groups the picker would draw for Stages 2 to 7 (92 in the shipped catalogue).
     expect(past).toBe(plan.filter((g) => g.id !== 'stage1').reduce((n, g) => n + g.count, 0));
     expect(past).toBe(92);
-    expect(lessonsPastStages([])).toBe(107);
+    expect(lessonsPastStages([])).toBe(108);
     expect(lessonsPastStages(all)).toBe(0);
   });
 

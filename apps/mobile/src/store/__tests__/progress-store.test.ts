@@ -1,4 +1,4 @@
-import { ProgressSnapshotSchema, VocabProgressSchema, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
+import { ProgressSnapshotSchema, VocabProgressSchema, requiredQuestIds, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -710,10 +710,10 @@ describe('applyPlacementOverride (F-PLC-001 section 3.9)', () => {
 
 describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled off)', () => {
   const notified: string[] = [];
-  /** The live Stage 1 grid quests; no count is pinned here. */
+  /** The live Stage 1 grid quests the stage needs (an optional addition of F-CURR-002 section 4.2 is not one); no count is pinned here. */
   const stage1 = episodesAll
     .filter((e) => e.stage === 'stage1' && (e.placement ?? 'grid') === 'grid' && (e.status === 'shipped' || e.status === 'ready'))
-    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+    .flatMap((e) => requiredQuestIds(e).map((questId) => ({ questId, episodeId: e.id })));
   const finish = (profileId: string, q: { questId: string; episodeId: string }) =>
     useProgressStore.getState().recordQuestComplete(profileId, { ...q, stars: 1, accuracy: 1, attempts: 1 });
   const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;

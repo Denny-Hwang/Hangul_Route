@@ -58,7 +58,7 @@ export interface CellCheckDeps {
   /** `cellCheck` and `memoryRecord` for the profile (a learner, not a grown-up persona). */
   on(profileId: string): boolean;
   visibility(profileId: string): SourceVisibility;
-  /** Row CM-32: the section 7.1 formats switched on for the profile (`game.syllable-build`); none when absent. */
+  /** Rows CM-32 and CM-33: the section 7.1 formats switched on for the profile (`game.syllable-build`, `game.match-shape`); none when absent. */
   games?(profileId: string): GameFormats;
   voice(): boolean;
   /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
@@ -134,9 +134,11 @@ export function createCellCheckApi(deps: CellCheckDeps): CellCheckApi {
       if (file === null) return { kind: 'unreadable' };
       const today = localDay(now);
       const snap = deps.snapshot(profileId);
+      const states = engineStates(file.rows, snap ? vocabOf(snap) : undefined);
       const ctx: EngineContext = {
-        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }),
-        states: engineStates(file.rows, snap ? vocabOf(snap) : undefined),
+        // Row CM-33: a pair round only when this learner met the letter's look-alike too.
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }, states),
+        states,
         today,
         voice: deps.voice(),
         seed: `${profileId}|${today}`,

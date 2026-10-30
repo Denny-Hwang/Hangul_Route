@@ -2110,7 +2110,8 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
       expect(fragment.startsWith('1.')).toBe(true);
       const decoded = decodeDeck(fragment);
       expect(decoded.ok).toBe(true);
-      expect(LECTURE_DECODE_FAILURES).toEqual(['empty', 'too_large', 'bad_encoding', 'bad_json', 'unsupported_version', 'invalid']);
+      // Role Play adds none; `unknown_kind` is Hidden Heritage's (row CM-36).
+      expect(LECTURE_DECODE_FAILURES).toEqual(['empty', 'too_large', 'bad_encoding', 'bad_json', 'unsupported_version', 'invalid', 'unknown_kind']);
     });
   });
 

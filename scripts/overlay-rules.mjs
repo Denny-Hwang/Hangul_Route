@@ -108,6 +108,13 @@ const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
 const isLessonNote = (id, field) =>
   (/^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field)) || (/^episode:stage[2-467]-/.test(id) && CELL_NOTE_FIELD.test(field));
 const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
+/**
+ * F-CURR-002 row CM-33: a Match Shape difference line of a Stage 1 scope names its two letters as `{ko:...}` tokens,
+ * rendered as taught Korean, so the Hangul inside them is not UI text either. The scope is TypeScript, so the tokens'
+ * parity with the English is held by the app's Stage 1 additions test.
+ */
+const SHAPE_NOTE_FIELD = /^matchShape\.rounds\.[^.]+\.diffNote$/;
+const isShapeNote = (id, field) => /^minigame:s1-/.test(id) && SHAPE_NOTE_FIELD.test(field);
 
 /**
  * id -> { entity, file } for every object with an entity id in the base content (first
@@ -276,7 +283,7 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (typeof value !== "string" || value.trim() === "") return add("overlay-bad-shape: a translated field is a non-blank string");
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
-  const shown = isLessonNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
+  const shown = isLessonNote(id, field) || isShapeNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
   if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);

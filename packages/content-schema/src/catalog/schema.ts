@@ -18,6 +18,8 @@ export const CatalogCellSchema = z.object({
   status: EpisodeStatusSchema,
   minutes: z.number().int(),
   questIds: z.array(z.string()),
+  /** The episode's `optionalQuestIds` (F-CURR-002 section 4.2): listed and played, never needed for the cell to be done. */
+  optionalQuestIds: z.array(z.string()).optional(),
 });
 export type CatalogCell = z.infer<typeof CatalogCellSchema>;
 

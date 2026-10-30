@@ -34,6 +34,7 @@ import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
 import { rolePlayMainPath, rolePlayToTapRespond } from '../role-play/fallback';
 import { validRounds } from '../listen-pick';
+import { shapeListenRounds } from './format-rounds';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
 import { playableStoryOrder } from '../story-order/fallback';
@@ -646,6 +647,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       // A whole-class scene hunt (F-CURR-002 §8, row CM-36): one slide per target, in content order.
       case 'hidden-heritage':
         hiddenHeritageStep(path, ref, listOf(scope.hiddenHeritage?.rounds));
+        return;
+      // The Stage 1 additions' Match Shape (F-CURR-002 section 8, row CM-33): the existing listen question slides, no new slide kind.
+      case 'match-shape':
+        listenStep(path, ref, shapeListenRounds(scope));
         return;
       default:
         skip(ref, 'unsupported-step');
