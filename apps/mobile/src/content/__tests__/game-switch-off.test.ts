@@ -97,6 +97,9 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-crafts-q3',
       'quest:stage6-letters-q2',
       'quest:stage6-life-q2',
+      // Row CM-41 S6: the Stage 6 Nature Volume 2 Apply (q1, the weather card) and Check (q2, the trail sign).
+      'quest:stage6-nature-v2-q1',
+      'quest:stage6-nature-v2-q2',
       'quest:stage6-rites-q2',
     ]);
   });
