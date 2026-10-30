@@ -31,6 +31,7 @@
     "./src/scene-art/hidden-heritage/profile": "./src/scene-art/hidden-heritage/profile.ts",
     "./src/components/ShapeOriginArt/ShapeOriginArt": "./src/components/ShapeOriginArt/ShapeOriginArt.tsx",
     "./src/scene-art/shape-origin-registry": "./src/scene-art/shape-origin-registry.ts",
+    "./src/scene-art/hidden-heritage/seollal-room": "./src/scene-art/hidden-heritage/seollal-room.ts",
     "./hangul-keyboard-layout": "./src/components/HangulKeyboard/layout.ts",
     "./components/*": "./src/components/*/index.ts"
   },

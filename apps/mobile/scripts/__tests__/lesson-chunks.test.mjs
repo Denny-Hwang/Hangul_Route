@@ -193,6 +193,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(SCENE_CHUNKS).toEqual([
       { name: 'scene-food-market', marker: 'scene-chunk:food-market' },
       { name: 'scene-letters-school', marker: 'scene-chunk:letters-school' },
+      // Row CM-37 part 2: the Holidays & Traditions scene.
+      { name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' },
     ]);
   });
 
@@ -255,21 +257,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-37 part 1: the Letters school room.
     expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-letters-school')");
+    // Row CM-37 part 2: the Seollal room scene, its own chunk through its own literal import().
+    expect(read('src/screens/minigames/scenes/scene-seollal-room.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[2].marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-seollal-room')");
   });
 
   it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
     expect(PRECACHE_BUDGET.sceneChunkRaw).toBe(25_000);
     const start = { url: START, text: 'var s=1;' };
-    // One bundle per scene (row CM-37 adds the Letters school room), each named after its chunk and carrying its marker.
+    // One bundle per scene (rows CM-36 and CM-37), each named after its chunk and carrying its marker.
     const sceneBundles = SCENE_CHUNKS.map(({ name, marker }) => {
       const body = `__d(function(){var m="${marker}"})`;
       return { url: `${WEB_JS_DIR}/${name}-${md5(body)}.js`, text: body };
     });
     expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, ...sceneBundles], precached: all([start, ...sceneBundles]) })).toEqual([]);
-    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, sceneBundles[0]], precached: all([start, sceneBundles[0]]) })).toEqual([
-      'scene-letters-school has no web bundle: the chunk is missing from the build',
-    ]);
-    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, ...sceneBundles], precache: { count: 3, size: 10 } });
+    expect(markedChunkProblems({ chunks: SCENE_CHUNKS, bundles: [start, sceneBundles[0]], precached: all([start, sceneBundles[0]]) })).toEqual(
+      SCENE_CHUNKS.slice(1).map(({ name }) => `${name} has no web bundle: the chunk is missing from the build`),
+    );
+    const report = precacheReport({ manifest: [], scenes: SCENE_CHUNKS, bundles: [start, ...sceneBundles], precache: { count: 1 + sceneBundles.length, size: 10 } });
     expect(reportLines(report).some((l) => l.startsWith(`  hidden heritage scene chunks  ${SCENE_CHUNKS.length} bundles`) && l.endsWith('ceiling 25000 B each)'))).toBe(true);
     expect(precacheBudgetProblems(report)).toEqual([]);
     const tight = { ...PRECACHE_BUDGET, sceneChunkRaw: Math.max(...sceneBundles.map((b) => b.text.length)) - 1 };

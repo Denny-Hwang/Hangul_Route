@@ -1,7 +1,10 @@
 import { HiddenHeritageRoundSchema } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
+import { useLocale } from '../i18n/use-messages';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
+import { CONTENT_OVERLAYS } from '../logic/content-locale';
+import { localizeReferenceRound } from '../logic/hidden-heritage-reference';
 import type { MinigameScope } from '../logic/minigame-config';
 import { LessonWaiting } from '../screens/lesson-content';
 import { HiddenHeritageStep } from '../screens/minigames/hidden-heritage-entry';
@@ -13,8 +16,9 @@ import type { RootStackParamList } from './types';
 /**
  * The Hidden Heritage e2e screen (F-CURR-002 row CM-36; fixture builds only), loaded by `./hidden-heritage-e2e.tsx` through
  * its literal `import()`, so a release start bundle carries only the hook. Opens the step on a scene's reference round
- * (`sceneId`, the Food market scene by default; row CM-37 adds the Letters school room), read from the scene's own lazy
- * chunk; `missing` names a scene this build does not have.
+ * (`sceneId`, the Food market scene by default; row CM-37 adds the other scenes), read from the scene's own lazy
+ * chunk, with its `scene:<id>` overlay (`content/i18n/{es,ko}/hidden-heritage.json`) in those UI languages; `missing`
+ * names a scene this build does not have.
  */
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HiddenHeritageE2e'>;
@@ -22,16 +26,22 @@ type Props = NativeStackScreenProps<RootStackParamList, 'HiddenHeritageE2e'>;
 export function HiddenHeritageE2eBody({ route, navigation }: Props): ReactElement {
   const missing = route.params.missing === true;
   const sceneId = route.params.sceneId ?? 'scene:food-market';
+  const locale = useLocale();
   const [scope, setScope] = useState<MinigameScope | null>(null);
   useEffect(() => {
+    let live = true;
     log.answers = [];
     log.completed = 0;
     void loadScene(sceneId).then((scene) => {
-      if (!scene) return;
-      const round = HiddenHeritageRoundSchema.parse(missing ? { ...scene.round, sceneId: 'scene:not-in-this-build' } : scene.round);
+      if (!live || !scene) return;
+      const parsed = HiddenHeritageRoundSchema.parse(missing ? { ...scene.round, sceneId: 'scene:not-in-this-build' } : scene.round);
+      const round = localizeReferenceRound(scene.id, parsed, locale, CONTENT_OVERLAYS);
       setScope({ kind: 'hidden-heritage', rounds: round.targets.length, hiddenHeritage: { rounds: [round] } });
     });
-  }, [missing, sceneId]);
+    return () => {
+      live = false;
+    };
+  }, [missing, sceneId, locale]);
   const host: MinigameHost = {
     mode: 'quest',
     answer: (key, correct) => log.answers.push({ key: String(key), correct }),
