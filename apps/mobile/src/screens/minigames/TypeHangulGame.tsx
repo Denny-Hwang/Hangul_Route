@@ -109,6 +109,10 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
 
   const lc = useLayoutClass();
   const [available, setAvailable] = useState(lc.windowWidth);
+  // A Check's room (row CM-3A S2): the height the game is laid out in and where its prompt starts under the screen
+  // header (DN-4's Close and Display row, drawn in the same scroll content); 0 before layout.
+  const [room, setRoom] = useState(0);
+  const [promptTop, setPromptTop] = useState(0);
   const kbWidth = keyboardWidth(lc, available || lc.windowWidth);
   const compactRow = lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight;
   const phone = lc.width === 'compact' || lc.short;
@@ -416,18 +420,28 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   // leaves the prompt a row of its own (320 x 568: 72 + 392 + 64; 844 x 390: 68 + 256 + 64). A window
   // too short for that (a small phone on its side, 568 x 320) scrolls them with the prompt instead,
   // so no key is ever cut off and the touch floor is kept (keyboard.md, short windows).
+  // A Check counts the room under the screen header instead of the window (row CM-3A S2): its word must never sit
+  // under the answer row, so at 320 x 568 (about 493 under the header) the prompt, the field and Done are on the first
+  // screen and the last key row is a short scroll away, with the prompt still in view (the CM-31 open item, which the
+  // shared layout keeps for the other steps until its own row).
   const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm);
   const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + (check ? 0 : touchTarget.min) : 0;
-  const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + kb.height + underKeyboard + touchTarget.min;
+  const height = check && room > 0 ? room - promptTop : lc.windowHeight;
+  const pinned = height <= 0 || height >= answerRow + kb.height + underKeyboard + touchTarget.min;
 
   // A phone (and any short window) gets the keyboard edge to edge, so the screen has no width cap there.
   return (
-    <Screen tone="canvas" padded={false} width={phone ? 'bleed' : 'reading'} footer={pinned ? footer : undefined} testID="type-hangul">
-      <View style={{ paddingHorizontal: lc.gutter, paddingTop: compactRow ? spacing.sm : spacing.md, paddingBottom: spacing.sm }}>
-        {header}
-      </View>
-      {pinned ? null : footer}
-    </Screen>
+    <View style={{ flex: 1 }} onLayout={check ? (e: LayoutChangeEvent) => setRoom(Math.round(e.nativeEvent.layout.height)) : undefined}>
+      <Screen tone="canvas" padded={false} width={phone ? 'bleed' : 'reading'} footer={pinned ? footer : undefined} testID="type-hangul">
+        <View
+          onLayout={check ? (e: LayoutChangeEvent) => setPromptTop(Math.round(e.nativeEvent.layout.y)) : undefined}
+          style={{ paddingHorizontal: lc.gutter, paddingTop: compactRow ? spacing.sm : spacing.md, paddingBottom: spacing.sm }}
+        >
+          {header}
+        </View>
+        {pinned ? null : footer}
+      </Screen>
+    </View>
   );
 }
 

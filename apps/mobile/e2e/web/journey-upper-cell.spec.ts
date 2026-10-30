@@ -358,7 +358,7 @@ async function playCheckBoards(page: Page, boards: readonly (readonly string[])[
     await expect.poll(() => boardIds(page)).toEqual([...ids].sort());
     // A Check has no Skip (F-QUEST-002 L2), and its header is "Quick check", never "n / N".
     await expect(page.getByTestId('pic-word-skip')).toHaveCount(0);
-    await expect(page.getByText('Quick check').first()).toBeVisible();
+    await expect(page.locator('text=Quick check >> visible=true').first()).toBeVisible();
     for (const id of ids) {
       await page.getByTestId(`pic-word-picture-${id}`).click();
       await page.getByTestId(`pic-word-word-${id}`).click();
@@ -391,6 +391,15 @@ async function playDictationCheck(page: Page, name: string, words: readonly [str
   await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport();
   await shot(page, `dictation-${name}-${page.viewportSize()?.width ?? 0}`);
   const size = page.viewportSize();
+  // The smallest phone (320 x 568): the word to copy and the field are on screen without scrolling.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('type-hangul-done')).toBeInViewport({ ratio: 1 });
+  await shot(page, `dictation-${name}-320x568`);
+  // The last key row is a short scroll away, and the word is still in view with it.
+  await page.getByTestId('hangul-key-space').scrollIntoViewIfNeeded();
+  await expect(page.getByTestId('hangul-key-space')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport({ ratio: 1 });
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(page.getByTestId('type-hangul-field')).toBeVisible();
   await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
