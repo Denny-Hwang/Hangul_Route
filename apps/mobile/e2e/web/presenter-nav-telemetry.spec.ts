@@ -10,8 +10,9 @@ import { shot } from './shots';
  * and 844 x 390 touch, the overlay layout until PN-4's rail; 1180 x 820 touch and mouse and
  * 1920 x 1080 mouse and touch, docked) a lesson takes one step from each source its device has (a
  * bar button, a swipe, a key, and with a mouse a click on the stage), a Previous at once after a
- * forward step, and Exit: the payload names the layout drawn, each source's own count, the quick
- * back and no points, and nothing else (no id, no place, no time, no title).
+ * forward step, a Previous long after a fresh forward step, and Exit: the payload names the layout
+ * drawn, each source's own count, the one quick back and no points, and nothing else (no id, no
+ * place, no time, no title).
  *
  * The client sends events only from a build with an API address, so this spec runs on one
  * (`EXPO_PUBLIC_API_BASE_URL` at a mock host) and is reported as skipped elsewhere:
@@ -163,9 +164,12 @@ for (const c of MATRIX) {
         await page.waitForTimeout(300);
         expect(await slideNow(page)).toBe(was);
       }
-      // Previous at once after a forward step: a quick back. A swipe back long after is not.
+      // Previous at once after a forward step: a quick back. The key needs no bar, so the press
+      // lands well inside the 2 s window on a slow runner too.
       await stepped(page, () => page.keyboard.press('ArrowRight'));
-      await stepped(page, () => press(page, c, 'presenter-back'));
+      await stepped(page, () => page.keyboard.press('ArrowLeft'));
+      // A fresh forward step, then a swipe back long after it (2.1 s): no second quick back.
+      await stepped(page, () => press(page, c, 'presenter-next'));
       await page.waitForTimeout(2_100);
       await stepped(page, () => swipe(page, c.input, 'right'));
       await shot(page, `presenter-nav-telemetry-${c.width}x${c.height}-${c.input}`);
@@ -182,7 +186,7 @@ for (const c of MATRIX) {
         navLayout: c.layout,
         stepsButton: 2,
         stepsSwipe: 2,
-        stepsKey: 2,
+        stepsKey: 3,
         stepsClick: c.input === 'mouse' ? 1 : 0,
         quickBacks: 1,
         points: 0,

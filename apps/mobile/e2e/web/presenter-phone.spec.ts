@@ -115,6 +115,12 @@ async function tapEmpty(page: Page): Promise<void> {
 /** The swipe cases drive CDP touch events, which only Chromium has (section 14). */
 const SWIPES_SKIPPED = process.env.E2E_WEBKIT === '1';
 
+/** A step while the bar shows: a swipe, or under `E2E_WEBKIT` (no CDP touch) a tap on the bar's Next, so the tap and focus checks still run there. */
+async function stepWhileShown(page: Page): Promise<void> {
+  if (SWIPES_SKIPPED) await page.getByTestId('presenter-next').tap();
+  else await swipeNext(page);
+}
+
 /** No element of the slide's text (the taught row: glyph, Korean, romanization, gloss, answer tiles) meets a visible control. */
 async function expectNothingCovered(page: Page): Promise<void> {
   const hits = await page.evaluate(() => {
@@ -206,7 +212,6 @@ for (const size of PHONES) {
     });
 
     test('the bar shows at the start and hides; a swipe steps without it; a tap on empty stage shows or hides it; Next and a swipe hide it at once', async ({ page }) => {
-      test.skip(SWIPES_SKIPPED, 'swipes drive CDP touch events (Chromium only)');
       await page.goto(link());
       await startLesson(page);
       // The start of the lesson: shown, its controls one row of touch targets inside the window, then hidden after 3 s.
@@ -221,13 +226,15 @@ for (const size of PHONES) {
       await expect(page.getByTestId('presenter-back')).toHaveAccessibleName('Previous');
       await shot(page, `presenter-phone-bar-${size.width}x${size.height}`);
       await expectBarHidden(page);
-      // A swipe steps; the bar stays out of the way.
-      const first = await counter(page);
-      await swipeNext(page);
-      await expect.poll(() => liveText(page)).not.toContain('Slide 1 of');
-      await page.waitForTimeout(400);
-      await expectBarHidden(page);
-      expect(await counter(page)).not.toBe(first);
+      // A swipe steps; the bar stays out of the way (Chromium: CDP touch; the taps below run everywhere).
+      if (!SWIPES_SKIPPED) {
+        const first = await counter(page);
+        await swipeNext(page);
+        await expect.poll(() => liveText(page)).not.toContain('Slide 1 of');
+        await page.waitForTimeout(400);
+        await expectBarHidden(page);
+        expect(await counter(page)).not.toBe(first);
+      }
       // A tap on empty stage shows it, and steps nothing (the slide's builds revealed by key first, so Next steps a slide).
       await revealAll(page);
       await expectBarHidden(page);
@@ -241,12 +248,12 @@ for (const size of PHONES) {
       await expect.poll(() => liveText(page)).not.toBe(at);
       await expectBarHidden(page);
       await expectNothingCovered(page);
-      // Shown again, a swipe while it shows also hides it at once.
+      // Shown again, a swipe while it shows also hides it at once (under E2E_WEBKIT, the bar's Next).
       await revealAll(page);
       await tapEmpty(page);
       await expectBarShown(page);
       const before = await liveText(page);
-      await swipeNext(page);
+      await stepWhileShown(page);
       await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none');
       await expect.poll(() => liveText(page)).not.toBe(before);
       await expectBarHidden(page);
@@ -351,7 +358,6 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
   });
 
   test('a keyboard focus inside the bar holds it; a focus given back after a tap (More closing) does not', async ({ page }) => {
-    test.skip(SWIPES_SKIPPED, 'swipes drive CDP touch events (Chromium only)');
     await page.goto(link());
     await startLesson(page);
     await expectBarHidden(page);
@@ -363,9 +369,11 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
     await expect(page.getByTestId('presenter-more')).toBeFocused();
     await revealAll(page);
     await expectBarShown(page);
-    await swipeNext(page);
+    await stepWhileShown(page);
     await expectBarHidden(page);
     // A keyboard user: a key, then focus moves into the bar; it shows and stays past presenter.autoHideMs.
+    // (Past the bar's 500 ms after a press first, so the focus is not that press's: under E2E_WEBKIT the step was a tap on Next.)
+    await page.waitForTimeout(600);
     await page.keyboard.press('Shift');
     await page.getByTestId('presenter-sound').focus();
     await expectBarShown(page);

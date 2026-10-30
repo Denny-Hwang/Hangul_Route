@@ -152,3 +152,14 @@ export function gesturePointer(eventType: string | undefined, lastPointerDown: G
   if (eventType !== undefined && eventType.startsWith('touch')) return 'touch';
   return lastPointerDown === 'touch' ? 'touch' : 'mouse';
 }
+
+/**
+ * After a touch ends, a browser may still send its compatibility `mousedown` and `mouseup` for the
+ * same tap (react-native-web stops dropping them once the finger moved at all), within this many ms.
+ */
+export const COMPAT_MOUSE_MS = 800;
+
+/** A mouse-type grant this soon after the stage's last touch ended is the same tap again: dropped, so a bar toggle never runs twice. */
+export function isCompatMouse(eventType: string | undefined, msSinceTouchEnd: number): boolean {
+  return eventType !== undefined && eventType.startsWith('mouse') && msSinceTouchEnd >= 0 && msSinceTouchEnd < COMPAT_MOUSE_MS;
+}

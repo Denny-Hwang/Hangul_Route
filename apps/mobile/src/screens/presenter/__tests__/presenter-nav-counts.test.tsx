@@ -171,7 +171,8 @@ describe('lecture.complete counts each step by its source (section 12)', () => {
     await stepped(r, () => gesture(r, 'mouse'));
     // Previous at once after that forward click: a quick back, counted under the bar button.
     await stepped(r, () => press(one(r, 'presenter-back')));
-    // A Previous long after the last forward step is not a quick back.
+    // A fresh forward step, then a Previous long after it: no second quick back.
+    await stepped(r, () => key('next'));
     await tick(5_000);
     await stepped(r, () => key('prev'));
     // A key that is no step (the grid) and a press an overlay swallowed count nothing.
@@ -183,7 +184,7 @@ describe('lecture.complete counts each step by its source (section 12)', () => {
     await tick(10);
     const payload = await exitLesson(r);
     expect(Object.keys(payload).sort()).toEqual(KEYS);
-    expect(payload).toMatchObject({ navLayout: 'docked', stepsButton: 2, stepsKey: 2, stepsSwipe: 1, stepsClick: 1, quickBacks: 1, points: 0 });
+    expect(payload).toMatchObject({ navLayout: 'docked', stepsButton: 2, stepsKey: 3, stepsSwipe: 1, stepsClick: 1, quickBacks: 1, points: 0 });
     // Nothing about the deck, a slide or a time rides along.
     expect(JSON.stringify(payload)).not.toMatch(/Counts lesson|lecture:|quest:|stage1/);
   });
@@ -223,8 +224,12 @@ describe('navLayout: the first slide shown after Start settled, not the Start ta
     expect(payload.navLayout).toBe('docked');
   });
 
-  it('a lesson left before its start settled reports the layout at Exit', async () => {
+  it('a lesson left before its start settled reports the layout at Exit, not the Start tap', async () => {
+    // The Start tap is on a phone window (overlay); the window is a tablet by Exit (docked).
+    Dimensions.set({ window: PHONE, screen: PHONE });
     const r = await lesson();
+    resize(TABLET);
+    await tick(10);
     await stepped(r, () => key('next'));
     const payload = await exitLesson(r);
     expect(payload).toMatchObject({ navLayout: 'docked', stepsKey: 1 });

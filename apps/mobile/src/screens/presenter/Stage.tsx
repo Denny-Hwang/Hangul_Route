@@ -11,6 +11,7 @@ import { buildLive, slideDetail, type BuildLive } from '../../logic/lecture/shel
 import {
   edgeGuard,
   gesturePointer,
+  isCompatMouse,
   parseStageTarget,
   slideHasTargets,
   stageGesture,
@@ -99,6 +100,8 @@ export function Stage(props: StageProps): ReactElement {
   const lang = LOCALE_META[locale].htmlLang;
   const shown = new Set<BuildName>(slide.builds.slice(0, reveal + 1));
   const gesture = useRef<Gesture | null>(null);
+  // When the stage last saw a touch end (`Date.now()`), so a browser's compatibility mouse events for that tap are dropped.
+  const touchEndedAt = useRef(Number.NEGATIVE_INFINITY);
   const insets = useSafeAreaInsets();
   const windowWidth = useWindowDimensions().width;
 
@@ -123,6 +126,10 @@ export function Stage(props: StageProps): ReactElement {
 
   const onGrant = (event: GestureResponderEvent): void => {
     const native = event.nativeEvent as unknown as ResponderNative;
+    if (isCompatMouse(native.type, Date.now() - touchEndedAt.current)) {
+      gesture.current = null;
+      return;
+    }
     const first = native.changedTouches?.[0] ?? native;
     const id = first.identifier ?? 0;
     gesture.current = {
@@ -148,7 +155,13 @@ export function Stage(props: StageProps): ReactElement {
       g.y = tracked.pageY;
     }
   };
+  /** A touch that ended or was taken (`touchend`, `touchcancel`): the time, for `isCompatMouse`. */
+  const noteTouchEnd = (event: GestureResponderEvent): void => {
+    const type = (event.nativeEvent as unknown as ResponderNative).type;
+    if (type !== undefined && type.startsWith('touch')) touchEndedAt.current = Date.now();
+  };
   const onRelease = (event: GestureResponderEvent): void => {
+    noteTouchEnd(event);
     onTouches(event);
     const g = gesture.current;
     gesture.current = null;
@@ -181,7 +194,8 @@ export function Stage(props: StageProps): ReactElement {
       onResponderMove={onTouches}
       onResponderEnd={onTouches}
       onResponderRelease={onRelease}
-      onResponderTerminate={() => {
+      onResponderTerminate={(event) => {
+        noteTouchEnd(event);
         gesture.current = null;
       }}
       style={{

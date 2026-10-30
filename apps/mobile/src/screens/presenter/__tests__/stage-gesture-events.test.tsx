@@ -6,7 +6,7 @@ import { Dimensions } from 'react-native';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
-import type { GesturePointer, StageCommand, StageCovering, StageStepSource } from '../../../logic/lecture/stage-gesture';
+import { COMPAT_MOUSE_MS, type GesturePointer, type StageCommand, type StageCovering, type StageStepSource } from '../../../logic/lecture/stage-gesture';
 import type { NavLayout } from '../../../logic/lecture/stage-scale';
 import { subscribeInputKind, type PresenterEnv } from '../../../platform/presenter.web';
 import { byTestId, render } from '../../../test-support/render';
@@ -194,6 +194,46 @@ describe("Stage: the gesture's own pointer (section 4)", () => {
   });
 });
 
+describe("Stage: a browser's compatibility mouse events after a tap", () => {
+  it('a mousedown under COMPAT_MOUSE_MS after a touch ended is dropped: the overlay bar toggles once', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(1_000_000);
+      const { stage, commands } = await mount({ layout: 'overlay', lastPointer: () => 'touch' });
+      // A tap whose finger moved a little (react-native-web then lets the mouse events through).
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderMove', ev('touchmove', [at(1, 643)], [at(1, 643)]));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 643)], []));
+      vi.setSystemTime(1_000_000 + COMPAT_MOUSE_MS - 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      expect(commands).toEqual(['toggle-bar']);
+      // A later click is a new gesture.
+      vi.setSystemTime(1_000_000 + COMPAT_MOUSE_MS + 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      expect(commands).toEqual(['toggle-bar', 'toggle-bar']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a touch taken by a stage button (touchcancel) counts as ended too', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(2_000_000);
+      const { stage, commands } = await mount();
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderTerminate', ev('touchcancel', [at(1, 640)], []));
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 640)], [at(0, 640)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
+      expect(commands).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('Stage: the target read at the grant (section 7.1)', () => {
   it('a tap inside an option points at it only with pointing on; never a step', async () => {
     const off = await mount({ idx: quizIdx });
@@ -250,15 +290,44 @@ describe('Stage: the target read at the grant (section 7.1)', () => {
 
 describe('Stage: the source of a step, for lecture.complete (section 12, row PN-6)', () => {
   it('a touch swipe and a mouse drag are swipes; a mouse click that goes on is a click', async () => {
-    const { stage, commands, sources } = await mount();
-    fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 700)], [at(1, 700)], outside));
-    fire(stage, 'onResponderRelease', ev('touchend', [at(1, 600)], []));
-    fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 500)], [at(0, 500)], outside));
-    fire(stage, 'onResponderMove', ev('mousemove', [at(0, 560)], [at(0, 560)]));
-    fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 600)], []));
-    fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 640)], [at(0, 640)], outside));
-    fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
-    expect(commands).toEqual(['next', 'prev', 'next']);
-    expect(sources).toEqual(['swipe', 'swipe', 'click']);
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(3_000_000);
+      const { stage, commands, sources } = await mount();
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 700)], [at(1, 700)], outside));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 600)], []));
+      // The mouse comes later than a tap's compatibility events would.
+      vi.setSystemTime(3_000_000 + COMPAT_MOUSE_MS + 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 500)], [at(0, 500)], outside));
+      fire(stage, 'onResponderMove', ev('mousemove', [at(0, 560)], [at(0, 560)]));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 600)], []));
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 640)], [at(0, 640)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 640)], []));
+      expect(commands).toEqual(['next', 'prev', 'next']);
+      expect(sources).toEqual(['swipe', 'swipe', 'click']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a touch tap's compatibility mouse events on a docked, target-free slide are no click step", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(4_000_000);
+      const { stage, commands, sources } = await mount({ lastPointer: () => 'touch' });
+      fire(stage, 'onResponderGrant', ev('touchstart', [at(1, 640)], [at(1, 640)], outside));
+      fire(stage, 'onResponderMove', ev('touchmove', [at(1, 643)], [at(1, 643)]));
+      fire(stage, 'onResponderRelease', ev('touchend', [at(1, 643)], []));
+      vi.setSystemTime(4_000_000 + COMPAT_MOUSE_MS - 1);
+      fire(stage, 'onResponderGrant', ev('mousedown', [at(0, 643)], [at(0, 643)], outside));
+      fire(stage, 'onResponderRelease', ev('mouseup', [at(0, 643)], []));
+      // The touch tap alone answers (it never steps); the mouse events after it are dropped, so
+      // nothing reaches the stepper to be counted as a mouse click.
+      expect(commands).toHaveLength(1);
+      expect(commands).not.toContain('next');
+      expect(commands).not.toContain('prev');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -2,12 +2,14 @@ import { spacing } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import { SWIPE_MIN, SWIPE_RATIO } from '../stage-constants';
 import {
+  COMPAT_MOUSE_MS,
   EDGE_GUARD_MIN,
   EDGE_GUARD_PAD,
   NUDGE_MS,
   TAP_SLOP,
   edgeGuard,
   gesturePointer,
+  isCompatMouse,
   optionTarget,
   parseStageTarget,
   stageGesture,
@@ -241,6 +243,17 @@ describe('the target and the pointer of a gesture', () => {
     expect(gesturePointer('mousedown', 'mouse')).toBe('mouse');
     expect(gesturePointer('mousedown', null)).toBe('mouse');
     expect(gesturePointer(undefined, null)).toBe('mouse');
+  });
+
+  it('isCompatMouse: a mouse-type grant under COMPAT_MOUSE_MS after a touch ended is the same tap; never a touch, never later', () => {
+    expect(COMPAT_MOUSE_MS).toBe(800);
+    expect(isCompatMouse('mousedown', 0)).toBe(true);
+    expect(isCompatMouse('mousedown', COMPAT_MOUSE_MS - 1)).toBe(true);
+    expect(isCompatMouse('mousedown', COMPAT_MOUSE_MS)).toBe(false);
+    expect(isCompatMouse('mousedown', Number.POSITIVE_INFINITY)).toBe(false);
+    expect(isCompatMouse('mousedown', -1)).toBe(false);
+    expect(isCompatMouse('touchstart', 0)).toBe(false);
+    expect(isCompatMouse(undefined, 0)).toBe(false);
   });
 });
 
