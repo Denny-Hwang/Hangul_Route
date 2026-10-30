@@ -4,6 +4,7 @@ import type { PlaySpec, PromptKind } from '../audio/controller';
 import type { FallbackReason } from '../audio/prompt-state';
 import { HIGHLIGHT_AFTER_WRONG, type CheckState } from './check-player';
 import { buildCheckView, type CheckView, type OptionView } from './check-view';
+import { spokenRomanization } from './spoken-label';
 
 /**
  * View-models and small rules of the story check screen (F-STORY-003 §3.4,
@@ -97,7 +98,7 @@ export function checkSpeech(item: CheckView, source: CheckView | undefined, ui: 
 
   const options = item.options.flatMap((o) => {
     const out: PlaySpec[] = [];
-    if (o.ko !== undefined) out.push(step(o.ko, 'ko-KR', 'word'));
+    if (o.ko !== undefined) out.push(step(o.spokenKo ?? o.ko, 'ko-KR', 'word'));
     if (o.en !== undefined) {
       const original = source?.options.find((s) => s.id === o.id)?.en;
       out.push(step(o.en, speechLangOf(o.en, original, ui), 'sentence'));
@@ -217,6 +218,8 @@ export function checkOptionCell(columns: 1 | 2): CheckOptionCell {
 export interface TargetView {
   ko: string;
   romanization: string;
+  /** What its speaker says, romanized, when that is not `romanization` (a letter target says its name: ㅁ, "mieum"; M8). */
+  spokenRomanization?: string;
   /** Absent while it would give the answer away (pick-meaning, fill-word, before the item resolves). */
   gloss?: string;
   /** The prompt holds the `{target}` token (else the target is a word card above the options). */
@@ -232,17 +235,21 @@ export function targetView(item: CheckView, state: CheckState, ctx: Romanization
     romanization: romanizationShown(ctx.romanizationMode, ctx.revealed || done) ? item.target.romanization : '',
     inline: item.targetInline,
   };
+  const spoken = spokenRomanization(item.target);
+  if (view.romanization !== '' && spoken !== item.target.romanization) view.spokenRomanization = spoken;
   if (!item.hideTargetGloss || done) view.gloss = item.target.en;
   return view;
 }
 
 /**
  * The accessible name of the target when it is the Korean speaker: the Korean, its romanization when
- * shown, and that a tap plays it. Never the gloss, which would give a pick-meaning answer away.
+ * shown, and that a tap plays it, then what it says when that differs (a letter target: "mieum").
+ * Never the gloss, which would give a pick-meaning answer away.
  */
 export function targetAccessibilityLabel(target: TargetView, copy: CheckCopy): string {
   const korean = target.romanization === '' ? target.ko : `${target.ko}, ${target.romanization}`;
-  return `${korean}. ${copy.speakerTarget}`;
+  const says = target.spokenRomanization === undefined ? '' : `, ${target.spokenRomanization}`;
+  return `${korean}. ${copy.speakerTarget}${says}`;
 }
 
 /** Whether the item draws any taught Korean (a target or a Korean option). */

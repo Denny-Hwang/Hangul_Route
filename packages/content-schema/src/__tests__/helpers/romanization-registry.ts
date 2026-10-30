@@ -103,6 +103,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
   { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
+  { path: 'apps/mobile/src/logic/audio/jamo-voice.ts', reason: 'the M12 pronounced-form table of the Word Builder finals (AMENDMENTS-AUDIO-CLIPS JV-A2) and doc examples: each spoken text and its romanization are pinned row by row, and romanization === romanizeWord(text) for all 55 jamo, by apps/mobile/src/logic/audio/__tests__/jamo-voice.test.ts' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },
   { path: 'apps/mobile/src/logic/type-hangul/e2e-rounds.ts', reason: 'test-only Type Hangul rounds played by the fixture-build e2e (F-CURR-001 G-3), never shipped; their romanization is still checked by apps/mobile/src/logic/type-hangul/__tests__/e2e-rounds.test.ts' },
   { path: 'apps/mobile/src/logic/cloze-pick/e2e-rounds.ts', reason: 'test-only Cloze Pick rounds played by the fixture-build e2e and the component tests (F-CURR-002 row CM-30), never shipped; their romanization is still checked by apps/mobile/src/logic/cloze-pick/__tests__/round.test.ts' },
@@ -157,6 +158,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/content-schema/src/schemas/transfer-consent-ko.ts', reason: 'the Korean consent lines (that file only) of a class move (F-SPACE-002 section 4.11, T-6d): Korean UI-locale legal text shown to a guardian, never taught Korean' },
   { path: 'packages/content-schema/src/schemas/class-scope-ko.ts', reason: 'the Korean class-scope update (that file only), [TV] AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 3: Korean UI-locale text shown to a guardian, never taught Korean' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
+  { path: 'content/audio/', reason: 'clip generation data (AMENDMENTS-AUDIO-CLIPS AC-2): the TTS manifest and the pronunciation overrides, generated from or keyed by the class A content; no romanization of their own, never shown (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
   { path: 'apps/mobile/src/content/__generated__/stories-index.ts', reason: 'the story shelf, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
@@ -187,7 +189,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
 ];
 
 /** The directories the content scan skips; kept equal to SKIPPED_DIRS in scripts/validate-content.mjs. */
-export const CONTENT_SKIPPED_DIRS: readonly string[] = ['content/stories/research'];
+export const CONTENT_SKIPPED_DIRS: readonly string[] = ['content/stories/research', 'content/audio'];
 
 /** Absolute path of the repository root (this file is packages/content-schema/src/__tests__/helpers/). */
 export const REPO_ROOT = new URL('../../../../../', import.meta.url).pathname;

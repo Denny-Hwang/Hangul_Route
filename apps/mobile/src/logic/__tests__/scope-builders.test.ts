@@ -2,6 +2,7 @@ import { ListenPickRoundSchema, PicWordRoundSchema } from '@hangul-route/content
 import { describe, expect, it, vi } from 'vitest';
 import { AUDIO_ASSETS } from '../../content/__generated__/audio-assets';
 import { findJamo, jamoAll } from '../../content/jamo';
+import { jamoVoice } from '../audio/jamo-voice';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import { lp, pw } from '../scope-builders';
 import * as config from '../minigame-config';
@@ -25,13 +26,16 @@ vi.mock('../../content/jamo', async (importOriginal) => {
 const word = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
 const TAUGHT_L1 = ['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun'];
 
-describe('lp.sym (sound -> written symbol)', () => {
-  it('prompts with the spoken sound of the symbol, never its letter name', () => {
+describe('lp.sym (heard letter -> written symbol)', () => {
+  it("is a letter question: the prompt is the letter's name, never the carrier syllable (AMENDMENTS-AUDIO-CLIPS M10)", () => {
     const r = lp.sym('jamo:eo', TAUGHT_L1);
+    // A vowel's name is its sound.
     expect(r.prompt).toMatchObject({ ko: '어', romanization: 'eo' });
     expect(r.prompt.spokenKo).toBeUndefined();
     const g = lp.sym('jamo:giyeok', TAUGHT_L1);
-    expect(g.prompt).toMatchObject({ ko: '가', romanization: 'ga' });
+    expect(g.prompt).toMatchObject({ ko: '기역', romanization: 'giyeok', en: 'the letter giyeok' });
+    const n = lp.sym('jamo:nieun', TAUGHT_L1);
+    expect(n.prompt).toMatchObject({ ko: '니은', romanization: 'nieun', en: 'the letter nieun' });
   });
 
   it('speaks the initial ㅇ by its name 이응', () => {
@@ -62,11 +66,17 @@ describe('lp.sym (sound -> written symbol)', () => {
     }
   });
 
-  it("carries the letter's audioRef on the prompt when the record names one, and none when it does not", () => {
+  it("carries the name's clip on the prompt when the record names one, and never a consonant's sound clip", () => {
     const giyeok = findJamo('jamo:giyeok')!;
     expect(giyeok.audioRef).toBe('audio/jamo/giyeok.mp3');
+    // ㄱ has a sound clip (가) and, since AC-1, a name clip (`nameAudioRef`): the prompt carries the name's clip, never the sound's.
+    expect(giyeok.nameAudioRef).toBe('audio/jamo/giyeok-name.mp3');
     const r = lp.sym('jamo:giyeok', TAUGHT_L1);
-    expect(r.prompt).toEqual({ ko: '가', romanization: 'ga', en: 'the letter giyeok', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.prompt).toEqual({ ko: '기역', romanization: 'giyeok', en: 'the letter giyeok', audioRef: 'audio/jamo/giyeok-name.mp3' });
+    const named = lp.sym('jamo:nieun', TAUGHT_L1);
+    expect(named.prompt.audioRef).toBe(jamoVoice(findJamo('jamo:nieun')!, 'letter').audioRef);
+    // A vowel's name is its sound, so its one clip rides on the prompt.
+    expect(lp.sym('jamo:eo', TAUGHT_L1).prompt).toEqual({ ko: '어', romanization: 'eo', en: 'the letter eo', audioRef: 'audio/jamo/eo.mp3' });
     // The options are the written symbols: no recording rides on them.
     expect(r.options.every((o) => o.text?.audioRef === undefined)).toBe(true);
 
@@ -100,20 +110,21 @@ describe('lp.sym (sound -> written symbol)', () => {
     });
   });
 
-  it('every Stage 1 letter round is the same round with only the letter audioRef added, and no clip is bundled yet', () => {
+  it("every Stage 1 letter round says the letter's name with the name's clip, and no clip is bundled yet", () => {
     let seen = 0;
     for (const scope of Object.values(config.minigameScopes)) {
       for (const round of scope.listenPick?.rounds ?? []) {
         if (!round.id.startsWith('lp:sym:')) continue;
         seen += 1;
         const jamo = findJamo(round.answerId)!;
+        const voice = jamoVoice(jamo, 'letter');
         const { audioRef, ...rest } = round.prompt;
-        expect(audioRef, round.id).toBe(jamo.audioRef);
-        expect(rest, round.id).toEqual({ ko: jamo.spokenKo, romanization: jamo.spokenRomanization, en: `the letter ${jamo.nameEn}` });
+        expect(audioRef, round.id).toBe(voice.audioRef);
+        expect(rest, round.id).toEqual({ ko: voice.text, romanization: voice.romanization, en: `the letter ${jamo.nameEn}` });
         // No file for the ref: the prompt still plays through the voice, as before (F-AUDIO-004 AD4).
-        expect(Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef!), round.id).toBe(false);
-        // Still a sound prompt: the carrier syllable at the sound rate, with the recording to try first.
-        expect(listenPickSpeech(round), round.id).toEqual({ text: jamo.spokenKo, kind: 'sound', source: 'listen-pick', audioRef });
+        if (audioRef !== undefined) expect(Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef), round.id).toBe(false);
+        // Played at the sound rate, with the recording to try first.
+        expect(listenPickSpeech(round), round.id).toEqual({ text: voice.text, kind: 'sound', source: 'listen-pick', ...(audioRef === undefined ? {} : { audioRef }) });
       }
     }
     expect(seen).toBeGreaterThan(0);
@@ -141,6 +152,11 @@ describe('lp.sym (sound -> written symbol)', () => {
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:a', 'jamo:a'] })).toThrow(/twice/);
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:o'] })).toThrow(/not taught/);
     expect(() => lp.sym('jamo:eo', [...TAUGHT_L1, 'jamo:nope'], { optionIds: ['jamo:eo', 'jamo:nope'] })).toThrow(/Unknown symbol/);
+    // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A3 1b, 1c): no option is heard in the answer's name.
+    const taught = ['jamo:digeut', 'jamo:i', 'jamo:eu', 'jamo:rieul', 'jamo:ieung', 'jamo:mieum'];
+    expect(() => lp.sym('jamo:digeut', taught, { optionIds: ['jamo:digeut', 'jamo:i', 'jamo:rieul'] })).toThrow(/JV-A3/);
+    expect(() => lp.sym('jamo:i', taught, { optionIds: ['jamo:i', 'jamo:ieung', 'jamo:eu'] })).toThrow(/JV-A3/);
+    expect(lp.sym('jamo:digeut', taught, { optionIds: ['jamo:digeut', 'jamo:rieul', 'jamo:mieum'] }).options).toHaveLength(3);
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo'] })).toThrow(/two options/);
   });
 });

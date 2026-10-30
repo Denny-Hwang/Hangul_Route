@@ -46,10 +46,10 @@ import {
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
-import { shuffleOptions, validRounds } from '../../logic/listen-pick';
+import { roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
@@ -178,7 +178,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const spellingNow = !textMode && spelling !== null && current !== undefined && isSpellingRound(current);
   const slot = usePromptSlot({
     source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
-    hasClip: hasClip(current?.prompt.audioRef),
+    // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
+    hasClip: current !== undefined && hasClipFor(listenPickSpeech(current)),
     textOnScreen: spellingNow || textMode,
   });
   const { play: slotPlay, reset: slotReset } = slot;
@@ -209,7 +210,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
       }
       case 'answer': {
         const round = roundsRef.current[effect.roundKey];
-        hostRef.current.answer(effect.roundKey, effect.correct, round ? { itemId: round.id } : undefined);
+        // The Hangul Check names the item a symbol round credits (`itemId`, M7); any other round credits its own id.
+        hostRef.current.answer(effect.roundKey, effect.correct, round ? { itemId: roundItemId(round) } : undefined);
         return;
       }
       case 'haptic':

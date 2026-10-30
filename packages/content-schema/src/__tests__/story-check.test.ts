@@ -89,6 +89,13 @@ describe('CheckOptionSchema', () => {
     if (!bad.success) expect(bad.error.issues[0]?.path).toEqual(['en']);
   });
 
+  it('a spokenKo is said for a Korean option text: a lone letter option says its name, and spokenKo without ko is refused', () => {
+    expect(CheckOptionSchema.safeParse({ id: 'a', ko: 'ㅣ', spokenKo: '이', romanization: 'i', en: 'the vowel letter i', isCorrect: true }).success).toBe(true);
+    const bad = CheckOptionSchema.safeParse({ id: 'a', spokenKo: '이', en: 'the vowel letter i', isCorrect: true });
+    expect(bad.success).toBe(false);
+    if (!bad.success) expect(bad.error.issues.map((i) => i.path)).toContainEqual(['spokenKo']);
+  });
+
   it('enforces id grammar, the 80 character cap and the art ref grammar', () => {
     expect(CheckOptionSchema.safeParse({ id: 'A', en: 'x', isCorrect: true }).success).toBe(false);
     expect(CheckOptionSchema.safeParse({ id: 'a'.repeat(17), en: 'x', isCorrect: true }).success).toBe(false);

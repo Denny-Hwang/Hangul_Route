@@ -14,6 +14,7 @@ import { useStoryReady } from '../story-content';
 import { usePracticeSession } from '../use-practice-session';
 import { StoryReaderView } from './StoryReaderView';
 import { useStoryNotesFound } from './use-story-notes-found';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -50,6 +51,8 @@ const NOTHING = (): void => undefined;
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen(props: Props): ReactElement {
+  // The stories pack and this story's clips (AMENDMENTS-AUDIO-CLIPS AC-B6), loaded and warmed with the story.
+  useClipPacks('stories', props.route.params.storyId);
   // The story's scenes come from its chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
   // only its waiting state (the way back, then a calm status line if it takes longer).
   return useStoryReady(props.route.params.storyId) ? <StoryReaderBody {...props} /> : <LessonWaiting />;

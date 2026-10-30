@@ -11,8 +11,9 @@ import {
 } from '@hangul-route/content-schema';
 import { cardById } from '../content/heritage-cards';
 import { findJamo } from '../content/jamo';
+import { jamoVoice } from './audio/jamo-voice';
 import { checkOptionIds } from './stage1/confusables';
-import { spokenFormFor } from './stage1/spoken';
+import { letterTileAllowed } from './voice-pools';
 
 /**
  * Scope builders (F-QUEST-002 §3.7): short, validated constructors for the
@@ -52,24 +53,31 @@ function explicitOptionIds(targetId: string, taughtIds: readonly string[], optio
 
 export const lp = {
   /**
-   * Sound -> written symbol (a consonant or vowel). Options: the symbol and its taught
-   * confusables. `optionIds` names the options instead, for a quest that teaches fewer
-   * than four symbols of a kind (quest 1 asks among its four new symbols, F-QUEST-002
-   * section 3.3); they must be taught and include the target, which goes first.
+   * Heard letter -> written symbol (a consonant or vowel): a letter question, so the prompt is the
+   * letter's name (ㄴ is nieun, a vowel its sound; AMENDMENTS-AUDIO-CLIPS JV-A1, M10). Options: the
+   * symbol and its taught confusables. `optionIds` names the options instead, for a quest that
+   * teaches fewer than four symbols of a kind (quest 1 asks among its four new symbols, F-QUEST-002
+   * section 3.3); they must be taught and include the target, which goes first. A final throws: it
+   * is asked only by its sound (`syl`).
    */
   sym(jamoId: string, taughtIds: readonly string[], opts: { optionIds?: readonly string[] } = {}): ListenPickRound {
     const jamo = findJamo(jamoId);
-    const spoken = jamo && spokenFormFor(jamo);
-    if (!jamo || !spoken) throw new Error(`Unknown symbol ${jamoId}`);
+    if (!jamo) throw new Error(`Unknown symbol ${jamoId}`);
+    const spoken = jamoVoice(jamo, 'letter');
     const ids = opts.optionIds ? explicitOptionIds(jamoId, taughtIds, opts.optionIds) : checkOptionIds(jamoId, taughtIds);
+    // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A3 rules 1, 1b, 1c): no option is right by ear but the answer.
+    for (const id of ids.slice(1)) {
+      if (!letterTileAllowed(jamo, findJamo(id)!)) throw new Error(`Option ${id} is heard in ${jamoId}'s letter name or shares it (JV-A3)`);
+    }
     const options = ids.map((id) => {
       const option = findJamo(id)!;
       return { id, text: { ko: option.char, romanization: option.romanization, en: `the letter ${option.nameEn}` } };
     });
-    // The letter's recording, when the record names one, rides on the prompt (F-AUDIO-004 AD4: clip > voice > text);
-    // a ref with no bundled file still plays through the voice, so the round sounds the same until a clip ships.
-    const prompt: KoText = { ko: spoken.ko, romanization: spoken.romanization, en: `the letter ${jamo.nameEn}` };
-    if (jamo.audioRef !== undefined) prompt.audioRef = jamo.audioRef;
+    // The name's recording, when the record names one, rides on the prompt (F-AUDIO-004 AD4: clip > voice > text):
+    // a consonant's name clip, a vowel's (and ㅇ's) one clip; never the sound clip for a name. A ref with no
+    // bundled file still plays through the voice, so the round sounds the same until a clip ships.
+    const prompt: KoText = { ko: spoken.text, romanization: spoken.romanization, en: `the letter ${jamo.nameEn}` };
+    if (spoken.audioRef !== undefined) prompt.audioRef = spoken.audioRef;
     return parseRound({
       id: `lp:sym:${jamoId}`,
       prompt,

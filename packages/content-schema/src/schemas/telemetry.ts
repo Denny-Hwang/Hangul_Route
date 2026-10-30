@@ -52,6 +52,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'audio.fallback_shown',
   'audio.mute_changed',
   'audio.playback_failed',
+  // AMENDMENTS-AUDIO-CLIPS AC-B9 (payload AudioSourceSummaryPayloadSchema in audio.ts: four counts and the app version)
+  'audio.source_summary',
   // F-STORY-002 §3.12 (payloads carry ids and counts only)
   'story.read.finished',
   'story.sources.opened',

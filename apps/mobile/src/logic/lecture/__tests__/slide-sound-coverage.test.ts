@@ -1,4 +1,5 @@
 import { LectureDeckSchema, SLOT_MARKER, type LectureBlock } from '@hangul-route/content-schema';
+import { isLoneJamo } from '../../audio/speech-guard';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
@@ -139,14 +140,16 @@ describe('Sound plays the Korean on every slide that shows it (F-TCH-004 section
     }
   });
 
+  // A piece says its `spokenKo` when the story gives one: a letter keyword (ㄱ) says its name (기역, AMENDMENTS-AUDIO-CLIPS M8).
   it("Read-to-me on every story scene says every piece of Korean the scene draws, the scene's line or keyword included", () => {
     const scenes = everySlide(true).filter((s): s is Extract<Slide, { kind: 'story' }> => s.kind === 'story');
     expect(scenes.filter((s) => s.korean !== undefined).length).toBeGreaterThan(100);
     const unsaid = scenes.flatMap((scene) => {
       const plan = readToMePlan(scene, { sound: true, canPlayKorean: true, voiceChecked: true, narrationLang: 'en-US', reveal: scene.builds.length - 1 });
       const said = new Set(plan?.steps.filter((step) => step.language === 'ko-KR').map((step) => step.text));
-      const drawn = [...scene.narration.flatMap((piece) => ('ko' in piece ? [piece.ko] : [])), ...(scene.korean ? [scene.korean.ko] : [])];
-      return drawn.filter((ko) => !said.has(ko)).map((ko) => `${scene.key}: ${ko}`);
+      const drawn = [...scene.narration.flatMap((piece) => ('ko' in piece ? [piece.spokenKo ?? piece.ko] : [])), ...(scene.korean ? [scene.korean.spokenKo ?? scene.korean.ko] : [])];
+      const bare = [...said].filter((text) => isLoneJamo(text)).map((text) => `${scene.key}: says the bare letter ${text}`);
+      return [...drawn.filter((ko) => !said.has(ko)).map((ko) => `${scene.key}: ${ko}`), ...bare];
     });
     expect(unsaid).toEqual([]);
   });

@@ -1,7 +1,6 @@
-import type { SpeechLang } from '@hangul-route/content-schema';
+import type { AudioPack, SpeechLang } from '@hangul-route/content-schema';
 import { Asset } from 'expo-asset';
-import { flags } from '../config/flags';
-import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
+import { APP_VERSION } from '../config/app-version';
 import {
   attachWebVoices,
   createCapabilityTracker,
@@ -15,8 +14,10 @@ import {
 } from '../logic/audio/capability';
 import {
   classifySpeechError,
+  clipRefsFor,
   createAudioController,
   type AudioController,
+  type ClipLookup,
   type ClipPlayer,
   type PlayResult,
   type PlaySpec,
@@ -26,9 +27,12 @@ import {
 } from '../logic/audio/controller';
 import type { FallbackReason } from '../logic/audio/prompt-state';
 import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
+import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createWebClipPlayer, webAudioGlobals } from './audio-player.web';
+import { clipRegistry } from './audio-assets-store';
+import { clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
 import { track } from './telemetry';
 
 /**
@@ -96,22 +100,36 @@ export interface WebAudioEnv {
 
 export interface WebClipSetup {
   player: ClipPlayer;
-  /** The bundled asset map: `has(ref)` and how many clips it holds. */
-  assets: { has(ref: string): boolean; readonly size: number };
-  /** `flags.audioClips`: off switches every clip off without a code change. */
+  /**
+   * The bundled asset map: `has(ref)`, how many clips it holds, a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6), and the
+   * pack map chunks still on their way (`pending`, row AC-6), which a prompt waits on briefly before it looks for a clip.
+   */
+  assets: {
+    has(ref: string): boolean;
+    readonly size: number;
+    packOf?(ref: string): AudioPack | undefined;
+    packHas?(pack: AudioPack): boolean;
+    pending?(): Promise<void> | null;
+  };
+  /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
+  /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
+  packEnabled?(pack: AudioPack): boolean;
   /** The browser has Web Audio and `fetch`; without them no clip can play, so none is tried. */
   supported: boolean;
 }
 
-/** The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`). */
+/**
+ * The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`): the start map's `jamo-s1`
+ * clips and the clips of each pack map chunk loaded so far (`audio-assets-store.ts`, AC-B6).
+ */
 function bundledClips(): WebClipSetup {
-  const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
+  // The remote clip switches are read (stored copy, then a fetch when due) before the first prompt (AC-B8).
+  primeAudioSwitches();
   const uri = (ref: string): string | null => {
-    if (!has(ref)) return null;
     try {
       // On web Metro's asset transformer makes `require('x.mp3')` a URL string, not a registry number.
-      const mod = AUDIO_ASSETS[ref];
+      const mod = clipRegistry.asset(ref);
       return mod === undefined ? null : Asset.fromModule(mod).uri;
     } catch {
       return null;
@@ -120,8 +138,10 @@ function bundledClips(): WebClipSetup {
   const globals = webAudioGlobals();
   return {
     player: createWebClipPlayer({ uri, ...globals }),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length },
-    enabled: () => flags.audioClips,
+    assets: clipRegistry,
+    // The clip switches (AC-B8, `audio-switches.ts`): read at each prompt.
+    enabled: clipsSwitchOn,
+    packEnabled: packSwitchOn,
     supported: globals.createContext !== null && globals.fetch !== null,
   };
 }
@@ -191,7 +211,18 @@ export function createWebAudio(env: WebAudioEnv) {
   const clipsOn = (): boolean => clipSetup !== null && clipSetup.supported && clipSetup.enabled();
   /** Clips are on and the build holds at least one: only then is Web Audio touched at all. */
   const clipsLive = (): boolean => clipsOn() && (clipSetup?.assets.size ?? 0) > 0;
-  const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
+  const packOf = (ref: string): AudioPack | undefined => clipSetup?.assets.packOf?.(ref);
+  const packEnabled = (pack: AudioPack): boolean => clipSetup?.packEnabled?.(pack) ?? true;
+  /** Bundled, clips on, and its pack (if any) on now. */
+  const hasClip = (ref: string | undefined): boolean => {
+    if (ref === undefined || !clipsOn() || !(clipSetup?.assets.has(ref) ?? false)) return false;
+    const pack = packOf(ref);
+    return pack === undefined || packEnabled(pack);
+  };
+  /** A clip will be tried first for this prompt: its own, or the say clip of its text (`clipRefsFor`, AC-B7). */
+  const hasClipFor = (spec: ClipLookup): boolean => clipRefsFor(spec).some(hasClip);
+  /** Clips are on, the pack is on and the build holds at least one clip of it (AC-B6, AC-B8). */
+  const hasPackClips = (pack: AudioPack): boolean => clipsOn() && packEnabled(pack) && (clipSetup?.assets.packHas?.(pack) ?? false);
   const tracker = createCapabilityTracker({
     online: env.isOnline(),
     clips: clipsLive(),
@@ -395,8 +426,11 @@ export function createWebAudio(env: WebAudioEnv) {
   const controller: AudioController = createAudioController({
     engine,
     clips: clipSetup?.player ?? null,
-    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false },
+    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false, packOf },
+    clipsReady: () => clipSetup?.assets.pending?.() ?? null,
     clipsEnabled: clipsOn,
+    packEnabled,
+    appVersion: APP_VERSION,
     voices: tracker,
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
@@ -417,6 +451,19 @@ export function createWebAudio(env: WebAudioEnv) {
   });
 
   const detachVoices = attachWebVoices(tracker, voiceEvents, network, { timeoutMs: 1500 });
+
+  // The session ends when the page hides or is left: one `audio.source_summary` of what played (AC-B9). Both events
+  // may fire; the second finds nothing counted and sends nothing.
+  const sendSummary = (): void => controller.flushSourceSummary();
+  const onPageHidden = (): void => {
+    if (env.doc?.visibilityState === 'hidden') sendSummary();
+  };
+  env.doc?.addEventListener('visibilitychange', onPageHidden);
+  env.win?.addEventListener('pagehide', sendSummary);
+  const offSummary = (): void => {
+    env.doc?.removeEventListener('visibilitychange', onPageHidden);
+    env.win?.removeEventListener('pagehide', sendSummary);
+  };
 
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
 
@@ -562,7 +609,7 @@ export function createWebAudio(env: WebAudioEnv) {
 
   return {
     playPrompt,
-    playJamo: (jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> => controller.playJamo(jamo, mode),
+    playJamo: (jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult> => controller.playJamo(jamo, question),
     speak: (text: string, opts: SpeakOptions = {}): void => speakCompat(playPrompt, text, opts),
     stop: (): void => controller.stop(),
     setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
@@ -592,6 +639,10 @@ export function createWebAudio(env: WebAudioEnv) {
     },
     /** The ref has a bundled recording that will be tried first (the prompt slot's `hasClip`). */
     hasClip,
+    /** The prompt will try a bundled clip first, its own or its text's say clip (the prompt slot's `hasClip`). */
+    hasClipFor,
+    /** The build holds a playable clip of this pack now (the level check's prompts, AMENDMENTS-AUDIO-CLIPS AC-B6). */
+    hasPackClips,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     /** Test only: how many utterances the page-wide live set holds (shared by every instance: compare to a baseline). */
     liveUtteranceCountForTests: (): number => LIVE_UTTERANCES.size,
@@ -607,6 +658,7 @@ export function createWebAudio(env: WebAudioEnv) {
       detachVoices();
       offCapability();
       offMute();
+      offSummary();
       controller.dispose();
     },
   };
@@ -626,8 +678,9 @@ function audio(): WebAudio {
 export function playPrompt(spec: PlaySpec): Promise<PlayResult> {
   return audio().playPrompt(spec);
 }
-export function playJamo(jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> {
-  return audio().playJamo(jamo, mode);
+/** Say a jamo for a question (JV-A2): `'letter'` its name, `'sound'` (default) its carrier syllable; legacy `'name'` = `'letter'`. */
+export function playJamo(jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult> {
+  return audio().playJamo(jamo, question);
 }
 export function speak(text: string, opts: SpeakOptions = {}): void {
   audio().speak(text, opts);
@@ -668,6 +721,14 @@ export function noteFallbackShown(source: string, reason: FallbackReason): void 
 }
 export function hasClip(ref: string | undefined): boolean {
   return audio().hasClip(ref);
+}
+/** A prompt will try a bundled clip first: the record's own or the say clip of its text (AMENDMENTS-AUDIO-CLIPS AC-B7). */
+export function hasClipFor(spec: ClipLookup): boolean {
+  return audio().hasClipFor(spec);
+}
+/** A playable clip of this pack is bundled now (clips and the pack switched on). */
+export function hasPackClips(pack: AudioPack): boolean {
+  return audio().hasPackClips(pack);
 }
 
 export type { SpeechLang };

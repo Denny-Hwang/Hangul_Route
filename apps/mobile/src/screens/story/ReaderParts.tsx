@@ -30,6 +30,7 @@ import type { ReactElement, Ref } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { recapLayout, type CultureNoteView, type RecapScene } from '../../logic/story/reader-extras';
 import type { NarrationPartView, SceneKorean } from '../../logic/story/scene-view';
+import { spokenRomanization } from '../../logic/story/spoken-label';
 
 /**
  * The presentational pieces of the story reader (F-STORY-002 §3.3-3.7,
@@ -241,7 +242,7 @@ export function GlossCard({
                 testID="story-reader-gloss-text"
               />
             </View>
-            <SpeakerButton label={copy.hearTerm(text.romanization)} onPress={onHear} testID="story-reader-gloss-hear" />
+            <SpeakerButton label={copy.hearTerm(spokenRomanization(text))} onPress={onHear} testID="story-reader-gloss-hear" />
           </View>
           <View style={{ alignSelf: 'center' }}>
             <Button label={copy.closeGloss.cta} tone="ghost" size="md" onPress={onClose} testID="story-reader-gloss-close" />

@@ -36,7 +36,7 @@ export const useReviewRunStore = create<State & Actions>((set, get) => ({
 
 /**
  * The review `MinigameHost` (F-QUEST-002 §3.12) for Listen & Pick: an answer is credited to the
- * item named by `meta.itemId` (the round id is the item id), never to a round index; `complete`
+ * item named by `meta.itemId` (`roundItemId`: a symbol round's `itemId`, a word round's id), never to a round index; `complete`
  * hands the chunk back to the screen.
  */
 export function reviewHost(onComplete: () => void): MinigameHost {

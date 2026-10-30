@@ -9,6 +9,18 @@ import type { MinigameScope } from './minigame-config';
 /** The six taught final consonants, in teaching order (F-QUEST-002 §3.6). */
 const TAUGHT_FINALS: readonly string[] = ['ㄴ', 'ㄹ', 'ㅇ', 'ㄱ', 'ㅁ', 'ㅂ'];
 
+/**
+ * A Listen & Pick round that credits a review item other than its own id: the Hangul Check keeps a
+ * symbol round's `lp:sym:` / `lp:syl:` id, which sets its speech rate, and names its item here
+ * (AMENDMENTS-AUDIO-CLIPS M7).
+ */
+export type ItemRound = ListenPickRound & { itemId?: string };
+
+/** The review item a round credits (scoring and resume): its `itemId`, else its own id. */
+export function roundItemId(round: ItemRound): string {
+  return round.itemId ?? round.id;
+}
+
 /** mulberry32: a small, well-spread seeded generator. Shared with the other games' shuffles. */
 export function seededRandom(seed: number): () => number {
   let a = seed >>> 0;
@@ -26,7 +38,7 @@ export function seededRandom(seed: number): () => number {
  * the answer first; this is what keeps it from staying there. The input is not
  * changed.
  */
-export function shuffleOptions(round: ListenPickRound, seed: number): ListenPickRound {
+export function shuffleOptions<R extends ListenPickRound>(round: R, seed: number): R {
   const next = seededRandom(seed);
   const options = [...round.options];
   for (let i = options.length - 1; i > 0; i--) {

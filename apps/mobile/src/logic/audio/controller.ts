@@ -1,8 +1,18 @@
-import type { SpeechLang } from '@hangul-route/content-schema';
+import {
+  AUDIO_SOURCE_COUNT_MAX,
+  isSayRef,
+  sayRef,
+  type AudioPack,
+  type AudioSource,
+  type AudioSourceSummaryPayload,
+  type SpeechLang,
+} from '@hangul-route/content-schema';
 import { capabilityTelemetry, type AudioCapability, type CapabilityCheckedPayload, type CapabilityPlatform } from './capability';
 import type { FallbackReason, PlayResult } from './prompt-state';
 import { speechParams, type LevelOrder, type PromptKind } from './rate';
-import { spokenFor, type SpokenJamo } from './spoken';
+import { jamoVoice, toJamoQuestion, type JamoQuestion, type JamoVoice, type LegacyJamoMode } from './jamo-voice';
+import { guardSpokenText, reportVoiceFault } from './speech-guard';
+import type { SpokenJamo } from './spoken';
 import type { VoiceCandidate } from './voice-rank';
 
 export type { PlayResult } from './prompt-state';
@@ -10,10 +20,17 @@ export type { PlayResult } from './prompt-state';
 /**
  * The one place that decides what a prompt does (F-AUDIO-004 §3.5).
  *
- * Resolution order is clip > TTS > visible text (AD4): a bundled recording
- * wins, a clip that fails falls through to the device voice, and with no
- * usable Korean voice the controller never calls the engine and reports
- * `unavailable` so the screen shows the text prompt. Pure logic: the speech
+ * Resolution order (AMENDMENTS-AUDIO-CLIPS AC-B7, amending AD4): the record's
+ * clip (`spec.audioRef`), then the text-keyed clip of what is said
+ * (`audio/say/<sayKey(spec.text)>.mp3`, AC-B4; Korean only), then the device
+ * voice, then the visible text. A clip plays only when it is bundled, clips are
+ * on (`clipsEnabled`: the build flag and the remote `audioClips`) and its pack
+ * is on (`packEnabled`: the build ceiling and the remote `audioPack.<pack>`,
+ * AC-B8), all read at prompt time, so a pack switched off plays the voice on the
+ * next prompt. A clip that fails falls through to the next step. With no usable
+ * Korean voice the controller never calls the engine and reports `unavailable`
+ * so the screen shows the text prompt. Because a say clip is keyed by the text
+ * itself, a clip can never play for a text that changed. Pure logic: the speech
  * engine, the clip player, the asset map, the clock and telemetry are all
  * arguments, so `platform/audio*.ts` stay thin adapters.
  */
@@ -31,6 +48,25 @@ export interface PlaySpec {
   slow?: boolean;
   /** Surface id for telemetry: 'match-sound' | 'discover' | 'trace' | ... */
   source?: string;
+}
+
+/** What decides which clips a prompt may play: the spoken text, the record's clip and the language. */
+export type ClipLookup = Pick<PlaySpec, 'text' | 'audioRef' | 'language'>;
+
+/**
+ * The clips a prompt may play, in the AMENDMENTS-AUDIO-CLIPS AC-B7 order: the record's clip (`audioRef`), then the
+ * text-keyed say clip of the spoken text (`audio/say/<sayKey(text)>.mp3`, AC-B4; Korean only, never for blank text).
+ * The controller tries these, and the adapters' `hasClipFor` and the warm-up lists read the same list, so a screen's
+ * "no Korean voice" decision always agrees with what will play.
+ */
+export function clipRefsFor(spec: ClipLookup): string[] {
+  const refs: string[] = [];
+  if (spec.audioRef !== undefined && spec.audioRef !== '') refs.push(spec.audioRef);
+  if ((spec.language ?? 'ko-KR') === 'ko-KR' && spec.text.trim() !== '') {
+    const said = sayRef(spec.text);
+    if (!refs.includes(said)) refs.push(said);
+  }
+  return refs;
 }
 
 // --- Injected engines -------------------------------------------------------
@@ -153,17 +189,30 @@ export interface PlaybackFailedPayload {
 export type AudioTelemetryEvent =
   | { name: 'audio.capability_checked'; payload: CapabilityCheckedPayload }
   | { name: 'audio.fallback_shown'; payload: { source: string; reason: FallbackReason } }
-  | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload };
+  | { name: 'audio.playback_failed'; payload: PlaybackFailedPayload }
+  | { name: 'audio.source_summary'; payload: AudioSourceSummaryPayload };
+
+/** How many prompts each source played since the last summary (AC-B9). */
+export type AudioSourceCounts = Record<AudioSource, number>;
 
 export interface ControllerDeps {
   /** `null` = the platform has no speech engine. */
   engine: TtsEngine | null;
   /** `null` = no clip player (clips not wired yet). */
   clips: ClipPlayer | null;
-  /** The bundled asset map: `has(ref)`. */
-  assets: { has(ref: string): boolean };
-  /** `flags.audioClips`. */
+  /** The bundled asset map: `has(ref)`, and the pack of a ref (`AUDIO_ASSET_PACKS`, AC-B6) when it has one. */
+  assets: { has(ref: string): boolean; packOf?(ref: string): AudioPack | undefined };
+  /**
+   * The pack map chunks still on their way (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), or null when none is: a prompt
+   * with no playable clip yet waits on them, at most `PACK_WAIT_MS`, before it looks again. Absent: never waits.
+   */
+  clipsReady?(): Promise<void> | null;
+  /** `flags.audioClips` and the remote `audioClips` (AC-B8); read at each prompt. */
   clipsEnabled(): boolean;
+  /** The build ceiling `flags.audioClipPacks` and the remote `audioPack.<pack>` (AC-B8); read at each prompt. Absent: every pack is on. */
+  packEnabled?(pack: AudioPack): boolean;
+  /** The app version `audio.source_summary` carries (AC-B9). */
+  appVersion: string;
   voices: VoiceSource;
   isMuted(): boolean;
   levelOrder(): LevelOrder;
@@ -175,11 +224,23 @@ export interface ControllerDeps {
 }
 
 export interface AudioController {
+  /** Throws synchronously in tests on a lone-jamo text (JV-A2 guard); never in a release build. */
   playPrompt(spec: PlaySpec): Promise<PlayResult>;
-  playJamo(jamo: SpokenJamo, mode?: 'sound' | 'name'): Promise<PlayResult>;
+  /**
+   * Say a jamo for a question (AMENDMENTS-AUDIO-CLIPS JV-A2): `'letter'` its name, `'sound'` (the
+   * default) its carrier syllable. The legacy `'name'` is the letter question (`toJamoQuestion`).
+   */
+  playJamo(jamo: SpokenJamo, question?: JamoQuestion | LegacyJamoMode): Promise<PlayResult>;
   stop(): void;
   /** Called by the fallback panel when it first shows; fires `audio.fallback_shown` once per (source, reason). */
   noteFallbackShown(source: string, reason: FallbackReason): void;
+  /** The counts since the last summary (AC-B9). */
+  sourceCounts(): AudioSourceCounts;
+  /**
+   * The session ended or the page hides: sends `audio.source_summary` (counts and the app version only) when anything
+   * was counted, and starts a new count, so one session sends at most one summary.
+   */
+  flushSourceSummary(): void;
   dispose(): void;
 }
 
@@ -202,6 +263,12 @@ const DRAIN_MAX_MS = 300;
 const SAFETY_BASE_MS = 2000;
 const SAFETY_PER_CHAR_MS = 400;
 const MAX_FAILURE_EVENTS_PER_KEY = 3;
+/**
+ * A prompt asked while its lesson's pack map chunk is still loading waits this long at most for it (AC-B6): the chunk
+ * comes from the service worker's precache in a frame or two; one that does not arrive in time leaves the prompt to
+ * the device voice (AC-B7), never a silent wait.
+ */
+export const PACK_WAIT_MS = 1000;
 const MAX_FAILURE_EVENTS_PER_PAGE = 12;
 
 const SUPERSEDED = Symbol('superseded');
@@ -228,6 +295,11 @@ export function createAudioController(deps: ControllerDeps): AudioController {
   const failureEventsByKey = new Map<string, number>();
   let lastCapabilityKey: string | null = null;
   const shown = new Set<string>();
+  const zeroCounts = (): AudioSourceCounts => ({ clip: 0, say: 0, tts: 0, text: 0 });
+  let counts = zeroCounts();
+  const count = (source: AudioSource): void => {
+    counts[source] = Math.min(AUDIO_SOURCE_COUNT_MAX, counts[source] + 1);
+  };
 
   // --- telemetry -------------------------------------------------------------
 
@@ -296,10 +368,15 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
   // --- clip ------------------------------------------------------------------
 
-  const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'played' | 'skipped' | Superseded> => {
-    const ref = spec.audioRef;
-    const clips = deps.clips;
-    if (ref === undefined || clips === null || !deps.clipsEnabled() || !deps.assets.has(ref)) return 'skipped';
+  /** Bundled, and its pack (if it has one) is on now (AC-B8). */
+  const playable = (ref: string): boolean => {
+    if (!deps.assets.has(ref)) return false;
+    const pack = deps.assets.packOf?.(ref);
+    return pack === undefined || (deps.packEnabled?.(pack) ?? true);
+  };
+
+  /** One clip; a failure is reported (`kind: 'clip'`) and settles `failed`, so the caller tries the next step. */
+  const playClip = async (t: Ticket, clips: ClipPlayer, ref: string, spec: PlaySpec): Promise<'ok' | 'failed' | Superseded> => {
     const outcome = await waitFor<'ok' | ClipFailure>(t, (resolve) => {
       const handle = clips.play(ref, {
         onStart: () => undefined,
@@ -308,9 +385,39 @@ export function createAudioController(deps: ControllerDeps): AudioController {
       });
       return () => handle.stop();
     });
-    if (outcome === SUPERSEDED) return SUPERSEDED;
-    if (outcome === 'ok') return 'played';
+    if (outcome === SUPERSEDED || outcome === 'ok') return outcome;
     noteFailure({ kind: 'clip', reason: outcome, code: 'none', source: sourceOf(spec) });
+    return 'failed';
+  };
+
+  /** AC-B7 steps 1 and 2 (`clipRefsFor`): the record's clip, then the say clip of the spoken text (Korean only). */
+  const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'clip' | 'say' | 'skipped' | Superseded> => {
+    const clips = deps.clips;
+    if (clips === null || !deps.clipsEnabled()) return 'skipped';
+    const refs = clipRefsFor(spec);
+    // Wait only for a clip that could still arrive in a pack chunk on its way: never for a prompt with no clip to look
+    // for (a non-Korean line, an empty text), one whose clip is already playable, or one whose clips are all in but
+    // switched off.
+    const pending = refs.some(playable) || refs.every((ref) => deps.assets.has(ref)) ? null : (deps.clipsReady?.() ?? null);
+    if (pending !== null) {
+      const waited = await waitFor<'ready'>(t, (resolve) => {
+        let timer: unknown;
+        const done = (): void => {
+          clock.clearTimeout(timer);
+          resolve('ready');
+        };
+        timer = clock.setTimeout(done, PACK_WAIT_MS);
+        void pending.then(done, done);
+        return () => clock.clearTimeout(timer);
+      });
+      if (waited === SUPERSEDED) return SUPERSEDED;
+    }
+    for (const ref of refs) {
+      if (!playable(ref)) continue;
+      const outcome = await playClip(t, clips, ref, spec);
+      if (outcome === SUPERSEDED) return SUPERSEDED;
+      if (outcome === 'ok') return isSayRef(ref) ? 'say' : 'clip';
+    }
     return 'skipped';
   };
 
@@ -474,7 +581,7 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
   // --- public ----------------------------------------------------------------
 
-  const playPrompt = async (spec: PlaySpec): Promise<PlayResult> => {
+  const runPrompt = async (spec: PlaySpec): Promise<PlayResult> => {
     if (deps.isMuted()) return fail('muted', 'muted');
 
     const ticket: Ticket = { superseded: false, hooks: new Set() };
@@ -490,21 +597,47 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     try {
       const viaClip = await tryClip(ticket, spec);
       if (viaClip === SUPERSEDED) return 'played';
-      if (viaClip === 'played') return 'played';
+      if (viaClip !== 'skipped') {
+        count(viaClip);
+        return 'played';
+      }
       const viaTts = await speakTts(ticket, spec, wasBusy);
-      // An interrupted prompt never drives the fallback.
-      return viaTts === SUPERSEDED ? 'played' : viaTts;
+      // An interrupted prompt never drives the fallback, and is not counted.
+      if (viaTts === SUPERSEDED) return 'played';
+      count(viaTts === 'played' ? 'tts' : 'text');
+      return viaTts;
     } finally {
       if (current === ticket) current = null;
     }
   };
 
+  /**
+   * `jamoVoice` throws on a letter question for a final in every build (JV-A1). At the playback
+   * boundary that is a caller fault, so it throws in tests and otherwise warns in development and
+   * speaks the sound: a learner never loses a prompt to it.
+   */
+  const voiceForPlay = (jamo: SpokenJamo, question: JamoQuestion): JamoVoice => {
+    try {
+      return jamoVoice(jamo, question);
+    } catch (error) {
+      if (question === 'sound') throw error;
+      reportVoiceFault((error as Error).message);
+      return jamoVoice(jamo, 'sound');
+    }
+  };
+
+  /** Every prompt passes here, so the lone-jamo guard (JV-A2) runs once for both platforms, before anything plays. */
+  const playPrompt = (spec: PlaySpec): Promise<PlayResult> => {
+    guardSpokenText(spec.text, spec.source);
+    return runPrompt(spec);
+  };
+
   return {
     playPrompt,
-    playJamo: (jamo, mode = 'sound') => {
-      const spoken = spokenFor(jamo, mode);
-      const spec: PlaySpec = { text: spoken.text, language: 'ko-KR', kind: 'sound' };
-      if (spoken.audioRef !== undefined) spec.audioRef = spoken.audioRef;
+    playJamo: (jamo, question) => {
+      const voice = voiceForPlay(jamo, toJamoQuestion(jamo, question));
+      const spec: PlaySpec = { text: voice.text, language: 'ko-KR', kind: 'sound' };
+      if (voice.audioRef !== undefined) spec.audioRef = voice.audioRef;
       return playPrompt(spec);
     },
     stop: () => {
@@ -517,6 +650,13 @@ export function createAudioController(deps: ControllerDeps): AudioController {
       if (shown.has(key)) return;
       shown.add(key);
       deps.emit({ name: 'audio.fallback_shown', payload: { source, reason } });
+    },
+    sourceCounts: () => ({ ...counts }),
+    flushSourceSummary: () => {
+      const sent = counts;
+      if (sent.clip + sent.say + sent.tts + sent.text === 0) return;
+      counts = zeroCounts();
+      deps.emit({ name: 'audio.source_summary', payload: { ...sent, appVersion: deps.appVersion } });
     },
     dispose: stopObserving,
   };

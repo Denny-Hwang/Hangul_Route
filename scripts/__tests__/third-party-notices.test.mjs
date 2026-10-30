@@ -16,6 +16,7 @@ import {
   JSON_OUT,
   MARKDOWN_OUT,
   PERMISSIVE,
+  TTS_CATEGORY,
   assetLicenseId,
   buildModel,
   classify,
@@ -26,6 +27,7 @@ import {
   parseCsv,
   renderJson,
   renderMarkdown,
+  summarizeTtsAssets,
   walk,
 } from "../third-party-notices.mjs";
 
@@ -277,6 +279,41 @@ describe("third-party-notices: the walk", () => {
 });
 
 const installed = existsSync(join(REPO, "apps", "mobile", "node_modules")) && existsSync(join(REPO, "apps", "web", "node_modules"));
+
+describe("third-party-notices: generated speech clips (AMENDMENTS-AUDIO-CLIPS AC-B1)", () => {
+  test("audio-tts rows need no license text and are listed once per vendor, engine and voice", () => {
+    const tts = (file, rate) => ({
+      asset_path: `apps/mobile/assets/audio/say/${file}.mp3`,
+      category: TTS_CATEGORY,
+      source: `tts:polly/neural/Seoyeon; rate ${rate}; generated 2026-11-02; terms https://aws.amazon.com/service-terms/ read 2026-10-29`,
+      license: "Vendor terms recorded in source (not under the repository licence)",
+      attribution: "Amazon Polly, computer-generated voice Seoyeon",
+      url: "https://aws.amazon.com/service-terms/",
+    });
+    const rows = [tts("0123456789abcdef", 0.9), tts("fedcba9876543210", 0.85), { ...tts("00112233445566aa", 0.9), source: "tts:google/neural2/ko-KR-Neural2-A; rate 0.9; generated 2026-11-02; terms https://cloud.google.com/terms/service-terms read 2026-10-29", attribution: "Google Cloud Text-to-Speech, computer-generated voice ko-KR-Neural2-A", url: "https://cloud.google.com/terms/service-terms" }];
+    const summary = summarizeTtsAssets(rows);
+    assert.deepEqual(summary.map((a) => [a.path, a.source, a.license, a.declared]), [
+      ["apps/mobile/assets/audio (1 computer-generated speech clip)", "tts:google/neural2/ko-KR-Neural2-A", null, rows[0].license],
+      ["apps/mobile/assets/audio (2 computer-generated speech clips)", "tts:polly/neural/Seoyeon", null, rows[0].license],
+    ]);
+    assert.deepEqual(summarizeTtsAssets([]), []);
+
+    const root = fixtureRepo();
+    try {
+      const csv = join(root, "content", "assets-license.csv");
+      const quote = (v) => `"${String(v).replace(/"/g, '""')}"`;
+      writeFileSync(csv, `${readFileSync(csv, "utf8")}${rows.map((r) => Object.values(r).map(quote).join(",")).join("\n")}\n`);
+      const model = buildModel(root, [{ dir: "apps/app", label: "app" }, { dir: "packages/lib", label: "server" }]);
+      assert.deepEqual(model.problems, []);
+      assert.deepEqual(model.licenses.map((l) => l.id), ["Apache-2.0", "MIT", "OFL-1.1"]);
+      const md = renderMarkdown(model);
+      assert.match(md, /\| apps\/mobile\/assets\/audio \(2 computer-generated speech clips\) \| tts:polly\/neural\/Seoyeon \(https:\/\/aws\.amazon\.com\/service-terms\/\) \| Vendor terms recorded in source \(not under the repository licence\) \| Amazon Polly, computer-generated voice Seoyeon \|/);
+      assert.doesNotMatch(md, /0123456789abcdef/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("third-party-notices: the repository", () => {
   test("--check passes: no copyleft or unknown license, and the notices are current", { skip: !installed && !process.env.CI && "workspace not installed" }, () => {

@@ -518,13 +518,14 @@ export const learner = {
     },
     discover: {
       hearIt: { cta: 'Escuchar' },
-      letterName: { cta: 'Nombre' },
+      soundWith: { cta: 'Escúchala con una vocal' },
       sayLine: (spoken: string) => `Se dice así: ${spoken}`,
       showHowToSay: { cta: 'Ver cómo se dice' },
       heard: { pill: 'Escuchado' },
       continue: { cta: 'Continuar' },
       wordsTitle: 'Palabras que ya puedes leer',
       batchimLine: 'Va abajo del bloque',
+      exampleWord: 'Palabra de ejemplo',
       empty: 'Aquí no hay nada que ver. Toca Continuar.',
       pageLabel: (page: number, count: number) => `Página ${page} de ${count}`,
       exchange: {
@@ -735,8 +736,15 @@ export const learner = {
 
   audio: {
     readHere: '¿Sin sonido? Léelo aquí.',
-    heading: { listen: 'Toca la letra que escuchas', text: 'Toca la letra de este sonido' },
+    heading: {
+      listen: 'Toca la letra que escuchas',
+      text: 'Toca la letra de este sonido',
+      startsWith: '¿Con qué letra empieza este sonido?',
+      endsWith: '¿Qué letra va abajo en este sonido?',
+    },
     listenAgain: 'Escucha otra vez. Esta suena',
+    listenAgainLetter: 'Escucha otra vez. Esta letra es',
+    finalLine: (letter: string, syllable: string) => `${letter} abajo: ${syllable}`,
     hearIt: { cta: 'Escuchar' },
     tapToHear: 'Toca y escucha',
     tapToReplay: 'Toca para repetir',
@@ -1833,7 +1841,7 @@ export const learner = {
     },
     slide: {
       deckTitle: 'Lección',
-      letterName: (name: string) => `Nombre de la letra: ${name}`,
+      letterName: (name: string, _hangul: string) => `Nombre de la letra: ${name}`,
       strokeCaption: 'Guía de trazos simplificada',
       sayIt: 'Dilo así:',
       card: 'Tarjeta cultural',
