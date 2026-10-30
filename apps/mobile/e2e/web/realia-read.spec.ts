@@ -22,7 +22,8 @@ const TAP_GAP_MS = 120;
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|score)\b|%/i;
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
 
-type Fixture = 'menu' | 'ticket' | 'sign' | 'priceCards';
+type AddedKind = 'recipe' | 'receipt' | 'label' | 'forecast' | 'calendar' | 'timetable' | 'map' | 'poster';
+type Fixture = 'menu' | 'ticket' | 'sign' | 'priceCards' | AddedKind;
 interface Params {
   fixture: Fixture;
   mode?: 'quest' | 'check';
@@ -147,6 +148,35 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
         await expectNoHorizontalOverflow(page);
         await shot(page, `realia-read-price-cards-${size.name}`);
       });
+
+      // F-CURR-002 row CM-47: one smoke per added kind. The layout is a lazy chunk (`screen-chunk:realia-kinds`): the
+      // sheet draws as its kind once that chunk is in, with every line a named button, and the round still plays.
+      for (const [kind, group, lineName, answer] of [
+        ['recipe', 'Recipe card, 3 lines', '김, gim, 두 장, du jang', 'two'],
+        ['receipt', 'Receipt, 4 lines', '우유, uyu, 1,000원, cheon won', 'cheon'],
+        ['label', 'Food label, 2 lines', '원산지, wonsanji, 국산, guksan', 'local'],
+        ['forecast', 'Weather forecast, 3 lines', '화, hwa, 비, bi', 'rain'],
+        ['calendar', 'Calendar, 2 lines', '9일, guil, 한글날, hangeullal', 'd9'],
+        ['timetable', 'Timetable, 3 lines', '부산, busan, 두 시, du si', 'two'],
+        ['map', 'Map, 3 lines', '정상, jeongsang, to the right', 'right'],
+        ['poster', 'Poster, 3 lines', '도서관, doseogwan', 'library'],
+      ] as const satisfies ReadonlyArray<readonly [AddedKind, string, string, string]>) {
+        test(`a ${kind} draws its own layout from its chunk, with named line buttons, and its round plays (CM-47)`, async ({ page }) => {
+          await open(page, { fixture: kind });
+          const sheet = page.getByRole('group', { name: group });
+          await expect(sheet).toBeVisible();
+          await expect(page.getByTestId(`realia-read-sheet-kind-${kind}`)).toBeVisible({ timeout: 10_000 });
+          const answerLine = sheet.getByRole('button', { name: lineName, exact: true });
+          await expect(answerLine).toBeVisible();
+          // Every line button is at least 48 px tall (touchTarget.min is 64).
+          for (const box of await sheet.getByRole('button').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(box).toBeGreaterThanOrEqual(48);
+          await expectNoHorizontalOverflow(page);
+          await shot(page, `realia-read-${kind}-${size.name}`);
+          await option(page, answer).click();
+          await expect(sheet.getByRole('button', { name: new RegExp(`^${lineName.split(',')[0]}, .*Found here$`) })).toBeVisible();
+          await expectNoShame(page);
+        });
+      }
     });
   }
 

@@ -1,14 +1,17 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { RomanizationModeOverride } from '../i18n/use-romanization-mode';
+import { LessonWaiting } from '../screens/lesson-content';
 import { minigameFinishedEvent } from '../logic/minigame-finished';
 import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
 import { RealiaReadGame } from '../screens/minigames/RealiaReadGame';
 import { REALIA_FIXTURES, type RealiaFixtureKey } from './realia-read-e2e-fixture';
+import type { RealiaKindFixtureKey } from './realia-kinds-e2e-fixture';
+import type { MinigameScope } from '../logic/minigame-config';
 import type { RootStackParamList } from './types';
 
 /**
@@ -19,7 +22,8 @@ import type { RootStackParamList } from './types';
  */
 
 export interface RealiaReadE2eParams {
-  fixture: RealiaFixtureKey;
+  /** A G-2 fixture, or one of the CM-47 kinds' (`realia-kinds-e2e-fixture.ts`, loaded on demand). */
+  fixture: RealiaFixtureKey | RealiaKindFixtureKey;
   mode?: HostMode;
   romanization?: RomanizationMode;
 }
@@ -60,8 +64,24 @@ export function RealiaE2eHook(): null {
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RealiaReadE2e'>;
 
+/** The scope of a fixture: a G-2 one at once, a CM-47 one once its module is in (null before). */
+function useFixture(fixture: RealiaReadE2eParams['fixture']): MinigameScope | null {
+  const g2 = Object.prototype.hasOwnProperty.call(REALIA_FIXTURES, fixture) ? REALIA_FIXTURES[fixture as RealiaFixtureKey] : null;
+  const [added, setAdded] = useState<MinigameScope | null>(null);
+  useEffect(() => {
+    if (g2) return;
+    let live = true;
+    void import('./realia-kinds-e2e-fixture').then((m) => live && setAdded(m.REALIA_KIND_FIXTURES[fixture as RealiaKindFixtureKey]));
+    return () => {
+      live = false;
+    };
+  }, [g2, fixture]);
+  return g2 ?? added;
+}
+
 export function RealiaReadE2eScreen({ route, navigation }: Props): ReactElement {
   const { fixture, mode = 'quest', romanization = 'always' } = route.params;
+  const scope = useFixture(fixture);
   useEffect(() => {
     log.answers = [];
     log.completed = 0;
@@ -75,9 +95,10 @@ export function RealiaReadE2eScreen({ route, navigation }: Props): ReactElement 
       void track(minigameFinishedEvent('realia-read', E2E_QUEST_ID, 0));
     },
   };
+  if (scope === null) return <LessonWaiting />;
   return (
     <RomanizationModeOverride mode={romanization}>
-      <RealiaReadGame scope={REALIA_FIXTURES[fixture]} host={host} onBack={() => navigation.goBack()} />
+      <RealiaReadGame scope={scope} host={host} onBack={() => navigation.goBack()} />
     </RomanizationModeOverride>
   );
 }
