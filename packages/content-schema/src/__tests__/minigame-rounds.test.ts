@@ -25,6 +25,7 @@ describe('minigame kinds', () => {
     expect(MinigameKindSchema.options).toEqual(
       expect.arrayContaining(['match-sound', 'card-match', 'culture-quiz', 'listen-pick', 'pic-word-match']),
     );
+    // 21 + `story-order` (F-CURR-002 row CM-34).
     expect(MinigameKindSchema.options).toHaveLength(22);
   });
 

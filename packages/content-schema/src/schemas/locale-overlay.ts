@@ -89,6 +89,8 @@ export const OVERLAY_FIELDS = {
     'clozePick.realia.title.gloss',
     'clozePick.realia.entries.<entry>.text.gloss',
     'clozePick.realia.entries.<entry>.value.gloss',
+    // F-CURR-002 row CM-34: a Story Order panel's caption gloss.
+    'storyOrder.rounds.<roundId>.panels.<panelId>.caption.gloss',
   ],
   stage: ['title', 'oneLiner', 'anchorSkill'],
   theme: ['title', 'oneLiner', 'anchorSkill'],

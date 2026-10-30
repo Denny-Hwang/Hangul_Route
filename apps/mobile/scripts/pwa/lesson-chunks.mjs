@@ -113,6 +113,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
   // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
   // 2,388 B under this line, which stays.
+  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
+  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
+  // `build:web`), 7,102 B over that main and 1,454 B under this line, so the line stays.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -280,6 +283,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/dictation-entry.ts`).
   Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
+  // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
+  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
 ]);
 
 /**

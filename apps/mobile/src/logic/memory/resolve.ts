@@ -94,7 +94,7 @@ const text = (value: { ko?: unknown } | undefined, kind?: ReviewItemKind): Asked
 
 /**
  * What a host game's round asked, read from its scope by the answered round's id (Listen & Pick,
- * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame). Trace a Word copies a
+ * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame, Story Order). Trace a Word copies a
  * word shown on screen, so it asks no item; an unknown kind or id asks nothing.
  */
 export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRound | undefined {
@@ -144,6 +144,13 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const answer = round.tiles[round.answerIndex];
       if (!answer) return undefined;
       return { texts: texts({ ko: fillClozeGap(round.sentence.ko, answer.ko), kind: 'pat' }), jamoIds: [], rung: 'produce' };
+    case 'story-order': {
+      // F-CURR-002 row CM-34: a slot asks the line that comes next (`<round>/<panel>`), read in order: the read rung. No
+      // kind, as Listen & Pick: a sentence is the pattern item and a one-word caption the word item (the catalogue's kind).
+      const at = itemId.indexOf('/');
+      const round = scope.storyOrder?.rounds.find((r) => r.id === itemId.slice(0, at));
+      const panel = at < 0 ? undefined : round?.panels.find((p) => p.id === itemId.slice(at + 1));
+      return panel ? { texts: texts(text(panel.caption)), jamoIds: [], rung: 'read' } : undefined;
     }
     default:
       return undefined;
