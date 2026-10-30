@@ -50,6 +50,25 @@ export interface PlaySpec {
   source?: string;
 }
 
+/** What decides which clips a prompt may play: the spoken text, the record's clip and the language. */
+export type ClipLookup = Pick<PlaySpec, 'text' | 'audioRef' | 'language'>;
+
+/**
+ * The clips a prompt may play, in the AMENDMENTS-AUDIO-CLIPS AC-B7 order: the record's clip (`audioRef`), then the
+ * text-keyed say clip of the spoken text (`audio/say/<sayKey(text)>.mp3`, AC-B4; Korean only, never for blank text).
+ * The controller tries these, and the adapters' `hasClipFor` and the warm-up lists read the same list, so a screen's
+ * "no Korean voice" decision always agrees with what will play.
+ */
+export function clipRefsFor(spec: ClipLookup): string[] {
+  const refs: string[] = [];
+  if (spec.audioRef !== undefined && spec.audioRef !== '') refs.push(spec.audioRef);
+  if ((spec.language ?? 'ko-KR') === 'ko-KR' && spec.text.trim() !== '') {
+    const said = sayRef(spec.text);
+    if (!refs.includes(said)) refs.push(said);
+  }
+  return refs;
+}
+
 // --- Injected engines -------------------------------------------------------
 
 export interface TtsRequest {
@@ -360,22 +379,17 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     return 'failed';
   };
 
-  /** AC-B7 steps 1 and 2: the record's clip, then the say clip of the spoken text (Korean only). */
+  /** AC-B7 steps 1 and 2 (`clipRefsFor`): the record's clip, then the say clip of the spoken text (Korean only). */
   const tryClip = async (t: Ticket, spec: PlaySpec): Promise<'clip' | 'say' | 'skipped' | Superseded> => {
     const clips = deps.clips;
     if (clips === null || !deps.clipsEnabled()) return 'skipped';
-    const recordRef = spec.audioRef;
-    if (recordRef !== undefined && playable(recordRef)) {
-      const outcome = await playClip(t, clips, recordRef, spec);
+    for (const ref of clipRefsFor(spec)) {
+      if (!playable(ref)) continue;
+      const outcome = await playClip(t, clips, ref, spec);
       if (outcome === SUPERSEDED) return SUPERSEDED;
-      if (outcome === 'ok') return isSayRef(recordRef) ? 'say' : 'clip';
+      if (outcome === 'ok') return isSayRef(ref) ? 'say' : 'clip';
     }
-    if ((spec.language ?? 'ko-KR') !== 'ko-KR') return 'skipped';
-    const said = sayRef(spec.text);
-    if (said === recordRef || !playable(said)) return 'skipped';
-    const outcome = await playClip(t, clips, said, spec);
-    if (outcome === SUPERSEDED) return SUPERSEDED;
-    return outcome === 'ok' ? 'say' : 'skipped';
+    return 'skipped';
   };
 
   // --- tts -------------------------------------------------------------------

@@ -170,7 +170,10 @@ describe('fallback order: last known when offline, built-in pct when never fetch
 });
 
 describe('audio clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8): reduce-only, on by default', () => {
-  it('before the stored copy is read, every switch is off (the device voice plays: the safe side)', () => {
+  // `currFlagOn` with no copy argument keeps the F-CURR-002 rule for every name, audio ones included. The audio adapters
+  // never read the switches this way: `platform/audio-switches.ts` passes the copy itself, so with none the built-in
+  // pct 100 holds (pinned in audio-switches.test.ts).
+  it('currFlagOn with no copy argument: before the stored copy is read every name is off, the audio switches too', () => {
     expect(currFlagOn('audioClips', 'p1')).toBe(false);
     expect(currFlagOn('audioPack.jamo-s1', 'p1')).toBe(false);
   });
@@ -193,7 +196,24 @@ describe('audio clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8): reduce-only, on by
     expect(currFlagOn('audioPack.jamo-wb', 'p1')).toBe(false);
   });
 
-  it('the remote cannot turn on a pack the build ceiling leaves out', async () => {
+  it('the remote cannot turn on a pack the build ceiling leaves out (EXPO_PUBLIC_AUDIO_CLIP_PACKS)', async () => {
+    const before = process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS;
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = 'jamo-s1';
+    try {
+      vi.resetModules();
+      const fresh = await import('../remote-config-store');
+      const f = fetchReturning(answer({ audioClips: { on: true, pct: 100 }, 'audioPack.stage1': { on: true, pct: 100 }, 'audioPack.jamo-s1': { on: true, pct: 100 } }));
+      await fresh.useRemoteConfigStore.getState().refresh({ endpoint: ENDPOINT, fetchImpl: f.impl, now: () => 0 });
+      expect(fresh.currFlagOn('audioPack.stage1', 'p1')).toBe(false);
+      expect(fresh.currFlagOn('audioPack.jamo-s1', 'p1')).toBe(true);
+    } finally {
+      if (before === undefined) delete process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS;
+      else process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = before;
+      vi.resetModules();
+    }
+  }, 20_000);
+
+  it('a name that is no pack (audioPack.stage5) is off whatever the copy says', async () => {
     const f = fetchReturning(answer({ audioClips: { on: true, pct: 100 }, 'audioPack.stage5': { on: true, pct: 100 } }));
     await useRemoteConfigStore.getState().refresh({ endpoint: ENDPOINT, fetchImpl: f.impl, now: () => 0 });
     expect(currFlagOn('audioPack.stage5', 'p1')).toBe(false);

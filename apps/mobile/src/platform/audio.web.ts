@@ -15,8 +15,10 @@ import {
 } from '../logic/audio/capability';
 import {
   classifySpeechError,
+  clipRefsFor,
   createAudioController,
   type AudioController,
+  type ClipLookup,
   type ClipPlayer,
   type PlayResult,
   type PlaySpec,
@@ -30,7 +32,7 @@ import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createWebClipPlayer, webAudioGlobals } from './audio-player.web';
-import { bundledPackOf, clipsSwitchOn, packSwitchOn } from './audio-switches';
+import { bundledPackHas, bundledPackOf, clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
 import { track } from './telemetry';
 
 /**
@@ -99,7 +101,7 @@ export interface WebAudioEnv {
 export interface WebClipSetup {
   player: ClipPlayer;
   /** The bundled asset map: `has(ref)`, how many clips it holds, and a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6). */
-  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined };
+  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined; packHas?(pack: AudioPack): boolean };
   /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
   /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
@@ -110,6 +112,8 @@ export interface WebClipSetup {
 
 /** The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`). */
 function bundledClips(): WebClipSetup {
+  // The remote clip switches are read (stored copy, then a fetch when due) before the first prompt (AC-B8).
+  primeAudioSwitches();
   const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
   const uri = (ref: string): string | null => {
     if (!has(ref)) return null;
@@ -124,7 +128,7 @@ function bundledClips(): WebClipSetup {
   const globals = webAudioGlobals();
   return {
     player: createWebClipPlayer({ uri, ...globals }),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf },
+    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf, packHas: bundledPackHas },
     // The clip switches (AC-B8, `audio-switches.ts`): read at each prompt.
     enabled: clipsSwitchOn,
     packEnabled: packSwitchOn,
@@ -205,6 +209,10 @@ export function createWebAudio(env: WebAudioEnv) {
     const pack = packOf(ref);
     return pack === undefined || packEnabled(pack);
   };
+  /** A clip will be tried first for this prompt: its own, or the say clip of its text (`clipRefsFor`, AC-B7). */
+  const hasClipFor = (spec: ClipLookup): boolean => clipRefsFor(spec).some(hasClip);
+  /** Clips are on, the pack is on and the build holds at least one clip of it (AC-B6, AC-B8). */
+  const hasPackClips = (pack: AudioPack): boolean => clipsOn() && packEnabled(pack) && (clipSetup?.assets.packHas?.(pack) ?? false);
   const tracker = createCapabilityTracker({
     online: env.isOnline(),
     clips: clipsLive(),
@@ -620,6 +628,10 @@ export function createWebAudio(env: WebAudioEnv) {
     },
     /** The ref has a bundled recording that will be tried first (the prompt slot's `hasClip`). */
     hasClip,
+    /** The prompt will try a bundled clip first, its own or its text's say clip (the prompt slot's `hasClip`). */
+    hasClipFor,
+    /** The build holds a playable clip of this pack now (the level check's prompts, AMENDMENTS-AUDIO-CLIPS AC-B6). */
+    hasPackClips,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     /** Test only: how many utterances the page-wide live set holds (shared by every instance: compare to a baseline). */
     liveUtteranceCountForTests: (): number => LIVE_UTTERANCES.size,
@@ -698,6 +710,14 @@ export function noteFallbackShown(source: string, reason: FallbackReason): void 
 }
 export function hasClip(ref: string | undefined): boolean {
   return audio().hasClip(ref);
+}
+/** A prompt will try a bundled clip first: the record's own or the say clip of its text (AMENDMENTS-AUDIO-CLIPS AC-B7). */
+export function hasClipFor(spec: ClipLookup): boolean {
+  return audio().hasClipFor(spec);
+}
+/** A playable clip of this pack is bundled now (clips and the pack switched on). */
+export function hasPackClips(pack: AudioPack): boolean {
+  return audio().hasPackClips(pack);
 }
 
 export type { SpeechLang };

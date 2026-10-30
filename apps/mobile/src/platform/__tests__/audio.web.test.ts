@@ -8,6 +8,7 @@ import {
   type FakeVoice,
 } from '../../test-support/fake-speech-synthesis';
 import type { ClipFailure, ClipPlayer } from '../../logic/audio/controller';
+import { clipRefsOf } from '../../logic/audio/clip-refs';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 const tracked = vi.hoisted(() => [] as Array<{ name: string; payload?: Record<string, unknown> }>);
@@ -151,7 +152,7 @@ function rig(
     const packsOff = opts.clips.packsOff ?? new Set();
     env.clips = {
       player: opts.clips.player,
-      assets: { has: (ref) => refs.has(ref), size: refs.size, packOf: (ref) => packs[ref] },
+      assets: { has: (ref) => refs.has(ref), size: refs.size, packOf: (ref) => packs[ref], packHas: (pack) => Object.values(packs).includes(pack) },
       enabled: () => enabled,
       packEnabled: (pack) => !packsOff.has(pack),
       supported: opts.clips.supported ?? true,
@@ -1464,6 +1465,38 @@ describe('platform/audio.web: text-keyed clips, pack switches and the source sum
     await audio.warmClips([GIYEOK_CLIP]);
     expect(player.warmed).toEqual([]);
     audio.dispose();
+  });
+
+  it('hasClipFor counts the say clip of the text, as the controller plays it: the prompt slot never says no voice while a clip plays', async () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<contentSchema.AudioPack>();
+    const { audio } = rig({ clips: { player, refs: [APPLE], packs: { [APPLE]: 'vocab' }, packsOff } });
+    expect(audio.hasClip(undefined)).toBe(false);
+    expect(audio.hasClipFor({ text: '사과' })).toBe(true);
+    expect(audio.hasClipFor({ text: ' 사과 ', audioRef: 'audio/vocab/apple.mp3' })).toBe(true);
+    expect(audio.hasClipFor({ text: '사과요' })).toBe(false);
+    expect(audio.hasClipFor({ text: '사과', language: 'en-US' })).toBe(false);
+    // The say clip is warmed like any other bundled clip.
+    await audio.warmClips(clipRefsOf([{ text: '사과' }, { text: '사과요' }]));
+    expect(player.warmed).toEqual([[APPLE]]);
+    // Its pack switched off: no clip for the slot either.
+    packsOff.add('vocab');
+    expect(audio.hasClipFor({ text: '사과' })).toBe(false);
+    audio.dispose();
+  });
+
+  it('hasPackClips: a pack with a bundled clip, while clips and the pack are on', () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<contentSchema.AudioPack>();
+    const { audio } = rig({ clips: { player, refs: [APPLE], packs: { [APPLE]: 'placement' }, packsOff } });
+    expect(audio.hasPackClips('placement')).toBe(true);
+    expect(audio.hasPackClips('stage1')).toBe(false);
+    packsOff.add('placement');
+    expect(audio.hasPackClips('placement')).toBe(false);
+    audio.dispose();
+    const none = rig();
+    expect(none.audio.hasPackClips('placement')).toBe(false);
+    none.audio.dispose();
   });
 
   it('the page hiding sends one audio.source_summary, counts and the app version only', async () => {

@@ -63,9 +63,12 @@ describe('sayKey (AC-B4)', () => {
   });
 
   it('pins the keys of a few texts, so a change to the key is a visible test change', () => {
-    expect(sayKey('가')).toBe(nodeSha256('가').slice(0, 16));
-    expect(sayKey('니은')).toBe(nodeSha256('니은').slice(0, 16));
+    // Literal keys, generated once from node:crypto: AC-2's manifest and lock rows depend on them never changing.
+    expect(sayKey('가')).toBe('64ee5293d31bc58b');
+    expect(sayKey('니은')).toBe('7383da42119a1c5c');
+    expect(sayKey('안녕하세요.')).toBe('8b118d6741f7cfa1');
     expect(sayKey('')).toBe('e3b0c44298fc1c14');
+    expect(sayKey('가')).toBe(nodeSha256('가').slice(0, 16));
   });
 
   it('trims surrounding white space, so "가 " and "가" are one clip', () => {
@@ -108,6 +111,13 @@ describe('sayRef and isSayRef', () => {
     expect(ref).toBe(`audio/say/${sayKey('니은')}.mp3`);
     expect(AUDIO_REF_PATTERN.test(ref)).toBe(true);
     expect(isSayRef(ref)).toBe(true);
+  });
+
+  it('the ref grammar takes exactly the say refs isSayRef recognizes (16 lower-case hex, no folders)', () => {
+    for (const ref of ['audio/say/abc.mp3', 'audio/say/foo.mp3', 'audio/say/0123456789ABCDEF.mp3', 'audio/say/0123456789abcdef0.mp3', 'audio/say/ab/0123456789abcdef.mp3']) {
+      expect(AUDIO_REF_PATTERN.test(ref)).toBe(false);
+      expect(isSayRef(ref)).toBe(false);
+    }
   });
 
   it('recognizes only a 16-hex say ref', () => {

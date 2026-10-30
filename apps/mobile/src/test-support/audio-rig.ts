@@ -56,6 +56,8 @@ export function rigAudio(current: () => AudioRig) {
     stop: () => current().audio.stop(),
     noteFallbackShown: (...args: Parameters<WebAudio['noteFallbackShown']>) => current().audio.noteFallbackShown(...args),
     hasClip: () => false,
+    hasClipFor: () => false,
+    hasPackClips: () => false,
     warmClips: () => Promise.resolve(),
   };
 }

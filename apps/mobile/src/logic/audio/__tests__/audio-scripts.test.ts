@@ -59,6 +59,12 @@ describe('scripts/audio/lib: the ref grammar', () => {
     expect(AUDIO_REF_PATTERN.test('audio/say/0123456789abcdef.wav')).toBe(false);
   });
 
+  it('a say file not named by a 16-hex key fails the map build loudly (it could never be found by text)', () => {
+    for (const file of ['say/foo.mp3', 'say/0123456789ABCDEF.mp3', 'say/ab/0123456789abcdef.mp3']) {
+      expect(() => buildAssetMap([file])).toThrow(/does not make a valid audioRef/);
+    }
+  });
+
   it('the two jamo pack ids are on the shared pack list', () => {
     expect(AUDIO_PACKS).toContain(JAMO_PACK_STAGE1);
     expect(AUDIO_PACKS).toContain(JAMO_PACK_WORD_BUILDER);
