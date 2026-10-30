@@ -60,7 +60,8 @@ const px = (v: unknown): number => Number.parseFloat(String(v));
 const withoutOutline = (s: Style): Style => Object.fromEntries(Object.entries(s).filter(([k]) => !k.startsWith('outline')));
 
 const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
-const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
+// Stage 3 Nature q1 holds a listen round with text options since the Phase 3 re-authoring (#889), as in question-slides.test.
+const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
 const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
 const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
 const stories = slidesOf(storiesAll.map((story): LectureBlock => ({ kind: 'story', storyId: story.id, checks: true })));
