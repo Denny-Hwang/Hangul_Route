@@ -79,7 +79,7 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',

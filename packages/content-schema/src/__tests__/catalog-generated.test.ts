@@ -81,7 +81,8 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
 
   it('orders the lesson quests by route (cell by cell), then the story quests in shelf order', () => {
     const lessons = CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual(CATALOG.cells.flatMap((c) => c.questIds));
+    // Then the later volumes' quests, cell by cell (F-CURR-002 row CM-40).
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))]);
     expect(CATALOG.quests.filter((q) => q.kind === 'story').map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 });
