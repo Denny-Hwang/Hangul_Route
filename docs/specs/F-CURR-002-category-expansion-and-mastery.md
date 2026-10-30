@@ -573,6 +573,19 @@ On a shared device the memory store is partitioned by profile id. A profile swit
 | S6 | Recipe card, a receipt, a packaged-food label, a snack-bar menu (all drawn, no brands) | Realia Read, new kinds `recipe`, `receipt`, `label` |
 | S7 | Write my favourite food or the steps of a simple recipe. Adds the missing S7 culture notes on table manners and banchan | My Story |
 
+**Decision record (row CM-43 S4, 2026-10-30): Snack Bar Talk, Food Volume 2.**
+- **What ships.** `content/episodes/stage-4/life.v2.json`, `episode:stage4-life-v2`, `volume: 2`, ready behind `volumes` (built-in pct 0, the row merges dark), with `content/i18n/{es,ko}/lessons-stage4-life-v2.json` (222 fields each). Quests stamped `addedIn` 20261030 (main's `CATALOG_VERSION` 20261028). No new UI strings, so the review ledger is untouched.
+  - q1 What Can I Get You? (뭐 드릴까요?, 떡볶이 주세요, 물 드릴까요?, 감사합니다): Role Play / Cloze Pick / Tap to Respond.
+  - q2 How Much Is It? (얼마예요?, 이천 원이에요, 삼천 원이에요, 여기 있어요): Role Play / Tap to Respond / Sentence Builder.
+  - q3 Thanks for the Meal (맛있게 드세요, 잘 먹겠습니다, 맛있게 드셨어요?, 잘 먹었습니다): Sentence Builder / Role Play / Cloze Pick.
+  - No triple is a Volume 1 triple and the three Checks differ. Every Role Play scene is a generic snack bar (분식집) with a server named by role (직원), 4 turns on every way (4, 2 and 2 ways), a natural and a less natural reply each turn, and a closing line on every way. Prices are round practice amounts (이천 원, 삼천 원); no brand, shop or person.
+- **Notes.** Three culture notes, each with two sources and NIKL first, accessed 2026-10-30: 분식집 and 분식 (표준국어대사전), 떡볶이 and 가래떡 (표준국어대사전), and 잘 먹겠습니다 (Online Ganada, then Seoul Shinmun: the hedge of the Stage 6 Food note n2, some people and no rule). The after-meal 잘 먹었습니다 is modelled in the dialogues only; no note claims anything about it.
+- **Recycling and load.** `lesson-recycle` 6 of 11, 5 of 12 and 2 of 6. The retired `pat:samcheon-wonieyo` and `pat:icheon-wonieyo` are not taught again (the q2 Check builds 떡볶이 얼마예요? and 여기 있어요). 25 new review-item ids are frozen; the Stage 4 review-load gate of row CM-3A S4 (123 items) now reads Volume 1, and Food Volume 2 has its own gate of 30 (`stage4-check-rotation.test.ts`).
+- **Shared fixes a shipped Volume 2 needs.** The clip warm unit of a `.v2.json` file and the clip plan over `episodesWithVolumes` (the commit #899 carries), and the lecture route quests without later volumes (the hunk #899 carries), so the rows merge cleanly whichever lands first.
+- **Launch state.** `volumes` off: the cell opens Volume 1 alone. `game.role-play` off (its launch state): each scene plays Tap to Respond on its main path. `game.cloze-pick` off: its Listen & Pick text-prompt fallback. `game-switch-off.test.ts` plays every quest with each switch off.
+- **MAR.** Author, language, culture and facts, learning design, reviser, third pass, run one after another in the authoring session (no tool to start separate reviewer agents); the record is in the cell's `review.notes` and each note's `verification`. No native-speaker or expert review is claimed.
+- **Measured (release `pnpm build:web --budget`, no recorded clips).** Start bundle 4,835,598 B raw / 1,292,942 B gzip, +1,002 B over CM-40 part 2's head (4,834,596 B on the same machine): the manifest entry (`lessons-index.ts` 19,963 to 20,628 B), the catalogue rows and the lecture route filter; under the 4,840,000 B line, no raise. Cell chunk `lessons-cell-stage4-life-v2` 58,272 B raw / 9,718 B gzip generated (66.9 kB built; line 90,000 / 16,000); 7,417 B a quest (line 9,000); Stage 4 game content 200,527 B raw / 26,100 B gzip (line 220,000 / 40,000); lesson modules 1,215,865 B raw / 202,457 B gzip (line 1,400,000 / 210,000); largest locale chunk 955,735 B (line 1,000,000); learner precache 97 files, 10,162,686 B.
+
 ### 5.4 Holidays & Traditions (`rites`)
 
 | Stage | Volume 2 content | New formats |
