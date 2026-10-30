@@ -119,13 +119,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 111 quests since row CM-41 S7 added Stage 7 Nature Volume 2)', () => {
-  const snap = finished(111);
+describe('the all-quests fixture (scenario S-c; 114 quests since rows CM-41 S7 and CM-42 S7 added the Stage 7 Nature and Play & Crafts Volume 2)', () => {
+  const snap = finished(114);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(111);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
+    expect(LESSON_QUESTS).toHaveLength(114);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(114);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {
