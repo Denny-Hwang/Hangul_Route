@@ -795,7 +795,7 @@
               "target": {
                 "ko": "바나나",
                 "romanization": "banana",
-                "en": "banana"
+                "en": "a long, yellow fruit"
               }
             }
           ]
@@ -1134,23 +1134,23 @@
           "kind": "type-hangul",
           "rounds": [
             {
-              "id": "hear-gimchi",
+              "id": "hear-banchan",
               "promptEn": "Listen to the word and write it in Hangul.",
               "mode": "hear",
               "target": {
-                "ko": "김치",
-                "romanization": "gimchi",
-                "en": "kimchi"
+                "ko": "반찬",
+                "romanization": "banchan",
+                "en": "side dishes"
               }
             },
             {
-              "id": "hear-mul",
+              "id": "hear-dubu",
               "promptEn": "Listen to the word and write it in Hangul.",
               "mode": "hear",
               "target": {
-                "ko": "물",
-                "romanization": "mul",
-                "en": "water"
+                "ko": "두부",
+                "romanization": "dubu",
+                "en": "tofu"
               }
             }
           ]
@@ -1198,13 +1198,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-27",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 나물 and 국 glosses no longer echo the word; 사과, 빵 match Word Builder. es: lonchera, 'plátano, banana', sazonadas, tazón. 바나나 (q1) and 사랑 stay: Stage 1 words.",
       "Culture (pass 5, MAR 2026-10-14): n1 re-checked against all three sources (verification line 3); the 반찬 locator names its single sense. The meal is framed as the traditional everyday 반상, not what every household eats. No person, brand, shop or price, no holiday content, no age wording.",
       "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Read Pick Meaning (김밥, 우유), q2 Dictation (수박, 바나나: Stage 1 letters only, no sound change), q3 Pic-Word Match (비빔밥, 김치, 밥; 김밥, 달걀, 물). Every read or written word uses Stage 1 letters only; reuse stays at half or more. The reviser restored the shipped ko gloss of pic-gimbap.",
       "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
-      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Listen & Pick 7, Pic-Word Match 6 and Dictation 5 of 18; every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed."
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

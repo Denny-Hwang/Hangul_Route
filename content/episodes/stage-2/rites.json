@@ -377,7 +377,7 @@
                 {
                   "id": "bap",
                   "pictureRef": "card:rice",
-                  "labelEn": "rice, a meal"
+                  "labelEn": "cooked rice"
                 }
               ],
               "answerId": "seollal"
@@ -762,7 +762,7 @@
               "target": {
                 "ko": "추석",
                 "romanization": "chuseok",
-                "en": "Chuseok, the autumn harvest festival"
+                "en": "the autumn harvest festival"
               }
             },
             {
@@ -1459,13 +1459,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-27",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR): card:moon and card:chuseok never share a round or board; card:sebae never shares one with card:seollal; q1 Apply builds 한복 and 한국 (no sound change); notes no longer repeat glosses; ko and es glosses aligned with Stage 1.",
       "Culture (pass 5, MAR): every source re-opened; ko 떡국 and 보름달 glosses no longer copy a source; ko 가족 gloss names no household shape; n1 KHS locator trimmed so no quote names an ancestral rite (OD-9).",
       "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Read Pick Meaning (설날, 한복; card:seollal never with card:sebae), q2 Dictation (추석, 가족: no sound change; 보름달 and 복주머니 stay out of Dictation, as their tensing is a sound change), q3 Pic-Word Match (연, 윷놀이, 한복; 윷놀이, 연, 가족; card:moon never with card:chuseok). No new culture claim.",
       "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
-      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Listen & Pick 7, Pic-Word Match 6 and Dictation 5 of 18; every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed."
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

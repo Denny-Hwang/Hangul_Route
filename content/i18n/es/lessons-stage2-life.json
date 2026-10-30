@@ -85,7 +85,7 @@
       "typeHangul.rounds.hear-subak.prompt": "Escucha la palabra y escríbela en hangul.",
       "typeHangul.rounds.hear-subak.target.gloss": "sandía",
       "typeHangul.rounds.hear-banana.prompt": "Escucha la palabra y escríbela en hangul.",
-      "typeHangul.rounds.hear-banana.target.gloss": "plátano, banana"
+      "typeHangul.rounds.hear-banana.target.gloss": "una fruta larga y amarilla"
     },
     "minigame:s2-life-q3-apply": {
       "cardPairs.guk.gloss": "sopa",
@@ -94,10 +94,10 @@
       "cardPairs.namul.gloss": "verduras sazonadas"
     },
     "minigame:s2-life-q3-check": {
-      "typeHangul.rounds.hear-gimchi.prompt": "Escucha la palabra y escríbela en hangul.",
-      "typeHangul.rounds.hear-gimchi.target.gloss": "kimchi",
-      "typeHangul.rounds.hear-mul.prompt": "Escucha la palabra y escríbela en hangul.",
-      "typeHangul.rounds.hear-mul.target.gloss": "agua"
+      "typeHangul.rounds.hear-banchan.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-banchan.target.gloss": "acompañamientos",
+      "typeHangul.rounds.hear-dubu.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-dubu.target.gloss": "tofu"
     },
     "minigame:s2-life-q1-practice": {
       "picWord.boards.0.pairs.gimbap.word.gloss": "rollo de arroz con alga",

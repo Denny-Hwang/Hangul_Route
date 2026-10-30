@@ -750,13 +750,13 @@
           "kind": "type-hangul",
           "rounds": [
             {
-              "id": "hear-gong",
+              "id": "hear-yeon",
               "promptEn": "Listen to the word and write it in Hangul.",
               "mode": "hear",
               "target": {
-                "ko": "공",
-                "romanization": "gong",
-                "en": "ball"
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
               }
             },
             {
@@ -1260,14 +1260,15 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-27",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Pass 4 language MAR (2026-10-14): Korean naturalness, spelling, pedagogy and gloss lenses; applied the ball-board fix, toy wording, 놀 때 쓰는 낱말, ko gloss fixes and the 친구 reading distractors; rejected the claim that 연 and 줄 are untaught (Stage 1 crafts q1 Discover teaches both).",
       "Pass 5 culture MAR (2026-10-14): heritage accuracy against all four sources, sensitivity and audience lenses; n1 and n2 pass unchanged; the q2 Hoya line and blurb now call 제기, 팽이, 윷 and 연 toys, as the sources do; verification line 3 on both notes.",
       "Pass 6 translation MAR (2026-10-14): es and ko overlays; applied 친구 gloss parity with minigames.json, es title length and calque fixes, trompo in es prose to match placement.json; no circular ko gloss.",
       "Check rotation (row CM-3A S2, MAR 2026-10-23: language, culture and learning-design checkers, reviser, third pass): q1 Pic-Word Match (no other ball beside the generic ball), q2 Dictation (공, 줄: Stage 1 words, so reuse stays at half), q3 Read Pick Meaning (친구, 달리기).",
       "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
-      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Listen & Pick 7, Pic-Word Match 6 and Dictation 5 of 18; every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed."
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

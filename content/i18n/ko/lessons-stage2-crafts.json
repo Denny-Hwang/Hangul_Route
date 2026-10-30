@@ -68,8 +68,8 @@
       "cardPairs.yeon.gloss": "바람에 날리는 종이 장난감"
     },
     "minigame:s2-crafts-q2-check": {
-      "typeHangul.rounds.hear-gong.prompt": "낱말을 듣고 한글로 써 봐요.",
-      "typeHangul.rounds.hear-gong.target.gloss": "차거나 던지며 노는 둥근 물건",
+      "typeHangul.rounds.hear-yeon.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-yeon.target.gloss": "바람에 날리는 종이 장난감",
       "typeHangul.rounds.hear-jul.prompt": "낱말을 듣고 한글로 써 봐요.",
       "typeHangul.rounds.hear-jul.target.gloss": "길고 가는 끈"
     },
@@ -98,14 +98,14 @@
     },
     "minigame:s2-crafts-q3-check": {
       "listenPick.rounds.see-chingu.prompt": "가깝게 지내는 사람",
-      "listenPick.rounds.see-dalligi.prompt": "누가 더 빨리 뛰는지 겨루는 경기",
+      "listenPick.rounds.see-dalligi.prompt": "누가 먼저 결승선에 닿는지 겨루는 운동",
       "listenPick.rounds.see-chingu.options.chingu.label": "가깝게 지내는 사람",
-      "listenPick.rounds.see-chingu.options.dalligi.label": "누가 더 빨리 뛰는지 겨루는 경기",
-      "listenPick.rounds.see-chingu.options.julleomgi.label": "줄을 돌리며 뛰어넘는 놀이",
+      "listenPick.rounds.see-chingu.options.dalligi.label": "누가 먼저 결승선에 닿는지 겨루는 운동",
+      "listenPick.rounds.see-chingu.options.julleomgi.label": "줄을 돌려서 넘는 놀이",
       "listenPick.rounds.see-chingu.options.gong.label": "차거나 던지며 노는 둥근 물건",
-      "listenPick.rounds.see-dalligi.options.dalligi.label": "누가 더 빨리 뛰는지 겨루는 경기",
+      "listenPick.rounds.see-dalligi.options.dalligi.label": "누가 먼저 결승선에 닿는지 겨루는 운동",
       "listenPick.rounds.see-dalligi.options.chingu.label": "가깝게 지내는 사람",
-      "listenPick.rounds.see-dalligi.options.julleomgi.label": "줄을 돌리며 뛰어넘는 놀이"
+      "listenPick.rounds.see-dalligi.options.julleomgi.label": "줄을 돌려서 넘는 놀이"
     },
     "minigame:s2-crafts-q1-practice": {
       "picWord.boards.0.pairs.gong.word.gloss": "차거나 던지며 노는 둥근 물건",

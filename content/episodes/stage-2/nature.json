@@ -1185,7 +1185,7 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-27",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable; no 눈 'eye' picture. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 꽃 gloss matches Word Builder; 주변 for 둘레. The q3 reward line names 섬 (en, es, ko). es: '¡Vamos afuera!'. 강 and 바다 in q1 stay: Stage 1 words.",
       "Culture (pass 5, MAR 2026-10-14): the cell makes no culture claim (no notes). Sky, weather and water words and pictures are neutral; no person, brand, shop or price, no age wording.",
@@ -1193,7 +1193,8 @@
       "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed.",
       "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Dictation (하늘, 나무), q2 Read Pick Meaning (구름, 바람; no 눈 'eye' picture), q3 Pic-Word Match (강, 바다, 돌; 물고기, 강, 산). Stage 1 letters only in every read or written word. The reviser restored the shipped ko gloss of pic-gureum.",
       "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
-      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Listen & Pick 7, Pic-Word Match 6 and Dictation 5 of 18; every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed."
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

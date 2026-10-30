@@ -80,12 +80,12 @@
       "steps.s2.discover.pages.1.items.1.note": "새해 절을 하면 어른이 주기도 하는 용돈"
     },
     "minigame:s2-rites-q1-check": {
-      "listenPick.rounds.see-seollal.prompt": "음력으로 새해 첫날",
-      "listenPick.rounds.see-hanbok.prompt": "한국의 전통 옷",
-      "listenPick.rounds.see-seollal.options.seollal.label": "음력으로 새해 첫날",
+      "listenPick.rounds.see-seollal.prompt": "음력으로 새해를 시작하는 명절",
+      "listenPick.rounds.see-hanbok.prompt": "명절에 즐겨 입는 전통 옷",
+      "listenPick.rounds.see-seollal.options.seollal.label": "음력으로 새해를 시작하는 명절",
       "listenPick.rounds.see-seollal.options.san.label": "땅이 높이 솟은 곳",
       "listenPick.rounds.see-seollal.options.bap.label": "쌀로 지어 먹는 음식",
-      "listenPick.rounds.see-hanbok.options.hanbok.label": "한국의 전통 옷",
+      "listenPick.rounds.see-hanbok.options.hanbok.label": "명절에 즐겨 입는 전통 옷",
       "listenPick.rounds.see-hanbok.options.tteokguk.label": "설날에 먹는, 떡을 넣은 국",
       "listenPick.rounds.see-hanbok.options.san.label": "땅이 높이 솟은 곳"
     },

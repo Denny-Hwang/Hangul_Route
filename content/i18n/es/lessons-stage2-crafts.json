@@ -68,8 +68,8 @@
       "cardPairs.yeon.gloss": "cometa"
     },
     "minigame:s2-crafts-q2-check": {
-      "typeHangul.rounds.hear-gong.prompt": "Escucha la palabra y escríbela en hangul.",
-      "typeHangul.rounds.hear-gong.target.gloss": "pelota",
+      "typeHangul.rounds.hear-yeon.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-yeon.target.gloss": "cometa",
       "typeHangul.rounds.hear-jul.prompt": "Escucha la palabra y escríbela en hangul.",
       "typeHangul.rounds.hear-jul.target.gloss": "cuerda"
     },

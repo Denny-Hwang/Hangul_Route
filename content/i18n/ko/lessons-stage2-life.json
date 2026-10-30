@@ -71,9 +71,9 @@
       "cardPairs.dalgyal.gloss": "닭이 낳는 둥근 알"
     },
     "minigame:s2-life-q1-check": {
-      "listenPick.rounds.pic-gimbap.prompt": "김에 밥과 재료를 넣고 말아 만든 음식",
+      "listenPick.rounds.pic-gimbap.prompt": "해초에 재료를 넣고 둥글게 말아 썬 음식",
       "listenPick.rounds.see-uyu.prompt": "소에게서 얻는 하얀 마실 것",
-      "listenPick.rounds.pic-gimbap.options.gimbap.label": "김에 밥과 재료를 넣고 만 음식",
+      "listenPick.rounds.pic-gimbap.options.gimbap.label": "해초에 재료를 넣고 둥글게 말아 썬 음식",
       "listenPick.rounds.pic-gimbap.options.uyu.label": "소에게서 얻는 하얀 마실 것",
       "listenPick.rounds.pic-gimbap.options.dalgyal.label": "닭이 낳는 둥근 알",
       "listenPick.rounds.pic-gimbap.options.bap.label": "쌀로 지어 먹는 음식",
@@ -94,10 +94,10 @@
       "cardPairs.namul.gloss": "먹을 수 있는 풀이나 잎을 데치거나 볶아 양념한 음식"
     },
     "minigame:s2-life-q3-check": {
-      "typeHangul.rounds.hear-gimchi.prompt": "낱말을 듣고 한글로 써 봐요.",
-      "typeHangul.rounds.hear-gimchi.target.gloss": "배추를 맵게 절인 한국 음식",
-      "typeHangul.rounds.hear-mul.prompt": "낱말을 듣고 한글로 써 봐요.",
-      "typeHangul.rounds.hear-mul.target.gloss": "목마를 때 마시는 맑고 투명한 것"
+      "typeHangul.rounds.hear-banchan.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-banchan.target.gloss": "밥에 곁들여 먹는 여러 가지 음식",
+      "typeHangul.rounds.hear-dubu.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-dubu.target.gloss": "콩으로 만든 하얗고 말랑한 음식"
     },
     "minigame:s2-life-q1-practice": {
       "picWord.boards.0.pairs.gimbap.word.gloss": "김에 밥과 재료를 넣고 만 음식",
