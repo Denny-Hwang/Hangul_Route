@@ -74,6 +74,9 @@ export const FINAL_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoBatchim.map(
  * of tile and rule 2. A distractor a rule refuses is dropped and another drawn. A pool that
  * breaks the kind rule, or a target with too few allowed distractors, throws: the content test
  * (`voice-pools.test.ts`) runs every shipped scope, so no learner meets it.
+ *
+ * `promptJamoIds`, when present, are the only jamo asked; the rest of the scope serves as distractors
+ * only (the lecture quiz tops up a crowded pool with letters it never asks).
  */
 export function buildMatchSoundRounds(opts: {
   scopeJamoIds: string[];
@@ -82,6 +85,7 @@ export function buildMatchSoundRounds(opts: {
   focusJamoIds?: string[];
   seed?: number;
   question?: PoolQuestion;
+  promptJamoIds?: string[];
 }): MatchSoundRound[] {
   const tileCount = opts.tileCount ?? 4;
   const question = opts.question ?? 'letter';
@@ -94,7 +98,9 @@ export function buildMatchSoundRounds(opts: {
 
   const out: MatchSoundRound[] = [];
   let seed = opts.seed ?? Date.now();
-  const prompts = pickPrompts(pool, opts.rounds, opts.focusJamoIds ?? [], seed);
+  const askable = opts.promptJamoIds === undefined ? pool : pool.filter((j) => opts.promptJamoIds!.includes(j.id));
+  if (askable.length === 0) throw new Error('Match Sound pool: no prompt jamo in scope');
+  const prompts = pickPrompts(askable, opts.rounds, opts.focusJamoIds ?? [], seed);
 
   for (const prompt of prompts) {
     seed = seed + 1;

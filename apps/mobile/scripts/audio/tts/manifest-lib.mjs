@@ -65,6 +65,13 @@ const DANGLING = /^(?:[-~…]|\.\.\.)|-$/u;
 const FRAGMENT_PATH = /(?:^|\.)particle\.choices(?:\.|$)/u;
 const SINGLE_SYLLABLE = /^[가-힣]$/u;
 const SENTENCE_END = /[.!?]["'”’)]*$/u;
+/**
+ * A text with no final mark is still a sentence for QA (AC-4's per-syllable duration bound, section 9) when it is
+ * several words long: it has a comma, or more than this many syllables. Story titles and unpunctuated lines such as
+ * "판소리로 듣는 흥부와 놀부, 토끼와 자라" or "새 동아줄을 내려 주세요" would overrun the fixed 0.6-4.0 s word bound.
+ */
+export const SENTENCE_MIN_SYLLABLES = 9;
+const HANGUL_SYLLABLE_G = /[가-힣]/gu;
 
 /** The text as keyed: trimmed NFC (the same normal form `sayKey` hashes). */
 export function normalText(text) {
@@ -76,11 +83,22 @@ export function spokenOf(occ) {
   return normalText(typeof occ.spokenKo === 'string' && occ.spokenKo.trim() !== '' ? occ.spokenKo : occ.ko);
 }
 
-/** The kind of a spoken text by its shape: one syllable, a sentence (ends in . ! ?), else a word or phrase. */
+/**
+ * The kind of a spoken text by its shape: one syllable; a sentence (ends in . ! ?, or is several words with a comma
+ * or at least SENTENCE_MIN_SYLLABLES syllables); else a word or phrase. Only the QA class depends on it: words and
+ * sentences share the rate 0.9.
+ *
+ * Story lines spoken by the narrator are taught Korean and are sentences at 0.9 like every other line: the learner
+ * reads along with them. `narration` (1.0) stays a kind of the manifest format (AC-B5) for untaught narration; no
+ * shipped Korean text is one today.
+ */
 export function kindOfText(text) {
   const t = normalText(text);
   if (SINGLE_SYLLABLE.test(t)) return 'syllable';
-  return SENTENCE_END.test(t) ? 'sentence' : 'word';
+  if (SENTENCE_END.test(t)) return 'sentence';
+  const multiWord = /\s/u.test(t);
+  const syllables = (t.match(HANGUL_SYLLABLE_G) ?? []).length;
+  return multiWord && (t.includes(',') || syllables >= SENTENCE_MIN_SYLLABLES) ? 'sentence' : 'word';
 }
 
 /**
@@ -173,20 +191,22 @@ function sayRows(occurrences, overrides, normalization) {
     byText.set(text, entry);
   }
   const rows = [];
+  const vocabRefShared = [];
   for (const { text, occurrences: occs } of byText.values()) {
     const pack = occs.map((o) => o.pack).reduce((a, b) => (packIndex(b) < packIndex(a) ? b : a));
     const recordRefs = uniqueSorted(occs.filter((o) => o.pack === 'vocab' && pack === 'vocab' && typeof o.audioRef === 'string').map((o) => o.audioRef));
     if (recordRefs.length > 1) {
       throw new Error(`"${text}": vocabulary records ${recordRefs.join(', ')} say the same text; one clip serves them, so give them one audioRef`);
     }
-    const kinds = new Set(occs.map((o) => o.kind).filter((k) => k !== undefined));
-    const shape = kindOfText(text);
-    const kind = kinds.has('narration') && shape !== 'syllable' ? 'narration' : shape;
-    rows.push(
-      rowOf({ ref: recordRefs[0] ?? sayRef(text), key: sayKey(text), kind, text, pack, sources: occs.map((o) => o.source) }, overrides, normalization),
-    );
+    const kind = kindOfText(text);
+    const ref = recordRefs[0] ?? sayRef(text);
+    if (recordRefs.length === 1) {
+      const elsewhere = uniqueSorted(occs.filter((o) => o.pack !== 'vocab').map((o) => o.pack));
+      if (elsewhere.length > 0) vocabRefShared.push({ text, ref, sayRef: sayRef(text), packs: elsewhere });
+    }
+    rows.push(rowOf({ ref, key: sayKey(text), kind, text, pack, sources: occs.map((o) => o.source) }, overrides, normalization));
   }
-  return { rows, skipped };
+  return { rows, skipped, vocabRefShared };
 }
 
 /**
@@ -198,7 +218,7 @@ function sayRows(occurrences, overrides, normalization) {
  */
 export function buildManifest({ jamo, occurrences, overrides = {}, normalization = NORMALIZATION }) {
   const jamoPart = jamoRows(jamo, overrides, normalization);
-  const { rows: said, skipped } = sayRows(occurrences, overrides, normalization);
+  const { rows: said, skipped, vocabRefShared } = sayRows(occurrences, overrides, normalization);
   const refs = new Set();
   for (const row of [...jamoPart, ...said]) {
     if (refs.has(row.ref)) throw new Error(`${row.ref}: two clips share a ref`);
@@ -213,7 +233,20 @@ export function buildManifest({ jamo, occurrences, overrides = {}, normalization
   const jamoSorted = jamoPart.map((row, i) => ({ row, i })).sort((a, b) => order(a.row) - order(b.row) || a.i - b.i).map((x) => x.row);
   const saySorted = [...said].sort((a, b) => order(a) - order(b) || byCodePoint(a.text, b.text));
   const skippedSorted = skipped.sort((a, b) => byCodePoint(a.reason, b.reason) || byCodePoint(a.source, b.source));
-  return { rows: [...jamoSorted, ...saySorted], skipped: skippedSorted };
+  // Notices, printed by the summary and kept out of the committed file (they are derived from it):
+  // - vocabRefShared: a vocabulary record's clip (audio/vocab/<slug>.mp3) whose text other packs speak too. Those
+  //   surfaces look up audio/say/<key>.mp3 (AC-B4), which is not generated; the audio map (AC-6) must point that say
+  //   ref at the vocabulary file, or they fall back to the device voice.
+  // - jamoTextAlsoSay: a text that is both a jamo clip (id-named, AC-B4) and a say clip. Generated twice on purpose:
+  //   the jamo clip is the letter's own voice (the owner's recordings, A-9, replace it by id) at the letter rate,
+  //   while the say clip is the same text as a word or syllable item at its own rate and QA class.
+  const jamoTexts = new Map(jamoPart.map((r) => [r.text, r.ref]));
+  const jamoTextAlsoSay = saySorted.filter((r) => jamoTexts.has(r.text)).map((r) => ({ text: r.text, jamoRef: jamoTexts.get(r.text), ref: r.ref, pack: r.pack }));
+  const notices = {
+    vocabRefShared: vocabRefShared.sort((a, b) => byCodePoint(a.text, b.text)),
+    jamoTextAlsoSay,
+  };
+  return { rows: [...jamoSorted, ...saySorted], skipped: skippedSorted, notices };
 }
 
 /** The committed file: a short header, then one row per line (stable and reviewable in a diff). */
@@ -229,7 +262,7 @@ export function renderManifest(rows, normalization = NORMALIZATION) {
 }
 
 /** The printed summary: rows per kind and pack, characters sent, and the skip list by reason. */
-export function summarizeManifest({ rows, skipped }) {
+export function summarizeManifest({ rows, skipped, notices = { vocabRefShared: [], jamoTextAlsoSay: [] } }) {
   const count = (list, keyOf) => list.reduce((acc, item) => acc.set(keyOf(item), (acc.get(keyOf(item)) ?? 0) + 1), new Map());
   const chars = (list) => list.reduce((n, r) => n + [...r.say].length, 0);
   const perKind = count(rows, (r) => r.kind);
@@ -249,5 +282,11 @@ export function summarizeManifest({ rows, skipped }) {
     const head = texts.slice(0, 8).map((t) => `"${t}"`).join(', ');
     lines.push(`    ${reason} ${reasons.get(reason)} (${texts.length} texts): ${head}${texts.length > 8 ? ', ...' : ''}`);
   }
+  const shared = notices.vocabRefShared;
+  lines.push(`  vocabulary clips also spoken outside vocab (AC-6 maps the say ref to the vocabulary file): ${shared.length}`);
+  for (const v of shared) lines.push(`    "${v.text}" ${v.ref} <- ${v.sayRef} (${v.packs.join(', ')})`);
+  const twice = notices.jamoTextAlsoSay;
+  const twiceHead = twice.slice(0, 12).map((t) => `"${t.text}"`).join(', ');
+  lines.push(`  texts that are both a jamo clip and a say clip (generated twice on purpose): ${twice.length}${twice.length > 0 ? `: ${twiceHead}${twice.length > 12 ? ', ...' : ''}` : ''}`);
   return lines;
 }

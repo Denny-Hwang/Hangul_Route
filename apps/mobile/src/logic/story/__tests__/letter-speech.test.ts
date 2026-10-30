@@ -42,6 +42,7 @@ const check: StoryCheck = {
     { id: 'c', en: 'The round dot', isCorrect: false },
   ],
   shuffle: false,
+  factIds: ['f1'],
 };
 
 describe('story checks speak a letter by its name', () => {
