@@ -308,6 +308,37 @@ export function parseCsv(text) {
 }
 
 /** The SPDX id of an asset's license column ("SIL OFL 1.1" and the like). */
+/**
+ * Generated speech clips (AMENDMENTS-AUDIO-CLIPS AC-B1 "Licence rows"): the CSV holds one `audio-tts` row per clip
+ * (validated against content/audio/tts-lock.json by apps/mobile/scripts/audio/tts/licence-rows.mjs). They are under
+ * the vendor terms their row records, not an open licence, so they need no licence text here; the notices list one
+ * line per vendor, engine and voice with the clip count instead of one line per clip.
+ */
+export const TTS_CATEGORY = "audio-tts";
+
+/** The `audio-tts` rows as one asset entry per vendor/engine/voice (from `source`, `tts:<vendor>/<engine>/<voice>; ...`). */
+export function summarizeTtsAssets(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const voice = /^tts:([^;\s]+)/.exec(row.source ?? "")?.[1] ?? String(row.source);
+    const key = [voice, row.url, row.license, row.attribution].join("\u0000");
+    const group = groups.get(key) ?? { voice, row, count: 0 };
+    group.count += 1;
+    groups.set(key, group);
+  }
+  return [...groups.values()]
+    .sort((a, b) => (a.voice < b.voice ? -1 : a.voice > b.voice ? 1 : 0))
+    .map(({ voice, row, count }) => ({
+      path: `apps/mobile/assets/audio (${count} computer-generated speech ${count === 1 ? "clip" : "clips"})`,
+      category: TTS_CATEGORY,
+      source: `tts:${voice}`,
+      license: null,
+      declared: row.license,
+      attribution: row.attribution,
+      url: row.url,
+    }));
+}
+
 export function assetLicenseId(text) {
   if (/\bOFL\b.*1\.1|Open Font License.*1\.1/i.test(text)) return "OFL-1.1";
   const id = text.trim();
@@ -526,13 +557,17 @@ export function buildModel(root = DEFAULT_ROOT, roots = ROOTS, { extras = roots 
   }
 
   const csvPath = join(root, ASSETS_CSV);
-  const assets = existsSync(csvPath)
-    ? parseCsv(readFileSync(csvPath, "utf8")).map((row) => {
+  const csvRows = existsSync(csvPath) ? parseCsv(readFileSync(csvPath, "utf8")) : [];
+  const assets = [
+    ...csvRows
+      .filter((row) => row.category !== TTS_CATEGORY)
+      .map((row) => {
         const license = assetLicenseId(row.license ?? "");
         if (!license) problems.push({ code: "unknown-license", message: `${ASSETS_CSV}: ${row.asset_path} has license "${row.license}", which has no text here` });
         return { path: row.asset_path, category: row.category, source: row.source, license, declared: row.license, attribution: row.attribution, url: row.url };
-      })
-    : [];
+      }),
+    ...summarizeTtsAssets(csvRows.filter((row) => row.category === TTS_CATEGORY)),
+  ];
 
   const used = new Set([...listed, ...builds].filter((p) => p.status === "permissive" || p.status === "exception").map((p) => p.license));
   for (const a of assets) if (a.license) used.add(a.license);

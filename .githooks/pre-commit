@@ -1,0 +1,4 @@
+#!/bin/sh
+# Pre-commit hook (AMENDMENTS-AUDIO-CLIPS AC-B5 key safety): rejects a staged speech-vendor credential.
+# Turn it on once per clone with `pnpm hooks:install` (git config core.hooksPath .githooks).
+exec node scripts/check-no-secrets.mjs

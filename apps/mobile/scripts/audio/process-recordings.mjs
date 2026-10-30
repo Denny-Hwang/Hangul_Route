@@ -1,7 +1,7 @@
 // Turns the owner's recordings into app clips (F-AUDIO-004 §3.11). Needs ffmpeg
 // and ffprobe on the PATH; runs locally, never in CI.
 //
-//   node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--names] [--allow-extra]
+//   node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]
 //
 // The raw recordings and the speaker's signed voice-use release stay OUTSIDE the
 // repo (it is public): the folder must be outside it, or in the gitignored
@@ -12,6 +12,8 @@
 // used, or the take the owner marked in the name (giyeok.2.m4a = take 2). Per
 // clip: cut the take, trim silence, add 0.3 s of silence each side,
 // loudness-normalise to -16 LUFS, mono, 44.1 kHz, 64 kbps CBR MP3, no metadata.
+// `--bitrate 48` encodes 48 kbps at 24 kHz instead, for the generated `say` group (AMENDMENTS-AUDIO-CLIPS AC-B5
+// step 3, AU-OD-7); trimming, padding, loudness, mono and the metadata strip are the same.
 // loudnorm needs about 3 s of audio, so a short syllable is then topped up
 // (gain behind a peak limiter at -2 dBFS, at 4x oversampling), at most
 // MAX_TOP_UP_PASSES passes and MAX_TOP_UP_DB in all. A clip that still misses
@@ -35,8 +37,10 @@ import {
   MAX_TOP_UP_DB,
   MAX_TOP_UP_PASSES,
   isInsideDir,
+  mp3EncodeArgs,
   nameRows,
   nextTopUp,
+  parseBitrate,
   parseEbur128,
   parseSilences,
   parseTakeFile,
@@ -61,7 +65,7 @@ const measure = (file) =>
   parseEbur128(ffmpeg(['-hide_banner', '-nostats', '-i', file, '-af', 'ebur128=peak=true', '-f', 'null', '-'])).integratedLufs;
 
 const args = process.argv.slice(2);
-const VALUE_FLAGS = ['--group', '--out'];
+const VALUE_FLAGS = ['--group', '--out', '--bitrate'];
 const flag = (name, fallback) => {
   const i = args.indexOf(name);
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
@@ -69,7 +73,7 @@ const flag = (name, fallback) => {
 const input = args.find((a, i) => !a.startsWith('--') && !VALUE_FLAGS.includes(args[i - 1] ?? ''));
 if (!input) {
   process.stderr.write(
-    'usage: node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--names] [--allow-extra]\n',
+    'usage: node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]\n',
   );
   process.exit(2);
 }
@@ -79,6 +83,13 @@ if (!['jamo', 'vocab'].includes(group)) {
   process.exit(2);
 }
 const opts = { names: args.includes('--names'), allowExtra: args.includes('--allow-extra') };
+let bitrate;
+try {
+  bitrate = parseBitrate(flag('--bitrate', undefined));
+} catch (e) {
+  process.stderr.write(`${e instanceof Error ? e.message : String(e)}\n`);
+  process.exit(2);
+}
 
 /** Raw recordings must never be committable: outside the repo, or in a gitignored folder inside it. */
 const inputDir = resolve(input);
@@ -168,11 +179,7 @@ function processOne(work, fileId, name, take) {
   }
   if (outcome === 'accepted') warnings.push(`${name}: loudness ${lufs} LUFS is inside the limit but did not settle within 0.5 dB (${summary})`);
   const out = join(outDir, `${fileId}.mp3`);
-  ffmpeg([
-    '-hide_banner', '-loglevel', 'error', '-y', '-i', wav,
-    '-ar', '44100', '-ac', '1', '-c:a', 'libmp3lame', '-b:a', '64k',
-    '-map_metadata', '-1', '-id3v2_version', '0', out,
-  ]);
+  ffmpeg(['-hide_banner', '-loglevel', 'error', '-y', '-i', wav, ...mp3EncodeArgs(bitrate), out]);
   return `${name} -> ${out} (take ${take} of ${segments.length}, ${summary})`;
 }
 

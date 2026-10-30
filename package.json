@@ -9,6 +9,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "generate": "node scripts/generate.mjs",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "secrets:check": "node scripts/check-no-secrets.mjs --all",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",

@@ -156,3 +156,8 @@ export function planRecording(
   opts: { names?: boolean; allowExtra?: boolean },
 ): { action: 'process' } | { action: 'skip'; reason: string };
 export function isInsideDir(dir: string, root: string): boolean;
+
+export const MP3_BITRATES: Readonly<Record<64 | 48, number>>;
+export const DEFAULT_MP3_BITRATE: 64;
+export function parseBitrate(value: string | undefined): 64 | 48;
+export function mp3EncodeArgs(kbps?: 64 | 48): string[];
