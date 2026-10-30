@@ -11,6 +11,10 @@ import {
   RUNTIME_AUDIO_GROUPS,
   audioRuntimeCaching,
   buildAssetMap,
+  CLIP_LIMITS,
+  clipClassOf,
+  clipKbpsOf,
+  clipLimitsOf,
   clipSets,
   clipStatus,
   correctionGain,
@@ -25,6 +29,7 @@ import {
   mergeAssetMaps,
   nameRows,
   nextTopUp,
+  PACK_SET_LIMITS,
   parseEbur128,
   parseJamoSource,
   parseProbe,
@@ -36,6 +41,7 @@ import {
   recordingRows,
   refFromFile,
   refsInRenderedMap,
+  spokenSyllableCount,
   renderAssetMap,
   renderRecordingScript,
   takeSegments,
@@ -490,11 +496,16 @@ describe('scripts/audio/lib: evaluateReport', () => {
     expect(evaluateReport('word', { ...good, bytes: 40_001 })[0]).toMatch(/size/);
   });
 
-  it('evaluateSet checks the total size of a set', () => {
-    expect(evaluateSet('jamo', [400_000])).toEqual([]);
-    expect(evaluateSet('jamo', [200_000, 200_001])[0]).toMatch(/400000/);
+  it('evaluateSet checks the total size of a vocabulary topic', () => {
+    expect(evaluateSet('word', [1_500_000])).toEqual([]);
     expect(evaluateSet('word', [1_500_001])[0]).toMatch(/1500000/);
     expect(evaluateSet('word', [1_500_001], 'topic food')[0]).toMatch(/^topic food: /);
+  });
+
+  it('a 48 kbps clip (the say group, AU-OD-7) must be 24 kHz, a 64 kbps clip 44.1 kHz', () => {
+    expect(evaluateReport('word', { ...good, sampleRate: 24000 }, { kbps: 48 })).toEqual([]);
+    expect(evaluateReport('word', { ...good, sampleRate: 44100 }, { kbps: 48 })[0]).toMatch(/24000/);
+    expect(evaluateReport('jamo', { ...good, sampleRate: 24000 })[0]).toMatch(/44100/);
   });
 
   it('a silent-peak clip (-inf dBTP) passes the peak limit', () => {
@@ -509,10 +520,89 @@ describe('scripts/audio/lib: evaluateReport', () => {
   });
 });
 
+describe('scripts/audio/lib: the clip classes of AMENDMENTS-AUDIO-CLIPS AC-B6 (sentence, narration, per-pack set limits)', () => {
+  it('keeps the jamo and word bounds of F-AUDIO-004 section 3.11', () => {
+    expect(clipLimitsOf('jamo')).toEqual({ minS: 0.6, maxS: 1.5, maxBytes: 12_000 });
+    expect(clipLimitsOf('word')).toEqual({ minS: 0.6, maxS: 4.0, maxBytes: 40_000 });
+    expect(CLIP_LIMITS.word.setMaxBytes).toBe(1_500_000);
+  });
+
+  it('sentence and narration: 0.15-0.45 s per spoken syllable plus 0.6 s of padding, the byte cap at 48 kbps', () => {
+    // 10 syllables: 0.15 * 10 + 0.6 = 2.1 s; 0.45 * 10 + 0.6 = 5.1 s; 5.1 s at 48 kbps = 30,600 bytes.
+    expect(clipLimitsOf('sentence', { syllables: 10 })).toEqual({ minS: 2.1, maxS: 5.1, maxBytes: 30_600 });
+    expect(clipLimitsOf('narration', { syllables: 10 })).toEqual({ minS: 2.1, maxS: 5.1, maxBytes: 30_600 });
+    expect(clipLimitsOf('sentence', { syllables: 3 })).toEqual({ minS: 1.05, maxS: 1.95, maxBytes: 11_700 });
+  });
+
+  it('a sentence needs its syllable count', () => {
+    expect(() => clipLimitsOf('sentence')).toThrow(/syllable/);
+    expect(() => clipLimitsOf('narration', { syllables: 0 })).toThrow(/syllable/);
+  });
+
+  it('counts spoken syllables only (no spaces, punctuation or Latin letters)', () => {
+    expect(spokenSyllableCount('안녕히 가세요.')).toBe(6);
+    expect(spokenSyllableCount('이거 얼마예요?')).toBe(6);
+    expect(spokenSyllableCount('...')).toBe(0);
+  });
+
+  it('evaluateReport applies the per-syllable bound to a sentence clip', () => {
+    const say = { channels: 1, sampleRate: 24000, codec: 'mp3', integratedLufs: -16, truePeakDb: -2, bytes: 15_000 };
+    // 6 syllables: 1.5-3.3 s, 19,800 bytes.
+    expect(evaluateReport('sentence', { ...say, durationS: 2.4 }, { syllables: 6 })).toEqual([]);
+    expect(evaluateReport('sentence', { ...say, durationS: 1.4 }, { syllables: 6 })[0]).toMatch(/duration 1.4 s: must be 1.5-3.3 s/);
+    expect(evaluateReport('sentence', { ...say, durationS: 3.4 }, { syllables: 6 })[0]).toMatch(/duration/);
+    expect(evaluateReport('sentence', { ...say, durationS: 3.0, bytes: 19_801 }, { syllables: 6 })[0]).toMatch(/size 19801 bytes: must be <= 19800/);
+  });
+
+  it('the classes of the manifest kinds: the five tense names take the word bound, a one-syllable say clip the jamo bound', () => {
+    expect(clipClassOf({ kind: 'jamo-sound', text: '가' })).toBe('jamo');
+    expect(clipClassOf({ kind: 'jamo-sound', text: '이응' })).toBe('jamo');
+    expect(clipClassOf({ kind: 'jamo-name', text: '기역' })).toBe('jamo');
+    for (const name of ['쌍기역', '쌍디귿', '쌍비읍', '쌍시옷', '쌍지읒']) expect(clipClassOf({ kind: 'jamo-name', text: name })).toBe('word');
+    expect(clipClassOf({ kind: 'syllable', text: '나' })).toBe('jamo');
+    expect(clipClassOf({ kind: 'word', text: '가방' })).toBe('word');
+    expect(clipClassOf({ kind: 'sentence', text: '안녕히 가세요.' })).toBe('sentence');
+    expect(clipClassOf({ kind: 'narration', text: '옛날 옛적에.' })).toBe('narration');
+  });
+
+  it('jamo clips are 64 kbps, every generated clip outside audio/jamo 48 kbps (AU-OD-7)', () => {
+    expect(clipKbpsOf('audio/jamo/giyeok.mp3')).toBe(64);
+    expect(clipKbpsOf('audio/say/0123456789abcdef.mp3')).toBe(48);
+    expect(clipKbpsOf('audio/vocab/sagwa.mp3', { generated: true })).toBe(48);
+    expect(clipKbpsOf('audio/vocab/sagwa.mp3', { generated: false })).toBe(64);
+  });
+
+  it('per-pack set limits replace the 400,000 B "30 jamo clips" total', () => {
+    expect(PACK_SET_LIMITS).toEqual({ 'jamo-s1': { clips: 43, maxBytes: 520_000 }, 'jamo-wb': { clips: 22, maxBytes: 420_000 } });
+    expect('setMaxBytes' in CLIP_LIMITS.jamo).toBe(false);
+    // 43 jamo clips at the 12 KB cap fit jamo-s1; 17 jamo clips at 12 KB and the five tense names at 40 KB fit jamo-wb.
+    expect(43 * 12_000).toBeLessThanOrEqual(PACK_SET_LIMITS['jamo-s1'].maxBytes);
+    expect(17 * 12_000 + 5 * 40_000).toBeLessThanOrEqual(PACK_SET_LIMITS['jamo-wb'].maxBytes);
+    expect(evaluateSet('jamo-s1', [520_000])).toEqual([]);
+    expect(evaluateSet('jamo-s1', [260_000, 260_001], 'pack jamo-s1')[0]).toMatch(/^pack jamo-s1: set total 520001 bytes: must be <= 520000/);
+    expect(evaluateSet('jamo-wb', [420_001])[0]).toMatch(/420000/);
+    expect(evaluateSet('jamo-wb', Array.from({ length: 23 }, () => 1000))[0]).toMatch(/23 clips: the pack has 22/);
+    expect(() => evaluateSet('jamo', [1])).toThrow(/per pack/);
+  });
+
+  it('the pack limits match the packs jamo.ts declares', () => {
+    const refs = jamoClipRefs(readFileSync(join(__dirname, '../../../content/jamo.ts'), 'utf8'));
+    for (const [pack, limit] of Object.entries(PACK_SET_LIMITS)) expect(refs.filter((r) => r.pack === pack)).toHaveLength(limit.clips);
+  });
+});
+
 describe('scripts/audio/lib: clipSets (what the set-total limit adds up)', () => {
-  it('jamo: only the 30 script clips; Batch 2 names and stray files are not in the total', () => {
-    const sets = clipSets('jamo', ['a', 'giyeok', 'giyeok-name', 'stray'], { jamoIds: ['a', 'giyeok', 'nieun'] });
-    expect(sets).toEqual([{ label: 'the jamo clips of the recording script', fileIds: ['a', 'giyeok'] }]);
+  it('jamo: one set per pack; files in no pack are not in any total', () => {
+    const packByFileId = new Map([
+      ['a', 'jamo-s1'],
+      ['giyeok', 'jamo-s1'],
+      ['giyeok-name', 'jamo-s1'],
+      ['ae', 'jamo-wb'],
+    ]);
+    expect(clipSets('jamo', ['giyeok', 'a', 'giyeok-name', 'ae', 'stray'], { packByFileId })).toEqual([
+      { label: 'pack jamo-s1', pack: 'jamo-s1', fileIds: ['a', 'giyeok', 'giyeok-name'] },
+      { label: 'pack jamo-wb', pack: 'jamo-wb', fileIds: ['ae'] },
+    ]);
   });
 
   it('word: one set per vocabulary topic, sorted, with unknown files on their own', () => {

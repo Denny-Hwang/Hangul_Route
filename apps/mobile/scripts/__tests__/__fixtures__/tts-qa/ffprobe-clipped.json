@@ -1,0 +1,13 @@
+{
+  "streams": [
+    {
+      "codec_name": "mp3",
+      "sample_rate": "44100",
+      "channels": 1
+    }
+  ],
+  "format": {
+    "duration": "0.850000",
+    "size": "7358"
+  }
+}

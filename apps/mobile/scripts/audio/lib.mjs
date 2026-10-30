@@ -189,7 +189,7 @@ const NOTES = {
 };
 
 /** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. A recorded clip is flat in its group folder (F-VOC-001: `audio/vocab/<slug>.mp3`). */
-function fileIdOf(audioRef) {
+export function fileIdOf(audioRef) {
   const id = audioRef.replace(/^audio\/[a-z]+\//, '').replace(/\.mp3$/, '');
   if (id.includes('/')) throw new Error(`${audioRef}: a recorded clip must be flat in its group folder (audio/<group>/<id>.mp3)`);
   return id;
@@ -447,26 +447,111 @@ export function clipPacksOf(manifest) {
 
 // --- Clip acceptance (check-audio.mjs, F-AUDIO-004 §3.11 table) ----------------
 
-/** The acceptance limits of §3.11. Sizes are bytes (1 KB = 1000 bytes: 1.5 s at 64 kbps is 12,000). */
+/**
+ * The acceptance limits of §3.11, with the classes of AMENDMENTS-AUDIO-CLIPS AC-B6. Sizes are bytes (1 KB = 1000
+ * bytes: 1.5 s at 64 kbps is 12,000).
+ *
+ * - `jamo` and `word` keep their fixed bounds. The five tense letter names (쌍기역 ...) take the word bound
+ *   (`clipClassOf`).
+ * - `sentence` and `narration` are bounded per spoken syllable: 0.15-0.45 s a syllable plus the 0.6 s of padding
+ *   (0.3 s each side), with the byte cap that bound gives at 48 kbps (`clipLimitsOf`).
+ * - The jamo set totals are per pack (`PACK_SET_LIMITS`); a vocabulary topic keeps its 1.5 MB.
+ */
+export const CLIP_PADDING_S = 0.6;
+export const PER_SYLLABLE_S = Object.freeze({ min: 0.15, max: 0.45 });
+export const SAY_KBPS = 48;
 export const CLIP_LIMITS = {
-  jamo: { minS: 0.6, maxS: 1.5, maxBytes: 12_000, setMaxBytes: 400_000 },
+  jamo: { minS: 0.6, maxS: 1.5, maxBytes: 12_000 },
   word: { minS: 0.6, maxS: 4.0, maxBytes: 40_000, setMaxBytes: 1_500_000 },
+  sentence: { perSyllable: PER_SYLLABLE_S, paddingS: CLIP_PADDING_S, kbps: SAY_KBPS },
+  narration: { perSyllable: PER_SYLLABLE_S, paddingS: CLIP_PADDING_S, kbps: SAY_KBPS },
 };
+/** The set totals of the two jamo packs (AC-B6): in place of the 400,000 B of "30 jamo clips". */
+export const PACK_SET_LIMITS = Object.freeze({
+  'jamo-s1': Object.freeze({ clips: 43, maxBytes: 520_000 }),
+  'jamo-wb': Object.freeze({ clips: 22, maxBytes: 420_000 }),
+});
 export const TARGET_LUFS = -16;
 export const LUFS_TOLERANCE = 1.5;
 export const MAX_TRUE_PEAK_DB = -1.5;
 
+const HANGUL_SYLLABLE = /[가-힣]/gu;
+const round3 = (n) => Math.round(n * 1000) / 1000;
+
+/** The spoken syllables of a text: its Hangul syllables (spaces, punctuation and anything else are not spoken syllables). */
+export function spokenSyllableCount(text) {
+  return (String(text).normalize('NFC').match(HANGUL_SYLLABLE) ?? []).length;
+}
+
+/**
+ * The bounds of one clip of a class: `{ minS, maxS, maxBytes }`. A `sentence` or `narration` clip needs its spoken
+ * syllable count (`spokenSyllableCount`).
+ *
+ * @param {'jamo' | 'word' | 'sentence' | 'narration'} kind
+ * @param {{ syllables?: number }} [context]
+ */
+export function clipLimitsOf(kind, { syllables } = {}) {
+  const lim = CLIP_LIMITS[kind];
+  if (lim === undefined) throw new Error(`unknown clip class ${kind}`);
+  if (lim.perSyllable === undefined) return { minS: lim.minS, maxS: lim.maxS, maxBytes: lim.maxBytes };
+  if (!Number.isInteger(syllables) || syllables <= 0) throw new Error(`a ${kind} clip is bounded per spoken syllable: pass its syllable count`);
+  const minS = round3(lim.perSyllable.min * syllables + lim.paddingS);
+  const maxS = round3(lim.perSyllable.max * syllables + lim.paddingS);
+  return { minS, maxS, maxBytes: Math.ceil(round3((maxS * lim.kbps * 1000) / 8)) };
+}
+
+/**
+ * The limit class of a manifest row (AC-B6): a jamo sound, a two-syllable letter name and a one-syllable say clip
+ * take the jamo bound; a letter name of three syllables (the five tense names, 쌍기역 ...) and a word take the word
+ * bound; a sentence and narration are bounded per syllable.
+ *
+ * @param {{ kind: string, text: string }} row
+ * @returns {'jamo' | 'word' | 'sentence' | 'narration'}
+ */
+export function clipClassOf(row) {
+  switch (row.kind) {
+    case 'jamo-sound':
+    case 'syllable':
+      return 'jamo';
+    case 'jamo-name':
+      return spokenSyllableCount(row.text) >= 3 ? 'word' : 'jamo';
+    case 'word':
+    case 'sentence':
+    case 'narration':
+      return row.kind;
+    default:
+      throw new Error(`unknown clip kind ${row.kind}`);
+  }
+}
+
+/**
+ * The MP3 bitrate a clip is processed at (AU-OD-7): 64 kbps for a jamo clip, 48 kbps for every other generated clip
+ * (the say group, and a vocabulary clip the manifest generates). A recorded clip outside audio/jamo keeps 64.
+ *
+ * @param {string} ref
+ * @param {{ generated?: boolean }} [context] whether the clip is a generated (manifest) clip
+ * @returns {64 | 48}
+ */
+export function clipKbpsOf(ref, { generated = true } = {}) {
+  if (ref.startsWith('audio/jamo/')) return 64;
+  if (ref.startsWith('audio/say/')) return SAY_KBPS;
+  return generated ? SAY_KBPS : 64;
+}
+
 /**
  * The limits one processed clip misses (empty when it passes).
  *
- * @param {'jamo' | 'word'} kind
+ * @param {'jamo' | 'word' | 'sentence' | 'narration'} kind
  * @param {{ channels: number, sampleRate: number, codec: string, durationS: number, integratedLufs: number, truePeakDb: number, bytes: number }} r
+ * @param {{ syllables?: number, kbps?: 64 | 48 }} [context] the spoken syllables (sentence, narration) and the bitrate
+ *   the clip was processed at (default 64; 48 for a sentence or narration clip)
  */
-export function evaluateReport(kind, r) {
-  const lim = CLIP_LIMITS[kind];
+export function evaluateReport(kind, r, { syllables, kbps } = {}) {
+  const lim = clipLimitsOf(kind, { syllables });
+  const rate = MP3_BITRATES[kbps ?? CLIP_LIMITS[kind].kbps ?? DEFAULT_MP3_BITRATE];
   const failures = [];
   if (r.channels !== 1) failures.push(`channels ${r.channels}: must be mono`);
-  if (r.sampleRate !== 44100) failures.push(`sample rate ${r.sampleRate}: must be 44100 Hz`);
+  if (r.sampleRate !== rate) failures.push(`sample rate ${r.sampleRate}: must be ${rate} Hz`);
   if (r.codec !== 'mp3') failures.push(`codec ${r.codec}: must be mp3`);
   if (r.durationS < lim.minS || r.durationS > lim.maxS) failures.push(`duration ${r.durationS} s: must be ${lim.minS}-${lim.maxS} s`);
   if (!Number.isFinite(r.integratedLufs) || Math.abs(r.integratedLufs - TARGET_LUFS) > LUFS_TOLERANCE + 1e-9) {
@@ -477,29 +562,41 @@ export function evaluateReport(kind, r) {
   return failures;
 }
 
-/** The set-total limit (30 jamo clips <= 400 KB; one vocabulary topic <= 1.5 MB). `label` names the set in the message. */
-export function evaluateSet(kind, sizes, label) {
+/**
+ * The set-total limit: a jamo pack (`PACK_SET_LIMITS`: at most its clip count and its bytes) or one vocabulary topic
+ * (`word`, 1.5 MB). `label` names the set in the message.
+ *
+ * @param {'word' | keyof typeof PACK_SET_LIMITS} set
+ */
+export function evaluateSet(set, sizes, label) {
+  const prefix = label ? `${label}: ` : '';
+  const pack = Object.prototype.hasOwnProperty.call(PACK_SET_LIMITS, set) ? PACK_SET_LIMITS[set] : undefined;
+  const max = pack?.maxBytes ?? CLIP_LIMITS[set]?.setMaxBytes;
+  if (max === undefined) throw new Error(`no set limit for ${set}: the jamo set totals are per pack (${Object.keys(PACK_SET_LIMITS).join(', ')})`);
+  const failures = [];
+  if (pack !== undefined && sizes.length > pack.clips) failures.push(`${prefix}${sizes.length} clips: the pack has ${pack.clips}`);
   const total = sizes.reduce((sum, b) => sum + b, 0);
-  const max = CLIP_LIMITS[kind].setMaxBytes;
-  if (total <= max) return [];
-  return [`${label ? `${label}: ` : ''}set total ${total} bytes: must be <= ${max}`];
+  if (total > max) failures.push(`${prefix}set total ${total} bytes: must be <= ${max}`);
+  return failures;
 }
 
 const NO_TOPIC = '(not in any topic)';
 
 /**
- * The sets the set-total limit applies to. Jamo: the clips of the recording
- * script only (the optional Batch 2 `-name` clips and stray files are not part
- * of "30 jamo clips"). Words: one set per vocabulary topic.
+ * The sets the set-total limit applies to. Jamo: one set per pack of `PACK_SET_LIMITS`, by the pack jamo.ts declares
+ * for each clip (`jamoClipRefs`); a stray file is in no pack and no total. Words: one set per vocabulary topic.
  *
  * @param {'jamo' | 'word'} kind
  * @param {readonly string[]} fileIds the clips in the folder, as file ids
- * @param {{ jamoIds?: readonly string[], topicByFileId?: ReadonlyMap<string, string> }} context
+ * @param {{ packByFileId?: ReadonlyMap<string, string>, topicByFileId?: ReadonlyMap<string, string> }} context
  */
-export function clipSets(kind, fileIds, { jamoIds = [], topicByFileId = new Map() } = {}) {
+export function clipSets(kind, fileIds, { packByFileId = new Map(), topicByFileId = new Map() } = {}) {
   if (kind === 'jamo') {
-    const script = new Set(jamoIds);
-    return [{ label: 'the jamo clips of the recording script', fileIds: fileIds.filter((id) => script.has(id)).sort() }];
+    return Object.keys(PACK_SET_LIMITS).map((pack) => ({
+      label: `pack ${pack}`,
+      pack,
+      fileIds: fileIds.filter((id) => packByFileId.get(id) === pack).sort(),
+    }));
   }
   const byTopic = new Map();
   for (const id of fileIds) {

@@ -93,7 +93,8 @@ export interface ParsedJamo {
   nameKo: string | undefined;
 }
 
-export type ClipKind = 'jamo' | 'word';
+export type ClipKind = 'jamo' | 'word' | 'sentence' | 'narration';
+export type JamoPack = 'jamo-s1' | 'jamo-wb';
 
 export interface ClipReport {
   channels: number;
@@ -110,7 +111,22 @@ export interface TimeSpan {
   end: number;
 }
 
-export const CLIP_LIMITS: Readonly<Record<ClipKind, { minS: number; maxS: number; maxBytes: number; setMaxBytes: number }>>;
+export const CLIP_PADDING_S: number;
+export const PER_SYLLABLE_S: Readonly<{ min: number; max: number }>;
+export const SAY_KBPS: 48;
+export const CLIP_LIMITS: Readonly<{
+  jamo: { minS: number; maxS: number; maxBytes: number };
+  word: { minS: number; maxS: number; maxBytes: number; setMaxBytes: number };
+  sentence: { perSyllable: { min: number; max: number }; paddingS: number; kbps: 48 };
+  narration: { perSyllable: { min: number; max: number }; paddingS: number; kbps: 48 };
+}>;
+export const PACK_SET_LIMITS: Readonly<Record<JamoPack, Readonly<{ clips: number; maxBytes: number }>>>;
+export function spokenSyllableCount(text: string): number;
+export function clipLimitsOf(kind: ClipKind, context?: { syllables?: number }): { minS: number; maxS: number; maxBytes: number };
+export function clipClassOf(row: { kind: string; text: string }): ClipKind;
+export function clipKbpsOf(ref: string, context?: { generated?: boolean }): 64 | 48;
+/** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. */
+export function fileIdOf(audioRef: string): string;
 export const TARGET_LUFS: number;
 export const LUFS_TOLERANCE: number;
 export const MAX_TRUE_PEAK_DB: number;
@@ -130,13 +146,13 @@ export function parseJamoSource(source: string): ParsedJamo[];
 export function jamoClipRefs(source: string): Array<{ ref: string; pack: string }>;
 export const TTS_MANIFEST_FILE: string;
 export function clipPacksOf(manifest: { rows?: ReadonlyArray<{ ref: string; pack: string }> } | null | undefined): Map<string, string>;
-export function evaluateReport(kind: ClipKind, report: ClipReport): string[];
-export function evaluateSet(kind: ClipKind, sizes: readonly number[], label?: string): string[];
+export function evaluateReport(kind: ClipKind, report: ClipReport, context?: { syllables?: number; kbps?: 64 | 48 }): string[];
+export function evaluateSet(set: 'word' | JamoPack | (string & {}), sizes: readonly number[], label?: string): string[];
 export function clipSets(
-  kind: ClipKind,
+  kind: 'jamo' | 'word',
   fileIds: readonly string[],
-  context?: { jamoIds?: readonly string[]; topicByFileId?: ReadonlyMap<string, string> },
-): Array<{ label: string; fileIds: string[] }>;
+  context?: { packByFileId?: ReadonlyMap<string, string>; topicByFileId?: ReadonlyMap<string, string> },
+): Array<{ label: string; pack?: string; fileIds: string[] }>;
 export function parseTakeFile(name: string): { fileId: string; take: number } | null;
 export function parseSilences(log: string, durationS: number): TimeSpan[];
 export function takeSegments(silences: readonly TimeSpan[], durationS: number, minGapS?: number): TimeSpan[];
