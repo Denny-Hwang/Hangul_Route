@@ -470,6 +470,13 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(index).toContain("register('/sw.js')");
   });
 
+  it('keeps overscroll-behavior: none on html and body, so a stage swipe never leaves the page (AMENDMENTS-PRESENTER-NAV section 6)', () => {
+    // The presenter (/present) is this page too: the single-page fallback serves index.html.
+    const index = readFileSync(join(dist, 'index.html'), 'utf8');
+    expect(index).toMatch(/html, body \{ overscroll-behavior: none;[^}]*\}/);
+    expect(index).toMatch(/body \{[^}]*user-select: none;[^}]*\}/);
+  });
+
   it('wraps Korean at spaces, never inside a word (F-I18N-001 PR 16, the Korean layout review)', () => {
     const index = readFileSync(join(dist, 'index.html'), 'utf8');
     expect(index).toMatch(/:lang\(ko\)\s*\{\s*word-break: keep-all; overflow-wrap: break-word; overflow-wrap: anywhere;\s*\}/);

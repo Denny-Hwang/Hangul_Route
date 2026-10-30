@@ -504,3 +504,45 @@ export async function acceptConfirmSheets(page: Page): Promise<void> {
     await sheet.getByRole('button').last().click();
   });
 }
+
+/** A point in the window, in CSS px. */
+export interface WindowPoint {
+  x: number;
+  y: number;
+}
+
+export interface SwipeOptions {
+  /** Fingers down together (default 1). A second finger goes down beside the first, `spacing.xxxl` below it. */
+  fingers?: 1 | 2;
+  /** With two fingers: which one lifts first (`'tracked'`: the first one down). */
+  liftFirst?: 'tracked' | 'other';
+  /** Moves between the start and the end (default 6). */
+  steps?: number;
+}
+
+/**
+ * A real touch swipe on the page (AMENDMENTS-PRESENTER-NAV section 14): `page.touchscreen` only
+ * taps, so the swipe goes through CDP `Input.dispatchTouchEvent` (as `audio-engine.spec.ts` does),
+ * Chromium only; a spec skips its swipe cases under `E2E_WEBKIT`. Every finger moves by the same
+ * travel; the touch lifts at `to`.
+ */
+export async function swipeStage(page: Page, from: WindowPoint, to: WindowPoint, options: SwipeOptions = {}): Promise<void> {
+  const fingers = options.fingers ?? 1;
+  const steps = Math.max(1, options.steps ?? 6);
+  const cdp = await page.context().newCDPSession(page);
+  const at = (t: number, finger: number) => ({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + finger * 48, id: finger });
+  const all = (t: number) => Array.from({ length: fingers }, (_, finger) => at(t, finger));
+  try {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at(0, 0)] });
+    if (fingers === 2) await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: all(0) });
+    for (let i = 1; i <= steps; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: all(i / steps) });
+    if (fingers === 2) {
+      // The finger that stays down is the one still listed.
+      const stays = options.liftFirst === 'other' ? at(1, 0) : at(1, 1);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [stays] });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  } finally {
+    await cdp.detach();
+  }
+}

@@ -1454,8 +1454,12 @@ const SOUND_FLASH_TEST_IDS: Readonly<Record<SoundFlashKey, string>> = {
   deckSoundOff: 'presenter-deck-sound-off-flash',
 };
 
-/** Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). */
-const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0 };
+/**
+ * Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). It sits at the
+ * centre of the stage box, beside the stage, so it takes no pointer: a finger there is the stage's
+ * (AMENDMENTS-PRESENTER-NAV section 7).
+ */
+const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0, pointerEvents: 'none' as const };
 
 /**
  * A sound flash at the top of the stage, for `presenter.autoHideMs`: the no-voice chip when a sound

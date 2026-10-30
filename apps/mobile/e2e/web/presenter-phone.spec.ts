@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { readStored } from './helpers';
+import { readStored, swipeStage } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -9,8 +9,9 @@ import { shot } from './shots';
  * AMENDMENTS-LECTURE-V2 section 14 `presenter-phone.spec.ts`): the presenter on a phone, with
  * `isMobile` and touch. Sideways at 568 x 320, 640 x 360 and 844 x 390 the slide is drawn (no
  * too-small page) and every slide family stays inside the stage; the compact bar shows at the start
- * of the lesson and hides after `presenter.autoHideMs`, a stage tap steps without showing it, a tap
- * in its strip shows it, and after Next on the bar or a stage tap it is hidden at once, so no
+ * of the lesson and hides after `presenter.autoHideMs`, a swipe steps without showing it, a touch
+ * tap on empty stage area shows it or hides it (AMENDMENTS-PRESENTER-NAV section 5.3: the strip
+ * and its grabber are gone), and after Next on the bar or a swipe it is hidden at once, so no
  * control covers the new slide; its step back reads Previous; More holds the rest. Upright, the
  * rotate page with Back. The phone start screen. The browser's back steps back one phase. No
  * sideways scroll. Screenshots with `HR_SHOTS=1`.
@@ -98,17 +99,21 @@ async function expectBarShown(page: Page): Promise<void> {
   await expect(page.getByTestId('presenter-next')).not.toHaveCSS('pointer-events', 'none');
 }
 
-/** A tap in the middle of the stage, above the bar's strip (the right two thirds: next). */
-async function tapStage(page: Page): Promise<void> {
+/** A swipe to the left across the middle of the stage: next (AMENDMENTS-PRESENTER-NAV section 6; Chromium only). */
+async function swipeNext(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.7, stage.y + stage.height * 0.4);
+  const y = stage.y + stage.height * 0.4;
+  await swipeStage(page, { x: stage.x + stage.width * 0.7, y }, { x: stage.x + stage.width * 0.3, y });
 }
 
-/** A tap in the bar's strip: the bottom of the stage, beside where the bar sits. */
-async function tapStrip(page: Page): Promise<void> {
+/** A touch tap on empty stage area (the stage's top-left padding, where no slide draws): it shows or hides the bar (section 5.3). */
+async function tapEmpty(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
 }
+
+/** The swipe cases drive CDP touch events, which only Chromium has (section 14). */
+const SWIPES_SKIPPED = process.env.E2E_WEBKIT === '1';
 
 /** No element of the slide's text (the taught row: glyph, Korean, romanization, gloss, answer tiles) meets a visible control. */
 async function expectNothingCovered(page: Page): Promise<void> {
@@ -186,7 +191,8 @@ for (const size of PHONES) {
       await expect(page.getByTestId('presenter-rotate')).toHaveCount(0);
       await expect.poll(() => counter(page)).toMatch(/^1 \//);
       await expect(page.getByTestId('presenter-bar-band')).toHaveCount(0);
-      await expect(page.getByTestId('presenter-grabber')).toBeAttached();
+      // No strip and no grabber: no part of the stage is a hidden zone (section 5.3).
+      await expect(page.getByTestId('presenter-grabber')).toHaveCount(0);
       await expect(page.getByTestId('presenter-picker')).toHaveCount(0);
       // No band: the stage takes the whole window in one direction.
       const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
@@ -199,7 +205,8 @@ for (const size of PHONES) {
       expect(errors).toEqual([]);
     });
 
-    test('the bar shows at the start and hides; a stage tap steps without it; its strip shows it; Next and a stage tap hide it at once', async ({ page }) => {
+    test('the bar shows at the start and hides; a swipe steps without it; a tap on empty stage shows or hides it; Next and a swipe hide it at once', async ({ page }) => {
+      test.skip(SWIPES_SKIPPED, 'swipes drive CDP touch events (Chromium only)');
       await page.goto(link());
       await startLesson(page);
       // The start of the lesson: shown, its controls one row of touch targets inside the window, then hidden after 3 s.
@@ -214,18 +221,18 @@ for (const size of PHONES) {
       await expect(page.getByTestId('presenter-back')).toHaveAccessibleName('Previous');
       await shot(page, `presenter-phone-bar-${size.width}x${size.height}`);
       await expectBarHidden(page);
-      // A stage tap steps; the bar stays out of the way.
+      // A swipe steps; the bar stays out of the way.
       const first = await counter(page);
-      await tapStage(page);
+      await swipeNext(page);
       await expect.poll(() => liveText(page)).not.toContain('Slide 1 of');
       await page.waitForTimeout(400);
       await expectBarHidden(page);
       expect(await counter(page)).not.toBe(first);
-      // A tap in the strip shows it, and steps nothing (the slide's builds revealed by key first, so Next steps a slide).
+      // A tap on empty stage shows it, and steps nothing (the slide's builds revealed by key first, so Next steps a slide).
       await revealAll(page);
       await expectBarHidden(page);
       const at = await liveText(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarShown(page);
       expect(await liveText(page)).toBe(at);
       // Next on the bar: the step happens and the bar is gone at once; nothing of the new slide is covered.
@@ -234,20 +241,20 @@ for (const size of PHONES) {
       await expect.poll(() => liveText(page)).not.toBe(at);
       await expectBarHidden(page);
       await expectNothingCovered(page);
-      // Shown again, a stage tap while it shows also hides it at once.
+      // Shown again, a swipe while it shows also hides it at once.
       await revealAll(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarShown(page);
       const before = await liveText(page);
-      await tapStage(page);
+      await swipeNext(page);
       await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none');
       await expect.poll(() => liveText(page)).not.toBe(before);
       await expectBarHidden(page);
       await expectNothingCovered(page);
-      // A tap in the strip while it shows hides it.
-      await tapStrip(page);
+      // A tap on empty stage while it shows hides it.
+      await tapEmpty(page);
       await expectBarShown(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarHidden(page);
     });
 
@@ -322,13 +329,13 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
     await expect(sheet).toHaveCount(0);
     const help = page.getByTestId('presenter-help');
     await expect(help).toBeVisible();
-    await expect(help.getByTestId('presenter-help-phone-bar')).toHaveText('On a phone, tap the bottom of the slide to show the controls.');
+    await expect(help.getByTestId('presenter-help-phone-bar')).toHaveText('On this phone, swipe to move. Tap the slide to show the controls.');
     await expect(help.getByText('Previous', { exact: true })).toBeVisible();
     await shot(page, 'presenter-phone-help-568x320');
     await page.getByTestId('presenter-help-close').tap();
     // Exit from More: the confirm fits the window.
     await expectBarHidden(page);
-    await tapStrip(page);
+    await tapEmpty(page);
     await expectBarShown(page);
     await page.getByTestId('presenter-more').tap();
     await page.getByTestId('presenter-more-sheet').getByTestId('presenter-exit').tap();
@@ -344,18 +351,19 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
   });
 
   test('a keyboard focus inside the bar holds it; a focus given back after a tap (More closing) does not', async ({ page }) => {
+    test.skip(SWIPES_SKIPPED, 'swipes drive CDP touch events (Chromium only)');
     await page.goto(link());
     await startLesson(page);
     await expectBarHidden(page);
     // A tap: More, then Close; focus goes back to More, and the next step still hides the bar.
-    await tapStrip(page);
+    await tapEmpty(page);
     await expectBarShown(page);
     await page.getByTestId('presenter-more').tap();
     await page.getByTestId('presenter-more-close').tap();
     await expect(page.getByTestId('presenter-more')).toBeFocused();
     await revealAll(page);
     await expectBarShown(page);
-    await tapStage(page);
+    await swipeNext(page);
     await expectBarHidden(page);
     // A keyboard user: a key, then focus moves into the bar; it shows and stays past presenter.autoHideMs.
     await page.keyboard.press('Shift');
