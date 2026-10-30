@@ -3,7 +3,7 @@
 Spec: `docs/specs/AMENDMENTS-PRESENTER-NAV.md` (rows **PN-2** to **PN-5**) · amends `docs/specs/F-TCH-004-lecture-mode.md` §3.5 "Touch and mouse" and "Control bar", §3.6 phone exception · amends `classroom/lecture-presenter.md` C (stage and bar) and `classroom/lecture-phone.md` A to C (the phone bar and its strip)
 Audience: **teacher, parent or caregiver presenting** a lesson from a tablet, a laptop at a projector, an interactive whiteboard or a phone
 Route: `app.hangulroute.com/present` (no new route)
-Mock: row PN-0b (`design/screens/presenter/stage-and-bar.md`, `overlays.md`, `slide-quiz.md`, `slide-listen-reply.md`)
+Mock: row PN-0b: `design/screens/presenter/stage-and-bar.md` "Navigation (PN-0b)" (Panels A, C, D, D2, E, G and the kill switch), `overlays.md` "Help" (Panel F), `slide-quiz.md` and `slide-listen-reply.md` "Pointed option" (Panel B); pages `mock/nav-*.html`, `mock/overlay-help-touch.html`
 
 ## Scenario (Given-When-Then)
 
@@ -195,4 +195,4 @@ Exit to: the Exit confirm (Exit, the browser or phone back) · the grid (Slides,
 ## Open questions
 
 - Owner choices O1 to O8 (`AMENDMENTS-PRESENTER-NAV.md` section 3); the panels show the recommended defaults.
-- Rail labels in Spanish at the body floor ("Siguiente") inside 88 px, and More inside the compact rail's 64 px in en, es, ko: measured in PN-0b; a two-line label is allowed, a broken word is not.
+- ~~Rail labels in Spanish at the body floor ("Siguiente") inside 88 px, and More inside the compact rail's 64 px in en, es, ko~~: measured in PN-0b (`stage-and-bar.md` "Navigation (PN-0b)", Rail labels): every label fits on one line once the full rail's buttons drop their side padding ("Siguiente" is 81.4 px in the iOS system font against 84 px); More fits 64 px in all three, so no `more` icon is needed.

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rail labels in en, es and ko at 18 px (PN-0b) - design mock</title>
+<link rel="stylesheet" href="presenter.css">
+<link rel="stylesheet" href="presenter-nav.css">
+</head>
+<body>
+<!-- Design mock (PN-0b, section 5.2), not shipped code: the full rail's buttons (88 px wide, at least 64 tall, Next / Reveal 96) and the compact rail's More (64 x 64) with the shipped labels (bar.more.cta, bar.reveal.cta, common.buttons.next, bar.prev.cta, bar.sound.cta) in en, es and ko at typography.size.body. A word never breaks; presenter-nav.js marks a label that overflows or needs more than two lines and fills the table. -->
+<main class="label-board">
+<div class="col-l" lang="en"><h2>en</h2>
+<button class="ctl more" type="button" data-key="bar.more.cta"><span>More</span></button>
+<button class="ctl primary nav-next" type="button" data-key="bar.reveal.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Reveal</span></button>
+<button class="ctl primary nav-next" type="button" data-key="common.buttons.next"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Next</span></button>
+<button class="ctl" type="button" data-key="bar.prev.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Previous</span></button>
+<button class="ctl" type="button" data-key="bar.sound.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sound</span></button>
+<button class="ctl more sq" type="button" data-key="bar.more.cta (compact, 64)"><span>More</span></button>
+</div>
+<div class="col-l" lang="es"><h2>es</h2>
+<button class="ctl more" type="button" data-key="bar.more.cta"><span>Más</span></button>
+<button class="ctl primary nav-next" type="button" data-key="bar.reveal.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Mostrar</span></button>
+<button class="ctl primary nav-next" type="button" data-key="common.buttons.next"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Siguiente</span></button>
+<button class="ctl" type="button" data-key="bar.prev.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Anterior</span></button>
+<button class="ctl" type="button" data-key="bar.sound.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sonido</span></button>
+<button class="ctl more sq" type="button" data-key="bar.more.cta (compact, 64)"><span>Más</span></button>
+</div>
+<div class="col-l" lang="ko"><h2>ko</h2>
+<button class="ctl more" type="button" data-key="bar.more.cta"><span>더 보기</span></button>
+<button class="ctl primary nav-next" type="button" data-key="bar.reveal.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>다음 보기</span></button>
+<button class="ctl primary nav-next" type="button" data-key="common.buttons.next"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 6 L15.5 12 L9.5 18" fill="none" stroke="var(--colors-text-onPrimary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>다음</span></button>
+<button class="ctl" type="button" data-key="bar.prev.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 6 L8.5 12 L14.5 18" fill="none" stroke="var(--colors-text-primary)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>이전</span></button>
+<button class="ctl" type="button" data-key="bar.sound.cta"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" fill="var(--colors-text-primary)"/><path d="M16.5 9 Q18.5 12 16.5 15" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7 Q22 12 19 17" fill="none" stroke="var(--colors-text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>소리</span></button>
+<button class="ctl more sq" type="button" data-key="bar.more.cta (compact, 64)"><span>더 보기</span></button>
+</div>
+<table id="board-results"><thead><tr><th>lang</th><th>key</th><th>label</th><th>button (px)</th><th>longest word / room (px)</th><th>lines</th><th>result</th></tr></thead><tbody></tbody></table>
+</main>
+<script src="presenter-nav.js"></script>
+</body>
+</html>

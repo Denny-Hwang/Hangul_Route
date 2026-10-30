@@ -1,0 +1,130 @@
+/*
+ * Presenter navigation (owner report 2026-10-29; docs/specs/AMENDMENTS-PRESENTER-NAV.md, design pass PN-0b;
+ * wireframe design/wireframes/classroom/lecture-nav.md): the docked bar with Previous first and Next / Reveal last
+ * (O6), Previous beside Next on a wide touch window (O9) and the wrapped band; the phone rail (full and compact, O1,
+ * O3, O10) and the overlay fallback without the strip or the grabber; a pointed option (O2); the start hint (O7); the
+ * Next ring; Help's Touch and mouse group. Design mock, not shipped code. Loaded after presenter.css, presenter-v2.css
+ * and presenter-or.css; presenter-nav.js picks the layout the way `navLayout` does (section 4) and sets the classes
+ * used here. Every value is a token of presenter.css's first :root block, or a constant named once below and listed
+ * in ../stage-and-bar.md "Navigation (PN-0b)".
+ */
+:root {
+  --rail: calc(var(--touch-hero) + var(--spacing-sm));                            /* PHONE_RAIL: the full rail column, 104 px */
+  --rail-compact: calc(var(--touch-min) + var(--spacing-md) + var(--spacing-xs));  /* PHONE_RAIL_COMPACT: the compact icon rail, 80 px */
+  --rail-gap: var(--spacing-md);                                                    /* PHONE_RAIL_GAP: the rail's inert stage side, 12 px (the rule included) */
+  --rail-btn: calc(var(--rail) - var(--rail-gap) - var(--spacing-xs));              /* a full rail button: 88 px wide */
+  --rail-next-h: calc(var(--touch-min) * 1.5);                                      /* the full rail's Next / Reveal: 96 px tall */
+  --nav-clearance: var(--spacing-xxl);                                              /* NAV_CLEARANCE: 32 window px of inert space, target to control */
+  --bar-row-gap: calc(2 * var(--spacing-md));                                       /* a wrapped band: each row adds one BAR_BAND (96 + 2 x 12) */
+  --pin: max(var(--spacing-xl), calc(var(--u) * var(--presenter-size-body)));      /* the pointed option's pin: 40 units, never under 24 px */
+  --wide-touch-min: 1600px;                                                         /* O9: a touch window at least this wide (a whiteboard) puts Previous beside Next */
+  --layout-phoneShortSide: 600px;                                                   /* token layout.phoneShortSide (isPhoneWindow), read by presenter-nav.js */
+  --layout-phoneMaxLongSide: 1000px;                                                /* token layout.phoneMaxLongSide (isPhoneWindow), read by presenter-nav.js */
+  --mock-inset-side-lg: 59px;                                                       /* mock only: a 932 x 430 phone's landscape safe-area inset (left and right) */
+  --mock-projector: contrast(0.55) brightness(1.2) saturate(0.7);                   /* mock only: a washed-out projector in a lit room */
+}
+
+/* ---------------------------------------------------------------- Which chrome each layout draws (section 4) */
+.presenter.nav [hidden] { display: none; }
+.presenter.nav .cbar, .presenter.nav .rail { display: none; }
+.presenter.nav.nav-overlay .cbar { display: flex; }
+.presenter.nav.nav-overlay .bar.nav, .presenter.nav.nav-rail .bar.nav { display: none; }
+.presenter.phone.notch-lg { --inset-l: var(--mock-inset-side-lg); --inset-r: var(--mock-inset-side-lg); --inset-b: var(--mock-inset-bottom); }
+
+/* ---------------------------------------------------------------- Docked bar (section 5.1; O6, O9, the wrap rule) */
+/* DOM order is the visual and focus order: Previous, the chips, Exit, Full screen, Slides, Blank, Timer, Sound,  */
+/* Next / Reveal (O6); on a wide touch window presenter-nav.js moves Previous to just before Next (O9).            */
+.bar.nav { flex-wrap: nowrap; justify-content: flex-start; gap: var(--spacing-lg); }
+.bar.nav .status { flex: 1 0 var(--status-min); }      /* the chips keep their basis, so a band that cannot hold it wraps */
+.bar.nav .tools { display: flex; gap: var(--spacing-sm); flex: none; }
+/* Wrapped (a tablet such as 1024 x 768, upright 820 x 1180): the tools take a row above; Previous and Next stay on */
+/* the bottom row at its two ends (together at its end on a wide touch window); the band grows by one BAR_BAND.     */
+.bar.nav.wrapped { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "tools tools tools" "prev status next"; row-gap: var(--bar-row-gap); column-gap: var(--spacing-lg); align-items: center; }
+.bar.nav.wrapped.o9 { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "tools tools tools" "status prev next"; }
+.bar.nav.wrapped .tools { grid-area: tools; justify-self: end; flex-wrap: wrap; justify-content: flex-end; }
+.bar.nav.wrapped .nav-prev { grid-area: prev; }
+.bar.nav.wrapped .status { grid-area: status; min-width: 0; }
+.bar.nav.wrapped .nav-next { grid-area: next; }
+/* Touch seen: Previous and Next never fade and take taps at once; the chips and tools keep the 3 s fade (D3).      */
+/* Mouse only: presenter.css's `.bar.hidden > *` fades the whole bar as before.                                     */
+.presenter.touch .bar.nav.hidden > .nav-pin { opacity: 1; }
+/* The Next ring ('nudge-next', section 7.2): a static border.focus ring, STAGE_BORDER (borderWidth.thick) wide,  */
+/* for NUDGE_MS (1 s), drawn and removed at once; never a step, never announced.                                   */
+.ctl.nudge { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--border-width-base); }
+
+/* ---------------------------------------------------------------- Phone rail (section 5.2; O1 a, O3 a, O10 a) */
+/* The rail is a column at the right of the stage box, inside the right safe-area inset, full height between the */
+/* top and bottom insets; its stage side is a border.strong rule and the inert gap (12 px, rule included), which */
+/* no button reaches. The stage box is the window minus the insets minus the rail; --u is measured on it.         */
+.presenter.nav-rail { flex-direction: row; }
+.presenter.nav-rail .stage-box { padding: var(--spacing-none) var(--spacing-none) var(--inset-b) var(--inset-l); }
+.presenter.nav-rail .rail { display: flex; flex: none; flex-direction: column; justify-content: space-between; width: var(--rail); margin: var(--spacing-none) var(--inset-r) var(--inset-b) var(--spacing-none); padding: var(--spacing-sm) var(--spacing-xs) var(--spacing-sm) calc(var(--rail-gap) - var(--border-width-base)); background: var(--colors-surface-sunken); border-left: var(--border-width-base) solid var(--colors-border-strong); }
+.rail .rail-pair { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+/* Full rail: 88 wide, at least 64 tall, icon above a visible label at the body floor (18 px), up to two lines;  */
+/* a word never breaks (keep-all, no anywhere-wrap), so a label too long for 88 px shows as overflow. No side    */
+/* padding: the 2 px border is the edge, so a label has 84 px ("Siguiente" is 81.4 px in the iOS system font).  */
+.rail .ctl { width: var(--rail-btn); min-width: var(--spacing-none); max-width: none; min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-none); overflow-wrap: normal; word-break: keep-all; hyphens: none; }
+.rail .ctl.nav-next { min-height: var(--rail-next-h); }
+/* Compact rail (640 x 360 class): 80 px, the same four in the same order, each touchTarget.min square; Next,     */
+/* Previous and Sound icon only with the label as the accessible name; More keeps its short text label.           */
+.presenter.nav-rail.compact .rail { width: var(--rail-compact); }
+.presenter.nav-rail.compact .rail .ctl { width: var(--touch-min); height: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-xs); }
+.presenter.nav-rail.compact .rail .ctl:not(.more) > span { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.presenter.nav-rail.compact .rail .ctl .icon { width: var(--spacing-xxl); height: var(--spacing-xxl); }
+
+/* ---------------------------------------------------------------- Overlay fallback (section 5.3) */
+/* The floating compact bar of presenter-or.css, which no longer has a strip or a grabber: no part of the stage */
+/* is a hidden zone. A tap on empty stage area shows or hides it; every step hides it at once.                    */
+
+/* ---------------------------------------------------------------- Pointed option (section 7.3; O2 a) */
+/* A dashed outline, STAGE_BORDER (borderWidth.thick) units in text.primary and never under STAGE_BORDER_MIN     */
+/* (borderWidth.base: 1.3 px at a phone's unit would vanish), spacing.sm units outside the card's own border, so */
+/* it reads as a second line; the pin glyph so colour is never the only cue. No fill change, no feedback colour, */
+/* no motion; one option at a time; any step clears it.                                                           */
+.opt.pointed { outline: max(var(--border-width-base), var(--stage-line)) dashed var(--colors-text-primary); outline-offset: calc(var(--u) * var(--spacing-n-sm)); }
+.opt { position: relative; }
+.opt .pin { position: absolute; display: flex; align-items: center; justify-content: center; width: var(--pin); height: var(--pin); }
+.opt .pin svg { width: 100%; height: 100%; display: block; }
+/* At its marker: the pin sits on the marker's top right, over the marker's own corner, on a paper disc. */
+.opt .pin { left: calc(var(--u) * var(--spacing-n-xl) + var(--marker) - var(--pin) * 0.6); top: calc(50% - var(--marker) / 2 - var(--pin) * 0.25); border-radius: var(--radii-circle); background: var(--colors-surface-paper); }
+
+/* ---------------------------------------------------------------- Start hint (section 9.3; O7 a) */
+/* The sound flash's pill (stage-and-bar.md "Sound flash"): top of the stage, centred, spacing.md from the top,  */
+/* at most 90 % wide, chrome text at the body size; it takes no taps and goes after 2 x presenter.autoHideMs.     */
+.stage-hint { position: absolute; top: var(--spacing-md); left: 50%; transform: translateX(-50%); width: max-content; max-width: 90%; z-index: var(--z-raised); padding: var(--spacing-xs) var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-strong); border-radius: var(--radii-pill); color: var(--colors-text-primary); font-size: var(--size-body); line-height: var(--leading-tight); text-align: center; pointer-events: none; }
+
+/* Korean chrome breaks between words only, as KOREAN_LINE_BREAK does in the app (never inside 슬라이드에서는).    */
+html:lang(ko) .presenter.nav { word-break: keep-all; }
+
+/* ---------------------------------------------------------------- Help: the Touch and mouse group (section 9.2) */
+.help .help-group { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.help .help-group h3 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.help .help-group ul { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.help .help-group li { font-size: var(--size-body); line-height: var(--leading-normal); }
+.help .phone-line { font-size: var(--size-body); color: var(--colors-text-secondary); }
+/* Two key columns from layout.breakpoint.wide (900 px; a media query cannot read a custom property): each      */
+/* description keeps at least --key-col-2, so a Spanish or Korean row label wraps by words, not word by word.  */
+@media (min-width: 900px) { .presenter.nav .help .keys { grid-template-columns: repeat(2, minmax(var(--key-col-2), auto) minmax(var(--key-col-2), 1fr)); } }
+
+/* ---------------------------------------------------------------- Mock annotations (never shipped) */
+/* #dims=1: every content target box and every visible control hit box outlined, the inert space between the     */
+/* closest pair hatched and dimensioned in window px. feedback.info for a met rule, feedback.nudge where the      */
+/* overlay bar covers the stage while shown (section 18).                                                          */
+.dims { position: fixed; inset: 0; pointer-events: none; z-index: var(--z-toast); }
+.dims .box { position: absolute; outline: var(--border-width-base) dashed var(--colors-feedback-info); }
+.dims .gap { position: absolute; background: repeating-linear-gradient(45deg, var(--colors-feedback-infoLight) 0 var(--spacing-xs), transparent var(--spacing-xs) var(--spacing-sm)); outline: var(--border-width-base) solid var(--colors-feedback-info); }
+.dims .label { position: absolute; transform: translate(-50%, -50%); padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-sm); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-feedback-info); color: var(--colors-text-primary); font-size: var(--size-body); font-weight: var(--weight-bold); white-space: nowrap; }
+.dims .gap.fail { background: var(--colors-feedback-nudgeLight); outline-color: var(--colors-feedback-nudge); }
+.dims .label.fail { border-color: var(--colors-feedback-nudge); }
+.projector { filter: var(--mock-projector); }
+
+/* Rail label board (nav-rail-labels.html): the rail buttons in en, es and ko side by side, measured. */
+.label-board { display: flex; flex-wrap: wrap; gap: var(--spacing-xl); padding: var(--spacing-lg); background: var(--colors-surface-paper); }
+.label-board .col-l { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-xs) var(--spacing-sm) calc(var(--rail-gap) - var(--border-width-base)); background: var(--colors-surface-sunken); border-left: var(--border-width-base) solid var(--colors-border-strong); }
+.label-board h2 { font-size: var(--size-body); font-weight: var(--weight-bold); }
+.label-board .ctl { width: var(--rail-btn); min-width: var(--spacing-none); max-width: none; min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-none); overflow-wrap: normal; word-break: keep-all; hyphens: none; }
+.label-board .ctl.nav-next { min-height: var(--rail-next-h); }
+.label-board .ctl.sq { width: var(--touch-min); height: var(--touch-min); padding: var(--spacing-xs); }
+.label-board .ctl.over { outline: var(--border-width-thick) solid var(--colors-feedback-nudge); }
+.label-board table { border-collapse: collapse; font-size: var(--size-body); }
+.label-board td, .label-board th { border: var(--border-width-thin) solid var(--colors-border-strong); padding: var(--spacing-xxs) var(--spacing-sm); text-align: left; }

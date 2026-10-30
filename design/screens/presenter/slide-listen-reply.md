@@ -25,3 +25,12 @@ Spec: AMENDMENTS-LECTURE-V2 section 5.2 "As built in LV-S2". Shots: `apps/mobile
 - **Pictures** sit in the neutral `PictureArt` tile (F-VOC-002: card art and WordArt look alike, so a style never gives the answer away), `PIC_OPT` units, smaller with a shorter row.
 - **Reply**: the box holds the other speaker's line without the speaker's name: the lesson scope keeps no speaker for a turn (the learner's Tap to Respond shows none), and a name needs an overlay field of its own to follow the slide language. A later content row can add it.
 - **Fit**: the rows step to compact levels on a long text (Korean and Spanish meanings, a phone's 18 px floor): compact rows, then the line's Korean at body size, then romanizations and meanings at caption size; a new stage scale (fullscreen, the projector) fits again from level 0, and a step with no layout event measures the rows again (as the reading slides do).
+
+## Pointed option (owner choice O2, decided 2026-10-29; `AMENDMENTS-PRESENTER-NAV.md` section 7.3; row PN-5)
+
+The look and rules are `slide-quiz.md` "Pointed option" (dashed `text.primary` outline `spacing.sm` units outside the card, the pin at the marker on a paper disc, no fill, no `feedback` colour, no motion; any step clears it).
+
+- **Picture grid** (`mock/nav-quiz-listen.html#b=0&point=2`; shot `slide-quiz-listen-pointed-1280x720.png`, projector look `-1280x720-projector`): the outline goes round the whole card, picture included; the pin sits on the marker's corner, clear of the picture tile.
+- **Rows** (`mock/nav-quiz-reply.html#b=0&point=2`; shots `slide-quiz-reply-pointed-1280x720.png`, `-1920x1080`, `-844x390`, projector look `-1280x720-projector`): the outline runs the full row; the pin's disc sits on the marker's top right and reaches into the row gap above, never onto the Korean. The outline lies 1 unit from the next row's border (row gap `spacing.md` units); it still reads as its own dashed line, so the row gap must not shrink.
+- The reply box above the options (the other speaker's line) is not a content target (section 7.1 lists the options only): a tap there is a tap on empty stage area (the Next ring on a docked window or the rail, the bar in the overlay layout) and points at nothing.
+
