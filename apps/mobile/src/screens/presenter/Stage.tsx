@@ -14,9 +14,11 @@ import {
   parseStageTarget,
   slideHasTargets,
   stageGesture,
+  stageStepSource,
   type GesturePointer,
   type StageCommand,
   type StageCovering,
+  type StageStepSource,
   type StageTarget,
 } from '../../logic/lecture/stage-gesture';
 import { gridKindKey } from '../../logic/lecture/tools';
@@ -66,8 +68,8 @@ export interface StageProps {
   deckTitle: string;
   strokeToken: number;
   joinCta: string;
-  /** A gesture's command (`stageGesture`), never null. */
-  onGesture: (command: Exclude<StageCommand, null>) => void;
+  /** A gesture's command (`stageGesture`), never null, with the source of a step (`stageStepSource`, for `lecture.complete`). */
+  onGesture: (command: Exclude<StageCommand, null>, source: StageStepSource) => void;
   /** Where Previous and Next live (`navLayout`): a touch tap on empty stage shows or hides the overlay bar, elsewhere rings Next. */
   layout: NavLayout;
   /** What covers the stage now: the More sheet (a tap closes it), another covering overlay, or nothing. */
@@ -151,10 +153,10 @@ export function Stage(props: StageProps): ReactElement {
     const g = gesture.current;
     gesture.current = null;
     if (g === null) return;
+    const travel = { dx: g.x - g.x0, dy: g.y - g.y0 };
     const command = stageGesture({
       pointer: g.pointer,
-      dx: g.x - g.x0,
-      dy: g.y - g.y0,
+      ...travel,
       startX: g.x0,
       windowWidth,
       edgeGuard: edgeGuard(insets),
@@ -165,7 +167,7 @@ export function Stage(props: StageProps): ReactElement {
       covering: props.covering,
       pointing: props.pointing,
     });
-    if (command !== null) props.onGesture(command);
+    if (command !== null) props.onGesture(command, stageStepSource(travel));
   };
 
   return (

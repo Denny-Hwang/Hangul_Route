@@ -4,8 +4,9 @@ import { canPlayKorean } from '../audio/capability';
 import type { PlayResult } from '../audio/controller';
 import type { KoLine, SlideKind } from './build-steps';
 import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './deck-builder';
-import type { PresenterState } from './controls';
+import type { PresenterEvent, PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
+import type { NavLayout } from './stage-scale';
 import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView, typeCue, writeMove } from './slide-view';
 
 /**
@@ -527,33 +528,154 @@ export function lessonStartPayload(
   return startPayload({ ...input, source: from.source, ...(from.preset !== undefined ? { preset: from.preset } : {}) });
 }
 
-/** Slides seen and reveals made in this run, for `lecture.complete`. */
+/**
+ * Where a step came from (AMENDMENTS-PRESENTER-NAV section 12, owner choice O8): a bar or rail
+ * button, a swipe (a touch or a mouse drag), a key or a key-sending clicker, or a mouse click on
+ * the stage.
+ */
+export type NavSource = 'button' | 'swipe' | 'key' | 'click';
+
+/** A `prev` sooner than this after a forward step is a quick back: the sign of a step taken by mistake (section 12). */
+export const QUICK_BACK_MS = 2000;
+
+/** Every navigation count stops here (`LECTURE_REVEALS_MAX`, the Worker's bound for `lecture.complete`). */
+export const NAV_COUNT_MAX = 100_000;
+
+/** The navigation counts of a run (section 12): whole numbers, never an id, a place or a time. */
+export type NavCounts = {
+  stepsButton: number;
+  stepsSwipe: number;
+  stepsKey: number;
+  stepsClick: number;
+  quickBacks: number;
+  /** `{ point }` events (owner choice O2, row PN-5); 0 until pointing ships. */
+  points: number;
+};
+
+/** Slides seen, reveals made and the navigation counts of this run, for `lecture.complete`. */
 export interface RunTally {
   startedAt: number;
   shown: ReadonlySet<string>;
   reveals: number;
+  /** The layout when the first slide was shown after Start's fullscreen resize settled (`tallyLayout`); null until then. */
+  navLayout: NavLayout | null;
+  nav: NavCounts;
+  /** When the last forward step was taken; null before one, and after a quick back or any other move. */
+  forwardAt: number | null;
 }
+
+const NO_NAV: NavCounts = { stepsButton: 0, stepsSwipe: 0, stepsKey: 0, stepsClick: 0, quickBacks: 0, points: 0 };
+
+const SOURCE_COUNT: Readonly<Record<NavSource, keyof NavCounts>> = { button: 'stepsButton', swipe: 'stepsSwipe', key: 'stepsKey', click: 'stepsClick' };
 
 export function startTally(now: number, firstKey: string | undefined): RunTally {
-  return { startedAt: now, shown: new Set(firstKey === undefined ? [] : [firstKey]), reveals: 0 };
+  return { startedAt: now, shown: new Set(firstKey === undefined ? [] : [firstKey]), reveals: 0, navLayout: null, nav: NO_NAV, forwardAt: null };
 }
 
-/** Counts a move: a new slide joins `shown`; a later build of the same slide is one reveal. */
+/** An event the tally reads: the presenter's own, or a `{ point }` (row PN-5 adds it to the reducer). */
+export type TallyEvent = PresenterEvent | { point: number };
+
+/** What `tallyStep` needs to count a step by its source: the event, where it came from (none for a non-step) and when. */
+export interface TallyInput {
+  event: TallyEvent;
+  source?: NavSource;
+  at: number;
+}
+
+function bump(nav: NavCounts, key: keyof NavCounts): NavCounts {
+  return { ...nav, [key]: Math.min(NAV_COUNT_MAX, nav[key] + 1) };
+}
+
+/**
+ * Counts a move: a new slide joins `shown`; a later build of the same slide is one reveal. With
+ * `input` (section 12): a `next` or `prev` that moved counts once under its source; a `prev` that
+ * moved sooner than `QUICK_BACK_MS` after the forward step just before it is a quick back (one per
+ * forward step); a `{ point }` the reducer took is a point. A press that moved nothing (an
+ * overlay swallowed it, or Next on the End slide) counts nothing.
+ */
 export function tallyStep(
   tally: RunTally,
   before: Pick<PresenterState, 'slideIdx' | 'reveal'>,
   after: Pick<PresenterState, 'slideIdx' | 'reveal'>,
   slides: readonly Pick<Slide, 'key'>[],
+  input?: TallyInput,
 ): RunTally {
+  const moved = after.slideIdx !== before.slideIdx || after.reveal !== before.reveal;
+  let out = tally;
   if (after.slideIdx !== before.slideIdx) {
     const key = slides[after.slideIdx]?.key;
-    if (key === undefined || tally.shown.has(key)) return tally;
-    return { ...tally, shown: new Set([...tally.shown, key]) };
+    if (key !== undefined && !tally.shown.has(key)) out = { ...out, shown: new Set([...tally.shown, key]) };
+  } else if (after.reveal > before.reveal) {
+    out = { ...out, reveals: out.reveals + 1 };
   }
-  return after.reveal > before.reveal ? { ...tally, reveals: tally.reveals + 1 } : tally;
+  if (input === undefined) return out;
+  const { event, source, at } = input;
+  if (typeof event === 'object' && 'point' in event) return after !== before ? { ...out, nav: bump(out.nav, 'points') } : out;
+  if (!moved) return out;
+  if (event !== 'next' && event !== 'prev') return { ...out, forwardAt: null };
+  let nav = source !== undefined ? bump(out.nav, SOURCE_COUNT[source]) : out.nav;
+  if (event === 'next') return { ...out, nav, forwardAt: at };
+  const elapsed = out.forwardAt === null ? null : at - out.forwardAt;
+  if (elapsed !== null && elapsed >= 0 && elapsed < QUICK_BACK_MS) nav = bump(nav, 'quickBacks');
+  return { ...out, nav, forwardAt: null };
 }
 
-/** `lecture.complete` (section 3.14): whole minutes since Start, never negative. */
-export function completePayload(tally: RunTally, now: number): { slidesShown: number; minutes: number; reveals: number } {
-  return { slidesShown: tally.shown.size, minutes: Math.max(0, Math.round((now - tally.startedAt) / 60_000)), reveals: tally.reveals };
+/**
+ * The layout of the first slide shown after Start's fullscreen resize settled (section 12): the
+ * first call sets it, a later resize changes nothing.
+ */
+export function tallyLayout(tally: RunTally, layout: NavLayout): RunTally {
+  return tally.navLayout === null ? { ...tally, navLayout: layout } : tally;
+}
+
+/** The longest Start waits for its fullscreen request before the layout is taken anyway (`settleWithin`). */
+export const START_SETTLE_MAX_MS = 1500;
+
+/**
+ * Resolves once `request` settles (either way) and one animation frame has passed, so the resize it
+ * brought has reached the window size; or after `maxMs` when it never settles. Never rejects.
+ */
+export function settleWithin(request: Promise<unknown>, maxMs: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let done = false;
+    const finish = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      const frame = (globalThis as { requestAnimationFrame?: (callback: () => void) => unknown }).requestAnimationFrame;
+      if (typeof frame === 'function') frame(() => resolve());
+      else resolve();
+    };
+    const timer = setTimeout(finish, maxMs);
+    request.then(finish, finish);
+  });
+}
+
+/** `lecture.complete` (F-TCH-004 section 3.14, AMENDMENTS-PRESENTER-NAV section 12): exactly these keys. */
+export type CompletePayload = NavCounts & {
+  slidesShown: number;
+  minutes: number;
+  reveals: number;
+  navLayout: NavLayout;
+};
+
+/**
+ * `lecture.complete` (section 3.14): whole minutes since Start, never negative; the layout the tally
+ * took (`layoutNow` only for a lesson left before its start settled) and the navigation counts, each
+ * a whole number from 0 to `NAV_COUNT_MAX`. No coordinates, ids, per-step timings or deck title.
+ */
+export function completePayload(tally: RunTally, now: number, layoutNow: NavLayout): CompletePayload {
+  const count = (n: number): number => Math.min(NAV_COUNT_MAX, Math.max(0, Math.floor(n)));
+  return {
+    slidesShown: tally.shown.size,
+    minutes: Math.max(0, Math.round((now - tally.startedAt) / 60_000)),
+    reveals: tally.reveals,
+    navLayout: tally.navLayout ?? layoutNow,
+    stepsButton: count(tally.nav.stepsButton),
+    stepsSwipe: count(tally.nav.stepsSwipe),
+    stepsKey: count(tally.nav.stepsKey),
+    stepsClick: count(tally.nav.stepsClick),
+    quickBacks: count(tally.nav.quickBacks),
+    points: count(tally.nav.points),
+  };
 }
