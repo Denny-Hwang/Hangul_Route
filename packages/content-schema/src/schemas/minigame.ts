@@ -135,6 +135,13 @@ export const ListenPickRoundSchema = z
      * rules stay out of the start bundle.
      */
     fallbackOptions: z.array(ListenPickOptionSchema).min(1).max(3).optional(),
+    /**
+     * F-CURR-002 section 7.1 (row CM-3A S2): Read Pick Meaning, the read rung of section 4.3. The prompt's Korean and its
+     * romanization are shown as text and nothing is said before the answer (the word is said once after the right pick);
+     * the options are meanings (pictures with their labels), never spellings. A scope's rounds are all read or all
+     * heard. The lint checks the shape (`readPickRoundIssues`, lesson-lint.ts), so the start bundle carries only the field.
+     */
+    promptShown: z.literal(true).optional(),
   })
   .superRefine((round, ctx) => {
     const ids = new Set<string>();
@@ -171,6 +178,11 @@ export const ListenPickRoundSchema = z
     }
   });
 export type ListenPickRound = z.infer<typeof ListenPickRoundSchema>;
+
+/** Whether a Listen & Pick scope is Read Pick Meaning (row CM-3A S2): its rounds show their Korean prompt, none is heard. */
+export function isReadPickScope(rounds: readonly ListenPickRound[]): boolean {
+  return rounds.length > 0 && rounds.every((r) => r.promptShown === true);
+}
 
 /** Whether a Listen & Pick round is the spelling round of section 4.5 (row CM-31). */
 export function isSpellingRound(round: Pick<ListenPickRound, 'promptKind'>): boolean {

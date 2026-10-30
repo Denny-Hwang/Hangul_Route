@@ -118,8 +118,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-nature-q1-check",
           "durationSeconds": 35
         },
@@ -351,73 +351,27 @@
         },
         {
           "ref": "minigame:s2-nature-q1-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "pic-byeol",
-              "prompt": {
-                "ko": "별",
-                "romanization": "byeol",
-                "en": "star"
-              },
-              "options": [
-                {
-                  "id": "byeol",
-                  "pictureRef": "word:nature-star",
-                  "labelEn": "star"
-                },
-                {
-                  "id": "dal",
-                  "pictureRef": "card:moon",
-                  "labelEn": "moon"
-                },
-                {
-                  "id": "haneul",
-                  "pictureRef": "word:nature-sky",
-                  "labelEn": "sky"
-                },
-                {
-                  "id": "namu",
-                  "pictureRef": "word:nature-tree",
-                  "labelEn": "tree"
-                }
-              ],
-              "answerId": "byeol"
+              "id": "hear-haneul",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "하늘",
+                "romanization": "haneul",
+                "en": "sky"
+              }
             },
             {
-              "id": "read-namu",
-              "prompt": {
+              "id": "hear-namu",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "나무",
                 "romanization": "namu",
                 "en": "tree"
-              },
-              "options": [
-                {
-                  "id": "namu",
-                  "text": {
-                    "ko": "나무",
-                    "romanization": "namu",
-                    "en": "tree"
-                  }
-                },
-                {
-                  "id": "nabi",
-                  "text": {
-                    "ko": "나비",
-                    "romanization": "nabi",
-                    "en": "butterfly"
-                  }
-                },
-                {
-                  "id": "bada",
-                  "text": {
-                    "ko": "바다",
-                    "romanization": "bada",
-                    "en": "sea"
-                  }
-                }
-              ],
-              "answerId": "namu"
+              }
             }
           ]
         }
@@ -519,7 +473,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-nature-q2-check",
           "durationSeconds": 35
@@ -757,6 +711,7 @@
           "rounds": [
             {
               "id": "pic-gureum",
+              "promptShown": true,
               "prompt": {
                 "ko": "구름",
                 "romanization": "gureum",
@@ -787,7 +742,8 @@
               "answerId": "gureum"
             },
             {
-              "id": "read-baram",
+              "id": "see-baram",
+              "promptShown": true,
               "prompt": {
                 "ko": "바람",
                 "romanization": "baram",
@@ -796,27 +752,18 @@
               "options": [
                 {
                   "id": "baram",
-                  "text": {
-                    "ko": "바람",
-                    "romanization": "baram",
-                    "en": "wind"
-                  }
+                  "pictureRef": "word:science-wind",
+                  "labelEn": "wind"
                 },
                 {
-                  "id": "bada",
-                  "text": {
-                    "ko": "바다",
-                    "romanization": "bada",
-                    "en": "sea"
-                  }
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "labelEn": "cloud"
                 },
                 {
-                  "id": "gabang",
-                  "text": {
-                    "ko": "가방",
-                    "romanization": "gabang",
-                    "en": "bag"
-                  }
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "rain"
                 }
               ],
               "answerId": "baram"
@@ -918,8 +865,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-nature-q3-check",
           "durationSeconds": 35
         },
@@ -1151,73 +1098,27 @@
         },
         {
           "ref": "minigame:s2-nature-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "pic-bada",
-              "prompt": {
+              "id": "hear-bada",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "바다",
                 "romanization": "bada",
                 "en": "sea"
-              },
-              "options": [
-                {
-                  "id": "bada",
-                  "pictureRef": "card:sea",
-                  "labelEn": "sea"
-                },
-                {
-                  "id": "gang",
-                  "pictureRef": "word:nature-river",
-                  "labelEn": "river"
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "mountain"
-                },
-                {
-                  "id": "mulgogi",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "fish"
-                }
-              ],
-              "answerId": "bada"
+              }
             },
             {
-              "id": "read-hosu",
-              "prompt": {
-                "ko": "호수",
-                "romanization": "hosu",
-                "en": "lake"
-              },
-              "options": [
-                {
-                  "id": "hosu",
-                  "text": {
-                    "ko": "호수",
-                    "romanization": "hosu",
-                    "en": "lake"
-                  }
-                },
-                {
-                  "id": "suyeong",
-                  "text": {
-                    "ko": "수영",
-                    "romanization": "suyeong",
-                    "en": "swimming"
-                  }
-                },
-                {
-                  "id": "ori",
-                  "text": {
-                    "ko": "오리",
-                    "romanization": "ori",
-                    "en": "duck"
-                  }
-                }
-              ],
-              "answerId": "hosu"
+              "id": "hear-dol",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "돌",
+                "romanization": "dol",
+                "en": "stone"
+              }
             }
           ]
         }
@@ -1284,12 +1185,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable; no 눈 'eye' picture. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 꽃 gloss matches Word Builder; 주변 for 둘레. The q3 reward line names 섬 (en, es, ko). es: '¡Vamos afuera!'. 강 and 바다 in q1 stay: Stage 1 words.",
       "Culture (pass 5, MAR 2026-10-14): the cell makes no culture claim (no notes). Sky, weather and water words and pictures are neutral; no person, brand, shop or price, no age wording.",
       "CM-3C (F-CURR-002 §5.5 S2, 2026-10-23): culture notes n1 and n2 added (the magpie and the tiger in minhwa, National Folk Museum of Korea), each with its own verification record; the on-screen tip shows them at the reward step behind upperCards.",
-      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed.",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Dictation (하늘, 나무), q2 Read Pick Meaning (구름, 바람; no 눈 'eye' picture), q3 Pic-Word Match (강, 바다, 돌; 물고기, 강, 산). Stage 1 letters only in every read or written word. The reviser restored the shipped ko gloss of pic-gureum.",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

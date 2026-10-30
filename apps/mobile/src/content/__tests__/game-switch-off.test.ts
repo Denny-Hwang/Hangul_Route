@@ -14,7 +14,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
  * shipped game. (No shipped cell plays Cloze Pick yet, row CM-3A authors them; the fixture keeps the check from being
- * empty, and the e2e answers a fallback round of the fixture step.)
+ * empty, and the e2e answers a fallback round of the fixture step.) `game.type-hangul-hear` turns a round, not a kind: the
+ * seven shipped Stage 2 Dictation Checks (row CM-3A S2) are checked switch off in logic/__tests__/game-switches.test.ts
+ * and rendered in screens/minigames/__tests__/switched-step.test.tsx.
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */

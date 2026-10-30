@@ -49,6 +49,8 @@ export const OVERLAY_FIELDS = Object.freeze({
     "dialogue.<turn>.npc",
     "dialogue.<turn>.options.<option>.gloss",
     "listenPick.rounds.<roundId>.prompt",
+    // F-CURR-002 row CM-3A S2: a picture option's label (optional: see OPTIONAL_OVERLAY_FIELDS).
+    "listenPick.rounds.<roundId>.options.<option>.label",
     // F-CURR-001 §3.10: the lesson scopes of the upper-stage games (build-lessons.mjs runtime shape).
     // F-CURR-001 §3.10: a lesson's Pic-Word Match pair, whose gloss the word tile and the picture's
     // text fallback show; a board has no id, so `<board>` is its index.
@@ -134,6 +136,9 @@ export const OVERLAY_FIELDS = Object.freeze({
     "note.facts.<factId>.claim",
   ],
 });
+
+/** Mirror of OPTIONAL_OVERLAY_FIELDS: applied when given, never counted missing (F-CURR-002 row CM-3A S2). */
+export const OPTIONAL_OVERLAY_FIELDS = Object.freeze(["listenPick.rounds.<roundId>.options.<option>.label"]);
 
 /** Never overridable, whatever the prefix. */
 export const NEVER_OVERRIDABLE_FIELDS = Object.freeze([
@@ -352,6 +357,7 @@ export function translatableFields(entityId, entity) {
   const out = [];
   const bySource = new Map();
   for (const pattern of patterns) {
+    if (OPTIONAL_OVERLAY_FIELDS.includes(pattern)) continue;
     for (const [field, path] of expand(entity, pattern.split("."), [], [])) {
       const at = path.join("\u0000");
       const first = bySource.get(at);

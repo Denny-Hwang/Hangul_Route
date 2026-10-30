@@ -91,6 +91,10 @@ describe('lintCurriculum over the content/fixtures/curriculum-lint bundles', () 
     expect(tree.size).toBeGreaterThanOrEqual(25 + SHIPPED_STORY_IDS.size);
     // Whatever Volume 1 still breaks (row CM-3A re-authors it), it is a warning until row CM-3B.
     expect(lintCurriculum(tree).filter((f) => f.severity !== 'warning')).toEqual([]);
+    // Row CM-3A S2 re-authored Stage 2: every rule passes there with no warning, as CM-3B will require (the cross-file
+    // Check share is reported on the stage's first file, so it is a Stage 2 file too).
+    const stage2 = lintCurriculum(tree).filter((f) => f.file.startsWith('content/episodes/stage-2/'));
+    expect(stage2.map((f) => `${f.rule} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
   });
 
   it('builds the story-topic-unique bundles from stories that parse with StorySchema', () => {

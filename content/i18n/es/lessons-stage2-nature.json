@@ -17,7 +17,7 @@
       "steps.s2.title": "Palabras de afuera",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Arma la palabra",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Tarjeta de estrella!",
       "steps.s1.hoyaLine": "¡Leamos lo que vemos afuera!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -36,7 +36,7 @@
       "steps.s2.title": "Palabras del tiempo",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Lee la palabra",
       "steps.s6.title": "¡Palabras del tiempo!",
       "steps.s1.hoyaLine": "Mira el cielo. ¿Cómo está el tiempo?",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -53,7 +53,7 @@
       "steps.s2.title": "Palabras del agua",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Arma la palabra",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras del agua!",
       "steps.s1.hoyaLine": "¡Vamos adonde está el agua!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee tú cada palabra.",
@@ -64,8 +64,10 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "mar"
     },
     "minigame:s2-nature-q1-check": {
-      "listenPick.rounds.pic-byeol.prompt": "estrella",
-      "listenPick.rounds.read-namu.prompt": "árbol"
+      "typeHangul.rounds.hear-haneul.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-haneul.target.gloss": "cielo",
+      "typeHangul.rounds.hear-namu.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-namu.target.gloss": "árbol"
     },
     "minigame:s2-nature-q2-apply": {
       "cardPairs.bi.gloss": "lluvia",
@@ -75,11 +77,20 @@
     },
     "minigame:s2-nature-q2-check": {
       "listenPick.rounds.pic-gureum.prompt": "nube",
-      "listenPick.rounds.read-baram.prompt": "viento"
+      "listenPick.rounds.see-baram.prompt": "viento",
+      "listenPick.rounds.pic-gureum.options.gureum.label": "nube",
+      "listenPick.rounds.pic-gureum.options.bi.label": "lluvia",
+      "listenPick.rounds.pic-gureum.options.nun.label": "nieve",
+      "listenPick.rounds.pic-gureum.options.baram.label": "viento",
+      "listenPick.rounds.see-baram.options.baram.label": "viento",
+      "listenPick.rounds.see-baram.options.gureum.label": "nube",
+      "listenPick.rounds.see-baram.options.bi.label": "lluvia"
     },
     "minigame:s2-nature-q3-check": {
-      "listenPick.rounds.pic-bada.prompt": "mar",
-      "listenPick.rounds.read-hosu.prompt": "lago"
+      "typeHangul.rounds.hear-bada.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-bada.target.gloss": "mar",
+      "typeHangul.rounds.hear-dol.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-dol.target.gloss": "piedra"
     },
     "minigame:s2-nature-q1-practice": {
       "picWord.boards.0.pairs.haneul.word.gloss": "cielo",

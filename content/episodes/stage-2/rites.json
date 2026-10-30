@@ -121,7 +121,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-rites-q1-check",
           "durationSeconds": 35
@@ -356,38 +356,8 @@
           "kind": "listen-pick",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "세배",
-                "romanization": "sebae",
-                "en": "New Year's bow"
-              },
-              "options": [
-                {
-                  "id": "sebae",
-                  "pictureRef": "card:sebae",
-                  "labelEn": "New Year's bow"
-                },
-                {
-                  "id": "tteokguk",
-                  "pictureRef": "card:tteokguk",
-                  "labelEn": "Rice-cake soup"
-                },
-                {
-                  "id": "bap",
-                  "pictureRef": "card:rice",
-                  "labelEn": "Rice"
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                }
-              ],
-              "answerId": "sebae"
-            },
-            {
-              "id": "r2",
+              "id": "see-seollal",
+              "promptShown": true,
               "prompt": {
                 "ko": "설날",
                 "romanization": "seollal",
@@ -396,38 +366,48 @@
               "options": [
                 {
                   "id": "seollal",
-                  "text": {
-                    "ko": "설날",
-                    "romanization": "seollal",
-                    "en": "Lunar New Year's Day"
-                  }
-                },
-                {
-                  "id": "hanbok",
-                  "text": {
-                    "ko": "한복",
-                    "romanization": "hanbok",
-                    "en": "traditional Korean clothes"
-                  }
+                  "pictureRef": "card:seollal",
+                  "labelEn": "Lunar New Year's Day"
                 },
                 {
                   "id": "san",
-                  "text": {
-                    "ko": "산",
-                    "romanization": "san",
-                    "en": "mountain"
-                  }
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
                 },
                 {
-                  "id": "hanguk",
-                  "text": {
-                    "ko": "한국",
-                    "romanization": "hanguk",
-                    "en": "Korea"
-                  }
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
                 }
               ],
               "answerId": "seollal"
+            },
+            {
+              "id": "see-hanbok",
+              "promptShown": true,
+              "prompt": {
+                "ko": "한복",
+                "romanization": "hanbok",
+                "en": "traditional Korean clothes"
+              },
+              "options": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
+                }
+              ],
+              "answerId": "hanbok"
             }
           ]
         }
@@ -541,8 +521,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-rites-q2-check",
           "durationSeconds": 35
         },
@@ -773,81 +753,27 @@
         },
         {
           "ref": "minigame:s2-rites-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "보름달",
-                "romanization": "boreumdal",
-                "en": "full moon"
-              },
-              "options": [
-                {
-                  "id": "boreumdal",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
-                },
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Half-moon rice cake"
-                },
-                {
-                  "id": "tteokguk",
-                  "pictureRef": "card:tteokguk",
-                  "labelEn": "Rice-cake soup"
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                }
-              ],
-              "answerId": "boreumdal"
+              "id": "hear-chuseok",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              }
             },
             {
-              "id": "r2",
-              "prompt": {
+              "id": "hear-gajok",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "가족",
                 "romanization": "gajok",
                 "en": "family"
-              },
-              "options": [
-                {
-                  "id": "gajok",
-                  "text": {
-                    "ko": "가족",
-                    "romanization": "gajok",
-                    "en": "family"
-                  }
-                },
-                {
-                  "id": "hanguk",
-                  "text": {
-                    "ko": "한국",
-                    "romanization": "hanguk",
-                    "en": "Korea"
-                  }
-                },
-                {
-                  "id": "chuseok",
-                  "text": {
-                    "ko": "추석",
-                    "romanization": "chuseok",
-                    "en": "Chuseok, the autumn harvest festival"
-                  }
-                },
-                {
-                  "id": "boreumdal",
-                  "text": {
-                    "ko": "보름달",
-                    "romanization": "boreumdal",
-                    "en": "full moon"
-                  }
-                }
-              ],
-              "answerId": "gajok"
+              }
             }
           ]
         }
@@ -959,8 +885,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
           "minigameRef": "minigame:s2-rites-q3-check",
           "durationSeconds": 35
         },
@@ -1193,81 +1119,69 @@
         },
         {
           "ref": "minigame:s2-rites-q3-check",
-          "kind": "listen-pick",
-          "rounds": [
+          "kind": "pic-word-match",
+          "boards": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "연",
-                "romanization": "yeon",
-                "en": "kite"
-              },
-              "options": [
+              "pairs": [
                 {
                   "id": "yeon",
                   "pictureRef": "card:kite",
-                  "labelEn": "Kite"
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
                 },
                 {
                   "id": "yunnori",
                   "pictureRef": "card:yutnori",
-                  "labelEn": "Yut game"
-                },
-                {
-                  "id": "sebae",
-                  "pictureRef": "card:sebae",
-                  "labelEn": "New Year's bow"
+                  "word": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
                 },
                 {
                   "id": "hanbok",
                   "pictureRef": "card:hanbok",
-                  "labelEn": "Hanbok"
-                }
-              ],
-              "answerId": "yeon"
-            },
-            {
-              "id": "r2",
-              "prompt": {
-                "ko": "복주머니",
-                "romanization": "bokjumeoni",
-                "en": "lucky pouch"
-              },
-              "options": [
-                {
-                  "id": "bokjumeoni",
-                  "text": {
-                    "ko": "복주머니",
-                    "romanization": "bokjumeoni",
-                    "en": "lucky pouch"
-                  }
-                },
-                {
-                  "id": "boreumdal",
-                  "text": {
-                    "ko": "보름달",
-                    "romanization": "boreumdal",
-                    "en": "full moon"
-                  }
-                },
-                {
-                  "id": "hanbok",
-                  "text": {
+                  "word": {
                     "ko": "한복",
                     "romanization": "hanbok",
                     "en": "traditional Korean clothes"
                   }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "word": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "word": {
+                    "ko": "떡국",
+                    "romanization": "tteokguk",
+                    "en": "rice-cake soup"
+                  }
                 },
                 {
                   "id": "gajok",
-                  "text": {
+                  "pictureRef": "word:family-family",
+                  "word": {
                     "ko": "가족",
                     "romanization": "gajok",
                     "en": "family"
                   }
                 }
-              ],
-              "answerId": "bokjumeoni"
+              ]
             }
           ]
         }
@@ -1545,10 +1459,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR): card:moon and card:chuseok never share a round or board; card:sebae never shares one with card:seollal; q1 Apply builds 한복 and 한국 (no sound change); notes no longer repeat glosses; ko and es glosses aligned with Stage 1.",
-      "Culture (pass 5, MAR): every source re-opened; ko 떡국 and 보름달 glosses no longer copy a source; ko 가족 gloss names no household shape; n1 KHS locator trimmed so no quote names an ancestral rite (OD-9)."
+      "Culture (pass 5, MAR): every source re-opened; ko 떡국 and 보름달 glosses no longer copy a source; ko 가족 gloss names no household shape; n1 KHS locator trimmed so no quote names an ancestral rite (OD-9).",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Read Pick Meaning (설날, 한복; card:seollal never with card:sebae), q2 Dictation (추석, 가족: no sound change; 보름달 and 복주머니 stay out of Dictation, as their tensing is a sound change), q3 Pic-Word Match (연, 윷놀이, 한복; 윷놀이, 연, 가족; card:moon never with card:chuseok). No new culture claim.",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

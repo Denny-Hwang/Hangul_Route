@@ -17,7 +17,7 @@
       "steps.s2.title": "바깥 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "낱말 완성하기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "별 카드!",
       "steps.s1.hoyaLine": "밖에서 보이는 것을 읽어 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -36,7 +36,7 @@
       "steps.s2.title": "날씨 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "카드 짝짓기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 읽기",
       "steps.s6.title": "날씨 낱말!",
       "steps.s1.hoyaLine": "하늘을 올려다봐요. 날씨가 어때요?",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -53,7 +53,7 @@
       "steps.s2.title": "물 낱말",
       "steps.s3.title": "그림과 낱말",
       "steps.s4.title": "낱말 완성하기",
-      "steps.s5.title": "듣고 읽기",
+      "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "물 낱말!",
       "steps.s1.hoyaLine": "물이 있는 곳으로 가 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 낱말을 하나씩 직접 읽어 봐요.",
@@ -64,8 +64,10 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "넓고 짠 물"
     },
     "minigame:s2-nature-q1-check": {
-      "listenPick.rounds.pic-byeol.prompt": "밤하늘에 반짝이는 작은 빛",
-      "listenPick.rounds.read-namu.prompt": "줄기와 가지, 잎이 있는 키 큰 식물"
+      "typeHangul.rounds.hear-haneul.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-haneul.target.gloss": "머리 위로 보이는 높고 넓은 곳",
+      "typeHangul.rounds.hear-namu.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-namu.target.gloss": "줄기와 가지, 잎이 있는 키 큰 식물"
     },
     "minigame:s2-nature-q2-apply": {
       "cardPairs.bi.gloss": "구름에서 떨어지는 물방울",
@@ -75,11 +77,20 @@
     },
     "minigame:s2-nature-q2-check": {
       "listenPick.rounds.pic-gureum.prompt": "하늘에 떠 있는 하얗거나 회색인 덩어리",
-      "listenPick.rounds.read-baram.prompt": "움직이는 공기"
+      "listenPick.rounds.see-baram.prompt": "움직이는 공기",
+      "listenPick.rounds.pic-gureum.options.gureum.label": "하늘에 뜬 하얗거나 회색인 덩어리",
+      "listenPick.rounds.pic-gureum.options.bi.label": "하늘에서 떨어지는 물방울",
+      "listenPick.rounds.pic-gureum.options.nun.label": "겨울에 하늘에서 내리는 하얀 것",
+      "listenPick.rounds.pic-gureum.options.baram.label": "움직이는 공기",
+      "listenPick.rounds.see-baram.options.baram.label": "움직이는 공기",
+      "listenPick.rounds.see-baram.options.gureum.label": "하늘에 뜬 하얗거나 회색인 덩어리",
+      "listenPick.rounds.see-baram.options.bi.label": "하늘에서 떨어지는 물방울"
     },
     "minigame:s2-nature-q3-check": {
-      "listenPick.rounds.pic-bada.prompt": "넓고 짠 물",
-      "listenPick.rounds.read-hosu.prompt": "땅으로 둘러싸인 넓고 깊은 물"
+      "typeHangul.rounds.hear-bada.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-bada.target.gloss": "넓고 짠 물",
+      "typeHangul.rounds.hear-dol.prompt": "낱말을 듣고 한글로 써 봐요.",
+      "typeHangul.rounds.hear-dol.target.gloss": "흙이 굳어 된 단단한 덩어리"
     },
     "minigame:s2-nature-q1-practice": {
       "picWord.boards.0.pairs.haneul.word.gloss": "머리 위로 보이는 높고 넓은 곳",

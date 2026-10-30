@@ -2000,6 +2000,40 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
   type Quiz = Extract<Slide, { kind: 'quiz' }>;
   const quizzes = (slides: readonly Slide[], ask: Quiz['prompt']['ask']): Quiz[] => only(slides, 'quiz').filter((q) => q.prompt.ask === ask);
 
+  it('Read Pick Meaning (row CM-3A S2): a meaning question on the shown Korean, nothing said before the answer, the pictures as options', () => {
+    const read = quest('read-pick', [['check', 'mg:read-pick']], { rewardCardId: undefined });
+    const scope: MinigameScope = {
+      kind: 'listen-pick',
+      listenPick: {
+        rounds: [
+          {
+            id: 'see-uyu',
+            promptShown: true,
+            prompt: kt('우유', 'uyu', 'milk'),
+            options: [
+              { id: 'uyu', pictureRef: 'word:food-milk', labelEn: 'milk' },
+              { id: 'mul', pictureRef: 'word:food-water', labelEn: 'water' },
+            ],
+            answerId: 'uyu',
+          },
+        ],
+      },
+    };
+    const bun = (over: Partial<LectureBundle> = {}) =>
+      b({ scopeFor: (ref) => (ref === 'mg:read-pick' ? scope : undefined), questById: (id) => (id === read.id ? read : undefined), ...over });
+    const [q] = quizzes(run(read.id, {}, VOICE, bun()).slides, 'meaning');
+    expect(q!.prompt).toEqual({ ask: 'meaning', ko: '우유', romanization: 'uyu' });
+    expect(q!.textPrompt).toBe(false);
+    expect([...q!.options].sort((x, y) => x.picture!.localeCompare(y.picture!))).toEqual([
+      { picture: 'word:food-milk', gloss: 'milk', correct: true },
+      { picture: 'word:food-water', gloss: 'water', correct: false },
+    ]);
+    expect(quizzes(run(read.id, {}, VOICE, bun()).slides, 'listen')).toEqual([]);
+    // In another language a picture is never named by its English label (the listen rule).
+    const [es] = quizzes(run(read.id, {}, VOICE, bun({ locale: 'es' })).slides, 'meaning');
+    expect(es!.options.some((o) => o.gloss !== undefined)).toBe(false);
+  });
+
   describe('Role Play (F-CURR-002 section 8, row CM-35): a read-together chat, the class picks the reply', () => {
     type RolePlay = Extract<Slide, { kind: 'role-play' }>;
     const rp = quest('role-play', [['apply', 'mg:role-play'], ['check', 'mg:role-play-none']], { rewardCardId: undefined });
@@ -2551,7 +2585,8 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
         for (const [step, cues] of byStep) expect(new Set(cues).size, `${locale} ${step}`).toBe(cues.length);
       }
     }
-    expect(typeSlides).toBe(73 * 3);
+    // Row CM-3A S2 adds the seven Stage 2 Dictation Checks: 14 rounds, 87 type rounds in all.
+    expect(typeSlides).toBe(87 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

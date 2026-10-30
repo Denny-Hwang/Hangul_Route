@@ -113,8 +113,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
           "minigameRef": "minigame:s2-crafts-q1-check",
           "durationSeconds": 35
         },
@@ -347,73 +347,69 @@
         },
         {
           "ref": "minigame:s2-crafts-q1-check",
-          "kind": "listen-pick",
-          "rounds": [
+          "kind": "pic-word-match",
+          "boards": [
             {
-              "id": "pic-gong",
-              "prompt": {
-                "ko": "공",
-                "romanization": "gong",
-                "en": "ball"
-              },
-              "options": [
-                {
-                  "id": "sport-ball",
-                  "pictureRef": "word:sport-ball",
-                  "labelEn": "Ball"
-                },
-                {
-                  "id": "kite",
-                  "pictureRef": "card:kite",
-                  "labelEn": "Kite"
-                },
-                {
-                  "id": "nature-tree",
-                  "pictureRef": "word:nature-tree",
-                  "labelEn": "Tree"
-                },
-                {
-                  "id": "sport-bicycle",
-                  "pictureRef": "word:sport-bicycle",
-                  "labelEn": "Bicycle"
-                }
-              ],
-              "answerId": "sport-ball"
-            },
-            {
-              "id": "read-gong",
-              "prompt": {
-                "ko": "공",
-                "romanization": "gong",
-                "en": "ball"
-              },
-              "options": [
+              "pairs": [
                 {
                   "id": "gong",
-                  "text": {
+                  "pictureRef": "word:sport-ball",
+                  "word": {
                     "ko": "공",
                     "romanization": "gong",
                     "en": "ball"
                   }
                 },
                 {
-                  "id": "gom",
-                  "text": {
-                    "ko": "곰",
-                    "romanization": "gom",
-                    "en": "bear"
+                  "id": "jajeongeo",
+                  "pictureRef": "word:sport-bicycle",
+                  "word": {
+                    "ko": "자전거",
+                    "romanization": "jajeongeo",
+                    "en": "bicycle"
                   }
                 },
                 {
-                  "id": "gang",
-                  "text": {
-                    "ko": "강",
-                    "romanization": "gang",
-                    "en": "river"
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
                   }
                 }
-              ],
-              "answerId": "gong"
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                },
+                {
+                  "id": "chukgu",
+                  "pictureRef": "word:sport-soccer",
+                  "word": {
+                    "ko": "축구",
+                    "romanization": "chukgu",
+                    "en": "soccer (football)"
+                  }
+                }
+              ]
             }
           ]
         }
@@ -517,8 +513,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-crafts-q2-check",
           "durationSeconds": 35
         },
@@ -751,73 +747,27 @@
         },
         {
           "ref": "minigame:s2-crafts-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "pic-paengi",
-              "prompt": {
-                "ko": "팽이",
-                "romanization": "paengi",
-                "en": "spinning top"
-              },
-              "options": [
-                {
-                  "id": "top",
-                  "pictureRef": "card:top",
-                  "labelEn": "Spinning top"
-                },
-                {
-                  "id": "jegi",
-                  "pictureRef": "card:jegi",
-                  "labelEn": "Jegi"
-                },
-                {
-                  "id": "kite",
-                  "pictureRef": "card:kite",
-                  "labelEn": "Kite"
-                },
-                {
-                  "id": "yutnori",
-                  "pictureRef": "card:yutnori",
-                  "labelEn": "Yut"
-                }
-              ],
-              "answerId": "top"
-            },
-            {
-              "id": "read-yeon",
-              "prompt": {
+              "id": "hear-yeon",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "연",
                 "romanization": "yeon",
                 "en": "kite"
-              },
-              "options": [
-                {
-                  "id": "yeon",
-                  "text": {
-                    "ko": "연",
-                    "romanization": "yeon",
-                    "en": "kite"
-                  }
-                },
-                {
-                  "id": "gong",
-                  "text": {
-                    "ko": "공",
-                    "romanization": "gong",
-                    "en": "ball"
-                  }
-                },
-                {
-                  "id": "jul",
-                  "text": {
-                    "ko": "줄",
-                    "romanization": "jul",
-                    "en": "rope"
-                  }
-                }
-              ],
-              "answerId": "yeon"
+              }
+            },
+            {
+              "id": "hear-jul",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "줄",
+                "romanization": "jul",
+                "en": "rope"
+              }
             }
           ]
         }
@@ -929,7 +879,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-crafts-q3-check",
           "durationSeconds": 35
@@ -1166,38 +1116,8 @@
           "kind": "listen-pick",
           "rounds": [
             {
-              "id": "pic-julleomgi",
-              "prompt": {
-                "ko": "줄넘기",
-                "romanization": "julleomgi",
-                "en": "jump rope"
-              },
-              "options": [
-                {
-                  "id": "sport-jumprope",
-                  "pictureRef": "word:sport-jumprope",
-                  "labelEn": "Jump rope"
-                },
-                {
-                  "id": "sport-running",
-                  "pictureRef": "word:sport-running",
-                  "labelEn": "Running"
-                },
-                {
-                  "id": "school-friend",
-                  "pictureRef": "word:school-friend",
-                  "labelEn": "Friend"
-                },
-                {
-                  "id": "sport-ball",
-                  "pictureRef": "word:sport-ball",
-                  "labelEn": "Ball"
-                }
-              ],
-              "answerId": "sport-jumprope"
-            },
-            {
-              "id": "read-chingu",
+              "id": "see-chingu",
+              "promptShown": true,
               "prompt": {
                 "ko": "친구",
                 "romanization": "chingu",
@@ -1206,30 +1126,53 @@
               "options": [
                 {
                   "id": "chingu",
-                  "text": {
-                    "ko": "친구",
-                    "romanization": "chingu",
-                    "en": "friend"
-                  }
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "friend"
                 },
                 {
-                  "id": "chukgu",
-                  "text": {
-                    "ko": "축구",
-                    "romanization": "chukgu",
-                    "en": "soccer (football)"
-                  }
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "labelEn": "running, a race"
                 },
                 {
-                  "id": "nonggu",
-                  "text": {
-                    "ko": "농구",
-                    "romanization": "nonggu",
-                    "en": "basketball"
-                  }
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "labelEn": "jump rope"
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "labelEn": "ball"
                 }
               ],
               "answerId": "chingu"
+            },
+            {
+              "id": "see-dalligi",
+              "promptShown": true,
+              "prompt": {
+                "ko": "달리기",
+                "romanization": "dalligi",
+                "en": "running, a race"
+              },
+              "options": [
+                {
+                  "id": "dalligi",
+                  "pictureRef": "word:sport-running",
+                  "labelEn": "running, a race"
+                },
+                {
+                  "id": "chingu",
+                  "pictureRef": "word:school-friend",
+                  "labelEn": "friend"
+                },
+                {
+                  "id": "julleomgi",
+                  "pictureRef": "word:sport-jumprope",
+                  "labelEn": "jump rope"
+                }
+              ],
+              "answerId": "dalligi"
             }
           ]
         }
@@ -1317,11 +1260,15 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Pass 4 language MAR (2026-10-14): Korean naturalness, spelling, pedagogy and gloss lenses; applied the ball-board fix, toy wording, 놀 때 쓰는 낱말, ko gloss fixes and the 친구 reading distractors; rejected the claim that 연 and 줄 are untaught (Stage 1 crafts q1 Discover teaches both).",
       "Pass 5 culture MAR (2026-10-14): heritage accuracy against all four sources, sensitivity and audience lenses; n1 and n2 pass unchanged; the q2 Hoya line and blurb now call 제기, 팽이, 윷 and 연 toys, as the sources do; verification line 3 on both notes.",
-      "Pass 6 translation MAR (2026-10-14): es and ko overlays; applied 친구 gloss parity with minigames.json, es title length and calque fixes, trompo in es prose to match placement.json; no circular ko gloss."
+      "Pass 6 translation MAR (2026-10-14): es and ko overlays; applied 친구 gloss parity with minigames.json, es title length and calque fixes, trompo in es prose to match placement.json; no circular ko gloss.",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23: language, culture and learning-design checkers, reviser, third pass): q1 Pic-Word Match (no other ball beside the generic ball), q2 Dictation (공, 줄: Stage 1 words, so reuse stays at half), q3 Read Pick Meaning (친구, 달리기).",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1
