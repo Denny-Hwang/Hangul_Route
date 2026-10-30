@@ -649,6 +649,7 @@ describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE
     ({ ...body, key: 'w/1', builds: buildsFor(body, { romanization: 'always', strokeGuide: true }) }) as Extract<Slide, { kind: 'write-together' }>;
   const type = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Ask for water.', answer: line('물 주세요', 'mul juseyo', 'Water, please.') });
   const tea = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word for tea', answer: line('차', 'cha', 'tea') });
+  const heard = withBuildsOf({ kind: 'write-together', variant: 'type', prompt: 'Type the word you hear.', answer: line('아침', 'achim', 'morning'), hear: true });
   const trace = withBuildsOf({ kind: 'write-together', variant: 'trace', word: line('아침', 'achim', 'morning') });
   const filled = withBuildsOf({
     kind: 'write-together',
@@ -694,6 +695,11 @@ describe('writeView and its sound: the write-together slides (AMENDMENTS-LECTURE
     expect(slideSound(type, 1)).toEqual({ spoken: { text: '물 주세요', romanization: 'mul juseyo' }, kind: 'sentence' });
     expect(slideSound(tea, 1)).toEqual({ spoken: { text: '차', romanization: 'cha' }, kind: 'word' });
     expect(slideSound(tea)).toEqual(slideSound(tea, 1));
+    // A Dictation round (row CM-31 hear mode, its prompt "Type the word you hear") plays its target from the first
+    // build, as the learner's hear mode does; its Korean still waits for the answer build (row CM-3A S7).
+    expect(slideSound(heard, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
+    expect(writeView(heard, 0, 'always')).toMatchObject({ answer: false, rom: false });
+    expect(slideSound(heard, 1)).toEqual(slideSound(heard, 0));
     expect(slideSound(trace, 0)).toEqual({ spoken: { text: '아침', romanization: 'achim' }, kind: 'word' });
     // A frame says its own Korean with a pause at each gap, then its banks, then the example.
     expect(slideSound(filled, 0)).toEqual({ spoken: { text: '아침에, 을, 를 먹어요.', romanization: 'achime, eul, reul meogeoyo' }, kind: 'sentence' });

@@ -8,6 +8,7 @@ import {
   SLOT_MARKER,
   storyOrderPictures,
   syllableSplit,
+  typeHangulMode,
   wordReviewCardCap,
   type CheckKind,
   type Discover,
@@ -938,6 +939,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     prompt: round.promptEn,
     ...(round.pictureRef !== undefined ? { picture: round.pictureRef } : {}),
     answer: spokenLine(round.target),
+    // A Dictation round's prompt says "the word you hear": the slide plays the target before the answer (row CM-3A S7).
+    ...(typeHangulMode(round) === 'hear' ? { hear: true as const } : {}),
   });
 
   /** Trace a Word: the word drawn as a ghost from the start; its romanization and meaning at the answer. */

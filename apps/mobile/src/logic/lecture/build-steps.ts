@@ -137,6 +137,8 @@ export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
  * room writes on paper or on its own devices and the stage only shows; nothing on it takes input,
  * and no name is ever typed, shown or stored.
  * - `type` (Type Hangul): the prompt in the slide language and its picture, then the answer.
+ *   A Dictation round (`mode: 'hear'`, F-CURR-002 row CM-31) is marked `hear`: its prompt says "Type the word you
+ *   hear", so the slide's sound plays the target from the first build (`writeSound`).
  * - `trace` (Trace a Word): the word as a large outline ghost, then its romanization and meaning.
  * - `frame` (Write Frame): the frame with its gap, each slot's word bank, then "For example" with
  *   each gap filled by its bank's first word, the ending that fits it chosen (observation O2).
@@ -144,7 +146,7 @@ export const SOUND_TABLE_GROUPS_PER_BUILD = 5;
  *   syllable blocks, five groups a build (V12); never a name.
  */
 export type WriteTogether =
-  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine }
+  | { variant: 'type'; prompt: string; picture?: string; answer: SpokenLine; hear?: true }
   | { variant: 'trace'; word: SpokenLine }
   | { variant: 'frame'; frame: FrameText; banks: SheetText[][]; example: SheetText & { spoken: SpokenForm } }
   | { variant: 'own-name'; frame: FrameText; groups: SheetText[][] };
