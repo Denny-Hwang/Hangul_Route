@@ -28,14 +28,18 @@ export function HiddenHeritageE2eBody({ route, navigation }: Props): ReactElemen
   const locale = useLocale();
   const [scope, setScope] = useState<MinigameScope | null>(null);
   useEffect(() => {
+    let live = true;
     log.answers = [];
     log.completed = 0;
     void loadScene(sceneId).then((scene) => {
-      if (!scene) return;
+      if (!live || !scene) return;
       const parsed = HiddenHeritageRoundSchema.parse(missing ? { ...scene.round, sceneId: 'scene:not-in-this-build' } : scene.round);
       const round = localizeReferenceRound(scene.id, parsed, locale, CONTENT_OVERLAYS);
       setScope({ kind: 'hidden-heritage', rounds: round.targets.length, hiddenHeritage: { rounds: [round] } });
     });
+    return () => {
+      live = false;
+    };
   }, [missing, sceneId, locale]);
   const host: MinigameHost = {
     mode: 'quest',

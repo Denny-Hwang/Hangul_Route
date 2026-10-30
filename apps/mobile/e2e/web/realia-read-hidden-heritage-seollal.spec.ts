@@ -5,6 +5,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -45,10 +46,10 @@ function meanings(locale: Locale): Record<string, string> {
   return Object.fromEntries(Object.values(TARGETS).map((t) => [t.id, entry[`round.targets.${t.id}.word.gloss`]!]));
 }
 
-async function open(page: Page, gameOn: boolean, locale?: Locale): Promise<void> {
+async function open(page: Page, gameOn: boolean, locale?: Locale, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: gameOn, pct: gameOn ? 100 : 0 } } });
-  if (locale) await seedStored(page, 'device:settings', { uiLocale: locale, uiLocaleAt: '2026-10-27T09:00:00.000Z' });
+  if (locale || textSize) await seedStored(page, 'device:settings', { uiLocale: locale ?? 'en', uiLocaleAt: '2026-10-27T09:00:00.000Z', ...(textSize ? { textSize } : {}) });
   await page.reload();
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
@@ -141,6 +142,23 @@ test.describe('Hidden Heritage, the Seollal room (F-CURR-002 CM-37)', () => {
         await shot(page, `hidden-heritage-seollal-end-${locale}-320`);
       });
     }
+
+    test('at the Largest text size: the prompt, the found row and the end panel fit at 320, nothing clipped', async ({ page }) => {
+      await open(page, true, undefined, 'largest');
+      await expect(page.getByTestId('hh-scene')).toBeVisible();
+      await asked(page);
+      await expectTextFits(page, 'Seollal room prompt at Largest');
+      for (let i = 0; i < 3; i += 1) {
+        const ko = await asked(page);
+        await spot(page, TARGETS[ko]!.id).click();
+        await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
+        await expectTextFits(page, `Seollal room found row ${i + 1} at Largest`);
+        if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
+      }
+      await expect(page.getByText('You found them all')).toBeVisible();
+      await expectTextFits(page, 'Seollal room end panel at Largest');
+      await shot(page, 'hidden-heritage-seollal-end-largest-320');
+    });
 
     test('game.hidden-heritage off (the launch state): Pic-Word Match on the same three targets, from their card pictures', async ({ page }) => {
       await open(page, false);
