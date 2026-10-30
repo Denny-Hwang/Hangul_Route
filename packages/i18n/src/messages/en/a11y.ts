@@ -184,7 +184,22 @@ export const a11y = {
     /** Realia Read (F-CURR-001 G-2): the drawn sheet is a named group of line buttons; a line's name ends with its mark. */
     realia: {
       summary: (kind: string, lines: number) => `${kind}, ${plural('en', lines, { one: '1 line', other: `${lines} lines` })}`,
-      kind: { menu: 'Menu', ticket: 'Train ticket', sign: 'Trail sign', priceCards: 'Price cards', plain: 'Reading sheet' },
+      kind: {
+        menu: 'Menu',
+        ticket: 'Train ticket',
+        sign: 'Trail sign',
+        priceCards: 'Price cards',
+        plain: 'Reading sheet',
+        // F-CURR-002 row CM-47: the eight added layouts.
+        recipe: 'Recipe card',
+        receipt: 'Receipt',
+        label: 'Food label',
+        forecast: 'Weather forecast',
+        calendar: 'Calendar',
+        timetable: 'Timetable',
+        map: 'Map',
+        poster: 'Poster',
+      },
       lineHint: 'Tap to hear it',
       found: 'Found here',
       lookHere: 'Look here',
@@ -560,4 +575,9 @@ export const a11y = {
     throw: (ko: string, romanization: string, n: number) =>
       plural('en', n, { one: `Throw: ${ko}, ${romanization}. Your piece moved 1 station.`, other: `Throw: ${ko}, ${romanization}. Your piece moved ${n} stations.` }),
   },
+  /**
+   * A Journey cell with two volumes (F-CURR-002 row CM-40, `volumes` on): its own sentence after the cell's label (the
+   * label adds the full stop), the volume a tap opens (the first one not finished). The volume dots are decorative.
+   */
+  journeyVolume: (n: number) => `Opens Volume ${n}`,
 } as const;

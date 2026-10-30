@@ -162,11 +162,14 @@ const upperStageTitles: Record<string, Record<string, string>> = {
 };
 
 /**
- * Grid capacity (F-STORY-005 §3.1 rule 1, D9): at launch a cell (stage × theme)
- * holds at most one grid episode. Shelf episodes never count. Raising this to 2
- * is the "volumes later" switch (PR 5.8).
+ * Grid capacity (F-STORY-005 §3.1 rule 1, D9; PR 5.8 and F-CURR-002 row CM-40): a cell (stage × theme) holds at
+ * most two grid episodes, its Volume 1 and its Volume 2 (`episode:<stage>-<theme>-v2`, a lesson cell's
+ * `<theme>.v2.json` or a Stage 5 book 2). Shelf episodes never count.
  */
-export const MAX_EPISODES_PER_CELL = 1;
+export const MAX_EPISODES_PER_CELL = 2;
+
+/** An episode's volume: 1 unless it says otherwise (`EpisodeSchema` ties volume k >= 2 to the `-v<k>` id). */
+export const volumeOf = (episode: Pick<Episode, 'volume'>): number => episode.volume ?? 1;
 
 /** The key of an episode's grid cell (stage × theme); the one definition every cell count uses. */
 export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
@@ -179,7 +182,16 @@ export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.sta
  * T-1: Lunch Box Words and Outdoor Words; T-2: Greeting Dialogues; OD-3), so no taste literal
  * is left here.
  */
-export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...lessonEpisodes, ...bookEpisodes];
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...lessonEpisodes, ...bookEpisodes].filter((e) => volumeOf(e) === 1);
+
+/**
+ * The later volumes of the cells (F-CURR-002 §5.1, row CM-40; F-STORY-005 PR 5.8): every grid episode of volume 2,
+ * a lesson cell's or a Stage 5 book's. They are not in `episodesAll`, which stays the route's list (the cursor, the
+ * route days, the stage completion and every count read it, and a Volume 2 adds no route day): only the surfaces that
+ * show a cell's volumes read them, through `episodesFor` and `episodeById`, and only while `volumes` is on
+ * (`withVolumes`). Their quests are in `questsAll`, so progress, cards and memory states stay whatever the switch.
+ */
+export const volumeEpisodes: readonly Episode[] = [...lessonEpisodes, ...bookEpisodes].filter((e) => volumeOf(e) >= 2);
 
 /**
  * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1
@@ -213,8 +225,19 @@ export const episodesAll: Episode[] = [
   ...previewEpisodesFor(handWrittenEpisodes),
 ];
 
+/** Every episode of the bundle, the later volumes included (they follow the route's list). */
+export const episodesWithVolumes: readonly Episode[] = [...episodesAll, ...volumeEpisodes];
+
+/**
+ * The episodes a learner's surfaces show (row CM-40): `episodesAll` with the later volumes while `volumes` is on, and
+ * without them while it is off, so every Volume 2 entry point hides and nothing else changes.
+ */
+export function withVolumes(volumesOn: boolean, list: readonly Episode[] = episodesWithVolumes): Episode[] {
+  return volumesOn ? [...list] : list.filter((e) => volumeOf(e) === 1);
+}
+
 export function episodeById(id: string): Episode | undefined {
-  return episodesAll.find((e) => e.id === id);
+  return episodesWithVolumes.find((e) => e.id === id);
 }
 
 /**
@@ -240,12 +263,13 @@ export function shelfEpisodes<E extends Pick<Episode, 'placement'>>(list: readon
  * The grid episodes of the cell at `stage` × `theme`, sorted by volume, then
  * order (F-STORY-005 §3.5). A shelf episode is never in a cell. A grid
  * episode's `order` equals its theme's order, so within a cell volume is the
- * key that decides; equal volumes keep list order (the sort is stable).
+ * key that decides; equal volumes keep list order (the sort is stable). The
+ * default list holds the later volumes (row CM-40); a surface passes `withVolumes`.
  */
-export function episodesFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode[] {
+export function episodesFor(stage: string, theme: string, list: readonly Episode[] = episodesWithVolumes): Episode[] {
   return list
     .filter((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme)
-    .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1) || a.order - b.order);
+    .sort((a, b) => volumeOf(a) - volumeOf(b) || a.order - b.order);
 }
 
 /** The cell's first grid episode; unchanged for every cell that holds one. */

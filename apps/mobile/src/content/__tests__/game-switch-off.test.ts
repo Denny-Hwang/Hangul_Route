@@ -91,10 +91,13 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
   it('the shipped quests play Cloze Pick, so the check above is not empty (row CM-3A S6)', () => {
     const shipped = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick');
     expect(shipped.length).toBeGreaterThan(0);
-    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3).
+    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3);
+    // Play Volume 2, S6 (row CM-42) adds two: the q1 Check on the yut rules card and the q3 Apply on the sign-up sheet.
     expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-')).map(({ questId }) => questId).sort()).toEqual([
       'quest:stage6-crafts-q1',
       'quest:stage6-crafts-q3',
+      'quest:stage6-crafts-v2-q1',
+      'quest:stage6-crafts-v2-q3',
       'quest:stage6-letters-q2',
       'quest:stage6-life-q2',
       'quest:stage6-rites-q2',

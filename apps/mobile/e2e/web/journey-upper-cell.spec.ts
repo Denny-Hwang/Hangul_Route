@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -1189,8 +1189,11 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
+/** The cells' first volumes: a later volume (F-CURR-002 row CM-40) is no route day and opens behind `volumes` (below). */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+
 /** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1215,9 +1218,27 @@ async function openJourney(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
 }
 
+/** The Journey of a new learner with the remote copy `flags` stored (a ramp's state), as the volumes specs set it. */
+async function openJourneyWith(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
@@ -1251,6 +1272,63 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-42: Play Volume 2, S6 (Rules and Crafts) at its launch state. `volumes` is at built-in pct 0, so
+  // it is turned on through the stored remote copy, as a ramp would; `game.type-hangul-hear` stays dark, so the q2
+  // Dictation Check plays its Type Hangul `see` rounds. The fan craft card is a CM-47 `poster`.
+  test('episode:stage6-crafts-v2 q2 at 320 px: Vol 2 on the cell page, the fan craft card, its Dictation Check as see rounds, to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourneyWith(page, { volumes: { on: true, pct: 100 } });
+    // Volume 1 is not done, so the cell opens it; the Vol 2 tab opens Rules and Crafts.
+    await page.getByRole('button', { name: journeyCellName(6, THEME_LABEL.crafts), exact: true }).click();
+    await expect(page.getByText('Buy at Market').first()).toBeVisible();
+    await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+    await expect(page.getByText('Rules and Crafts').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+    await shot(page, 'cm42-s6-rules-and-crafts-page-320');
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.getByText('Rules and Crafts').first()).toBeVisible();
+    await shot(page, 'cm42-s6-rules-and-crafts-page-wide');
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.getByTestId('episode-quest-quest:stage6-crafts-v2-q2').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(headerClose(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    // Realia Read on the fan craft card: two sheets of hanji, the scissors, one glue, thirty minutes.
+    await expect(page.getByTestId('realia-read-question')).toBeVisible();
+    await shot(page, 'cm42-s6-fan-card-320');
+    await pickRealia(page, ['du', 'gawi', 'han', 'samsip']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await typeWords(page, ['풀', '두 장', '부채']);
+    // The Check is Dictation (가위, 한지): with game.type-hangul-hear dark it shows each word to copy.
+    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+    await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
+    await shot(page, 'cm42-s6-dictation-see-320');
+    for (const word of ['가위', '한지']) {
+      await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+      for (const jamo of keysFor(word).flatMap((j) => [...(SPLIT[j] ?? j)])) await page.getByTestId(`hangul-key-${jamo}`).click();
+      await page.getByTestId('type-hangul-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+    }
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    await shot(page, 'cm42-s6-q2-reward-320');
+    expect(errors).toEqual([]);
+  });
+
+  test('episode:stage6-crafts-v2 with volumes off: the cell opens Volume 1 alone, with no Vol 2 tab', async ({ page }) => {
+    await openJourneyWith(page, {});
+    await page.getByRole('button', { name: journeyCellName(6, THEME_LABEL.crafts), exact: true }).click();
+    await expect(page.getByText('Buy at Market').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText('Rules and Crafts')).toHaveCount(0);
+  });
 
   // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
   // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.

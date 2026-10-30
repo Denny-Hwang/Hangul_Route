@@ -21,6 +21,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'a11y.hiddenHeritage.spotFound': 'read aloud as a spot\'s name, never drawn ("Ya encontraste: palillos"; no pronoun to agree with the meaning)',
   'a11y.hiddenHeritage.slotEmpty': 'read aloud as an empty slot\'s name, never drawn ("Aún sin encontrar")',
   'learner.hiddenHeritage.found': '"Lo hallado" (10) against "Found" (5): the neuter keeps the row free of a noun\'s gender; a caption before the slots that wraps',
+  // F-CURR-002 row CM-47: a realia sheet's group name, read aloud before its line count.
+  'a11y.minigame.realia.kind.label': 'read aloud as the sheet\'s group name, never drawn ("Etiqueta de alimento": a label on food, not a clothing tag)',
   'a11y.minigame.strokeOrder.direction.right': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la derecha")',
   'a11y.minigame.strokeOrder.direction.left': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la izquierda")',
   'a11y.minigame.strokeOrder.direction.upLeft': 'read aloud, never drawn ("arriba a la izquierda")',
