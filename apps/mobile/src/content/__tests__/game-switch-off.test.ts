@@ -22,6 +22,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */
+// Dictation (`game.type-hangul-hear`, row CM-31; shipped as the Stage 3 Dictation Checks of row CM-3A S3) and the
+// spelling round (`game.spelling-pick`) go through `useSwitchedScope`, so their off path is tested step by step in
+// src/screens/minigames/__tests__/switched-step.test.tsx rather than in this table.
 const SWITCHED: ReadonlyArray<{ kind: MinigameKind; fallback: MinigameKind; plays: (s: MinigameScope) => number; fallbackOf: (s: MinigameScope) => MinigameScope }> = [
   { kind: 'cloze-pick', fallback: 'listen-pick', plays: (s) => validClozeRounds(s).length, fallbackOf: clozeFallbackScope },
 ];
