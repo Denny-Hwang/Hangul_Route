@@ -84,6 +84,8 @@ test.beforeEach(async ({ page }) => {
 
 async function open(page: Page, vp: Viewport, input: Input): Promise<void> {
   if (vp.insets) {
+    // The insets come from CDP `Emulation.setSafeAreaInsetsOverride` (Chromium only).
+    test.skip(SWIPES_SKIPPED, 'notch insets are emulated through CDP (Chromium only)');
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: vp.insets });
   }

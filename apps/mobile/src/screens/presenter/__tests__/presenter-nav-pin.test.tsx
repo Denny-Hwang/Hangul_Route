@@ -13,7 +13,9 @@ import { byTestId, press, render, textOf } from '../../../test-support/render';
  * seen, Previous and Next keep opacity 1 and take taps after `presenter.autoHideMs` and inside the
  * `BAR_SHOW_GRACE_MS` after a show, while the chips and tools fade and keep the grace; mouse only,
  * the whole bar fades (README D3); a touch tap on empty stage rings Next for `NUDGE_MS` and steps
- * nothing. The page's input kind, its activity and its pointer media are driven by the test.
+ * nothing. In a phone window (844 x 390, the overlay layout) the same tap shows and hides the bar,
+ * and with More open the stage is covered (a tap closes it). The page's input kind, its activity and
+ * its pointer media are driven by the test.
  */
 
 const page = vi.hoisted(() => ({ input: null as ((kind: InputKind) => void) | null, activity: null as (() => void) | null, touchAtStart: false }));
@@ -123,8 +125,8 @@ async function tick(ms: number): Promise<void> {
   });
 }
 
-/** The presenter at 1180 x 820 with the first slide on screen. */
-async function lesson(touchAtStart: boolean): Promise<ReactTestRenderer> {
+/** The presenter (at 1180 x 820, docked, unless a phone window is set) with the first slide on screen. */
+async function lesson(touchAtStart: boolean, docked = true): Promise<ReactTestRenderer> {
   page.touchAtStart = touchAtStart;
   vi.useFakeTimers();
   const r = await render(<PresenterApp />);
@@ -132,18 +134,19 @@ async function lesson(touchAtStart: boolean): Promise<ReactTestRenderer> {
   await press(one(r, 'presenter-start-button'));
   await tick(10);
   expect(byTestId(r.root, 'presenter-stage')).toHaveLength(1);
-  expect(byTestId(r.root, 'presenter-bar-band')).toHaveLength(1);
+  expect(byTestId(r.root, 'presenter-bar-band')).toHaveLength(docked ? 1 : 0);
   return r;
 }
 
-/** A one-finger tap on empty stage area, through the stage's responder handlers. */
-function tapStage(r: ReactTestRenderer, type: 'touch' | 'mouse'): void {
+/** A one-finger tap (or, with `dx`, a swipe) on empty stage area, through the stage's responder handlers. */
+function tapStage(r: ReactTestRenderer, type: 'touch' | 'mouse', dx = 0): void {
   const stage = r.root.find((n) => n.props.testID === 'presenter-stage' && typeof n.props.onResponderGrant === 'function');
-  const point = { identifier: 0, pageX: 600, pageY: 300 };
-  const event = (kind: string, touches: unknown[]) => ({ target: null, nativeEvent: { type: kind, target: null, ...point, changedTouches: [point], touches } });
+  const down = { identifier: 0, pageX: 400, pageY: 200 };
+  const up = { ...down, pageX: down.pageX + dx };
+  const event = (kind: string, at: typeof down, touches: unknown[]) => ({ target: null, nativeEvent: { type: kind, target: null, ...at, changedTouches: [at], touches } });
   act(() => {
-    (stage.props.onResponderGrant as (e: unknown) => void)(event(type === 'touch' ? 'touchstart' : 'mousedown', [point]));
-    (stage.props.onResponderRelease as (e: unknown) => void)(event(type === 'touch' ? 'touchend' : 'mouseup', []));
+    (stage.props.onResponderGrant as (e: unknown) => void)(event(type === 'touch' ? 'touchstart' : 'mousedown', down, [down]));
+    (stage.props.onResponderRelease as (e: unknown) => void)(event(type === 'touch' ? 'touchend' : 'mouseup', up, []));
   });
 }
 
@@ -238,5 +241,49 @@ describe("'nudge-next': a touch tap on empty stage rings Next and steps nothing 
     expect(counter(r)).toBe(was);
     // Nothing is said: the live region still names the first slide.
     expect(textOf(one(r, 'presenter-live'))).toContain('Slide 1 of');
+  });
+});
+
+describe('a phone window (the overlay layout, sections 5.2 and 5.3)', () => {
+  const phone = { width: 844, height: 390, scale: 1, fontScale: 1 };
+  const tablet = { width: 1180, height: 820, scale: 1, fontScale: 1 };
+  afterEach(() => {
+    Dimensions.set({ window: tablet, screen: tablet });
+  });
+
+  it('a touch tap on empty stage shows the hidden bar and hides it again; it never steps', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    await tick(presenter.autoHideMs + 1000);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(false);
+    const was = counter(r);
+    tapStage(r, 'touch');
+    await tick(BAR_SHOW_GRACE_MS + 100);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(true);
+    tapStage(r, 'touch');
+    await tick(10);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(false);
+    expect(counter(r)).toBe(was);
+    // A swipe steps, and the bar stays hidden.
+    tapStage(r, 'touch', -100);
+    await tick(10);
+    expect(counter(r)).not.toBe(was);
+    expect(await takesPointer(one(r, 'presenter-next'))).toBe(false);
+  });
+
+  it('with More open the stage is covered: a swipe steps nothing, a tap closes More and steps nothing', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    await press(one(r, 'presenter-more'));
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+    const was = counter(r);
+    tapStage(r, 'touch', -100);
+    await tick(10);
+    expect(counter(r)).toBe(was);
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+    tapStage(r, 'touch');
+    await tick(10);
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
+    expect(counter(r)).toBe(was);
   });
 });

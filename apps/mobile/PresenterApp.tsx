@@ -700,13 +700,14 @@ function Presenter(): ReactElement {
   }, [phase, rawOf]);
   /**
    * A press, a tap or a key in the lesson: an activation, then the event. While the More sheet is open
-   * it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): nothing reaches the lesson until it
-   * closes (each of its own buttons closes it first).
+   * it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): no step reaches the lesson until it
+   * closes (each of its own buttons closes it first; the rotate page's Back still opens the Exit confirm).
    */
   const userDispatch = useCallback(
     (event: PresenterEvent) => {
       activate();
-      if (moreOpenRef.current) return;
+      const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
+      if (step && moreOpenRef.current) return;
       dispatch(event);
     },
     [activate, dispatch],
