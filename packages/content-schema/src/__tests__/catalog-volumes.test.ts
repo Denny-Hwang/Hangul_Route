@@ -21,6 +21,7 @@ import {
   volumeEpisodeId,
   type Catalog,
   type CatalogHistory,
+  type ChooserEpisodeRow,
 } from '..';
 import { assembleCatalog, expandCellRows, type GeneratedCellRow } from '../catalog/assemble';
 import { GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
@@ -193,7 +194,7 @@ describe('the lecture deck and the chooser take a Volume 2 id (row CM-40)', () =
     const on = rowsOf(true);
     const at = on.findIndex((r) => r.key === 'episode:stage2-nature');
     expect(on[at + 1]).toMatchObject({ kind: 'episode', key: V2_ID, minutes: 13 });
-    expect((on[at + 1] as { lessons: { key: string }[] }).lessons.map((l) => l.key)).toEqual(NATURE_V2);
+    expect((on[at + 1] as ChooserEpisodeRow).lessons.map((l) => l.key)).toEqual(NATURE_V2);
     expect(rowsOf(false).some((r) => r.key === V2_ID)).toBe(false);
     expect(groupOfKey(chooserGroups({ catalog, title: (id) => id, volumes: true }), NATURE_V2[0] as string)).toBe('stage2');
     expect(selectionBlocks([V2_ID], chooserGroups({ catalog, title: (id) => id, volumes: true }))).toEqual([{ kind: 'episode', id: V2_ID }]);

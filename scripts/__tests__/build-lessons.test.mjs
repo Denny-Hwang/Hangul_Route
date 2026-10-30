@@ -697,6 +697,10 @@ describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", (
     assert.deepEqual(Object.keys(files[0].json.entries), ["episode:stage2-nature-v2", "quest:stage2-nature-v2-q1"]);
     const root = makeRoot();
     put(root, "content/episodes/stage-2/nature.json", v1);
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    // The list the fixture bundle's post-build checks (pwa-postbuild.mjs --lesson-fixtures): the fixture after its Volume 1.
+    const { readCellsWithFixtures } = await import(SCRIPT);
+    assert.deepEqual(readCellsWithFixtures(root).map((c) => c.episode.id), ["episode:stage2-nature", "episode:stage2-nature-v2", "episode:stage2-crafts"]);
     const r = run(root, ["--include-fixtures"]);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /E2E FIXTURE MODULES/);
