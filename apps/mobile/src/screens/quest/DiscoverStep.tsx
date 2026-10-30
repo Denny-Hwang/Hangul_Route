@@ -452,7 +452,7 @@ function DiscoverItemCard({
         dispatch={dispatch}
       />
 
-      {/* What Hear it says, with its romanization (AMENDMENTS-AUDIO-CLIPS JV-A5, D2): 니은 · nieun; a final its closed syllable. */}
+      {/* What Hear it says, with its romanization (AMENDMENTS-AUDIO-CLIPS JV-A5, D2): nieun with its romanization; a final its closed syllable. */}
       {item.spokenLine ? (
         <View testID={`discover-spoken-${item.key}`}>
           <KoreanText ko={item.spokenLine.ko} romanization={item.spokenLine.romanization} size="sm" />
@@ -474,7 +474,7 @@ function DiscoverItemCard({
             tone="ghost"
             dispatch={dispatch}
           />
-          {/* The taught line "나 = ㄴ + ㅏ · na" is content, never inside the UI string. */}
+          {/* The taught line "na = ㄴ + ㅏ" with its romanization is content, never inside the UI string. */}
           <KoreanText ko={item.soundWith.ko} romanization={item.soundWith.romanization} size="sm" />
         </View>
       ) : null}

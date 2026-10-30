@@ -730,7 +730,7 @@ export const learner = {
     /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
     discover: {
       hearIt: { cta: 'Hear it' },
-      /** A consonant page's second button: the letter's sound on a vowel (ㄴ said 나); the taught line under it is content. */
+      /** A consonant page's second button: the letter's sound on a vowel (ㄴ said na); the taught line under it is content. */
       soundWith: { cta: 'Hear it with a vowel' },
       /** Shown for a button whose audio could not play; `spoken` is a romanization. */
       sayLine: (spoken: string) => `Say it out loud: ${spoken}`,
@@ -965,7 +965,7 @@ export const learner = {
     listenAgainLetter: 'Listen again. This letter is',
     /**
      * A final consonant and the closed syllable it is heard in (JV-A1): `letter` is the final (ㄴ), `syllable` the
-     * syllable with its romanization (안 · an). Both arrive as taught content.
+     * syllable with its romanization (the syllable an with its romanization). Both arrive as taught content.
      */
     finalLine: (letter: string, syllable: string) => `${letter} at the bottom: ${syllable}`,
     hearIt: { cta: 'Hear it' },

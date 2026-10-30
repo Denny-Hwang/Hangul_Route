@@ -24,10 +24,10 @@ type LetterBody = Extract<Slide, { kind: 'letter' }>;
  * the letter name and sound hint, and the example word. A build that is not reached keeps its
  * space, so nothing shifts when it appears.
  *
- * AMENDMENTS-AUDIO-CLIPS JV-A1 / JV-A4: the main speaker says an initial's or a vowel's name (니은),
- * and a consonant whose sound differs has a second speaker for its sound on a vowel (나 = ㄴ + ㅏ),
- * beside the letter-name line. A final has one speaker, its closed syllable (안), and shows the
- * `finalLine` (ㄴ at the bottom: 안 · an) instead of a letter name.
+ * AMENDMENTS-AUDIO-CLIPS JV-A1 / JV-A4: the main speaker says an initial's or a vowel's name (nieun),
+ * and a consonant whose sound differs has a second speaker for its sound on a vowel (na = ㄴ + ㅏ),
+ * beside the letter-name line. A final has one speaker, its closed syllable (an), and shows the
+ * `finalLine` (ㄴ at the bottom: the syllable an with its romanization) instead of a letter name.
  */
 export function LetterSlide({
   slide,

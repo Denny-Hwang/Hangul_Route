@@ -15,9 +15,9 @@ import { decompose, symbolsOf } from './hangul';
  * plays the audio it asks for (the test lanes cannot render components, §5).
  *
  * Rules in one place: pages show one or two new things; nothing autoplays;
- * Hear it says a lone letter by its NAME (ㄴ is 니은, a vowel its sound, a final
+ * Hear it says a lone letter by its NAME (ㄴ is nieun, a vowel its sound, a final
  * its closed syllable; AMENDMENTS-AUDIO-CLIPS JV-A5), and a consonant's second,
- * optional button says its sound on a vowel (나); unavailable or muted audio
+ * optional button says its sound on a vowel (na); unavailable or muted audio
  * switches that item to a "say it out loud" text line and changes nothing else; Continue is enabled at once and
  * never waits for a Hear it; an item that cannot be resolved is skipped, and
  * a step with nothing left still has a Continue.
@@ -74,20 +74,20 @@ export interface DiscoverItemView {
   gloss?: string;
   accessibilityLabel: string;
   soundHint?: string;
-  /** The main Hear it button: a letter's name (니은), a final's closed syllable (악), or the word. */
+  /** The main Hear it button: a letter's name (nieun), a final's closed syllable (ak), or the word. */
   hear: HearAction;
   /** What the voice says for `hear`, as romanization (`giyeok` for ㄱ, `ak` for the final ㄱ). */
   spokenRomanization: string;
-  /** An initial or a vowel: what Hear it says, shown under it with its romanization (D2): 니은 · nieun, 아 · a. */
+  /** An initial or a vowel: what Hear it says, shown under it with its romanization (D2): nieun with its romanization, a. */
   spokenLine?: { ko: string; romanization: string };
   /**
    * A final: the `learner.audio.finalLine` parts, the final and the closed syllable Hear it says, shown as
-   * spelled with the pronounced romanization (ㄱ, 악 · ak; ㅈ, 앚 · at).
+   * spelled with the pronounced romanization (ㄱ, the syllable ak; ㅈ, the spelled syllable, at).
    */
   finalLine?: { letter: string; syllable: string };
   /**
-   * A consonant's second button, Hear it with a vowel (JV-A5): its sound on the carrier vowel (나), with
-   * the taught line `ko` "나 = ㄴ + ㅏ" and its romanization, drawn as content.
+   * A consonant's second button, Hear it with a vowel (JV-A5): its sound on the carrier vowel (na), with
+   * the taught line `ko` "na = ㄴ + ㅏ" and its romanization, drawn as content.
    */
   soundWith?: { action: HearAction; ko: string; romanization: string };
   block?: DiscoverBlockView;
@@ -208,8 +208,9 @@ function symbolItem(
   source: Jamo,
 ): DiscoverItemView {
   const example = exampleIn(item.example, source, jamo);
-  // A lone letter on screen is first heard by its name (JV-A5): ㄴ is 니은, a vowel its sound, ㅇ 이응. A final is
-  // never said by name: Hear it says its closed syllable, and the Word Builder finals their pronounced form (M12, 앚 -> 앋).
+  // A lone letter on screen is first heard by its name (JV-A5): a consonant by its name (nieun), a vowel by its
+  // sound. A final is never said by name: Hear it says its closed syllable, and the Word Builder finals their
+  // pronounced form (M12: a final j says at).
   const main = loneLetterVoice(jamo);
   const final = jamo.kind === 'batchim';
   const romanization = soundValue(jamo.romanization);

@@ -545,7 +545,7 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
 }
 
 /**
- * A letter slide's second speaker (AMENDMENTS-AUDIO-CLIPS JV-A4): a consonant's sound on a vowel (나), at
+ * A letter slide's second speaker (AMENDMENTS-AUDIO-CLIPS JV-A4): a consonant's sound on a vowel (na), at
  * the sound rate; `undefined` on any other slide and on a letter whose name is its sound (a vowel, ㅇ) or
  * a final (one speaker, its closed syllable).
  */

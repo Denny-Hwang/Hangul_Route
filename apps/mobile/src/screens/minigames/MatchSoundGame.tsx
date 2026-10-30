@@ -66,8 +66,8 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   const gridWidth = tileGridWidth(layoutClass, tile, spacing.md);
 
   const round = rounds[roundIdx];
-  // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A1): the letter's name (ㄴ is 니은), or the same name as
-  // text (§3.8). A final, never asked by name, says its closed syllable (안).
+  // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A1): the letter's name (ㄴ is nieun), or the same name as
+  // text (§3.8). A final, never asked by name, says its closed syllable (an).
   const voice = round ? loneLetterVoice(round.promptJamo) : undefined;
   const slot = usePromptSlot({ source: 'match-sound', hasClip: hasClip(voice?.audioRef) });
   const { view, play, reset } = slot;

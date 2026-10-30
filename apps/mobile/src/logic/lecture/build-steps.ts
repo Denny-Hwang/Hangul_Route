@@ -27,7 +27,7 @@ export type NarrationPiece = { text: string } | KoLine;
 export type QuizPrompt =
   /**
    * Match Sound: play the letter (AMENDMENTS-AUDIO-CLIPS JV-A1): an initial or a vowel by its name
-   * (ㄴ is 니은), a final, asked only by its sound, by its closed syllable (안).
+   * (ㄴ is nieun), a final, asked only by its sound, by its closed syllable (an).
    */
   | { ask: 'sound'; spoken: SpokenForm }
   /** Word to gloss: the Korean on screen, pick its meaning. */
@@ -179,16 +179,16 @@ export type SlideBody =
       soundHint?: string;
       /**
        * What the main speaker, Sound and S play (AMENDMENTS-AUDIO-CLIPS JV-A1): an initial's or a vowel's
-       * name (니은, 아), a final's closed syllable (안, the Word Builder finals their pronounced form).
+       * name (nieun, a), a final's closed syllable (an, the Word Builder finals their pronounced form).
        */
       spoken: SpokenForm;
-      /** The spoken form as the slide shows it, when it differs from `spoken.text` (a Word Builder final: 앚 shown, 앋 said). */
+      /** The spoken form as the slide shows it, when it differs from `spoken.text` (a Word Builder final: the spelled syllable shown, at said). */
       spokenShown?: string;
       /** An initial or a vowel: its name in Hangul, for the letter-name line (`learner.presenter.slide.letterName`). A final has none. */
       nameKo?: string;
-      /** A consonant whose sound differs from its name: the second speaker, its sound on the carrier vowel (나 = ㄴ + ㅏ). */
+      /** A consonant whose sound differs from its name: the second speaker, its sound on the carrier vowel (na = ㄴ + ㅏ). */
       sound?: SpokenForm & { line: string };
-      /** A final (`kind: 'batchim'`): the slide shows the `finalLine` (ㄴ at the bottom: 안 · an) and no letter-name line. */
+      /** A final (`kind: 'batchim'`): the slide shows the `finalLine` (ㄴ at the bottom: the syllable an with its romanization) and no letter-name line. */
       final?: true;
       example?: KoLine;
       /** A stroke skeleton exists for the guide panel. */

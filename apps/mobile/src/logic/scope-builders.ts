@@ -53,7 +53,7 @@ function explicitOptionIds(targetId: string, taughtIds: readonly string[], optio
 export const lp = {
   /**
    * Heard letter -> written symbol (a consonant or vowel): a letter question, so the prompt is the
-   * letter's name (ㄴ is 니은, a vowel its sound; AMENDMENTS-AUDIO-CLIPS JV-A1, M10). Options: the
+   * letter's name (ㄴ is nieun, a vowel its sound; AMENDMENTS-AUDIO-CLIPS JV-A1, M10). Options: the
    * symbol and its taught confusables. `optionIds` names the options instead, for a quest that
    * teaches fewer than four symbols of a kind (quest 1 asks among its four new symbols, F-QUEST-002
    * section 3.3); they must be taught and include the target, which goes first. A final throws: it

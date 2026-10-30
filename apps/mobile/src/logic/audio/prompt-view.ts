@@ -110,8 +110,8 @@ export interface WrongAnswerBubble {
 
 /**
  * F-001 §3.2 (revised by AMENDMENTS-AUDIO-CLIPS JV-A4): the bubble repeats what was said. A letter
- * question names the letter ("Listen again. This letter is" 니은 · nieun); a final, asked by its
- * sound, shows the `finalLine` ("ㄴ at the bottom: 안 · an").
+ * question names the letter ("Listen again. This letter is" nieun with its romanization); a final, asked by its
+ * sound, shows the `finalLine` ("ㄴ at the bottom: the syllable an with its romanization").
  */
 export function wrongAnswerBubble(jamo: SpokenJamo, copy: AudioCopy): WrongAnswerBubble {
   if (loneLetterQuestion(jamo) === 'sound') return { message: finalLine(jamo, copy) };

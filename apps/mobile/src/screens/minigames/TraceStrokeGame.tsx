@@ -154,7 +154,7 @@ export function TraceStrokeGame({
     // its result can come in mid-stroke, and a status row appearing then would move the canvas under the
     // finger. Show me plays through the slot and says why when it is silent.
     soundReset();
-    // An initial or a vowel says its name (ㅁ is 미음), a final its closed syllable (암): AMENDMENTS-AUDIO-CLIPS M11.
+    // An initial or a vowel says its name (ㅁ is mieum), a final its closed syllable (am): AMENDMENTS-AUDIO-CLIPS M11.
     if (round) void playJamo(round.jamo, loneLetterQuestion(round.jamo));
   }, [roundIdx, round, soundReset]);
 
