@@ -243,10 +243,14 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
     }
   });
 
-  it('keeps every shipped lesson the single grid episode of its cell (stories never take a cell)', () => {
+  it('keeps every shipped lesson the single grid episode of its cell on the route (stories never take a cell); a later volume is a lesson too', () => {
     for (const key of lessonCells) {
       const [stage = '', theme = ''] = key.split(':');
-      expect(episodesFor(stage, theme).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      expect(episodesFor(stage, theme, episodesAll).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      // F-CURR-002 row CM-40: the cell's Volume 2, once shipped (row CM-41 S7 for Stage 7 Nature), follows its Volume 1.
+      const volumes = episodesFor(stage, theme);
+      expect(volumes.every((e) => (e.format ?? 'lesson') === 'lesson'), key).toBe(true);
+      expect(volumes.map((e) => e.volume ?? 1), key).toEqual(volumes.map((_, i) => i + 1));
     }
   });
 });
