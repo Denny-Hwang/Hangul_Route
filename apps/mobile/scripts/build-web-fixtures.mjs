@@ -79,7 +79,8 @@ try {
   if (status === 0 && interrupted === null) {
     status = run('expo', ['export', '--platform', 'web', '--output-dir', out], exportEnv(process.env, options, ownTmp));
   }
-  if (status === 0 && interrupted === null) status = run(process.execPath, [join(app, 'scripts', 'pwa-postbuild.mjs'), out]);
+  // The post-build checks the lesson chunks the bundle was built from, the fixture Volume 2's included (row CM-40).
+  if (status === 0 && interrupted === null) status = run(process.execPath, [join(app, 'scripts', 'pwa-postbuild.mjs'), out, '--lesson-fixtures']);
 } finally {
   if (ownTmp !== null) rmSync(ownTmp, { recursive: true, force: true });
   const restored = spawnSync(process.execPath, [generator], { cwd: app, stdio: 'inherit' }).status ?? 1;

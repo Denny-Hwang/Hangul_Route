@@ -991,6 +991,17 @@ export function volume2Fixture(cell, files = []) {
   };
 }
 
+/**
+ * The cells of an e2e build (`--include-fixtures`): `readCells` with the fixture Volume 2 right after its Volume 1. The
+ * PWA post-build of the fixture bundle reads the same list, so it checks the chunks the bundle was built from.
+ */
+export function readCellsWithFixtures(root) {
+  const cells = readCells(root);
+  const fixtures = fixtureCells(root);
+  const at = cells.findIndex((c) => c.stageNo === FIXTURE_VOLUME2.stageNo && c.episode.theme === FIXTURE_VOLUME2.theme);
+  return at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
+}
+
 /** The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent. */
 export function fixtureCells(root) {
   const { stageNo, theme } = FIXTURE_VOLUME2;
@@ -1178,13 +1189,8 @@ export async function main(argv, root) {
   let cells;
   let generated;
   try {
-    cells = readCells(root);
-    if (opts.includeFixtures) {
-      // The e2e bundle (apps/mobile/scripts/build-web-fixtures.mjs): the fixture Volume 2 right after its Volume 1.
-      const fixtures = fixtureCells(root);
-      const at = cells.findIndex((c) => c.stageNo === FIXTURE_VOLUME2.stageNo && c.episode.theme === FIXTURE_VOLUME2.theme);
-      cells = at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
-    }
+    // The e2e bundle (apps/mobile/scripts/build-web-fixtures.mjs) adds the fixture Volume 2 right after its Volume 1.
+    cells = opts.includeFixtures ? readCellsWithFixtures(root) : readCells(root);
     generated = await generatedOutputs(root, cells);
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
