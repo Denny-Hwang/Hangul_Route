@@ -170,9 +170,9 @@
     },
     "minigame:s6-nature-q2-check": {
       "typeHangul.rounds.c1.prompt": "들리는 방향을 써 봐요.",
-      "typeHangul.rounds.c1.target.gloss": "왼손이 있는 방향",
+      "typeHangul.rounds.c1.target.gloss": "좌측 방향",
       "typeHangul.rounds.c2.prompt": "들리는 방향을 써 봐요.",
-      "typeHangul.rounds.c2.target.gloss": "오른손이 있는 방향"
+      "typeHangul.rounds.c2.target.gloss": "우측 방향"
     },
     "minigame:s6-nature-q3-practice": {
       "realiaRead.realia.alt": "시간이 적힌 산길 표지판: 오른쪽에 꼭대기 두 시간, 강 세 시간, 왼쪽에 나가는 곳 한 시간과 화장실이 있어요",

@@ -182,9 +182,9 @@
     },
     "minigame:s6-letters-q3-check": {
       "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c1.target.gloss": "2,000원",
+      "typeHangul.rounds.c1.target.gloss": "한국 돈 2,000",
       "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c2.target.gloss": "7,000원"
+      "typeHangul.rounds.c2.target.gloss": "한국 돈 7,000"
     }
   }
 }
