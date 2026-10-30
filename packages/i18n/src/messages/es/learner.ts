@@ -525,6 +525,7 @@ export const learner = {
       continue: { cta: 'Continuar' },
       wordsTitle: 'Palabras que ya puedes leer',
       batchimLine: 'Va abajo del bloque',
+      exampleWord: 'Palabra de ejemplo',
       empty: 'Aquí no hay nada que ver. Toca Continuar.',
       pageLabel: (page: number, count: number) => `Página ${page} de ${count}`,
       exchange: {
@@ -681,7 +682,12 @@ export const learner = {
 
   audio: {
     readHere: '¿Sin sonido? Léelo aquí.',
-    heading: { listen: 'Toca la letra que escuchas', text: 'Toca la letra de este sonido' },
+    heading: {
+      listen: 'Toca la letra que escuchas',
+      text: 'Toca la letra de este sonido',
+      startsWith: '¿Con qué letra empieza este sonido?',
+      endsWith: '¿Qué letra va abajo en este sonido?',
+    },
     listenAgain: 'Escucha otra vez. Esta suena',
     hearIt: { cta: 'Escuchar' },
     tapToHear: 'Toca y escucha',

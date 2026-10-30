@@ -141,6 +141,11 @@ describe('lp.sym (sound -> written symbol)', () => {
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:a', 'jamo:a'] })).toThrow(/twice/);
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:o'] })).toThrow(/not taught/);
     expect(() => lp.sym('jamo:eo', [...TAUGHT_L1, 'jamo:nope'], { optionIds: ['jamo:eo', 'jamo:nope'] })).toThrow(/Unknown symbol/);
+    // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A3 1b, 1c): no option is heard in the answer's name.
+    const taught = ['jamo:digeut', 'jamo:i', 'jamo:eu', 'jamo:rieul', 'jamo:ieung', 'jamo:mieum'];
+    expect(() => lp.sym('jamo:digeut', taught, { optionIds: ['jamo:digeut', 'jamo:i', 'jamo:rieul'] })).toThrow(/JV-A3/);
+    expect(() => lp.sym('jamo:i', taught, { optionIds: ['jamo:i', 'jamo:ieung', 'jamo:eu'] })).toThrow(/JV-A3/);
+    expect(lp.sym('jamo:digeut', taught, { optionIds: ['jamo:digeut', 'jamo:rieul', 'jamo:mieum'] }).options).toHaveLength(3);
     expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo'] })).toThrow(/two options/);
   });
 });

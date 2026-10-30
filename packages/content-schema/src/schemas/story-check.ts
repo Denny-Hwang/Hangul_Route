@@ -36,6 +36,8 @@ export const CheckOptionSchema = z
     id: z.string().regex(/^[a-z0-9-]{1,16}$/),
     en: z.string().trim().min(1).max(CHECK_LIMITS.option).optional(), // label / gloss / alt text
     ko: z.string().trim().min(1).max(24).optional(), // Korean option text
+    // What the voice says when it differs from `ko` (F-AUDIO-004): a lone letter option says its name (ㅣ = i, AMENDMENTS-AUDIO-CLIPS M8).
+    spokenKo: z.string().trim().min(1).max(24).optional(),
     romanization: z.string().trim().min(1).max(48).optional(),
     art: ArtRef.optional(),
     isCorrect: z.boolean(),
@@ -43,6 +45,9 @@ export const CheckOptionSchema = z
   .superRefine((o, ctx) => {
     if (!o.en && !o.ko && !o.art) {
       ctx.addIssue({ code: 'custom', message: 'option needs en, ko or art' });
+    }
+    if (o.spokenKo && !o.ko) {
+      ctx.addIssue({ code: 'custom', path: ['spokenKo'], message: 'spokenKo needs the Korean option text it is said for' });
     }
     if (o.ko && !(o.romanization && o.en)) {
       ctx.addIssue({

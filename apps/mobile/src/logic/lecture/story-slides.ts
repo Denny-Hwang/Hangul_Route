@@ -26,7 +26,7 @@ const SAYABLE = /[\p{L}\p{N}]/u;
  */
 export function storyNarrationSteps(narration: readonly NarrationPiece[], narrationLang: SpeechLang): PlaySpec[] {
   return narration.flatMap((piece): PlaySpec[] => {
-    if ('ko' in piece) return [{ text: piece.ko, language: 'ko-KR', kind: 'word', source: PRESENTER_AUDIO_SOURCE }];
+    if ('ko' in piece) return [{ text: piece.spokenKo ?? piece.ko, language: 'ko-KR', kind: 'word', source: PRESENTER_AUDIO_SOURCE }];
     return SAYABLE.test(piece.text) ? [{ text: piece.text, language: narrationLang, kind: 'narration', source: PRESENTER_AUDIO_SOURCE }] : [];
   });
 }
@@ -73,7 +73,7 @@ export function readToMePlan(slide: ReadToMeSlide, input: ReadToMeInput): ReadTo
   const { korean } = slide;
   const koreanShown = korean !== undefined && (input.reveal === undefined || slide.builds === undefined || slide.builds.slice(0, input.reveal + 1).includes('korean'));
   if (koreanShown && !slide.narration.some((piece) => 'ko' in piece && piece.ko === korean.ko)) {
-    steps.push({ text: korean.ko, language: 'ko-KR', kind: korean.speech, source: PRESENTER_AUDIO_SOURCE });
+    steps.push({ text: korean.spokenKo ?? korean.ko, language: 'ko-KR', kind: korean.speech, source: PRESENTER_AUDIO_SOURCE });
   }
   if (steps.length === 0) return null;
   const spoken = stepsForVoice(steps, input.canPlayKorean);
