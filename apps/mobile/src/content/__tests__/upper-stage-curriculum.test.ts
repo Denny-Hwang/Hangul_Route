@@ -29,7 +29,7 @@ import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
@@ -157,7 +157,8 @@ export function missingGlosses(entities: ReadonlyArray<readonly [string, object]
 
 describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
   it('every file parses as a LessonCell and sits in its stage folder', () => {
-    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.json`);
+    // A Volume 2 is `<theme>.v2.json` beside its Volume 1 (F-CURR-002 row CM-40).
+    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}${cell.volume === 2 ? '.v2' : ''}.json`);
   });
 
   it('the generated index holds exactly the ready cells (a draft stays "Coming later")', () => {
@@ -184,7 +185,8 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
-      const episode = episodesAll.filter((e) => e.id === cell.id);
+      // A Volume 2 is a bundle episode of the later volumes (row CM-40), so read the list that holds both.
+      const episode = episodesWithVolumes.filter((e) => e.id === cell.id);
       expect(episode.map((e) => e.status), cell.id).toEqual(['shipped']);
       for (const quest of cell.quests) {
         expect(questsAll.some((q) => q.id === quest.id), quest.id).toBe(true);
@@ -197,8 +199,9 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     if (!READY.some((c) => c.cell.id === 'episode:stage4-rites')) return;
     const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
     const THEME_ORDER = ['letters', 'life', 'rites', 'nature', 'crafts'];
+    // First volumes in grid theme order, then the later volumes (row CM-40; Stage 4 Nature's since row CM-41 S4).
     const expected = READY.filter((c) => c.cell.stage === 'stage4')
-      .sort((a, b) => THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
+      .sort((a, b) => (a.cell.volume ?? 1) - (b.cell.volume ?? 1) || THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
       .flatMap((c) => c.cell.quests.map((q) => q.id));
     expect(expected.slice(0, 3)).toEqual(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']);
     expect(stage4).toEqual(expected);
@@ -636,10 +639,17 @@ const STAGE1_WORDS: ReadonlySet<string> = new Set(
 );
 
 /** What a cell of `stage` may count as taught before its own Discover (rule 5): Stage 1 and the vocabulary of its level. */
-const wordsBefore = (stage: StageKey): ReadonlySet<string> => {
+const wordsBefore = (stage: StageKey, volume = 1): ReadonlySet<string> => {
   const base = new Set([...STAGE1_WORDS, ...VOCAB_ITEMS.filter((v) => v.level <= vocabLevelFor(stage)).map((v) => v.ko)]);
-  // Rule 5 and U-6: an earlier stage counts too (every route plays a stage's cells before the next stage's).
-  const earlier = READY.filter((c) => Number(c.cell.stage.slice(5)) < Number(stage.slice(5)));
+  // Rule 5 and U-6: an earlier stage counts too (every route plays a stage's cells before the next stage's). A Volume 2
+  // cell also builds on Volume 1 of its own stage, and on the Volume 2 cells of earlier stages, as the F-CURR-002 §9.3
+  // lint reads the route (`lessonsBefore` in lesson-lint.ts); a Volume 1 cell reads Volume 1 alone.
+  const n = Number(stage.slice(5));
+  const earlier = READY.filter((c) => {
+    const at = Number(c.cell.stage.slice(5));
+    const v = c.cell.volume ?? 1;
+    return volume === 1 ? v === 1 && at < n : (v === 1 && at <= n) || (v > 1 && at < n);
+  });
   for (const { cell } of earlier) for (const q of cell.quests) for (const w of wordsOf(discoverTexts(q), base)) base.add(w);
   return base;
 };
@@ -747,7 +757,7 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
 
   for (const { cell } of READY.filter((c) => c.cell.stage !== 'stage2')) {
     it(`${cell.id}: one new pattern and at most the new words of its stage a quest; at least half the other words reused`, () => {
-      expect(reuseProblems(cell.stage, cell.quests, wordsBefore(cell.stage))).toEqual([]);
+      expect(reuseProblems(cell.stage, cell.quests, wordsBefore(cell.stage, cell.volume ?? 1))).toEqual([]);
     });
   }
 });
@@ -1000,9 +1010,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 Volume 1 Practices scaffold, and
+    // the three Role Play Practices of Stage 4 Nature's Volume 2 (row CM-41 S4) all do.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([81, 78]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
