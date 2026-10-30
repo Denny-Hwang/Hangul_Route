@@ -103,7 +103,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
-  startBundleRaw: 4_760_000,
+  // JV-2 (#881) and JV-3 (#880) together (AMENDMENTS-AUDIO-CLIPS: letter names, tile pools; measured on JV-4's stack,
+  // test/jv-4-jamo-voice-e2e, which adds no app code) measure 4,761,055 B raw / 1,269,471 B gzip (release `build:web`),
+  // 1,055 B over the 4,760,000 B line (JV-2 alone 4,756,896 B, JV-3 alone 4,758,521 B). The line is that measurement
+  // plus a 3,945 B rounding margin.
+  startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
