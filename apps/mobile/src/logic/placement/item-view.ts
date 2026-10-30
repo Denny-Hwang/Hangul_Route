@@ -56,6 +56,27 @@ export function instructionFor(m: Messages, format: AssessmentFormat, testLocale
   return { visible: spokenOnly ? null : line, spoken: line };
 }
 
+/** A compatibility consonant letter (ㄱ to ㅎ, U+3131-314E). */
+const CONSONANT_LETTER = /^[\u3131-\u314E]$/u;
+
+/**
+ * A sound question about an initial (AMENDMENTS-AUDIO-CLIPS JV-A1, AU-OD-3): the learner hears a
+ * syllable (na) and picks among consonant letters only. Its letters are not said by name, so the
+ * instruction says what is asked: which letter the sound starts with. A vowel item (a, pick ㅏ)
+ * is a letter question whose name is its sound, and keeps the format's instruction.
+ */
+export function isConsonantSoundItem(question: Pick<AssessmentQuestion, 'format' | 'options'>): boolean {
+  return question.format === 'hear-pick-written' && question.options.every((o) => o.ko !== undefined && CONSONANT_LETTER.test(o.ko));
+}
+
+/** The instruction of one question: `startsWith` for a consonant sound item, else its format's line. */
+export function instructionForQuestion(m: Messages, question: Pick<AssessmentQuestion, 'format' | 'options'>, testLocale: UiLocale): Instruction {
+  if (!isConsonantSoundItem(question)) return instructionFor(m, question.format, testLocale);
+  const line = m.learner.audio.heading.startsWith;
+  const spokenOnly = testLocale === 'ko' && KO_SPOKEN_ONLY_FORMATS.includes(question.format);
+  return { visible: spokenOnly ? null : line, spoken: line };
+}
+
 /** Formats whose prompt is heard (a speaker), not read. */
 const HEARD: readonly AssessmentFormat[] = ['hear-pick-written', 'build-syllable', 'hear-pick-picture', 'reply-pick'];
 

@@ -730,7 +730,8 @@ export const learner = {
     /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
     discover: {
       hearIt: { cta: 'Hear it' },
-      letterName: { cta: 'Letter name' },
+      /** A consonant page's second button: the letter's sound on a vowel (ㄴ said na); the taught line under it is content. */
+      soundWith: { cta: 'Hear it with a vowel' },
       /** Shown for a button whose audio could not play; `spoken` is a romanization. */
       sayLine: (spoken: string) => `Say it out loud: ${spoken}`,
       showHowToSay: { cta: 'Show how to say it' },
@@ -738,6 +739,8 @@ export const learner = {
       continue: { cta: 'Continue' },
       wordsTitle: 'Words you can read now',
       batchimLine: 'Sits at the bottom of the block',
+      /** Leads the example button's accessible name, so a screen-reader user never takes the word for the letter's sound. */
+      exampleWord: 'Example word',
       empty: 'Nothing to look at here. Tap Continue.',
       pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
       /** The `exchange` page (F-CURR-001 §3.5, D-1 S3): Read along plays each line and lights it. */
@@ -1055,9 +1058,23 @@ export const learner = {
   audio: {
     readHere: 'No sound? Read it here.',
     /** The Match Sound heading: listening, or reading the sound as text. */
-    heading: { listen: 'Tap the letter you hear', text: 'Tap the letter for this sound' },
-    /** Hoya after a miss; the spoken syllable and its romanization follow as taught content. */
+    heading: {
+      listen: 'Tap the letter you hear',
+      text: 'Tap the letter for this sound',
+      /** A sound question about an initial (Placement's consonant items): a syllable plays, pick the letter it starts with. */
+      startsWith: 'Which letter starts this sound?',
+      /** A sound question about a final, final-letter tiles only (the lecture quiz's final rounds). */
+      endsWith: 'Which letter is at the bottom of this sound?',
+    },
+    /** Hoya after a miss on a sound question; the spoken syllable and its romanization follow as taught content. */
     listenAgain: 'Listen again. This one says',
+    /** Hoya after a miss on a letter question (AMENDMENTS-AUDIO-CLIPS JV-A4); the letter's name and its romanization follow as taught content. */
+    listenAgainLetter: 'Listen again. This letter is',
+    /**
+     * A final consonant and the closed syllable it is heard in (JV-A1): `letter` is the final (ㄴ), `syllable` the
+     * syllable with its romanization (the syllable an with its romanization). Both arrive as taught content.
+     */
+    finalLine: (letter: string, syllable: string) => `${letter} at the bottom: ${syllable}`,
     hearIt: { cta: 'Hear it' },
     tapToHear: 'Tap to hear',
     tapToReplay: 'Tap to replay',
@@ -2414,7 +2431,8 @@ export const learner = {
     slide: {
       /** Read before the teacher's deck title on the first slide. */
       deckTitle: 'Lesson',
-      letterName: (name: string) => `Letter name: ${name}`,
+      /** `name` is the romanized letter name (nieun); `hangul` the name in Hangul, which only the Korean line shows. */
+      letterName: (name: string, _hangul: string) => `Letter name: ${name}`,
       /** Until a native speaker reviews the letter's strokes (section 3.6). */
       strokeCaption: 'Simplified stroke guide',
       /** The teacher-says text when the room cannot hear the Korean (section 3.7, PR 9). */

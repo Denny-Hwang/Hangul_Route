@@ -19,14 +19,20 @@ export interface KoLine {
   romanization: string;
   /** In the deck's UI language; absent for a syllable that is only a sound block. */
   gloss?: string;
+  /** What Sound says when it differs from `ko` (F-AUDIO-004): a story's letter keyword says its name (ㄱ = giyeok, AMENDMENTS-AUDIO-CLIPS M8). */
+  spokenKo?: string;
 }
 
 /** A narration run: plain text, or a keyword drawn as a `KoreanText` chip. */
 export type NarrationPiece = { text: string } | KoLine;
 
 export type QuizPrompt =
-  /** Match Sound: play the carrier syllable (never the letter name, F-AUDIO-004 AD1-AD2). */
-  | { ask: 'sound'; spoken: SpokenForm }
+  /**
+   * Match Sound: play the letter (AMENDMENTS-AUDIO-CLIPS JV-A1): an initial or a vowel by its name
+   * (ㄴ is nieun), a final, asked only by its sound, by its closed syllable (an). `frame: 'endsWith'` is a
+   * final round (JV-A3 rule 3): the closed syllable plays and the question asks which letter is at the bottom.
+   */
+  | { ask: 'sound'; spoken: SpokenForm; frame?: 'endsWith' }
   /** Word to gloss: the Korean on screen, pick its meaning. */
   | { ask: 'meaning'; ko: string; romanization: string }
   /** Odd One Out: which letter is not like the others (the question is a catalogue string). */
@@ -202,7 +208,19 @@ export type SlideBody =
       nameEn: string;
       ipa?: string;
       soundHint?: string;
+      /**
+       * What the main speaker, Sound and S play (AMENDMENTS-AUDIO-CLIPS JV-A1): an initial's or a vowel's
+       * name (nieun, a), a final's closed syllable (an, the Word Builder finals their pronounced form).
+       */
       spoken: SpokenForm;
+      /** The spoken form as the slide shows it, when it differs from `spoken.text` (a Word Builder final: the spelled syllable shown, at said). */
+      spokenShown?: string;
+      /** An initial or a vowel: its name in Hangul, for the letter-name line (`learner.presenter.slide.letterName`). A final has none. */
+      nameKo?: string;
+      /** A consonant whose sound differs from its name: the second speaker, its sound on the carrier vowel (na = ㄴ + ㅏ). */
+      sound?: SpokenForm & { line: string };
+      /** A final (`kind: 'batchim'`): the slide shows the `finalLine` (ㄴ at the bottom: the syllable an with its romanization) and no letter-name line. */
+      final?: true;
       example?: KoLine;
       /** A stroke skeleton exists for the guide panel. */
       hasStrokes: boolean;

@@ -88,6 +88,8 @@ export interface StageProps {
   /** The last `pointerdown`'s kind (`subscribeInputKind`), so a pen's mouse-type events count as touch. */
   lastPointer: () => GesturePointer | null;
   onPlaySound: () => void;
+  /** A letter slide's second speaker: the consonant's sound on a vowel (AMENDMENTS-AUDIO-CLIPS JV-A4). */
+  onPlayLetterSound?: () => void;
   /** An activity slide's [ Start timer ]: opens the class timer with the slide's minutes. */
   onStartTimer?: (ms: number) => void;
   /** The deck's romanization mode now (the live Shift+R flip included), for quiz options (D2). */
@@ -247,7 +249,7 @@ export function Stage(props: StageProps): ReactElement {
             {...(slide.cover !== undefined ? { cover: props.storyScene(slide.cover.storyId, slide.cover.sceneId) } : {})}
           />
         ) : slide.kind === 'letter' ? (
-          <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
+          <LetterSlide slide={slide} shown={shown} strokeToken={props.strokeToken} sayIt={props.sayIt} onPlaySound={props.onPlaySound} {...(props.onPlayLetterSound ? { onPlayLetterSound: props.onPlayLetterSound } : {})} />
         ) : slide.kind === 'syllable' ? (
           <SyllableSlide slide={slide} reveal={reveal} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
         ) : slide.kind === 'vocab' ? (

@@ -12,6 +12,8 @@ export interface OptionView {
   id: string;
   en?: string;
   ko?: string;
+  /** What the voice says for `ko` when it differs (a letter option says its name, AMENDMENTS-AUDIO-CLIPS M8). */
+  spokenKo?: string;
   romanization?: string;
   art?: string;
   isCorrect: boolean;
@@ -61,6 +63,7 @@ function toOptionView(o: StoryCheck['options'][number]): OptionView {
   const view: OptionView = { id: o.id, isCorrect: o.isCorrect };
   if (o.en !== undefined) view.en = o.en;
   if (o.ko !== undefined) view.ko = o.ko;
+  if (o.spokenKo !== undefined) view.spokenKo = o.spokenKo;
   if (o.romanization !== undefined) view.romanization = o.romanization;
   if (o.art !== undefined) view.art = o.art;
   return view;

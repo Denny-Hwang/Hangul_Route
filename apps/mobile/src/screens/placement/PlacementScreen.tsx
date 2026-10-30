@@ -49,7 +49,7 @@ import { gateProfiles } from '../../logic/guest/guest-model';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
 import { isBackAction } from '../../logic/navigation/back-action';
-import { getCapability, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
+import { getCapability, hasPackClips, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
 import { isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { CONTENT_VERSION } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
@@ -82,6 +82,7 @@ import {
   type PlacementRoute,
   type ResultAction,
 } from './context';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /**
  * The level check (F-PLC-001 section 3.1, section 3.10, wireframe placement
@@ -98,9 +99,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
 
 const Stack = createNativeStackNavigator<PlacementStackParamList>();
 const resolvesPicture = (ref: string): boolean => resolvePicture(ref, PICTURE_CONTEXT).kind !== 'text';
-/** The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11). */
+/**
+ * The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11): its own `audioRef`s, or the
+ * text-keyed clips of the `placement` pack (AMENDMENTS-AUDIO-CLIPS AC-B6), read when asked so a pack switched off counts.
+ */
 const PLACEMENT_HAS_CLIPS = bankHasClips(PLACEMENT_BANK, PLACEMENT_WARMUP);
-const koreanAudioNow = (): boolean => placementKoreanAudio(getCapability(), PLACEMENT_HAS_CLIPS);
+const koreanAudioNow = (): boolean => placementKoreanAudio(getCapability(), PLACEMENT_HAS_CLIPS || hasPackClips('placement'));
 
 const ROUTES = {
   PlacementBoot: flowRoute('PlacementBoot', () => <Screen tone="canvas" testID="placement-boot">{null}</Screen>),
@@ -147,6 +151,8 @@ interface RootRoute {
 }
 
 export function PlacementScreen({ route, navigation }: Props): ReactElement {
+  // The level check's clip pack, warmed when it opens (AMENDMENTS-AUDIO-CLIPS AC-B6).
+  useClipPacks('placement', 'placement');
   const { source, retakeMode } = route.params;
   const profile = useProfileStore(activeProfileSelector);
   const profiles = useProfileStore((s) => s.profiles);

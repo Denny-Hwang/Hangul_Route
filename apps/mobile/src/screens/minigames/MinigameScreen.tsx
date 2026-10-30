@@ -49,6 +49,7 @@ import { RolePlayStep } from './role-play/role-play-entry';
 import { MyStoryRoute } from './my-story-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
+import { useLessonClips } from '../../platform/audio-assets-store';
 
 /**
  * The learner stack passes `route` and `navigation`; another host (All lessons, F-BROWSE-001 §4.7)
@@ -76,6 +77,8 @@ export function MinigameScreen(props: Props): ReactElement {
   // takes longer), so the way back is always there.
   const lessonReady = useLessonQuestReady(props.route.params.questId);
   const storyReady = useStoryQuestReady(questById(props.route.params.questId));
+  // The game's clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6), also when it is opened straight (a resume, a reload).
+  useLessonClips(props.route.params.questId, props.route.params.episodeId);
   // One body per step: the step's `game.<kind>` switches and its dictation chunk are decided once, as it opens (row CM-31).
   const { questId, stepIndex } = props.route.params;
   return lessonReady && storyReady ? <MinigameBody key={`${questId}:${stepIndex}`} {...props} /> : <LessonWaiting />;

@@ -28,12 +28,13 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { findJamo } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
+import { jamoVoice } from '../../logic/audio/jamo-voice';
 import { koTokenParts } from '../../logic/ko-tokens';
 import type { ShapeSource } from '../../logic/match-shape/facts';
 import { shapeHoyaLine, startShape, stepShape, type ShapeEffect, type ShapeEvent, type ShapeState } from '../../logic/match-shape/flow';
 import { originTiles, pairHeading, pairTiles, type ShapeTileLook } from '../../logic/match-shape/view';
 import { TRACE_CANVAS_MIN } from '../../logic/trace-layout';
-import { playJamo, stop } from '../../platform/audio';
+import { hasClip, playJamo, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 
 /**
@@ -134,7 +135,10 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const pairTall = useMediaSize(touchTarget.hero);
   const target = findJamo(round.target);
 
-  const slot = usePromptSlot({ source, hasClip: target?.audioRef !== undefined, reportFallback: true });
+  // The pair board is a letter question (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1): the letter's name (ㄴ is nieun), from
+  // its name clip when the build has one, else the device voice or the same name as text (section 3.8).
+  const voice = target ? jamoVoice(target, 'letter') : undefined;
+  const slot = usePromptSlot({ source, hasClip: hasClip(voice?.audioRef), reportFallback: true });
   const { play: slotPlay } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
   const [state, setState] = useState<ShapeState>(() => startShape(round));
@@ -146,7 +150,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const say = useCallback((): void => {
     // Said by its name (giyeok, nieun, ieung), every letter alike, never a carrier syllable (na, ba): the tiles name letters,
     // and a lone letter's carrier syllable is the confusion of the owner's audio report of 2026-10-29.
-    if (target) void slotPlay(() => playJamo(target, 'name'));
+    if (target) void slotPlay(() => playJamo(target, 'letter'));
   }, [slotPlay, target]);
 
   const run = useCallback(

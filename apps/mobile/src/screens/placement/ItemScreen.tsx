@@ -27,7 +27,7 @@ import {
   choiceColumns,
   estimatedPromptMs,
   fallbackRomanization,
-  instructionFor,
+  instructionForQuestion,
   instructionOnTap,
   optionViews,
   promptOutcome,
@@ -110,7 +110,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const autoStarted = useRef(false);
   const promptRef = useRef<object | null>(null);
 
-  const instruction = instructionFor(m, question.format, flow.testLocale);
+  const instruction = instructionForQuestion(m, question, flow.testLocale);
   const options = optionViews(question, { revealed, mode, testLocale: flow.testLocale, m });
   const cheer = cheerLine(m, mode, answered);
   const canReveal = revealAvailable(question, state.config) && !revealed;

@@ -166,7 +166,7 @@ test('no Korean voice: the sound is shown as text, nothing is spoken, and the ro
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
 
-  // The text prompt: spoken syllable + romanization + the line, with the "this sound" heading.
+  // The text prompt: what the voice would say (the letter name) + romanization + the line, with the "this sound" heading.
   await expect(panelText(page)).toBeVisible();
   await expect(page.getByText('No sound? Read it here.')).toBeVisible();
   await expect(page.getByText('No Korean voice on this device.')).toBeVisible();
@@ -212,18 +212,18 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
 });
 
-test('a wrong tap says the sound, not the letter name', async ({ page }) => {
+test('a wrong tap names the letter: a letter question says the name, not a syllable (AMENDMENTS-AUDIO-CLIPS JV-A1)', async ({ page }) => {
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
   const [first] = await utterances(page);
-  // 가 not 기역: one syllable, spoken at the sound rate.
-  expect(first!.text).toMatch(/^[가-힣]$|^이응$/);
+  // Quest 1 asks among ㅏ ㅓ ㄱ ㄴ: 기역 or 니은 (never 가 or 나), or a vowel's name, its sound (아, 어).
+  expect(['아', '어', '기역', '니은']).toContain(first!.text);
   const answer = jamoOfSpoken(first!.text);
   const wrong = page.getByRole('button', { name: /^Korean letter / }).filter({ hasNotText: answer }).first();
   await wrong.click();
-  await expect(page.getByText('Listen again. This one says')).toBeVisible();
+  await expect(page.getByText('Listen again. This letter is')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Hear it' })).toBeVisible();
   const before = (await utterances(page)).length;
   await page.getByRole('button', { name: 'Hear it' }).click();
@@ -537,9 +537,19 @@ function builtClips(): string[] {
   return out;
 }
 
-const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
-const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
+/**
+ * Clips the precache must not hold (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6): the record groups, the text-keyed say
+ * clips and the fixture Word Builder letter `ae` (pack jamo-wb, although it lives under audio/jamo/ too).
+ */
+const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue|say)\/|(^|\/)audio\/jamo\/ae\./;
+const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p) && !RUNTIME_CLIP.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
+const vocabClips = runtimeClips.filter((p) => /\/audio\/vocab\//.test(p));
+const wordBuilderClips = builtClips().filter((p) => /\/audio\/jamo\/ae\./.test(p));
+/** The fixture say clips (e2e/fixtures/audio/say): 나 and 너, the example words of quest 1's first Discover page. */
+const SAY_NA = '1098bbe54520ab2a';
+const SAY_NEO = '734dae8e9d9a8f8b';
+const sayClips = builtClips().filter((p) => /\/audio\/say\//.test(p));
 // The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
 const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has six.';
 
@@ -572,6 +582,70 @@ async function controlledBySw(page: Page): Promise<void> {
   });
 }
 
+/**
+ * Plays Match Sound until a round plays a clip, and returns what the rounds before it said. A letter
+ * question says the letter's name (AMENDMENTS-AUDIO-CLIPS JV-A1): a vowel's name is its sound, so its
+ * letter clip plays, while a consonant's name (giyeok, nieun) has no clip until AC-1 bundles name
+ * clips, so the device voice says it or, with no voice, the text prompt shows it. Those rounds are
+ * answered from what was said or shown. Quest 1 asks among two vowels and two consonants.
+ */
+async function playUntilClip(page: Page): Promise<string[]> {
+  const names: string[] = [];
+  let heard = 0;
+  for (let round = 1; round <= 6; round += 1) {
+    await expect(page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true })).toBeVisible();
+    let said = '';
+    await expect
+      .poll(
+        async () => {
+          if ((await clipStarts(page)) > 0) return 'clip';
+          const ko = (await utterances(page)).filter((u) => u.lang === 'ko-KR');
+          if (ko.length > heard) {
+            heard = ko.length;
+            said = ko.at(-1)!.text;
+            return 'voice';
+          }
+          if (await panelText(page).isVisible()) {
+            said = ((await panelText(page).getAttribute('aria-label')) ?? '').split(',')[0]!.trim();
+            return 'text';
+          }
+          return 'waiting';
+        },
+        { message: `round ${round}: a clip, the voice or the text prompt` },
+      )
+      .not.toBe('waiting');
+    if ((await clipStarts(page)) > 0) return names;
+    names.push(said);
+    await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: jamoOfSpoken(said) }).click();
+  }
+  throw new Error(`no round played a clip; the rounds said ${names.join(', ')}`);
+}
+/** Records, on the page's own clock, when each clip (a decoded buffer longer than 0.1 s) starts (G7). */
+async function recordClipTimes(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const w = window as Window & { __clipAt?: number[] };
+    w.__clipAt = [];
+    const proto = window.AudioBufferSourceNode?.prototype;
+    if (!proto) return;
+    const start = proto.start;
+    proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
+      if ((this.buffer?.duration ?? 0) > 0.1) w.__clipAt?.push(performance.now());
+      return start.apply(this, args);
+    };
+  });
+}
+
+/** Milliseconds from the moment stored in `window[mark]` to the first clip start after it, or null before either. */
+async function clipGapAfter(page: Page, mark: '__tapAt'): Promise<number | null> {
+  return page.evaluate((key) => {
+    const w = window as unknown as Record<string, unknown> & { __clipAt?: number[] };
+    const at = w[key];
+    if (typeof at !== 'number') return null;
+    const first = (w.__clipAt ?? []).find((t) => t >= at);
+    return first === undefined ? null : first - at;
+  }, mark);
+}
+
 test.describe('bundled clips (A-6)', () => {
   test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
     if (FIXTURE_BUILD) {
@@ -589,8 +663,8 @@ test.describe('bundled clips (A-6)', () => {
   });
 
   test('a vocabulary clip is cached on its first online fetch and then served offline', async ({ page, context }) => {
-    test.skip(runtimeClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
-    const url = `/${runtimeClips[0]}`;
+    test.skip(vocabClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
+    const url = `/${vocabClips[0]}`;
     await fakeSpeech(page, 'none');
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await page.goto('/');
@@ -629,8 +703,9 @@ test.describe('bundled clips (A-6)', () => {
     await page.getByTestId('home-next-lesson-start').click();
     await openMatchSound(page);
 
-    // A clip started, served by the service worker.
-    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // A vowel round's clip started, served by the service worker; a consonant's name has no clip yet, so it showed as text.
+    const names = await playUntilClip(page);
+    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
     // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
     await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
     await expect(page.getByText('Tap the letter you hear')).toBeVisible();
@@ -643,9 +718,182 @@ test.describe('bundled clips (A-6)', () => {
     await onboardChild(page, { name: 'Dami' });
     await openMatchSound(page);
 
-    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
-    // The clip played to its end: the Korean voice never spoke the letter.
+    const names = await playUntilClip(page);
+    // The clip played to its end: the Korean voice never spoke the letter. It said only the consonant
+    // names of the rounds before, which have no clip until AC-1.
     await page.waitForTimeout(1500);
-    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR')).toEqual([]);
+    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
+    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR' && !names.includes(u.text))).toEqual([]);
+  });
+  test('only the jamo-s1 letters are precached: a Word Builder letter and the say clips are runtime-cached (AC-B6)', async ({ page }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    if (FIXTURE_BUILD) {
+      expect(wordBuilderClips.length, 'fixture jamo-wb letter').toBeGreaterThan(0);
+      expect(sayClips.length, 'fixture say clips').toBe(2);
+    }
+    const sw = await (await page.request.get('/sw.js')).text();
+    for (const clip of [...wordBuilderClips, ...sayClips]) expect(sw, clip).not.toContain(clip);
+    // The say clips' own cache-first rule; the record clips (and jamo-wb) keep hr-audio-v1.
+    expect(sw).toContain('hr-audio-say-v1');
+    expect(sw).toContain('hr-audio-v1');
+  });
+
+  test('offline after one online lesson: a precached letter, a warmed say clip, and a say clip never warmed falls back to the voice', async ({ page, context }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    await page.reload();
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+
+    // Opening the first lesson online loads its clip pack and warms its say clips into hr-audio-say-v1.
+    await page.getByTestId('home-next-lesson-start').click();
+    const sayCached = (key: string) =>
+      page.evaluate(async (k) => (await (await caches.open('hr-audio-say-v1')).keys()).some((r) => r.url.includes(`/audio/say/${k}.`)), key);
+    await expect.poll(() => sayCached(SAY_NA), { timeout: 15_000 }).toBe(true);
+    await expect.poll(() => sayCached(SAY_NEO), { timeout: 15_000 }).toBe(true);
+    // 너 as if it had never been warmed: out of the say cache before the device goes offline.
+    await page.evaluate(async (k) => {
+      const cache = await caches.open('hr-audio-say-v1');
+      for (const req of await cache.keys()) if (req.url.includes(`/audio/say/${k}.`)) await cache.delete(req);
+    }, SAY_NEO);
+    expect(await sayCached(SAY_NEO)).toBe(false);
+
+    await context.setOffline(true);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByTestId('home-next-lesson-start').click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    const examples = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]');
+    await expect(examples).toHaveCount(2);
+
+    // The precached letter ㅏ (jamo-s1) plays its clip offline.
+    const before = await clipStarts(page);
+    await page.locator('[data-testid^="discover-hear-"][data-testid$="|sound"]').first().click();
+    await expect.poll(() => clipStarts(page)).toBe(before + 1);
+
+    // The warmed say clip of 나 plays from hr-audio-say-v1, not the voice.
+    await examples.nth(0).click();
+    await expect.poll(() => clipStarts(page)).toBe(before + 2);
+    await page.waitForTimeout(300);
+    expect((await utterances(page)).filter((u) => u.text === '나')).toEqual([]);
+
+    // 너 was never warmed: its fetch fails offline, and the device voice says it, with no error on the page.
+    await examples.nth(1).click();
+    await expect.poll(async () => (await utterances(page)).filter((u) => u.text === '너' && u.lang === 'ko-KR').length, { timeout: 5_000 }).toBe(1);
+    expect(await clipStarts(page)).toBe(before + 2);
+    await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('a warmed clip starts within 150 ms of the round appearing (G7)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    await recordClipTimes(page);
+    // When each later round of Match Sound is in the DOM, on the page's own clock. The rounds after the first were warmed
+    // when the game opened (round 1 plays while its warm-up is still on its way). The observer takes only a text that
+    // changed to "n / 6" (the round pill), never a container that merely holds such a text, from the mutation records
+    // themselves (no layout is forced).
+    await page.addInitScript(() => {
+      const w = window as Window & { __roundIn?: Record<number, number> };
+      w.__roundIn = {};
+      const roundOf = (text: string | null): number | undefined => {
+        const m = /^([2-6]) \/ 6$/.exec((text ?? '').trim());
+        return m ? Number(m[1]) : undefined;
+      };
+      const mark = (text: string | null): void => {
+        const n = roundOf(text);
+        if (n !== undefined && w.__roundIn![n] === undefined) w.__roundIn![n] = performance.now();
+      };
+      new MutationObserver((records) => {
+        for (const r of records) {
+          if (r.type === 'characterData') mark(r.target.textContent);
+          else for (const node of r.addedNodes) mark(node.textContent);
+        }
+      }).observe(document, { subtree: true, childList: true, characterData: true });
+    });
+    /**
+     * Milliseconds from round n entering the DOM to its clip's start, or null before either. The observer's callback runs
+     * after the task that rendered the round, so a clip started in that same task can carry an earlier time: a clip up to
+     * 20 ms before the callback counts as the round's own (at 0 ms).
+     */
+    const roundGap = (n: number): Promise<number | null> =>
+      page.evaluate((round) => {
+        const w = window as Window & { __roundIn?: Record<number, number>; __clipAt?: number[] };
+        const inAt = w.__roundIn?.[round];
+        if (inAt === undefined) return null;
+        const first = (w.__clipAt ?? []).find((t) => t >= inAt - 20);
+        return first === undefined ? null : Math.max(0, first - inAt);
+      }, n);
+    await onboardChild(page, { name: 'Dami' });
+    await openMatchSound(page);
+    // A letter question says the letter's name (JV-A1): a vowel's and ㄴ's name clips are in the fixture build, ㄱ's
+    // (giyeok-name) is not, so a ㄱ round shows its name as text (no voice here) and plays no clip. Round 1 has spoken
+    // either way before the tiles are tried.
+    await expect.poll(async () => (await clipStarts(page)) > 0 || (await panelText(page).isVisible())).toBe(true);
+    // The right tile is not known from outside (every fixture letter is the same tone): try them in turn.
+    const tiles = page.getByRole('button', { name: /^Korean letter / });
+    const gaps: number[] = [];
+    for (let round = 2; round <= 6 && gaps.length === 0; round += 1) {
+      const pill = page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true }).first();
+      for (let i = 0; i < 4 && !(await pill.isVisible()); i += 1) {
+        await tiles.nth(i).click({ timeout: 2_000 }).catch(() => undefined);
+        await expect(pill).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
+      }
+      await expect(pill).toBeVisible();
+      // A round with a clip: its gap. A round shown as text (ㄱ): on to the next one.
+      await expect
+        .poll(() => roundGap(round), { timeout: 3_000 })
+        .not.toBeNull()
+        .catch(() => undefined);
+      const gap = await roundGap(round);
+      if (gap !== null) gaps.push(gap);
+      else await expect(panelText(page), `round ${round} played no clip, so it shows its prompt as text`).toBeVisible();
+    }
+    expect(gaps, 'a later round played a warmed clip').toHaveLength(1);
+    expect(gaps[0]).toBeLessThan(150);
+  });
+
+  test('a warmed say clip from a pack map chunk starts within 150 ms of the tap (G7, AC-B6)', async ({ page }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await recordClipTimes(page);
+    // The tap, on the page's clock, before any app handler runs (capture phase).
+    await page.addInitScript(() => {
+      const w = window as Window & { __tapAt?: number };
+      document.addEventListener('pointerdown', () => (w.__tapAt = performance.now()), true);
+    });
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    // The lesson's stage1 pack chunk loads and its say clips are warmed when the lesson opens (useLessonClips).
+    await page.getByTestId('home-next-lesson-start').click();
+    await expect
+      .poll(() => page.evaluate(async (k) => (await (await caches.open('hr-audio-say-v1')).keys()).some((r) => r.url.includes(`/audio/say/${k}.`)), SAY_NA), { timeout: 15_000 })
+      .toBe(true);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    // 나 (the first example word): its say clip lives in the stage1 pack chunk, not the start map. Tapped twice, a
+    // second apart: on a shared CI runner the faster tap is held to the 150 ms goal, and neither may be slow.
+    const example = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]').nth(0);
+    const gaps: number[] = [];
+    for (let tap = 0; tap < 2; tap += 1) {
+      const before = await clipStarts(page);
+      await example.click();
+      await expect.poll(() => clipStarts(page)).toBe(before + 1);
+      await expect.poll(() => clipGapAfter(page, '__tapAt')).not.toBeNull();
+      gaps.push((await clipGapAfter(page, '__tapAt'))!);
+      await page.waitForTimeout(1_000);
+    }
+    expect(Math.min(...gaps), gaps.join(', ')).toBeLessThan(150);
+    for (const gap of gaps) expect(gap).toBeLessThan(400);
+    expect((await utterances(page)).filter((u) => u.text === '나')).toEqual([]);
   });
 });

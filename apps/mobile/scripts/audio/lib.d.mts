@@ -5,6 +5,8 @@ export interface AssetEntry {
   ref: string;
   /** Literal require path from the generated file. */
   require: string;
+  /** The clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6), when it has one. */
+  pack?: string;
 }
 
 export interface AudioRuntimeCachingRule {
@@ -18,23 +20,52 @@ export interface AudioRuntimeCachingRule {
 }
 
 export const AUDIO_REF_PATTERN: RegExp;
+export const JAMO_PACK_STAGE1: 'jamo-s1';
+export const JAMO_PACK_WORD_BUILDER: 'jamo-wb';
 export const RUNTIME_AUDIO_GROUPS: readonly string[];
 export const ASSET_MAP_FILE: string;
 export const AUDIO_DIR: string;
 export const AUDIO_REQUIRE_BASE: string;
 export const E2E_FIXTURE_DIR: string;
 export const E2E_FIXTURE_REQUIRE_BASE: string;
-export const AUDIO_PRECACHE_IGNORES: readonly string[];
+export const PRECACHED_AUDIO_PACKS: readonly string[];
+export const SAY_AUDIO_GROUP: 'say';
+export const REF_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
+export const SAY_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
+export const PACK_CHUNK_DIR: string;
+export const ASSET_MAP_MODULE: string;
+
+/** Each clip's pack: a ref => pack map (`clipPackMap`), or a lookup. */
+export type ClipPacks = ReadonlyMap<string, string> | ((ref: string) => string | undefined);
+
+export interface ClipManifestLike {
+  rows?: readonly { ref: string; pack: string; sources?: readonly string[] }[];
+}
 
 export function refFromFile(file: string): string;
-export function buildAssetMap(files: readonly string[], base?: string): AssetEntry[];
+export function buildAssetMap(files: readonly string[], base?: string, packOf?: (ref: string) => string | undefined): AssetEntry[];
 export function mergeAssetMaps(...lists: ReadonlyArray<readonly AssetEntry[]>): AssetEntry[];
-export function renderAssetMap(entries: readonly AssetEntry[]): string;
+export function renderAssetMap(entries: readonly AssetEntry[], chunks?: readonly { pack: string; entries: readonly AssetEntry[] }[]): string;
 export function refsInRenderedMap(source: string): string[];
-export function isRuntimeAudio(path: string): boolean;
-export function audioRuntimeCaching(): AudioRuntimeCachingRule;
-export function precacheGaps(distMp3s: readonly string[], manifestUrls: readonly string[]): string[];
-export function precacheLeaks(manifestUrls: readonly string[]): string[];
+export function packChunkModule(pack: string): string;
+export function packChunkName(pack: string): string;
+export function packChunkMarker(pack: string): string;
+export function splitAssetMap(entries: readonly AssetEntry[]): { start: AssetEntry[]; chunks: { pack: string; entries: AssetEntry[] }[] };
+export const WORD_BUILDER_UNIT: 'episode:stage2-letters';
+export function clipUnitOfSource(source: string, pack?: string): string | null;
+export function clipUnitsOf(manifest: ClipManifestLike | null | undefined): Map<string, string[]>;
+export function renderPackChunk(pack: string, entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): string;
+export function renderAudioModules(entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): Record<string, string>;
+export function clipPackMap(manifest: ClipManifestLike | null | undefined, jamoSource: string): Map<string, string>;
+export function refOfBuiltClip(path: string): string | null;
+export function isPrecachedAudio(path: string, packs?: ClipPacks): boolean;
+export function isRuntimeAudio(path: string, packs?: ClipPacks): boolean;
+export function audioPrecacheIgnores(packs: ReadonlyMap<string, string>): string[];
+export function audioRuntimeCaching(): AudioRuntimeCachingRule[];
+export function precacheGaps(distMp3s: readonly string[], manifestUrls: readonly string[], packs?: ClipPacks): string[];
+export function precacheLeaks(manifestUrls: readonly string[], packs?: ClipPacks): string[];
+export function precachedPackFiles(manifestUrls: readonly string[], packs: ClipPacks, pack: string): string[];
+export function precachedClipBytes(manifestEntries: readonly { url: string; size: number }[], packs: ClipPacks): { count: number; bytes: number };
 
 // --- Recording script, processing and acceptance (F-AUDIO-004 §3.11) ---
 
@@ -89,7 +120,8 @@ export interface ParsedJamo {
   nameKo: string | undefined;
 }
 
-export type ClipKind = 'jamo' | 'word';
+export type ClipKind = 'jamo' | 'word' | 'sentence' | 'narration';
+export type JamoPack = 'jamo-s1' | 'jamo-wb';
 
 export interface ClipReport {
   channels: number;
@@ -106,7 +138,23 @@ export interface TimeSpan {
   end: number;
 }
 
-export const CLIP_LIMITS: Readonly<Record<ClipKind, { minS: number; maxS: number; maxBytes: number; setMaxBytes: number }>>;
+export const CLIP_PADDING_S: number;
+export const PER_SYLLABLE_S: Readonly<{ min: number; max: number }>;
+export const SAY_KBPS: 48;
+export const CLIP_LIMITS: Readonly<{
+  jamo: { minS: number; maxS: number; maxBytes: number };
+  word: { minS: number; maxS: number; maxBytes: number; setMaxBytes: number };
+  sentence: { perSyllable: { min: number; max: number }; paddingS: number; kbps: 48 };
+  narration: { perSyllable: { min: number; max: number }; paddingS: number; kbps: 48 };
+}>;
+export const PACK_SET_LIMITS: Readonly<Record<JamoPack, Readonly<{ clips: number; maxBytes: number }>>>;
+export function spokenSyllableCount(text: string): number;
+export function clipLimitsOf(kind: ClipKind, context?: { syllables?: number; kbps?: 64 | 48 }): { minS: number; maxS: number; maxBytes: number };
+export function clipClassOf(row: { kind: string; text: string }): ClipKind;
+export function recordingGroupOf(ref: string): 'jamo' | 'vocab' | 'say' | null;
+export function clipKbpsOf(ref: string, context?: { kbps?: 64 | 48; sampleRate?: number }): 64 | 48;
+/** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. */
+export function fileIdOf(audioRef: string): string;
 export const TARGET_LUFS: number;
 export const LUFS_TOLERANCE: number;
 export const MAX_TRUE_PEAK_DB: number;
@@ -122,13 +170,17 @@ export function vocabAudioRef(id: string): string;
 export function vocabClipRefs(topicFiles: ReadonlyArray<{ items?: readonly object[] }>): string[];
 export function renderRecordingScript(rows: readonly RecordingRow[], names: readonly NameRow[], vocab: readonly VocabRecordingRow[]): string;
 export function parseJamoSource(source: string): ParsedJamo[];
-export function evaluateReport(kind: ClipKind, report: ClipReport): string[];
-export function evaluateSet(kind: ClipKind, sizes: readonly number[], label?: string): string[];
+/** Every jamo clip ref jamo.ts declares (sound and name clips, Stage 1 and Word Builder), each once, with its pack. */
+export function jamoClipRefs(source: string): Array<{ ref: string; pack: string }>;
+export const TTS_MANIFEST_FILE: string;
+export function clipPacksOf(manifest: { rows?: ReadonlyArray<{ ref: string; pack: string }> } | null | undefined): Map<string, string>;
+export function evaluateReport(kind: ClipKind, report: ClipReport, context?: { syllables?: number; kbps?: 64 | 48 }): string[];
+export function evaluateSet(set: 'word' | JamoPack | (string & {}), sizes: readonly number[], label?: string): string[];
 export function clipSets(
-  kind: ClipKind,
+  kind: 'jamo' | 'word',
   fileIds: readonly string[],
-  context?: { jamoIds?: readonly string[]; topicByFileId?: ReadonlyMap<string, string> },
-): Array<{ label: string; fileIds: string[] }>;
+  context?: { packByFileId?: ReadonlyMap<string, string>; topicByFileId?: ReadonlyMap<string, string> },
+): Array<{ label: string; pack?: string; fileIds: string[] }>;
 export function parseTakeFile(name: string): { fileId: string; take: number } | null;
 export function parseSilences(log: string, durationS: number): TimeSpan[];
 export function takeSegments(silences: readonly TimeSpan[], durationS: number, minGapS?: number): TimeSpan[];
@@ -148,3 +200,12 @@ export function planRecording(
   opts: { names?: boolean; allowExtra?: boolean },
 ): { action: 'process' } | { action: 'skip'; reason: string };
 export function isInsideDir(dir: string, root: string): boolean;
+
+export const MP3_BITRATES: Readonly<Record<64 | 48, number>>;
+export const DEFAULT_MP3_BITRATE: 64;
+export function parseBitrate(value: string | undefined): 64 | 48;
+export function mp3EncodeArgs(kbps?: 64 | 48): string[];
+export const GROUP_BITRATES: Readonly<{ jamo: readonly 64[]; vocab: readonly 64[]; say: readonly (48 | 64)[] }>;
+export const RECORDING_GROUPS: readonly ('jamo' | 'vocab' | 'say')[];
+export function groupBitrate(group: string, value: string | undefined): 64 | 48;
+export function sayRecordingIds(manifest: { rows?: Array<{ ref: string; key: string }> } | null | undefined): string[];

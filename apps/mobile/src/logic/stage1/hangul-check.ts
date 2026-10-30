@@ -1,16 +1,20 @@
 import type { Jamo, KoText, ListenPickRound, PictureRef, ThemeKey } from '@hangul-route/content-schema';
 import { jamoAll } from '../../content/jamo';
-import { seededRandom, shuffleOptions } from '../listen-pick';
+import { jamoVoice } from '../audio/jamo-voice';
+import { seededRandom, shuffleOptions, type ItemRound } from '../listen-pick';
 import { lp } from '../scope-builders';
 
 /**
  * The Hangul Check (F-QUEST-002 §3.9): the Stage 1 configuration of F-RVW-001's Stage Review.
  * 35 items, pure and deterministic by seed: one per symbol (30) and one word per theme episode
- * (5), in 5 chunks of 7 (6 symbols, then the chunk's word). A consonant or vowel is heard as its
- * sound and picked among the target and its first three confusables; a final is heard as the
- * syllable ㅇ + ㅏ + final and picked among syllables that differ only in the final; a word is
- * heard and its picture picked. Each round's id is the item id, so the review host credits the
- * right item. Taught Korean here is registered with F-CNT-002 (romanization-registry).
+ * (5), in 5 chunks of 7 (6 symbols, then the chunk's word). A consonant or vowel is a letter
+ * question, heard as its name (ㄴ is 니은; AMENDMENTS-AUDIO-CLIPS JV-A1) and picked among the target
+ * and its first three confusables; a final is heard as the syllable ㅇ + ㅏ + final and picked among
+ * syllables that differ only in the final (Listen & Pick's "which one did you hear", JV-A3 rule 3);
+ * a word is heard and its picture picked. A symbol round keeps its `lp:sym:` / `lp:syl:` id, so it
+ * plays at the sound rate (M7), and carries the item id in `itemId`, so the review host credits the
+ * right item; a word round's id is its item id. Taught Korean here is registered with F-CNT-002
+ * (romanization-registry).
  */
 
 export const HANGUL_CHECK_CHUNK = 7;
@@ -23,7 +27,7 @@ export interface HangulCheckItem {
   /** A jamo id for a symbol (`jamo:giyeok`, `jamo:nieun-batchim`), `word:<romanization>` for a word. */
   id: string;
   kind: HangulCheckItemKind;
-  round: ListenPickRound;
+  round: ItemRound;
 }
 
 export interface HangulCheck {
@@ -68,16 +72,19 @@ export function isSymbolItem(id: string): boolean {
 }
 
 /**
- * One symbol's round, its id the jamo id. `records` defaults to the bundle; a symbol it does not
- * know, or a final with no distractor row, throws (the content test would fail, never a dead item).
+ * One symbol's round: Listen & Pick's own `lp:sym:` (a letter) or `lp:syl:` (a final) round, so
+ * `listenPickSpeech` plays both at the sound rate (M7), with the jamo id as its `itemId`. `records`
+ * defaults to the bundle; a symbol it does not know, or a final with no distractor row, throws (the
+ * content test would fail, never a dead item).
  */
-export function symbolRound(jamoId: string, records: readonly Jamo[] = jamoAll): ListenPickRound {
+export function symbolRound(jamoId: string, records: readonly Jamo[] = jamoAll): ItemRound {
   const jamo = records.find((j) => j.id === jamoId);
   if (!jamo) throw new Error(`Unknown symbol ${jamoId}`);
-  if (jamo.kind !== 'batchim') return { ...lp.sym(jamoId, ALL_SYMBOL_IDS), id: jamoId };
+  if (jamo.kind !== 'batchim') return { ...lp.sym(jamoId, ALL_SYMBOL_IDS), itemId: jamoId };
   const distractors = FINAL_DISTRACTORS[jamoId];
   if (!distractors || jamo.spokenKo === undefined) throw new Error(`No final syllables for ${jamoId}`);
-  return { ...lp.syl(jamo.spokenKo, distractors), id: jamoId };
+  // The syllable heard is the final's sound voice (JV-A2): an for the final nieun.
+  return { ...lp.syl(jamoVoice(jamo, 'sound').text, distractors), itemId: jamoId };
 }
 
 function wordRound(word: HangulCheckWord, rnd: () => number): ListenPickRound {

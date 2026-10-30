@@ -48,7 +48,8 @@ import {
 } from '../../logic/stage1/discover-flow';
 import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
-import { hasClip, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
+import { exampleWordLabel } from '../../logic/stage1/example-label';
+import { hasClipFor, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait } from '../../platform/screen-reader';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
@@ -70,7 +71,7 @@ import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 interface CardSlot {
   play: PromptSlot['play'];
 }
-/** The card an action id belongs to: `<item key>|sound`, `|name`, `|example` or `|line<n>`. */
+/** The card an action id belongs to: `<item key>|sound`, `|vowel`, `|example` or `|line<n>`. */
 const cardKeyOf = (actionId: string): string => actionId.split('|')[0] ?? actionId;
 
 interface Props {
@@ -95,7 +96,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props
     for (const page of model.pages) {
       for (const item of page.items) {
         map.set(item.hear.id, item.hear);
-        if (item.letterName) map.set(item.letterName.action.id, item.letterName.action);
+        if (item.soundWith) map.set(item.soundWith.action.id, item.soundWith.action);
         if (item.example) map.set(item.example.hear.id, item.example.hear);
       }
       for (const line of page.exchange?.lines ?? []) map.set(line.hear.id, line.hear);
@@ -332,7 +333,7 @@ interface CardAudio {
  */
 function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio): PromptSlot {
   const playable = actions.filter((a): a is HearAction => a !== undefined);
-  const clip = playable.length > 0 && playable.every((a) => hasClip(a.spec.audioRef));
+  const clip = playable.length > 0 && playable.every((a) => hasClipFor(a.spec));
   const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true });
   const { play } = slot;
   const { register } = audio;
@@ -403,7 +404,8 @@ function DiscoverItemCard({
   divided?: boolean;
 }): ReactElement {
   const { item } = render;
-  const slot = useCardSlot(item.key, [item.hear, item.letterName?.action, item.example?.hear], audio);
+  const audioCopy = useMessages().learner.audio;
+  const slot = useCardSlot(item.key, [item.hear, item.soundWith?.action, item.example?.hear], audio);
   const example = item.example;
   // The gloss each picture is given below, so "is there a picture" matches what PictureArt draws.
   const itemGloss = item.gloss ?? item.glyph;
@@ -451,19 +453,30 @@ function DiscoverItemCard({
         dispatch={dispatch}
       />
 
-      {item.letterName ? (
+      {/* What Hear it says, with its romanization (AMENDMENTS-AUDIO-CLIPS JV-A5, D2): nieun with its romanization; a final its closed syllable. */}
+      {item.spokenLine ? (
+        <View testID={`discover-spoken-${item.key}`}>
+          <KoreanText ko={item.spokenLine.ko} romanization={item.spokenLine.romanization} size="sm" />
+        </View>
+      ) : null}
+      {item.finalLine ? (
+        <Body tone="secondary" align="center" testID={`discover-final-line-${item.key}`}>
+          {audioCopy.finalLine(item.finalLine.letter, item.finalLine.syllable)}
+        </Body>
+      ) : null}
+
+      {item.soundWith ? (
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <HearButton
-            action={item.letterName.action}
-            label={copy.letterName.cta}
-            accessibilityLabel={copy.letterName.cta}
+            action={item.soundWith.action}
+            label={copy.soundWith.cta}
+            accessibilityLabel={copy.soundWith.cta}
             size="md"
             tone="ghost"
             dispatch={dispatch}
           />
-          {render.nameShown ? (
-            <KoreanText ko={item.letterName.ko} romanization={item.letterName.romanization} size="sm" />
-          ) : null}
+          {/* The taught line "na = ㄴ + ㅏ" with its romanization is content, never inside the UI string. */}
+          <KoreanText ko={item.soundWith.ko} romanization={item.soundWith.romanization} size="sm" />
         </View>
       ) : null}
 
@@ -522,11 +535,7 @@ function DiscoverItemCard({
             size="sm"
             romanizationShown={render.exampleRomanizationShown}
             onPress={() => dispatch({ type: 'hear', id: example.hear.id })}
-            accessibilityLabel={a11y.hearExample(
-              render.exampleRomanizationShown
-                ? `${example.ko}, ${example.romanization}, ${example.gloss}`
-                : `${example.ko}, ${example.gloss}`,
-            )}
+            accessibilityLabel={exampleWordLabel(copy, a11y, example, render.exampleRomanizationShown)}
             testID={`discover-hear-${example.hear.id}`}
           />
           {/* Decorative: the example's KoreanText line already names it. */}

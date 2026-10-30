@@ -44,7 +44,7 @@ import {
   wrongMarkFor,
   type QuestionViewContext,
 } from '../../logic/vocab/question-view';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { useAudioStore } from '../../store/audio-store';
@@ -149,7 +149,7 @@ export function VocabQuestionView({
   // prints its Korean, so its fallback counts once the status panel is up; a picture prompt has no sound.
   const slot = usePromptSlot({
     source: QUESTION_AUDIO_SOURCE[mode],
-    hasClip: hasClip(question.prompt.audioRef),
+    hasClip: question.prompt.ko !== undefined && hasClipFor({ text: question.prompt.spokenKo ?? question.prompt.ko, audioRef: question.prompt.audioRef }),
     textOnScreen: promptKind === 'word',
     reportFallback: promptKind !== 'image',
   });

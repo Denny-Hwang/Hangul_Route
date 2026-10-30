@@ -498,13 +498,14 @@ export const learner = {
     },
     discover: {
       hearIt: { cta: '들어 보기' },
-      letterName: { cta: '글자 이름' },
+      soundWith: { cta: '모음과 함께 들어 봐요' },
       sayLine: (spoken: string) => `소리 내어 읽어 봐요: ${spoken}`,
       showHowToSay: { cta: '읽는 법 보기' },
       heard: { pill: '들었어요' },
       continue: { cta: '계속' },
       wordsTitle: '이제 읽을 수 있는 낱말',
       batchimLine: '글자의 맨 아래에 와요',
+      exampleWord: '예시 낱말',
       empty: '여기에는 볼 것이 없어요. 계속을 눌러요.',
       pageLabel: (page: number, count: number) => `${count}쪽 중 ${page}쪽`,
       exchange: {
@@ -715,8 +716,15 @@ export const learner = {
 
   audio: {
     readHere: '소리가 안 나나요? 여기서 읽어 봐요.',
-    heading: { listen: '들리는 글자를 눌러요', text: '이 소리의 글자를 눌러요' },
+    heading: {
+      listen: '들리는 글자를 눌러요',
+      text: '이 소리의 글자를 눌러요',
+      startsWith: '이 소리는 어떤 글자로 시작할까요?',
+      endsWith: '이 소리의 받침은 어떤 글자일까요?',
+    },
     listenAgain: '다시 들어 봐요. 이건 이렇게 읽어요:',
+    listenAgainLetter: '다시 들어 봐요. 이 글자 이름:',
+    finalLine: (letter: string, syllable: string) => `받침 ${letter}: ${syllable}`,
     hearIt: { cta: '들어 보기' },
     tapToHear: '눌러서 듣기',
     tapToReplay: '눌러서 다시 듣기',
@@ -1771,7 +1779,7 @@ export const learner = {
     },
     slide: {
       deckTitle: '수업',
-      letterName: (name: string) => `글자 이름: ${name}`,
+      letterName: (name: string, hangul: string) => `글자 이름: ${hangul} (${name})`,
       strokeCaption: '간단한 획순 안내',
       sayIt: '이렇게 읽어요:',
       card: '문화 카드',

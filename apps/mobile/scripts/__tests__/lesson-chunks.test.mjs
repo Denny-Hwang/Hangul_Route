@@ -319,6 +319,42 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     ]);
   });
 
+  it('the clip pack loader is a learner chunk of its own (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[3]).toEqual({ name: 'clip-packs-chunk', marker: 'clip-packs-chunk:loader' });
+    expect(read('src/platform/clip-packs-chunk.ts')).toContain(`export const CLIP_PACKS_CHUNK = '${LEARNER_CHUNKS[3].marker}';`);
+    // Reached only through the start-side store's literal import(). The pack chunks' import()s stay in the start bundle
+    // (the store): imported by the loader chunk, their URLs would change its content after Metro named it by its md5.
+    const store = read('src/platform/audio-assets-store.ts');
+    expect(store).toContain("import('./clip-packs-chunk')");
+    expect(store).not.toMatch(/^import [^t].*clip-packs-chunk/m);
+    // The pack chunks' import()s are the generated start map's (`loadAudioPackChunk`), which the store imports too.
+    expect(store).toContain("from '../content/__generated__/audio-assets'");
+    expect(read('src/content/__generated__/audio-assets.ts')).toContain('export function loadAudioPackChunk(');
+    expect(read('src/platform/clip-packs-chunk.ts')).not.toMatch(/\bimport\(['"]/);
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[3].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/clip-packs-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[3]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+  });
+
+  it('a pack\'s clip map is a marked chunk too: never in the start bundle, precached (AC-B6)', () => {
+    const pack = { name: 'audio-pack-stage1', marker: 'audio-pack:stage1' };
+    const text = `__d(function(){var m="${pack.marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/audio-pack-stage1-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [pack], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [pack], bundles: [{ url: START, text: `${text};` }, chunk], precached: all([chunk]) })).toEqual([
+      `audio-pack-stage1 is in the start bundle ${START}: a static import pulled it in`,
+    ]);
+    const report = precacheReport({ manifest: [], audioPacks: [pack], clips: { count: 43, bytes: 350_000 }, bundles: [start, chunk], precache: { count: 3, size: 99 } });
+    expect(report.audioPackChunks.count).toBe(1);
+    expect(reportLines(report)).toContain('  precached clips  43 files  350000 B  (ceiling 520000 B, jamo-s1 only)');
+    expect(reportLines(report).some((line) => line.startsWith('  clip map chunks  1 bundles  '))).toBe(true);
+    expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 } })).toEqual([]);
+    expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 }, clips: { count: 44, bytes: 520_001 } })[0]).toContain('the precached clips are 520001 B');
+  });
+
   it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
     expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });
@@ -517,12 +553,14 @@ describe('precacheReport and its budget lines', () => {
     // 4,758,598 B on main 524961dae). The Phase 3 integration (integrate/curr-phase3: CM-30 to CM-39, CM-3A S2 to S7 and
     // CM-3B together) measures 4,815,388 B on main c84df434e (release build, Metro cache cleared), so the line is
     // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_820_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388]) {
+    // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
+    // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_840_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_815_388).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_835_104).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

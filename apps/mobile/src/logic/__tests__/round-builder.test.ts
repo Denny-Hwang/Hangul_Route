@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { jamoAll, jamoConsonants, jamoVowels } from '../../content/jamo';
+import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels, jamoWordBuilder } from '../../content/jamo';
 import {
+  FINAL_QUIZ_JAMO_IDS,
+  LETTER_QUIZ_JAMO_IDS,
   buildBuildLetterRounds,
   buildCultureQuizRounds,
   buildMatchSoundRounds,
@@ -42,6 +44,19 @@ describe('buildMatchSoundRounds', () => {
       const ids = r.tiles.map((t) => t.id);
       expect(new Set(ids).size).toBe(ids.length);
     }
+  });
+
+  it('a sound question over the six finals: final tiles only, the answer among them (JV-A3 rules 2 and 3)', () => {
+    const rounds = buildMatchSoundRounds({ scopeJamoIds: [...FINAL_QUIZ_JAMO_IDS], rounds: 6, seed: 3, question: 'sound' });
+    expect(rounds).toHaveLength(6);
+    for (const r of rounds) {
+      expect(r.tiles.every((t) => t.kind === 'batchim')).toBe(true);
+      expect(r.tiles.map((t) => t.id)).toContain(r.promptJamo.id);
+    }
+  });
+
+  it('a letter question (the default) refuses a final in its pool', () => {
+    expect(() => buildMatchSoundRounds({ scopeJamoIds: [...scope4, 'jamo:nieun-batchim'], rounds: 2, seed: 1 })).toThrow(/no final/);
   });
 
   it('throws when scope is smaller than tileCount', () => {
@@ -273,5 +288,31 @@ describe('buildBuildLetterRounds: explicit jamoIds and batchim (F-QUEST-002 §3.
   it('2-part rounds keep the vowel/consonant distractors', () => {
     const [r] = buildBuildLetterRounds({ syllables: [{ ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }], seed: 2 });
     expect(r!.tileJamoIds).toHaveLength(4);
+  });
+});
+
+describe('quiz-by-ear jamo sets (AMENDMENTS-AUDIO-CLIPS JV-A3 rule 1)', () => {
+  it('LETTER_QUIZ_JAMO_IDS is the 24 Stage 1 initials and vowels', () => {
+    expect(LETTER_QUIZ_JAMO_IDS.size).toBe(24);
+    expect([...LETTER_QUIZ_JAMO_IDS]).toEqual([...jamoConsonants, ...jamoVowels].map((j) => j.id));
+    for (const id of LETTER_QUIZ_JAMO_IDS) expect(jamoAll.find((j) => j.id === id)?.kind).not.toBe('batchim');
+  });
+
+  it('FINAL_QUIZ_JAMO_IDS is the 6 Stage 1 finals', () => {
+    expect(FINAL_QUIZ_JAMO_IDS.size).toBe(6);
+    expect([...FINAL_QUIZ_JAMO_IDS]).toEqual(jamoBatchim.map((j) => j.id));
+    for (const id of FINAL_QUIZ_JAMO_IDS) expect(jamoAll.find((j) => j.id === id)?.kind).toBe('batchim');
+  });
+
+  it('the two sets are disjoint and together hold all 30 Stage 1 symbols (the deprecated union is gone, JV-3)', () => {
+    expect([...LETTER_QUIZ_JAMO_IDS].filter((id) => FINAL_QUIZ_JAMO_IDS.has(id))).toEqual([]);
+    expect(new Set([...LETTER_QUIZ_JAMO_IDS, ...FINAL_QUIZ_JAMO_IDS])).toEqual(new Set(jamoAll.map((j) => j.id)));
+  });
+
+  it('no tense consonant or compound vowel (Word Builder) is in either set', () => {
+    for (const j of jamoWordBuilder) {
+      expect(LETTER_QUIZ_JAMO_IDS.has(j.id)).toBe(false);
+      expect(FINAL_QUIZ_JAMO_IDS.has(j.id)).toBe(false);
+    }
   });
 });

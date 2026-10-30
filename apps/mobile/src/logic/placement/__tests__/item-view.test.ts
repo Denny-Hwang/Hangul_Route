@@ -13,6 +13,8 @@ import {
   promptOutcome,
   estimatedPromptMs,
   instructionFor,
+  instructionForQuestion,
+  isConsonantSoundItem,
   optionViews,
   promptView,
   questionLabel,
@@ -47,6 +49,38 @@ const ALL_FORMATS: AssessmentFormat[] = [
   'read-pick-picture',
   'reply-pick',
 ];
+
+describe('consonant sound items ask which letter starts the sound (AMENDMENTS-AUDIO-CLIPS AU-OD-3)', () => {
+  const soundLetter = PLACEMENT_BANK.templates.filter((t) => t.strand === 'sound-letter' && t.question.format === 'hear-pick-written');
+  const CONSONANT = /^[\u3131-\u314E]$/u;
+  const VOWEL = /^[\u314F-\u3163]$/u;
+
+  it('every consonant item keeps the sound (a syllable, never a lone letter) and offers consonants only', () => {
+    const consonantItems = soundLetter.filter((t) => isConsonantSoundItem(t.question));
+    expect(consonantItems.length).toBe(13);
+    for (const t of consonantItems) {
+      const spoken = t.question.spokenKo ?? t.question.promptKo ?? '';
+      expect(spoken, t.id).toMatch(/^[\uAC00-\uD7A3]$/u);
+      for (const o of t.question.options) expect(o.ko, `${t.id} ${o.id}`).toMatch(CONSONANT);
+    }
+  });
+
+  it('a consonant item says "Which letter starts this sound?"; a vowel item keeps the format line', () => {
+    const consonant = question('pitem:sound-basic-hear-nieun');
+    expect(isConsonantSoundItem(consonant)).toBe(true);
+    expect(instructionForQuestion(en, consonant, 'en')).toEqual({ visible: 'Which letter starts this sound?', spoken: 'Which letter starts this sound?' });
+    expect(instructionForQuestion(getMessages('es'), consonant, 'es').visible).toBe('¿Con qué letra empieza este sonido?');
+    expect(isConsonantSoundItem(HEAR_LETTER)).toBe(false);
+    for (const o of HEAR_LETTER.options) expect(o.ko).toMatch(VOWEL);
+    expect(instructionForQuestion(en, HEAR_LETTER, 'en')).toEqual(instructionFor(en, 'hear-pick-written', 'en'));
+    for (const q of [SHAPE, SEE_LETTER, BUILD, READ_WORD, REPLY]) expect(instructionForQuestion(en, q, 'en')).toEqual(instructionFor(en, q.format, 'en'));
+  });
+
+  it('T-leak: in Korean the line is spoken only, as every letter format', () => {
+    const ko = getMessages('ko');
+    expect(instructionForQuestion(ko, question('pitem:sound-basic-hear-nieun'), 'ko')).toEqual({ visible: null, spoken: '이 소리는 어떤 글자로 시작할까요?' });
+  });
+});
 
 describe('instructionFor (section 3.2)', () => {
   it('writes and speaks the same line in English and Spanish', () => {

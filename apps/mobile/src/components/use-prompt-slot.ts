@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useSyncExternalStore } from 'react';
 import {
   INITIAL_PROMPT_STATE,
   promptReducer,
@@ -8,6 +8,7 @@ import {
 import { failureFromStore, fallbackVisible, promptPanelView, type PromptPanelView } from '../logic/audio/prompt-view';
 import { useMessages } from '../i18n/use-messages';
 import { noteFallbackShown } from '../platform/audio';
+import { clipRegistry } from '../platform/audio-assets-store';
 import { useAudioStore } from '../store/audio-store';
 
 /**
@@ -20,7 +21,7 @@ import { useAudioStore } from '../store/audio-store';
  */
 export interface PromptSlot {
   view: PromptPanelView;
-  /** Run a play (`playJamo(...)` / `playPrompt(...)`) and feed its result to the slot. */
+  /** Run a play (`playJamo` or `playPrompt`) and feed its result to the slot. */
   play: (run: () => Promise<PlayResult>) => Promise<PlayResult>;
   /** New round: forget the text and any play still in flight. */
   reset: () => void;
@@ -52,6 +53,9 @@ export function usePromptSlot({
   reportFallback = true,
 }: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
+  // A pack chunk's clips arrive after the first render (AMENDMENTS-AUDIO-CLIPS AC-B6): the caller re-renders then, so
+  // the `hasClip` it computes (`hasClipFor`) is never left saying "no clip" while the say clip will play.
+  useSyncExternalStore(clipRegistry.subscribe, clipRegistry.version, clipRegistry.version);
   const muted = useAudioStore((s) => s.muted);
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
@@ -63,12 +67,13 @@ export function usePromptSlot({
   const clip = hasClip && clips;
   const view = promptPanelView(state, capability, muted, clip, copy);
 
-  // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker).
+  // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker). An item whose
+  // clip arrives late (its pack chunk) clears a "no Korean voice" text: with a clip it was never true.
   useEffect(() => {
     dispatch({ muted });
   }, [muted]);
   useEffect(() => {
-    if (!clip) dispatch({ capability: { tts, clips, unlocked } });
+    dispatch({ capability: { tts, clips, unlocked } });
   }, [tts, clips, unlocked, clip]);
 
   const shown = reportFallback && fallbackVisible(view, textOnScreen);

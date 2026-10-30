@@ -1,0 +1,43 @@
+{
+  "_about": "Recorded request bodies the engine adapters must send (AMENDMENTS-AUDIO-CLIPS AC-B2, AC-B5; row AC-3). Each case is a manifest row and a voice; tts-engines.test.mjs checks that request() builds exactly this body and that the mocked SDK client receives it unchanged. No network.",
+  "rows": {
+    "jamo-sound": { "ref": "audio/jamo/giyeok.mp3", "key": "giyeok", "kind": "jamo-sound", "text": "가", "say": "가.", "rate": 0.85, "pack": "jamo-s1" },
+    "word": { "ref": "audio/say/0123456789abcdef.mp3", "key": "0123456789abcdef", "kind": "word", "text": "박물관", "say": "박물관", "rate": 0.9, "pack": "stage6" },
+    "ipa": { "ref": "audio/say/fedcba9876543210.mp3", "key": "fedcba9876543210", "kind": "word", "text": "국물", "say": "궁물", "ipa": "kuŋmul", "rate": 0.9, "pack": "stage2" },
+    "narration": { "ref": "audio/say/00112233445566aa.mp3", "key": "00112233445566aa", "kind": "narration", "text": "설날 아침이에요.", "say": "설날 아침이에요.", "rate": 1, "pack": "stories" }
+  },
+  "cases": [
+    {
+      "engine": "polly", "voice": "Seoyeon", "row": "jamo-sound", "chars": 47,
+      "payload": { "Engine": "neural", "LanguageCode": "ko-KR", "VoiceId": "Seoyeon", "OutputFormat": "ogg_vorbis", "SampleRate": "24000", "TextType": "ssml", "Text": "<speak><prosody rate=\"85%\">가.</prosody></speak>" }
+    },
+    {
+      "engine": "polly", "voice": "Jihye", "row": "ipa", "chars": 93,
+      "payload": { "Engine": "neural", "LanguageCode": "ko-KR", "VoiceId": "Jihye", "OutputFormat": "ogg_vorbis", "SampleRate": "24000", "TextType": "ssml", "Text": "<speak><prosody rate=\"90%\"><phoneme alphabet=\"ipa\" ph=\"kuŋmul\">궁물</phoneme></prosody></speak>" }
+    },
+    {
+      "engine": "polly", "voice": "Seoyeon", "row": "narration", "chars": 55,
+      "payload": { "Engine": "neural", "LanguageCode": "ko-KR", "VoiceId": "Seoyeon", "OutputFormat": "ogg_vorbis", "SampleRate": "24000", "TextType": "ssml", "Text": "<speak><prosody rate=\"100%\">설날 아침이에요.</prosody></speak>" }
+    },
+    {
+      "engine": "google", "voice": "ko-KR-Neural2-A", "row": "jamo-sound", "chars": 2,
+      "payload": { "input": { "text": "가." }, "voice": { "languageCode": "ko-KR", "name": "ko-KR-Neural2-A" }, "audioConfig": { "audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": 0.85 } }
+    },
+    {
+      "engine": "google", "voice": "ko-KR-Neural2-C", "row": "word", "chars": 3,
+      "payload": { "input": { "text": "박물관" }, "voice": { "languageCode": "ko-KR", "name": "ko-KR-Neural2-C" }, "audioConfig": { "audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": 0.9 } }
+    },
+    {
+      "engine": "google", "voice": "ko-KR-Wavenet-A", "row": "ipa", "chars": 63,
+      "payload": { "input": { "ssml": "<speak><phoneme alphabet=\"ipa\" ph=\"kuŋmul\">궁물</phoneme></speak>" }, "voice": { "languageCode": "ko-KR", "name": "ko-KR-Wavenet-A" }, "audioConfig": { "audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": 0.9 } }
+    },
+    {
+      "engine": "azure", "voice": "ko-KR-SunHiNeural", "row": "jamo-sound", "chars": 163,
+      "payload": { "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"ko-KR\"><voice name=\"ko-KR-SunHiNeural\"><prosody rate=\"0.85\">가.</prosody></voice></speak>", "outputFormat": "riff-48khz-16bit-mono-pcm" }
+    },
+    {
+      "engine": "azure", "voice": "ko-KR-InJoonNeural", "row": "word", "chars": 164,
+      "payload": { "ssml": "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"ko-KR\"><voice name=\"ko-KR-InJoonNeural\"><prosody rate=\"0.9\">박물관</prosody></voice></speak>", "outputFormat": "riff-48khz-16bit-mono-pcm" }
+    }
+  ]
+}

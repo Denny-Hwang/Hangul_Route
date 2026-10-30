@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "pnpm --filter @hangul-route/mobile audio:tts:generate (apps/mobile/scripts/audio/tts/generate.mjs); do not edit by hand",
+  "rows": []
+}

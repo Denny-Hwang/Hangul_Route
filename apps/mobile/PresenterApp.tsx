@@ -66,7 +66,7 @@ import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
 import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS, railHeightNeeds, railHeightsEstimate } from './src/screens/presenter/stage-metrics';
-import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
+import { letterSecondSound, readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
 import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
 import { flags } from './src/config/flags';
 import { NUDGE_MS, type GesturePointer, type StageCommand, type StageStepSource } from './src/logic/lecture/stage-gesture';
@@ -139,6 +139,7 @@ import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { currFlagOn, startRemoteConfig, useRemoteConfigStore } from './src/store/remote-config-store';
+import { useClipPacks } from './src/platform/audio-assets-store';
 
 /**
  * The lecture presenter, the `/present` root of the learner web build (F-TCH-004 PR 6; spec
@@ -252,6 +253,8 @@ export default function PresenterApp(): ReactElement {
 }
 
 function Presenter(): ReactElement {
+  // Every clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6): the presenter shows any lesson's slides.
+  useClipPacks('cards');
   const address = useMemo(readAddress, []);
   // A link opens at once; a reloaded deck waits for Recent (it may resume at its slide); no deck is the home.
   const [phase, setPhase] = useState<Phase>(() =>
@@ -702,9 +705,10 @@ function Presenter(): ReactElement {
    * The slide's sound (section 3.4 amendment 2026-10-17: the Korean it shows, at its own rate).
    * `explicit`: the bar's Sound, S or a stage speaker, which always answers (section 3.7): while
    * muted it turns the device sound on first, and nothing to play or a play that fails flashes.
+   * `second`: a letter slide's second speaker, the consonant's sound on a vowel (AMENDMENTS-AUDIO-CLIPS JV-A4).
    */
   const playSound = useCallback(
-    (slide: Slide | undefined, { explicit }: { explicit: boolean }) => {
+    (slide: Slide | undefined, { explicit, second = false }: { explicit: boolean; second?: boolean }) => {
       if (!slide || !deck) return;
       const flash = (key: SoundFlashKey): void => setSoundFlash({ key, at: Date.now() });
       const reveal = stateRef.current?.reveal;
@@ -715,7 +719,7 @@ function Presenter(): ReactElement {
         slide.kind === 'story'
           ? readToMePlan(slide, { sound: true, canPlayKorean: canPlay, voiceChecked, narrationLang: stories.scene(slide.storyId, slide.sceneId)?.narrationLang ?? 'en-US', ...(reveal !== undefined ? { reveal } : {}) })
           : null;
-      const sound = slide.kind === 'story' ? undefined : slideSound(slide, reveal);
+      const sound = slide.kind === 'story' ? undefined : second ? letterSecondSound(slide) : slideSound(slide, reveal);
       const press = soundPress({ hasSound: story !== null || sound !== undefined, explicit, muted: useAudioStore.getState().muted, deckSound: deck.options.sound });
       if (press === 'skip') return;
       if (press === 'flash-no-sound' || press === 'flash-deck-sound-off') {
@@ -1535,6 +1539,10 @@ function Presenter(): ReactElement {
               pointed={p.pointed}
               lastPointer={lastPointer}
               onPlaySound={() => userDispatch('replay-sound')}
+              onPlayLetterSound={() => {
+                activate();
+                playSound(slide, { explicit: true, second: true });
+              }}
               onStartTimer={(ms) => userDispatch({ startTimer: ms })}
               romanization={romanizationNow}
               sayIt={sayIt}

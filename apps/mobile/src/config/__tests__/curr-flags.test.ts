@@ -115,3 +115,59 @@ describe('ramp gate for game.my-story (row CM-38, section 12.2)', () => {
     expect(flags.currBuiltInPct('game.my-story')).toBe(0);
   });
 });
+
+/**
+ * The audio clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8, row AC-1): `audioClips` and `audioPack.<pack>` are remote
+ * names whose build floor is the build ceiling (`flags.audioClips`, and `flags.audioClipPacks` for a pack), with
+ * built-in pct 100, used as on/off. Remote config can only turn them off.
+ */
+// Each test re-imports flags.ts cold (`vi.resetModules()`); on a loaded runner one import can pass 5 s.
+describe('audio clip switches (AC-B8)', { timeout: 20_000 }, () => {
+  beforeEach(() => {
+    process.env = { ...ORIGINAL_ENV };
+    delete process.env.EXPO_PUBLIC_AUDIO_CLIPS;
+    delete process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS;
+  });
+
+  afterEach(() => {
+    process.env = { ...ORIGINAL_ENV };
+  });
+
+  it('every audio switch has built-in pct 100 (on until the remote turns it off)', async () => {
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema/audio-packs');
+    const mod = await reload();
+    expect(mod.currBuiltInPct('audioClips')).toBe(100);
+    for (const pack of AUDIO_PACKS) expect(mod.currBuiltInPct(`audioPack.${pack}`), pack).toBe(100);
+    expect(mod.audioPackFlag('jamo-s1')).toBe('audioPack.jamo-s1');
+  });
+
+  it('by default every switch is on at build time', async () => {
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema/audio-packs');
+    const mod = await reload();
+    expect(mod.currBuildFloor('audioClips')).toBe(true);
+    for (const pack of AUDIO_PACKS) expect(mod.currBuildFloor(`audioPack.${pack}`), pack).toBe(true);
+  });
+
+  it('EXPO_PUBLIC_AUDIO_CLIP_PACKS is the ceiling: a pack it leaves out is off at build time', async () => {
+    process.env.EXPO_PUBLIC_AUDIO_CLIP_PACKS = 'jamo-s1';
+    const mod = await reload();
+    expect(mod.currBuildFloor('audioPack.jamo-s1')).toBe(true);
+    expect(mod.currBuildFloor('audioPack.jamo-wb')).toBe(false);
+    expect(mod.currBuildFloor('audioPack.stage1')).toBe(false);
+    expect(mod.currBuildFloor('audioClips')).toBe(true);
+  });
+
+  it('EXPO_PUBLIC_AUDIO_CLIPS=false turns every audio switch off at build time', async () => {
+    process.env.EXPO_PUBLIC_AUDIO_CLIPS = 'false';
+    const mod = await reload();
+    expect(mod.currBuildFloor('audioClips')).toBe(false);
+    expect(mod.currBuildFloor('audioPack.jamo-s1')).toBe(false);
+  });
+
+  it('an unknown pack name is off', async () => {
+    const mod = await reload();
+    expect(mod.currBuildFloor('audioPack.stage5')).toBe(false);
+    expect(mod.currBuildFloor('audioPack.')).toBe(false);
+    expect(mod.currBuildFloor('audioPack.JAMO-S1')).toBe(false);
+  });
+});

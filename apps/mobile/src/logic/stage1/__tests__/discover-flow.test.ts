@@ -131,16 +131,22 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(g.kind).toBe('symbol');
     expect(g.glyph).toBe('ㄱ');
     expect(g.romanization).toBe('g/k');
-    // The main button plays the SOUND (가), never the letter name (기역); the name is a second button.
-    expect(g.hear.spec.text).toBe('가');
-    expect(g.spokenRomanization).toBe('ga');
-    expect(g.letterName).toMatchObject({ ko: '기역', romanization: 'giyeok' });
-    expect(g.letterName?.action.spec.text).toBe('기역');
+    // AMENDMENTS-AUDIO-CLIPS JV-A5: a lone letter is first heard by its NAME (기역), shown under Hear it with its
+    // romanization; the second button, Hear it with a vowel, plays its sound (가) with the taught line 가 = ㄱ + ㅏ.
+    expect(g.hear.spec.text).toBe('기역');
+    expect(g.spokenRomanization).toBe('giyeok');
+    expect(g.spokenLine).toEqual({ ko: '기역', romanization: 'giyeok' });
+    expect(g.finalLine).toBeUndefined();
+    expect(g.soundWith).toMatchObject({ ko: '가 = ㄱ + ㅏ', romanization: 'ga' });
+    expect(g.soundWith?.action.spec.text).toBe('가');
     expect(g.example).toMatchObject({ ko: '가구', romanization: 'gagu', gloss: 'furniture' });
     expect(g.example?.hear.spec.text).toBe('가구');
     // ids of the three buttons are distinct
-    const ids = [g.hear.id, g.letterName?.action.id, g.example?.hear.id];
+    const ids = [g.hear.id, g.soundWith?.action.id, g.example?.hear.id];
     expect(new Set(ids).size).toBe(3);
+    // ㄴ: 니은 · nieun, then 나 = ㄴ + ㅏ · na.
+    const n = page.items[1]!;
+    expect([n.hear.spec.text, n.spokenLine, n.soundWith?.action.spec.text, n.soundWith?.ko]).toEqual(['니은', { ko: '니은', romanization: 'nieun' }, '나', '나 = ㄴ + ㅏ']);
   });
 
   it('example audio uses spokenKo when the content has one, and an audioRef when present', () => {
@@ -148,13 +154,17 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(page.items[0]!.example?.hear.spec).toEqual({ text: '아이이', audioRef: 'audio/words/ai.mp3' });
   });
 
-  it('vowels and the silent initial have no separate letter-name button', () => {
+  it('vowels and the silent initial have one Hear it and no second button', () => {
     const vowel = buildDiscover([pageOne]).pages[0]!.items[0]!;
-    expect(vowel.letterName).toBeUndefined();
+    expect(vowel.soundWith).toBeUndefined();
+    // A vowel's name is its sound: one Hear it (아 · a).
+    expect(vowel.hear.spec.text).toBe('아');
+    expect(vowel.spokenLine).toEqual({ ko: '아', romanization: 'a' });
     const silent = buildDiscover([{ items: [{ type: 'jamo', jamoId: 'jamo:ieung', example: ko('아이', 'ai', 'child') }] }]).pages[0]!.items[0]!;
-    expect(silent.letterName).toBeUndefined();
+    expect(silent.soundWith).toBeUndefined();
     // ㅇ is spoken by its name, and shows "silent", never the empty-set sign
     expect(silent.hear.spec.text).toBe('이응');
+    expect(silent.spokenLine).toEqual({ ko: '이응', romanization: 'ieung' });
     expect(silent.romanization).toBe('silent/ng');
     expect(silent.accessibilityLabel).not.toContain('∅');
     expect(silent.accessibilityLabel).toContain('silent/ng');
@@ -164,12 +174,37 @@ describe('buildDiscover: the view model of the pages', () => {
     const item = buildDiscover([batchimPage]).pages[0]!.items[0]!;
     expect(item.glyph).toBe('ㄴ');
     expect(item.hear.spec.text).toBe('안');
-    expect(item.letterName).toBeUndefined();
+    expect(item.soundWith).toBeUndefined();
+    // A final is never said by name: its closed syllable, shown as the finalLine (ㄴ at the bottom: 안 · an).
+    expect(item.spokenLine).toBeUndefined();
+    expect(item.finalLine).toEqual({ letter: 'ㄴ', syllable: '안 · an' });
+    expect(messages.learner.audio.finalLine(item.finalLine!.letter, item.finalLine!.syllable)).toBe('ㄴ at the bottom: 안 · an');
     expect(item.block).toEqual({ vowel: 'under', hasFinal: true, highlight: 'final', parts: ['ㅁ', 'ㅜ', 'ㄴ'] });
     expect(item.batchimLine).toBe(COPY.batchimLine);
     expect(item.accessibilityLabel).toBe('Korean final consonant n');
     const beside = buildDiscover([batchimPage]).pages[0]!.items[1]!;
     expect(beside.block).toEqual({ vowel: 'beside', hasFinal: true, highlight: 'final', parts: ['ㄷ', 'ㅏ', 'ㄹ'] });
+  });
+
+  it('a Word Builder final speaks its pronounced form and keeps showing its letter (AMENDMENTS-AUDIO-CLIPS M12)', () => {
+    const page: DiscoverPage = {
+      items: [
+        { type: 'jamo', jamoId: 'jamo:jieut-batchim', example: ko('낮', 'nat', 'daytime') },
+        { type: 'jamo', jamoId: 'jamo:kieuk-batchim', example: ko('부엌', 'bueok', 'kitchen') },
+        { type: 'jamo', jamoId: 'jamo:pieup-batchim', example: ko('앞', 'ap', 'front') },
+      ],
+    };
+    const [jieut, kieuk, pieup] = buildDiscover([page]).pages[0]!.items;
+    expect([jieut!.hear.spec.text, kieuk!.hear.spec.text, pieup!.hear.spec.text]).toEqual(['앋', '악', '압']);
+    expect([jieut!.spokenRomanization, kieuk!.spokenRomanization, pieup!.spokenRomanization]).toEqual(['at', 'ak', 'ap']);
+    expect([jieut!.glyph, kieuk!.glyph, pieup!.glyph]).toEqual(['ㅈ', 'ㅋ', 'ㅍ']);
+    // The block still shows the spelled closed syllable 앚 (ㅇ ㅏ ㅈ), not the pronounced 앋, and so does the finalLine.
+    expect(jieut!.block?.parts).toEqual(['ㅇ', 'ㅏ', 'ㅈ']);
+    expect([jieut!.finalLine, kieuk!.finalLine, pieup!.finalLine]).toEqual([
+      { letter: 'ㅈ', syllable: '앚 · at' },
+      { letter: 'ㅋ', syllable: '앜 · ak' },
+      { letter: 'ㅍ', syllable: '앞 · ap' },
+    ]);
   });
 
   it('a batchim whose example lacks the symbol still gets a generic block', () => {
@@ -212,7 +247,8 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(b).toMatchObject({ romanization: 'agi', note: 'Also a pet name' });
     expect(b!.hear.spec).toEqual({ text: '아기' });
     expect(a!.example).toBeUndefined();
-    expect(a!.letterName).toBeUndefined();
+    expect(a!.soundWith).toBeUndefined();
+    expect(a!.spokenLine).toBeUndefined();
     expect(a!.accessibilityLabel).toBe('아버지, abeoji, father');
   });
 
@@ -303,11 +339,11 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(out.state.played).toEqual([id]);
   });
 
-  it('the text line says the spoken romanization of the syllable, not the tile value', () => {
+  it('the text line says the romanization of what Hear it says (the name, giyeok), not the tile value', () => {
     const pageG = buildDiscover([pageTwo]);
     const g = pageG.pages[0]!.items[0]!;
     const out = run(startDiscover(pageG), { type: 'audio', id: g.hear.id, result: 'unavailable' });
-    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('ga')]);
+    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('giyeok')]);
     const batchim = buildDiscover([batchimPage]);
     const k = batchim.pages[0]!.items[0]!;
     const out2 = run(startDiscover(batchim), { type: 'audio', id: k.hear.id, result: 'muted' });
@@ -327,13 +363,12 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(pageRender(words, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('abeoji')]);
   });
 
-  it('shows the letter name after its button was tapped', () => {
+  it('Hear it with a vowel plays the sound on its own id and counts as heard', () => {
     const g = model.pages[1]!.items[0]!;
-    const out = run(startDiscover(model), { type: 'next' }, { type: 'hear', id: g.letterName!.action.id });
-    expect(out.effects).toEqual([{ type: 'play', id: g.letterName!.action.id }]);
-    const render = pageRender(model, out.state, 'always');
-    expect(render.items[0]!.nameShown).toBe(true);
-    expect(render.items[1]!.nameShown).toBe(false);
+    const out = run(startDiscover(model), { type: 'next' }, { type: 'hear', id: g.soundWith!.action.id }, { type: 'audio', id: g.soundWith!.action.id, result: 'played' });
+    expect(out.effects).toEqual([]);
+    expect(out.state.tapped).toEqual([g.soundWith!.action.id]);
+    expect(pageRender(model, out.state, 'always').items[0]!.heard).toBe(true);
   });
 
   it('marks an item heard when any of its buttons played', () => {
@@ -484,7 +519,7 @@ describe('upper-stage Discover items (F-CURR-001 §3.10) before their own views'
   it('a symbol and its name are sounds, its example and a word item are words', () => {
     const [symbols] = buildDiscover([pageTwo]).pages;
     const g = symbols!.items[0]!;
-    expect([g.hear.kind, g.letterName?.action.kind, g.example?.hear.kind]).toEqual(['sound', 'sound', 'word']);
+    expect([g.hear.kind, g.soundWith?.action.kind, g.example?.hear.kind]).toEqual(['sound', 'sound', 'word']);
     const [words] = buildDiscover([{ items: [{ type: 'word', word: ko('나무', 'namu', 'tree') }] }]).pages;
     expect(words!.items[0]!.hear.kind).toBe('word');
     expect(DISCOVER_AUDIO_SOURCE).toBe('discover');

@@ -1470,7 +1470,9 @@ test.describe('PR 9 with no Korean voice at 1280 x 720', () => {
     const say = page.getByTestId('presenter-say-it');
     await expect(say).toBeVisible();
     await expect(say).toContainText('Say it:');
-    await expect(say).toContainText('[k]');
+    // The box says the letter's name (giyeok); its IPA is the sound's, so it sits beside the sound on a vowel (JV-2).
+    await expect(say).not.toContainText('[k]');
+    await expect(page.getByTestId('presenter-letter-sound-ipa')).toHaveText('[k]');
     await expect(page.getByRole('button', { name: 'Play the sound' })).toHaveCount(0);
     await shot(page, 'presenter-letter-novoice-1280x720');
     await forwardTo(page, 'Question');

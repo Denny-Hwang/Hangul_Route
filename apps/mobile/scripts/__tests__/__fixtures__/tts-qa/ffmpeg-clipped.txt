@@ -1,0 +1,147 @@
+Input #0, mp3, from 'clipped.mp3':
+  Duration: 00:00:00.55, start: 0.025057, bitrate: 72 kb/s
+  Stream #0:0: Audio: mp3 (mp3float), 44100 Hz, mono, fltp, 64 kb/s, start 0.025057
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> pcm_s16le (native))
+Press [q] to stop, [?] for help
+[Parsed_ebur128_1 @ 0xc7e8249c0] t: 0.0999773  TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK: -12.0 dBFS  TPK: -12.0 dBFS
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:0    pts:0       pts_time:0
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.116879
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf62.12.101
+  Stream #0:0: Audio: pcm_s16le, 44100 Hz, mono, s16, 705 kb/s
+    Metadata:
+      encoder         : Lavc62.28.101 pcm_s16le
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:1    pts:441     pts_time:0.01
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.779244
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:2    pts:882     pts_time:0.02
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.327570
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:3    pts:1323    pts_time:0.03
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.788471
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:4    pts:1764    pts_time:0.04
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.102196
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:5    pts:2205    pts_time:0.05
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.121678
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:6    pts:2646    pts_time:0.06
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.778685
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:7    pts:3087    pts_time:0.07
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.329430
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:8    pts:3528    pts_time:0.08
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.791137
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:9    pts:3969    pts_time:0.09
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.104547
+[Parsed_ebur128_1 @ 0xc7e8249c0] t: 0.199977   TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK: -12.0 dBFS  TPK: -12.0 dBFS
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:10   pts:4410    pts_time:0.1
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.123052
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:11   pts:4851    pts_time:0.11
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.780058
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:12   pts:5292    pts_time:0.12
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.329713
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:13   pts:5733    pts_time:0.13
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.788688
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:14   pts:6174    pts_time:0.14
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.104362
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:15   pts:6615    pts_time:0.15
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.121517
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:16   pts:7056    pts_time:0.16
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.778491
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:17   pts:7497    pts_time:0.17
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.329090
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:18   pts:7938    pts_time:0.18
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.790765
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:19   pts:8379    pts_time:0.19
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.103873
+[Parsed_ebur128_1 @ 0xc7e8249c0] t: 0.299977   TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK: -12.0 dBFS  TPK: -12.0 dBFS
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:20   pts:8820    pts_time:0.2
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.124203
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:21   pts:9261    pts_time:0.21
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.778908
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:22   pts:9702    pts_time:0.22
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.329611
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:23   pts:10143   pts_time:0.23
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.790313
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:24   pts:10584   pts_time:0.24
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.103906
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:25   pts:11025   pts_time:0.25
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.122955
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:26   pts:11466   pts_time:0.26
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.779691
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:27   pts:11907   pts_time:0.27
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.330476
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:28   pts:12348   pts_time:0.28
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.790073
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:29   pts:12789   pts_time:0.29
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.104098
+[Parsed_ebur128_1 @ 0xc7e8249c0] t: 0.399977   TARGET:-23 LUFS    M: -15.9 S:-120.7     I: -16.0 LUFS       LRA:   0.0 LU  FTPK: -12.0 dBFS  TPK: -12.0 dBFS
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:30   pts:13230   pts_time:0.3
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.122703
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:31   pts:13671   pts_time:0.31
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.779024
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:32   pts:14112   pts_time:0.32
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.329889
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:33   pts:14553   pts_time:0.33
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.788894
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:34   pts:14994   pts_time:0.34
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.102934
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:35   pts:15435   pts_time:0.35
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.123008
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:36   pts:15876   pts_time:0.36
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.780363
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:37   pts:16317   pts_time:0.37
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.328386
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:38   pts:16758   pts_time:0.38
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-14.790825
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:39   pts:17199   pts_time:0.39
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-15.861431
+[Parsed_silencedetect_0 @ 0xc7e824480] silence_start: 0.449184
+[Parsed_ebur128_1 @ 0xc7e8249c0] t: 0.499977   TARGET:-23 LUFS    M: -17.0 S:-120.7     I: -16.5 LUFS       LRA:   0.0 LU  FTPK: -13.8 dBFS  TPK: -12.0 dBFS
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:40   pts:17640   pts_time:0.4
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-17.588287
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:41   pts:18081   pts_time:0.41
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-19.440890
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:42   pts:18522   pts_time:0.42
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-22.886344
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:43   pts:18963   pts_time:0.43
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-26.629737
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:44   pts:19404   pts_time:0.44
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-35.596395
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:45   pts:19845   pts_time:0.45
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-101.190095
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:46   pts:20286   pts_time:0.46
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:47   pts:20727   pts_time:0.47
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:48   pts:21168   pts_time:0.48
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:49   pts:21609   pts_time:0.49
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:50   pts:22050   pts_time:0.5
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:51   pts:22491   pts_time:0.51
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:52   pts:22932   pts_time:0.52
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:53   pts:23373   pts_time:0.53
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_ametadata_5 @ 0xc7e824cc0] frame:54   pts:23814   pts_time:0.54
+[Parsed_ametadata_5 @ 0xc7e824cc0] lavfi.astats.Overall.RMS_level=-inf
+[Parsed_silencedetect_0 @ 0xc7e824480] silence_end: 0.55 | silence_duration: 0.100816
+[Parsed_astats_4 @ 0xc7e824c00] Overall
+[Parsed_astats_4 @ 0xc7e824c00] RMS level dB: -inf
+[Parsed_ebur128_1 @ 0xc7e8249c0] Summary:
+
+  Integrated loudness:
+    I:         -16.5 LUFS
+    Threshold: -26.4 LUFS
+
+  Loudness range:
+    LRA:         0.0 LU
+    Threshold:   0.0 LUFS
+    LRA low:     0.0 LUFS
+    LRA high:    0.0 LUFS
+
+  True peak:
+    Peak:      -12.0 dBFS
+[out#0/null @ 0xc7e824180] video:0KiB audio:47KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:00:00.55 bitrate=N/A speed= 123x elapsed=0:00:00.00    

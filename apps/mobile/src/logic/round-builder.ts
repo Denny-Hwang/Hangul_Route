@@ -1,6 +1,7 @@
 import type { Jamo } from '@hangul-route/content-schema';
 import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../content/jamo';
 import { shuffle } from './shuffle';
+import { allowedDistractors, poolKindFault, type PoolQuestion } from './voice-pools';
 
 export interface MatchSoundRound {
   promptJamo: Jamo;
@@ -48,16 +49,34 @@ function pickPrompts(pool: readonly Jamo[], rounds: number, focusIds: readonly s
 }
 
 /**
- * The letters a Match Sound round may ask by ear: Stage 1's 30. Word Builder's letters
- * (F-CURR-001 section 3.3) are never asked by sound: ㅐ / ㅔ and ㅚ / ㅙ / ㅞ sound alike
- * for most speakers today, and its final letters are said as sounds Stage 1 already has.
+ * The letters a letter question may ask by ear (AMENDMENTS-AUDIO-CLIPS JV-A3 rule 1): Stage 1's
+ * 24 initials and vowels, said by name. Word Builder's letters (F-CURR-001 section 3.3) are never
+ * asked by ear: ㅐ / ㅔ and ㅚ / ㅙ / ㅞ sound alike for most speakers today, and the tense
+ * consonants blur with the plain and aspirated series on most voices.
  */
-export const SOUND_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoAll.map((j) => j.id));
+export const LETTER_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...jamoConsonants, ...jamoVowels].map((j) => j.id));
 
 /**
- * Build a Match Sound minigame: N rounds, each with `tileCount` distinct jamo.
- * Distractors drawn from the same scope. No duplicates within a round (F-001 §3.5).
- * `rounds` above the pool size cycle the prompts; `focusJamoIds` are always asked.
+ * The finals a sound question may ask by ear (JV-A3 rules 1 and 3): Stage 1's 6, said as their
+ * closed syllable (the final ㄴ says an). A final never shares a letter-question pool. Word Builder's finals are
+ * said as sounds Stage 1 already has, so they are never asked by ear.
+ */
+export const FINAL_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoBatchim.map((j) => j.id));
+
+/**
+ * Build a Match Sound round set: N rounds, each with `tileCount` distinct jamo, distractors
+ * drawn from the same scope, no duplicates within a round (F-001 §3.5). `rounds` above the pool
+ * size cycle the prompts; `focusJamoIds` are always asked.
+ *
+ * `question` (AMENDMENTS-AUDIO-CLIPS JV-A3): a `letter` question (the default: Match Sound and
+ * the lecture's letter quiz say the letter's name) takes no final, and its distractors follow
+ * rules 1, 1b and 1c; a `sound` question (the lecture's final rounds, said as a closed syllable) takes one kind
+ * of tile and rule 2. A distractor a rule refuses is dropped and another drawn. A pool that
+ * breaks the kind rule, or a target with too few allowed distractors, throws: the content test
+ * (`voice-pools.test.ts`) runs every shipped scope, so no learner meets it.
+ *
+ * `promptJamoIds`, when present, are the only jamo asked; the rest of the scope serves as distractors
+ * only (the lecture quiz tops up a crowded pool with letters it never asks).
  */
 export function buildMatchSoundRounds(opts: {
   scopeJamoIds: string[];
@@ -65,23 +84,31 @@ export function buildMatchSoundRounds(opts: {
   tileCount?: number;
   focusJamoIds?: string[];
   seed?: number;
+  question?: PoolQuestion;
+  promptJamoIds?: string[];
 }): MatchSoundRound[] {
   const tileCount = opts.tileCount ?? 4;
+  const question = opts.question ?? 'letter';
   const pool = jamoAll.filter((j) => opts.scopeJamoIds.includes(j.id));
   if (pool.length < tileCount) {
     throw new Error(`Not enough jamo in scope (${pool.length}) for ${tileCount} tiles`);
   }
+  const kindFault = poolKindFault(question, pool);
+  if (kindFault !== null) throw new Error(`Match Sound pool: ${kindFault}`);
 
   const out: MatchSoundRound[] = [];
   let seed = opts.seed ?? Date.now();
-  const prompts = pickPrompts(pool, opts.rounds, opts.focusJamoIds ?? [], seed);
+  const askable = opts.promptJamoIds === undefined ? pool : pool.filter((j) => opts.promptJamoIds!.includes(j.id));
+  if (askable.length === 0) throw new Error('Match Sound pool: no prompt jamo in scope');
+  const prompts = pickPrompts(askable, opts.rounds, opts.focusJamoIds ?? [], seed);
 
   for (const prompt of prompts) {
     seed = seed + 1;
-    const distractors = shuffle(
-      pool.filter((j) => j.id !== prompt.id),
-      seed,
-    ).slice(0, tileCount - 1);
+    const allowed = allowedDistractors(question, prompt, pool);
+    if (allowed.length < tileCount - 1) {
+      throw new Error(`Match Sound pool: ${prompt.id} has ${allowed.length} allowed distractors, needs ${tileCount - 1} (JV-A3)`);
+    }
+    const distractors = shuffle(allowed, seed).slice(0, tileCount - 1);
     const tiles = shuffle([prompt, ...distractors], seed + 1);
     out.push({ promptJamo: prompt, tiles });
   }

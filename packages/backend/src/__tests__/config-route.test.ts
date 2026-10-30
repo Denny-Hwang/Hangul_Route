@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { AUDIO_PACKS } from '@hangul-route/content-schema';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -207,11 +208,17 @@ describe('remote config values', () => {
   });
 
   it('serves valid names only', () => {
-    const good = ['dailyReview', 'memoryRecord', 'fsrsShadow', 'pack.k-culture', 'game.cloze-pick', 'pack.a1'];
-    const bad = ['', 'DailyReview', '__proto__', 'pack.', 'pack.K-Food', 'a.b.c', 'daily review', 'pack.-x', `a${'b'.repeat(60)}`];
+    // AMENDMENTS-AUDIO-CLIPS AC-B8: `audioClips` and one `audioPack.<pack>` per clip pack (reduce-only kill switches).
+    const audio = ['audioClips', ...AUDIO_PACKS.map((pack) => `audioPack.${pack}`)];
+    const good = ['dailyReview', 'memoryRecord', 'fsrsShadow', 'pack.k-culture', 'game.cloze-pick', 'pack.a1', ...audio];
+    const bad = ['', 'DailyReview', '__proto__', 'pack.', 'pack.K-Food', 'a.b.c', 'daily review', 'pack.-x', `a${'b'.repeat(60)}`, 'audioPack.', 'audioPack.Jamo-s1', 'AudioClips'];
     for (const name of good) expect(REMOTE_FLAG_NAME.test(name), name).toBe(true);
     for (const name of bad) expect(REMOTE_FLAG_NAME.test(name), name).toBe(false);
     expect(publicFlags([row('dailyReview', true, 5), row('__proto__', true, 100), row('Bad Name', true, 100)])).toEqual({ dailyReview: { on: true, pct: 5 } });
+    expect(publicFlags([row('audioClips', true, 100), row('audioPack.jamo-s1', false, 100)])).toEqual({
+      audioClips: { on: true, pct: 100 },
+      'audioPack.jamo-s1': { on: false, pct: 100 },
+    });
   });
 
   it('the table refuses a value outside the rules (CHECK), so a console typo never reaches a device', async () => {

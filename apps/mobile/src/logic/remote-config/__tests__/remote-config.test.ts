@@ -191,10 +191,19 @@ describe('resolveRemoteFlag · remote can only reduce, in every combination', ()
 });
 
 describe('parentFlagOf and remoteFlagValue', () => {
-  it('a pack flag sits under topicPacks; other flags have no parent', () => {
+  it('a pack flag sits under topicPacks; an audio pack under audioClips; other flags have no parent', () => {
     expect(parentFlagOf('pack.k-culture')).toBe('topicPacks');
+    // AMENDMENTS-AUDIO-CLIPS AC-B8: `audioPack.<pack>` has `audioClips` as its parent.
+    expect(parentFlagOf('audioPack.jamo-s1')).toBe('audioClips');
+    expect(parentFlagOf('audioPack.stage7')).toBe('audioClips');
+    expect(parentFlagOf('audioClips')).toBeNull();
     expect(parentFlagOf('game.cloze-pick')).toBeNull();
     expect(parentFlagOf('dailyReview')).toBeNull();
+  });
+
+  it('the audio names are valid remote names, so a copy keeps them', () => {
+    const flags = parseConfigBody({ ok: true, data: { flags: { audioClips: { on: true, pct: 100 }, 'audioPack.jamo-wb': { on: false, pct: 100 } } } });
+    expect(flags).toEqual({ audioClips: { on: true, pct: 100 }, 'audioPack.jamo-wb': { on: false, pct: 100 } });
   });
 
   it('reads a flag from a copy without inheriting object keys', () => {

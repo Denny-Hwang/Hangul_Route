@@ -1,8 +1,8 @@
 import type { Overlays, UiLocale } from '@hangul-route/content-schema';
 import { cardById, episodeById, jamoAll, jamoKnown, questById } from '../../content';
 import type { AudioCapability } from '../audio/capability';
-import type { PlaySpec } from '../audio/controller';
-import { spokenFor } from '../audio/spoken';
+import { clipRefsFor, type PlaySpec } from '../audio/controller';
+import { jamoVoice } from '../audio/jamo-voice';
 import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
 import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
 import { scopeFor } from '../minigame-config';
@@ -53,9 +53,12 @@ export const SOUND_CHECK_WORD = { ko: '안녕하세요', romanization: 'annyeong
 export function soundCheckSpec(capability: AudioCapability, hasClip: (ref: string | undefined) => boolean): PlaySpec {
   const greeting: PlaySpec = { text: SOUND_CHECK_WORD.ko, kind: 'word', source: 'presenter-check' };
   if (capability.tts.state === 'ready' || !capability.clips) return greeting;
+  // A clip of the greeting itself (its say clip, AMENDMENTS-AUDIO-CLIPS AC-B7) plays what the voice would.
+  if (clipRefsFor(greeting).some(hasClip)) return greeting;
   for (const jamo of jamoAll) {
-    const spoken = spokenFor(jamo, 'sound');
-    if (spoken.audioRef !== undefined && hasClip(spoken.audioRef)) {
+    // A sound check, nothing a learner answers: the letter's sound (나), the clip the slides' sound speakers play (JV-2).
+    const spoken = jamoVoice(jamo, 'sound');
+    if (spoken.audioRef !== undefined && clipRefsFor({ text: spoken.text, audioRef: spoken.audioRef }).some(hasClip)) {
       return { text: spoken.text, audioRef: spoken.audioRef, kind: 'sound', source: 'presenter-check' };
     }
   }

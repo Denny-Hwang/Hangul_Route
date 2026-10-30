@@ -22,9 +22,11 @@ import { LECTURE_MINUTES_DECKS } from '@hangul-route/content-schema/testing/lect
 import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
+import { jamoKnown } from '../../../content/jamo';
 import { questsAll } from '../../../content/quests';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
+import { letterSecondSound, slideSound } from '../slide-view';
 import { resumeIndex } from '../controls';
 import { runDeck } from '../shell';
 import {
@@ -354,7 +356,7 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(title).toMatchObject({ kind: 'title', source: 'quest', title: 'Quest letters', line: 'Hello from Hoya' });
   });
 
-  it('a letter slide is the glyph, its sound, name, example word and stroke caption state', () => {
+  it('a letter slide is the glyph, its name and its sound, example word and stroke caption state', () => {
     const letter = only(expand([{ kind: 'quest', id: 'quest:letters' }]).slides, 'letter')[0]!;
     expect(letter).toMatchObject({
       jamoId: 'jamo:giyeok',
@@ -362,12 +364,37 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
       romanization: 'g/k',
       nameEn: 'giyeok',
       ipa: 'k',
-      spoken: { text: '가', romanization: 'ga' },
+      // AMENDMENTS-AUDIO-CLIPS JV-A1: the main speaker says the name; the second speaker the sound on a vowel.
+      spoken: { text: '기역', romanization: 'giyeok' },
+      nameKo: '기역',
+      sound: { text: '가', romanization: 'ga', audioRef: 'audio/jamo/giyeok.mp3', line: '가 = ㄱ + ㅏ' },
       example: { ko: '가족', romanization: 'gajok', gloss: 'family' },
       hasStrokes: true,
       strokeReviewed: true,
       builds: ['ko', 'stroke', 'sound', 'name', 'example'],
     });
+    expect(letter).not.toHaveProperty('final');
+  });
+
+  it('a vowel and the initial ㅇ have one speaker, their name; a final one speaker, its closed syllable, and no name (JV-A4)', () => {
+    const known = bundle({ jamoAll: jamoKnown });
+    const letters = only(expand([{ kind: 'jamo-set', jamoIds: [J('a'), J('ieung'), J('nieun-batchim'), J('jieut-batchim')] }], {}, known).slides, 'letter');
+    const [a, ieung, finalN, finalJ] = letters;
+    expect(a).toMatchObject({ spoken: { text: '아', romanization: 'a', audioRef: 'audio/jamo/a.mp3' }, nameKo: '아' });
+    expect(a).not.toHaveProperty('sound');
+    expect(ieung).toMatchObject({ spoken: { text: '이응', romanization: 'ieung' }, nameKo: '이응' });
+    expect(ieung).not.toHaveProperty('sound');
+    // A final branches before any name: its closed syllable, the finalLine, and no letter name.
+    expect(finalN).toMatchObject({ spoken: { text: '안', romanization: 'an' }, final: true });
+    expect(finalN).not.toHaveProperty('nameKo');
+    expect(finalN).not.toHaveProperty('sound');
+    // A Word Builder final: shown spelled (앚), said pronounced (앋), its romanization pronounced (M12).
+    expect(finalJ).toMatchObject({ spoken: { text: '앋', romanization: 'at' }, spokenShown: '앚', final: true });
+    // The second speaker plays only a consonant's sound on a vowel, at the sound rate.
+    const [nieun] = only(expand([{ kind: 'jamo-set', jamoIds: [J('nieun')] }]).slides, 'letter');
+    expect(letterSecondSound(nieun)).toEqual({ spoken: { text: '나', romanization: 'na', audioRef: 'audio/jamo/nieun.mp3' }, kind: 'sound' });
+    expect(slideSound(nieun)?.spoken.text).toBe('니은');
+    for (const slide of [a, ieung, finalN, undefined]) expect(letterSecondSound(slide)).toBeUndefined();
   });
 
   it('carries the jamo sound hint when the content has one', () => {
@@ -383,7 +410,7 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(letters[1]).toMatchObject({ hasStrokes: false, strokeReviewed: false, builds: ['ko', 'sound', 'name', 'example'] });
   });
 
-  it('quiz rounds are min(options.quizRounds, scope.rounds); match-sound prompts with the carrier sound', () => {
+  it("quiz rounds are min(options.quizRounds, scope.rounds); match-sound prompts with the letter's name", () => {
     const quiz = only(expand([{ kind: 'quest', id: 'quest:letters' }], { options: { quizRounds: 2 } }).slides, 'quiz');
     expect(quiz).toHaveLength(2);
     const first = quiz[0]!;
@@ -393,7 +420,7 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     const answer = first.options.find((o) => o.correct)!;
     expect(first.prompt).toEqual({ ask: 'sound', spoken: expect.objectContaining({ text: expect.any(String) }) });
     const jamo = jamoAll.find((j) => j.char === answer.ko && j.kind === 'consonant')!;
-    expect(first.prompt.ask === 'sound' && first.prompt.spoken.text).toBe(jamo.spokenKo);
+    expect(first.prompt.ask === 'sound' && first.prompt.spoken.text).toBe(jamo.nameKo);
     expect(answer.romanization).toBe(jamo.romanization);
     expect(first.textPrompt).toBe(false);
     expect(first.builds).toEqual(['question', 'answer']);

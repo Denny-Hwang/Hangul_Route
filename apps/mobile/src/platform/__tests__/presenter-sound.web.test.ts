@@ -12,6 +12,9 @@ vi.mock('../storage', () => ({
 // The module-level instance resolves bundled clips through expo-asset (a native module tree vitest cannot load).
 vi.mock('expo-asset', () => ({ Asset: { fromModule: (id: number | string) => ({ uri: String(id) }) } }));
 vi.mock('../telemetry', () => ({ track: vi.fn(async () => true) }));
+// The clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8) read the remote config store, whose native visibility module
+// imports react-native (Metro picks app-visibility.web.ts in the web build).
+vi.mock('../app-visibility', () => ({ subscribeAppVisibility: () => () => undefined, isAppVisible: () => true }));
 
 import { RATE_BASE } from '../../logic/audio/rate';
 import { lectureBundle } from '../../logic/lecture/content';

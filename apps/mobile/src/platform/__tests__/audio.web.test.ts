@@ -8,6 +8,7 @@ import {
   type FakeVoice,
 } from '../../test-support/fake-speech-synthesis';
 import type { ClipFailure, ClipPlayer } from '../../logic/audio/controller';
+import { clipRefsOf } from '../../logic/audio/clip-refs';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 const tracked = vi.hoisted(() => [] as Array<{ name: string; payload?: Record<string, unknown> }>);
@@ -22,6 +23,9 @@ vi.mock('../storage', () => ({
 vi.mock('expo-asset', () => ({
   Asset: { fromModule: (id: number | string) => ({ uri: typeof id === 'string' ? id : `/assets/clip-${id}.mp3` }) },
 }));
+// The clip switches (AMENDMENTS-AUDIO-CLIPS AC-B8) read the remote config store, whose native visibility module
+// imports react-native (Metro picks app-visibility.web.ts in the web build).
+vi.mock('../app-visibility', () => ({ subscribeAppVisibility: () => () => undefined, isAppVisible: () => true }));
 vi.mock('../telemetry', () => ({
   track: vi.fn(async (e: { name: string; payload?: Record<string, unknown> }) => {
     tracked.push(e);
@@ -111,6 +115,9 @@ interface ClipRigOptions {
   enabled?: boolean;
   /** The browser has Web Audio and fetch (default true). */
   supported?: boolean;
+  /** The pack of a ref (`AUDIO_ASSET_PACKS`), and the packs switched off (AMENDMENTS-AUDIO-CLIPS AC-B8). */
+  packs?: Record<string, contentSchema.AudioPack>;
+  packsOff?: Set<contentSchema.AudioPack>;
 }
 
 function rig(
@@ -141,10 +148,13 @@ function rig(
   if (opts.clips) {
     const refs = new Set(opts.clips.refs ?? [GIYEOK_CLIP]);
     const enabled = opts.clips.enabled ?? true;
+    const packs = opts.clips.packs ?? {};
+    const packsOff = opts.clips.packsOff ?? new Set();
     env.clips = {
       player: opts.clips.player,
-      assets: { has: (ref) => refs.has(ref), size: refs.size },
+      assets: { has: (ref) => refs.has(ref), size: refs.size, packOf: (ref) => packs[ref], packHas: (pack) => Object.values(packs).includes(pack) },
       enabled: () => enabled,
+      packEnabled: (pack) => !packsOff.has(pack),
       supported: opts.clips.supported ?? true,
     };
   }
@@ -271,6 +281,8 @@ describe('platform/audio.web: playJamo (sound first)', () => {
     expect(synth.spoken[0]?.rate).toBe(0.75);
     await audio.playJamo(giyeok, 'name');
     expect(synth.spoken[1]?.text).toBe('기역');
+    await audio.playJamo(giyeok, 'letter');
+    expect(synth.spoken[2]?.text).toBe('기역');
     audio.dispose();
   });
 });
@@ -310,7 +322,7 @@ describe('platform/audio.web: the legacy speak() surface', () => {
   it('calls onDone once when the utterance ends', async () => {
     const { synth, audio } = rig();
     const onDone = vi.fn();
-    audio.speak('ㄱ', { onDone });
+    audio.speak('가', { onDone });
     await flush();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(synth.spoken[0]?.voice?.name).toBe('Yuna');
@@ -321,7 +333,7 @@ describe('platform/audio.web: the legacy speak() surface', () => {
     const { synth, audio } = rig();
     useAudioStore.getState().setMuted(true, 'profile');
     const onDone = vi.fn();
-    audio.speak('ㄴ', { onDone });
+    audio.speak('나', { onDone });
     await flush();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(synth.spoken).toHaveLength(0);
@@ -1331,12 +1343,12 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
     mod.noteFallbackShown('x', 'muted');
     expect(mod.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     expect(mod.subscribeCapability(() => undefined)()).toBeUndefined();
-    await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKind: 'sound' })).resolves.toBe('unavailable');
+    await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKo: '아', spokenKind: 'sound' })).resolves.toBe('unavailable');
   });
 
   it('resolves a bundled clip through expo-asset and plays it with Web Audio and fetch', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 } }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1366,7 +1378,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
 
   it('with no bundled clips a gesture creates no AudioContext (production before A-9)', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: {} }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: {}, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 0, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1386,7 +1398,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
   it('a web asset module that is a URL string (Metro on web) resolves through expo-asset', async () => {
     vi.resetModules();
     const url = '/assets/assets/audio/jamo/giyeok.abc.mp3';
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': url } }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': url }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1409,7 +1421,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
 
   it('an asset that expo-asset cannot resolve is a missing clip, and the voice speaks', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 } }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     vi.doMock('expo-asset', () => ({
       Asset: {
         fromModule: () => {
@@ -1423,6 +1435,96 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
     expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
     vi.doUnmock('../../content/__generated__/audio-assets');
     vi.doUnmock('expo-asset');
+  });
+});
+
+describe('platform/audio.web: text-keyed clips, pack switches and the source summary (AMENDMENTS-AUDIO-CLIPS AC-1)', () => {
+  const APPLE = contentSchema.sayRef('사과');
+
+  it('a prompt with no audioRef plays the say clip of its text; another text is spoken by the voice', async () => {
+    const player = new FakeClipPlayer();
+    const { synth, audio } = rig({ clips: { player, refs: [APPLE] } });
+    await expect(audio.playPrompt({ text: '사과' })).resolves.toBe('played');
+    await audio.playPrompt({ text: '사과요' });
+    expect(player.played).toEqual([APPLE]);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['사과요']);
+    audio.dispose();
+  });
+
+  it('a pack switched off plays the voice on the next prompt, and hasClip and warmClips follow it', async () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<contentSchema.AudioPack>();
+    const { synth, audio } = rig({ clips: { player, packs: { [GIYEOK_CLIP]: 'jamo-s1' }, packsOff } });
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(true);
+    packsOff.add('jamo-s1');
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(false);
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    expect(synth.spoken.map((u) => u.text)).toEqual(['가']);
+    await audio.warmClips([GIYEOK_CLIP]);
+    expect(player.warmed).toEqual([]);
+    audio.dispose();
+  });
+
+  it('hasClipFor counts the say clip of the text, as the controller plays it: the prompt slot never says no voice while a clip plays', async () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<contentSchema.AudioPack>();
+    const { audio } = rig({ clips: { player, refs: [APPLE], packs: { [APPLE]: 'vocab' }, packsOff } });
+    expect(audio.hasClip(undefined)).toBe(false);
+    expect(audio.hasClipFor({ text: '사과' })).toBe(true);
+    expect(audio.hasClipFor({ text: ' 사과 ', audioRef: 'audio/vocab/apple.mp3' })).toBe(true);
+    expect(audio.hasClipFor({ text: '사과요' })).toBe(false);
+    expect(audio.hasClipFor({ text: '사과', language: 'en-US' })).toBe(false);
+    // The say clip is warmed like any other bundled clip.
+    await audio.warmClips(clipRefsOf([{ text: '사과' }, { text: '사과요' }]));
+    expect(player.warmed).toEqual([[APPLE]]);
+    // Its pack switched off: no clip for the slot either.
+    packsOff.add('vocab');
+    expect(audio.hasClipFor({ text: '사과' })).toBe(false);
+    audio.dispose();
+  });
+
+  it('hasPackClips: a pack with a bundled clip, while clips and the pack are on', () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<contentSchema.AudioPack>();
+    const { audio } = rig({ clips: { player, refs: [APPLE], packs: { [APPLE]: 'placement' }, packsOff } });
+    expect(audio.hasPackClips('placement')).toBe(true);
+    expect(audio.hasPackClips('stage1')).toBe(false);
+    packsOff.add('placement');
+    expect(audio.hasPackClips('placement')).toBe(false);
+    audio.dispose();
+    const none = rig();
+    expect(none.audio.hasPackClips('placement')).toBe(false);
+    none.audio.dispose();
+  });
+
+  it('the page hiding sends one audio.source_summary, counts and the app version only', async () => {
+    const player = new FakeClipPlayer();
+    const { doc, win, audio } = rig({ clips: { player, refs: [GIYEOK_CLIP, APPLE] } });
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    await audio.playPrompt({ text: '사과' });
+    await audio.playPrompt({ text: '나무' });
+    const summaries = () => tracked.filter((e) => e.name === 'audio.source_summary');
+    expect(summaries()).toEqual([]);
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    win.dispatchEvent(new Event('pagehide'));
+    expect(summaries()).toEqual([{ name: 'audio.source_summary', payload: { clip: 1, say: 1, tts: 1, text: 0, appVersion: '1.0.0' } }]);
+    expect(contentSchema.AudioSourceSummaryPayloadSchema.safeParse(summaries()[0]?.payload).success).toBe(true);
+    expect(summaries()[0]).not.toHaveProperty('profileId');
+    audio.dispose();
+  });
+
+  it('a page shown again sends nothing, and after dispose a hide sends nothing', async () => {
+    const { doc, audio } = rig();
+    await audio.playPrompt({ text: '나무' });
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(tracked.filter((e) => e.name === 'audio.source_summary')).toEqual([]);
+    audio.dispose();
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    expect(tracked.filter((e) => e.name === 'audio.source_summary')).toEqual([]);
   });
 });
 
