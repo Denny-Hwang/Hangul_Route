@@ -345,7 +345,7 @@ describe('voice surfaces: every surface says what its question asks (AMENDMENTS-
 // ---- the table is the list of surfaces: a scan of the source finds no other caller -------------------------
 
 const SRC = join(__dirname, '..', '..');
-/** The voice itself and the platform plumbing: not surfaces. */
+/** The voice itself, the platform plumbing and the tile-pool rules: not surfaces. */
 const PLUMBING = new Set([
   'logic/audio/jamo-voice.ts',
   'logic/audio/jamo-lines.ts',
@@ -354,6 +354,8 @@ const PLUMBING = new Set([
   'logic/audio/speech-guard.ts',
   'platform/audio.ts',
   'platform/audio.web.ts',
+  // JV-A3's pool rules compare the voices of tiles to choose a round's tiles; they say nothing.
+  'logic/voice-pools.ts',
 ]);
 const SAYS_A_JAMO = /\b(?:playJamo|jamoVoice|spokenFor|loneLetterVoice|loneLetterQuestion)\(/;
 
