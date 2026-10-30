@@ -90,8 +90,8 @@
       "traceWord.rounds.w4.word.gloss": "쌀로 지은 먹을거리, 또는 끼니"
     },
     "minigame:s7-life-q1-apply": {
-      "typeHangul.rounds.t1.prompt": "들리는 낱말을 자판으로 써 봐요.",
-      "typeHangul.rounds.t2.prompt": "들리는 낱말을 자판으로 써 봐요.",
+      "typeHangul.rounds.t1.prompt": "들리는 낱말을 입력해 봐요.",
+      "typeHangul.rounds.t2.prompt": "들리는 낱말을 입력해 봐요.",
       "typeHangul.rounds.t3.prompt": "‘낮 열두 시쯤에’라는 말을 자판으로 써 봐요.",
       "typeHangul.rounds.t4.prompt": "하루가 시작될 때 식사를 한다는 문장을 자판으로 써 봐요.",
       "typeHangul.rounds.t1.target.gloss": "해가 뜰 때부터 낮이 되기 전까지의 때",
@@ -144,7 +144,7 @@
       "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "김 위에 밥과 재료를 올려 만 음식"
     },
     "minigame:s7-life-q2-check": {
-      "writeFrame.rounds.c1.frame.gloss": "호야가 해가 질 무렵 먹는 것: ___",
+      "writeFrame.rounds.c1.frame.gloss": "호야가 해 질 무렵에 먹는 것: ___",
       "writeFrame.rounds.c2.frame.gloss": "때: ___, 먹는 것: ___",
       "writeFrame.rounds.c1.slots.food.bank.bap.gloss": "쌀로 지은 먹을거리, 또는 끼니",
       "writeFrame.rounds.c1.slots.food.bank.ppang.gloss": "밀가루를 반죽해 구운 먹을거리",

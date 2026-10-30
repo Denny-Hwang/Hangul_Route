@@ -90,8 +90,8 @@
       "traceWord.rounds.w4.word.gloss": "arroz, una comida"
     },
     "minigame:s7-life-q1-apply": {
-      "typeHangul.rounds.t1.prompt": "Teclea la palabra que oyes.",
-      "typeHangul.rounds.t2.prompt": "Teclea la palabra que oyes.",
+      "typeHangul.rounds.t1.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.t2.prompt": "Escribe la palabra que oyes.",
       "typeHangul.rounds.t3.prompt": "Teclea: al mediodía.",
       "typeHangul.rounds.t4.prompt": "Teclea: Por la mañana como una comida.",
       "typeHangul.rounds.t1.target.gloss": "mañana (el comienzo del día)",
