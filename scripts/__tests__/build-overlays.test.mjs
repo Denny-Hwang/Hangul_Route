@@ -149,6 +149,9 @@ describe("build-overlays.mjs: CLI", () => {
     assert.match(out, /"title": "A"/);
     assert.doesNotMatch(out, /Palabras de fiesta/);
     assert.equal(isLessonOverlay("lessons-stage7-crafts.json"), true);
+    // F-CURR-002 row CM-40: a cell's Volume 2 glosses are build-lessons.mjs's too; no third volume.
+    assert.equal(isLessonOverlay("lessons-stage2-nature-v2.json"), true);
+    assert.equal(isLessonOverlay("lessons-stage2-nature-v3.json"), false);
     assert.equal(isLessonOverlay("lessons.json"), false);
     assert.equal(isLessonOverlay("stage1-quests.json"), false);
   });
