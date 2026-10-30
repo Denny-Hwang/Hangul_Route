@@ -648,6 +648,15 @@ function Presenter(): ReactElement {
       const before = stateRef.current;
       if (!before || slides.length === 0) return;
       const { state, effect } = reduce(before, event, { slides });
+      // Pointing at an option (AMENDMENTS-PRESENTER-NAV section 7.3) changes only `pointed`: no step, no
+      // sound, no bar, no Recent, nothing tallied here (PN-6 counts it); never stored, never sent.
+      if (typeof event === 'object' && 'point' in event) {
+        if (state !== before) {
+          stateRef.current = state;
+          setPstate(state);
+        }
+        return;
+      }
       stateRef.current = state;
       setPstate(state);
       reportTools(toolsOpened(before, state));
@@ -867,6 +876,11 @@ function Presenter(): ReactElement {
         showBar();
         return;
       }
+      // Keys 1 to 4 point at an option (section 7.3); the More sheet covers the stage, so it takes none.
+      if (typeof command === 'object' && 'point' in command) {
+        if (!moreOpenRef.current) dispatch(command);
+        return;
+      }
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
         if (command.overlay === 'timer') {
@@ -885,7 +899,7 @@ function Presenter(): ReactElement {
   useEffect(() => {
     if (phase.kind !== 'home' || !homeHelp) return undefined;
     return subscribeKeys((command: KeyCommand) => {
-      if (command !== 'escape' && !(typeof command === 'object' && command.overlay === 'help')) return false;
+      if (command !== 'escape' && !(typeof command === 'object' && 'overlay' in command && command.overlay === 'help')) return false;
       setHomeHelp(false);
       return true;
     });
@@ -1267,8 +1281,10 @@ function Presenter(): ReactElement {
         else hideBarNow();
       } else if (command === 'nudge-next') {
         ringNext();
+      } else if (typeof command === 'object') {
+        // A tap or click on an option points at it (owner choice O2, section 7.3).
+        dispatch(command);
       }
-      // `{ point }` comes only with pointing on (owner choice O2, row PN-5).
     };
     const bar =
       page !== null ? null : (
@@ -1339,7 +1355,8 @@ function Presenter(): ReactElement {
               onGesture={onGesture}
               layout={nav}
               covering={stageCovering}
-              pointing={false}
+              pointing
+              pointed={p.pointed}
               lastPointer={lastPointer}
               onPlaySound={() => userDispatch('replay-sound')}
               onStartTimer={(ms) => userDispatch({ startTimer: ms })}

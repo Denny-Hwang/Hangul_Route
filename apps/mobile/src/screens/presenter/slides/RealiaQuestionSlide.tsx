@@ -47,7 +47,18 @@ const MAX_LEVEL = 3;
  * the options never move. With `romanization: 'tap'` the romanization of the options, the key word and
  * the sheet waits for the answer build (D2). Nothing is collected or tallied (TD6).
  */
-export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: RealiaQuestionBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): ReactElement {
+export function RealiaQuestionSlide({
+  slide,
+  shown,
+  romanization,
+  pointed = null,
+}: {
+  slide: RealiaQuestionBody;
+  shown: ReadonlySet<BuildName>;
+  romanization: RomanizationMode;
+  /** The option the presenter points at (from 1), or none (AMENDMENTS-PRESENTER-NAV section 7.3). */
+  pointed?: number | null;
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   // The stage scale goes in, so a new scale fits again from level 0; `contentRef` lets a step with no layout event re-measure.
@@ -115,9 +126,9 @@ export function RealiaQuestionSlide({ slide, shown, romanization }: { slide: Rea
           </View>
         </View>
         {rows ? (
-          <OptionRows options={slide.options} revealed={revealed} romanization={romanization} compact={fit.level >= 1} small={fit.level >= 3} />
+          <OptionRows options={slide.options} revealed={revealed} romanization={romanization} pointed={pointed} compact={fit.level >= 1} small={fit.level >= 3} />
         ) : (
-          <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} onCrowded={crowd} />
+          <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} pointed={pointed} onCrowded={crowd} />
         )}
       </View>
     </View>

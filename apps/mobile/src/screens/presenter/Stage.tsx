@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
-import { buildLive, slideDetail, type BuildLive } from '../../logic/lecture/shell';
+import { buildLive, pointLive, slideDetail, type BuildLive, type PointLive } from '../../logic/lecture/shell';
 import {
   edgeGuard,
   gesturePointer,
@@ -54,7 +54,8 @@ import { VocabSlide } from './slides/VocabSlide';
  * gesture started on (`data-stage-target`) and the gesture's own pointer, follows the first touch
  * by its identifier and counts the most touches down at once, and on release hands the rule's
  * command (`stageGesture`) to the presenter: a swipe steps, a tap never steps by touch nor on a
- * content target, and no part of the stage is a hidden zone. `touch-action: manipulation`: double
+ * content target, and no part of the stage is a hidden zone. A tap on an option points at it
+ * (`{ point }`, owner choice O2): the option draws its pointed look and the live region names it. `touch-action: manipulation`: double
  * taps never zoom. The stage is marked with the slide language (`lang`), which may differ
  * from the chrome's (`<html lang>`, the device's) when the deck names one, so a screen reader reads
  * the slides in their own voice (WCAG 3.1.2).
@@ -75,6 +76,8 @@ export interface StageProps {
   covering: StageCovering;
   /** A tap on an option points at it (owner choice O2, row PN-5); false: it does nothing. */
   pointing: boolean;
+  /** The option pointed at (from 1), or none (`PresenterState.pointed`, section 7.3): outlined on the slide and named in the live region. */
+  pointed?: number | null;
   /** The last `pointerdown`'s kind (`subscribeInputKind`), so a pen's mouse-type events count as touch. */
   lastPointer: () => GesturePointer | null;
   onPlaySound: () => void;
@@ -120,7 +123,14 @@ export function Stage(props: StageProps): ReactElement {
   useEffect(() => {
     lastLive.current = liveNow;
   });
-  const live = liveNow.words ?? messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
+  // Pointing at an option says which, or that none is pointed at now (section 7.3); a step announces itself.
+  const pointed = props.pointed ?? null;
+  const lastPoint = useRef<PointLive | null>(null);
+  const pointNow = pointLive(slide.key, reveal, pointed, lastPoint.current, messages.a11y.presenter);
+  useEffect(() => {
+    lastPoint.current = pointNow;
+  });
+  const live = pointNow.words ?? liveNow.words ?? messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
     const native = event.nativeEvent as unknown as ResponderNative;
@@ -240,13 +250,13 @@ export function Stage(props: StageProps): ReactElement {
         ) : slide.kind === 'card' ? (
           <CardSlide slide={slide} reveal={reveal} />
         ) : isStoryCheck(slide) ? (
-          <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} />
+          <StoryCheckSlide slide={slide} shown={shown} romanization={props.romanization} pointed={pointed} />
         ) : isListenOrReply(slide) ? (
-          <QuestionSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
+          <QuestionSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} pointed={pointed} />
         ) : isRealiaQuestion(slide) ? (
-          <RealiaQuestionSlide slide={slide} shown={shown} romanization={props.romanization} />
+          <RealiaQuestionSlide slide={slide} shown={shown} romanization={props.romanization} pointed={pointed} />
         ) : slide.kind === 'quiz' ? (
-          <QuizSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} />
+          <QuizSlide slide={slide} shown={shown} romanization={props.romanization} sayIt={props.sayIt} onPlaySound={props.onPlaySound} pointed={pointed} />
         ) : slide.kind === 'activity' ? (
           <ActivitySlide slide={slide} {...(props.onStartTimer ? { onStartTimer: props.onStartTimer } : {})} />
         ) : slide.kind === 'story' ? (

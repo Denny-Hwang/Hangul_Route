@@ -55,12 +55,15 @@ export function QuestionSlide({
   romanization,
   sayIt,
   onPlaySound,
+  pointed = null,
 }: {
   slide: ListenBody | ReplyBody;
   shown: ReadonlySet<BuildName>;
   romanization: RomanizationMode;
   sayIt: boolean;
   onPlaySound: () => void;
+  /** The option the presenter points at (from 1), or none (AMENDMENTS-PRESENTER-NAV section 7.3). */
+  pointed?: number | null;
 }): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
@@ -108,9 +111,9 @@ export function QuestionSlide({
           <PromptLine line={prompt.line} shown={revealed} level={fit.level} />
         )}
         {rows ? (
-          <OptionRows options={slide.options} revealed={revealed} romanization={optionRom} compact={fit.level >= 1} small={fit.level >= 3} />
+          <OptionRows options={slide.options} revealed={revealed} romanization={optionRom} pointed={pointed} compact={fit.level >= 1} small={fit.level >= 3} />
         ) : (
-          <QuizOptions options={slide.options} revealed={revealed} romanization={optionRom} />
+          <QuizOptions options={slide.options} revealed={revealed} romanization={optionRom} pointed={pointed} />
         )}
       </View>
     </View>

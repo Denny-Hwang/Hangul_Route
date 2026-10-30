@@ -32,6 +32,7 @@ export function QuizSlide({
   romanization,
   sayIt,
   onPlaySound,
+  pointed = null,
 }: {
   slide: QuizBody;
   shown: ReadonlySet<BuildName>;
@@ -40,6 +41,8 @@ export function QuizSlide({
   /** The room cannot hear the Korean: the teacher-says text replaces the speaker (section 3.7). */
   sayIt: boolean;
   onPlaySound: () => void;
+  /** The option the presenter points at (from 1), or none (AMENDMENTS-PRESENTER-NAV section 7.3). */
+  pointed?: number | null;
 }): ReactElement {
   const { unit } = usePresenterView();
   const revealed = shown.has('answer');
@@ -56,7 +59,7 @@ export function QuizSlide({
         </View>
         <AnswerLine shown={revealed} />
       </View>
-      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} onCrowded={crowd} />
+      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} pointed={pointed} onCrowded={crowd} />
     </View>
   );
 }

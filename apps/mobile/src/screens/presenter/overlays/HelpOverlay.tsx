@@ -3,7 +3,7 @@ import { Icon, borderWidth, colors, layout, radii, spacing, touchTarget, typogra
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
-import { HELP_KEYS, type KeyCap } from '../../../logic/lecture/help-keys';
+import { HELP_KEYS, HELP_TOUCH, type KeyCap } from '../../../logic/lecture/help-keys';
 import { HELP_WIDTH, KBD_MIN, KEY_COL } from '../stage-metrics';
 import { usePresenterView } from '../presenter-context';
 import { ChipRadios, Cover, ToolButton } from './OverlayParts';
@@ -16,8 +16,10 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * Close. The language is the device's one language (owner items 6 and 7), set on the Display (Aa)
  * sheet of the home and the start screen, so this overlay has no language chips. Real pixels; it
  * scrolls inside the stage box when taller.
- * In a phone window (`phone`, F-TCH-004 section 3.6) one line under the title says how to show
- * the controls: a tap at the bottom of the slide, the bar's strip.
+ * In a phone window (`phone`, F-TCH-004 section 3.6) one line under the title says how to move and
+ * how to show the controls (`help.phoneBar`). Above the key rows, the Touch and mouse lines
+ * (`HELP_TOUCH`, AMENDMENTS-PRESENTER-NAV section 9.2): a tap on an answer points at it and does not
+ * show the answer (owner choice O2); the key rows hold `1` to `4` for the same.
  */
 export function HelpOverlay({
   romanization,
@@ -82,6 +84,19 @@ export function HelpOverlay({
               {m.phoneBar}
             </Text>
           ) : null}
+          <View role="list" testID="presenter-help-touch" style={{ gap: spacing.xs }}>
+            {HELP_TOUCH.map((line) => (
+              <Text
+                key={line}
+                {...KOREAN_LINE_BREAK}
+                role="listitem"
+                testID={`presenter-help-touch-${line}`}
+                style={{ fontSize: textScale.size.body, color: colors.text.primary, lineHeight: Math.round(textScale.size.body * typography.leading.normal) }}
+              >
+                {m.touch[line]}
+              </Text>
+            ))}
+          </View>
           <View role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.xl }}>
             {HELP_KEYS.map((row) => (
               <View key={row.row} role="listitem" style={{ width: twoColumns ? '47%' : '100%', flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
