@@ -800,12 +800,18 @@ export function focusablesIn(root: unknown): readonly unknown[] {
 
 /**
  * Notes the focused control when an overlay opens; the returned function gives focus back to it
- * when the overlay closes, if it is still on the page.
+ * when the overlay closes, if it is still on the page, and says whether it did (false: the opener
+ * left the page, as the docked band's More does when a wider window no longer needs it, so the
+ * caller moves focus to a control that stays).
  */
-export function rememberFocus(env: PresenterEnv = browserEnv()): () => void {
+export function rememberFocus(env: PresenterEnv = browserEnv()): () => boolean {
   const opener = env.activeElement?.() as { focus?: () => void; isConnected?: boolean } | null | undefined;
   return () => {
-    if (opener && opener.isConnected !== false && typeof opener.focus === 'function') opener.focus();
+    if (opener && opener.isConnected !== false && typeof opener.focus === 'function') {
+      opener.focus();
+      return true;
+    }
+    return false;
   };
 }
 

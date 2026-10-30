@@ -34,6 +34,16 @@ export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLong
 export const TEXT_FLOOR = typography.size.body;
 /** 120 px: `touchTarget.hero + 2 x spacing.md` (README D1). */
 export const BAR_BAND = barBand(touchTarget.hero, spacing.md);
+/** Between the docked band's parts (Previous, the chips, the tools, More, Next): `spacing.lg` (PN-0b `.bar.nav`). */
+export const BAR_GROUP_GAP = spacing.lg;
+/** Between a wrapped band's two rows: `2 x spacing.md`, so each row adds one `BAR_BAND` (AMENDMENTS-PRESENTER-NAV section 5.1). */
+export const BAR_ROW_GAP = 2 * spacing.md;
+/**
+ * `spacing.xxl` (32) window px: the least inert space between any content target and any bar or rail
+ * button (AMENDMENTS-PRESENTER-NAV section 5.0). On the docked band it is the stage padding plus the
+ * band's own `spacing.md` padding, in every order and wrapped layout.
+ */
+export const NAV_CLEARANCE = spacing.xxl;
 
 /** Every slide keeps this margin inside the stage, in units. */
 export const STAGE_PADDING = spacing.xxxl;

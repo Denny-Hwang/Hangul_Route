@@ -67,6 +67,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.presenter.bar.blank.cta': 'one letter over; the Spanish for a blanked screen needs the preposition; a bar label that wraps inside 96',
   'learner.presenter.bar.grid.cta': 'the one Spanish word for slides; a bar label that wraps inside 96',
   'learner.presenter.bar.timer.cta': 'the standard Spanish word for a timer; a bar label that wraps inside 96',
+  // AMENDMENTS-PRESENTER-NAV section 13 (row PN-3): Help's Touch and mouse group, a line of the Help overlay that wraps.
+  'learner.presenter.help.touch.swipe':
+    '"Desliza a la izquierda ... y a la derecha ..." (62) against "Swipe left ..., right ..." (38): Spanish names each side with "a la"; a Help line at the body size that wraps by words, as PN-0b drew it (overlays.md "Touch and mouse")',
   // F-TCH-004 PR 7 (design/screens/presenter/README.md "Length budget"): the activity slide's stage button.
   'learner.presenter.slide.activity.startTimer.cta': '"temporizador" again; inside the 28-character cta budget, a stage button that wraps',
   // F-TCH-004 PR 9 (design/screens/presenter/README.md "Length budget"): the class timer's buttons.
@@ -563,5 +566,35 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     ]) {
       expect(paths).toContain(expected);
     }
+  });
+
+  /**
+   * The start hint (AMENDMENTS-PRESENTER-NAV section 9.3, row PN-3): a pill at the top of the stage, at most 90 % of
+   * the window wide, `spacing.lg` padding and a `borderWidth.base` edge each side, chrome text at the 18 px body size.
+   * PN-0b accepted it at 568 x 320, the smallest window it shows on, at two lines at most (es: 511 x 53 px); this
+   * holds both lines to two lines of that pill in every locale. Width is estimated per character: a Hangul
+   * syllable is 1 em, anything else 0.6 em (wider than the 0.45 em the system fonts measured in PN-0b), and a line
+   * loses up to a tenth to breaking between words.
+   */
+  describe('start hint lines at 568 x 320 (AMENDMENTS-PRESENTER-NAV section 9.3)', () => {
+    const BODY = 18;
+    const PILL_TEXT = 0.9 * 568 - 2 * 16 - 2 * 1;
+    const LINE_EM = (0.9 * PILL_TEXT) / BODY;
+    const HANGUL_SYLLABLE = /[가-힯]/;
+    const em = (text: string): number => [...text].reduce((n, ch) => n + (HANGUL_SYLLABLE.test(ch) ? 1 : 0.6), 0);
+    for (const locale of LOCALES) {
+      for (const path of ['learner.presenter.nav.hint', 'learner.presenter.nav.hintOverlay']) {
+        it(`${locale}:${path} fits two lines of the pill`, () => {
+          const value = lookup(getMessages(locale), path);
+          expect(typeof value).toBe('string');
+          expect(em(value as string), `${locale} ${path}: ${String(value)}`).toBeLessThanOrEqual(2 * LINE_EM);
+        });
+      }
+    }
+
+    it('the estimate keeps the measured one-line hints under one line and the Spanish overlay hint over it', () => {
+      expect(em(getMessages('en').learner.presenter.nav.hint)).toBeLessThanOrEqual(LINE_EM);
+      expect(em(getMessages('es').learner.presenter.nav.hintOverlay)).toBeGreaterThan(LINE_EM);
+    });
   });
 });

@@ -1,8 +1,8 @@
-import { colors, presenter, radii, spacing, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
+import { borderWidth, colors, motion, presenter, radii, spacing, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
-import { Text, View, useWindowDimensions, type GestureResponderEvent, type ViewStyle } from 'react-native';
+import { Animated, Text, View, useWindowDimensions, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
@@ -12,6 +12,7 @@ import {
   edgeGuard,
   gesturePointer,
   isCompatMouse,
+  isSwipe,
   parseStageTarget,
   slideHasTargets,
   stageGesture,
@@ -69,8 +70,8 @@ export interface StageProps {
   deckTitle: string;
   strokeToken: number;
   joinCta: string;
-  /** A gesture's command (`stageGesture`), never null. */
-  onGesture: (command: Exclude<StageCommand, null>) => void;
+  /** A gesture's command (`stageGesture`), never null; `swipe`: it came from a swipe, not a tap or click (the start hint ends on a swipe step). */
+  onGesture: (command: Exclude<StageCommand, null>, via: { swipe: boolean }) => void;
   /** Where Previous and Next live (`navLayout`): a touch tap on empty stage shows or hides the overlay bar, elsewhere rings Next. */
   layout: NavLayout;
   /** What covers the stage now: the More sheet (a tap closes it), another covering overlay, or nothing. */
@@ -166,10 +167,12 @@ export function Stage(props: StageProps): ReactElement {
     const g = gesture.current;
     gesture.current = null;
     if (g === null) return;
+    const dx = g.x - g.x0;
+    const dy = g.y - g.y0;
     const command = stageGesture({
       pointer: g.pointer,
-      dx: g.x - g.x0,
-      dy: g.y - g.y0,
+      dx,
+      dy,
       startX: g.x0,
       windowWidth,
       edgeGuard: edgeGuard(insets),
@@ -180,7 +183,7 @@ export function Stage(props: StageProps): ReactElement {
       covering: props.covering,
       pointing: props.pointing,
     });
-    if (command !== null) props.onGesture(command);
+    if (command !== null) props.onGesture(command, { swipe: isSwipe(dx, dy) });
   };
 
   return (
@@ -354,5 +357,61 @@ export function StageHint({ text, bottom }: { text: string; bottom?: boolean }):
     >
       <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.primary }}>{text}</Text>
     </View>
+  );
+}
+
+/**
+ * The start hint (AMENDMENTS-PRESENTER-NAV section 9.3, O7; PN-0b stage-and-bar.md "Start hint"): the
+ * sound flash's pill at the top of the stage box (`spacing.md` from the top, centred, at most 90 % wide,
+ * paper with a `border.strong` edge, chrome text at the body size) on a lesson's first slide, on touch.
+ * It takes no taps and is drawn only (`aria-hidden`; Help says the same lines). `shown` false fades it
+ * out over `motion.duration.base`, at once under reduced motion, and then calls `onGone`.
+ */
+export function StartHint({ text, line, shown, onGone }: { text: string; line: 'hint' | 'hintOverlay'; shown: boolean; onGone: () => void }): ReactElement {
+  const textScale = useTypeScale();
+  const { reducedMotion } = usePresenterView();
+  const opacity = useRef(new Animated.Value(1)).current;
+  const gone = useRef(onGone);
+  gone.current = onGone;
+  useEffect(() => {
+    if (shown) {
+      opacity.setValue(1);
+      return undefined;
+    }
+    if (reducedMotion) {
+      opacity.setValue(0);
+      gone.current();
+      return undefined;
+    }
+    const fade = Animated.timing(opacity, { toValue: 0, duration: motion.duration.base, useNativeDriver: false });
+    fade.start(({ finished }) => {
+      if (finished) gone.current();
+    });
+    return () => fade.stop();
+  }, [shown, reducedMotion, opacity]);
+  return (
+    <Animated.View
+      testID="presenter-nav-hint"
+      aria-hidden
+      pointerEvents="none"
+      {...{ dataSet: { line } }}
+      style={{
+        position: 'absolute',
+        top: spacing.md,
+        alignSelf: 'center',
+        maxWidth: '90%',
+        opacity,
+        backgroundColor: colors.surface.paper,
+        borderRadius: radii.pill,
+        borderWidth: borderWidth.base,
+        borderColor: colors.border.strong,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.primary, textAlign: 'center' }}>
+        {text}
+      </Text>
+    </Animated.View>
   );
 }

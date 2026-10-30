@@ -2548,6 +2548,17 @@ export const learner = {
       /** Under the title in a phone window only (the overlay layout: swipe moves, a tap on the slide shows the bar; AMENDMENTS-PRESENTER-NAV section 9.2). */
       phoneBar: 'On this phone, swipe to move. Tap the slide to show the controls.',
       keepVisible: 'Keep controls visible',
+      /**
+       * The Touch and mouse group above the key rows, in every layout (AMENDMENTS-PRESENTER-NAV section 9.2,
+       * row PN-3): plain lines, not controls. `keep` explains the Keep controls visible switch further down.
+       */
+      touch: {
+        title: 'Touch and mouse',
+        swipe: 'Swipe left to go on, right to go back.',
+        buttons: 'Or tap Previous and Next.',
+        click: 'With a mouse, click the slide to go on (not on question slides).',
+        keep: 'Keep controls visible shows every button all the time.',
+      },
       romanization: 'Romanization',
       romanizationAlways: 'always',
       romanizationTap: 'hide until tapped',
@@ -2566,6 +2577,15 @@ export const learner = {
         help: 'This help',
         close: 'Close or exit',
       },
+    },
+    /**
+     * The start hint (AMENDMENTS-PRESENTER-NAV section 9.3, O7, row PN-3): one line at the top of the stage on a
+     * lesson's first slide, on touch, until the device's first button or swipe step (at most three lessons).
+     * `hint` on the docked bar and the rail; `hintOverlay` where Previous and Next show only after a tap on the slide.
+     */
+    nav: {
+      hint: 'Swipe, or tap Previous and Next.',
+      hintOverlay: 'Swipe to move. Tap the slide to show the controls.',
     },
     state: {
       invalid: {

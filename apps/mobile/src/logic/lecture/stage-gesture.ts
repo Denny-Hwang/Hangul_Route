@@ -65,7 +65,7 @@ export function edgeGuard(insets: Pick<StageInsets, 'left' | 'right'>): { left: 
 }
 
 /** A swipe: at least `SWIPE_MIN` across and at least `SWIPE_RATIO` times more across than down. */
-function isSwipe(dx: number, dy: number): boolean {
+export function isSwipe(dx: number, dy: number): boolean {
   const ax = Math.abs(dx);
   return ax >= SWIPE_MIN && ax >= SWIPE_RATIO * Math.abs(dy);
 }
@@ -122,15 +122,17 @@ export function optionTarget(index: number): string {
 
 /**
  * A slide the room points at (section 7.1): every quiz (quiz, story check, listen and reply
- * questions, realia questions), sequence, sentence build and write-together slide, whatever the
- * build. Title, letter, syllable, vocab, card, story, sentence, pattern, read along, realia,
- * activity and end slides have none (their speaker and Start timer are stage buttons).
+ * questions, realia questions), sequence, sentence build and write-together slide, and every
+ * Role Play turn (its replies are the quiz's option rows), whatever the build. Title, letter,
+ * syllable, vocab, card, story, sentence, pattern, read along, realia, Hidden Heritage (a scene
+ * the room points at in the room), activity and end slides have none (their speaker and Start
+ * timer are stage buttons).
  */
 export function slideHasTargets(slide: Pick<Slide, 'kind'>): boolean {
   return TARGET_SLIDE_KINDS.has(slide.kind);
 }
 
-const TARGET_SLIDE_KINDS: ReadonlySet<Slide['kind']> = new Set<Slide['kind']>(['quiz', 'sequence', 'sentence-build', 'write-together']);
+const TARGET_SLIDE_KINDS: ReadonlySet<Slide['kind']> = new Set<Slide['kind']>(['quiz', 'sequence', 'sentence-build', 'write-together', 'role-play']);
 
 /**
  * The gesture's own pointer (section 4): a touch event is touch; a mouse event is touch too when

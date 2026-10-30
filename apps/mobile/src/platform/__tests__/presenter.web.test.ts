@@ -1028,10 +1028,10 @@ describe('focusablesIn and rememberFocus (every covering overlay keeps Tab insid
 
   it('gives focus back to the control that had it, only while that control is still on the page', () => {
     const opener = { focus: vi.fn(), isConnected: true };
-    rememberFocus(env({ activeElement: () => opener }))();
+    expect(rememberFocus(env({ activeElement: () => opener }))()).toBe(true);
     expect(opener.focus).toHaveBeenCalledTimes(1);
     const removed = { focus: vi.fn(), isConnected: false };
-    rememberFocus(env({ activeElement: () => removed }))();
+    expect(rememberFocus(env({ activeElement: () => removed }))()).toBe(false);
     expect(removed.focus).not.toHaveBeenCalled();
     expect(() => rememberFocus(env({ activeElement: () => null }))()).not.toThrow();
     expect(() => rememberFocus(env())()).not.toThrow();

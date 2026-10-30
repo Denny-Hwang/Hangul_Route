@@ -1869,6 +1869,13 @@ export const learner = {
       clicker: '프레젠테이션 리모컨은 따로 설정하지 않아도 돼요.',
       phoneBar: '이 휴대폰에서는 화면을 밀어서 넘겨요. 슬라이드를 누르면 조작 버튼이 보여요.',
       keepVisible: '조작 버튼 계속 보이기',
+      touch: {
+        title: '터치와 마우스',
+        swipe: '왼쪽으로 밀면 다음으로, 오른쪽으로 밀면 이전으로 가요.',
+        buttons: '이전, 다음 버튼을 눌러도 돼요.',
+        click: '마우스로 슬라이드를 클릭하면 다음으로 가요. 문제 슬라이드에서는 안 돼요.',
+        keep: "'조작 버튼 계속 보이기'를 켜면 모든 버튼이 계속 보여요.",
+      },
       romanization: '로마자',
       romanizationAlways: '항상',
       romanizationTap: '누를 때까지 숨기기',
@@ -1887,6 +1894,10 @@ export const learner = {
         help: '이 도움말',
         close: '닫기와 나가기',
       },
+    },
+    nav: {
+      hint: '화면을 밀거나 이전, 다음 버튼을 눌러요.',
+      hintOverlay: '화면을 밀어서 넘겨요. 슬라이드를 누르면 조작 버튼이 보여요.',
     },
     state: {
       invalid: {

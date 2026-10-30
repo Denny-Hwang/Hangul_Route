@@ -180,7 +180,11 @@ describe('Stage: a Role Play turn (row CM-35)', () => {
           deckTitle="Role play"
           strokeToken={0}
           joinCta="Join"
-          onCommand={() => undefined}
+          onGesture={() => undefined}
+          layout="docked"
+          covering="none"
+          pointing={false}
+          lastPointer={() => null}
           onPlaySound={() => undefined}
           romanization="always"
           sayIt={false}

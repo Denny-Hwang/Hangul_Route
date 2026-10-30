@@ -4,6 +4,7 @@ import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BAR_SHOW_GRACE_MS } from '../../../logic/lecture/stage-constants';
 import { NUDGE_MS } from '../../../logic/lecture/stage-gesture';
+import type { KeyCommand } from '../../../logic/lecture/keymap';
 import type { InputKind } from '../../../platform/presenter';
 import { byTestId, press, render, textOf } from '../../../test-support/render';
 
@@ -18,7 +19,12 @@ import { byTestId, press, render, textOf } from '../../../test-support/render';
  * its pointer media are driven by the test.
  */
 
-const page = vi.hoisted(() => ({ input: null as ((kind: InputKind) => void) | null, activity: null as (() => void) | null, touchAtStart: false }));
+const page = vi.hoisted(() => ({
+  input: null as ((kind: InputKind) => void) | null,
+  activity: null as (() => void) | null,
+  touchAtStart: false,
+  keys: new Set<(command: KeyCommand) => boolean | void>(),
+}));
 vi.mock('../../../platform/presenter', async (importOriginal) => {
   const { encodeDeck } = await import('@hangul-route/content-schema');
   const deck = { v: 1, id: 'lecture:navpin1', title: 'Pin', createdAt: '2026-10-29T09:00:00Z', seed: 1, blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }] };
@@ -38,6 +44,12 @@ vi.mock('../../../platform/presenter', async (importOriginal) => {
       };
     },
     touchSeenAtStart: () => page.touchAtStart,
+    subscribeKeys: (handler: (command: KeyCommand) => boolean | void) => {
+      page.keys.add(handler);
+      return () => {
+        page.keys.delete(handler);
+      };
+    },
   };
 });
 // The picture art reads Metro's `__DEV__`, which the Node render lane does not define.
@@ -117,6 +129,12 @@ function opacityOf(node: ReactTestInstance): number {
 }
 
 const one = (r: ReactTestRenderer, id: string): ReactTestInstance => byTestId(r.root, id)[0]!;
+/** Previous and Next pinned or not (each stands on its own since PN-3's order puts the tools between them). */
+function pinnedPair(r: ReactTestRenderer): string {
+  const prev = String(one(r, 'presenter-nav-prev').props['data-pinned']);
+  expect(one(r, 'presenter-nav-next').props['data-pinned']).toBe(prev);
+  return prev;
+}
 const counter = (r: ReactTestRenderer): string => textOf(one(r, 'presenter-counter'));
 
 async function tick(ms: number): Promise<void> {
@@ -153,7 +171,7 @@ function tapStage(r: ReactTestRenderer, type: 'touch' | 'mouse', dx = 0): void {
 describe('docked, touch seen: Previous and Next never fade (section 5.1)', () => {
   it('after presenter.autoHideMs the pair keeps opacity 1 and takes taps; the tools fade and take none', async () => {
     const r = await lesson(true);
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('true');
+    expect(pinnedPair(r)).toBe('true');
     await tick(presenter.autoHideMs + 1000);
     for (const id of ['presenter-back', 'presenter-next']) {
       expect(opacityOf(one(r, id)), id).toBe(1);
@@ -186,9 +204,9 @@ describe('docked, touch seen: Previous and Next never fade (section 5.1)', () =>
 
   it('touch seen by the first touch press on a mouse-looking page pins the pair from then on', async () => {
     const r = await lesson(false);
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('false');
+    expect(pinnedPair(r)).toBe('false');
     act(() => page.input?.('touch'));
-    expect(one(r, 'presenter-nav-pair').props['data-pinned']).toBe('true');
+    expect(pinnedPair(r)).toBe('true');
     await tick(presenter.autoHideMs + 1000);
     expect(opacityOf(one(r, 'presenter-next'))).toBe(1);
     expect(await takesPointer(one(r, 'presenter-back'))).toBe(true);
@@ -285,6 +303,29 @@ describe('a phone window (the overlay layout, sections 5.2 and 5.3)', () => {
     await tick(10);
     expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
     expect(counter(r)).toBe(was);
+  });
+
+  it('with More open a step key (an arrow, a clicker) closes More and then steps; a tool key closes More and opens its tool', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    const r = await lesson(true, false);
+    const key = (command: KeyCommand): void => {
+      act(() => {
+        for (const handler of [...page.keys]) handler(command);
+      });
+    };
+    await press(one(r, 'presenter-more'));
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+    const was = counter(r);
+    key('next');
+    await tick(10);
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
+    expect(counter(r)).not.toBe(was);
+    await press(one(r, 'presenter-more'));
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(1);
+    key({ overlay: 'blank' });
+    await tick(10);
+    expect(byTestId(r.root, 'presenter-more-sheet')).toHaveLength(0);
+    expect(byTestId(r.root, 'presenter-blank')).toHaveLength(1);
   });
 
   it('More open when the window stops being a phone window (a foldable opened): More closes, and Next steps', async () => {
