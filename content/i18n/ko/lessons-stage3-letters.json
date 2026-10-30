@@ -94,8 +94,14 @@
       "listenPick.rounds.a4.prompt": "맞다고 하며, 배우러 다니는 곳이라는 뜻"
     },
     "minigame:s3-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이라는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "맞다고 하며, 물건을 넣어 메는 것이라는 뜻",
+      "clozePick.rounds.c1.tiles.gabang.gloss": "물건을 넣어 메는 것",
+      "clozePick.rounds.c1.tiles.chaek.gloss": "읽는 물건",
+      "clozePick.rounds.c1.tiles.hakgyo.gloss": "배우러 다니는 곳",
+      "clozePick.rounds.c2.sentence.gloss": "배우러 다니는 곳이라는 뜻",
+      "clozePick.rounds.c2.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
+      "clozePick.rounds.c2.tiles.ieyo.gloss": "무엇이라고 알려 주는 말끝 (받침 있는 말 뒤)",
+      "clozePick.rounds.c2.tiles.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)"
     },
     "minigame:s3-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "읽는 물건이 이곳에 존재한다는 뜻",
@@ -119,8 +125,11 @@
       "listenPick.rounds.a4.prompt": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻"
     },
     "minigame:s3-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "물건을 넣어 메는 것이 이곳에 존재한다는 뜻",
-      "listenPick.rounds.c2.prompt": "맞다고 하며, 읽는 물건이 이곳에 존재한다는 뜻"
+      "orderIt.rounds.c1.sentence.gloss": "맞다고 하며, 글씨 쓰는 도구가 이곳에 존재한다는 뜻",
+      "orderIt.rounds.c1.distractors.gabangi.gloss": "물건을 넣어 메는 것 (문장의 주어)",
+      "orderIt.rounds.c2.sentence.gloss": "맞다고 하며, 가깝게 지내는 사람을 두고 있다는 뜻",
+      "orderIt.rounds.c2.particle.choices.ga.gloss": "주어를 나타내는 조사 (받침 없는 말 뒤)",
+      "orderIt.rounds.c2.particle.choices.i.gloss": "주어를 나타내는 조사 (받침 있는 말 뒤)"
     },
     "minigame:s3-letters-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가까이 있는 것이 읽는 물건이라는 뜻",
@@ -144,8 +153,10 @@
       "listenPick.rounds.a4.prompt": "가까이 있는 것이 물건을 넣어 메는 것이라는 뜻"
     },
     "minigame:s3-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "맞다고 하며, 가까이 있는 것이 글씨 쓰는 도구라는 뜻",
-      "listenPick.rounds.c2.prompt": "자기 이름을 공손하게 밝힌다는 뜻"
+      "typeHangul.rounds.d1.prompt": "한국어를 적는 문자를 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d1.target.gloss": "한국어를 적는 문자",
+      "typeHangul.rounds.d2.prompt": "글씨 쓰는 도구를 뜻하는 낱말을 써 봐요.",
+      "typeHangul.rounds.d2.target.gloss": "글씨 쓰는 도구"
     }
   }
 }

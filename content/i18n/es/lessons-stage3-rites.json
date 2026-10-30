@@ -53,8 +53,11 @@
       "listenPick.rounds.r4.prompt": "Tengo una mamá y una abuela."
     },
     "minigame:s3-rites-q1-check": {
-      "listenPick.rounds.r1.prompt": "Tengo una abuela y un abuelo.",
-      "listenPick.rounds.r2.prompt": "Como songpyeon y una manzana."
+      "orderIt.rounds.c1.sentence.gloss": "Tengo un abuelo y una abuela.",
+      "orderIt.rounds.c1.distractors.meogeoyo.gloss": "comer",
+      "orderIt.rounds.c2.sentence.gloss": "Como una manzana y songpyeon.",
+      "orderIt.rounds.c2.particle.choices.eul.gloss": "marca de objeto, tras consonante final",
+      "orderIt.rounds.c2.particle.choices.reul.gloss": "marca de objeto, tras vocal"
     },
     "quest:stage3-rites-q2": {
       "title": "Bonito y rico",
@@ -105,8 +108,10 @@
       "listenPick.rounds.r4.prompt": "El pastel de arroz está rico."
     },
     "minigame:s3-rites-q2-check": {
-      "listenPick.rounds.r1.prompt": "El songpyeon está rico.",
-      "listenPick.rounds.r2.prompt": "El hanbok es bonito."
+      "typeHangul.rounds.d1.prompt": "Escribe la palabra para la ropa tradicional coreana.",
+      "typeHangul.rounds.d1.target.gloss": "ropa tradicional coreana",
+      "typeHangul.rounds.d2.prompt": "Escribe la palabra para el pastel de arroz en forma de media luna.",
+      "typeHangul.rounds.d2.target.gloss": "pastel de arroz en forma de media luna"
     },
     "quest:stage3-rites-q3": {
       "title": "Días de fiesta",
@@ -156,8 +161,14 @@
       "listenPick.rounds.r4.prompt": "Mamá y papá miran la luna llena."
     },
     "minigame:s3-rites-q3-check": {
-      "listenPick.rounds.r1.prompt": "Juego al yut.",
-      "listenPick.rounds.r2.prompt": "Miro la luna llena."
+      "clozePick.rounds.c1.sentence.gloss": "Miro la luna llena.",
+      "clozePick.rounds.c1.tiles.bwayo.gloss": "mirar, ver",
+      "clozePick.rounds.c1.tiles.meogeoyo.gloss": "comer",
+      "clozePick.rounds.c1.tiles.haeyo.gloss": "hacer",
+      "clozePick.rounds.c2.sentence.gloss": "Hago la reverencia de Año Nuevo.",
+      "clozePick.rounds.c2.tiles.reul.gloss": "marca de objeto, tras vocal",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto, tras consonante final",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto, tras vocal"
     }
   }
 }

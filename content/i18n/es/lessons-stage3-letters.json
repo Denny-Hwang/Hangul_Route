@@ -94,8 +94,14 @@
       "listenPick.rounds.a4.prompt": "Sí, es una escuela."
     },
     "minigame:s3-letters-q1-check": {
-      "listenPick.rounds.c1.prompt": "Sí, es una mochila.",
-      "listenPick.rounds.c2.prompt": "Sí, es un libro."
+      "clozePick.rounds.c1.sentence.gloss": "Sí, es una mochila.",
+      "clozePick.rounds.c1.tiles.gabang.gloss": "mochila",
+      "clozePick.rounds.c1.tiles.chaek.gloss": "libro",
+      "clozePick.rounds.c1.tiles.hakgyo.gloss": "escuela",
+      "clozePick.rounds.c2.sentence.gloss": "Es una escuela.",
+      "clozePick.rounds.c2.tiles.yeyo.gloss": "es (después de una vocal)",
+      "clozePick.rounds.c2.tiles.ieyo.gloss": "es (después de una consonante final)",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "minigame:s3-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Hay un libro.",
@@ -119,8 +125,11 @@
       "listenPick.rounds.a4.prompt": "Sí, hay un lápiz."
     },
     "minigame:s3-letters-q2-check": {
-      "listenPick.rounds.c1.prompt": "Hay una mochila.",
-      "listenPick.rounds.c2.prompt": "Sí, hay un libro."
+      "orderIt.rounds.c1.sentence.gloss": "Sí, hay un lápiz.",
+      "orderIt.rounds.c1.distractors.gabangi.gloss": "mochila (como sujeto)",
+      "orderIt.rounds.c2.sentence.gloss": "Sí, tengo un amigo o una amiga.",
+      "orderIt.rounds.c2.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)",
+      "orderIt.rounds.c2.particle.choices.i.gloss": "marca de sujeto (después de una consonante final)"
     },
     "minigame:s3-letters-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Esto es un libro.",
@@ -144,8 +153,10 @@
       "listenPick.rounds.a4.prompt": "Esto es una mochila."
     },
     "minigame:s3-letters-q3-check": {
-      "listenPick.rounds.c1.prompt": "Sí, esto es un lápiz.",
-      "listenPick.rounds.c2.prompt": "Soy Hoya."
+      "typeHangul.rounds.d1.prompt": "Escribe la palabra para el alfabeto coreano.",
+      "typeHangul.rounds.d1.target.gloss": "hangul, el alfabeto coreano",
+      "typeHangul.rounds.d2.prompt": "Escribe la palabra para el lápiz.",
+      "typeHangul.rounds.d2.target.gloss": "lápiz"
     }
   }
 }

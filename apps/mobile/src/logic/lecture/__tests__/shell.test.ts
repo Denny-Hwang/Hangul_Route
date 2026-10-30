@@ -467,7 +467,8 @@ describe('slideDetail: the Role Play slide (F-CURR-002 section 8, row CM-35)', (
 describe('slideDetail: the question slides (LV-S2)', () => {
   const slides = expandDeck(
     deckOf([
-      { kind: 'quest', id: 'quest:stage3-life-q1' },
+      // Row CM-3A S3: a Stage 3 quest whose Apply is heard (the Checks rotate Cloze Pick, Sentence Builder and Dictation).
+      { kind: 'quest', id: 'quest:stage3-nature-q1' },
       { kind: 'quest', id: 'quest:stage4-life-q1' },
       { kind: 'quest', id: 'quest:stage6-life-q3' },
     ]),

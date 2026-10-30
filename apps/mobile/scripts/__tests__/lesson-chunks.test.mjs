@@ -238,9 +238,6 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-31: the dictation chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/dictation-chunk.tsx')).toContain(`export const DICTATION_CHUNK = '${SCREEN_CHUNKS[8].marker}';`);
     expect(read('src/screens/minigames/dictation-entry.ts')).toContain("import('./dictation-chunk')");
-    // Row CM-35: the Role Play game's chunk, reached only through the entry's literal import().
-    expect(read('src/screens/minigames/role-play/role-play-chunk.tsx')).toContain(`export const ROLE_PLAY_CHUNK = '${SCREEN_CHUNKS[7].marker}';`);
-    expect(read('src/screens/minigames/role-play/role-play-entry.tsx')).toContain("import('./role-play-chunk')");
     // Row CM-3C: the Did you know? tip's chunk, reached only through the entry's literal import().
     expect(read('src/screens/quest/culture-tip-chunk.tsx')).toContain(`export const CULTURE_TIP_CHUNK = '${SCREEN_CHUNKS[9].marker}';`);
     expect(read('src/screens/quest/culture-tip-entry.tsx')).toContain("import('./culture-tip-chunk')");

@@ -86,6 +86,7 @@
     "lex|부산": "lex:busan",
     "lex|붓": "lex:but",
     "lex|봤어요": "lex:bwasseoyo",
+    "lex|봐요": "lex:bwayo",
     "lex|차": "lex:cha",
     "lex|창포": "lex:changpo",
     "lex|천": "lex:cheon",
@@ -245,6 +246,7 @@
     "lex|떡국": "lex:tteokguk",
     "lex|떡국 먹기": "lex:tteokguk-meokgi",
     "lex|의사": "lex:uisa",
+    "lex|와요": "lex:wayo",
     "lex|원": "lex:won",
     "lex|얘기": "lex:yaegi",
     "lex|약초": "lex:yakcho",
@@ -270,6 +272,7 @@
     "pat|밥을 먹어요": "pat:babeul-meogeoyo",
     "pat|밥이 맛있어요": "pat:babi-masisseoyo",
     "pat|밥이 뜨거워요": "pat:babi-tteugeowoyo",
+    "pat|바다에 가고 싶어요": "pat:badae-gago-sipeoyo",
     "pat|바다에 가요": "pat:badae-gayo",
     "pat|밥 먹었어요": "pat:bap-meogeosseoyo",
     "pat|밥 먹어요": "pat:bap-meogeoyo",
@@ -329,8 +332,10 @@
     "pat|곰이 커요": "pat:gomi-keoyo",
     "pat|공책이에요": "pat:gongchaegieyo",
     "pat|공을 차요": "pat:gongeul-chayo",
+    "pat|공원에 가고 싶어요": "pat:gongwone-gago-sipeoyo",
     "pat|공원에 가요": "pat:gongwone-gayo",
     "pat|고양이가 귀여워요": "pat:goyangiga-gwiyeowoyo",
+    "pat|고양이가 작아요": "pat:goyangiga-jagayo",
     "pat|고양이가 좋아요": "pat:goyangiga-joayo",
     "pat|고양이는 귀여워요": "pat:goyangineun-gwiyeowoyo",
     "pat|국이 뜨거워요": "pat:gugi-tteugeowoyo",
@@ -341,6 +346,7 @@
     "pat|할머니예요": "pat:halmeoniyeyo",
     "pat|한 시간 걸려요": "pat:han-sigan-geollyeoyo",
     "pat|한복이 예뻐요": "pat:hanbogi-yeppeoyo",
+    "pat|할아버지하고 할머니가 있어요": "pat:harabeojihago-halmeoniga-isseoyo",
     "pat|호랑이가 좋아요": "pat:horangiga-joayo",
     "pat|호랑이가 커요": "pat:horangiga-keoyo",
     "pat|호랑이가 뛰어요": "pat:horangiga-ttwieoyo",
@@ -457,6 +463,7 @@
     "pat|네": "pat:ne",
     "pat|네, 책이 있어요": "pat:ne-chaegi-isseoyo",
     "pat|네, 책이에요": "pat:ne-chaegieyo",
+    "pat|네, 친구가 있어요": "pat:ne-chinguga-isseoyo",
     "pat|네, 가방이에요": "pat:ne-gabangieyo",
     "pat|네, 같이 가요": "pat:ne-gachi-gayo",
     "pat|네, 학교예요": "pat:ne-hakgyoyeyo",
@@ -494,6 +501,7 @@
     "pat|사과가 어때요": "pat:sagwaga-eottaeyo",
     "pat|사과가 좋아요": "pat:sagwaga-joayo",
     "pat|사과가 맛있어요": "pat:sagwaga-masisseoyo",
+    "pat|사과하고 송편을 먹어요": "pat:sagwahago-songpyeoneul-meogeoyo",
     "pat|사과하고 떡을 먹어요": "pat:sagwahago-tteogeul-meogeoyo",
     "pat|사과하고 떡이 맛있어요": "pat:sagwahago-tteogi-masisseoyo",
     "pat|사과를 먹었어요": "pat:sagwareul-meogeosseoyo",
@@ -516,6 +524,7 @@
     "pat|송편하고 떡을 먹어요": "pat:songpyeonhago-tteogeul-meogeoyo",
     "pat|송편하고 떡이 맛있어요": "pat:songpyeonhago-tteogi-masisseoyo",
     "pat|송편이 맛있어요": "pat:songpyeoni-masisseoyo",
+    "pat|토끼가 귀여워요": "pat:tokkiga-gwiyeowoyo",
     "pat|토끼가 작아요": "pat:tokkiga-jagayo",
     "pat|토끼가 좋아요": "pat:tokkiga-joayo",
     "pat|토끼가 뛰어요": "pat:tokkiga-ttwieoyo",
@@ -736,5 +745,7 @@
     "lex|윷놀이": "vocab:yunnori"
   },
   "alias": {},
-  "retired": []
+  "retired": [
+    "pat:namue-goyangiga-isseoyo"
+  ]
 }

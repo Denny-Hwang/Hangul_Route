@@ -103,6 +103,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (#859 to #862 on the named React imports, 4,749,283 B, +6,592 B) measures 4,751,444 B raw / 1,266,428 B gzip
   // (release `build:web`, Metro cache cleared), +2,161 B over that main, the same +2,161 B it measured on main
   // 2851bac3b; the app-host build 4,751,600 B. The line is the release measurement plus an 8,556 B rounding margin.
+  // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
+  // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
+  // `build:web`), 7,102 B over that main and 1,454 B under this line, so the line stays.
+  // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
+  // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
+  // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
+  // 2,388 B under this line, which stays.
   // CM-30 (Cloze Pick: the `cloze-pick` round and scope schema with its cross-checks, the lecture mapping, Listen &
   // Pick's text prompt mode, the door, the Listen & Pick fallback with its card and round helpers (in the start bundle
   // so the switch never depends on the chunk it guards) and 10 English strings; the game, its flow and its view are
@@ -131,6 +138,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // lecture and memory mapping, the Check header and room of Type Hangul and Pic-Word Match, the optional label overlay
   // field): 4,785,010 B raw / 1,276,601 B gzip. The line is that measurement plus a 4,990 B rounding margin, for the
   // stack only; when the parents land, the update from main takes main's line and the row's 1,623 B is measured on it.
+  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S3 (#852, #850, #851, #854, #856, each measured
+  // alone above) measures 4,783,181 B raw / 1,276,079 B gzip (release `build:web`, Metro cache cleared); S3's Stage 3
+  // Check kinds add 67 B (4,783,248 B raw / 1,276,087 B gzip). The line is that measurement plus a 6,752 B margin.
+  // With CM-35's review fixes merged in, 4,783,426 B raw / 1,276,170 B gzip. This is the stack's line: once the five
+  // rows land on main, S3 takes main's line and raises it only if S3's own +67 B does not fit.
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -299,12 +311,11 @@ export const SCREEN_CHUNKS = Object.freeze([
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
   // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
-  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
-  // that prefix is the story chunks' (row CM-8), which the offline e2e counts.
+  // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already.
   Object.freeze({ name: 'order-game-chunk', marker: 'screen-chunk:story-order' }),
-  // F-CURR-002 row CM-35: the Role Play game and the fixture build's host screen
-  // (`src/screens/minigames/role-play/role-play-chunk.tsx`, reached only through the literal `import()` of
-  // `src/screens/minigames/role-play/role-play-entry.tsx`).
+  // F-CURR-002 row CM-35: the Role Play game, its branch reducer and views (`src/screens/minigames/role-play/role-play-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/role-play/role-play-entry.tsx` while
+  // `game.role-play` is on); its fallback (Tap to Respond on the same turns) stays in the start bundle.
   Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
   // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of

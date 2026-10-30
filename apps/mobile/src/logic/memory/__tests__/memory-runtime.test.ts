@@ -753,7 +753,9 @@ describe('mastery: levels latched into cellBest, Ready to refresh, New volume an
   });
 
   it('a first read before the seeding leaves the baseline to the first read after it: the levels reached before stay history', async () => {
-    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:') && !i.cells.includes(CELL)).slice(0, 101);
+    // The cell's own words (a Cloze Pick word gap's answer, row CM-3A S3) are known with the cell's items: 101 in all.
+    const cellWords = CELL_ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:')).length;
+    const words = ITEMS.filter((i) => i.kind === 'lex' && !i.id.startsWith('vocab:') && !i.cells.includes(CELL)).slice(0, 101 - cellWords);
     const rows = { ...Object.fromEntries(CELL_ITEMS.map((i) => [i.id, held(3)])), ...Object.fromEntries(words.map((i) => [i.id, held(2)])) };
     // This device's first mastery read lands before the seeding has latched (memSeededAt not there yet).
     const d = await learner(rows, { memSeededAt: undefined }, null);

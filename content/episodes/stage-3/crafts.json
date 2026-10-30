@@ -106,7 +106,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s3-crafts-q1-check",
           "durationSeconds": 40
         },
@@ -364,73 +364,62 @@
         },
         {
           "ref": "minigame:s3-crafts-q1-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
-              "id": "hear-yeon",
-              "prompt": {
-                "ko": "연을 날리고 싶어요.",
-                "romanization": "yeoneul nalligo sipeoyo",
-                "en": "I want to fly a kite."
+              "id": "c1",
+              "sentence": {
+                "ko": "___를 하고 싶어요.",
+                "romanization": "___reul hago sipeoyo",
+                "en": "I want to play baseball."
               },
-              "options": [
+              "gapKind": "word",
+              "tiles": [
                 {
-                  "id": "kite",
-                  "pictureRef": "card:kite",
-                  "labelEn": "Kite"
+                  "ko": "야구",
+                  "romanization": "yagu",
+                  "en": "baseball"
                 },
                 {
-                  "id": "yutnori",
-                  "pictureRef": "card:yutnori",
-                  "labelEn": "Yut"
+                  "ko": "축구",
+                  "romanization": "chukgu",
+                  "en": "soccer"
                 },
                 {
-                  "id": "soccer",
-                  "pictureRef": "word:sport-soccer",
-                  "labelEn": "Soccer"
-                },
-                {
-                  "id": "jumprope",
-                  "pictureRef": "word:sport-jumprope",
-                  "labelEn": "Jump rope"
+                  "ko": "농구",
+                  "romanization": "nonggu",
+                  "en": "basketball"
                 }
               ],
-              "answerId": "kite"
+              "answerIndex": 0
             },
             {
-              "id": "read-chukgu",
-              "prompt": {
-                "ko": "축구를 하고 싶어요.",
-                "romanization": "chukgureul hago sipeoyo",
-                "en": "I want to play soccer."
+              "id": "c2",
+              "sentence": {
+                "ko": "연___ 날리고 싶어요.",
+                "romanization": "yeon___ nalligo sipeoyo",
+                "en": "I want to fly a kite."
               },
-              "options": [
+              "gapKind": "particle",
+              "tiles": [
                 {
-                  "id": "chukgu",
-                  "text": {
-                    "ko": "축구를 하고 싶어요.",
-                    "romanization": "chukgureul hago sipeoyo",
-                    "en": "I want to play soccer."
-                  }
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
                 },
                 {
-                  "id": "yagu",
-                  "text": {
-                    "ko": "야구를 하고 싶어요.",
-                    "romanization": "yagureul hago sipeoyo",
-                    "en": "I want to play baseball."
-                  }
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
                 },
                 {
-                  "id": "nonggu",
-                  "text": {
-                    "ko": "농구를 하고 싶어요.",
-                    "romanization": "nonggureul hago sipeoyo",
-                    "en": "I want to play basketball."
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
                 }
               ],
-              "answerId": "chukgu"
+              "answerIndex": 0,
+              "filledRomanization": "yeoneul nalligo sipeoyo"
             }
           ]
         }
@@ -528,7 +517,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s3-crafts-q2-check",
           "durationSeconds": 40
         },
@@ -756,73 +745,38 @@
         },
         {
           "ref": "minigame:s3-crafts-q2-check",
-          "kind": "listen-pick",
+          "kind": "order-it",
           "rounds": [
             {
-              "id": "hear-san",
-              "prompt": {
-                "ko": "산에 가요.",
-                "romanization": "sane gayo",
-                "en": "I go to the mountain."
+              "id": "c1",
+              "sentence": {
+                "ko": "바다에 가고 싶어요.",
+                "romanization": "badae gago sipeoyo",
+                "en": "I want to go to the sea."
               },
-              "options": [
+              "pictureRef": "card:sea",
+              "distractors": [
                 {
-                  "id": "mountain",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                },
-                {
-                  "id": "sea",
-                  "pictureRef": "card:sea",
-                  "labelEn": "Sea"
-                },
-                {
-                  "id": "school",
-                  "pictureRef": "word:school-school",
-                  "labelEn": "School"
-                },
-                {
-                  "id": "river",
-                  "pictureRef": "word:nature-river",
-                  "labelEn": "River"
+                  "ko": "하고",
+                  "romanization": "hago",
+                  "en": "do (in 'want to do')"
                 }
-              ],
-              "answerId": "mountain"
+              ]
             },
             {
-              "id": "read-noriteo",
-              "prompt": {
-                "ko": "놀이터에 가요.",
-                "romanization": "noriteoe gayo",
-                "en": "I go to the playground."
+              "id": "c2",
+              "sentence": {
+                "ko": "공원에 가고 싶어요.",
+                "romanization": "gongwone gago sipeoyo",
+                "en": "I want to go to the park."
               },
-              "options": [
+              "distractors": [
                 {
-                  "id": "noriteo",
-                  "text": {
-                    "ko": "놀이터에 가요.",
-                    "romanization": "noriteoe gayo",
-                    "en": "I go to the playground."
-                  }
-                },
-                {
-                  "id": "gongwon",
-                  "text": {
-                    "ko": "공원에 가요.",
-                    "romanization": "gongwone gayo",
-                    "en": "I go to the park."
-                  }
-                },
-                {
-                  "id": "hakgyo",
-                  "text": {
-                    "ko": "학교에 가요.",
-                    "romanization": "hakgyoe gayo",
-                    "en": "I go to school."
-                  }
+                  "ko": "날리고",
+                  "romanization": "nalligo",
+                  "en": "fly (in 'want to fly')"
                 }
-              ],
-              "answerId": "noriteo"
+              ]
             }
           ]
         }
@@ -919,9 +873,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s3-crafts-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 50
         },
         {
           "id": "s6",
@@ -1177,73 +1131,27 @@
         },
         {
           "ref": "minigame:s3-crafts-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "hear-jegi",
-              "prompt": {
-                "ko": "제기를 차요.",
-                "romanization": "jegireul chayo",
-                "en": "I kick the jegi."
-              },
-              "options": [
-                {
-                  "id": "jegi",
-                  "pictureRef": "card:jegi",
-                  "labelEn": "Jegi"
-                },
-                {
-                  "id": "top",
-                  "pictureRef": "card:top",
-                  "labelEn": "Spinning top"
-                },
-                {
-                  "id": "kite",
-                  "pictureRef": "card:kite",
-                  "labelEn": "Kite"
-                },
-                {
-                  "id": "ball",
-                  "pictureRef": "word:sport-ball",
-                  "labelEn": "Ball"
-                }
-              ],
-              "answerId": "jegi"
+              "id": "d1",
+              "promptEn": "Type the word for a spinning top.",
+              "mode": "hear",
+              "target": {
+                "ko": "팽이",
+                "romanization": "paengi",
+                "en": "spinning top"
+              }
             },
             {
-              "id": "read-paengi",
-              "prompt": {
-                "ko": "팽이를 돌려요.",
-                "romanization": "paengireul dollyeoyo",
-                "en": "I spin the top."
-              },
-              "options": [
-                {
-                  "id": "paengi-spin",
-                  "text": {
-                    "ko": "팽이를 돌려요.",
-                    "romanization": "paengireul dollyeoyo",
-                    "en": "I spin the top."
-                  }
-                },
-                {
-                  "id": "paengi-throw",
-                  "text": {
-                    "ko": "팽이를 던져요.",
-                    "romanization": "paengireul deonjyeoyo",
-                    "en": "I throw the top."
-                  }
-                },
-                {
-                  "id": "jegi-spin",
-                  "text": {
-                    "ko": "제기를 돌려요.",
-                    "romanization": "jegireul dollyeoyo",
-                    "en": "I spin the jegi."
-                  }
-                }
-              ],
-              "answerId": "paengi-spin"
+              "id": "d2",
+              "promptEn": "Type the word for the shuttlecock toy you kick.",
+              "mode": "hear",
+              "target": {
+                "ko": "제기",
+                "romanization": "jegi",
+                "en": "a shuttlecock toy you kick"
+              }
             }
           ]
         }
@@ -1337,11 +1245,15 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language passes 4, 6, re-review (MAR): spelling, spacing, 해요체, marks and romanization clean; ko glosses are short definitions with no echo; q1 particle rounds test 을 and 를; step titles match the shipped overlays; the read Check keeps the shipped reading-round shape (spec 3.4). Order-it rounds may join two taught patterns. Scored reads assume Word Builder symbols; U-4 checks this once S2-1 ships.",
-      "Culture pass 5 and re-review (MAR): no culture claim (section 3.9); n1-n3 re-checked against all six sources, n3 tied to a going word, dictionary links on the entry views, locators in the pages' own wording; traditional and everyday games mixed evenly; no real person, shop, brand or price; no age wording."
+      "Culture pass 5 and re-review (MAR): no culture claim (section 3.9); n1-n3 re-checked against all six sources, n3 tied to a going word, dictionary links on the entry views, locators in the pages' own wording; traditional and everyday games mixed evenly; no real person, shop, brand or price; no age wording.",
+      "Check rotation MAR (row CM-3A S3, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): the stage's 15 Checks are Cloze Pick 6, Sentence Builder 5 and Dictation 4, none above 40 in 100, no Listen & Pick; every Check is a produce round; no two adjacent quests share Practice, Apply and Check.",
+      "CM-3A S3 MAR (cont.): Language: 야구, 축구 and 농구 all take 를, so the word gap is read by its meaning (I want to play baseball), not by its particle; 연을 날리고 싶어요 with 을 after a final consonant; 팽이 and 제기 are said as written, so they fit Dictation. Culture and facts: 제기 is the kicked shuttlecock toy and 팽이 the spinning top, as in the cell's notes.",
+      "CM-3A S3 MAR (cont.): Learning design: the Sentence Builder distractors 하고 and 날리고 are taught forms of the -고 싶어요 pattern. Reviser: ko Dictation prompts say 써 봐요 (was 쳐 봐요; reason in the review fix note). Third pass: es keeps the cell's marcador de objeto wording; no change.",
+      "CM-3A S3 review fix (2026-10-29): 써 봐요 because 써 ('write') is the plain verb for writing Hangul and matches the earlier 써 봐요 typing prompts. The 쳐 보세요 / 쳐 봐요 prompts of Stages 6 and 7 and the stories stay as they are."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

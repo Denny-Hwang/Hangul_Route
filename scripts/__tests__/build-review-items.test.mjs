@@ -141,11 +141,12 @@ describe("build-review-items.mjs over the repository's content", () => {
     const gone = run(root);
     assert.equal(gone.status, 1);
     assert.match(gone.stdout, /lex:somsatang \(lex\|솜사탕\) is no longer taught.*add lex:somsatang to "retired"/);
-    writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...frozen, retired: ["lex:somsatang"] }));
+    // Appended to the ids already retired (row CM-3A S3 retired one), as an author does.
+    writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...frozen, retired: [...frozen.retired, "lex:somsatang"] }));
     const retired = run(root);
     assert.equal(retired.status, 0, retired.stdout);
     // The retired item keeps its id and Korean for reports, and is in no row.
-    assert.match(chunkFile(root), /export const REVIEW_RETIRED: readonly RetiredItemRow\[\] = \[\["lex:somsatang","솜사탕",""\]\];/);
+    assert.match(chunkFile(root), /export const REVIEW_RETIRED: readonly RetiredItemRow\[\] = \[[^\n]*\["lex:somsatang","솜사탕",""\][^\n]*\];/);
     const rowsPart = chunkFile(root).split("export const REVIEW_RETIRED")[0];
     assert.ok(!rowsPart.includes('"lex:somsatang"'), "a retired id is in no row");
   });

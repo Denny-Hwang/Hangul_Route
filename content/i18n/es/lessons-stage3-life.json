@@ -102,8 +102,14 @@
       "picWord.boards.3.pairs.p3.word.gloss": "Como arroz."
     },
     "minigame:s3-life-q1-check": {
-      "listenPick.rounds.c1.prompt": "Bebo leche.",
-      "listenPick.rounds.c2.prompt": "Como pan."
+      "clozePick.rounds.c1.sentence.gloss": "Como pan.",
+      "clozePick.rounds.c1.tiles.ppang.gloss": "pan",
+      "clozePick.rounds.c1.tiles.tteok.gloss": "pastel de arroz",
+      "clozePick.rounds.c1.tiles.bap.gloss": "arroz",
+      "clozePick.rounds.c2.sentence.gloss": "Como una manzana.",
+      "clozePick.rounds.c2.tiles.reul.gloss": "marca de objeto, después de vocal",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto, después de consonante final",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto, después de vocal"
     },
     "minigame:s3-life-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "El gimbap está rico.",
@@ -134,8 +140,11 @@
       "picWord.boards.3.pairs.p3.word.gloss": "El arroz está rico."
     },
     "minigame:s3-life-q2-check": {
-      "listenPick.rounds.c1.prompt": "Los fideos instantáneos están calientes.",
-      "listenPick.rounds.c2.prompt": "La manzana está rica."
+      "orderIt.rounds.c1.sentence.gloss": "El kimchi está rico.",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "marca de sujeto, después de vocal",
+      "orderIt.rounds.c1.particle.choices.i.gloss": "marca de sujeto, después de consonante final",
+      "orderIt.rounds.c2.sentence.gloss": "Me gusta la leche.",
+      "orderIt.rounds.c2.distractors.tteugeowoyo.gloss": "está caliente"
     },
     "minigame:s3-life-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Mi amigo o amiga va a la escuela.",
@@ -164,8 +173,14 @@
       "picWord.boards.3.pairs.p3.word.gloss": "Mi hermano o hermana menor viene a casa."
     },
     "minigame:s3-life-q3-check": {
-      "listenPick.rounds.c1.prompt": "Voy al mar.",
-      "listenPick.rounds.c2.prompt": "Viene mi amigo o amiga."
+      "clozePick.rounds.c1.sentence.gloss": "Mamá viene a casa.",
+      "clozePick.rounds.c1.tiles.wayo.gloss": "venir",
+      "clozePick.rounds.c1.tiles.gayo.gloss": "ir",
+      "clozePick.rounds.c1.tiles.masyeoyo.gloss": "beber",
+      "clozePick.rounds.c2.sentence.gloss": "Mi hermano o hermana menor va a la escuela.",
+      "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto, después de consonante final",
+      "clozePick.rounds.c2.tiles.ga.gloss": "marca de sujeto, después de vocal",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marca de objeto, después de consonante final"
     }
   }
 }

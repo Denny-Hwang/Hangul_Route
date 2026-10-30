@@ -182,6 +182,19 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   }
   if (typeof value !== 'object' || value === null) return out;
   const record = value as Record<string, unknown>;
+  // F-CURR-002 row CM-3A S3: a Cloze Pick round asks its completed sentence and, for a word gap, the tile that fills it
+  // (the review-item build's reading, extract.ts); its other tiles are shown but not taught, and a value gap asks its card.
+  const tiles = record.tiles;
+  const sentence = record.sentence;
+  if (Array.isArray(tiles) && typeof record.answerIndex === 'number' && typeof sentence === 'object' && sentence !== null) {
+    const answer = tiles[record.answerIndex] as Record<string, unknown> | undefined;
+    const gapped = (sentence as Record<string, unknown>).ko;
+    if (record.gapKind !== 'value' && typeof answer?.ko === 'string' && typeof gapped === 'string') {
+      out.push(normalizeKo(gapped.replace('___', answer.ko)));
+      if (record.gapKind !== 'particle') out.push(normalizeKo(answer.ko));
+    }
+    return out;
+  }
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {

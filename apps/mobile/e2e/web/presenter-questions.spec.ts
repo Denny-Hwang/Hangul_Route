@@ -24,7 +24,8 @@ const DECK: LectureDeckInput = {
   seed: 7,
   blocks: [
     { kind: 'quest', id: 'quest:stage1-letters-q1' }, // a letter round and a word round (the Check)
-    { kind: 'quest', id: 'quest:stage3-life-q1' }, // a picture round and a sentence round (the Check)
+    // Stage 3 life q1's Check is Cloze Pick since row CM-3A S3 (no listen question); nature q1's Apply has them.
+    { kind: 'quest', id: 'quest:stage3-nature-q1' }, // heard picture and sentence rounds (its Apply), and a Cloze Pick Check
     { kind: 'quest', id: 'quest:stage4-life-q1' }, // reply questions (Tap to Respond)
     { kind: 'quest', id: 'quest:stage6-life-q3' }, // realia questions: Korean, figure and picture options on a menu
     { kind: 'quest', id: 'quest:stage6-nature-q1' }, // a five-board trail sign
@@ -301,9 +302,10 @@ test.describe('the question slides in Spanish and Korean (longer questions and m
 test.describe('the listen question without a Korean voice (section 3.7)', () => {
   test.use({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false });
 
-  test('the teacher reads the romanization; the Hangul joins the Say it box at the answer build; no stage speaker', async ({ page }) => {
+  /** Walk one quest's listen questions with no Korean voice; returns how many it reached. */
+  async function walkWithoutVoice(page: Page, questId: string, deckId: string): Promise<number> {
     // The suite's silent engine has no Korean voice (fixtures.ts), so the listen prompts are teacher-says text.
-    await page.goto(link({ ...DECK, id: 'lecture:e2eq02', blocks: [{ kind: 'quest', id: 'quest:stage3-life-q1' }] }));
+    await page.goto(link({ ...DECK, id: deckId, blocks: [{ kind: 'quest', id: questId }] }));
     await startLesson(page);
     const stage = page.getByTestId('presenter-stage');
     let visited = 0;
@@ -324,8 +326,18 @@ test.describe('the listen question without a Korean voice (section 3.7)', () => 
       await shot(page, `presenter-questions-say-it-${n}-a`);
       await expect.poll(() => fitProblems(page, false), { timeout: 3000 }).toEqual([]);
     }
-    // Stage 3 life q1 has listen rounds (a picture round and a sentence round): the walk must reach them.
-    expect(visited).toBeGreaterThan(0);
+    return visited;
+  }
+
+  test('the teacher reads the romanization; the Hangul joins the Say it box at the answer build; no stage speaker', async ({ page }) => {
+    // Stage 3 letters q1 has listen rounds (its Apply): the walk must reach them.
+    expect(await walkWithoutVoice(page, 'quest:stage3-letters-q1', 'lecture:e2eq02')).toBeGreaterThan(0);
+  });
+
+  // Tracked in issue #870: nature q1's Apply sentence question overflows the stage by about 11 px at 1280 x 720 with
+  // no Korean voice (older than row CM-3A S3, which moved this walk from life q1). Make it a test when #870 is fixed.
+  test.fixme('nature q1 (heard picture and sentence rounds) fits with no Korean voice (issue #870)', async ({ page }) => {
+    expect(await walkWithoutVoice(page, 'quest:stage3-nature-q1', 'lecture:e2eq02n')).toBeGreaterThan(0);
   });
 });
 

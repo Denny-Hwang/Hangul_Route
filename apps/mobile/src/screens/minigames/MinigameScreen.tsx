@@ -101,8 +101,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     // A strong round earlier in the cell plays this Apply one round shorter (F-CURR-002 section 4.6, row CM-24).
     const { questId: running, short } = useQuestRunStore.getState();
     const source = running === questId && short?.step === stepIndex ? short.scope : ref ? scopeFor(ref) : undefined;
-    const localized = source && ref ? localizeScope(source, ref, locale) : source;
-    return localized && playedScope(localized, playsRolePlay);
+    const scoped = source && ref ? localizeScope(source, ref, locale) : source;
+    return scoped && playedScope(scoped, playsRolePlay);
   }, [ref, locale, questId, stepIndex, playsRolePlay]);
   // A new format's `game.<kind>` switch (F-CURR-002 §12.2): off, the step plays its fallback round of a shipped kind
   // (My Story: Write Frame on the first frame, row CM-38), and `minigame.finished` names the kind that was played.
@@ -165,7 +165,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     </Screen>
   );
 
-  if (switched?.kind === 'loading' || waitsForSwitch) return <LessonWaiting />;
+  if (waitsForSwitch || switched?.kind === 'loading') return <LessonWaiting />;
   if (!quest || !step || !scope) {
     return fallback(copy.notFound);
   }

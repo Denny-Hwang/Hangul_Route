@@ -174,10 +174,14 @@ export const QuestObjectSchema = z.object({
  * `stage2` (F-CURR-002 §7.1 Check rotation, row CM-3A S2): Listen & Pick (with its Read
  * Pick Meaning round), Dictation (Type Hangul) and Pic-Word Match, so no game holds more
  * than 40% of the stage's Checks.
+ * `stage3` (F-CURR-002 §7.1 Check rotation, row CM-3A S3): Cloze Pick and Sentence Builder
+ * (the S3 default Check) and Dictation (Type Hangul), so no game holds more than 40% of the
+ * stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
   if (stage === 'stage2') return ['listen-pick', 'type-hangul', 'pic-word-match'];
+  if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
   return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
 }
 
