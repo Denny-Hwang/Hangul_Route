@@ -7,9 +7,9 @@
     "kind": "consonant",
     "order": 1,
     "exampleWord": {
-      "ko": "강아지",
-      "romanization": "gangaji",
-      "en": "puppy"
+      "ko": "가족",
+      "romanization": "gajok",
+      "en": "family"
     }
   },
   {
@@ -20,9 +20,9 @@
     "kind": "consonant",
     "order": 2,
     "exampleWord": {
-      "ko": "나비",
-      "romanization": "nabi",
-      "en": "butterfly"
+      "ko": "나무",
+      "romanization": "namu",
+      "en": "tree"
     }
   },
   {
@@ -59,9 +59,9 @@
     "kind": "consonant",
     "order": 5,
     "exampleWord": {
-      "ko": "무궁화",
-      "romanization": "mugunghwa",
-      "en": "rose of Sharon — Korea's flower"
+      "ko": "물",
+      "romanization": "mul",
+      "en": "water"
     }
   },
   {
@@ -85,9 +85,9 @@
     "kind": "consonant",
     "order": 7,
     "exampleWord": {
-      "ko": "사과",
-      "romanization": "sagwa",
-      "en": "apple"
+      "ko": "산",
+      "romanization": "san",
+      "en": "mountain"
     }
   },
   {
@@ -98,9 +98,9 @@
     "kind": "consonant",
     "order": 8,
     "exampleWord": {
-      "ko": "인형",
-      "romanization": "inhyeong",
-      "en": "doll"
+      "ko": "아이",
+      "romanization": "ai",
+      "en": "child"
     }
   },
   {
@@ -111,9 +111,9 @@
     "kind": "consonant",
     "order": 9,
     "exampleWord": {
-      "ko": "잠자리",
-      "romanization": "jamjari",
-      "en": "dragonfly"
+      "ko": "집",
+      "romanization": "jip",
+      "en": "house"
     }
   },
   {
@@ -137,9 +137,9 @@
     "kind": "consonant",
     "order": 11,
     "exampleWord": {
-      "ko": "케이팝",
-      "romanization": "keipap",
-      "en": "K-pop music"
+      "ko": "코",
+      "romanization": "ko",
+      "en": "nose"
     }
   },
   {
@@ -163,9 +163,9 @@
     "kind": "consonant",
     "order": 13,
     "exampleWord": {
-      "ko": "팽이",
-      "romanization": "paengi",
-      "en": "spinning top"
+      "ko": "포도",
+      "romanization": "podo",
+      "en": "grape"
     }
   },
   {
@@ -176,9 +176,9 @@
     "kind": "consonant",
     "order": 14,
     "exampleWord": {
-      "ko": "호랑이",
-      "romanization": "horangi",
-      "en": "tiger — that's Hoya!"
+      "ko": "하늘",
+      "romanization": "haneul",
+      "en": "sky"
     }
   },
   {
@@ -215,9 +215,9 @@
     "kind": "vowel",
     "order": 17,
     "exampleWord": {
-      "ko": "어묵",
-      "romanization": "eomuk",
-      "en": "fish cake"
+      "ko": "엄마",
+      "romanization": "eomma",
+      "en": "mom"
     }
   },
   {
@@ -254,9 +254,9 @@
     "kind": "vowel",
     "order": 20,
     "exampleWord": {
-      "ko": "용",
-      "romanization": "yong",
-      "en": "dragon"
+      "ko": "요리",
+      "romanization": "yori",
+      "en": "cooking"
     }
   },
   {
@@ -293,9 +293,9 @@
     "kind": "vowel",
     "order": 23,
     "exampleWord": {
-      "ko": "그네",
-      "romanization": "geune",
-      "en": "swing — like on a playground"
+      "ko": "으뜸",
+      "romanization": "eutteum",
+      "en": "first"
     }
   },
   {
@@ -306,9 +306,9 @@
     "kind": "vowel",
     "order": 24,
     "exampleWord": {
-      "ko": "이불",
-      "romanization": "ibul",
-      "en": "blanket — a warm sleeping cover"
+      "ko": "이름",
+      "romanization": "ireum",
+      "en": "name"
     }
   }
 ]

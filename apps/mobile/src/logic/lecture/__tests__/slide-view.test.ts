@@ -253,6 +253,12 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
     // A Cloze Pick sentence with its gap (row CM-30) is not said: the gap would be read out as underscores.
     expect(slideSound(quiz({ ask: 'check', text: '{target}', target: { ko: '책을 ___.', romanization: 'chaegeul ___.', gloss: 'I read a book.' } }))).toBeUndefined();
+    // A one-letter target plays its name and carries the name's romanization, not the sound value it shows.
+    const letter = { ko: 'ㅁ', romanization: 'm', spokenKo: '미음', gloss: 'the consonant letter mieum' };
+    expect(slideSound(quiz({ ask: 'check', text: 'What does {target} copy?', target: letter }))).toEqual({
+      spoken: { text: '미음', romanization: 'mieum' },
+      kind: 'word',
+    });
   });
 
   it('an order slide plays the last Korean step on screen at the reveal, in the order drawn, at the sentence rate', () => {

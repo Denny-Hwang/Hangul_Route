@@ -32,6 +32,15 @@
 //     rice roll)" is "seaweed rice roll"): rule gloss-repeats-romanization, the one
 //     implementation in scripts/overlay-rules.mjs (glossRepeatsRomanization, F-CNT-001 §3), with
 //     its proper-name allowlist; the overlay rules apply it to the Spanish glosses.
+//   - A `ko` that is one lone letter (a compatibility jamo, U+3131-318E, or a conjoining
+//     jamo, U+1100-11FF) carries a `spokenKo` (rule lone-jamo-without-spokenKo,
+//     AMENDMENTS-AUDIO-CLIPS M8): a device voice reads a bare letter by engine whim (its name
+//     on iOS, nothing elsewhere), so the content says what is spoken, the letter's name
+//     (ㅁ: "spokenKo": "미음"). Exempt are the places where a letter is shown and never
+//     spoken (SHOWN_ONLY_LETTERS, apps/mobile/scripts/audio/content-sources.mjs): the Stage 1
+//     letter records (the app speaks them through jamoVoice), the placement bank's written
+//     options and prompts (its heard prompt is `question.spoken`), Listen & Pick's written
+//     options and the write-frame keyboard's final tiles.
 //   - content/i18n/<locale>/*.json are locale overlays, not base content: they
 //     follow the overlay rules in scripts/overlay-rules.mjs (F-I18N-001 §3.7),
 //     where Korean overlays may hold Hangul in translatable fields (a Korean
@@ -48,6 +57,8 @@ import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkPlacementTree } from "./placement-rules.mjs";
 import { bannedWordIn, checkOverlayTree, glossRepeatsRomanization, glossRepeatsRule } from "./overlay-rules.mjs";
+// The one list of places a lone letter is shown and never spoken, shared with the audio scripts' content walker.
+import { isLoneLetter, isShownOnlyLetter, spokenTextOf } from "../apps/mobile/scripts/audio/content-sources.mjs";
 
 const ROOT = process.env.HANGUL_ROUTE_ROOT
   ? resolve(process.env.HANGUL_ROUTE_ROOT)
@@ -65,6 +76,8 @@ const OVERLAY_DIR_PREFIX = "content/i18n/";
 const KOREAN_RE = /[ㄱ-㆏가-힣]/;
 const KOREAN_TARGET_FIELDS = new Set([
   "ko",
+  // What the voice says when it differs from `ko` (F-AUDIO-004): taught Korean, not a UI field.
+  "spokenKo",
   "korean",
   "target",
   "answer_ko",
@@ -146,6 +159,13 @@ const isLessonZone = (path, k) =>
 const withoutKoTokens = (text) => text.replace(/\{ko:[^}]*\}/g, " ");
 const uiText = (file, k, v) => (isLessonFile(file) && k.endsWith("En") ? withoutKoTokens(v) : v);
 
+/** A `ko` that is one lone letter, with no `spokenKo`, outside the shown-only places (F-CNT-001, M8). */
+function loneLetterWithoutSpoken(file, path, obj) {
+  if (typeof obj.ko !== "string" || !isLoneLetter(obj.ko)) return false;
+  if (spokenTextOf(obj) !== obj.ko) return false;
+  return !isShownOnlyLetter(file, path);
+}
+
 function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
@@ -177,6 +197,9 @@ function visit(value, path, file, violations, parentObj, inReferenceZone = false
       if (glossRepeatsRomanization({ ko: obj.ko, romanization: obj.romanization, gloss: obj[key] })) {
         violations.push({ file, path: [...path, key].join("."), rule: glossRepeatsRule(obj[key], obj.romanization) });
       }
+    }
+    if (loneLetterWithoutSpoken(file, path, obj)) {
+      violations.push({ file, path: path.join(".") || "(root)", rule: "lone-jamo-without-spokenKo" });
     }
     if (koreanFields.length > 0) {
       if (!("romanization" in obj)) {

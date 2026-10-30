@@ -47,13 +47,15 @@ import {
   buildCultureQuizRounds,
   buildMatchSoundRounds,
   buildOddOneOutRounds,
-  SOUND_QUIZ_JAMO_IDS,
+  FINAL_QUIZ_JAMO_IDS,
+  LETTER_QUIZ_JAMO_IDS,
   type CardMatchPair,
   type CultureQuizRound,
   type MatchSoundRound,
 } from '../round-builder';
 import { GLOSS_HIDDEN_KINDS } from '../story/check-view';
 import { derangeSeeded, shuffleSeeded } from '../story/seeded-order';
+import { allowedDistractors } from '../voice-pools';
 import {
   buildsFor,
   joinSpoken,
@@ -93,7 +95,8 @@ const CLOZE_PROMPT = '{target}';
  * do not know is a `scope-too-small` skip too.
  */
 
-type StoryKo = { ko: string; romanization: string; en: string };
+/** A story's taught Korean; `spokenKo` is what the voice says when it differs (a letter keyword says its name, M8). */
+type StoryKo = { ko: string; romanization: string; en: string; spokenKo?: string };
 
 export interface LectureStoryScene {
   id: string;
@@ -314,6 +317,9 @@ function slideVoices(slide: Slide): Array<[string, WordVoice]> {
   }
 }
 
+/** A story text's `spokenKo` as a spread, so a slide carries it only when the content has one. */
+const spokenOfStory = (text: { spokenKo?: string | undefined }): { spokenKo?: string } => (text.spokenKo === undefined ? {} : { spokenKo: text.spokenKo });
+
 /** A scene's Korean: its line, else its keyword (the D14 rule of the schema's `sceneKorean`, on the presenter's narrower view). */
 const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ?? scene.keyword;
 
@@ -504,6 +510,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
 
   const jamoOption = (jamo: Jamo, correct: boolean): QuizOption => ({ ko: jamo.char, romanization: jamo.romanization, correct });
+  /** A final round's prompt: the closed syllable (an for final ㄴ), its romanization and clip (`jamoVoice`, JV-A2). */
+  const finalSpoken = (jamo: Jamo): SpokenForm => {
+    const voice = jamoVoice(jamo, 'sound');
+    return voice.audioRef === undefined ? { text: voice.text, romanization: voice.romanization } : { text: voice.text, romanization: voice.romanization, audioRef: voice.audioRef };
+  };
 
   /** A Match Sound round's prompt (JV-A1): a letter by its name, a final by its closed syllable. */
   const promptSpoken = (jamo: Jamo): SpokenForm => {
@@ -521,11 +532,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     }
   };
 
-  const soundQuiz = (path: string, ref: string, build: () => readonly MatchSoundRound[]): void => {
+  /**
+   * Sound-quiz slides. A letter round asks among letters; a final round (`finals`, AMENDMENTS-AUDIO-CLIPS
+   * JV-A3 rule 3) is a sound question: it plays the closed syllable (an), asks which letter is at the
+   * bottom (`frame: 'endsWith'`) and shows final tiles only. `from` numbers the slides after earlier rounds.
+   */
+  const soundQuiz = (path: string, ref: string, build: () => readonly MatchSoundRound[], from = 0, finals = false): void => {
     attempt(ref, build)?.forEach((round, i) =>
-      push(`${path}/q${i + 1}`, {
+      push(`${path}/q${from + i + 1}`, {
         kind: 'quiz',
-        prompt: { ask: 'sound', spoken: promptSpoken(round.promptJamo) },
+        prompt: finals ? { ask: 'sound', spoken: finalSpoken(round.promptJamo), frame: 'endsWith' } : { ask: 'sound', spoken: promptSpoken(round.promptJamo) },
         options: round.tiles.map((t) => jamoOption(t, t.id === round.promptJamo.id)),
         textPrompt,
       }),
@@ -1237,7 +1253,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     try {
       narrations = tier.scenes.map((scene) =>
         parseNarration(scene.narrationEn, found.keywords).map((part): NarrationPiece =>
-          'text' in part ? { text: part.text } : { ko: part.kw.ko, romanization: part.kw.romanization, gloss: part.kw.en },
+          'text' in part ? { text: part.text } : { ko: part.kw.ko, romanization: part.kw.romanization, gloss: part.kw.en, ...spokenOfStory(part.kw) },
         ),
       );
     } catch {
@@ -1255,7 +1271,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     tier.scenes.forEach((scene, i) => {
       const ko = sceneKo(scene);
       // A scene's line is read at the sentence rate, its keyword at the word rate (Read-to-me).
-      const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en, speech: scene.line ? ('sentence' as const) : ('word' as const) } : undefined;
+      const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en, ...spokenOfStory(ko), speech: scene.line ? ('sentence' as const) : ('word' as const) } : undefined;
       push(`${key}/${scene.id}`, {
         kind: 'story',
         storyId,
@@ -1294,7 +1310,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         }),
       );
       const keepOrder = check.kind === 'true-false' || check.shuffle === false;
-      const target = check.target ? { ko: check.target.ko, romanization: check.target.romanization, gloss: check.target.en } : undefined;
+      const target = check.target ? { ko: check.target.ko, romanization: check.target.romanization, gloss: check.target.en, ...spokenOfStory(check.target) } : undefined;
       push(ref, {
         kind: 'quiz',
         prompt: { ask: 'check', text: check.promptEn, ...(target ? { target } : {}), ...(target && GLOSS_HIDDEN_KINDS.includes(check.kind) ? { glossAtAnswer: true as const } : {}) },
@@ -1415,23 +1431,27 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (focus.length === 0) return;
     const kinds = new Set(focus.map((j) => j.kind));
     const pool = [...focus];
+    // Up to 4 rounds; each asks a revisit letter (focus = rounds), so the prompts are the first `rounds`
+    // revisit letters. The pool is topped up with other letters of their kinds until it holds 4 and each
+    // prompt has 3 distractors the letter rules allow (JV-A3 rules 1b, 1c: no ㅣ or ㅡ beside digeut).
+    const rounds = Math.min(REVISIT_MAX_ROUNDS, focus.length);
+    const prompts = focus.slice(0, rounds);
+    const filled = (): boolean =>
+      pool.length >= QUIZ_MIN_ITEMS && prompts.every((p) => allowedDistractors('letter', p, pool).length >= QUIZ_MIN_ITEMS - 1);
     for (const j of bundle.jamoAll) {
-      if (pool.length >= QUIZ_MIN_ITEMS) break;
-      if (kinds.has(j.kind) && !pool.some((p) => p.id === j.id)) pool.push(j);
+      if (filled()) break;
+      if (kinds.has(j.kind) && LETTER_QUIZ_JAMO_IDS.has(j.id) && !pool.some((p) => p.id === j.id)) pool.push(j);
     }
     const ref = `${path}/quiz`;
     if (pool.length < QUIZ_MIN_ITEMS) {
       skip(ref, 'scope-too-small');
       return;
     }
-    // Up to 4 rounds; each must ask a revisit letter. With 4 or more letters the pool is exactly
-    // those letters, so every prompt is one; with fewer, each is asked once (focus = rounds).
-    const rounds = Math.min(REVISIT_MAX_ROUNDS, focus.length);
     soundQuiz(ref, ref, () =>
       buildMatchSoundRounds({
         scopeJamoIds: pool.map((j) => j.id),
         rounds,
-        focusJamoIds: focus.slice(0, rounds).map((j) => j.id),
+        focusJamoIds: prompts.map((j) => j.id),
         tileCount: 4,
         seed: seed(),
       }),
@@ -1441,21 +1461,61 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   const quizBlock = (path: string, from: 'previous' | 'all', rounds: number): void => {
     const items = taught.slice(from === 'previous' ? quizFrom : 0);
     quizFrom = taught.length;
-    // Only letters a sound round may ask (Word Builder's are shown on their letter slides, never quizzed by ear).
-    const letters = [...new Set(items.flatMap((t) => (t.kind === 'letter' && SOUND_QUIZ_JAMO_IDS.has(t.jamoId) ? [t.jamoId] : [])))];
+    // Letters and finals are different questions (AMENDMENTS-AUDIO-CLIPS JV-A3 rules 1, 3 and 4): a letter round
+    // asks among the taught initials and vowels, a final round among the taught finals by their closed syllable.
+    // Word Builder's letters are shown on their letter slides, never quizzed by ear.
+    const taughtOf = (ids: ReadonlySet<string>): string[] => [
+      ...new Set(items.flatMap((t) => (t.kind === 'letter' && ids.has(t.jamoId) ? [t.jamoId] : []))),
+    ];
+    const letters = taughtOf(LETTER_QUIZ_JAMO_IDS);
+    const finals = taughtOf(FINAL_QUIZ_JAMO_IDS);
     const pairs: CardMatchPair[] = items.flatMap((t) =>
       t.kind === 'word' && t.gloss !== undefined ? [{ ko: t.ko, en: t.gloss, romanization: t.romanization }] : [],
     );
     const lettersOk = letters.length >= QUIZ_MIN_ITEMS;
+    const finalsOk = finals.length >= QUIZ_MIN_ITEMS;
     const pairsOk = pairs.length >= QUIZ_MIN_ITEMS;
-    if (!lettersOk && !pairsOk) {
+    if (!lettersOk && !finalsOk && !pairsOk) {
       skip('quiz', 'scope-too-small');
       return;
     }
-    const letterRounds = lettersOk ? (pairsOk ? Math.ceil(rounds / 2) : rounds) : 0;
-    if (lettersOk) soundQuiz(path, 'quiz', () => buildMatchSoundRounds({ scopeJamoIds: letters, rounds: letterRounds, tileCount: 4, seed: seed() }));
+    const soundRounds = lettersOk || finalsOk ? (pairsOk ? Math.ceil(rounds / 2) : rounds) : 0;
+    const finalRounds = finalsOk ? (lettersOk ? Math.floor(soundRounds / 2) : soundRounds) : 0;
+    const letterRounds = soundRounds - finalRounds;
+    if (letterRounds > 0) {
+      // A taught letter with too few distractors the letter rules allow (JV-A3 rule 1b: ㄷ beside ㅡ ㅣ ㄹ) would make
+      // the builder throw and drop the whole quiz. Top the pool up with other letters of the taught kinds, as a warm-up
+      // does, and keep asking only the taught letters: the added ones are distractors, never prompts.
+      const taughtJamo = letters.flatMap((id) => bundle.jamoAll.filter((j) => j.id === id));
+      const pool = [...taughtJamo];
+      const kinds = new Set(taughtJamo.map((j) => j.kind));
+      const filled = (): boolean => taughtJamo.every((p) => allowedDistractors('letter', p, pool).length >= QUIZ_MIN_ITEMS - 1);
+      for (const j of bundle.jamoAll) {
+        if (filled()) break;
+        if (kinds.has(j.kind) && LETTER_QUIZ_JAMO_IDS.has(j.id) && !pool.some((p) => p.id === j.id)) pool.push(j);
+      }
+      const toppedUp = pool.length > taughtJamo.length;
+      soundQuiz(path, 'quiz', () =>
+        buildMatchSoundRounds({
+          scopeJamoIds: pool.map((j) => j.id),
+          rounds: letterRounds,
+          tileCount: 4,
+          seed: seed(),
+          ...(toppedUp ? { promptJamoIds: letters } : {}),
+        }),
+      );
+    }
+    if (finalRounds > 0) {
+      soundQuiz(
+        path,
+        'quiz',
+        () => buildMatchSoundRounds({ scopeJamoIds: finals, rounds: finalRounds, tileCount: 4, seed: seed(), question: 'sound' }),
+        letterRounds,
+        true,
+      );
+    }
     if (pairsOk) {
-      meaningQuiz(path, 'quiz', () => buildCultureQuizRounds({ cardPairs: pairs, rounds: rounds - letterRounds, seed: seed() }), letterRounds);
+      meaningQuiz(path, 'quiz', () => buildCultureQuizRounds({ cardPairs: pairs, rounds: rounds - soundRounds, seed: seed() }), soundRounds);
     }
   };
 

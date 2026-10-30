@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:shapes-of-hangeul",
   "state": "ready",
-  "contentVer": 6,
+  "contentVer": 7,
   "title": {
     "ko": "한글 모양의 비밀",
     "romanization": "Hangeul moyangui bimil",
@@ -93,6 +93,7 @@
     {
       "id": "jamo-g",
       "ko": "ㄱ",
+      "spokenKo": "기역",
       "romanization": "g/k",
       "en": "giyeok, the letter for the g/k sound",
       "kind": "jamo"
@@ -114,6 +115,7 @@
     {
       "id": "jamo-a",
       "ko": "ㅏ",
+      "spokenKo": "아",
       "romanization": "a",
       "en": "the vowel letter a",
       "kind": "jamo"
@@ -128,6 +130,7 @@
     {
       "id": "jamo-n",
       "ko": "ㄴ",
+      "spokenKo": "니은",
       "romanization": "n",
       "en": "the consonant letter nieun",
       "kind": "jamo"
@@ -135,6 +138,7 @@
     {
       "id": "jamo-m",
       "ko": "ㅁ",
+      "spokenKo": "미음",
       "romanization": "m",
       "en": "the consonant letter mieum",
       "kind": "jamo"
@@ -142,6 +146,7 @@
     {
       "id": "jamo-s",
       "ko": "ㅅ",
+      "spokenKo": "시옷",
       "romanization": "s",
       "en": "the consonant letter siot",
       "kind": "jamo"
@@ -149,6 +154,7 @@
     {
       "id": "jamo-silent-ng",
       "ko": "ㅇ",
+      "spokenKo": "이응",
       "romanization": "silent/ng",
       "en": "the consonant letter ieung",
       "kind": "jamo"
@@ -156,6 +162,7 @@
     {
       "id": "jamo-d",
       "ko": "ㄷ",
+      "spokenKo": "디귿",
       "romanization": "d/t",
       "en": "the consonant letter digeut",
       "kind": "jamo"
@@ -163,6 +170,7 @@
     {
       "id": "jamo-t",
       "ko": "ㅌ",
+      "spokenKo": "티읕",
       "romanization": "t",
       "en": "the consonant letter tieut",
       "kind": "jamo"
@@ -170,6 +178,7 @@
     {
       "id": "jamo-eu",
       "ko": "ㅡ",
+      "spokenKo": "으",
       "romanization": "eu",
       "en": "the vowel letter eu",
       "kind": "jamo"
@@ -177,6 +186,7 @@
     {
       "id": "jamo-i",
       "ko": "ㅣ",
+      "spokenKo": "이",
       "romanization": "i",
       "en": "the vowel letter i",
       "kind": "jamo"
@@ -241,6 +251,7 @@
           "keyword": {
             "id": "jamo-g",
             "ko": "ㄱ",
+            "spokenKo": "기역",
             "romanization": "g/k",
             "en": "giyeok, the letter for the g/k sound",
             "kind": "jamo"
@@ -428,6 +439,7 @@
           "keyword": {
             "id": "jamo-a",
             "ko": "ㅏ",
+            "spokenKo": "아",
             "romanization": "a",
             "en": "the vowel letter a",
             "kind": "jamo"
@@ -502,6 +514,7 @@
           "promptEn": "What does the shape of {target} copy?",
           "target": {
             "ko": "ㅁ",
+            "spokenKo": "미음",
             "romanization": "m",
             "en": "the consonant letter mieum"
           },
@@ -545,6 +558,7 @@
             {
               "id": "b",
               "ko": "ㅣ",
+              "spokenKo": "이",
               "romanization": "i",
               "en": "the vowel letter i",
               "isCorrect": true
@@ -552,6 +566,7 @@
             {
               "id": "c",
               "ko": "ㅡ",
+              "spokenKo": "으",
               "romanization": "eu",
               "en": "the vowel letter eu",
               "isCorrect": false
@@ -559,6 +574,7 @@
             {
               "id": "d",
               "ko": "ㅏ",
+              "spokenKo": "아",
               "romanization": "a",
               "en": "the vowel letter a",
               "isCorrect": false
@@ -575,6 +591,7 @@
           "promptEn": "How do you get {target} from the letter nieun?",
           "target": {
             "ko": "ㄷ",
+            "spokenKo": "디귿",
             "romanization": "d/t",
             "en": "the consonant letter digeut"
           },

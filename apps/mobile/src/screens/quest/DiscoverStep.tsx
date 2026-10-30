@@ -48,6 +48,7 @@ import {
 } from '../../logic/stage1/discover-flow';
 import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
+import { exampleWordLabel } from '../../logic/stage1/example-label';
 import { hasClip, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait } from '../../platform/screen-reader';
@@ -534,11 +535,7 @@ function DiscoverItemCard({
             size="sm"
             romanizationShown={render.exampleRomanizationShown}
             onPress={() => dispatch({ type: 'hear', id: example.hear.id })}
-            accessibilityLabel={a11y.hearExample(
-              render.exampleRomanizationShown
-                ? `${example.ko}, ${example.romanization}, ${example.gloss}`
-                : `${example.ko}, ${example.gloss}`,
-            )}
+            accessibilityLabel={exampleWordLabel(copy, a11y, example, render.exampleRomanizationShown)}
             testID={`discover-hear-${example.hear.id}`}
           />
           {/* Decorative: the example's KoreanText line already names it. */}

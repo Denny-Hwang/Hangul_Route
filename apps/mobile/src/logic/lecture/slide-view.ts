@@ -15,6 +15,7 @@ import {
   type SequenceStep,
   type SheetText,
 } from './build-steps';
+import { spokenRomanization } from '../story/spoken-label';
 import type { Slide } from './deck-builder';
 import { SHEET_CARDS_W, SHEET_MAX_W, SHEET_ROOMY_LINES, SHEET_W } from './stage-constants';
 
@@ -429,7 +430,9 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
       return wordSound(prompt.ko, prompt.romanization);
     case 'check':
       // A Cloze Pick sentence with its gap (row CM-30) is not said: a gap read aloud says "underscore".
-      return prompt.target && !prompt.target.ko.includes(SLOT_MARKER) ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
+      return prompt.target && !prompt.target.ko.includes(SLOT_MARKER)
+        ? wordSound(prompt.target.spokenKo ?? prompt.target.ko, spokenRomanization(prompt.target))
+        : undefined;
     case 'odd-one-out':
       // Its letters are the answer.
       return undefined;

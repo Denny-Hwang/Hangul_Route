@@ -77,7 +77,8 @@ function Question({ slide, sayIt, onPlaySound, crowded }: { slide: QuizBody; say
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: say ? 'wrap' : 'nowrap', gap: units(unit, spacing.xl) }}>
         {say ? null : <SpeakerButton testID="presenter-quiz-speaker" enabled onPress={onPlaySound} />}
-        <View style={{ flexShrink: 1 }}>{heading(m.sound)}</View>
+        {/* A final round asks for the letter at the bottom of the syllable it plays (AMENDMENTS-AUDIO-CLIPS JV-A3 rule 3). */}
+        <View style={{ flexShrink: 1 }}>{heading(prompt.frame === 'endsWith' ? messages.learner.audio.heading.endsWith : m.sound)}</View>
         {say ? <SayIt spoken={prompt.spoken} /> : null}
       </View>
     );
