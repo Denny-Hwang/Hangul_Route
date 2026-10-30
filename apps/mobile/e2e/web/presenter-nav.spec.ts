@@ -1283,10 +1283,33 @@ for (const vp of POINT_MATRIX) {
               const shown = await controls(page);
               expect(shown.length).toBeGreaterThan(0);
               for (const b of boxes) for (const c of shown) expect(gap(b, c), `${family} ${t.marker}: ${b.marker} / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
-              // The outline and the pin themselves keep the clearance too: drawing them never brings the content within 32 px of a control.
-              for (const c of shown) {
-                expect(gap(reach.outline, c), `${family} ${t.marker}: outline / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
-                if (reach.pin) expect(gap(reach.pin, c), `${family} ${t.marker}: pin / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+              if (layout === 'docked') {
+                // The outline and the pin themselves keep the clearance too: drawing them never brings the content within 32 px of a control.
+                for (const c of shown) {
+                  expect(gap(reach.outline, c), `${family} ${t.marker}: outline / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+                  if (reach.pin) expect(gap(reach.pin, c), `${family} ${t.marker}: pin / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+                }
+              } else {
+                // Beside the rail the 32 px of section 5.0 is the one held above: from the target's box (what takes the
+                // tap) to a rail button's hit area. The outline is drawn `spacing.sm` units plus its width outside the
+                // card, so on the compact rail it comes nearer the rail than 32 px (27 px at 640 x 360); it takes no tap,
+                // never meets a rail button, and every point from the target's box to the rail's buttons stays inert.
+                for (const c of shown) {
+                  expect(gap(reach.outline, c), `${family} ${t.marker}: outline / ${c.id}`).toBeGreaterThan(0);
+                  if (reach.pin) expect(gap(reach.pin, c), `${family} ${t.marker}: pin / ${c.id}`).toBeGreaterThan(0);
+                }
+                const railButtons = Math.min(...shown.map((c) => c.left));
+                const pressed = await page.evaluate(
+                  ({ from, to, y }) => {
+                    // Whole window px strictly between the two boxes (a fractional edge rounds onto the button).
+                    for (let x = Math.ceil(from) + 1; x <= Math.floor(to) - 1; x += 1) {
+                      if (document.elementFromPoint(x, y)?.closest('[data-testid="presenter-rail"] [role="button"]')) return x;
+                    }
+                    return null;
+                  },
+                  { from: t.right, to: railButtons, y: (t.top + t.bottom) / 2 },
+                );
+                expect(pressed, `${family} ${t.marker}: a rail button between the target and the rail`).toBeNull();
               }
             }
             // The pin takes no taps.
