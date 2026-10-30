@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useGuestStore } from '../../../store/guest-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { byTestId } from '../../../test-support/render';
-import { DecodingSprintOffer, DecodingSprintRoute } from '../syllable-build-entry';
+import { DecodingSprintRoute } from '../../decode-sprint/DecodingSprintRoute';
+import { DecodingSprintOffer } from '../syllable-build-entry';
 
 /**
  * F-CURR-002 section 7.1 F9 ("hidden when off"), row CM-32: with `decodingSprint` off the Block Sprint is drawn nowhere
@@ -30,12 +31,13 @@ async function mount(element: React.ReactElement): Promise<ReactTestRenderer> {
   return r;
 }
 
-const navigation = () => ({ canGoBack: vi.fn(() => true), goBack: vi.fn() });
+const navigation = (canGoBack = true) => ({ canGoBack: vi.fn(() => canGoBack), goBack: vi.fn(), reset: vi.fn() });
+const LEARNER = { id: 'p1', displayName: 'Mina', role: 'learner' };
 type RouteProps = Parameters<typeof DecodingSprintRoute>[0];
 
 beforeEach(() => {
   flags.decodingSprint = false;
-  useProfileStore.setState({ activeId: 'p1' });
+  useProfileStore.setState({ activeId: 'p1', profiles: [LEARNER] } as never);
   useGuestStore.setState({ running: false });
 });
 afterEach(async () => {
@@ -68,5 +70,23 @@ describe('decodingSprint off', () => {
     const nav = navigation();
     await mount(<DecodingSprintRoute {...({ navigation: nav, route: { key: 'k', name: 'DecodingSprint' } } as unknown as RouteProps)} />);
     expect(nav.goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('on, a grown-up persona gets no offer and the route still goes back (the sprint is a learner\'s bonus)', async () => {
+    flags.decodingSprint = true;
+    useProfileStore.setState({ activeId: 'p2', profiles: [LEARNER, { id: 'p2', displayName: 'Sam', role: 'parent' }] } as never);
+    const r = await mount(<DecodingSprintOffer onOpen={() => undefined} />);
+    expect(r.toJSON()).toBeNull();
+    const nav = navigation();
+    await mount(<DecodingSprintRoute {...({ navigation: nav, route: { key: 'k', name: 'DecodingSprint' } } as unknown as RouteProps)} />);
+    expect(nav.goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('with nothing to go back to (a reload on the route), off resets to Home instead of waiting forever', async () => {
+    const nav = navigation(false);
+    const r = await mount(<DecodingSprintRoute {...({ navigation: nav, route: { key: 'k', name: 'DecodingSprint' } } as unknown as RouteProps)} />);
+    expect(nav.goBack).not.toHaveBeenCalled();
+    expect(nav.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Main' }] });
+    expect(byTestId(r.root, 'decoding-sprint-intro')).toHaveLength(0);
   });
 });

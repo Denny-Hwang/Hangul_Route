@@ -1,7 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState, type ReactElement } from 'react';
 import type { MinigameScope } from '../../logic/minigame-config';
-import type { RootStackParamList } from '../../navigation/types';
 import { useGuestStore } from '../../store/guest-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useCurrFlag } from '../../store/remote-config-store';
@@ -17,7 +15,8 @@ import type { MinigameHost } from './host';
  * - `game.syllable-build` (built-in pct 0): on, a `syllable-build` step plays the game; off, Listen & Pick on the built
  *   block, so no switch bricks a quest.
  * - `decodingSprint` (built-in pct 0): on, the Block Sprint is offered after Stage 1 (the Journey's Stage 1 footer and
- *   the Hangul Check results) to a learner; off, nothing is drawn and the route goes back.
+ *   the Hangul Check results) to a learner; off, nothing is drawn and the route (`../decode-sprint/DecodingSprintRoute.tsx`,
+ *   a root route the guest stack never registers) goes back.
  */
 
 type Chunk = typeof import('./syllable-build-chunk');
@@ -76,33 +75,19 @@ export function SyllableBuildStep(props: SyllableBuildStepProps): ReactElement {
   return <SyllableBuildStepBody {...props} on={on} />;
 }
 
-/** `decodingSprint` for a learner (never a guest run, whose first quest is all it plays). */
+/**
+ * `decodingSprint` for a learner: never a guest run (its first quest is all it plays) and never a grown-up persona (the
+ * sprint is a learner's bonus, as the memory store's `memoryRecordsFor`; a profile with no role is a learner).
+ */
 export function useDecodingSprintOn(): boolean {
   const on = useCurrFlag('decodingSprint');
   const guest = useGuestStore((s) => s.running);
-  const profile = useProfileStore((s) => s.activeId);
-  return on && !guest && profile !== null;
+  const learner = useProfileStore((s) => s.activeId !== null && s.profiles.some((p) => p.id === s.activeId && (p.role ?? 'learner') === 'learner'));
+  return on && !guest && learner;
 }
 
 /** The Block Sprint's bonus line and button; nothing while `decodingSprint` is off. `onOpen` opens the `DecodingSprint` route. */
 export function DecodingSprintOffer({ onOpen, testID = 'decoding-sprint-offer' }: { onOpen: () => void; testID?: string }): ReactElement | null {
   const ui = useSyllableBuildChunk(useDecodingSprintOn()).chunk;
   return ui === null ? null : <ui.SprintOffer onOpen={onOpen} testID={testID} />;
-}
-
-type RouteProps = NativeStackScreenProps<RootStackParamList, 'DecodingSprint'>;
-
-/** The `DecodingSprint` route: the chunk's screen for the active learner; with the switch off it goes back. */
-export function DecodingSprintRoute({ navigation }: RouteProps): ReactElement {
-  const on = useDecodingSprintOn();
-  const build = useCurrFlag('game.syllable-build');
-  const profileId = useProfileStore((s) => s.activeId);
-  const { chunk, failed, retry } = useSyllableBuildChunk(on);
-  useEffect(() => {
-    if (!on && navigation.canGoBack()) navigation.goBack();
-  }, [on, navigation]);
-  if (failed) return <OopsScreen onRetry={retry} />;
-  if (!on || profileId === null || chunk === null) return <LessonWaiting />;
-  const { DecodingSprintScreen } = chunk;
-  return <DecodingSprintScreen profileId={profileId} buildOn={build} onClose={() => navigation.goBack()} />;
 }

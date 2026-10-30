@@ -35,7 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
 import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
-import { DecodingSprintRoute } from '../screens/minigames/syllable-build-entry';
+import { DecodingSprintRoute } from '../screens/decode-sprint/DecodingSprintRoute';
 import { StageCheckRoute, StageCompleteRoute, StageRecapRoute } from '../screens/stage-check/stage-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
