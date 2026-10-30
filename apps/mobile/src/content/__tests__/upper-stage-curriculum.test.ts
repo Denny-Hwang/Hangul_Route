@@ -125,7 +125,8 @@ export function questProblems(stage: StageKey, quest: LessonQuest): string[] {
       if (rounds !== CHECK_ROUNDS || !checkKindsFor(stage).includes(scope.kind)) out.push(`U-1 ${quest.id}: Check is ${scope.kind} x ${rounds}`);
     } else {
       const range = ROUND_RANGE[stage]?.[step.kind];
-      if (range && scope.kind !== 'story-sequence' && (rounds < range[0] || rounds > range[1])) {
+      // Story Sequence and Story Order (row CM-34) order one talk a round: a step is one ordering, not a round count.
+      if (range && scope.kind !== 'story-sequence' && scope.kind !== 'story-order' && (rounds < range[0] || rounds > range[1])) {
         out.push(`U-1 ${quest.id}: ${step.kind} plays ${rounds} rounds, not ${range[0]}-${range[1]}`);
       }
     }
@@ -994,14 +995,20 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
 
   // After the per-quest checks above (vitest runs a describe's tests in order).
   it('every shipped Practice with a listed word can scaffold, Trace a Word and keyed Realia Read included', () => {
-    const left = QUESTS.filter((q) => !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
+    // A Story Sequence Practice (Stage 4 Holidays, F-CURR-002 section 7.1) orders lines: a slot answers no item, so a miss
+    // names nothing a scaffold could ask, and the CM-24 pacing leaves it unscaffolded (the step plays as authored).
+    const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
+    const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
+    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
     expect(shortened.size).toBeGreaterThan(0);
     const roundsOf = (s: MinigameScope): unknown[] =>
-      s.listenPick?.rounds ?? s.picWord?.boards ?? s.orderIt?.rounds ?? s.typeHangul?.rounds ?? s.writeFrame?.rounds ?? s.cardPairs ?? s.dialogue ?? [];
+      s.listenPick?.rounds ?? s.picWord?.boards ?? s.orderIt?.rounds ?? s.typeHangul?.rounds ?? s.writeFrame?.rounds ?? s.cardPairs ?? s.dialogue ?? s.clozePick?.rounds ?? s.realiaRead?.rounds ?? [];
     for (const [id, [full, short]] of shortened) {
       const [a, b] = [roundsOf(full), roundsOf(short)];
       expect(b.length, id).toBeGreaterThanOrEqual(2);

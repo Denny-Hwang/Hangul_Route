@@ -230,6 +230,27 @@ describe('taught items and pronunciation', () => {
     expect(askedKo(scopes)).toEqual(['달', '달', '안녕', '네', '비가 와요', '김밥', '해', '별']);
   });
 
+  it('reads a Role Play scene as its partner lines and natural replies, never its title, partner or less natural replies (row CM-3A S4)', () => {
+    const scene = {
+      title: kt('놀이터'),
+      partner: kt('친구'),
+      start: 't1',
+      nodes: [
+        { id: 't1', line: kt('같이 놀자!'), replies: [{ id: 'a', text: kt('좋아!'), kind: 'natural', next: 'end' }, { id: 'b', text: kt('책이에요.'), kind: 'lessNatural', whyEn: 'x' }] },
+        { id: 'end', end: true, closingEn: 'Done!' },
+      ],
+    };
+    expect(askedKo([{ kind: 'role-play', scene }])).toEqual(['같이 놀자', '좋아']);
+  });
+
+  it('reads a Cloze Pick round as its completed sentence, and a word gap also as its answer tile (row CM-3A S4)', () => {
+    const rounds = [
+      { id: 'c1', sentence: kt('맛이 ___?'), tiles: [kt('달아요'), kt('어때요'), kt('먹었어요')], answerIndex: 1 },
+      { id: 'c2', gapKind: 'particle', sentence: kt('한글___.'), tiles: [kt('예요'), kt('이에요')], answerIndex: 1 },
+    ];
+    expect(askedKo([{ kind: 'cloze-pick', rounds }])).toEqual(['맛이 어때요', '어때요', '한글이에요']);
+  });
+
   it('counts a word seen only as a wrong option as new when a later quest teaches it', () => {
     const pick = q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [
       { ref: 'm:c', kind: 'listen-pick', rounds: [{ prompt: kt('하늘'), options: [{ id: 'a', text: kt('하늘') }, { id: 'b', text: kt('구름') }], answerId: 'a' }] },

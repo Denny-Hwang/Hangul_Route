@@ -101,21 +101,21 @@
           "titleEn": "Pick a Reply",
           "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-nature-q1-play",
-          "durationSeconds": 90
+          "durationSeconds": 85
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Read the Weather Card",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s4-nature-q1-apply",
-          "durationSeconds": 75
+          "durationSeconds": 90
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s4-nature-q1-check",
           "durationSeconds": 40
         },
@@ -247,103 +247,278 @@
         },
         {
           "ref": "minigame:s4-nature-q1-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "날씨가 좋아요!",
-                "romanization": "nalssiga joayo",
-                "en": "The weather is nice!"
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s4-nature-q1-weather",
+            "title": {
+              "ko": "날씨",
+              "romanization": "nalssi",
+              "en": "weather"
+            },
+            "entries": [
+              {
+                "id": "park",
+                "text": {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "park"
+                },
+                "value": {
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
+                }
+              },
+              {
+                "id": "mountain",
+                "text": {
+                  "ko": "산",
+                  "romanization": "san",
+                  "en": "mountain"
+                },
+                "value": {
+                  "ko": "구름",
+                  "romanization": "gureum",
+                  "en": "cloud"
+                }
+              },
+              {
+                "id": "sea",
+                "text": {
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
+                },
+                "value": {
+                  "ko": "바람",
+                  "romanization": "baram",
+                  "en": "wind"
+                }
+              },
+              {
+                "id": "river",
+                "text": {
+                  "ko": "강",
+                  "romanization": "gang",
+                  "en": "river"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
               }
+            ],
+            "altEn": "A weather card: sun at the park, clouds on the mountain, wind at the sea, rain by the river"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What is the weather like at the park?",
+              "key": {
+                "ko": "공원",
+                "romanization": "gongwon",
+                "en": "park"
+              },
+              "options": [
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                },
+                {
+                  "id": "cloud",
+                  "text": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                }
+              ],
+              "answerId": "sun",
+              "answerEntryId": "park"
             },
             {
-              "id": "l2",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "네, 좋아요!",
-                "romanization": "ne joayo",
-                "en": "Yes, it is!"
-              }
+              "id": "r2",
+              "questionEn": "Where is it raining?",
+              "key": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "river",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "park",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "park"
+                  }
+                },
+                {
+                  "id": "mountain",
+                  "text": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ],
+              "answerId": "river",
+              "answerEntryId": "river"
             },
             {
-              "id": "l3",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "비가 와요!",
-                "romanization": "biga wayo",
-                "en": "It is raining!"
-              }
+              "id": "r3",
+              "questionEn": "What is it like at the sea?",
+              "key": {
+                "ko": "바다",
+                "romanization": "bada",
+                "en": "sea"
+              },
+              "options": [
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "wind",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ],
+              "answerId": "wind",
+              "answerEntryId": "sea"
             },
             {
-              "id": "l4",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "집에 가요!",
-                "romanization": "jibe gayo",
-                "en": "I am going home!"
-              }
+              "id": "r4",
+              "questionEn": "Where are the clouds?",
+              "key": {
+                "ko": "구름",
+                "romanization": "gureum",
+                "en": "cloud"
+              },
+              "options": [
+                {
+                  "id": "sea",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "mountain",
+                  "text": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "river",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "mountain",
+              "answerEntryId": "mountain"
             }
           ]
         },
         {
           "ref": "minigame:s4-nature-q1-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "날씨가 좋아요!",
-                "romanization": "nalssiga joayo",
-                "en": "The weather is nice!"
+              "sentence": {
+                "ko": "___가 와요!",
+                "romanization": "___ga wayo",
+                "en": "It is raining!"
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, it is!"
-                  }
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "책이에요.",
-                    "romanization": "chaegieyo",
-                    "en": "It is a book."
-                  }
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                },
+                {
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "비가 와요!",
-                "romanization": "biga wayo",
-                "en": "It is raining!"
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "날씨___ 좋아요!",
+                "romanization": "nalssi___ joayo",
+                "en": "The weather is nice!"
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "집에 가요!",
-                    "romanization": "jibe gayo",
-                    "en": "I am going home!"
-                  }
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 0,
+              "filledRomanization": "nalssiga joayo"
             }
           ]
         }
@@ -436,23 +611,23 @@
           "titleEn": "Pick a Reply",
           "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-nature-q2-play",
-          "durationSeconds": 90
+          "durationSeconds": 85
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Read the Weather Card",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s4-nature-q2-apply",
-          "durationSeconds": 75
+          "durationSeconds": 90
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s4-nature-q2-check",
-          "durationSeconds": 40
+          "durationSeconds": 45
         },
         {
           "id": "s6",
@@ -582,103 +757,220 @@
         },
         {
           "ref": "minigame:s4-nature-q2-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "오늘 비가 올 거예요.",
-                "romanization": "oneul biga ol geoyeyo",
-                "en": "It is going to rain today."
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s4-nature-q2-weather",
+            "title": {
+              "ko": "공원 날씨",
+              "romanization": "gongwon nalssi",
+              "en": "park weather"
+            },
+            "entries": [
+              {
+                "id": "today",
+                "text": {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
+              },
+              {
+                "id": "tomorrow",
+                "text": {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                },
+                "value": {
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
+                }
               }
+            ],
+            "altEn": "A weather card for the park: rain today, sun tomorrow"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What is the weather at the park today?",
+              "key": {
+                "ko": "오늘",
+                "romanization": "oneul",
+                "en": "today"
+              },
+              "options": [
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "wind",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ],
+              "answerId": "rain",
+              "answerEntryId": "today"
             },
             {
-              "id": "l2",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "그럼 내일 갈 거예요.",
-                "romanization": "geureom naeil gal geoyeyo",
-                "en": "Then I will go tomorrow."
-              }
+              "id": "r2",
+              "questionEn": "What will the weather be tomorrow?",
+              "key": {
+                "ko": "내일",
+                "romanization": "naeil",
+                "en": "tomorrow"
+              },
+              "options": [
+                {
+                  "id": "cloud",
+                  "text": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                }
+              ],
+              "answerId": "sun",
+              "answerEntryId": "tomorrow"
             },
             {
-              "id": "l3",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "내일 날씨가 좋을 거예요.",
-                "romanization": "naeil nalssiga joeul geoyeyo",
-                "en": "The weather will be nice tomorrow."
-              }
+              "id": "r3",
+              "questionEn": "When is it going to rain?",
+              "key": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "today",
+                  "text": {
+                    "ko": "오늘",
+                    "romanization": "oneul",
+                    "en": "today"
+                  }
+                },
+                {
+                  "id": "tomorrow",
+                  "text": {
+                    "ko": "내일",
+                    "romanization": "naeil",
+                    "en": "tomorrow"
+                  }
+                }
+              ],
+              "answerId": "today",
+              "answerEntryId": "today"
             },
             {
-              "id": "l4",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "네, 같이 가요!",
-                "romanization": "ne gachi gayo",
-                "en": "Yes, let us go together!"
-              }
+              "id": "r4",
+              "questionEn": "Friends want a sunny day at the park. When do they go?",
+              "key": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              },
+              "options": [
+                {
+                  "id": "tomorrow",
+                  "text": {
+                    "ko": "내일",
+                    "romanization": "naeil",
+                    "en": "tomorrow"
+                  }
+                },
+                {
+                  "id": "today",
+                  "text": {
+                    "ko": "오늘",
+                    "romanization": "oneul",
+                    "en": "today"
+                  }
+                }
+              ],
+              "answerId": "tomorrow",
+              "answerEntryId": "tomorrow"
             }
           ]
         },
         {
           "ref": "minigame:s4-nature-q2-check",
-          "kind": "listen-pick",
+          "kind": "order-it",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
+              "sentence": {
                 "ko": "오늘 비가 올 거예요.",
                 "romanization": "oneul biga ol geoyeyo",
                 "en": "It is going to rain today."
               },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "그럼 내일 갈 거예요.",
-                    "romanization": "geureom naeil gal geoyeyo",
-                    "en": "Then I will go tomorrow."
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
                   }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "책이에요.",
-                    "romanization": "chaegieyo",
-                    "en": "It is a book."
-                  }
-                }
-              ],
-              "answerId": "a"
+                ]
+              }
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "내일 날씨가 좋을 거예요.",
-                "romanization": "naeil nalssiga joeul geoyeyo",
-                "en": "The weather will be nice tomorrow."
+              "sentence": {
+                "ko": "그럼 내일 갈 거예요.",
+                "romanization": "geureom naeil gal geoyeyo",
+                "en": "Then I will go tomorrow."
               },
-              "options": [
+              "distractors": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "네, 같이 가요!",
-                    "romanization": "ne gachi gayo",
-                    "en": "Yes, let us go together!"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "밥을 먹어요.",
-                    "romanization": "babeul meogeoyo",
-                    "en": "I eat rice."
-                  }
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "comes"
                 }
-              ],
-              "answerId": "a"
+              ]
             }
           ]
         }
@@ -770,21 +1062,21 @@
           "titleEn": "Pick a Reply",
           "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-nature-q3-play",
-          "durationSeconds": 90
+          "durationSeconds": 85
         },
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Put the Talk in Order",
-          "minigameKind": "story-sequence",
+          "titleEn": "Read the Weather Card",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s4-nature-q3-apply",
-          "durationSeconds": 75
+          "durationSeconds": 90
         },
         {
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s4-nature-q3-check",
           "durationSeconds": 40
         },
@@ -916,103 +1208,265 @@
         },
         {
           "ref": "minigame:s4-nature-q3-apply",
-          "kind": "story-sequence",
-          "lines": [
-            {
-              "id": "l1",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "호야, 어디 가요?",
-                "romanization": "hoya eodi gayo",
-                "en": "Hoya, where are you going?"
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s4-nature-q3-weather",
+            "title": {
+              "ko": "날씨",
+              "romanization": "nalssi",
+              "en": "weather"
+            },
+            "entries": [
+              {
+                "id": "park",
+                "text": {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "park"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
+              },
+              {
+                "id": "sea",
+                "text": {
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
+                },
+                "value": {
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
+                }
+              },
+              {
+                "id": "mountain",
+                "text": {
+                  "ko": "산",
+                  "romanization": "san",
+                  "en": "mountain"
+                },
+                "value": {
+                  "ko": "바람",
+                  "romanization": "baram",
+                  "en": "wind"
+                }
               }
+            ],
+            "altEn": "A weather card: rain at the park, sun at the sea, wind on the mountain"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Hoya is going to the park. What is the weather there?",
+              "key": {
+                "ko": "공원",
+                "romanization": "gongwon",
+                "en": "park"
+              },
+              "options": [
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                },
+                {
+                  "id": "wind",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ],
+              "answerId": "rain",
+              "answerEntryId": "park"
             },
             {
-              "id": "l2",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "공원에 가요.",
-                "romanization": "gongwone gayo",
-                "en": "I am going to the park."
-              }
+              "id": "r2",
+              "questionEn": "Where is the sun out?",
+              "key": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              },
+              "options": [
+                {
+                  "id": "sea",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "park",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "park"
+                  }
+                },
+                {
+                  "id": "mountain",
+                  "text": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ],
+              "answerId": "sea",
+              "answerEntryId": "sea"
             },
             {
-              "id": "l3",
-              "speakerEn": "Friend",
-              "line": {
-                "ko": "같이 가요!",
-                "romanization": "gachi gayo",
-                "en": "Let us go together!"
-              }
+              "id": "r3",
+              "questionEn": "What is the weather on the mountain?",
+              "key": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              },
+              "options": [
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "wind",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                }
+              ],
+              "answerId": "wind",
+              "answerEntryId": "mountain"
             },
             {
-              "id": "l4",
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "네, 좋아요!",
-                "romanization": "ne joayo",
-                "en": "Yes, sounds good!"
-              }
+              "id": "r4",
+              "questionEn": "Where is it raining?",
+              "key": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "mountain",
+                  "text": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "sea",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "park",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "park"
+                  }
+                }
+              ],
+              "answerId": "park",
+              "answerEntryId": "park"
             }
           ]
         },
         {
           "ref": "minigame:s4-nature-q3-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "어디 가요?",
-                "romanization": "eodi gayo",
-                "en": "Where are you going?"
+              "sentence": {
+                "ko": "___에 가요.",
+                "romanization": "___e gayo",
+                "en": "I am going to the park."
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "공원에 가요.",
-                    "romanization": "gongwone gayo",
-                    "en": "I am going to the park."
-                  }
+                  "ko": "바다",
+                  "romanization": "bada",
+                  "en": "sea"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "우유를 마셔요.",
-                    "romanization": "uyureul masyeoyo",
-                    "en": "I drink milk."
-                  }
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "park"
+                },
+                {
+                  "ko": "산",
+                  "romanization": "san",
+                  "en": "mountain"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "같이 가요!",
-                "romanization": "gachi gayo",
-                "en": "Let us go together!"
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "집___ 가요!",
+                "romanization": "jip___ gayo",
+                "en": "I am going home!"
               },
-              "options": [
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, sounds good!"
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "저는 호야예요.",
-                    "romanization": "jeoneun hoyayeyo",
-                    "en": "I am Hoya."
-                  }
+                  "ko": "에",
+                  "romanization": "e",
+                  "en": "to (a place)"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1,
+              "filledRomanization": "jibe gayo"
             }
           ]
         }
@@ -1106,13 +1560,17 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language and translation passes 4 and 6 (MAR, #637): no distractor borrows a sibling cell's Discover item; q2 asks only its own words; ko glosses are definitions with no echo (가겠다고 대답하는 말, 공원으로 간다는 대답); the q1 Story Sequence keeps speaker turns; es names no gendered friend; romanization follows checkRomanization.",
       "Culture pass 5 (MAR, #637): no culture claim and no sourced language note (culture: []), so no verification record; no real person, shop, brand or price; no age wording; the friend is never gendered in es.",
       "CM-3C (F-CURR-002 §5.5 S4, 2026-10-23): culture notes n1-n3 added (Jirisan the first national park, 1967; 24 parks; visitors; the Asiatic black bear project), source Korea National Park Service, each with its own verification record.",
-      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed.",
+      "Check rotation MAR (row CM-3A S4, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Nature plays Tap to Respond and Realia Read on a weather card (four rounds, every answer an entry of the card); the Checks are Cloze Pick, Sentence Builder and Cloze Pick.",
+      "CM-3A S4 MAR (cont.): Language: 비가, 날씨가 after a vowel, 집에 and 공원에 for where to; the weather words on the cards (해, 비, 구름, 바람) and places (공원, 산, 바다, 강) are taught topic words. Culture and facts: the weather cards are made-up park forecasts, no real data; the CM-3C park notes are unchanged.",
+      "CM-3A S4 MAR (cont.): Learning design: the Checks complete the Discover lines, so the cell adds only its cards and the word 내일. Reviser and third pass: es and ko glosses checked; no native-speaker or expert review is claimed.",
+      "CM-3A S4 review fix (2026-10-27, corrected 2026-10-29): the ko meaning of a Cloze or particle Sentence Builder round describes the answer without naming it (q3 Check c1: 나무와 산책길이 있어 쉬거나 노는 곳으로 간다는 말; q2 Check c1: 이날 하늘에서 물방울이 떨어지겠다고 짐작하는 말), so a Korean-UI learner decides the gap by its meaning, not by matching Hangul (CM-30: no translation shows the answer before the tap)."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -18,36 +18,13 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "미나",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
       "steps.s2.title": "친구끼리 하는 말",
-      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s3.title": "친구와 나누는 대화",
       "steps.s4.title": "대화 순서 맞추기",
       "steps.s5.title": "듣고 대답 고르기",
       "steps.s6.hoyaLine": "친구끼리 하는 진짜 대화를 따라갔어요!",
       "steps.s6.title": "이제 놀아요!",
       "teaser": "다음: 윷놀이에서 차례를 지켜요.",
       "title": "무슨 놀이를 할지 정해요"
-    },
-    "minigame:s4-crafts-q1-practice": {
-      "dialogue.0.npc": "함께 놀자고 친구에게 하는 말",
-      "dialogue.0.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
-      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
-      "dialogue.0.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.1.npc": "무슨 놀이를 할지 친구에게 묻는 말",
-      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.1.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말",
-      "dialogue.1.options.yunnori-haja.gloss": "윷을 던지는 놀이를 하자는 말",
-      "dialogue.2.npc": "윷을 던지는 놀이를 하자는 말",
-      "dialogue.2.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.2.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말",
-      "dialogue.2.options.mwo-hago-nolkka.gloss": "무슨 놀이를 할지 친구에게 묻는 말"
-    },
-    "minigame:s4-crafts-q1-apply": {
-      "storySteps.l1.label": "함께 놀자고 친구에게 하는 말",
-      "storySteps.l2.label": "좋다며 무슨 놀이를 할지 묻는 말",
-      "storySteps.l3.label": "윷을 던지는 놀이를 하자는 말"
-    },
-    "minigame:s4-crafts-q1-check": {
-      "listenPick.rounds.r1.prompt": "윷을 던지는 놀이를 하자는 말",
-      "listenPick.rounds.r2.prompt": "무슨 놀이를 할지 친구에게 묻는 말"
     },
     "quest:stage4-crafts-q2": {
       "blurb": "미나와 윷놀이를 하며 차례를 지켜요.",
@@ -65,37 +42,13 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
       "steps.s2.title": "차례대로 하기",
-      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s3.title": "친구와 나누는 대화",
       "steps.s4.title": "대화 순서 맞추기",
-      "steps.s5.title": "듣고 대답 고르기",
+      "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.hoyaLine": "진짜 놀이할 때처럼 차례를 잘 지켰어요!",
       "steps.s6.title": "재미있었어요!",
       "teaser": "다음: 공손하게 말하기와 편하게 말하기.",
       "title": "차례대로 해요"
-    },
-    "minigame:s4-crafts-q2-practice": {
-      "dialogue.0.npc": "상대 순서라고 하는 말",
-      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
-      "dialogue.0.options.jalhaesseo.gloss": "친구를 칭찬하는 말",
-      "dialogue.0.options.joa-nae-charyeya.gloss": "좋다며 자기 순서라고 하는 말",
-      "dialogue.1.npc": "친구를 칭찬하는 말",
-      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
-      "dialogue.1.options.gomawo.gloss": "친구에게 고마운 마음을 전하는 말",
-      "dialogue.1.options.nae-charyeya.gloss": "자기 순서라고 하는 말",
-      "dialogue.2.npc": "자기 순서라고 하는 말",
-      "dialogue.2.options.gomawo.gloss": "친구에게 고마운 마음을 전하는 말",
-      "dialogue.2.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.2.options.mureul-masyeoyo.gloss": "목마를 때 맑은 액체를 마신다는 말"
-    },
-    "minigame:s4-crafts-q2-apply": {
-      "storySteps.l1.label": "윷을 던지는 놀이를 하자는 말",
-      "storySteps.l2.label": "좋다며 자기 순서라고 하는 말",
-      "storySteps.l3.label": "친구를 칭찬하는 말",
-      "storySteps.l4.label": "고맙다며 상대 순서라고 하는 말"
-    },
-    "minigame:s4-crafts-q2-check": {
-      "listenPick.rounds.r1.prompt": "친구를 칭찬하는 말",
-      "listenPick.rounds.r2.prompt": "상대 순서라고 하는 말"
     },
     "quest:stage4-crafts-q3": {
       "blurb": "공손하게 묻는 말과 편하게 묻는 말을 읽어요.",
@@ -113,36 +66,12 @@
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "호야",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러 한 줄씩 들어 봐요.",
       "steps.s2.title": "공손한 말과 편한 말",
-      "steps.s3.title": "호야의 대답 고르기",
+      "steps.s3.title": "친구와 나누는 대화",
       "steps.s4.title": "대화 순서 맞추기",
       "steps.s5.title": "듣고 대답 고르기",
       "steps.s6.hoyaLine": "공손한 말과 편한 말을 읽을 수 있어요. 정말 멋져요!",
       "steps.s6.title": "다 같이 놀았어요!",
       "title": "같이 할지 물어봐요"
-    },
-    "minigame:s4-crafts-q3-practice": {
-      "dialogue.0.npc": "함께 할지 친구에게 편하게 묻는 말",
-      "dialogue.0.options.hakgyoe-gayo.gloss": "배우러 가는 곳으로 간다는 말",
-      "dialogue.0.options.jalhaesseo.gloss": "친구를 칭찬하는 말",
-      "dialogue.0.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.1.npc": "무슨 놀이를 할지 친구에게 묻는 말",
-      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
-      "dialogue.1.options.tokkiga-jagayo.gloss": "귀가 긴 동물의 크기가 작다는 말",
-      "dialogue.1.options.yunnori-haja.gloss": "윷을 던지는 놀이를 하자는 말",
-      "dialogue.2.npc": "함께 할지 공손하게 묻는 말",
-      "dialogue.2.options.chaegieyo.gloss": "읽는 물건이 무엇인지 알려 주는 말",
-      "dialogue.2.options.joayo.gloss": "좋다고 공손하게 대답하는 말",
-      "dialogue.2.options.nae-charyeya.gloss": "자기 순서라고 하는 말"
-    },
-    "minigame:s4-crafts-q3-apply": {
-      "storySteps.l1.label": "함께 할지 친구에게 편하게 묻는 말",
-      "storySteps.l2.label": "좋다며 무슨 놀이를 할지 묻는 말",
-      "storySteps.l3.label": "윷을 던지는 놀이를 하자는 말",
-      "storySteps.l4.label": "좋다며 자기 순서라고 하는 말"
-    },
-    "minigame:s4-crafts-q3-check": {
-      "listenPick.rounds.r1.prompt": "함께 할지 공손하게 묻는 말",
-      "listenPick.rounds.r2.prompt": "함께 할지 친구에게 편하게 묻는 말"
     },
     "episode:stage4-crafts": {
       "hoyaIntro": "미나랑 나랑 놀이를 하고 있어요. 우리가 하는 말을 읽어 봐요!",
@@ -150,6 +79,137 @@
       "title": "놀이 대화",
       "culture.n1.text": "친한 친구끼리는 흔히 {ko:반말}로 이야기해요. 이 칸에서 높임말 문장은 {ko:요}로 끝나지만, 호야와 미나가 주고받는 반말 문장은 그렇지 않아요.",
       "culture.n2.text": "{ko:같이 할까요?}와 {ko:같이 할까?}는 함께 하자고 묻는 같은 말이에요. 끝의 {ko:요} 덕분에 앞의 말은 높임말이 되고, 뒤의 말은 반말이에요."
+    },
+    "minigame:s4-crafts-q1-practice": {
+      "rolePlay.scene.title.gloss": "그네와 미끄럼틀이 있는 노는 곳",
+      "rolePlay.scene.partner.gloss": "가깝게 지내는 사람",
+      "rolePlay.scene.nodes.t1.line.gloss": "함께 놀자고 친구에게 하는 말",
+      "rolePlay.scene.nodes.t2.line.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
+      "rolePlay.scene.nodes.t3.line.gloss": "좋다며 노는 곳에 갈지 묻는 말",
+      "rolePlay.scene.nodes.t4.line.gloss": "함께 가자고 친구에게 하는 말",
+      "rolePlay.scene.nodes.t1.replies.polite.text.gloss": "좋다고 공손하게 대답하는 말",
+      "rolePlay.scene.nodes.t1.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t1.replies.book.text.gloss": "읽는 물건이라는 답",
+      "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "윷을 던지는 놀이를 하자는 말",
+      "rolePlay.scene.nodes.t2.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t3.replies.what.text.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
+      "rolePlay.scene.nodes.t3.replies.school.text.gloss": "공부하는 곳으로 향한다는 말",
+      "rolePlay.scene.nodes.t3.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t4.replies.go.text.gloss": "좋다며 함께 가자고 하는 말",
+      "rolePlay.scene.nodes.t4.replies.pencil.text.gloss": "글씨 쓰는 도구라는 답",
+      "rolePlay.scene.nodes.t4.replies.drink.text.gloss": "맑고 투명한 음료를 마신다는 뜻",
+      "rolePlay.scene.nodes.t1.replies.polite.why": "친한 친구끼리는 흔히 편하게 말해요. 끝에 공손한 '-요'가 없는 대답을 골라요.",
+      "rolePlay.scene.nodes.t1.replies.book.why": "그건 무엇인지 말하는 말이에요. 친구가 놀자고 하니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t2.replies.okay.why": "그건 좋다고만 하는 말이에요. 친구가 뭐 하고 놀지 물으니 놀이 이름을 말해요.",
+      "rolePlay.scene.nodes.t3.replies.what.why": "놀이는 벌써 골랐어요. 친구가 갈지 물으니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t3.replies.school.why": "그건 학교에 간다는 말이에요. 친구는 놀이터에 갈지 물어요.",
+      "rolePlay.scene.nodes.t4.replies.pencil.why": "그건 무엇인지 말하는 말이에요. 친구가 같이 가자고 하니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t4.replies.drink.why": "그건 물을 마신다는 말이에요. 친구가 같이 가자고 하니 좋다고 말해요.",
+      "rolePlay.scene.nodes.end.closing": "친구와 함께 놀이를 골랐어요. 이제 놀아요!",
+      "rolePlay.scene.nodes.t2.replies.drink.text.gloss": "맑고 투명한 음료를 마신다는 뜻",
+      "rolePlay.scene.nodes.t2.replies.drink.why": "그건 물을 마신다는 말이에요. 친구가 뭐 하고 놀지 물으니 놀이 이름을 말해요."
+    },
+    "minigame:s4-crafts-q1-apply": {
+      "storyOrder.rounds.pick-a-game.panels.ask.caption.gloss": "함께 놀자고 친구에게 하는 말",
+      "storyOrder.rounds.pick-a-game.panels.what.caption.gloss": "좋다며 무슨 놀이를 할지 묻는 말",
+      "storyOrder.rounds.pick-a-game.panels.yut.caption.gloss": "윷을 던지는 놀이를 하자는 말",
+      "storyOrder.rounds.pick-a-game.panels.okay.caption.gloss": "친구에게 좋다고 대답하는 말"
+    },
+    "minigame:s4-crafts-q1-check": {
+      "dialogue.0.npc": "무슨 놀이를 할지 친구에게 묻는 말",
+      "dialogue.0.options.yunnori-haja.gloss": "윷을 던지는 놀이를 하자는 말",
+      "dialogue.0.options.mureul-masyeoyo.gloss": "맑고 투명한 음료를 마신다는 뜻",
+      "dialogue.0.options.tokkiga-jagayo.gloss": "귀가 긴 동물의 몸집이 조그맣다는 말",
+      "dialogue.1.npc": "윷을 던지는 놀이를 하자는 말",
+      "dialogue.1.options.mwo-hago-nolkka.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
+      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.options.chaegieyo.gloss": "읽는 물건이라는 답"
+    },
+    "minigame:s4-crafts-q2-practice": {
+      "rolePlay.scene.title.gloss": "막대 네 개를 던져 말을 옮기는 놀이",
+      "rolePlay.scene.partner.gloss": "가깝게 지내는 사람",
+      "rolePlay.scene.nodes.t1.line.gloss": "윷을 던지는 놀이를 하자는 말",
+      "rolePlay.scene.nodes.t1.replies.well.text.gloss": "친구를 칭찬하는 말",
+      "rolePlay.scene.nodes.t1.replies.what.text.gloss": "무슨 놀이를 할지 친구에게 묻는 말",
+      "rolePlay.scene.nodes.t1.replies.well.why": "그건 잘 던졌다고 칭찬하는 말이에요. 아직 놀이를 시작하지 않았으니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t1.replies.what.why": "친구가 벌써 윷놀이를 골랐어요. 좋다고 말해요.",
+      "rolePlay.scene.nodes.t2.line.gloss": "자기 순서라고 하는 말",
+      "rolePlay.scene.nodes.t2.replies.thanks.text.gloss": "친구에게 고마운 마음을 전하는 말",
+      "rolePlay.scene.nodes.t2.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "윷을 던지는 놀이를 하자는 말",
+      "rolePlay.scene.nodes.t2.replies.thanks.why": "친구가 칭찬한 게 아니에요. 이제 친구 차례이니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t2.replies.yut.why": "벌써 윷놀이를 하고 있어요. 친구가 자기 차례라고 하니 좋다고 말해요.",
+      "rolePlay.scene.nodes.t3.line.gloss": "상대 순서라고 하는 말",
+      "rolePlay.scene.nodes.t3.replies.well.text.gloss": "친구를 칭찬하는 말",
+      "rolePlay.scene.nodes.t3.replies.okay.text.gloss": "좋다며 자기 순서라고 하는 말",
+      "rolePlay.scene.nodes.t3.replies.drink.text.gloss": "맑고 투명한 음료를 마신다는 뜻",
+      "rolePlay.scene.nodes.t3.replies.well.why": "친구가 이제 내 차례라고 해요. 좋다고 말하고 차례를 이어 가요.",
+      "rolePlay.scene.nodes.t3.replies.drink.why": "그건 물을 마신다는 말이에요. 친구는 이제 내 차례라고 해요.",
+      "rolePlay.scene.nodes.t4.line.gloss": "친구를 칭찬하는 말",
+      "rolePlay.scene.nodes.t4.replies.thanks.text.gloss": "친구에게 고마운 마음을 전하는 말",
+      "rolePlay.scene.nodes.t4.replies.mine.text.gloss": "자기 순서라고 하는 말",
+      "rolePlay.scene.nodes.t4.replies.play.text.gloss": "함께 놀자고 친구에게 하는 말",
+      "rolePlay.scene.nodes.t4.replies.mine.why": "친구가 방금 잘했다고 했어요. 먼저 고맙다고 말해요.",
+      "rolePlay.scene.nodes.t4.replies.play.why": "벌써 놀고 있어요. 친구가 잘했다고 하니 고맙다고 말해요.",
+      "rolePlay.scene.nodes.end.closing": "차례를 지키며 사이좋게 놀았어요. 즐거운 놀이였어요!",
+      "rolePlay.scene.nodes.t1.replies.okay.text.gloss": "친구에게 좋다고 대답하는 말"
+    },
+    "minigame:s4-crafts-q2-apply": {
+      "storyOrder.rounds.taking-turns.panels.yut.caption.gloss": "윷을 던지는 놀이를 하자는 말",
+      "storyOrder.rounds.taking-turns.panels.mine.caption.gloss": "좋다며 자기 순서라고 하는 말",
+      "storyOrder.rounds.taking-turns.panels.well.caption.gloss": "친구를 칭찬하는 말",
+      "storyOrder.rounds.taking-turns.panels.yours.caption.gloss": "고맙다며 상대 순서라고 하는 말"
+    },
+    "minigame:s4-crafts-q2-check": {
+      "orderIt.rounds.c1.sentence.gloss": "윷을 던지는 놀이를 하자는 말",
+      "orderIt.rounds.c2.sentence.gloss": "상대 순서라고 하는 말",
+      "orderIt.rounds.c1.distractors.neoya.gloss": "상대를 가리키는 편한 말",
+      "orderIt.rounds.c2.distractors.charyeya.gloss": "순서라고 하는 편한 말"
+    },
+    "minigame:s4-crafts-q3-practice": {
+      "rolePlay.scene.title.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
+      "rolePlay.scene.partner.gloss": "가깝게 지내는 사람",
+      "rolePlay.scene.nodes.t1.line.gloss": "함께 할지 공손하게 묻는 말",
+      "rolePlay.scene.nodes.t2.line.gloss": "무엇을 하고 싶은지 공손하게 묻는 말",
+      "rolePlay.scene.nodes.t3.line.gloss": "공원에 갈지 공손하게 묻는 말",
+      "rolePlay.scene.nodes.t4.line.gloss": "함께 가자고 공손하게 권하는 말",
+      "rolePlay.scene.nodes.t1.replies.okay.text.gloss": "좋다고 공손하게 대답하는 말",
+      "rolePlay.scene.nodes.t1.replies.casual.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t1.replies.thanks.text.gloss": "친구에게 고마운 마음을 전하는 말",
+      "rolePlay.scene.nodes.t2.replies.okay.text.gloss": "좋다고 공손하게 대답하는 말",
+      "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "막대 네 개를 던지며 노는 놀이를 하고 싶다는 말",
+      "rolePlay.scene.nodes.t3.replies.casual.text.gloss": "친구에게 좋다고 대답하는 말",
+      "rolePlay.scene.nodes.t3.replies.okay.text.gloss": "좋다고 공손하게 대답하는 말",
+      "rolePlay.scene.nodes.t3.replies.jegi.text.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
+      "rolePlay.scene.nodes.t4.replies.go.text.gloss": "좋다고 공손하게 대답하는 말",
+      "rolePlay.scene.nodes.t4.replies.mine.text.gloss": "자기 순서라고 하는 말",
+      "rolePlay.scene.nodes.t4.replies.who.text.gloss": "사람을 묻는 말",
+      "rolePlay.scene.nodes.t1.replies.casual.why": "친구가 '-요'를 붙여 공손하게 물으니 똑같이 대답해요.",
+      "rolePlay.scene.nodes.t1.replies.thanks.why": "그건 고맙다는 말이에요. 친구는 함께 할지 물어요.",
+      "rolePlay.scene.nodes.t2.replies.okay.why": "그건 좋다고만 하는 말이에요. 친구가 무엇을 하고 싶은지 물으니 말해 줘요.",
+      "rolePlay.scene.nodes.t3.replies.casual.why": "친구가 공손하게 물으니 '-요'를 붙여 대답해요.",
+      "rolePlay.scene.nodes.t3.replies.jegi.why": "그건 제기를 찬다는 말이에요. 친구는 공원에 갈지 물어요.",
+      "rolePlay.scene.nodes.t4.replies.mine.why": "그건 놀이에서 순서를 말할 때 쓰는 편한 말이에요. 친구는 같이 가자고 해요.",
+      "rolePlay.scene.nodes.t4.replies.who.why": "그건 누구인지 묻는 말이에요. 친구가 같이 가자고 하니 좋다고 대답해요.",
+      "rolePlay.scene.nodes.end.closing": "친구가 물은 대로 공손하게 대답했어요. 이제 공원으로 가요!",
+      "rolePlay.scene.nodes.t2.replies.mine.text.gloss": "자기 순서라고 하는 말",
+      "rolePlay.scene.nodes.t2.replies.mine.why": "그건 놀이에서 순서를 말할 때 쓰는 편한 말이에요. 친구는 무엇을 하고 싶은지 물어요."
+    },
+    "minigame:s4-crafts-q3-apply": {
+      "storyOrder.rounds.two-ways.panels.ask.caption.gloss": "함께 할지 공손하게 묻는 말",
+      "storyOrder.rounds.two-ways.panels.what.caption.gloss": "좋다며 무엇을 하고 싶은지 공손하게 묻는 말",
+      "storyOrder.rounds.two-ways.panels.go.caption.gloss": "함께 가자고 공손하게 대답하는 말",
+      "storyOrder.rounds.two-ways.panels.yut.caption.gloss": "막대 네 개를 던지며 노는 놀이를 하고 싶다는 말"
+    },
+    "minigame:s4-crafts-q3-check": {
+      "dialogue.0.npc": "함께 할지 공손하게 묻는 말",
+      "dialogue.1.npc": "함께 할지 친구에게 편하게 묻는 말",
+      "dialogue.0.options.jalhaesseo.gloss": "친구를 칭찬하는 말",
+      "dialogue.0.options.mureul-masyeoyo.gloss": "맑고 투명한 음료를 마신다는 뜻",
+      "dialogue.0.options.joayo.gloss": "좋다고 공손하게 대답하는 말",
+      "dialogue.1.options.joa.gloss": "친구에게 좋다고 대답하는 말",
+      "dialogue.1.options.nae-charyeya.gloss": "자기 순서라고 하는 말",
+      "dialogue.1.options.hakgyoe-gayo.gloss": "공부하는 곳으로 향한다는 말"
     }
   }
 }

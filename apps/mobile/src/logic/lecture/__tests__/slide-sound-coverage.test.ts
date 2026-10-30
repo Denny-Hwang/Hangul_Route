@@ -48,6 +48,8 @@ function silentByDesign(slide: Slide): boolean {
   if (slide.kind === 'title' || slide.kind === 'story' || slide.kind === 'activity' || slide.kind === 'end') return true;
   if (slide.kind !== 'quiz') return false;
   if (slide.prompt.ask === 'odd-one-out') return true;
+  // A Cloze Pick question (row CM-30, shipped by rows CM-3A S3 and S4): its target is the sentence with its gap, which is
+  // not said (a gap read aloud says "underscore", and the completed sentence would say the answer).
   return slide.prompt.ask === 'check' && (slide.prompt.target === undefined || slide.prompt.target.ko.includes('___'));
 }
 

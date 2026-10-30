@@ -75,6 +75,9 @@ interface CellRow {
 // Row CM-3A S3 (F-CURR-002 section 7.1) lowered the Stage 3 question floors: the Sentence Builder and Dictation Checks
 // of the rotation are sentence-build and write-together slides now (each round keeps a slide of its own, counted below),
 // and a Cloze Pick Check is two question slides, as its Listen & Pick Check was.
+// Row CM-3A S4 (F-CURR-002 section 7.1) raised the Stage 4 floors to what the cells build now: with `game.role-play` off
+// a Role Play plays as the reply slides of its main path, and the Cloze Pick and Realia Read rounds are quiz slides; the
+// Sentence Builder and Story Order rounds are sentence-build and sentence slides (each round keeps a slide of its own).
 const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:letters': { quests: 3, slides: 43, wordCards: 0, differentWords: 0, quiz: 25, skipped: {}, flattened: {} },
   'stage1:life': { quests: 3, slides: 49, wordCards: 12, differentWords: 12, quiz: 25, skipped: {}, flattened: {} },
@@ -103,11 +106,11 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
     flattened: {},
   },
   'stage3:crafts': { quests: 3, slides: 53, wordCards: 48, differentWords: 15, quiz: 6, skipped: {}, flattened: {} },
-  'stage4:letters': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 15, skipped: {}, flattened: {} },
+  'stage4:letters': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 25, skipped: {}, flattened: {} },
+  'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 18, skipped: {}, flattened: {} },
+  'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 16, skipped: {}, flattened: {} },
+  'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 25, skipped: {}, flattened: {} },
+  'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 16, skipped: {}, flattened: {} },
   stage5: { quests: 14, slides: 186, wordCards: 0, differentWords: 0, quiz: 42, skipped: {}, flattened: {} },
   'stage6:letters': {
     quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 18,
@@ -393,8 +396,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
       }
     }
     // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S3 adds the five
-    // Stage 3 Sentence Builder Checks (10 rounds).
-    expect({ rounds, built }).toEqual({ rounds: 145, built: 145 });
+    // Stage 3 Sentence Builder Checks (10 rounds) and row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
+    // Stage 4 Sentence Builder Checks (8 rounds).
+    expect({ rounds, built }).toEqual({ rounds: 165, built: 165 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {

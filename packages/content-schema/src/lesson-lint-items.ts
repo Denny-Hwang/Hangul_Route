@@ -199,8 +199,12 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
     if (UNASKED_KEYS.has(key)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
       askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
+    } else if (key === 'scene' && typeof child === 'object' && child !== null) {
+      // A Role Play scene (row CM-35): its turns ask their lines and natural replies; the title and partner are labels.
+      askedKo((child as Record<string, unknown>).nodes, out);
     } else if (key === 'replies' && Array.isArray(child)) {
-      askedKo(child.filter((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>).correct === true), out);
+      // A Tap to Respond reply that is `correct`, or a Role Play reply that is `natural` (a less natural one is never sent).
+      askedKo(child.filter((r) => typeof r === 'object' && r !== null && ((r as Record<string, unknown>).correct === true || (r as Record<string, unknown>).kind === 'natural')), out);
     } else if (key === 'ko' && typeof child === 'string') {
       const ko = normalizeKo(child);
       if (ko !== '') out.push(ko);

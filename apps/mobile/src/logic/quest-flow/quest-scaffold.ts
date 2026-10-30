@@ -80,19 +80,6 @@ function askedKo(asked: RoundAsked): string | undefined {
   );
 }
 
-/** A Cloze Pick round's completed sentence (a value gap asks its card, not a sentence). */
-function clozeKo(round: ClozePickRound | undefined): string | undefined {
-  return round ? clozeSentence(round)?.ko : undefined;
-}
-
-/** A word or particle gap's completed sentence, its gap filled with the answer tile; none for a value gap. */
-function clozeSentence(round: ClozePickRound): KoText | undefined {
-  const answer = round.tiles[round.answerIndex];
-  if (round.gapKind === 'value' || !answer) return undefined;
-  const { sentence: s } = round;
-  return { ko: fillClozeGap(s.ko, answer.ko), romanization: round.filledRomanization ?? fillClozeGap(s.romanization, answer.romanization), en: s.en };
-}
-
 /** A scene's turns: the main path's, then the other branches' turns, each once. */
 function rolePlayTurns(scene: RolePlayScene | undefined): RolePlayTurnNode[] {
   if (!scene) return [];
@@ -105,6 +92,19 @@ function rolePlayTurns(scene: RolePlayScene | undefined): RolePlayTurnNode[] {
 function rolePlayLine(scene: RolePlayScene | undefined, itemId: string): string | undefined {
   const node = itemId.split('/')[0];
   return rolePlayTurns(scene).find((t) => t.id === node)?.line.ko;
+}
+
+/** A Cloze Pick round's completed sentence (a value gap asks its card, not a sentence). */
+function clozeKo(round: ClozePickRound | undefined): string | undefined {
+  return round ? clozeSentence(round)?.ko : undefined;
+}
+
+/** A word or particle gap's completed sentence, its gap filled with the answer tile; none for a value gap. */
+function clozeSentence(round: ClozePickRound): KoText | undefined {
+  const answer = round.tiles[round.answerIndex];
+  if (round.gapKind === 'value' || !answer) return undefined;
+  const { sentence: s } = round;
+  return { ko: fillClozeGap(s.ko, answer.ko), romanization: round.filledRomanization ?? fillClozeGap(s.romanization, answer.romanization), en: s.en };
 }
 
 /** A Realia Read round's word: its key word, else its answer when that is a word. */

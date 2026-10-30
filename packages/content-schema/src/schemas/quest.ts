@@ -177,11 +177,15 @@ export const QuestObjectSchema = z.object({
  * `stage3` (F-CURR-002 §7.1 Check rotation, row CM-3A S3): Cloze Pick and Sentence Builder
  * (the S3 default Check) and Dictation (Type Hangul), so no game holds more than 40% of the
  * stage's Checks.
+ * `stage4` (F-CURR-002 §7.1 Check rotation, row CM-3A S4): the default Dialogue reply pick
+ * (Tap to Respond, the line read with its replies), Cloze Pick and Sentence Builder, so no
+ * game holds more than 40% of the stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
   if (stage === 'stage2') return ['listen-pick', 'type-hangul', 'pic-word-match'];
   if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
+  if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
   return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
 }
 

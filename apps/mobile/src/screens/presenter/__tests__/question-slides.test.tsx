@@ -150,9 +150,12 @@ describe('QuestionSlide: listen (LV-S2)', () => {
   });
 });
 
-describe('QuestionSlide: a listen round that asks for the reply (the Stage 4 Check)', () => {
+describe('QuestionSlide: a listen round that asks for the reply (a heard line, a reply it does not hold)', () => {
   it('asks "Which answer fits?"; what was heard still waits for the answer build', async () => {
-    const slide = stage4.find((s): s is ListenBody => isListenOrReply(s) && s.prompt.ask === 'listen')!;
+    // Row CM-3A S4 moved the Stage 4 Checks off Listen & Pick, so no shipped lesson asks one now: a heard sentence round
+    // of Stage 3 is drawn as the deck builder marks such a round (`reply`).
+    const heard = listenOf(stage3, true);
+    const slide: ListenBody = { ...heard, prompt: { ...heard.prompt, reply: true } };
     expect(slide.prompt.reply).toBe(true);
     const r = await render(inView(<QuestionSlide slide={slide} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
     expect(textOf(byTestId(r.root, 'presenter-quiz-question')[0]!)).toBe(en.learner.presenter.quiz.reply);
@@ -170,6 +173,7 @@ describe('QuestionSlide: reply (LV-S2)', () => {
     expect(byTestId(r.root, 'presenter-quiz-speaker')).toHaveLength(0);
     const said = byTestId(r.root, 'presenter-quiz-said')[0]!;
     expect(hiddenNow(said)).toBe(false);
+    // Row CM-3A S4: the life q1 Role Play's first turn (its reply slides while `game.role-play` is off, row CM-35).
     expect(screenTexts(said)).toEqual(expect.arrayContaining(['밥 먹었어요?', slide.prompt.line.romanization, slide.prompt.line.gloss]));
     expect(byTestId(r.root, 'presenter-quiz-option-gloss').map(hiddenNow).every(Boolean)).toBe(true);
     expect(byTestId(r.root, 'presenter-quiz-option-ko').map((n) => textOf(n)).sort()).toEqual(slide.options.map((o) => o.ko).sort());

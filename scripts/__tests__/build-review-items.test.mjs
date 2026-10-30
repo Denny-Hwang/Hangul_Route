@@ -105,7 +105,8 @@ describe("build-review-items.mjs over the repository's content", () => {
     assert.equal(failed.status, 1, failed.stdout);
     assert.match(failed.stdout, /items-stable-id: lex:somsatang \(lex\|솜사탕\) is no longer taught\. If its text was edited, keep the id with an alias/);
     const snapshot = JSON.parse(read(root, SNAPSHOT));
-    writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...snapshot, alias: { "lex|솜사탕들": "lex:somsatang" } }));
+    // The repository's own aliases and retirements (row CM-3A onward) stay; the test adds one of each.
+    writeFileSync(join(root, SNAPSHOT), JSON.stringify({ ...snapshot, alias: { ...snapshot.alias, "lex|솜사탕들": "lex:somsatang" } }));
     const kept = run(root);
     assert.equal(kept.status, 0, kept.stdout + kept.stderr);
     assert.doesNotMatch(kept.stdout, /::warning/);
