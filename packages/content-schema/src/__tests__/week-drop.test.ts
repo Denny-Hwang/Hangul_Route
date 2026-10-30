@@ -171,6 +171,15 @@ describe('the §9.3 rules on the drops (row CM-48)', () => {
     ]);
   });
 
+  it('names the older institution for a source read before its rename, and reads a body with no items as no load', () => {
+    const early = source({ publisher: 'Korea Heritage Service', url: 'https://www.khs.go.kr/a', accessed: '2024-01-10' });
+    expect(lint({ 'content/weekly/2026-11-02.json': drop({ sources: [source(), early] }) })).toEqual([
+      ['error', 'culture-source', 'sources[1].publisher', 'on 2024-01-10 the institution was called the Cultural Heritage Administration (문화재청)'],
+    ]);
+    expect(lint({ 'content/weekly/2026-11-02.json': [] }).map((r) => [r[1], r[2]])).toEqual([['lesson-schema', '(root)']]);
+    expect(lint({ 'content/weekly/2026-11-02.json': { items: [{}, 'x'] } }).filter((r) => r[1] === 'lesson-new-load')).toEqual([]);
+  });
+
   it('never lets two items of a drop sound alike (dictation-unambiguous)', () => {
     const items = [...(drop().items as object[]), { id: 'nat', ko: '낫', romanization: 'nat', en: 'sickle' }, { id: 'nat2', ko: '낮', romanization: 'nat', en: 'daytime' }];
     expect(lint({ 'content/weekly/2026-11-02.json': drop({ items }) })).toEqual([['error', 'dictation-unambiguous', 'items[4]', '낮 is said like 낫: a heard round could not ask them apart']]);

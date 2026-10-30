@@ -304,9 +304,6 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
-  // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
-  // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
-  Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
   // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
   // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/dictation-entry.ts`).
@@ -339,6 +336,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
   Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
+  // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
+  Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
 ]);
 
 /**
