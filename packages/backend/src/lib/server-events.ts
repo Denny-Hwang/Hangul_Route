@@ -202,7 +202,7 @@ const BILLING_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
 
 /**
  * Lecture events (F-TCH-004 section 3.14 as amended by AMENDMENTS-LECTURE-V2
- * section 11) carry no profile id and, per name, only the documented keys:
+ * section 11 and AMENDMENTS-PRESENTER-NAV section 12) carry no profile id and, per name, only the documented keys:
  * codes from their lists, booleans, and whole-number counts within bounds that
  * hold the largest deck the schema allows (`LECTURE_MAX_BLOCKS` 30 episode blocks
  * of the largest cell, 172 slides today, is about 5200 slides; reveals are several
