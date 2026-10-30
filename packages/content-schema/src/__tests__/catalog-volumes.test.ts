@@ -86,7 +86,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
 
   it('lists each cell’s episodes by volume: the shipped cells their first volume and each shipped later volume', () => {
     for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual([cell.episodeId, ...(cell.volumes ?? []).map((v) => v.episodeId)]);
-    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage3-crafts')?.episodeIds).toEqual(['episode:stage3-crafts', 'episode:stage3-crafts-v2']);
+    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage3-life')?.episodeIds).toEqual(['episode:stage3-life', 'episode:stage3-life-v2']);
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.episodeIds).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);

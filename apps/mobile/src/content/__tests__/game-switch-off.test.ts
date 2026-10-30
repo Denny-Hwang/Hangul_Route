@@ -81,9 +81,9 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     ]);
   });
 
-  it('reads the Volume 2 Cloze Pick steps too: every quest of Stage 3 Play & Crafts Volume 2 plays one (row CM-42 S3)', () => {
+  it('reads the Volume 2 Cloze Pick steps too: every quest of Stage 3 Food & Daily Life Volume 2 plays one (row CM-43 S3)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    for (const id of ['quest:stage3-crafts-v2-q1', 'quest:stage3-crafts-v2-q2', 'quest:stage3-crafts-v2-q3']) expect(cloze, id).toContain(id);
+    for (const id of ['quest:stage3-life-v2-q1', 'quest:stage3-life-v2-q2', 'quest:stage3-life-v2-q3']) expect(cloze, id).toContain(id);
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {
