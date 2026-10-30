@@ -738,6 +738,32 @@ describe('platform/audio (native): pack switches and the source summary (AMENDME
     audio.dispose();
   });
 
+  it('hasClipFor and hasPackClips count the say clip of the text and its pack, as the controller plays it', async () => {
+    const said = contentSchema.sayRef('나무');
+    const packsOff = new Set<string>();
+    const speech = new FakeSpeech();
+    const audio = createNativeAudio({
+      speech,
+      platform: 'ios',
+      clips: {
+        player: new FakeClipPlayer(),
+        assets: { has: (ref) => ref === said, size: 1, packOf: (ref) => (ref === said ? 'stage1' : undefined), packHas: (pack) => pack === 'stage1' },
+        enabled: () => true,
+        packEnabled: (pack) => !packsOff.has(pack),
+      },
+    });
+    await flush();
+    expect(audio.hasClipFor({ text: '나무' })).toBe(true);
+    expect(audio.hasClipFor({ text: '나무', audioRef: GIYEOK_CLIP })).toBe(true);
+    expect(audio.hasClipFor({ text: '나비' })).toBe(false);
+    expect(audio.hasPackClips('stage1')).toBe(true);
+    expect(audio.hasPackClips('placement')).toBe(false);
+    packsOff.add('stage1');
+    expect(audio.hasClipFor({ text: '나무' })).toBe(false);
+    expect(audio.hasPackClips('stage1')).toBe(false);
+    audio.dispose();
+  });
+
   it('the app leaving the foreground sends one audio.source_summary', async () => {
     const player = new FakeClipPlayer();
     const hidden: Array<() => void> = [];

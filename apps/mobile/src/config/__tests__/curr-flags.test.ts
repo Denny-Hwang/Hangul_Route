@@ -110,7 +110,8 @@ describe('F-CURR-002 flags (CM-2)', () => {
  * names whose build floor is the build ceiling (`flags.audioClips`, and `flags.audioClipPacks` for a pack), with
  * built-in pct 100, used as on/off. Remote config can only turn them off.
  */
-describe('audio clip switches (AC-B8)', () => {
+// Each test re-imports flags.ts cold (`vi.resetModules()`); on a loaded runner one import can pass 5 s.
+describe('audio clip switches (AC-B8)', { timeout: 20_000 }, () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
     delete process.env.EXPO_PUBLIC_AUDIO_CLIPS;
@@ -122,7 +123,7 @@ describe('audio clip switches (AC-B8)', () => {
   });
 
   it('every audio switch has built-in pct 100 (on until the remote turns it off)', async () => {
-    const { AUDIO_PACKS } = await import('@hangul-route/content-schema');
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema/audio-packs');
     const mod = await reload();
     expect(mod.currBuiltInPct('audioClips')).toBe(100);
     for (const pack of AUDIO_PACKS) expect(mod.currBuiltInPct(`audioPack.${pack}`), pack).toBe(100);
@@ -130,7 +131,7 @@ describe('audio clip switches (AC-B8)', () => {
   });
 
   it('by default every switch is on at build time', async () => {
-    const { AUDIO_PACKS } = await import('@hangul-route/content-schema');
+    const { AUDIO_PACKS } = await import('@hangul-route/content-schema/audio-packs');
     const mod = await reload();
     expect(mod.currBuildFloor('audioClips')).toBe(true);
     for (const pack of AUDIO_PACKS) expect(mod.currBuildFloor(`audioPack.${pack}`), pack).toBe(true);

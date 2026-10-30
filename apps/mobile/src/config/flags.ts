@@ -1,4 +1,5 @@
-import { AUDIO_PACKS, type AudioPack } from '@hangul-route/content-schema';
+// The leaf module, not the package index: every `reload()` in the flag tests re-evaluates this file cold.
+import { AUDIO_PACKS, type AudioPack } from '@hangul-route/content-schema/audio-packs';
 import { showAllLocalesEnabled, type UiLocale } from '@hangul-route/i18n';
 
 /**
@@ -63,7 +64,21 @@ function parseLectureSwitch(raw: string | undefined, fallback: boolean): boolean
 function parsePackList(raw: string | undefined, fallback: readonly AudioPack[]): readonly AudioPack[] {
   if (raw === undefined || raw.trim() === '') return fallback;
   const listed = new Set(raw.split(',').map((k) => k.trim().toLowerCase()));
+  const unknown = unknownPackNames(raw);
+  // A typo (`jamo_s1`) fails safe (the device voice plays) but is easy to miss: say so in a development build.
+  if (unknown.length > 0 && isDevBuild()) {
+    console.warn(`EXPO_PUBLIC_AUDIO_CLIP_PACKS names no pack called ${unknown.join(', ')}; the packs are ${AUDIO_PACKS.join(', ')} (or none).`);
+  }
   return AUDIO_PACKS.filter((pack) => listed.has(pack));
+}
+
+/** The names in a build ceiling list that are not packs (`none`, the documented empty list, is not one of them). */
+export function unknownPackNames(raw: string): string[] {
+  const known = new Set<string>([...AUDIO_PACKS, 'none']);
+  return raw
+    .split(',')
+    .map((k) => k.trim().toLowerCase())
+    .filter((k) => k !== '' && !known.has(k));
 }
 
 /**

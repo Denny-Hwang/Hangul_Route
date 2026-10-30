@@ -49,7 +49,7 @@ import {
 import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { exampleWordLabel } from '../../logic/stage1/example-label';
-import { hasClip, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait } from '../../platform/screen-reader';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
@@ -333,7 +333,7 @@ interface CardAudio {
  */
 function useCardSlot(key: string, actions: readonly (HearAction | undefined)[], audio: CardAudio): PromptSlot {
   const playable = actions.filter((a): a is HearAction => a !== undefined);
-  const clip = playable.length > 0 && playable.every((a) => hasClip(a.spec.audioRef));
+  const clip = playable.length > 0 && playable.every((a) => hasClipFor(a.spec));
   const slot = usePromptSlot({ source: DISCOVER_AUDIO_SOURCE, hasClip: clip, textOnScreen: true });
   const { play } = slot;
   const { register } = audio;

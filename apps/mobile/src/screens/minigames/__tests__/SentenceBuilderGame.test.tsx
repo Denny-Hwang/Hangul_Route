@@ -1,4 +1,4 @@
-import type { OrderItRound } from '@hangul-route/content-schema';
+import { sayRef, type OrderItRound } from '@hangul-route/content-schema';
 import { motion } from '@hangul-route/design-system';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -20,7 +20,7 @@ import { SentenceBuilderGame } from '../SentenceBuilderGame';
 const CLIP = 'audio/sentences/like-tteokguk.mp3';
 
 const audio = vi.hoisted(() => ({
-  hasClip: vi.fn((ref: string | undefined) => ref === 'audio/sentences/like-tteokguk.mp3'),
+  hasClipFor: vi.fn((spec: { text: string; audioRef?: string }) => spec.audioRef === 'audio/sentences/like-tteokguk.mp3'),
   warmClips: vi.fn((_refs: readonly string[]) => Promise.resolve()),
   playPrompt: vi.fn(() => Promise.resolve('played' as const)),
   stop: vi.fn(),
@@ -66,17 +66,19 @@ async function tapTile(r: ReactTestRenderer, id: string): Promise<void> {
 
 describe('SentenceBuilderGame: the prompt slot follows the round, the clips are warmed', () => {
   it('hasClip is true for a round with a bundled sentence, false once the reducer moves to one without', async () => {
+    const spoken = (round: OrderItRound): string => round.sentence.spokenKo ?? round.sentence.ko;
     const rounds = [WITH_CLIP, EAT_RICE];
     const r = await render(<SentenceBuilderGame scope={{ kind: 'order-it', rounds: rounds.length, orderIt: { rounds } }} host={host()} />);
     mounted.push(r);
 
     expect(slotArgs.length).toBeGreaterThan(0);
     for (const args of slotArgs) expect(args).toEqual({ source: 'sentence-builder', hasClip: true, textOnScreen: true });
-    expect(audio.hasClip).toHaveBeenCalledWith(CLIP);
+    // The slot asks with what the round plays: its spoken text and its own clip (AMENDMENTS-AUDIO-CLIPS AC-B7).
+    expect(audio.hasClipFor).toHaveBeenCalledWith(expect.objectContaining({ text: spoken(WITH_CLIP), audioRef: CLIP }));
 
-    // Warmed once on mount, with the one bundled ref (EAT_RICE has none).
+    // Warmed once on mount: round 1's own clip, then each sentence's say clip (the platform drops refs with no file).
     expect(audio.warmClips).toHaveBeenCalledTimes(1);
-    expect(audio.warmClips).toHaveBeenCalledWith([CLIP]);
+    expect(audio.warmClips).toHaveBeenCalledWith([CLIP, sayRef(spoken(WITH_CLIP)), sayRef(spoken(EAT_RICE))]);
 
     // Build round 1 in order (w0, w1, w2), each tap a second apart (past the double-tap window);
     // the built sentence is heard, then the next round opens.
@@ -104,7 +106,7 @@ describe('SentenceBuilderGame: the prompt slot follows the round, the clips are 
     expect(round2Open()).toBe(true);
     const later = slotArgs.slice(round1);
     expect(later.at(-1)).toEqual({ source: 'sentence-builder', hasClip: false, textOnScreen: true });
-    expect(audio.hasClip).toHaveBeenLastCalledWith(undefined);
+    expect(audio.hasClipFor).toHaveBeenLastCalledWith(expect.objectContaining({ text: spoken(EAT_RICE), audioRef: undefined }));
     // A new round does not warm the clips again.
     expect(audio.warmClips).toHaveBeenCalledTimes(1);
   });

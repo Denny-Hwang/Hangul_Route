@@ -40,17 +40,51 @@ afterEach(() => {
   vi.doUnmock('../../content/__generated__/audio-assets');
 });
 
-describe('platform/audio-switches', () => {
-  it('with no copy every switch is on (built-in pct 100), and the first read loads the stored copy', async () => {
+describe('platform/audio-switches', { timeout: 20_000 }, () => {
+  it('with no copy yet every switch is on (built-in pct 100, as the capability reads it); the first read loads the stored copy', async () => {
     const { switches, store } = await load();
     mem.set('remote-config', copy({ 'audioPack.jamo-s1': { on: false, pct: 100 } }));
     expect(store.useRemoteConfigStore.getState().hydrated).toBe(false);
     expect(switches.clipsSwitchOn()).toBe(true);
     expect(switches.packSwitchOn('jamo-s1')).toBe(true);
     await vi.waitFor(() => expect(store.useRemoteConfigStore.getState().hydrated).toBe(true));
-    // The stored copy (written by the learner app on this device) now holds: jamo-s1 is off.
+    // The stored copy (written by the learner app on this device) now holds: jamo-s1 is off, the rest on.
     expect(switches.packSwitchOn('jamo-s1')).toBe(false);
     expect(switches.packSwitchOn('jamo-wb')).toBe(true);
+    expect(switches.clipsSwitchOn()).toBe(true);
+  });
+
+  it('once the stored copy is read, a device with no copy at all plays every pack (built-in pct 100)', async () => {
+    const { switches, store } = await load();
+    switches.primeAudioSwitches();
+    await vi.waitFor(() => expect(store.useRemoteConfigStore.getState().hydrated).toBe(true));
+    expect(store.useRemoteConfigStore.getState().cache).toBeNull();
+    expect(switches.clipsSwitchOn()).toBe(true);
+    expect(switches.packSwitchOn('jamo-s1')).toBe(true);
+  });
+
+  it('the presenter and All lessons roots (no startRemoteConfig) still fetch the copy: priming reads the stored one, then fetches when due', async () => {
+    const { switches, store } = await load();
+    const refreshIfDue = vi.fn(async () => {
+      store.useRemoteConfigStore.setState({ cache: copy({ 'audioPack.stage1': { on: false, pct: 100 } }) });
+      return true;
+    });
+    store.useRemoteConfigStore.setState({ refreshIfDue });
+    switches.primeAudioSwitches();
+    switches.primeAudioSwitches();
+    await vi.waitFor(() => expect(refreshIfDue).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(switches.packSwitchOn('stage1')).toBe(false));
+    // Each prompt asks again; `refreshIfDue` itself fetches only once the copy is due.
+    refreshIfDue.mockClear();
+    switches.packSwitchOn('jamo-s1');
+    expect(refreshIfDue).toHaveBeenCalledTimes(1);
+  });
+
+  it('pct below 100 reads as off on every screen (on/off only, never a ramp)', async () => {
+    const { switches, store } = await load();
+    store.useRemoteConfigStore.setState({ hydrated: true, cache: copy({ 'audioPack.stage1': { on: true, pct: 99 } }) });
+    expect(switches.packSwitchOn('stage1')).toBe(false);
+    expect(switches.packSwitchOn('stage2')).toBe(true);
   });
 
   it('a copy that switches a pack off turns only that pack off; audioClips off turns every pack off', async () => {

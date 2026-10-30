@@ -3,7 +3,7 @@
 // src/logic/audio/__tests__/audio-scripts.test.ts through the sibling lib.d.mts.
 
 /** Same grammar as `AUDIO_REF_PATTERN` in packages/content-schema (a parity test keeps them equal). */
-export const AUDIO_REF_PATTERN = /^audio\/(jamo|vocab|story|card|dialogue|say)\/[a-z0-9][a-z0-9/-]*\.mp3$/;
+export const AUDIO_REF_PATTERN = /^audio\/(?:(?:jamo|vocab|story|card|dialogue)\/[a-z0-9][a-z0-9/-]*|say\/[0-9a-f]{16})\.mp3$/;
 
 /**
  * The two jamo clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6): the Stage 1 symbols (`jamoAll`) and the Word Builder ones
