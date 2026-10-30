@@ -1,4 +1,4 @@
-import type { ActivityPreset, RomanizationMode } from '@hangul-route/content-schema';
+import type { ActivityPreset, Realia, RomanizationMode } from '@hangul-route/content-schema';
 import type { SpokenForm } from '../audio/spoken';
 
 /**
@@ -95,8 +95,8 @@ export interface SheetText {
  * before the key words show (the title, then each line and its value, in order).
  */
 export interface RealiaSheetView {
-  /** The layout and dressing; `plain` for a realia with no kind. */
-  kind: 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+  /** The layout and dressing: the four G-2 kinds, the eight of F-CURR-002 row CM-47, or `plain` for a realia with no kind. */
+  kind: NonNullable<Realia['kind']> | 'plain';
   /** The sheet's own title (taught Korean, so not `title`, which names UI-language text on a slide). */
   heading?: SheetText;
   entries: ReadonlyArray<{ id: string; text: SheetText; value?: SheetText; dir?: 'left' | 'right'; goods?: 'apples' | 'fan' | 'hanji' }>;
