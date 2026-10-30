@@ -19,6 +19,8 @@ export interface KoLine {
   romanization: string;
   /** In the deck's UI language; absent for a syllable that is only a sound block. */
   gloss?: string;
+  /** What Sound says when it differs from `ko` (F-AUDIO-004): a story's letter keyword says its name (ㄱ = giyeok, AMENDMENTS-AUDIO-CLIPS M8). */
+  spokenKo?: string;
 }
 
 /** A narration run: plain text, or a keyword drawn as a `KoreanText` chip. */
@@ -27,9 +29,10 @@ export type NarrationPiece = { text: string } | KoLine;
 export type QuizPrompt =
   /**
    * Match Sound: play the letter (AMENDMENTS-AUDIO-CLIPS JV-A1): an initial or a vowel by its name
-   * (ㄴ is nieun), a final, asked only by its sound, by its closed syllable (an).
+   * (ㄴ is nieun), a final, asked only by its sound, by its closed syllable (an). `frame: 'endsWith'` is a
+   * final round (JV-A3 rule 3): the closed syllable plays and the question asks which letter is at the bottom.
    */
-  | { ask: 'sound'; spoken: SpokenForm }
+  | { ask: 'sound'; spoken: SpokenForm; frame?: 'endsWith' }
   /** Word to gloss: the Korean on screen, pick its meaning. */
   | { ask: 'meaning'; ko: string; romanization: string }
   /** Odd One Out: which letter is not like the others (the question is a catalogue string). */

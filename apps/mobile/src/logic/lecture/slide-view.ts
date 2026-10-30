@@ -428,7 +428,7 @@ function quizSound(prompt: QuizPrompt): SlideSound | undefined {
     case 'meaning':
       return wordSound(prompt.ko, prompt.romanization);
     case 'check':
-      return prompt.target ? wordSound(prompt.target.ko, prompt.target.romanization) : undefined;
+      return prompt.target ? wordSound(prompt.target.spokenKo ?? prompt.target.ko, prompt.target.romanization) : undefined;
     case 'odd-one-out':
       // Its letters are the answer.
       return undefined;
