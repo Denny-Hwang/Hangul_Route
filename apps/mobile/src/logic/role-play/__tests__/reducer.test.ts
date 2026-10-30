@@ -167,8 +167,9 @@ describe('any taps reach a good ending (property)', () => {
 
 /**
  * Exhaustive (section 7.7, review fix): every way through every scene that ships or that the suites play is walked
- * through the reducer, not sampled. The scenes are the fixture scene, every role-play scope of the lesson cells (the
- * Stage 4 and pack rows add theirs and inherit this walk), and every scene shape the property draws from (4 to 6
+ * through the reducer, not sampled. The scenes are the fixture scene, every role-play scope of the lesson cells (a
+ * Stage 4 cell's scopes join this walk on their own; `ALL_LESSON_SCOPES` holds cells only, so the pack rows must add
+ * their pack scopes to `shipped` below), and every scene shape the property draws from (4 to 6
  * turns, a split at each turn, branches that meet again or stay apart). At each turn every natural reply is taken, so
  * two natural replies that lead to the same line are two ways; each way is played twice: each less natural reply
  * tapped first, then the natural reply at once.

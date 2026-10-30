@@ -28,7 +28,6 @@ import { buildDiscover } from '../../logic/stage1/discover-flow';
 import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { rolePlayMainPath } from '../../logic/role-play/fallback';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { episodesAll } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
@@ -919,9 +918,9 @@ function missesOf(scope: MinigameScope): RoundAsked[] {
       return [...new Set(scope.picWord?.boards.flatMap((b) => b.pairs.map((p) => p.id)))].map((itemId) => ({ scope, itemId }));
     case 'tap-respond':
       return (scope.dialogue ?? []).map((t) => ({ texts: [t.npcKo] }));
-    // Row CM-3A S4: a Role Play turn answers `<node>/<reply>` (RolePlayGame), along the main path its fallback plays.
     case 'role-play':
-      return scope.rolePlay ? rolePlayMainPath(scope.rolePlay.scene).map((t) => ({ scope, itemId: `${t.id}/${t.replies.find((r) => r.kind === 'natural')?.id ?? ''}` })) : [];
+      // A first-try miss names the turn and the less natural reply tapped (row CM-35).
+      return (scope.rolePlay?.scene.nodes ?? []).flatMap((n) => ('replies' in n ? n.replies.filter((r) => r.kind === 'lessNatural').map((r) => ({ scope, itemId: `${n.id}/${r.id}` })) : []));
     default:
       return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
   }

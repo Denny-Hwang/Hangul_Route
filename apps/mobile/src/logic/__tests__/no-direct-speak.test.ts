@@ -36,6 +36,8 @@ const SLOT_SCREENS = [
   // The menu, ticket and sign lines and options, and the Story Order replay line (review of #740).
   'minigames/RealiaReadGame.tsx',
   'minigames/StorySequenceGame.tsx',
+  // F-CURR-002 row CM-35: Role Play says each partner line without a tap, and each reply as it is sent.
+  'minigames/role-play/RolePlayGame.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -97,6 +99,7 @@ describe('no direct speak from screens', () => {
     'vocab/VocabCardsScreen.tsx',
     'minigames/TraceWordGame.tsx',
     'minigames/TraceStrokeGame.tsx',
+    'minigames/role-play/RolePlayGame.tsx',
   ])(
     '%s stops its speech on unmount',
     (rel) => {
