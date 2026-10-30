@@ -536,9 +536,19 @@ function builtClips(): string[] {
   return out;
 }
 
-const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
-const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
+/**
+ * Clips the precache must not hold (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6): the record groups, the text-keyed say
+ * clips and the fixture Word Builder letter `ae` (pack jamo-wb, although it lives under audio/jamo/ too).
+ */
+const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue|say)\/|(^|\/)audio\/jamo\/ae\./;
+const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p) && !RUNTIME_CLIP.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
+const vocabClips = runtimeClips.filter((p) => /\/audio\/vocab\//.test(p));
+const wordBuilderClips = builtClips().filter((p) => /\/audio\/jamo\/ae\./.test(p));
+/** The fixture say clips (e2e/fixtures/audio/say): 나 and 너, the example words of quest 1's first Discover page. */
+const SAY_NA = '1098bbe54520ab2a';
+const SAY_NEO = '734dae8e9d9a8f8b';
+const sayClips = builtClips().filter((p) => /\/audio\/say\//.test(p));
 // The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
 const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has six.';
 
@@ -588,8 +598,8 @@ test.describe('bundled clips (A-6)', () => {
   });
 
   test('a vocabulary clip is cached on its first online fetch and then served offline', async ({ page, context }) => {
-    test.skip(runtimeClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
-    const url = `/${runtimeClips[0]}`;
+    test.skip(vocabClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
+    const url = `/${vocabClips[0]}`;
     await fakeSpeech(page, 'none');
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await page.goto('/');
@@ -646,5 +656,118 @@ test.describe('bundled clips (A-6)', () => {
     // The clip played to its end: the Korean voice never spoke the letter.
     await page.waitForTimeout(1500);
     expect((await utterances(page)).filter((u) => u.lang === 'ko-KR')).toEqual([]);
+  });
+  test('only the jamo-s1 letters are precached: a Word Builder letter and the say clips are runtime-cached (AC-B6)', async ({ page }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    if (FIXTURE_BUILD) {
+      expect(wordBuilderClips.length, 'fixture jamo-wb letter').toBeGreaterThan(0);
+      expect(sayClips.length, 'fixture say clips').toBe(2);
+    }
+    const sw = await (await page.request.get('/sw.js')).text();
+    for (const clip of [...wordBuilderClips, ...sayClips]) expect(sw, clip).not.toContain(clip);
+    // The say clips' own cache-first rule; the record clips (and jamo-wb) keep hr-audio-v1.
+    expect(sw).toContain('hr-audio-say-v1');
+    expect(sw).toContain('hr-audio-v1');
+  });
+
+  test('offline after one online lesson: a precached letter, a warmed say clip, and a say clip never warmed falls back to the voice', async ({ page, context }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    await page.reload();
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+
+    // Opening the first lesson online loads its clip pack and warms its say clips into hr-audio-say-v1.
+    await page.getByTestId('home-next-lesson-start').click();
+    const sayCached = (key: string) =>
+      page.evaluate(async (k) => (await (await caches.open('hr-audio-say-v1')).keys()).some((r) => r.url.includes(`/audio/say/${k}.`)), key);
+    await expect.poll(() => sayCached(SAY_NA), { timeout: 15_000 }).toBe(true);
+    await expect.poll(() => sayCached(SAY_NEO), { timeout: 15_000 }).toBe(true);
+    // 너 as if it had never been warmed: out of the say cache before the device goes offline.
+    await page.evaluate(async (k) => {
+      const cache = await caches.open('hr-audio-say-v1');
+      for (const req of await cache.keys()) if (req.url.includes(`/audio/say/${k}.`)) await cache.delete(req);
+    }, SAY_NEO);
+    expect(await sayCached(SAY_NEO)).toBe(false);
+
+    await context.setOffline(true);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByTestId('home-next-lesson-start').click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    const examples = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]');
+    await expect(examples).toHaveCount(2);
+
+    // The precached letter ㅏ (jamo-s1) plays its clip offline.
+    const before = await clipStarts(page);
+    await page.locator('[data-testid^="discover-hear-"][data-testid$="|sound"]').first().click();
+    await expect.poll(() => clipStarts(page)).toBe(before + 1);
+
+    // The warmed say clip of 나 plays from hr-audio-say-v1, not the voice.
+    await examples.nth(0).click();
+    await expect.poll(() => clipStarts(page)).toBe(before + 2);
+    await page.waitForTimeout(300);
+    expect((await utterances(page)).filter((u) => u.text === '나')).toEqual([]);
+
+    // 너 was never warmed: its fetch fails offline, and the device voice says it, with no error on the page.
+    await examples.nth(1).click();
+    await expect.poll(async () => (await utterances(page)).filter((u) => u.text === '너' && u.lang === 'ko-KR').length, { timeout: 5_000 }).toBe(1);
+    expect(await clipStarts(page)).toBe(before + 2);
+    await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('a warmed clip starts within 150 ms of the round appearing (G7)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    // When Match Sound's second round is on screen, and when each clip starts, on the page's own clock. The second
+    // round's clip was warmed when the game opened (the first round's plays while its warm-up is still on its way).
+    await page.addInitScript(() => {
+      const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
+      w.__clipAt = [];
+      const proto = window.AudioBufferSourceNode?.prototype;
+      if (proto) {
+        const start = proto.start;
+        proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
+          if ((this.buffer?.duration ?? 0) > 0.1) w.__clipAt?.push(performance.now());
+          return start.apply(this, args);
+        };
+      }
+      const seen = (): void => {
+        if (w.__roundAt === undefined && document.body?.innerText.includes('2 / 6')) w.__roundAt = performance.now();
+      };
+      new MutationObserver(seen).observe(document, { subtree: true, childList: true, characterData: true });
+    });
+    await onboardChild(page, { name: 'Dami' });
+    await openMatchSound(page);
+    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // The right tile is not known from outside (every fixture letter is the same tone): try them in turn.
+    const tiles = page.getByRole('button', { name: /^Korean letter / });
+    const second = page.getByText('2 / 6');
+    for (let i = 0; i < 4 && !(await second.isVisible()); i += 1) {
+      await tiles.nth(i).click({ timeout: 2_000 }).catch(() => undefined);
+      await expect(second).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
+    }
+    await expect(second).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => {
+        const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
+        return (w.__clipAt ?? []).some((t) => t >= (w.__roundAt ?? Infinity));
+      }))
+      .toBe(true);
+    const gap = await page.evaluate(() => {
+      const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
+      const at = w.__roundAt ?? Number.NaN;
+      return (w.__clipAt ?? []).find((t) => t >= at)! - at;
+    });
+    expect(Number.isFinite(gap)).toBe(true);
+    expect(gap).toBeLessThan(150);
   });
 });

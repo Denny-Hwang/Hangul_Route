@@ -17,6 +17,8 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'components/InstallGuideSheet.tsx': 'not a quest: the install guide message steps',
   'components/VoiceHelpSheet.tsx': 'not a quest: the voice help sections',
   'logic/audio/voice-help.ts': 'not a quest: the voice help sections',
+  'logic/audio/lesson-clips.ts':
+    'warm units only (AMENDMENTS-AUDIO-CLIPS AC-6): a step game ref is a Stage 1 unit (static quests); a lesson quest warms by its cell, so empty steps warm nothing less',
   'logic/browse/facts.ts': 'All lessons: the browse root mounts through withLessonContent',
   'logic/lecture/build-steps.ts': 'not a quest: a lecture slide body, built once the presenter root has every chunk',
   'logic/lecture/content.ts': 'the presenter and lecture roots mount through withLessonContent',

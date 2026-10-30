@@ -678,7 +678,7 @@ describe('platform/audio (native): the module-level clip path', RELOAD_SUITE, ()
     av.loaded.length = 0;
     // Instances of earlier module loads stay subscribed: only this load's instance may answer the background below.
     appState.listeners.length = 0;
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { [GIYEOK_CLIP]: 7 }, AUDIO_ASSET_PACKS: { [GIYEOK_CLIP]: 'jamo-s1' } }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { [GIYEOK_CLIP]: 7 }, AUDIO_ASSET_PACKS: { [GIYEOK_CLIP]: 'jamo-s1' }, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([YUNA] as never);
     vi.mocked(Speech.speak).mockReset();
     const store = await import('../../store/audio-store');

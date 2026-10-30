@@ -236,6 +236,40 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     ]);
   });
 
+  it('the clip pack loader is a learner chunk of its own (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[3]).toEqual({ name: 'clip-packs-chunk', marker: 'clip-packs-chunk:loader' });
+    expect(read('src/platform/clip-packs-chunk.ts')).toContain(`export const CLIP_PACKS_CHUNK = '${LEARNER_CHUNKS[3].marker}';`);
+    // Reached only through the start-side store's literal import(). The pack chunks' import()s stay in the start bundle
+    // (the store): imported by the loader chunk, their URLs would change its content after Metro named it by its md5.
+    const store = read('src/platform/audio-assets-store.ts');
+    expect(store).toContain("import('./clip-packs-chunk')");
+    expect(store).not.toMatch(/^import [^t].*clip-packs-chunk/m);
+    expect(store).toContain("from '../content/__generated__/audio-pack-loaders'");
+    expect(read('src/platform/clip-packs-chunk.ts')).not.toContain('audio-pack-loaders');
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[3].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/clip-packs-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[3]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+  });
+
+  it('a pack\'s clip map is a marked chunk too: never in the start bundle, precached (AC-B6)', () => {
+    const pack = { name: 'audio-pack-stage1', marker: 'audio-pack:stage1' };
+    const text = `__d(function(){var m="${pack.marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/audio-pack-stage1-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [pack], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [pack], bundles: [{ url: START, text: `${text};` }, chunk], precached: all([chunk]) })).toEqual([
+      `audio-pack-stage1 is in the start bundle ${START}: a static import pulled it in`,
+    ]);
+    const report = precacheReport({ manifest: [], audioPacks: [pack], clips: { count: 43, bytes: 350_000 }, bundles: [start, chunk], precache: { count: 3, size: 99 } });
+    expect(report.audioPackChunks.count).toBe(1);
+    expect(reportLines(report)).toContain('  precached clips  43 files  350000 B  (ceiling 520000 B, jamo-s1 only)');
+    expect(reportLines(report).some((line) => line.startsWith('  clip map chunks  1 bundles  '))).toBe(true);
+    expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 } })).toEqual([]);
+    expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 }, clips: { count: 44, bytes: 520_001 } })[0]).toContain('the precached clips are 520001 B');
+  });
+
   it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
     expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });

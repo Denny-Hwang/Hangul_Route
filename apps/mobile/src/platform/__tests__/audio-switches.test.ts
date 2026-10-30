@@ -116,16 +116,4 @@ describe('platform/audio-switches', { timeout: 20_000 }, () => {
     expect(switches.clipsSwitchOn()).toBe(false);
     expect(switches.packSwitchOn('jamo-s1')).toBe(false);
   });
-
-  it('bundledPackOf reads the generated pack map, own keys only', async () => {
-    vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({
-      AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 },
-      AUDIO_ASSET_PACKS: { 'audio/jamo/giyeok.mp3': 'jamo-s1' },
-    }));
-    const switches = await import('../audio-switches');
-    expect(switches.bundledPackOf('audio/jamo/giyeok.mp3')).toBe('jamo-s1');
-    expect(switches.bundledPackOf('audio/jamo/nieun.mp3')).toBeUndefined();
-    expect(switches.bundledPackOf('toString')).toBeUndefined();
-  });
 });

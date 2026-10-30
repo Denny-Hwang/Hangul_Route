@@ -4,8 +4,23 @@ import { AUDIO_PACKS, AUDIO_REF_PATTERN as SCHEMA_PATTERN, type Jamo } from '@ha
 import { describe, expect, it } from 'vitest';
 import { jamoAll, jamoWordBuilder } from '../../../content/jamo';
 import {
-  AUDIO_PRECACHE_IGNORES,
   AUDIO_REF_PATTERN,
+  PRECACHED_AUDIO_PACKS,
+  REF_RUNTIME_CACHE,
+  SAY_RUNTIME_CACHE,
+  audioPrecacheIgnores,
+  clipPackMap,
+  clipUnitOfSource,
+  clipUnitsOf,
+  isPrecachedAudio,
+  packChunkMarker,
+  packChunkModule,
+  precachedClipBytes,
+  precachedPackFiles,
+  refOfBuiltClip,
+  renderAudioModules,
+  renderPackChunk,
+  splitAssetMap,
   JAMO_PACK_STAGE1,
   JAMO_PACK_WORD_BUILDER,
   RUNTIME_AUDIO_GROUPS,
@@ -174,52 +189,220 @@ describe('scripts/audio/lib: renderAssetMap', () => {
   });
 });
 
-describe('scripts/audio/lib: the PWA precache rules (AD10)', () => {
-  it('runtime groups are vocabulary, story, card and dialogue; jamo is precached', () => {
+/**
+ * A small clip manifest in the shape of content/audio/tts-manifest.json (row AC-2): two Stage 1 letters (jamo-s1), a
+ * Word Builder letter and its name (jamo-wb), a word of a Stage 1 quest and one of a Stage 2 cell (say), a vocabulary
+ * record clip, a story sentence and a card word. The real manifest is pinned by the drift test; these rows pin the rules.
+ */
+const SAY_Q1 = 'audio/say/1098bbe54520ab2a.mp3';
+const SAY_S2 = 'audio/say/6852b2954fc85566.mp3';
+const SAY_STORY = 'audio/say/e139a8ff4b5e8c99.mp3';
+const SAY_CARD = 'audio/say/3f663e28cb8bea91.mp3';
+const FIXTURE_MANIFEST = {
+  rows: [
+    { ref: 'audio/jamo/giyeok.mp3', pack: 'jamo-s1', sources: ['jamo:giyeok#sound'] },
+    { ref: 'audio/jamo/giyeok-name.mp3', pack: 'jamo-s1', sources: ['jamo:giyeok#letter'] },
+    { ref: 'audio/jamo/ae.mp3', pack: 'jamo-wb', sources: ['jamo:ae#sound'] },
+    { ref: 'audio/jamo/ssanggiyeok-name.mp3', pack: 'jamo-wb', sources: ['jamo:ssanggiyeok#letter'] },
+    { ref: SAY_Q1, pack: 'stage1', sources: ['minigame:s1-letters-q1-check', 'quest:stage1-letters-q1', 'syl:na'] },
+    { ref: SAY_S2, pack: 'stage2', sources: ['content/episodes/stage-2/life.json', 'content/vocab/school.json', 'vocab:gabang'] },
+    { ref: 'audio/vocab/gangaji.mp3', pack: 'vocab', sources: ['content/vocab/animals.json'] },
+    { ref: SAY_STORY, pack: 'stories', sources: ['content/stories/chuseok-ganggangsullae.json'] },
+    { ref: SAY_CARD, pack: 'cards', sources: ['card:gamsa'] },
+  ],
+};
+const JAMO_SOURCE = readFileSync(join(__dirname, '../../../content/jamo.ts'), 'utf8');
+const PACKS = clipPackMap(FIXTURE_MANIFEST, JAMO_SOURCE);
+
+describe('scripts/audio/lib: pack membership from the clip manifest (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6)', () => {
+  it('reads each clip\'s pack from the manifest, and a jamo clip the manifest does not list from jamo.ts', () => {
+    expect(PACKS.get('audio/jamo/giyeok.mp3')).toBe('jamo-s1');
+    expect(PACKS.get('audio/jamo/ae.mp3')).toBe('jamo-wb');
+    expect(PACKS.get(SAY_Q1)).toBe('stage1');
+    expect(PACKS.get('audio/vocab/gangaji.mp3')).toBe('vocab');
+    // Not in the fixture manifest: jamo.ts still places every jamo clip (43 jamo-s1, 22 jamo-wb).
+    expect(PACKS.get('audio/jamo/nieun.mp3')).toBe('jamo-s1');
+    expect(PACKS.get('audio/jamo/yae.mp3')).toBe('jamo-wb');
+    expect(clipPackMap(null, JAMO_SOURCE).get(SAY_Q1)).toBeUndefined();
+  });
+
+  it('the real manifest precaches exactly the 43 jamo-s1 clips, and every one is a jamo clip', () => {
+    const manifest = JSON.parse(readFileSync(join(__dirname, '../../../../../../content/audio/tts-manifest.json'), 'utf8')) as typeof FIXTURE_MANIFEST;
+    const packs = clipPackMap(manifest, JAMO_SOURCE);
+    const precached = [...packs].filter(([ref]) => isPrecachedAudio(`assets/assets/${ref.replace(/\.mp3$/, '.0123456789abcdef0123456789abcdef.mp3')}`, packs));
+    expect(precached).toHaveLength(43);
+    expect(precached.every(([ref, pack]) => ref.startsWith('audio/jamo/') && pack === 'jamo-s1')).toBe(true);
+    expect([...packs.values()].filter((p) => p === 'jamo-wb')).toHaveLength(22);
+  });
+
+  it('only jamo-s1 is a precached pack (G5)', () => {
+    expect([...PRECACHED_AUDIO_PACKS]).toEqual(['jamo-s1']);
+  });
+});
+
+describe('scripts/audio/lib: the PWA precache rules (AD10, AC-B6)', () => {
+  it('reads the ref of a built clip, its content hash and query dropped', () => {
+    expect(refOfBuiltClip('assets/assets/audio/jamo/giyeok.0d663d9a0166e1ebe46c80873605ae07.mp3')).toBe('audio/jamo/giyeok.mp3');
+    expect(refOfBuiltClip('/assets/e2e/fixtures/audio/jamo/a.24fd18fd6b26c4107536682485ab1e7e.mp3?__WB_REVISION__=1')).toBe('audio/jamo/a.mp3');
+    expect(refOfBuiltClip('/assets/assets/audio/story/heungbu/line-1.abc.mp3')).toBe('audio/story/heungbu/line-1.mp3');
+    expect(refOfBuiltClip('assets/assets/audio/say/1098bbe54520ab2a.ffff.mp3')).toBe(SAY_Q1);
+    expect(refOfBuiltClip('assets/assets/audio/vocab/notes.txt')).toBeNull();
+    expect(refOfBuiltClip('assets/myaudio/vocab/x.mp3')).toBeNull();
+  });
+
+  it('precaches the jamo-s1 clips only: jamo-wb, say, vocabulary, story, card and dialogue clips are runtime', () => {
     expect([...RUNTIME_AUDIO_GROUPS]).toEqual(['vocab', 'story', 'card', 'dialogue']);
-    expect(isRuntimeAudio('assets/assets/audio/vocab/ice-cream.abc.mp3')).toBe(true);
-    expect(isRuntimeAudio('/assets/assets/audio/story/heungbu/line-1.abc.mp3')).toBe(true);
-    expect(isRuntimeAudio('audio/card/hanbok.mp3')).toBe(true);
-    expect(isRuntimeAudio('assets/assets/audio/dialogue/hello.mp3')).toBe(true);
-    expect(isRuntimeAudio('assets/assets/audio/jamo/giyeok.abc.mp3')).toBe(false);
-    expect(isRuntimeAudio('assets/assets/audio/vocab/notes.txt')).toBe(false);
-    expect(isRuntimeAudio('assets/myaudio/vocab/x.mp3')).toBe(false);
+    expect(isRuntimeAudio('assets/assets/audio/jamo/giyeok.abc.mp3', PACKS)).toBe(false);
+    expect(isRuntimeAudio('assets/assets/audio/jamo/giyeok-name.abc.mp3', PACKS)).toBe(false);
+    expect(isRuntimeAudio('assets/assets/audio/jamo/ae.abc.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio('assets/assets/audio/jamo/ssanggiyeok-name.abc.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio(`assets/assets/${SAY_Q1}`, PACKS)).toBe(true);
+    expect(isRuntimeAudio('assets/assets/audio/vocab/ice-cream.abc.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio('/assets/assets/audio/story/heungbu/line-1.abc.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio('audio/card/hanbok.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio('assets/assets/audio/dialogue/hello.mp3', PACKS)).toBe(true);
+    expect(isRuntimeAudio('assets/assets/audio/vocab/notes.txt', PACKS)).toBe(false);
+    expect(isRuntimeAudio('assets/myaudio/vocab/x.mp3', PACKS)).toBe(false);
+    // A jamo clip with no pack is never precached by accident: the build names it (precacheLeaks).
+    expect(isRuntimeAudio('assets/assets/audio/jamo/not-a-letter.abc.mp3', PACKS)).toBe(true);
+    // With no pack lookup at all, nothing is precached.
+    expect(isRuntimeAudio('assets/assets/audio/jamo/giyeok.abc.mp3')).toBe(true);
   });
 
-  it('the Workbox ignore glob names the same groups', () => {
-    expect([...AUDIO_PRECACHE_IGNORES]).toEqual(['**/audio/{vocab,story,card,dialogue}/**']);
+  it('the Workbox ignore globs name the record and say groups and every jamo clip outside jamo-s1', () => {
+    const ignores = audioPrecacheIgnores(PACKS);
+    expect(ignores[0]).toBe('**/audio/{vocab,story,card,dialogue,say}/**');
+    expect(ignores).toContain('**/audio/jamo/ae.mp3');
+    expect(ignores).toContain('**/audio/jamo/ae.*.mp3');
+    expect(ignores).toContain('**/audio/jamo/ssanggiyeok-name.*.mp3');
+    // 22 jamo-wb clips, two globs each, and never a jamo-s1 clip.
+    expect(ignores).toHaveLength(1 + 2 * 22);
+    expect(ignores.some((g) => g.includes('/giyeok.') || g.includes('/giyeok-name.'))).toBe(false);
   });
 
-  it('the runtime rule is cache-first, bounded, and matches only those groups', () => {
-    const rule = audioRuntimeCaching();
-    expect(rule.handler).toBe('CacheFirst');
-    expect(rule.options).toEqual({
-      cacheName: 'hr-audio-v1',
-      expiration: { maxEntries: 400 },
-      cacheableResponse: { statuses: [200], headers: { 'content-type': 'audio/mpeg' } },
-    });
-    expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/vocab/ice-cream.1a2b.mp3')).toBe(true);
-    expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/story/heungbu/line-1.mp3')).toBe(true);
-    expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/jamo/giyeok.1a2b.mp3')).toBe(false);
-    expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/vocab/ice-cream.png')).toBe(false);
+  it('the say clips get their own cache-first cache of 1,600, the record clips keep hr-audio-v1 and its 400', () => {
+    const [say, refs] = audioRuntimeCaching();
+    expect(SAY_RUNTIME_CACHE).toEqual({ cacheName: 'hr-audio-say-v1', maxEntries: 1600 });
+    expect(REF_RUNTIME_CACHE).toEqual({ cacheName: 'hr-audio-v1', maxEntries: 400 });
+    const audioOnly = { statuses: [200], headers: { 'content-type': 'audio/mpeg' } };
+    expect(say?.handler).toBe('CacheFirst');
+    expect(say?.options).toEqual({ cacheName: 'hr-audio-say-v1', expiration: { maxEntries: 1600 }, cacheableResponse: audioOnly });
+    expect(refs?.handler).toBe('CacheFirst');
+    expect(refs?.options).toEqual({ cacheName: 'hr-audio-v1', expiration: { maxEntries: 400 }, cacheableResponse: audioOnly });
+    const host = 'https://app.hangulroute.com/assets/assets/audio';
+    expect(say?.urlPattern.test(`${host}/say/1098bbe54520ab2a.0d663d9a0166e1ebe46c80873605ae07.mp3`)).toBe(true);
+    expect(say?.urlPattern.test(`${host}/say/1098bbe54520ab2a.mp3`)).toBe(true);
+    expect(say?.urlPattern.test(`${host}/vocab/ice-cream.1a2b.mp3`)).toBe(false);
+    expect(say?.urlPattern.test(`${host}/say/1098bbe54520ab2a.png`)).toBe(false);
+    expect(refs?.urlPattern.test(`${host}/vocab/ice-cream.1a2b.mp3`)).toBe(true);
+    expect(refs?.urlPattern.test(`${host}/story/heungbu/line-1.mp3`)).toBe(true);
+    // A jamo-wb clip is fetched at run time; a jamo-s1 clip never reaches this rule (the precache route answers first).
+    expect(refs?.urlPattern.test(`${host}/jamo/ae.1a2b.mp3`)).toBe(true);
+    expect(refs?.urlPattern.test(`${host}/say/1098bbe54520ab2a.mp3`)).toBe(false);
+    expect(refs?.urlPattern.test(`${host}/vocab/ice-cream.png`)).toBe(false);
   });
 
-  it('precacheGaps lists precache-group clips missing from the manifest, ignoring runtime groups', () => {
+  it('precacheGaps lists jamo-s1 clips missing from the manifest and nothing of the runtime packs', () => {
     const dist = [
       'assets/assets/audio/jamo/giyeok.aa.mp3',
       'assets/assets/audio/jamo/nieun.bb.mp3',
-      'assets/__node_modules/.pnpm/x/audio/jamo/hidden.cc.mp3',
+      'assets/__node_modules/.pnpm/x/audio/jamo/giyeok-name.cc.mp3',
+      'assets/assets/audio/jamo/ae.ee.mp3',
+      `assets/assets/${SAY_Q1.replace('.mp3', '.ff.mp3')}`,
       'assets/assets/audio/vocab/ice-cream.dd.mp3',
     ];
     const manifest = ['assets/assets/audio/jamo/giyeok.aa.mp3', '/assets/assets/audio/jamo/nieun.bb.mp3?__WB_REVISION__=1'];
-    expect(precacheGaps(dist, manifest)).toEqual(['assets/__node_modules/.pnpm/x/audio/jamo/hidden.cc.mp3']);
-    expect(precacheGaps([], manifest)).toEqual([]);
+    expect(precacheGaps(dist, manifest, PACKS)).toEqual(['assets/__node_modules/.pnpm/x/audio/jamo/giyeok-name.cc.mp3']);
+    expect(precacheGaps([], manifest, PACKS)).toEqual([]);
   });
 
-  it('precacheLeaks lists runtime-group clips that reached the manifest', () => {
-    expect(precacheLeaks(['index.html', 'assets/assets/audio/vocab/a.mp3', 'assets/assets/audio/jamo/a.mp3'])).toEqual([
+  it('precacheLeaks lists every clip outside jamo-s1 that reached the manifest, and precachedPackFiles a pack\'s files', () => {
+    const manifest = [
+      'index.html',
       'assets/assets/audio/vocab/a.mp3',
-    ]);
+      'assets/assets/audio/jamo/giyeok.aa.mp3',
+      'assets/assets/audio/jamo/ae.ee.mp3',
+      `assets/assets/${SAY_S2}`,
+    ];
+    expect(precacheLeaks(manifest, PACKS)).toEqual(['assets/assets/audio/jamo/ae.ee.mp3', `assets/assets/${SAY_S2}`, 'assets/assets/audio/vocab/a.mp3']);
+    expect(precachedPackFiles(manifest, PACKS, 'jamo-wb')).toEqual(['assets/assets/audio/jamo/ae.ee.mp3']);
+    expect(precachedPackFiles(manifest, PACKS, 'jamo-s1')).toEqual(['assets/assets/audio/jamo/giyeok.aa.mp3']);
+  });
+
+  it('precachedClipBytes counts the precached jamo-s1 clips only (the G5 growth)', () => {
+    const entries = [
+      { url: 'index.html', size: 900 },
+      { url: 'assets/assets/audio/jamo/giyeok.aa.mp3', size: 8000 },
+      { url: 'assets/assets/audio/jamo/giyeok-name.bb.mp3', size: 9000 },
+      { url: 'assets/assets/audio/jamo/ae.cc.mp3', size: 7000 },
+    ];
+    expect(precachedClipBytes(entries, PACKS)).toEqual({ count: 2, bytes: 17_000 });
+    expect(precachedClipBytes([], PACKS)).toEqual({ count: 0, bytes: 0 });
+  });
+});
+
+describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () => {
+  const entries = buildAssetMap(
+    ['jamo/giyeok.mp3', 'jamo/ae.mp3', SAY_Q1.slice('audio/'.length), SAY_S2.slice('audio/'.length), 'vocab/gangaji.mp3', SAY_STORY.slice('audio/'.length), 'story/heungbu/line-1.mp3'],
+    undefined,
+    (ref) => PACKS.get(ref),
+  );
+
+  it('the start map holds only jamo-s1 refs (and a ref with no pack); every other pack is a chunk of its own', () => {
+    const { start, chunks } = splitAssetMap(entries);
+    expect(start.map((e) => e.ref)).toEqual(['audio/jamo/giyeok.mp3', 'audio/story/heungbu/line-1.mp3']);
+    expect(start.filter((e) => e.pack !== undefined).every((e) => e.pack === 'jamo-s1')).toBe(true);
+    expect(chunks.map((c) => c.pack)).toEqual(['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab']);
+    expect(chunks.find((c) => c.pack === 'stage1')?.entries.map((e) => e.ref)).toEqual([SAY_Q1]);
+  });
+
+  it('the rendered start map carries no chunk ref; the loader module loads each chunk through one literal import()', () => {
+    const modules = renderAudioModules(entries, clipUnitsOf(FIXTURE_MANIFEST));
+    const start = modules['audio-assets.ts'] ?? '';
+    expect(refsInRenderedMap(start)).toEqual(['audio/jamo/giyeok.mp3', 'audio/story/heungbu/line-1.mp3']);
+    for (const ref of [SAY_Q1, SAY_S2, SAY_STORY, 'audio/jamo/ae.mp3', 'audio/vocab/gangaji.mp3']) expect(start).not.toContain(ref);
+    expect(start).toContain('export const AUDIO_CLIP_COUNT = 7;');
+    expect(start).toContain("export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab'];");
+    // The literal import()s are the loader module's, which only the lazy clip pack loader imports.
+    expect(start).not.toContain('import(');
+    const loader = modules['audio-pack-loaders.ts'] ?? '';
+    expect(loader).toContain("    case 'stage1':\n      return import('./audio-packs/audio-pack-stage1');");
+    expect(loader).not.toMatch(/^import .*audio-packs/m);
+    expect(Object.keys(modules).sort()).toEqual(
+      ['audio-assets.ts', 'audio-pack-loaders.ts', ...['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab'].map(packChunkModule)].sort(),
+    );
+  });
+
+  it('a chunk carries its marker, its clips one folder deeper and the warm units of their sources', () => {
+    const units = clipUnitsOf(FIXTURE_MANIFEST);
+    const stage1 = renderPackChunk('stage1', entries.filter((e) => e.pack === 'stage1'), units);
+    expect(stage1).toContain(`export const AUDIO_PACK_CHUNK = '${packChunkMarker('stage1')}';`);
+    expect(packChunkMarker('stage1')).toBe('audio-pack:stage1');
+    expect(stage1).toContain(`    '${SAY_Q1}': require('../../../../assets/audio/say/1098bbe54520ab2a.mp3'),`);
+    expect(stage1).toContain("    'minigame:s1-letters-q1-check': [0],");
+    expect(stage1).toContain("    'quest:stage1-letters-q1': [0],");
+    expect(stage1).not.toContain('syl:');
+    const stage2 = renderPackChunk('stage2', entries.filter((e) => e.pack === 'stage2'), units);
+    expect(stage2).toContain("    'episode:stage2-life': [0],");
+    expect(stage2).not.toContain('vocab:');
+  });
+
+  it('a source is a warm unit when a screen opens by it: a Stage 1 quest or game, a lesson cell, a story, the level check', () => {
+    expect(clipUnitOfSource('quest:stage1-letters-q1')).toBe('quest:stage1-letters-q1');
+    expect(clipUnitOfSource('minigame:s1-letters-q1-check')).toBe('minigame:s1-letters-q1-check');
+    expect(clipUnitOfSource('content/episodes/stage-7/crafts.json')).toBe('episode:stage7-crafts');
+    expect(clipUnitOfSource('content/stories/hangeul-day.json')).toBe('story:hangeul-day');
+    expect(clipUnitOfSource('content/placement/sentences.json')).toBe('placement');
+    for (const other of ['lex:gansik', 'pat:gamsahamnida', 'exc:gachi-gayo', 'card:gamsa', 'vocab:gajok', 'content/vocab/family.json', 'syl:ga', 'jamo:giyeok#sound']) {
+      expect(clipUnitOfSource(other), other).toBeNull();
+    }
+  });
+
+  it('every real manifest unit a lesson opens by names an episode, quest, game or story that ships', () => {
+    const manifest = JSON.parse(readFileSync(join(__dirname, '../../../../../../content/audio/tts-manifest.json'), 'utf8')) as typeof FIXTURE_MANIFEST;
+    const units = new Set([...clipUnitsOf(manifest).values()].flat());
+    expect(units.size).toBeGreaterThan(30);
+    for (const unit of units) expect(unit).toMatch(/^(?:episode:stage\d-[a-z0-9-]+|story:[a-z0-9-]+|quest:[a-z0-9-]+|minigame:[a-z0-9-]+|placement)$/);
   });
 });
 

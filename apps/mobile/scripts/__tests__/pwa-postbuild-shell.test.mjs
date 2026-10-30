@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
+import { headersFor, parseHeaders } from '../app-host/headers.mjs';
 import { LESSON_MANIFEST, REVIEW_ITEM_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GROWN_UP_PREFIXES, LEARNER_ROOTS, isGrownUpPath } from '@hangul-route/content-schema';
@@ -365,6 +366,148 @@ describe('public/_headers', () => {
   it('keeps the learner rules (the worker and the shell are never served stale)', () => {
     expect(headers).toMatch(/^\/sw\.js\n  Cache-Control: no-cache$/m);
     expect(headers).toMatch(/^\/index\.html\n  Cache-Control: no-cache$/m);
+  });
+
+  it('serves every clip group, the say clips included, as immutable for a year, by one rule (AMENDMENTS-AUDIO-CLIPS AC-B6)', () => {
+    const rules = parseHeaders(headers);
+    const year = 'public, max-age=31536000, immutable';
+    for (const path of [
+      '/assets/assets/audio/say/1098bbe54520ab2a.0d663d9a0166e1ebe46c80873605ae07.mp3',
+      '/assets/assets/audio/jamo/ae.0d663d9a0166e1ebe46c80873605ae07.mp3',
+      '/assets/assets/audio/jamo/giyeok.0d663d9a0166e1ebe46c80873605ae07.mp3',
+      '/assets/assets/audio/vocab/gangaji.0d663d9a0166e1ebe46c80873605ae07.mp3',
+    ]) {
+      // Exactly the one value: a second matching rule would join its Cache-Control to it.
+      expect(headersFor(rules, path)['cache-control'], path).toBe(year);
+    }
+  });
+});
+
+/** A stand-in clip file of `bytes` bytes (the post-build reads names and sizes, never the audio). */
+const clip = (bytes) => 'ID3'.padEnd(bytes, '.');
+const HASH = '0d663d9a0166e1ebe46c80873605ae07';
+
+describe('pwa-postbuild.mjs precaches only the jamo-s1 pack (AMENDMENTS-AUDIO-CLIPS AC-B6, G5, row AC-6)', () => {
+  let dist;
+  let run;
+  let sw;
+  const files = {
+    'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+    'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
+    ...lessonBundles(),
+    // jamo-s1: precached.
+    [`assets/assets/audio/jamo/giyeok.${HASH}.mp3`]: clip(9_000),
+    [`assets/assets/audio/jamo/giyeok-name.${HASH}.mp3`]: clip(11_000),
+    [`assets/e2e/fixtures/audio/jamo/a.${HASH}.mp3`]: clip(7_000),
+    // jamo-wb (under audio/jamo/ too), a say clip, a vocabulary clip: runtime-cached.
+    [`assets/assets/audio/jamo/ae.${HASH}.mp3`]: clip(8_000),
+    [`assets/assets/audio/jamo/ssanggiyeok-name.${HASH}.mp3`]: clip(8_000),
+    [`assets/assets/audio/say/1098bbe54520ab2a.${HASH}.mp3`]: clip(6_000),
+    [`assets/assets/audio/vocab/gangaji.${HASH}.mp3`]: clip(6_000),
+  };
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-packs-'));
+    for (const [path, body] of Object.entries(files)) {
+      mkdirSync(dirname(join(dist, path)), { recursive: true });
+      writeFileSync(join(dist, path), body);
+    }
+    const { WORKERS_CI: _w, CF_PAGES: _p, ...env } = process.env;
+    run = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env });
+    sw = existsSync(join(dist, 'sw.js')) ? readFileSync(join(dist, 'sw.js'), 'utf8') : '';
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('succeeds with --budget: no gap, no leak, the precached clips under their line', () => {
+    expect(run.status, run.stderr).toBe(0);
+    expect(run.stdout).toContain('7 audio clips built');
+  });
+
+  it('precaches the jamo-s1 clips and no jamo-wb, say or vocabulary clip', () => {
+    for (const ref of ['assets/assets/audio/jamo/giyeok.', 'assets/assets/audio/jamo/giyeok-name.', 'assets/e2e/fixtures/audio/jamo/a.']) {
+      expect(sw, ref).toContain(`"${ref}${HASH}.mp3"`);
+    }
+    for (const ref of ['audio/jamo/ae.', 'audio/jamo/ssanggiyeok-name.', 'audio/say/1098bbe54520ab2a.', 'audio/vocab/gangaji.']) {
+      expect(sw, ref).not.toContain(`${ref}${HASH}.mp3`);
+    }
+  });
+
+  it('writes the say cache (hr-audio-say-v1, 1,600 entries) and keeps hr-audio-v1 at 400, both cache-first, audio only', () => {
+    expect(sw).toContain('"hr-audio-say-v1"');
+    expect(sw).toMatch(/cacheName:\s*"hr-audio-say-v1"[\s\S]{0,400}maxEntries:\s*1600/);
+    expect(sw).toMatch(/cacheName:\s*"hr-audio-v1"[\s\S]{0,400}maxEntries:\s*400/);
+    expect(sw.match(/"audio\/mpeg"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(sw).toContain('CacheFirst');
+  });
+
+  it('reports the precached clips (the G5 growth) against their own line, and the learner precache against its line', () => {
+    expect(run.stdout).toContain(`  precached clips  3 files  27000 B  (ceiling ${PRECACHE_BUDGET.precachedClipsRaw} B, jamo-s1 only)`);
+    expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling 11287329 B\)/);
+  });
+});
+
+/**
+ * AC-6's release `build:web` (Metro cache cleared, no recorded clips, on the AC-1 and AC-2 heads): the learner precache
+ * is 78 files, 9,416,202 B (9,411,393 B, 77 files, before AC-6: the clip pack loader chunk is the one more file).
+ */
+const AC6_MEASURED_LEARNER_PRECACHE = 9_416_202;
+
+describe('the offline budget does not move for audio (AMENDMENTS-AUDIO-CLIPS G5, row AC-6)', () => {
+  it('keeps learnerPrecacheRaw at 11,287,329 B: CM-5B is never triggered by audio', () => {
+    expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(11_287_329);
+  });
+
+  it('the precached clips have a line of their own, the jamo-s1 set limit (43 clips, at most 520,000 B)', () => {
+    expect(PRECACHE_BUDGET.precachedClipsRaw).toBe(520_000);
+  });
+
+  it('the measured learner precache plus the whole jamo-s1 pack stays under the line', () => {
+    // About 1.87 MB of headroom; the whole jamo-s1 pack at its set limit takes 0.52 MB of it (about 0.35 MB expected).
+    const measured = AC6_MEASURED_LEARNER_PRECACHE;
+    expect(measured).toBeGreaterThan(0);
+    expect(measured + PRECACHE_BUDGET.precachedClipsRaw).toBeLessThan(PRECACHE_BUDGET.learnerPrecacheRaw);
+  });
+});
+
+describe('pwa-postbuild.mjs --budget fails precached clips over their line (G5)', () => {
+  let dist;
+  let run;
+  let deploy;
+
+  beforeAll(() => {
+    dist = mkdtempSync(join(tmpdir(), 'hr-pwa-clips-over-'));
+    const files = {
+      'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
+      'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
+      ...lessonBundles(),
+      [`assets/assets/audio/jamo/giyeok.${HASH}.mp3`]: clip(PRECACHE_BUDGET.precachedClipsRaw - 999),
+      [`assets/assets/audio/jamo/nieun.${HASH}.mp3`]: clip(1_000),
+    };
+    for (const [path, body] of Object.entries(files)) {
+      mkdirSync(dirname(join(dist, path)), { recursive: true });
+      writeFileSync(join(dist, path), body);
+    }
+    const { WORKERS_CI: _w, CF_PAGES: _p, ...env } = process.env;
+    run = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env });
+    deploy = spawnSync(process.execPath, [postbuild, dist, '--budget'], { encoding: 'utf8', env: { ...env, WORKERS_CI: '1' } });
+  }, 120_000);
+
+  afterAll(() => {
+    if (dist) rmSync(dist, { recursive: true, force: true });
+  });
+
+  it('fails and says only jamo-s1 is precached, never a reason to move learnerPrecacheRaw', () => {
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain(`the precached clips are ${PRECACHE_BUDGET.precachedClipsRaw + 1} B, over their ceiling of ${PRECACHE_BUDGET.precachedClipsRaw} B`);
+    expect(run.stderr).toContain('never a reason to move learnerPrecacheRaw');
+  });
+
+  it('on the deploy build, warns only', () => {
+    expect(deploy.status).toBe(0);
+    expect(deploy.stdout).toContain('pwa-postbuild: WARNING over budget');
   });
 });
 
