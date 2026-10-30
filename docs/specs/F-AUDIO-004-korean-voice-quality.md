@@ -2,6 +2,8 @@ Status: ready
 
 # F-AUDIO-004 — Korean voice quality: sounds before names, a voice we can trust, text when there is none, recordings that drop in
 
+> **Amended 2026-10-29 by `AMENDMENTS-AUDIO-CLIPS.md`** (owner request): AD1 is replaced for letter questions (a lone letter is said by its name, 니은; a syllable is said only for a sound question), D6's carrier-sound rule applies only to sound questions, and Part B adds generated Korean clips (text-keyed `say` group, lazy packs, two-pass QA) that precede the owner's recordings (A-9, A-10). Where this file and the amendment differ, the amendment wins.
+>
 > **Start order (review 2, 2026-10-10)**: PR A-1 (schemas, telemetry names) and A-3 (pure logic) have no dependency; A-2 needs F-QUEST-002 Q-1 (PR #103: `JamoSchema.soundHint`, `KoText.spokenKo`) only for merge order in `content/jamo.ts`; A-8 (recording pipeline and copy) needs A-2. A-9 is blocked on the owner's recordings (T-017) and is a content-only PR. **Amends F-QUEST-002** (landed spec): the interim spoken-form map and the ㅇ treatment, see §3.2 "Interim map" and `AMENDMENTS-LANDED-SPECS.md`.
 
 **Scope**: `packages/content-schema` (audio schemas, jamo fields, telemetry names) · `apps/mobile` (`platform/audio*.ts`, new `logic/audio/`, `store/audio-store.ts`, call sites in 8 screens, MP3 path, PWA build) · `scripts/` (recording pipeline) · `docs/launch` (runbook Step 12, copy claims) · wireframe `design/wireframes/minigame/audio-fallback.md`
