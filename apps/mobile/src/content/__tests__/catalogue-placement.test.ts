@@ -244,9 +244,12 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   });
 
   it('keeps every shipped lesson the single grid episode of its cell (stories never take a cell)', () => {
+    // A cell's Volume 2 is a second lesson episode of the same cell (F-CURR-002 row CM-40; Stage 6 Nature, row CM-41 S6).
+    const withVolume2 = new Set(['stage6:nature']);
     for (const key of lessonCells) {
       const [stage = '', theme = ''] = key.split(':');
-      expect(episodesFor(stage, theme).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      expect(episodesFor(stage, theme).map((e) => e.format ?? 'lesson'), key).toEqual(withVolume2.has(key) ? ['lesson', 'lesson'] : ['lesson']);
+      expect(episodesFor(stage, theme).map((e) => e.volume ?? 1), key).toEqual(withVolume2.has(key) ? [1, 2] : [1]);
     }
   });
 });
