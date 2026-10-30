@@ -203,6 +203,9 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
     fill('M4 3.5 H20 V6.5 H4 Z'),
     fill('M4.5 8.5 H19.5 C19 13 15.5 17 12 20.5 C8.5 17 5 13 4.5 8.5 Z'),
   ],
+  // More (three dots): the phone rail's More when its word does not fit the compact button (PN-0b N8,
+  // AMENDMENTS-PRESENTER-NAV section 5.2). Never alone: the button carries its label as the accessible name.
+  more: [fill(circle(5, 12, 2.2)), fill(circle(12, 12, 2.2)), fill(circle(19, 12, 2.2))],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

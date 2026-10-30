@@ -1,6 +1,6 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
-Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3) · [`rest`](#rest-a-granted-rest-day-f-curr-002-cm-17) (F-CURR-002 CM-17) · [theme glyphs](theme-glyphs.md) (the Heritage Journey grid: `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top`)
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2) · [`shift`, `shift-on` and `backspace`](#shift-shift-on-and-backspace-the-hangul-keyboard-f-curr-001-g-3) (F-CURR-001 G-3) · [`rest`](#rest-a-granted-rest-day-f-curr-002-cm-17) (F-CURR-002 CM-17) · [`more`](#more-the-phone-rails-label-fallback-amendments-presenter-nav-pn-4) (AMENDMENTS-PRESENTER-NAV PN-4) · [theme glyphs](theme-glyphs.md) (the Heritage Journey grid: `hangul-tile`, `rice-bowl`, `lantern`, `leaf`, `spinning-top`)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
@@ -139,3 +139,19 @@ rest: stroke M15.5 3.5 A8.5 8.5 0 1 0 20.5 15.5 A7 7 0 0 1 15.5 3.5 Z (2.2)
 ## Theme glyphs: the Heritage Journey grid
 
 Five glyphs, one per theme, replace the single letters L, F, H, N, P in the Journey cells and sit above each column label: `hangul-tile` (Letters), `rice-bowl` (Food), `lantern` (Holidays), `leaf` (Nature), `spinning-top` (Play). They are decorative; the words stay in the column label and in each cell's label. Geometry, sizes and rules: [`theme-glyphs.md`](theme-glyphs.md); preview `theme-glyphs-v1.png`.
+
+## `more`: the phone rail's label fallback (AMENDMENTS-PRESENTER-NAV PN-4)
+
+Spec: `docs/specs/AMENDMENTS-PRESENTER-NAV.md` section 5.2 (the compact rail's More) · screen spec `design/screens/presenter/stage-and-bar.md` "Phone rail" (the label fallback, decision N8) · mock `design/screens/presenter/mock/presenter-nav.js` `railLabelFallback` (the same three circles) · shot `design/screens/presenter/shots/nav-rail-844x390-textscale.png`
+
+| Name | Means | Where | Geometry (24 x 24) |
+|---|---|---|---|
+| `more` | More controls (opens the lesson's More sheet) | the compact phone rail's More, only when the word of `bar.more.cta` is wider than the 64 px button's 52 px of room (a larger text size or a wider font) | three filled dots on the middle line, r 2.2, centres x 5, 12 and 19 |
+
+```
+more: fill circle(5, 12, 2.2) + fill circle(12, 12, 2.2) + fill circle(19, 12, 2.2)
+```
+
+- **Never alone.** The button keeps `bar.more.cta` as its accessible name; while the word fits, More shows the word, not the glyph (N5).
+- **Tokens only.** `text.primary` on `surface.paper`, as the rail's other icons.
+- **Tests.** The `more` block and the set-wide tests in `Icon/__tests__/glyphs.test.ts` (names, path data, distinct, inside the box).
