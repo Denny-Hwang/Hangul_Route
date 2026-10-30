@@ -116,14 +116,29 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
       await shot(page, 'hidden-heritage-play-off-320');
     });
 
-    test('at the Largest text size the courtyard still fits: nothing scrolls sideways, every thing 48 dp or more', async ({ page }) => {
+    test('at the Largest text size the courtyard still fits: nothing scrolls sideways or clips, every thing 48 dp or more', async ({ page }) => {
       await open(page, true, 'largest');
       await expect(page.getByTestId('hh-scene')).toBeVisible();
-      await asked(page);
+      const ko = await asked(page);
       for (const name of THINGS) {
         const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
         expect(Math.min(box.width, box.height), name).toBeGreaterThanOrEqual(48);
       }
+      // The prompt (word and romanization) shows whole at Largest, and the slots stay on screen.
+      const prompt = page.getByTestId('hh-prompt');
+      await expect(prompt).toBeInViewport();
+      await expect(prompt).toContainText(TARGETS[ko]!.id);
+      const clip = await prompt.evaluate((el) => el.scrollHeight - el.clientHeight);
+      expect(clip).toBeLessThanOrEqual(1);
+      await page.getByTestId('hh-found').scrollIntoViewIfNeeded();
+      await expect(page.getByTestId('hh-found')).toBeInViewport();
+      await expect(page.getByLabel('Not found yet')).toHaveCount(4);
+      // A miss nudges and a find shows its meaning, both readable at Largest.
+      await spot(page, ko === '윷' ? 'eolle' : 'yutpan').click();
+      await expect(page.getByText('Look again').first()).toBeVisible();
+      await expect(page.getByTestId('hh-ring-miss')).toHaveCount(0);
+      await spot(page, TARGETS[ko]!.id).click();
+      await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
       await expectNoHorizontalOverflow(page);
       await shot(page, 'hidden-heritage-play-largest-320');
     });

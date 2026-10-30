@@ -3,7 +3,7 @@ import type { HiddenHeritageScene } from './types';
 
 /**
  * The Play & Crafts Hidden Heritage scene (F-CURR-002 §5.6 S2 and §7.1 F7, row CM-37 part 4): a courtyard set out for
- * the traditional games of the New Year days, for the Play & Crafts Volume 2 Stage 2 cell. Composed fresh from the
+ * traditional games, for the Play & Crafts Volume 2 Stage 2 cell. Composed fresh from the
  * scene-art kit in theme tokens (OD-10): a low stone wall under a blue sky with a shield kite flying, a wooden platform
  * with a kite reel, two folded ttakji and a jegi, and the yard with five gonggi stones, a spinning top, and four yut
  * sticks beside a yut board on a straw mat. It copies, traces or follows no painting: genre painting is its subject
@@ -250,7 +250,7 @@ export const PLAY_COURTYARD_SCENE: HiddenHeritageScene = {
     ],
   },
   note: {
-    subjectEn: 'The New Year days in a courtyard, a subject of everyday-life painting: the traditional games of yunnori, kite flying, jegichagi, spinning tops, ttakji and gonggi.',
+    subjectEn: 'Traditional games set out in a courtyard: yunnori, kite flying, jegichagi, spinning tops, ttakji and gonggi.',
     facts: [
       {
         id: 'f1',
@@ -268,7 +268,7 @@ export const PLAY_COURTYARD_SCENE: HiddenHeritageScene = {
       },
       {
         id: 'f2',
-        claimEn: 'Yunnori is played from New Year’s Day to the first full moon of the year, and people of every age play it together.',
+        claimEn: 'Yunnori is played from the first day of the lunar new year to the first full moon of the lunar year, and people of every age play it together.',
         sources: [folk(4702, '윷놀이, 한국세시풍속사전 (Encyclopedia of Korean Seasonal Customs)', '정월 초하루에서 보름까지 윷이라는 놀이도구를 사용하여 남녀노소 누구나 어울려 즐기면서 노는 놀이.')],
       },
       {
@@ -307,7 +307,7 @@ export const PLAY_COURTYARD_SCENE: HiddenHeritageScene = {
     passes: 3,
     notes: [
       'Pass 1 (author): the Korea Heritage Service page and the five Encyclopedia of Korean Folk Culture entries (topics 4702, 4522, 4833, 1634, 1510, 1467) opened on 2026-10-23; each quote is copied from its page. f1 agrees with the shipped card:yut back.',
-      'Pass 2 (culture and facts): the scene shows a games subject only and copies no composition (no figures are drawn); the kite is the shield kite the museum names as the common Korean form; no game is called Korean in origin and no UNESCO claim is made; every institution name is as of the access date.',
+      'Pass 2 (culture and facts): the scene shows a games subject only and copies no composition (no figures are drawn); the kite is the shield kite the museum names as the common Korean form; no game is called Korean in origin and no UNESCO claim is made; every institution name is as of the access date; the subject names the games only and claims no game for genre painting, and f2 is dated by the lunar calendar as its source is (review fix, 2026-10-29).',
       'Pass 3 (language, learning design and anti-shame): the four targets are the Stage 2 Play words of quest:stage2-crafts-q2 with their taught meanings and romanization (rr.ts); the alt text names the setting, never a target; the other meanings do not contain a target meaning; no English label or writing is in the picture; nothing in the scene times, scores or compares.',
     ],
   },
