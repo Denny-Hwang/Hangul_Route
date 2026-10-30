@@ -236,6 +236,12 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     const target = { ko: '해', romanization: 'hae', gloss: 'sun' };
     expect(slideSound(quiz({ ask: 'check', text: 'What is {target}?', target }))).toEqual({ spoken: { text: '해', romanization: 'hae' }, kind: 'word' });
     expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
+    // A one-letter target plays its name and carries the name's romanization, not the sound value it shows.
+    const letter = { ko: 'ㅁ', romanization: 'm', spokenKo: '미음', gloss: 'the consonant letter mieum' };
+    expect(slideSound(quiz({ ask: 'check', text: 'What does {target} copy?', target: letter }))).toEqual({
+      spoken: { text: '미음', romanization: 'mieum' },
+      kind: 'word',
+    });
   });
 
   it('an order slide plays the last Korean step on screen at the reveal, in the order drawn, at the sentence rate', () => {
