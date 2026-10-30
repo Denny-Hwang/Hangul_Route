@@ -95,6 +95,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/logic/syllable-build/fallback.ts', reason: 'comments only: the wireframe example of the fallback options (F-CURR-002 CM-32)' },
   { path: 'apps/mobile/src/logic/syllable-build/view.ts', reason: 'comments only: a tile label example (F-CURR-002 CM-32)' },
   { path: 'apps/mobile/src/logic/write-frame/e2e-rounds.ts', reason: 'test-only Write Frame rounds played by the fixture-build e2e and the component tests (F-CURR-001 G-5), never shipped; their romanization is still checked by apps/mobile/src/logic/write-frame/__tests__/e2e-rounds.test.ts' },
+  { path: 'apps/mobile/src/logic/my-story/e2e-chain.ts', reason: 'the test-only My Story chain played by the fixture-build e2e and the component tests (F-CURR-002 row CM-38), never shipped; its romanization is still checked by apps/mobile/src/logic/my-story/__tests__/e2e-chain.test.ts' },
   { path: 'apps/mobile/src/logic/write-frame/flow.ts', reason: 'Hangul character-class regex and a comment naming the cast name (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/write-frame/view.ts', reason: 'Hangul character-class regex and doc examples of the fitted ending (F-CURR-001 G-5)' },
   { path: 'apps/mobile/src/logic/lecture/deck-builder.ts', reason: 'a doc comment on the write-frame slide: the fitted-ending example (observation O2: 밥 with 을/를), no shipped text; the slides read their Korean from the bundle (AMENDMENTS-LECTURE-V2 LV-S2, LV-S4)' },

@@ -15,6 +15,7 @@ import {
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
+  MyStoryFramesSchema,
   realiaReadIssues,
   type MinigameKind,
 } from './minigame';
@@ -114,6 +115,8 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('role-play'), scene: RolePlaySceneSchema }),
   /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes; each target found is a round. */
   z.object({ ref: ScopeRefSchema, kind: z.literal('hidden-heritage'), rounds: z.array(HiddenHeritageRoundSchema).min(1).max(2) }),
+  /** My Story (F-CURR-002 §7.1 F8, row CM-38): 3-5 chained word-bank frames, one neutral option in every bank. */
+  z.object({ ref: ScopeRefSchema, kind: z.literal('my-story'), frames: MyStoryFramesSchema }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -142,6 +145,8 @@ export function scopeRoundCount(scope: LessonScope): number {
       return rolePlayTurnCount(scope.scene);
     case 'hidden-heritage':
       return scope.rounds.reduce((n, r) => n + r.targets.length, 0);
+    case 'my-story':
+      return scope.frames.length;
     default:
       return scope.rounds.length;
   }

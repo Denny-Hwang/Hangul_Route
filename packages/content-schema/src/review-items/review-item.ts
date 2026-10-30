@@ -216,6 +216,8 @@ const GLOSS_KEY_TOKENS: readonly (readonly [long: string, short: string])[] = [
   ['#checks.', '^h'],
   ['#clozePick.rounds.', '^n'],
   ['.gloss', '^g'],
+  // F-CURR-002 row CM-38: My Story's frames and bank words (appended; an unused letter).
+  ['#myStory.frames.', '^f'],
 ];
 
 export function packGlossKey(glossKey: string | undefined, id: string): string {

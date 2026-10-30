@@ -321,6 +321,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // round at the produce rung and the Read Pick fallback; `src/screens/minigames/match-shape-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
   Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
+  // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
+  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
+  Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
 ]);
 
 /**

@@ -75,6 +75,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/decode-sprint/DecodingSprintRoute.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',
   // Row CM-33: the Match Shape chunk's quest step (the game, or Read Pick while `game.match-shape` is off).
   'screens/minigames/match-shape-entry.tsx#MatchShapeStepBody': 'screens/minigames/MatchShapeStepBody.tsx#MatchShapeStepBody',
+  // Row CM-38: the My Story game's chunk (a minigame step: its Screen is Write Frame's).
+  'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
 };
 
 /**

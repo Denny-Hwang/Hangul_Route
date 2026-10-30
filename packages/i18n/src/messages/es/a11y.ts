@@ -171,6 +171,9 @@ export const a11y = {
       pairHeading: (letter: string, name: string, sound: string) => `Toca cada ${letter}, letra ${name}, ${sound}`,
       sounds: (first: string, second: string) => `${first} o ${second}`,
     },
+    myStory: {
+      soFar: (lines: number) => plural('es', lines, { one: 'Mi historia hasta ahora, 1 línea', other: `Mi historia hasta ahora, ${lines} líneas` }),
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

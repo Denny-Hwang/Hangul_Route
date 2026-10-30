@@ -5,6 +5,7 @@ import type {
   ListenPickRound,
   MatchShapeRound,
   MinigameKind,
+  MyStoryFrame,
   OrderItRound,
   PicWordRound,
   Realia,
@@ -85,6 +86,8 @@ export interface MinigameScope {
   matchShape?: { rounds: MatchShapeRound[] };
   /** Read Pick, Match Shape's fallback (row CM-33): derived at run time, drawn on the Listen & Pick cards. */
   readPick?: { rounds: ReadPickRound[] };
+  /** My Story (F-CURR-002 row CM-38): the chain's 3-5 frames, each a Write Frame round with one neutral option per bank. */
+  myStory?: { frames: MyStoryFrame[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;

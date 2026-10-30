@@ -185,6 +185,32 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
     expect(reply).toEqual({ ko: '밥 먹어요.', romanization: 'bap meogeoyo.', en: 'I eat rice.', glossKey: 'minigame:s2-life-q2-b#dialogue.0.options.bap-meogeoyo.gloss' });
   });
 
+  it('reads a My Story chain as Write Frame rounds: each frame a pattern, each bank word a word (row CM-38)', () => {
+    const story = {
+      ...cell,
+      quests: [
+        {
+          id: 'quest:stage2-life-q3',
+          steps: [step('s1', 'apply', 'minigame:s2-life-q3-a')],
+          scopes: [
+            {
+              ref: 'minigame:s2-life-q3-a',
+              kind: 'my-story',
+              frames: [{ id: 'f1', frame: kt('기분이 ___.', 'gibuni ___', 'I feel ___.'), slots: [{ id: 'how', bank: [kt('좋아요', 'joayo', 'good'), { ...kt('괜찮아요', 'gwaenchanayo', 'okay'), neutral: true }] }] }],
+            },
+          ],
+        },
+      ],
+    };
+    const m = (field: string) => `minigame:s2-life-q3-a#myStory.frames.f1.${field}`;
+    const got = lessonOccurrences({ ...source, body: story }, SYMBOLS).map((o) => [o.kind, o.ko, o.glossKey ?? '', o.loose === true ? 'loose' : '', o.at]);
+    expect(got).toEqual([
+      ['pat', '기분이 ___.', m('frame.gloss'), '', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0]'],
+      ['lex', '좋아요', m('slots.how.bank.joayo.gloss'), 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0].slots[0].bank[0]'],
+      ['lex', '괜찮아요', m('slots.how.bank.gwaenchanayo.gloss'), 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].frames[0].slots[0].bank[1]'],
+    ]);
+  });
+
   it('places each occurrence in its cell, at its file and path', () => {
     expect(new Set(occs.map((o) => `${o.cell} ${o.home} ${o.stage} ${o.volume}`))).toEqual(new Set(['episode:stage2-life life 2 1']));
     expect(occs[0]?.at).toBe('content/episodes/stage-2/life.json quests[0].steps[1].discover.pages[0].items[0]');

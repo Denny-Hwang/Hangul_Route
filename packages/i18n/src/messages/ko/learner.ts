@@ -704,6 +704,13 @@ export const learner = {
       continue: { cta: '계속하기' },
       readPick: { heading: '이 글자는 어떤 소리가 날까요?', miss: '글자를 다시 봐요.' },
     },
+    myStory: {
+      heading: '내 이야기를 써 봐요',
+      soFar: '지금까지 쓴 내 이야기',
+      soFarFolded: (lines: number) => `지금까지 ${lines}줄`,
+      done: '이야기를 끝까지 다 썼어요!',
+      donePartial: '지금까지 쓴 이야기예요.',
+    },
   },
 
   audio: {
@@ -1207,6 +1214,7 @@ export const learner = {
       typeHangul: '한글 자판으로 쓰기',
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
+      myStory: '짧은 이야기 쓰기',
       sentenceBuilder: '문장 만들기',
       clozePick: '문장의 빈칸 채우기',
       rolePlay: '대화 읽고 대답 누르기',

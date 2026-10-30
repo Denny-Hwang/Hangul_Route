@@ -42,4 +42,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'syllable-build',
   // F-CURR-002 row CM-33 (Read Pick while `game.match-shape` is off)
   'match-shape',
+  // F-CURR-002 row CM-38: its own chunk; with `game.my-story` off it plays Write Frame on the first frame.
+  'my-story',
 ]);

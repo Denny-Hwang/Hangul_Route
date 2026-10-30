@@ -50,6 +50,8 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   'role-play': ['read', 'listen'],
   // F-CURR-002 row CM-36: the Korean word is read and heard, then found in a scene.
   'hidden-heritage': ['read', 'listen'],
+  // F-CURR-002 row CM-38: My Story writes its frames as Write Frame does.
+  'my-story': ['write'],
 };
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);

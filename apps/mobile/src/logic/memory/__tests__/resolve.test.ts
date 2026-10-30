@@ -117,6 +117,13 @@ describe('what a round asked', () => {
     for (const id of ['r1/down', 'r2/up', 'r1', 'up']) expect(askedOfScope(scope, id), id).toBeUndefined();
     expect(askedOfScope({ kind: 'story-order' } as MinigameScope, 'r1/up')).toBeUndefined();
   });
+  it('My Story asks only the frame pattern, never the picked word (F-CURR-002 row CM-38)', () => {
+    const bank = [ko('친구'), ko('가족'), { ...ko('호야'), neutral: true }];
+    const story = { kind: 'my-story', myStory: { frames: [{ id: 'f1', frame: ko('___과/와 같이 가요.'), slots: [{ id: 'who', bank }] }] } } as unknown as MinigameScope;
+    expect(askedOfScope(story, 'f1')).toEqual({ texts: [{ ko: '___과/와 같이 가요.', kind: 'pat' }], jamoIds: [], rung: 'produce' });
+    expect(JSON.stringify(askedOfScope(story, 'f1'))).not.toMatch(/친구|가족|호야/);
+    expect(askedOfScope(story, 'f2')).toBeUndefined();
+  });
 
   it('Realia Read asks the card only (one rea item), never its key word or options', () => {
     const scope = {

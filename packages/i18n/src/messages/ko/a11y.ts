@@ -173,6 +173,9 @@ export const a11y = {
       pairHeading: (letter: string, _name: string, sound: string) => `글자 ${letter}, ${sound}: 모두 찾아 눌러요`,
       sounds: (first: string, second: string) => `${first} 또는 ${second}`,
     },
+    myStory: {
+      soFar: (lines: number) => `지금까지 쓴 내 이야기, ${lines}줄`,
+    },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

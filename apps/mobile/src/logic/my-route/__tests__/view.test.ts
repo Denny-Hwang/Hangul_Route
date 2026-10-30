@@ -373,6 +373,14 @@ describe('the pieces', () => {
     expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
   });
 
+  it('a switched game is named only while its game.<kind> switch is on (row CM-38, review of PR #849)', () => {
+    const games = EN.learner.myRoute.games;
+    // game.my-story off (its launch state): a My Story step plays Write Frame, which the sheet already names.
+    expect(gamesFor('write', games)).not.toContain('Write a short story');
+    expect(gamesFor('write', games, undefined, (kind) => kind !== 'my-story')).not.toContain('Write a short story');
+    expect(gamesFor('write', games, undefined, (kind) => kind === 'my-story')).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own', 'Write a short story']);
+  });
+
   it('gamesFor names a game once its kind is playable', () => {
     const games = EN.learner.myRoute.games;
     const all = new Set(MinigameKindSchema.options);
@@ -383,6 +391,7 @@ describe('the pieces', () => {
     expect(gamesFor('read', games, all)).toContain('Find a thing in a picture');
     expect(gamesFor('listen', games, all)).toContain('Find a thing in a picture');
     expect(gamesFor('read', games)).not.toContain('Find a thing in a picture');
+    expect(gamesFor('write', games, all, () => true)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own', 'Write a short story']);
   });
 });
 

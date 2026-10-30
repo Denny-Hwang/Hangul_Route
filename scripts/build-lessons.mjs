@@ -255,6 +255,9 @@ export function runtimeScope(scope, where) {
     case "hidden-heritage":
       // F-CURR-002 row CM-36: each target found is a round (`scopeRoundCount`).
       return { kind, rounds: scope.rounds.reduce((n, r) => n + r.targets.length, 0), hiddenHeritage: { rounds: scope.rounds } };
+    // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
+    case "my-story":
+      return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }

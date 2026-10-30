@@ -1035,4 +1035,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.matchShape.found': [['x', 'bieup', 'b or p']],
   'a11y.minigame.matchShape.pairHeading': [['x', 'bieup', 'b or p']],
   'a11y.minigame.matchShape.sounds': [['g', 'k'], ['silent', 'ng']],
+  // F-CURR-002 row CM-38: My Story's sentences so far (a chain has 3-5 frames, so 1-4 lines while writing).
+  'learner.minigame.myStory.soFarFolded': [[1], [2], [4]],
+  'a11y.minigame.myStory.soFar': [[1], [2], [4]],
 };

@@ -1,14 +1,15 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { MinigameKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
+import { gameFlagOf, playedScope as fallbackScope } from '../../logic/game-fallback';
 import { minigameFinishedEvent } from '../../logic/minigame-finished';
-import { scopeFor } from '../../logic/minigame-config';
+import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { playedScope } from '../../logic/role-play/fallback';
 import { patternNoteOf } from '../../logic/sentence-builder/view';
@@ -17,7 +18,7 @@ import { stop } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
-import { useFrozenCurrFlag } from '../../store/remote-config-store';
+import { useCurrFlag, useFrozenCurrFlag } from '../../store/remote-config-store';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -45,6 +46,7 @@ import { VoiceEchoGame } from './VoiceEchoGame';
 import { WriteFrameGame } from './WriteFrameGame';
 import { useSwitchedScope } from './dictation-entry';
 import { RolePlayStep } from './role-play/role-play-entry';
+import { MyStoryRoute } from './my-story-entry';
 import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
 import { useStoryQuestReady } from '../story-content';
 
@@ -102,8 +104,20 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     const localized = source && ref ? localizeScope(source, ref, locale) : source;
     return localized && playedScope(localized, playsRolePlay);
   }, [ref, locale, questId, stepIndex, playsRolePlay]);
+  // A new format's `game.<kind>` switch (F-CURR-002 §12.2): off, the step plays its fallback round of a shipped kind
+  // (My Story: Write Frame on the first frame, row CM-38), and `minigame.finished` names the kind that was played.
+  // The step decides once, when it opens: a remote copy that lands mid-step never swaps the game under the learner.
+  const gameOnNow = useCurrFlag(gameFlagOf(localized?.kind ?? 'write-frame'));
+  const [gameOn] = useState(gameOnNow);
+  const ownScope = useMemo(() => (localized ? fallbackScope(localized, () => gameOn) : undefined), [localized, gameOn]);
+  // A game whose chunk cannot load plays its fallback instead (My Story: Write Frame on the first frame); answers and
+  // `minigame.finished` then go with the scope that was played (review of PR #849).
+  const fellBackTo = useRef<MinigameScope | null>(null);
+  const onFallback = useCallback((played: MinigameScope): void => {
+    fellBackTo.current = played;
+  }, []);
   // The `game.<kind>` switches, decided as the step opens, and the dictation chunk when a round plays from it (row CM-31).
-  const switched = useSwitchedScope(localized);
+  const switched = useSwitchedScope(ownScope);
   const scope = switched?.kind === 'ready' ? switched.scope : undefined;
   const kit = switched?.kind === 'ready' ? switched.kit : null;
   // Sentence Builder shows the quest's own Discover pattern note again under a particle miss (F-CURR-001 §3.4).
@@ -128,7 +142,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   const close = (): void => {
     if (scope) {
-      void track(minigameFinishedEvent(renderedKind.current ?? scope.kind, questId, stepIndex, activeProfileId));
+      void track(minigameFinishedEvent(fellBackTo.current?.kind ?? renderedKind.current ?? scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };
@@ -168,7 +182,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
         .answerRound(
           roundKey,
           correct,
-          inPreview || meta?.itemId === undefined ? undefined : { scope: played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
+          inPreview || meta?.itemId === undefined ? undefined : { scope: fellBackTo.current ?? played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
           meta?.hinted === true,
         ),
     complete: () => {
@@ -235,6 +249,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     // F-CURR-002 row CM-33: from its own chunk; Read Pick while `game.match-shape` is off.
     case 'match-shape':
       return <MatchShapeStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
+    case 'my-story':
+      return <MyStoryRoute scope={scope} host={host} onBack={exits.back} onFallback={onFallback} />;
     default:
       return fallback(copy.comingSoon);
   }

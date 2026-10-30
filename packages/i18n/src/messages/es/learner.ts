@@ -724,6 +724,13 @@ export const learner = {
       continue: { cta: 'Continuar' },
       readPick: { heading: '¿Qué sonido tiene esta letra?', miss: 'Mira la letra otra vez.' },
     },
+    myStory: {
+      heading: 'Escribe tu historia',
+      soFar: 'Mi historia hasta ahora',
+      soFarFolded: (lines: number) => plural('es', lines, { one: '1 línea hasta ahora', other: `${lines} líneas hasta ahora` }),
+      done: '¡Escribiste toda una historia!',
+      donePartial: 'Aquí está tu historia hasta ahora.',
+    },
   },
 
   audio: {
@@ -1236,6 +1243,7 @@ export const learner = {
       typeHangul: 'Teclea en hangul',
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
+      myStory: 'Escribe una historia corta',
       sentenceBuilder: 'Arma una oración',
       clozePick: 'Completa el hueco de una oración',
       rolePlay: 'Lee un diálogo y toca una respuesta',

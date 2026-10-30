@@ -235,3 +235,14 @@ export function resetRemoteConfigForTests(): void {
 export function useRemoteConfigDecidable(): boolean {
   return useRemoteConfigStore(decidable);
 }
+/**
+ * `useCurrFlag` for a named learner rather than the active profile (row CM-38): a surface that shows one learner's
+ * data, such as the grown-up's read-only My Route for a child, buckets on that learner, so it names a switched game
+ * exactly when that learner would play it. A guest run still buckets on no profile (section 5.3).
+ */
+export function useCurrFlagFor(flag: CurrFlagName, profileId: string): boolean {
+  const cache = useRemoteConfigStore((s) => s.cache);
+  const ready = useRemoteConfigStore(decidable);
+  const guestRun = useGuestStore((s) => s.running);
+  return ready ? currFlagOn(flag, guestRun ? null : profileId, cache) : false;
+}

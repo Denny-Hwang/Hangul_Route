@@ -185,6 +185,12 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
       const round = scope.matchShape?.rounds.find((r) => r.id === itemId);
       return round?.shape === 'pair' ? { texts: [], jamoIds: [round.target], rung: 'produce' } : undefined;
     }
+    // F-CURR-002 row CM-38: only the frame's pattern, the same whichever bank word was picked. A picked word is never
+    // credited (no `lex` item): memory syncs and feeds the grown-up summaries, so a per-word credit would record the pick.
+    case 'my-story': {
+      const frame = scope.myStory?.frames.find((f) => f.id === itemId);
+      return frame ? { texts: texts(text(frame.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
+    }
     default:
       return undefined;
   }

@@ -337,6 +337,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
         { kind: "hidden-heritage", rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] },
         { kind: "hidden-heritage", rounds: 7, hiddenHeritage: { rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] } },
       ],
+      // F-CURR-002 row CM-38: a chain plays one round per frame.
+      [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });

@@ -187,6 +187,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'hidden-heritage-chunk', marker: 'screen-chunk:hidden-heritage' },
       { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
       { name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' },
+      { name: 'my-story-chunk', marker: 'screen-chunk:my-story' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([{ name: 'scene-food-market', marker: 'scene-chunk:food-market' }]);
@@ -245,6 +246,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-33: the Match Shape chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/match-shape-chunk.tsx')).toContain(`export const MATCH_SHAPE_CHUNK = '${SCREEN_CHUNKS[12].marker}';`);
     expect(read('src/screens/minigames/match-shape-entry.tsx')).toContain("import('./match-shape-chunk')");
+    // Row CM-38: the My Story game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/my-story-chunk.tsx')).toContain(`export const MY_STORY_CHUNK = '${SCREEN_CHUNKS[13].marker}';`);
+    expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
   });
 
   it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {
@@ -330,6 +334,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'hidden-heritage-chunk has no web bundle: the chunk is missing from the build',
       'syllable-build-chunk has no web bundle: the chunk is missing from the build',
       'match-shape-chunk has no web bundle: the chunk is missing from the build',
+      'my-story-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

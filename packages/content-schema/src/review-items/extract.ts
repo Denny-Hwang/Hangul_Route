@@ -341,16 +341,11 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       rounds.forEach((round, ri) => c.text(round.word, 'loose', 'round', `${at}.rounds[${ri}]`, { glossKey: k(`traceWord.rounds.${key(round, ri)}.word.gloss`) }));
       return;
     case 'write-frame':
-      rounds.forEach((round, ri) => {
-        const rid = key(round, ri);
-        const where = `${at}.rounds[${ri}]`;
-        c.text(round.frame, 'pat', 'round', where, { glossKey: k(`writeFrame.rounds.${rid}.frame.gloss`) });
-        arr(round.slots).filter(isRec).forEach((slot, si) => {
-          arr(slot.bank).forEach((w, wi) => {
-            c.text(w, 'loose', 'round', `${where}.slots[${si}].bank[${wi}]`, { glossKey: k(`writeFrame.rounds.${rid}.slots.${key(slot, si)}.bank.${key(w, wi)}.gloss`) });
-          });
-        });
-      });
+      frameTexts(c, rounds, `${at}.rounds`, 'writeFrame.rounds', k);
+      return;
+    // F-CURR-002 row CM-38: My Story's frames are Write Frame rounds (the frame a pattern, each bank word a word).
+    case 'my-story':
+      frameTexts(c, arr(scope.frames).filter(isRec), `${at}.frames`, 'myStory.frames', k);
       return;
     case 'cloze-pick': {
       // Row CM-30: a word or particle gap asks the completed sentence (a `pat` item, produce rung) and a word gap
@@ -407,6 +402,20 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);
   }
+}
+
+/** Write Frame rounds (and My Story frames): each frame is a pattern, each bank word a word, glossed at `<field>.<round>...`. */
+function frameTexts(c: Collector, rounds: readonly Rec[], at: string, field: string, k: (path: string) => string): void {
+  rounds.forEach((round, ri) => {
+    const rid = key(round, ri);
+    const where = `${at}[${ri}]`;
+    c.text(round.frame, 'pat', 'round', where, { glossKey: k(`${field}.${rid}.frame.gloss`) });
+    arr(round.slots).filter(isRec).forEach((slot, si) => {
+      arr(slot.bank).forEach((w, wi) => {
+        c.text(w, 'loose', 'round', `${where}.slots[${si}].bank[${wi}]`, { glossKey: k(`${field}.${rid}.slots.${key(slot, si)}.bank.${key(w, wi)}.gloss`) });
+      });
+    });
+  });
 }
 
 function walkTexts(c: Collector, value: unknown, at: string): void {
