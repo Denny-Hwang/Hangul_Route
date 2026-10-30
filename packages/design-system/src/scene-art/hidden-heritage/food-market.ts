@@ -152,7 +152,7 @@ export const FOOD_MARKET_SCENE: HiddenHeritageScene = {
     id: 'hh1',
     sceneId: 'scene:food-market',
     altEn: 'A food stall on a market day.',
-    // Stage 2 Food words with a bundled picture each, for the Pic-Word Match fallback.
+    // 밥 and 젓가락 are S2 Food table words and 김치 a Stage 1 Food word, each with a bundled Stage 1 card picture for the Pic-Word Match fallback.
     targets: [
       { id: 'bap', word: word('밥', 'bap', 'rice'), spot: { x: 12, y: 168, w: 86, h: 90 }, picture: 'card:rice' },
       { id: 'gimchi', word: word('김치', 'gimchi', 'kimchi'), spot: { x: 204, y: 180, w: 82, h: 78 }, picture: 'card:kimchi' },
@@ -203,7 +203,7 @@ export const FOOD_MARKET_SCENE: HiddenHeritageScene = {
     passes: 4,
     notes: [
       'Pass 1 (author): both pages opened on 2026-10-23; the quotes are copied from them. The National Museum of Korea page lists the album order ending "25) 장터길"; the dictionary gives 반찬 one sense.',
-      'Pass 2 (culture and facts): the scene shows a market subject only and copies no composition of the album (no figures are drawn at all); every target is a Stage 2 Food word; nothing is framed as Korean in origin.',
+      'Pass 2 (culture and facts): the scene shows a market subject only and copies no composition of the album (no figures are drawn at all); 밥 and 젓가락 are S2 Food table words and 김치 a Stage 1 Food word, each with a bundled Stage 1 card picture; nothing is framed as Korean in origin.',
       'Pass 3 (language, learning design and anti-shame): the alt text names the setting, never a target; the targets carry romanization and a gloss; no English label or writing is in the picture.',
       'Pass 4 (reviser): each claim says no more than its quote. f2 backs the subject line ("rice, soup and side dishes"), the table the scene draws around 밥, 국 and 김치; 반찬 itself is not a spot, so the content row that ships the cell either adds it as a thing or keeps f2 on the card back as the subject fact. Institution names are as of the access date; no brand appears.',
     ],
