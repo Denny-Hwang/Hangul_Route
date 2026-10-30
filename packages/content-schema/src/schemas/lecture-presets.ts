@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { catalogEpisode, storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, cellEpisodeIds, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -237,9 +237,14 @@ export function fillToLength(candidates: readonly LectureBlock[], minutes: numbe
 
 // ---- route helpers ------------------------------------------------------------------------------
 
-/** Route quests (section 4.2): lesson quests only, playable only, in route order. */
+/**
+ * Route quests (section 4.2): lesson quests only, playable only, in route order. A cell's later volume is off the route
+ * (F-CURR-002 row CM-40: it adds no route day), so a preset that walks the route never steps into one; a Volume 2 is
+ * still a block the chooser offers while `volumes` is on.
+ */
 function routeQuests(catalog: Catalog): RouteQuest[] {
-  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable);
+  const laterVolume = new Set(catalog.cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable && !laterVolume.has(q.episodeId));
 }
 
 const stageNumberOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
