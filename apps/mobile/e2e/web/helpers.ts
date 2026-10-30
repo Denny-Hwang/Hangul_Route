@@ -548,3 +548,31 @@ export async function swipeStage(page: Page, from: WindowPoint, to: WindowPoint,
     await cdp.detach();
   }
 }
+
+/**
+ * A phone in a lesson, before a press on its controls (AMENDMENTS-PRESENTER-NAV sections 5.2 and 5.3, row PN-4):
+ * the rail beside the stage is always shown, so its buttons are pressed directly; the floating bar of the overlay
+ * layout (a 568 x 320 class phone, or any phone with `EXPO_PUBLIC_PRESENTER_RAIL` off) is shown first with a touch
+ * tap on empty stage area (its top-left padding), as a teacher does. A bar still shown from an earlier tap is let
+ * hide first (it fades after `presenter.autoHideMs`), so it cannot fade under the next tap.
+ */
+export async function showPhoneControls(page: Page): Promise<void> {
+  if ((await page.getByTestId('presenter-rail').count()) > 0) {
+    await expect(page.getByTestId('presenter-rail')).toBeVisible();
+    await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+    return;
+  }
+  const bar = page.getByTestId('presenter-bar-compact');
+  await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none', { timeout: 10_000 });
+  await expect(bar).toHaveCSS('opacity', '0');
+  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
+  await expect(bar).toHaveCSS('opacity', '1');
+  await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+}
+
+/** The lesson on a phone uses the rail (true) or the floating bar of the overlay layout (false). */
+export async function phoneHasRail(page: Page): Promise<boolean> {
+  await expect(page.getByTestId('presenter-stage')).toBeVisible();
+  return (await page.getByTestId('presenter-rail').count()) > 0;
+}

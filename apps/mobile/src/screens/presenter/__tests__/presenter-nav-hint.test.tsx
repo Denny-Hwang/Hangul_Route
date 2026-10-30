@@ -10,7 +10,7 @@ import { byTestId, press, render, textOf } from '../../../test-support/render';
 /**
  * The start hint (AMENDMENTS-PRESENTER-NAV section 9.3, O7, row PN-3) on the whole presenter with fake
  * timers: on touch, at the top of a lesson's first slide (the quest's title) for 2 x presenter.autoHideMs,
- * `nav.hint` on a docked window and `nav.hintOverlay` on a phone (the overlay layout until PN-4); it takes
+ * `nav.hint` on a docked window and the phone rail, `nav.hintOverlay` in the overlay layout (568 x 320); it takes
  * no taps and is drawn only; it goes with its slide and fades on the first bar button or swipe step, which
  * writes `done` so it never shows again; a touch tap on empty stage is no such step; it shows on at most three
  * lessons (`lecture:navHint` counts them) and never on a mouse-only window. The record goes through the
@@ -53,7 +53,9 @@ vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 import PresenterApp from '../../../../PresenterApp';
 
 const tablet = { width: 1180, height: 820, scale: 1, fontScale: 1 };
-const phone = { width: 844, height: 390, scale: 1, fontScale: 1 };
+/** The smallest phone (568 x 320): the overlay layout. 844 x 390 has room for the rail (row PN-4). */
+const phone = { width: 568, height: 320, scale: 1, fontScale: 1 };
+const railPhone = { width: 844, height: 390, scale: 1, fontScale: 1 };
 const before = { window: Dimensions.get('window'), screen: Dimensions.get('screen') };
 beforeAll(() => {
   Dimensions.set({ window: tablet, screen: tablet });
@@ -176,12 +178,21 @@ describe('the start hint on touch (section 9.3)', () => {
     expect(store.get(NAV_HINT_KEY)).toBe('3');
   });
 
-  it('says nav.hintOverlay on a phone (the overlay layout)', async () => {
+  it('says nav.hintOverlay on a phone too narrow for the rail (the overlay layout, 568 x 320)', async () => {
     Dimensions.set({ window: phone, screen: phone });
     const r = await lesson(true);
     expect(byTestId(r.root, 'presenter-bar-band')).toHaveLength(0);
+    expect(byTestId(r.root, 'presenter-rail')).toHaveLength(0);
     expect(textOf(hint(r)!)).toBe(en.nav.hintOverlay);
     expect(hint(r)!.props['data-line']).toBe('hintOverlay');
+  });
+
+  it('says nav.hint beside the phone rail (844 x 390, row PN-4): the buttons are on screen', async () => {
+    Dimensions.set({ window: railPhone, screen: railPhone });
+    const r = await lesson(true);
+    expect(byTestId(r.root, 'presenter-rail')).toHaveLength(1);
+    expect(textOf(hint(r)!)).toBe(en.nav.hint);
+    expect(hint(r)!.props['data-line']).toBe('hint');
   });
 });
 

@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { swipeStage } from './helpers';
+import { phoneHasRail, showPhoneControls, swipeStage } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -166,18 +166,8 @@ function seedKeys(page: Page, entries: Record<string, unknown>): Promise<void> {
 }
 
 const counter = async (page: Page): Promise<string> => (await page.getByTestId('presenter-counter').textContent()) ?? '';
-const bar = (page: Page): Locator => page.getByTestId('presenter-bar-compact');
 /** The `speaker-off` glyph's cross, the one part `speaker` does not draw. */
 const speakerOff = (page: Page): Locator => page.getByTestId('presenter-sound').locator('path[d="M16 9.5 L21 14.5"]');
-
-/**
- * A touch tap on empty stage area (the stage's top-left padding, where no slide draws): it shows a
- * hidden bar and hides a shown one (AMENDMENTS-PRESENTER-NAV section 5.3; the strip is gone).
- */
-async function tapEmpty(page: Page): Promise<void> {
-  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
-}
 
 /** A swipe to the left across the middle of the stage: reveal or next (section 6; Chromium only). */
 async function swipeNext(page: Page): Promise<void> {
@@ -187,26 +177,25 @@ async function swipeNext(page: Page): Promise<void> {
 }
 
 /**
- * Shows the compact bar with a tap on empty stage, as a teacher does. A bar still shown from an earlier tap
- * is let hide first (it fades after `presenter.autoHideMs`), so it cannot fade under the next tap.
+ * The phone's controls before a press (AMENDMENTS-PRESENTER-NAV row PN-4): 915 x 412 has room for the rail,
+ * which never hides, so its Sound is pressed directly; with the rail switched off (`E2E_RAIL_OFF=1`, a local
+ * `EXPO_PUBLIC_PRESENTER_RAIL=0` build) the floating bar is shown first with a tap on empty stage.
  */
 async function showPhoneBar(page: Page): Promise<void> {
-  await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none', { timeout: 10_000 });
-  await expect(bar(page)).toHaveCSS('opacity', '0');
-  await tapEmpty(page);
-  await expect(bar(page)).toHaveCSS('opacity', '1');
-  await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+  if (process.env.E2E_RAIL_OFF !== '1') expect(await phoneHasRail(page)).toBe(true);
+  await showPhoneControls(page);
 }
 
-/** Next on the phone bar (shown first, as a teacher does), until the word card reads `ko`. */
+/** Next on the phone's controls (the rail, or the floating bar shown first), until the word card reads `ko`. */
 async function nextOnBarUntilWord(page: Page, ko: string): Promise<void> {
   for (let i = 0; i < 40; i++) {
     const word = page.getByTestId('presenter-word');
     if ((await word.count()) > 0 && (await word.textContent())?.trim() === ko) return;
     await showPhoneBar(page);
     await page.getByTestId('presenter-next').tap();
-    // Every step hides the bar at once (F-TCH-004 section 3.6).
-    await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none');
+    // Every step hides the floating bar at once (F-TCH-004 section 3.6); the rail stays.
+    if (await phoneHasRail(page)) await expect(page.getByTestId('presenter-next')).not.toHaveCSS('pointer-events', 'none');
+    else await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none');
   }
   throw new Error(`never reached the word ${ko}`);
 }
@@ -242,7 +231,7 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
   // The steps are swipes, which drive CDP touch events (Chromium only; AMENDMENTS-PRESENTER-NAV section 14).
   test.skip(process.env.E2E_WEBKIT === '1', 'swipes drive CDP touch events (Chromium only)');
 
-  test('the owner report: Sound in the floating bar on 김밥 says 김밥 once, in Korean, inside the tap', async ({ page }) => {
+  test('the owner report: Sound on the phone (the rail) on 김밥 says 김밥 once, in Korean, inside the tap', async ({ page }) => {
     await startOnPhone(page);
     await nextOnBarUntilWord(page, '김밥');
     await expect(page.getByTestId('presenter-word')).toHaveText('김밥');

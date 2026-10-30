@@ -1,4 +1,4 @@
-import { TextSizeProvider, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { TextSizeProvider, textSizeFactor, typeScale, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
 import { useLocalePacks } from './src/i18n/use-messages';
@@ -61,9 +61,10 @@ import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage
 import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS, railHeightNeeds, railHeightsEstimate } from './src/screens/presenter/stage-metrics';
 import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
-import { isPhoneWindow, navLayout, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { flags } from './src/config/flags';
 import { NUDGE_MS, type GesturePointer, type StageCommand } from './src/logic/lecture/stage-gesture';
 import { wideTouchWindow } from './src/logic/lecture/bar-layout';
 import { claimNavHint, finishNavHint, navHintKey, navHintStarts, type NavHintStore } from './src/logic/lecture/nav-hint';
@@ -119,7 +120,7 @@ import {
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { readJson, readJsonExact, writeJson } from './src/platform/storage';
 import { flushQueue, track } from './src/platform/telemetry';
-import { ControlBar } from './src/screens/presenter/ControlBar';
+import { ControlBar, type RailMeasure } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
 import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
@@ -156,9 +157,14 @@ import { currFlagOn, startRemoteConfig, useRemoteConfigStore } from './src/store
  * Phones (F-TCH-004 section 3.6 phone exception; owner report 2026-10-16 item 1): in a phone window
  * (`isPhoneWindow`: window, screen and a coarse pointer) the stage is the whole window less the
  * safe-area insets, judged too small only below `PHONE_STAGE_MIN`; upright, a lesson shows the
- * rotate page. The compact bar floats over the stage bottom and never covers a new slide: every
+ * rotate page. Where it fits (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4: `railSize`, the
+ * full rail at 104 px or the compact one at 80 px, while `flags.presenterRail` is on) the phone rail
+ * stands at the right of the stage, inside the right inset, and the stage box is the window less the
+ * four insets and the rail; it never hides, a touch tap on empty stage rings its Next, and More opens
+ * beside it. Elsewhere (568 x 320 class phones, or the rail switched off: the overlay layout) the
+ * compact bar floats over the stage bottom and never covers a new slide: every
  * step hides it at once; it shows at the start of the lesson, on a touch tap on empty stage area
- * (another such tap hides it; AMENDMENTS-PRESENTER-NAV section 5.3) and while keyboard or
+ * (another such tap hides it; section 5.3) and while keyboard or
  * screen-reader focus is inside it. No part of the stage is a hidden zone: a tap on a content target
  * never steps and never touches the bar, and a swipe moves (sections 6 and 7).
  *
@@ -283,6 +289,37 @@ function Presenter(): ReactElement {
   const phone = isPhoneWindow({ w: window.width, h: window.height, screenW: screen?.width ?? null, screenH: screen?.height ?? null, coarse }, PHONE_RULE);
   const phoneRef = useRef(phone);
   phoneRef.current = phone;
+  // The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4): where it fits beside the stage, and
+  // while its kill switch (`flags.presenterRail`, read at build time) is on; else the floating bar.
+  // `railMeasure` is what the rail last measured, complete (ControlBar `onRailMeasure`): the label
+  // fallback (a full-rail word wider than its button draws the compact rail) and its buttons' drawn
+  // heights, so a window too short for them gets the compact rail or the overlay, never buttons drawn
+  // over each other. Before the first measure: every label on one line at the chosen text size.
+  const [railMeasure, setRailMeasure] = useState<RailMeasure>(() => ({ full: true, heights: railHeightsEstimate(typeScale(textSizeFactor(textSize)).size.body) }));
+  const railWordsFit = railMeasure.full;
+  const railNeed = railHeightNeeds(railMeasure.heights);
+  const rail = railSize({ phone, window, insets, enabled: flags.presenterRail, labelsFit: railWordsFit, need: railNeed }, RAIL_RULE);
+  // Where Previous and Next live (section 4): the docked band, the rail, or the floating bar (overlay).
+  const nav = navLayout(phone, rail);
+  const overlayRef = useRef(nav === 'overlay');
+  overlayRef.current = nav === 'overlay';
+  // The home's Help speaks of the lesson, which runs sideways: an upright phone asks the gate for the
+  // window turned (its top and bottom insets become side ones), so the phone line shows only where the
+  // lesson will use the floating bar.
+  const lessonRail =
+    window.height > window.width
+      ? railSize(
+        {
+          phone,
+          window: { width: window.height, height: window.width },
+          insets: { left: Math.max(insets.top, insets.bottom), right: Math.max(insets.top, insets.bottom), top: insets.left, bottom: insets.right },
+          enabled: flags.presenterRail,
+          labelsFit: railWordsFit,
+          need: railNeed,
+        },
+        RAIL_RULE,
+      )
+    : rail;
   const upright = window.height > window.width;
   // A short window (a phone sideways): the phone start screen steps its title and Start down.
   const short = window.height < layout.shortHeight;
@@ -720,9 +757,10 @@ function Presenter(): ReactElement {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
       }
-      // A phone step hides the compact bar at once: it never covers a new slide or build (section 3.6).
+      // A phone step hides the floating bar at once: it never covers a new slide or build (section 3.6).
+      // The rail never hides (AMENDMENTS-PRESENTER-NAV section 5.2).
       const stepped = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (phoneRef.current && stepped) hideBarNow();
+      if (overlayRef.current && stepped) hideBarNow();
       // Next on the End slide: the hint, and focus on Exit (the docked bar) or More, which holds it (the phone bar, shown).
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
@@ -1140,16 +1178,15 @@ function Presenter(): ReactElement {
   useEffect(() => subscribePresenterPop((landed) => onPop.current(landed)), []);
 
   // ---- render ----
-  // A phone window has no band: its compact bar floats over the stage, so the stage is the window less
-  // the safe area, judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so
-  // a bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
-  const box = stageBox(window, phone ? 0 : band, insets);
+  // A phone window has no band: its floating bar sits over the stage, so the stage is the window less
+  // the safe area, or (the rail, section 5.2) the window less the four insets and the rail's column;
+  // either is judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so a
+  // bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
+  const box = stageBox(window, phone ? 0 : band, insets, railWidth(rail, RAIL_RULE));
   const scale = stageScale(box, phone ? PHONE_STAGE_BOUNDS : STAGE_BOUNDS);
   const tooSmall = phone ? scale.tooSmall : stageScale(stageBox(window, BAR_BAND, insets), STAGE_BOUNDS).tooSmall || scale.tooSmall;
   const stageShows = stageView({ phone, window, tooSmall });
   const stageViewContext: PresenterView = { ...view, unit: scale.unit, phone };
-  // Where Previous and Next live (AMENDMENTS-PRESENTER-NAV section 4): the phone rail is row PN-4.
-  const nav = navLayout(phone);
   // The bar's overlays speak the chrome language; only the stage (the slides) speaks the slide language.
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
@@ -1276,7 +1313,7 @@ function Presenter(): ReactElement {
             keepVisible={keepVisible}
             onKeepVisible={setKeepVisible}
             onClose={() => setHomeHelp(false)}
-            phone={phone}
+            phone={navLayout(phone, lessonRail) === 'overlay'}
           />
         ) : null}
       </View>
@@ -1373,7 +1410,7 @@ function Presenter(): ReactElement {
     const bar =
       page !== null ? null : (
         <ControlBar
-          hidden={phone ? barHidden || moreOpen : barHidden}
+          hidden={nav === 'overlay' ? barHidden || moreOpen : nav === 'rail' ? false : barHidden}
           pinNav={nav === 'docked' && touchSeen}
           wideTouch={nav === 'docked' && wideTouchWindow(window.width, touchSeen)}
           nudge={nudge}
@@ -1420,6 +1457,10 @@ function Presenter(): ReactElement {
           {...(phone ? {} : { onBandHeight: setBand })}
           exitRef={exitRef}
           compact={phone}
+          rail={rail}
+          railHeight={window.height - insets.top - insets.bottom}
+          railHeights={railMeasure.heights}
+          onRailMeasure={setRailMeasure}
           insets={insets}
           moreOpen={moreOpen}
           onMore={(open) => {
@@ -1497,7 +1538,7 @@ function Presenter(): ReactElement {
                   if (on) setBarHidden(false);
                 }}
                 onClose={() => userDispatch('close')}
-                phone={phone}
+                phone={nav === 'overlay'}
               />
             ) : null}
             {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
@@ -1506,7 +1547,27 @@ function Presenter(): ReactElement {
       </>
     );
     const exitConfirm = p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} /> : null;
-    body = phone ? (
+    body = nav === 'rail' ? (
+      // The rail (section 5.2): the stage column takes the window less the left, top and bottom insets;
+      // the rail sits at its right, inside the right inset, so the class tools cover the stage only and
+      // nothing of the rail ever overlaps it. The rail follows the stage in the DOM (left to right).
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.surface.paper }}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+          }}
+        >
+          {stageAndTools}
+        </View>
+        {bar}
+        {exitConfirm}
+      </View>
+    ) : phone ? (
       // The whole window, less the safe area, is the stage box; the compact bar floats over its
       // bottom edge, after the class tools, so a touch can always clear or leave them.
       <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>

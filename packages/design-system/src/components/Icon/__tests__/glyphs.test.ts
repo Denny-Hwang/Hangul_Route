@@ -43,6 +43,7 @@ const EXPECTED_NAMES: IconName[] = [
   'lantern',
   'leaf',
   'spinning-top',
+  'more',
 ];
 
 describe('icon glyphs', () => {
@@ -661,5 +662,26 @@ describe('theme glyphs (Heritage Journey grid; design/components/Icon/theme-glyp
     const [moon] = strokes('rest');
     expect(moon?.d).toMatch(/Z$/);
     expect(moon?.width).toBe(2.2);
+  });
+});
+
+describe('more: the phone rail label fallback (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4; design/components/Icon/spec.md)', () => {
+  it('is three filled dots of one size on the middle line, evenly spaced (the PN-0b mock geometry)', () => {
+    const parts = iconGlyphs.more;
+    expect(parts).toHaveLength(3);
+    for (const part of parts) expect(part.kind).toBe('fill');
+    const starts = parts.map((part) => /^M(-?[\d.]+) (-?[\d.]+) A([\d.]+) /.exec(part.d));
+    for (const m of starts) expect(m).not.toBeNull();
+    const centres = starts.map((m) => Number(m![1]) + Number(m![3]));
+    expect(centres).toEqual([5, 12, 19]);
+    for (const m of starts) {
+      expect(Number(m![2])).toBe(12);
+      expect(Number(m![3])).toBe(2.2);
+    }
+  });
+
+  it('is not a miss mark and not another glyph: no cross, no stroke, distinct from dash', () => {
+    expect(iconGlyphs.more.some((part) => part.kind === 'stroke')).toBe(false);
+    expect(JSON.stringify(iconGlyphs.more)).not.toBe(JSON.stringify(iconGlyphs.dash));
   });
 });

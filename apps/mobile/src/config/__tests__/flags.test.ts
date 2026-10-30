@@ -622,4 +622,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_GUEST_LESSON');
   });
+
+  it('[PN] presenterRail (AMENDMENTS-PRESENTER-NAV section 15, row PN-4) is ON at launch; the kill switch values turn it off', async () => {
+    delete process.env.EXPO_PUBLIC_PRESENTER_RAIL;
+    let mod = await reload();
+    expect(mod.flags.presenterRail).toBe(true);
+    expect(mod.launchDefaultFlags.presenterRail).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', ' OFF ']) {
+      process.env.EXPO_PUBLIC_PRESENTER_RAIL = off;
+      mod = await reload();
+      expect(mod.flags.presenterRail, JSON.stringify(off)).toBe(false);
+    }
+    process.env.EXPO_PUBLIC_PRESENTER_RAIL = 'maybe';
+    mod = await reload();
+    expect(mod.flags.presenterRail).toBe(true);
+    delete process.env.EXPO_PUBLIC_PRESENTER_RAIL;
+  }, RELOADS_MS);
+
+  it('[PN] presenterRail is read by its literal name (build time)', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_PRESENTER_RAIL');
+  });
 });
