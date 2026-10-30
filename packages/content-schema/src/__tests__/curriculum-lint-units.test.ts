@@ -8,6 +8,7 @@ import {
   freqCoverage,
   hasSoundChange,
   isReadMeaningRound,
+  readPickRoundIssues,
   koStrings,
   lessonBodies,
   lintCurriculum,
@@ -17,6 +18,7 @@ import {
   newCopyProblems,
   normalizeKo,
   parseGradeAList,
+  practiceCheckItems,
   pronunciationKey,
   questUnits,
   reviewScoreProblems,
@@ -228,6 +230,40 @@ describe('taught items and pronunciation', () => {
     expect(askedKo(scopes)).toEqual(['달', '달', '안녕', '네', '비가 와요', '김밥', '해', '별']);
   });
 
+  it('reads a Role Play scene as its partner lines and natural replies, never its title, partner or less natural replies (row CM-3A S4)', () => {
+    const scene = {
+      title: kt('놀이터'),
+      partner: kt('친구'),
+      start: 't1',
+      nodes: [
+        { id: 't1', line: kt('같이 놀자!'), replies: [{ id: 'a', text: kt('좋아!'), kind: 'natural', next: 'end' }, { id: 'b', text: kt('책이에요.'), kind: 'lessNatural', whyEn: 'x' }] },
+        { id: 'end', end: true, closingEn: 'Done!' },
+      ],
+    };
+    expect(askedKo([{ kind: 'role-play', scene }])).toEqual(['같이 놀자', '좋아']);
+  });
+
+  it('reads a Cloze Pick round as its completed sentence, and a word gap also as its answer tile (row CM-3A S4)', () => {
+    const rounds = [
+      { id: 'c1', sentence: kt('맛이 ___?'), tiles: [kt('달아요'), kt('어때요'), kt('먹었어요')], answerIndex: 1 },
+      { id: 'c2', gapKind: 'particle', sentence: kt('한글___.'), tiles: [kt('예요'), kt('이에요')], answerIndex: 1 },
+    ];
+    expect(askedKo([{ kind: 'cloze-pick', rounds }])).toEqual(['맛이 어때요', '어때요', '한글이에요']);
+  });
+
+  it('reads a Cloze Pick round as the review-item build does, not as the memory credits it: its completed sentence and, for a word gap, its answer tile, never the gap or a wrong tile (row CM-3A)', () => {
+    const scopes = [
+      {
+        kind: 'cloze-pick',
+        rounds: [
+          { id: 'c1', sentence: kt('별을 ___.'), tiles: [kt('접어요'), kt('그려요'), kt('잘라요')], answerIndex: 1 },
+          { id: 'c2', sentence: kt('꽃___ 접어요.'), gapKind: 'particle', tiles: [kt('을'), kt('를'), kt('로')], answerIndex: 0 },
+        ],
+      },
+    ];
+    expect(askedKo(scopes)).toEqual(['별을 그려요', '그려요', '꽃을 접어요']);
+  });
+
   it('counts a word seen only as a wrong option as new when a later quest teaches it', () => {
     const pick = q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [
       { ref: 'm:c', kind: 'listen-pick', rounds: [{ prompt: kt('하늘'), options: [{ id: 'a', text: kt('하늘') }, { id: 'b', text: kt('구름') }], answerId: 'a' }] },
@@ -236,6 +272,22 @@ describe('taught items and pronunciation', () => {
     const teach = q('quest:b', [discover(...words.map((w) => ({ type: 'word', word: kt(w) })))]);
     const files = { 'content/episodes/stage-2/nature.v2.json': body('episode:stage2-nature-v2', 2, [pick, teach], { volume: 2 }) };
     expect(rows(lint(files), 'lesson-new-load')).toEqual(['lesson-new-load error content/episodes/stage-2/nature.v2.json quests[1]']);
+  });
+
+  it('asks only the targets of a Hidden Heritage round: its other things stay new for the quest that teaches them', () => {
+    const thing = (id: string, ko: string) => ({ id, word: kt(ko), spot: { x: 0, y: 0, w: 80, h: 80 } });
+    const scope = {
+      ref: 'm:p',
+      kind: 'hidden-heritage',
+      rounds: [{ id: 'hh1', targets: [thing('bap', '밥'), thing('guk', '국'), thing('sutgarak', '숟가락')], others: [thing('hangari', '항아리'), thing('baguni', '바구니'), thing('banchan', '반찬')] }],
+    };
+    expect(askedKo([scope])).toEqual(['밥', '국', '숟가락']);
+    const find = q('quest:a', [step('practice', { minigameKind: 'hidden-heritage', minigameRef: 'm:p' })], [scope]);
+    expect(practiceCheckItems(find as unknown as LessonBodyQuest)).toEqual(['밥', '국', '숟가락']);
+    const words = ['항아리', '바다', '산', '강', '꽃', '나무', '돌', '새', '비'];
+    const teach = q('quest:b', [discover(...words.map((w) => ({ type: 'word', word: kt(w) })))]);
+    const files = { 'content/episodes/stage-2/life.v2.json': body('episode:stage2-life-v2', 2, [find, teach], { volume: 2 }) };
+    expect(rows(lint(files), 'lesson-new-load')).toEqual(['lesson-new-load error content/episodes/stage-2/life.v2.json quests[1]']);
   });
 
   it('takes a step game from its scope when the step names none', () => {
@@ -249,6 +301,16 @@ describe('taught items and pronunciation', () => {
     expect(new Set(['낫', '낮', '낯'].map(pronunciationKey))).toEqual(new Set(['nat']));
     expect(pronunciationKey('같이')).toBe(pronunciationKey('가치'));
     expect(pronunciationKey('책 이')).not.toBe(pronunciationKey('채기'));
+    // Vowels said alike (row CM-31 review): ㅐ/ㅔ, ㅒ/ㅖ, ㅙ/ㅚ/ㅞ; ㅖ after a consonant other than ㅇ or ㄹ; ㅢ after a consonant.
+    expect(pronunciationKey('개')).toBe(pronunciationKey('게'));
+    expect(pronunciationKey('얘기')).toBe(pronunciationKey('예기'));
+    expect(new Set(['왜', '외', '웨'].map(pronunciationKey)).size).toBe(1);
+    expect(pronunciationKey('계')).toBe(pronunciationKey('게'));
+    expect(pronunciationKey('희망')).toBe(pronunciationKey('히망'));
+    expect(pronunciationKey('예')).not.toBe(pronunciationKey('에'));
+    expect(pronunciationKey('례')).not.toBe(pronunciationKey('레'));
+    expect(pronunciationKey('의사')).not.toBe(pronunciationKey('이사'));
+    expect(pronunciationKey('개')).not.toBe(pronunciationKey('가'));
     expect(hasSoundChange('같이')).toBe(true);
     expect(hasSoundChange('국물')).toBe(true);
     expect(hasSoundChange('좋아요')).toBe(true);
@@ -280,8 +342,8 @@ describe('taught items and pronunciation', () => {
 });
 
 describe('lintCurriculum edge cases', () => {
-  it('gives the severity of each tier', () => {
-    expect(['volume1', 'volume2', 'pack', 'shipped-story', 'new-story'].map((t) => severityOf(t as never))).toEqual(['warning', 'error', 'error', 'warning', 'error']);
+  it('gives the severity of each tier: Volume 1 is an error since row CM-3B, a shipped story still a warning', () => {
+    expect(['volume1', 'volume2', 'pack', 'shipped-story', 'new-story'].map((t) => severityOf(t as never))).toEqual(['error', 'error', 'error', 'warning', 'error']);
   });
 
   it('reads a cell with volume 2 inside a Volume 1 file name as Volume 2, and a non-object file as not a body', () => {
@@ -312,7 +374,7 @@ describe('lintCurriculum edge cases', () => {
       'content/episodes/stage-2/nature.json': body('episode:stage2-nature', 2, [q('quest:a', [step('intro')])], { culture: notes }),
       'content/stories/s.json': { id: 'story:s', facts: [{ id: 'f1' }, { id: 'f2', sources: [{ publisher: 'Bank of Korea' }] }] },
     };
-    expect(rows(lint(files), 'culture-source')).toEqual([0, 1, 2, 3, 4].map((i) => `culture-source warning content/episodes/stage-2/nature.json culture[${i}].sources`));
+    expect(rows(lint(files), 'culture-source')).toEqual([0, 1, 2, 3, 4].map((i) => `culture-source error content/episodes/stage-2/nature.json culture[${i}].sources`));
   });
 
   it('reads Dictation and heard rounds defensively, and an explicit sound-change flag', () => {
@@ -362,6 +424,25 @@ describe('lintCurriculum edge cases', () => {
     expect(check('listen-pick', { rounds: [{ options: [{ id: 'a', text: kt('하늘') }], answerId: 'a' }] })).toHaveLength(1);
     expect(check('listen-pick', {})).toHaveLength(1);
     expect(check('story-sequence', { lines: [{ id: 'a', speakerEn: 'Hoya', line: kt('안녕') }] })).toHaveLength(1);
+  });
+
+  it('holds a Read Pick Meaning round to its shape: meanings only, not a spelling round, and a scope all read or all heard (row CM-3A S2)', () => {
+    const read = (options: Json[], extra: Json = {}) => ({ id: 'r', promptShown: true, prompt: kt('하늘'), options, answerId: 'a', ...extra });
+    const pics = [{ id: 'a', pictureRef: 'word:nature-sky', labelEn: 'sky' }, { id: 'b', pictureRef: 'card:sea', labelEn: 'sea' }];
+    expect(readPickRoundIssues([read(pics), read(pics)])).toEqual([]);
+    expect(readPickRoundIssues([{ id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }])).toEqual([]);
+    expect(readPickRoundIssues([read([{ id: 'a', text: kt('하늘') }, ...pics])]).map((i) => i.path)).toEqual(['options']);
+    expect(readPickRoundIssues([read(pics, { promptKind: 'spelling' })]).map((i) => i.path)).toEqual(['promptKind']);
+    expect(readPickRoundIssues([read(pics), { id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }])).toEqual([
+      { round: 1, path: 'promptShown', message: "a Listen & Pick scope's rounds are all Read Pick Meaning (promptShown: true) or all heard" },
+    ]);
+    expect(readPickRoundIssues(['x', read(pics)]).map((i) => i.round)).toEqual([0]);
+    // The lint reports it on the round, as an error in Volume 1 (since row CM-3B) and Volume 2 alike.
+    const mixed = { ref: 'm:c', kind: 'listen-pick', rounds: [read(pics), { id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }] };
+    const v2 = body('episode:stage2-nature-v2', 2, [q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [mixed])], { volume: 2 });
+    expect(rows(lint({ 'content/episodes/stage-2/nature.v2.json': v2 }), 'lesson-check-variety')).toContain(
+      'lesson-check-variety error content/episodes/stage-2/nature.v2.json quests[0].scopes[0].rounds[1].promptShown',
+    );
   });
 
   it('caps a game kind at 40 in 100 of the Checks of a stage across its files', () => {

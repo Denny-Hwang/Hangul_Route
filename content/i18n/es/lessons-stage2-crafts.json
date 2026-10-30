@@ -5,7 +5,9 @@
     "episode:stage2-crafts": {
       "title": "Palabras del parque",
       "subtitle": "Lee palabras del parque y de juegos tradicionales.",
-      "hoyaIntro": "Columpios, trompos y cuerdas de saltar: ¡leamos las palabras con las que jugamos!"
+      "hoyaIntro": "Columpios, trompos y cuerdas de saltar: ¡leamos las palabras con las que jugamos!",
+      "culture.n1.text": "{ko:제기차기} es un juego tradicional coreano. Se patea un {ko:제기}, un juguete pequeño con peso y flecos de papel o tela, y se intenta que no toque el suelo durante el mayor número de patadas posible.",
+      "culture.n2.text": "{ko:팽이치기} es un juego tradicional coreano con una peonza de madera. Se mantiene girando con golpes de un pequeño látigo, a menudo sobre el hielo en invierno, y en algunas competencias gana la peonza que gira más tiempo."
     },
     "quest:stage2-crafts-q1": {
       "title": "En el parque",
@@ -21,7 +23,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "pelota",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Lee y une",
       "steps.s6.title": "¡Bien jugado!",
       "steps.s6.hoyaLine": "Leíste las palabras del parque. ¡Muy bien!"
     },
@@ -32,8 +34,12 @@
       "cardPairs.gong.gloss": "pelota"
     },
     "minigame:s2-crafts-q1-check": {
-      "listenPick.rounds.pic-gong.prompt": "pelota",
-      "listenPick.rounds.read-gong.prompt": "pelota"
+      "picWord.boards.0.pairs.gong.word.gloss": "pelota",
+      "picWord.boards.0.pairs.jajeongeo.word.gloss": "bicicleta",
+      "picWord.boards.0.pairs.haneul.word.gloss": "cielo",
+      "picWord.boards.1.pairs.yeon.word.gloss": "cometa",
+      "picWord.boards.1.pairs.namu.word.gloss": "árbol",
+      "picWord.boards.1.pairs.chukgu.word.gloss": "fútbol"
     },
     "quest:stage2-crafts-q2": {
       "title": "Juegos tradicionales",
@@ -51,7 +57,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "cometa",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Buen juego!",
       "steps.s6.hoyaLine": "Leíste cuatro palabras de juegos. ¡Bien jugado!"
     },
@@ -62,8 +68,10 @@
       "cardPairs.yeon.gloss": "cometa"
     },
     "minigame:s2-crafts-q2-check": {
-      "listenPick.rounds.pic-paengi.prompt": "peonza, trompo",
-      "listenPick.rounds.read-yeon.prompt": "cometa"
+      "typeHangul.rounds.hear-yeon.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-yeon.target.gloss": "cometa",
+      "typeHangul.rounds.hear-jul.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-jul.target.gloss": "cuerda"
     },
     "quest:stage2-crafts-q3": {
       "title": "Jugar juntos",
@@ -78,7 +86,7 @@
       "steps.s2.discover.pages.1.items.1.word.gloss": "amigo, amiga",
       "steps.s3.title": "Imagen y palabra",
       "steps.s4.title": "Une las tarjetas",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Lee la palabra",
       "steps.s6.title": "¡Estrella del parque!",
       "steps.s6.hoyaLine": "Leíste todas las palabras del parque. ¡Muy bien jugado!"
     },
@@ -89,8 +97,15 @@
       "cardPairs.chingu.gloss": "amigo, amiga"
     },
     "minigame:s2-crafts-q3-check": {
-      "listenPick.rounds.pic-julleomgi.prompt": "saltar la cuerda",
-      "listenPick.rounds.read-chingu.prompt": "amigo, amiga"
+      "listenPick.rounds.see-chingu.prompt": "amigo, amiga",
+      "listenPick.rounds.see-dalligi.prompt": "carrera",
+      "listenPick.rounds.see-chingu.options.chingu.label": "amigo, amiga",
+      "listenPick.rounds.see-chingu.options.dalligi.label": "carrera",
+      "listenPick.rounds.see-chingu.options.julleomgi.label": "saltar la cuerda",
+      "listenPick.rounds.see-chingu.options.gong.label": "pelota",
+      "listenPick.rounds.see-dalligi.options.dalligi.label": "carrera",
+      "listenPick.rounds.see-dalligi.options.chingu.label": "amigo, amiga",
+      "listenPick.rounds.see-dalligi.options.julleomgi.label": "saltar la cuerda"
     },
     "minigame:s2-crafts-q1-practice": {
       "picWord.boards.0.pairs.gong.word.gloss": "pelota",

@@ -351,18 +351,34 @@ describe('the pieces', () => {
     const games = EN.learner.myRoute.games;
     // Only kinds the app can play are named: match-shape and the F-CURR-001 games still without a
     // screen are left out (none are now); Sentence Builder (order-it, G-1), Realia Read (G-2), Type Hangul (G-3),
-    // Trace a Word (G-4) and Write Frame (G-5) have one.
+    // Trace a Word (G-4) and Write Frame (G-5) have one; Cloze Pick (F-CURR-002 row CM-30) plays as itself or as its
+    // Listen & Pick fallback, so it is playable either way.
+    // Only kinds the app can play are named: the F-CURR-001 games still without a screen are left out (none are
+    // now); Sentence Builder (order-it, G-1), Realia Read (G-2), Type Hangul (G-3), Trace a Word (G-4), Write Frame
+    // (G-5) and Match Shape (F-CURR-002 row CM-33) have one.
     expect(gamesFor('read', games)).toEqual([
       'Hear a sound, find its letter',
       'Hear it, then tap the answer',
+      'Match the shapes',
       'Find the one that is different',
       'Match a picture to its word',
       'Read a story',
       'Build a sentence',
       'Read a menu, sign or ticket',
+      'Fill the gap in a sentence',
+      // Row CM-35: Role Play reads and listens.
+      'Read a chat, tap a reply',
     ]);
-    expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick']);
+    expect(gamesFor('listen', games)).toEqual(['Hear a sound, find its letter', 'Hear it, then tap the answer', 'Listen and pick', 'Read a chat, tap a reply']);
     expect(gamesFor('write', games)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
+  });
+
+  it('a switched game is named only while its game.<kind> switch is on (row CM-38, review of PR #849)', () => {
+    const games = EN.learner.myRoute.games;
+    // game.my-story off (its launch state): a My Story step plays Write Frame, which the sheet already names.
+    expect(gamesFor('write', games)).not.toContain('Write a short story');
+    expect(gamesFor('write', games, undefined, (kind) => kind !== 'my-story')).not.toContain('Write a short story');
+    expect(gamesFor('write', games, undefined, (kind) => kind === 'my-story')).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own', 'Write a short story']);
   });
 
   it('gamesFor names a game once its kind is playable', () => {
@@ -371,6 +387,11 @@ describe('the pieces', () => {
     expect(gamesFor('read', games, all)).toContain('Read a menu, sign or ticket');
     expect(gamesFor('read', games, all)).toContain('Match the shapes');
     expect(gamesFor('write', games, all)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own']);
+    // Hidden Heritage (row CM-36) merges dark: named only once it is passed in as playable (the row that ramps it).
+    expect(gamesFor('read', games, all)).toContain('Find a thing in a picture');
+    expect(gamesFor('listen', games, all)).toContain('Find a thing in a picture');
+    expect(gamesFor('read', games)).not.toContain('Find a thing in a picture');
+    expect(gamesFor('write', games, all, () => true)).toEqual(['Trace a letter', 'Build a sentence', 'Type in Hangul', 'Trace a word', 'Finish a sentence of your own', 'Write a short story']);
   });
 });
 

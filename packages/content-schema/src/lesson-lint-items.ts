@@ -163,8 +163,11 @@ export function stepGameKind(quest: LessonBodyQuest, kind: string): string | und
   return step?.minigameKind ?? scopeOfStep(quest, kind)?.kind;
 }
 
-/** Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet. */
-const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia']);
+/**
+ * Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet, and the other
+ * things of a Hidden Heritage round (their spots are named by meaning; only the targets are asked, F-CURR-002 CM-36).
+ */
+const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia', 'others']);
 
 /**
  * The Korean a scope asks for and accepts as right, normalized: a round's prompt, target,
@@ -179,17 +182,46 @@ export function askedKo(value: unknown, out: string[] = []): string[] {
   }
   if (typeof value !== 'object' || value === null) return out;
   const record = value as Record<string, unknown>;
+  if (isClozeRound(record)) return clozeAskedKo(record, out);
   for (const [key, child] of Object.entries(record)) {
     if (UNASKED_KEYS.has(key)) continue;
+    // A Role Play scene's title and partner name the place and the role (row CM-35); the chat asks its lines.
+    if ((key === 'title' || key === 'partner') && Array.isArray(record.nodes)) continue;
     if (key === 'options' && Array.isArray(child) && 'answerId' in record) {
       askedKo(child.filter((o) => typeof o === 'object' && o !== null && (o as Record<string, unknown>).id === record.answerId), out);
+    } else if (key === 'scene' && typeof child === 'object' && child !== null) {
+      // A Role Play scene (row CM-35): its turns ask their lines and natural replies; the title and partner are labels.
+      askedKo((child as Record<string, unknown>).nodes, out);
     } else if (key === 'replies' && Array.isArray(child)) {
-      askedKo(child.filter((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>).correct === true), out);
+      // A Tap to Respond reply that is `correct`, or a Role Play reply that is `natural` (a less natural one is never sent).
+      askedKo(child.filter((r) => typeof r === 'object' && r !== null && ((r as Record<string, unknown>).correct === true || (r as Record<string, unknown>).kind === 'natural')), out);
     } else if (key === 'ko' && typeof child === 'string') {
       const ko = normalizeKo(child);
       if (ko !== '') out.push(ko);
     } else askedKo(child, out);
   }
+  return out;
+}
+
+/** A Cloze Pick round (row CM-30): one sentence with its gap, its tiles and the tile that fills it. */
+function isClozeRound(record: Record<string, unknown>): boolean {
+  return Array.isArray(record.tiles) && typeof record.answerIndex === 'number' && typeof record.sentence === 'object' && record.sentence !== null;
+}
+
+/**
+ * What a Cloze Pick round asks, as the review-item build reads it (row CM-3A, the first content to ship one): a word
+ * or particle gap asks its completed sentence, and a word gap its answer tile; a value gap asks the card it is read
+ * from (the `rea` item), so no Korean of its own. The other tiles are shown, not taught, like a wrong option.
+ */
+function clozeAskedKo(round: Record<string, unknown>, out: string[]): string[] {
+  if (round.gapKind === 'value') return out;
+  const answer = (round.tiles as unknown[])[round.answerIndex as number];
+  const tile = typeof answer === 'object' && answer !== null ? String((answer as Record<string, unknown>).ko ?? '') : '';
+  // A round with no answer tile asks nothing (row CM-3A S3).
+  if (normalizeKo(tile) === '') return out;
+  const filled = normalizeKo(String((round.sentence as Record<string, unknown>).ko ?? '').replace('___', tile));
+  if (filled !== '') out.push(filled);
+  if (round.gapKind !== 'particle') out.push(normalizeKo(tile));
   return out;
 }
 
@@ -206,13 +238,47 @@ export function practiceCheckItems(quest: LessonBodyQuest): string[] {
 
 // ---- pronunciation ----------------------------------------------------------------------------------
 
+/** Medial indices (Unicode block order, as MEDIAL_RR) of the vowels folded by `foldMergedVowels`. */
+const MEDIAL_AE = 1;
+const MEDIAL_YAE = 3;
+const MEDIAL_E = 5;
+const MEDIAL_YE = 7;
+const MEDIAL_WAE = 10;
+const MEDIAL_OE = 11;
+const MEDIAL_WE = 15;
+const MEDIAL_UI = 19;
+const MEDIAL_I_VOWEL = 20;
+
+/**
+ * Spells each block with the vowel it is said with: ㅐ and ㅔ, ㅒ and ㅖ, and ㅙ, ㅚ and ㅞ are one sound in
+ * present-day speech and in a device voice (개 and 게, 얘 and 예, 왜, 외 and 웨). ㅖ after a consonant other
+ * than ㅇ or ㄹ may be said [ㅔ] (계 [게]), and ㅢ after a consonant is said [ㅣ] (희 [히]), as the standard
+ * pronunciation allows (표준 발음법 제5항). So a word is kept out of Dictation when it has such a twin.
+ */
+function foldMergedVowels(ko: string): string {
+  return [...ko]
+    .map((ch) => {
+      const parts = decomposeSyllable(ch);
+      if (parts === null) return ch;
+      let medial = parts.medial;
+      if (medial === MEDIAL_AE) medial = MEDIAL_E;
+      else if (medial === MEDIAL_YAE) medial = MEDIAL_YE;
+      else if (medial === MEDIAL_WAE || medial === MEDIAL_OE) medial = MEDIAL_WE;
+      if (medial === MEDIAL_YE && parts.initial !== 'ㅇ' && parts.initial !== 'ㄹ') medial = MEDIAL_E;
+      if (medial === MEDIAL_UI && parts.initial !== 'ㅇ') medial = MEDIAL_I_VOWEL;
+      return medial === parts.medial ? ch : (composeSyllable({ ...parts, medial }) as string);
+    })
+    .join('');
+}
+
 /**
  * A key equal for two spellings that sound the same: the F-CNT-002 converter is
  * pronunciation based (coda neutralisation, liaison, palatalisation, nasalisation), so
- * 낫, 낮 and 낯 all give `nat`, and 같이 and 가치 both give `gachi`. Spaces are not heard.
+ * 낫, 낮 and 낯 all give `nat`, and 같이 and 가치 both give `gachi`. The vowels said alike are
+ * folded first (`foldMergedVowels`), so 개 and 게 give one key. Spaces are not heard.
  */
 export function pronunciationKey(ko: string): string {
-  return romanize(normalizeKo(ko)).text.replace(/\s+/g, '').toLowerCase();
+  return romanize(foldMergedVowels(normalizeKo(ko))).text.replace(/\s+/g, '').toLowerCase();
 }
 
 /** Finals that split when the next block starts with ㅇ: [kept, moved]; ㄲ and ㅆ move whole. */

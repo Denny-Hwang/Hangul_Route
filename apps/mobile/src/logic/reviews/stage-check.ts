@@ -95,7 +95,7 @@ export function planStageCheck(
     const ids = stageCheckSelection(ctx, cells, skipped);
     if (ids.length === 0) break;
     const session = buildCheck(ctx, { itemIds: ids, size: STAGE_CHECK_SIZE });
-    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index }) }));
+    const built = session.questions.map((q) => ({ q, round: roundFor(q, { ...rounds, index: ctx.index, states: ctx.states }) }));
     best = built.flatMap((b) => (b.round ? [b.round] : []));
     if (best.length === session.questions.length) break;
     for (const b of built) if (b.round === null) skipped.add(b.q.itemId);

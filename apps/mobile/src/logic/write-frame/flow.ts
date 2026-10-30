@@ -68,6 +68,11 @@ export interface WriteFrameState {
   nameKeys: readonly string[];
   /** The step is over (completed or skipped). */
   done: boolean;
+  /**
+   * Skip shows My page with the sentences written so far before the step ends (My Story, F-CURR-002 row CM-38); with
+   * none written, or in Write Frame, Skip ends the step at once.
+   */
+  skipShowsPage: boolean;
 }
 
 export type WriteFrameEvent =
@@ -83,7 +88,7 @@ export type WriteFrameEvent =
   | { type: 'advance' }
   /** My page's Continue. */
   | { type: 'continue' }
-  /** Skip: leave now, without recording the remaining frames; My page is not shown. */
+  /** Skip: leave now, without recording the remaining frames; My page is not shown (My Story shows it, `skipShowsPage`). */
   | { type: 'skip' };
 
 export type WriteFrameEffect =
@@ -128,11 +133,16 @@ function freshFrame(s: WriteFrameState, roundIdx: number): WriteFrameState {
   };
 }
 
+/** How a chain of frames plays: My Story's Skip shows My page first (F-CURR-002 row CM-38). */
+export interface FlowOptions {
+  skipShowsPage?: boolean;
+}
+
 /**
  * The opening state. `nameKeys` prefills the name round (the grown-up preview passes the
  * keys of the cast name 호야, F-BROWSE-001); a learner's round starts empty.
  */
-export function startFlow(frames: readonly FrameInput[], nameKeys: readonly string[] = []): WriteFrameState {
+export function startFlow(frames: readonly FrameInput[], nameKeys: readonly string[] = [], options: FlowOptions = {}): WriteFrameState {
   const base: WriteFrameState = {
     frames,
     total: frames.length,
@@ -151,6 +161,7 @@ export function startFlow(frames: readonly FrameInput[], nameKeys: readonly stri
     written: [],
     nameKeys,
     done: frames.length === 0,
+    skipShowsPage: options.skipShowsPage === true,
   };
   return freshFrame(base, 0);
 }
@@ -269,6 +280,9 @@ export function stepFlow(s: WriteFrameState, e: WriteFrameEvent): WriteFrameStep
       if (s.phase !== 'myPage') return unchanged(s);
       return { state: { ...s, done: true }, effects: [{ type: 'complete' }] };
     case 'skip':
+      // My Story: the sentences written so far are shown once on My page (not kept), then Done ends the step.
+      if (s.skipShowsPage && s.phase === 'myPage') return unchanged(s);
+      if (s.skipShowsPage && s.written.length > 0) return unchanged({ ...s, phase: 'myPage', keys: [] });
       return { state: { ...s, done: true }, effects: [{ type: 'complete' }] };
   }
 }

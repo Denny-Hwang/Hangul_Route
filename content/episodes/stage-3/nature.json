@@ -7,8 +7,12 @@
   "subtitleEn": "Say where animals are, how they look and what they do.",
   "hoyaIntroEn": "I love animals! Let us read and build sentences about them.",
   "order": 4,
-  "pillarTags": ["D2"],
-  "rewardCardIds": ["card:gom"],
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [
+    "card:gom"
+  ],
   "quests": [
     {
       "id": "quest:stage3-nature-q1",
@@ -104,7 +108,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s3-nature-q1-check",
           "durationSeconds": 40
         },
@@ -333,68 +337,62 @@
         },
         {
           "ref": "minigame:s3-nature-q1-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "산에 곰이 있어요.",
-                "romanization": "sane gomi isseoyo",
-                "en": "There is a bear on the mountain."
+              "sentence": {
+                "ko": "___에 새가 있어요.",
+                "romanization": "___e saega isseoyo",
+                "en": "There is a bird in the tree."
               },
-              "options": [
+              "gapKind": "word",
+              "tiles": [
                 {
-                  "id": "bear",
-                  "pictureRef": "word:animal-bear",
-                  "labelEn": "Bear"
+                  "ko": "나무",
+                  "romanization": "namu",
+                  "en": "tree"
                 },
                 {
-                  "id": "bird",
-                  "pictureRef": "word:animal-bird",
-                  "labelEn": "Bird"
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
                 },
                 {
-                  "id": "cat",
-                  "pictureRef": "word:animal-cat",
-                  "labelEn": "Cat"
+                  "ko": "집",
+                  "romanization": "jip",
+                  "en": "home"
                 }
               ],
-              "answerId": "bear"
+              "answerIndex": 0
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "나무에 고양이가 있어요.",
-                "romanization": "namue goyangiga isseoyo",
-                "en": "There is a cat in the tree."
+              "sentence": {
+                "ko": "산에 곰___ 있어요.",
+                "romanization": "sane gom___ isseoyo",
+                "en": "There is a bear on the mountain."
               },
-              "options": [
+              "gapKind": "particle",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "나무에 고양이가 있어요.",
-                    "romanization": "namue goyangiga isseoyo",
-                    "en": "There is a cat in the tree."
-                  }
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker after a final consonant"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "나무에 새가 있어요.",
-                    "romanization": "namue saega isseoyo",
-                    "en": "There is a bird in the tree."
-                  }
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker after a vowel"
                 },
                 {
-                  "id": "c",
-                  "text": {
-                    "ko": "집에 고양이가 있어요.",
-                    "romanization": "jibe goyangiga isseoyo",
-                    "en": "There is a cat at home."
-                  }
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker after a final consonant"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 0,
+              "filledRomanization": "sane gomi isseoyo"
             }
           ]
         }
@@ -494,7 +492,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s3-nature-q2-check",
           "durationSeconds": 40
         },
@@ -741,68 +739,48 @@
         },
         {
           "ref": "minigame:s3-nature-q2-check",
-          "kind": "listen-pick",
+          "kind": "order-it",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "호랑이가 커요.",
-                "romanization": "horangiga keoyo",
-                "en": "The tiger is big."
+              "sentence": {
+                "ko": "토끼가 귀여워요.",
+                "romanization": "tokkiga gwiyeowoyo",
+                "en": "The rabbit is cute."
               },
-              "options": [
+              "pictureRef": "word:animal-rabbit",
+              "distractors": [
                 {
-                  "id": "tiger",
-                  "pictureRef": "card:tiger",
-                  "labelEn": "Tiger"
-                },
-                {
-                  "id": "rabbit",
-                  "pictureRef": "word:animal-rabbit",
-                  "labelEn": "Rabbit"
-                },
-                {
-                  "id": "cat",
-                  "pictureRef": "word:animal-cat",
-                  "labelEn": "Cat"
+                  "ko": "커요",
+                  "romanization": "keoyo",
+                  "en": "is big"
                 }
-              ],
-              "answerId": "tiger"
+              ]
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "토끼가 작아요.",
-                "romanization": "tokkiga jagayo",
-                "en": "The rabbit is small."
+              "sentence": {
+                "ko": "고양이가 작아요.",
+                "romanization": "goyangiga jagayo",
+                "en": "The cat is small."
               },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "토끼가 작아요.",
-                    "romanization": "tokkiga jagayo",
-                    "en": "The rabbit is small."
+              "pictureRef": "word:animal-cat",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker after a final consonant"
                   }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "토끼가 커요.",
-                    "romanization": "tokkiga keoyo",
-                    "en": "The rabbit is big."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "고양이가 작아요.",
-                    "romanization": "goyangiga jagayo",
-                    "en": "The cat is small."
-                  }
-                }
-              ],
-              "answerId": "a"
+                ]
+              }
             }
           ]
         }
@@ -901,9 +879,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s3-nature-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 50
         },
         {
           "id": "s6",
@@ -1148,68 +1126,27 @@
         },
         {
           "ref": "minigame:s3-nature-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "c1",
-              "prompt": {
-                "ko": "새가 날아요.",
-                "romanization": "saega narayo",
-                "en": "The bird flies."
-              },
-              "options": [
-                {
-                  "id": "bird",
-                  "pictureRef": "word:animal-bird",
-                  "labelEn": "Bird"
-                },
-                {
-                  "id": "fish",
-                  "pictureRef": "word:animal-fish",
-                  "labelEn": "Fish"
-                },
-                {
-                  "id": "rabbit",
-                  "pictureRef": "word:animal-rabbit",
-                  "labelEn": "Rabbit"
-                }
-              ],
-              "answerId": "bird"
+              "id": "d1",
+              "promptEn": "Type the word for a rabbit.",
+              "mode": "hear",
+              "target": {
+                "ko": "토끼",
+                "romanization": "tokki",
+                "en": "rabbit"
+              }
             },
             {
-              "id": "c2",
-              "prompt": {
-                "ko": "물고기가 헤엄쳐요.",
-                "romanization": "mulgogiga heeomchyeoyo",
-                "en": "The fish swims."
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "물고기가 헤엄쳐요.",
-                    "romanization": "mulgogiga heeomchyeoyo",
-                    "en": "The fish swims."
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "물고기가 작아요.",
-                    "romanization": "mulgogiga jagayo",
-                    "en": "The fish is small."
-                  }
-                },
-                {
-                  "id": "c",
-                  "text": {
-                    "ko": "새가 날아요.",
-                    "romanization": "saega narayo",
-                    "en": "The bird flies."
-                  }
-                }
-              ],
-              "answerId": "a"
+              "id": "d2",
+              "promptEn": "Type the word for a tiger.",
+              "mode": "hear",
+              "target": {
+                "ko": "호랑이",
+                "romanization": "horangi",
+                "en": "tiger"
+              }
             }
           ]
         }
@@ -1284,6 +1221,13 @@
       "textEn": "In a Korean sentence the word that says what the subject does or is like comes after the subject, at the end.",
       "sources": [
         {
+          "title": "서술어 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%9C%EC%88%A0%EC%96%B4",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "표제어 ‘서술-어(敍述語)’ 「명사」 『언어』: ‘한 문장에서 주어의 움직임, 상태, 성질 따위를 서술하는 말.’"
+        },
+        {
           "title": "문장",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0019645",
@@ -1296,20 +1240,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0027885",
           "accessed": "2026-10-14",
           "quoteOrLocator": "정의: ‘문장에서 주어의 동작·상태·성질 등을 설명하는 문장성분.’ 내용: ‘정상적인 문장에서 서술어는 주어의 뒤에 놓이며 … 서술어에는 용언(用言)이 주로 쓰인다.’"
-        },
-        {
-          "title": "서술어 (표준국어대사전 검색 결과)",
-          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%9C%EC%88%A0%EC%96%B4",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "표제어 ‘서술-어(敍述語)’ 「명사」 『언어』: ‘한 문장에서 주어의 움직임, 상태, 성질 따위를 서술하는 말.’"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened encykorea 문장 and 서술어; the basic order and the predicate after the subject at the end found as quoted. Finding (minor): both sources came from one reference work; added the NIKL Standard Korean Language Dictionary entry 서술어 (주어의 움직임, 상태, 성질 따위를 서술하는 말, opened 2026-10-14, HTTP 200), which supports 'says what the subject does or is like'. Paraphrased; nothing copied. Outcome: confirmed, a third source added."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'comes at the end' = encykorea 문장 (기본어순 주어·(보어)·(목적어)·서술어; 서술어가 문장 끝위치에 고정); 'says what the subject does or is like' and 'after the subject' = encykorea 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 내용 (서술어는 주어의 뒤에 놓이며). Pages opened 2026-10-14, HTTP 200. Paraphrased, nothing copied. Used in: q2 and q3 Discover pattern noteEn ('The describing word comes last', 'The action word comes last').\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 문장 (E0019645) and 서술어 (E0027885); 기본어순 ‘주어·(보어)·(목적어)·서술어’, 서술어가 문장 끝위치에 고정, 서술어 정의 (주어의 동작·상태·성질 등을 설명) and 서술어는 주어의 뒤에 놓이며 found as quoted. The note matches; it makes no free-word-order claim beyond the predicate. Paraphrased, nothing copied. Outcome: confirmed, no change.\npass 5 (MAR culture review, final independent fact-check, 2026-10-14): re-opened encykorea 문장 and 서술어; the basic order and the predicate after the subject at the end found as quoted. Finding (minor): both sources came from one reference work; added the NIKL Standard Korean Language Dictionary entry 서술어 (주어의 움직임, 상태, 성질 따위를 서술하는 말, opened 2026-10-14, HTTP 200), which supports 'says what the subject does or is like'. Paraphrased; nothing copied. Outcome: confirmed, a third source added.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],
@@ -1317,12 +1254,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "pass 4 language (MAR, 2026-10-14): no Korean gloss repeats its noun or stem; Apply a3 and a4 hold the animal and vary the new word; q1 keeps one pattern (its particle rounds became order rounds); q3 distractors no longer build a true sentence; ko button name, register, glosses fixed; the two-slot q1 frame rejected (schema: one slot).",
       "pass 5 culture (MAR, 2026-10-14): every claim re-checked against its sources; the n1 있다 locator now cites the adjective sense of existing at a place; n3 gained an NIKL source; the es reward line no longer genders the learner; no culture claim, person, brand or price in the cell.",
-      "pass 7 four-lens review (MAR, 2026-10-14): the bear gloss no longer carries the taught 크다 (adnominal forms now checked); 집 and 산 glosses say only what the words mean; Apply distractors no longer say a tiger or rabbit cannot swim; ko titles and teasers in 해요체, one 헤엄쳐요 gloss, es teasers use Siguiente; practice refs renamed."
+      "pass 7 four-lens review (MAR, 2026-10-14): the bear gloss no longer carries the taught 크다 (adnominal forms now checked); 집 and 산 glosses say only what the words mean; Apply distractors no longer say a tiger or rabbit cannot swim; ko titles and teasers in 해요체, one 헤엄쳐요 gloss, es teasers use Siguiente; practice refs renamed.",
+      "Check rotation MAR (row CM-3A S3, F-CURR-002 section 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): the stage's 15 Checks are Cloze Pick 6, Sentence Builder 5 and Dictation 4, none above 40 in 100, no Listen & Pick; every Check is a produce round; no two adjacent quests share Practice, Apply and Check.",
+      "CM-3A S3 MAR (cont.): Language: 나무에 새가 있어요 with 물 and 집 as tiles that make other meanings, never the shown one; 곰이 after a final consonant; 토끼 and 호랑이 are said as written, so they fit Dictation. Learning design: 작아요, 귀여워요 and 커요 are taught in the cell; the Sentence Builder rounds keep a picture and a particle choice or a distractor ending. Reviser: ko Dictation prompts say 써 봐요 (was 쳐 봐요).",
+      "CM-3A S3 MAR (cont.): Third pass: es and ko glosses follow the cell's overlay style; no change.",
+      "CM-3A S3 review fix (2026-10-29): 써 봐요 because 써 ('write') is the plain verb for writing Hangul and matches the earlier 써 봐요 typing prompts. The 쳐 보세요 / 쳐 봐요 prompts of Stages 6 and 7 and the stories stay as they are."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -24,12 +24,20 @@ function stage1KindsInApp(): Map<string, number> {
   return counts;
 }
 
+/**
+ * Games behind a `game.<kind>` switch that ships dark (F-CURR-002 section 12.2): a learner plays their fallback until the
+ * owner ramps the switch, so the fold does not name them yet. Row CM-33: Match Shape (Read Pick while off).
+ */
+const SWITCHED_DARK: ReadonlySet<string> = new Set(['match-shape']);
+
 describe('minigameCatalog (the /learners games fold, F-SITE-002 §3.4)', () => {
-  const app = stage1KindsInApp();
+  const all = stage1KindsInApp();
+  const app = new Map([...all].filter(([kind]) => !SWITCHED_DARK.has(kind)));
 
   it('reads the Stage 1 scopes of the learner app', () => {
+    expect(all.get('match-shape')).toBe(2);
     expect(Object.fromEntries(app)).toEqual({
-      'listen-pick': 22,
+      'listen-pick': 23,
       'match-sound': 7,
       'build-letter': 7,
       'pic-word-match': 4,

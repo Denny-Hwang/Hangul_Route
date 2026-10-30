@@ -1,17 +1,21 @@
 import {
   ALLOMORPH_PAIRS,
   discoverItemTexts,
+  isRolePlayEnd,
   fillFrame,
   parseNarration,
   romanize,
   SLOT_MARKER,
+  storyOrderPictures,
   syllableSplit,
+  typeHangulMode,
   wordReviewCardCap,
   type CheckKind,
   type Discover,
   type DiscoverItem,
   type Episode,
   type HeritageCard,
+  type HiddenHeritageRound,
   type Jamo,
   type KoText,
   type LectureBlock,
@@ -20,6 +24,7 @@ import {
   type OrderItRound,
   type Quest,
   type Realia,
+  type RolePlayScene,
   type StoryLevel,
   type TraceWordRound,
   type TypeHangulRound,
@@ -28,9 +33,12 @@ import {
 } from '@hangul-route/content-schema';
 import { spokenFor, type SpokenForm } from '../audio/spoken';
 import { koTokenParts } from '../ko-tokens';
+import { rolePlayMainPath, rolePlayToTapRespond } from '../role-play/fallback';
 import { validRounds } from '../listen-pick';
+import { shapeListenRounds } from './format-rounds';
 import { listenPickSpeech } from '../audio/listen-pick-speech';
 import type { MinigameScope } from '../minigame-config';
+import { playableStoryOrder } from '../story-order/fallback';
 import { buildRound, withoutMark, type SbParticle } from '../sentence-builder/progression';
 import {
   buildCultureQuizRounds,
@@ -55,11 +63,16 @@ import {
   type NarrationPiece,
   type QuizOption,
   type RealiaSheetView,
+  type RolePlayReplyView,
+  type RolePlayTurn,
   type SequenceStep,
   type SlideBody,
   type SpokenLine,
   type WriteTogether,
 } from './build-steps';
+
+/** A Cloze Pick question (row CM-30) is its sentence: the check prompt is the target alone, drawn as its chip. */
+const CLOZE_PROMPT = '{target}';
 
 /**
  * Deck builder (F-TCH-004 §3.3): expands a deck (ids, a seed, options) into
@@ -148,6 +161,18 @@ export interface LectureBundle {
 export interface VoiceInfo {
   canPlayKorean: boolean;
 }
+
+/**
+ * The F-CURR-002 switches a deck reads (section 12.2): with `game.<kind>` off, every step of that kind builds its
+ * fallback's slides. The presenter reads them once per deck (`PresenterApp`); left out, every switch is off, the
+ * state a kill-switched kind merges in.
+ */
+export interface DeckSwitches {
+  /** `game.role-play` (row CM-35): on, the Role Play slide; off, the reply slides of Tap to Respond on its main path. */
+  rolePlay: boolean;
+}
+
+const SWITCHES_OFF: DeckSwitches = Object.freeze({ rolePlay: false });
 
 export type Slide = SlideBody & { key: string; builds: readonly BuildName[] };
 
@@ -246,6 +271,8 @@ function slideVoices(slide: Slide): Array<[string, WordVoice]> {
       return slide.examples.map((e): [string, WordVoice] => [e.ko, { spoken: e.spoken, speech: 'sentence' }]);
     case 'read-along':
       return slide.lines.map((l): [string, WordVoice] => [l.ko, { spoken: l.spoken, speech: 'sentence' }]);
+    case 'role-play':
+      return [[slide.line.ko, { spoken: slide.line.spoken, speech: 'sentence' }]];
     case 'realia':
       return slide.keyWords.map((w): [string, WordVoice] => [w.ko, { spoken: w.spoken, speech: 'word' }]);
     default:
@@ -325,7 +352,7 @@ export function withBuilds(slides: readonly Slide[], opts: BuildOptions): Slide[
   return slides.map((slide) => ({ ...slide, builds: buildsFor(slide, opts) }));
 }
 
-export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: VoiceInfo): ExpandedDeck {
+export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: VoiceInfo, switches: DeckSwitches = SWITCHES_OFF): ExpandedDeck {
   const opts: BuildOptions = { romanization: deck.options.romanization, strokeGuide: deck.options.strokeGuide };
   const textPrompt = !voice.canPlayKorean || !deck.options.sound;
   const slides: Slide[] = [];
@@ -576,6 +603,12 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'tap-respond':
         replyStep(path, ref, listOf(scope.dialogue));
         return;
+      // Role Play (F-CURR-002 section 8, row CM-35): with `game.role-play` on, the read-together Role Play slide (the
+      // class picks the reply); off, the reply slides of its main path, as the learner fallback plays it (section 12.2).
+      case 'role-play':
+        if (switches.rolePlay) rolePlayStep(path, ref, scope.rolePlay?.scene);
+        else replyStep(path, ref, scope.rolePlay ? rolePlayToTapRespond(scope.rolePlay.scene) : []);
+        return;
       case 'realia-read':
         realiaReadStep(path, ref, scope.realiaRead);
         return;
@@ -593,8 +626,45 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       case 'write-frame':
         writeStep(path, ref, listOf(scope.writeFrame?.rounds).map((round) => [round.id, () => frameWrite(round)]));
         return;
+      // Cloze Pick (F-CURR-002 section 8, row CM-30): the existing question slides, no new slide kind.
+      case 'cloze-pick':
+        clozeStep(path, ref, scope.clozePick);
+        return;
+      // Story Order (F-CURR-002 section 8, row CM-34): no slide kind of its own. Each round's lines become sentence
+      // slides in their right order, so the room reads the story together: the Korean first and its meaning a click
+      // later, as the learner's cards hold it back; a picture only where the round draws its pictures.
+      case 'story-order':
+        for (const round of playableStoryOrder(scope)) {
+          const pictures = storyOrderPictures(round);
+          for (const panel of round.panels) {
+            push(`${path}/${round.id}/${panel.id}`, {
+              kind: 'sentence',
+              sentence: spokenLine(panel.caption),
+              ...(pictures && panel.pictureRef !== undefined ? { picture: panel.pictureRef } : {}),
+            });
+          }
+        }
+        return;
+      // A whole-class scene hunt (F-CURR-002 §8, row CM-36): one slide per target, in content order.
+      case 'hidden-heritage':
+        hiddenHeritageStep(path, ref, listOf(scope.hiddenHeritage?.rounds));
+        return;
+      // The Stage 1 additions' Match Shape (F-CURR-002 section 8, row CM-33): the existing listen question slides, no new slide kind.
+      case 'match-shape':
+        listenStep(path, ref, shapeListenRounds(scope));
+        return;
       default:
         skip(ref, 'unsupported-step');
+    }
+  };
+
+  const hiddenHeritageStep = (path: string, ref: string, rounds: readonly HiddenHeritageRound[]): void => {
+    if (rounds.length === 0) skip(ref, 'scope-too-small');
+    for (const round of rounds) {
+      for (const t of round.targets) {
+        teachWord({ ko: t.word.ko, romanization: t.word.romanization, gloss: t.word.en });
+        push(`${path}/${round.id}/${t.id}`, { kind: 'hidden-heritage', sceneId: round.sceneId, alt: round.altEn, word: spokenLine(t.word), spot: t.spot, picture: t.picture });
+      }
     }
   };
 
@@ -671,9 +741,13 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         speech !== 'sound' && answer?.pictureRef === undefined && answer?.text !== undefined && !bare(round.prompt.ko).includes(bare(answer.text.ko));
       push(`${path}/q${i + 1}`, {
         kind: 'quiz',
-        prompt: { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
+        // Row CM-3A S2: a Read Pick Meaning round is a meaning question on its shown Korean (nothing said before the
+        // answer), its pictures the options, as in the game.
+        prompt: round.promptShown
+          ? { ask: 'meaning', ko: round.prompt.ko, romanization: round.prompt.romanization }
+          : { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
         options: shuffleSeeded(options, seed()),
-        textPrompt,
+        textPrompt: textPrompt && !round.promptShown,
       });
     });
   };
@@ -702,6 +776,45 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       };
       const options = turn.options.map((o): QuizOption => ({ ko: o.ko, romanization: o.romanization!, gloss: o.en, correct: o.isCorrect }));
       push(`${path}/q${i + 1}`, { kind: 'quiz', prompt: { ask: 'reply', line }, options: shuffleSeeded(options, seed()), textPrompt: false });
+    });
+  };
+
+  /**
+   * Role Play (F-CURR-002 section 8, row CM-35): a `role-play` slide per turn of the scene's main path (each turn's
+   * first natural reply, as the learner fallback plays it), so the room reads the chat together and picks the reply.
+   * Each slide carries the exchange just before it, the partner's line, and the turn's replies in the slide's seeded
+   * order: every natural reply marked as one, each less natural one with Hoya's reason (a `{ko:}` token without a
+   * romanization drops only that reason, counted, rule 11). The last turn carries the scene's closing line, so the
+   * chat ends well on the stage too. A scope with no scene, or a scene whose main path holds no turn, is skipped.
+   */
+  const rolePlayStep = (path: string, ref: string, scene: RolePlayScene | undefined): void => {
+    const turns = scene === undefined ? [] : rolePlayMainPath(scene);
+    if (scene === undefined || turns.length === 0) {
+      skip(ref, 'scope-too-small');
+      return;
+    }
+    const last = turns[turns.length - 1]!;
+    const endId = last.replies.find((r) => r.kind === 'natural')?.next;
+    const end = scene.nodes.find((n) => n.id === endId);
+    let before: RolePlayTurn['before'];
+    turns.forEach((turn, i) => {
+      const replies = turn.replies.map((r): RolePlayReplyView => {
+        const view: RolePlayReplyView = { ko: r.text.ko, romanization: r.text.romanization, gloss: r.text.en, natural: r.kind === 'natural' };
+        const why = r.whyEn === undefined ? undefined : tokenPieces(ref, r.whyEn);
+        return why === undefined ? view : { ...view, why };
+      });
+      const line = spokenLine(turn.line);
+      push(`${path}/t${i + 1}`, {
+        kind: 'role-play',
+        scene: scene.title.en,
+        partner: scene.partner.en,
+        ...(before !== undefined ? { before } : {}),
+        line,
+        replies: shuffleSeeded(replies, seed()),
+        ...(turn === last && isRolePlayEnd(end) ? { closing: end.closingEn } : {}),
+      });
+      const sent = turn.replies.find((r) => r.kind === 'natural');
+      before = sent === undefined ? undefined : { line, reply: spokenLine(sent.text) };
     });
   };
 
@@ -742,6 +855,39 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         options: shuffleSeeded(options, seed()),
         textPrompt: false,
       });
+    });
+  };
+
+  /**
+   * Cloze Pick (F-CURR-002 section 8, row CM-30): one question slide per round, on the slides that already exist, so
+   * the deck shape and its `v` are unchanged and an older presenter that meets the scope skips it as an unsupported
+   * step. A word or particle gap is a `check` question: the sentence with its gap is the target (its Korean and
+   * romanization; its meaning shows from the start, it is the input the room reads from), the tiles are the options.
+   * A value gap is a `realia` question beside its card (shown once before the questions, as Realia Read): the question
+   * is the meaning with its gap ("It is ___ won.") and the key is the sentence with its gap. Nothing is said before
+   * the answer build (a gap read aloud would say "underscore", and the sentence would answer the round).
+   */
+  const clozeStep = (path: string, ref: string, cloze: MinigameScope['clozePick']): void => {
+    const rounds = cloze?.rounds ?? [];
+    if (rounds.length === 0) skip(ref, 'scope-too-small');
+    const sheet = cloze?.realia && sheetView(cloze.realia);
+    rounds.forEach((round, i) => {
+      const { sentence: s } = round;
+      const key = `${path}/q${i + 1}`;
+      const options = shuffleSeeded(
+        round.tiles.map((t, ti): QuizOption => ({ ko: t.ko, romanization: t.romanization, correct: ti === round.answerIndex })),
+        seed(),
+      );
+      if (round.gapKind !== 'value') {
+        push(key, { kind: 'quiz', prompt: { ask: 'check', text: CLOZE_PROMPT, target: { ko: s.ko, romanization: s.romanization, gloss: s.en } }, options, textPrompt: false });
+        return;
+      }
+      if (!sheet) return skip(ref, 'scope-too-small');
+      if (!seenRealia.has(cloze.realia!.ref)) {
+        seenRealia.add(cloze.realia!.ref);
+        push(`${path}/sheet`, { kind: 'realia', sheet, keyWords: [] });
+      }
+      push(key, { kind: 'quiz', prompt: { ask: 'realia', text: s.en, sheet, key: { ko: s.ko, romanization: s.romanization, spoken: sheet.spoken } }, options, textPrompt: false });
     });
   };
 
@@ -817,6 +963,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     prompt: round.promptEn,
     ...(round.pictureRef !== undefined ? { picture: round.pictureRef } : {}),
     answer: spokenLine(round.target),
+    // A Dictation round's prompt says "the word you hear": the slide plays the target before the answer (row CM-3A S7).
+    ...(typeHangulMode(round) === 'hear' ? { hear: true as const } : {}),
   });
 
   /** Trace a Word: the word drawn as a ghost from the start; its romanization and meaning at the answer. */
@@ -1181,7 +1329,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         skip(id, 'unknown-id');
         continue;
       }
-      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice);
+      const alone = expandDeck({ ...deck, blocks: [{ kind: 'quest', id }] }, bundle, voice, switches);
       // A taught word keeps the sound the quest gave it, on its card or its reading slide (a Discover sentence stays a sentence).
       const voices = new Map<string, WordVoice>();
       for (const [ko, v] of alone.slides.flatMap(slideVoices)) if (!voices.has(ko)) voices.set(ko, v);

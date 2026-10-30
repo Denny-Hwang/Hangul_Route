@@ -36,13 +36,18 @@ import {
 const WB = [1, 2, 3, 4, 5, 6].map((k) => `quest:stage2-letters-q${k}`);
 const V8 = new Set(CATALOG_QUEST_IDS_V8);
 
-/** The catalogue as it stood at version 8: today's catalogue without the quests later versions added. */
+/**
+ * The catalogue as it stood at version 8: today's catalogue without the quests later versions added. A cell that
+ * shipped by then keeps its quests of then (F-CURR-002 row CM-33 appends a stamped quest to Stage 1 Crafts).
+ */
 const CATALOG_8: Catalog = {
   ...CATALOG,
   version: 8,
-  cells: CATALOG.cells.map((cell) =>
-    cell.questIds.every((id) => V8.has(id)) ? cell : { ...cell, status: 'preview', minutes: 10, questIds: [] },
-  ),
+  cells: CATALOG.cells.map((cell) => {
+    const then = cell.questIds.filter((id) => V8.has(id));
+    if (then.length === cell.questIds.length) return cell;
+    return then.length > 0 ? { ...cell, questIds: then } : { ...cell, status: 'preview', minutes: 10, questIds: [] };
+  }),
   quests: CATALOG.quests.filter((q) => V8.has(q.id)),
 };
 const FS = [1, 2, 3].map((k) => `quest:stage3-letters-q${k}`);
@@ -160,7 +165,8 @@ describe('placedOutGrowth', () => {
       'quest:stage2-crafts-q2',
       'quest:stage2-crafts-q3',
     ]);
-    expect(placedOutGrowth(STAGE3, undefined, routeCatalogOf(CATALOG))).toEqual(shippedSince);
+    // Row CM-33's Stage 1 addition shipped since too, behind a stage3 result: it is placed out with them.
+    expect(placedOutGrowth(STAGE3, undefined, routeCatalogOf(CATALOG))).toEqual(['quest:stage1-crafts-q4', ...shippedSince]);
     expect(placedOutGrowth(STAGE3, CATALOG_VERSION, routeCatalogOf(CATALOG))).toEqual([]);
   });
 });

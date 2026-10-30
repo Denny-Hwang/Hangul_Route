@@ -181,6 +181,40 @@ describe('frames, My page and the end of the step', () => {
     expect(effects).toEqual([{ type: 'complete' }]);
     expect(state.phase).not.toBe('myPage');
   });
+
+  it('a My Story chain (skipShowsPage): Skip after a written frame shows My page with it, then Done completes once', () => {
+    const start = startFlow([food, pickOnly, food], [], { skipShowsPage: true });
+    expect(start.skipShowsPage).toBe(true);
+    let { state, effects } = run(start, [{ type: 'pick', index: 2 }, ...type('라면'), { type: 'done' }, { type: 'advance' }, { type: 'skip' }]);
+    expect(state).toMatchObject({ phase: 'myPage', done: false, keys: [] });
+    expect(state.written.map((w) => w.words)).toEqual([['라면']]);
+    // The rest of the chain is not recorded: one answer, for the frame written.
+    expect(answers(effects)).toEqual([{ type: 'answer', roundIdx: 0, correct: true }]);
+    expect(effects).not.toContainEqual({ type: 'complete' });
+    // Skip again does nothing on My page; a stray advance does nothing; Done (continue) ends the step once.
+    ({ state, effects } = run(state, [{ type: 'skip' }, { type: 'advance' }, { type: 'continue' }, { type: 'continue' }]));
+    expect(effects).toEqual([{ type: 'complete' }]);
+    expect(state.done).toBe(true);
+  });
+
+  it('a My Story chain: Skip with nothing written ends the step at once, with no page', () => {
+    const { state, effects } = run(startFlow([food, pickOnly, food], [], { skipShowsPage: true }), [{ type: 'pick', index: 0 }, { type: 'skip' }]);
+    expect(effects).toEqual([{ type: 'complete' }]);
+    expect(state.phase).not.toBe('myPage');
+  });
+
+  it('a My Story chain: Skip while the last sentence shows lands on My page with every frame', () => {
+    const { state } = run(startFlow([pickOnly, pickOnly, pickOnly], [], { skipShowsPage: true }), [
+      { type: 'pick', index: 0 },
+      { type: 'advance' },
+      { type: 'pick', index: 1 },
+      { type: 'advance' },
+      { type: 'pick', index: 0 },
+      { type: 'skip' },
+    ]);
+    expect(state.phase).toBe('myPage');
+    expect(state.written).toHaveLength(3);
+  });
 });
 
 describe('the name round (Write Your Name q3: free entry, unscored)', () => {

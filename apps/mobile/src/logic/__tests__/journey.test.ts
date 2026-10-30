@@ -204,10 +204,21 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
 
   it('is 0 of the grid total with no progress, and the total stays the grid count for today\'s bundle', () => {
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
-    // Every hand-written quest is a grid quest; bundled shelf stories never count.
+    // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done.
+    const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
     expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(
-      questsAll.filter((q) => !storyQuests.includes(q)).length,
+      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id)).length,
     );
+  });
+
+  it('counts an optional addition on both sides once it is done, never before (F-CURR-002 section 4.2)', () => {
+    const withAddition: Episode = { ...grid, questIds: ['q1', 'q2', 'qx'], optionalQuestIds: ['qx'] };
+    const bundled = [...quests, { id: 'qx' }];
+    // A learner who finished every quest before the addition shipped still reads 2 of 2.
+    expect(gridQuestProgress([withAddition, shelf], bundled, [done('q1'), done('q2')])).toEqual({ completed: 2, total: 2 });
+    expect(gridQuestProgress([withAddition, shelf], bundled, [])).toEqual({ completed: 0, total: 2 });
+    expect(gridQuestProgress([withAddition, shelf], bundled, [done('q1'), done('q2'), done('qx')])).toEqual({ completed: 3, total: 3 });
+    expect(gridQuestProgress([withAddition, shelf], bundled, [done('qx')])).toEqual({ completed: 1, total: 3 });
   });
 
   it('never reads "completed of total" past the total when a grid episode lists a quest that is not bundled', () => {

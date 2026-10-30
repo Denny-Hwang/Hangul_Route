@@ -558,7 +558,34 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     quoteOrLocator: "entry, sense 1",
   });
   const lpRound = (id) => ({ id, prompt: kt("떡국", "tteokguk", "rice-cake soup"), options: [{ id: "a", pictureRef: "word:soup" }, { id: "b", pictureRef: "word:kite" }], answerId: "a" });
-  function lessonQuest(k) {
+  // F-CURR-002 §7.1 Check rotation (rows CM-3A, CM-3B): a Stage 2 Check is Read Pick Meaning (the Korean shown, the
+  // meanings as pictures), Dictation (Type Hangul `hear`) or Pic-Word Match, at most 40 in 100 of them one game.
+  const checkScopes = {
+    "listen-pick": (ref) => ({ ref, kind: "listen-pick", rounds: [lpRound("c1"), lpRound("c2")] }),
+    "read-pick": (ref) => ({
+      ref,
+      kind: "listen-pick",
+      rounds: ["c1", "c2"].map((id) => ({ ...lpRound(id), promptShown: true, options: [{ id: "a", pictureRef: "word:soup", labelEn: "rice-cake soup" }, { id: "b", pictureRef: "word:kite", labelEn: "kite" }] })),
+    }),
+    "type-hangul": (ref) => ({
+      ref,
+      kind: "type-hangul",
+      rounds: [kt("연", "yeon", "kite"), kt("윷", "yut", "yut sticks")].map((target, i) => ({ id: `c${i + 1}`, promptEn: "Listen to the word and write it in Hangul.", mode: "hear", target })),
+    }),
+    "pic-word-match": (ref) => ({
+      ref,
+      kind: "pic-word-match",
+      boards: [0, 1].map(() => ({
+        pairs: [
+          { id: "tteokguk", pictureRef: "word:soup", word: kt("떡국", "tteokguk", "rice-cake soup") },
+          { id: "yeon", pictureRef: "word:kite", word: kt("연", "yeon", "kite") },
+          { id: "yut", pictureRef: "word:yut", word: kt("윷", "yut", "yut sticks") },
+        ],
+      })),
+    }),
+  };
+  const ROTATION = { 1: "read-pick", 2: "type-hangul", 3: "pic-word-match" };
+  function lessonQuest(k, check = ROTATION[k]) {
     const ref = (step) => `minigame:s2-rites-q${k}-${step}`;
     return {
       id: `quest:stage2-rites-q${k}`,
@@ -569,13 +596,13 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
         { id: "s2", kind: "discover", titleEn: "Look", durationSeconds: 50, discover: { pages: [{ items: [{ type: "word", word: kt("떡국", "tteokguk", "rice-cake soup"), noteEn: "Say {ko:떡국} at the New Year." }] }] } },
         { id: "s3", kind: "practice", titleEn: "Play", durationSeconds: 80, minigameKind: "listen-pick", minigameRef: ref("practice") },
         { id: "s4", kind: "apply", titleEn: "Build", durationSeconds: 70, minigameKind: "card-match", minigameRef: ref("apply") },
-        { id: "s5", kind: "check", titleEn: "Two quick ones", durationSeconds: 35, minigameKind: "listen-pick", minigameRef: ref("check") },
+        { id: "s5", kind: "check", titleEn: "Two quick ones", durationSeconds: 35, minigameKind: checkScopes[check](ref("check")).kind, minigameRef: ref("check") },
         { id: "s6", kind: "reward", titleEn: "Done", durationSeconds: 8 },
       ],
       scopes: [
         { ref: ref("practice"), kind: "listen-pick", rounds: [1, 2, 3, 4, 5, 6].map((i) => lpRound(`r${i}`)) },
         { ref: ref("apply"), kind: "card-match", pairs: [kt("연", "yeon", "kite"), kt("윷", "yut", "yut sticks")] },
-        { ref: ref("check"), kind: "listen-pick", rounds: [lpRound("c1"), lpRound("c2")] },
+        checkScopes[check](ref("check")),
       ],
     };
   }
@@ -589,7 +616,7 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
     hoyaIntroEn: "Let us read holiday words!",
     order: 3,
     pillarTags: ["B5"],
-    quests: [1, 2, 3].map(lessonQuest),
+    quests: [1, 2, 3].map((k) => lessonQuest(k)),
     culture: [
       {
         id: "n1",
@@ -648,6 +675,37 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
       assert.match(r.stdout, /file=content\/other\/x\.json::korean-in-ui-field/);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a Role Play scene (row CM-35): a sound one passes; one whose ways differ in turns fails role-play-even-branches", () => {
+    const nudge = { id: "x", text: kt("아니요.", "aniyo", "No."), kind: "lessNatural", whyEn: "Try another reply." };
+    const turnNode = (id, next) => ({ id, line: kt("뭐예요?", "mwoyeyo", "What is it?"), replies: [{ id: "a", text: kt("네.", "ne", "Yes."), kind: "natural", next }, nudge] });
+    const scene = (t3Next) => ({
+      title: kt("도서관", "doseogwan", "At the library"),
+      partner: kt("사서", "saseo", "librarian"),
+      start: "t1",
+      nodes: [turnNode("t1", "t2"), turnNode("t2", "t3"), turnNode("t3", t3Next), turnNode("t4", "end"), { id: "end", end: true, closingEn: "Well done!" }],
+    });
+    const withScene = (sc) => {
+      const cell = lessonCell();
+      cell.quests[0].steps[3].minigameKind = "role-play";
+      cell.quests[0].scopes[1] = { ref: "minigame:s2-rites-q1-apply", kind: "role-play", scene: sc };
+      return cell;
+    };
+    for (const [sc, ok] of [[scene("t4"), true], [scene("end"), false]]) {
+      const root = makeRoot();
+      try {
+        writeContent(root, "episodes/stage-2/rites.json", withScene(sc));
+        const r = run(root);
+        if (ok) assert.equal(r.status, 0, r.stdout + r.stderr);
+        else {
+          assert.equal(r.status, 1);
+          assert.match(r.stdout, /file=content\/episodes\/stage-2\/rites\.json::role-play-good-endings: node t4 cannot be reached from the start/);
+        }
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
     }
   });
 
@@ -726,26 +784,45 @@ describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
-  // F-CURR-002 §9.3 (row CM-7): the curriculum rules, warnings for Volume 1 and errors for Volume 2,
-  // packs and new stories; review-copy on the i18n review strings; the report-only rules.
+  // F-CURR-002 §9.3 (row CM-7): the curriculum rules, errors for Volume 1 (row CM-3B), Volume 2, packs and
+  // new stories and warnings for the shipped stories; review-copy on the i18n review strings; the report-only rules.
   const runWith = (root, env = {}, args = []) =>
     spawnSync("node", [SCRIPT, ...args], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, ...env }, encoding: "utf8" });
 
-  test("a Volume 1 cell gets F-CURR-002 warnings and passes; a Volume 2 cell with the same Checks fails", () => {
+  test("a Volume 1 cell with the same Checks fails as an error since row CM-3B, as a Volume 2 cell does", () => {
     const root = makeRoot();
     try {
-      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const sameChecks = { quests: [1, 2, 3].map((k) => lessonQuest(k, "listen-pick")) };
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell(sameChecks));
       const v1 = run(root);
-      assert.equal(v1.status, 0, v1.stdout + v1.stderr);
-      assert.match(v1.stdout, /::warning file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety: quests 1 and 2 both play listen-pick \/ card-match \/ listen-pick/);
+      assert.equal(v1.status, 1, v1.stdout + v1.stderr);
+      assert.match(v1.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety: quests 1 and 2 both play listen-pick \/ card-match \/ listen-pick/);
+      assert.match(v1.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety: the Check plays listen-pick with no read-meaning or produce round/);
+      assert.match(v1.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety: listen-pick is the game of 3 of the 3 stage2 Volume 1 Checks/);
+      assert.doesNotMatch(v1.stdout, /::warning file=content\/episodes\/stage-2\/rites\.json::lesson-check-variety/);
       assert.match(v1.stdout, /::notice::lesson-check-variety: Check rotation/);
       assert.match(v1.stdout, /::notice::culture-source: .*MAR: check each institution's name as of the source's access date/);
       assert.match(v1.stdout, /story-coverage \(report only\): 0 of 0 story tiers/);
-      writeContent(root, "episodes/stage-2/rites.v2.json", { ...lessonCell(), id: "episode:stage2-rites-v2", volume: 2 });
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      writeContent(root, "episodes/stage-2/rites.v2.json", { ...lessonCell(sameChecks), id: "episode:stage2-rites-v2", volume: 2 });
       const v2 = run(root);
       assert.equal(v2.status, 1);
       assert.match(v2.stdout, /::error file=content\/episodes\/stage-2\/rites\.v2\.json::lesson-check-variety: quests 1 and 2 both play listen-pick \/ card-match \/ listen-pick/);
       assert.match(v2.stdout, /::error file=content\/episodes\/stage-2\/rites\.v2\.json::lesson-culture-coverage/);
+      assert.doesNotMatch(v2.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a Volume 1 cell whose Checks rotate passes with no F-CURR-002 finding (row CM-3B)", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "episodes/stage-2/rites.json", lessonCell());
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      const curriculumRules = "lesson-new-load|lesson-check-variety|culture-source|dictation-unambiguous|story-order-text|review-copy|items-stable-id";
+      assert.doesNotMatch(r.stdout, new RegExp(`file=content/episodes/stage-2/rites\\.json::(${curriculumRules})`));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

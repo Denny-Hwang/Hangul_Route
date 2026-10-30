@@ -10,7 +10,9 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:bokjumeoni"],
+  "rewardCardIds": [
+    "card:bokjumeoni"
+  ],
   "quests": [
     {
       "id": "quest:stage2-rites-q1",
@@ -119,7 +121,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-rites-q1-check",
           "durationSeconds": 35
@@ -354,38 +356,8 @@
           "kind": "listen-pick",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "세배",
-                "romanization": "sebae",
-                "en": "New Year's bow"
-              },
-              "options": [
-                {
-                  "id": "sebae",
-                  "pictureRef": "card:sebae",
-                  "labelEn": "New Year's bow"
-                },
-                {
-                  "id": "tteokguk",
-                  "pictureRef": "card:tteokguk",
-                  "labelEn": "Rice-cake soup"
-                },
-                {
-                  "id": "bap",
-                  "pictureRef": "card:rice",
-                  "labelEn": "Rice"
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                }
-              ],
-              "answerId": "sebae"
-            },
-            {
-              "id": "r2",
+              "id": "see-seollal",
+              "promptShown": true,
               "prompt": {
                 "ko": "설날",
                 "romanization": "seollal",
@@ -394,38 +366,48 @@
               "options": [
                 {
                   "id": "seollal",
-                  "text": {
-                    "ko": "설날",
-                    "romanization": "seollal",
-                    "en": "Lunar New Year's Day"
-                  }
-                },
-                {
-                  "id": "hanbok",
-                  "text": {
-                    "ko": "한복",
-                    "romanization": "hanbok",
-                    "en": "traditional Korean clothes"
-                  }
+                  "pictureRef": "card:seollal",
+                  "labelEn": "Lunar New Year's Day"
                 },
                 {
                   "id": "san",
-                  "text": {
-                    "ko": "산",
-                    "romanization": "san",
-                    "en": "mountain"
-                  }
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
                 },
                 {
-                  "id": "hanguk",
-                  "text": {
-                    "ko": "한국",
-                    "romanization": "hanguk",
-                    "en": "Korea"
-                  }
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
                 }
               ],
               "answerId": "seollal"
+            },
+            {
+              "id": "see-hanbok",
+              "promptShown": true,
+              "prompt": {
+                "ko": "한복",
+                "romanization": "hanbok",
+                "en": "traditional Korean clothes"
+              },
+              "options": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
+                }
+              ],
+              "answerId": "hanbok"
             }
           ]
         }
@@ -539,8 +521,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-rites-q2-check",
           "durationSeconds": 35
         },
@@ -771,81 +753,27 @@
         },
         {
           "ref": "minigame:s2-rites-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "보름달",
-                "romanization": "boreumdal",
-                "en": "full moon"
-              },
-              "options": [
-                {
-                  "id": "boreumdal",
-                  "pictureRef": "card:moon",
-                  "labelEn": "Full moon"
-                },
-                {
-                  "id": "songpyeon",
-                  "pictureRef": "card:songpyeon",
-                  "labelEn": "Half-moon rice cake"
-                },
-                {
-                  "id": "tteokguk",
-                  "pictureRef": "card:tteokguk",
-                  "labelEn": "Rice-cake soup"
-                },
-                {
-                  "id": "san",
-                  "pictureRef": "card:mountain",
-                  "labelEn": "Mountain"
-                }
-              ],
-              "answerId": "boreumdal"
+              "id": "hear-chuseok",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              }
             },
             {
-              "id": "r2",
-              "prompt": {
+              "id": "hear-gajok",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "가족",
                 "romanization": "gajok",
                 "en": "family"
-              },
-              "options": [
-                {
-                  "id": "gajok",
-                  "text": {
-                    "ko": "가족",
-                    "romanization": "gajok",
-                    "en": "family"
-                  }
-                },
-                {
-                  "id": "hanguk",
-                  "text": {
-                    "ko": "한국",
-                    "romanization": "hanguk",
-                    "en": "Korea"
-                  }
-                },
-                {
-                  "id": "chuseok",
-                  "text": {
-                    "ko": "추석",
-                    "romanization": "chuseok",
-                    "en": "Chuseok, the autumn harvest festival"
-                  }
-                },
-                {
-                  "id": "boreumdal",
-                  "text": {
-                    "ko": "보름달",
-                    "romanization": "boreumdal",
-                    "en": "full moon"
-                  }
-                }
-              ],
-              "answerId": "gajok"
+              }
             }
           ]
         }
@@ -957,8 +885,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
           "minigameRef": "minigame:s2-rites-q3-check",
           "durationSeconds": 35
         },
@@ -1191,81 +1119,69 @@
         },
         {
           "ref": "minigame:s2-rites-q3-check",
-          "kind": "listen-pick",
-          "rounds": [
+          "kind": "pic-word-match",
+          "boards": [
             {
-              "id": "r1",
-              "prompt": {
-                "ko": "연",
-                "romanization": "yeon",
-                "en": "kite"
-              },
-              "options": [
+              "pairs": [
                 {
                   "id": "yeon",
                   "pictureRef": "card:kite",
-                  "labelEn": "Kite"
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
                 },
                 {
                   "id": "yunnori",
                   "pictureRef": "card:yutnori",
-                  "labelEn": "Yut game"
-                },
-                {
-                  "id": "sebae",
-                  "pictureRef": "card:sebae",
-                  "labelEn": "New Year's bow"
+                  "word": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
                 },
                 {
                   "id": "hanbok",
                   "pictureRef": "card:hanbok",
-                  "labelEn": "Hanbok"
-                }
-              ],
-              "answerId": "yeon"
-            },
-            {
-              "id": "r2",
-              "prompt": {
-                "ko": "복주머니",
-                "romanization": "bokjumeoni",
-                "en": "lucky pouch"
-              },
-              "options": [
-                {
-                  "id": "bokjumeoni",
-                  "text": {
-                    "ko": "복주머니",
-                    "romanization": "bokjumeoni",
-                    "en": "lucky pouch"
-                  }
-                },
-                {
-                  "id": "boreumdal",
-                  "text": {
-                    "ko": "보름달",
-                    "romanization": "boreumdal",
-                    "en": "full moon"
-                  }
-                },
-                {
-                  "id": "hanbok",
-                  "text": {
+                  "word": {
                     "ko": "한복",
                     "romanization": "hanbok",
                     "en": "traditional Korean clothes"
                   }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "word": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "word": {
+                    "ko": "떡국",
+                    "romanization": "tteokguk",
+                    "en": "rice-cake soup"
+                  }
                 },
                 {
                   "id": "gajok",
-                  "text": {
+                  "pictureRef": "word:family-family",
+                  "word": {
                     "ko": "가족",
                     "romanization": "gajok",
                     "en": "family"
                   }
                 }
-              ],
-              "answerId": "bokjumeoni"
+              ]
             }
           ]
         }
@@ -1279,6 +1195,13 @@
       "textEn": "Seollal is the first day of the year on the lunar calendar. Tteokguk, a clear soup of thinly sliced white rice cake, is the food most tied to the day.",
       "sources": [
         {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "‘설과 대보름은 음력 정월 초하루에서 보름까지 해당하며, 한 해의 시작을 기념하는 인류 보편적 ‘신년맞이 명절’이다.’ / ‘… 떡국을 먹는 풍속이 확인된다.’"
+        },
+        {
           "title": "설",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0028997",
@@ -1291,20 +1214,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0017198",
           "accessed": "2026-10-14",
           "quoteOrLocator": "정의: ‘맑은 장국에 가래떡을 얇게 썰어넣고 끓인 음식.’ 내용: ‘설날에 먹는 절식(節食)의 하나이다.’"
-        },
-        {
-          "title": "국가무형유산 설과 대보름",
-          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
-          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "‘설과 대보름은 음력 정월 초하루에서 보름까지 해당하며, 한 해의 시작을 기념하는 인류 보편적 ‘신년맞이 명절’이다.’ / ‘… 떡국을 먹는 풍속이 확인된다.’"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'first day of the lunar year' = encykorea 설 정의 (음력 1월 1일) and KHS 설과 대보름 (음력 정월 초하루); 'clear soup of thinly sliced white rice cake' = encykorea 떡국 정의 (맑은 장국에 가래떡을 얇게 썰어넣고); 'food most tied to the day' = encykorea 설 (세찬의 대표적인 음식인 떡국) and 떡국 (설날에 먹는 절식). Same facts as story seollal-new-year f1 and f6. Pages re-opened 2026-10-14, HTTP 200. Used in: q1 intro Hoya line, q1 Discover page 1.\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 설 (E0028997) and 떡국 (E0017198) and the KHS 설과 대보름 description (fetched via its HTML fragment); lunar 1/1 date, clear broth with thin-sliced garaetteok, and tteokguk as the representative 설 dish all confirmed; every quoteOrLocator string found on the page (KHS keeps the original spelling 새배). English is a paraphrase of Korean text, no wording copied. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 설 (E0028997) and 떡국 (E0017198) and the KHS 설과 대보름 description; lunar 1/1 and tteokguk as the dish of the day confirmed. KHS locator trimmed with an ellipsis to the part the note uses, so no source quote in the cell names an ancestral rite (OD-9). The ko 떡국 gloss, which shared a run with the encykorea 떡국 정의, now reuses the Stage 1 gloss. Pass."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'first day of the lunar year' = encykorea 설 정의 (음력 1월 1일) and KHS 설과 대보름 (음력 정월 초하루); 'clear soup of thinly sliced white rice cake' = encykorea 떡국 정의 (맑은 장국에 가래떡을 얇게 썰어넣고); 'food most tied to the day' = encykorea 설 (세찬의 대표적인 음식인 떡국) and 떡국 (설날에 먹는 절식). Same facts as story seollal-new-year f1 and f6. Pages re-opened 2026-10-14, HTTP 200. Used in: q1 intro Hoya line, q1 Discover page 1.\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 설 (E0028997) and 떡국 (E0017198) and the KHS 설과 대보름 description (fetched via its HTML fragment); lunar 1/1 date, clear broth with thin-sliced garaetteok, and tteokguk as the representative 설 dish all confirmed; every quoteOrLocator string found on the page (KHS keeps the original spelling 새배). English is a paraphrase of Korean text, no wording copied. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 설 (E0028997) and 떡국 (E0017198) and the KHS 설과 대보름 description; lunar 1/1 and tteokguk as the dish of the day confirmed. KHS locator trimmed with an ellipsis to the part the note uses, so no source quote in the cell names an ancestral rite (OD-9). The ko 떡국 gloss, which shared a run with the encykorea 떡국 정의, now reuses the Stage 1 gloss. Pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1312,6 +1228,13 @@
       "kind": "culture",
       "textEn": "Sebae is a deep bow to elders and the first greeting of the new year. For the day, people traditionally put on new clothes, called seolbim.",
       "sources": [
+        {
+          "title": "세배",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8%EB%B0%B0",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "세배(歲拜)「명사」: ‘섣달그믐이나 정초에 웃어른께 인사로 하는 절.’"
+        },
         {
           "title": "세배",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
@@ -1327,13 +1250,6 @@
           "quoteOrLocator": "‘설날에 입는 옷을 설빔이라 한다.’"
         },
         {
-          "title": "세배",
-          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8%EB%B0%B0",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "세배(歲拜)「명사」: ‘섣달그믐이나 정초에 웃어른께 인사로 하는 절.’"
-        },
-        {
           "title": "설빔",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%A4%EB%B9%94",
@@ -1345,7 +1261,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'deep bow to elders, first greeting of the new year' = encykorea 세배 정의 (윗사람에게 절을 하는 새해의 첫인사) and stdict 세배 (웃어른께 인사로 하는 절); 'new clothes called seolbim' = encykorea 설 (설날에 입는 옷을 설빔이라 한다) and stdict 설빔. The note names no ancestral rite (OD-9). Used in: q1 Discover page 2 (sebae note and caption).\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 세배 and 설 and stdict 세배 and 설빔; bow to elders as the first greeting of the year and new clothes called 설빔 confirmed (encykorea 세배 also says 새옷(설빔)). 'deep bow' reads 절 as the full bow; acceptable. No wording copied; no ancestral rite named. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 세배 and 설 and stdict 세배 and 설빔; bow to elders as the year's first greeting and seolbim confirmed; no ancestral rite named. The card:sebae art (folded hands over a pouch) no longer shares a scored round or board with card:seollal. Pass."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'deep bow to elders, first greeting of the new year' = encykorea 세배 정의 (윗사람에게 절을 하는 새해의 첫인사) and stdict 세배 (웃어른께 인사로 하는 절); 'new clothes called seolbim' = encykorea 설 (설날에 입는 옷을 설빔이라 한다) and stdict 설빔. The note names no ancestral rite (OD-9). Used in: q1 Discover page 2 (sebae note and caption).\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 세배 and 설 and stdict 세배 and 설빔; bow to elders as the first greeting of the year and new clothes called 설빔 confirmed (encykorea 세배 also says 새옷(설빔)). 'deep bow' reads 절 as the full bow; acceptable. No wording copied; no ancestral rite named. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 세배 and 설 and stdict 세배 and 설빔; bow to elders as the year's first greeting and seolbim confirmed; no ancestral rite named. The card:sebae art (folded hands over a pouch) no longer shares a scored round or board with card:seollal. Pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1443,6 +1359,13 @@
       "sources": [
         {
           "title": "연날리기",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%B0%EB%82%A0%EB%A6%AC%EA%B8%B0",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "연날리기「명사」: ‘바람을 이용하여 연을 하늘 높이 띄움. 또는 그런 놀이.’"
+        },
+        {
+          "title": "연날리기",
           "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
           "url": "https://encykorea.aks.ac.kr/Article/E0036725",
           "accessed": "2026-10-14",
@@ -1454,20 +1377,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0036663",
           "accessed": "2026-10-14",
           "quoteOrLocator": "정의: ‘바람을 이용하여 하늘에 띄우는 민속놀이 용구이다.’ / ‘겨울철부터 날리던 연에 정월보름날이 되면 ‘송액영복(送厄迎福)’이라는 글들을 써서’"
-        },
-        {
-          "title": "연날리기",
-          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%97%B0%EB%82%A0%EB%A6%AC%EA%B8%B0",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "연날리기「명사」: ‘바람을 이용하여 연을 하늘 높이 띄움. 또는 그런 놀이.’"
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'traditional game of the New Year season, busiest from New Year's Day to the first full moon' = encykorea 연날리기 (음력 정월 초하루에서부터 보름까지가 본격적; 정초부터 정월보름 사이에 성행) and encykorea 연 (겨울철부터 날리던 연, 정월보름날); definition = stdict 연날리기. The note leaves out the source's gender wording so it reads for every learner. Used in: q3 Discover page 1 caption 'New Year games'.\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 연날리기 and 연 and stdict 연날리기; New Year season and 정월 초하루 to 보름 as the main kite period confirmed. Fix: the source 1 locator labelled the second quote '요약'; on the page it is the media caption, relabelled '미디어 설명'. Gendered source wording correctly left out. No wording copied. Pass after locator fix.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 연날리기 and 연 and stdict 연날리기; New Year season and the 정월 초하루 to 보름 peak confirmed; the 미디어 설명 locator matches the page; gendered source wording left out. Pass."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'traditional game of the New Year season, busiest from New Year's Day to the first full moon' = encykorea 연날리기 (음력 정월 초하루에서부터 보름까지가 본격적; 정초부터 정월보름 사이에 성행) and encykorea 연 (겨울철부터 날리던 연, 정월보름날); definition = stdict 연날리기. The note leaves out the source's gender wording so it reads for every learner. Used in: q3 Discover page 1 caption 'New Year games'.\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 연날리기 and 연 and stdict 연날리기; New Year season and 정월 초하루 to 보름 as the main kite period confirmed. Fix: the source 1 locator labelled the second quote '요약'; on the page it is the media caption, relabelled '미디어 설명'. Gendered source wording correctly left out. No wording copied. Pass after locator fix.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 연날리기 and 연 and stdict 연날리기; New Year season and the 정월 초하루 to 보름 peak confirmed; the 미디어 설명 locator matches the page; gendered source wording left out. Pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     },
     {
@@ -1510,18 +1426,18 @@
       "textEn": "Elders who receive the New Year's bow answer with kind wishes, and may give children a little money, called sebaetdon.",
       "sources": [
         {
-          "title": "세배",
-          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
-          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "‘세배를 받는 이도 … 한마디씩 덕담을 한다.’ / ‘아이들에게는 술은 주지 않고 약간의 돈, 또는 떡과 과일을 준다.’"
-        },
-        {
           "title": "세뱃돈",
           "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
           "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%B8%EB%B1%83%EB%8F%88",
           "accessed": "2026-10-14",
           "quoteOrLocator": "세뱃-돈(歲拜돈)「명사」: ‘세뱃값으로 주는 돈.’"
+        },
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "‘세배를 받는 이도 … 한마디씩 덕담을 한다.’ / ‘아이들에게는 술은 주지 않고 약간의 돈, 또는 떡과 과일을 준다.’"
         },
         {
           "title": "덕담",
@@ -1535,7 +1451,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "pass 2 (author sourcing, 2026-10-14): 'answer with kind wishes' = encykorea 세배 (세배를 받는 이도 덕담을 한다) and stdict 덕담; 'may give children a little money' = encykorea 세배 (아이들에게는 약간의 돈, 또는 떡과 과일을 준다; 'may' because the source also names rice cakes and fruit); the word = stdict 세뱃돈. Same facts as story seollal-new-year f5. Used in: q3 Discover page 2 (sebaetdon note).\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 세배 and stdict 세뱃돈 and 덕담; elders answering the bow with 덕담 and giving children a little money (or rice cakes and fruit, hence 'may') confirmed; 세뱃돈 defined as money given for the bow. No wording copied. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 세배 and stdict 세뱃돈 and 덕담; kind wishes (덕담) and a little money or food for children confirmed; no amount named. Pass."
+        "notes": "pass 2 (author sourcing, 2026-10-14): 'answer with kind wishes' = encykorea 세배 (세배를 받는 이도 덕담을 한다) and stdict 덕담; 'may give children a little money' = encykorea 세배 (아이들에게는 약간의 돈, 또는 떡과 과일을 준다; 'may' because the source also names rice cakes and fruit); the word = stdict 세뱃돈. Same facts as story seollal-new-year f5. Used in: q3 Discover page 2 (sebaetdon note).\npass 2b (independent fact-check, 2026-10-14): re-opened encykorea 세배 and stdict 세뱃돈 and 덕담; elders answering the bow with 덕담 and giving children a little money (or rice cakes and fruit, hence 'may') confirmed; 세뱃돈 defined as money given for the bow. No wording copied. Pass.\npass 3 (MAR culture review, 2026-10-14): re-opened encykorea 세배 and stdict 세뱃돈 and 덕담; kind wishes (덕담) and a little money or food for children confirmed; no amount named. Pass.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],
@@ -1543,10 +1459,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR): card:moon and card:chuseok never share a round or board; card:sebae never shares one with card:seollal; q1 Apply builds 한복 and 한국 (no sound change); notes no longer repeat glosses; ko and es glosses aligned with Stage 1.",
-      "Culture (pass 5, MAR): every source re-opened; ko 떡국 and 보름달 glosses no longer copy a source; ko 가족 gloss names no household shape; n1 KHS locator trimmed so no quote names an ancestral rite (OD-9)."
+      "Culture (pass 5, MAR): every source re-opened; ko 떡국 and 보름달 glosses no longer copy a source; ko 가족 gloss names no household shape; n1 KHS locator trimmed so no quote names an ancestral rite (OD-9).",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Read Pick Meaning (설날, 한복; card:seollal never with card:sebae), q2 Dictation (추석, 가족: no sound change; 보름달 and 복주머니 stay out of Dictation, as their tensing is a sound change), q3 Pic-Word Match (연, 윷놀이, 한복; 윷놀이, 연, 가족; card:moon never with card:chuseok). No new culture claim.",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

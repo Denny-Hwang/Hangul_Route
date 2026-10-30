@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
+import type { View } from 'react-native';
 
 export type ChoiceCardState = 'idle' | 'correct' | 'wrong' | 'hint' | 'disabled';
 
@@ -33,4 +34,9 @@ export interface ChoiceCardProps {
   /** Already-localised accessible name; it should also name the outcome. */
   accessibilityLabel: string;
   testID?: string;
+  /**
+   * The pressable's node, for a screen that moves focus to this card (a DOM node on the web, a view for
+   * `AccessibilityInfo.setAccessibilityFocus` on native), as Button's `pressableRef`. Optional; nothing else changes.
+   */
+  pressableRef?: Ref<View>;
 }

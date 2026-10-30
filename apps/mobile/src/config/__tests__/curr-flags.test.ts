@@ -104,3 +104,14 @@ describe('F-CURR-002 flags (CM-2)', () => {
     for (const env of [...Object.values(ENV_OF), 'EXPO_PUBLIC_CURR_PACKS_OFF', 'EXPO_PUBLIC_CURR_GAMES_OFF']) expect(src, env).toContain(`process.env.${env}`);
   });
 });
+
+describe('ramp gate for game.my-story (row CM-38, section 12.2)', () => {
+  // A learner's My Story sentence goes to the device's speech engine; on the web a voice that is not on the device may
+  // send it to a network service. Until the privacy sign-off of the CM-38 decision record is given (or the audio
+  // controller limits `my-story` sources to on-device voices), My Story never plays by default. Raising this pct means
+  // that gate is cleared: update this test in the same reviewed change that clears it.
+  it('ships at built-in pct 0', async () => {
+    const flags = await reload();
+    expect(flags.currBuiltInPct('game.my-story')).toBe(0);
+  });
+});

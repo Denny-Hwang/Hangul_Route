@@ -171,10 +171,27 @@ export const QuestObjectSchema = z.object({
  * The game a Check step may use (F-QUEST-002 T4, amended by F-CURR-001 §3.11):
  * Listen & Pick, or for a `stage7` quest also Sentence Builder (`order-it`),
  * because Stage 7's skill is writing. The Check scope holds exactly 2 rounds.
+ * `stage2` (F-CURR-002 §7.1 Check rotation, row CM-3A S2): Listen & Pick (with its Read
+ * Pick Meaning round), Dictation (Type Hangul) and Pic-Word Match, so no game holds more
+ * than 40% of the stage's Checks.
+ * `stage3` (F-CURR-002 §7.1 Check rotation, row CM-3A S3): Cloze Pick and Sentence Builder
+ * (the S3 default Check) and Dictation (Type Hangul), so no game holds more than 40% of the
+ * stage's Checks.
+ * `stage4` (F-CURR-002 §7.1 Check rotation, row CM-3A S4): the default Dialogue reply pick
+ * (Tap to Respond, the line read with its replies), Cloze Pick and Sentence Builder, so no
+ * game holds more than 40% of the stage's Checks.
+ * `stage7` (F-CURR-002 §7.1 Check rotation, row CM-3A S7): also Write Frame (the default
+ * S7 Check) and Cloze Pick, so no game holds more than 40% of the stage's Checks.
  */
 export const CHECK_ROUNDS = 2;
 export function checkKindsFor(stage: StageKey): readonly MinigameKind[] {
-  return stage === 'stage7' ? ['listen-pick', 'order-it'] : ['listen-pick'];
+  if (stage === 'stage2') return ['listen-pick', 'type-hangul', 'pic-word-match'];
+  if (stage === 'stage3') return ['listen-pick', 'cloze-pick', 'order-it', 'type-hangul'];
+  if (stage === 'stage4') return ['listen-pick', 'tap-respond', 'cloze-pick', 'order-it'];
+  // F-CURR-002 §7.1 Check rotation (row CM-3A S6): a Stage 6 Check is a realia question (Realia Read, or Cloze Pick
+  // on a value read from the card) or Dictation (Type Hangul `hear`), so no game holds more than 40% of the Checks.
+  if (stage === 'stage6') return ['listen-pick', 'realia-read', 'cloze-pick', 'type-hangul'];
+  return stage === 'stage7' ? ['listen-pick', 'order-it', 'write-frame', 'cloze-pick'] : ['listen-pick'];
 }
 
 /** The quest-level step rules (F-QUEST-002 §3.1), shared by `QuestSchema` and `LessonQuestSchema`. */

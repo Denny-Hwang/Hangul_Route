@@ -69,6 +69,7 @@ pw.tmp*.config.*
 pw-tmp*.config.*
 playwright.tmp*.config.*
 playwright-tmp*.config.*
+playwright.*.local.config.*
 
 # Raw voice recordings stay local (public repo; F-AUDIO-004 §3.11)
 apps/mobile/recordings/

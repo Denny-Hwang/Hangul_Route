@@ -21,7 +21,8 @@ describe('console catalogue adapter over the shared catalogue', () => {
     expect(catalogLabel('episode', 'episode:stage1-letters')).toBe('Meet the Letters (3 quests)');
     expect(catalogLabel('episode', 'episode:stage1-rites')).toBe('New Year & Festivals (3 quests)');
     expect(catalogLabel('episode', 'episode:stage1-nature')).toBe('Tigers, Mountains, Moon (3 quests)');
-    expect(catalogLabel('episode', 'episode:stage1-crafts')).toBe('Yut, Kites & Paper (3 quests)');
+    // F-CURR-002 row CM-33 appends the letter-shapes quest.
+    expect(catalogLabel('episode', 'episode:stage1-crafts')).toBe('Yut, Kites & Paper (4 quests)');
   });
 
   it('labels an episode that is not released yet as coming soon, never as "0 quests"', () => {

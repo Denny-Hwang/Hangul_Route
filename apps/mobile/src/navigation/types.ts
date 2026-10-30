@@ -12,11 +12,15 @@ import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 import type { RoundSummary } from '../logic/vocab/stars';
 import type { RealiaReadE2eParams } from './realia-read-e2e';
+import type { StoryOrderE2eParams } from './story-order-e2e';
+import type { HiddenHeritageE2eParams } from './hidden-heritage-e2e';
 import type { VocabQuestionE2eParams } from './vocab-question-e2e';
 import type { SentenceE2eParams } from './sentence-builder-e2e';
 import type { TypeHangulE2eParams } from './type-hangul-e2e';
+import type { ClozePickE2eParams } from './cloze-pick-e2e';
 import type { TraceWordE2eParams } from './trace-word-e2e';
 import type { WriteFrameE2eParams } from './write-frame-e2e';
+import type { RolePlayE2eParams } from './role-play-e2e';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
@@ -169,6 +173,8 @@ export type RootStackParamList = {
   StageCheck: { stageKey: StageKey };
   /** F-CURR-002 row CM-22: the one retroactive summary of the stages finished earlier (no params). */
   StageRecap: undefined;
+  /** F-CURR-002 row CM-32: the Block Sprint, the optional one-minute bonus after Stage 1 (no params: nothing about the learner). */
+  DecodingSprint: undefined;
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: {
@@ -332,12 +338,19 @@ export type RootStackParamList = {
   SentenceBuilderE2e: SentenceE2eParams;
   /** Realia Read on a D-2 fixture realia (fixture builds only, F-CURR-001 G-2). */
   RealiaReadE2e: RealiaReadE2eParams;
+  /** F-CURR-002 row CM-36: the Hidden Heritage e2e entry (fixture builds only). */
+  HiddenHeritageE2e: HiddenHeritageE2eParams;
   /** Fixture builds only (`navigation/type-hangul-e2e.tsx`): Type Hangul on fixture rounds (F-CURR-001 G-3). */
   TypeHangulE2e: TypeHangulE2eParams;
   /** Fixture builds only (`navigation/trace-word-e2e.tsx`): Trace a Word on the spec's Stage 7 words. */
   TraceWordE2e: TraceWordE2eParams;
   /** Fixture builds only (`navigation/write-frame-e2e.tsx`): Write Frame on fixture rounds (F-CURR-001 G-5). */
   WriteFrameE2e: WriteFrameE2eParams;
+  /** Fixture builds only (`navigation/cloze-pick-e2e.tsx`): a Cloze Pick step on fixture rounds (F-CURR-002 row CM-30). */
+  ClozePickE2e: ClozePickE2eParams;
+  /** Fixture builds only (`navigation/story-order-e2e.tsx`): Story Order's step on fixture scopes (F-CURR-002 CM-34). */
+  StoryOrderE2e: StoryOrderE2eParams;
+  RolePlayE2e: RolePlayE2eParams;
   /**
    * [TV] The class update of one learner (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D4, TV-D5): what a teacher sees and
    * that a teacher may move the learner; OK records it. Behind the grown-up gate whenever the device needs one.

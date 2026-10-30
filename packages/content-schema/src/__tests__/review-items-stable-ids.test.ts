@@ -186,6 +186,21 @@ describe('buildReviewItems: merge and frozen ids', () => {
     expect(items[8]?.reply).toEqual({ ko: '네.', romanization: 'ne.', glossKey: 'minigame:s2-life-q1-play#dialogue.0.options.ne.gloss' });
   });
 
+  it('links two words said alike only because their vowels merged (개 / 게): neither is dictated (row CM-31 review)', () => {
+    const list = [
+      occ({ kind: 'lex', ko: '개', romanization: 'gae', en: 'dog', source: 'discover' }),
+      occ({ kind: 'lex', ko: '게', romanization: 'ge', en: 'crab', source: 'discover' }),
+      occ({ kind: 'lex', ko: '가', romanization: 'ga', en: 'edge', source: 'discover' }),
+    ];
+    const { items } = buildReviewItems(list, EMPTY_SNAPSHOT, vocab);
+    const byKo = new Map(items.map((i) => [i.ko, i]));
+    expect(byKo.get('개')?.homophoneOf).toEqual([byKo.get('게')?.id]);
+    expect(byKo.get('게')?.homophoneOf).toEqual([byKo.get('개')?.id]);
+    expect(byKo.get('개')?.formats).not.toContain('dictation');
+    expect(byKo.get('가')).toMatchObject({ homophoneOf: [] });
+    expect(byKo.get('가')?.formats).toContain('dictation');
+  });
+
   it('counts a later cell as teaching an item only when its Discover page shows it', () => {
     const list = [
       occ({ kind: 'lex', ko: '사과', en: 'apple', cell: 'episode:stage2-life', stage: 2 }),

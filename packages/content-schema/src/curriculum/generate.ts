@@ -212,10 +212,27 @@ const catalogQueuesOf = (
     return true;
   };
 
+  // An optional quest (a cell's `optionalQuestIds`, the Stage 1 additions of F-CURR-002 section 4.2) is queued in its
+  // place on the route, but never once a quest after it is done: an addition that ships later never puts the learner
+  // back behind where they already are on a refreshed route (the rule of the app's cursor, `nextQuestAfter`).
+  const optional = new Set(catalog.cells.flatMap((cell) => cell.optionalQuestIds ?? []));
+  const passed = new Set<string>();
+  if (optional.size > 0) {
+    let later = false;
+    const route = StageKeySchema.options.flatMap((stage) =>
+      (stage === 'stage1' ? CANONICAL_THEMES : themeOrder).flatMap((theme) => cellAt.get(`${stage}-${theme}`)?.questIds ?? []),
+    );
+    for (let i = route.length - 1; i >= 0; i -= 1) {
+      const id = route[i] as string;
+      if (later && optional.has(id)) passed.add(id);
+      if (done.has(id)) later = true;
+    }
+  }
+  const required = (cell: Catalog['cells'][number]): readonly string[] => cell.questIds.filter((id) => !optional.has(id));
   // With an exact set, the visit starts at the lowest stage that still has a ready lesson outside it.
   const open = p.placedOutQuestIds === undefined
     ? []
-    : catalog.cells.filter((cell) => cellIsReady(cell) && cell.questIds.some((id) => !done.has(id))).map((cell) => stageIndex(cell.stage));
+    : catalog.cells.filter((cell) => cellIsReady(cell) && required(cell).some((id) => !done.has(id))).map((cell) => stageIndex(cell.stage));
   const first = Math.min(stageIndex(p.level.stage), ...open);
   const stages = StageKeySchema.options.slice(first, stageIndex(endStage) + 1);
   for (const stage of stages) {
@@ -231,7 +248,7 @@ const catalogQueuesOf = (
         continue;
       }
       for (const questId of cell.questIds) {
-        if (skip(questId)) continue;
+        if (skip(questId) || passed.has(questId)) continue;
         if (unlocked.has(stage)) out.lessons.push({ kind: 'quest', id: questId });
         else out.locked.push(questId);
       }

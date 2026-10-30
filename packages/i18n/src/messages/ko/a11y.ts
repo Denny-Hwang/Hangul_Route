@@ -103,6 +103,7 @@ export const a11y = {
       close: (description: string) => `${description} 눌러서 닫기.`,
     },
     hearAgain: '소리 다시 듣기',
+    dictation: { speaker: '낱말 듣기' },
     picture: '그림',
     option: {
       correct: (label: string) => `정답: ${label}`,
@@ -129,6 +130,11 @@ export const a11y = {
       lookHere: '여기를 봐요',
       dir: { left: '왼쪽으로', right: '오른쪽으로' },
     },
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `문장: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `완성된 문장: ${sentence}. ${meaning}`,
+      blank: '빈칸',
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: '시프트, 다른 글자',
@@ -144,6 +150,31 @@ export const a11y = {
       either: (a: string, b: string) => `${a} 또는 ${b}`,
       particleFits: (particle: string, word: string) => `${word} 다음: ${particle}`,
       tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
+    rolePlay: {
+      log: '대화',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role}의 말: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `내 대답: ${line}, ${romanization}`,
+    },
+    // A Korean screen reader names the jamo itself (ㅂ is read 비읍), so the RR name is not added.
+    syllableBuild: {
+      tile: (jamo: string, _name: string) => `글자 ${jamo}`,
+      finalTile: (jamo: string, _name: string) => `받침 ${jamo}`,
+      noFinal: '받침 없음',
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part} 자리, 비어 있음` : `${part} 자리: ${filled}`),
+      marked: (label: string) => `${label}, 다시 들어 봐요`,
+      block: (ko: string, romanization: string) => `글자 덩어리 ${ko}, ${romanization}, 완성`,
+      meaning: (gloss: string) => `뜻: ${gloss}`,
+    },
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, _name: string) => `글자 ${letter}`,
+      found: (letter: string, _name: string, sound: string) => `글자 ${letter}, ${sound}, 찾았어요`,
+      pairHeading: (letter: string, _name: string, sound: string) => `글자 ${letter}, ${sound}: 모두 찾아 눌러요`,
+      sounds: (first: string, second: string) => `${first} 또는 ${second}`,
+    },
+    myStory: {
+      soFar: (lines: number) => `지금까지 쓴 내 이야기, ${lines}줄`,
     },
   },
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
@@ -288,6 +319,7 @@ export const a11y = {
     timerLeft: (t: string) => `남은 시간: ${t}`,
     slot: '빈칸',
     tilePlaced: (word: string) => `놓은 낱말: ${word}`,
+    rolePlayClass: (line: string) => `우리 반의 대답: ${line}`,
   },
   /** [OA] 선택 화면의 접근성 이름 (OA-4a, 17.2): 이름 뒤에는 조사 대신 쌍점. */
   who: {
@@ -320,5 +352,14 @@ export const a11y = {
   },
   stageCheck: {
     best: (stars: number) => `단계 확인, 가장 좋은 결과 별 ${stars}개`,
+  },
+  hiddenHeritage: {
+    foundLive: (gloss: string) => `찾았어요: ${gloss}`,
+    spotFound: (gloss: string) => `${gloss}, 찾았어요`,
+    slotEmpty: '아직 비어 있어요',
+  },
+  yutReview: {
+    board: '윷판',
+    throw: (ko: string, romanization: string, n: number) => `던진 결과: ${ko}, ${romanization}. 말이 ${n}칸 움직였어요.`,
   },
 } satisfies DeepPartial<Messages['a11y']>;

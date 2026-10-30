@@ -68,63 +68,77 @@ interface CellRow {
  * Section 1, verbatim, with the rows the LV-S rows lowered (LV-S1: no Discover item flattened; LV-S2:
  * no listen-pick, tap-respond or realia-read step skipped, and each cell's question floor raised to
  * what it builds now; LV-S3: no order-it step skipped; LV-S4: no step skipped at all). Stage 5 is the five books together.
+ * F-CURR-002 row CM-3A S2: each Stage 2 cell's floor is 2 lower for each of its Checks that is now Dictation (one in
+ * letters, rites and crafts, two in life and nature), whose 2 rounds are write-together slides (counted below), not
+ * question slides; no round lost its slide.
+ * Row CM-3A S6 (F-CURR-002 section 7.1 Check rotation): the Dictation Checks of Stage 6 Letters q3, Life q3, Rites q3 and
+ * Nature q2 are write-together slides now, not question slides, so those cells' question floors are 2 lower and the
+ * type-hangul write slides 8 more; their Realia Read and Cloze Pick value Checks stay question slides. Crafts q3's Apply
+ * is Role Play at the stall now (row CM-35's role-play slides, not the four Tap & Respond question slides), so the
+ * crafts floor is 4 lower.
  */
+// Row CM-3A S3 (F-CURR-002 section 7.1) lowered the Stage 3 question floors: the Sentence Builder and Dictation Checks
+// of the rotation are sentence-build and write-together slides now (each round keeps a slide of its own, counted below),
+// and a Cloze Pick Check is two question slides, as its Listen & Pick Check was.
+// Row CM-3A S4 (F-CURR-002 section 7.1) raised the Stage 4 floors to what the cells build now: with `game.role-play` off
+// a Role Play plays as the reply slides of its main path, and the Cloze Pick and Realia Read rounds are quiz slides; the
+// Sentence Builder and Story Order rounds are sentence-build and sentence slides (each round keeps a slide of its own).
 const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage1:letters': { quests: 3, slides: 43, wordCards: 0, differentWords: 0, quiz: 25, skipped: {}, flattened: {} },
   'stage1:life': { quests: 3, slides: 49, wordCards: 12, differentWords: 12, quiz: 25, skipped: {}, flattened: {} },
   'stage1:rites': { quests: 3, slides: 36, wordCards: 4, differentWords: 4, quiz: 23, skipped: {}, flattened: {} },
   'stage1:nature': { quests: 3, slides: 32, wordCards: 16, differentWords: 14, quiz: 24, skipped: {}, flattened: {} },
-  'stage1:crafts': { quests: 3, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
-  'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 16, skipped: {}, flattened: {} },
-  'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 19, skipped: {}, flattened: {} },
-  'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 20, skipped: {}, flattened: {} },
-  'stage2:nature': { quests: 3, slides: 84, wordCards: 70, differentWords: 17, quiz: 15, skipped: {}, flattened: {} },
-  'stage2:crafts': { quests: 3, slides: 83, wordCards: 78, differentWords: 18, quiz: 28, skipped: {}, flattened: {} },
+  'stage1:crafts': { quests: 4, slides: 38, wordCards: 20, differentWords: 17, quiz: 18, skipped: {}, flattened: {} },
+  'stage2:letters': { quests: 6, slides: 172, wordCards: 139, differentWords: 75, quiz: 14, skipped: {}, flattened: {} },
+  'stage2:life': { quests: 3, slides: 86, wordCards: 76, differentWords: 19, quiz: 15, skipped: {}, flattened: {} },
+  'stage2:rites': { quests: 3, slides: 83, wordCards: 70, differentWords: 15, quiz: 18, skipped: {}, flattened: {} },
+  'stage2:nature': { quests: 3, slides: 84, wordCards: 70, differentWords: 17, quiz: 11, skipped: {}, flattened: {} },
+  'stage2:crafts': { quests: 3, slides: 83, wordCards: 78, differentWords: 18, quiz: 26, skipped: {}, flattened: {} },
   'stage3:letters': {
-    quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 18,
+    quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 14,
     skipped: {},
     flattened: {},
   },
-  'stage3:life': { quests: 3, slides: 53, wordCards: 48, differentWords: 31, quiz: 6, skipped: {}, flattened: {} },
+  'stage3:life': { quests: 3, slides: 53, wordCards: 48, differentWords: 31, quiz: 4, skipped: {}, flattened: {} },
   'stage3:rites': {
-    quests: 3, slides: 19, wordCards: 14, differentWords: 14, quiz: 18,
+    quests: 3, slides: 19, wordCards: 14, differentWords: 14, quiz: 14,
     skipped: {},
     flattened: {},
   },
   'stage3:nature': {
-    quests: 3, slides: 17, wordCards: 12, differentWords: 12, quiz: 18,
+    quests: 3, slides: 17, wordCards: 12, differentWords: 12, quiz: 14,
     skipped: {},
     flattened: {},
   },
-  'stage3:crafts': { quests: 3, slides: 53, wordCards: 48, differentWords: 15, quiz: 10, skipped: {}, flattened: {} },
-  'stage4:letters': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 15, skipped: {}, flattened: {} },
-  'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 15, skipped: {}, flattened: {} },
+  'stage3:crafts': { quests: 3, slides: 53, wordCards: 48, differentWords: 15, quiz: 6, skipped: {}, flattened: {} },
+  'stage4:letters': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 25, skipped: {}, flattened: {} },
+  'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 18, skipped: {}, flattened: {} },
+  'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 16, skipped: {}, flattened: {} },
+  'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 25, skipped: {}, flattened: {} },
+  'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 16, skipped: {}, flattened: {} },
   stage5: { quests: 14, slides: 186, wordCards: 0, differentWords: 0, quiz: 42, skipped: {}, flattened: {} },
   'stage6:letters': {
-    quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 18,
+    quests: 3, slides: 16, wordCards: 11, differentWords: 11, quiz: 16,
     skipped: {},
     flattened: {},
   },
   'stage6:life': {
-    quests: 3, slides: 33, wordCards: 28, differentWords: 27, quiz: 27,
+    quests: 3, slides: 33, wordCards: 28, differentWords: 27, quiz: 25,
     skipped: {},
     flattened: {},
   },
   'stage6:rites': {
-    quests: 3, slides: 22, wordCards: 17, differentWords: 17, quiz: 21,
+    quests: 3, slides: 22, wordCards: 17, differentWords: 17, quiz: 19,
     skipped: {},
     flattened: {},
   },
   'stage6:nature': {
-    quests: 3, slides: 20, wordCards: 15, differentWords: 15, quiz: 22,
+    quests: 3, slides: 20, wordCards: 15, differentWords: 15, quiz: 20,
     skipped: {},
     flattened: {},
   },
   'stage6:crafts': {
-    quests: 3, slides: 23, wordCards: 18, differentWords: 17, quiz: 22,
+    quests: 3, slides: 23, wordCards: 18, differentWords: 17, quiz: 18,
     skipped: {},
     flattened: {},
   },
@@ -359,7 +373,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
       }
     }
     // Section 1: type-hangul 21 steps holding 73 rounds, write-frame 7 holding 21, trace-word 5 holding 20; one write-frame round is the name round.
-    expect({ rounds, ...counts }).toEqual({ rounds: 114, type: 73, trace: 20, frame: 20, 'own-name': 1 });
+    // Rows CM-3A S2, S3 and S6 add the seven Stage 2 Dictation Checks (14 rounds), the four Stage 3 Dictation Checks (8
+    // rounds) and the four Stage 6 Dictation Checks (8 rounds); row CM-3A S7 makes five Stage 7 Checks Write Frame (10).
+    expect({ rounds, ...counts }).toEqual({ rounds: 154, type: 103, trace: 20, frame: 30, 'own-name': 1 });
   });
 
   it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {
@@ -385,8 +401,11 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
         }
       }
     }
-    // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30.
-    expect({ rounds, built }).toEqual({ rounds: 135, built: 135 });
+    // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S3 adds the five
+    // Stage 3 Sentence Builder Checks (10 rounds), row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
+    // Stage 4 Sentence Builder Checks (8 rounds), and row CM-3A S7 keeps 5 of the Stage 7 Checks as Sentence Builder
+    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation).
+    expect({ rounds, built }).toEqual({ rounds: 145, built: 145 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {

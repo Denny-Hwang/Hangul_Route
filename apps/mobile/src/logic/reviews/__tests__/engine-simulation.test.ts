@@ -31,9 +31,13 @@ const lateDays = (sim: Sim) => sim.days.filter((d) => d.day >= 29);
 const series = (sim: Sim, key: 'pool' | 'left' | 'answered') => `${key} by day: ${sim.days.map((d) => d[key]).join(' ')}`;
 const median = (values: readonly number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] as number;
 
-/** Pins of what the S-a readings cost (measured on this build: opening pool at most 71, review-first on 26-27 of days 30-60, a median of 55-57 answers a day). */
+/**
+ * Pins of what the S-a readings cost (measured on this build: opening pool at most 71, review-first on 26-27 of days
+ * 30-60, a median of 55-57 answers a day). Row CM-33's Stage 1 addition (one more quest a day before Stage 2, asking six
+ * letters again) moves seed 4 to review-first on 29 of days 30-60, so that pin is 29 (it was 28).
+ */
 const OPENING_POOL_MAX = 80;
-const REVIEW_FIRST_LATE_DAYS_MAX = 28;
+const REVIEW_FIRST_LATE_DAYS_MAX = 29;
 const ANSWERED_MEDIAN_MAX = 60;
 
 describe('S-a: one quest a day, the Daily Review every day, Keep going on days the pool is over 20', () => {
@@ -57,6 +61,20 @@ describe('S-a: one quest a day, the Daily Review every day, Keep going on days t
       expect(Math.max(...late.map((d) => d.pool)), series(sim, 'pool')).toBeLessThanOrEqual(OPENING_POOL_MAX);
       expect(late.filter((d) => d.reviewFirst).length, series(sim, 'pool')).toBeLessThanOrEqual(REVIEW_FIRST_LATE_DAYS_MAX);
       expect(median(late.map((d) => d.answered)), series(sim, 'answered')).toBeLessThanOrEqual(ANSWERED_MEDIAN_MAX);
+    });
+  }
+
+  for (const seed of SEEDS) {
+    it(`seed ${seed}: holds with game.syllable-build on too (row CM-32): the pool line and G2 with Syllable Build in the surface index, and no due item dropped`, () => {
+      const sim = new Sim(seed, { ...DEFAULT_KNOBS, games: true });
+      scenarioA(sim, DAYS);
+      const late = lateDays(sim);
+      expect(late.filter((d) => d.left <= POOL_LINE).length / late.length, series(sim, 'left')).toBeGreaterThanOrEqual(0.9);
+      const introduced = [...sim.intro].filter(([, day]) => day < 30).map(([id]) => id);
+      expect(introduced.length).toBeGreaterThan(150);
+      const g2 = introduced.filter((id) => sim.spacedWithin(id, 30) >= 3).length / introduced.length;
+      expect(g2).toBeGreaterThanOrEqual(0.7);
+      expect(sim.dropped).toBe(0);
     });
   }
 
@@ -86,6 +104,15 @@ describe('S-b: two quests a day; on review-first days the Daily Review and Keep 
       expect(sim.days.some((d) => d.reviewFirst)).toBe(true);
     });
   }
+
+  it('holds with game.syllable-build on too (row CM-32), and no due item dropped', () => {
+    const sim = new Sim(1, { ...DEFAULT_KNOBS, games: true });
+    scenarioB(sim, DAYS);
+    const [day30, day60] = [sim.days[29], sim.days[59]];
+    expect(day60?.left, series(sim, 'left')).toBeLessThanOrEqual((day30?.left ?? 0) + 30);
+    expect(day60?.pool, series(sim, 'pool')).toBeLessThanOrEqual((day30?.pool ?? 0) + 30);
+    expect(sim.dropped).toBe(0);
+  });
 });
 
 describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {

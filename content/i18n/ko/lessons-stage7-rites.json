@@ -5,7 +5,13 @@
     "episode:stage7-rites": {
       "title": "특별한 날의 추억",
       "subtitle": "특별한 날에 먹고, 만들고, 본 것을 써요.",
-      "hoyaIntro": "특별한 날은 좋은 추억이 돼요. 그날의 추억을 써 봐요!"
+      "hoyaIntro": "특별한 날은 좋은 추억이 돼요. 그날의 추억을 써 봐요!",
+      "culture.n1.text": "지난 일은 어간의 마지막 모음이 {ko:ㅏ}나 {ko:ㅗ}일 때 {ko:았어요}, 그 밖의 모음일 때 {ko:었어요}로 끝나요. {ko:먹었어요}, {ko:만들었어요}처럼요. {ko:보았어요}는 줄여서 {ko:봤어요}로 쓸 수 있어요.",
+      "culture.n2.text": "날이나 때를 나타내는 말 뒤에 붙은 {ko:에}는 언제 일어나는 일인지 알려 줘요. {ko:설날에}처럼 써요.",
+      "culture.n3.text": "받침이 있는 말 뒤에는 {ko:이에요}, 받침이 없는 말 뒤에는 {ko:예요}를 써요. {ko:생일이에요}처럼요.",
+      "culture.n4.text": "가래떡을 썰어 넣고 끓인 떡국은 설날을 대표하는 음식이에요.",
+      "culture.n5.text": "추석에는 가족이 모여 함께 송편을 빚는 경우가 많아요.",
+      "culture.n6.text": "추석은 오래전부터 보름달과 깊은 관련이 있어서 '달의 명절'이라고 불리기도 했어요."
     },
     "quest:stage7-rites-q1": {
       "title": "떡국을 먹은 날",
@@ -95,8 +101,14 @@
       "typeHangul.rounds.t4.target.gloss": "가래떡을 얇게 썰어 넣고 끓인 국"
     },
     "minigame:s7-rites-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "반달 모양 떡을 먹은 일",
-      "orderIt.rounds.c2.sentence.gloss": "크고 둥근 달을 본 일"
+      "clozePick.rounds.c1.sentence.gloss": "반달 모양 떡을 먹은 일",
+      "clozePick.rounds.c2.sentence.gloss": "크고 둥근 달을 본 일",
+      "clozePick.rounds.c1.tiles.meogeosseoyo.gloss": "먹은 일을 말하는 말",
+      "clozePick.rounds.c1.tiles.bwasseoyo.gloss": "본 일을 말하는 말",
+      "clozePick.rounds.c1.tiles.mandeureosseoyo.gloss": "만든 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.meogeosseoyo.gloss": "먹은 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.bwasseoyo.gloss": "본 일을 말하는 말",
+      "clozePick.rounds.c2.tiles.mandeureosseoyo.gloss": "만든 일을 말하는 말"
     },
     "minigame:s7-rites-q2-practice": {
       "traceWord.rounds.w1.word.gloss": "음력 1월 1일, 새해 첫날 명절",
@@ -171,8 +183,17 @@
       "writeFrame.rounds.f3.slots.what.bank.boreumdal.gloss": "보름날 밤의 둥근 달"
     },
     "minigame:s7-rites-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "내 마음에 가장 드는 날이 가을 보름 명절이라는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "새해 첫날 명절에 가래떡을 넣은 국을 먹은 일"
+      "writeFrame.rounds.c1.frame.gloss": "호야가 가장 좋아하는 날: ___",
+      "writeFrame.rounds.c1.slots.day.bank.seollal.gloss": "새해 첫날 명절",
+      "writeFrame.rounds.c1.slots.day.bank.chuseok.gloss": "가을 보름 명절",
+      "writeFrame.rounds.c1.slots.day.bank.jumal.gloss": "토요일과 일요일",
+      "writeFrame.rounds.c2.frame.gloss": "___에 호야가 만든 것: ___",
+      "writeFrame.rounds.c2.slots.day.bank.seollal.gloss": "새해 첫날 명절",
+      "writeFrame.rounds.c2.slots.day.bank.chuseok.gloss": "가을 보름 명절",
+      "writeFrame.rounds.c2.slots.thing.bank.songpyeon.gloss": "반달 모양 떡",
+      "writeFrame.rounds.c2.slots.thing.bank.tteok.gloss": "곡식 가루를 쪄서 만든 음식",
+      "writeFrame.rounds.c2.slots.thing.bank.keikeu.gloss": "구워 만든 달콤한 서양 과자",
+      "writeFrame.rounds.c2.slots.day.bank.jumal.gloss": "토요일과 일요일"
     }
   }
 }

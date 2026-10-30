@@ -1,3 +1,5 @@
+import { isReadPickScope, isSpellingRound, spellingPickToListenPick } from '@hangul-route/content-schema';
+import { romanizationShown } from '@hangul-route/i18n';
 import {
   Body,
   Button,
@@ -16,11 +18,12 @@ import {
   radii,
   spacing,
   touchTarget,
+  layout,
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -44,11 +47,13 @@ import {
 } from '../../logic/listen-pick-flow';
 import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
+import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { hasClip, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
+import type { DictationKit } from './dictation-entry';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -72,6 +77,29 @@ interface Props {
   onBack?: () => void;
   /** The scaffold round (F-CURR-002 section 4.6, row CM-24): the right card is ringed from the start, under this line. */
   hint?: string;
+  /** Text prompt mode (row CM-30); absent, the game is unchanged. */
+  textPrompt?: ListenPickTextPrompt;
+  /**
+   * The dictation chunk, when the scope has spelling rounds with `game.spelling-pick` on (F-CURR-002 section 4.5, row
+   * CM-31): their picture and meaning, and option labels spelled by letter name. Without it a spelling round plays as
+   * its Listen & Pick fallback.
+   */
+  spelling?: DictationKit | null;
+}
+
+/**
+ * Listen & Pick's text prompt mode (F-CURR-002 row CM-30, design/wireframes/minigame/cloze-pick.md "Fallback round"):
+ * the round Cloze Pick renders when `game.cloze-pick` is off (and Match Shape's Read Pick later). No speaker and no
+ * sound before the answer: `prompt` draws the round's prompt as text under `heading`, and the voice says the prompt's
+ * `spokenKo` once after the right answer (the status panel says why when it cannot). Same options, answer and scoring.
+ */
+export interface ListenPickTextPrompt {
+  /** Replaces "Listen, then pick". */
+  heading: string;
+  /** Hoya after a miss, in place of "Listen again". */
+  missLine: string;
+  /** The prompt as text; it receives focus from round 2 on. */
+  prompt: (round: ListenPickRound, focusRef: (node: unknown) => void) => ReactNode;
 }
 
 /**
@@ -85,9 +113,15 @@ interface Focusable {
   focus?: () => void;
 }
 
-export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactElement {
+/** A spelling round's options this short (in glyphs) sit two up at any width (row CM-31). */
+const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
+
+export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
-  const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
+  const rounds = useMemo(
+    () => validRounds(scope).map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i)),
+    [scope, seed, spelling],
+  );
 
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -112,8 +146,41 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   roundsRef.current = rounds;
   const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
 
-  // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot.
-  const slot = usePromptSlot({ source: LISTEN_PICK_AUDIO_SOURCE, hasClip: hasClip(rounds[state.roundIdx]?.prompt.audioRef) });
+  // The round's sound, or the same prompt as text (F-AUDIO-004 §3.8); a new round is a new slot. The spelling round
+  // prints its meaning, never its Korean (the answer), so it shows only the status panel (W11); the text prompt mode
+  // (row CM-30) draws its prompt as text.
+  // Read Pick Meaning (F-CURR-002 section 7.1, the default Stage 2 Check; row CM-3A S2): a scope whose rounds show their
+  // Korean prompt (`promptShown`) plays in the text prompt mode, the Korean read in the learner's romanization mode, under
+  // the shipped "What does this mean?" heading and the picture miss line; the word is said once after the right pick.
+  const textPrompt: ListenPickTextPrompt | undefined =
+    textPromptProp ??
+    (isReadPickScope(rounds)
+      ? {
+          heading: copy.cultureQuiz.heading,
+          missLine: copy.picWord.missHoya,
+          prompt: (r, focusRef) => (
+            <View ref={focusRef} style={{ alignItems: 'center' }} testID="listen-pick-text-prompt">
+              <KoreanText
+                ko={r.prompt.ko}
+                romanization={r.prompt.romanization}
+                romanizationShown={romanizationShown(romanizationMode, false)}
+                size="md"
+                testID="listen-pick-prompt-text"
+              />
+            </View>
+          ),
+        }
+      : undefined);
+  const textMode = textPrompt !== undefined;
+  const textModeRef = useRef(textMode);
+  textModeRef.current = textMode;
+  const current = rounds[state.roundIdx];
+  const spellingNow = !textMode && spelling !== null && current !== undefined && isSpellingRound(current);
+  const slot = usePromptSlot({
+    source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
+    hasClip: hasClip(current?.prompt.audioRef),
+    textOnScreen: spellingNow || textMode,
+  });
   const { play: slotPlay, reset: slotReset } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
@@ -125,6 +192,11 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         const current = stateRef.current;
         const round = roundsRef.current[current.roundIdx];
         if (!round) return;
+        // Text prompt mode: nothing is said before the answer (it would answer the round), only the completed prompt
+        // after it: the confirm, and a tap on the status panel once the round is answered (sound turned on, a blocked
+        // play tapped again).
+        const answered = current.status === 'resolved' || current.status === 'done';
+        if (textModeRef.current && effect.why !== 'confirm' && !(effect.why === 'manual' && answered)) return;
         // The 800 ms replay after a wrong tap waits while the text stands in for a sound that is off or absent.
         if (effect.why === 'replay' && !shouldAutoReplay(viewRef.current)) return;
         // The autoplay opens a new round: a new prompt slot, so last round's text does not carry over.
@@ -217,7 +289,16 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
   }
 
   const header = headerView(host.mode, state, copy);
-  const prompt = promptView(round, state, host.mode, slot.view.textShown);
+  const spellingKit = spellingNow ? spelling : null;
+  // The spelling round's Korean is its answer: a sound that cannot play (no voice, sound off) shows only the status
+  // panel, never the prompt text, until the round resolves.
+  const prompt = promptView(
+    round,
+    spellingKit === null ? state : { ...state, textPrompt: false },
+    host.mode,
+    spellingKit === null ? slot.view.textShown || textMode : false,
+  );
+  const resolved = state.status === 'resolved' || state.status === 'done';
   const hear = (): void => dispatch({ type: 'hear' });
   // The speaker says the state when the sound is off or needs a tap (F-AUDIO-004 W4).
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
@@ -230,8 +311,27 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
     arrangement === 'side' &&
     !twoUpFits(answersColumnWidth(layoutClass, arrangement, spacing.xl), spacing.md, art + CARD_CHROME)
       ? 1
-      : optionColumns(round, width);
+      : spellingKit !== null && round.options.every((o) => [...(o.text?.ko ?? '')].length <= SPELLING_SIDE_BY_SIDE_GLYPHS)
+        ? // The spelling round's options are short spellings to compare: side by side even on a 320 phone, so both
+          // are on the first screen (row CM-31).
+          2
+        : optionColumns(round, width);
+  // Below 640 tall the spelling round's speaker is its one sound control (it replays on every tap), as the design's
+  // single [ (speaker) Hear it ] reads, so the meaning, the speaker and both spellings fit the first screen.
+  const hearAgainShown = spellingKit === null || !(layoutClass.windowHeight > 0 && layoutClass.windowHeight < layout.compactHeight);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
+  const textContent = textPrompt ? (
+    <View style={{ gap: spacing.md }}>
+      {textPrompt.prompt(round, (node) => {
+        speakerRef.current = node as Focusable | null;
+      })}
+      {resolved ? (
+        <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} onHelp={() => setHelpOpen(true)} testID="listen-pick-prompt" />
+      ) : null}
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+    </View>
+  ) : null;
+  const optionContext = { mode: host.mode, romanizationMode, ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }) };
 
   return (
     <Screen tone="canvas">
@@ -252,7 +352,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
         arrangement={arrangement}
         prompt={
           <>
-            <Heading level="prompt">{copy.listenPick.heading}</Heading>
+            <Heading level="prompt">{textPrompt ? textPrompt.heading : spellingKit === null ? copy.listenPick.heading : copy.spellingPick.heading}</Heading>
             {hint ? (
               <Body tone="secondary" testID="listen-pick-hint">
                 {hint}
@@ -260,7 +360,8 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             ) : null}
             <Spacer size="md" />
 
-            <View style={{ alignItems: 'center', gap: spacing.md }}>
+            {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
+              {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
                 <Pressable
                   ref={(node) => {
@@ -285,15 +386,17 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
                   <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
                 </Pressable>
               </Animated.View>
-              <View style={{ alignSelf: 'center' }}>
-                <Button
-                  label={copy.listenPick.hearAgain.cta}
-                  tone="secondary"
-                  size="md"
-                  onPress={hear}
-                  testID="listen-pick-hear-again"
-                />
-              </View>
+              {hearAgainShown ? (
+                <View style={{ alignSelf: 'center' }}>
+                  <Button
+                    label={copy.listenPick.hearAgain.cta}
+                    tone="secondary"
+                    size="md"
+                    onPress={hear}
+                    testID="listen-pick-hear-again"
+                  />
+                </View>
+              ) : null}
 
               <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
                 {prompt.content ? (
@@ -308,21 +411,31 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
               </View>
               {/* The Korean is drawn just above, so the panel carries the read line, why and the one action. */}
               <View style={{ alignSelf: 'stretch' }}>
-                <PromptPanel
-                  view={slot.view}
-                  onAction={(action) => slot.act(action, hear)}
-                  onHelp={() => setHelpOpen(true)}
-                  testID="listen-pick-prompt"
-                />
+                {spellingKit === null ? (
+                  <PromptPanel
+                    view={slot.view}
+                    onAction={(action) => slot.act(action, hear)}
+                    onHelp={() => setHelpOpen(true)}
+                    testID="listen-pick-prompt"
+                  />
+                ) : (
+                  <PromptPanel
+                    view={slot.view}
+                    variant="status"
+                    onAction={(action) => slot.act(action, hear)}
+                    onHelp={() => setHelpOpen(true)}
+                    testID="listen-pick-prompt"
+                  />
+                )}
               </View>
               <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
-            </View>
+            </View>}
           </>
         }
         answers={
           <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
             {round.options.map((option) => {
-              const view = optionView(round, option, state, { mode: host.mode, romanizationMode }, m.a11y.minigame);
+              const view = optionView(round, option, state, optionContext, m.a11y.minigame);
               return (
                 <View
                   key={option.id}
@@ -352,7 +465,7 @@ export function ListenPickGame({ scope, host, onBack, hint }: Props): ReactEleme
             {showMissHoya ? (
               <>
                 <Spacer size="lg" />
-                <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
+                <HoyaBubble tone="thinking" message={textPrompt ? textPrompt.missLine : spellingKit === null ? copy.listenPick.missHoya : copy.spellingPick.miss} />
               </>
             ) : null}
           </View>

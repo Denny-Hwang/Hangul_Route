@@ -96,6 +96,14 @@ describe('what a round asked', () => {
     expect(askedOfScope(scope, 'nope')).toBeUndefined();
   });
 
+  it('Listen & Pick: a Read Pick Meaning round (row CM-3A S2) shows its Korean, so it asks its prompt at read', () => {
+    const scope = {
+      kind: 'listen-pick',
+      listenPick: { rounds: [{ id: 'see-baram', promptShown: true, prompt: ko('바람'), options: [], answerId: 'a' }] },
+    } as unknown as MinigameScope;
+    expect(askedOfScope(scope, 'see-baram')).toEqual({ texts: [{ ko: '바람' }], jamoIds: [], rung: 'read' });
+  });
+
   it('Pic-Word Match reads, Sentence Builder, Type Hangul and Write a Frame produce', () => {
     const pic = { kind: 'pic-word-match', picWord: { boards: [{ pairs: [{ id: 'p1', word: ko('배') }] }] } } as unknown as MinigameScope;
     expect(askedOfScope(pic, 'p1')).toEqual({ texts: [{ ko: '배' }], jamoIds: [], rung: 'read' });
@@ -109,6 +117,20 @@ describe('what a round asked', () => {
     const frame = { kind: 'write-frame', writeFrame: { rounds: [{ id: 'w1', frame: ko('저는 ___이에요.') }] } } as unknown as MinigameScope;
     expect(askedOfScope(frame, 'w1')).toEqual({ texts: [{ ko: '저는 ___이에요.', kind: 'pat' }], jamoIds: [], rung: 'produce' });
     expect(askedOfScope(frame, 'w2')).toBeUndefined();
+  });
+
+  it('Story Order reads the line its slot asked for (row CM-34)', () => {
+    const scope = { kind: 'story-order', storyOrder: { rounds: [{ id: 'r1', panels: [{ id: 'up', caption: ko('먼저 일어나요.') }] }] } } as unknown as MinigameScope;
+    expect(askedOfScope(scope, 'r1/up')).toEqual({ texts: [{ ko: '먼저 일어나요.' }], jamoIds: [], rung: 'read' });
+    for (const id of ['r1/down', 'r2/up', 'r1', 'up']) expect(askedOfScope(scope, id), id).toBeUndefined();
+    expect(askedOfScope({ kind: 'story-order' } as MinigameScope, 'r1/up')).toBeUndefined();
+  });
+  it('My Story asks only the frame pattern, never the picked word (F-CURR-002 row CM-38)', () => {
+    const bank = [ko('친구'), ko('가족'), { ...ko('호야'), neutral: true }];
+    const story = { kind: 'my-story', myStory: { frames: [{ id: 'f1', frame: ko('___과/와 같이 가요.'), slots: [{ id: 'who', bank }] }] } } as unknown as MinigameScope;
+    expect(askedOfScope(story, 'f1')).toEqual({ texts: [{ ko: '___과/와 같이 가요.', kind: 'pat' }], jamoIds: [], rung: 'produce' });
+    expect(JSON.stringify(askedOfScope(story, 'f1'))).not.toMatch(/친구|가족|호야/);
+    expect(askedOfScope(story, 'f2')).toBeUndefined();
   });
 
   it('Realia Read asks the card only (one rea item), never its key word or options', () => {
@@ -135,5 +157,73 @@ describe('what a round asked', () => {
     expect(resolveRound({})).toBeUndefined();
     const pic = { kind: 'pic-word-match', picWord: { boards: [{ pairs: [{ id: 'p1', word: ko('배') }] }] } } as unknown as MinigameScope;
     expect(resolveRound({ scope: pic, itemId: 'p1' })?.rung).toBe('read');
+  });
+});
+
+describe('Role Play: a turn asks its exchange (row CM-35)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const scope: MinigameScope = {
+    kind: 'role-play',
+    rolePlay: {
+      scene: {
+        title: kt('도서관', 'doseogwan', 'At the library'),
+        partner: kt('사서', 'saseo', 'librarian'),
+        start: 't2',
+        nodes: [
+          {
+            id: 't2',
+            line: kt('무슨 책을 찾아요?', 'museun chaegeul chajayo', 'What book are you looking for?'),
+            replies: [
+              { id: 'storybook', text: kt('동화책을 찾아요.', 'donghwachaegeul chajayo', 'I am looking for a storybook.'), kind: 'natural', next: 'end' },
+              { id: 'hangeul', text: kt('한글 책을 찾아요.', 'hangeul chaegeul chajayo', 'I am looking for a Hangul book.'), kind: 'natural', next: 'end' },
+              { id: 'fine', text: kt('괜찮아요.', 'gwaenchanayo', 'It is okay.'), kind: 'lessNatural', whyEn: 'Tell them the book you want.' },
+            ],
+          },
+          { id: 'end', end: true, closingEn: 'You found your book!' },
+        ],
+      },
+    },
+  };
+  const STORY = item({ id: 'exc:museun-chaegeul-chajayo', kind: 'exc', ko: '무슨 책을 찾아요?', cells: ['episode:stage4-letters'], reply: { ko: '동화책을 찾아요.', romanization: 'donghwachaegeul chajayo' } });
+  const HANGEUL = item({ id: 'exc:museun-chaegeul-chajayo~2', kind: 'exc', ko: '무슨 책을 찾아요?', cells: ['episode:stage4-letters'], reply: { ko: '한글 책을 찾아요.', romanization: 'hangeul chaegeul chajayo' } });
+  const exchanges = buildLookup([STORY, HANGEUL], new Set());
+
+  it('reads the line with the natural reply named by `<node>/<reply>`, at the read rung', () => {
+    expect(askedOfScope(scope, 't2/hangeul')).toEqual({ texts: [{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }], jamoIds: [], rung: 'read' });
+    // A less natural reply, a missing node or reply, or a scope with no scene asks nothing.
+    for (const id of ['t2/fine', 't2/gone', 'end/x', 'gone/storybook', 't2']) expect(askedOfScope(scope, id), id).toBeUndefined();
+    expect(askedOfScope({ kind: 'role-play' }, 't2/hangeul')).toBeUndefined();
+  });
+
+  it('of two exchanges with the same line, resolves the one with the reply the turn was about', () => {
+    const ask = (id: string) => resolveItems(exchanges, 'episode:stage4-letters', askedOfScope(scope, id)!);
+    expect(ask('t2/storybook')).toEqual([STORY]);
+    expect(ask('t2/hangeul')).toEqual([HANGEUL]);
+    // Through a host answer: `{ scope, itemId }`, hinted when meanings were showing.
+    expect(resolveRound({ scope, itemId: 't2/hangeul', hinted: true })?.texts).toEqual([{ ko: '무슨 책을 찾아요?', kind: 'exc', reply: '한글 책을 찾아요.' }]);
+  });
+});
+describe('askedOfScope: Match Shape and its Read Pick fallback (row CM-33)', () => {
+  const SHAPES: MinigameScope = {
+    kind: 'match-shape',
+    matchShape: {
+      rounds: [
+        { id: 'ms:origin:nieun', shape: 'origin', target: 'jamo:nieun', options: ['jamo:giyeok', 'jamo:nieun', 'jamo:mieum'], picture: 'prop:shape-origin-nieun', noteEn: 'x', fact: 'nieun' },
+        { id: 'ms:pair:bieup', shape: 'pair', target: 'jamo:bieup', lookAlike: 'jamo:pieup', layout: 'tlltlt', diffNoteEn: 'x' },
+      ],
+    },
+  };
+
+  it('a pair round asks its letter at the produce rung; an origin round teaches its fact and asks nothing', () => {
+    expect(askedOfScope(SHAPES, 'ms:pair:bieup')).toEqual({ texts: [], jamoIds: ['jamo:bieup'], rung: 'produce' });
+    expect(askedOfScope(SHAPES, 'ms:origin:nieun')).toBeUndefined();
+    expect(askedOfScope(SHAPES, 'ms:nope')).toBeUndefined();
+    expect(resolveItems(lookup, 'episode:stage1-crafts', askedOfScope(SHAPES, 'ms:pair:bieup')!)).toEqual([B]);
+    expect(resolveRound({ scope: SHAPES, itemId: 'ms:origin:nieun' })).toBeUndefined();
+  });
+
+  it('Read Pick asks its letter at the read rung', () => {
+    const pick: MinigameScope = { kind: 'listen-pick', readPick: { rounds: [{ id: 'ms:pair:bieup', target: 'jamo:bieup', options: [], answerId: 'jamo:bieup' }] } };
+    expect(askedOfScope(pick, 'ms:pair:bieup')).toEqual({ texts: [], jamoIds: ['jamo:bieup'], rung: 'read' });
   });
 });

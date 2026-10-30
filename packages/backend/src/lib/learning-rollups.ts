@@ -60,6 +60,8 @@ export const ROLLUP_EVENT_NAMES = [
   'pack.opened',
   'pack.level_complete',
   'exp.exposure',
+  // Row CM-32: G9 (decoding fluency) reads the held-out probe's rate by sprint index.
+  'decode.sprint.finished',
 ] as const satisfies readonly TelemetryEventName[];
 type RollupEventName = (typeof ROLLUP_EVENT_NAMES)[number];
 
@@ -266,6 +268,12 @@ const CURR_ROLLUPS: { [N in Exclude<RollupEventName, 'session.end' | 'review.com
   'pack.opened': (p) => [cell('pack.opened', packDim(p.packId), '')],
   'pack.level_complete': (p) => [cell('pack.level_complete', packDim(p.packId), p.stage)],
   'exp.exposure': (p) => [cell('exp.exposure', `${p.experimentId}:${p.arm}`, '')],
+  // Row CM-32 (G9): the drill and held-out probe rates, each by the learner's sprint index, so the median of the first
+  // sprint is read against the fourth's. The payload takes only the shared codes, so a rate never lands raw.
+  'decode.sprint.finished': (p) => [
+    cell('decode.sprint.finished.rate', p.sprintIndexBucket, p.rateBucket),
+    cell('decode.sprint.finished.probeRate', p.sprintIndexBucket, p.probeRateBucket),
+  ],
 };
 
 function keysOf(name: RollupEventName, payload: Payload): RollupKey[] {

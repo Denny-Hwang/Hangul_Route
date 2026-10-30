@@ -24,6 +24,17 @@ export const ROLLUP_SPREAD_DAYS_EDGES = [0, 1, 2, 4, 8, 15, 31, 46, 63, 91] as c
 /** Study minutes on one local day (`memory.daily` `minutes`, 0 to 1440). */
 export const ROLLUP_STUDY_MINUTES_EDGES = [0, 1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120] as const;
 
+/**
+ * Correct decodes per minute of a Decoding Sprint (row CM-32, `decode.sprint.finished` `rateBucket` and
+ * `probeRateBucket`; G9 compares the median of the held-out probe's rate between a learner's first and fourth sprint):
+ * two-wide to 15 and three-wide to 30, so a +30% change of a median between about 8 and 25 moves at least one bucket,
+ * then 30-34, 35-39, 40-49, 50-59, 60-74 and the open top 75+ (a confident reader answers a probe round in about a
+ * second, about 50 a minute, so the top stays open well above that and a change there still moves a bucket).
+ */
+export const ROLLUP_DECODE_RATE_EDGES = [0, 1, 3, 5, 7, 9, 11, 13, 15, 18, 21, 24, 27, 30, 35, 40, 50, 60, 75] as const;
+/** A learner's sprint count on this device, 1 for the first sprint (`decode.sprint.finished` `sprintIndexBucket`): one bucket each to 4 (G9 reads 1 and 4), then 5-9, 10-19 and 20+. */
+export const ROLLUP_SPRINT_INDEX_EDGES = [0, 1, 2, 3, 4, 5, 10, 20] as const;
+
 /** The bucket code of a whole, non-negative `value` on `edges` (lower edges, ascending, from 0). */
 export function rollupBucketCode(value: number, edges: readonly number[]): string {
   let i = edges.length - 1;

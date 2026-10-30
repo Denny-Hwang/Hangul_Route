@@ -587,3 +587,21 @@ describe('the shipped catalogue once letters q1-q3 teach (F-QUEST-002 Q-6a)', ()
     expect(questsPlacedOutAtLevel({ stage: 'stage1', band: 0 }, routeCatalogOf(CATALOG))).toEqual([]);
   });
 });
+
+describe('an optional Stage 1 addition on a refreshed route (F-CURR-002 section 4.2, row CM-33)', () => {
+  const ADDITION = 'quest:stage1-crafts-q4';
+  const lessons = (draft: CurriculumDraft): string[] => draft.items.filter((item) => item.kind === 'quest' && !item.id.startsWith('quest:story-')).map((item) => item.id);
+  const stage2 = routeCatalogOf(CATALOG).quests.filter((rq) => rq.stage === 'stage2' && rq.grid).map((rq) => rq.id);
+
+  it('is queued in its place for a learner who has not gone past it', () => {
+    expect(CATALOG.cells.some((cell) => cell.optionalQuestIds?.includes(ADDITION))).toBe(true);
+    expect(lessons(generateCurriculum({ ...base, weeks: 2, completedQuestIds: STAGE1 }, CATALOG))[0]).toBe(ADDITION);
+  });
+
+  it('never heads the route of a learner who already finished a later quest, so Refresh route pulls no one back', () => {
+    expect(stage2.length).toBeGreaterThan(0);
+    const draft = generateCurriculum({ ...base, weeks: 2, completedQuestIds: [...STAGE1, stage2[0] as string] }, CATALOG);
+    expect(ids(draft)).not.toContain(ADDITION);
+    expect(lessons(draft)[0]).toBe(stage2[1]);
+  });
+});

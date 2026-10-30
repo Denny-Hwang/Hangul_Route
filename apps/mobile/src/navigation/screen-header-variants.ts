@@ -67,6 +67,7 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   CellCheck: 'close',
   StageCheck: 'close',
   StageRecap: 'close',
+  DecodingSprint: 'close',
   CardDetail: 'close',
   StoryReader: 'close',
   StorySources: 'back',
@@ -135,6 +136,10 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   TypeHangulE2e: 'close',
   TraceWordE2e: 'close',
   WriteFrameE2e: 'close',
+  ClozePickE2e: 'close',
+  StoryOrderE2e: 'close',
+  RolePlayE2e: 'close',
+  HiddenHeritageE2e: 'close',
 };
 
 const EXCEPTIONS: ReadonlySet<string> = new Set(SCREEN_HEADER_EXCEPTIONS);

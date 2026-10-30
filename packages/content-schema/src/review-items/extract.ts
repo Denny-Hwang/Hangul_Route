@@ -65,6 +65,8 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() !== '' ? v : undefined);
+/** A Cloze Pick text with its one gap filled (the `fillClozeGap` of the round schema, on unparsed content). */
+const fillGap = (text: string, fill: string): string => text.replace('___', fill);
 const HANGUL = /[ᄀ-ᇿㄱ-ㆎ가-힣]/;
 const COMPAT_JAMO = /^[ㄱ-ㆎ]$/;
 const SENTENCE_END = /[.?!]["'”’)]*$/;
@@ -272,6 +274,20 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
         if (reply !== undefined) c.text(turn.line, 'exc', 'round', `${at}.turns[${ti}]`, { glossKey: k(`dialogue.${ti}.npc`), reply });
       });
       return;
+    case 'role-play': {
+      // Each turn's line with each natural reply is an exchange (section 4.2): two natural replies are two items. A less
+      // natural reply is never sent, so it teaches nothing. Glossed at the runtime scope's overlay fields (`rolePlay.scene`).
+      const scene = isRec(scope.scene) ? scope.scene : {};
+      arr(scene.nodes).filter(isRec).forEach((node, ni) => {
+        const id = key(node, ni);
+        arr(node.replies).filter(isRec).forEach((r, ri) => {
+          if (r.kind !== 'natural') return;
+          const reply = lineOf(r.text, k(`rolePlay.scene.nodes.${id}.replies.${key(r, ri)}.text.gloss`));
+          if (reply !== undefined) c.text(node.line, 'exc', 'round', `${at}.scene.nodes[${ni}].replies[${ri}]`, { glossKey: k(`rolePlay.scene.nodes.${id}.line.gloss`), reply });
+        });
+      });
+      return;
+    }
     case 'story-sequence':
       arr(scope.lines).filter(isRec).forEach((line, li) => {
         c.text(line.line, 'pat', 'round', `${at}.lines[${li}]`, { glossKey: k(`storySteps.${key(line, li)}.label`) });
@@ -325,14 +341,60 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       rounds.forEach((round, ri) => c.text(round.word, 'loose', 'round', `${at}.rounds[${ri}]`, { glossKey: k(`traceWord.rounds.${key(round, ri)}.word.gloss`) }));
       return;
     case 'write-frame':
+      frameTexts(c, rounds, `${at}.rounds`, 'writeFrame.rounds', k);
+      return;
+    // F-CURR-002 row CM-38: My Story's frames are Write Frame rounds (the frame a pattern, each bank word a word).
+    case 'my-story':
+      frameTexts(c, arr(scope.frames).filter(isRec), `${at}.frames`, 'myStory.frames', k);
+      return;
+    case 'cloze-pick': {
+      // Row CM-30: a word or particle gap asks the completed sentence (a `pat` item, produce rung) and a word gap
+      // its answer word; a value gap asks the card it is read from (the `rea` item, as Realia Read).
+      const realia = isRec(scope.realia) ? scope.realia : undefined;
       rounds.forEach((round, ri) => {
         const rid = key(round, ri);
         const where = `${at}.rounds[${ri}]`;
-        c.text(round.frame, 'pat', 'round', where, { glossKey: k(`writeFrame.rounds.${rid}.frame.gloss`) });
-        arr(round.slots).filter(isRec).forEach((slot, si) => {
-          arr(slot.bank).forEach((w, wi) => {
-            c.text(w, 'loose', 'round', `${where}.slots[${si}].bank[${wi}]`, { glossKey: k(`writeFrame.rounds.${rid}.slots.${key(slot, si)}.bank.${key(w, wi)}.gloss`) });
+        const tiles = arr(round.tiles).filter(isRec);
+        const ti = typeof round.answerIndex === 'number' ? round.answerIndex : -1;
+        const answer = tiles[ti];
+        const sentence = isRec(round.sentence) ? round.sentence : undefined;
+        if (round.gapKind === 'value') {
+          if (realia !== undefined && typeof realia.ref === 'string') {
+            const shown = realia.title ?? arr(realia.entries).filter(isRec)[0]?.text;
+            c.realia(realia.ref, shown, { en: str(realia.altEn), glossKey: k('clozePick.realia.alt') }, 'round', `${at}.realia`);
+          }
+          return;
+        }
+        if (sentence === undefined || answer === undefined) return;
+        const filled = {
+          ko: fillGap(String(sentence.ko ?? ''), String(answer.ko ?? '')),
+          romanization: str(round.filledRomanization) ?? fillGap(String(sentence.romanization ?? ''), String(answer.romanization ?? '')),
+          en: sentence.en,
+        };
+        c.text(filled, 'pat', 'round', where, { glossKey: k(`clozePick.rounds.${rid}.sentence.gloss`) });
+        if (round.gapKind !== 'particle') c.text(answer, 'loose', 'round', `${where}.answer`, { glossKey: k(`clozePick.rounds.${rid}.tiles.${key(answer, ti)}.gloss`) });
+      });
+      return;
+    }
+    case 'story-order':
+      // F-CURR-002 row CM-34: each panel's caption is a line of taught words the learner reads in order. A caption that
+      // ends a sentence is a pattern; a one-word caption (하늘) is the word Discover taught, never a second item of it (§4.2).
+      rounds.forEach((round, ri) => {
+        const rid = key(round, ri);
+        arr(round.panels).filter(isRec).forEach((panel, pi) => {
+          c.text(panel.caption, 'loose', 'round', `${at}.rounds[${ri}].panels[${pi}]`, {
+            glossKey: k(`storyOrder.rounds.${rid}.panels.${key(panel, pi)}.caption.gloss`),
+            picture: pictureOf(panel),
           });
+        });
+      });
+      return;
+    case 'hidden-heritage':
+      // A target is asked (its word is found in the scene); the other things only name their spots, so they are no items.
+      rounds.forEach((round, ri) => {
+        const rid = key(round, ri);
+        arr(round.targets).filter(isRec).forEach((t, ti) => {
+          c.text(t.word, 'loose', 'round', `${at}.rounds[${ri}].targets[${ti}]`, { glossKey: k(`hiddenHeritage.rounds.${rid}.targets.${key(t, ti)}.word.gloss`), picture: pictureOf(t) });
         });
       });
       return;
@@ -340,6 +402,20 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);
   }
+}
+
+/** Write Frame rounds (and My Story frames): each frame is a pattern, each bank word a word, glossed at `<field>.<round>...`. */
+function frameTexts(c: Collector, rounds: readonly Rec[], at: string, field: string, k: (path: string) => string): void {
+  rounds.forEach((round, ri) => {
+    const rid = key(round, ri);
+    const where = `${at}[${ri}]`;
+    c.text(round.frame, 'pat', 'round', where, { glossKey: k(`${field}.${rid}.frame.gloss`) });
+    arr(round.slots).filter(isRec).forEach((slot, si) => {
+      arr(slot.bank).forEach((w, wi) => {
+        c.text(w, 'loose', 'round', `${where}.slots[${si}].bank[${wi}]`, { glossKey: k(`${field}.${rid}.slots.${key(slot, si)}.bank.${key(w, wi)}.gloss`) });
+      });
+    });
+  });
 }
 
 function walkTexts(c: Collector, value: unknown, at: string): void {
@@ -418,6 +494,14 @@ function stage1Scope(c: Collector, ref: string, scope: Rec, at: string): void {
     if (id.startsWith('lp:sym:')) c.symbol(id.slice('lp:sym:'.length), 'round', where);
     else if (id.startsWith('lp:syl:')) c.text(round.prompt, 'syl', 'round', where, { glossKey });
     else c.text(round.prompt, 'lex', 'round', where, { glossKey, picture: pictureOf(answer) });
+  });
+  // F-CURR-002 row CM-33, the Stage 1 additions: a Match Shape pair round asks its target letter. An origin round
+  // teaches where a shape comes from (the learner meets the fact there), so it is no evidence about the letter.
+  // `asked` follows the authored game. While `game.match-shape` is off the step plays Read Pick, which also records the
+  // origin rounds' letters (at the read rung); those letters are all taught and asked by earlier Stage 1 quests, so
+  // leaving them out of this cell's `asked` changes no item's visibility or warm-up, on purpose.
+  arr(isRec(scope.matchShape) ? scope.matchShape.rounds : []).filter(isRec).forEach((round, ri) => {
+    if (round.shape === 'pair' && typeof round.target === 'string') c.symbol(round.target, 'round', `${at}.matchShape.rounds[${ri}]`);
   });
 }
 

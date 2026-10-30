@@ -151,6 +151,8 @@ export const a11y = {
     },
     /** Listen & Pick: the speaker button, and a picture option with no label. */
     hearAgain: 'Play the sound again',
+    /** Dictation's speaker (F-CURR-002 row CM-31): the first focus after the heading; it plays the word again on every tap. */
+    dictation: { speaker: 'Hear the word' },
     picture: 'Picture',
     /** An answer card in its state (Listen & Pick, Pic-Word Match); `label` is what the card says. */
     option: {
@@ -189,6 +191,15 @@ export const a11y = {
       dir: { left: 'to the left', right: 'to the right' },
     },
     /**
+     * Cloze Pick (row CM-30): the prompt card is one group. `sentence` is the romanization with its gap read as
+     * `blank`, `meaning` the sentence's meaning (content, in the UI language).
+     */
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `Sentence: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `Sentence complete: ${sentence}. ${meaning}`,
+      blank: 'blank',
+    },
+    /**
      * The in-app Hangul keyboard and the Type Hangul field (F-CURR-001 G-3). `jamo` and `text` are the taught
      * Korean as typed; `sound` and `romanization` are sound values read as words ("g or k").
      */
@@ -214,6 +225,48 @@ export const a11y = {
       particleFits: (particle: string, word: string) => `${particle} after ${word}`,
       /** A name-round tile: its block (or final letter) and its sound. */
       tile: (block: string, sound: string) => `${block}, ${sound}`,
+    },
+    /**
+     * Role Play (row CM-35): the chat log, a partner bubble (`role` is the partner's role in the UI language, `meaning`
+     * the line's meaning) and a reply the learner sent. `line` is the taught Korean, passed in.
+     */
+    rolePlay: {
+      log: 'Chat',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role} says: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `You said: ${line}, ${romanization}`,
+    },
+    /**
+     * Syllable Build (F-CURR-002 row CM-32): a tile is named by its jamo and the letter's name (`name`, the RR name such
+     * as `bieup`), never by its sound in the block, so a label never answers the round. `part` is a row caption.
+     */
+    syllableBuild: {
+      tile: (jamo: string, name: string) => `${jamo}, letter ${name}`,
+      finalTile: (jamo: string, name: string) => `${jamo}, letter ${name}, as a final`,
+      noFinal: 'No final letter',
+      /** A zone of the block: its part, then the tile in it (`filled`, a tile's name), or empty. */
+      zone: (part: string, filled?: string) => (filled === undefined ? `${part}, empty` : `${part}, ${filled}`),
+      /** A zone that did not fit: its label, then where to go next. */
+      marked: (label: string) => `${label}, listen again`,
+      /** The built block, once it is right: its Korean and romanization. */
+      block: (ko: string, romanization: string) => `Block ${ko}, ${romanization}, built`,
+      /** The meaning button under the speaker. */
+      meaning: (gloss: string) => `Meaning: ${gloss}`,
+    },
+    /**
+     * Match Shape (row CM-33): an origin tile is named by its letter and sound; a pair tile by its letter and RR name,
+     * never its sound, so a name never answers the round; `sound` is the value read as words ("g or k").
+     */
+    matchShape: {
+      originTile: (letter: string, sound: string) => `${letter}, ${sound}`,
+      pairTile: (letter: string, name: string) => `${letter}, letter ${name}`,
+      found: (letter: string, name: string, sound: string) => `${letter}, letter ${name}, ${sound}, found`,
+      pairHeading: (letter: string, name: string, sound: string) => `Tap every ${letter}, letter ${name}, ${sound}`,
+      /** A sound value of two readings (`g/k`). */
+      sounds: (first: string, second: string) => `${first} or ${second}`,
+    },
+    /** My Story (F-CURR-002 row CM-38): the list of sentences written so far, named with its length. */
+    myStory: {
+      soFar: (lines: number) => plural('en', lines, { one: 'My story so far, 1 line', other: `My story so far, ${lines} lines` }),
     },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
@@ -430,6 +483,8 @@ export const a11y = {
     slot: 'gap',
     /** A sentence-build move, announced politely (AMENDMENTS-LECTURE-V2 section 10, LV-S3): the tile just placed. */
     tilePlaced: (word: string) => `${word} placed`,
+    /** A Role Play slide's reply bubble from the room (F-CURR-002 section 8, row CM-35): the class, never a name; `line` is the Korean with its romanization once it shows. */
+    rolePlayClass: (line: string) => `The class said: ${line}`,
   },
   /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
   who: {
@@ -478,5 +533,27 @@ export const a11y = {
   /** F-CURR-002 row CM-22: the Journey header's Stage Check button once one was finished, with the best stars only. */
   stageCheck: {
     best: (stars: number) => plural('en', stars, { one: 'Stage Check, best 1 star', other: `Stage Check, best ${stars} stars` }),
+  },
+  /**
+   * Hidden Heritage (F-CURR-002 row CM-36): `gloss` is the meaning of the thing in the UI language (content), or its Korean
+   * word in the Korean UI when the meaning is the word itself. Each spot is a button named by its meaning.
+   */
+  hiddenHeritage: {
+    /** The live region after a right tap. */
+    foundLive: (gloss: string) => `Found: ${gloss}`,
+    /** A spot's name once its thing is found. */
+    spotFound: (gloss: string) => `${gloss}, found`,
+    /** An empty slot of the found row. */
+    slotEmpty: 'Not found yet',
+  },
+  /**
+   * Yut Review (F-CURR-002 row CM-39; design/wireframes/minigame/yut-review.md, Accessibility): the board is one image,
+   * and each throw is described once in a polite live region. `ko` is the throw's Korean name, tagged Korean where it is
+   * read; never a station number out of a total.
+   */
+  yutReview: {
+    board: 'Yut board',
+    throw: (ko: string, romanization: string, n: number) =>
+      plural('en', n, { one: `Throw: ${ko}, ${romanization}. Your piece moved 1 station.`, other: `Throw: ${ko}, ${romanization}. Your piece moved ${n} stations.` }),
   },
 } as const;

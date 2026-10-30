@@ -37,11 +37,13 @@ import { PatternSlide } from './slides/PatternSlide';
 import { ReadAlongSlide } from './slides/ReadAlongSlide';
 import { RealiaQuestionSlide, isRealiaQuestion } from './slides/RealiaQuestionSlide';
 import { RealiaSlide } from './slides/RealiaSlide';
+import { RolePlaySlide } from './slides/RolePlaySlide';
 import { SentenceBuildSlide } from './slides/SentenceBuildSlide';
 import { SentenceSlide } from './slides/SentenceSlide';
 import { SequenceSlide } from './slides/SequenceSlide';
 import { SyllableSlide } from './slides/SyllableSlide';
 import { WriteTogetherSlide } from './slides/WriteTogetherSlide';
+import { HiddenHeritageSlide } from './slides/HiddenHeritageSlide';
 import { StoryCheckSlide, isStoryCheck } from './slides/StoryCheckSlide';
 import { StorySlide } from './slides/StorySlide';
 import { TitleSlide } from './slides/TitleSlide';
@@ -268,6 +270,10 @@ export function Stage(props: StageProps): ReactElement {
           <SentenceBuildSlide slide={slide} reveal={reveal} />
         ) : slide.kind === 'write-together' ? (
           <WriteTogetherSlide slide={slide} reveal={reveal} romanization={props.romanization} />
+        ) : slide.kind === 'role-play' ? (
+          <RolePlaySlide slide={slide} shown={shown} romanization={props.romanization} />
+        ) : slide.kind === 'hidden-heritage' ? (
+          <HiddenHeritageSlide slide={slide} reveal={reveal} />
         ) : null}
       </View>
     </View>

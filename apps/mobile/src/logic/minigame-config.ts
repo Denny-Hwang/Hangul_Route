@@ -1,17 +1,25 @@
 import type {
+  ClozePickRound,
+  HiddenHeritageRound,
   KoText,
   ListenPickRound,
+  MatchShapeRound,
   MinigameKind,
+  MyStoryFrame,
   OrderItRound,
   PicWordRound,
   Realia,
   RealiaReadRound,
+  RolePlayScene,
   StoryLevel,
+  StoryOrderRound,
+  SyllableBuildRound,
   TraceWordRound,
   TypeHangulRound,
   WriteFrameRound,
 } from '@hangul-route/content-schema';
 import { lessonContent } from '../content/lessons';
+import type { ReadPickRound } from './match-shape/fallback';
 import { lp, pw } from './scope-builders';
 import { storyScopeFor } from './story/story-ref';
 
@@ -64,6 +72,22 @@ export interface MinigameScope {
   typeHangul?: { rounds: TypeHangulRound[] };
   traceWord?: { rounds: TraceWordRound[] };
   writeFrame?: { rounds: WriteFrameRound[] };
+  /** Cloze Pick (F-CURR-002 row CM-30): its rounds, and the card a value gap is read from. */
+  clozePick?: { rounds: ClozePickRound[]; realia?: Realia };
+  /** Story Order (F-CURR-002 row CM-34): its rounds as authored, panels in the right order. */
+  storyOrder?: { rounds: StoryOrderRound[] };
+  /** Role Play (F-CURR-002 row CM-35): one branching chat, filled by scripts/build-lessons.mjs. */
+  rolePlay?: { scene: RolePlayScene };
+  /** Hidden Heritage (F-CURR-002 row CM-36): one or two scenes to search, filled by build-lessons from a lesson cell. */
+  hiddenHeritage?: { rounds: HiddenHeritageRound[] };
+  /** Syllable Build rounds (F-CURR-002 section 7.1 F3, row CM-32); Listen & Pick on the block while `game.syllable-build` is off. */
+  syllableBuild?: { rounds: SyllableBuildRound[] };
+  /** Match Shape rounds (F-CURR-002 section 7.1 F4, row CM-33); Read Pick while `game.match-shape` is off. */
+  matchShape?: { rounds: MatchShapeRound[] };
+  /** Read Pick, Match Shape's fallback (row CM-33): derived at run time, drawn on the Listen & Pick cards. */
+  readPick?: { rounds: ReadPickRound[] };
+  /** My Story (F-CURR-002 row CM-38): the chain's 3-5 frames, each a Write Frame round with one neutral option per bank. */
+  myStory?: { frames: MyStoryFrame[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;
@@ -626,7 +650,71 @@ export const minigameScopes: Record<string, MinigameScope> = {
       ],
     },
   },
+  ...stage1AdditionScopes(),
 };
+
+/**
+ * The game scopes of the Stage 1 additions (F-CURR-002 section 5.2, row CM-33), Play & Crafts quest 4. It follows quest
+ * 15, the last of Stage 1, so every symbol here was taught. Match Shape: an origin round names its fact (its sources are
+ * `logic/match-shape/facts.ts`, checked by `stage1-additions.test.ts`), a pair round a look-alike of
+ * `SHAPE_LOOK_ALIKES`, and a difference line whose letters are `{ko:}` tokens.
+ */
+function stage1AdditionScopes(): Record<string, MinigameScope> {
+  const o = (letter: string, options: [string, string, string], noteEn: string): MatchShapeRound => ({
+    id: `ms:origin:${letter}`,
+    shape: 'origin',
+    target: J(letter),
+    options: options.map(J),
+    picture: `prop:shape-origin-${letter}`,
+    noteEn,
+    fact: letter,
+  });
+  const p = (letter: string, lookAlike: string, layout: string, diffNoteEn: string): MatchShapeRound => ({
+    id: `ms:pair:${letter}`,
+    shape: 'pair',
+    target: J(letter),
+    lookAlike: J(lookAlike),
+    layout,
+    diffNoteEn,
+  });
+  return {
+    'minigame:s1-crafts-q4-play': {
+      kind: 'match-shape',
+      matchShape: {
+        rounds: [
+          o('nieun', ['giyeok', 'nieun', 'mieum'], 'The tongue touches the upper gum.'),
+          o('giyeok', ['giyeok', 'nieun', 'siot'], 'The root of the tongue closes the throat.'),
+          p('bieup', 'pieup', 'tlltlt', '{ko:ㅂ} stands up, with two tall sides. {ko:ㅍ} lies flat, with long lines at the top and bottom.'),
+          o('mieum', ['mieum', 'ieung', 'nieun'], 'The shape of the mouth.'),
+          o('siot', ['siot', 'giyeok', 'mieum'], 'The shape of a tooth.'),
+          o('ieung', ['ieung', 'mieum', 'siot'], 'The shape of the throat.'),
+        ],
+      },
+    },
+    'minigame:s1-crafts-q4-apply': {
+      kind: 'match-shape',
+      matchShape: {
+        rounds: [
+          o('eu', ['eu', 'i', 'o'], 'Flat, like the earth.'),
+          o('i', ['i', 'eu', 'eo'], 'Upright, like a person standing.'),
+          p('eo', 'o', 'ltlltt', '{ko:ㅓ}: a short stroke points left from a tall line. {ko:ㅗ}: a short stroke points up from a flat line.'),
+          o('a', ['a', 'eo', 'i'], 'A standing person, with the round dot for the sky on the right.'),
+          p('a', 'eo', 'tltllt', '{ko:ㅏ}: the short stroke points right. {ko:ㅓ}: the short stroke points left.'),
+          p('rieul', 'digeut', 'lttllt', '{ko:ㄹ} has three flat lines joined in a zigzag. {ko:ㄷ} has two flat lines and no zigzag.'),
+        ],
+      },
+    },
+    'minigame:s1-crafts-q4-check': {
+      kind: 'listen-pick',
+      listenPick: {
+        // Heard, so no option is a look-alike told apart only by its sound (바 / 파, 어 / 오): the shapes were
+        // matched in the two steps before, and a device voice must not decide this Check (owner audio report,
+        // 2026-10-29; the pronunciation plan takes the lone-letter voice up for every Check).
+        rounds: [lp.sym(J('pieup'), THRU_R3, { optionIds: [J('pieup'), J('mieum'), J('rieul'), J('siot')] }), lp.sym(J('o'), THRU_R3, { optionIds: [J('o'), J('a'), J('i'), J('eu')] })],
+      },
+    },
+  };
+}
 
 /**
  * A hand-written scope, a lesson cell's scope (F-CURR-001; from its chunk, once the screen has

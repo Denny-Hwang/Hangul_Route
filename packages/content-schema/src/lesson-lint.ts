@@ -29,6 +29,7 @@ import { LessonNoteSchema, LessonReviewSchema, isLessonSignedOff, type LessonNot
 import { Stage1TableSchema, reviewItemsOf, type Stage1Table } from './review-items/build';
 import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from './review-items/sources';
 import { StableIdSnapshotSchema, type StableIdIssue } from './review-items/stable-ids';
+import { lintRolePlayScopes } from './role-play-rules';
 
 /*
  * The content lint, a build-time module (F-CURR-002 §9.3 and the F-CURR-001 lesson rules it
@@ -46,13 +47,15 @@ export * from './review-items/build';
 export * from './review-items/extract';
 export * from './review-items/sources';
 export * from './review-items/stable-ids';
+// F-CURR-002 row CM-35: the Role Play graph rules (content time only, so outside the package barrel).
+export * from './role-play-rules';
 
 // =====================================================================================================
 // F-CURR-002 §9.3: the lint rules for Volume 2 cells, Topic Pack levels and new stories. Each is an
 // error from day one for a file with `volume` >= 2 (or a `<theme>.v<k>.json` name), for every file
-// under `content/packs/` and for a story that is not in SHIPPED_STORY_IDS; for Volume 1 cells and
-// the shipped stories it is a warning, so `main` stays green until rows CM-3A re-author Volume 1
-// and CM-3B turns the warnings into errors.
+// under `content/packs/` and for a story that is not in SHIPPED_STORY_IDS. For Volume 1 cells it
+// warned until rows CM-3A re-authored Volume 1; row CM-3B made it an error there too. For the
+// shipped stories it is still a warning.
 // =====================================================================================================
 
 export type CurriculumRule =
@@ -98,7 +101,7 @@ export const CURRICULUM_RULES: Readonly<Record<CurriculumRule | CurriculumReport
   'pack-skeleton':
     'A pack follows the template of §6.4: pack.json lists its levels at S2, S3, S4, S6, S7 in that order (all five once the pack is ready), and each ready level has three quests, the new-item caps and its one new pattern, exchange or frame, the formats, three new realia in L4, the two pack cards and the Pack Check in L5. A draft level (the CM-50a scaffold) is checked for its ids, stage and file name only.',
   'dictation-unambiguous':
-    'An item asked by ear (Dictation, or a heard round whose options are spellings) has exactly one spelling among the taught items with its pronunciation, unless the prompt shows a picture or the gloss that settles it (a label on the answer option alone does not, as it gives the answer away). Taught items are those met by that quest on the route or in the pack. An item with a sound change (tensification such as 학교 [학꾜] included) stays out of Dictation until recordings A-9 and A-10 exist (§4.5).',
+    'An item asked by ear (Dictation, or a heard round whose options are spellings) has exactly one spelling among the taught items with its pronunciation, unless the prompt shows a picture or the gloss that settles it (a label on the answer option alone does not, as it gives the answer away); for Dictation that prompt also has a meaning no other taught spelling of the sound has, because the meaning is all a phone under 640 tall shows. A heard pick whose options sound alike is the spelling round (`promptKind: spelling`, row CM-31), the one Listen & Pick that draws its picture and meaning: it shows one of them, and its Listen & Pick fallback options are taught words that sound different from the answer and from each other. Taught items are those met by that quest on the route or in the pack. An item with a sound change (tensification such as 학교 [학꾜] included) stays out of Dictation until recordings A-9 and A-10 exist (§4.5).',
   'story-order-text': 'At least 1 Story Order round in 2 has captions only, or captions that settle the order on their own (`captionsSettleOrder: true`, checked by MAR) (§7.1 F5).',
   'story-topic-unique':
     'A new story declares its topicTags, and shares no topic (a topic tag or a story slug, compared both ways) and no source URL with another story in content/stories/ (§5.1).',
@@ -297,7 +300,8 @@ export function allowlistedInstitution(publisher: string, accessed: string, url?
 // ---- files and tiers --------------------------------------------------------------------------------
 
 export type CurriculumTier = 'volume1' | 'volume2' | 'pack' | 'shipped-story' | 'new-story';
-const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume2', 'pack', 'new-story']);
+// Row CM-3B: Volume 1 is strict too, once rows CM-3A and CM-3C left it no finding (§9.3); a shipped story still warns.
+const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume1', 'volume2', 'pack', 'new-story']);
 export const severityOf = (tier: CurriculumTier): CurriculumSeverity => (STRICT_TIERS.has(tier) ? 'error' : 'warning');
 
 
@@ -376,9 +380,32 @@ function checkHasReadOrProduceRound(quest: LessonBodyQuest, kind: string): boole
   return kind === 'listen-pick' && Array.isArray(rounds) && rounds.some(isReadMeaningRound);
 }
 
+/**
+ * The shape of a Read Pick Meaning round (row CM-3A S2; kept in the lint, not the round schema, so the start bundle does
+ * not carry it): it is not a spelling round, and every option is a meaning (a picture with its label), never a spelling,
+ * since the Korean shown is the answer. A scope's rounds are all read or all heard (the game draws one prompt mode).
+ */
+export function readPickRoundIssues(rounds: readonly unknown[]): Array<{ round: number; path: string; message: string }> {
+  const out: Array<{ round: number; path: string; message: string }> = [];
+  const shown = rounds.map((r) => isRecord(r) && r.promptShown === true);
+  if (shown.some(Boolean) && !shown.every(Boolean)) {
+    out.push({ round: shown.indexOf(false), path: 'promptShown', message: "a Listen & Pick scope's rounds are all Read Pick Meaning (promptShown: true) or all heard" });
+  }
+  rounds.forEach((round, ri) => {
+    if (!isRecord(round) || round.promptShown !== true) return;
+    if (round.promptKind !== undefined) out.push({ round: ri, path: 'promptKind', message: 'a Read Pick Meaning round is not a spelling round' });
+    if (!isReadMeaningRound(round)) out.push({ round: ri, path: 'options', message: 'a Read Pick Meaning round offers meanings only: pictures with their labels, no spelling' });
+  });
+  return out;
+}
+
 function lintQuestChecks(entry: LessonEntry, add: Add): void {
   const triples = entry.body.quests.map((q) => ['practice', 'apply', 'check'].map((k) => stepGameKind(q, k) ?? '-').join(' / '));
   entry.body.quests.forEach((quest, qi) => {
+    quest.scopes.forEach((scope, si) => {
+      if (scope.kind !== 'listen-pick' || !Array.isArray(scope.rounds)) return;
+      for (const issue of readPickRoundIssues(scope.rounds)) add('lesson-check-variety', pathOf('quests', qi, 'scopes', si, 'rounds', issue.round, issue.path), issue.message);
+    });
     const check = stepGameKind(quest, 'check');
     if (check !== undefined && entry.stage >= 2 && !checkHasReadOrProduceRound(quest, check)) {
       add('lesson-check-variety', pathOf('quests', qi), `the Check plays ${check} with no read-meaning or produce round; from Stage 2 on every Check has at least 1`);
@@ -475,6 +502,28 @@ function addTaught(map: Homophones, quest: LessonBodyQuest): void {
   }
 }
 
+/** The meanings (lower case) each taught spelling is shown with on its quest's Discover pages. */
+type Glosses = Map<string, Set<string>>;
+
+/** Adds the meanings a quest's Discover pages show with each Korean text (a `{ ko, en }` pair anywhere in an item). */
+function addGlosses(map: Glosses, quest: LessonBodyQuest): void {
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (!isRecord(value)) return;
+    if (typeof value.ko === 'string' && typeof value.en === 'string' && value.en.trim() !== '') {
+      const ko = normalizeKo(value.ko);
+      const set = map.get(ko) ?? new Set<string>();
+      set.add(value.en.trim().toLowerCase());
+      map.set(ko, set);
+    }
+    Object.values(value).forEach(walk);
+  };
+  for (const step of quest.steps) walk(step.discover);
+}
+
 function otherSpellings(ko: string, homophones: Homophones, alsoHeard: readonly string[]): string[] {
   const key = pronunciationKey(ko);
   const spellings = new Set([...(homophones.get(key) ?? []), ...alsoHeard.filter((o) => pronunciationKey(o) === key)]);
@@ -495,9 +544,16 @@ function glossShown(prompt: string, gloss: string): boolean {
  */
 function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add: Add): void {
   const homophones: Homophones = new Map();
-  for (const other of lessonsBefore(entry, lessons)) for (const quest of other.body.quests) addTaught(homophones, quest);
+  const glosses: Glosses = new Map();
+  for (const other of lessonsBefore(entry, lessons)) {
+    for (const quest of other.body.quests) {
+      addTaught(homophones, quest);
+      addGlosses(glosses, quest);
+    }
+  }
   entry.body.quests.forEach((quest, qi) => {
     addTaught(homophones, quest);
+    addGlosses(glosses, quest);
     quest.scopes.forEach((scope, si) => {
       const rounds = Array.isArray(scope.rounds) ? scope.rounds.filter(isRecord) : [];
       rounds.forEach((round, ri) => {
@@ -505,30 +561,102 @@ function lintDictation(entry: LessonEntry, lessons: readonly LessonEntry[], add:
         if (scope.kind === 'type-hangul' && round.mode === 'hear') {
           const target = isRecord(round.target) ? round.target : {};
           const ko = normalizeKo(String(target.ko ?? ''));
-          const gloss = typeof target.en === 'string' ? target.en.toLowerCase() : undefined;
-          const settled = round.pictureRef !== undefined || (gloss !== undefined && glossShown(String(round.promptEn ?? ''), gloss));
+          const gloss = typeof target.en === 'string' ? target.en.trim().toLowerCase() : '';
           const others = otherSpellings(ko, homophones, []);
-          if (others.length > 0 && !settled) add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; show a picture or the gloss, or ask it another way`);
+          // The hear prompt always draws the meaning (`target.en`), and below 640 tall it leaves the picture out
+          // (type-hangul.md), so the meaning has to settle it on its own: it differs from the meaning of every other
+          // taught spelling of the sound. The prompt still shows the picture or the gloss line, as CM-7 reads it.
+          const meaningSettles = gloss !== '' && others.every((other) => !(glosses.get(other)?.has(gloss) ?? false));
+          const shown = round.pictureRef !== undefined || (gloss !== '' && glossShown(String(round.promptEn ?? ''), gloss));
+          if (others.length > 0 && !(shown && meaningSettles)) {
+            add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; show a picture or the gloss, with a meaning none of them has, or ask it another way`);
+          }
           const flagged = round.soundChange === true || target.soundChange === true || hasSoundChange(ko);
           if (flagged && !SOUND_CHANGE_RECORDINGS_READY) add('dictation-unambiguous', at, `${ko} has a sound change; it stays out of Dictation until recordings A-9 and A-10 exist`);
         }
+        if (scope.kind === 'listen-pick') for (const issue of spellingRoundIssues(round)) add('dictation-unambiguous', `${at}.${issue.path}`, issue.message);
         if (scope.kind === 'listen-pick' && Array.isArray(round.options)) {
           const options = round.options.filter(isRecord);
           const answer = options.find((o) => o.id === round.answerId);
           if (answer === undefined || !isRecord(answer.text)) return;
           const ko = normalizeKo(String(answer.text.ko ?? ''));
           const heard = options.filter((o) => o !== answer).flatMap((o) => koStrings(o.text));
-          // Only the prompt settles it: a picture on the round, or the gloss in its shown line. A label on
-          // the answer option alone would give the answer away, so it does not count.
-          const glosses = [isRecord(round.prompt) ? round.prompt.en : undefined, answer.text.en, answer.labelEn].filter((g): g is string => typeof g === 'string');
-          const settled = round.pictureRef !== undefined || glosses.some((g) => glossShown(String(round.promptEn ?? ''), g));
+          // Only the prompt settles it, and only the spelling round draws a prompt that can (row CM-31): its
+          // picture and its meaning show with the sound. A plain Listen & Pick shows neither before the answer, and
+          // a label on the answer option alone would give the answer away, so neither counts.
+          const spelling = round.promptKind === 'spelling';
+          const gloss = isRecord(round.prompt) && typeof round.prompt.en === 'string' ? round.prompt.en.trim() : '';
+          const settles = spelling && (round.pictureRef !== undefined || gloss !== '');
+          if (spelling && !settles) add('dictation-unambiguous', at, `the spelling round of ${ko} shows a picture (pictureRef) or the meaning (prompt.en) that settles it`);
           const others = otherSpellings(ko, homophones, heard);
-          if (others.length > 0 && !settled) {
-            add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; a heard round with spelling options shows a picture (pictureRef) or the gloss (promptEn) on its prompt`);
+          if (others.length > 0 && !settles && !spelling) {
+            add('dictation-unambiguous', at, `${ko} sounds like ${others.join(', ')}; a heard round whose options sound alike is a spelling round (promptKind: spelling) with a picture or the meaning`);
           }
+          if (spelling) lintSpellingFallback(round, ko, homophones, at, add);
         }
       });
     });
+  });
+}
+
+/**
+ * The spelling round's shape (row CM-31; kept in the lint, not the round schema, so the start bundle does not carry
+ * it): only a spelling round has a prompt picture and fallback options; its options are spellings; the right one is the
+ * prompt word; it names its fallback options, which are new spellings with new ids. Read from the content as written.
+ */
+export function spellingRoundIssues(round: Record<string, unknown>): Array<{ path: string; message: string }> {
+  const out: Array<{ path: string; message: string }> = [];
+  if (round.promptKind !== 'spelling') {
+    if (round.pictureRef !== undefined) out.push({ path: 'pictureRef', message: 'only a spelling round (promptKind: spelling) shows a picture on its prompt' });
+    if (round.fallbackOptions !== undefined) out.push({ path: 'fallbackOptions', message: 'only a spelling round has fallback options' });
+    return out;
+  }
+  const options = Array.isArray(round.options) ? round.options.filter(isRecord) : [];
+  const koOf = (o: Record<string, unknown>): string | undefined => (isRecord(o.text) && typeof o.text.ko === 'string' ? o.text.ko : undefined);
+  options.forEach((o, i) => {
+    if (koOf(o) === undefined || o.pictureRef !== undefined) out.push({ path: `options[${i}].text`, message: "a spelling round's options are spellings: text only" });
+  });
+  const answer = options.find((o) => o.id === round.answerId);
+  const promptKo = isRecord(round.prompt) ? round.prompt.ko : undefined;
+  if (answer !== undefined && koOf(answer) !== undefined && koOf(answer) !== promptKo) out.push({ path: 'answerId', message: 'the right spelling is the prompt word' });
+  if (!Array.isArray(round.fallbackOptions) || round.fallbackOptions.length === 0) {
+    out.push({ path: 'fallbackOptions', message: 'a spelling round names the other options of its Listen & Pick fallback' });
+    return out;
+  }
+  const ids = new Set(options.map((o) => o.id));
+  const spelled = new Set(options.flatMap((o) => koOf(o) ?? []));
+  round.fallbackOptions.forEach((o, i) => {
+    const option = isRecord(o) ? o : {};
+    if (ids.has(option.id)) out.push({ path: `fallbackOptions[${i}].id`, message: 'fallback option ids are new and unique' });
+    ids.add(option.id);
+    const ko = koOf(option);
+    if (ko === undefined || option.pictureRef !== undefined) {
+      out.push({ path: `fallbackOptions[${i}].text`, message: 'a fallback option is a spelling: text only' });
+      return;
+    }
+    if (spelled.has(ko)) out.push({ path: `fallbackOptions[${i}].text.ko`, message: 'a fallback option is a word the round does not already offer' });
+    spelled.add(ko);
+  });
+  return out;
+}
+
+/**
+ * A spelling round's `game.spelling-pick` fallback (row CM-31): Listen & Pick on the right spelling and its
+ * `fallbackOptions`, with no picture or meaning. So every fallback option is a taught word that sounds different from
+ * the answer and from the other fallback options: the fallback has one right answer by sound alone.
+ */
+function lintSpellingFallback(round: Record<string, unknown>, ko: string, homophones: Homophones, at: string, add: Add): void {
+  const fallback = Array.isArray(round.fallbackOptions) ? round.fallbackOptions.filter(isRecord) : [];
+  const taught = new Set([...homophones.values()].flatMap((set) => [...set]));
+  const sounds = new Set([pronunciationKey(ko)]);
+  fallback.forEach((option, i) => {
+    const words = koStrings(option.text).map(normalizeKo);
+    const word = words[0];
+    if (word === undefined) return;
+    const key = pronunciationKey(word);
+    if (sounds.has(key)) add('dictation-unambiguous', `${at}.fallbackOptions[${i}]`, `${word} sounds like another option of the Listen & Pick fallback; its options sound different`);
+    sounds.add(key);
+    if (!taught.has(word)) add('dictation-unambiguous', `${at}.fallbackOptions[${i}]`, `${word} is not taught by this quest on the route; a fallback option is a taught word`);
   });
 }
 
@@ -868,6 +996,7 @@ function lintStrictLesson(entry: LessonEntry, ctx: { today: string; storyFacts: 
       if (scope.kind === 'voice-echo') add('lesson-no-speaking', pathOf('quests', qi, 'scopes', si, 'kind'), 'no lesson step records or asks for speech');
     });
   });
+  lintRolePlayScopes(entry.body.quests, add);
   if (ready) {
     const review = LessonReviewSchema.safeParse(entry.body.review);
     if (!review.success || !isLessonSignedOff(review.data)) {
@@ -911,9 +1040,10 @@ function tierOfCell(cell: string, shipped: ReadonlySet<string>): CurriculumTier 
  * (`REVIEW_SNAPSHOT_FILE`; validate-content.mjs adds it and the frozen Stage 1 table). An issue of an
  * item is reported on the file that teaches it, an issue of the snapshot itself (a frozen id no
  * longer taught, an alias or retirement that names no frozen id) on the snapshot. Only a new item
- * not frozen yet takes its file's severity (a warning for Volume 1 and a shipped story); every other
- * issue is an error whatever the file, as scripts/build-review-items.mjs (`isBlocking`) stops the
- * build, and with it `pnpm install` and the dev server, on it.
+ * not frozen yet takes its file's severity (a warning for a shipped story, an error for Volume 1
+ * since row CM-3B); every other issue is an error whatever the file, as
+ * scripts/build-review-items.mjs (`isBlocking`) stops the build, and with it `pnpm install` and the
+ * dev server, on it.
  */
 function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<string>, push: Push): void {
   const raw = tree.get(REVIEW_SNAPSHOT_FILE);
@@ -958,8 +1088,8 @@ function issueWhere(issue: StableIdIssue): { file: string; path: string } {
 
 /**
  * Every F-CURR-002 §9.3 finding over a content tree (`content/...` path -> parsed JSON), with
- * its severity: an error for Volume 2 cells, pack files and new stories, a warning for Volume 1
- * cells and shipped stories. A file under `content/packs/` or an upper-stage directory whose path
+ * its severity: an error for Volume 1 cells (since row CM-3B), Volume 2 cells, pack files and new
+ * stories, a warning for shipped stories. A file under `content/packs/` or an upper-stage directory whose path
  * no lesson or pack layout accepts is an error. Other files are ignored.
  */
 export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: CurriculumLintOptions = {}): CurriculumFinding[] {

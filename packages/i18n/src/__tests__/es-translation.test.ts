@@ -204,4 +204,8 @@ const LITERALLY_SHARED: readonly string[] = [
   'caregiver.join.who.refused',
   // F-CURR-002 row CM-20: a level up, the cell's title and its level word joined by ": ".
   'learner.mastery.levelUp',
+  // F-CURR-002 row CM-32: Syllable Build's final row caption, "Final", a Spanish word as is (la final, the glossary's batchim).
+  'learner.minigame.syllableBuild.row.final',
+  // F-CURR-002 row CM-33: Match Shape's origin tile, "{letter}, {sound}", a jamo and its romanized sound.
+  'a11y.minigame.matchShape.originTile',
 ];

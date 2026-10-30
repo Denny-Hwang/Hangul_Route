@@ -59,6 +59,24 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-30: the Cloze Pick game's chunk (its fallback, Listen & Pick, is imported as usual).
+  'screens/minigames/cloze-pick-entry.tsx#ClozePickGame': 'screens/minigames/ClozePickGame.tsx#ClozePickGame',
+  'screens/minigames/cloze-pick-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
+  // Row CM-34: Story Order's game, the minigame step's chunk while `game.story-order` is on.
+  'screens/minigames/story-order/StoryOrderStep.tsx#StoryOrderGame': 'screens/minigames/story-order/StoryOrderGame.tsx#StoryOrderGame',
+  // Row CM-35: Role Play's chunk (the game, and the fixture build's host).
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayGame': 'screens/minigames/role-play/RolePlayGame.tsx#RolePlayGame',
+  'screens/minigames/role-play/role-play-entry.tsx#RolePlayE2eScreen': 'screens/minigames/role-play/RolePlayE2eScreen.tsx#RolePlayE2eScreen',
+  // Row CM-36: the Hidden Heritage game's chunk.
+  'screens/minigames/hidden-heritage-entry.tsx#HiddenHeritageGame': 'screens/minigames/HiddenHeritageGame.tsx#HiddenHeritageGame',
+  'navigation/hidden-heritage-e2e.tsx#HiddenHeritageE2eBody': 'navigation/hidden-heritage-e2e-screen.tsx#HiddenHeritageE2eBody',
+  // Row CM-32: the Syllable Build chunk's quest game and Block Sprint.
+  'screens/minigames/syllable-build-entry.tsx#SyllableBuildStepBody': 'screens/minigames/SyllableBuildStepBody.tsx#SyllableBuildStepBody',
+  'screens/decode-sprint/DecodingSprintRoute.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',
+  // Row CM-33: the Match Shape chunk's quest step (the game, or Read Pick while `game.match-shape` is off).
+  'screens/minigames/match-shape-entry.tsx#MatchShapeStepBody': 'screens/minigames/MatchShapeStepBody.tsx#MatchShapeStepBody',
+  // Row CM-38: the My Story game's chunk (a minigame step: its Screen is Write Frame's).
+  'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
 };
 
 /**

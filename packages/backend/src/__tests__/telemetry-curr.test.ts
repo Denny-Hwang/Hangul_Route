@@ -53,7 +53,7 @@ const PER_PROFILE: Array<[string, Record<string, unknown>]> = [
   ['goal.set', { daily: 3, weeklyDays: 3 }],
   ['goal.met', { points: 4, target: 3 }],
   ['week.goal_met', { days: 3, target: 3 }],
-  ['decode.sprint.finished', { rateBucket: '30-39', probeRateBucket: '20-29', sprintIndexBucket: '1' }],
+  ['decode.sprint.finished', { rateBucket: '30-34', probeRateBucket: '18-20', sprintIndexBucket: '1' }],
   ['stamp.earned', { stampId: 'stamp:first-cell' }],
   ['weekly_quest.complete', { questKind: 'finish-stories' }],
   ['pack.opened', { packId: 'pack:numbers-time' }],
@@ -148,6 +148,34 @@ describe('POST /api/telemetry, session.end with the three optional CM-3 fields',
     expect(r.status).toBe(201);
     expect(r.body.data?.event.payload).toEqual(payload);
     expect((await post({ name: 'session.end', payload: { ...older, questLeft: 0, afterWrongStreak: 0 } })).body.data?.event.payload).toEqual({ ...older, questLeft: 0, afterWrongStreak: 0 });
+  });
+
+  it('keeps the Story Order kind code (row CM-34, Worker first: accepted before the app can send it)', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'story-order', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', profileId: 'profile:suni', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+
+  it('keeps role-play as a leftAtKind code (row CM-35, Worker first: the kind code list is the minigame kind enum)', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'role-play', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', profileId: 'profile:suni', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+
+  // Worker first (F-CURR-002 §11.1 rule 1, row CM-36): the Hidden Heritage kind code is kept before any client sends it.
+  it('keeps leftAtKind hidden-heritage, the kind code of row CM-36', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'hidden-heritage', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
+  });
+  it('keeps leftAtKind my-story, the F-CURR-002 row CM-38 kind code (Worker first: the code list is the kind enum)', async () => {
+    const payload = { ...older, questLeft: 1, leftAtKind: 'my-story', afterWrongStreak: 0 };
+    const r = await post({ name: 'session.end', profileId: 'profile:suni', payload });
+    expect(r.status).toBe(201);
+    expect(r.body.data?.event.payload).toEqual(payload);
   });
 
   it('drops a new field off its codes and keeps the rest of the payload', async () => {

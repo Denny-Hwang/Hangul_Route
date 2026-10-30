@@ -21,7 +21,7 @@ import {
   type RoundAnswer,
 } from './daily-review';
 import { engineStates, gradeTyped, type EngineContext, type SourceVisibility, type TypedGrade } from './engine';
-import { glossFrom, surfaceIndex } from './review-rounds';
+import { glossFrom, surfaceIndex, type GameFormats } from './review-rounds';
 import type { ReviewItemIndex } from './review-items-store';
 
 /**
@@ -42,8 +42,14 @@ export interface DailyReviewDeps {
   /** `dailyReview` and `memoryRecord` for the profile (a learner, not a grown-up persona). */
   on(profileId: string): boolean;
   visibility(profileId: string): SourceVisibility;
+  /** Rows CM-32 and CM-33: the section 7.1 formats switched on for the profile (`game.syllable-build`, `game.match-shape`); none when absent. */
+  games?(profileId: string): GameFormats;
   /** A Korean voice and the sound on (F-AUDIO-004): without it the ladder has two rungs. */
   voice(): boolean;
+  /** `game.cloze-pick` for the profile (row CM-30): a sentence's produce rung may be a Cloze Pick round. Absent: off. */
+  clozePick?(profileId: string): boolean;
+  /** `game.type-hangul-hear` for the profile: the produce rung may be Dictation (row CM-31). Absent: off. */
+  dictation?(profileId: string): boolean;
   hydrate(profileId: string): Promise<void>;
   reviews(profileId: string): readonly ReviewEntry[] | undefined;
   vocab(profileId: string): Parameters<typeof vocabOf>[0] | undefined;
@@ -107,9 +113,11 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
       if (file === null) return { kind: 'unreadable' };
       const today = localDay(now);
       const vocab = deps.vocab(profileId);
+      const states = engineStates(file.rows, vocab ? vocabOf(vocab) : undefined);
       const ctx: EngineContext = {
-        index: surfaceIndex(index),
-        states: engineStates(file.rows, vocab ? vocabOf(vocab) : undefined),
+        // Row CM-33: a pair round only when this learner met the letter's look-alike too.
+        index: surfaceIndex(index, { clozePick: deps.clozePick?.(profileId) === true, dictation: deps.dictation?.(profileId) === true, games: deps.games?.(profileId) }, states),
+        states,
         today,
         voice: deps.voice(),
         seed: `${profileId}|${today}`,

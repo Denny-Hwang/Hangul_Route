@@ -912,6 +912,8 @@ export const learner = {
       heading: {
         see: 'Type this word',
         picture: 'Type the word for the picture',
+        /** Dictation (F-CURR-002 section 7.1 F2, row CM-31): the empty field's line in `hear` mode. */
+        hear: 'Type the word you hear',
       },
       pass: 'You typed it!',
       /** One block different, missing or extra. */
@@ -923,6 +925,22 @@ export const learner = {
       fixIt: { cta: 'Fix it' },
       /** The romanization of the word to type, when the learner's setting hides it until a tap (F-BROWSE-001 BR-5c). */
       showRomanization: { cta: 'Show how to say it' },
+      /**
+       * Dictation (row CM-31, design/wireframes/minigame/type-hangul.md): the word's meaning on the prompt, and the hint
+       * that shows its romanization (the same words as `learner.placement.item.showSound`). A hint, never a penalty.
+       */
+      hear: {
+        meaning: (gloss: string) => `Meaning: ${gloss}`,
+        showSound: 'Show how it sounds',
+      },
+    },
+    /**
+     * The spelling round of Letters S2 (F-CURR-002 section 4.5, row CM-31): hear the word, see its meaning, pick its
+     * spelling. Its two options may sound the same, so a miss points back to the meaning.
+     */
+    spellingPick: {
+      heading: 'Which spelling matches this word?',
+      miss: 'Look at the meaning again.',
     },
     /**
      * Write Frame (F-CURR-001 G-5, design/wireframes/minigame/write-frame.md): pick a word for the blank, write it,
@@ -946,6 +964,86 @@ export const learner = {
         longest: 'That is the longest name that fits here.',
         finishBlock: 'Finish the last block.',
       },
+    },
+    /**
+     * Cloze Pick (F-CURR-002 row CM-30, design/wireframes/minigame/cloze-pick.md): read a sentence with one gap, pick
+     * the tile that fills it. A particle miss is `sentenceBuilder.missParticle`, a miss on a menu, sign or ticket value
+     * `realia.missHoya`; Hear it is `audio.hearIt`. With the game switched off the round is Listen & Pick with this heading.
+     */
+    clozePick: {
+      heading: 'Fill the gap',
+      instruction: {
+        word: 'Pick the word that fits.',
+        particle: 'Pick the piece that fits.',
+        value: 'Read the menu, sign or ticket, then pick.',
+      },
+      miss: 'Read the sentence again. Which one fits?',
+      /** The second miss on one round: the tile that fits is ringed. */
+      lookHere: 'This one fits here.',
+    },
+    /**
+     * Role Play (F-CURR-002 row CM-35, design/wireframes/minigame/role-play.md): a short chat, read the partner's line
+     * and tap a reply. The partner lines, replies, Hoya's why lines and the closing line are content; Continue is
+     * `common.buttons.continue`. No speaking: the learner's turn is a tap.
+     */
+    rolePlay: {
+      tapReply: 'Tap a reply',
+      /** Shows the meanings of this turn's replies; the turn counts as hinted, never as a miss. */
+      showMeanings: { cta: 'Show meanings' },
+      /** The same button once pressed, for this turn. */
+      meaningsShown: 'Meanings shown',
+      /** The cue at the bottom of the pinned replies while some are below its edge. */
+      moreReplies: 'More replies below',
+    },
+    /**
+     * Syllable Build (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md): hear a block,
+     * tap its first letter, vowel and final into the block. The tiles show the jamo only; the romanization waits until
+     * the block is built, or a tap on `showSound` (a hint, never a penalty line). A miss says where to listen, never
+     * that it was wrong.
+     */
+    syllableBuild: {
+      heading: 'Build the block you hear',
+      row: { first: 'First letter', vowel: 'Vowel', final: 'Final' },
+      /** The final row's last tile: the block has no final letter. */
+      noFinal: 'No final',
+      showSound: 'Show how it sounds',
+      miss: {
+        first: 'Listen to how it starts.',
+        vowel: 'Listen to the middle sound.',
+        final: 'Listen to how it ends.',
+        /** No final picked where there is one, or a final where there is none. */
+        finalOrNone: 'Listen to the end: is there a final sound?',
+      },
+      /** After a second miss on one zone: the right tile of that row is ringed. */
+      lookHere: 'This one goes here.',
+      built: 'You built it!',
+    },
+    /**
+     * Match Shape (F-CURR-002 section 7.1 F4, row CM-33): where a letter's shape comes from, and look-alike letters.
+     * The letters, their sounds and the sourced lines are taught content the screen draws, never inside these strings.
+     */
+    matchShape: {
+      heading: { origin: 'Which letter comes from this shape?', pair: 'Tap every copy of this letter' },
+      missOrigin: 'Look at the picture again. Which letter has that shape?',
+      missPair: 'Look at the strokes again.',
+      found: 'Found it!',
+      continue: { cta: 'Continue' },
+      /** Read Pick, the round played while Match Shape is switched off: see the letter, pick its sound. */
+      readPick: { heading: 'Which sound does this letter make?', miss: 'Look at the letter again.' },
+    },
+    /**
+     * My Story (F-CURR-002 §7.1 F8, row CM-38; design/wireframes/minigame/my-story.md): 3-5 Write Frame rounds in a
+     * row make a short text. It reuses `writeFrame.*` (the pick line, Change word, My page and its not-kept line),
+     * `common.buttons.done` and `audio.hearIt`. `done` shows only when every frame was written; after Skip with
+     * some lines written, `donePartial`.
+     */
+    myStory: {
+      heading: 'Write your story',
+      soFar: 'My story so far',
+      /** "My story so far" folded to one line while the learner writes (it opens on a tap). */
+      soFarFolded: (lines: number) => plural('en', lines, { one: '1 line so far', other: `${lines} lines so far` }),
+      done: 'You wrote a whole story!',
+      donePartial: 'Here is your story so far.',
     },
   },
 
@@ -1588,6 +1686,13 @@ export const learner = {
       writeFrame: 'Finish a sentence of your own',
       /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
       sentenceBuilder: 'Build a sentence',
+      clozePick: 'Fill the gap in a sentence',
+      /** Role Play (row CM-35): it counts for reading and listening. */
+      rolePlay: 'Read a chat, tap a reply',
+      /** Hidden Heritage (F-CURR-002 row CM-36): the Korean word is read and heard, then found in a scene. */
+      hiddenHeritage: 'Find a thing in a picture',
+      /** My Story (F-CURR-002 row CM-38): it counts for writing. */
+      myStory: 'Write a short story',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {
@@ -2273,6 +2378,10 @@ export const learner = {
         build: 'Build a sentence',
         /** The write-together slide (LV-S4): the same value as `slide.write.title`. */
         write: 'Write together',
+        /** The Role Play slide (F-CURR-002 section 8, row CM-35): the same value as `slide.rolePlay.label`. */
+        rolePlay: 'Role play',
+        /** The Hidden Heritage slide (F-CURR-002 §8, row CM-36): the class finds the named thing in a projected scene; its kind label. */
+        hiddenHeritage: 'Find it together',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2337,6 +2446,8 @@ export const learner = {
       sentence: { label: 'Sentence' },
       pattern: { label: 'Sentence pattern' },
       readAlong: { label: 'Read along' },
+      /** The Role Play slide's kind label (F-CURR-002 section 8, row CM-35): a chat the room reads together, then picks the reply. */
+      rolePlay: { label: 'Role play' },
       /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
       realia: { ask: 'Look closely and find the answer.' },
       /**
@@ -2819,5 +2930,82 @@ export const learner = {
     intro: 'About 7 minutes. Show what you know from every place in this stage. No timer.',
     extra: 'If it goes well, every place in this stage is marked Done and you can skip ahead. Every quest stays open to play.',
     passed: 'You jumped ahead!',
+  },
+  /**
+   * Story Order (F-CURR-002 section 7.1 F5, row CM-34; design/wireframes/minigame/story-order.md): put Korean lines in
+   * order by reading them. The cards show Korean and romanization only; Show meanings is a hint for the rest of the
+   * round, never a penalty. An illustrated round reuses `story.sequence.title` and `.hint`; slots, misses, the replay
+   * and Skip reuse `story.sequence`. Read by the `review-copy` rule.
+   */
+  storyOrder: {
+    /** The heading of a round told by its captions alone. */
+    title: 'Put the lines in order',
+    hint: 'Read each line. Tap the one that comes first.',
+    showMeanings: 'Show meanings',
+    /** Replaces the button once the meanings show (not a toggle back). */
+    meaningsShown: 'Meanings shown',
+  },
+  /**
+   * The Did you know? tip (F-CURR-002 §5.7, row CM-3C): one sourced note of the lesson cell at a quest's reward step and
+   * on the back of the cell's cards, behind `upperCards`. The note and its source line are content (the cell's
+   * `culture[]` and `cardDetail.citation`); `region` names the tip for screen readers (a landmark on the web).
+   */
+  cultureTip: {
+    title: 'Did you know?',
+    region: 'Lesson note',
+  },
+  /**
+   * Hidden Heritage (F-CURR-002 row CM-36; design/wireframes/minigame/hidden-heritage.md "Proposed copy"): find the thing
+   * Hoya names in a scene. The word to find is taught Korean (content), never in here. A find is never a score, and a tap on
+   * another thing only says Look again. Skip, Continue, the Hear button and the empty state reuse shipped keys. Read by the
+   * `review-copy` rule.
+   */
+  hiddenHeritage: {
+    /** The caption over the Korean word to find. */
+    prompt: 'Find this',
+    /** The row of found words under the scene. */
+    found: 'Found',
+    /** Hoya's line after a tap on another thing; the word stays. */
+    again: 'Look again',
+    /** The title of the end panel, over every word with its meaning. */
+    allFound: 'You found them all',
+  },
+  /**
+   * The Block Sprint (F-CURR-002 section 7.1 F9 "Decoding Sprint", OD-8, row CM-32): an optional one-minute bonus after
+   * Stage 1, like the vocab Speed round. One clock for the minute, then a few blocks with no clock. The count is the
+   * learner's own, beside their own best, never compared with anyone. Pause, Resume, Stop, the stop sheet, Start, Play
+   * again and New best! reuse `vocab.speed`. Read by the `review-copy` rule: no percentage, no "n of m".
+   */
+  decodingSprint: {
+    title: 'Block Sprint',
+    /** The bonus line on the Journey's Stage 1 header and on the Hangul Check results, above the button. */
+    offer: 'Bonus round: read as many blocks as you can in one minute.',
+    intro: 'One minute on the clock. Hear a block, then pick it or build it.',
+    /** The intro while `game.syllable-build` is off: every round is a pick, so it promises no build. */
+    introPick: 'One minute on the clock. Hear a block, then pick it.',
+    introProbe: 'Then a few more blocks, with no clock.',
+    /** The probe starts: the clock is gone. */
+    probe: 'A few more blocks. No clock now.',
+    /** The result: the blocks read right on the first try in the minute. */
+    read: (n: number) => count(n, 'block read', 'blocks read'),
+    /** From the second sprint on: the learner's own best, kept on this device. */
+    best: (n: number) => `Your best: ${n}`,
+    done: 'Done',
+  },
+  /**
+   * Yut Review (F-CURR-002 section 7.1 F10, row CM-39; design/wireframes/minigame/yut-review.md): a board band over the
+   * Daily Review and Keep going. Every finished item throws the yut sticks; the board is play only and gives nothing.
+   * The throw's name (do, gae, geol, yut, mo) is taught Korean, drawn with its romanization, never inside these strings. Never
+   * a station number out of a total, a count of the tray against four or a score. Read by the `review-copy` rule.
+   */
+  yutReview: {
+    /** How far the piece moved, beside the throw's name. */
+    stations: (n: number) => plural('en', n, { one: '1 station', other: `${n} stations` }),
+    /** Under yut or mo: another throw follows by itself (not a button). */
+    throwAgain: 'Throw again',
+    /** A piece reached home: one line, once. */
+    pieceHome: 'A piece went home!',
+    /** The home tray's label; the tray draws only the pieces that went home. */
+    home: 'Home',
   },
 } as const;
