@@ -75,9 +75,13 @@ describe('gridEpisodes / shelfEpisodes', () => {
 
   it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // F-CURR-002 row CM-40: a later volume's quests are in questsAll (kept and synced) but add no count to Home.
+    const volumeQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !volumeQuestIds.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
+    for (const id of volumeQuestIds) expect(gridQuestIds.has(id), id).toBe(false);
+    expect(questsAll.filter((q) => volumeQuestIds.has(q.id))).toHaveLength(volumeQuestIds.size);
   });
 });
 
@@ -103,10 +107,17 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); a shipped Volume 2 sits beside the route, never in it', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    // Row CM-41 S7 ships the first Volume 2 (Nature, My Favorite Season); later Volume 2 rows add theirs.
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage7-nature-v2');
+    for (const e of volumeEpisodes) {
+      expect(e.volume, e.id).toBe(2);
+      expect(e.id.endsWith('-v2'), e.id).toBe(true);
+      expect(episodesAll.some((x) => x.id === e.id), e.id).toBe(false);
+      expect(episodesAll.some((x) => x.stage === e.stage && x.theme === e.theme && (x.volume ?? 1) === 1), `${e.id} has its Volume 1`).toBe(true);
+    }
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
