@@ -81,7 +81,8 @@ export function LetterSlide({
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
         {sayIt ? (
           <View style={reveal(shown.has('sound'))}>
-            <SayIt spoken={{ ...slide.spoken, text: shownSpoken }} {...(slide.ipa !== undefined ? { ipa: slide.ipa } : {})} />
+            {/* The IPA is the letter's sound: beside the name when the name is the sound (a vowel, the initial ieung), else beside the sound on a vowel. */}
+            <SayIt spoken={{ ...slide.spoken, text: shownSpoken }} {...(slide.ipa !== undefined && slide.sound === undefined ? { ipa: slide.ipa } : {})} />
           </View>
         ) : (
         <View style={[{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.xl) }, reveal(shown.has('sound'))]}>
@@ -109,6 +110,9 @@ export function LetterSlide({
                   <View accessibilityLabel={koreanTextLabel(slide.sound.line, slide.sound.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
                     <TaughtKo size={bodySize}>{slide.sound.line}</TaughtKo>
                     <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{slide.sound.romanization}</Text>
+                    {sayIt && slide.ipa !== undefined ? (
+                      <Text {...KOREAN_LINE_BREAK} testID="presenter-letter-sound-ipa" style={{ fontSize: bodySize, color: colors.text.primary }}>{`[${slide.ipa}]`}</Text>
+                    ) : null}
                   </View>
                 </View>
               ) : null}
