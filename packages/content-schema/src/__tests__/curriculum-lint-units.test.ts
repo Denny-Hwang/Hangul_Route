@@ -228,7 +228,7 @@ describe('taught items and pronunciation', () => {
     expect(askedKo(scopes)).toEqual(['달', '달', '안녕', '네', '비가 와요', '김밥', '해', '별']);
   });
 
-  it('reads a Cloze Pick round as its completed sentence and, for a word gap, its answer tile, never the gap or a wrong tile (row CM-3A)', () => {
+  it('reads a Cloze Pick round as the review-item build does, not as the memory credits it: its completed sentence and, for a word gap, its answer tile, never the gap or a wrong tile (row CM-3A)', () => {
     const scopes = [
       {
         kind: 'cloze-pick',

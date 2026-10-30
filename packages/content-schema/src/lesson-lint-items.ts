@@ -167,6 +167,10 @@ export function stepGameKind(quest: LessonBodyQuest, kind: string): string | und
  * A Cloze Pick round (row CM-30, `{ sentence, tiles, answerIndex }`): it asks its completed sentence and,
  * for a word gap, the answer tile, as the review-item build reads it (row CM-3A). The gapped sentence and
  * the wrong tiles are shown, not taught; a value gap is read from its card, so it asks no Korean here.
+ * The lint follows the build, not the memory credit: since CM-30 the memory grades only the completed
+ * sentence at the produce rung and credits a due answer word at the read rung inside it
+ * (`withSentenceCredit`), but the word is still a review item of the round and the learner picked it, so
+ * the lint counts it as asked and known after the quest (curriculum-lint-units.test.ts pins this reading).
  */
 const isClozeRound = (r: Record<string, unknown>): boolean => Array.isArray(r.tiles) && typeof r.answerIndex === 'number' && typeof r.sentence === 'object' && r.sentence !== null;
 function clozeAsked(round: Record<string, unknown>, out: string[]): string[] {
