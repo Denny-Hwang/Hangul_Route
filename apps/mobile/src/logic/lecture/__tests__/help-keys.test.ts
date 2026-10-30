@@ -112,7 +112,7 @@ describe('HELP_TOUCH (the Touch and mouse group, AMENDMENTS-PRESENTER-NAV sectio
     }
   });
 
-  it('adds no key: the key rows and their keys are unchanged by the group', () => {
-    expect(HELP_KEYS.map((r) => r.row)).toEqual(['next', 'back', 'first', 'blank', 'sound', 'strokes', 'romanization', 'timer', 'grid', 'fullscreen', 'help', 'close']);
+  it('adds no key: the key rows are the key map rows (the point row holds the PN-5 keys 1 to 4), unchanged by the group', () => {
+    expect(HELP_KEYS.map((r) => r.row)).toEqual(['next', 'back', 'first', 'point', 'blank', 'sound', 'strokes', 'romanization', 'timer', 'grid', 'fullscreen', 'help', 'close']);
   });
 });

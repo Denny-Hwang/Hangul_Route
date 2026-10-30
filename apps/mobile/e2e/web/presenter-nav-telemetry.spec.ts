@@ -7,7 +7,8 @@ import { shot } from './shots';
 /**
  * AMENDMENTS-PRESENTER-NAV section 12 (owner choice O8, row PN-6): the navigation counts of
  * `lecture.complete`, smoked on the real build. At each window of the matrix (568 x 320, 640 x 360
- * and 844 x 390 touch, the overlay layout until PN-4's rail; 1180 x 820 touch and mouse and
+ * and 844 x 390 touch: the overlay layout at 568 x 320 and the phone rail of PN-4 at the other two, or
+ * the overlay at all three with `E2E_RAIL_OFF=1` on a rail-off build; 1180 x 820 touch and mouse and
  * 1920 x 1080 mouse and touch, docked) a lesson takes one step from each source its device has (a
  * bar button, a swipe, a key, and with a mouse a click on the stage), a Previous at once after a
  * forward step, a Previous long after a fresh forward step, and Exit: the payload names the layout
@@ -39,13 +40,17 @@ interface Case {
   height: number;
   phone: boolean;
   input: Input;
-  layout: 'docked' | 'overlay';
+  layout: 'docked' | 'rail' | 'overlay';
 }
+
+/** `E2E_RAIL_OFF=1`: a local `EXPO_PUBLIC_PRESENTER_RAIL=0` build, where every phone uses the overlay layout (section 15). */
+const RAIL_OFF = process.env.E2E_RAIL_OFF === '1';
+const PHONE_RAIL: Case['layout'] = RAIL_OFF ? 'overlay' : 'rail';
 
 const MATRIX: readonly Case[] = [
   { id: 'V1', width: 568, height: 320, phone: true, input: 'touch', layout: 'overlay' },
-  { id: 'V2c', width: 640, height: 360, phone: true, input: 'touch', layout: 'overlay' },
-  { id: 'V2', width: 844, height: 390, phone: true, input: 'touch', layout: 'overlay' },
+  { id: 'V2c', width: 640, height: 360, phone: true, input: 'touch', layout: PHONE_RAIL },
+  { id: 'V2', width: 844, height: 390, phone: true, input: 'touch', layout: PHONE_RAIL },
   { id: 'V3', width: 1180, height: 820, phone: false, input: 'touch', layout: 'docked' },
   { id: 'V3', width: 1180, height: 820, phone: false, input: 'mouse', layout: 'docked' },
   { id: 'V4', width: 1920, height: 1080, phone: false, input: 'mouse', layout: 'docked' },
@@ -145,7 +150,7 @@ for (const c of MATRIX) {
       if (c.input === 'touch') await start.tap();
       else await start.click();
       await expect(page.getByTestId('presenter-stage')).toBeVisible();
-      await expect(page.getByTestId(c.layout === 'docked' ? 'presenter-bar-band' : 'presenter-bar-compact')).toHaveCount(1);
+      await expect(page.getByTestId({ docked: 'presenter-bar-band', rail: 'presenter-rail', overlay: 'presenter-bar-compact' }[c.layout])).toHaveCount(1);
       await expect.poll(() => sent.map((e) => e.name)).toContain('lecture.start');
 
       // One step from each source this device has.

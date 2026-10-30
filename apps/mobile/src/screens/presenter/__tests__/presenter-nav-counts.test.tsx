@@ -39,6 +39,15 @@ vi.mock('../../../platform/presenter', async (importOriginal) => {
     touchSeenAtStart: () => false,
   };
 });
+// The phone rail's kill switch (`EXPO_PUBLIC_PRESENTER_RAIL`, read at build time, row PN-4), set per test.
+const railSwitch = vi.hoisted(() => ({ on: true }));
+vi.mock('../../../config/flags', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../../../config/flags')>();
+  return {
+    ...real,
+    flags: new Proxy(real.flags, { get: (target, key) => (key === 'presenterRail' ? railSwitch.on : Reflect.get(target, key)) }),
+  };
+});
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../platform/telemetry')>()),
   track: async (event: { name: string; payload?: Record<string, unknown> }) => {
@@ -78,6 +87,7 @@ afterAll(() => {
 beforeEach(() => {
   page.sent = [];
   page.settle = null;
+  railSwitch.on = true;
   Dimensions.set({ window: TABLET, screen: TABLET });
 });
 afterEach(() => {
@@ -189,7 +199,25 @@ describe('lecture.complete counts each step by its source (section 12)', () => {
     expect(JSON.stringify(payload)).not.toMatch(/Counts lesson|lecture:|quest:|stage1/);
   });
 
-  it('a phone (the overlay layout until the rail ships, and with its kill switch off): touch swipes count, touch taps on empty stage never step', async () => {
+  it('a phone with the rail (row PN-4): touch swipes count, touch taps on empty stage never step; navLayout is rail', async () => {
+    Dimensions.set({ window: PHONE, screen: PHONE });
+    const r = await lesson();
+    await settle();
+    await stepped(r, () => gesture(r, 'touch', -120));
+    await stepped(r, () => gesture(r, 'touch', -120));
+    await stepped(r, () => gesture(r, 'touch', 120));
+    // A touch tap on empty stage shows the bar; it never steps.
+    const was = counter(r);
+    gesture(r, 'touch');
+    await tick(10);
+    expect(counter(r)).toBe(was);
+    await stepped(r, () => key('next'));
+    const payload = await exitLesson(r);
+    expect(payload).toMatchObject({ navLayout: 'rail', stepsSwipe: 3, stepsKey: 1, stepsButton: 0, stepsClick: 0, quickBacks: 1, points: 0 });
+  });
+
+  it('a phone with the rail kill switch off (the overlay layout): the same counts; navLayout is overlay', async () => {
+    railSwitch.on = false;
     Dimensions.set({ window: PHONE, screen: PHONE });
     const r = await lesson();
     await settle();
@@ -204,6 +232,33 @@ describe('lecture.complete counts each step by its source (section 12)', () => {
     await stepped(r, () => key('next'));
     const payload = await exitLesson(r);
     expect(payload).toMatchObject({ navLayout: 'overlay', stepsSwipe: 3, stepsKey: 1, stepsButton: 0, stepsClick: 0, quickBacks: 1, points: 0 });
+  });
+});
+
+describe('points: each point the reducer takes, by a key or a tap (section 12, owner choice O2, row PN-5)', () => {
+  it('keys 1 to 4 on a question slide count; a digit on a slide with no options counts nothing; no point is a step', async () => {
+    const r = await lesson();
+    await settle();
+    // A digit on the title slide points at nothing.
+    key({ point: 1 });
+    await tick(10);
+    // On to the first slide with options.
+    for (let i = 0; i < 40 && byTestId(r.root, 'presenter-quiz-options').length === 0; i++) {
+      key('next');
+      await tick(10);
+    }
+    expect(byTestId(r.root, 'presenter-quiz-options').length).toBeGreaterThan(0);
+    const was = where(r);
+    key({ point: 2 });
+    await tick(10);
+    key({ point: 3 });
+    await tick(10);
+    // The same option again clears it: also a point the reducer took.
+    key({ point: 3 });
+    await tick(10);
+    expect(where(r)).toBe(was);
+    const payload = await exitLesson(r);
+    expect(payload.points).toBe(3);
   });
 });
 

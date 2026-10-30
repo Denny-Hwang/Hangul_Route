@@ -760,13 +760,15 @@ function Presenter(): ReactElement {
       if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
       // Pointing at an option (AMENDMENTS-PRESENTER-NAV section 7.3) changes only `pointed`: no step, no
-      // sound, no bar, no Recent, nothing tallied here (PN-6 counts it); never stored, never sent.
+      // sound, no bar, no Recent; never stored, never sent. Only the count `points` (section 12, PN-6)
+      // takes it, and only a point the reducer took (a swallowed one returns `before`).
       if (typeof event === 'object' && 'point' in event) {
         if (state !== before) {
           stateRef.current = state;
           setPstate(state);
         }
-        return;
+        if (tally.current) tally.current = tallyStep(tally.current, before, state, slides, { event, at: Date.now() });
+        return false;
       }
       stateRef.current = state;
       setPstate(state);
@@ -1015,7 +1017,7 @@ function Presenter(): ReactElement {
       // A step key (arrows, PageDown, Home, End, a clicker) goes the way a bar press does: with More
       // open it closes the sheet and then steps (`userDispatch`).
       if (command === 'next' || command === 'prev' || command === 'first' || command === 'last') {
-        userDispatch(command);
+        userDispatch(command, 'key');
         return;
       }
       // A tool key (G, B, T, H) closes the More sheet first, as the sheet's own buttons do, so no tool opens under it.

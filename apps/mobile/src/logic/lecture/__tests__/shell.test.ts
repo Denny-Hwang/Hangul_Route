@@ -923,10 +923,14 @@ describe('lecture.complete navigation counts (PN-6)', () => {
     t = tallyLayout(t, 'overlay');
     t = step(t, at(0), at(1), 'next', 'key', 1_000);
     expect(completePayload(t, 1_000, 'overlay').navLayout).toBe('docked');
-    // A phone (the rail kill switch off, or before row PN-4): every phone window is the overlay layout.
-    expect(navLayout(true)).toBe('overlay');
-    expect(navLayout(false)).toBe('docked');
-    expect(completePayload(tallyLayout(startTally(0, 'a'), navLayout(true)), 0, 'docked').navLayout).toBe('overlay');
+    // A phone with no rail (the rail kill switch off, or a window the rail does not fit) is the overlay layout;
+    // a phone beside the rail (row PN-4) is the rail layout; anything else is docked.
+    expect(navLayout(true, null)).toBe('overlay');
+    expect(navLayout(true, 'full')).toBe('rail');
+    expect(navLayout(true, 'compact')).toBe('rail');
+    expect(navLayout(false, null)).toBe('docked');
+    expect(completePayload(tallyLayout(startTally(0, 'a'), navLayout(true, null)), 0, 'docked').navLayout).toBe('overlay');
+    expect(completePayload(tallyLayout(startTally(0, 'a'), navLayout(true, 'compact')), 0, 'docked').navLayout).toBe('rail');
   });
 });
 
