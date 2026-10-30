@@ -24,13 +24,14 @@ import {
   type ChooserEpisodeRow,
 } from '..';
 import { assembleCatalog, expandCellRows, type GeneratedCellRow } from '../catalog/assemble';
-import { GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
+import { GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
 import { STORY_SHELF } from '../catalog/data';
 
 /**
  * Two volumes per cell in the catalogue (F-CURR-002 §5.1 and §6.2, F-STORY-005 PR 5.8, row CM-40): a cell's Volume 2
  * joins its `episodeIds`, its quests are catalogue quests on its own episode, a level below its stage places them out
- * like Volume 1's, and it adds no route day. No Volume 2 ships yet, so these tests add fixture rows to the catalogue.
+ * like Volume 1's, and it adds no route day. These tests add fixture rows to the catalogue for cells that ship no Volume 2
+ * (Stage 2 Nature, Stage 7 Letters); a Volume 2 that ships (Stage 4 Play, row CM-42 S4) is in `CATALOG` already.
  */
 
 const quests3 = [
@@ -40,16 +41,18 @@ const quests3 = [
 ] as const;
 const V2_ROWS: GeneratedCellRow[] = [
   ['stage2', 'nature', 'Outdoor Words', 'shipped', 13, quests3, 2],
-  ['stage4', 'crafts', 'Playdate Talk', 'shipped', 13, quests3, 2],
+  ['stage7', 'letters', 'Write Your Name', 'shipped', 13, quests3, 2],
 ];
 const V2 = expandCellRows(V2_ROWS);
+/** The later volumes the shipped catalogue holds (row CM-42 S4 ships the first), kept when the fixture rows are added. */
+const SHIPPED_VOLUMES = expandCellRows(GENERATED_LESSON_CELL_ROWS).volumes;
 
 /** The shipped catalogue with fixture Volume 2 rows added, assembled the way catalog/data.ts assembles it. */
 function withVolumes(rows = V2): Catalog {
   return assembleCatalog({
     version: CATALOG_VERSION,
     cells: CATALOG.cells,
-    volumes: rows.volumes,
+    volumes: [...SHIPPED_VOLUMES, ...rows.volumes],
     lessonQuests: [...CATALOG.quests.filter((q) => q.kind === 'lesson'), ...rows.quests],
     stories: GENERATED_STORIES,
     storyShelf: STORY_SHELF,
@@ -59,7 +62,11 @@ function withVolumes(rows = V2): Catalog {
   });
 }
 const NATURE_V2 = ['quest:stage2-nature-v2-q1', 'quest:stage2-nature-v2-q2', 'quest:stage2-nature-v2-q3'];
+const LETTERS7_V2 = ['quest:stage7-letters-v2-q1', 'quest:stage7-letters-v2-q2', 'quest:stage7-letters-v2-q3'];
+/** The shipped Volume 2 of Stage 4 Play (row CM-42 S4), in `CATALOG` itself. */
 const CRAFTS4_V2 = ['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'quest:stage4-crafts-v2-q3'];
+/** The cells of the shipped catalogue that have a later volume (a content row shipped it). */
+const SHIPPED_LATER = new Set(CATALOG.cells.filter((c) => (c.volumes ?? []).length > 0).map((c) => c.episodeId));
 
 describe('the catalogue with two volumes per cell (row CM-40)', () => {
   it('expands a Volume 2 row into a later volume of its cell, quests named <cell>-v2-q<k> on its own episode', () => {
@@ -79,17 +86,20 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(volumeEpisodeId('episode:stage2-nature', 2)).toBe('episode:stage2-nature-v2');
   });
 
-  it('lists each cell’s episodes by volume, and every shipped cell holds its first volume alone today', () => {
-    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual([cell.episodeId]);
+  it('lists each cell’s episodes by volume, and a shipped cell with no Volume 2 holds its first volume alone', () => {
+    expect(SHIPPED_LATER.has('episode:stage4-crafts')).toBe(true);
+    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual(SHIPPED_LATER.has(cell.episodeId) ? [cell.episodeId, `${cell.episodeId}-v2`] : [cell.episodeId]);
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.episodeIds).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.volumes).toEqual([{ episodeId: 'episode:stage2-nature-v2', title: 'Outdoor Words', minutes: 13, questIds: NATURE_V2 }]);
-    for (const cell of CATALOG.cells) expect(cell.volumes, cell.episodeId).toBeUndefined();
+    for (const cell of CATALOG.cells.filter((c) => !SHIPPED_LATER.has(c.episodeId))) expect(cell.volumes, cell.episodeId).toBeUndefined();
     expect(cellEpisodeIds({ episodeId: 'episode:stage3-life' })).toEqual(['episode:stage3-life']);
     // The first volume's quests stay the cell's list; the later volume's follow every first volume's, in grid order.
     const lessons = catalog.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...NATURE_V2, ...CRAFTS4_V2]);
+    const later = catalog.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds));
+    expect(later).toEqual(expect.arrayContaining([...NATURE_V2, ...LETTERS7_V2]));
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...later]);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds);
   });
 
@@ -133,7 +143,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
 
   it('counts a later volume’s quests as grid lessons past the free plan, so the free plan never opens them', () => {
     const grid = gridLessonIds(withVolumes());
-    for (const id of [...NATURE_V2, ...CRAFTS4_V2]) expect(grid.has(id), id).toBe(true);
+    for (const id of [...NATURE_V2, ...LETTERS7_V2]) expect(grid.has(id), id).toBe(true);
     expect(grid.size).toBe(gridLessonIds(CATALOG).size + 6);
     for (const id of NATURE_V2) expect(freeRouteQuestIds(withVolumes()).has(id)).toBe(false);
   });
@@ -143,10 +153,10 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const at = (id: string) => route.findIndex((q) => q.id === id);
     const lastFirstVolume = Math.max(...CATALOG.cells.flatMap((c) => c.questIds).map(at));
     const firstStory = Math.min(...route.filter((q) => !q.grid).map((q) => at(q.id)));
-    for (const id of [...NATURE_V2, ...CRAFTS4_V2]) {
+    for (const id of [...NATURE_V2, ...CRAFTS4_V2, ...LETTERS7_V2]) {
       expect(at(id), id).toBeGreaterThan(lastFirstVolume);
       expect(at(id), id).toBeLessThan(firstStory);
-      expect(route[at(id)]).toMatchObject({ grid: true, playable: true, episodeId: id.includes('nature') ? 'episode:stage2-nature-v2' : 'episode:stage4-crafts-v2' });
+      expect(route[at(id)]).toMatchObject({ grid: true, playable: true, episodeId: id.slice('quest:'.length).replace(/-q[0-9]+$/, '').replace(/^/, 'episode:') });
     }
     expect(route.map((q) => q.order)).toEqual(route.map((_, i) => i + 1));
   });

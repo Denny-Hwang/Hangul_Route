@@ -4,6 +4,7 @@ import { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import { ThemeKeySchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
+import { volumeEpisodes } from '../../content/episodes';
 import { storyQuests } from '../../content/stories';
 import {
   gridQuestProgress,
@@ -206,10 +207,12 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
 
   it('is 0 of the grid total with no progress, and the total stays the grid count for today\'s bundle', () => {
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
-    // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done.
+    // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done,
+    // nor a later volume's quest (F-CURR-002 row CM-40: Home's total is the route's).
     const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
+    const later = new Set(volumeEpisodes.flatMap((e) => e.questIds));
     expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(
-      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id)).length,
+      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id) && !later.has(q.id)).length,
     );
   });
 

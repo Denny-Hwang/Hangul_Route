@@ -76,7 +76,8 @@ const repeated = (list: readonly string[]): string[] => list.filter((x, i) => li
 describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => {
   it('every section 9.3 rule passes with zero findings for Stage 4, the frozen ids included', () => {
     const findings = lintCurriculum(tree, { today: '2026-10-23' }).filter(
-      (f) => f.file.startsWith('content/episodes/stage-4/') || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
+      // Volume 1's five cells (a Volume 2 cell has its own test, with its own access dates: stage4-crafts-v2.test.ts).
+      (f) => FILES.includes(f.file) || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
     );
     expect(findings.map((f) => `${f.rule} ${f.severity} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
   });
@@ -172,7 +173,8 @@ describe('Stage 4 review-item ids (F-CURR-002 section 4.2, row CM-3A S4)', () =>
     // 34, 35 and 3C stack). The 60-day simulation (S-b and the pinned S-c peak) holds at that load; a re-authoring that
     // teaches each turn and sentence as a new item (157 items) breaks S-b on 4 of 5 seeds. Retired items have no row.
     const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
-    const stage4 = built.items.filter((i) => firstCell(i.cells)?.startsWith('episode:stage4-') === true);
+    // Volume 1 only: a Volume 2 item is reviewed only while `volumes` is on (row CM-13), so it is not on this route's load.
+    const stage4 = built.items.filter((i) => /^episode:stage4-[a-z]+$/.test(firstCell(i.cells) ?? ''));
     expect(stage4.length).toBeLessThanOrEqual(123);
   });
 
