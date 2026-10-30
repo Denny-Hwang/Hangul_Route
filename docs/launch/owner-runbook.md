@@ -737,7 +737,8 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 3. 이미 만든 줄 (같은 글, 같은 목소리, 같은 빠르기) 은 다시 돌려도 건너뛴다. 그래서 중간에 멈췄으면 같은 명령을 다시 실행하면 이어서 만든다.
 
 **M-4. 선택: 자모 클립 듣기 (오너 단계 5, 약 10분)**
-- AC-4 가 머지된 뒤 `pnpm audio:tts:listen --pack jamo-s1,jamo-wb` 로 65개를 이어서 듣고, 다시 만들고 싶은 것을 에이전트에게 이름으로 알린다. 필수가 아니다 (오너 검토를 기다리지 않는 규칙). 다만 거부 (veto) 는 지킨다.
+- `pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine polly --voice <13장의 목소리>` 로 65개를 이어서 듣는다. 클립마다 id, 한글, 로마자가 나온다. Enter 는 통과, `v` 는 거부 (이유는 적어도 되고 안 적어도 된다), `r` 은 다시 듣기, `q` 는 멈춤. 거부한 것은 `owner-listen.json` 과 QA 보고서에 남고 다시 만들 목록에 들어간다. 필수가 아니다 (오너 검토를 기다리지 않는 규칙). 다만 거부 (veto) 는 지킨다.
+- 기록은 git 이 무시하는 `apps/mobile/recordings/tts/<엔진>/<목소리>/owner-listen.json` 에 남는다. 다른 팩을 나중에 들어도 앞에서 거부한 것은 그대로 남는다. 거부한 클립을 다시 만들면 그 거부는 저절로 풀린다.
 
 **M-5. 메시지가 나오면**
 - `refused: CLAUDECODE ...` 또는 `refused: CI ...`: Claude Code 터미널이나 CI 안이다. 별도 터미널에서 다시 한다.
@@ -748,6 +749,11 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - `refused: the Azure Product Terms ...`: 아래 Azure 항목을 먼저 해야 한다.
 - 인증 오류 (`security token ... invalid`, `Could not load the default credentials`): 로그인이 끝났다. M-2 의 로그인부터 다시 한다. 오류 문구에는 키가 들어 있지 않으니 그대로 보내도 된다.
 - Azure 는 예비 (fallback) 다. 쓰기 전에 Microsoft Product Terms 의 Azure Speech 항목을 브라우저에서 읽고 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 날짜와 함께 기록해야 한다 (에이전트가 2026-10-29 에 직접 읽지 못했다). 그 기록이 들어가기 전에는 스크립트가 실제 Azure 실행을 거부한다 (미리보기는 된다). 쓸 때는 S0 (유료) 리소스만, 키는 `read -rs SPEECH_KEY` 로 붙여 넣고 (`export` 하지 않는다) 그 명령 하나에만 넘긴다: `AZURE_SPEECH_KEY=$SPEECH_KEY AZURE_SPEECH_REGION=koreacentral pnpm --filter @hangul-route/mobile audio:tts:generate --engine azure --voice ko-KR-SunHiNeural --pilot` → `unset SPEECH_KEY` → 창을 닫는다. 끝나면 포털에서 키를 다시 만든다 (regenerate).
+
+**M-6. 두 번 확인 (QA, AC-4): 에이전트가 이 컴퓨터에서 한다 (오너 할 일 없음)**
+- 클립을 만들었다고 알리면 에이전트가 `audio:tts:qa` 로 두 음성 인식기 (Whisper 와 다른 계열의 CTC 모델) 를 **이 컴퓨터 안에서만** 돌린다. 네트워크 호출, 업체 음성 인식, CI 실행은 없다. 계정과 키도 필요 없다.
+- 처음 한 번만 공개 모델을 내려받는다 (약 5 GB, 모두 git 이 무시하는 `apps/mobile/recordings/models/` 안). 설치 방법은 [`tts-qa-setup.md`](tts-qa-setup.md) (영문) 에 있다.
+- 결과는 같은 폴더의 `qa-report.md` 다. 떨어진 클립은 다시 만들 명령 (`... audio:tts:generate ... --only <키>`) 이 함께 나온다. 그 명령은 M-2 처럼 **별도 터미널** 에서, 그 명령 하나에만 자격 증명을 주고 실행한다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
