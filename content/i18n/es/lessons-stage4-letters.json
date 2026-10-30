@@ -221,11 +221,11 @@
       "rolePlay.scene.nodes.t3.replies.name.why": "Esa dice tu nombre. Tu docente te da un lápiz, así que da las gracias.",
       "rolePlay.scene.nodes.t4.replies.thanks.why": "Ya diste las gracias. Tu docente pregunta qué es, así que nómbralo.",
       "rolePlay.scene.nodes.t4.replies.hello.why": "Ya saludaste. Dile a tu docente qué es.",
-      "rolePlay.scene.nodes.end.closing": "¡Seguiste toda una charla, del saludo al gracias!",
+      "rolePlay.scene.nodes.end.closing": "¡Seguiste toda una charla, del saludo hasta dar las gracias!",
       "rolePlay.scene.nodes.t4.replies.eraser.text.gloss": "Es una goma de borrar."
     },
     "minigame:s4-letters-q3-check": {
-      "clozePick.rounds.c2.sentence.gloss": "Es hangul.",
+      "clozePick.rounds.c2.sentence.gloss": "Es el hangul.",
       "clozePick.rounds.c2.tiles.yeyo.gloss": "es (después de una vocal)",
       "clozePick.rounds.c2.tiles.i.gloss": "marca de sujeto (después de una consonante final)",
       "clozePick.rounds.c2.tiles.ieyo.gloss": "es (después de una consonante final)",

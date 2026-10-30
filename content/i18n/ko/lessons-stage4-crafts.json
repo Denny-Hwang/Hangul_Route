@@ -177,7 +177,7 @@
       "rolePlay.scene.nodes.t1.replies.casual.text.gloss": "친구에게 좋다고 대답하는 말",
       "rolePlay.scene.nodes.t1.replies.thanks.text.gloss": "친구에게 고마운 마음을 전하는 말",
       "rolePlay.scene.nodes.t2.replies.okay.text.gloss": "좋다고 공손하게 대답하는 말",
-      "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말",
+      "rolePlay.scene.nodes.t2.replies.yut.text.gloss": "막대 네 개를 던지며 노는 놀이를 하고 싶다는 말",
       "rolePlay.scene.nodes.t3.replies.casual.text.gloss": "친구에게 좋다고 대답하는 말",
       "rolePlay.scene.nodes.t3.replies.okay.text.gloss": "좋다고 공손하게 대답하는 말",
       "rolePlay.scene.nodes.t3.replies.jegi.text.gloss": "술이 달린 작은 놀잇감을 발로 툭툭 올린다는 말",
@@ -199,7 +199,7 @@
       "storyOrder.rounds.two-ways.panels.ask.caption.gloss": "함께 할지 공손하게 묻는 말",
       "storyOrder.rounds.two-ways.panels.what.caption.gloss": "좋다며 무엇을 하고 싶은지 공손하게 묻는 말",
       "storyOrder.rounds.two-ways.panels.go.caption.gloss": "함께 가자고 공손하게 대답하는 말",
-      "storyOrder.rounds.two-ways.panels.yut.caption.gloss": "막대 네 개를 던지며 노는 놀이를 바라는 말"
+      "storyOrder.rounds.two-ways.panels.yut.caption.gloss": "막대 네 개를 던지며 노는 놀이를 하고 싶다는 말"
     },
     "minigame:s4-crafts-q3-check": {
       "dialogue.0.npc": "함께 할지 공손하게 묻는 말",
