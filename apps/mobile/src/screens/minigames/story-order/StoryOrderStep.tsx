@@ -113,7 +113,8 @@ function StoryOrderFallback({ scope, host, sequenceId, onFinish }: { scope: Mini
         noSkip: host.mode === 'check',
         answer: (roundKey, slot, correct) => {
           const itemId = storyOrderFallbackItem(round, slot);
-          host.answer(roundKey, correct, itemId === undefined ? undefined : { itemId, hinted: true });
+          // Hinted with a right answer only: a miss stays a plain miss (the host records a hinted answer as right).
+          host.answer(roundKey, correct, itemId === undefined ? undefined : { itemId, ...(correct ? { hinted: true } : {}) });
         },
       }}
       onFinish={(skipped) => (last || skipped === true ? onFinish() : setIndex(index + 1))}

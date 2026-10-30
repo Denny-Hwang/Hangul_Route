@@ -20,12 +20,25 @@ export type LessonQuestHeader = Omit<Quest, 'steps'>;
 /** One locale's glosses by entity id. */
 export type OverlayTable = Readonly<Record<string, EntityOverlay>>;
 
+/**
+ * A quest's Did you know? note (F-CURR-002 §5.7, row CM-3C): one note of its cell (`culture[]`, by id), its English
+ * text with `{ko:}` tokens, and its source line, the first source's publisher and title (never a URL) and how many
+ * other sources it has. The es / ko text is the cell's `culture.<id>.text` gloss on the episode id.
+ */
+export interface LessonQuestNote {
+  id: string;
+  textEn: string;
+  citation: { title: string; publisher: string; more: number };
+}
+
 /** The module of a cell's body chunk (`lesson-chunks/lessons-cell-<stage>-<theme>.ts`). */
 export interface LessonCellChunk {
   CHUNK_HASH: string;
   LESSON_STEPS: Readonly<Record<string, readonly QuestStep[]>>;
   LESSON_SCOPES: Readonly<Record<string, MinigameScope>>;
   LESSON_OVERLAYS: Overlays;
+  /** Each quest's note by quest id (row CM-3C); none for a quest of a cell with no notes. */
+  LESSON_NOTES: Readonly<Record<string, LessonQuestNote>>;
 }
 
 /** The module of a locale's title chunk (`lesson-chunks/lessons-titles-<locale>.ts`). */
@@ -127,6 +140,8 @@ export interface LessonStore {
   stepsOf: (questId: string) => readonly QuestStep[] | undefined;
   /** A lesson minigame ref's scope, once its cell is loaded. */
   scopeFor: (ref: string) => MinigameScope | undefined;
+  /** A lesson quest's Did you know? note, once its cell is loaded (row CM-3C); undefined before, or for a cell with none. */
+  noteOf: (questId: string) => LessonQuestNote | undefined;
   /** Every scope of the loaded cells, by ref. */
   loadedScopes: () => Readonly<Record<string, MinigameScope>>;
   /** Called with the glosses of every chunk loaded so far, then of each chunk as it loads. */
@@ -309,6 +324,10 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     scopeFor: (ref) => {
       const cell = cellOfScopeRef(ref);
       return cell === undefined ? undefined : cells.get(cell)?.LESSON_SCOPES[ref];
+    },
+    noteOf: (questId) => {
+      const cell = questCell.get(questId);
+      return cell === undefined ? undefined : cells.get(cell)?.LESSON_NOTES[questId];
     },
     loadedScopes: () => Object.assign({}, ...[...cells.values()].map((c) => c.LESSON_SCOPES)) as Record<string, MinigameScope>,
     onOverlays: (listener) => {

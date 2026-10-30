@@ -695,6 +695,7 @@ export const learner = {
       },
       miss: 'Lee la oración otra vez. ¿Cuál encaja?',
       lookHere: 'Esta encaja aquí.',
+    },
     rolePlay: {
       tapReply: 'Toca tu respuesta',
       showMeanings: { cta: 'Ver significados' },
@@ -2146,5 +2147,9 @@ export const learner = {
     hint: 'Lee cada frase. Toca la que va primero.',
     showMeanings: 'Ver significados',
     meaningsShown: 'Significados visibles',
+  },
+  cultureTip: {
+    title: '¿Sabías que…?',
+    region: 'Nota de lección',
   },
 } satisfies DeepPartial<Messages['learner']>;

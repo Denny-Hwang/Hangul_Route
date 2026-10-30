@@ -52,7 +52,8 @@ const realia = { ref: 'realia:market-prices', kind: 'price-card', entries: [{ id
 
 describe('cloze-pick kind (additive)', () => {
   it('is a new kind at the end of MinigameKindSchema; every older kind still parses', () => {
-    expect(MinigameKindSchema.options.at(-1)).toBe('cloze-pick');
+    // Additive: after write-frame, before the kinds later rows append (story-order, role-play).
+    expect(MinigameKindSchema.options[MinigameKindSchema.options.indexOf('write-frame') + 1]).toBe('cloze-pick');
     for (const kind of ['listen-pick', 'order-it', 'realia-read', 'type-hangul', 'trace-word', 'write-frame']) expect(MinigameKindSchema.safeParse(kind).success).toBe(true);
   });
 

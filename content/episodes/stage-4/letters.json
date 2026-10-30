@@ -10,7 +10,9 @@
   "pillarTags": [
     "A1"
   ],
-  "rewardCardIds": ["card:mwoyeyo"],
+  "rewardCardIds": [
+    "card:mwoyeyo"
+  ],
   "quests": [
     {
       "id": "quest:stage4-letters-q1",
@@ -1062,7 +1064,96 @@
       ]
     }
   ],
-  "culture": [],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Hangeul Day, {ko:한글날}, is on 9 October. It celebrates the making of Hunminjeongeum, the letters now called Hangeul, and the day they were shared with everyone.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는?",
+          "publisher": "국립한글박물관 (National Hangeul Museum) — 한박웃음 2018년 10월 제63호",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "‘한글날은 세종대왕이 창제한 훈민정음의 반포를 기념하고, 한글의 연구와 보급을 장려하기 위해 정한 날이다. 현재 한글날(10월 9일)은 … 5대 국경일 중 하나’ / ‘‘백성을 가르치는 바른 소리’라는 의미를 가진 ‘훈민정음(訓民正音)’은 … 하나는 1443년 세종대왕이 만든 우리의 문자를 가리키는 것이고, 다른 하나는 이 문자에 대해 풀이하여 1446년에 간행한 책을 가리키는 것이다.’"
+        },
+        {
+          "title": "한글날 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/5230",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘훈민정음(訓民正音) 곧 오늘의 한글을 창제해서 세상에 펴낸 것을 기념하고, 우리 글자 한글의 우수성을 기리기 위한 국경일.’ / ‘광복 후 양력 10월 9일로 확정되었으며’ 유래: ‘훈민정음은 세종대왕 25년 곧 서기 1443년에 완성하여 3년 동안의 시험 기간을 거쳐 세종 28년인 서기 1446년에 세상에 반포되었다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-23",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Hangeul Museum webzine article 한글날이 10월 9일인 이유는? (2018, no. 63) says Hangeul Day, 9 October, marks the publication of 훈민정음 and is one of the five national days; the National Folk Museum of Korea entry 한글날 (Encyclopedia of Korean Seasonal Customs, topic 5230) defines it as the national day that marks the making and publishing of 훈민정음, today's 한글, and says the date was fixed at 9 October (solar) after liberation, from the 1446 publication. English paraphrase.\nPass 2 (fact check, 2026-10-23): entry fetched again; 10월 9일, 창제 and 세상에 펴낸 found. 'Shared with everyone' paraphrases 세상에 펴낸/반포. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): National Hangeul Museum webzine (hangeul.go.kr) and NFM 한글날 (5230) re-read: 9 October, marks the making and publishing of 훈민정음, today's 한글. Holds. es/ko checked."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "King Sejong finished the new letters in 1443. In 1446 they were made public in a book named Hunminjeongeum, which means the right sounds to teach the people.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는?",
+          "publisher": "국립한글박물관 (National Hangeul Museum) — 한박웃음 2018년 10월 제63호",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "‘한글날은 세종대왕이 창제한 훈민정음의 반포를 기념하고, 한글의 연구와 보급을 장려하기 위해 정한 날이다. 현재 한글날(10월 9일)은 … 5대 국경일 중 하나’ / ‘‘백성을 가르치는 바른 소리’라는 의미를 가진 ‘훈민정음(訓民正音)’은 … 하나는 1443년 세종대왕이 만든 우리의 문자를 가리키는 것이고, 다른 하나는 이 문자에 대해 풀이하여 1446년에 간행한 책을 가리키는 것이다.’"
+        },
+        {
+          "title": "한글날 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/5230",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘훈민정음(訓民正音) 곧 오늘의 한글을 창제해서 세상에 펴낸 것을 기념하고, 우리 글자 한글의 우수성을 기리기 위한 국경일.’ / ‘광복 후 양력 10월 9일로 확정되었으며’ 유래: ‘훈민정음은 세종대왕 25년 곧 서기 1443년에 완성하여 3년 동안의 시험 기간을 거쳐 세종 28년인 서기 1446년에 세상에 반포되었다.’"
+        },
+        {
+          "title": "Hunminjeongum Manuscript",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "‘The manuscript published in the ninth lunar month of 1446, contains the promulgation by Sejong the Great … of the Korean alphabet of the same name, now called han-gul, the development of which he completed in 1443.’ / ‘Registration Year: 1997’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-23",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the National Hangeul Museum article 한글날이 10월 9일인 이유는? says 훈민정음 means ‘the right sounds to teach the people’, names the letters Sejong made in 1443 and the book that explains them, published in 1446; the National Folk Museum of Korea entry 한글날 (유래) says 훈민정음 was completed in 1443 and made public in 1446; the UNESCO Memory of the World page says Sejong completed the alphabet in 1443 and the manuscript was published in the ninth lunar month of 1446. Same years as the reviewed card:hangeul back. English paraphrase.\nPass 2 (fact check, 2026-10-23): both pages fetched again; 1443 and 1446 found in both. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): National Hangeul Museum: 1443 the script, 1446 the book, 백성을 가르치는 바른 소리; NFM 5230: completed 1443, published 1446; UNESCO page: completed in 1443, published 1446. Holds. es/ko checked."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "The 1446 book that explains the letters was inscribed in UNESCO's Memory of the World Register in 1997, as the Hunminjeongum Manuscript.",
+      "sources": [
+        {
+          "title": "Hunminjeongum Manuscript",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "‘The manuscript published in the ninth lunar month of 1446, contains the promulgation by Sejong the Great … of the Korean alphabet of the same name, now called han-gul, the development of which he completed in 1443.’ / ‘Registration Year: 1997’"
+        },
+        {
+          "title": "한글날 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/5230",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘훈민정음(訓民正音) 곧 오늘의 한글을 창제해서 세상에 펴낸 것을 기념하고, 우리 글자 한글의 우수성을 기리기 위한 국경일.’ / ‘광복 후 양력 10월 9일로 확정되었으며’ 유래: ‘훈민정음은 세종대왕 25년 곧 서기 1443년에 완성하여 3년 동안의 시험 기간을 거쳐 세종 28년인 서기 1446년에 세상에 반포되었다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-23",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-3C, 2026-10-23): the UNESCO Memory of the World page 'Hunminjeongum Manuscript' gives the 1446 manuscript with its commentaries and 'Registration Year: 1997'; the National Folk Museum of Korea entry 한글날 says the book was registered in the Memory of the World in October 1997. The UNESCO claim names the exact element under its UNESCO name (§5.1), the book, not the alphabet.\nPass 2 (fact check, 2026-10-23): both pages fetched again; the element name and 1997 found. Claim holds.\nPass 3 (MAR checklist pass by the authoring agent, 2026-10-23): F-CURR-002 §5.1 conventions (institution named as on the access date, no UNESCO claim beyond the exact element, shared East Asian heritage not framed as Korean in origin), §7.7 checklist (no age wording, no emoji, no speaking UI, neutral tone) and the 해요체 of the tokens checked. Pass. The independent MAR culture review re-runs in the PR review stage.\nPass 4 (independent MAR culture, facts and language review, a reviewer agent other than the author, 2026-10-23): UNESCO Memory of the World page re-read: the element is named Hunminjeongum Manuscript, inscribed 1997, the 1446 book with the proclamation and commentaries; the note uses 'inscribed' and the exact UNESCO name only (§5.1). NFM 5230 agrees (1997). Holds. es/ko checked."
+      }
+    }
+  ],
   "review": {
     "language": "native-reviewed",
     "culture": "culture-reviewed",
@@ -1070,7 +1161,9 @@
     "reviewedAt": "2026-10-14",
     "notes": [
       "Language pass 4 (MAR): spelling, spacing, register and romanization clean; applied the one-order Story Sequences, Hoya greeting the teacher back in q3, the ko q3 title on the taught thank-you, Let's in Hoya lines, es Siguiente, plainer ko glosses; kept 연필 여기 있어요 (natural colloquial order).",
-      "Culture pass 5 (MAR): no culture claim, so no sources; school etiquette fixed (the pupil returns the greeting); cast is Hoya and an unnamed teacher (선생님 / Teacher / Docente), addressed by title as pupils do; no real person, brand or price; no age wording."
+      "Culture pass 5 (MAR): no culture claim, so no sources; school etiquette fixed (the pupil returns the greeting); cast is Hoya and an unnamed teacher (선생님 / Teacher / Docente), addressed by title as pupils do; no real person, brand or price; no age wording.",
+      "CM-3C (F-CURR-002 §5.2 S4, 2026-10-23): culture notes n1-n3 added (Hangeul Day on 9 October, Hunminjeongeum 1443/1446, the Hunminjeongum Manuscript in Memory of the World 1997), sources National Hangeul Museum, National Folk Museum of Korea and UNESCO, each with its own verification record.",
+      "Culture notes (CM-3C, MAR 2026-10-23): an independent reviewer agent re-read every source of the new notes (all §6.6 hosts, the allowlisted one first), checked §5.1 and §7.7 and the es and ko overlays; findings applied. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1

@@ -112,10 +112,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // F-CURR-002 CM-31 (Dictation and the spelling round, #850) adds 6,168 B on top (its switch step, the props and
   // branches in Type Hangul and Listen & Pick, the round fields and the English strings; the rounds themselves are the
   // precached dictation chunk, a SCREEN_CHUNKS entry): 4,757,612 B raw / 1,268,578 B gzip merged onto main 524961dae,
-  // 2,388 B under this line, which stays.
+  // 2,388 B under the 4,760,000 B line of that main.
   // CM-34 (Story Order: the step's door and its Story Sequence fallback, the round schema, the four English strings;
   // the game is the order-game chunk) on main 524961dae (#845) measures 4,758,546 B raw / 1,268,549 B gzip (release
-  // `build:web`), 7,102 B over that main and 1,454 B under this line, so the line stays.
+  // `build:web`), 7,102 B over that main and 1,454 B under the 4,760,000 B line of that main.
   startBundleRaw: 4_765_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -279,10 +279,6 @@ export const SCREEN_CHUNKS = Object.freeze([
   // is on); its Listen & Pick fallback (`cloze-pick-fallback.tsx`, with the card and the round helpers) stays in the
   // start bundle, so a step plays it with the switch off or the chunk unable to load.
   Object.freeze({ name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' }),
-  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
-  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
-  // `src/screens/minigames/dictation-entry.ts`).
-  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
   // F-CURR-002 row CM-34: the Story Order game (`src/screens/minigames/story-order/order-game-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/story-order/StoryOrderStep.tsx`), loaded while
   // `game.story-order` is on; off, its rounds play as Story Sequence, in the start bundle already. Not named `story-*`:
@@ -292,6 +288,14 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/minigames/role-play/role-play-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/minigames/role-play/role-play-entry.tsx`).
   Object.freeze({ name: 'role-play-chunk', marker: 'screen-chunk:role-play' }),
+  // F-CURR-002 row CM-31: Type Hangul's hear mode (Dictation) and the spelling round's prompt
+  // (`src/screens/minigames/dictation-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/minigames/dictation-entry.ts`).
+  Object.freeze({ name: 'dictation-chunk', marker: 'screen-chunk:dictation' }),
+  // F-CURR-002 row CM-3C: the Did you know? tip at the reward step and on the card back
+  // (`src/screens/quest/culture-tip-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/quest/culture-tip-entry.tsx` while `upperCards` is on).
+  Object.freeze({ name: 'culture-tip-chunk', marker: 'screen-chunk:culture-tip' }),
 ]);
 
 /**

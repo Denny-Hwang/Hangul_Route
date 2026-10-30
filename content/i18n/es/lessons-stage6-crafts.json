@@ -5,7 +5,11 @@
     "episode:stage6-crafts": {
       "title": "Compra en el mercado",
       "subtitle": "Lee los carteles de precios y compra en un puesto del mercado.",
-      "hoyaIntro": "¡Vamos a un puesto del mercado, a leer los carteles y a comprar manzanas!"
+      "hoyaIntro": "¡Vamos a un puesto del mercado, a leer los carteles y a comprar manzanas!",
+      "culture.n1.text": "Un mercado tradicional reúne muchas tiendas en un mismo lugar. Venden comida, fruta y cosas de uso diario, a menudo a precios bastante bajos.",
+      "culture.n2.text": "Un mercado de cinco días, {ko:오일장}, abre una vez cada cinco días, unas seis veces al mes. Algunos pueblos lo celebran en días de mercado fijos.",
+      "culture.n3.text": "{ko:덤} es un poco más que el vendedor añade gratis a lo que pagaste. En un puesto del mercado, a veces el vendedor da un poco.",
+      "culture.n4.text": "Delante de un contador como {ko:개}, se cuenta con {ko:한}, {ko:두}, {ko:세}, formas cortas de {ko:하나}, {ko:둘}, {ko:셋}. Estos números no llegan a cien, así que los precios en miles usan {ko:이}, {ko:오}, {ko:천}."
     },
     "quest:stage6-crafts-q1": {
       "title": "En el puesto",

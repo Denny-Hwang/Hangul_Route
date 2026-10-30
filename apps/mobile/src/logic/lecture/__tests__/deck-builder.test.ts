@@ -2703,6 +2703,9 @@ describe('expandDeck: Cloze Pick on the existing question slides (F-CURR-002 sec
       { blockIndex: 0, ref: 'mg:cloze-none', reason: 'scope-too-small' },
     ]);
     expect(new Set(kinds(slides))).toEqual(new Set(['title', 'quiz', 'realia', 'end']));
+  });
+});
+
 describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
   // The two-round fixture: an illustrated round settled by its time words, then a captions-only round.
   const soScopes: Record<string, MinigameScope> = { 'mg:story-order': STORY_ORDER_FIXTURES.twoRounds, 'mg:story-order-empty': STORY_ORDER_FIXTURES.empty };
@@ -2711,6 +2714,7 @@ describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
   soQuest.steps[2]!.minigameKind = 'story-order';
   const b = bundle({ scopeFor: (ref) => soScopes[ref] ?? scopes[ref], questById: (id) => (id === soQuest.id ? soQuest : quests.find((q) => q.id === id)) });
   const run = () => expandDeck(deckOf([{ kind: 'quest', id: soQuest.id }]), b, VOICE);
+
   it('maps onto the sentence slides, no slide kind of its own: each line in its right order, round by round', () => {
     const { slides, skipped } = run();
     expect(kinds(slides)).toEqual(['title', ...Array(8).fill('sentence'), 'end']);
@@ -2724,9 +2728,12 @@ describe('expandDeck: Story Order (F-CURR-002 section 8, row CM-34)', () => {
       '그다음에 세수해요.',
       '그리고 밥을 먹어요.',
       '마지막에 공원에 가요.',
+    ]);
     expect(keys(lines).slice(0, 2)).toEqual(['quest:story-order/s2/day/sun', 'quest:story-order/s2/day/bread']);
     // An empty scope adds no slide and no skip.
     expect(skipped).toEqual([]);
+  });
+
   it('the Korean first and its meaning a click later; the picture only where the round draws pictures', () => {
     const lines = only(run().slides, 'sentence');
     expect(lines[0]).toMatchObject({

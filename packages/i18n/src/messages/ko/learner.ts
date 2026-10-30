@@ -675,6 +675,7 @@ export const learner = {
       },
       miss: '문장을 다시 읽어 봐요. 어느 것이 알맞을까요?',
       lookHere: '여기에는 이게 알맞아요.',
+    },
     rolePlay: {
       tapReply: '대답을 눌러요',
       showMeanings: { cta: '뜻 보기' },
@@ -2081,5 +2082,9 @@ export const learner = {
     hint: '문장을 하나씩 읽어요. 처음에 오는 문장을 눌러요.',
     showMeanings: '뜻 보기',
     meaningsShown: '뜻이 보여요',
+  },
+  cultureTip: {
+    title: '알고 있었나요?',
+    region: '레슨 노트',
   },
 } satisfies DeepPartial<Messages['learner']>;

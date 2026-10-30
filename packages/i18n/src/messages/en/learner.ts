@@ -980,9 +980,12 @@ export const learner = {
       miss: 'Read the sentence again. Which one fits?',
       /** The second miss on one round: the tile that fits is ringed. */
       lookHere: 'This one fits here.',
+    },
+    /**
      * Role Play (F-CURR-002 row CM-35, design/wireframes/minigame/role-play.md): a short chat, read the partner's line
      * and tap a reply. The partner lines, replies, Hoya's why lines and the closing line are content; Continue is
      * `common.buttons.continue`. No speaking: the learner's turn is a tap.
+     */
     rolePlay: {
       tapReply: 'Tap a reply',
       /** Shows the meanings of this turn's replies; the turn counts as hinted, never as a miss. */
@@ -2865,5 +2868,14 @@ export const learner = {
     showMeanings: 'Show meanings',
     /** Replaces the button once the meanings show (not a toggle back). */
     meaningsShown: 'Meanings shown',
+  },
+  /**
+   * The Did you know? tip (F-CURR-002 §5.7, row CM-3C): one sourced note of the lesson cell at a quest's reward step and
+   * on the back of the cell's cards, behind `upperCards`. The note and its source line are content (the cell's
+   * `culture[]` and `cardDetail.citation`); `region` names the tip for screen readers (a landmark on the web).
+   */
+  cultureTip: {
+    title: 'Did you know?',
+    region: 'Lesson note',
   },
 } as const;

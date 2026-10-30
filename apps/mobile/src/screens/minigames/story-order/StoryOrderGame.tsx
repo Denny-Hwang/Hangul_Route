@@ -164,7 +164,7 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       switch (effect.type) {
         case 'answer':
           // The last slot names no item (one card left): it scores, and the memory store hears nothing.
-          hostRef.current.answer(effect.roundKey, effect.correct, { ...(effect.itemId === undefined ? {} : { itemId: effect.itemId }), ...(effect.hinted ? { hinted: true } : {}) });
+          hostRef.current.answer(effect.roundKey, effect.correct, { ...(effect.itemId === undefined ? {} : { itemId: effect.itemId }), ...(effect.hinted && effect.correct ? { hinted: true } : {}) });
           return;
         case 'placed': {
           success();

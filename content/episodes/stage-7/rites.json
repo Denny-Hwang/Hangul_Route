@@ -1116,36 +1116,102 @@
       "id": "n4",
       "kind": "culture",
       "textEn": "Tteokguk, a soup of sliced rice cake, is the classic Seollal dish.",
-      "factRef": "story:seollal-new-year#f6",
+      "sources": [
+        {
+          "title": "떡국 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3690",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘멥쌀을 가루내어 떡메로 친 후, 손으로 길게 만든 흰 가래떡을 썰어서 맑은 장국에 넣고 끓인 음식으로 정조차례(正朝茶禮)시에 세찬(歲饌)으로 먹는 시절음식.’"
+        },
+        {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘설의 핵심 요소인 설 차례, 새배, 떡국을 먹는 풍속이 확인된다.’ (원문 표기 그대로)"
+        },
+        {
+          "title": "떡국",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0017198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘맑은 장국에 가래떡을 얇게 썰어넣고 끓인 음식.’ 내용: ‘설날에 먹는 절식(節食)의 하나이다.’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘세찬의 대표적인 음식인 떡국을 먹어야 나이 한 살을 먹는다고 했다.’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story seollal-new-year (tteokguk is the representative Seollal food, sliced garaetteok in a clear broth; sources: the Encyclopedia of Korean Culture entries 떡국 and 설 and the Korea Heritage Service entry 설과 대보름). No new fact. Carried by: the q1 intro Hoya line (\"Tteokguk is a classic Seollal dish.\").\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:seollal-new-year#f6 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 떡국 defines it as sliced garaetteok in clear broth and a Seollal seasonal food; the entry 설 calls tteokguk the representative New Year food; the Korea Heritage Service text for 설과 대보름 (loaded from its cul_127ZZ01500000 description page) names eating tteokguk as a core Seol custom. \"The classic Seollal dish\" matches; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:seollal-new-year#f6 resolves; AKS 떡국 (설날 절식) and 설 and the Korea Heritage Service 설과 대보름 page support \"the classic Seollal dish\". The note says \"classic\", no claim about every household. No new fact; no wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story seollal-new-year (tteokguk is the representative Seollal food, sliced garaetteok in a clear broth; sources: the Encyclopedia of Korean Culture entries 떡국 and 설 and the Korea Heritage Service entry 설과 대보름). No new fact. Carried by: the q1 intro Hoya line (\"Tteokguk is a classic Seollal dish.\").\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:seollal-new-year#f6 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 떡국 defines it as sliced garaetteok in clear broth and a Seollal seasonal food; the entry 설 calls tteokguk the representative New Year food; the Korea Heritage Service text for 설과 대보름 (loaded from its cul_127ZZ01500000 description page) names eating tteokguk as a core Seol custom. \"The classic Seollal dish\" matches; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:seollal-new-year#f6 resolves; AKS 떡국 (설날 절식) and 설 and the Korea Heritage Service 설과 대보름 page support \"the classic Seollal dish\". The note says \"classic\", no claim about every household. No new fact; no wording copied. Outcome: pass, no change.\nCM-3C (2026-10-23): the note now carries its own sources, the four sources of story:seollal-new-year#f6 with the National Folk Museum of Korea entry 떡국 first, so the on-screen tip names an allowlisted source. The words and the fact are unchanged."
       }
     },
     {
       "id": "n5",
       "kind": "culture",
       "textEn": "For Chuseok, families often gather to make songpyeon together.",
-      "factRef": "story:chuseok-ganggangsullae#f4",
+      "sources": [
+        {
+          "title": "송편 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4337",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "정의: ‘멥쌀가루를 익반죽하고 풋콩, 깨, 밤 같은 소를 넣어 반달 모양으로 빚어서 시루에 솔잎을 켜켜로 놓고 찐 떡. … 추석 때 햇곡식으로 빚는 명절떡이기도 하다.’"
+        },
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.’ / ‘송편 속에도 콩 · 팥 · 밤 · 대추 등을 넣는데, 모두 햇것으로 한다. 모두 햇곡식이기 때문에 더욱 맛이 있다.’"
+        },
+        {
+          "title": "송편",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031123",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘팔월 추석에는 햅쌀로 송편을 빚어 차례를 지내고’ / ‘팥송편·깨송편·대추송편·잣송편’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f4 of the reviewed story chuseok-ganggangsullae (on the evening before Chuseok families gather to make songpyeon; sources: the Encyclopedia of Korean Culture entries 추석 and 송편). The note says \"often\", not every family. No new fact. Carried by: the q2 intro Hoya line.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 추석 says families gather on the evening of the 14th to make songpyeon; the entry 송편 says songpyeon is made from new rice for Chuseok. The note says \"often\", so it makes no claim about every family; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves; AKS 추석 (families gather on the evening of the 14th to make songpyeon) and 송편 (new rice) support the note, which says \"often\", not every family. No new fact; no wording copied. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f4 of the reviewed story chuseok-ganggangsullae (on the evening before Chuseok families gather to make songpyeon; sources: the Encyclopedia of Korean Culture entries 추석 and 송편). The note says \"often\", not every family. No new fact. Carried by: the q2 intro Hoya line.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves (story reviewed by MAR 2026-10-13). Its sources re-fetched: the Encyclopedia of Korean Culture entry 추석 says families gather on the evening of the 14th to make songpyeon; the entry 송편 says songpyeon is made from new rice for Chuseok. The note says \"often\", so it makes no claim about every family; no new fact; no wording copied.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f4 resolves; AKS 추석 (families gather on the evening of the 14th to make songpyeon) and 송편 (new rice) support the note, which says \"often\", not every family. No new fact; no wording copied. Outcome: pass, no change.\nCM-3C (2026-10-23): culture-source fix. The note now carries its own sources: the National Folk Museum of Korea entry 송편 (topic 4337, read through the site's topic API: the festive rice cake made for Chuseok from the new grain) first, then the two sources of story:chuseok-ganggangsullae#f4 (families gather to make songpyeon). The words are unchanged."
       }
     },
     {
       "id": "n6",
       "kind": "culture",
       "textEn": "Chuseok has long been linked with the full moon, and it was even called the holiday of the moon.",
-      "factRef": "story:chuseok-ganggangsullae#f6",
+      "sources": [
+        {
+          "title": "국가무형유산 추석",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The full moon on Chuseok is understood as a symbol of prosperity, fecundity, and a bountiful crop.’ / ‘추석을 ‘달의 명절’이라 이르기도 하였다.’"
+        },
+        {
+          "title": "추석",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "내용 요약: ‘추석은 1년 중 가장 큰 보름달을 맞이하는 달의 명절이다. 농경민족으로서 수확의 계절을 맞이하여 풍년을 축하·감사하며’"
+        }
+      ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story chuseok-ganggangsullae (the Chuseok full moon as a symbol of plenty; Chuseok called 'the holiday of the moon'; source: the Korea Heritage Service entry 추석). No new fact. Carried by: the q1 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves (story reviewed by MAR 2026-10-13). The Korea Heritage Service text for 추석 (loaded from its cul_127ZZ01530000 description page) says the full moon symbolised plenty in traditional farming life and that Chuseok was also called 달의 명절, and gives the English line quoted in the story locator; the Encyclopedia of Korean Culture entry 추석 also calls it a moon holiday. The note matches; \"the holiday of the moon\" is a translated name, not copied prose; no new fact.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves; the Korea Heritage Service 추석 page (the full moon as a symbol of plenty; 달의 명절) and AKS 추석 support the note. The q1 Discover caption that carries it said \"has long been called\", a duration the sources do not give; it now says \"was even called the holiday of the moon\" in en, es and ko, matching the note. No new fact; no wording copied. Outcome: pass, caption fixed."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): restates fact f6 of the reviewed story chuseok-ganggangsullae (the Chuseok full moon as a symbol of plenty; Chuseok called 'the holiday of the moon'; source: the Korea Heritage Service entry 추석). No new fact. Carried by: the q1 Discover page 2 caption.\nLine 2 (pass 2b, independent fact check, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves (story reviewed by MAR 2026-10-13). The Korea Heritage Service text for 추석 (loaded from its cul_127ZZ01530000 description page) says the full moon symbolised plenty in traditional farming life and that Chuseok was also called 달의 명절, and gives the English line quoted in the story locator; the Encyclopedia of Korean Culture entry 추석 also calls it a moon holiday. The note matches; \"the holiday of the moon\" is a translated name, not copied prose; no new fact.\nLine 3 (pass 5, MAR culture review, 2026-10-14): factRef story:chuseok-ganggangsullae#f6 resolves; the Korea Heritage Service 추석 page (the full moon as a symbol of plenty; 달의 명절) and AKS 추석 support the note. The q1 Discover caption that carries it said \"has long been called\", a duration the sources do not give; it now says \"was even called the holiday of the moon\" in en, es and ko, matching the note. No new fact; no wording copied. Outcome: pass, caption fixed.\nCM-3C (2026-10-23): the note now carries its own sources, the two sources of story:chuseok-ganggangsullae#f6 (the Korea Heritage Service entry 추석 first), so the on-screen tip names an allowlisted source. The words and the fact are unchanged."
       }
     }
   ],

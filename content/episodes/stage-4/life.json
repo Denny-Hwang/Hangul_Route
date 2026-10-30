@@ -10,7 +10,9 @@
   "pillarTags": [
     "B5"
   ],
-  "rewardCardIds": ["card:masisseoyo"],
+  "rewardCardIds": [
+    "card:masisseoyo"
+  ],
   "quests": [
     {
       "id": "quest:stage4-life-q1",
@@ -1067,6 +1069,13 @@
       "textEn": "People often ask {ko:밥 먹었어요?} as a friendly hello. It shows care, and a short answer is enough.",
       "sources": [
         {
+          "title": "인사예절 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/12123",
+          "accessed": "2026-10-23",
+          "quoteOrLocator": "내용, 2. 언어 인사예절 ⑦: ‘전통적인 인사언어로는 ‘밥 먹었니?’ ‘식사하셨습니까?’ ‘진지 잡수셨습니까?’ 등이 있다.’ / ‘식사 여부를 묻는 것이 안부를 확인하는 보통의 인사로 정착한 것으로 보인다.’"
+        },
+        {
           "title": "인사, an entry of the Encyclopedia of Korean Culture",
           "publisher": "한국민족문화대백과사전 (Encyclopedia of Korean Culture), Academy of Korean Studies",
           "url": "https://encykorea.aks.ac.kr/Article/E0046905",
@@ -1092,7 +1101,7 @@
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the 정책기자단 citizen-reporter piece on an NFMK exhibit (the reporter's wording) describes it as an ordinary greeting at a shared table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting as the reporter describes the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged.\nLine 3 (pass 5, MAR culture review, final independent fact check, 2026-10-14): the review found both korea.kr sources were private writing on a public host (an opinion column and a citizen-reporter piece), not an institution's own statement, so the AKS Encyclopedia of Korean Culture entry 인사 was added as the institutional source; all three pages re-fetched and every quoteOrLocator passage found. The entry lists asking whether someone has eaten among everyday greetings still exchanged today and defines a greeting as asking after someone and showing warmth. 'Family and friends' was narrowed to 'People often ask'. Source labels in lines 1-2 corrected. No copied wording, no group-wide claim, stereotype, living person, shop, brand or price. Outcome: changed as stated, passes 3."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-14): both pages fetched; the column calls the question a customary greeting and an expression of care rather than a real question; the 정책기자단 citizen-reporter piece on an NFMK exhibit (the reporter's wording) describes it as an ordinary greeting at a shared table. The note says 'often', names no group as a whole and copies no wording. Carried by: q1 intro Hoya line and q1 Discover page 1 caption.\nLine 2 (pass 2b, independent fact check by a separate session, 2026-10-14): both korea.kr pages re-fetched; every quoteOrLocator passage found on its page (column dated 2018-08-31 calls the question just a customary greeting and, in the mother's phone call, care and affection rather than a real question; report dated 2025-11-13 describes asking it around the shared table as an ordinary greeting as the reporter describes the museum's third section). 'Family and friends often ask' is supported (family in both, closeness between acquaintances in the column); 'shows care' is supported; 'a short answer is enough' follows from both pages calling it a greeting rather than a real question. The note and the carrying lines are original English and copy no source wording; host www.korea.kr is on the allowlist; no group-wide claim, stereotype, living person, shop, brand or price. Outcome: kept unchanged.\nLine 3 (pass 5, MAR culture review, final independent fact check, 2026-10-14): the review found both korea.kr sources were private writing on a public host (an opinion column and a citizen-reporter piece), not an institution's own statement, so the AKS Encyclopedia of Korean Culture entry 인사 was added as the institutional source; all three pages re-fetched and every quoteOrLocator passage found. The entry lists asking whether someone has eaten among everyday greetings still exchanged today and defines a greeting as asking after someone and showing warmth. 'Family and friends' was narrowed to 'People often ask'. Source labels in lines 1-2 corrected. No copied wording, no group-wide claim, stereotype, living person, shop, brand or price. Outcome: changed as stated, passes 3.\nCM-3C (2026-10-23): culture-source fix. The National Folk Museum of Korea entry 인사예절 (Hallyu culture dictionary, topic 12123) added first: asking whether someone has eaten (밥 먹었니?) is a traditional greeting that asks after the person. The note's words are unchanged; the short answer stays with the korea.kr column."
       }
     }
   ],

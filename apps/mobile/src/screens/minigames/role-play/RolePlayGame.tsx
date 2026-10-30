@@ -154,7 +154,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
       for (const effect of effects) {
         switch (effect.type) {
           case 'answer':
-            host.answer(effect.node, effect.correct, { itemId: `${effect.node}/${effect.reply}`, ...(effect.hinted ? { hinted: true } : {}) });
+            host.answer(effect.node, effect.correct, { itemId: `${effect.node}/${effect.reply}`, ...(effect.hinted && effect.correct ? { hinted: true } : {}) });
             break;
           case 'nudge': {
             nudge();

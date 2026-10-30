@@ -5,7 +5,10 @@
     "episode:stage3-nature": {
       "title": "Oraciones de animales",
       "subtitle": "Di dónde están los animales, cómo son y qué hacen.",
-      "hoyaIntro": "¡Me encantan los animales! Leamos y armemos oraciones sobre ellos."
+      "hoyaIntro": "¡Me encantan los animales! Leamos y armemos oraciones sobre ellos.",
+      "culture.n1.text": "Después de una palabra de lugar, {ko:에} dice dónde está algo: en, sobre o junto a. {ko:있어요} dice que un animal o una cosa está ahí.",
+      "culture.n2.text": "El marcador de sujeto tiene dos formas: {ko:이} tras una palabra que acaba en consonante y {ko:가} tras una que acaba en vocal.",
+      "culture.n3.text": "En una oración coreana, la palabra que dice qué hace o cómo es el sujeto va después del sujeto, al final."
     },
     "quest:stage3-nature-q1": {
       "title": "¿Dónde está el pájaro?",

@@ -626,6 +626,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       // Cloze Pick (F-CURR-002 section 8, row CM-30): the existing question slides, no new slide kind.
       case 'cloze-pick':
         clozeStep(path, ref, scope.clozePick);
+        return;
       // Story Order (F-CURR-002 section 8, row CM-34): no slide kind of its own. Each round's lines become sentence
       // slides in their right order, so the room reads the story together: the Korean first and its meaning a click
       // later, as the learner's cards hold it back; a picture only where the round draws its pictures.
