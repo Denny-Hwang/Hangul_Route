@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
+import { swipeStage } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -169,26 +170,30 @@ const bar = (page: Page): Locator => page.getByTestId('presenter-bar-compact');
 /** The `speaker-off` glyph's cross, the one part `speaker` does not draw. */
 const speakerOff = (page: Page): Locator => page.getByTestId('presenter-sound').locator('path[d="M16 9.5 L21 14.5"]');
 
-/** A tap in the compact bar's strip (the bottom of the stage): it shows a hidden bar and hides a shown one. */
-async function tapStrip(page: Page): Promise<void> {
+/**
+ * A touch tap on empty stage area (the stage's top-left padding, where no slide draws): it shows a
+ * hidden bar and hides a shown one (AMENDMENTS-PRESENTER-NAV section 5.3; the strip is gone).
+ */
+async function tapEmpty(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
 }
 
-/** A tap in the middle of the stage, above the strip (the right two thirds: reveal or next). */
-async function tapStage(page: Page): Promise<void> {
+/** A swipe to the left across the middle of the stage: reveal or next (section 6; Chromium only). */
+async function swipeNext(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.7, stage.y + stage.height * 0.4);
+  const y = stage.y + stage.height * 0.4;
+  await swipeStage(page, { x: stage.x + stage.width * 0.7, y }, { x: stage.x + stage.width * 0.3, y });
 }
 
 /**
- * Shows the compact bar with a strip tap, as a teacher does. A bar still shown from an earlier tap
+ * Shows the compact bar with a tap on empty stage, as a teacher does. A bar still shown from an earlier tap
  * is let hide first (it fades after `presenter.autoHideMs`), so it cannot fade under the next tap.
  */
 async function showPhoneBar(page: Page): Promise<void> {
   await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none', { timeout: 10_000 });
   await expect(bar(page)).toHaveCSS('opacity', '0');
-  await tapStrip(page);
+  await tapEmpty(page);
   await expect(bar(page)).toHaveCSS('opacity', '1');
   await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
 }
@@ -234,6 +239,8 @@ async function arrowUntilWord(page: Page, ko: string): Promise<void> {
 
 test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
   test.use({ viewport: { width: 915, height: 412 }, isMobile: true, hasTouch: true });
+  // The steps are swipes, which drive CDP touch events (Chromium only; AMENDMENTS-PRESENTER-NAV section 14).
+  test.skip(process.env.E2E_WEBKIT === '1', 'swipes drive CDP touch events (Chromium only)');
 
   test('the owner report: Sound in the floating bar on 김밥 says 김밥 once, in Korean, inside the tap', async ({ page }) => {
     await startOnPhone(page);
@@ -259,8 +266,8 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
     const flashed: string[] = [];
     for (let n = 1; n <= total; n++) {
       await expect(page.getByTestId('presenter-counter')).toHaveText(`${n} / ${total}`);
-      // Every build revealed by stage taps, so all of the slide's Korean is on the stage.
-      for (let i = 0; i < 10 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await tapStage(page);
+      // Every build revealed by swipes, so all of the slide's Korean is on the stage.
+      for (let i = 0; i < 10 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await swipeNext(page);
       const before = (await spoken(page)).length;
       const flash = page.getByTestId('presenter-no-sound-flash');
       // A flash belongs to its slide: none is left over from the slide before.
@@ -282,7 +289,7 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
         expect(said[0]!.lang, `slide ${n}`).toBe('ko-KR');
         expect(await stageText(page), `slide ${n}: ${said[0]!.text}`).toContain(said[0]!.text);
       }
-      if (n < total) await tapStage(page);
+      if (n < total) await swipeNext(page);
     }
     // The title and the End slide have nothing of their own to say; every word, question and card does.
     expect(flashed).toEqual([`1 / ${total}`, `${total} / ${total}`]);
@@ -292,12 +299,12 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
     await speechConfig(page, { voices: 'none' });
     await startOnPhone(page, { ...DECK, id: 'lecture:sound019', blocks: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }] });
     const flash = page.getByTestId('presenter-no-voice-flash');
-    await tapStage(page);
+    await swipeNext(page);
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
     // ko, then the stroke guide, then the sound build.
-    await tapStage(page);
+    await swipeNext(page);
     await expect(flash).toHaveCount(0);
-    await tapStage(page);
+    await swipeNext(page);
     await expect(flash).toHaveText('No Korean voice here. You say it!');
     await expect(page.getByTestId('presenter-sound-live')).toHaveText('No Korean voice here. You say it!');
     expect(await spoken(page)).toEqual([]);
@@ -308,7 +315,7 @@ test.describe('Sound on an Android phone, sideways at 915 x 412', () => {
     await startOnPhone(page);
     const flash = page.getByTestId('presenter-no-voice-flash');
     for (let i = 0; i < 6; i++) {
-      await tapStage(page);
+      await swipeNext(page);
       await expect(flash).toHaveCount(0);
     }
     await expect(page.getByTestId('presenter-word')).toBeVisible();

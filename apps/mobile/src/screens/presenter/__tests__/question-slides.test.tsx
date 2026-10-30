@@ -356,7 +356,11 @@ describe('Stage: the live region names each question by its question (section 10
           deckTitle="Questions"
           strokeToken={0}
           joinCta="Join"
-          onCommand={() => undefined}
+          onGesture={() => undefined}
+          layout="docked"
+          covering="none"
+          pointing={false}
+          lastPointer={() => null}
           onPlaySound={() => undefined}
           romanization="always"
           sayIt={false}

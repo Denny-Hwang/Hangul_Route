@@ -225,9 +225,9 @@ test.describe('(a) Android Chrome, a phone sideways, the presenter', () => {
     await expect(page.getByTestId('presenter-stage')).toBeVisible();
     await page.getByTestId('presenter-next').tap();
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
-    // A phone step hides the bar at once; a tap in its strip shows it again.
+    // A phone step hides the bar at once; a tap on empty stage area (its top-left padding) shows it again.
     const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-    await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+    await page.touchscreen.tap(stage.x + 10, stage.y + 10);
     await expect(page.getByTestId('presenter-bar-compact')).toHaveCSS('opacity', '1');
     await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
     const before = (await spoken(page)).length;
@@ -477,8 +477,9 @@ test.describe('(c) an engine that never answers the silent unlock, the presenter
     await expect(page.getByTestId('presenter-stage')).toBeVisible();
     await page.getByTestId('presenter-next').tap();
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
+    // A tap on empty stage area shows the bar (AMENDMENTS-PRESENTER-NAV section 5.3).
     const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-    await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+    await page.touchscreen.tap(stage.x + 10, stage.y + 10);
     await expect(page.getByTestId('presenter-bar-compact')).toHaveCSS('opacity', '1');
     const before = (await heardOf(page)).length;
     await page.getByTestId('presenter-sound').tap();

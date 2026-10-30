@@ -17,9 +17,6 @@ import {
   completePayload,
   endLetters,
   fitShown,
-  barOverlap,
-  gestureCommand,
-  inBarStrip,
   homeStart,
   lessonStartPayload,
   readyFromBoot,
@@ -761,52 +758,6 @@ describe('stage box (README D1)', () => {
   it('in a phone window a stage button floors at the touch target instead (F-TCH-004 section 3.6 phone exception)', () => {
     expect(stageButtonSize(0.44, touchTarget.hero, touchTarget.min)).toBe(touchTarget.min);
     expect(stageButtonSize(0.8, touchTarget.hero, touchTarget.min)).toBe(Math.round(0.8 * touchTarget.hero));
-  });
-});
-
-describe("the compact bar's strip on a phone stage (F-TCH-004 section 3.6)", () => {
-  it('a tap in the strip shows or hides the bar instead of stepping; above it the stage takes the tap', () => {
-    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(true);
-    expect(inBarStrip({ y: 260, height: 320, strip: 60, dx: 2, dy: 3 })).toBe(true);
-    expect(inBarStrip({ y: 259, height: 320, strip: 60, dx: 0, dy: 0 })).toBe(false);
-  });
-
-  it('a swipe that starts in the strip still moves the slide', () => {
-    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: -80, dy: 0 })).toBe(false);
-    expect(inBarStrip({ y: 300, height: 320, strip: 60, dx: 0, dy: -70 })).toBe(false);
-  });
-
-  it('no strip, or a stage before layout, takes no tap', () => {
-    expect(inBarStrip({ y: 300, height: 320, strip: 0, dx: 0, dy: 0 })).toBe(false);
-    expect(inBarStrip({ y: 0, height: 0, strip: 60, dx: 0, dy: 0 })).toBe(false);
-    expect(inBarStrip({ y: 300, height: 320, strip: Number.NaN, dx: 0, dy: 0 })).toBe(false);
-  });
-
-  it('the strip is what of the bar reaches above the bottom inset and the letterbox', () => {
-    expect(barOverlap(80, 0, 0)).toBe(80);
-    expect(barOverlap(101, 21, 0)).toBe(80);
-    expect(barOverlap(80, 0, 30)).toBe(50);
-    expect(barOverlap(80, 40, 50)).toBe(0);
-    expect(barOverlap(80, -5, -5)).toBe(80);
-  });
-});
-
-describe('gestureCommand (section 3.5)', () => {
-  it('a tap on the left third goes back, elsewhere forward', () => {
-    expect(gestureCommand({ x: 100, width: 1200, dx: 0, dy: 0 })).toBe('prev');
-    expect(gestureCommand({ x: 400, width: 1200, dx: 2, dy: 3 })).toBe('next');
-    expect(gestureCommand({ x: 1100, width: 1200, dx: 0, dy: 0 })).toBe('next');
-  });
-
-  it('a horizontal swipe of 60 px or more: left forward, right back', () => {
-    expect(gestureCommand({ x: 600, width: 1200, dx: -60, dy: 10 })).toBe('next');
-    expect(gestureCommand({ x: 100, width: 1200, dx: 80, dy: -20 })).toBe('prev');
-  });
-
-  it('a vertical or diagonal drag, or a stage with no width, does nothing', () => {
-    expect(gestureCommand({ x: 600, width: 1200, dx: 60, dy: 50 })).toBeNull();
-    expect(gestureCommand({ x: 600, width: 1200, dx: 0, dy: 90 })).toBeNull();
-    expect(gestureCommand({ x: 600, width: 0, dx: 0, dy: 0 })).toBeNull();
   });
 });
 

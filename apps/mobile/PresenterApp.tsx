@@ -61,9 +61,10 @@ import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage
 import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
 import { readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
-import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { isPhoneWindow, navLayout, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { NUDGE_MS, type GesturePointer, type StageCommand } from './src/logic/lecture/stage-gesture';
 import {
   getCapability,
   hasClip,
@@ -106,6 +107,7 @@ import {
   subscribeKeys,
   subscribePresenterPop,
   takeDeckFragment,
+  touchSeenAtStart,
   unlockChime,
   unlockOrientation,
   waitForPresenterFont,
@@ -153,8 +155,15 @@ import { currFlagOn, startRemoteConfig, useRemoteConfigStore } from './src/store
  * (`isPhoneWindow`: window, screen and a coarse pointer) the stage is the whole window less the
  * safe-area insets, judged too small only below `PHONE_STAGE_MIN`; upright, a lesson shows the
  * rotate page. The compact bar floats over the stage bottom and never covers a new slide: every
- * step hides it at once, a stage tap never shows it; it shows at the start of the lesson, on a tap
- * in its strip (the grabber marks it) and while keyboard or screen-reader focus is inside it.
+ * step hides it at once; it shows at the start of the lesson, on a touch tap on empty stage area
+ * (another such tap hides it; AMENDMENTS-PRESENTER-NAV section 5.3) and while keyboard or
+ * screen-reader focus is inside it. No part of the stage is a hidden zone: a tap on a content target
+ * never steps and never touches the bar, and a swipe moves (sections 6 and 7).
+ *
+ * Docked windows (section 5.1): once touch is seen (`touchSeenAtStart`, or the first touch or pen
+ * press), Previous and Next never fade and take taps at once; the other controls keep D3's fade. A
+ * touch tap on empty stage rings Next for `NUDGE_MS` instead of stepping; a mouse click steps on a
+ * slide with nothing to point at.
  *
  * The way back (section 3.5 "History"; item 3): one history entry per phase (`logic/lecture/
  * history.ts`), so the browser or phone back goes lesson -> Exit confirm (a covering overlay closes
@@ -274,6 +283,16 @@ function Presenter(): ReactElement {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreOpenRef = useRef(moreOpen);
   moreOpenRef.current = moreOpen;
+  /** Opens or closes the More sheet; the ref follows at once, so a sheet button's own tool runs after it closed. */
+  const openMore = useCallback((open: boolean) => {
+    moreOpenRef.current = open;
+    setMoreOpen(open);
+  }, []);
+  // The More sheet lives only in the phone bar: a window that stops being a phone window (a foldable
+  // opened, split screen widened) closes it, so a stale sheet never swallows the docked bar's steps.
+  useEffect(() => {
+    if (!phone && moreOpenRef.current) openMore(false);
+  }, [phone, openMore]);
   const [capability, setCapability] = useState<AudioCapability>(getCapability);
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -534,8 +553,37 @@ function Presenter(): ReactElement {
   // A keyboard, switch or screen-reader focus inside the bar holds it on screen (a press's own focus does not, on a phone).
   const barHeld = useRef(false);
   // The last input on the page: a focus given back after a tap (More's sheet closing) is the pointer's too.
-  const lastInput = useRef<'pointer' | 'key' | null>(null);
-  useEffect(() => subscribeInputKind((kind) => (lastInput.current = kind)), []);
+  const lastInput = useRef<'mouse' | 'touch' | 'key' | null>(null);
+  // Touch seen (AMENDMENTS-PRESENTER-NAV section 4): from the page's pointer media, or the first touch or
+  // pen press; it pins Previous and Next on a docked window until the lesson's Exit.
+  const [touchSeen, setTouchSeen] = useState(touchSeenAtStart);
+  useEffect(
+    () =>
+      subscribeInputKind((kind) => {
+        lastInput.current = kind;
+        if (kind === 'touch') setTouchSeen(true);
+      }),
+    [],
+  );
+  /** The last press's pointer for a stage gesture: a pen's mouse-type events count as touch. */
+  const lastPointer = useCallback((): GesturePointer | null => (lastInput.current === 'key' ? null : lastInput.current), []);
+  // Next's ring after a touch tap on empty stage (section 7.2): static, for NUDGE_MS, never announced.
+  const [nudge, setNudge] = useState(false);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ringNext = useCallback(() => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    setNudge(true);
+    nudgeTimer.current = setTimeout(() => {
+      nudgeTimer.current = null;
+      setNudge(false);
+    }, NUDGE_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    },
+    [],
+  );
   const barTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearBarTimer = useCallback(() => {
     if (barTimer.current) clearTimeout(barTimer.current);
@@ -674,10 +722,16 @@ function Presenter(): ReactElement {
     repush.current = false;
     void pushPresenterEntry('running', rawOf(phase.deck));
   }, [phase, rawOf]);
-  /** A press, a tap or a key in the lesson: an activation, then the event. */
+  /**
+   * A press, a tap or a key in the lesson: an activation, then the event. While the More sheet is open
+   * it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): no step reaches the lesson until it
+   * closes (each of its own buttons closes it first; the rotate page's Back still opens the Exit confirm).
+   */
   const userDispatch = useCallback(
     (event: PresenterEvent) => {
       activate();
+      const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
+      if (step && moreOpenRef.current && phoneRef.current) return;
       dispatch(event);
     },
     [activate, dispatch],
@@ -709,7 +763,7 @@ function Presenter(): ReactElement {
     setPstate(state);
     toolsUsed.current = new Set();
     begun.current = false;
-    setMoreOpen(false);
+    openMore(false);
     setEndHint(false);
     setSoundFlash(null);
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source, from: phase });
@@ -757,9 +811,15 @@ function Presenter(): ReactElement {
     setShowNumbers(true);
     toolsUsed.current = new Set();
     setRomanization(null);
-    setMoreOpen(false);
+    openMore(false);
     setEndHint(false);
     setSoundFlash(null);
+    // Touch seen lasts until Exit (section 4): the next lesson starts from the page's pointer media.
+    setTouchSeen(touchSeenAtStart());
+    // Next's ring ends with the lesson too, so it never shows on the next lesson's bar.
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = null;
+    setNudge(false);
     repush.current = false;
     landHome(returnToPresenterHome(), () => {
       setHomeFocus(true);
@@ -792,7 +852,7 @@ function Presenter(): ReactElement {
       if (phase.kind !== 'running' || begun.current) return;
       stateRef.current = null;
       setPstate(null);
-      setMoreOpen(false);
+      openMore(false);
       setSoundFlash(null);
       releaseDevice();
       if (!fromPop) void stepBackPresenter();
@@ -822,7 +882,7 @@ function Presenter(): ReactElement {
       }
       // Esc closes the compact bar's More sheet first.
       if (command === 'escape' && moreOpenRef.current) {
-        setMoreOpen(false);
+        openMore(false);
         showBar();
         return;
       }
@@ -856,9 +916,10 @@ function Presenter(): ReactElement {
   coveringRef.current = covering;
 
   // The docked bar hides after `presenter.autoHideMs` without pointer, touch or key and returns on any
-  // of them (README D3). The phone bar does not follow page activity (a stage tap never shows it):
-  // only while a covering tool is open, which changes no slide, does a touch bring it back, so the
-  // tool can be cleared or left.
+  // of them (README D3; once touch is seen, Previous and Next stay, section 5.1). The phone bar does
+  // not follow page activity (only a touch tap on empty stage shows or hides it, section 5.3): while
+  // a covering tool is open, which changes no slide, a touch anywhere brings it back, so the tool can
+  // be cleared or left.
   useEffect(() => {
     if (phase.kind !== 'running' || (phone && !covering)) return undefined;
     showBar();
@@ -993,7 +1054,7 @@ function Presenter(): ReactElement {
         return;
       case 'close-overlay':
         repush.current = true;
-        if (moreOpenRef.current) setMoreOpen(false);
+        if (moreOpenRef.current) openMore(false);
         else dispatch('close');
         return;
       case 'confirm':
@@ -1025,6 +1086,8 @@ function Presenter(): ReactElement {
   const tooSmall = phone ? scale.tooSmall : stageScale(stageBox(window, BAR_BAND, insets), STAGE_BOUNDS).tooSmall || scale.tooSmall;
   const stageShows = stageView({ phone, window, tooSmall });
   const stageViewContext: PresenterView = { ...view, unit: scale.unit, phone };
+  // Where Previous and Next live (AMENDMENTS-PRESENTER-NAV section 4): the phone rail is row PN-4.
+  const nav = navLayout(phone);
   // The bar's overlays speak the chrome language; only the stage (the slides) speaks the slide language.
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
@@ -1205,10 +1268,33 @@ function Presenter(): ReactElement {
       ) : stageShows === 'too-small' || !slide ? (
         <StatePage testID="presenter-too-small" pose="thinking" line={state.tooSmall} cta={messages.learner.presenter.bar.exit.cta} onCta={() => userDispatch({ overlay: 'exit' })} />
       ) : null;
+    // What covers the stage for a gesture (section 7.2): the More sheet (a tap there closes it), or any
+    // other covering overlay or the Exit confirm, which swallow navigation.
+    const stageCovering = moreOpen && phone ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
+    const onGesture = (command: Exclude<StageCommand, null>): void => {
+      if (command === 'next' || command === 'prev') {
+        userDispatch(command);
+        return;
+      }
+      // Every other command is a user activation too (rule 4) and changes no slide.
+      activate();
+      if (command === 'close-more') {
+        openMore(false);
+        showBar();
+      } else if (command === 'toggle-bar') {
+        if (barHidden) showBar();
+        else hideBarNow();
+      } else if (command === 'nudge-next') {
+        ringNext();
+      }
+      // `{ point }` comes only with pointing on (owner choice O2, row PN-5).
+    };
     const bar =
       page !== null ? null : (
         <ControlBar
           hidden={phone ? barHidden || moreOpen : barHidden}
+          pinNav={nav === 'docked' && touchSeen}
+          nudge={nudge}
           revealNext={revealNext}
           muted={muted}
           fullscreenSupported={fullscreenSupported()}
@@ -1233,7 +1319,7 @@ function Presenter(): ReactElement {
           onFocusWithin={(focused, pointer) => {
             // A keyboard, switch or screen-reader focus holds the bar on every device; on a phone a
             // press's own focus does not (the step it made hides the bar), on the docked bar it does.
-            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'pointer'));
+            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'mouse' || lastInput.current === 'touch'));
             if (!focused) {
               if (!barHidden) showBar();
               return;
@@ -1250,7 +1336,7 @@ function Presenter(): ReactElement {
           moreOpen={moreOpen}
           onMore={(open) => {
             activate();
-            setMoreOpen(open);
+            openMore(open);
             if (!open) showBar();
           }}
         />
@@ -1269,23 +1355,17 @@ function Presenter(): ReactElement {
               deckTitle={phase.deck.title}
               strokeToken={strokeTokenFor(strokePlay, slide?.key)}
               joinCta={slideMessages.caregiver.spaces.join.cta}
-              onCommand={userDispatch}
+              onGesture={onGesture}
+              layout={nav}
+              covering={stageCovering}
+              pointing={false}
+              lastPointer={lastPointer}
               onPlaySound={() => userDispatch('replay-sound')}
               onStartTimer={(ms) => userDispatch({ startTimer: ms })}
               romanization={romanizationNow}
               sayIt={sayIt}
               storyScene={stories.scene}
               playingLine={playingLine !== null && playingLine.key === slide?.key ? playingLine.line : null}
-              {...(phone
-                ? {
-                    barStrip: PHONE_BAR_STRIP,
-                    onStripTap: () => {
-                      activate();
-                      if (barHidden) showBar();
-                      else hideBarNow();
-                    },
-                  }
-                : {})}
             />
             </TextSizeProvider>
           </PresenterViewProvider>
@@ -1403,8 +1483,12 @@ const SOUND_FLASH_TEST_IDS: Readonly<Record<SoundFlashKey, string>> = {
   deckSoundOff: 'presenter-deck-sound-off-flash',
 };
 
-/** Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). */
-const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0 };
+/**
+ * Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). It sits at the
+ * centre of the stage box, beside the stage, so it takes no pointer: a finger there is the stage's
+ * (AMENDMENTS-PRESENTER-NAV section 7).
+ */
+const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0, pointerEvents: 'none' as const };
 
 /**
  * A sound flash at the top of the stage, for `presenter.autoHideMs`: the no-voice chip when a sound

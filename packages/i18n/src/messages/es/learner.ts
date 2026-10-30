@@ -1933,7 +1933,7 @@ export const learner = {
     help: {
       title: 'Teclas y controles',
       clicker: 'Un control de presentaciones funciona sin configurarlo.',
-      phoneBar: 'En un teléfono, toca la parte de abajo de la diapositiva para ver los controles.',
+      phoneBar: 'En este teléfono, desliza para avanzar o volver. Toca la diapositiva para ver los controles.',
       keepVisible: 'Dejar los controles a la vista',
       romanization: 'Romanización',
       romanizationAlways: 'siempre',

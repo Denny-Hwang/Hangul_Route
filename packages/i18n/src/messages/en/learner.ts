@@ -2545,8 +2545,8 @@ export const learner = {
     help: {
       title: 'Keys and controls',
       clicker: 'A presentation clicker works with no setup.',
-      /** Under the title in a phone window only (the bar's strip shows it, section 3.6). */
-      phoneBar: 'On a phone, tap the bottom of the slide to show the controls.',
+      /** Under the title in a phone window only (the overlay layout: swipe moves, a tap on the slide shows the bar; AMENDMENTS-PRESENTER-NAV section 9.2). */
+      phoneBar: 'On this phone, swipe to move. Tap the slide to show the controls.',
       keepVisible: 'Keep controls visible',
       romanization: 'Romanization',
       romanizationAlways: 'always',

@@ -251,7 +251,7 @@ function FrameParts({ slide, view, line, example, level }: { slide: Variant<'fra
         {slide.banks.map((words, i) => (
           <View key={i} role="list" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: units(unit, spacing.md) }}>
             {words.map((word) => (
-              <View key={word.ko} role="listitem">
+              <View key={word.ko} role="listitem" {...{ dataSet: { stageTarget: 'chip' } }}>
                 <BankChip word={word} rom={view.rom} small={level >= 1} />
               </View>
             ))}
@@ -316,6 +316,7 @@ function SoundTable({ groups, level, unit }: { groups: ReadonlyArray<readonly Sh
               key={block.ko}
               testID="presenter-write-cell"
               role="listitem"
+              {...{ dataSet: { stageTarget: 'chip' } }}
               style={{
                 // Level 2 drops the block's side padding too: a row of 13 at a phone's text floor (`cheo`, `chae`) then fits a wider fallback font for the romanization.
                 ...(level >= 1 ? { minWidth: caption + 2 * border, paddingHorizontal: level >= 2 ? 0 : units(unit, spacing.xs) } : { width: Math.max(units(unit, SOUND_CELL_W), caption * SOUND_CELL_EM) }),

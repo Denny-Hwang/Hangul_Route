@@ -15,7 +15,6 @@ import {
   STATE_HOYA_FACTOR,
   PHONE_STAGE_MIN,
   barBand,
-  phoneBarStrip,
 } from '../../logic/lecture/stage-constants';
 import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
 
@@ -29,8 +28,6 @@ import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
 export const STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
 /** A phone window's stage: the same stage, judged too small only below `PHONE_STAGE_MIN` (README Constants). */
 export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_STAGE_MIN };
-/** The compact bar's strip at the bottom of a phone stage: `touchTarget.min + 2 x spacing.sm` (section 3.6). */
-export const PHONE_BAR_STRIP = phoneBarStrip(touchTarget.min, spacing.sm);
 /** The design system's phone form factor (`layout.phoneShortSide`, `layout.phoneMaxLongSide`). */
 export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
 /** No text below `typography.size.body` anywhere (README D2). */

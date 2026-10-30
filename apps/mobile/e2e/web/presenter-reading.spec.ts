@@ -194,7 +194,7 @@ async function fitProblems(page: Page, phone: boolean): Promise<string[]> {
   return page.getByTestId('presenter-stage').evaluate(
     (root, { box, min }) => {
       const out: string[] = [];
-      const skip = (el: Element): boolean => el.closest('[data-testid="presenter-live"], [data-testid="presenter-counter"], [data-testid="presenter-grabber"]') !== null;
+      const skip = (el: Element): boolean => el.closest('[data-testid="presenter-live"], [data-testid="presenter-counter"]') !== null;
       for (const el of Array.from(root.querySelectorAll('*'))) {
         if (skip(el)) continue;
         const r = el.getBoundingClientRect();

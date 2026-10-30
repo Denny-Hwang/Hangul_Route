@@ -1,18 +1,30 @@
-import { colors, presenter, radii, spacing, typography, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
+import { colors, presenter, radii, spacing, KOREAN_LINE_BREAK, useTypeScale } from '@hangul-route/design-system';
 import { LOCALE_META } from '@hangul-route/i18n';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
-import { Text, View, type GestureResponderEvent, type ViewStyle } from 'react-native';
+import { Text, View, useWindowDimensions, type GestureResponderEvent, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RomanizationMode } from '@hangul-route/content-schema';
 import type { BuildName } from '../../logic/lecture/build-steps';
 import type { Slide } from '../../logic/lecture/deck-builder';
-import { barOverlap, buildLive, gestureCommand, inBarStrip, slideDetail, type BuildLive } from '../../logic/lecture/shell';
+import { buildLive, slideDetail, type BuildLive } from '../../logic/lecture/shell';
+import {
+  edgeGuard,
+  gesturePointer,
+  isCompatMouse,
+  parseStageTarget,
+  slideHasTargets,
+  stageGesture,
+  type GesturePointer,
+  type StageCommand,
+  type StageCovering,
+  type StageTarget,
+} from '../../logic/lecture/stage-gesture';
 import { gridKindKey } from '../../logic/lecture/tools';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
-import type { StageScale } from '../../logic/lecture/stage-scale';
+import type { NavLayout, StageScale } from '../../logic/lecture/stage-scale';
 import { usePresenterView, useStageText } from './presenter-context';
 import { ActivitySlide } from './slides/ActivitySlide';
 import { CardSlide } from './slides/CardSlide';
@@ -39,12 +51,13 @@ import { VocabSlide } from './slides/VocabSlide';
 /**
  * The stage (design/screens/presenter/stage-and-bar.md): the slide on a logical 1280-unit stage,
  * centred in the stage box and letterboxed in paper, with the counter in its top-right padding and
- * a polite live region naming the slide. A tap on the left third goes back, elsewhere forward; a
- * horizontal swipe moves too (section 3.5). `touch-action: manipulation`: double taps never zoom.
- * In a phone window the compact bar floats over the stage's bottom edge and is out of the way
- * whenever the slide changes (F-TCH-004 section 3.6): a tap in its strip (`inBarStrip`) shows or
- * hides it instead of stepping, and a short grabber in the stage's bottom margin, where no slide
- * draws, marks the strip. The stage is marked with the slide language (`lang`), which may differ
+ * a polite live region naming the slide. The stage is the only owner of a gesture on the slide
+ * (AMENDMENTS-PRESENTER-NAV sections 6 and 7): it reads, at the grant, the content target the
+ * gesture started on (`data-stage-target`) and the gesture's own pointer, follows the first touch
+ * by its identifier and counts the most touches down at once, and on release hands the rule's
+ * command (`stageGesture`) to the presenter: a swipe steps, a tap never steps by touch nor on a
+ * content target, and no part of the stage is a hidden zone. `touch-action: manipulation`: double
+ * taps never zoom. The stage is marked with the slide language (`lang`), which may differ
  * from the chrome's (`<html lang>`, the device's) when the deck names one, so a screen reader reads
  * the slides in their own voice (WCAG 3.1.2).
  */
@@ -56,7 +69,16 @@ export interface StageProps {
   deckTitle: string;
   strokeToken: number;
   joinCta: string;
-  onCommand: (command: 'next' | 'prev') => void;
+  /** A gesture's command (`stageGesture`), never null. */
+  onGesture: (command: Exclude<StageCommand, null>) => void;
+  /** Where Previous and Next live (`navLayout`): a touch tap on empty stage shows or hides the overlay bar, elsewhere rings Next. */
+  layout: NavLayout;
+  /** What covers the stage now: the More sheet (a tap closes it), another covering overlay, or nothing. */
+  covering: StageCovering;
+  /** A tap on an option points at it (owner choice O2, row PN-5); false: it does nothing. */
+  pointing: boolean;
+  /** The last `pointerdown`'s kind (`subscribeInputKind`), so a pen's mouse-type events count as touch. */
+  lastPointer: () => GesturePointer | null;
   onPlaySound: () => void;
   /** An activity slide's [ Start timer ]: opens the class timer with the slide's minutes. */
   onStartTimer?: (ms: number) => void;
@@ -66,10 +88,6 @@ export interface StageProps {
   sayIt: boolean;
   /** A listed story's scene: its art, theme and accessible name (`sources/story.ts`). */
   storyScene: (storyId: string, sceneId: string) => LectureSceneView | undefined;
-  /** A phone window: the compact bar's strip above the bottom inset, in window pixels (`PHONE_BAR_STRIP`). Absent: no strip. */
-  barStrip?: number;
-  /** A tap in the strip: show or hide the bar. */
-  onStripTap?: () => void;
   /** The read-along line Sound is playing on this slide, lit while it plays (V6); null when none. */
   playingLine?: number | null;
 }
@@ -81,12 +99,11 @@ export function Stage(props: StageProps): ReactElement {
   const slide = slides[slideIdx]!;
   const lang = LOCALE_META[locale].htmlLang;
   const shown = new Set<BuildName>(slide.builds.slice(0, reveal + 1));
-  const start = useRef<{ x: number; y: number; locationX: number } | null>(null);
-  // In a phone window the stage is centred inside the safe area: its top is the top inset plus the
-  // letterbox, and the bar's strip is what of it reaches above the letterbox.
+  const gesture = useRef<Gesture | null>(null);
+  // When the stage last saw a touch end (`Date.now()`), so a browser's compatibility mouse events for that tap are dropped.
+  const touchEndedAt = useRef(Number.NEGATIVE_INFINITY);
   const insets = useSafeAreaInsets();
-  const stageTop = insets.top + scale.offsetY;
-  const strip = props.barStrip === undefined ? 0 : barOverlap(props.barStrip, 0, scale.offsetY);
+  const windowWidth = useWindowDimensions().width;
 
   const kind = messages.learner.presenter.grid.kind[gridKindKey(slide.kind)];
   const detail = slideDetail(slide, {
@@ -108,21 +125,62 @@ export function Stage(props: StageProps): ReactElement {
   const live = liveNow.words ?? messages.a11y.presenter.slide(slideIdx + 1, slides.length, detail === '' ? kind : `${kind}, ${detail}`);
 
   const onGrant = (event: GestureResponderEvent): void => {
-    const { pageX, pageY, locationX } = event.nativeEvent;
-    start.current = { x: pageX, y: pageY, locationX };
-  };
-  const onRelease = (event: GestureResponderEvent): void => {
-    const from = start.current;
-    start.current = null;
-    if (from === null) return;
-    const dx = event.nativeEvent.pageX - from.x;
-    const dy = event.nativeEvent.pageY - from.y;
-    if (inBarStrip({ y: from.y - stageTop, height: scale.stageHeight, strip, dx, dy })) {
-      props.onStripTap?.();
+    const native = event.nativeEvent as unknown as ResponderNative;
+    if (isCompatMouse(native.type, Date.now() - touchEndedAt.current)) {
+      gesture.current = null;
       return;
     }
-    const command = gestureCommand({ x: from.locationX, width: scale.stageWidth, dx, dy });
-    if (command !== null) props.onCommand(command);
+    const first = native.changedTouches?.[0] ?? native;
+    const id = first.identifier ?? 0;
+    gesture.current = {
+      id,
+      x0: first.pageX,
+      y0: first.pageY,
+      x: first.pageX,
+      y: first.pageY,
+      touches: Math.max(1, native.touches?.length ?? 1),
+      pointer: gesturePointer(native.type, props.lastPointer()),
+      target: parseStageTarget(markerAt(event.target ?? native.target)),
+    };
+  };
+  /** A finger down, moved or lifted during the gesture: the most touches at once, and where the tracked one is. */
+  const onTouches = (event: GestureResponderEvent): void => {
+    const g = gesture.current;
+    if (g === null) return;
+    const native = event.nativeEvent as unknown as ResponderNative;
+    g.touches = Math.max(g.touches, native.touches?.length ?? 0);
+    const tracked = findTouch(native, g.id);
+    if (tracked) {
+      g.x = tracked.pageX;
+      g.y = tracked.pageY;
+    }
+  };
+  /** A touch that ended or was taken (`touchend`, `touchcancel`): the time, for `isCompatMouse`. */
+  const noteTouchEnd = (event: GestureResponderEvent): void => {
+    const type = (event.nativeEvent as unknown as ResponderNative).type;
+    if (type !== undefined && type.startsWith('touch')) touchEndedAt.current = Date.now();
+  };
+  const onRelease = (event: GestureResponderEvent): void => {
+    noteTouchEnd(event);
+    onTouches(event);
+    const g = gesture.current;
+    gesture.current = null;
+    if (g === null) return;
+    const command = stageGesture({
+      pointer: g.pointer,
+      dx: g.x - g.x0,
+      dy: g.y - g.y0,
+      startX: g.x0,
+      windowWidth,
+      edgeGuard: edgeGuard(insets),
+      touches: g.touches,
+      target: g.target,
+      slideHasTargets: slideHasTargets(slide),
+      layout: props.layout,
+      covering: props.covering,
+      pointing: props.pointing,
+    });
+    if (command !== null) props.onGesture(command);
   };
 
   return (
@@ -132,9 +190,13 @@ export function Stage(props: StageProps): ReactElement {
       {...{ lang, accessibilityLanguage: lang }}
       onStartShouldSetResponder={() => true}
       onResponderGrant={onGrant}
+      onResponderStart={onTouches}
+      onResponderMove={onTouches}
+      onResponderEnd={onTouches}
       onResponderRelease={onRelease}
-      onResponderTerminate={() => {
-        start.current = null;
+      onResponderTerminate={(event) => {
+        noteTouchEnd(event);
+        gesture.current = null;
       }}
       style={{
         width: scale.stageWidth,
@@ -211,33 +273,49 @@ export function Stage(props: StageProps): ReactElement {
           <HiddenHeritageSlide slide={slide} reveal={reveal} />
         ) : null}
       </View>
-      {props.barStrip !== undefined ? <Grabber pad={units(unit, STAGE_PADDING)} /> : null}
     </View>
   );
 }
 
-/**
- * The bar strip's grabber (stage-and-bar.md "Phone"): a short pill (`spacing.xxxl` x `spacing.xs`,
- * `border.strong`, `radii.pill`) centred in the stage's bottom margin, where no slide draws, so it
- * covers nothing. Decorative: hidden from assistive tech and taking no touch.
- */
-function Grabber({ pad }: { pad: number }): ReactElement {
-  return (
-    <View
-      testID="presenter-grabber"
-      aria-hidden
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: Math.max(0, (pad - spacing.xs) / 2),
-        alignItems: 'center',
-      }}
-    >
-      <View style={{ width: spacing.xxxl, height: spacing.xs, borderRadius: radii.pill, backgroundColor: colors.border.strong }} />
-    </View>
-  );
+/** A gesture on the stage, from its grant: the first touch (by identifier) and where it is now, in window px. */
+interface Gesture {
+  id: number | string;
+  x0: number;
+  y0: number;
+  x: number;
+  y: number;
+  /** The most touches down at once so far. */
+  touches: number;
+  pointer: GesturePointer;
+  target: StageTarget;
+}
+
+interface ResponderTouch {
+  /** A number on the web (react-native-web normalizes it); typed as React Native's string too. */
+  identifier?: number | string;
+  pageX: number;
+  pageY: number;
+}
+
+/** The responder event's native part (react-native-web: a mouse event is one emulated touch, `type` the DOM event's). */
+interface ResponderNative extends ResponderTouch {
+  type?: string;
+  target?: unknown;
+  touches?: readonly ResponderTouch[];
+  changedTouches?: readonly ResponderTouch[];
+}
+
+/** The tracked touch in this event: lifted (`changedTouches`) or still down (`touches`); never another finger. */
+function findTouch(native: ResponderNative, id: number | string): ResponderTouch | undefined {
+  const match = (t: ResponderTouch): boolean => (t.identifier ?? 0) === id;
+  return native.changedTouches?.find(match) ?? native.touches?.find(match);
+}
+
+/** The content-target marker of the node a gesture started on, or of the nearest node above it (web); null when none. */
+function markerAt(target: unknown): string | null {
+  const node = target as { closest?: (selector: string) => { getAttribute?: (name: string) => string | null } | null } | null | undefined;
+  if (!node || typeof node.closest !== 'function') return null;
+  return node.closest('[data-stage-target]')?.getAttribute?.('data-stage-target') ?? null;
 }
 
 /** `touch-action: manipulation` (web): no double-tap zoom on the stage. Not in the native style types. */
@@ -255,7 +333,7 @@ const visuallyHidden = {
 /**
  * A non-blocking pill over the stage box: at the top for the portrait hint (section 3.8), at the
  * bottom, above the bar, for the End slide's "To finish, choose Exit." (slide-end.md). On a phone the
- * End hint sits at the top too, clear of the bar's strip.
+ * End hint sits at the top too, clear of the floating bar.
  */
 export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): ReactElement {
   const textScale = useTypeScale();

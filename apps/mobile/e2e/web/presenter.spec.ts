@@ -310,14 +310,27 @@ test.describe('presenter at 1280 x 720', () => {
     expect(await Promise.all(Object.keys(learner).map((k) => storedValue(page, k)))).toEqual(before);
   });
 
-  test('a tap on the right two thirds of the stage goes on, on the left third goes back', async ({ page }) => {
+  test('a click on a slide with nothing to point at goes on; the left of the stage no longer goes back', async ({ page }) => {
+    // AMENDMENTS-PRESENTER-NAV section 7 (owner choice O4): no thirds, no hidden tap zones.
     await page.goto(link());
     await startLesson(page);
     const box = (await page.getByTestId('presenter-stage').boundingBox())!;
     await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.5);
     await expect.poll(() => counter(page)).toMatch(/^2 \//);
-    await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
+    await page.keyboard.press('Home');
     await expect.poll(() => counter(page)).toMatch(/^1 \//);
+    await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
+    await expect.poll(() => counter(page)).toMatch(/^2 \//);
+    // A question slide: neither click moves (the room points at its options).
+    for (let i = 0; i < 60 && (await page.getByTestId('presenter-quiz-options').count()) === 0; i++) await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('presenter-quiz-options')).toBeVisible();
+    const at = await counter(page);
+    const live = await page.getByTestId('presenter-live').textContent();
+    await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
+    await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.5);
+    await page.waitForTimeout(300);
+    expect(await counter(page)).toBe(at);
+    expect(await page.getByTestId('presenter-live').textContent()).toBe(live);
   });
 
   test('Shift+R gives romanization its own reveal, and Back on the first build stays put', async ({ page }) => {

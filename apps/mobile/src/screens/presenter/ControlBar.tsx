@@ -5,7 +5,7 @@ import { Animated, Pressable, ScrollView, Text, View, type LayoutChangeEvent, ty
 import { BAR_SHOW_GRACE_MS, NO_INSETS, type StageInsets } from '../../logic/lecture/stage-constants';
 import type { StatusChip } from '../../logic/lecture/tools';
 import { focusablesIn, rememberFocus, trapFocus } from '../../platform/presenter';
-import { BAR_BAND, CTL_MAX_WIDTH, NEXT_MIN_WIDTH, NEXT_MIN_WIDTH_COMPACT, STATUS_MIN } from './stage-metrics';
+import { BAR_BAND, CTL_MAX_WIDTH, NEXT_MIN_WIDTH, NEXT_MIN_WIDTH_COMPACT, STAGE_BORDER, STATUS_MIN } from './stage-metrics';
 import { usePresenterView } from './presenter-context';
 
 /**
@@ -18,7 +18,10 @@ import { usePresenterView } from './presenter-context';
  *
  * - **Docked** (every window but a phone's): eight labelled 96 px buttons in their own band under
  *   the stage. The band stays when the bar auto-hides (its content fades; no fade under reduced
- *   motion), so no slide moves.
+ *   motion), so no slide moves. Once touch is seen (`pinNav`, AMENDMENTS-PRESENTER-NAV section
+ *   5.1) Previous and Next sit outside the fading part, in the same places: always opaque, always
+ *   taking taps, with no grace after a show; the chips and the tools keep the fade and the grace.
+ *   After a touch tap on empty stage Next shows a ring for `NUDGE_MS` (`nudge`).
  * - **Compact** (a phone window, section 3.6 phone exception; stage-and-bar.md "Phone"): one row of
  *   `touchTarget.min` controls (Previous, Next / Reveal at 1.5 x, Sound, More) floating over the
  *   stage bottom, inside the bottom safe-area inset. More opens a sheet over the stage ("Lesson
@@ -60,6 +63,10 @@ export interface ControlBarProps {
   /** The compact bar's More sheet is open (the presenter holds it, so Esc and the browser's Back close it). */
   moreOpen?: boolean;
   onMore?: (open: boolean) => void;
+  /** Docked, touch seen: Previous and Next never fade and take taps at once (section 5.1). */
+  pinNav?: boolean;
+  /** Docked: Next shows its ring (a touch tap on empty stage, `'nudge-next'`, section 7.2). */
+  nudge?: boolean;
 }
 
 type PressState = { pressed: boolean; focused?: boolean; hovered?: boolean };
@@ -70,11 +77,16 @@ function focusRing(focused: boolean): ViewStyle {
     : {};
 }
 
+/** Next's "tap here" ring (section 7.2): drawn at once and removed at once, outside the button, so nothing moves. */
+const nudgeRing = { outlineStyle: 'solid', outlineWidth: STAGE_BORDER, outlineColor: colors.border.focus, outlineOffset: borderWidth.base } as ViewStyle;
+
 interface CtlProps {
   label: string;
   icon?: IconName;
   primary?: boolean;
   pressed?: boolean;
+  /** The ring that says "tap here": a static `border.focus` outline `STAGE_BORDER` wide, no motion. */
+  nudge?: boolean;
   /** The compact bar's `touchTarget.min` size, the glyph beside the label. */
   small?: boolean;
   expanded?: boolean;
@@ -107,7 +119,7 @@ function useFocusTracker(onFocusWithin: (focused: boolean, pointer: boolean) => 
   };
 }
 
-const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, small, expanded, popup, onPress, focus, testID }, ref) {
+const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pressed, nudge, small, expanded, popup, onPress, focus, testID }, ref) {
   const textScale = useTypeScale();
   const fg = primary ? colors.text.onPrimary : colors.text.primary;
   const target = small ? touchTarget.min : touchTarget.hero;
@@ -121,6 +133,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
       aria-pressed={pressed}
       {...(expanded !== undefined ? { 'aria-expanded': expanded } : {})}
       {...(popup !== undefined ? { 'aria-haspopup': popup } : {})}
+      {...(nudge === true ? { dataSet: { nudge: 'on' } } : {})}
       onPressIn={focus.pressIn}
       onPress={onPress}
       onFocus={focus.onFocus}
@@ -141,7 +154,7 @@ const Ctl = forwardRef<View, CtlProps>(function Ctl({ label, icon, primary, pres
           borderWidth: pressed ? borderWidth.thick : borderWidth.base,
           borderColor: primary ? colors.brand.primaryDark : pressed ? colors.text.primary : colors.border.strong,
           backgroundColor: primary ? colors.brand.primaryDark : colors.surface.paper,
-          ...focusRing(focused === true),
+          ...(nudge === true && focused !== true ? nudgeRing : focusRing(focused === true)),
         };
       }}
     >
@@ -194,11 +207,25 @@ function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusCh
   );
 }
 
+/**
+ * The docked bar: one tree for both pointer facts, so the first touch (which pins Previous and Next)
+ * never remounts the button it lands on. Mouse only, the whole row fades as one (README D3); touch
+ * seen (`pinNav`), only the chips and the tools fade, each group taking the pointer only `live`, and
+ * Previous and Next stand outside them in the same places, opaque, taking taps at all times.
+ */
 function DockedBar(props: BarParts): ReactElement {
   const { messages } = usePresenterView();
   const m = messages.learner.presenter.bar;
   const focus = props.focus;
   const onLayout = (event: LayoutChangeEvent): void => props.onBandHeight?.(event.nativeEvent.layout.height);
+  const pinned = props.pinNav === true;
+  const pointer = props.live ? ('auto' as const) : ('none' as const);
+  // The row fades as one (mouse only), or its groups do (touch seen). Pinned, the row is `box-none`
+  // (no pointer of its own) and each group sets its own (react-native-web writes `auto` and `none`
+  // as !important, so a group's value wins); mouse only, the groups set none and follow the row.
+  const row = pinned ? { opacity: 1, pointerEvents: 'box-none' as const } : { opacity: props.opacity, pointerEvents: pointer };
+  const groupOpacity = pinned ? props.opacity : 1;
+  const groupPointer = pinned ? { pointerEvents: pointer } : {};
   return (
     <View
       testID="presenter-bar-band"
@@ -211,21 +238,39 @@ function DockedBar(props: BarParts): ReactElement {
         justifyContent: 'center',
       }}
     >
-      <Animated.View pointerEvents={props.live ? 'auto' : 'none'} style={{ opacity: props.opacity, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm }}>
+      <Animated.View
+        testID="presenter-bar-docked"
+        pointerEvents={row.pointerEvents}
+        style={{ opacity: row.opacity, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.sm }}
+      >
         {props.chips.length > 0 ? (
-          <View testID="presenter-status" role="status" style={{ flexGrow: 1, flexShrink: 0, flexBasis: STATUS_MIN, minWidth: STATUS_MIN, maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          <Animated.View
+            testID="presenter-status"
+            role="status"
+            {...groupPointer}
+            style={{ opacity: groupOpacity, flexGrow: 1, flexShrink: 0, flexBasis: STATUS_MIN, minWidth: STATUS_MIN, maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}
+          >
             <StatusChips chips={props.chips} onTurnSoundOn={props.onTurnSoundOn} focus={focus} />
-          </View>
+          </Animated.View>
         ) : null}
-        <View role="toolbar" aria-label={m.label} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm }}>
-          <Ctl testID="presenter-back" label={m.prev.cta} icon="arrow-left" onPress={props.onPrev} focus={focus} />
-          <Ctl testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary onPress={props.onNext} focus={focus} />
-          <Ctl testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} focus={focus} />
-          <Ctl testID="presenter-timer" label={m.timer.cta} onPress={props.onTimer} focus={focus} />
-          <Ctl testID="presenter-blank-button" label={m.blank.cta} onPress={props.onBlank} focus={focus} />
-          <Ctl testID="presenter-grid-button" label={m.grid.cta} onPress={props.onGrid} focus={focus} />
-          {props.fullscreenSupported ? <Ctl testID="presenter-fullscreen" label={m.fullscreen.cta} pressed={props.fullscreen} onPress={props.onFullscreen} focus={focus} /> : null}
-          <Ctl ref={props.exitRef} testID="presenter-exit" label={m.exit.cta} icon="close" onPress={props.onExit} focus={focus} />
+        <View role="toolbar" aria-label={m.label} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: spacing.sm, maxWidth: '100%' }}>
+          {/* Pinned, the pair takes taps whatever the row does; mouse only, it follows the row (no pointer of its own). */}
+          <View testID="presenter-nav-pair" {...{ dataSet: { pinned: pinned ? 'true' : 'false' } }} {...(pinned ? { pointerEvents: 'auto' as const } : {})} style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Ctl testID="presenter-back" label={m.prev.cta} icon="arrow-left" onPress={props.onPrev} focus={focus} />
+            <Ctl testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} />
+          </View>
+          <Animated.View
+            testID="presenter-bar-tools"
+            {...groupPointer}
+            style={{ opacity: groupOpacity, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: spacing.sm, maxWidth: '100%' }}
+          >
+            <Ctl testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} focus={focus} />
+            <Ctl testID="presenter-timer" label={m.timer.cta} onPress={props.onTimer} focus={focus} />
+            <Ctl testID="presenter-blank-button" label={m.blank.cta} onPress={props.onBlank} focus={focus} />
+            <Ctl testID="presenter-grid-button" label={m.grid.cta} onPress={props.onGrid} focus={focus} />
+            {props.fullscreenSupported ? <Ctl testID="presenter-fullscreen" label={m.fullscreen.cta} pressed={props.fullscreen} onPress={props.onFullscreen} focus={focus} /> : null}
+            <Ctl ref={props.exitRef} testID="presenter-exit" label={m.exit.cta} icon="close" onPress={props.onExit} focus={focus} />
+          </Animated.View>
         </View>
       </Animated.View>
     </View>

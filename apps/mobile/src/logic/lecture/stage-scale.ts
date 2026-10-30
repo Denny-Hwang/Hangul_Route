@@ -148,3 +148,15 @@ export function stageView(input: { phone: boolean; window: WindowSize; tooSmall:
   if (input.phone && input.window.height > input.window.width) return 'rotate';
   return input.tooSmall ? 'too-small' : 'slide';
 }
+
+/**
+ * Where the presenter's Previous and Next live (AMENDMENTS-PRESENTER-NAV section 4): `'docked'` in
+ * the band under the stage on every window but a phone's; `'overlay'`, the floating compact bar, in
+ * a phone window; `'rail'`, the phone rail beside the stage (row PN-4; not yet given).
+ */
+export type NavLayout = 'docked' | 'rail' | 'overlay';
+
+/** The layout for a window: from `isPhoneWindow` (row PN-2; PN-4 adds the rail where it fits). */
+export function navLayout(phone: boolean): NavLayout {
+  return phone ? 'overlay' : 'docked';
+}

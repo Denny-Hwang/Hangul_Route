@@ -172,7 +172,7 @@ function Tile({ ko, metrics, place, look = 'tile', testID }: { ko: string; metri
     <View
       testID={testID}
       aria-hidden={ghost}
-      {...{ dataSet: { look } }}
+      {...{ dataSet: { look, stageTarget: 'tile' } }}
       style={[tileLook(metrics, ghost ? 'dashed' : 'solid'), place, look === 'set-back' ? { opacity: presenter.dimOpacity } : null]}
     >
       <View style={revealProps(!ghost).style}>
@@ -189,7 +189,7 @@ function Tile({ ko, metrics, place, look = 'tile', testID }: { ko: string; metri
 function ParticleTile({ tile, metrics, place }: { tile: BuildTile; metrics: TileMetrics; place: ViewStyle }): ReactElement {
   const particle = tile.particle!;
   return (
-    <View testID="presenter-build-particle" style={[tileLook(metrics, 'solid'), place, { flexDirection: 'row', gap: metrics.inner }]}>
+    <View testID="presenter-build-particle" {...{ dataSet: { stageTarget: 'tile' } }} style={[tileLook(metrics, 'solid'), place, { flexDirection: 'row', gap: metrics.inner }]}>
       <TaughtKo size={metrics.size}>{particle.stem}</TaughtKo>
       {particle.choices.map((choice, i) => (
         <Fragment key={choice.ko}>

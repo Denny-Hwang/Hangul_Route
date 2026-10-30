@@ -7,7 +7,6 @@ import { blockKeyOf, type ExpandedDeck, type Slide, type SkipReason } from './de
 import type { PresenterState } from './controls';
 import type { RecentItem, RecentList } from './recent';
 import { buildLineWords, buildMove, buildWholeWords, sentenceBuildView, typeCue, writeMove } from './slide-view';
-import { SWIPE_MIN, SWIPE_RATIO, TAP_BACK_FRACTION } from './stage-constants';
 
 /**
  * The presenter shell's pure decisions (F-TCH-004 sections 3.2, 3.3, 3.5, 3.14): what the boot
@@ -276,38 +275,6 @@ export function countRows(boxes: readonly { y: number; height: number }[]): numb
  */
 export function fitShown(shown: number, rowsUsed: number, maxRows: number): number {
   return rowsUsed > maxRows && shown > 0 ? shown - 1 : shown;
-}
-
-// --- touch and mouse on the stage ------------------------------------------------------------------
-
-/**
- * A pointer that went down and up on the stage (section 3.5): a horizontal swipe of at least
- * `SWIPE_MIN` with |dx| >= `SWIPE_RATIO` |dy| goes forward (to the left) or back; otherwise it is a
- * tap: the left third goes back, the rest forward. Anything else (a vertical drag) does nothing.
- */
-export function gestureCommand(g: { x: number; width: number; dx: number; dy: number }): 'next' | 'prev' | null {
-  const ax = Math.abs(g.dx);
-  const ay = Math.abs(g.dy);
-  if (ax >= SWIPE_MIN && ax >= SWIPE_RATIO * ay) return g.dx < 0 ? 'next' : 'prev';
-  if (ax >= SWIPE_MIN || ay >= SWIPE_MIN || !(g.width > 0)) return null;
-  return g.x < g.width * TAP_BACK_FRACTION ? 'prev' : 'next';
-}
-
-/**
- * A tap in the compact bar's strip at the bottom of a phone stage (F-TCH-004 section 3.6): it shows
- * the bar (or hides it while it shows) instead of stepping, so the bar is never brought up by a
- * step and a tap on a hidden bar presses nothing. A swipe that starts there still moves. `strip`:
- * the strip's height on the stage, in stage pixels (0: none).
- */
-export function inBarStrip(g: { y: number; height: number; strip: number; dx: number; dy: number }): boolean {
-  if (!(g.strip > 0) || !(g.height > 0)) return false;
-  const swipe = Math.abs(g.dx) >= SWIPE_MIN || Math.abs(g.dy) >= SWIPE_MIN;
-  return !swipe && g.y >= g.height - g.strip;
-}
-
-/** How much of the stage the bar's strip of `barHeight` covers: the strip sits on the window bottom, the stage `insetBottom + offsetY` above it. */
-export function barOverlap(barHeight: number, insetBottom: number, offsetY: number): number {
-  return Math.max(0, barHeight - Math.max(0, insetBottom) - Math.max(0, offsetY));
 }
 
 // --- accessibility -------------------------------------------------------------------------------
