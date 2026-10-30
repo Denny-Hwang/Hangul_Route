@@ -1295,7 +1295,29 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     const soundRounds = lettersOk || finalsOk ? (pairsOk ? Math.ceil(rounds / 2) : rounds) : 0;
     const finalRounds = finalsOk ? (lettersOk ? Math.floor(soundRounds / 2) : soundRounds) : 0;
     const letterRounds = soundRounds - finalRounds;
-    if (letterRounds > 0) soundQuiz(path, 'quiz', () => buildMatchSoundRounds({ scopeJamoIds: letters, rounds: letterRounds, tileCount: 4, seed: seed() }));
+    if (letterRounds > 0) {
+      // A taught letter with too few distractors the letter rules allow (JV-A3 rule 1b: ㄷ beside ㅡ ㅣ ㄹ) would make
+      // the builder throw and drop the whole quiz. Top the pool up with other letters of the taught kinds, as a warm-up
+      // does, and keep asking only the taught letters: the added ones are distractors, never prompts.
+      const taughtJamo = letters.flatMap((id) => bundle.jamoAll.filter((j) => j.id === id));
+      const pool = [...taughtJamo];
+      const kinds = new Set(taughtJamo.map((j) => j.kind));
+      const filled = (): boolean => taughtJamo.every((p) => allowedDistractors('letter', p, pool).length >= QUIZ_MIN_ITEMS - 1);
+      for (const j of bundle.jamoAll) {
+        if (filled()) break;
+        if (kinds.has(j.kind) && LETTER_QUIZ_JAMO_IDS.has(j.id) && !pool.some((p) => p.id === j.id)) pool.push(j);
+      }
+      const toppedUp = pool.length > taughtJamo.length;
+      soundQuiz(path, 'quiz', () =>
+        buildMatchSoundRounds({
+          scopeJamoIds: pool.map((j) => j.id),
+          rounds: letterRounds,
+          tileCount: 4,
+          seed: seed(),
+          ...(toppedUp ? { promptJamoIds: letters } : {}),
+        }),
+      );
+    }
     if (finalRounds > 0) {
       soundQuiz(
         path,

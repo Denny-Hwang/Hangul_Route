@@ -11,7 +11,7 @@ import {
   type PresetContext,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll } from '../../content';
+import { episodesAll, stage1Quests } from '../../content';
 import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../../content/jamo';
 import { jamoVoice } from '../audio/jamo-voice';
 import { lectureBundle } from '../lecture/content';
@@ -208,6 +208,20 @@ describe('buildMatchSoundRounds applies the rules', () => {
       }
     }
   });
+
+  it('promptJamoIds: only those are asked, the rest of the scope serves as distractors; none in scope throws', () => {
+    const scope = ['eu', 'i', 'digeut', 'rieul', 'giyeok', 'mieum'].map((id) => `jamo:${id}`);
+    const asked = ['jamo:eu', 'jamo:i', 'jamo:digeut', 'jamo:rieul'];
+    for (const seed of SEEDS) {
+      const rounds = buildMatchSoundRounds({ scopeJamoIds: scope, rounds: 6, promptJamoIds: asked, seed });
+      expect(rounds).toHaveLength(6);
+      for (const r of rounds) {
+        expect(asked).toContain(r.promptJamo.id);
+        expect(roundFaults('letter', r)).toEqual([]);
+      }
+    }
+    expect(() => buildMatchSoundRounds({ scopeJamoIds: scope, rounds: 2, promptJamoIds: ['jamo:a'], seed: 1 })).toThrow(/no prompt jamo/);
+  });
 });
 
 describe('every shipped Match Sound scope (G2 = 0)', () => {
@@ -385,5 +399,41 @@ describe('the lecture sound quiz (JV-A3 rules 1, 3 and 4)', () => {
       expect(quiz).toHaveLength(4);
       expect(quiz.flatMap(slideFaults)).toEqual([]);
     }
+  });
+
+  it('a quiz over letters that crowd a consonant (ㅡ ㅣ ㄷ ㄹ) still asks them: the pool is topped up, the prompts stay the taught letters', () => {
+    const taughtIds = ['jamo:eu', 'jamo:i', 'jamo:digeut', 'jamo:rieul'];
+    const taughtChars = taughtIds.map((id) => byId(id).char);
+    for (const seed of SEEDS) {
+      const { slides, skipped } = expandDeck(deckOf([{ kind: 'jamo-set', jamoIds: taughtIds }, { kind: 'quiz', from: 'all', rounds: 4 }], seed), bundle, {
+        canPlayKorean: true,
+      });
+      const quiz = slides.filter(isSoundQuiz);
+      expect(skipped).toEqual([]);
+      expect(quiz).toHaveLength(4);
+      expect(quiz.flatMap(slideFaults)).toEqual([]);
+      for (const s of quiz) expect(taughtChars).toContain(s.options.find((o) => o.correct)?.ko);
+    }
+  });
+
+  it('every Stage 1 quest followed by a quiz of everything (seeds 1-20): four or more taught letters always give a letter quiz, never a skip', () => {
+    const quests = stage1Quests.map((q) => q.id);
+    expect(quests.length).toBeGreaterThanOrEqual(15);
+    const gaps: string[] = [];
+    const faults: string[] = [];
+    for (const id of quests) {
+      for (const seed of SEEDS) {
+        const { slides, skipped } = expandDeck(deckOf([{ kind: 'quest', id }, { kind: 'quiz', from: 'all', rounds: 6 }], seed), bundle, { canPlayKorean: true });
+        const taughtLetters = new Set(slides.flatMap((s) => (s.kind === 'letter' && LETTER_QUIZ_JAMO_IDS.has(s.jamoId) ? [s.jamoId] : [])));
+        const quiz = slides.filter(isSoundQuiz);
+        const letterRounds = quiz.filter((s) => s.prompt.ask === 'sound' && s.prompt.frame !== 'endsWith');
+        faults.push(...quiz.flatMap(slideFaults).map((f) => `${id} seed ${seed}: ${f}`));
+        if (taughtLetters.size >= 4 && letterRounds.length === 0) gaps.push(`${id} seed ${seed}: ${taughtLetters.size} letters taught, no letter quiz`);
+        // A JV-A3 pool shortfall throws inside the builder and shows as a quiz skip; none may.
+        if (taughtLetters.size >= 4 && skipped.some((s) => s.reason === 'scope-too-small' && s.ref === 'quiz')) gaps.push(`${id} seed ${seed}: quiz skipped`);
+      }
+    }
+    expect(gaps).toEqual([]);
+    expect(faults).toEqual([]);
   });
 });
