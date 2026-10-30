@@ -181,7 +181,7 @@
       "rolePlay.scene.partner.gloss": "mamá",
       "rolePlay.scene.nodes.t1.line.gloss": "¿Pica?",
       "rolePlay.scene.nodes.t2.line.gloss": "¿La sopa está caliente?",
-      "rolePlay.scene.nodes.t3.line.gloss": "¿El kimchi pica?",
+      "rolePlay.scene.nodes.t3.line.gloss": "¿La sopa pica?",
       "rolePlay.scene.nodes.t1.replies.no.text.gloss": "No, no pica.",
       "rolePlay.scene.nodes.t1.replies.taste.text.gloss": "¿Qué tal sabe?",
       "rolePlay.scene.nodes.t2.replies.spicy.text.gloss": "No, no pica.",
@@ -194,7 +194,7 @@
       "rolePlay.scene.nodes.t2.replies.spicy.why": "Mamá pregunta si la sopa está caliente, no si pica.",
       "rolePlay.scene.nodes.t2.replies.drank.why": "Esa dice que te la tomaste. Mamá pregunta si la sopa está caliente.",
       "rolePlay.scene.nodes.t3.replies.hot.why": "Mamá pregunta si pica, no si está caliente.",
-      "rolePlay.scene.nodes.t3.replies.bye.why": "Esa es una despedida. Mamá pregunta si el kimchi pica.",
+      "rolePlay.scene.nodes.t3.replies.bye.why": "Esa es una despedida. Mamá pregunta si la sopa pica.",
       "rolePlay.scene.nodes.end.closing": "¡Dijiste sí y no en la mesa familiar!",
       "rolePlay.scene.nodes.t1.replies.drank.text.gloss": "Sí, ya bebí.",
       "rolePlay.scene.nodes.t1.replies.drank.why": "Esa dice que te lo tomaste. Mamá pregunta si pica, así que di sí o no.",
@@ -208,7 +208,7 @@
     "minigame:s4-life-q3-apply": {
       "orderIt.rounds.r1.sentence.gloss": "No, no pica.",
       "orderIt.rounds.r2.sentence.gloss": "¿La sopa está caliente?",
-      "orderIt.rounds.r3.sentence.gloss": "El kimchi no pica.",
+      "orderIt.rounds.r3.sentence.gloss": "El kimchi está rico.",
       "orderIt.rounds.r4.sentence.gloss": "No, no está caliente.",
       "orderIt.rounds.r1.distractors.masisseoyo.gloss": "está rico",
       "orderIt.rounds.r4.distractors.maewoyo.gloss": "pica",
@@ -218,7 +218,7 @@
       "orderIt.rounds.r3.particle.choices.ga.gloss": "marca de sujeto (después de una vocal)"
     },
     "minigame:s4-life-q3-check": {
-      "dialogue.0.npc": "¿El kimchi pica?",
+      "dialogue.0.npc": "¿La sopa pica?",
       "dialogue.1.npc": "¿La sopa está caliente?",
       "dialogue.0.options.masi-eottaeyo.gloss": "¿Qué tal sabe?",
       "dialogue.0.options.ne-meogeosseoyo.gloss": "Sí, ya comí.",

@@ -13,8 +13,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * `game.<kind>` switch renders its fallback round of a shipped kind when the switch is off (section 7.1), so no switch
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
- * shipped game. (No shipped cell plays Cloze Pick yet, row CM-3A authors them; the fixture keeps the check from being
- * empty, and the e2e answers a fallback round of the fixture step.)
+ * shipped game. Row CM-3A S4 ships Cloze Pick steps in Stage 4, so the check reads shipped steps (and asserts that
+ * there are some, as the CM-30 decision record in section 7.1 asks); the fixture still pins the negative case, and the
+ * e2e answers a fallback round of the fixture step.
  */
 
 /** Each switched game kind (row CM-30 onward), its fallback kind and how its fallback scope is built. */
@@ -44,6 +45,10 @@ function fallbackProblems(scope: MinigameScope, where: string): string[] {
 describe('every quest with each game.<kind> off (section 12.2)', () => {
   it('reads every step of every quest', () => {
     expect(steps.length).toBeGreaterThan(100);
+  });
+
+  it('ships Cloze Pick steps, so the switch-off check below is not empty (CM-30 decision record, row CM-3A)', () => {
+    expect(steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').length).toBeGreaterThan(0);
   });
 
   it.each(SWITCHED.map((s) => s.kind))('%s off: each of its steps plays every round as its fallback', (kind) => {

@@ -157,9 +157,14 @@ describe('Stage 4 review-item ids (F-CURR-002 section 4.2, row CM-3A S4)', () =>
 
   it('an edited exchange keeps its frozen id through an alias, taught by a Stage 4 cell', () => {
     expect(snapshot.alias['exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요']).toBe('exc:hoya-annyeonghaseyo');
-    expect(snapshot.alias['exc|김치가 매워요|네, 매워요']).toBe('exc:gugi-maewoyo');
     expect(byId.get('exc:hoya-annyeonghaseyo')?.cells).toContain('episode:stage4-letters');
+  });
+
+  it('the spicy turn stays on the soup (Food culture pass 5), so its frozen id needs no alias', () => {
+    expect(Object.values(snapshot.alias)).not.toContain('exc:gugi-maewoyo');
+    expect(byId.get('exc:gugi-maewoyo')?.ko).toBe('국이 매워요?');
     expect(byId.get('exc:gugi-maewoyo')?.reply?.ko).toBe('네, 매워요.');
+    expect(byId.get('exc:gugi-maewoyo')?.cells).toContain('episode:stage4-life');
   });
 
   it('keeps the review load: Stage 4 teaches no more items first than before the re-authoring (section 4.3 gate)', () => {

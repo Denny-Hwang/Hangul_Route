@@ -218,6 +218,7 @@
     "lex|포쇄": "lex:poswae",
     "lex|사초": "lex:sacho",
     "lex|새가 좋아요": "lex:saega-joayo",
+    "lex|새해": "lex:saehae",
     "lex|생일": "lex:saengil",
     "lex|사과 한 개": "lex:sagwa-han-gae",
     "lex|사과 세 개": "lex:sagwa-se-gae",
@@ -326,7 +327,6 @@
     "pat|그럼 내일 갈 거예요": "pat:geureom-naeil-gal-geoyeyo",
     "pat|김밥이 맛있어요": "pat:gimbabi-masisseoyo",
     "pat|김밥 주세요": "pat:gimbap-juseyo",
-    "pat|김치가 안 매워요": "pat:gimchiga-an-maewoyo",
     "pat|김치가 어때요": "pat:gimchiga-eottaeyo",
     "pat|김치가 맛있어요": "pat:gimchiga-masisseoyo",
     "pat|김치를 먹어요": "pat:gimchireul-meogeoyo",
@@ -754,7 +754,6 @@
     "lex|윷놀이": "vocab:yunnori"
   },
   "alias": {
-    "exc|김치가 매워요|네, 매워요": "exc:gugi-maewoyo",
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
   },
   "retired": [
