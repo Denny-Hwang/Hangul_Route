@@ -1,4 +1,4 @@
-import { LectureDeckSchema, type LectureBlock } from '@hangul-route/content-schema';
+import { LectureDeckSchema, SLOT_MARKER, type LectureBlock } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
@@ -50,7 +50,7 @@ function silentByDesign(slide: Slide): boolean {
   if (slide.prompt.ask === 'odd-one-out') return true;
   // A Cloze Pick question (row CM-30, shipped by rows CM-3A S3 and S4): its target is the sentence with its gap, which is
   // not said (a gap read aloud says "underscore", and the completed sentence would say the answer).
-  return slide.prompt.ask === 'check' && (slide.prompt.target === undefined || slide.prompt.target.ko.includes('___'));
+  return slide.prompt.ask === 'check' && (slide.prompt.target === undefined || slide.prompt.target.ko.includes(SLOT_MARKER));
 }
 
 /**

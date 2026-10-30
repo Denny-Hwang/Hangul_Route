@@ -13,9 +13,9 @@ import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
  * `game.<kind>` switch renders its fallback round of a shipped kind when the switch is off (section 7.1), so no switch
  * bricks a quest. For every step of every quest whose game has a switch, the fallback plays every round the game
  * would: as many rounds, each with two or more options and its answer among them. The renderer of each fallback is a
- * shipped game. Rows CM-3A S3, S4 and S6 ship Cloze Pick steps (the Stage 3, 4 and 6 Checks), so the check reads shipped
- * steps (and asserts that there are some, as the CM-30 decision record in section 7.1 asks); the fixture still pins the
- * negative case and checks every gap kind, and the e2e answers a fallback round of the fixture step.
+ * shipped game. Rows CM-3A S3, S4, S6 and S7 ship Cloze Pick steps (the Stage 3, 4, 6 and 7 Checks), so the check reads
+ * shipped steps (and asserts that there are some, as the CM-30 decision record in section 7.1 asks); the fixture still
+ * pins the negative case and checks every gap kind, and the e2e answers a fallback round of the fixture step.
  * `game.type-hangul-hear` turns a round, not a kind: the seven shipped Stage 2 Dictation Checks (row CM-3A S2) are
  * checked switch off in logic/__tests__/game-switches.test.ts and rendered in screens/minigames/__tests__/switched-step.test.tsx.
  */
@@ -54,6 +54,11 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('ships Cloze Pick steps, so the switch-off check below is not empty (CM-30 decision record, row CM-3A)', () => {
     expect(steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').length).toBeGreaterThan(0);
+  });
+
+  it('reaches the shipped Cloze Pick steps (row CM-3A S7: the five Stage 7 Cloze Pick Checks)', () => {
+    const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
+    expect(cloze.filter((id) => id.startsWith('quest:stage7-')).length).toBeGreaterThanOrEqual(5);
   });
 
   it.each(SWITCHED.map((s) => s.kind))('%s off: each of its steps plays every round as its fallback', (kind) => {

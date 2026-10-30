@@ -374,8 +374,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     }
     // Section 1: type-hangul 21 steps holding 73 rounds, write-frame 7 holding 21, trace-word 5 holding 20; one write-frame round is the name round.
     // Rows CM-3A S2, S3 and S6 add the seven Stage 2 Dictation Checks (14 rounds), the four Stage 3 Dictation Checks (8
-    // rounds) and the four Stage 6 Dictation Checks (8 rounds).
-    expect({ rounds, ...counts }).toEqual({ rounds: 144, type: 103, trace: 20, frame: 20, 'own-name': 1 });
+    // rounds) and the four Stage 6 Dictation Checks (8 rounds); row CM-3A S7 makes five Stage 7 Checks Write Frame (10).
+    expect({ rounds, ...counts }).toEqual({ rounds: 154, type: 103, trace: 20, frame: 30, 'own-name': 1 });
   });
 
   it('every shipped order-it round, the Stage 7 Checks included, has its own sentence-build slide (LV-S3)', () => {
@@ -402,9 +402,10 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
       }
     }
     // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S3 adds the five
-    // Stage 3 Sentence Builder Checks (10 rounds) and row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
-    // Stage 4 Sentence Builder Checks (8 rounds).
-    expect({ rounds, built }).toEqual({ rounds: 165, built: 165 });
+    // Stage 3 Sentence Builder Checks (10 rounds), row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
+    // Stage 4 Sentence Builder Checks (8 rounds), and row CM-3A S7 keeps 5 of the Stage 7 Checks as Sentence Builder
+    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation).
+    expect({ rounds, built }).toEqual({ rounds: 145, built: 145 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {

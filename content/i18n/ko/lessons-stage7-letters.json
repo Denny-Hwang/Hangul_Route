@@ -77,7 +77,7 @@
     },
     "minigame:s7-letters-q1-apply": {
       "typeHangul.rounds.y1.prompt": "함께 배우는 친구의 이름을 입력해 봐요.",
-      "typeHangul.rounds.y2.prompt": "사람이나 물건을 부르는 말을 입력해 봐요.",
+      "typeHangul.rounds.y2.prompt": "들리는 낱말을 입력해 봐요.",
       "typeHangul.rounds.y3.prompt": "한국어를 적는 문자를 뜻하는 말을 입력해 봐요.",
       "typeHangul.rounds.y4.prompt": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 문장을 입력해 봐요.",
       "typeHangul.rounds.y1.target.gloss": "이 앱에서 함께 배우는 친구의 이름",
@@ -86,10 +86,14 @@
       "typeHangul.rounds.y4.target.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻"
     },
     "minigame:s7-letters-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻",
-      "orderIt.rounds.c2.distractors.ireum.gloss": "사람이나 물건을 부르는 말",
-      "orderIt.rounds.c1.distractors.jeoneun.gloss": "'나는'을 공손하게 이르는 말"
+      "clozePick.rounds.c1.sentence.gloss": "가까이 있는 것이 사람이나 물건을 부르는 말이라는 뜻",
+      "clozePick.rounds.c2.sentence.gloss": "가까이 있는 것이 한국어를 적는 글자라는 뜻",
+      "clozePick.rounds.c1.tiles.ireum.gloss": "사람이나 물건을 부르는 말",
+      "clozePick.rounds.c1.tiles.hangeul.gloss": "한국어를 적는 문자",
+      "clozePick.rounds.c1.tiles.chaek.gloss": "글이나 그림을 묶어 펴낸 것",
+      "clozePick.rounds.c2.tiles.ireum.gloss": "사람이나 물건을 부르는 말",
+      "clozePick.rounds.c2.tiles.hangeul.gloss": "한국어를 적는 문자",
+      "clozePick.rounds.c2.tiles.chaek.gloss": "글이나 그림을 묶어 펴낸 것"
     },
     "minigame:s7-letters-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "자기 이름을 공손하게 알려 준다는 뜻",
@@ -135,10 +139,15 @@
       "writeFrame.rounds.w2.slots.what.bank.yeonpil.gloss": "글씨 쓰는 도구"
     },
     "minigame:s7-letters-q3-check": {
-      "orderIt.rounds.c1.sentence.gloss": "가까이 있는 것이 나를 부르는 말이라는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "가까이 있는 것이 한국어를 적는 기호 하나라는 뜻",
-      "orderIt.rounds.c1.distractors.sori.gloss": "귀로 듣는 울림",
-      "orderIt.rounds.c2.distractors.jeoneun.gloss": "'나는'을 공손하게 이르는 말"
+      "writeFrame.rounds.c1.frame.gloss": "가까이 있는 호야의 것: ___",
+      "writeFrame.rounds.c2.frame.gloss": "한국어 문자로 적은 것: ___",
+      "writeFrame.rounds.c1.slots.what.bank.ireum.gloss": "사람이나 물건을 부르는 말",
+      "writeFrame.rounds.c1.slots.what.bank.chaek.gloss": "글이나 그림을 묶어 펴낸 것",
+      "writeFrame.rounds.c1.slots.what.bank.gabang.gloss": "물건을 넣어 메는 것",
+      "writeFrame.rounds.c1.slots.what.bank.yeonpil.gloss": "글씨 쓰는 도구",
+      "writeFrame.rounds.c2.slots.what.bank.geulja.gloss": "말을 적는 하나하나의 기호",
+      "writeFrame.rounds.c2.slots.what.bank.ireum.gloss": "사람이나 물건을 부르는 말",
+      "writeFrame.rounds.c2.slots.what.bank.chaek.gloss": "글이나 그림을 묶어 펴낸 것"
     }
   }
 }

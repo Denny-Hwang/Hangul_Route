@@ -555,7 +555,8 @@ export function slideSound(slide: Slide | undefined, reveal?: number): SlideSoun
 /**
  * A write-together slide's sound (LV-S4): the Korean on screen, never ahead of it. A type prompt has
  * none until its answer (the learner's Type Hangul plays nothing before the learner types either),
- * then the target; a trace its word, at the word rate, as the learner's Trace a Word plays its block;
+ * then the target, but a Dictation round (`hear`, "Type the word you hear") plays its target from the
+ * first build, as the learner's hear mode does, while its Korean waits for the answer; a trace its word, at the word rate, as the learner's Trace a Word plays its block;
  * a frame its own Korean with a pause at each gap (`frameSpoken`), then its banks' words, then the
  * example; the name round its frame, then the blocks of the table page on screen, at the word rate.
  */
@@ -564,7 +565,8 @@ function writeSound(slide: Of<'write-together'>, reveal: number): SlideSound | u
   const rate = (ko: string): PromptKind => (/\s/.test(ko.trim()) ? 'sentence' : 'word');
   switch (slide.variant) {
     case 'type':
-      return view.answer ? { spoken: slide.answer.spoken, kind: rate(slide.answer.ko) } : undefined;
+      // A Dictation round ("Type the word you hear") plays its target from the first build; the Korean still waits.
+      return view.answer || slide.hear ? { spoken: slide.answer.spoken, kind: rate(slide.answer.ko) } : undefined;
     case 'trace':
       return { spoken: slide.word.spoken, kind: 'word' };
     case 'frame':

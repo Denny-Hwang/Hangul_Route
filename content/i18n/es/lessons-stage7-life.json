@@ -90,8 +90,8 @@
       "traceWord.rounds.w4.word.gloss": "arroz, una comida"
     },
     "minigame:s7-life-q1-apply": {
-      "typeHangul.rounds.t1.prompt": "Teclea la palabra para mañana (el comienzo del día).",
-      "typeHangul.rounds.t2.prompt": "Teclea la palabra para tarde-noche (cuando se pone el sol).",
+      "typeHangul.rounds.t1.prompt": "Escribe la palabra que oyes.",
+      "typeHangul.rounds.t2.prompt": "Escribe la palabra que oyes.",
       "typeHangul.rounds.t3.prompt": "Teclea: al mediodía.",
       "typeHangul.rounds.t4.prompt": "Teclea: Por la mañana como una comida.",
       "typeHangul.rounds.t1.target.gloss": "mañana (el comienzo del día)",
@@ -100,10 +100,14 @@
       "typeHangul.rounds.t4.target.gloss": "Por la mañana como una comida."
     },
     "minigame:s7-life-q1-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Por la mañana como una comida.",
-      "orderIt.rounds.c2.sentence.gloss": "Al mediodía como una comida.",
-      "orderIt.rounds.c1.distractors.gayo.gloss": "voy",
-      "orderIt.rounds.c2.distractors.gayo.gloss": "voy"
+      "clozePick.rounds.c1.sentence.gloss": "Por la mañana como una comida.",
+      "clozePick.rounds.c2.sentence.gloss": "Al mediodía como una comida.",
+      "clozePick.rounds.c1.tiles.achim.gloss": "mañana (el comienzo del día)",
+      "clozePick.rounds.c1.tiles.jeomsim.gloss": "almuerzo, mediodía",
+      "clozePick.rounds.c1.tiles.jeonyeok.gloss": "tarde-noche (cuando se pone el sol)",
+      "clozePick.rounds.c2.tiles.achim.gloss": "mañana (el comienzo del día)",
+      "clozePick.rounds.c2.tiles.jeomsim.gloss": "almuerzo, mediodía",
+      "clozePick.rounds.c2.tiles.jeonyeok.gloss": "tarde-noche (cuando se pone el sol)"
     },
     "minigame:s7-life-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Por la mañana como pan.",
@@ -140,11 +144,21 @@
       "writeFrame.rounds.f3.slots.food.bank.gimbap.gloss": "rollo de arroz con alga"
     },
     "minigame:s7-life-q2-check": {
-      "orderIt.rounds.c1.sentence.gloss": "Por la mañana como un huevo.",
-      "orderIt.rounds.c2.sentence.gloss": "Por la noche como pan.",
-      "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
-      "orderIt.rounds.c1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)",
-      "orderIt.rounds.c2.distractors.gayo.gloss": "voy"
+      "writeFrame.rounds.c1.frame.gloss": "Por la noche, Hoya come ___.",
+      "writeFrame.rounds.c2.frame.gloss": "___, Hoya come ___.",
+      "writeFrame.rounds.c1.slots.food.bank.bap.gloss": "arroz",
+      "writeFrame.rounds.c1.slots.food.bank.ppang.gloss": "pan",
+      "writeFrame.rounds.c1.slots.food.bank.sagwa.gloss": "una manzana",
+      "writeFrame.rounds.c1.slots.food.bank.dalgyal.gloss": "un huevo",
+      "writeFrame.rounds.c1.slots.food.bank.gimbap.gloss": "rollo de arroz con alga",
+      "writeFrame.rounds.c2.slots.time.bank.achim.gloss": "Por la mañana",
+      "writeFrame.rounds.c2.slots.time.bank.jeomsim.gloss": "Al mediodía",
+      "writeFrame.rounds.c2.slots.time.bank.jeonyeok.gloss": "Por la noche",
+      "writeFrame.rounds.c2.slots.food.bank.bap.gloss": "arroz",
+      "writeFrame.rounds.c2.slots.food.bank.ppang.gloss": "pan",
+      "writeFrame.rounds.c2.slots.food.bank.sagwa.gloss": "una manzana",
+      "writeFrame.rounds.c2.slots.food.bank.dalgyal.gloss": "un huevo",
+      "writeFrame.rounds.c2.slots.food.bank.gimbap.gloss": "rollo de arroz con alga"
     },
     "minigame:s7-life-q3-practice": {
       "typeHangul.rounds.t1.prompt": "Teclea la palabra para hoy.",

@@ -105,7 +105,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-nature-q1-check",
           "durationSeconds": 40
         },
@@ -204,48 +204,63 @@
         },
         {
           "ref": "minigame:s7-nature-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "고양이가 좋아요.",
-                "romanization": "goyangiga joayo",
+                "ko": "고양이___ 좋아요.",
+                "romanization": "goyangi___ joayo",
                 "en": "I like cats."
               },
-              "pictureRef": "word:animal-cat",
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "이",
-                    "romanization": "i",
-                    "en": "subject marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "가",
-                    "romanization": "ga",
-                    "en": "subject marker (after a vowel)"
-                  }
-                ]
-              }
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "goyangiga joayo"
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "호랑이가 좋아요.",
-                "romanization": "horangiga joayo",
-                "en": "I like tigers."
+                "ko": "곰___ 좋아요.",
+                "romanization": "gom___ joayo",
+                "en": "I like bears."
               },
-              "pictureRef": "card:tiger",
-              "distractors": [
+              "gapKind": "particle",
+              "tiles": [
                 {
-                  "ko": "곰이",
-                  "romanization": "gomi",
-                  "en": "bear (as the subject)"
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
                 }
-              ]
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "gomi joayo"
             }
           ]
         }
@@ -630,9 +645,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-nature-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -885,48 +900,111 @@
         },
         {
           "ref": "minigame:s7-nature-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "제가 좋아하는 동물은 새예요.",
-                "romanization": "jega joahaneun dongmureun saeyeyo",
-                "en": "My favorite animal is the bird."
+              "frame": {
+                "ko": "호야가 좋아하는 동물은 ___이에요/예요.",
+                "romanization": "hoyaga joahaneun dongmureun ___ieyo/yeyo",
+                "en": "Hoya's favorite animal is the ___."
               },
-              "pictureRef": "word:animal-bird",
-              "distractors": [],
-              "particle": {
-                "tile": 3,
-                "choices": [
-                  {
-                    "ko": "이에요",
-                    "romanization": "ieyo",
-                    "en": "it is (after a final consonant)"
-                  },
-                  {
-                    "ko": "예요",
-                    "romanization": "yeyo",
-                    "en": "it is (after a vowel)"
-                  }
-                ]
-              }
+              "slots": [
+                {
+                  "id": "animal",
+                  "bank": [
+                    {
+                      "ko": "호랑이",
+                      "romanization": "horangi",
+                      "en": "tiger"
+                    },
+                    {
+                      "ko": "고양이",
+                      "romanization": "goyangi",
+                      "en": "cat"
+                    },
+                    {
+                      "ko": "토끼",
+                      "romanization": "tokki",
+                      "en": "rabbit"
+                    },
+                    {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "토끼는 정말 귀여워요.",
-                "romanization": "tokkineun jeongmal gwiyeowoyo",
-                "en": "Rabbits are really cute."
+              "frame": {
+                "ko": "___이/가 정말 ___.",
+                "romanization": "___i/ga jeongmal ___",
+                "en": "The ___ is really ___."
               },
-              "pictureRef": "word:animal-rabbit",
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "커요",
-                  "romanization": "keoyo",
-                  "en": "it is big"
+                  "id": "animal",
+                  "bank": [
+                    {
+                      "ko": "호랑이",
+                      "romanization": "horangi",
+                      "en": "tiger"
+                    },
+                    {
+                      "ko": "고양이",
+                      "romanization": "goyangi",
+                      "en": "cat"
+                    },
+                    {
+                      "ko": "토끼",
+                      "romanization": "tokki",
+                      "en": "rabbit"
+                    },
+                    {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    }
+                  ]
+                },
+                {
+                  "id": "looks",
+                  "bank": [
+                    {
+                      "ko": "귀여워요",
+                      "romanization": "gwiyeowoyo",
+                      "en": "cute"
+                    },
+                    {
+                      "ko": "커요",
+                      "romanization": "keoyo",
+                      "en": "big"
+                    },
+                    {
+                      "ko": "작아요",
+                      "romanization": "jagayo",
+                      "en": "small"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -1081,11 +1159,16 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): 해요체, spelling, spacing, romanization and the 이/가, 은/는, 이에요/예요 pairs clean; applied: 동물 for 짐승 in ko glosses, 이/가 called a subject marker, writing verbs (no speaking) in titles and captions, shorter bear gloss, fewer ko/es calques; kept: Write Frame glosses with ___ (filled by the pick), en w1 'I like the ___', order-it distractors (target gloss shown), 내가 in ko titles.",
-      "Culture pass 5 (MAR): n1-n5 re-checked against every cited NIKL and AKS page (n5 via factRef story:sun-and-moon#f2), two or three Korean public-institution sources each, nothing copied (the ko q3 caption no longer echoes the 저 definition); the tiger tale reduced to the rice cakes with no peril; open-choice banks with 'any answer is a good one'; no real person, brand, price or age wording."
+      "Culture pass 5 (MAR): n1-n5 re-checked against every cited NIKL and AKS page (n5 via factRef story:sun-and-moon#f2), two or three Korean public-institution sources each, nothing copied (the ko q3 caption no longer echoes the 저 definition); the tiger tale reduced to the rice cakes with no peril; open-choice banks with 'any answer is a good one'; no real person, brand, price or age wording.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 Check is Cloze Pick with a particle gap (고양이___ takes 가, 곰___ takes 이; the wrong tiles are the object marker), q2 keeps Sentence Builder, q3 Check is Write Frame (호야가 좋아하는 동물은 ___ and ___이/가 정말 ___; the Apply played neither frame). Retired: 호랑이가 좋아요, 제가 좋아하는 동물은 새예요, 토끼는 정말 귀여워요; new item 곰이 좋아요 (on q1 Discover).",
+      "CM-3A S7 language (MAR, 2026-10-23): 는 is kept out of the tiles because 호랑이는 좋아요 is also Korean; filledRomanization goyangiga / gomi checked against RR; es and ko particle glosses reuse the reviewed q1 wording. Animal banks only, no feeling slot, so no frame asks about the learner's own feelings.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; Cloze Pick, Sentence Builder and Write Frame Checks, one each; off, the particle Check plays as Listen & Pick and keeps 가 and 이 apart by the last syllable in en, es and ko; the banks ask no feeling of the learner's own; nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; n1-n5 and their sources are untouched; the Checks name only animals and looks the cell teaches; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the #867 reviews): the q3 Check repeated Apply w2 and w3 word for word; c1 is now Hoya's favorite animal (호야가 좋아하는 동물은 ___, section 6.6) and c2 puts the q1 subject marker in the w3 frame (___이/가 정말 ___: 고양이가, 곰이). es El animal favorito de Hoya es el ___ and ko 호야 마음에 가장 드는 동물: ___ fit every pick."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

@@ -6,6 +6,7 @@ import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
+import { slideSound } from '../../../logic/lecture/slide-view';
 import { byTestId, hostNodes, render, screenTexts, textOf } from '../../../test-support/render';
 import { PresenterViewProvider } from '../presenter-context';
 import { Stage } from '../Stage';
@@ -89,6 +90,18 @@ describe('WriteTogetherSlide (LV-S4)', () => {
     const answer = byTestId(shown.root, 'presenter-write-answer')[0]!;
     expect(hiddenNow(answer)).toBe(false);
     expect(screenTexts(answer)).toEqual(['물 주세요', 'mul juseyo']);
+  });
+
+  it('a Dictation round (Stage 7 Food q1, row CM-3A S7) is marked hear: "the word you hear" plays the target from the first build, its Korean still hidden', () => {
+    const types = writes(slidesOf([{ kind: 'quest', id: 'quest:stage7-life-q1' }])).filter((s): s is Extract<WriteTogetherBody, { variant: 'type' }> => s.variant === 'type');
+    const heard = types.filter((s) => s.hear === true);
+    expect(heard.map((s) => [s.prompt, s.answer.ko])).toEqual([
+      ['Type the word you hear.', '아침'],
+      ['Type the word you hear.', '저녁'],
+    ]);
+    for (const slide of heard) expect(slideSound(slide, 0)?.spoken.text, slide.answer.ko).toBe(slide.answer.ko);
+    // A see round's slide is not marked and stays silent until its answer.
+    for (const slide of types.filter((s) => s.hear !== true)) expect(slideSound(slide, 0), slide.answer.ko).toBeUndefined();
   });
 
   it('type with no picture and a prompt that does not name the word: the cue tells the three prices apart (Stage 6 letters q2)', async () => {

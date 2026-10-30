@@ -147,6 +147,7 @@ describe("build-review-items.mjs over the repository's content", () => {
     const retired = run(root);
     assert.equal(retired.status, 0, retired.stdout);
     // The retired item keeps its id and Korean for reports, and is in no row.
+    // The repository's own retired ids (row CM-3A S7 onward) stay listed beside it.
     assert.match(chunkFile(root), /export const REVIEW_RETIRED: readonly RetiredItemRow\[\] = \[[^\n]*\["lex:somsatang","솜사탕",""\][^\n]*\];/);
     const rowsPart = chunkFile(root).split("export const REVIEW_RETIRED")[0];
     assert.ok(!rowsPart.includes('"lex:somsatang"'), "a retired id is in no row");

@@ -105,7 +105,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s7-crafts-q1-check",
           "durationSeconds": 40
         },
@@ -227,48 +227,61 @@
         },
         {
           "ref": "minigame:s7-crafts-q1-check",
-          "kind": "order-it",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
               "sentence": {
-                "ko": "꽃을 접어요.",
-                "romanization": "kkocheul jeobeoyo",
+                "ko": "꽃___ 접어요.",
+                "romanization": "kkot___ jeobeoyo",
                 "en": "I fold a paper flower."
               },
-              "pictureRef": "word:nature-flower",
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker (after a vowel)"
-                  }
-                ]
-              }
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "kkocheul jeobeoyo"
             },
             {
               "id": "c2",
               "sentence": {
-                "ko": "별을 그려요.",
-                "romanization": "byeoreul geuryeoyo",
+                "ko": "별을 ___.",
+                "romanization": "byeoreul ___",
                 "en": "I draw a star."
               },
-              "pictureRef": "word:nature-star",
-              "distractors": [
+              "tiles": [
                 {
                   "ko": "접어요",
                   "romanization": "jeobeoyo",
                   "en": "I fold"
+                },
+                {
+                  "ko": "잘라요",
+                  "romanization": "jallayo",
+                  "en": "I cut"
+                },
+                {
+                  "ko": "그려요",
+                  "romanization": "geuryeoyo",
+                  "en": "I draw"
                 }
-              ]
+              ],
+              "answerIndex": 2
             }
           ]
         }
@@ -386,12 +399,13 @@
           "rounds": [
             {
               "id": "t1",
-              "promptEn": "Type the word for first.",
+              "promptEn": "Type the word you hear.",
               "target": {
                 "ko": "먼저",
                 "romanization": "meonjeo",
                 "en": "first"
-              }
+              },
+              "mode": "hear"
             },
             {
               "id": "t2",
@@ -626,9 +640,9 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "write-frame",
           "minigameRef": "minigame:s7-crafts-q3-check",
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         {
           "id": "s6",
@@ -772,47 +786,66 @@
         },
         {
           "ref": "minigame:s7-crafts-q3-check",
-          "kind": "order-it",
+          "kind": "write-frame",
           "rounds": [
             {
               "id": "c1",
-              "sentence": {
-                "ko": "종이를 접고 잘라요.",
-                "romanization": "jongireul jeopgo jallayo",
-                "en": "I fold the paper and then cut it."
+              "frame": {
+                "ko": "종이를 접고 ___.",
+                "romanization": "jongireul jeopgo ___",
+                "en": "I fold the paper, and then ___."
               },
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker (after a final consonant)"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker (after a vowel)"
-                  }
-                ]
-              }
+              "slots": [
+                {
+                  "id": "act",
+                  "bank": [
+                    {
+                      "ko": "잘라요",
+                      "romanization": "jallayo",
+                      "en": "I cut"
+                    },
+                    {
+                      "ko": "그려요",
+                      "romanization": "geuryeoyo",
+                      "en": "I draw"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
             },
             {
               "id": "c2",
-              "sentence": {
-                "ko": "먼저 접고 그려요.",
-                "romanization": "meonjeo jeopgo geuryeoyo",
-                "en": "First, I fold and then draw."
+              "frame": {
+                "ko": "먼저 ___을/를 접어요.",
+                "romanization": "meonjeo ___eul/reul jeobeoyo",
+                "en": "First, I fold ___."
               },
-              "pictureRef": "word:nature-flower",
-              "distractors": [
+              "slots": [
                 {
-                  "ko": "마지막으로",
-                  "romanization": "majimageuro",
-                  "en": "last, finally"
+                  "id": "thing",
+                  "bank": [
+                    {
+                      "ko": "종이",
+                      "romanization": "jongi",
+                      "en": "the paper"
+                    },
+                    {
+                      "ko": "비행기",
+                      "romanization": "bihaenggi",
+                      "en": "a paper plane"
+                    },
+                    {
+                      "ko": "꽃",
+                      "romanization": "kkot",
+                      "en": "a paper flower"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "entry": "type",
+              "freeEntry": false
             }
           ]
         }
@@ -906,11 +939,17 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language (pass 4, MAR, 2026-10-14): Hoya in 해요체 throughout the ko overlay; the -고 note shows the stem rule (접어요 -> 접 + 고); 가위로 is a fixed chunk glossed 'with scissors' on its Discover page, and q2 Check no longer pairs it with 마지막으로; ko glosses define 접어요 / 잘라요 / 그려요 without echoing them; 을/를 answers rebalanced.",
-      "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price."
+      "Culture (pass 5, MAR, 2026-10-14): all six cited pages re-fetched, every locator matches; 'tree' dropped from the hanji note and captions, ko 우리 종이 -> 한국 전통 종이, the Share line is conditional so a learner alone has a true reading; no stereotype, no age wording, no real person, shop, brand or price.",
+      "CM-3A S7 learning design (MAR, 2026-10-23): q1 and q2 shared one triple; q1 Check is now Cloze Pick (꽃___ 접어요 particle gap, 별을 ___ verb gap; ids kept), q2 keeps Sentence Builder, q3 Check is Write Frame (종이를 접고 ___ and 먼저 ___을/를 접어요 with the paper, a paper plane or a paper flower; the Apply played neither frame). q2 Practice t1 is Dictation (먼저). Discover still teaches both old q3 Check sentences.",
+      "CM-3A S7 language (MAR, 2026-10-23): only 을 fits 꽃___ 접어요; the third tile is 가, the subject marker the stage teaches in nature, wrong after 꽃 as a particle and as a form. es Doblo el papel y luego ___ composes with corto / dibujo; ko glosses echo no tile.",
+      "CM-3A S7 third pass (MAR, 2026-10-27, merged CM-30/31/34/35/3C stack): curriculum lint clean for the cell; no two quests share a triple; off, Cloze Pick plays as Listen & Pick and Dictation as a see round; es Primero doblo ___ takes each pick with its own article (el papel, un avión de papel, una flor de papel); nothing typed is kept.",
+      "CM-3A S7 culture (MAR, 2026-10-27): no culture claim and no note added; n1 and n2 and their sources are untouched; the Checks name only paper, folded things and the cell's verbs; culture-source reports nothing.",
+      "CM-3A S7 reviser (MAR, 2026-10-27, after the two independent reviews of #867): q3 Check c2 copied the q3 Apply's w3 (마지막으로 ___을/를 그려요, 꽃 / 별); it is now 먼저 ___을/를 접어요 with 종이, 비행기 and 꽃 (the q1 and q2 folded things). q1 Check c1's 로 tile, which Stage 7 teaches only inside the chunk 가위로, is now 가. ko 맨 처음에 꺾어 겹치는 것: ___ composes with every pick.",
+      "CM-3A S7 reviser 2 (MAR, 2026-10-29, after the second pair of #867 reviews): the q2 Dictation prompt (t1) is the stage's one hear prompt, ko 들리는 낱말을 입력해 봐요. in the stage's -요 register (was the -세요 쳐 보세요.), as in letters q1 y2 and life q1 t1 and t2; es already reads Escribe la palabra que oyes."
     ]
   },
-  "contentVer": 1
+  "contentVer": 2
 }

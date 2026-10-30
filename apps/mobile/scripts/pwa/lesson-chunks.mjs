@@ -158,6 +158,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // games merged together: their doors and fallbacks add up past 4,765,000 B, and the row itself adds about 207 B (the
   // Stage 6 Check kinds and the other-direction value gap rule, which the lesson parse enforces as validate-content
   // does). The line is that measurement plus a 6,204 B rounding margin.
+  // The CM-30, CM-31, CM-34, CM-35 and CM-3C stack merged for CM-3A S7 (#852, #850, #851, #854, #856, each measured
+  // alone above) measures 4,783,209 B raw / 1,276,097 B gzip (release `build:web`); S7's Stage 7 Check kinds and
+  // re-authored steps add 27 B (4,783,236 B raw / 1,276,092 B gzip); with CM-35's review fixes (83b6ffa43) and S7's
+  // Write Frame Check header (no Skip in the Check) the stack measures 4,784,044 B raw / 1,276,420 B gzip. The line is
+  // that measurement plus a 5,956 B margin. It is the stacked branch's line only: once the five rows merge, S7 is
+  // measured again on main and keeps main's line if it fits (S7's own share is under 1 KB).
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
