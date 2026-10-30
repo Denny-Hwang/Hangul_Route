@@ -2,9 +2,11 @@ import type { MyStoryFrame } from '@hangul-route/content-schema';
 
 /**
  * A test-only My Story chain (F-CURR-002 row CM-38): the wireframe's example (design/wireframes/minigame/my-story.md),
- * played by the fixture build's `navigation/my-story-e2e.tsx` and the component tests. Never shipped content: no lesson
+ * played by the fixture build's `navigation/write-frame-e2e.tsx` (story mode) and the component tests. Never shipped content: no lesson
  * cell reads it. Every bank has its neutral option (공원, 호야, 괜찮아요), drawn like the others and never first. Its
- * Korean is checked like any taught Korean (`__tests__/e2e-chain.test.ts`).
+ * Korean is checked like any taught Korean (`__tests__/e2e-chain.test.ts`). The `e2e-feel` frame follows the
+ * wireframe's example; it is not a model for the section 6.6 feelings rule: a shipped feelings frame also offers a
+ * path whose subject is not the learner (for example "Hoya feels ___", 호야는 기분이 ___).
  */
 export const FIXTURE_CHAIN: readonly MyStoryFrame[] = [
   {

@@ -22,7 +22,8 @@ vi.mock('../../config/flags', async (importOriginal) => {
 });
 
 import { useProfileStore } from '../profile-store';
-import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useRemoteConfigStore } from '../remote-config-store';
+import { useGuestStore } from '../guest-store';
+import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useCurrFlagFor, useRemoteConfigStore } from '../remote-config-store';
 
 /**
  * `useCurrFlag` (F-CURR-002 section 12.2, row CM-2): a surface re-renders when the remote copy arrives or the active
@@ -105,5 +106,56 @@ describe('useCurrFlag', () => {
       expect(seen.at(-1), id).toBe(currFlagOn('dailyReview', id));
     }
     expect(new Set(answers.values()).size).toBe(2);
+  });
+});
+
+function ForProbe({ profileId }: { profileId: string }): null {
+  seen.push(useCurrFlagFor('game.my-story', profileId));
+  return null;
+}
+
+describe('useCurrFlagFor (row CM-38): buckets on the learner a surface shows, not the active profile', () => {
+  afterEach(() => {
+    useGuestStore.setState({ running: false });
+  });
+
+  it('a grown-up viewing a child during a 50% ramp gets the child\'s answer whatever the active profile is', async () => {
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.my-story': { on: true, pct: 50 } } } });
+    });
+    const ids = ['a1', 'b2', 'c3', 'd4', 'e5', 'f6', 'g7', 'h8'];
+    const child = ids.find((id) => currFlagOn('game.my-story', id))!;
+    const other = ids.find((id) => !currFlagOn('game.my-story', id))!;
+    expect(child).toBeDefined();
+    expect(other).toBeDefined();
+    useProfileStore.setState({ activeId: other });
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(ForProbe, { profileId: child }));
+    });
+    expect(seen.at(-1)).toBe(true);
+    await act(async () => {
+      useProfileStore.setState({ activeId: child });
+    });
+    await act(async () => {
+      renderer!.update(createElement(ForProbe, { profileId: other }));
+    });
+    expect(seen.at(-1)).toBe(false);
+  });
+
+  it('off before the stored copy is read, and a guest run buckets on no profile', async () => {
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(ForProbe, { profileId: 'a1' }));
+    });
+    expect(seen).toEqual([false]);
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.my-story': { on: true, pct: 100 } } } });
+    });
+    expect(seen.at(-1)).toBe(true);
+    await act(async () => {
+      useGuestStore.setState({ running: true });
+    });
+    expect(seen.at(-1)).toBe(currFlagOn('game.my-story', null));
   });
 });

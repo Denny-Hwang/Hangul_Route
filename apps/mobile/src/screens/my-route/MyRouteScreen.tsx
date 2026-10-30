@@ -35,7 +35,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { questOpenFor, useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { useUiStore } from '../../store/ui-store';
-import { useCurrFlag } from '../../store/remote-config-store';
+import { useCurrFlagFor } from '../../store/remote-config-store';
 import { LinkButton } from '../../components/LinkButton';
 import { GainsCard, StoriesNote } from './GainsCard';
 import { NextLessons } from './NextLessons';
@@ -257,9 +257,10 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   // visit only; the effect below records the goal and sends route_map.goal_reached. Never read-only.
   const firstReached = firstGoalReachedFor({ focusKey, seenFor, focused, readOnly, goal: model?.goal ?? null, seen: seenRead });
 
-  // The Write sheet names My Story only while its `game.my-story` switch is on for this learner (row CM-38); each
-  // later switched format adds its switch here.
-  const myStoryOn = useCurrFlag('game.my-story');
+  // The Write sheet names My Story only while its `game.my-story` switch is on for this learner (row CM-38), bucketed
+  // on the learner the body shows (the child, on the grown-up's read-only view), not the active profile; each later
+  // switched format adds its switch here.
+  const myStoryOn = useCurrFlagFor('game.my-story', profileId);
   const view = useMemo(() => {
     if (model === null) return null;
     const themeTitles = Object.fromEntries(localized.themes.map((t) => [t.key, t.titleEn])) as Record<ThemeKey, string>;
