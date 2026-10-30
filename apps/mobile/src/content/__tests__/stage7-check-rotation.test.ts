@@ -10,9 +10,11 @@ import { scopeFor } from '../../logic/minigame-config';
  * F-CURR-002 row CM-3A, part S7 (section 7.1 Check rotation, 6.6 risk notes, 9.3): the Stage 7 Volume 1 Checks
  * rotate over Write Frame (the default S7 Check), Cloze Pick and Sentence Builder, so no game holds more than 40% of
  * the stage's Checks; every Check asks the learner to produce; no two adjacent quests share a Practice, Apply and
- * Check triple; no Write Frame Check repeats a frame its own quest's Apply just played; every Write Frame Check is about
- * Hoya or about things, never about the learner (the neutral option of the section 6.6 risk notes), and no frame or
- * bank of the stage needs the learner's own family or feelings. The lint over the same files (no finding of any rule)
+ * Check triple; no Write Frame Check frame is textually identical to a frame its own quest's Apply just played (a
+ * Check may still ask the same bank about Hoya: section 7.1 does not forbid it, and varying it is a follow-up); every
+ * Write Frame Check is about Hoya or about things, never about the learner (the neutral option of the section 6.6 risk
+ * notes); no frame of the stage names the learner's family or feelings, every bank slot has a neutral answer, and no
+ * Check bank offers a family or feeling word at all. The lint over the same files (no finding of any rule)
  * is `packages/content-schema` curriculum-lint.test.ts.
  */
 
@@ -89,7 +91,7 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
     for (const quest of QUESTS) expect(quest.scopes.map((s) => s.kind), quest.id).not.toContain('my-story');
   });
 
-  it('no frame or bank of the stage names a family or feeling word, and every bank slot has an answer that is neither (section 6.6)', () => {
+  it('no frame names a family or feeling word, every bank slot has a neutral answer, and no Check bank holds a family or feeling word (section 6.6)', () => {
     let frames = 0;
     for (const quest of QUESTS) {
       for (const scope of quest.scopes) {
@@ -101,6 +103,11 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
           frames += 1;
           for (const slot of round.slots) expect(slot.bank.some((w) => !PERSONAL.has(w.ko)), `${where} slot ${slot.id}`).toBe(true);
         }
+      }
+      const check = scopeOfStep(quest, 'check')!;
+      if (check.kind !== 'write-frame') continue;
+      for (const round of check.rounds) {
+        for (const slot of round.slots) for (const w of slot.bank) expect(PERSONAL.has(w.ko), `${check.ref} ${round.id} slot ${slot.id}: ${w.ko}`).toBe(false);
       }
     }
     expect(frames).toBeGreaterThanOrEqual(20);
@@ -126,7 +133,7 @@ describe('Stage 7 Check rotation (F-CURR-002 row CM-3A S7)', () => {
     expect(liking).toBe(2);
   });
 
-  it("no Write Frame Check round repeats a frame its own quest's Apply played", () => {
+  it("no Write Frame Check frame is textually identical to a frame its own quest's Apply played", () => {
     let checked = 0;
     for (const quest of QUESTS) {
       const check = scopeOfStep(quest, 'check')!;
