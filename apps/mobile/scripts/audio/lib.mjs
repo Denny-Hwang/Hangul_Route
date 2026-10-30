@@ -454,7 +454,7 @@ export function clipPacksOf(manifest) {
  * - `jamo` and `word` keep their fixed bounds. The five tense letter names (쌍기역 ...) take the word bound
  *   (`clipClassOf`).
  * - `sentence` and `narration` are bounded per spoken syllable: 0.15-0.45 s a syllable plus the 0.6 s of padding
- *   (0.3 s each side), with the byte cap that bound gives at 48 kbps (`clipLimitsOf`).
+ *   (0.3 s each side), with the byte cap that bound gives at the clip's bitrate (48 kbps by default; `clipLimitsOf`).
  * - The jamo set totals are per pack (`PACK_SET_LIMITS`); a vocabulary topic keeps its 1.5 MB.
  */
 export const CLIP_PADDING_S = 0.6;
@@ -485,19 +485,20 @@ export function spokenSyllableCount(text) {
 
 /**
  * The bounds of one clip of a class: `{ minS, maxS, maxBytes }`. A `sentence` or `narration` clip needs its spoken
- * syllable count (`spokenSyllableCount`).
+ * syllable count (`spokenSyllableCount`); its byte cap is derived at `kbps` (default 48, the say group's first bitrate;
+ * 64 when the pilot moved the say group to 64 kbps).
  *
  * @param {'jamo' | 'word' | 'sentence' | 'narration'} kind
- * @param {{ syllables?: number }} [context]
+ * @param {{ syllables?: number, kbps?: 64 | 48 }} [context]
  */
-export function clipLimitsOf(kind, { syllables } = {}) {
+export function clipLimitsOf(kind, { syllables, kbps } = {}) {
   const lim = CLIP_LIMITS[kind];
   if (lim === undefined) throw new Error(`unknown clip class ${kind}`);
   if (lim.perSyllable === undefined) return { minS: lim.minS, maxS: lim.maxS, maxBytes: lim.maxBytes };
   if (!Number.isInteger(syllables) || syllables <= 0) throw new Error(`a ${kind} clip is bounded per spoken syllable: pass its syllable count`);
   const minS = round3(lim.perSyllable.min * syllables + lim.paddingS);
   const maxS = round3(lim.perSyllable.max * syllables + lim.paddingS);
-  return { minS, maxS, maxBytes: Math.ceil(round3((maxS * lim.kbps * 1000) / 8)) };
+  return { minS, maxS, maxBytes: Math.ceil(round3((maxS * (kbps ?? lim.kbps) * 1000) / 8)) };
 }
 
 /**
@@ -524,18 +525,35 @@ export function clipClassOf(row) {
   }
 }
 
+/** The recording group of a clip ref: `audio/jamo/`, `audio/vocab/` or `audio/say/` (anything else: null). */
+export function recordingGroupOf(ref) {
+  const m = /^audio\/(jamo|vocab|say)\//.exec(String(ref));
+  return m === null ? null : m[1];
+}
+
 /**
- * The MP3 bitrate a clip is processed at (AU-OD-7): 64 kbps for a jamo clip, 48 kbps for every other generated clip
- * (the say group, and a vocabulary clip the manifest generates). A recorded clip outside audio/jamo keeps 64.
+ * The MP3 bitrate a clip is checked at: one its recording group is encoded at (`GROUP_BITRATES`, AU-OD-7; AC-B5
+ * step 3). jamo and vocab clips are 64 kbps. A say clip is 48 kbps, or 64 if the pilot listen of section 13 ruled 48
+ * out: pass `kbps` when the run knows it (refused when the group does not allow it), or the clip's measured
+ * `sampleRate`, which picks the allowed bitrate that encodes at that rate (48 kbps at 24 kHz, 64 kbps at 44.1 kHz).
+ * With neither, the group's first bitrate. A clip outside the three groups is 64 kbps.
  *
  * @param {string} ref
- * @param {{ generated?: boolean }} [context] whether the clip is a generated (manifest) clip
+ * @param {{ kbps?: 64 | 48, sampleRate?: number }} [context]
  * @returns {64 | 48}
  */
-export function clipKbpsOf(ref, { generated = true } = {}) {
-  if (ref.startsWith('audio/jamo/')) return 64;
-  if (ref.startsWith('audio/say/')) return SAY_KBPS;
-  return generated ? SAY_KBPS : 64;
+export function clipKbpsOf(ref, { kbps, sampleRate } = {}) {
+  const group = recordingGroupOf(ref);
+  const allowed = group === null ? [DEFAULT_MP3_BITRATE] : GROUP_BITRATES[group];
+  if (kbps !== undefined) {
+    if (!allowed.includes(kbps)) throw new Error(`${ref}: the ${group ?? 'other'} group is encoded at ${allowed.join(' or ')} kbps (AU-OD-7), not ${kbps}`);
+    return kbps;
+  }
+  if (sampleRate !== undefined) {
+    const match = allowed.find((k) => MP3_BITRATES[k] === sampleRate);
+    if (match !== undefined) return match;
+  }
+  return allowed[0];
 }
 
 /**
@@ -547,7 +565,7 @@ export function clipKbpsOf(ref, { generated = true } = {}) {
  *   the clip was processed at (default 64; 48 for a sentence or narration clip)
  */
 export function evaluateReport(kind, r, { syllables, kbps } = {}) {
-  const lim = clipLimitsOf(kind, { syllables });
+  const lim = clipLimitsOf(kind, { syllables, kbps });
   const rate = MP3_BITRATES[kbps ?? CLIP_LIMITS[kind].kbps ?? DEFAULT_MP3_BITRATE];
   const failures = [];
   if (r.channels !== 1) failures.push(`channels ${r.channels}: must be mono`);

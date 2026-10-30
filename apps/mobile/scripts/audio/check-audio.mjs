@@ -3,8 +3,9 @@
 // still missing (the T-017 to-do list). The limits live in lib.mjs (clipLimitsOf,
 // evaluateReport, evaluateSet), unit-tested. A clip the manifest lists
 // (content/audio/tts-manifest.json) takes its row's class (a tense letter name the
-// word bound, a sentence the per-syllable bound) and its bitrate (jamo 64 kbps,
-// generated clips 48 kbps); the jamo set totals are per pack (jamo-s1, jamo-wb).
+// word bound, a sentence the per-syllable bound). Every clip takes its group's bitrate
+// (GROUP_BITRATES: jamo and vocab 64 kbps; say 48 kbps, or 64 if the pilot ruled 48
+// out); the jamo set totals are per pack (jamo-s1, jamo-wb).
 //
 //   node scripts/audio/check-audio.mjs [<dir>] [--kind jamo|word]   default: assets/audio/jamo, jamo
 //   node scripts/audio/check-audio.mjs --status                      clips the content refers to that have no file yet
@@ -75,10 +76,11 @@ for (const f of files) {
   const path = join(dir, f);
   const row = rowByRef.get(refOf(f));
   const clipKind = row === undefined ? kind : clipClassOf(row);
-  const context = { kbps: clipKbpsOf(refOf(f), { generated: row !== undefined }), syllables: row === undefined ? undefined : spokenSyllableCount(row.text) };
   const probe = parseProbe(
     ffprobe(['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_name,channels,sample_rate:format=duration,size', '-of', 'json', path]),
   );
+  // The group's bitrate (jamo and vocab 64; say 48, or 64 after the pilot): picked by the measured sample rate.
+  const context = { kbps: clipKbpsOf(refOf(f), { sampleRate: probe.sampleRate }), syllables: row === undefined ? undefined : spokenSyllableCount(row.text) };
   const loud = parseEbur128(ffmpeg(['-hide_banner', '-nostats', '-i', path, '-af', 'ebur128=peak=true', '-f', 'null', '-']));
   const report = { ...probe, ...loud };
   const failures = evaluateReport(clipKind, report, context);

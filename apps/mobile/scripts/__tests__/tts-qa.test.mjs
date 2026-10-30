@@ -21,7 +21,9 @@ import {
   isExactMatch,
   normalizeTranscript,
   parseWhisperText,
+  sameSoundSpellingsOf,
   scoreCtcClip,
+  standardPronunciationsOf,
   syllableConfusables,
   targetFormsOf,
   whisperGrammar,
@@ -123,6 +125,54 @@ describe('the closed set of confusables (section 9, Pass 1 and Pass 2)', () => {
     expect(set.targets).toEqual(['가방']);
     expect(set.confusables).toEqual(expect.arrayContaining(['카방', '까방', '가박', '가반', '가발', '가밤', '가밥', '가받', '가빵', '가팡']));
     expect(set.confusables).not.toContain('가방');
+  });
+
+  it('a sound change across the syllables makes the standard pronunciation a target, never a confusable', () => {
+    // Tensing after a stop coda (학교 [학꾜], 있다 [읻따], 십 분 [십뿐]), aspiration after ㅎ (좋다 [조타], not 좋따),
+    // nasalization (국물 [궁물]) and ㄴ next to ㄹ (신라 [실라], 설날 [설랄]).
+    expect(standardPronunciationsOf('학교')).toEqual(['학꾜']);
+    expect(standardPronunciationsOf('있다')).toEqual(['있따']);
+    expect(standardPronunciationsOf('십분')).toEqual(['십뿐']);
+    expect(standardPronunciationsOf('좋다')).toEqual(['좋타']);
+    expect(standardPronunciationsOf('국물')).toEqual(['궁물']);
+    expect(standardPronunciationsOf('입니')).toEqual(['임니']);
+    expect(standardPronunciationsOf('신라')).toEqual(['실라']);
+    expect(standardPronunciationsOf('설날')).toEqual(['설랄']);
+    // No change: no coda, a sonorant coda before a plain stop, or one syllable.
+    for (const form of ['가방', '기역', '사과', '안녕', '가']) expect(standardPronunciationsOf(form)).toEqual([]);
+    for (const [text, said] of [['학교', '학꾜'], ['떡국', '떡꾹'], ['책상', '책쌍'], ['십 분', '십뿐'], ['국물', '궁물'], ['밥상', '밥쌍'], ['햇볕', '햇뼡']]) {
+      const set = closedSetOf(row('word', text), NO_OVERRIDES);
+      expect(set.targets).toContain(said);
+      expect(set.confusables).not.toContain(said);
+    }
+    // The real confusables stay: 학교 against 학쿄 and 한교.
+    expect(closedSetOf(row('word', '학교'), NO_OVERRIDES).confusables).toEqual(expect.arrayContaining(['학쿄', '한교']));
+  });
+
+  it('a final-sound clip accepts the spellings said the same: 앋 as 앗, 악 as 앜', () => {
+    expect(sameSoundSpellingsOf('앋')).toEqual(['앗', '았', '앚', '앛', '앝', '앟']);
+    expect(sameSoundSpellingsOf('악')).toEqual(['앆', '앇', '앍', '앜']);
+    expect(sameSoundSpellingsOf('아')).toEqual([]);
+    const t = closedSetOf(row('jamo-sound', '앋'), NO_OVERRIDES);
+    expect(t.targets).toEqual(['앋', '앗', '았', '앚', '앛', '앝', '앟']);
+    expect(t.confusables).toEqual(['악', '안', '알', '암', '압', '앙']);
+    // A forced choice of 앗 is the target; 악 is not.
+    const forms = targetFormsOf(row('jamo-sound', '앋'), NO_OVERRIDES);
+    expect(evaluatePass1({ forms, closedSet: t, free: '앗.', forced: '앗' })).toMatchObject({ ok: true, flags: ['free transcript "앗." differs from 앋 (the forced choice decides)'] });
+    expect(evaluatePass1({ forms, closedSet: t, free: '앗.', forced: '악' }).ok).toBe(false);
+    // Only a jamo clip: a one-syllable word keeps its own spelling.
+    expect(closedSetOf(row('word', '옷'), NO_OVERRIDES).targets).toEqual(['옷']);
+  });
+
+  it('a forced choice or a CTC top score on the standard pronunciation passes', () => {
+    const r = row('word', '학교');
+    const set = closedSetOf(r, NO_OVERRIDES);
+    const forms = targetFormsOf(r, NO_OVERRIDES);
+    expect(evaluatePass1({ forms, closedSet: set, free: '학교', forced: '학꾜' }).ok).toBe(true);
+    const scores = Object.fromEntries([...set.targets, ...set.confusables].map((c) => [c, -20]));
+    scores['학꾜'] = -8;
+    scores['학교'] = -9;
+    expect(evaluatePass2({ forms, closedSet: set, free: '학교', scores })).toMatchObject({ ok: true, target: '학꾜', margin: 12 });
   });
 
   it('letter names: names that share a syllable, the same series and the 쌍 name', () => {

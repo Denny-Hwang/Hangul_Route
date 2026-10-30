@@ -1,13 +1,19 @@
 {
-  "streams": [
-    {
-      "codec_name": "mp3",
-      "sample_rate": "44100",
-      "channels": 1
+    "programs": [
+
+    ],
+    "stream_groups": [
+
+    ],
+    "streams": [
+        {
+            "codec_name": "mp3",
+            "sample_rate": "44100",
+            "channels": 1
+        }
+    ],
+    "format": {
+        "duration": "1.700045",
+        "size": "14209"
     }
-  ],
-  "format": {
-    "duration": "1.700000",
-    "size": "14254"
-  }
 }

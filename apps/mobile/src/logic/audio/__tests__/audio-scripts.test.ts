@@ -565,11 +565,28 @@ describe('scripts/audio/lib: the clip classes of AMENDMENTS-AUDIO-CLIPS AC-B6 (s
     expect(clipClassOf({ kind: 'narration', text: '옛날 옛적에.' })).toBe('narration');
   });
 
-  it('jamo clips are 64 kbps, every generated clip outside audio/jamo 48 kbps (AU-OD-7)', () => {
+  it('each clip takes its group bitrate (GROUP_BITRATES, AU-OD-7): jamo and vocab 64, say 48 or 64', () => {
     expect(clipKbpsOf('audio/jamo/giyeok.mp3')).toBe(64);
+    // A generated vocabulary clip is encoded at 64 kbps, 44.1 kHz, like a recorded one.
+    expect(clipKbpsOf('audio/vocab/sagwa.mp3')).toBe(64);
+    expect(clipKbpsOf('audio/vocab/sagwa.mp3', { sampleRate: 24000 })).toBe(64);
+    expect(() => clipKbpsOf('audio/vocab/sagwa.mp3', { kbps: 48 })).toThrow(/vocab group is encoded at 64 kbps/);
+    // say: 48 kbps by default; 64 when the pilot moved it (given, or read from the 44.1 kHz sample rate).
     expect(clipKbpsOf('audio/say/0123456789abcdef.mp3')).toBe(48);
-    expect(clipKbpsOf('audio/vocab/sagwa.mp3', { generated: true })).toBe(48);
-    expect(clipKbpsOf('audio/vocab/sagwa.mp3', { generated: false })).toBe(64);
+    expect(clipKbpsOf('audio/say/0123456789abcdef.mp3', { sampleRate: 24000 })).toBe(48);
+    expect(clipKbpsOf('audio/say/0123456789abcdef.mp3', { sampleRate: 44100 })).toBe(64);
+    expect(clipKbpsOf('audio/say/0123456789abcdef.mp3', { kbps: 64 })).toBe(64);
+    expect(() => clipKbpsOf('audio/jamo/giyeok.mp3', { kbps: 48 })).toThrow(/jamo group is encoded at 64 kbps/);
+  });
+
+  it('a generated vocab clip at 64 kbps / 44.1 kHz passes; a say sentence at 64 kbps gets the 64 kbps byte cap', () => {
+    const word = { channels: 1, sampleRate: 44100, codec: 'mp3', durationS: 1.2, integratedLufs: -16, truePeakDb: -2, bytes: 9_800 };
+    expect(evaluateReport('word', word, { kbps: clipKbpsOf('audio/vocab/gangaji.mp3', { sampleRate: 44100 }) })).toEqual([]);
+    // 10 syllables: at most 5.1 s; 30,600 bytes at 48 kbps, 40,800 bytes at 64 kbps.
+    expect(clipLimitsOf('sentence', { syllables: 10, kbps: 64 }).maxBytes).toBe(40_800);
+    const sentence = { ...word, durationS: 4.9, bytes: 39_000 };
+    expect(evaluateReport('sentence', sentence, { syllables: 10, kbps: clipKbpsOf('audio/say/0123456789abcdef.mp3', { sampleRate: 44100 }) })).toEqual([]);
+    expect(evaluateReport('sentence', { ...sentence, sampleRate: 24000 }, { syllables: 10, kbps: 48 })).toEqual(['size 39000 bytes: must be <= 30600']);
   });
 
   it('per-pack set limits replace the 400,000 B "30 jamo clips" total', () => {

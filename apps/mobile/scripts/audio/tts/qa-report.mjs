@@ -37,8 +37,18 @@ export const EDGE_SILENCE_S = Object.freeze({ min: 0.25, max: 0.4 });
 export const MAX_INTERNAL_SILENCE_S = 0.5;
 /** A jamo clip whose voiced span is under 0.15 s fails (truncation). */
 export const MIN_VOICED_SPAN_S = 0.15;
-/** Speech that starts within 50 ms of the first sample was cut into: a clipped onset. */
+/** Speech that starts within 50 ms of the first sample of a WAV master was cut into: a clipped onset. */
 export const CLIPPED_ONSET_S = 0.05;
+/**
+ * An onset with no rise: the first voiced 10 ms frame (RMS over the -50 dB silence threshold) is already within 6 dB
+ * of the clip's loudest frame. Speech rises into its first syllable (on recorded synthetic clips: a 40 ms attack rises
+ * 26 dB, a cut-into tone 0.4 dB), so this catches a take whose start was cut even after the processing has padded
+ * 0.3 s of silence in front of it, where the leading silence alone no longer shows it.
+ */
+export const ABRUPT_ONSET_DB = 6;
+/** The analysis frames of the onset check: 10 ms at 44.1 kHz (every clip is resampled to 44.1 kHz for it). */
+export const ONSET_FRAME_SAMPLES = 441;
+const SILENCE_DB = -50;
 const EPS = 1e-3;
 
 /** The ffprobe arguments of the format checks (as check-audio.mjs). */
@@ -46,9 +56,36 @@ export function probeArgs(path) {
   return ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=codec_name,channels,sample_rate:format=duration,size', '-of', 'json', path];
 }
 
-/** One ffmpeg pass that logs both the silences and the loudness summary. */
+/** The per-frame RMS level, logged by ametadata after the loudness meter (which passes the audio through unchanged). */
+export const FRAME_LEVEL_FILTER =
+  `aresample=44100,asetnsamples=n=${ONSET_FRAME_SAMPLES},` +
+  'astats=metadata=1:reset=1:measure_perchannel=none:measure_overall=RMS_level,ametadata=print:key=lavfi.astats.Overall.RMS_level';
+
+/** One ffmpeg pass that logs the silences, the loudness summary and the per-frame level of the onset check. */
 export function measureArgs(path) {
-  return ['-hide_banner', '-nostats', '-i', path, '-af', `${SILENCEDETECT_FILTER},ebur128=peak=true`, '-f', 'null', '-'];
+  return ['-hide_banner', '-nostats', '-i', path, '-af', `${SILENCEDETECT_FILTER},ebur128=peak=true,${FRAME_LEVEL_FILTER}`, '-f', 'null', '-'];
+}
+
+/** The per-frame RMS levels of the `measureArgs` log: [{ t, db }] in order (-Infinity for digital silence). */
+export function parseFrameLevels(log) {
+  const frames = [];
+  let t = null;
+  for (const m of String(log).matchAll(/pts_time:(-?[\d.]+)|lavfi\.astats\.Overall\.RMS_level=(-?inf|-?[\d.]+)/g)) {
+    if (m[1] !== undefined) t = Number(m[1]);
+    else frames.push({ t, db: m[2].endsWith('inf') ? Number.NEGATIVE_INFINITY : Number(m[2]) });
+  }
+  return frames;
+}
+
+/**
+ * The rise of the onset: the clip's loudest frame less its first voiced frame, in dB (null when the log has no frame
+ * levels or nothing is voiced).
+ */
+export function onsetRiseOf(frames) {
+  const first = frames.find((f) => f.db > SILENCE_DB);
+  if (first === undefined) return null;
+  const peak = Math.max(...frames.map((f) => f.db));
+  return { atS: first.t, firstDb: round(first.db), peakDb: round(peak), riseDb: round(peak - first.db) };
 }
 
 const round = (n) => Math.round(n * 1000) / 1000;
@@ -80,7 +117,7 @@ export function parseMeasure({ probeJson, log }) {
   const probe = parseProbe(probeJson);
   const loudness = parseEbur128(log);
   const silences = parseSilences(log, probe.durationS);
-  return { probe, loudness, silences, summary: signalSummary(silences, probe.durationS) };
+  return { probe, loudness, silences, summary: signalSummary(silences, probe.durationS), onset: onsetRiseOf(parseFrameLevels(log)) };
 }
 
 /** Whether a jamo clip ends on a final (악 안 알 암 압 앙 앋): its closure is reported. */
@@ -104,7 +141,7 @@ const isJamoRow = (row) => row.kind === 'jamo-sound' || row.kind === 'jamo-name'
  * @param {{ kbps: 64 | 48, stage: 'processed' | 'masters' }} context
  */
 export function evaluateSignal(row, measured, { kbps, stage }) {
-  const { probe, loudness, summary } = measured;
+  const { probe, loudness, summary, onset = null } = measured;
   const clipClass = clipClassOf(row);
   const syllables = spokenSyllableCount(row.text);
   const context = { kbps, syllables: CLIP_LIMITS[clipClass].perSyllable ? syllables : undefined };
@@ -128,13 +165,14 @@ export function evaluateSignal(row, measured, { kbps, stage }) {
   }
   if (isJamoRow(row)) {
     if (summary.voicedSpanS < MIN_VOICED_SPAN_S - EPS) failures.push(`voiced span ${summary.voicedSpanS} s: must be >= ${MIN_VOICED_SPAN_S} s`);
-    if (summary.onsetS < CLIPPED_ONSET_S) {
-      if (stage === 'processed') failures.push(`clipped onset: speech starts at ${summary.onsetS} s`);
-      else flags.push(`speech starts at ${summary.onsetS} s in the master (check the onset after processing)`);
-    }
+    // A master is where a truncated take shows: speech from the first sample. After processing (trim, then 0.3 s of
+    // pad) the leading silence is always there, so a cut is found by the onset's missing rise, in both stages.
+    if (summary.onsetS < CLIPPED_ONSET_S) failures.push(`clipped onset: speech starts at ${summary.onsetS} s${stage === 'masters' ? ' in the master (a cut take)' : ''}`);
+    if (onset === null) failures.push('onset level not measured (no frame levels in the ffmpeg output)');
+    else if (onset.riseDb < ABRUPT_ONSET_DB) failures.push(`clipped onset: the first voiced frame (${onset.atS} s) is ${onset.riseDb} dB under the loudest, must rise >= ${ABRUPT_ONSET_DB} dB`);
   }
   const closure = isJamoRow(row) && endsOnFinal(row) ? { atS: summary.voicedEndS, silenceAfterS: summary.trailingS } : null;
-  return { ok: failures.length === 0, failures, flags, pending, summary, loudness, probe, closure, maxTruePeakDb: MAX_TRUE_PEAK_DB };
+  return { ok: failures.length === 0, failures, flags, pending, summary, onset, loudness, probe, closure, maxTruePeakDb: MAX_TRUE_PEAK_DB };
 }
 
 // --- Identity -------------------------------------------------------------------------------------------------
@@ -209,56 +247,83 @@ function firstTake(clips, pass) {
 
 /**
  * The commands that regenerate the failing rows, for the owner's own terminal (docs/launch/owner-runbook.md section
- * M). A WAV master is moved aside first, because the generator skips a row whose master is still there; an override
- * (AC-B3) changes the text sent, so its row is never skipped.
+ * M). A WAV master is moved aside first, because the generator skips a row whose master is still there (`missing`
+ * rows have no master to move). A processed MP3 is in the lock with its mp3Sha256, so the generator skips it too:
+ * another take needs its lock row's mp3Sha256 set back to null (and its master moved aside), or an AC-B3 override,
+ * which changes the text sent, so its row is never skipped.
  */
-export function regenerationCommands({ engine, voice, keys, pilot, stage, masterDir }) {
+export function regenerationCommands({ engine, voice, keys, missing = [], pilot, stage, masterDir }) {
   if (keys.length === 0) return [];
   const only = keys.join(',');
   const select = `${pilot ? '--pilot ' : ''}--only ${only}`;
   const generate = `pnpm --filter @hangul-route/mobile audio:tts:generate --engine ${engine} --voice ${voice} ${select}`;
   const lines = [];
+  const absent = new Set(missing);
+  const masters = keys.filter((k) => !absent.has(k));
   if (stage === 'masters') {
-    lines.push(`mkdir -p ${masterDir}/rejected && mv ${keys.map((k) => `${masterDir}/${k}.wav`).join(' ')} ${masterDir}/rejected/`);
-  } else {
-    lines.push('# Processed MP3s are in the lock: regenerate through an override (content/audio/pronunciation-overrides.json, AC-B3), then `audio:tts:manifest`.');
+    if (masters.length > 0) lines.push(`mkdir -p ${masterDir}/rejected && mv ${masters.map((k) => `${masterDir}/${k}.wav`).join(' ')} ${masterDir}/rejected/`);
+  } else if (masters.length > 0) {
+    lines.push(
+      `# Processed MP3s are in the lock, so the generator skips them. Another take: set "mp3Sha256" back to null in content/audio/tts-lock.json for the ${engine}/${voice} rows of ${masters.join(',')}, and move their WAV masters out of ${masterDir}. Or regenerate through an override (content/audio/pronunciation-overrides.json, AC-B3), then \`audio:tts:manifest\`.`,
+    );
   }
   lines.push(`${generate} --dry-run`, generate);
   return lines;
 }
 
 /**
- * The QA report: the run's settings (recognizers with their model ids, licences and file hashes; the threshold), one
- * entry per clip, the summary with G4's first-take rates, the rows to regenerate with their commands (failing,
- * missing, and any the owner vetoed in the optional listen), and that listen.
+ * The owner's vetoes that still apply: a veto holds only while the clip is one that was played (its sha256 is among
+ * the veto's `sha256s`), so a regenerated clip is judged afresh. A veto recorded with no hash applies to the row.
  */
-export function buildReport({ meta, clips, missing, extra, ownerListen = null }) {
-  const failing = clips.filter((c) => c.verdict !== 'pass').map((c) => c.key);
-  const vetoed = (ownerListen?.vetoes ?? []).map((v) => v.key);
+export function activeVetoes(ownerListen, clips) {
+  const shaByKey = new Map(clips.map((c) => [c.key, c.sha256]));
+  return (ownerListen?.vetoes ?? []).filter((v) => !Array.isArray(v.sha256s) || v.sha256s.length === 0 || v.sha256s.includes(shaByKey.get(v.key)));
+}
+
+/**
+ * The QA report: the run's settings (recognizers with their model ids, licences and file hashes; the threshold), one
+ * entry per clip, the summary with G4's first-take rates, the per-pack set totals of processed jamo clips (AC-B6),
+ * the rows to regenerate with their commands (failing, missing, and any the owner vetoed in the optional listen),
+ * and that listen. Extra files (no manifest row) fail the run: they are listed to be removed.
+ */
+export function buildReport({ meta, clips, missing, extra, notGenerated = [], ownerListen = null, packTotals = [] }) {
+  const vetoed = activeVetoes(ownerListen, clips).map((v) => v.key);
+  const vetoedSet = new Set(vetoed);
+  const marked = clips.map((c) => ({ ...c, vetoed: vetoedSet.has(c.key) }));
+  const failing = marked.filter((c) => c.verdict !== 'pass').map((c) => c.key);
   const regenerate = [...new Set([...failing, ...missing, ...vetoed])];
+  const passing = marked.filter((c) => c.verdict === 'pass' && !c.vetoed);
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
     ...meta,
     summary: {
       rows: clips.length + missing.length,
       clips: clips.length,
-      pass: clips.length - failing.length,
+      pass: passing.length,
       fail: failing.length,
       missing: missing.length,
       extra: extra.length,
       vetoed: vetoed.length,
-      flagged: clips.filter((c) => c.verdict === 'pass' && (c.pass1?.flags.length || c.pass2?.flags.length || c.signal?.flags.length)).length,
+      flagged: passing.filter((c) => c.pass1?.flags.length || c.pass2?.flags.length || c.signal?.flags.length).length,
+      packTotalsOk: packTotals.every((p) => p.ok),
       firstTake: { pass1: firstTake(clips, 'pass1'), pass2: firstTake(clips, 'pass2') },
     },
-    clips,
+    clips: marked,
     missing,
     extra,
+    notGenerated,
+    packTotals,
     regenerate: {
       keys: regenerate,
-      commands: regenerationCommands({ engine: meta.engine, voice: meta.voice, keys: regenerate, pilot: meta.selection?.pilot === true, stage: meta.stage, masterDir: meta.masterDir }),
+      commands: regenerationCommands({ engine: meta.engine, voice: meta.voice, keys: regenerate, missing, pilot: meta.selection?.pilot === true, stage: meta.stage, masterDir: meta.masterDir }),
     },
     ownerListen,
   };
+}
+
+/** Whether the run passes: nothing to regenerate, no extra file, and every pack within its set total. */
+export function reportPasses(report) {
+  return report.regenerate.keys.length === 0 && report.extra.length === 0 && (report.packTotals ?? []).every((p) => p.ok);
 }
 
 const cell = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
@@ -293,7 +358,7 @@ export function renderReportMarkdown(report) {
     `Two independent acoustic passes and the shared checks of AMENDMENTS-AUDIO-CLIPS section 9. Stage: ${report.stage === 'masters' ? 'WAV masters (format, size, loudness and edge silence are checked again on the processed MP3s)' : 'processed MP3s'}. Selection: ${report.selectionLabel}.`,
     '',
     `- Pass 1: ${p1.name}, model ${p1.model} (${p1.licence}, sha256 ${p1.modelSha256}), language ${p1.language}; forced choice by grammar, penalty ${p1.grammarPenalty}.`,
-    `- Pass 2: ${p2.name}, model ${p2.id} (${p2.licence}, sha256 ${p2.modelSha256}), ${p2.unit} units; forced-alignment (Viterbi) log-likelihood, margin threshold ${p2.threshold} nats.`,
+    `- Pass 2: ${p2.name}, model ${p2.id}${p2.revision ? ` at revision ${p2.revision}` : ''} (${p2.licence}${p2.licenceSource ? `, ${p2.licenceSource}` : ''}; sha256 ${p2.modelSha256}), ${p2.unit} units; forced-alignment (Viterbi) log-likelihood, margin threshold ${p2.threshold} nats.`,
     `- Clips: ${s.clips} of ${s.rows} rows; ${s.pass} pass, ${s.fail} fail, ${s.missing} missing, ${s.extra} extra files; ${s.flagged} passing clips carry a flag.`,
     `- First-take exact match of words and sentences (G4, target ${G4_FIRST_TAKE * 100} %): Pass 1 ${s.firstTake.pass1.matched} of ${s.firstTake.pass1.total} (${pct(s.firstTake.pass1.rate)}), Pass 2 ${s.firstTake.pass2.matched} of ${s.firstTake.pass2.total} (${pct(s.firstTake.pass2.rate)}).`,
     '',
@@ -304,7 +369,8 @@ export function renderReportMarkdown(report) {
   ];
   for (const c of report.clips) {
     const flags = [...(c.pass1?.flags ?? []), ...(c.pass2?.flags ?? []), ...(c.signal?.flags ?? [])];
-    const qa = c.verdict === 'pass' ? (flags.length > 0 ? `pass (flag: ${flags.join('; ')})` : 'pass') : `fail: ${c.reasons.join('; ')}`;
+    let qa = c.verdict === 'pass' ? (flags.length > 0 ? `pass (flag: ${flags.join('; ')})` : 'pass') : `fail: ${c.reasons.join('; ')}`;
+    if (c.vetoed) qa = `vetoed in the owner listen (${qa})`;
     out.push(
       tableRow([
         c.key,
@@ -321,7 +387,11 @@ export function renderReportMarkdown(report) {
     );
   }
   for (const key of report.missing) out.push(tableRow([key, '', 'no clip', '', '', '', '', 'fail: missing', '', '']));
-  if (report.extra.length > 0) out.push('', `Extra files (no manifest row in this selection): ${report.extra.join(', ')}.`);
+  if (report.extra.length > 0) out.push('', `Extra files, no manifest row (an identity failure: remove them): ${report.extra.join(', ')}.`);
+  if ((report.notGenerated ?? []).length > 0) out.push('', `Not generated (no manifest row; recorded clips, not checked here): ${report.notGenerated.length} files.`);
+  for (const p of report.packTotals ?? []) {
+    out.push('', `Pack ${p.pack} set total (AC-B6): ${p.clips} clips, ${p.bytes} bytes (limit ${p.limit.clips} clips, ${p.limit.maxBytes} bytes): ${p.ok ? 'pass' : `fail: ${p.failures.join('; ')}`}.`);
+  }
   out.push('', '## Regenerate');
   if (report.regenerate.keys.length === 0) out.push('', 'Nothing to regenerate.');
   else {
@@ -338,7 +408,9 @@ export function renderReportMarkdown(report) {
   if (report.ownerListen === null) out.push('', `Not done. \`pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine ${report.engine} --voice ${report.voice}\` plays the jamo clips; a veto is honoured.`);
   else {
     const v = report.ownerListen.vetoes;
-    out.push('', `${report.ownerListen.date}: ${report.ownerListen.played} clips played; ${v.length === 0 ? 'no veto' : `vetoed ${v.map((x) => (x.note ? `${x.key} (${x.note})` : x.key)).join(', ')}`}.`);
+    const active = new Set(activeVetoes(report.ownerListen, report.clips).map((x) => x.key));
+    const shown = (x) => `${x.key}${x.note ? ` (${x.note})` : ''}${active.has(x.key) ? '' : ' (clip since replaced, veto no longer applies)'}`;
+    out.push('', `${report.ownerListen.date}: ${report.ownerListen.played} clips played; ${v.length === 0 ? 'no veto' : `vetoed ${v.map(shown).join(', ')}`}.`);
   }
   return `${out.join('\n')}\n`;
 }

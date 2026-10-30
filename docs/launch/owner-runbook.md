@@ -738,6 +738,7 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **M-4. 선택: 자모 클립 듣기 (오너 단계 5, 약 10분)**
 - `pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine polly --voice <13장의 목소리>` 로 65개를 이어서 듣는다. 클립마다 id, 한글, 로마자가 나온다. Enter 는 통과, `v` 는 거부 (이유는 적어도 되고 안 적어도 된다), `r` 은 다시 듣기, `q` 는 멈춤. 거부한 것은 `owner-listen.json` 과 QA 보고서에 남고 다시 만들 목록에 들어간다. 필수가 아니다 (오너 검토를 기다리지 않는 규칙). 다만 거부 (veto) 는 지킨다.
+- 기록은 git 이 무시하는 `apps/mobile/recordings/tts/<엔진>/<목소리>/owner-listen.json` 에 남는다. 다른 팩을 나중에 들어도 앞에서 거부한 것은 그대로 남는다. 거부한 클립을 다시 만들면 그 거부는 저절로 풀린다.
 
 **M-5. 메시지가 나오면**
 - `refused: CLAUDECODE ...` 또는 `refused: CI ...`: Claude Code 터미널이나 CI 안이다. 별도 터미널에서 다시 한다.

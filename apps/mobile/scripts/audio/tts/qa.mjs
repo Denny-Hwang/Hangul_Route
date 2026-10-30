@@ -49,7 +49,7 @@ async function main(argv) {
       const python = opts.python ?? (existsSync(abs(DEFAULT_PYTHON)) ? abs(DEFAULT_PYTHON) : 'python3');
       return {
         pass1: createWhisper({ whisperCli: opts.whisperCli ?? 'whisper-cli', model: abs(opts.whisperModel ?? DEFAULT_WHISPER_MODEL), grammarPenalty: opts.grammarPenalty }),
-        pass2: createCtc({ modelDir: abs(opts.ctcModel ?? DEFAULT_CTC_MODEL_DIR), modelId: opts.ctcModelId, licence: opts.ctcLicence, python, threshold: opts.threshold }),
+        pass2: await createCtc({ modelDir: abs(opts.ctcModel ?? DEFAULT_CTC_MODEL_DIR), modelId: opts.ctcModelId, licence: opts.ctcLicence, python, threshold: opts.threshold }),
       };
     },
     measure: async (path) => ({ probeJson: ffprobe(probeArgs(path)), log: ffmpeg(measureArgs(path)) }),

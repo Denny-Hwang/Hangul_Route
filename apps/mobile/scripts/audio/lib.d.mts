@@ -122,9 +122,10 @@ export const CLIP_LIMITS: Readonly<{
 }>;
 export const PACK_SET_LIMITS: Readonly<Record<JamoPack, Readonly<{ clips: number; maxBytes: number }>>>;
 export function spokenSyllableCount(text: string): number;
-export function clipLimitsOf(kind: ClipKind, context?: { syllables?: number }): { minS: number; maxS: number; maxBytes: number };
+export function clipLimitsOf(kind: ClipKind, context?: { syllables?: number; kbps?: 64 | 48 }): { minS: number; maxS: number; maxBytes: number };
 export function clipClassOf(row: { kind: string; text: string }): ClipKind;
-export function clipKbpsOf(ref: string, context?: { generated?: boolean }): 64 | 48;
+export function recordingGroupOf(ref: string): 'jamo' | 'vocab' | 'say' | null;
+export function clipKbpsOf(ref: string, context?: { kbps?: 64 | 48; sampleRate?: number }): 64 | 48;
 /** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. */
 export function fileIdOf(audioRef: string): string;
 export const TARGET_LUFS: number;

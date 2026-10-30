@@ -181,17 +181,76 @@ function nameConfusables(name) {
   return out;
 }
 
+// Initial indexes of the plain obstruents that tense after a stop coda, and their tense forms: ㄱ>ㄲ ㄷ>ㄸ ㅂ>ㅃ ㅅ>ㅆ ㅈ>ㅉ.
+const TENSE_OF = { 0: 1, 3: 4, 7: 8, 9: 10, 12: 13 };
+// The aspirated forms after a final ㅎ (ㅎ ㄶ ㅀ): ㄱ>ㅋ ㄷ>ㅌ ㅈ>ㅊ.
+const ASPIRATED_OF = { 0: 15, 3: 16, 12: 14 };
+const H_FINALS = new Set([6, 15, 27]);
+// The nasal a stop coda becomes before ㄴ or ㅁ: ㄱ>ㅇ ㄷ>ㄴ ㅂ>ㅁ (by the coda's sound).
+const NASAL_OF_SOUND = { 1: 21, 7: 4, 17: 16 };
+const NASAL_INITIALS = new Set([2, 6]);
+const STOP_SOUNDS = new Set([1, 7, 17]);
+
+/**
+ * The standard pronunciation of a two-syllable form where an obligatory sound change across the syllable boundary
+ * makes it sound like one of its own confusables (Standard Pronunciation rules 23, 12 and 18), written the way the
+ * confusable generator writes it, one syllable changed:
+ *   - tensing after a stop coda (ㄱ ㄷ ㅂ by sound): 학교 > 학꾜, 책상 > 책쌍, 있다 > 있따, 십분 > 십뿐;
+ *   - aspiration after a final ㅎ: 좋다 > 좋타;
+ *   - nasalization of a stop coda before ㄴ or ㅁ: 국물 > 궁물, 입니 > 임니;
+ *   - ㄴ next to ㄹ said as ㄹ: 신라 > 실라, 설날 > 설랄.
+ * A correctly spoken clip sounds like these, so they are targets, never confusables. Other forms: none.
+ */
+export function standardPronunciationsOf(form) {
+  const syl = [...form];
+  if (syl.length !== 2) return [];
+  const a = decomposeSyllable(syl[0]);
+  const b = decomposeSyllable(syl[1]);
+  if (a === null || b === null || a.t === 0) return [];
+  const sound = FINAL_SOUND_OF[a.t];
+  const out = [];
+  if (STOP_SOUNDS.has(sound) && !H_FINALS.has(a.t) && TENSE_OF[b.l] !== undefined) out.push(syl[0] + composeSyllable({ ...b, l: TENSE_OF[b.l] }));
+  if (H_FINALS.has(a.t) && ASPIRATED_OF[b.l] !== undefined) out.push(syl[0] + composeSyllable({ ...b, l: ASPIRATED_OF[b.l] }));
+  if (STOP_SOUNDS.has(sound) && NASAL_INITIALS.has(b.l)) out.push(composeSyllable({ ...a, t: NASAL_OF_SOUND[sound] }) + syl[1]);
+  if (a.t === 4 && b.l === 5) out.push(composeSyllable({ ...a, t: 8 }) + syl[1]);
+  if (a.t === 8 && b.l === 2) out.push(syl[0] + composeSyllable({ ...b, l: 5 }));
+  return unique(out).filter((x) => x !== form);
+}
+
+/**
+ * The spellings said the same as a final-sound clip's text (악 > 앆 앇 앍 앜; 앋 > 앗 앚 앛 앝 았 앟): one syllable whose
+ * final is said as the same sound (coda neutralization). A recognizer trained on standard spelling usually writes the
+ * common one (앗 for the shared t-final clip 앋), so these are targets of that clip. Other texts: none.
+ */
+export function sameSoundSpellingsOf(text) {
+  const syl = [...String(text).normalize('NFC').trim()];
+  if (syl.length !== 1) return [];
+  const parts = decomposeSyllable(syl[0]);
+  if (parts === null || parts.t === 0) return [];
+  const own = FINAL_SOUND_OF[parts.t];
+  const out = [];
+  for (let t = 1; t < FINALS; t += 1) if (t !== parts.t && FINAL_SOUND_OF[t] === own) out.push(composeSyllable({ ...parts, t }));
+  return out;
+}
+
 /**
  * The closed set of a clip (section 9: the same set in both passes), or null for a clip that is checked by free
- * transcription only. `targets` are the accepted forms (`targetFormsOf`); `confusables` every other candidate: one
- * syllable at a time swapped for its confusables (1-2 syllable texts), and for a letter name the names of its series
- * and those that share a syllable (the 쌍 names against the plain names).
+ * transcription only. `targets` are the accepted forms (`targetFormsOf`), the standard pronunciation of a
+ * two-syllable form (`standardPronunciationsOf`: 학교 is said [학꾜]) and, for a final-sound jamo clip, the spellings
+ * said the same (`sameSoundSpellingsOf`: 앋 and 앗); `confusables` every other candidate: one syllable at a time
+ * swapped for its confusables (1-2 syllable texts), and for a letter name the names of its series and those that
+ * share a syllable (the 쌍 names against the plain names).
  */
 export function closedSetOf(row, overrides) {
   if (!isClosedSetRow(row)) return null;
-  const targets = targetFormsOf(row, overrides);
+  const forms = targetFormsOf(row, overrides);
+  const targets = unique([
+    ...forms,
+    ...forms.flatMap((f) => standardPronunciationsOf(f)),
+    ...(row.kind === 'jamo-sound' ? sameSoundSpellingsOf(row.text) : []),
+  ]);
   const out = [];
-  for (const form of targets) {
+  for (const form of forms) {
     const syl = [...form];
     if (syl.length > 2) continue;
     syl.forEach((s, i) => {
@@ -236,8 +295,9 @@ export function evaluatePass1({ forms, closedSet, free, forced }) {
   }
   const forcedText = forced === undefined ? undefined : String(forced).trim();
   if (closedSet !== null) {
+    // The forced choice may land on any target of the closed set (a standard pronunciation, 학교 as 학꾜, included).
     if (forcedText === undefined) failures.push('no forced choice');
-    else if (!isExactMatch(forcedText, forms)) failures.push(`forced choice "${forcedText}" is not the target ${shownForms(forms)}`);
+    else if (!isExactMatch(forcedText, closedSet.targets)) failures.push(`forced choice "${forcedText}" is not the target ${shownForms(closedSet.targets)}`);
   }
   return { ok: failures.length === 0, free: freeText ?? null, freeMatch, forced: closedSet === null ? null : forcedText ?? null, failures, flags };
 }

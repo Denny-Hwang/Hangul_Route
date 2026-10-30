@@ -3,15 +3,22 @@
 // (afplay on macOS, else ffplay), printing id, text and romanization, and records the vetoes next to the QA report.
 //
 //   pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine polly --voice Seoyeon
-//   pnpm audio:tts:listen --pack jamo-s1 --dir apps/mobile/assets/audio/jamo --veto giyeok-batchim
+//   pnpm audio:tts:listen --pack jamo-s1 --engine polly --voice Seoyeon --dir apps/mobile/assets/audio/jamo --veto giyeok-batchim
 //
-// Interactive in a terminal: Enter keeps a clip, v vetoes it (with an optional reason), r plays it again, q stops.
+// The listen is recorded in owner-listen.json next to the QA report, in the gitignored master folder
+// (apps/mobile/recordings/tts/<engine>/<voice>/; a folder that is not gitignored is refused), merged with the
+// earlier listens. Interactive in a terminal: Enter keeps a clip, v vetoes it (with an optional reason), r plays it
+// again, q stops. Without a terminal and without --veto nothing is recorded.
 // The rules are in listen-lib.mjs, tested.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { registerTsLoader, repoRoot } from '../content-sources.mjs';
+
+function isIgnored(dir) {
+  return spawnSync('git', ['-C', repoRoot, 'check-ignore', '-q', dir]).status === 0;
+}
 
 function writeAtomic(path, data) {
   const tmp = join(dirname(path), `.${Date.now()}-${process.pid}.tmp`);
@@ -28,6 +35,7 @@ function player() {
 async function main(argv) {
   await registerTsLoader();
   const { runListen } = await import('./listen-lib.mjs');
+  const { sha256File } = await import('./recognizers.mjs');
   const { romanize, sayKey, sayRef } = await import('@hangul-route/content-schema');
   const command = player();
   const rl = process.stdin.isTTY ? createInterface({ input: process.stdin, output: process.stdout }) : null;
@@ -38,6 +46,8 @@ async function main(argv) {
       exists: existsSync,
       listDir: (dir) => readdirSync(dir).sort(),
       writeAtomic,
+      isIgnored,
+      sha256File,
       keys: { sayKey, sayRef },
       romanize: (text) => romanize(text).text,
       play: async (file) => {
