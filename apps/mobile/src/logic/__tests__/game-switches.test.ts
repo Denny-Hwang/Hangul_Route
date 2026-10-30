@@ -121,8 +121,8 @@ describe('every quest with the switches off (section 14)', () => {
  * F-CURR-002 section 12.2: no `game.<kind>` switch bricks shipped content. A table check over the whole catalogue: each
  * game step's kind, with every switch off, is a kind the app plays, and a Story Order step's fallback has a Story
  * Sequence to play for each of its rounds (row CM-34). `StoryOrderStep` reads the same table (`renderedKind`); the
- * fallback itself is rendered, switch off, in `screens/minigames/story-order/__tests__/StoryOrderStep.test.tsx` and the
- * fixture e2e, since no catalogue quest plays Story Order yet.
+ * fallback itself is rendered, switch off, for every catalogue step of a gated kind (none authored yet) and every fixture
+ * in `screens/minigames/story-order/__tests__/StoryOrderStep.test.tsx`, and in the fixture e2e.
  */
 
 const OFF = (): boolean => false;
