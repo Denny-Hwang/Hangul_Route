@@ -122,7 +122,7 @@ describe('with game.hidden-heritage on', () => {
     const shown = text(root);
     for (const t of ROUND.targets) expect(shown).not.toContain(t.word.en);
     expect(shown).toContain('Find this');
-    expect(spots(root).map((s) => s.props.accessibilityLabel)).toEqual(['jar', 'basket', 'rice', 'soup', 'kimchi', 'chopsticks']);
+    expect(spots(root).map((s) => s.props.accessibilityLabel)).toEqual(['jar', 'kimchi', 'rice cake', 'basket', 'cooked rice', 'soup', 'spoon', 'chopsticks']);
   });
 
   it('every spot is a button of 48 dp or more at 320 px (54 dp for the smallest spot)', async () => {

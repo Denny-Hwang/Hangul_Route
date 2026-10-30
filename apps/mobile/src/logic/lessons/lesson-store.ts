@@ -1,21 +1,33 @@
-import type { EntityOverlay, OverlayLocale, Overlays, Quest, QuestStep, UiLocale } from '@hangul-route/content-schema';
+import type { Episode, EntityOverlay, OverlayLocale, Overlays, Quest, QuestStep, UiLocale } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../minigame-config';
 
 /**
- * The upper-stage lesson content at runtime (F-CURR-002 §10, row CM-5). The start bundle holds
- * only the manifest (`__generated__/lessons-index.ts`: episodes and quest headers in English).
- * Each cell's body (its quests' steps, its game scopes and their es / ko glosses) is one
- * content-hashed chunk, and the es / ko titles are one chunk per locale; both come through
- * injected loaders (the manifest's literal `import()`s), on demand, once each. The web build
+ * The upper-stage lesson content at runtime (F-CURR-002 §10, rows CM-5 and CM-40). The start bundle
+ * holds only the manifest (`__generated__/lessons-index.ts`: episodes and quest headers in English,
+ * ids, titles and minutes). Each cell's body (its quests' steps, its game scopes and their es / ko
+ * glosses) is one content-hashed chunk, a cell's Volume 2 one of its own; the es / ko titles are one
+ * chunk per locale, and the display lines (an episode's subtitle, Hoya intro and reward cards, a
+ * quest's blurb and teaser) one "headers" chunk per locale, English included (row CM-40). All come
+ * through injected loaders (the manifest's literal `import()`s), on demand, once each. The web build
  * makes every chunk its own precached bundle; the native build keeps them in its one bundle.
+ *
+ * "The titles" of a locale, as the first screen waits for them (`untilTitlesSettled`), are that
+ * locale's lesson text outside the bodies: the English headers for every locale, and for es or ko
+ * their title chunk and headers chunk too.
  *
  * Pure over the injected loaders, so the lazy path is testable without Metro
  * (`content/lessons.ts` binds the real ones). A loaded chunk is checked against the hash the
  * manifest names, so a shell never reads a chunk of another build.
  */
 
-/** A quest of the manifest: everything but its steps, which live in its cell's body chunk. */
-export type LessonQuestHeader = Omit<Quest, 'steps'>;
+/** The display lines of a lesson episode (row CM-40): in the English headers chunk, not the manifest. */
+export type LessonEpisodeLines = Pick<Episode, 'subtitleEn' | 'hoyaIntroEn' | 'rewardCardIds'>;
+/** The display lines of a lesson quest (row CM-40): in the English headers chunk, not the manifest. */
+export type LessonQuestLines = Pick<Quest, 'blurbEn' | 'teaserEn'>;
+/** An episode of the manifest: everything but its display lines (`content/lessons.ts` lays them back in). */
+export type LessonManifestEpisode = Omit<Episode, keyof LessonEpisodeLines>;
+/** A quest of the manifest: everything but its steps (its cell's body chunk) and its display lines (the headers chunk). */
+export type LessonQuestHeader = Omit<Quest, 'steps' | keyof LessonQuestLines>;
 
 /** One locale's glosses by entity id. */
 export type OverlayTable = Readonly<Record<string, EntityOverlay>>;
@@ -47,18 +59,33 @@ export interface LessonTitleChunk {
   LESSON_TITLE_OVERLAYS: OverlayTable;
 }
 
+/**
+ * The module of a locale's headers chunk (`lesson-chunks/lessons-headers-<locale>.ts`, row CM-40): English holds the
+ * display lines by episode and quest id; es and ko hold their glosses (`subtitle`, `hoyaIntro`, `blurb`, `teaser`).
+ */
+export interface LessonHeaderChunk {
+  CHUNK_HASH: string;
+  LESSON_EPISODE_HEADERS: Readonly<Record<string, LessonEpisodeLines>>;
+  LESSON_QUEST_HEADERS: Readonly<Record<string, LessonQuestLines>>;
+  LESSON_HEADER_OVERLAYS: OverlayTable;
+}
+
 export interface LessonManifest {
   episodes: readonly { id: string; questIds: readonly string[] }[];
   /** Episode id -> the hash its body chunk carries. */
   cells: Readonly<Record<string, string>>;
   /** Overlay locale -> the hash its title chunk carries. */
   titles: Readonly<Record<OverlayLocale, string>>;
+  /** UI locale -> the hash its headers chunk carries (row CM-40); a manifest without it has no display lines to wait for. */
+  headers?: Readonly<Record<UiLocale, string>>;
 }
 
 export interface LessonLoaders {
   /** The body chunk of a cell of the manifest; undefined for any other id. */
   cell: (cellId: string) => Promise<LessonCellChunk> | undefined;
   titles: (locale: OverlayLocale) => Promise<LessonTitleChunk>;
+  /** The headers chunk of a UI locale (row CM-40). */
+  headers?: (locale: UiLocale) => Promise<LessonHeaderChunk>;
 }
 
 /** A chunk whose hash is not the one the manifest names (another build's file under this name). */
@@ -96,9 +123,12 @@ export function isNewBuildError(error: unknown): boolean {
   return error instanceof Error && /^Requiring unknown module\b/.test(error.message);
 }
 
-/** The web bundle name of a chunk the store loads: `lessons-cell-stage2-letters` for `episode:stage2-letters`, `lessons-titles-es`. */
+/**
+ * The web bundle name of a chunk the store loads: `lessons-cell-stage2-letters` for `episode:stage2-letters` (and
+ * `lessons-cell-stage2-letters-v2` for its Volume 2), `lessons-titles-es`, `lessons-headers-en`.
+ */
 export function chunkBundleName(chunk: string): string {
-  return chunk.startsWith('titles-') ? `lessons-${chunk}` : `lessons-cell-${chunk.replace(/^episode:/, '')}`;
+  return chunk.startsWith('titles-') || chunk.startsWith('headers-') ? `lessons-${chunk}` : `lessons-cell-${chunk.replace(/^episode:/, '')}`;
 }
 
 export interface LessonStoreOptions {
@@ -112,8 +142,9 @@ export interface LessonStoreOptions {
   abandon?: (bundleName: string) => void;
   /**
    * A locale's titles count as settled (`titlesSettled`) once their load has taken this many ms, while it
-   * goes on: the screen then shows in that locale with the lesson titles in English, and they change
-   * when the chunk arrives (`titlesVersion`). None when omitted: settled only when in or failed.
+   * goes on: the screen then shows in that locale with the lesson titles in English (and, while the English
+   * headers are not in either, without the display lines), and they change when the chunk arrives
+   * (`titlesVersion`). None when omitted: settled only when in or failed.
    */
   titlesGraceMs?: number;
 }
@@ -125,17 +156,21 @@ export interface LessonStore {
   ensureCells: (cellIds: readonly string[]) => Promise<void>;
   /** Every cell of the manifest. */
   ensureAll: () => Promise<void>;
-  /** The title chunk of a UI locale; English needs none. */
+  /** The lesson text of a UI locale: the English headers, and for es or ko its title and headers chunks (row CM-40). */
   ensureTitles: (locale: UiLocale) => Promise<void>;
   /** True when the quest's body is in (always true for a quest that is not a lesson quest). */
   isQuestReady: (questId: string) => boolean;
   isAllReady: () => boolean;
-  /** True when the locale's titles are in, their load has failed (the English stays), or it has run past `titlesGraceMs`. */
+  /** True when each of the locale's text chunks is in, has failed (the English stays), or has run past `titlesGraceMs`. */
   titlesSettled: (locale: UiLocale) => boolean;
   /** Loads the locale's titles and resolves once they are settled (`titlesSettled`): within `titlesGraceMs` at most. Never rejects. */
   untilTitlesSettled: (locale: UiLocale) => Promise<void>;
-  /** Bumps when a locale's titles arrive, fail or run past the grace: what a localized memo keys on. */
+  /** Bumps when a locale's titles or headers arrive, fail or run past the grace: what a localized memo keys on. */
   titlesVersion: () => number;
+  /** A lesson episode's display lines, once the English headers are in (row CM-40); undefined before, or for another episode. */
+  episodeLines: (episodeId: string) => LessonEpisodeLines | undefined;
+  /** A lesson quest's display lines, once the English headers are in (row CM-40); undefined before, or for another quest. */
+  questLines: (questId: string) => LessonQuestLines | undefined;
   /** A lesson quest's steps, once its cell is loaded. */
   stepsOf: (questId: string) => readonly QuestStep[] | undefined;
   /** A lesson minigame ref's scope, once its cell is loaded. */
@@ -152,12 +187,18 @@ export interface LessonStore {
   version: () => number;
 }
 
-/** `minigame:s<n>-<theme>-q<k>-<step>` -> `episode:stage<n>-<theme>`; undefined for any other ref. */
-const SCOPE_REF = /^minigame:s([2-467])-(letters|life|rites|nature|crafts)-q[1-9]-[a-z0-9-]+$/;
+/**
+ * `minigame:s<n>-<theme>-q<k>-<step>` -> `episode:stage<n>-<theme>`, and a Volume 2 ref
+ * `minigame:s<n>-<theme>-v2-q<k>-<step>` -> `episode:stage<n>-<theme>-v2` (row CM-40); undefined for any other ref.
+ */
+const SCOPE_REF = /^minigame:s([2-467])-(letters|life|rites|nature|crafts)(-v2)?-q[1-9]-[a-z0-9-]+$/;
 export function cellOfScopeRef(ref: string): string | undefined {
   const match = SCOPE_REF.exec(ref);
-  return match === null ? undefined : `episode:stage${match[1]}-${match[2]}`;
+  return match === null ? undefined : `episode:stage${match[1]}-${match[2]}${match[3] ?? ''}`;
 }
+
+/** A text chunk the first screen waits for: a locale's titles or a locale's headers (row CM-40). */
+type TextChunk = `titles-${OverlayLocale}` | `headers-${UiLocale}`;
 
 export function createLessonStore(manifest: LessonManifest, load: LessonLoaders, options: LessonStoreOptions = {}): LessonStore {
   const { timeoutMs, abandon, titlesGraceMs } = options;
@@ -168,11 +209,13 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
   }
   const cells = new Map<string, LessonCellChunk>();
   const cellLoads = new Map<string, Promise<void>>();
-  const titles = new Map<OverlayLocale, LessonTitleChunk>();
-  const titleLoads = new Map<OverlayLocale, Promise<void>>();
-  const titleFailed = new Set<OverlayLocale>();
-  const titleLate = new Set<OverlayLocale>();
+  // The text chunks (titles and headers), by key: in, loading, failed, or past the grace while loading.
+  const textIn = new Set<TextChunk>();
+  const textLoads = new Map<TextChunk, Promise<void>>();
+  const textFailed = new Set<TextChunk>();
+  const textLate = new Set<TextChunk>();
   let titleChanges = 0;
+  let english: Pick<LessonHeaderChunk, 'LESSON_EPISODE_HEADERS' | 'LESSON_QUEST_HEADERS'> | undefined;
   const glosses: Overlays[] = [];
   const overlayListeners = new Set<(overlays: Overlays) => void>();
   const listeners = new Set<() => void>();
@@ -186,8 +229,8 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     glosses.push(overlays);
     for (const l of [...overlayListeners]) l(overlays);
   };
-  const checked = <T extends { CHUNK_HASH: string }>(chunk: string, expected: string, mod: T): T => {
-    if (mod.CHUNK_HASH !== expected) throw new LessonChunkMismatch(chunk, expected, mod.CHUNK_HASH);
+  const checked = <T extends { CHUNK_HASH: string }>(chunk: string, expected: string | undefined, mod: T): T => {
+    if (mod.CHUNK_HASH !== expected) throw new LessonChunkMismatch(chunk, expected ?? '(none)', mod.CHUNK_HASH);
     return mod;
   };
 
@@ -241,47 +284,71 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     await Promise.all(cellIds.map(ensureCell));
   };
 
-  const ensureTitles = (locale: UiLocale): Promise<void> => {
-    if (locale === 'en') return Promise.resolve();
-    if (titles.has(locale)) return Promise.resolve();
-    const pending = titleLoads.get(locale);
+  /** The text chunks a locale's screens show: the English headers for every locale, and es / ko their titles and headers. */
+  const textChunksOf = (locale: UiLocale): TextChunk[] => {
+    const headers = manifest.headers === undefined || load.headers === undefined ? [] : (['headers-en'] as TextChunk[]);
+    if (locale === 'en') return headers;
+    return [...headers, `titles-${locale}`, ...(headers.length > 0 ? [`headers-${locale}` as TextChunk] : [])];
+  };
+
+  /** Lays a loaded text chunk in: the titles' and the es / ko headers' glosses, or the English display lines. */
+  const layIn = (key: TextChunk, mod: LessonTitleChunk | LessonHeaderChunk): void => {
+    const locale = key.slice(key.indexOf('-') + 1) as UiLocale;
+    const table = 'LESSON_TITLE_OVERLAYS' in mod ? mod.LESSON_TITLE_OVERLAYS : mod.LESSON_HEADER_OVERLAYS;
+    if (locale === 'en' && 'LESSON_EPISODE_HEADERS' in mod) english = { LESSON_EPISODE_HEADERS: mod.LESSON_EPISODE_HEADERS, LESSON_QUEST_HEADERS: mod.LESSON_QUEST_HEADERS };
+    if (locale === 'es') addOverlays({ es: table, ko: {} });
+    if (locale === 'ko') addOverlays({ es: {}, ko: table });
+  };
+
+  const ensureText = (key: TextChunk): Promise<void> => {
+    if (textIn.has(key)) return Promise.resolve();
+    const pending = textLoads.get(key);
     if (pending !== undefined) return pending;
-    const expected = manifest.titles[locale];
+    const locale = key.slice(key.indexOf('-') + 1);
+    const titles = key.startsWith('titles-');
+    const expected = titles ? manifest.titles[locale as OverlayLocale] : manifest.headers?.[locale as UiLocale];
+    const started: Promise<LessonTitleChunk | LessonHeaderChunk> | undefined = titles ? load.titles(locale as OverlayLocale) : load.headers?.(locale as UiLocale);
+    if (started === undefined) return Promise.resolve();
     const grace =
       titlesGraceMs === undefined
         ? undefined
         : setTimeout(() => {
-            if (!titleLoads.has(locale) || titleLate.has(locale)) return;
-            titleLate.add(locale);
+            if (!textLoads.has(key) || textLate.has(key)) return;
+            textLate.add(key);
             titleChanges += 1;
             changed();
           }, titlesGraceMs);
-    const promise = withinTime(`titles-${locale}`, load.titles(locale))
-      .then((mod) => checked(`titles-${locale}`, expected, mod))
+    const promise = withinTime(key, started)
+      .then((mod) => checked(key, expected, mod))
       .then(
         (mod) => {
           clearTimeout(grace);
-          titles.set(locale, mod);
-          titleFailed.delete(locale);
-          titleLoads.delete(locale);
-          addOverlays(locale === 'es' ? { es: mod.LESSON_TITLE_OVERLAYS, ko: {} } : { es: {}, ko: mod.LESSON_TITLE_OVERLAYS });
+          layIn(key, mod);
+          textIn.add(key);
+          textFailed.delete(key);
+          textLoads.delete(key);
           titleChanges += 1;
           changed();
         },
         (error: unknown) => {
           clearTimeout(grace);
-          titleFailed.add(locale);
-          titleLoads.delete(locale);
+          textFailed.add(key);
+          textLoads.delete(key);
           titleChanges += 1;
           changed();
           throw error;
         },
       );
-    titleLoads.set(locale, promise);
+    textLoads.set(key, promise);
     return promise;
   };
 
-  const titlesSettled = (locale: UiLocale): boolean => locale === 'en' || titles.has(locale) || titleFailed.has(locale) || titleLate.has(locale);
+  const ensureTitles = async (locale: UiLocale): Promise<void> => {
+    await Promise.all(textChunksOf(locale).map(ensureText));
+  };
+
+  const textSettled = (key: TextChunk): boolean => textIn.has(key) || textFailed.has(key) || textLate.has(key);
+  const titlesSettled = (locale: UiLocale): boolean => textChunksOf(locale).every(textSettled);
 
   const subscribe = (listener: () => void): (() => void) => {
     listeners.add(listener);
@@ -320,6 +387,8 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     titlesSettled,
     untilTitlesSettled,
     titlesVersion: () => titleChanges,
+    episodeLines: (episodeId) => english?.LESSON_EPISODE_HEADERS[episodeId],
+    questLines: (questId) => english?.LESSON_QUEST_HEADERS[questId],
     stepsOf,
     scopeFor: (ref) => {
       const cell = cellOfScopeRef(ref);
@@ -345,9 +414,10 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
 /**
  * The manifest's quest headers as `Quest`s whose `steps` read the store: a lesson quest's steps
  * once its cell is loaded, none before. Screens that play or summarise a lesson quest wait for
- * its cell (`isQuestReady`) before they read them.
+ * its cell (`isQuestReady`) before they read them. Its display lines (`blurbEn`, `teaserEn`, row
+ * CM-40) read the English headers chunk the same way, which the first screen waits for.
  */
-export function questsOverStore(headers: readonly LessonQuestHeader[], store: Pick<LessonStore, 'stepsOf'>): Quest[] {
+export function questsOverStore(headers: readonly LessonQuestHeader[], store: Pick<LessonStore, 'stepsOf'> & Partial<Pick<LessonStore, 'questLines'>>): Quest[] {
   const none: readonly QuestStep[] = [];
   return headers.map((header) => {
     const quest = { ...header } as Quest;
@@ -356,7 +426,33 @@ export function questsOverStore(headers: readonly LessonQuestHeader[], store: Pi
       configurable: false,
       get: () => store.stepsOf(header.id) ?? none,
     });
+    if (store.questLines !== undefined) {
+      const lines = store.questLines;
+      for (const field of QUEST_LINE_FIELDS) {
+        Object.defineProperty(quest, field, { enumerable: true, configurable: false, get: () => lines(header.id)?.[field] });
+      }
+    }
     return quest;
+  });
+}
+
+const QUEST_LINE_FIELDS = ['blurbEn', 'teaserEn'] as const satisfies readonly (keyof LessonQuestLines)[];
+
+/**
+ * The manifest's episodes as `Episode`s whose display lines (row CM-40: `subtitleEn`, `hoyaIntroEn`, `rewardCardIds`)
+ * read the English headers chunk: there once it is in, which the first screen waits for (`TITLES_GRACE_MS` at most);
+ * before that an episode has no subtitle, an empty Hoya intro and no reward cards, and the screens draw again when
+ * the chunk arrives (`titlesVersion`).
+ */
+export function episodesOverStore(episodes: readonly LessonManifestEpisode[], store: Pick<LessonStore, 'episodeLines'>): Episode[] {
+  const noCards: string[] = [];
+  return episodes.map((manifestEpisode) => {
+    const episode = { ...manifestEpisode } as Episode;
+    const lines = (): LessonEpisodeLines | undefined => store.episodeLines(manifestEpisode.id);
+    Object.defineProperty(episode, 'subtitleEn', { enumerable: true, configurable: false, get: () => lines()?.subtitleEn });
+    Object.defineProperty(episode, 'hoyaIntroEn', { enumerable: true, configurable: false, get: () => lines()?.hoyaIntroEn ?? '' });
+    Object.defineProperty(episode, 'rewardCardIds', { enumerable: true, configurable: false, get: () => lines()?.rewardCardIds ?? noCards });
+    return episode;
   });
 }
 

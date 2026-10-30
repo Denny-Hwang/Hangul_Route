@@ -36,11 +36,11 @@ describe('the Food market scene (row CM-36)', () => {
     expect(drawScene(FOOD_MARKET_SCENE.art, SCENE_ART_REGISTRY).issues.length).toBeGreaterThan(0);
   });
 
-  it('names its six things with Korean words: three targets with a bundled picture, three other things', () => {
+  it('names its eight things with Korean words: four targets with a bundled picture, four other things (row CM-43 S2)', () => {
     const { round, things } = FOOD_MARKET_SCENE;
-    expect(round.targets.map((t) => t.word.ko)).toEqual(['밥', '김치', '젓가락']);
-    expect(round.targets.map((t) => t.picture)).toEqual(['card:rice', 'card:kimchi', 'card:chopsticks']);
-    expect(round.others.map((t) => t.word.ko)).toEqual(['국', '항아리', '바구니']);
+    expect(round.targets.map((t) => t.word.ko)).toEqual(['밥', '김치', '떡', '젓가락']);
+    expect(round.targets.map((t) => t.picture)).toEqual(['card:rice', 'card:kimchi', 'word:food-tteok', 'card:chopsticks']);
+    expect(round.others.map((t) => t.word.ko)).toEqual(['국', '숟가락', '항아리', '바구니']);
     expect(Object.keys(things).sort()).toEqual([...round.targets, ...round.others].map((t) => t.id).sort());
   });
 
@@ -89,11 +89,10 @@ describe('the profile catches a broken scene', () => {
     t.round.others = [...t.round.others, { id: 'spoon', word: { ko: '숟가락', romanization: 'sutgarak', en: 'spoon' }, spot: { x: 160, y: 40, w: 80, h: 80 } }];
     expect(rules(checkHiddenHeritageRound(t, t.round))).toContain('H-named');
     const u = clone();
-    const [bap, gimchi, chopsticks] = u.round.targets;
-    u.round.targets = [bap!, { ...gimchi!, id: 'guk' }, chopsticks!].map((x) => x);
+    const [bap, gimchi, tteok, chopsticks] = u.round.targets;
     u.round.others = [{ ...u.round.others[0]!, id: 'gimchi' }, ...u.round.others.slice(1)];
     // Swapping two spots' names keeps every rule but H-3 (the spot of guk is the kimchi's, and the reverse).
-    expect(rules(checkHiddenHeritageRound(u, { ...u.round, targets: [bap!, { ...gimchi!, id: 'guk' }, chopsticks!] }))).toEqual(['H-3']);
+    expect(rules(checkHiddenHeritageRound(u, { ...u.round, targets: [bap!, { ...gimchi!, id: 'guk' }, tteok!, chopsticks!] }))).toEqual(['H-3']);
     const v = clone();
     v.round.targets = v.round.targets.map((x) => ({ ...x, spot: { ...x.spot, x: Math.min(x.spot.x, 100) } }));
     expect(rules(checkHiddenHeritageRound(v, v.round))).toContain('H-focal');

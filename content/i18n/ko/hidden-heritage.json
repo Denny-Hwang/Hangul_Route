@@ -2,6 +2,21 @@
   "locale": "ko",
   "domain": "hidden-heritage",
   "entries": {
+    "scene:food-market": {
+      "art.alt": "장날에 문을 연 음식 가게.",
+      "round.alt": "장날에 문을 연 음식 가게.",
+      "round.targets.bap.word.gloss": "쌀로 지어 먹는 음식",
+      "round.targets.gimchi.word.gloss": "배추를 맵게 절인 한국 음식",
+      "round.targets.tteok.word.gloss": "곡식 가루를 쪄서 만든 음식",
+      "round.targets.jeotgarak.word.gloss": "음식을 집는 가느다란 막대 한 쌍",
+      "round.others.guk.word.gloss": "물에 고기나 채소를 넣고 끓여 떠먹는 음식",
+      "round.others.sutgarak.word.gloss": "밥이나 국을 떠먹는 기구",
+      "round.others.hangari.word.gloss": "흙으로 빚어 구운 배가 불룩한 그릇",
+      "round.others.baguni.word.gloss": "가는 나무 줄기를 엮어 만든 그릇",
+      "note.subject": "장날은 조선 풍속화의 소재 가운데 하나예요. 파는 음식과, 밥과 국과 반찬을 차린 평소의 밥상이 있어요.",
+      "note.facts.f1.claim": "국립중앙박물관에 있는 김홍도의 풍속화첩 《단원 풍속도첩》은 일과 놀이 등 생활의 여러 모습을 보여 줘요. 스물다섯 번째 그림은 장터로 가는 길을 그린 〈장터길〉이에요.",
+      "note.facts.f2.claim": "반찬은 밥에 곁들여 먹는 음식을 통틀어 이르는 말이에요."
+    },
     "scene:letters-school": {
       "art.alt": "마당 쪽 문이 열려 있는 옛날 서당의 방.",
       "round.alt": "마당 쪽 문이 열려 있는 옛날 서당의 방.",
