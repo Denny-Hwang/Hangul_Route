@@ -1135,6 +1135,11 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 | `freq-coverage` (report only) | Share of taught words on the NIKL grade-A list. The list is used at build time only and never bundled; its licence is checked before it is committed (assumption 4) |
 | `story-coverage` (report only) | Section 4.7 |
 
+**Decision record (row CM-3B, 2026-10-27).**
+- **The switch.** `STRICT_TIERS` in `lesson-lint.ts` now holds `volume1`, so every finding of this section on a Volume 1 cell (`content/episodes/stage-<n>/<theme>.json`, and a Stage 1 item of the frozen review-item table) is an error in `validate-content.mjs`, as it is for Volume 2, packs and new stories. Before the switch, main 524961dae had 109 Volume 1 warnings: 103 `lesson-check-variety` in Stages 2, 3, 4, 6 and 7 and 6 `culture-source`. Rows CM-3A (S2, S3, S4, S6, S7) and CM-3C clear them: with all six merged, Volume 1 has no finding for any rule. No rule was loosened and no finding was silenced.
+- **What stays.** A shipped story (`SHIPPED_STORY_IDS`) still warns, because this row covers Volume 1 only; the shipped stories have no finding today. The rules that read only Volume 2 and packs (`lesson-recycle`, `lesson-culture-coverage`, the strict lesson rules, the overlay copy of new entries) still do not read Volume 1. A Volume 1 file that is not a lesson body is still reported by the cell lint of F-CURR-001 section 5 (`lesson-schema`).
+- **Tests.** For each rule that reads Volume 1, the fail fixture in `content/fixtures/curriculum-lint/` now expects its Volume 1 rows as errors. A test checks that every fixture row outside a shipped story is an error. The real-content test checks that no Volume 1 cell has a finding. The `validate-content` test checks that a Volume 1 cell whose Checks all play one game fails.
+
 ## 10. Bundle and offline budget
 
 **The constraint.** Under Metro web, a lazy `require` defers evaluation, not download. F-CURR-001 assumption 2 found the per-stage modules land in the one web bundle. Growing content therefore needs real separate assets.

@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (a warning in Volume 1, an error in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. A gloss found only inside another prompt word (day in today) does not settle it. A heard pick is not settled by a label on the answer option alone (it gives the answer away), nor by labels on every option (the sound still does not say which was meant). Not real content. Row CM-31: a spelling round with neither a picture nor a meaning, and one whose fallback options sound like the answer or are not taught.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-7): Dictation of a homophone with nothing to settle it (an error in Volume 1 since row CM-3B, as in Volume 2), of a word with a sound change, and a heard pick between two spellings of one sound. A gloss found only inside another prompt word (day in today) does not settle it. A heard pick is not settled by a label on the answer option alone (it gives the answer away), nor by labels on every option (the sound still does not say which was meant). Not real content. Row CM-31: a spelling round with neither a picture nor a meaning, and one whose fallback options sound like the answer or are not taught.",
   "rule": "dictation-unambiguous",
   "files": {
     "content/episodes/stage-2/nature.json": {
@@ -375,7 +375,7 @@
   "expect": [
     [
       "dictation-unambiguous",
-      "warning",
+      "error",
       "content/episodes/stage-2/nature.json",
       "quests[0].scopes[0].rounds[0]"
     ],

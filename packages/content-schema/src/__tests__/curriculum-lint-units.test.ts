@@ -315,8 +315,8 @@ describe('taught items and pronunciation', () => {
 });
 
 describe('lintCurriculum edge cases', () => {
-  it('gives the severity of each tier', () => {
-    expect(['volume1', 'volume2', 'pack', 'shipped-story', 'new-story'].map((t) => severityOf(t as never))).toEqual(['warning', 'error', 'error', 'warning', 'error']);
+  it('gives the severity of each tier: Volume 1 is an error since row CM-3B, a shipped story still a warning', () => {
+    expect(['volume1', 'volume2', 'pack', 'shipped-story', 'new-story'].map((t) => severityOf(t as never))).toEqual(['error', 'error', 'error', 'warning', 'error']);
   });
 
   it('reads a cell with volume 2 inside a Volume 1 file name as Volume 2, and a non-object file as not a body', () => {
@@ -347,7 +347,7 @@ describe('lintCurriculum edge cases', () => {
       'content/episodes/stage-2/nature.json': body('episode:stage2-nature', 2, [q('quest:a', [step('intro')])], { culture: notes }),
       'content/stories/s.json': { id: 'story:s', facts: [{ id: 'f1' }, { id: 'f2', sources: [{ publisher: 'Bank of Korea' }] }] },
     };
-    expect(rows(lint(files), 'culture-source')).toEqual([0, 1, 2, 3, 4].map((i) => `culture-source warning content/episodes/stage-2/nature.json culture[${i}].sources`));
+    expect(rows(lint(files), 'culture-source')).toEqual([0, 1, 2, 3, 4].map((i) => `culture-source error content/episodes/stage-2/nature.json culture[${i}].sources`));
   });
 
   it('reads Dictation and heard rounds defensively, and an explicit sound-change flag', () => {
@@ -410,7 +410,7 @@ describe('lintCurriculum edge cases', () => {
       { round: 1, path: 'promptShown', message: "a Listen & Pick scope's rounds are all Read Pick Meaning (promptShown: true) or all heard" },
     ]);
     expect(readPickRoundIssues(['x', read(pics)]).map((i) => i.round)).toEqual([0]);
-    // The lint reports it on the round, for Volume 1 (a warning) and Volume 2 (an error) alike.
+    // The lint reports it on the round, as an error in Volume 1 (since row CM-3B) and Volume 2 alike.
     const mixed = { ref: 'm:c', kind: 'listen-pick', rounds: [read(pics), { id: 'h', prompt: kt('하늘'), options: pics, answerId: 'a' }] };
     const v2 = body('episode:stage2-nature-v2', 2, [q('quest:a', [step('check', { minigameKind: 'listen-pick', minigameRef: 'm:c' })], [mixed])], { volume: 2 });
     expect(rows(lint({ 'content/episodes/stage-2/nature.v2.json': v2 }), 'lesson-check-variety')).toContain(
