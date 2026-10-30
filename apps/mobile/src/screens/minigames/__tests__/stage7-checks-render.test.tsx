@@ -82,12 +82,12 @@ async function mount(node: React.ReactElement): Promise<ReactTestRenderer> {
 }
 
 describe('the Stage 7 Checks render with their switches on and off (row CM-3A S7)', () => {
-  it('reaches all 18 Stage 7 Checks: 6 Cloze Pick, 6 Write Frame, 6 Sentence Builder (Volume 1 and, since row CM-41 S7, Nature Volume 2)', () => {
-    expect(checks).toHaveLength(18);
+  it('reaches all 21 Stage 7 Checks: 7 Cloze Pick, 7 Write Frame, 7 Sentence Builder (Volume 1 and, since rows CM-41 S7 and CM-42 S7, Nature and Play & Crafts Volume 2)', () => {
+    expect(checks).toHaveLength(21);
     const kinds = checks.map((c) => c.scope.kind).sort();
-    expect(kinds.filter((k) => k === 'cloze-pick')).toHaveLength(6);
-    expect(kinds.filter((k) => k === 'write-frame')).toHaveLength(6);
-    expect(kinds.filter((k) => k === 'order-it')).toHaveLength(6);
+    expect(kinds.filter((k) => k === 'cloze-pick')).toHaveLength(7);
+    expect(kinds.filter((k) => k === 'write-frame')).toHaveLength(7);
+    expect(kinds.filter((k) => k === 'order-it')).toHaveLength(7);
   });
 
   it('each locale has a Check pill of its own (es and ko are not the English)', () => {
@@ -154,7 +154,7 @@ describe('each Stage 7 Cloze Pick Check through its step door (row CM-3A S7, the
 
   it('with game.cloze-pick off, every Check plays its Listen & Pick fallback at once, with the Check pill and no Skip', async () => {
     flag.value = false;
-    expect(clozeChecks).toHaveLength(6);
+    expect(clozeChecks).toHaveLength(7);
     for (const { questId, scope } of clozeChecks) {
       const { r, rendered } = await door(scope);
       expect(rendered, questId).toEqual(['listen-pick']);
