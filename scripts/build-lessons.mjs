@@ -265,6 +265,9 @@ export function runtimeScope(scope, where) {
     // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
     case "my-story":
       return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
+    // F-CURR-002 row CM-44 S2: one round per block; off (`game.syllable-build`), the app plays Listen & Pick on the block.
+    case "syllable-build":
+      return { kind, rounds: scope.rounds.length, syllableBuild: { rounds: scope.rounds } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }
