@@ -53,7 +53,7 @@ describe('the Food market scene', () => {
 describe('the flow', () => {
   it('asks every target once, in a shuffled order that is the same for the same seed', () => {
     const a = startFlow(ROUNDS, 7);
-    expect([...a.order[0]!].sort()).toEqual(['bap', 'gimchi', 'jeotgarak']);
+    expect([...a.order[0]!].sort()).toEqual(['bap', 'gimchi', 'jeotgarak', 'tteok']);
     expect(startFlow(ROUNDS, 7).order).toEqual(a.order);
     expect(askedId(a)).toBe(a.order[0]![0]);
     expect(run([{ type: 'start' }]).effects).toEqual([`play ${startFlow(ROUNDS, 1).order[0]![0]}`]);
@@ -103,10 +103,11 @@ describe('the flow', () => {
     const events: FlowEvent[] = order.flatMap((id): FlowEvent[] => [{ type: 'tap', id }, { type: 'advance' }]);
     const end = run(events).state;
     expect(end.status).toBe('end');
-    expect(headerView(end, ROUNDS, en.learner.minigame)).toEqual({ value: 3, max: 3, label: '3 / 3' });
+    expect(headerView(end, ROUNDS, en.learner.minigame)).toEqual({ value: 4, max: 4, label: '4 / 4' });
     expect(endView(ROUND).map((e) => [e.word.ko, e.meaning])).toEqual([
-      ['밥', 'rice'],
+      ['밥', 'cooked rice'],
       ['김치', 'kimchi'],
+      ['떡', 'rice cake'],
       ['젓가락', 'chopsticks'],
     ]);
     expect(run([...events, { type: 'continue' }]).effects.at(-1)).toBe('complete');
@@ -116,12 +117,12 @@ describe('the flow', () => {
   it('a second scene follows the first after its end panel, with keys that go on counting', () => {
     const second: HiddenHeritageRound = { ...ROUND, id: 'hh2' };
     const rounds = [ROUND, second];
-    expect(roundKeyOf(rounds, 1, 'bap')).toBe('w3');
+    expect(roundKeyOf(rounds, 1, 'bap')).toBe('w4');
     const order = startFlow(rounds, 1).order[0]!;
     const out = run([...order.flatMap((id): FlowEvent[] => [{ type: 'tap', id }, { type: 'advance' }]), { type: 'continue' }], rounds);
     expect(out.state.status).toBe('playing');
     expect(out.state.roundIdx).toBe(1);
-    expect(headerView(out.state, rounds, en.learner.minigame).label).toBe('3 / 6');
+    expect(headerView(out.state, rounds, en.learner.minigame).label).toBe('4 / 8');
   });
 
   it('Skip shows after the first answer and ends the step without marking the words not found', () => {
@@ -162,7 +163,7 @@ describe('the views', () => {
   it('names every spot by its meaning, never the answer, in reading order; a found spot says so', () => {
     const state = startFlow(ROUNDS, 1);
     const views = spotViews(ROUND, state, en.a11y.hiddenHeritage);
-    expect(views.map((v) => v.label)).toEqual(['jar', 'basket', 'rice', 'soup', 'kimchi', 'chopsticks']);
+    expect(views.map((v) => v.label)).toEqual(['jar', 'kimchi', 'rice cake', 'basket', 'cooked rice', 'soup', 'spoon', 'chopsticks']);
     const first = state.order[0]![0]!;
     const found = run([{ type: 'tap', id: first }]).state;
     const label = spotViews(ROUND, found, en.a11y.hiddenHeritage).find((v) => v.id === first)!.label;
@@ -173,9 +174,9 @@ describe('the views', () => {
     const first = startFlow(ROUNDS, 1).order[0]!;
     const state = run([{ type: 'tap', id: first[0]! }]).state;
     const slots = slotViews(ROUND, state);
-    expect(slots).toHaveLength(3);
+    expect(slots).toHaveLength(4);
     expect(slots[0]!.word?.ko).toBe(ROUND.targets.find((t) => t.id === first[0])!.word.ko);
-    expect(slots.slice(1).map((s) => s.word)).toEqual([null, null]);
+    expect(slots.slice(1).map((s) => s.word)).toEqual([null, null, null]);
   });
 
   it('in the Korean UI a meaning that is the word itself is not said twice', () => {

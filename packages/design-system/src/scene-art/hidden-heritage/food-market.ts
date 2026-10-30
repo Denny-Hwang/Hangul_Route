@@ -4,9 +4,11 @@ import type { HiddenHeritageScene } from './types';
 /**
  * The first Hidden Heritage scene (F-CURR-002 §5.3 S2 and §13, row CM-36): a food stall on a market day, for the
  * Food & Daily Life Volume 2 Stage 2 cell. Composed fresh from the scene-art kit in theme tokens (OD-10): a striped
- * awning, a shelf with a jar and a basket of greens, and a counter with a bowl of rice, a bowl of soup, a dish of
- * kimchi and chopsticks on a mat. It copies, traces or follows no painting: genre painting is its subject only
- * (style guide rule 1), and no person, Hoya or writing is drawn.
+ * awning, a shelf of things for sale (a jar, a dish of kimchi, a plate of rice cakes and a basket of greens) and a
+ * counter set as a table (a bowl of rice, a bowl of soup, a spoon and chopsticks, each on a mat). It copies, traces or
+ * follows no painting: genre painting is its subject only (style guide rule 1), and no person, Hoya or writing is drawn.
+ * Row CM-43 S2 (the Food Volume 2 cell that places it) added the rice cakes and the spoon and moved the kimchi to the
+ * shelf, so its round has the four targets and four other things a Stage 2 Apply plays.
  *
  * Its chunk (this module: the setting, the six props, the layers, the reference round and the note) is held to
  * 25,000 B (§10 ceilings table; `hidden-heritage.test.ts`). Eight colours, none of the ring or focus tokens.
@@ -98,6 +100,39 @@ const CHOPSTICKS: ItemDef = {
   ],
 };
 
+/** A spoon on a table mat (숟가락), an other thing (row CM-43 S2). */
+const SPOON: ItemDef = {
+  id: 'prop:hh-spoon',
+  kind: 'object',
+  box: { w: 82, h: 54 },
+  z: 'mid',
+  alt: 'A metal spoon lying on a yellow table mat',
+  accuracyNote: 'A plain everyday metal spoon with a long handle and a shallow bowl, drawn in the colour of the chopsticks; the mat is plain.',
+  nodes: [
+    { t: 'rect', x: 4, y: 36, w: 74, h: 16, r: 3, fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'line', x1: 24, y1: 38, x2: 76, y2: 12, stroke: 'text.secondary', sw: 'thick' },
+    { t: 'ellipse', cx: 17, cy: 41, rx: 12, ry: 7, fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
+    { t: 'ellipse', cx: 15, cy: 40, rx: 5, ry: 2, fill: 'border.strong', det: true },
+  ],
+};
+
+/** A plate of layered rice cakes for sale (떡), a target (row CM-43 S2). */
+const TTEOK_PLATE: ItemDef = {
+  id: 'prop:hh-tteok-plate',
+  kind: 'object',
+  box: { w: 80, h: 56 },
+  z: 'mid',
+  alt: 'A white plate with a stack of pink, white and green rice cakes',
+  accuracyNote: 'Three plain layers of rice cake on a plate, in the colours rice cakes are often coloured; no kind, recipe, region or shop is implied.',
+  nodes: [
+    { t: 'ellipse', cx: 40, cy: 48, rx: 38, ry: 7, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 14, y: 32, w: 52, h: 12, r: 3, fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 14, y: 20, w: 52, h: 12, r: 3, fill: 'surface.canvas', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 14, y: 8, w: 52, h: 12, r: 3, fill: 'theme.letters', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M22 14H58', stroke: 'surface.paper', sw: 'thin', o: 0.6, det: true },
+  ],
+};
+
 /** An earthenware jar with a lid (항아리), an other thing. */
 const JAR: ItemDef = {
   id: 'prop:hh-jar',
@@ -138,30 +173,38 @@ export const FOOD_MARKET_SCENE: HiddenHeritageScene = {
     setting: SETTING.id,
     altEn: 'A food stall on a market day.',
     layers: [
-      { ref: JAR.id, x: 80, y: 150 },
-      { ref: BASKET.id, x: 323, y: 150 },
+      // The shelf: things for sale.
+      { ref: JAR.id, x: 60, y: 150 },
+      { ref: KIMCHI_DISH.id, x: 151, y: 150 },
+      { ref: TTEOK_PLATE.id, x: 242, y: 150 },
+      { ref: BASKET.id, x: 336, y: 150 },
+      // The counter, set as a table: rice, soup, a spoon and chopsticks.
       { ref: RICE_BOWL.id, x: 56, y: 250 },
       { ref: SOUP_BOWL.id, x: 150, y: 250 },
-      { ref: KIMCHI_DISH.id, x: 245, y: 246 },
+      { ref: SPOON.id, x: 245, y: 244 },
       { ref: CHOPSTICKS.id, x: 341, y: 244 },
     ],
   },
-  items: [SETTING, RICE_BOWL, SOUP_BOWL, KIMCHI_DISH, CHOPSTICKS, JAR, BASKET],
-  things: { hangari: 0, baguni: 1, bap: 2, guk: 3, gimchi: 4, jeotgarak: 5 },
+  items: [SETTING, RICE_BOWL, SOUP_BOWL, KIMCHI_DISH, CHOPSTICKS, JAR, BASKET, SPOON, TTEOK_PLATE],
+  things: { hangari: 0, gimchi: 1, tteok: 2, baguni: 3, bap: 4, guk: 5, sutgarak: 6, jeotgarak: 7 },
   round: {
     id: 'hh1',
     sceneId: 'scene:food-market',
     altEn: 'A food stall on a market day.',
-    // 밥 and 젓가락 are S2 Food table words and 김치 a Stage 1 Food word, each with a bundled Stage 1 card picture for the Pic-Word Match fallback.
+    // 밥, 김치 and 떡 are words of the Food vocabulary topic and 젓가락 a word Food Volume 2 teaches, each with a bundled
+    // picture for the Pic-Word Match fallback (`card:rice`, `card:kimchi`, `word:food-tteok`, `card:chopsticks`); 국 and 숟가락, the table set's
+    // other two, have no bundled picture, so they are other things (row CM-43 S2).
     targets: [
-      { id: 'bap', word: word('밥', 'bap', 'rice'), spot: { x: 12, y: 168, w: 86, h: 90 }, picture: 'card:rice' },
-      { id: 'gimchi', word: word('김치', 'gimchi', 'kimchi'), spot: { x: 204, y: 180, w: 82, h: 78 }, picture: 'card:kimchi' },
+      { id: 'bap', word: word('밥', 'bap', 'cooked rice'), spot: { x: 12, y: 168, w: 86, h: 90 }, picture: 'card:rice' },
+      { id: 'gimchi', word: word('김치', 'gimchi', 'kimchi'), spot: { x: 111, y: 58, w: 80, h: 92 }, picture: 'card:kimchi' },
+      { id: 'tteok', word: word('떡', 'tteok', 'rice cake'), spot: { x: 202, y: 58, w: 80, h: 92 }, picture: 'word:food-tteok' },
       { id: 'jeotgarak', word: word('젓가락', 'jeotgarak', 'chopsticks'), spot: { x: 298, y: 180, w: 84, h: 78 }, picture: 'card:chopsticks' },
     ],
     others: [
       { id: 'guk', word: word('국', 'guk', 'soup'), spot: { x: 110, y: 168, w: 82, h: 90 } },
-      { id: 'hangari', word: word('항아리', 'hangari', 'jar'), spot: { x: 40, y: 58, w: 80, h: 92 } },
-      { id: 'baguni', word: word('바구니', 'baguni', 'basket'), spot: { x: 282, y: 58, w: 82, h: 92 } },
+      { id: 'sutgarak', word: word('숟가락', 'sutgarak', 'spoon'), spot: { x: 204, y: 180, w: 82, h: 78 } },
+      { id: 'hangari', word: word('항아리', 'hangari', 'jar'), spot: { x: 20, y: 58, w: 80, h: 92 } },
+      { id: 'baguni', word: word('바구니', 'baguni', 'basket'), spot: { x: 293, y: 58, w: 86, h: 92 } },
     ],
   },
   note: {
@@ -195,17 +238,19 @@ export const FOOD_MARKET_SCENE: HiddenHeritageScene = {
       },
     ],
     accuracyNote:
-      'Composed from the kit, not from a painting: no figure, viewpoint or group of the album is used. The stall, the bowls, the jar and the basket are generic; the food is drawn without any brand, sign or writing.',
+      'Composed from the kit, not from a painting: no figure, viewpoint or group of the album is used. The stall, the bowls, the spoon, the rice cakes, the jar and the basket are generic; the food is drawn without any brand, sign or writing.',
   },
   review: {
     reviewedBy: 'MAR',
-    reviewedAt: '2026-10-23',
-    passes: 4,
+    reviewedAt: '2026-10-30',
+    passes: 6,
     notes: [
       'Pass 1 (author): both pages opened on 2026-10-23; the quotes are copied from them. The National Museum of Korea page lists the album order ending "25) 장터길"; the dictionary gives 반찬 one sense.',
       'Pass 2 (culture and facts): the scene shows a market subject only and copies no composition of the album (no figures are drawn at all); 밥 and 젓가락 are S2 Food table words and 김치 a Stage 1 Food word, each with a bundled Stage 1 card picture; nothing is framed as Korean in origin.',
       'Pass 3 (language, learning design and anti-shame): the alt text names the setting, never a target; the targets carry romanization and a gloss; no English label or writing is in the picture.',
       'Pass 4 (reviser): each claim says no more than its quote. f2 backs the subject line ("rice, soup and side dishes"), the table the scene draws around 밥, 국 and 김치; 반찬 itself is not a spot, so the content row that ships the cell either adds it as a thing or keeps f2 on the card back as the subject fact. Institution names are as of the access date; no brand appears.',
+      'Pass 5 (author, row CM-43 S2, 2026-10-30): the Food Volume 2 cell places the scene in a Stage 2 Apply, which plays four rounds, so the scene gains a plate of rice cakes (떡, a Food topic word with its bundled picture word:food-tteok) as a fourth target and a spoon (숟가락, taught by the cell) as a fourth other thing; the kimchi dish moves to the shelf, so the counter is set as a table: rice, soup, a spoon and chopsticks. f2 stays the subject fact of the table set.',
+      'Pass 6 (culture, language and learning-design checkers and reviser, 2026-10-30): the two props are generic (no kind, recipe, region, brand or shop), drawn in the scene\'s eight colours, and pass the profile (four targets each outlined and readable at thumb size, spots 11 apart, one target in each half); the meanings of 밥 follow the cell (cooked rice); the facts and their sources are unchanged.',
     ],
   },
 };
