@@ -1,7 +1,7 @@
 import { layout, presenter, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { NO_INSETS, PHONE_STAGE_MIN, barBand, phoneBarStrip, stageBox } from '../stage-constants';
-import { isPhoneWindow, stageScale, stageText, stageView, type PhoneRule, type StageBounds } from '../stage-scale';
+import { NO_INSETS, PHONE_STAGE_MIN, barBand, stageBox } from '../stage-constants';
+import { isPhoneWindow, navLayout, stageScale, stageText, stageView, type PhoneRule, type StageBounds } from '../stage-scale';
 
 // The presenter passes `presenter.stage` and the compact breakpoint from the design tokens (F-TCH-004 §3.6).
 const STAGE: StageBounds = { width: 1280, minHeight: 600, maxHeight: 960, compactWidth: layout.breakpoint.regular };
@@ -163,10 +163,6 @@ describe('a phone window (owner report 2026-10-16 item 1)', () => {
     expect(stageView({ phone: false, window: { width: 320, height: 744 }, tooSmall: true })).toBe('too-small');
   });
 
-  it("the compact bar's strip is touchTarget.min + 2 x spacing.sm (80)", () => {
-    expect(phoneBarStrip(touchTarget.min, spacing.sm)).toBe(80);
-  });
-
   it('the safe-area insets come out of the stage box, and the phone width is judged inside them', () => {
     expect(stageBox({ width: 844, height: 390 }, 0, { top: 0, right: 47, bottom: 21, left: 47 })).toEqual({ width: 750, height: 369 });
     expect(stageBox({ width: 1280, height: 720 }, 120, { top: 10, right: 0, bottom: 20, left: 0 })).toEqual({ width: 1280, height: 570 });
@@ -265,5 +261,12 @@ describe('stageText', () => {
     expect(typography.size.body).toBe(18);
     expect(stageText(0.6, 28, FLOOR)).toBe(typography.size.body);
     expect(stageText(0, 380, FLOOR)).toBe(typography.size.body);
+  });
+});
+
+describe('navLayout (AMENDMENTS-PRESENTER-NAV section 4, row PN-2)', () => {
+  it('a phone window floats the compact bar over the stage; every other window docks the bar under it', () => {
+    expect(navLayout(true)).toBe('overlay');
+    expect(navLayout(false)).toBe('docked');
   });
 });

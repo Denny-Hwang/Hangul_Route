@@ -6,6 +6,7 @@ import { Text, View } from 'react-native';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
 import { markerFor } from '../../../logic/lecture/slide-view';
 import { MARKER_BODY_FACTOR, PIC_OPT, units } from '../../../logic/lecture/stage-constants';
+import { optionTarget } from '../../../logic/lecture/stage-gesture';
 import { optionContent, optionRomShown } from '../../../logic/lecture/tools';
 import { PictureArt } from '../../../components/PictureArt';
 import { ShapeMarker } from '../ShapeMarker';
@@ -152,6 +153,7 @@ function OptionCard({
     <View
       role="listitem"
       testID={`presenter-quiz-option-${index + 1}`}
+      {...{ dataSet: { stageTarget: optionTarget(index) } }}
       style={{
         flex: 1,
         minWidth: 0,
@@ -313,6 +315,7 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
     <View
       role="listitem"
       testID={`presenter-quiz-option-${index + 1}`}
+      {...{ dataSet: { stageTarget: optionTarget(index) } }}
       style={{
         flexDirection: 'row',
         alignItems: 'center',

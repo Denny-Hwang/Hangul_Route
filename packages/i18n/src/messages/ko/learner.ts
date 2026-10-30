@@ -1806,7 +1806,7 @@ export const learner = {
     help: {
       title: '키와 조작',
       clicker: '프레젠테이션 리모컨은 따로 설정하지 않아도 돼요.',
-      phoneBar: '휴대폰에서는 슬라이드 아래쪽을 누르면 조작 버튼이 보여요.',
+      phoneBar: '이 휴대폰에서는 화면을 밀어서 넘겨요. 슬라이드를 누르면 조작 버튼이 보여요.',
       keepVisible: '조작 버튼 계속 보이기',
       romanization: '로마자',
       romanizationAlways: '항상',

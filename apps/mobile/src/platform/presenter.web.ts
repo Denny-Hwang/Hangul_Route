@@ -91,6 +91,8 @@ export interface PresenterEnv {
    * which every open tab of the app answers; null without one.
    */
   tabs?: TabsChannelLike | null;
+  /** `window.matchMedia`, for the pointer media queries; null without one. */
+  matchMedia?: ((query: string) => { matches: boolean }) | null;
 }
 
 /** The slice of `BroadcastChannel` the stale-presenter Reload uses to find other open tabs. */
@@ -147,6 +149,7 @@ type Globals = {
   screen?: PresenterEnv['screen'];
   addEventListener?: EventTargetLike['addEventListener'];
   removeEventListener?: EventTargetLike['removeEventListener'];
+  matchMedia?: (query: string) => { matches: boolean };
 };
 
 function browserEnv(): PresenterEnv {
@@ -167,6 +170,7 @@ function browserEnv(): PresenterEnv {
     createAudioContext: browserAudioContext,
     serviceWorker: g.navigator?.serviceWorker ?? null,
     tabs: (g as { __hrTabs?: TabsChannelLike }).__hrTabs ?? null,
+    matchMedia: typeof g.matchMedia === 'function' ? (query) => g.matchMedia!(query) : null,
   };
 }
 
@@ -820,24 +824,51 @@ export function subscribeActivity(handler: () => void, env: PresenterEnv = brows
   };
 }
 
+/** The kind of an input on the page (AMENDMENTS-PRESENTER-NAV section 4): a pen counts as touch. */
+export type InputKind = 'mouse' | 'touch' | 'key';
+
 /**
- * The kind of the last input on the page: a pointer (mouse, touch, pen) or a key. A focus that
- * follows a pointer press, or that a dialog gives back after one, is the pointer's; one that follows
- * a key is a keyboard or switch user's (the phone bar stays on screen for those, section 3.6).
+ * The kind of each input on the page: a mouse press, a touch or pen press, or a key. A focus that
+ * follows a press, or that a dialog gives back after one, is the pointer's; one that follows a key
+ * is a keyboard or switch user's (the phone bar stays on screen for those, section 3.6). The
+ * presenter also reads touch from it (AMENDMENTS-PRESENTER-NAV section 4): the first touch or pen
+ * press pins Previous and Next on a docked window, and a mouse-type event after a pen press is the
+ * pen's (Windows Chrome sends pen input as mouse events).
  */
-export function subscribeInputKind(handler: (kind: 'pointer' | 'key') => void, env: PresenterEnv = browserEnv()): () => void {
+export function subscribeInputKind(handler: (kind: InputKind) => void, env: PresenterEnv = browserEnv()): () => void {
   const target = env.window;
   if (!target) return () => undefined;
-  const onPointer = (): void => handler('pointer');
+  const onPointer = (event: unknown): void => {
+    const type = (event as { pointerType?: unknown } | null)?.pointerType;
+    handler(type === 'touch' || type === 'pen' ? 'touch' : 'mouse');
+  };
+  const onTouch = (): void => handler('touch');
   const onKey = (): void => handler('key');
   target.addEventListener('pointerdown', onPointer);
-  target.addEventListener('touchstart', onPointer);
+  target.addEventListener('touchstart', onTouch);
   target.addEventListener('keydown', onKey);
   return () => {
     target.removeEventListener('pointerdown', onPointer);
-    target.removeEventListener('touchstart', onPointer);
+    target.removeEventListener('touchstart', onTouch);
     target.removeEventListener('keydown', onKey);
   };
+}
+
+/**
+ * Touch is seen from the start (AMENDMENTS-PRESENTER-NAV section 4) when the page matches
+ * `(any-pointer: coarse)` or `(hover: none)`: a tablet, a phone, and almost every whiteboard or
+ * touch panel, even one that reports a fine primary pointer. Otherwise the first touch or pen
+ * press says so (`subscribeInputKind`). A page without `matchMedia`, or one that throws, has not
+ * seen it yet.
+ */
+export function touchSeenAtStart(env: PresenterEnv = browserEnv()): boolean {
+  try {
+    const media = env.matchMedia;
+    if (typeof media !== 'function') return false;
+    return media('(any-pointer: coarse)').matches === true || media('(hover: none)').matches === true;
+  } catch {
+    return false;
+  }
 }
 
 // --- fullscreen -------------------------------------------------------------------------------

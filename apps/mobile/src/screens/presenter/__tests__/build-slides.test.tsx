@@ -124,6 +124,23 @@ describe('SentenceBuildSlide (LV-S3)', () => {
     expect(textOf(byTestId(kept.root, 'presenter-build-ask')[0]!)).toBe(en.learner.presenter.slide.build.next);
   });
 
+  it('every placed tile, particle tile and bank tile at every build is a content target: data-stage-target="tile" (AMENDMENTS-PRESENTER-NAV section 7.1)', async () => {
+    const counts = { 'presenter-build-placed': 0, 'presenter-build-particle': 0, 'presenter-build-bank-tile': 0 };
+    for (const slide of [plain, particle]) {
+      for (let reveal = 0; reveal < slide.builds.length; reveal += 1) {
+        const r = await render(inView(<SentenceBuildSlide slide={slide} reveal={reveal} />));
+        for (const id of Object.keys(counts) as (keyof typeof counts)[]) {
+          for (const node of byTestId(r.root, id)) {
+            expect((node.props as { 'data-stage-target'?: string })['data-stage-target'], `${id} at build ${reveal}`).toBe('tile');
+            counts[id] += 1;
+          }
+        }
+      }
+    }
+    // Each kind of tile was met at least once, so the check ran on all three.
+    for (const n of Object.values(counts)) expect(n).toBeGreaterThan(0);
+  });
+
   it.each(['es', 'ko'] as const)('in %s: the kind label, the question and the meaning are in the slide language', async (locale) => {
     const m = getMessages(locale);
     const slide = builds(slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q3' }], locale)).find((s) => s.sentence.ko === '친구가 학교에 가요.')!;
@@ -146,7 +163,11 @@ describe('Stage: the live region says each move of a sentence build (section 10)
         deckTitle="Build"
         strokeToken={0}
         joinCta="Join"
-        onCommand={() => undefined}
+        onGesture={() => undefined}
+        layout="docked"
+        covering="none"
+        pointing={false}
+        lastPointer={() => null}
         onPlaySound={() => undefined}
         romanization="always"
         sayIt={false}

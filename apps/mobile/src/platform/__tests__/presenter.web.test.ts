@@ -37,6 +37,7 @@ import {
   subscribeFullscreen,
   subscribeInputKind,
   subscribeKeys,
+  touchSeenAtStart,
   takeDeckFragment,
   trapFocus,
   focusablesIn,
@@ -680,20 +681,43 @@ describe('subscribeActivity', () => {
   });
 });
 
-describe('subscribeInputKind', () => {
-  it('reports a pointer or touch press as the pointer and a key as the key, until unsubscribed', () => {
+describe('subscribeInputKind (AMENDMENTS-PRESENTER-NAV section 4)', () => {
+  it('reports a mouse press as the mouse, a touch or pen press as touch and a key as the key, until unsubscribed', () => {
     const win = fakeTarget();
     const kinds: string[] = [];
     const stop = subscribeInputKind((kind) => kinds.push(kind), env({ window: win }));
-    win.fire('pointerdown', {});
+    win.fire('pointerdown', { pointerType: 'mouse' });
+    win.fire('pointerdown', { pointerType: 'touch' });
+    win.fire('pointerdown', { pointerType: 'pen' });
     win.fire('touchstart', {});
     win.fire('keydown', {});
-    expect(kinds).toEqual(['pointer', 'pointer', 'key']);
+    // A pointer event with no type (an old browser) is a mouse.
+    win.fire('pointerdown', {});
+    expect(kinds).toEqual(['mouse', 'touch', 'touch', 'touch', 'key', 'mouse']);
     stop();
     win.fire('keydown', {});
-    expect(kinds).toHaveLength(3);
+    expect(kinds).toHaveLength(6);
     expect(win.count('pointerdown') + win.count('touchstart') + win.count('keydown')).toBe(0);
     expect(() => subscribeInputKind(() => undefined, env())()).not.toThrow();
+  });
+
+  it('touch is seen from the start when the page matches (any-pointer: coarse) or (hover: none)', () => {
+    const media = (matching: string[]) => (query: string) => ({ matches: matching.includes(query) });
+    expect(touchSeenAtStart(env({ matchMedia: media(['(any-pointer: coarse)']) }))).toBe(true);
+    expect(touchSeenAtStart(env({ matchMedia: media(['(hover: none)']) }))).toBe(true);
+    expect(touchSeenAtStart(env({ matchMedia: media(['(pointer: fine)', '(hover: hover)']) }))).toBe(false);
+    // No matchMedia, or one that throws: not seen (the first touch press then says so).
+    expect(touchSeenAtStart(env())).toBe(false);
+    expect(
+      touchSeenAtStart(
+        env({
+          matchMedia: () => {
+            throw new Error('blocked');
+          },
+        }),
+      ),
+    ).toBe(false);
+    expect(native.touchSeenAtStart()).toBe(false);
   });
 });
 

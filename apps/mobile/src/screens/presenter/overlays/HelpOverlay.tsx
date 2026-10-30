@@ -33,7 +33,7 @@ export function HelpOverlay({
   keepVisible: boolean;
   onKeepVisible: (on: boolean) => void;
   onClose: () => void;
-  /** A phone window: the bar's strip line under the title (`help.phoneBar`). */
+  /** A phone window: the swipe and tap line under the title (`help.phoneBar`). */
   phone?: boolean;
 }): ReactElement {
   const textScale = useTypeScale();

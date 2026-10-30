@@ -197,7 +197,11 @@ describe('Stage: the live region names each reading slide by its kind (section 1
           deckTitle="Reading"
           strokeToken={0}
           joinCta="Join"
-          onCommand={() => undefined}
+          onGesture={() => undefined}
+          layout="docked"
+          covering="none"
+          pointing={false}
+          lastPointer={() => null}
           onPlaySound={() => undefined}
           romanization="always"
           sayIt={false}

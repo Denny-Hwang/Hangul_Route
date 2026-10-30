@@ -118,8 +118,14 @@ export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }
 
-export function subscribeInputKind(_handler: (kind: 'pointer' | 'key') => void): () => void {
+export type InputKind = 'mouse' | 'touch' | 'key';
+
+export function subscribeInputKind(_handler: (kind: InputKind) => void): () => void {
   return () => undefined;
+}
+
+export function touchSeenAtStart(): boolean {
+  return false;
 }
 
 export function fullscreenSupported(): boolean {

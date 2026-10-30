@@ -161,11 +161,9 @@ export const SVG_UI_FONT = 'system-ui, sans-serif';
  */
 export const BAR_SHOW_GRACE_MS = 400;
 
-/** Touch: a horizontal swipe of at least 60 px with |dx| >= 1.5 |dy| (spec section 3.5). */
+/** A swipe on the stage: at least 60 px across with |dx| >= 1.5 |dy| (AMENDMENTS-PRESENTER-NAV section 6). */
 export const SWIPE_MIN = 60;
 export const SWIPE_RATIO = 1.5;
-/** A tap on the left third of the stage goes back, elsewhere forward. */
-export const TAP_BACK_FRACTION = 1 / 3;
 
 /** The docked control-bar band: one row of hero buttons with `spacing.md` above and below (README D1). */
 export function barBand(hero: number, gap: number): number {
@@ -179,15 +177,6 @@ export function barBand(hero: number, gap: number): number {
  * (600). Text keeps the 18 px floor either way.
  */
 export const PHONE_STAGE_MIN = 560;
-
-/**
- * The compact bar's strip at the bottom of a phone stage (section 3.6): as tall as the bar's own
- * footprint, its `touchTarget.min` row and `spacing.sm` padding (`min + 2 x gap`). A tap there shows
- * or hides the bar instead of stepping.
- */
-export function phoneBarStrip(min: number, gap: number): number {
-  return min + 2 * gap;
-}
 
 /** The safe-area insets of the window (the notch and the home indicator), in window pixels. */
 export interface StageInsets {
