@@ -30,7 +30,29 @@ The presenter no longer draws a helper picker (`docs/specs/AMENDMENTS-LECTURE-V2
 
 ## Help (H or ?)
 
-- "Keys and controls": each key of section 3.5 as key caps (Next: right arrow, down arrow, Space, PageDown, Enter; Previous (was Back until LV-M1, `help.row.back`): left arrow, up arrow, PageUp, Backspace; the up and down caps are the arrow glyph rotated, no new icon) and what it does, two columns from 900 px; "A presentation clicker works with no setup."; in a phone window only, one more line under the title, "On a phone, tap the bottom of the slide to show the controls." (`help.phoneBar`, LV-M1, body size, `text.secondary`); the Romanization switch (always / hide until tapped; flips the deck's option live; not drawn when Help is opened from the presenter home's **Keys and help**, where no lesson is open); ~~the Presenter language chips (session only)~~ (removed 2026-10-16: the language is the device's, changed from the **Display (Aa)** control on the home and the start screen); **Keep controls visible**; Close. The `P` row is gone with the picker. It scrolls inside the stage box when taller (1280 x 720).
+- "Keys and controls": each key of section 3.5 as key caps (Next: right arrow, down arrow, Space, PageDown, Enter; Previous (was Back until LV-M1, `help.row.back`): left arrow, up arrow, PageUp, Backspace; the up and down caps are the arrow glyph rotated, no new icon) and what it does, two columns from 900 px; "A presentation clicker works with no setup."; in a phone window only, one more line under the title, ~~"On a phone, tap the bottom of the slide to show the controls."~~ (`help.phoneBar`, LV-M1, body size, `text.secondary`; reworded in PN-2 and drawn in the overlay layout only, see "Touch and mouse" below); the Romanization switch (always / hide until tapped; flips the deck's option live; not drawn when Help is opened from the presenter home's **Keys and help**, where no lesson is open); ~~the Presenter language chips (session only)~~ (removed 2026-10-16: the language is the device's, changed from the **Display (Aa)** control on the home and the start screen); **Keep controls visible**; Close. The `P` row is gone with the picker. It scrolls inside the stage box when taller (1280 x 720).
+
+### Touch and mouse (owner report 2026-10-29; `AMENDMENTS-PRESENTER-NAV.md` section 9.2; rows PN-2, PN-3, PN-5)
+
+Mock: `mock/overlay-help-touch.html` (`#lang=es`, `#lang=ko`; a touch window of 568 x 320 draws the overlay layout's line) · shots `overlay-help-touch-1280x720.png`, `-es`, `-ko`; `-1920x1080`, `-es`, `-ko`; `-568x320`, `-es`, `-ko` · wireframe `classroom/lecture-nav.md` Panel F
+
+- **Under the title, in the overlay layout only** (568 x 320 class phones, and every phone while the rail is switched off): `help.phoneBar`, reworded (body size, `text.secondary`). On a docked window and on the rail the line is not drawn: their Previous and Next are always on the screen.
+- **A "Touch and mouse" group above the key rows, in every layout**: the heading `help.touch.title` (`typography.size.bodyLg`, bold) and five lines at the body size, in this order: `help.touch.swipe`, `help.touch.buttons`, `help.touch.click`, `help.touch.point` (O2, PN-5), `help.touch.keep` (it explains the Keep controls visible switch further down, for a screen where the buttons fade). Plain lines, not a list of controls: nothing in the group takes input.
+- **The key rows gain `point`** right after Previous: key caps `1` `2` `3` `4` and `help.row.point` (O2, PN-5). The other rows, the clicker line, the Romanization switch, Keep controls visible and Close are unchanged.
+- Spanish says "mouse" (F-I18N-001 section 3.10), tú; Korean is 해요체 with no particle after a variable. Korean lines break between words only (`KOREAN_LINE_BREAK`, `word-break: keep-all`); at 568 x 320 the longest lines wrap to two inside the dialog, which scrolls (`overlay-help-touch-568x320-ko.png`); nothing is cut.
+
+| Key | en | es | ko |
+|---|---|---|---|
+| `help.phoneBar` (overlay layout only) | On this phone, swipe to move. Tap the slide to show the controls. | En este teléfono, desliza para avanzar o volver. Toca la diapositiva para ver los controles. | 이 휴대폰에서는 화면을 밀어서 넘겨요. 슬라이드를 누르면 조작 버튼이 보여요. |
+| `help.touch.title` | Touch and mouse | Pantalla táctil y mouse | 터치와 마우스 |
+| `help.touch.swipe` | Swipe left to go on, right to go back. | Desliza a la izquierda para avanzar y a la derecha para volver. | 왼쪽으로 밀면 다음으로, 오른쪽으로 밀면 이전으로 가요. |
+| `help.touch.buttons` | Or tap Previous and Next. | O toca Anterior y Siguiente. | 이전, 다음 버튼을 눌러도 돼요. |
+| `help.touch.click` | With a mouse, click the slide to go on (not on question slides). | Con el mouse, haz clic en la diapositiva para avanzar (no en las preguntas). | 마우스로 슬라이드를 클릭하면 다음으로 가요. 문제 슬라이드에서는 안 돼요. |
+| `help.touch.point` | Tap an answer to point at it. It does not show the answer. | Toca una opción para señalarla. No muestra la respuesta. | 선택지를 누르면 표시만 돼요. 정답은 보여 주지 않아요. |
+| `help.touch.keep` | Keep controls visible shows every button all the time. | Con «Dejar los controles a la vista» activado, todos los botones se ven siempre. | '조작 버튼 계속 보이기'를 켜면 모든 버튼이 계속 보여요. |
+| `help.row.point` | Point at an answer | Señalar una opción | 선택지 표시하기 |
+
+The values are the spec's section 13 exactly (copied into `mock/presenter-nav.js` from it); they land in the rows named there, each with its own Spanish and Korean review.
 
 ## Exit (PR 6)
 

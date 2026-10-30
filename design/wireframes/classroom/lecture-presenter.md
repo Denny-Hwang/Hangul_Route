@@ -104,7 +104,7 @@ Then: big letters, pictures and stories appear one reveal at a time; she can pla
 
 - The bar shows again on any key, touch or mouse move; a focused button keeps it visible; "Keep controls visible" lives in Help.
 - The only status that ever appears in the bar: offline / update chip ("Update ready, applies when you exit"), the voice chip, the mute chip. Nothing about students.
-- Tapping the right two thirds of the stage = next; the left third = back; swipe = next / back.
+- ~~Tapping the right two thirds of the stage = next; the left third = back~~ (superseded 2026-10-29, `AMENDMENTS-PRESENTER-NAV.md` section 7: the stage has no tap zones; a touch tap never steps, a mouse click steps forward only on a slide with nothing to point at, a tap on an answer option points at it); swipe = next / back.
 - Buttons are the biggest targets in the app and always carry a text label.
 
 ## D. Letter slide
@@ -284,7 +284,7 @@ portrait               exit
 
 ## Interaction points
 
-- Next / Reveal: Space, Enter, Right, Down, PageDown, tap right two thirds, swipe left, [Reveal >]. Previous (labelled Back until LV-M1, 2026-10-16): Left, Up, PageUp, Backspace, tap left third, swipe right, [< Previous].
+- Next / Reveal: Space, Enter, Right, Down, PageDown, swipe left, a mouse click on a slide with nothing to point at, [Reveal >] (at the end of the bar). Previous (labelled Back until LV-M1, 2026-10-16): Left, Up, PageUp, Backspace, swipe right, [< Previous] (at the start of the bar; beside Next on a touch window 1600 px wide or more). ~~tap right two thirds~~, ~~tap left third~~: removed 2026-10-29 (`AMENDMENTS-PRESENTER-NAV.md` sections 5.1 and 7; mocks `design/screens/presenter/stage-and-bar.md` "Navigation").
 - Blank: B or `.` (clickers) or [Blank]. Timer T, Picker P, Grid G, Fullscreen F, Help H or ?, Sound S, Strokes R, Romanization Shift+R, Close Esc (Esc with nothing open = Exit confirm).
 - Start: one tap unlocks everything that needs a gesture (sound, fullscreen, wake lock, landscape).
 - Console [[ Open presenter ]] -> new tab at `app.hangulroute.com/present#d=…` (ids and options only); the fragment is read and removed from the address bar before anything is drawn; names follow by message, never by URL.
