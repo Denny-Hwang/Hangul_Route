@@ -1,0 +1,1635 @@
+{
+  "id": "episode:stage4-life-v2",
+  "stage": "stage4",
+  "theme": "life",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Snack Bar Talk",
+  "subtitleEn": "Order at a snack bar, pay and thank the server.",
+  "hoyaIntroEn": "Tteokbokki and gimbap! Let us order at the snack bar.",
+  "order": 2,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-life-v2-q1",
+      "titleEn": "What Can I Get You?",
+      "blurbEn": "Order food at a snack bar and say thank you.",
+      "teaserEn": "Next: ask how much it is.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Snack Bar",
+          "hoyaLineEn": "Mmm, it smells good in here! Let us order at the snack bar.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "What Would You Like?",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "뭐 드릴까요?",
+                          "romanization": "mwo deurilkkayo",
+                          "en": "What can I get you?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "떡볶이 주세요.",
+                          "romanization": "tteokbokki juseyo",
+                          "en": "Tteokbokki, please."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The server asks what you want. Name the food, then add please."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "물 드릴까요?",
+                          "romanization": "mul deurilkkayo",
+                          "en": "Would you like some water?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "감사합니다.",
+                          "romanization": "gamsahamnida",
+                          "en": "Thank you."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Deurilkkayo offers something: shall I get you this? A thank-you says yes."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Order at the Counter",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-life-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-life-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-life-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Ordered!",
+          "hoyaLineEn": "You ordered at the snack bar. Great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-life-v2-q1-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "분식집",
+              "romanization": "bunsikjip",
+              "en": "At the snack bar"
+            },
+            "partner": {
+              "ko": "직원",
+              "romanization": "jigwon",
+              "en": "server"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "뭐 드릴까요?",
+                  "romanization": "mwo deurilkkayo",
+                  "en": "What can I get you?"
+                },
+                "replies": [
+                  {
+                    "id": "tteokbokki",
+                    "text": {
+                      "ko": "떡볶이 주세요.",
+                      "romanization": "tteokbokki juseyo",
+                      "en": "Tteokbokki, please."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. The server asks what you want, so name a food."
+                  },
+                  {
+                    "id": "ramyeon",
+                    "text": {
+                      "ko": "라면 주세요.",
+                      "romanization": "ramyeon juseyo",
+                      "en": "Ramyeon, please."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "물 드릴까요?",
+                  "romanization": "mul deurilkkayo",
+                  "en": "Would you like some water?"
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you ate. The server is offering water."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "not-spicy",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about spice. The server asks if you would like water."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "맛이 어때요?",
+                  "romanization": "masi eottaeyo",
+                  "en": "How does it taste?"
+                },
+                "replies": [
+                  {
+                    "id": "mwo",
+                    "text": {
+                      "ko": "뭐 드릴까요?",
+                      "romanization": "mwo deurilkkayo",
+                      "en": "What can I get you?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the server’s question. Tell the server how it tastes."
+                  },
+                  {
+                    "id": "drank",
+                    "text": {
+                      "ko": "네, 마셨어요.",
+                      "romanization": "ne masyeosseoyo",
+                      "en": "Yes, I drank it."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you drank something. The server asks how the food tastes."
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "매워요?",
+                  "romanization": "maewoyo",
+                  "en": "Is it spicy?"
+                },
+                "replies": [
+                  {
+                    "id": "not-spicy",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "spicy",
+                    "text": {
+                      "ko": "네, 매워요.",
+                      "romanization": "ne maewoyo",
+                      "en": "Yes, it is spicy."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "water",
+                    "text": {
+                      "ko": "물 드릴까요?",
+                      "romanization": "mul deurilkkayo",
+                      "en": "Would you like some water?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That offers water, as the server did. The server asks if it is spicy."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You ordered and told the server how it tastes. Enjoy your snack!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "___ 주세요.",
+                "romanization": "___ juseyo",
+                "en": "Tteokbokki, please."
+              },
+              "tiles": [
+                {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "stir-fried rice cakes"
+                },
+                {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice roll"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "뭐 ___?",
+                "romanization": "mwo ___",
+                "en": "What can I get you?"
+              },
+              "tiles": [
+                {
+                  "ko": "드릴까요",
+                  "romanization": "deurilkkayo",
+                  "en": "shall I get you"
+                },
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                },
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "is spicy"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "물 ___?",
+                "romanization": "mul ___",
+                "en": "Would you like some water?"
+              },
+              "tiles": [
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "is spicy"
+                },
+                {
+                  "ko": "감사합니다",
+                  "romanization": "gamsahamnida",
+                  "en": "thank you"
+                },
+                {
+                  "ko": "드릴까요",
+                  "romanization": "deurilkkayo",
+                  "en": "shall I get you"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "맛이 ___?",
+                "romanization": "masi ___",
+                "en": "How does it taste?"
+              },
+              "tiles": [
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                },
+                {
+                  "ko": "어때요",
+                  "romanization": "eottaeyo",
+                  "en": "how is it"
+                },
+                {
+                  "ko": "드릴까요",
+                  "romanization": "deurilkkayo",
+                  "en": "shall I get you"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-life-v2-q1-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "뭐 드릴까요?",
+                "romanization": "mwo deurilkkayo",
+                "en": "What can I get you?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "김밥 주세요.",
+                    "romanization": "gimbap juseyo",
+                    "en": "Gimbap, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 먹었어요.",
+                    "romanization": "ne meogeosseoyo",
+                    "en": "Yes, I ate."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "물 드릴까요?",
+                "romanization": "mul deurilkkayo",
+                "en": "Would you like some water?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "맛이 어때요?",
+                    "romanization": "masi eottaeyo",
+                    "en": "How does it taste?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 마셨어요.",
+                    "romanization": "ne masyeosseoyo",
+                    "en": "Yes, I drank it."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-life-v2-q2",
+      "titleEn": "How Much Is It?",
+      "blurbEn": "Ask the price, then pay at the counter.",
+      "teaserEn": "Next: thank the server for the meal.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Counter",
+          "hoyaLineEn": "Time to pay! Let us ask how much it is.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Prices in Won",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "떡볶이 얼마예요?",
+                          "romanization": "tteokbokki eolmayeyo",
+                          "en": "How much is the tteokbokki?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "삼천 원이에요.",
+                          "romanization": "samcheon wonieyo",
+                          "en": "It is 3,000 won."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the food, then ask how much. Samcheon won is 3,000 won."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "김밥 얼마예요?",
+                          "romanization": "gimbap eolmayeyo",
+                          "en": "How much is the gimbap?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "이천 원이에요.",
+                          "romanization": "icheon wonieyo",
+                          "en": "It is 2,000 won."
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "여기 있어요.",
+                          "romanization": "yeogi isseoyo",
+                          "en": "Here you are."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "감사합니다.",
+                          "romanization": "gamsahamnida",
+                          "en": "Thank you."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Icheon won is 2,000 won. Hand over the money with here you are."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pay at the Counter",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-life-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-life-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-life-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Paid!",
+          "hoyaLineEn": "You asked the price and paid. Nice work!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-life-v2-q2-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "분식집",
+              "romanization": "bunsikjip",
+              "en": "At the snack bar"
+            },
+            "partner": {
+              "ko": "직원",
+              "romanization": "jigwon",
+              "en": "server"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "뭐 드릴까요?",
+                  "romanization": "mwo deurilkkayo",
+                  "en": "What can I get you?"
+                },
+                "replies": [
+                  {
+                    "id": "price",
+                    "text": {
+                      "ko": "이천 원이에요.",
+                      "romanization": "icheon wonieyo",
+                      "en": "It is 2,000 won."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells a price. The server asks what you would like."
+                  },
+                  {
+                    "id": "tteokbokki",
+                    "text": {
+                      "ko": "떡볶이 주세요.",
+                      "romanization": "tteokbokki juseyo",
+                      "en": "Tteokbokki, please."
+                    },
+                    "kind": "natural",
+                    "next": "t2a"
+                  },
+                  {
+                    "id": "gimbap",
+                    "text": {
+                      "ko": "김밥 주세요.",
+                      "romanization": "gimbap juseyo",
+                      "en": "Gimbap, please."
+                    },
+                    "kind": "natural",
+                    "next": "t2b"
+                  }
+                ]
+              },
+              {
+                "id": "t2a",
+                "line": {
+                  "ko": "네, 떡볶이요.",
+                  "romanization": "ne tteokbokkiyo",
+                  "en": "Okay, tteokbokki."
+                },
+                "replies": [
+                  {
+                    "id": "how-much",
+                    "text": {
+                      "ko": "얼마예요?",
+                      "romanization": "eolmayeyo",
+                      "en": "How much is it?"
+                    },
+                    "kind": "natural",
+                    "next": "t3a"
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You have not eaten yet. Ask how much it is."
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Ask the price first."
+                  }
+                ]
+              },
+              {
+                "id": "t3a",
+                "line": {
+                  "ko": "삼천 원이에요.",
+                  "romanization": "samcheon wonieyo",
+                  "en": "It is 3,000 won."
+                },
+                "replies": [
+                  {
+                    "id": "mwo",
+                    "text": {
+                      "ko": "뭐 드릴까요?",
+                      "romanization": "mwo deurilkkayo",
+                      "en": "What can I get you?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the server’s question. Hand over the money: here you are."
+                  },
+                  {
+                    "id": "here",
+                    "text": {
+                      "ko": "여기 있어요.",
+                      "romanization": "yeogi isseoyo",
+                      "en": "Here you are."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "not-spicy",
+                    "text": {
+                      "ko": "아니요, 안 매워요.",
+                      "romanization": "aniyo an maewoyo",
+                      "en": "No, it is not spicy."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about spice. The server told you the price."
+                  }
+                ]
+              },
+              {
+                "id": "t2b",
+                "line": {
+                  "ko": "네, 김밥이요.",
+                  "romanization": "ne gimbabiyo",
+                  "en": "Okay, gimbap."
+                },
+                "replies": [
+                  {
+                    "id": "ate",
+                    "text": {
+                      "ko": "네, 먹었어요.",
+                      "romanization": "ne meogeosseoyo",
+                      "en": "Yes, I ate."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You have not eaten yet. Ask how much it is."
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Ask the price first."
+                  },
+                  {
+                    "id": "how-much",
+                    "text": {
+                      "ko": "얼마예요?",
+                      "romanization": "eolmayeyo",
+                      "en": "How much is it?"
+                    },
+                    "kind": "natural",
+                    "next": "t3b"
+                  }
+                ]
+              },
+              {
+                "id": "t3b",
+                "line": {
+                  "ko": "이천 원이에요.",
+                  "romanization": "icheon wonieyo",
+                  "en": "It is 2,000 won."
+                },
+                "replies": [
+                  {
+                    "id": "here",
+                    "text": {
+                      "ko": "여기 있어요.",
+                      "romanization": "yeogi isseoyo",
+                      "en": "Here you are."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You have not eaten yet. The server told you the price, so pay."
+                  },
+                  {
+                    "id": "mwo",
+                    "text": {
+                      "ko": "뭐 드릴까요?",
+                      "romanization": "mwo deurilkkayo",
+                      "en": "What can I get you?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the server’s question. Hand over the money: here you are."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "물 드릴까요?",
+                  "romanization": "mul deurilkkayo",
+                  "en": "Would you like some water?"
+                },
+                "replies": [
+                  {
+                    "id": "price",
+                    "text": {
+                      "ko": "삼천 원이에요.",
+                      "romanization": "samcheon wonieyo",
+                      "en": "It is 3,000 won."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells a price. The server asks if you would like water."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "how-much",
+                    "text": {
+                      "ko": "얼마예요?",
+                      "romanization": "eolmayeyo",
+                      "en": "How much is it?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You paid already. The server is offering water."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You ordered, asked the price and paid. Nice work!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-v2-q2-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "뭐 드릴까요?",
+                "romanization": "mwo deurilkkayo",
+                "en": "What can I get you?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "이천 원이에요.",
+                    "romanization": "icheon wonieyo",
+                    "en": "It is 2,000 won."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 먹었어요.",
+                    "romanization": "ne meogeosseoyo",
+                    "en": "Yes, I ate."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "라면 주세요.",
+                    "romanization": "ramyeon juseyo",
+                    "en": "Ramyeon, please."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "네, 라면이요.",
+                "romanization": "ne ramyeoniyo",
+                "en": "Okay, ramyeon."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "얼마예요?",
+                    "romanization": "eolmayeyo",
+                    "en": "How much is it?"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "삼천 원이에요.",
+                    "romanization": "samcheon wonieyo",
+                    "en": "It is 3,000 won."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "삼천 원이에요.",
+                "romanization": "samcheon wonieyo",
+                "en": "It is 3,000 won."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "뭐 드릴까요?",
+                    "romanization": "mwo deurilkkayo",
+                    "en": "What can I get you?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "여기 있어요.",
+                    "romanization": "yeogi isseoyo",
+                    "en": "Here you are."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "아니요, 안 매워요.",
+                    "romanization": "aniyo an maewoyo",
+                    "en": "No, it is not spicy."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Server",
+              "line": {
+                "ko": "맛이 어때요?",
+                "romanization": "masi eottaeyo",
+                "en": "How does it taste?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "맛있어요.",
+                    "romanization": "masisseoyo",
+                    "en": "It is tasty."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "이천 원이에요.",
+                    "romanization": "icheon wonieyo",
+                    "en": "It is 2,000 won."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 마셨어요.",
+                    "romanization": "ne masyeosseoyo",
+                    "en": "Yes, I drank it."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-life-v2-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "떡볶이 얼마예요?",
+                "romanization": "tteokbokki eolmayeyo",
+                "en": "How much is the tteokbokki?"
+              },
+              "distractors": [
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "여기 있어요.",
+                "romanization": "yeogi isseoyo",
+                "en": "Here you are."
+              },
+              "distractors": [
+                {
+                  "ko": "얼마예요",
+                  "romanization": "eolmayeyo",
+                  "en": "how much is it"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-life-v2-q3",
+      "titleEn": "Thanks for the Meal",
+      "blurbEn": "Read the set phrases for before and after you eat.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "The Food Is Here",
+          "hoyaLineEn": "Here comes the food! Let us read what people say before and after a meal.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Before and After",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "맛있게 드세요.",
+                          "romanization": "masitge deuseyo",
+                          "en": "Enjoy your meal."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "잘 먹겠습니다.",
+                          "romanization": "jal meokgetseumnida",
+                          "en": "I will eat well. (said before eating)"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Before eating, some people say this. Meokget looks ahead to the meal."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Server",
+                        "line": {
+                          "ko": "맛있게 드셨어요?",
+                          "romanization": "masitge deusyeosseoyo",
+                          "en": "Did you enjoy your meal?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 잘 먹었습니다.",
+                          "romanization": "ne jal meogeotseumnida",
+                          "en": "Yes, I ate well. (said after eating)"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "After eating, meogeot looks back on the meal, like meogeosseoyo."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Phrase",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-life-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Chat at the Table",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-life-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-life-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Read the Phrases!",
+          "hoyaLineEn": "Before and after the meal, you picked the right words. Great job!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-life-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "맛있게 드세요.",
+                "romanization": "masitge deuseyo",
+                "en": "Enjoy your meal."
+              },
+              "distractors": [
+                {
+                  "ko": "드셨어요",
+                  "romanization": "deusyeosseoyo",
+                  "en": "ate (said to show respect)"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "잘 먹겠습니다.",
+                "romanization": "jal meokgetseumnida",
+                "en": "I will eat well. (said before eating)"
+              },
+              "distractors": [
+                {
+                  "ko": "먹었습니다",
+                  "romanization": "meogeotseumnida",
+                  "en": "ate"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "김치가 맛있어요.",
+                "romanization": "gimchiga masisseoyo",
+                "en": "The kimchi is tasty."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "네, 잘 먹었습니다.",
+                "romanization": "ne jal meogeotseumnida",
+                "en": "Yes, I ate well. (said after eating)"
+              },
+              "distractors": [
+                {
+                  "ko": "먹겠습니다",
+                  "romanization": "meokgetseumnida",
+                  "en": "will eat"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-life-v2-q3-apply",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "분식집",
+              "romanization": "bunsikjip",
+              "en": "At the snack bar"
+            },
+            "partner": {
+              "ko": "직원",
+              "romanization": "jigwon",
+              "en": "server"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "여기 있어요. 맛있게 드세요.",
+                  "romanization": "yeogi isseoyo masitge deuseyo",
+                  "en": "Here you are. Enjoy your meal."
+                },
+                "replies": [
+                  {
+                    "id": "after",
+                    "text": {
+                      "ko": "잘 먹었습니다.",
+                      "romanization": "jal meogeotseumnida",
+                      "en": "I ate well. (said after eating)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That one is for after the meal. The food just came, so pick the phrase for before eating."
+                  },
+                  {
+                    "id": "before",
+                    "text": {
+                      "ko": "잘 먹겠습니다.",
+                      "romanization": "jal meokgetseumnida",
+                      "en": "I will eat well. (said before eating)"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "mwo",
+                    "text": {
+                      "ko": "뭐 드릴까요?",
+                      "romanization": "mwo deurilkkayo",
+                      "en": "What can I get you?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the server’s question. The food is here, so pick a thank-you for the meal."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "맛이 어때요?",
+                  "romanization": "masi eottaeyo",
+                  "en": "How does it taste?"
+                },
+                "replies": [
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "맛있어요.",
+                      "romanization": "masisseoyo",
+                      "en": "It is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "here",
+                    "text": {
+                      "ko": "여기 있어요.",
+                      "romanization": "yeogi isseoyo",
+                      "en": "Here you are."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is for handing something over. The server asks how it tastes."
+                  },
+                  {
+                    "id": "gimbap",
+                    "text": {
+                      "ko": "김밥이 맛있어요.",
+                      "romanization": "gimbabi masisseoyo",
+                      "en": "The gimbap is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "물 드릴까요?",
+                  "romanization": "mul deurilkkayo",
+                  "en": "Would you like some water?"
+                },
+                "replies": [
+                  {
+                    "id": "after",
+                    "text": {
+                      "ko": "잘 먹었습니다.",
+                      "romanization": "jal meogeotseumnida",
+                      "en": "I ate well. (said after eating)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You are still eating. The server offers water, so say thank you."
+                  },
+                  {
+                    "id": "price",
+                    "text": {
+                      "ko": "이천 원이에요.",
+                      "romanization": "icheon wonieyo",
+                      "en": "It is 2,000 won."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That tells a price. The server asks if you would like water."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "맛있게 드셨어요?",
+                  "romanization": "masitge deusyeosseoyo",
+                  "en": "Did you enjoy your meal?"
+                },
+                "replies": [
+                  {
+                    "id": "before",
+                    "text": {
+                      "ko": "잘 먹겠습니다.",
+                      "romanization": "jal meokgetseumnida",
+                      "en": "I will eat well. (said before eating)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That one is for before the meal. You have eaten, so pick the phrase for after eating."
+                  },
+                  {
+                    "id": "after",
+                    "text": {
+                      "ko": "네, 잘 먹었습니다.",
+                      "romanization": "ne jal meogeotseumnida",
+                      "en": "Yes, I ate well. (said after eating)"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "tteokbokki",
+                    "text": {
+                      "ko": "떡볶이 주세요.",
+                      "romanization": "tteokbokki juseyo",
+                      "en": "Tteokbokki, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You have finished eating. The server asks if you enjoyed it."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You thanked the server before and after the meal. Well done!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-life-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "잘 ___.",
+                "romanization": "jal ___",
+                "en": "I will eat well. (said before eating)"
+              },
+              "tiles": [
+                {
+                  "ko": "먹었습니다",
+                  "romanization": "meogeotseumnida",
+                  "en": "ate"
+                },
+                {
+                  "ko": "먹겠습니다",
+                  "romanization": "meokgetseumnida",
+                  "en": "will eat"
+                },
+                {
+                  "ko": "드세요",
+                  "romanization": "deuseyo",
+                  "en": "please eat (said to show respect)"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "c2",
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "김밥___ 맛있어요.",
+                "romanization": "gimbap___ masisseoyo",
+                "en": "The gimbap is tasty."
+              },
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "gimbabi masisseoyo"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "A {ko:분식집} is a snack bar: a place that sells simple dishes such as noodles, bread and dumplings. {ko:분식} itself means food made from flour and the like.",
+      "sources": [
+        {
+          "title": "분식집 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B6%84%EC%8B%9D%EC%A7%91",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘분식-집(粉食집)’ 「명사」: ‘국수류, 빵, 만두 따위의 간단하게 먹을 수 있는 음식을 파는 식당.’"
+        },
+        {
+          "title": "분식 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B6%84%EC%8B%9D",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘분식4(粉食)’ 「명사」: ‘밀가루 따위로 만든 음식을 먹음. 또는 그 음식.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): both stdict result pages opened; 분식-집 (粉食집) is defined as a 식당 selling simple dishes such as noodles, bread and dumplings, and 분식4 (粉食) as food made from flour and the like (or eating it). The note says no more: it names the three example dishes the definition names and makes no claim about prices, opening dates, who runs such places or where the word came from beyond its two parts as the dictionary shows them.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read; the quotes are on them; 'snack bar' is the English the cell uses for the scene, and 'a place that sells' paraphrases 식당; 'and the like' keeps 따위. The cell's dialogues order tteokbokki and gimbap there: that is the drawn scene, not a claim of the note. Institution name as of the access date: 국립국어원 (unchanged). No brand, shop, person or price.\nreviser (2026-10-30): 'a small restaurant' became 'a place': the definition does not say small.\npass 3 (third pass after revision, 2026-10-30): {ko:분식집} and {ko:분식} romanize as bunsikjip and bunsik with the converter; the es and ko glosses say the same and add nothing. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:떡볶이} is stick rice cake cut into pieces and stir-fried with vegetables and a sauce. The sauce can be soy sauce or red pepper paste.",
+      "sources": [
+        {
+          "title": "떡볶이 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%96%A1%EB%B3%B6%EC%9D%B4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘떡-볶이’ 「명사」: ‘가래떡을 적당한 크기로 잘라 여러 가지 채소를 넣고 양념을 하여 볶은 음식. 양념은 간장으로 하기도 하고, 고추장으로 하기도 한다.’"
+        },
+        {
+          "title": "가래떡 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EA%B0%80%EB%9E%98%EB%96%A1",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘가래-떡’ 「명사」: ‘가는 원통형으로 길게 뽑아 일정한 길이로 자른 흰떡.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): both stdict result pages opened; 떡-볶이 is 가래떡 cut to size and stir-fried with vegetables and seasoning, the seasoning being soy sauce (간장) or red pepper paste (고추장); 가래떡 is the long, thin, cylinder-shaped white rice cake cut to length, so 'stick rice cake' glosses it.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read and the quotes found. Finding: a draft said 'so not every kind is spicy', an inference the dictionary does not state; the reviser removed it. The note makes no claim about the dish's origin, its history, a region, a brand or a price. Institution name as of the access date: 국립국어원 (unchanged).\nreviser (2026-10-30): the inference above dropped; 'seasoning' rendered as 'a sauce' (양념), with the two named kinds kept.\npass 3 (third pass after revision, 2026-10-30): {ko:떡볶이} romanizes as tteokbokki; es and ko say the same (ko keeps 간장 and 고추장, the dictionary's own words). Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "Some people say {ko:잘 먹겠습니다} (I will eat well) at the table, before they pick up the spoon. No rule settles whether saying it is right or wrong.",
+      "sources": [
+        {
+          "title": "Online Ganada question and answer on the meal phrase, titled 잘먹겠습니다",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&qna_seq=326221&pageIndex=1",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Answer [식사 인사] of 2026-01-13: “이에 대해서 규정으로 정해 놓은 것은 없습니다. 따라서 무엇이 맞고 틀리다고 말씀드리기는 어렵습니다. 제시하신 상황에서 ‘잘 먹겠습니다’처럼 쓰는 것이 틀렸다고 볼 만한 근거는 딱히 없어 보입니다.”"
+        },
+        {
+          "title": "밥상 앞 “잘 먹겠습니다”, 밥값 내달란 말로 들리시나요? [넷만세]",
+          "publisher": "서울신문 (Seoul Shinmun), article by 이정수, 2023-06-22",
+          "url": "https://www.seoul.co.kr/news/2023/06/22/20230622500197",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Lead paragraph: “밥이 차려진 식탁 앞에서 숟가락을 들기 전 하는 말 ‘잘 먹겠습니다’. 사람에 따라서 자주 쓰기도 하는 이 말이 …” and closing paragraph: “우리말에서 ‘잘 먹겠습니다’라는 표현이 자주 쓰이게 된 시기나 유래에 대해서는 정확히 알려진 바 없다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): both pages opened. The newspaper's lead calls the phrase what is said at a laid table before lifting the spoon, used often by some people (사람에 따라서), and reports views that differ on when it fits; the NIKL Online Ganada answer of 2026-01-13 says no rule governs it, so right or wrong is hard to say, and finds no clear ground to call it wrong. These are the two sources the Stage 6 Food note n2 cites for the same phrase; this note keeps its hedge.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read and the quotes found. 'Some people' (not 'many' or 'Koreans'), 'before they pick up the spoon' (숟가락을 들기 전) and 'No rule settles' (규정으로 정해 놓은 것은 없습니다) say no more than the sources. No claim about origin, about who pays, about the after-meal phrase or about everyone. The cell models 잘 먹었습니다 after the meal in its dialogues only, as one polite reply to the server's question; the note claims nothing about it. Institution name as of the access date: 국립국어원 (unchanged); the newspaper is a second source, the allowlisted one is first.\nreviser (2026-10-30): no change.\npass 3 (third pass, 2026-10-30): {ko:잘 먹겠습니다} romanizes as jal meokgetseumnida with the converter; es and ko keep 'some people' and the no-rule hedge. Outcome: confirmed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, three checker passes (language with the F-CNT-002 converter and polite register; culture and facts against each source; learning design), a reviser and a third pass. The passes ran one after another in the authoring session, which had no tool to start separate reviewer agents. No native-speaker or expert review is claimed.",
+      "Language: the server speaks polite 해요체 with the humble offer 드릴까요 and the honorific 드세요 / 드셨어요; Hoya answers in 해요체 and uses the set phrases in 합쇼체 (감사합니다, 잘 먹겠습니다, 잘 먹었습니다). Every romanization matches the converter.",
+      "Language findings fixed by the reviser: q1 Practice t1 offered 김밥 주세요, and the server then asks 매워요? (gimbap is seldom spicy), so the second order is 라면 주세요; 드세요 and 드셨어요 are glossed 'said to show respect', not 'polite'; why lines hold no Korean tokens, so es holds no Hangul; es 'Que aproveche' is 'Buen provecho'; the q3 reward 'Well Said!' is 'You Read the Phrases!'.",
+      "Culture and facts: three notes, each with two sources and NIKL first (표준국어대사전 분식집 and 분식4; 떡볶이 and 가래떡; Online Ganada on 잘먹겠습니다 with the Seoul Shinmun article second, the pair of the Stage 6 Food note n2). Fixed: n1 'a small restaurant' became 'a place' (the definition does not say small); n2 dropped 'so not every kind is spicy', an inference.",
+      "Culture and facts (cont.): n3 keeps the Stage 6 hedge (some people; no rule settles it) and says nothing about the after-meal phrase, its origin or who pays. Names as of 2026-10-30. The snack bar is generic, the server named by role (직원), prices round practice amounts (이천 원, 삼천 원); no brand, shop, person, UNESCO claim or price of this app.",
+      "Learning design: one new grammar point a quest (the offer 드릴까요; prices with 얼마예요 and 원이에요; -겠- against -었- in the set phrases); U-3 holds (4 new Discover lines in q1 and q3; q2 by its new words 얼마예요, 원, the number set and 여기).",
+      "Learning design (cont.): lesson-recycle 6 of 11, 5 of 12 and 2 of 6 Practice and Check items from earlier quests (Volume 1's 맛이 어때요, 맛있어요, 매워요, 안 매워요; Stage 3's 김치가 / 김밥이 맛있어요; Stage 4 Letters' 감사합니다). The retired pat:samcheon-wonieyo and pat:icheon-wonieyo are not taught again: the q2 Check builds 떡볶이 얼마예요? and 여기 있어요.",
+      "Learning design (cont.): triples Role Play / Cloze Pick / Tap to Respond, Role Play / Tap to Respond / Sentence Builder, Sentence Builder / Role Play / Cloze Pick; none is a Volume 1 triple and the three Checks differ. Every Role Play scene has 4 turns on every way (q1 4 ways, q2 2, q3 2) and every way ends on its closing line; off, each plays Tap to Respond on its main path.",
+      "Learning design (cont.): no Dictation. Sound changes are heard, never typed: 떡볶이 [떡뽀끼], 감사합니다 [감사함니다], 맛있게 [마싣께], 먹겠습니다 [먹껟씀니다]. 먹겠습니다 and 먹었습니다 do not sound alike, and no heard round offers a same-sounding pair.",
+      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0)."
+    ]
+  },
+  "contentVer": 1
+}

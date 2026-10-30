@@ -190,6 +190,8 @@ const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
+  // F-CURR-002 row CM-40: the Volume 2 of a cell (none until a Volume 2 content row ships).
+  volumes: generated.volumes,
   lessonQuests: [...handLessonQuests, ...generated.quests],
   stories: GENERATED_STORIES,
   storyShelf: STORY_SHELF,

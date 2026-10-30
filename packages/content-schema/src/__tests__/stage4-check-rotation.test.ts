@@ -75,7 +75,8 @@ const repeated = (list: readonly string[]): string[] => list.filter((x, i) => li
 
 describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => {
   it('every section 9.3 rule passes with zero findings for Stage 4, the frozen ids included', () => {
-    const findings = lintCurriculum(tree, { today: '2026-10-23' }).filter(
+    // Today, so a source accessed on a later content row's day (Volume 2, row CM-43 S4) is not in the future.
+    const findings = lintCurriculum(tree, { today: new Date().toISOString().slice(0, 10) }).filter(
       (f) => f.file.startsWith('content/episodes/stage-4/') || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
     );
     expect(findings.map((f) => `${f.rule} ${f.severity} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
@@ -173,7 +174,18 @@ describe('Stage 4 review-item ids (F-CURR-002 section 4.2, row CM-3A S4)', () =>
     // teaches each turn and sentence as a new item (157 items) breaks S-b on 4 of 5 seeds. Retired items have no row.
     const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
     const stage4 = built.items.filter((i) => firstCell(i.cells)?.startsWith('episode:stage4-') === true);
-    expect(stage4.length).toBeLessThanOrEqual(123);
+    // Volume 2 is its own load (row CM-43 S4, next test): the gate above is the Volume 1 route's.
+    const volume1 = stage4.filter((i) => !/-v[0-9]+$/.test(firstCell(i.cells) ?? ''));
+    expect(volume1.length).toBeLessThanOrEqual(123);
+  });
+
+  it('keeps the Volume 2 load: Stage 4 Food Volume 2 first teaches no more items than the largest Volume 1 Stage 4 cell (30), re-asking Volume 1 for the rest (row CM-43 S4)', () => {
+    const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
+    const food2 = built.items.filter((i) => firstCell(i.cells) === 'episode:stage4-life-v2');
+    // The engine shows an item whose only source is Volume 2 only with `volumes` on (row CM-13), so the Volume 1 load
+    // above, which the 60-day simulation holds, is unchanged.
+    expect(food2.length).toBeGreaterThan(0);
+    expect(food2.length).toBeLessThanOrEqual(30);
   });
 
   it('a removed item is retired: in no row, kept in the retired table for reports', () => {
