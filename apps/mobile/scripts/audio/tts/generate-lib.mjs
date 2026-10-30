@@ -35,7 +35,7 @@ export const BUDGET_USD = 50;
  */
 export const PILOT_PROBE_WORDS = ['국물', '신라', '같이', '좋다'];
 export const PILOT_CONTENT_WORDS = ['박물관', '설날', '한글날', '집현전', '학교', '부엌'];
-export const PILOT_SENTENCES = ['새해 복 많이 받으세요.', '안녕히 가세요.', '이거 얼마예요?', '사과 한 개 주세요.', '생일에 케이크를 먹었어요.', '설날은 음력 새해 첫날이에요.'];
+export const PILOT_SENTENCES = ['새해 복 많이 받으세요.', '안녕히 가세요.', '이거 얼마예요?', '사과 세 개 주세요.', '생일에 케이크를 먹었어요.', '설날은 음력 새해 첫날이에요.'];
 export const PILOT_PACK = 'pilot';
 
 export const USAGE =
