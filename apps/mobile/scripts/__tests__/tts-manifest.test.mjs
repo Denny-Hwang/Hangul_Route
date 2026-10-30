@@ -246,14 +246,49 @@ describe('kinds and rates (AC-B2)', () => {
     expect(kindOfText('네.')).toBe('sentence');
   });
 
+  it('an unpunctuated story title or line of several words is a sentence for QA; a short phrase stays a word', () => {
+    expect(kindOfText('판소리로 듣는 흥부와 놀부, 토끼와 자라')).toBe('sentence');
+    expect(kindOfText('장영실과 스스로 울리는 물시계, 자격루')).toBe('sentence');
+    expect(kindOfText('간을 육지에 두고 왔습니다')).toBe('sentence');
+    expect(kindOfText('새 동아줄을 내려 주세요')).toBe('sentence');
+    expect(kindOfText('흥부와 놀부')).toBe('word');
+    expect(kindOfText('토끼의 간')).toBe('word');
+    expect(kindOfText('안녕하세요')).toBe('word');
+    expect(kindOfText('대한민국임시정부수립')).toBe('word');
+  });
+
   it('rates: syllables and names 0.85, words and sentences 0.9, narration 1.0', () => {
     expect(KIND_RATES).toEqual({ 'jamo-sound': 0.85, 'jamo-name': 0.85, syllable: 0.85, word: 0.9, sentence: 0.9, narration: 1.0 });
     expect(Object.keys(KIND_RATES)).toEqual(CLIP_KINDS);
   });
 
-  it('a text a source marks as narration is a narration row at rate 1.0', () => {
-    const { rows } = build([occ('옛날 옛적에 호랑이가 살았어요.', 'stories', { kind: 'narration' })]);
-    expect(rows[0]).toMatchObject({ kind: 'narration', rate: 1.0 });
+  it('a narrator line is taught Korean: a sentence at 0.9, never narration', () => {
+    const { rows } = build([occ('옛날 옛적에 호랑이가 살았어요.', 'stories', { kind: 'narration', speaker: 'narrator' })]);
+    expect(rows[0]).toMatchObject({ kind: 'sentence', rate: 0.9 });
+  });
+});
+
+describe('notices: clips the summary lists for a follow-up row', () => {
+  it('a vocabulary clip that other packs speak too is listed with the say ref they look up (AC-6 maps it)', () => {
+    const result = build([
+      occ('그림자', 'vocab', { audioRef: 'audio/vocab/geurimja.mp3' }),
+      occ('그림자', 'stories'),
+      occ('그림자', 'review'),
+      occ('나무', 'vocab', { audioRef: 'audio/vocab/namu.mp3' }),
+    ]);
+    expect(result.notices.vocabRefShared).toEqual([
+      { text: '그림자', ref: 'audio/vocab/geurimja.mp3', sayRef: sayRef('그림자'), packs: ['review', 'stories'] },
+    ]);
+    const lines = summarizeManifest(result).join('\n');
+    expect(lines).toContain('vocabulary clips also spoken outside vocab (AC-6 maps the say ref to the vocabulary file): 1');
+    expect(lines).toContain(`"그림자" audio/vocab/geurimja.mp3 <- ${sayRef('그림자')} (review, stories)`);
+  });
+
+  it('a text that is both a jamo clip and a say clip is listed (generated twice on purpose)', () => {
+    const result = buildManifest({ jamo: jamoVoices(), occurrences: [occ('가', 'stage1'), occ('나무', 'stage2')] });
+    const giyeok = result.rows.find((r) => r.ref === 'audio/jamo/giyeok.mp3');
+    expect(result.notices.jamoTextAlsoSay).toEqual([{ text: giyeok.text, jamoRef: giyeok.ref, ref: sayRef('가'), pack: 'stage1' }]);
+    expect(summarizeManifest(result).join('\n')).toContain('texts that are both a jamo clip and a say clip (generated twice on purpose): 1: "가"');
   });
 });
 

@@ -7,7 +7,10 @@
 //
 // - `say`: the Hangul respelling sent to the engine. It changes what is sent, never what the screen shows.
 // - `ipa`: optional, for the rare case a respelling fails (an SSML <phoneme> in the generator, AC-3).
-// - `reason`, `engine`, `voice`: why the override exists and the engine and voice it was needed for.
+// - `reason`, `engine`, `voice`: why the override exists and the engine and voice it was needed for. They are a
+//   record, not a filter: the manifest has one `say` per row, so an override applies to every engine and voice.
+//   During the AC-5 pilot, compare the candidates with no overrides (or the same overrides for all of them) so the
+//   blind comparison stays fair; once tts-lock.json names the vendor, overrides follow that one voice.
 // - `accept`: optional transcripts the two-pass QA (AC-4, section 9) accepts besides the text itself, for example the
 //   pronounced form 궁물 for 국물.
 //
