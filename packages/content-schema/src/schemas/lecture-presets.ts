@@ -237,9 +237,14 @@ export function fillToLength(candidates: readonly LectureBlock[], minutes: numbe
 
 // ---- route helpers ------------------------------------------------------------------------------
 
-/** Route quests (section 4.2): lesson quests only, playable only, in route order. */
+/**
+ * Route quests (section 4.2): lesson quests only, playable only, in route order. The route is each cell's first volume
+ * (F-CURR-002 row CM-40: a later volume adds no route day), so a later volume's quests are never a preset's next lesson;
+ * the chooser lists them while `volumes` is on (row CM-41 S4 ships the first one).
+ */
 function routeQuests(catalog: Catalog): RouteQuest[] {
-  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable);
+  const firstVolumes = new Set(catalog.cells.map((c) => c.episodeId));
+  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable && firstVolumes.has(q.episodeId));
 }
 
 const stageNumberOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
