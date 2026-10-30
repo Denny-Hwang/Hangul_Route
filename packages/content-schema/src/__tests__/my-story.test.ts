@@ -46,7 +46,8 @@ const messages = (schema: { safeParse: (v: unknown) => { success: boolean; error
 describe('the my-story kind (additive)', () => {
   it('is the last kind; every older kind still parses', () => {
     expect(MinigameKindSchema.options.at(-1)).toBe('my-story');
-    expect(MinigameKindSchema.options).toHaveLength(22);
+    // 21, then cloze-pick, story-order, role-play and hidden-heritage (rows CM-30, CM-34, CM-35, CM-36), then my-story.
+    expect(MinigameKindSchema.options).toHaveLength(26);
     for (const kind of ['write-frame', 'type-hangul', 'listen-pick', 'voice-echo']) expect(MinigameKindSchema.safeParse(kind).success).toBe(true);
   });
 

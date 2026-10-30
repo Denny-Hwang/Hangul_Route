@@ -842,7 +842,7 @@ Every format is reading, listening or writing. None records or measures speech. 
 - No game kind may be used for more than 40% of a stage's Checks.
 - From Stage 2 on, every Check has at least 1 read-meaning or produce round.
 - No two adjacent quests share the same Practice, Apply and Check triple. Adjacent means next to each other in one cell, which is how the lint reads it (it compares a cell's quests in order). A cell boundary is not adjacency: every shipped cell opens from the Journey (F-ROUTE-001), so a learner meets the cells in any order (clarified in row CM-3A S3, where rites q3 and nature q1 both play Sentence Builder, Listen & Pick and Cloze Pick).
-- The rule is an **error from day one** for files with `volume` ≥ 2 and for `content/packs/`. For Volume 1 it warns until the re-authoring rows (CM-3A) and becomes an error in CM-3B.
+- The rule is an **error from day one** for files with `volume` ≥ 2 and for `content/packs/`. For Volume 1 it warns until the re-authoring rows (CM-3A) and becomes an error in CM-3B (done: see the CM-3B decision record in section 9.3).
 
 Default Checks by stage:
 
@@ -1256,6 +1256,11 @@ New rules live in `packages/content-schema/src/lesson-lint.ts` and run in `valid
 | `review-copy` | No `%` and no "n of m" or "n/m" patterns in learner review strings; no age words, speaking-UI words or emoji in new copy |
 | `freq-coverage` (report only) | Share of taught words on the NIKL grade-A list. The list is used at build time only and never bundled; its licence is checked before it is committed (assumption 4) |
 | `story-coverage` (report only) | Section 4.7 |
+
+**Decision record (row CM-3B, 2026-10-29).**
+- **The switch.** `STRICT_TIERS` in `lesson-lint.ts` now holds `volume1`, so every finding of this section on a Volume 1 cell (`content/episodes/stage-<n>/<theme>.json`, and a Stage 1 item of the frozen review-item table) is an error in `validate-content.mjs`, as it is for Volume 2, packs and new stories. Before the switch, main 524961dae had 109 Volume 1 warnings: 103 `lesson-check-variety` in Stages 2, 3, 4, 6 and 7 and 6 `culture-source`. Rows CM-3A (S2, S3, S4, S6, S7) and CM-3C clear them: with all six merged, Volume 1 has no finding for any rule. No rule was loosened and no finding was silenced.
+- **What stays.** A shipped story (`SHIPPED_STORY_IDS`) still warns, because this row covers Volume 1 only; the shipped stories have no finding today. The rules that read only Volume 2 and packs (`lesson-recycle`, `lesson-culture-coverage`, the strict lesson rules, the overlay copy of new entries) still do not read Volume 1. A Volume 1 file that is not a lesson body is still reported by the cell lint of F-CURR-001 section 5 (`lesson-schema`).
+- **Tests.** For each rule that reads Volume 1, the fail fixture in `content/fixtures/curriculum-lint/` now expects its Volume 1 rows as errors. A test checks that every fixture row outside a shipped story is an error. The real-content test checks that no Volume 1 cell has a finding. The `validate-content` test checks that a Volume 1 cell whose Checks all play one game fails.
 
 ## 10. Bundle and offline budget
 

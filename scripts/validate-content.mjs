@@ -21,9 +21,9 @@
 //   - F-CURR-002 §9.3 (row CM-7): lintCurriculum of the same module over the whole tree, for
 //     lesson cells of every volume, content/packs/** and content/stories/*.json, and review-copy
 //     over packages/i18n/src/messages/<locale>/learner.ts when the root has them. A finding is an
-//     error for a Volume 2 cell (`volume` >= 2 or `<theme>.v<k>.json`), a pack file or a story
-//     that is not in SHIPPED_STORY_IDS, and a warning for Volume 1 cells and shipped stories
-//     (row CM-3B makes those errors). Each rule that reports prints its description once, for
+//     error for a Volume 1 cell (since row CM-3B), a Volume 2 cell (`volume` >= 2 or
+//     `<theme>.v<k>.json`), a pack file or a story that is not in SHIPPED_STORY_IDS, and a
+//     warning for a shipped story. Each rule that reports prints its description once, for
 //     MAR, and culture-source always does (its description asks MAR to check institution names
 //     as of the access date). The report-only rules print one line each (`--reports` for
 //     details); freq-coverage reads the NIKL grade-A list from HANGUL_ROUTE_NIKL_GRADE_A, a local
@@ -259,7 +259,7 @@ for (const file of files) {
 violations.push(...checkPlacementTree(parsedByRel));
 
 // F-CURR-001 section 5: the lesson rules of every lesson cell file. F-CURR-002 §9.3: the rules for
-// Volume 2 cells, pack levels and new stories (errors), and for Volume 1 and shipped stories (warnings).
+// Volume 1 cells (row CM-3B), Volume 2 cells, pack levels and new stories (errors), and for shipped stories (warnings).
 const lessonFiles = [...parsedByRel.keys()].filter((rel) => LESSON_FILE.test(rel));
 const curriculumFiles = [...parsedByRel.keys()].filter((rel) => CURRICULUM_FILE.test(rel));
 const reviewMessageFiles = REVIEW_LOCALES.map((locale) => `packages/i18n/src/messages/${locale}/learner.ts`).filter((rel) =>

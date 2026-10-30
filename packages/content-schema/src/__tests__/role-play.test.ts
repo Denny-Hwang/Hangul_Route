@@ -31,7 +31,8 @@ const turn = (scene: RolePlayScene, id: string) => scene.nodes.find((n) => n.id 
 
 describe('Role Play scene (F-CURR-002 section 7.1 F6, row CM-35)', () => {
   it('is a new kind, added after every shipped one', () => {
-    expect(MinigameKindSchema.options.at(-1)).toBe('role-play');
+    // Additive: after story-order (row CM-34), before the kinds later rows append (hidden-heritage, my-story).
+    expect(MinigameKindSchema.options[MinigameKindSchema.options.indexOf('story-order') + 1]).toBe('role-play');
   });
 
   it('parses the library fixture: 4 turns, two ways through it, each ending at the closing line', () => {

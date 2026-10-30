@@ -48,7 +48,8 @@ const issues = (value: unknown): string[] => {
 
 describe('the hidden-heritage kind (row CM-36)', () => {
   it('is added at the end of the kind list, after every kind that shipped', () => {
-    expect(MinigameKindSchema.options.at(-1)).toBe('hidden-heritage');
+    // Additive: after role-play (row CM-35), before the kinds later rows append (my-story, row CM-38).
+    expect(MinigameKindSchema.options[MinigameKindSchema.options.indexOf('role-play') + 1]).toBe('hidden-heritage');
     expect(MinigameKindSchema.options.indexOf('write-frame')).toBeLessThan(MinigameKindSchema.options.indexOf('hidden-heritage'));
   });
 

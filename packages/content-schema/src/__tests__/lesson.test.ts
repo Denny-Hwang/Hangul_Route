@@ -161,9 +161,10 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');
     expect(messages(s3)).toEqual([]);
-    const s4 = lessonCell('stage4') as Json;
-    s4.quests[0] = lessonQuest('stage4', 'letters', 1, 'order-it');
-    expect(messages(s4)).toEqual(['quests.0.steps.4.minigameKind: a stage4 Check plays listen-pick, not order-it']);
+    // Stage 6's rotation (row CM-3A S6) still has no Sentence Builder Check.
+    const s6 = lessonCell('stage6') as Json;
+    s6.quests[0] = lessonQuest('stage6', 'letters', 1, 'order-it');
+    expect(messages(s6)).toEqual(['quests.0.steps.4.minigameKind: a stage6 Check plays listen-pick or realia-read or cloze-pick or type-hangul, not order-it']);
 
     const three = lessonCell() as Json;
     three.quests[0].scopes[2].rounds.push(clone(three.quests[0].scopes[2].rounds[0]));

@@ -113,6 +113,20 @@ async function traceWord(page: Page, word: string, romanization: string): Promis
   }
 }
 
+/** Sentence Builder as a Check (no round counter, no Skip; row CM-3A S3's Stage 3 Check): build each round by its tiles. */
+async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const tiles of rounds) {
+    const tray = page.getByTestId('sentence-builder-tray');
+    for (const name of tiles) {
+      await page.waitForTimeout(120);
+      await tray.getByRole('button', { name, exact: true }).click();
+    }
+    await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+    await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  }
+}
+
 /**
  * A Stage 7 Cloze Pick Check (F-CURR-002 row CM-3A S7). `game.cloze-pick` ships at built-in pct 0, so the release
  * build plays its Listen & Pick fallback in the text prompt mode (the sentence with its gap and its meaning, the same

@@ -217,9 +217,11 @@ function clozeAskedKo(round: Record<string, unknown>, out: string[]): string[] {
   if (round.gapKind === 'value') return out;
   const answer = (round.tiles as unknown[])[round.answerIndex as number];
   const tile = typeof answer === 'object' && answer !== null ? String((answer as Record<string, unknown>).ko ?? '') : '';
+  // A round with no answer tile asks nothing (row CM-3A S3).
+  if (normalizeKo(tile) === '') return out;
   const filled = normalizeKo(String((round.sentence as Record<string, unknown>).ko ?? '').replace('___', tile));
   if (filled !== '') out.push(filled);
-  if (round.gapKind !== 'particle' && normalizeKo(tile) !== '') out.push(normalizeKo(tile));
+  if (round.gapKind !== 'particle') out.push(normalizeKo(tile));
   return out;
 }
 

@@ -1,5 +1,5 @@
 {
-  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-10): a frozen id no longer taught with no alias or retirement (an error on the snapshot), a retirement and an alias that name no frozen id (errors), a new word of a Volume 2 cell that is not frozen yet (an error), and one of a Volume 1 cell (a warning until row CM-3B). Not real content.",
+  "$comment": "F-CURR-002 §9.3 lint fixture (row CM-10): a frozen id no longer taught with no alias or retirement (an error on the snapshot), a retirement and an alias that name no frozen id (errors), a new word of a Volume 2 cell that is not frozen yet (an error), and one of a Volume 1 cell (an error since row CM-3B). Not real content.",
   "rule": "items-stable-id",
   "files": {
     "content/episodes/stage-2/nature.v2.json": {
@@ -157,7 +157,7 @@
     ],
     [
       "items-stable-id",
-      "warning",
+      "error",
       "content/episodes/stage-3/nature.json",
       "quests[0].steps[1].discover.pages[0].items[1]"
     ]

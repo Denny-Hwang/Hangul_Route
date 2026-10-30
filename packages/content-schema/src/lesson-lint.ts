@@ -53,9 +53,9 @@ export * from './role-play-rules';
 // =====================================================================================================
 // F-CURR-002 §9.3: the lint rules for Volume 2 cells, Topic Pack levels and new stories. Each is an
 // error from day one for a file with `volume` >= 2 (or a `<theme>.v<k>.json` name), for every file
-// under `content/packs/` and for a story that is not in SHIPPED_STORY_IDS; for Volume 1 cells and
-// the shipped stories it is a warning, so `main` stays green until rows CM-3A re-author Volume 1
-// and CM-3B turns the warnings into errors.
+// under `content/packs/` and for a story that is not in SHIPPED_STORY_IDS. For Volume 1 cells it
+// warned until rows CM-3A re-authored Volume 1; row CM-3B made it an error there too. For the
+// shipped stories it is still a warning.
 // =====================================================================================================
 
 export type CurriculumRule =
@@ -300,7 +300,8 @@ export function allowlistedInstitution(publisher: string, accessed: string, url?
 // ---- files and tiers --------------------------------------------------------------------------------
 
 export type CurriculumTier = 'volume1' | 'volume2' | 'pack' | 'shipped-story' | 'new-story';
-const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume2', 'pack', 'new-story']);
+// Row CM-3B: Volume 1 is strict too, once rows CM-3A and CM-3C left it no finding (§9.3); a shipped story still warns.
+const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume1', 'volume2', 'pack', 'new-story']);
 export const severityOf = (tier: CurriculumTier): CurriculumSeverity => (STRICT_TIERS.has(tier) ? 'error' : 'warning');
 
 
@@ -1039,9 +1040,10 @@ function tierOfCell(cell: string, shipped: ReadonlySet<string>): CurriculumTier 
  * (`REVIEW_SNAPSHOT_FILE`; validate-content.mjs adds it and the frozen Stage 1 table). An issue of an
  * item is reported on the file that teaches it, an issue of the snapshot itself (a frozen id no
  * longer taught, an alias or retirement that names no frozen id) on the snapshot. Only a new item
- * not frozen yet takes its file's severity (a warning for Volume 1 and a shipped story); every other
- * issue is an error whatever the file, as scripts/build-review-items.mjs (`isBlocking`) stops the
- * build, and with it `pnpm install` and the dev server, on it.
+ * not frozen yet takes its file's severity (a warning for a shipped story, an error for Volume 1
+ * since row CM-3B); every other issue is an error whatever the file, as
+ * scripts/build-review-items.mjs (`isBlocking`) stops the build, and with it `pnpm install` and the
+ * dev server, on it.
  */
 function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<string>, push: Push): void {
   const raw = tree.get(REVIEW_SNAPSHOT_FILE);
@@ -1086,8 +1088,8 @@ function issueWhere(issue: StableIdIssue): { file: string; path: string } {
 
 /**
  * Every F-CURR-002 §9.3 finding over a content tree (`content/...` path -> parsed JSON), with
- * its severity: an error for Volume 2 cells, pack files and new stories, a warning for Volume 1
- * cells and shipped stories. A file under `content/packs/` or an upper-stage directory whose path
+ * its severity: an error for Volume 1 cells (since row CM-3B), Volume 2 cells, pack files and new
+ * stories, a warning for shipped stories. A file under `content/packs/` or an upper-stage directory whose path
  * no lesson or pack layout accepts is an error. Other files are ignored.
  */
 export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: CurriculumLintOptions = {}): CurriculumFinding[] {

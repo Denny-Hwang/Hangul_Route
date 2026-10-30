@@ -28,10 +28,10 @@ const v1 = (quests: Json[]) => ({ [V1]: { id: 'episode:stage2-letters', stage: '
 const NAT: Array<[string, string, string]> = [['낫', 'nat', 'sickle'], ['낮', 'nat', 'daytime'], ['낯', 'nat', 'face']];
 
 describe('dictation-unambiguous: homophones (낫 / 낮 / 낯)', () => {
-  it('keeps each of the three out of Dictation when the others are taught: an error in Volume 2, a warning in Volume 1', () => {
+  it('keeps each of the three out of Dictation when the others are taught: an error in Volume 2, and in Volume 1 since row CM-3B', () => {
     const rounds = NAT.map(([ko, r, en]) => dictation(ko, r, en));
     expect(rows(lint(v2([teach('quest:t', ...NAT), hear('quest:h', rounds)])))).toEqual([0, 1, 2].map((i) => `error ${V2} quests[1].scopes[0].rounds[${i}]`));
-    expect(rows(lint(v1([teach('quest:t', ...NAT), hear('quest:h', rounds)])))).toEqual([0, 1, 2].map((i) => `warning ${V1} quests[1].scopes[0].rounds[${i}]`));
+    expect(rows(lint(v1([teach('quest:t', ...NAT), hear('quest:h', rounds)])))).toEqual([0, 1, 2].map((i) => `error ${V1} quests[1].scopes[0].rounds[${i}]`));
   });
 
   it('admits one of them when it is the only spelling taught, or when a picture settles it', () => {
