@@ -3,7 +3,7 @@ import { HiddenHeritageRoundSchema, checkRomanization, isOverlayFieldAllowed } f
 import { lintCardSources } from '@hangul-route/content-schema/lint';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { findBannedWord } from '@hangul-route/i18n';
-import { FOUR_SEASONS_OVERLAYS, FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
+import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
 import { Pressable, StyleSheet } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -23,7 +23,7 @@ import { glossRepeatsRomanization } from '../../../../../../scripts/overlay-rule
  * F-CURR-002 row CM-37 part 3: the Nature & Animals four-season scene in the Hidden Heritage step
  * (design/wireframes/minigame/hidden-heritage.md): its lazy chunk, the hit areas at 320 px, the Pic-Word Match fallback
  * with `game.hidden-heritage` off (the launch state), the culture-source lint on its facts, rr.ts romanization and its
- * es and ko meanings (carried in the scene's own chunk).
+ * es and ko (the `scene:four-seasons` entry of `content/i18n/<locale>/hidden-heritage.json`).
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -109,40 +109,73 @@ describe('the four-season scene as content (row CM-37 part 3)', () => {
     expect(lintCardSources(off, FILE).map((f) => f.rule)).toEqual(['culture-source']);
   });
 
-  it('asks taught words: 바람, 비 and 눈 of quest:stage2-nature-q2 and 까치 of Stage 2 Letters, with the taught meaning and romanization', () => {
+  it('asks taught words: 바람 and 비 of quest:stage2-nature-q2, 산 of quest:stage1-nature-q2 and 까치 of Stage 2 Letters, with the taught meaning and romanization', () => {
     const taught = (id: string) => JSON.stringify(questsAll.find((q) => q.id === id));
+    const quests: Record<string, string> = { kkachi: 'quest:stage2-letters-q2', san: 'quest:stage1-nature-q2' };
     for (const t of ROUND.targets) {
-      const quest = t.id === 'kkachi' ? 'quest:stage2-letters-q2' : 'quest:stage2-nature-q2';
+      const quest = quests[t.id] ?? 'quest:stage2-nature-q2';
       expect(taught(quest), t.word.ko).toContain(`"ko":"${t.word.ko}","romanization":"${t.word.romanization}","en":"${t.word.en}"`);
     }
   });
 
-  it('its es and ko meanings sit under overlay paths a lesson round may carry, and the targets keep their shipped meanings', () => {
+  it('asks no homograph by ear (§4.2): 눈, eye or snow, is an other thing only', () => {
+    // A homophone among the taught items: a _senses.json group with two or more senses at launch (비 'broom' is reserved).
+    const senses = JSON.parse(readFileSync(new URL('../../../../../../content/vocab/_senses.json', import.meta.url), 'utf8')) as { groups: Array<{ group: string; members: Array<{ state: string }> }> };
+    const homographs = new Set(senses.groups.filter((g) => g.members.filter((m) => m.state === 'launch').length > 1).map((g) => g.group));
+    expect(homographs.has('nun')).toBe(true);
+    for (const t of ROUND.targets) expect(homographs.has(t.word.romanization), t.word.ko).toBe(false);
+    expect(ROUND.others.map((t) => t.id)).toContain('nun');
+  });
+
+  it('its es and ko are the scene: overlay of content/i18n, every field present, and the targets keep their shipped meanings', () => {
+    const kind = (id: string) => (ROUND.targets.some((x) => x.id === id) ? 'targets' : 'others');
+    const fields = [
+      'art.alt',
+      'round.alt',
+      ...[...ROUND.targets, ...ROUND.others].map((t) => `round.${kind(t.id)}.${t.id}.word.gloss`),
+      'note.subject',
+      ...SCENE.note.facts.map((f) => `note.facts.${f.id}.claim`),
+    ];
     for (const locale of ['es', 'ko'] as const) {
-      const table = FOUR_SEASONS_OVERLAYS[locale] as Record<string, string>;
-      for (const path of Object.keys(table)) expect(isOverlayFieldAllowed('minigame:s2-nature-v2-q1-practice', path), path).toBe(true);
+      const file = JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/hidden-heritage.json`, import.meta.url), 'utf8')) as { entries: Record<string, Record<string, string>> };
+      const table = file.entries[SCENE.id]!;
+      expect(Object.keys(table).sort(), locale).toEqual([...fields].sort());
+      for (const [path, value] of Object.entries(table)) {
+        expect(isOverlayFieldAllowed(SCENE.id, path), path).toBe(true);
+        expect(value.trim().length, `${locale} ${path}`).toBeGreaterThan(0);
+        expect(value, `${locale} ${path}`).not.toMatch(/%|\p{Extended_Pictographic}/u);
+        expect(findBannedWord(value, locale, 'learner'), `${locale}: ${value}`).toBeNull();
+        if (locale === 'es') expect(value, path).not.toMatch(/[가-힣]/);
+        if (locale === 'ko') expect(value, path).toMatch(/[가-힣]/);
+      }
+      const gloss = (id: string) => table[`round.${kind(id)}.${id}.word.gloss`]!;
       const shipped = new Map<string, Set<string>>();
-      for (const file of ['lessons-stage2-nature', 'lessons-stage2-letters']) {
-        const overlay = JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/${file}.json`, import.meta.url), 'utf8')) as { entries: Record<string, Record<string, string>> };
-        for (const fields of Object.values(overlay.entries)) {
-          for (const [field, value] of Object.entries(fields)) {
+      for (const name of ['lessons-stage2-nature', 'lessons-stage2-letters']) {
+        const overlay = JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/${name}.json`, import.meta.url), 'utf8')) as { entries: Record<string, Record<string, string>> };
+        for (const entry of Object.values(overlay.entries)) {
+          for (const [field, value] of Object.entries(entry)) {
             const id = /\.pairs\.([a-z]+)\.word\.gloss$/.exec(field)?.[1];
             if (id) shipped.set(id, (shipped.get(id) ?? new Set()).add(value));
           }
         }
       }
-      for (const t of ROUND.targets) expect([...(shipped.get(t.id) ?? [])], `${locale} ${t.id}`).toEqual([table[`hiddenHeritage.rounds.hh1.targets.${t.id}.word.gloss`]]);
+      for (const t of ROUND.targets) expect([...(shipped.get(t.id) ?? [])], `${locale} ${t.id}`).toEqual([gloss(t.id)]);
       for (const t of [...ROUND.targets, ...ROUND.others]) {
-        const value = table[`hiddenHeritage.rounds.hh1.${ROUND.targets.some((x) => x.id === t.id) ? 'targets' : 'others'}.${t.id}.word.gloss`]!;
-        expect(findBannedWord(value, locale, 'learner'), `${locale}: ${value}`).toBeNull();
-        if (locale === 'es') expect(glossRepeatsRomanization({ ko: t.word.ko, romanization: t.word.romanization, gloss: value }), t.id).toBe(false);
+        if (locale === 'es') expect(glossRepeatsRomanization({ ko: t.word.ko, romanization: t.word.romanization, gloss: gloss(t.id) }), t.id).toBe(false);
+        // A ko meaning never just repeats its word (a circular gloss).
+        if (locale === 'ko') expect(gloss(t.id), t.id).not.toContain(t.word.ko);
+      }
+      for (const target of ROUND.targets) {
+        // The alt text names no target, and no other thing's meaning holds a target's word or meaning.
+        expect(table['art.alt']!.toLowerCase(), locale).not.toContain(locale === 'ko' ? target.word.ko : gloss(target.id));
+        for (const other of ROUND.others) expect(gloss(other.id), `${locale} ${other.id}`).not.toContain(locale === 'ko' ? target.word.ko : gloss(target.id));
       }
     }
   });
 });
 
 describe('with game.hidden-heritage off (its launch state)', () => {
-  it('plays Pic-Word Match on 바람, 비, 까치 and 눈 from their own pictures and never draws the scene', async () => {
+  it('plays Pic-Word Match on 바람, 비, 까치 and 산 from their own pictures and never draws the scene', async () => {
     gameSwitch(false);
     const root = await draw();
     expect(root.findAll((n) => n.props.testID === 'hh-scene')).toHaveLength(0);

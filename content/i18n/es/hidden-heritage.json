@@ -1,0 +1,25 @@
+{
+  "locale": "es",
+  "domain": "hidden-heritage",
+  "entries": {
+    "scene:four-seasons": {
+      "art.alt": "Cuatro paneles, uno al lado del otro, uno para cada estación del año.",
+      "round.alt": "Cuatro paneles, uno al lado del otro, uno para cada estación del año.",
+      "round.targets.baram.word.gloss": "viento",
+      "round.targets.bi.word.gloss": "lluvia",
+      "round.targets.kkachi.word.gloss": "urraca",
+      "round.targets.san.word.gloss": "montaña",
+      "round.others.kkot.word.gloss": "flor",
+      "round.others.namu.word.gloss": "árbol",
+      "round.others.bandalgaseumgom.word.gloss": "oso negro asiático",
+      "round.others.nun.word.gloss": "nieve",
+      "note.subject": "Las cuatro estaciones y su tiempo, con dos animales nativos: la urraca, una de las favoritas de la pintura popular, y el oso negro asiático.",
+      "note.facts.f1.claim": "Corea está en la zona templada de latitudes medias, por eso sus cuatro estaciones, primavera, verano, otoño e invierno, están bien marcadas.",
+      "note.facts.f2.claim": "Más de la mitad de la lluvia del año cae en verano, y en primavera, en marzo y abril, el viento sopla con bastante fuerza.",
+      "note.facts.f3.claim": "La urraca es una de las aves más conocidas que viven en Corea todo el año. Por encima es negra con un brillo azul, y su vientre es blanco.",
+      "note.facts.f4.claim": "El oso negro asiático tiene una mancha blanca en forma de media luna en el pecho. En otoño come mucho y luego pasa el invierno durmiendo en una cueva o en el hueco de un árbol.",
+      "note.facts.f5.claim": "El oso negro asiático vivía antes en toda la península de Corea y hoy está en peligro de extinción. En 2004 empezó en el Parque Nacional de Jirisan un proyecto para recuperarlo.",
+      "note.facts.f6.claim": "Las pinturas kkachihorangi, de una urraca y un tigre, nacieron de las pinturas chinas de tigres de las dinastías Yuan y Ming. Se hicieron muy populares en la pintura popular (minhwa) del siglo XIX, y con el tiempo el tigre se volvió un personaje más amable."
+    }
+  }
+}

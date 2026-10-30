@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { drawScene } from '../draw';
-import { FOUR_SEASONS_OVERLAYS, FOUR_SEASONS_SCENE } from '../hidden-heritage/four-seasons';
+import { FOUR_SEASONS_SCENE } from '../hidden-heritage/four-seasons';
 import { HIDDEN_HERITAGE_LIMITS, checkHiddenHeritageRound, checkHiddenHeritageScene, sceneRegistry } from '../hidden-heritage/profile';
 import type { HiddenHeritageScene } from '../hidden-heritage/types';
 import { SCENE_ART_REGISTRY } from '../registry';
@@ -21,8 +21,8 @@ describe('the four-season scene (row CM-37 part 3)', () => {
     expect(checkHiddenHeritageScene(scene)).toEqual([]);
   });
 
-  it('is 25,000 B or less as its chunk carries it, its meanings included (§10 ceilings table), and the budget rule still bites', () => {
-    expect(serializedBytes(scene) + serializedBytes(FOUR_SEASONS_OVERLAYS)).toBeLessThanOrEqual(HIDDEN_HERITAGE_LIMITS.chunkBytes);
+  it('is 25,000 B or less as its chunk carries it (§10 ceilings table), and the budget rule still bites', () => {
+    expect(serializedBytes(scene)).toBeLessThanOrEqual(HIDDEN_HERITAGE_LIMITS.chunkBytes);
     const fat = clone();
     fat.note = { ...fat.note, accuracyNote: 'x'.repeat(HIDDEN_HERITAGE_LIMITS.chunkBytes) };
     expect(rules(checkHiddenHeritageScene(fat))).toEqual(['H-budget']);
@@ -44,11 +44,11 @@ describe('the four-season scene (row CM-37 part 3)', () => {
       ['바람', 'baram', 'wind', 'word:science-wind'],
       ['비', 'bi', 'rain', 'word:nature-rain'],
       ['까치', 'kkachi', 'magpie', 'card:magpie'],
-      ['눈', 'nun', 'snow', 'word:nature-snow'],
+      ['산', 'san', 'mountain', 'card:mountain'],
     ]);
     // Spring, summer, autumn and winter are the four panels, 100 units wide each.
     expect(round.targets.map((t) => Math.floor((t.spot.x + t.spot.w / 2) / 100))).toEqual([0, 1, 2, 3]);
-    expect(round.others.map((t) => t.word.ko)).toEqual(['산', '꽃', '나무', '반달가슴곰']);
+    expect(round.others.map((t) => t.word.ko)).toEqual(['꽃', '나무', '반달가슴곰', '눈']);
     expect(Object.keys(scene.things).sort()).toEqual([...round.targets, ...round.others].map((t) => t.id).sort());
   });
 
@@ -88,12 +88,25 @@ describe('the four-season scene (row CM-37 part 3)', () => {
     expect(Math.floor(scene.round.others.find((t) => t.id === 'bandalgaseumgom')!.spot.x / 100)).toBe(2);
   });
 
-  it('the falling snow is the only snow: the mountain over the 눈 spot wears no white cap', () => {
-    const mountain = scene.items.find((i) => i.id === 'prop:hh-winter-mountain')!;
-    expect(JSON.stringify(mountain.nodes)).not.toContain('surface.paper');
-    expect(`${mountain.alt} ${mountain.accuracyNote}`).not.toMatch(/\b(white|snowy|snowcap)\b/i);
-    const snowColumn = Math.floor(scene.round.targets.find((t) => t.id === 'nun')!.spot.x / 100);
-    expect(Math.floor(scene.round.others.find((t) => t.id === 'san')!.spot.x / 100)).toBe(snowColumn);
+  it('눈 (eye or snow, a homograph) is never asked, only found as an other thing; the winter target 산 wears no snow', () => {
+    expect(scene.round.targets.map((t) => t.word.ko)).not.toContain('눈');
+    const snow = scene.round.others.find((t) => t.id === 'nun')!;
+    const mountain = scene.round.targets.find((t) => t.id === 'san')!;
+    expect(Math.floor(snow.spot.x / 100)).toBe(Math.floor(mountain.spot.x / 100));
+    const art = scene.items.find((i) => i.id === 'prop:hh-winter-mountain')!;
+    expect(JSON.stringify(art.nodes)).not.toContain('surface.paper');
+    expect(`${art.alt} ${art.accuracyNote}`).not.toMatch(/\b(white|snowy|snowcap)\b/i);
+    expect(`${scene.items[0]!.alt} ${scene.items[0]!.accuracyNote}`).not.toMatch(/\bsnowy\b/i);
+  });
+
+  it('the bear note claims no more than its quote: no favourite food, and the chest mark sits below the head', () => {
+    const bear = scene.items.find((i) => i.id === 'prop:hh-moon-bear')!;
+    expect(bear.accuracyNote).not.toMatch(/favourite|favorite|likes?\b/i);
+    expect(scene.review.notes.join(' ')).not.toMatch(/the bear likes/);
+    const head = bear.nodes.find((n) => n.t === 'circle' && n.r === 18)!;
+    const chest = bear.nodes.find((n) => n.t === 'path')!;
+    const top = Number(/^M\d+ (\d+)/.exec(chest.t === 'path' ? chest.d : '')![1]);
+    expect(top).toBeGreaterThan((head.t === 'circle' ? head.cy + head.r : 0) + 8);
   });
 
   it('records the MAR review in at least 3 passes, a reviser and a third pass after it, with no native-speaker or expert claim and no age wording', () => {
@@ -103,48 +116,14 @@ describe('the four-season scene (row CM-37 part 3)', () => {
     const reviser = scene.review.notes.findIndex((n) => n.startsWith('Pass 4 (reviser)'));
     expect(reviser).toBeGreaterThanOrEqual(0);
     expect(scene.review.notes.slice(reviser + 1).some((n) => /\(third pass\)/.test(n))).toBe(true);
-    const text = JSON.stringify({ review: scene.review, note: scene.note, overlays: FOUR_SEASONS_OVERLAYS, items: scene.items.map((i) => i.alt) });
+    const text = JSON.stringify({ review: scene.review, note: scene.note, alt: scene.art.altEn, items: scene.items.map((i) => i.alt) });
     expect(text).not.toMatch(/native speaker|native-speaker|expert/i);
     expect(text).not.toMatch(/\b(kids?|children|child|ages? \d)\b|어린이/i);
   });
 
-  it('a target is never named by another thing: no other meaning holds a target meaning or a target word', () => {
-    const ko = FOUR_SEASONS_OVERLAYS.ko as Record<string, string>;
+  it('a target is never named by another thing: no other English meaning holds a target meaning', () => {
     for (const other of scene.round.others) {
-      for (const target of scene.round.targets) {
-        expect(other.word.en.toLowerCase(), other.id).not.toContain(target.word.en.toLowerCase());
-        expect(ko[`hiddenHeritage.rounds.hh1.others.${other.id}.word.gloss`], other.id).not.toContain(target.word.ko);
-      }
-    }
-  });
-
-  it('gives the alt text and every meaning in es and ko, under the overlay paths a lesson round uses', () => {
-    const { round } = scene;
-    const paths = [
-      'hiddenHeritage.rounds.hh1.alt',
-      ...round.targets.map((t) => `hiddenHeritage.rounds.hh1.targets.${t.id}.word.gloss`),
-      ...round.others.map((t) => `hiddenHeritage.rounds.hh1.others.${t.id}.word.gloss`),
-    ];
-    for (const locale of ['es', 'ko'] as const) {
-      const table = FOUR_SEASONS_OVERLAYS[locale] as Record<string, string>;
-      expect(Object.keys(table).sort(), locale).toEqual([...paths].sort());
-      for (const [path, value] of Object.entries(table)) {
-        expect(value.trim().length, `${locale} ${path}`).toBeGreaterThan(0);
-        expect(value, `${locale} ${path}`).not.toMatch(/%|\p{Extended_Pictographic}/u);
-        if (locale === 'es') expect(value, path).not.toMatch(/[가-힣]/);
-        if (locale === 'ko') expect(value, path).toMatch(/[가-힣]/);
-      }
-    }
-    // A thing's ko meaning never just repeats its word (a circular gloss), and the alt never names a target.
-    const ko = FOUR_SEASONS_OVERLAYS.ko as Record<string, string>;
-    const es = FOUR_SEASONS_OVERLAYS.es as Record<string, string>;
-    for (const t of [...round.targets, ...round.others]) {
-      const kind = round.targets.some((x) => x.id === t.id) ? 'targets' : 'others';
-      expect(ko[`hiddenHeritage.rounds.hh1.${kind}.${t.id}.word.gloss`], t.id).not.toContain(t.word.ko);
-    }
-    for (const t of round.targets) {
-      expect(es['hiddenHeritage.rounds.hh1.alt']!.toLowerCase()).not.toContain(es[`hiddenHeritage.rounds.hh1.targets.${t.id}.word.gloss`]!);
-      expect(ko['hiddenHeritage.rounds.hh1.alt']).not.toContain(t.word.ko);
+      for (const target of scene.round.targets) expect(other.word.en.toLowerCase(), other.id).not.toContain(target.word.en.toLowerCase());
     }
   });
 
@@ -169,7 +148,8 @@ describe('the four-season scene (row CM-37 part 3)', () => {
       expect(fact.claimEn).not.toMatch(/[가-힣%]/);
       for (const s of fact.sources) {
         expect(s.url).toMatch(/^https:\/\/(www\.weather\.go\.kr|species\.nibr\.go\.kr|www\.knps\.or\.kr|folkency\.nfm\.go\.kr)\//);
-        expect(s.accessed).toBe('2026-10-23');
+        // Opened on 2026-10-23; the f2 quote was re-taken whole on 2026-10-27.
+        expect(s.accessed, fact.id).toBe(fact.id === 'f2' ? '2026-10-27' : '2026-10-23');
         expect(s.quote.length).toBeGreaterThan(20);
       }
     }
@@ -179,7 +159,7 @@ describe('the four-season scene (row CM-37 part 3)', () => {
 describe('the profile on broken copies of the four-season scene', () => {
   it('a thing with no spot, and every target moved into one half', () => {
     const named = clone();
-    named.round.targets = named.round.targets.filter((t) => t.id !== 'nun');
+    named.round.targets = named.round.targets.filter((t) => t.id !== 'san');
     expect(rules(checkHiddenHeritageRound(named, named.round))).toEqual(['H-named']);
     const focal = clone();
     focal.round.targets = focal.round.targets.map((t) => (t.spot.x >= 200 ? { ...t, spot: { ...t.spot, x: t.spot.x - 200 } } : t));

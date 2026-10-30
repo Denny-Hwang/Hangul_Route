@@ -4,14 +4,15 @@ import type { HiddenHeritageScene } from './types';
 /**
  * The Nature & Animals Hidden Heritage scene (F-CURR-002 §5.5 S2, §7.1 F7 and OD-10, row CM-37 part 3 of 4): the four
  * seasons side by side in four plain panels, for the Nature & Animals Volume 2 Stage 2 cell. Spring wind blows petals,
- * a summer cloud rains, a magpie sits on an autumn branch, snow falls in winter; a flower, a summer tree, a moon bear
- * and a snowy mountain are the other things. Composed fresh from the scene-art kit in theme tokens: it copies, traces
+ * a summer cloud rains, a magpie sits on an autumn branch, a mountain stands in winter; a flower, a summer tree, a moon
+ * bear and the falling snow are the other things. Composed fresh from the scene-art kit in theme tokens: it copies, traces
  * or follows no painting (style guide rule 1), and no person, Hoya, tiger or writing is drawn. The magpie and the
  * tiger of folk painting are a fact of the card back, never a picture here.
  *
  * Its chunk (this module: the setting, the eight props, the layers, the reference round and the note) is held to
  * 25,000 B (§10 ceilings table; `hidden-heritage-four-seasons.test.ts`). Eight colours, none of the ring or focus
- * tokens. Its es and ko meanings (`FOUR_SEASONS_OVERLAYS`) ride in the same chunk, so the start bundle carries none of them.
+ * tokens. The es and ko of every English string a learner reads here (alt text, spot meanings, subject, card-back facts)
+ * are in `content/i18n/<locale>/hidden-heritage.json` (entity `scene:four-seasons`).
  */
 
 /** The four panels: a sky tint per season over a ground band, divided by posts. */
@@ -92,8 +93,8 @@ const MAGPIE: ItemDef = {
     'Drawn after the National Institute of Biological Resources description: black above with a blue sheen, a white belly and a white shoulder patch, a long tail. A resident bird, so any season is right.',
   nodes: [
     { t: 'path', d: 'M0 76C22 70 52 76 84 66', fill: 'none', stroke: 'text.secondary', sw: 'thick' },
-    { t: 'ellipse', cx: 72, cy: 62, rx: 7, ry: 4, fill: 'theme.letters', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'ellipse', cx: 10, cy: 70, rx: 7, ry: 4, fill: 'theme.letters', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 72, cy: 62, rx: 7, ry: 4, fill: 'theme.life', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 10, cy: 70, rx: 7, ry: 4, fill: 'theme.life', stroke: 'text.secondary', sw: 'thin' },
     { t: 'poly', pts: [[30, 54], [4, 40], [2, 46], [26, 62]], fill: 'text.primary', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M6 43L28 56', stroke: 'theme.crafts', sw: 'thin', det: true },
     { t: 'ellipse', cx: 44, cy: 54, rx: 18, ry: 12, fill: 'text.primary', stroke: 'text.secondary', sw: 'base' },
@@ -106,19 +107,19 @@ const MAGPIE: ItemDef = {
   ],
 };
 
-/** A mountain (산) in winter: evergreen slopes under a bare rock peak, an other thing. No snow lies on it, so the falling
- * snow beneath is the only snow in the scene and a tap on the mountain never finds 눈 by another name. */
+/** A mountain (산) in winter: evergreen slopes under a bare rock peak, the winter target. No snow lies on it, so it reads
+ * as a mountain alone and the falling snow beneath, an other thing, stays a thing of its own. */
 const MOUNTAIN: ItemDef = {
   id: 'prop:hh-winter-mountain',
   kind: 'nature',
   box: { w: 84, h: 86 },
   z: 'mid',
   alt: 'A green mountain with a grey rocky peak',
-  accuracyNote: 'A generic mountain with evergreen slopes and a bare grey rock peak; no snow is drawn on it and no named peak is meant.',
+  accuracyNote: 'A generic mountain with evergreen slopes, two fir marks that keep it a mountain at thumb size, and a bare grey rock peak; no snow is drawn on it and no named peak is meant.',
   nodes: [
     { t: 'poly', pts: [[2, 86], [42, 4], [82, 86]], fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
     { t: 'poly', pts: [[42, 4], [57, 35], [49, 30], [42, 37], [35, 30], [27, 35]], fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M24 64L30 54L36 64 M50 72L56 62L62 72', fill: 'none', stroke: 'text.secondary', sw: 'thin', det: true },
+    { t: 'path', d: 'M24 64L30 54L36 64 M50 72L56 62L62 72', fill: 'none', stroke: 'text.secondary', sw: 'base' },
   ],
 };
 
@@ -166,7 +167,7 @@ const MOON_BEAR: ItemDef = {
   z: 'mid',
   alt: 'A black bear with a white half-moon mark on its chest, sitting beside acorns',
   accuracyNote:
-    'Drawn after the National Institute of Biological Resources description: black fur and a white half-moon mark on the chest. It sits calmly, mouth closed and claws hidden; acorns, a favourite food, lie beside it in autumn.',
+    'Drawn after the National Institute of Biological Resources description: black fur and a white half-moon mark on the chest, low on the front of the body. It sits calmly, mouth closed and claws hidden; two acorns lie beside it in autumn, the season its source says it feeds most.',
   nodes: [
     { t: 'ellipse', cx: 42, cy: 68, rx: 28, ry: 30, fill: 'text.primary', stroke: 'text.secondary', sw: 'base' },
     { t: 'circle', cx: 27, cy: 12, r: 7, fill: 'text.primary', stroke: 'text.secondary', sw: 'base' },
@@ -176,15 +177,17 @@ const MOON_BEAR: ItemDef = {
     { t: 'ellipse', cx: 42, cy: 30, rx: 3, ry: 2, fill: 'text.primary' },
     { t: 'circle', cx: 34, cy: 22, r: 1.5, fill: 'surface.paper', det: true },
     { t: 'circle', cx: 50, cy: 22, r: 1.5, fill: 'surface.paper', det: true },
-    { t: 'path', d: 'M22 46C30 62 54 62 62 46C54 55 30 55 22 46Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M28 58C34 69 50 69 56 58C50 64 34 64 28 58Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
     { t: 'ellipse', cx: 28, cy: 96, rx: 10, ry: 4, fill: 'text.primary' },
     { t: 'ellipse', cx: 56, cy: 96, rx: 10, ry: 4, fill: 'text.primary' },
-    { t: 'ellipse', cx: 6, cy: 94, rx: 4, ry: 5, fill: 'theme.life', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'ellipse', cx: 78, cy: 94, rx: 4, ry: 5, fill: 'theme.life', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 6, cy: 94, rx: 5, ry: 6, fill: 'theme.letters', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 6, cy: 88, rx: 5.5, ry: 2.5, fill: 'text.secondary' },
+    { t: 'ellipse', cx: 78, cy: 94, rx: 5, ry: 6, fill: 'theme.letters', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 78, cy: 88, rx: 5.5, ry: 2.5, fill: 'text.secondary' },
   ],
 };
 
-/** Winter snow (눈): large snowflakes falling over the snowy ground. */
+/** Winter snow (눈): large snowflakes falling over the white winter ground, an other thing. */
 const SNOW: ItemDef = {
   id: 'prop:hh-winter-snow',
   kind: 'nature',
@@ -232,18 +235,20 @@ export const FOUR_SEASONS_SCENE: HiddenHeritageScene = {
     id: 'hh1',
     sceneId: 'scene:four-seasons',
     altEn: 'Four panels side by side, one for each season of the year.',
-    // Stage 2 Nature words with a bundled picture each, for the Pic-Word Match fallback: one target in each season.
+    // Stage 2 Nature words with a bundled picture each, for the Pic-Word Match fallback: one target in each season. 눈 is
+    // an other thing, never asked: it is a homograph (눈 'eye', taught by Body, and 눈 'snow'), and a prompt heard and
+    // read with no gloss would not say which one is meant (§4.2), so the winter target is 산.
     targets: [
       { id: 'baram', word: word('바람', 'baram', 'wind'), spot: { x: 7, y: 12, w: 86, h: 110 }, picture: 'word:science-wind' },
       { id: 'bi', word: word('비', 'bi', 'rain'), spot: { x: 107, y: 12, w: 86, h: 110 }, picture: 'word:nature-rain' },
       { id: 'kkachi', word: word('까치', 'kkachi', 'magpie'), spot: { x: 207, y: 12, w: 86, h: 110 }, picture: 'card:magpie' },
-      { id: 'nun', word: word('눈', 'nun', 'snow'), spot: { x: 307, y: 136, w: 86, h: 154 }, picture: 'word:nature-snow' },
+      { id: 'san', word: word('산', 'san', 'mountain'), spot: { x: 307, y: 12, w: 86, h: 110 }, picture: 'card:mountain' },
     ],
     others: [
-      { id: 'san', word: word('산', 'san', 'mountain'), spot: { x: 307, y: 12, w: 86, h: 110 } },
       { id: 'kkot', word: word('꽃', 'kkot', 'flower'), spot: { x: 7, y: 136, w: 86, h: 154 } },
       { id: 'namu', word: word('나무', 'namu', 'tree'), spot: { x: 107, y: 136, w: 86, h: 154 } },
       { id: 'bandalgaseumgom', word: word('반달가슴곰', 'bandalgaseumgom', 'moon bear'), spot: { x: 207, y: 136, w: 86, h: 154 } },
+      { id: 'nun', word: word('눈', 'nun', 'snow'), spot: { x: 307, y: 136, w: 86, h: 154 } },
     ],
   },
   note: {
@@ -270,7 +275,7 @@ export const FOUR_SEASONS_SCENE: HiddenHeritageScene = {
             institution: 'Korea Meteorological Administration',
             title: '기상청 날씨누리 「한국 기후특성」 (Climate of Korea)',
             url: 'https://www.weather.go.kr/w/climate/statistics/korea.do',
-            accessed: '2026-10-23',
+            accessed: '2026-10-27',
             quote:
               '전국의 연강수량은 1306.3mm이며, … 제주도(4개 지점)의 연강수량은 1182.9 ~ 2030.0mm로 나타나며, 계절별로는 여름철 강수량이 710.9mm로 연 강수량의 54%를 차지한다. … 봄인 3~4월에 풍속이 비교적 높게 나타나고',
           },
@@ -336,45 +341,16 @@ export const FOUR_SEASONS_SCENE: HiddenHeritageScene = {
   },
   review: {
     reviewedBy: 'MAR',
-    reviewedAt: '2026-10-23',
-    passes: 5,
+    reviewedAt: '2026-10-29',
+    passes: 7,
     notes: [
       'Pass 1 (author sourcing): the five pages were opened on 2026-10-23 and every quote copied from them. The two National Institute of Biological Resources species pages of 한반도의 생물다양성 (까치 Pica serica, ktsn 120000532854; 반달가슴곰 Ursus thibetanus ussuricus, ktsn 120000212858) and the Encyclopedia of Korean Folk Culture entry draw their text by script, so it was read from the text each page loads. Every institution is on the §6.6 allowlist under its name on that date. The minhwa quote keeps the entry order (history, content, features), and its first draft, which cut a sentence in half, was replaced by whole sentences.',
-      'Pass 2 (culture and facts): each claim says no more than its quote. The spring wind is "fairly strong" (비교적 높게), not the strongest; the bear "is" endangered (처해 있으며). Kkachihorangi is credited to Yuan and Ming tiger paintings, as the entry says, so shared East Asian heritage is not framed as Korean in origin, and only "a friendlier character" is claimed of the tiger. The tiger is a fact about old pictures and is never drawn. The bear sits calm (mouth closed, no claws) in autumn, when its source says it feeds, with acorns, which it says the bear likes. The magpie is a resident bird, right in any season. No figure or composition of a painting is used.',
-      'Pass 3 (language, learning design and the 7.7 list): the targets are taught words with bundled pictures, one in each season: 바람, 비 and 눈 of quest:stage2-nature-q2 and 까치 of quest:stage2-letters-q2 (the Stage 1 Nature card word), each in Korean with rr.ts romanization and never as an English label, with the es and ko meanings the shipped Stage 2 overlays give them (a test compares them). The mountain was described as "with snow on its top", which named a target; it is now "a white top". The alt text names the setting, never a thing; no other meaning holds a target word; no percentage, timer, age word, speaking UI or emoji in any string.',
+      'Pass 2 (culture and facts): each claim says no more than its quote. The spring wind is "fairly strong" (비교적 높게), not the strongest; the bear "is" endangered (처해 있으며). Kkachihorangi is credited to Yuan and Ming tiger paintings, as the entry says, so shared East Asian heritage is not framed as Korean in origin, and only "a friendlier character" is claimed of the tiger. The tiger is a fact about old pictures and is never drawn. The bear sits calm (mouth closed, no claws) in autumn, when its source says it feeds, with acorns beside it. The magpie is a resident bird, right in any season. No figure or composition of a painting is used.',
+      'Pass 3 (language, learning design and the 7.7 list): the targets are taught words with bundled pictures, one in each season: 바람, 비 and 눈 of quest:stage2-nature-q2 and 까치 of quest:stage2-letters-q2 (the Stage 1 Nature card word), each in Korean with rr.ts romanization and never as an English label, with the es and ko meanings the shipped Stage 2 overlays give them (a test compares them). The mountain was described as "with snow on its top", which named a target; it is now "a white top" (superseded by pass 4: the peak is bare grey rock). The alt text names the setting, never a thing; no other meaning holds a target word; no percentage, timer, age word, speaking UI or emoji in any string.',
       'Pass 4 (reviser): two independent reviews of the PR were adjudicated. The winter mountain wore a white snowcap right above the 눈 spot, so a learner who found snow on it would have been marked as missing; the peak is now bare grey rock (border.strong) and the falling snow is the only snow drawn (a test holds it). The f2 rain quote is now given whole from 전국의 연강수량: on the page the seasonal clause follows the Jeju clause in one sentence, but 710.9 mm is 54% of the 1,306.3 mm national mean the paragraph opens with (710.9 / 1,306.3 = 0.544), while the Jeju clause gives only a range of station totals, so the claim reads it as the national summer share; the page was opened again on 2026-10-27 and the words match. The ko alt said 칸 three times and now reads 네 계절을 한 칸에 하나씩 나란히 그린 그림. The season words 봄 여름 가을 겨울 and 반달가슴곰 stay untaught, so they are not targets here; the Nature Volume 2 S2 content row (CM-41) teaches them and makes 반달가슴곰 a target when it copies the round.',
       'Pass 5 (third pass): the revised scene was checked again against the profile, §5.1, §7.7 and the taught-items rule. Every other thing in a target column (산 over 눈, 꽃 under 바람, 나무 under 비, 반달가슴곰 under 까치) shows nothing of its target; the bear is drawn from ellipses and one chest mark only, mouth closed with no claws or pointed shapes; the es and ko meanings are unchanged except the ko alt; no claim says more than its quote, and the record names no review but this multi-agent one.',
+      'Pass 6 (reviser, 2026-10-29): two more independent reviews were adjudicated. 눈 is a homograph (content/vocab/_senses.json group nun: 눈 eye of the Body topic, 눈 snow of Nature, both at launch; 비 broom is reserved, so 비 has no taught homophone), and the prompt is heard and read with no gloss, so §4.2 keeps it from being asked; it is now an other thing and 산 (taught by quest:stage1-nature-q2, the Stage 1 Nature card word, and played again on the Stage 2 Nature boards, picture card:mountain, the shipped es and ko meanings) is the winter target, so the targets are still one per season and no other meaning holds a target word. The acorns were called "a favourite food" with no quoted words behind it; the claim is gone and the bear note says only what the f4 quote says (it feeds in autumn). The f2 access date is the day its quote was re-taken (2026-10-27). The winter ground band is white paper, snowy ground: with the falling snow it is the only snow drawn, and it lies almost wholly inside the 눈 spot. The alt text, the eight meanings, the subject and the six card-back facts moved to content/i18n/{es,ko}/hidden-heritage.json under scene:four-seasons, with es and ko for the subject and f1 to f6 written here, so check-i18n, validate-content and overlays.test.ts read them. Drawing: the autumn leaves are gold (theme.life) apart from the orange spring petals, the acorns are filled with a dark cap, and the chest mark is narrower and lower on the body.',
+      'Pass 7 (third pass, 2026-10-29): the revised round and the new es and ko were checked against §4.2, §5.1, §7.7 and the taught-items rule. Each es and ko fact claims no more than its English and its quote (the f2 summer share is "más de la mitad" and 절반 이상, the f5 project is a 복원 사업 to bring the bears back, f6 credits the Yuan and Ming tiger paintings); 반달가슴곰 and kkachihorangi are given as the facts give them; no string carries a percentage, timer, age word, speaking UI or emoji, and the record names no review but this multi-agent one.',
     ],
   },
 };
-
-/**
- * The es and ko meanings of the reference round, under the overlay paths of `scripts/overlay-fields.mjs` (the round's
- * alt text and the meaning that names each spot). The Nature & Animals Volume 2 Stage 2 cell copies them into its
- * `content/i18n/<locale>` overlay with the round; the targets' meanings are the ones the shipped Stage 2 overlays give
- * those words (바람, 비 and 눈 in `lessons-stage2-nature`, 까치 in `lessons-stage2-letters`).
- */
-export const FOUR_SEASONS_OVERLAYS = {
-  es: {
-    'hiddenHeritage.rounds.hh1.alt': 'Cuatro paneles, uno al lado del otro, uno para cada estación del año.',
-    'hiddenHeritage.rounds.hh1.targets.baram.word.gloss': 'viento',
-    'hiddenHeritage.rounds.hh1.targets.bi.word.gloss': 'lluvia',
-    'hiddenHeritage.rounds.hh1.targets.kkachi.word.gloss': 'urraca',
-    'hiddenHeritage.rounds.hh1.targets.nun.word.gloss': 'nieve',
-    'hiddenHeritage.rounds.hh1.others.san.word.gloss': 'montaña',
-    'hiddenHeritage.rounds.hh1.others.kkot.word.gloss': 'flor',
-    'hiddenHeritage.rounds.hh1.others.namu.word.gloss': 'árbol',
-    'hiddenHeritage.rounds.hh1.others.bandalgaseumgom.word.gloss': 'oso negro asiático',
-  },
-  ko: {
-    'hiddenHeritage.rounds.hh1.alt': '네 계절을 한 칸에 하나씩 나란히 그린 그림.',
-    'hiddenHeritage.rounds.hh1.targets.baram.word.gloss': '움직이는 공기',
-    'hiddenHeritage.rounds.hh1.targets.bi.word.gloss': '구름에서 떨어지는 물방울',
-    'hiddenHeritage.rounds.hh1.targets.kkachi.word.gloss': '검은색과 흰색 깃털을 가진 새',
-    'hiddenHeritage.rounds.hh1.targets.nun.word.gloss': '겨울에 하늘에서 내리는 하얀 것',
-    'hiddenHeritage.rounds.hh1.others.san.word.gloss': '땅이 높이 솟은 곳',
-    'hiddenHeritage.rounds.hh1.others.kkot.word.gloss': '식물에 피어나는 빛깔이 고운 부분',
-    'hiddenHeritage.rounds.hh1.others.namu.word.gloss': '줄기와 가지, 잎이 있는 키 큰 식물',
-    'hiddenHeritage.rounds.hh1.others.bandalgaseumgom.word.gloss': '가슴에 하얀 반달 무늬가 있는 검은 곰',
-  },
-} as const;

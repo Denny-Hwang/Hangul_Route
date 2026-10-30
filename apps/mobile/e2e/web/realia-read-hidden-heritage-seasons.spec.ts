@@ -26,7 +26,7 @@ const TARGETS: Record<string, { id: string; meaning: string }> = {
   바람: { id: 'baram', meaning: 'wind' },
   비: { id: 'bi', meaning: 'rain' },
   까치: { id: 'kkachi', meaning: 'magpie' },
-  눈: { id: 'nun', meaning: 'snow' },
+  산: { id: 'san', meaning: 'mountain' },
 };
 
 type E2eWindow = Window & {
@@ -96,7 +96,7 @@ test.describe('Hidden Heritage, the four seasons (F-CURR-002 CM-37 part 3)', () 
     });
   }
 
-  test('at 320, game.hidden-heritage off (the launch state): Pic-Word Match on 바람, 비, 까치 and 눈 from their own pictures', async ({ page }) => {
+  test('at 320, game.hidden-heritage off (the launch state): Pic-Word Match on 바람, 비, 까치 and 산 from their own pictures', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await open(page, false);
     for (const t of Object.values(TARGETS)) await expect(page.getByTestId(`pic-word-picture-${t.id}`)).toBeVisible();
