@@ -1008,8 +1008,8 @@ test.describe('PN-4 the rail label fallback at the largest text size, 844 x 390'
     await page.goto('/');
     await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-30T09:00:00.000Z', textSize: 'largest' });
     await openPhone(page, { width: 844, height: 390 });
-    const r = (await page.getByTestId('presenter-rail').boundingBox())!;
-    expect(Math.round(r.width)).toBe(80);
+    // The rail draws what the gate gives, then measures its words on the real text: the fallback follows in a frame or two.
+    await expect.poll(async () => Math.round((await page.getByTestId('presenter-rail').boundingBox())?.width ?? 0)).toBe(80);
     const more = page.getByTestId('presenter-more');
     await expect(more).toHaveAttribute('data-glyph', 'more');
     await expect(more).toHaveAccessibleName('More');
@@ -1018,8 +1018,7 @@ test.describe('PN-4 the rail label fallback at the largest text size, 844 x 390'
       expect(b.text, b.id).toBe('');
     }
     // The stage takes the room the compact rail leaves: 844 - 80.
-    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-    expect(Math.max(stage.width / 764, stage.height / 390)).toBeGreaterThan(0.99);
+    await expect.poll(async () => { const stage = (await page.getByTestId('presenter-stage').boundingBox())!; return Math.max(stage.width / 764, stage.height / 390); }).toBeGreaterThan(0.99);
     await shot(page, 'presenter-nav-pn4-844x390-largest');
   });
 });
