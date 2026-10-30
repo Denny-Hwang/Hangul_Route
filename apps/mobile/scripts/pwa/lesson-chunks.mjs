@@ -112,7 +112,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // CM-39 +333, CM-3A S4 about +330, the four CM-37 scene loader lines +1,140, CM-3A S6 about +207, CM-3A S3 +67, CM-3B
   // 0: 64,515 B in all, 571 B more than the merge measures (code the rows share counts once). The line is the
   // measurement plus a 4,612 B rounding margin (F-CURR-002 section 10).
-  startBundleRaw: 4_820_000,
+  // The jamo voice and clips integration (AMENDMENTS-AUDIO-CLIPS JV-1 to JV-4, AC-1 to AC-4 and AC-6,
+  // integrate/jamo-voice-clips) on main fe074758a (4,815,388 B) measures 4,835,104 B raw / 1,292,810 B gzip (release
+  // `build:web`, Metro cache cleared): +19,716 B. Per row, measured at each merge of the integration in dependency order:
+  // JV-1 +3,062 (jamoVoice and the speech guard), JV-2 +2,553 (letter names, the bubble and slide lines), JV-3 +4,523
+  // (the tile pool rules), JV-4 0 (e2e), AC-1 +7,619 (the say key, the clip lookup order, the pack switches), AC-2, AC-3
+  // and AC-4 0 (scripts), AC-6 +1,959 (the clip registry and the pack hooks; the loader is a lazy chunk), the
+  // integration's Match Shape migration 0 (a screen chunk). The line is the measurement plus a 4,896 B rounding margin.
+  startBundleRaw: 4_840_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

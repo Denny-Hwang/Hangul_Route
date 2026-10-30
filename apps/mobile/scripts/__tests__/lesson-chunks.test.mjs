@@ -553,12 +553,14 @@ describe('precacheReport and its budget lines', () => {
     // 4,758,598 B on main 524961dae). The Phase 3 integration (integrate/curr-phase3: CM-30 to CM-39, CM-3A S2 to S7 and
     // CM-3B together) measures 4,815,388 B on main c84df434e (release build, Metro cache cleared), so the line is
     // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_820_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388]) {
+    // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
+    // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_840_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_815_388).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_835_104).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
