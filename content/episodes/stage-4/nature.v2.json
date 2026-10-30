@@ -1,0 +1,1592 @@
+{
+  "id": "episode:stage4-nature-v2",
+  "stage": "stage4",
+  "theme": "nature",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Hiking Plans",
+  "subtitleEn": "Chat about the weather and plan a park hike.",
+  "hoyaIntroEn": "What a clear day! Let us talk about the weather and plan a hike.",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-nature-v2-q1",
+      "titleEn": "Hot or Cold?",
+      "blurbEn": "Ask a friend about the weather and answer.",
+      "teaserEn": "Next: pick a national park.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Weather Talk",
+          "hoyaLineEn": "Is it hot or cold today? Let us ask a friend.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "How Is the Weather?",
+          "hoyaLineEn": "Tap each line to hear it.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "오늘 날씨가 어때요?",
+                          "romanization": "oneul nalssiga eottaeyo",
+                          "en": "How is the weather today?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "하늘이 파래요!",
+                          "romanization": "haneuri paraeyo",
+                          "en": "The sky is blue!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Talking about the weather is a friendly way to start a chat."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "추워요?",
+                          "romanization": "chuwoyo",
+                          "en": "Is it cold?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "아니요, 안 추워요.",
+                          "romanization": "aniyo an chuwoyo",
+                          "en": "No, it is not cold."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Say an before hot or cold to mean not."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "더워요!",
+                          "romanization": "deowoyo",
+                          "en": "It is hot!"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 더워요.",
+                          "romanization": "ne deowoyo",
+                          "en": "Yes, it is hot."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A hot, sunny day."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Chat About the Weather",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-nature-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-nature-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-nature-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Weather Chat Done!",
+          "hoyaLineEn": "You asked about the weather like a friend!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-v2-q1-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "학교",
+              "romanization": "hakgyo",
+              "en": "At school"
+            },
+            "partner": {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "안녕하세요!",
+                  "romanization": "annyeonghaseyo",
+                  "en": "Hello!"
+                },
+                "replies": [
+                  {
+                    "id": "home",
+                    "text": {
+                      "ko": "집에 가요.",
+                      "romanization": "jibe gayo",
+                      "en": "I am going home."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says where you are going. Say hello back first."
+                  },
+                  {
+                    "id": "hello",
+                    "text": {
+                      "ko": "안녕하세요!",
+                      "romanization": "annyeonghaseyo",
+                      "en": "Hello!"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "rice",
+                    "text": {
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about food. Your friend says hello, so say hello too."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "오늘 날씨가 어때요?",
+                  "romanization": "oneul nalssiga eottaeyo",
+                  "en": "How is the weather today?"
+                },
+                "replies": [
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend asks how the weather is. Say what the sky is like."
+                  },
+                  {
+                    "id": "blue",
+                    "text": {
+                      "ko": "하늘이 파래요!",
+                      "romanization": "haneuri paraeyo",
+                      "en": "The sky is blue!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "home",
+                    "text": {
+                      "ko": "집에 가요.",
+                      "romanization": "jibe gayo",
+                      "en": "I am going home."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says where you are going. Your friend asks about the weather."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "더워요?",
+                  "romanization": "deowoyo",
+                  "en": "Is it hot?"
+                },
+                "replies": [
+                  {
+                    "id": "hot",
+                    "text": {
+                      "ko": "네, 더워요.",
+                      "romanization": "ne deowoyo",
+                      "en": "Yes, it is hot."
+                    },
+                    "kind": "natural",
+                    "next": "t4-hot"
+                  },
+                  {
+                    "id": "rice",
+                    "text": {
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about food. Your friend asks if it is hot."
+                  },
+                  {
+                    "id": "not-hot",
+                    "text": {
+                      "ko": "아니요, 안 더워요.",
+                      "romanization": "aniyo an deowoyo",
+                      "en": "No, it is not hot."
+                    },
+                    "kind": "natural",
+                    "next": "t4-cool"
+                  }
+                ]
+              },
+              {
+                "id": "t4-hot",
+                "line": {
+                  "ko": "그럼 물을 마셔요.",
+                  "romanization": "geureom mureul masyeoyo",
+                  "en": "Then drink some water."
+                },
+                "replies": [
+                  {
+                    "id": "not-cold",
+                    "text": {
+                      "ko": "아니요, 안 추워요.",
+                      "romanization": "aniyo an chuwoyo",
+                      "en": "No, it is not cold."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend is talking about water, not the cold. Say okay."
+                  },
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "t4-cool",
+                "line": {
+                  "ko": "같이 가요!",
+                  "romanization": "gachi gayo",
+                  "en": "Let us go together!"
+                },
+                "replies": [
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "rice",
+                    "text": {
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about food. Your friend wants to go out together."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You chatted about the weather with your friend!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q1-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "오늘 비가 올 거예요.",
+                "romanization": "oneul biga ol geoyeyo",
+                "en": "It will rain today."
+              },
+              "distractors": [
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "it is cold"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "아니요, 안 추워요.",
+                "romanization": "aniyo an chuwoyo",
+                "en": "No, it is not cold."
+              },
+              "distractors": [
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "그럼 내일 갈 거예요.",
+                "romanization": "geureom naeil gal geoyeyo",
+                "en": "Then I will go tomorrow."
+              },
+              "distractors": [
+                {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "날씨가 좋아요.",
+                "romanization": "nalssiga joayo",
+                "en": "The weather is nice."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "아니요, 안 ___.",
+                "romanization": "aniyo an ___",
+                "en": "No, it is not cold."
+              },
+              "tiles": [
+                {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "park"
+                },
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "it is cold"
+                },
+                {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "c2",
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "비___ 와요.",
+                "romanization": "bi___ wayo",
+                "en": "It is raining."
+              },
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 2,
+              "filledRomanization": "biga wayo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-nature-v2-q2",
+      "titleEn": "Which Park?",
+      "blurbEn": "Pick a national park for a hike.",
+      "teaserEn": "Next: get ready for the hike.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Park Names",
+          "hoyaLineEn": "Korea has many national parks. Which one shall we visit?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Mountain Parks",
+          "hoyaLineEn": "Tap each one to hear it.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "내일 어디 가요?",
+                          "romanization": "naeil eodi gayo",
+                          "en": "Where are you going tomorrow?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "지리산에 가요.",
+                          "romanization": "jirisane gayo",
+                          "en": "I am going to Jirisan."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Many Korean mountains end in san, the word for mountain."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "설악산",
+                      "romanization": "seoraksan",
+                      "en": "Seoraksan"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "북한산",
+                      "romanization": "bukhansan",
+                      "en": "Bukhansan"
+                    }
+                  }
+                ],
+                "captionEn": "Two more mountain parks."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "국립공원",
+                      "romanization": "gungnipgongwon",
+                      "en": "national park"
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "설악산은 국립공원이에요.",
+                      "romanization": "seoraksaneun gungnipgongwonieyo",
+                      "en": "Seoraksan is a national park."
+                    }
+                  }
+                ],
+                "captionEn": "A national park keeps nature safe for everyone."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick a Park",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-nature-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Read the Park Weather",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s4-nature-v2-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-nature-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Park Picked!",
+          "hoyaLineEn": "You named three national parks in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-v2-q2-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "학교",
+              "romanization": "hakgyo",
+              "en": "At school"
+            },
+            "partner": {
+              "ko": "친구",
+              "romanization": "chingu",
+              "en": "friend"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "내일 어디 가요?",
+                  "romanization": "naeil eodi gayo",
+                  "en": "Where are you going tomorrow?"
+                },
+                "replies": [
+                  {
+                    "id": "seorak",
+                    "text": {
+                      "ko": "설악산에 가요.",
+                      "romanization": "seoraksane gayo",
+                      "en": "I am going to Seoraksan."
+                    },
+                    "kind": "natural",
+                    "next": "t2-seorak"
+                  },
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend asks where you are going. Name a place."
+                  },
+                  {
+                    "id": "jiri",
+                    "text": {
+                      "ko": "지리산에 가요.",
+                      "romanization": "jirisane gayo",
+                      "en": "I am going to Jirisan."
+                    },
+                    "kind": "natural",
+                    "next": "t2-jiri"
+                  }
+                ]
+              },
+              {
+                "id": "t2-seorak",
+                "line": {
+                  "ko": "설악산 날씨가 어때요?",
+                  "romanization": "seoraksan nalssiga eottaeyo",
+                  "en": "How is the weather at Seoraksan?"
+                },
+                "replies": [
+                  {
+                    "id": "jiri",
+                    "text": {
+                      "ko": "지리산에 가요.",
+                      "romanization": "jirisane gayo",
+                      "en": "I am going to Jirisan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You already picked Seoraksan. Your friend asks about the weather there."
+                  },
+                  {
+                    "id": "cold",
+                    "text": {
+                      "ko": "추워요!",
+                      "romanization": "chuwoyo",
+                      "en": "It is cold!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t2-jiri",
+                "line": {
+                  "ko": "지리산 날씨가 어때요?",
+                  "romanization": "jirisan nalssiga eottaeyo",
+                  "en": "How is the weather at Jirisan?"
+                },
+                "replies": [
+                  {
+                    "id": "nice",
+                    "text": {
+                      "ko": "날씨가 좋아요!",
+                      "romanization": "nalssiga joayo",
+                      "en": "The weather is nice!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "bukhan",
+                    "text": {
+                      "ko": "북한산에 가요.",
+                      "romanization": "bukhansane gayo",
+                      "en": "I am going to Bukhansan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You already picked Jirisan. Your friend asks about the weather there."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "같이 가요!",
+                  "romanization": "gachi gayo",
+                  "en": "Let us go together!"
+                },
+                "replies": [
+                  {
+                    "id": "not-cold",
+                    "text": {
+                      "ko": "아니요, 안 추워요.",
+                      "romanization": "aniyo an chuwoyo",
+                      "en": "No, it is not cold."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend wants to come with you. Say yes."
+                  },
+                  {
+                    "id": "okay",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "내일 갈 거예요?",
+                  "romanization": "naeil gal geoyeyo",
+                  "en": "Will you go tomorrow?"
+                },
+                "replies": [
+                  {
+                    "id": "will-go",
+                    "text": {
+                      "ko": "네, 갈 거예요.",
+                      "romanization": "ne gal geoyeyo",
+                      "en": "Yes, I will."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "not-hot",
+                    "text": {
+                      "ko": "아니요, 안 더워요.",
+                      "romanization": "aniyo an deowoyo",
+                      "en": "No, it is not hot."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Your friend asks about tomorrow, not the heat. Say you will go."
+                  },
+                  {
+                    "id": "rice",
+                    "text": {
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is about food. Your friend asks if you will go tomorrow."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You and your friend picked a national park for your hike!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q2-apply",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s4-nature-v2-q2-park-weather",
+            "title": {
+              "ko": "국립공원 날씨",
+              "romanization": "gungnipgongwon nalssi",
+              "en": "national park weather"
+            },
+            "entries": [
+              {
+                "id": "jirisan",
+                "text": {
+                  "ko": "지리산",
+                  "romanization": "jirisan",
+                  "en": "Jirisan"
+                },
+                "value": {
+                  "ko": "해",
+                  "romanization": "hae",
+                  "en": "sun"
+                }
+              },
+              {
+                "id": "seoraksan",
+                "text": {
+                  "ko": "설악산",
+                  "romanization": "seoraksan",
+                  "en": "Seoraksan"
+                },
+                "value": {
+                  "ko": "눈",
+                  "romanization": "nun",
+                  "en": "snow"
+                }
+              },
+              {
+                "id": "bukhansan",
+                "text": {
+                  "ko": "북한산",
+                  "romanization": "bukhansan",
+                  "en": "Bukhansan"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
+              }
+            ],
+            "altEn": "A park weather card: sun at Jirisan, snow at Seoraksan, rain at Bukhansan"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Hoya is going to Jirisan. What is the weather there?",
+              "key": {
+                "ko": "지리산",
+                "romanization": "jirisan",
+                "en": "Jirisan"
+              },
+              "options": [
+                {
+                  "id": "snow",
+                  "text": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ],
+              "answerId": "sun",
+              "answerEntryId": "jirisan"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Where is it snowing?",
+              "key": {
+                "ko": "눈",
+                "romanization": "nun",
+                "en": "snow"
+              },
+              "options": [
+                {
+                  "id": "bukhansan",
+                  "text": {
+                    "ko": "북한산",
+                    "romanization": "bukhansan",
+                    "en": "Bukhansan"
+                  }
+                },
+                {
+                  "id": "jirisan",
+                  "text": {
+                    "ko": "지리산",
+                    "romanization": "jirisan",
+                    "en": "Jirisan"
+                  }
+                },
+                {
+                  "id": "seoraksan",
+                  "text": {
+                    "ko": "설악산",
+                    "romanization": "seoraksan",
+                    "en": "Seoraksan"
+                  }
+                }
+              ],
+              "answerId": "seoraksan",
+              "answerEntryId": "seoraksan"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What is the weather at Bukhansan?",
+              "key": {
+                "ko": "북한산",
+                "romanization": "bukhansan",
+                "en": "Bukhansan"
+              },
+              "options": [
+                {
+                  "id": "rain",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "snow",
+                  "text": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "sun",
+                  "text": {
+                    "ko": "해",
+                    "romanization": "hae",
+                    "en": "sun"
+                  }
+                }
+              ],
+              "answerId": "rain",
+              "answerEntryId": "bukhansan"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Where is the sun out?",
+              "key": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              },
+              "options": [
+                {
+                  "id": "seoraksan",
+                  "text": {
+                    "ko": "설악산",
+                    "romanization": "seoraksan",
+                    "en": "Seoraksan"
+                  }
+                },
+                {
+                  "id": "jirisan",
+                  "text": {
+                    "ko": "지리산",
+                    "romanization": "jirisan",
+                    "en": "Jirisan"
+                  }
+                },
+                {
+                  "id": "bukhansan",
+                  "text": {
+                    "ko": "북한산",
+                    "romanization": "bukhansan",
+                    "en": "Bukhansan"
+                  }
+                }
+              ],
+              "answerId": "jirisan",
+              "answerEntryId": "jirisan"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "내일 설악산에 가요.",
+                "romanization": "naeil seoraksane gayo",
+                "en": "I am going to Seoraksan tomorrow."
+              },
+              "distractors": [
+                {
+                  "ko": "지리산",
+                  "romanization": "jirisan",
+                  "en": "Jirisan"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "설악산은 국립공원이에요.",
+                "romanization": "seoraksaneun gungnipgongwonieyo",
+                "en": "Seoraksan is a national park."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  },
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-nature-v2-q3",
+      "titleEn": "Ready to Hike",
+      "blurbEn": "Plan the hike and pack for the weather.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Hike Day",
+          "hoyaLineEn": "Tomorrow is hike day! Let us make a plan and pack.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Plan and Pack",
+          "hoyaLineEn": "Tap each line to hear it.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Friend",
+                        "line": {
+                          "ko": "내일 설악산에 갈까요?",
+                          "romanization": "naeil seoraksane galkkayo",
+                          "en": "Shall we go to Seoraksan tomorrow?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 좋아요!",
+                          "romanization": "ne joayo",
+                          "en": "Yes, sounds good!"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Asking Shall we go? is a friendly way to make a plan."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mom",
+                        "line": {
+                          "ko": "비가 올 거예요.",
+                          "romanization": "biga ol geoyeyo",
+                          "en": "It will rain."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "그럼 우산을 가져가요.",
+                          "romanization": "geureom usaneul gajyeogayo",
+                          "en": "Then I will take an umbrella."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Check the weather before a hike."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Mom",
+                        "line": {
+                          "ko": "물도 가져가요.",
+                          "romanization": "muldo gajyeogayo",
+                          "en": "Take water too."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 물도 가져가요.",
+                          "romanization": "ne muldo gajyeogayo",
+                          "en": "Okay, I will take water too."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Put do after a word to say too."
+              }
+            ]
+          },
+          "durationSeconds": 60
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pack for the Hike",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-nature-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-order",
+          "minigameRef": "minigame:s4-nature-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-nature-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ready to Hike!",
+          "hoyaLineEn": "You planned a hike in Korean. Have fun on the trail!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-nature-v2-q3-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "집",
+              "romanization": "jip",
+              "en": "At home"
+            },
+            "partner": {
+              "ko": "엄마",
+              "romanization": "eomma",
+              "en": "mom"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "내일 어디 가요?",
+                  "romanization": "naeil eodi gayo",
+                  "en": "Where are you going tomorrow?"
+                },
+                "replies": [
+                  {
+                    "id": "umbrella",
+                    "text": {
+                      "ko": "우산이에요.",
+                      "romanization": "usanieyo",
+                      "en": "It is an umbrella."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That names a thing. Mom asks where you are going."
+                  },
+                  {
+                    "id": "seorak",
+                    "text": {
+                      "ko": "설악산에 가요.",
+                      "romanization": "seoraksane gayo",
+                      "en": "I am going to Seoraksan."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "내일 날씨가 어때요?",
+                  "romanization": "naeil nalssiga eottaeyo",
+                  "en": "How will the weather be tomorrow?"
+                },
+                "replies": [
+                  {
+                    "id": "seorak",
+                    "text": {
+                      "ko": "설악산에 가요.",
+                      "romanization": "seoraksane gayo",
+                      "en": "I am going to Seoraksan."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You already said where. Mom asks about the weather."
+                  },
+                  {
+                    "id": "rain",
+                    "text": {
+                      "ko": "비가 올 거예요.",
+                      "romanization": "biga ol geoyeyo",
+                      "en": "It will rain."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "hot",
+                    "text": {
+                      "ko": "네, 더워요.",
+                      "romanization": "ne deowoyo",
+                      "en": "Yes, it is hot."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom asks about the weather tomorrow. Say what it will be like."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "우산을 가져가요.",
+                  "romanization": "usaneul gajyeogayo",
+                  "en": "Take an umbrella."
+                },
+                "replies": [
+                  {
+                    "id": "take",
+                    "text": {
+                      "ko": "네, 가져가요!",
+                      "romanization": "ne gajyeogayo",
+                      "en": "Okay, I will take it!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "cold",
+                    "text": {
+                      "ko": "네, 추워요.",
+                      "romanization": "ne chuwoyo",
+                      "en": "Yes, it is cold."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom is talking about the umbrella. Say you will take it."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "같이 가요!",
+                  "romanization": "gachi gayo",
+                  "en": "Let us go together!"
+                },
+                "replies": [
+                  {
+                    "id": "not-cold",
+                    "text": {
+                      "ko": "아니요, 안 추워요.",
+                      "romanization": "aniyo an chuwoyo",
+                      "en": "No, it is not cold."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Mom wants to come along. Say yes to her."
+                  },
+                  {
+                    "id": "yes",
+                    "text": {
+                      "ko": "네, 좋아요!",
+                      "romanization": "ne joayo",
+                      "en": "Yes, sounds good!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You packed for the weather, and Mom is coming too!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q3-apply",
+          "kind": "story-order",
+          "rounds": [
+            {
+              "id": "hike-plan",
+              "captionsOnly": true,
+              "panels": [
+                {
+                  "id": "ask",
+                  "caption": {
+                    "ko": "내일 설악산에 갈까요?",
+                    "romanization": "naeil seoraksane galkkayo",
+                    "en": "Shall we go to Seoraksan tomorrow?"
+                  }
+                },
+                {
+                  "id": "rain",
+                  "caption": {
+                    "ko": "비가 올 거예요.",
+                    "romanization": "biga ol geoyeyo",
+                    "en": "It will rain."
+                  }
+                },
+                {
+                  "id": "umbrella",
+                  "caption": {
+                    "ko": "그럼 우산을 가져가요.",
+                    "romanization": "geureom usaneul gajyeogayo",
+                    "en": "Then I will take an umbrella."
+                  }
+                },
+                {
+                  "id": "water",
+                  "caption": {
+                    "ko": "물도 가져가요.",
+                    "romanization": "muldo gajyeogayo",
+                    "en": "Take water too."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-nature-v2-q3-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "내일 설악산에 갈까요?",
+                "romanization": "naeil seoraksane galkkayo",
+                "en": "Shall we go to Seoraksan tomorrow?"
+              },
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "우산이에요.",
+                    "romanization": "usanieyo",
+                    "en": "It is an umbrella."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 좋아요!",
+                    "romanization": "ne joayo",
+                    "en": "Yes, sounds good!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "추워요?",
+                    "romanization": "chuwoyo",
+                    "en": "Is it cold?"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mom",
+              "line": {
+                "ko": "오늘 비가 올 거예요.",
+                "romanization": "oneul biga ol geoyeyo",
+                "en": "It will rain today."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "그럼 우산을 가져가요.",
+                    "romanization": "geureom usaneul gajyeogayo",
+                    "en": "Then I will take an umbrella."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 더워요.",
+                    "romanization": "ne deowoyo",
+                    "en": "Yes, it is hot."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "북한산에 가요.",
+                    "romanization": "bukhansane gayo",
+                    "en": "I am going to Bukhansan."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Korea's national parks are home to nearly 200 kinds of endangered animals and plants. Keeping the parks safe helps these living things too.",
+      "sources": [
+        {
+          "title": "우리나라 국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000665",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘국내 기록 생물종 60,010종 중 23,777종 서식·분포하며, 국내 멸종위기종(282종)에 한정하여 보았을 때는 69%에 달하는 195종이 국립공원 내 서식하는 것으로 확인되었습니다.’"
+        },
+        {
+          "title": "멸종위기야생생물관리",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020054",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘국립공원 내 지정및분포 현황’: 양서파충류 I급 1종, II급 5종; 어류 I급 4종, II급 11종; 곤충 I급 8종, II급 20종; 육상식물 I급 9종, II급 40종; 포유류 I급 7종, II급 5종; 조류 I급 10종, II급 49종; 기타 I급 2종, II급 14종 (185 in all on this page, 195 on 우리나라 국립공원; nearly 200 holds for both)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S4, 2026-10-30): the Korea National Park Service page 우리나라 국립공원 says 195 of Korea's 282 endangered species live in the national parks; its 멸종위기야생생물관리 page lists the endangered species in the parks by group (185 in all). 'Nearly 200' holds for both. English paraphrase, no count of n of m shown.\nPass 2 (independent MAR culture and facts, a reviewer agent other than the author, 2026-10-30): both pages fetched again; 195종 and the group table (185) found; publisher 국립공원공단 as on the access date; child-safe tone; es and ko match. Holds.\nPass 3 (MAR language and learning design, independent reviewers, 2026-10-30): es and ko text and the {ko:} tokens checked; no native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Since 2007 the Korea National Park Service has named flagship species, wild animals and plants that stand for a park. Bukhansan's is the great spotted woodpecker, called the doctor of the forest.",
+      "sources": [
+        {
+          "title": "국립공원깃대종",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020053",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘깃대종(Flagship Species)은 특정지역의 생태·지리·문화적 특성을 반영하는 상징적인 야생 동·식물로서 사람들이 보호해야 할 필요성이 인정되는 종입니다. 국립공원 공단은 2007년부터 22개 국립공원을 대상으로 총 43종의 야생 동·식물을 깃대종으로 지정하여 관리하고 있습니다.’ / 북한산국립공원 깃대종: ‘오색딱다구리’, ‘긴 혀를 이용하여 나무 줄기속에 살고 있는 애벌레를 잡어 먹어 ‘숲속의 의사’라는 별명이 있는 동물’"
+        },
+        {
+          "title": "국립공원 깃대종을 아십니까? (기후변화 위기 속 국립공원의 역할 ②, 2019.10.04)",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 국립공원공단 기획 시리즈",
+          "url": "https://www.korea.kr/news/cultureColumnView.do?newsId=148865369",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘우리나라에는 지난 2007년부터 국립공원마다 깃대종이 선정되기 시작했다.’ / ‘깃대종은 특정지역의 생태·지리·문화적 특성을 반영하는 상징적인 야생 동·식물로서 …’ (its count, 21 parks and 41 species, is as of 2019; today's 22 and 43 are the Korea National Park Service's)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S4, 2026-10-30): the Korea National Park Service page 국립공원깃대종 defines a flagship species (상징적인 야생 동·식물), says the Service has named them since 2007 (22 parks, 43 species today) and gives Bukhansan's, the great spotted woodpecker (오색딱다구리), nicknamed 숲속의 의사. The korea.kr column of 2019, written with the Service, says flagship species were first chosen in 2007. English paraphrase; no count is claimed.\nPass 2 (independent MAR culture and facts, a reviewer agent other than the author, 2026-10-30): both sources fetched again; 2007, the definition and the nickname found; 21 parks and 41 species in the 2019 column are noted as of 2019 and not used. Holds.\nPass 3 (MAR language and learning design, independent reviewers, 2026-10-30): es (especies bandera, pico picapinos) and ko checked; no native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "Seoraksan's flagship species is the long-tailed goral, {ko:산양}. It lives on steep, rocky cliffs, and more gorals live on Seoraksan than anywhere else in Korea.",
+      "sources": [
+        {
+          "title": "국립공원깃대종",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020053",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "설악산국립공원 깃대종: ‘산양 (Naemorhedus caudatus)’, ‘설악산은 국내 최대 산양 서식지(약 250마리 이상)’, ‘서식지 : 천적을 피해 경사가 급하고 바위가 많은 산악지대에서 생활함’"
+        },
+        {
+          "title": "산양",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020051",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘사람의 접근이 힘든 험준한 바위절벽을 중심으로 살아가는 산양은 2020년 약 2,000마리 정도가 비무장지대, 설악산, 양구-화천, 울진-봉화-삼척 등에서 살아가고 있는 것으로 추정되었습니다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S4, 2026-10-30): the Korea National Park Service page 국립공원깃대종 names the long-tailed goral (산양) as Seoraksan's flagship species, calls Seoraksan the largest goral habitat in Korea (국내 최대 산양 서식지) and gives its habitat as steep, rocky mountains; the Service's 산양 page says the goral lives around steep rock cliffs. English paraphrase; no population number is claimed, and the causes of decline are left out (child-safe tone).\nPass 2 (independent MAR culture and facts, a reviewer agent other than the author, 2026-10-30): both pages fetched again; 산양, 국내 최대 산양 서식지 and 험준한 바위절벽 found. Holds.\nPass 3 (MAR language and learning design, independent reviewers, 2026-10-30): es and ko checked, one {ko:산양} token each; no native-speaker or expert review is claimed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "CM-41 S4 (F-CURR-002 §5.5 S4, 2026-10-30): weather small talk and a hike plan with national park names (Jirisan, Seoraksan, Bukhansan). Practice is Role Play in all three quests (read and tap, 4 turns on every way, every way ends well); Apply and Check rotate: Sentence Builder and Cloze Pick, Realia Read and Sentence Builder, Story Order and Tap to Respond.",
+      "MAR pass 1, language (independent reviewer agent, 2026-10-30): particles, 해요체, natural and less natural replies, glosses and romanization checked (gungnipgongwon, seoraksaneun, galkkayo, gajyeogayo); es and ko overlays checked. PASS with two nits: es especies bandera (applied); a smoother q1 t4-cool line (declined: 같이 가요! keeps the quest's Volume 1 recycling at 30 in 100 or more).",
+      "MAR pass 1, culture and facts (independent reviewer agent, 2026-10-30): every source of n1-n3 fetched (Korea National Park Service, korea.kr); claims, numbers and the name 국립공원공단 as on the access date hold; the park weather card is made up and says so by its plain title; the notes are new against Volume 1. PASS; the verification records were then written.",
+      "MAR pass 1, learning design (independent reviewer agent, 2026-10-30): triples differ from Volume 1; Role Play graphs and their Tap to Respond fallback hold; item load 3, 5, 3 units; recycling 33, 46, 55 in 100. Should-fix applied: the q3 Story Order captions settle one order (그럼, then 도). Declined: a Practice off Role Play (the row names it), 그럼 물을 마셔요 (both words taught earlier).",
+      "Reviser (2026-10-30): 맑아요 (final ㄺ, not decodable at Stage 4, U-4) became 하늘이 파래요! in q1 and 날씨가 좋아요! in the q2 Jirisan branch; the review load is 28 new review items (Stage 4 Volume 1 cells teach 20 to 30). Third pass (independent reviewer agent, 2026-10-30): every change and every declined item confirmed; PASS. No native-speaker or expert review is claimed."
+    ]
+  },
+  "contentVer": 1
+}
