@@ -33,10 +33,14 @@ const HAS_TARGETS: Readonly<Record<SlideKind, boolean>> = {
   realia: false,
   'sentence-build': true,
   'write-together': true,
+  // The Role Play turn's replies are the quiz's option rows (`OptionRows`, each with its `stageTarget` marker).
+  'role-play': true,
+  // Hidden Heritage is a scene the room points at in the room; nothing on it is pointable on the stage.
+  'hidden-heritage': false,
 };
 
 describe('slideHasTargets (section 7.1)', () => {
-  it('is true for exactly the quiz, sequence, sentence-build and write-together kinds', () => {
+  it('is true for exactly the quiz, sequence, sentence-build, write-together and role-play kinds', () => {
     for (const kind of SHELL_SLIDE_KINDS) expect(slideHasTargets({ kind }), kind).toBe(HAS_TARGETS[kind]);
     expect(Object.keys(HAS_TARGETS).sort()).toEqual([...SHELL_SLIDE_KINDS].sort());
   });
@@ -107,6 +111,19 @@ describe('every list item a target slide draws is a content target (section 7.1 
     const tags = listItemTags(read('WriteTogetherSlide.tsx'));
     expect(tags).toHaveLength(2);
     for (const tag of tags) expect(tag).toContain("stageTarget: 'chip'");
+  });
+
+  it("RolePlaySlide: its replies are QuizParts' option rows (option targets); its chat bubbles are lines to read, not targets", () => {
+    const source = read('RolePlaySlide.tsx');
+    expect(source).toContain('<OptionRows');
+    expect(source).not.toContain('stageTarget');
+    expect(listItemTags(source)).toHaveLength(1);
+  });
+
+  it('HiddenHeritageSlide draws no list item and no target (the room points at the scene in the room)', () => {
+    const source = read('HiddenHeritageSlide.tsx');
+    expect(listItemTags(source)).toEqual([]);
+    expect(source).not.toContain('stageTarget');
   });
 
   it('the scan reads a whole tag, a style with an arrow or a comparison inside it included', () => {
