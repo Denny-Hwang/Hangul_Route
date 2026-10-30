@@ -216,6 +216,8 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
       expect(keptEventFields('lecture.tool_used', { tool }, undefined).payload).toEqual({ tool });
     }
     for (const reason of LECTURE_DECODE_FAILURES) expect(keptEventFields('lecture.deck_rejected', { reason }, undefined).payload).toEqual({ reason });
+    // Row CM-36 (Worker first): a deck naming a block kind this presenter does not know.
+    expect(keptEventFields('lecture.deck_rejected', { reason: 'unknown_kind' }, undefined).payload).toEqual({ reason: 'unknown_kind' });
   });
 
   it('the bounds: 0 to 30 blocks, 0 to 10000 slides and skips, 600 minutes, 100000 reveals, whole numbers only', () => {

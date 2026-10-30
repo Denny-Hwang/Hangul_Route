@@ -79,11 +79,21 @@ import { useQuestRunStore } from '../../store/quest-run-store';
 
 interface Props {
   scope: MinigameScope;
-  onFinish: () => void;
+  /** `skipped`: the learner left with Skip this one (or Continue on an empty step). */
+  onFinish: (skipped?: boolean) => void;
   /** The minigame ref; seeds the start order and names the sequence in telemetry. */
   sequenceId?: string;
   /** Per-mount random nonce for the start order; tests inject a fixed one. */
   nonce?: number;
+  /**
+   * One round of a step that plays several (Story Order's fallback, F-CURR-002 row CM-34): its slot keys carry
+   * `keyPrefix`, so two rounds never share one, and only the `last` round, or a skip, completes the step. `answer`,
+   * when given, takes each slot's answer instead of the run store, so the chain can say what the slot asked. A
+   * chained round is not a story's sequence, so it sends no `story.sequence.finished` (the step's `minigame.finished`
+   * names it; design/wireframes/minigame/story-order.md). `noSkip`: the chain is a Check's step, and the Check has no
+   * Skip (check-launcher.ts), so Skip this one is not drawn.
+   */
+  chain?: { keyPrefix: string; last: boolean; answer?: (roundKey: string, slot: number, correct: boolean) => void; noSkip?: boolean };
 }
 
 /** Column share of one card cell, by column count. */
@@ -110,7 +120,7 @@ type Note = 'hint' | 'wrong' | 'look';
  * shows it full width; a card without art shows its words alone on the paper
  * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/sequence.md (F, G).
  */
-export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): ReactElement {
+export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, chain }: Props): ReactElement {
   const textScale = useTypeScale();
   const locale = useLocale();
   // Captions and narration in the UI language (F-I18N-001 §3.6, `story:` overlays).
@@ -164,21 +174,25 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
 
   const finish = useCallback(
     (finalState: SequenceState, skipped: boolean): void => {
-      void track({
-        name: 'story.sequence.finished',
-        profileId: activeProfileId,
-        payload: sequenceFinishedPayload(
-          { storyId: scope.story?.storyId ?? null, sequenceId },
-          sequenceSummary(finalState),
-          skipped,
-        ),
-      });
+      if (chain === undefined) {
+        void track({
+          name: 'story.sequence.finished',
+          profileId: activeProfileId,
+          payload: sequenceFinishedPayload(
+            { storyId: scope.story?.storyId ?? null, sequenceId },
+            sequenceSummary(finalState),
+            skipped,
+          ),
+        });
+      }
       stop();
-      markStepComplete();
-      onFinish();
+      if (chain === undefined || chain.last || skipped) markStepComplete();
+      onFinish(skipped);
     },
-    [activeProfileId, scope.story?.storyId, sequenceId, markStepComplete, onFinish],
+    [activeProfileId, scope.story?.storyId, sequenceId, markStepComplete, onFinish, chain],
   );
+  const keyPrefix = chain?.keyPrefix;
+  const chainAnswer = chain?.answer;
 
   const dispatch = useCallback(
     (action: SequenceAction): void => {
@@ -196,7 +210,8 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
             nudge();
             setNote('wrong');
           }
-          answerRound(effect.roundKey, effect.correct);
+          if (keyPrefix !== undefined && chainAnswer !== undefined) chainAnswer(`${keyPrefix}${effect.roundKey}`, effect.roundKey, effect.correct);
+          else answerRound(keyPrefix === undefined ? effect.roundKey : `${keyPrefix}${effect.roundKey}`, effect.correct);
         } else if (effect.type === 'highlight') {
           setNote('look');
         } else {
@@ -212,7 +227,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         flashTimer.current = setTimeout(() => setWrongFlash(null), SEQUENCE_WRONG_FLASH_MS);
       }
     },
-    [answerRound, finish],
+    [answerRound, finish, keyPrefix, chainAnswer],
   );
 
   useEffect(
@@ -507,8 +522,12 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
           <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.tryAnother : copy.lookHere} />
         )}
       </View>
-      <Spacer size="xl" />
-      <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
+      {chain?.noSkip === true ? null : (
+        <>
+          <Spacer size="xl" />
+          <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
+        </>
+      )}
     </Screen>
   );
 }

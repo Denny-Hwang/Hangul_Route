@@ -65,16 +65,6 @@ async function typeHangul(page: Page, n: number, total: number, text: string): P
   await expect(page.getByText('You typed it!')).toBeVisible();
 }
 
-/** Sentence Builder Check: place the tiles of the round in order, by accessible name. */
-async function placeTiles(page: Page, tiles: readonly string[]): Promise<void> {
-  const tray = page.getByTestId('sentence-builder-tray');
-  await expect(tray).toBeVisible({ timeout: 5_000 });
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
 /** Type Hangul: tap the keys for each word, then Done; a typed word moves on by itself. */
 async function typeWords(page: Page, words: readonly string[]): Promise<void> {
   for (const [i, word] of words.entries()) {
@@ -123,27 +113,7 @@ async function traceWord(page: Page, word: string, romanization: string): Promis
   }
 }
 
-/** Sentence Builder as the Check (S7-4): no round counter; the round's gloss shows, then its tiles by accessible name in order. */
-async function buildCheckRound(page: Page, gloss: string, tiles: readonly string[]): Promise<void> {
-  await expect(page.getByTestId('sentence-builder-gloss')).toHaveText(gloss, { timeout: 5_000 });
-  const tray = page.getByTestId('sentence-builder-tray');
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
-/** Sentence Builder as the Stage 7 Check (S7-5): tap one round's tiles in order, past the touch window. */
-async function buildCheckTiles(page: Page, tiles: readonly string[]): Promise<void> {
-  const tray = page.getByTestId('sentence-builder-tray');
-  for (const name of tiles) {
-    await page.waitForTimeout(120);
-    await expect(tray.getByRole('button', { name, exact: true })).toBeVisible({ timeout: 5_000 });
-    await tray.getByRole('button', { name, exact: true }).click();
-  }
-}
-
-/** Sentence Builder in the Stage 7 Check (no round counter, no Skip): build each round by its tiles. */
+/** Sentence Builder as a Check (no round counter, no Skip; row CM-3A S3's Stage 3 Check): build each round by its tiles. */
 async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
   for (const tiles of rounds) {
@@ -154,6 +124,23 @@ async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): P
     }
     await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
     await expect(page.getByTestId('sentence-builder-done')).toHaveCount(0, { timeout: 5_000 });
+  }
+}
+
+/**
+ * A Stage 7 Cloze Pick Check (F-CURR-002 row CM-3A S7). `game.cloze-pick` ships at built-in pct 0, so the release
+ * build plays its Listen & Pick fallback in the text prompt mode (the sentence with its gap and its meaning, the same
+ * tiles): tap the tile that fits each round, by its tile id (`<round>:t<index>`), a beat apart.
+ */
+async function pickClozeCheck(page: Page, answers: ReadonlyArray<readonly [round: string, tile: number]>, screenshot?: string): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const [i, [round, tile]] of answers.entries()) {
+    await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible({ timeout: 5_000 });
+    const option = page.getByTestId(`listen-pick-option-${round}:t${tile}`);
+    await expect(option).toBeVisible({ timeout: 5_000 });
+    if (i === 0 && screenshot !== undefined) await shot(page, screenshot);
+    await page.waitForTimeout(120);
+    await option.click();
   }
 }
 
@@ -201,7 +188,7 @@ async function playTasteQ1(
   shot: string,
   firstWord: string,
   boards: readonly (readonly string[])[],
-  check: readonly [string, string],
+  check: (page: Page) => Promise<void>,
 ): Promise<void> {
   await startFirstQuest(page);
   await expect(page.getByText(firstWord, { exact: true }).first()).toBeVisible();
@@ -217,7 +204,8 @@ async function playTasteQ1(
     }
   }
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await playCheckByIds(page, [{ answer: check[0] }, { answer: check[1] }]);
+  await check(page);
+  await page.screenshot({ path: test.info().outputPath(`${shot}-q1-check.png`), fullPage: true });
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByText('Next up')).toBeVisible();
   await page.screenshot({ path: test.info().outputPath(`${shot}-q1-results.png`), fullPage: true });
@@ -268,6 +256,12 @@ async function pickRealia(page: Page, ids: readonly string[]): Promise<void> {
   }
 }
 
+/** A Realia Read Check (F-CURR-002 row CM-3A S6): the Check card's Go, then the two questions by option id. */
+async function playRealiaCheck(page: Page, ids: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await pickRealia(page, ids);
+}
+
 /**
  * Tap to Respond: tap the written reply whose button label starts with `ko` (the label is
  * "<ko>  ·  <romanization>  ·  <gloss>"); a right reply moves to the next turn.
@@ -277,6 +271,34 @@ async function reply(page: Page, ko: string): Promise<void> {
   const option = page.getByRole('button', { name: new RegExp(`^${ko.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} · `) });
   await expect(option).toBeVisible();
   await option.click();
+}
+
+/**
+ * Tap to Respond turns by their right reply, the counter moving on after each (`n / total`); after the last turn the
+ * next step's Play minigame (or the Check's Go, or the reward) shows. A tap inside the double-touch window is dropped (the same reply twice in a row),
+ * so a turn is tapped again until it moves on, and only while its own counter still shows. A Role Play step plays this while `game.role-play` is off (row CM-35).
+ */
+async function replyTurns(page: Page, turns: readonly string[], last: 'minigame' | 'check' | 'finish' = 'minigame'): Promise<void> {
+  for (const [i, line] of turns.entries()) {
+    await expect(page.getByText(`${i + 1} / ${turns.length}`, { exact: true })).toBeVisible({ timeout: 5_000 });
+    const after =
+      i + 1 < turns.length
+        ? page.getByText(`${i + 2} / ${turns.length}`, { exact: true })
+        : last === 'minigame'
+          ? page.getByRole('button', { name: 'Play minigame' })
+          : last === 'check'
+            ? page.getByRole('button', { name: 'Go', exact: true })
+            : page.getByText('Finish', { exact: true }).first();
+    // Tap only while this turn's counter still shows and the next one does not, so a retry never answers the next turn
+    // (consecutive turns can share a reply, life q1 and crafts q1). The wait passes the double-touch window first.
+    const current = page.getByText(`${i + 1} / ${turns.length}`, { exact: true });
+    await expect(async () => {
+      if (await after.isVisible()) return;
+      await page.waitForTimeout(120);
+      if ((await current.isVisible()) && !(await after.isVisible())) await reply(page, line);
+      await expect(after).toBeVisible({ timeout: 1500 });
+    }).toPass();
+  }
 }
 
 /** Story Sequence: place the lesson lines in order by card id, then leave the replay. */
@@ -348,6 +370,62 @@ async function playPicWordBoards(page: Page, boards: readonly (readonly string[]
       await page.getByTestId(`pic-word-word-${id}`).click();
     }
   }
+}
+
+/** A Pic-Word Match Check (F-CURR-002 row CM-3A S2): the launcher's Go, then each board's pairs by id. */
+async function playCheckBoards(page: Page, boards: readonly (readonly string[])[]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (const ids of boards) {
+    await expect.poll(() => boardIds(page)).toEqual([...ids].sort());
+    // A Check has no Skip (F-QUEST-002 L2), and its header is "Quick check", never "n / N".
+    await expect(page.getByTestId('pic-word-skip')).toHaveCount(0);
+    await expect(page.locator('text=Quick check >> visible=true').first()).toBeVisible();
+    for (const id of ids) {
+      await page.getByTestId(`pic-word-picture-${id}`).click();
+      await page.getByTestId(`pic-word-word-${id}`).click();
+    }
+  }
+}
+
+/** A Read Pick Meaning Check (row CM-3A S2): the Korean is drawn as text, no speaker, then the pictures by id. */
+async function playReadPickCheck(page: Page, answers: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible();
+  await expect(page.getByText('What does this mean?')).toBeVisible();
+  await expect(page.getByTestId('listen-pick-speaker')).toHaveCount(0);
+  const size = page.viewportSize();
+  await shot(page, `read-pick-${answers[0]}-${size?.width ?? 0}`);
+  // The same round wide (1024 x 768), then back to the test's own size.
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible();
+  await shot(page, `read-pick-${answers[0]}-wide`);
+  if (size) await page.setViewportSize(size);
+  await pickByIds(page, answers);
+}
+
+/** A Dictation Check (row CM-3A S2): the launcher's Go, then each word typed (a `see` round when no voice or its switch is off). */
+async function playDictationCheck(page: Page, name: string, words: readonly [string, string]): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  // A Check has no Skip (F-QUEST-002 L2), at the phone width and wide; the prompt and the field stay on screen.
+  await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport();
+  await shot(page, `dictation-${name}-${page.viewportSize()?.width ?? 0}`);
+  const size = page.viewportSize();
+  // The smallest phone (320 x 568): the word to copy and the field are on screen without scrolling.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('type-hangul-done')).toBeInViewport({ ratio: 1 });
+  await shot(page, `dictation-${name}-320x568`);
+  // The last key row is a short scroll away, and the word is still in view with it.
+  await page.getByTestId('hangul-key-space').scrollIntoViewIfNeeded();
+  await expect(page.getByTestId('hangul-key-space')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport({ ratio: 1 });
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect(page.getByTestId('type-hangul-field')).toBeVisible();
+  await expect(page.getByTestId('type-hangul-skip')).toHaveCount(0);
+  if (size) await page.setViewportSize(size);
+  for (const word of words) await typeAnswer(page, word);
 }
 
 /** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards carry a label, not a button role. */
@@ -422,8 +500,11 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['morae', 'sand'],
         ['gong', 'ball'],
       ]);
-      // One first-try miss shows the amber nudge, then the ball; the reading round reads 공.
-      await playCheckByIds(page, [{ answer: 'sport-ball', missWith: 'kite' }, { answer: 'gong' }]);
+      // F-CURR-002 row CM-3A S2: the Check is Pic-Word Match on the cell's own words (Check rotation, section 7.1).
+      await playCheckBoards(page, [
+        ['gong', 'jajeongeo', 'haneul'],
+        ['yeon', 'namu', 'chukgu'],
+      ]);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
     },
@@ -454,7 +535,11 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await build(page, 5, 5, ['이에요, ieyo']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['school-bag', 'school-school', 'book', 'school-school']);
-      await playCheckByIds(page, [{ answer: 'school-bag' }, { answer: 'a' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await expect(page.getByTestId('listen-pick-option-c1:t0')).toBeVisible({ timeout: 5_000 });
+      await shot(page, 'first-sentences-q1-cloze-check-320');
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }], { go: false });
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -472,12 +557,12 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByRole('button', { name: 'Read along' })).toBeVisible();
       await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '책이에요.');
-      await reply(page, '친구예요.');
-      await reply(page, '가방이에요.');
+      await replyTurns(page, ['책이에요.', '친구예요.', '가방이에요.']);
+      // The Apply is Role Play (F-CURR-002 row CM-3A S4); `game.role-play` is dark, so it plays Tap to Respond on its main path.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await replyTurns(page, ['지우개예요.', '책이에요.', '할머니예요.', '친구예요.'], 'check');
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t1' }, { answer: 'c2:t1' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -515,7 +600,12 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['o1', 'songpyeon', 'o1', 'grandma']);
       await expect(page.getByText('Two quick ones', { exact: true })).toBeVisible();
-      await playCheckByIds(page, [{ answer: 'grandpa' }, { answer: 'songpyeon' }]);
+      // The Check is Sentence Builder (F-CURR-002 row CM-3A S3): a built sentence, then the 을 / 를 choice after 송편.
+      await buildCheck(page, [
+        ['할아버지하고, harabeojihago', '할머니가, halmeoniga', '있어요, isseoyo'],
+        // A particle round: the words are given in order, the ending after 송편 is picked.
+        ['을, eul'],
+      ]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's3-3-q1-reward-320');
     },
@@ -544,7 +634,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['nonggu', 'yeon', 'julleomgi'],
         ['chukgu', 'yunnori', 'yeon'],
       ]);
-      await playCheckByIds(page, [{ answer: 'kite' }, { answer: 'chukgu' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -571,7 +662,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       ]);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await matchBoards(page, 4, ['p1', 'p2', 'p3']);
-      await playCheckByIds(page, [{ answer: 'o1' }, { answer: 'o1' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -585,13 +677,15 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     playFirstQuest: async (page) => {
       await startFirstQuest(page);
       await passDiscover(page);
-      await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '안녕하세요!');
-      await reply(page, '저는 호야예요.');
-      await reply(page, '저도 반가워요.');
+      // The Practice is Story Sequence and the Apply Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so
+      // the Apply plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await pickByIds(page, ['r1:t0', 'r2:t0', 'r3:t1', 'r4:t1']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['저는 호야예요.', '저도 반가워요.'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -601,7 +695,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S2-1: Word Builder. q1 teaches ㅐ ㅔ ㅒ ㅖ; its six Pic-Word boards are played, its Card Match is
-  // skipped (the shipped game), and the Check is answered by id: the sun picture, then the written 노래.
+  // skipped (the shipped game), and the Check is Read Pick Meaning on 해 and 노래 (row CM-3A S2).
   'episode:stage2-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -623,7 +717,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       }
       // Apply (the shipped Card Match) is skipped; the Check is answered by id.
       await page.getByRole('button', { name: 'Skip for now' }).click();
-      await playCheckByIds(page, [{ answer: 'hae' }, { answer: 'norae' }]);
+      // Row CM-3A S2: Read Pick Meaning, 해 and 노래 read, their pictures picked.
+      await playReadPickCheck(page, ['hae', 'norae']);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
       await shot(page, 's2-1-q1-results-320');
@@ -635,7 +730,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S2-2: Holiday Words, q1 "Seollal Words": Discover, all six Pic-Word boards, Build a Letter
-  // (the shipped game, skipped here), and the Check by id: the 세배 picture, then the written 설날.
+  // (the shipped game, skipped here), and the Check: Read Pick Meaning on 설날 and 한복 (row CM-3A S2).
   'episode:stage2-rites': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -651,7 +746,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['hanbok', 'tteokguk', 'sebae'],
       ]);
       await page.getByRole('button', { name: 'Skip for now' }).click();
-      await playCheckByIds(page, [{ answer: 'sebae' }, { answer: 'seollal' }]);
+      // Row CM-3A S2: Read Pick Meaning, 설날 and 한복 read, their pictures picked.
+      await playReadPickCheck(page, ['seollal', 'hanbok']);
       await page.getByRole('button', { name: 'See results' }).click();
       await expect(page.getByText('Next up')).toBeVisible();
       await shot(page, 's2-2-q1-results-320');
@@ -662,20 +758,26 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Holidays & Traditions: Holiday Words\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, three Tap to Respond turns, the four-line
-  // Story Sequence and the Check, at 320 px.
+  // F-CURR-001 S4-2: Kitchen Talk, q1 "Have You Eaten?": Discover, Role Play (its Tap to Respond fallback), four
+  // Sentence Builder rounds and the Dialogue reply pick Check, at 320 px (F-CURR-002 row CM-3A S4).
   'episode:stage4-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
       await passDiscover(page);
+      // The Practice is Role Play (F-CURR-002 row CM-3A S4); `game.role-play` is dark, so it plays Tap to Respond on its main path.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '네, 먹었어요.');
-      await reply(page, '네, 마셨어요.');
-      await reply(page, '네, 먹었어요.');
+      await shot(page, 's4-2-q1-role-play-fallback-320');
+      await replyTurns(page, ['네, 먹었어요.', '네, 먹었어요.', '네, 마셨어요.', '네, 먹었어요.']);
+      // The Apply is Sentence Builder: two built questions, the yes answer, then the 을 / 를 choice after 우유.
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await build(page, 1, 4, ['밥, bap', '먹었어요, meogeosseoyo']);
+      await build(page, 2, 4, ['우유, uyu', '마셨어요, masyeosseoyo']);
+      await build(page, 3, 4, ['네,, ne', '먹었어요, meogeosseoyo']);
+      await build(page, 4, 4, ['를, reul']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['네, 먹었어요.', '네, 마셨어요.'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-2-q1-reward-320');
     },
@@ -685,20 +787,21 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Food & Daily Life: Kitchen Talk\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, the four-line
-  // Story Sequence and the Check, at 320 px.
+  // F-CURR-001 S4-3: Park Conversations, q1 "Sky Watching": Discover, three Tap to Respond turns, Realia Read on the
+  // weather card and the Cloze Pick Check (its fallback), at 320 px (F-CURR-002 row CM-3A S4).
   'episode:stage4-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
       await startFirstQuest(page);
       await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await reply(page, '안녕하세요!');
-      await reply(page, '네, 좋아요!');
-      await reply(page, '집에 가요!');
+      await replyTurns(page, ['안녕하세요!', '네, 좋아요!', '집에 가요!']);
+      // The Apply is Realia Read on the park weather card (F-CURR-002 row CM-3A S4).
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3', 'l4']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await shot(page, 's4-3-q1-weather-card-320');
+      await pickRealia(page, ['sun', 'river', 'wind', 'mountain']);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S4); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t1' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-3-q1-reward-320');
     },
@@ -708,8 +811,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Nature & Animals: Park Conversations\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages),
-  // Tap to Respond (three turns), Story Sequence (three lines), the two-round Check, the reward.
+  // F-CURR-001 S4-4: Playdate Talk, q1 "What Shall We Play?" at 320 px: Discover (two exchange pages), Role Play
+  // and Story Order (their fallbacks), the Dialogue reply pick Check, the reward (F-CURR-002 row CM-3A S4).
   'episode:stage4-crafts': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 640 });
@@ -717,21 +820,16 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByText('Page 1 of 2')).toBeVisible();
       await shot(page, 's4-4-q1-discover-320');
       await passDiscover(page);
+      // The Practice is Role Play and the Apply Story Order (F-CURR-002 row CM-3A S4); both switches are dark, so they
+      // play Tap to Respond on the Role Play's main path and Story Sequence on the captions.
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await shot(page, 's4-4-q1-tap-respond-320');
-      const turns = ['좋아!', '윷놀이 하자!', '좋아!'];
-      for (const [i, line] of turns.entries()) {
-        await expect(page.getByText(`${i + 1} / ${turns.length}`, { exact: true })).toBeVisible();
-        // A tap inside the game's double-touch window is dropped (the same 좋아! twice): tap again until the turn moves on.
-        const after = i + 1 < turns.length ? page.getByText(`${i + 2} / ${turns.length}`, { exact: true }) : page.getByRole('button', { name: 'Play minigame' });
-        await expect(async () => {
-          await reply(page, line);
-          await expect(after).toBeVisible({ timeout: 1500 });
-        }).toPass();
-      }
+      await replyTurns(page, ['좋아!', '윷놀이 하자!', '좋아!', '좋아! 같이 가자!']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
-      await orderLines(page, ['l1', 'l2', 'l3']);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      await orderLines(page, ['ask', 'what', 'yut', 'okay']);
+      // The Check is the Dialogue reply pick (Tap to Respond).
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      await replyTurns(page, ['윷놀이 하자!', '좋아!'], 'finish');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
       await shot(page, 's4-4-q1-reward-320');
     },
@@ -766,7 +864,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         await page.getByTestId('type-hangul-done').click();
         await expect(page.getByText('You typed it!')).toBeVisible();
       }
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the menu (김밥 by its meaning, then 라면 by its picture).
+      await playRealiaCheck(page, ['b', 'c']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -787,7 +886,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeAnswer(page, '여기요');
       await typeAnswer(page, '김밥 주세요');
       await typeAnswer(page, '물 주세요');
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'b' }]);
+      // Row CM-3A S6: the Check reads the table menu (라면 by its meaning, then 우유 by its picture).
+      await playRealiaCheck(page, ['c', 'b']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -812,7 +912,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       ]);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await typeWords(page, ['기차', '출발', '도착']);
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the ticket (서울 goes with 출발, 부산 with 도착).
+      await playRealiaCheck(page, ['b', 'c']);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -822,7 +923,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S6-4: Hike & Ask, q1 "Trail Signs" at 320 px: Discover, Realia Read on the trail sign
-  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Check by id (정상, then 출구).
+  // (four boards), Type Hangul (산길, 정상, 입구, 출구) and the Realia Read Check (강, then 출구; row CM-3A S6).
   'episode:stage6-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -833,7 +934,9 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await pickRealia(page, ['jeongsang', 'chulgu', 'ipgu', 'hwajangsil']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       for (const word of ['산길', '정상', '입구', '출구']) await typeAnswer(page, word);
-      await playCheckByIds(page, [{ answer: 'a' }, { answer: 'a' }]);
+      // Row CM-3A S6: the Check reads the sign (the board to the river, then the way out).
+      await playRealiaCheck(page, ['b', 'c']);
+      await shot(page, 's6-4-q1-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -854,7 +957,9 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await pickRealia(page, ['hanji', 'buchae', 'apple', 'cheon']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       for (const word of ['한지', '부채', '오일장']) await typeAnswer(page, word);
-      await playCheckByIds(page, [{ answer: 'b' }, { answer: 'c' }]);
+      // Row CM-3A S6: the Check is Cloze Pick on the price cards (부채는 ___ 원이에요, 사과는 ___ 원이에요); with
+      // game.cloze-pick at its built-in pct 0 it plays as Listen & Pick with a text prompt, on the same tiles.
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t1' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -882,7 +987,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await buildSentence(page, ['산에, sane', '곰이, gomi', '있어요, isseoyo']);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await pickByIds(page, ['bird', 'fox', 'a', 'a']);
-      await playCheckByIds(page, [{ answer: 'bear' }, { answer: 'a' }]);
+      // The Check is Cloze Pick (F-CURR-002 row CM-3A S3); `game.cloze-pick` is dark, so it plays its Listen & Pick fallback (tile ids `<round>:t<n>`).
+      await playCheckByIds(page, [{ answer: 'c1:t0' }, { answer: 'c2:t0' }]);
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -891,19 +997,22 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Nature & Animals: Animal Sentences\./)).toBeVisible();
     },
   },
-  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is the
-  // gimbap picture, then the written 도시락.
+  // F-CURR-001 T-1: Lunch Box Words. q1 keeps its id and its card; its Card Match is skipped, the Check is Read
+  // Pick Meaning on 김밥 and 우유 (row CM-3A S2).
   'episode:stage2-life': {
-    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, ['gimbap', 'dosirak']),
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-life', '도시락', LUNCH_BOX_Q1_BOARDS, (p) => playReadPickCheck(p, ['gimbap', 'uyu'])),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
       await page.goto('/');
       await expectCellOnRoute(page, 2, 'Lunch Box Words');
     },
   },
-  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is the star picture, then the written 나무.
+  // F-CURR-001 T-1: Outdoor Words. q1's Build the Word is skipped; the Check is Dictation of 하늘 and 나무 (row CM-3A S2).
   'episode:stage2-nature': {
-    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, ['byeol', 'namu']),
+    playFirstQuest: (page) => playTasteQ1(page, 'stage2-nature', '하늘', OUTDOOR_Q1_BOARDS, async (p) => {
+      await p.setViewportSize({ width: 320, height: 720 });
+      await playDictationCheck(p, 'haneul', ['하늘', '나무']);
+    }),
     expectRouteDay: async (page) => {
       await page.context().setOffline(false);
       await page.goto('/');
@@ -911,7 +1020,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S7-1: Write Your Name, q1 "Hoya's Name": Trace a Word (left with Skip, a first-class way
-  // on), Type Hangul with the cast name 호야, and the Stage 7 Sentence Builder Check.
+  // on), Type Hangul with the cast name 호야 (이름 is a Dictation round, a see round with its switch off), and the
+  // Cloze Pick Check of row CM-3A S7 (이건 ___이에요.).
   'episode:stage7-letters': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -926,10 +1036,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeAnswer(page, '이름');
       await typeAnswer(page, '한글');
       await typeAnswer(page, '이건 이름이에요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      await placeTiles(page, ['이건, igeon', '이름이에요, ireumieyo']);
-      await expect(page.getByTestId('sentence-builder-gloss')).toHaveText('This is Hangul.', { timeout: 5_000 });
-      await placeTiles(page, ['이건, igeon', '한글이에요, hangeurieyo']);
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'write-your-name-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -939,7 +1046,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
     },
   },
   // F-CURR-001 S7-2: My Day in Korean, q1 "Morning to Evening": Trace a Word (Skip is the
-  // learner's own way past it), Type Hangul on the in-app keyboard, the Sentence Builder Check.
+  // learner's own way past it), Type Hangul on the in-app keyboard (아침 and 저녁 are Dictation rounds, see rounds
+  // with their switch off), and the Cloze Pick Check of row CM-3A S7 (___에 밥을 먹어요.).
   'episode:stage7-life': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -958,20 +1066,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeHangul(page, 2, 4, '저녁');
       await typeHangul(page, 3, 4, '점심에');
       await typeHangul(page, 4, 4, '아침에 밥을 먹어요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      const tray = page.getByTestId('sentence-builder-tray');
-      await expect(tray).toBeVisible({ timeout: 5_000 });
-      await shot(page, 'my-day-q1-check-320');
-      for (const tiles of [
-        ['아침에, achime', '밥을, babeul', '먹어요, meogeoyo'],
-        ['점심에, jeomsime', '밥을, babeul', '먹어요, meogeoyo'],
-      ]) {
-        await expect(tray.getByRole('button', { name: tiles[0], exact: true })).toBeVisible({ timeout: 5_000 });
-        for (const name of tiles) {
-          await page.waitForTimeout(120);
-          await tray.getByRole('button', { name, exact: true }).click();
-        }
-      }
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'my-day-q1-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1002,10 +1097,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeRound(page, 2, 4, '봤어요');
       await typeRound(page, 3, 4, '만들었어요');
       await typeRound(page, 4, 4, '떡국');
-      await buildCheck(page, [
-        ['송편을, songpyeoneul', '먹었어요, meogeosseoyo'],
-        ['보름달을, boreumdareul', '봤어요, bwasseoyo'],
-      ]);
+      // The Cloze Pick Check of row CM-3A S7: the past verb that fits each sentence.
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'my-holiday-memory-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1014,7 +1107,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await expect(page.getByLabel(/^Holidays & Traditions: My Holiday Memory\./)).toBeVisible();
     },
   },
-  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, the order-it Check.
+  // F-CURR-001 S7-4: My Favorite Animal, q1 "Animals I Like": Trace a Word, Type Hangul, and the Cloze Pick Check of
+  // row CM-3A S7 with a particle gap (고양이___ takes 가, 곰___ takes 이).
   'episode:stage7-nature': {
     playFirstQuest: async (page) => {
       await page.setViewportSize({ width: 320, height: 720 });
@@ -1034,10 +1128,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await typeRound(page, 3, 4, '곰이 좋아요');
       await shot(page, 'favorite-animal-q1-type-320');
       await typeRound(page, 4, 4, '새가 좋아요');
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      // Check round 1 is a particle round (the noun is given, 가 is picked); round 2 builds the sentence.
-      await buildCheckRound(page, 'I like cats.', ['가, ga']);
-      await buildCheckRound(page, 'I like tigers.', ['호랑이가, horangiga', '좋아요, joayo']);
+      await pickClozeCheck(page, [['c1', 1], ['c2', 1]], 'favorite-animal-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1068,10 +1159,8 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       await build(page, 1, 3, ['를, reul']);
       await build(page, 2, 3, ['꽃을, kkocheul', '그려요, geuryeoyo']);
       await build(page, 3, 3, ['가위로, gawiro', '잘라요, jallayo']);
-      // The Stage 7 Check is two Sentence Builder rounds: 을 after a final consonant, then one sentence.
-      await page.getByRole('button', { name: 'Go', exact: true }).click();
-      await buildCheckTiles(page, ['을, eul']);
-      await buildCheckTiles(page, ['별을, byeoreul', '그려요, geuryeoyo']);
+      // The Stage 7 Check (row CM-3A S7) is Cloze Pick: 을 after a final consonant, then the verb that fits.
+      await pickClozeCheck(page, [['c1', 0], ['c2', 2]], 'make-share-q1-cloze-check-320');
       await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     },
     expectRouteDay: async (page) => {
@@ -1162,4 +1251,42 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
+  // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.
+  test('episode:stage3-rites q2: its Dictation Check plays as see rounds with game.type-hangul-hear dark, to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(3, THEME_LABEL.rites), exact: true }).click();
+    await page.getByTestId('episode-quest-quest:stage3-rites-q2').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(headerClose(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    // Sentence Builder: four particle rounds (the words are given, 이 or 가 is picked) and one built sentence.
+    await build(page, 1, 5, ['이, i']);
+    await build(page, 2, 5, ['이, i']);
+    await build(page, 3, 5, ['가, ga']);
+    await build(page, 4, 5, ['사과하고, sagwahago', '떡이, tteogi', '맛있어요, masisseoyo']);
+    await build(page, 5, 5, ['이, i']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await pickByIds(page, ['hanbok', 'apple', 'moon', 'tteok']);
+    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    for (const word of ['한복', '송편']) {
+      // A see round: the word is shown, there is no speaker, and the in-app keyboard types it.
+      await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
+      await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
+      if (word === '한복') await shot(page, 's3-3-q2-dictation-check-see-320');
+      for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+      await page.getByTestId('type-hangul-done').click();
+      await expect(page.getByText('You typed it!')).toBeVisible();
+    }
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
 });

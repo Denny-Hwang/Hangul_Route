@@ -9,6 +9,7 @@ import {
   type ProgressSnapshot,
   type Quest,
   type SelfRoute,
+  requiredQuestIds,
 } from '@hangul-route/content-schema';
 import { canAssignQuest } from './gating';
 
@@ -131,7 +132,10 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
     const horizonEnd = source.meta ? addDays(today, source.meta.horizonDays ?? HORIZON_DAYS) : null;
     for (const item of source.items) {
       if (horizonEnd !== null && item.targetDate !== undefined && item.targetDate > horizonEnd) continue;
-      const targets = item.kind === 'quest' ? [item.id] : (episodeById.get(item.id)?.questIds ?? []);
+      // An episode item names the quests the episode needs (`requiredQuestIds`, F-CURR-002 section 4.2): an optional
+      // addition that ships after the plan was saved never lands on it as a new (often overdue) assignment.
+      const episode = item.kind === 'quest' ? undefined : episodeById.get(item.id);
+      const targets = item.kind === 'quest' ? [item.id] : episode ? requiredQuestIds(episode) : [];
       if (targets.length === 0) {
         bump(source.id);
         continue;

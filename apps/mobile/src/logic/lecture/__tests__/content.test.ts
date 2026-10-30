@@ -335,9 +335,9 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
           expect({ key: s.key, gloss: s.sentence.gloss }).not.toEqual({ key: s.key, gloss: same.sentence.gloss });
         }
       }
-      // Every order-it round, the Stage 7 Checks included, is a slide in every language.
+      // Every order-it round, the Stage 7 Checks included, is a slide in every language (115 since row CM-3A S7).
       expect(localized).toBe(english);
-      expect(localized).toBeGreaterThanOrEqual(135);
+      expect(localized).toBeGreaterThanOrEqual(115);
     },
   );
 

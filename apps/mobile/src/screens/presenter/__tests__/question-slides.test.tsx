@@ -51,8 +51,9 @@ const QUESTION: ReadonlySet<BuildName> = new Set(['question']);
 const ANSWER: ReadonlySet<BuildName> = new Set(['question', 'answer']);
 
 const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
-const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }]);
-const stage3Text = slidesOf([{ kind: 'quest', id: 'quest:stage3-life-q1' }], false);
+// Row CM-3A S3: the Stage 3 Checks rotate Cloze Pick, Sentence Builder and Dictation; nature q1 hears its Apply (pictures and sentences).
+const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
+const stage3Text = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }], false);
 const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
 const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }, { kind: 'quest', id: 'quest:stage6-crafts-q3' }]);
 /** Every realia question of the shipped Stage 6 lessons, so a figure and a picture question are always found. */
@@ -149,9 +150,12 @@ describe('QuestionSlide: listen (LV-S2)', () => {
   });
 });
 
-describe('QuestionSlide: a listen round that asks for the reply (the Stage 4 Check)', () => {
+describe('QuestionSlide: a listen round that asks for the reply (a heard line, a reply it does not hold)', () => {
   it('asks "Which answer fits?"; what was heard still waits for the answer build', async () => {
-    const slide = stage4.find((s): s is ListenBody => isListenOrReply(s) && s.prompt.ask === 'listen')!;
+    // Row CM-3A S4 moved the Stage 4 Checks off Listen & Pick, so no shipped lesson asks one now: a heard sentence round
+    // of Stage 3 is drawn as the deck builder marks such a round (`reply`).
+    const heard = listenOf(stage3, true);
+    const slide: ListenBody = { ...heard, prompt: { ...heard.prompt, reply: true } };
     expect(slide.prompt.reply).toBe(true);
     const r = await render(inView(<QuestionSlide slide={slide} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
     expect(textOf(byTestId(r.root, 'presenter-quiz-question')[0]!)).toBe(en.learner.presenter.quiz.reply);
@@ -169,6 +173,7 @@ describe('QuestionSlide: reply (LV-S2)', () => {
     expect(byTestId(r.root, 'presenter-quiz-speaker')).toHaveLength(0);
     const said = byTestId(r.root, 'presenter-quiz-said')[0]!;
     expect(hiddenNow(said)).toBe(false);
+    // Row CM-3A S4: the life q1 Role Play's first turn (its reply slides while `game.role-play` is off, row CM-35).
     expect(screenTexts(said)).toEqual(expect.arrayContaining(['밥 먹었어요?', slide.prompt.line.romanization, slide.prompt.line.gloss]));
     expect(byTestId(r.root, 'presenter-quiz-option-gloss').map(hiddenNow).every(Boolean)).toBe(true);
     expect(byTestId(r.root, 'presenter-quiz-option-ko').map((n) => textOf(n)).sort()).toEqual(slide.options.map((o) => o.ko).sort());
@@ -177,6 +182,25 @@ describe('QuestionSlide: reply (LV-S2)', () => {
 
 describe('RealiaQuestionSlide (LV-S2, V7)', () => {
   const realia = stage6.filter((s): s is RealiaQuestionBody => isRealiaQuestion(s));
+
+  it('a Cloze Pick value gap keys its question by its sentence, which wraps inside the key row (row CM-3A S6)', async () => {
+    // A Stage 6 Cloze Pick Check (김밥은 ___ 원이에요.), beside its menu.
+    const sentence = realia.find((s) => s.prompt.key?.ko.includes('___'))!;
+    expect(sentence).toBeDefined();
+    const r = await render(inView(<RealiaQuestionSlide slide={sentence} shown={QUESTION} romanization="always" />));
+    const chip = byTestId(r.root, 'presenter-realia-key')[0]!;
+    const style = Object.assign({}, ...[chip.props.style].flat()) as Record<string, unknown>;
+    expect(style).toMatchObject({ flexWrap: 'wrap', maxWidth: '100%', flexShrink: 1 });
+    expect(screenTexts(chip)).toEqual(expect.arrayContaining([sentence.prompt.key!.ko, sentence.prompt.key!.romanization]));
+    // A screen reader says the gap as a word, in the chip and in the question ("The fan is blank won."), never "underscore".
+    const blank = en.a11y.minigame.clozePick.blank;
+    expect(chip.props['aria-label']).not.toContain('___');
+    expect(chip.props['aria-label']).toContain(blank);
+    const question = byTestId(r.root, 'presenter-quiz-question')[0]!;
+    expect(sentence.prompt.text).toContain('___');
+    expect(question.props['aria-label']).not.toContain('___');
+    expect(question.props['aria-label']).toContain(blank);
+  });
   const withKey = realia.find((s) => s.prompt.key !== undefined && s.prompt.answerEntryId !== undefined && s.options.every((o) => o.ko !== undefined))!;
 
   it('the sheet stays beside the question; the key word and the lead line; the found line and the mark only at the answer build', async () => {

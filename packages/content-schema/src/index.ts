@@ -7,6 +7,7 @@ export * from './schemas/minigame';
 export * from './schemas/lesson';
 export * from './hangul/allomorph';
 export * from './hangul/compose-typed';
+export * from './hangul/syllable-build';
 export * from './schemas/profile';
 export * from './schemas/progress';
 export * from './schemas/progress-merge';
@@ -70,3 +71,5 @@ export * from './schemas/lesson-chooser';
 export * from './schemas/curr-telemetry';
 export * from './schemas/curr-rollup-buckets';
 export * from './schemas/guest';
+// F-CURR-002 row CM-35: the Role Play scene shape and its small readers; the graph rules are in `./lint` (role-play-rules.ts), off the start bundle.
+export * from './schemas/role-play';

@@ -1,3 +1,4 @@
+import { fillClozeGap } from '@hangul-route/content-schema';
 import type { ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import type { MinigameScope } from '../minigame-config';
 import { buildCheckView, type CheckView } from '../story/check-view';
@@ -15,6 +16,8 @@ import type { Rung } from './spacing';
 export interface AskedText {
   ko: string;
   kind?: ReviewItemKind;
+  /** An exchange's reply: of two `exc` items with the same line (two natural replies), the one with this reply. */
+  reply?: string;
 }
 
 export interface ResolvedRound {
@@ -61,8 +64,10 @@ export function buildLookup(items: readonly ReviewItem[], retired: ReadonlySet<s
 }
 
 /** The best of several items with the same Korean: one the round's own cell teaches or asks again, the kind it asks, an initial symbol before a final, then the id. */
-function pick(candidates: readonly ReviewItem[], cell: string, kind: ReviewItemKind | undefined): ReviewItem | undefined {
-  const score = (i: ReviewItem): number => (i.cells.includes(cell) || i.asked.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
+function pick(candidates: readonly ReviewItem[], cell: string, kind: ReviewItemKind | undefined, reply?: string): ReviewItem | undefined {
+  const replyFits = (i: ReviewItem): boolean => reply !== undefined && i.reply !== undefined && normalizeAskedKo(i.reply.ko) === normalizeAskedKo(reply);
+  const score = (i: ReviewItem): number =>
+    (replyFits(i) ? 8 : 0) + (i.cells.includes(cell) || i.asked.includes(cell) ? 4 : 0) + (kind !== undefined && i.kind === kind ? 2 : 0) + (i.id.endsWith('-batchim') ? 0 : 1);
   let best: ReviewItem | undefined;
   for (const item of candidates) {
     if (best === undefined || score(item) > score(best) || (score(item) === score(best) && item.id < best.id)) best = item;
@@ -79,7 +84,7 @@ export function resolveItems(lookup: ItemLookup, cell: string, round: Pick<Resol
   for (const jamoId of round.jamoIds) add(lookup.byId.get(`sym:${jamoId.replace(/^jamo:/, '')}`));
   for (const text of round.texts) {
     const candidates = (lookup.byKo.get(normalizeAskedKo(text.ko)) ?? []).filter((i) => !lookup.retired.has(i.id));
-    add(pick(candidates, cell, text.kind));
+    add(pick(candidates, cell, text.kind, text.reply));
   }
   return out;
 }
@@ -93,16 +98,20 @@ const text = (value: { ko?: unknown } | undefined, kind?: ReviewItemKind): Asked
 
 /**
  * What a host game's round asked, read from its scope by the answered round's id (Listen & Pick,
- * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame). Trace a Word copies a
+ * Pic-Word Match, Sentence Builder, Realia Read, Type Hangul, Write a Frame, Story Order, Role Play). Trace a Word copies a
  * word shown on screen, so it asks no item; an unknown kind or id asks nothing.
  */
 export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRound | undefined {
   switch (scope.kind) {
     case 'listen-pick': {
+      // Row CM-33: Read Pick, Match Shape's fallback, asks its letter at the read rung.
+      const pick = scope.readPick?.rounds.find((r) => r.id === itemId);
+      if (pick) return { texts: [], jamoIds: [pick.target], rung: 'read' };
       const round = scope.listenPick?.rounds.find((r) => r.id === itemId);
       if (!round) return undefined;
       if (round.id.startsWith('lp:sym:')) return { texts: [], jamoIds: [round.id.slice('lp:sym:'.length)], rung: 'recognize' };
-      return { texts: texts(text(round.prompt, round.id.startsWith('lp:syl:') ? 'syl' : undefined)), jamoIds: [], rung: 'recognize' };
+      // Row CM-3A S2: a Read Pick Meaning round shows the Korean and asks its meaning, the read rung (section 4.3).
+      return { texts: texts(text(round.prompt, round.id.startsWith('lp:syl:') ? 'syl' : undefined)), jamoIds: [], rung: round.promptShown === true ? 'read' : 'recognize' };
     }
     case 'pic-word-match': {
       const pair = scope.picWord?.boards.flatMap((b) => b.pairs).find((p) => p.id === itemId);
@@ -127,6 +136,61 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
     case 'write-frame': {
       const round = scope.writeFrame?.rounds.find((r) => r.id === itemId);
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
+    }
+    case 'cloze-pick': {
+      // Row CM-30, the produce rung (section 4.3): a word or particle gap asks the completed sentence only (one answer
+      // grades the item the round asks, section 4.8; picking a tile is no lex produce format, so a due answer word gets
+      // its read-rung credit inside the sentence instead); a value gap asks the card it is read from (the `rea` item).
+      // Its Listen & Pick fallback answers with the same round ids.
+      const round = scope.clozePick?.rounds.find((r) => r.id === itemId);
+      if (!round) return undefined;
+      if (round.gapKind === 'value') {
+        const realia = scope.clozePick?.realia;
+        const shown = realia ? (realia.title ?? realia.entries[0]?.text) : undefined;
+        return shown ? { texts: texts(text(shown, 'rea')), jamoIds: [], rung: 'produce' } : undefined;
+      }
+      const answer = round.tiles[round.answerIndex];
+      if (!answer) return undefined;
+      return { texts: texts({ ko: fillClozeGap(round.sentence.ko, answer.ko), kind: 'pat' }), jamoIds: [], rung: 'produce' };
+    }
+    case 'story-order': {
+      // F-CURR-002 row CM-34: a slot asks the line that comes next (`<round>/<panel>`), read in order: the read rung. No
+      // kind, as Listen & Pick: a sentence is the pattern item and a one-word caption the word item (the catalogue's kind).
+      const at = itemId.indexOf('/');
+      const round = scope.storyOrder?.rounds.find((r) => r.id === itemId.slice(0, at));
+      const panel = at < 0 ? undefined : round?.panels.find((p) => p.id === itemId.slice(at + 1));
+      return panel ? { texts: texts(text(panel.caption)), jamoIds: [], rung: 'read' } : undefined;
+    }
+    case 'role-play': {
+      // `<node>/<reply>` (row CM-35): the turn's exchange, its line with the natural reply it is about, at the read rung
+      // (section 4.3: read the line, pick the reply). The memory store credits the words inside it.
+      const [nodeId, replyId] = itemId.split('/');
+      const node = scope.rolePlay?.scene.nodes.find((n) => n.id === nodeId);
+      const reply = node && 'replies' in node ? node.replies.find((r) => r.id === replyId && r.kind === 'natural') : undefined;
+      const line = node && 'line' in node ? text(node.line, 'exc') : undefined;
+      return line && reply ? { texts: [{ ...line, reply: reply.text.ko }], jamoIds: [], rung: 'read' } : undefined;
+    }
+    case 'hidden-heritage': {
+      // A target found in the scene, or matched on its Pic-Word Match fallback (the pair id is the target id): the read rung.
+      const target = scope.hiddenHeritage?.rounds.flatMap((r) => r.targets).find((t) => t.id === itemId);
+      return target ? { texts: texts(text(target.word)), jamoIds: [], rung: 'read' } : undefined;
+    }
+    case 'syllable-build': {
+      // Row CM-32: the block built, at the produce rung (a bare block is a `syl` item; a word block keeps its cell's item).
+      const round = scope.syllableBuild?.rounds.find((r) => r.id === itemId);
+      return round ? { texts: texts(text(round.target, round.target.en === undefined ? 'syl' : undefined)), jamoIds: [], rung: 'produce' } : undefined;
+    }
+    case 'match-shape': {
+      // Row CM-33: a pair round's letter, at the produce rung (section 4.3: "Syllable Build with the symbol in place, or
+      // Match Shape"). An origin round teaches the fact it shows and is not recorded.
+      const round = scope.matchShape?.rounds.find((r) => r.id === itemId);
+      return round?.shape === 'pair' ? { texts: [], jamoIds: [round.target], rung: 'produce' } : undefined;
+    }
+    // F-CURR-002 row CM-38: only the frame's pattern, the same whichever bank word was picked. A picked word is never
+    // credited (no `lex` item): memory syncs and feeds the grown-up summaries, so a per-word credit would record the pick.
+    case 'my-story': {
+      const frame = scope.myStory?.frames.find((f) => f.id === itemId);
+      return frame ? { texts: texts(text(frame.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
     }
     default:
       return undefined;

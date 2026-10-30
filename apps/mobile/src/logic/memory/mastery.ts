@@ -1,4 +1,4 @@
-import type { CatalogCell, CatalogQuest, CellLevel, MemoryItemState, ProgressSnapshot, VocabItemState } from '@hangul-route/content-schema';
+import { requiredQuestIds, type CatalogCell, type CatalogQuest, type CellLevel, type MemoryItemState, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
 import { cellOfVolume, masteryDenominator, type ReviewItem } from '@hangul-route/content-schema/review-items';
 import { latchQuests } from '../quest-progress';
 import { isDue } from '../vocab/srs';
@@ -52,7 +52,7 @@ type HeldState = Pick<MemoryItemState, 's' | 'n' | 'r'>;
 
 export interface MasteryInput {
   /** The grid cells and pack levels: their own id and the quests of their first volume (`CATALOG.cells`). */
-  cells: readonly Pick<CatalogCell, 'episodeId' | 'questIds'>[];
+  cells: readonly Pick<CatalogCell, 'episodeId' | 'questIds' | 'optionalQuestIds'>[];
   /** Every catalogue quest, so a later volume's quests (episode `<cell>-v<k>`) are found. */
   quests: readonly Pick<CatalogQuest, 'id' | 'episodeId'>[];
   /** The review items of this build, with the retired ids. */
@@ -92,7 +92,8 @@ const reaches = (part: number, whole: number, share: number): boolean => whole >
 /** The volumes of each cell: 1 (the cell itself), plus every k >= 2 a quest or an item names as `<cell>-v<k>`. */
 function volumesByCell(input: Pick<MasteryInput, 'cells' | 'quests' | 'items'>): Map<string, { shipped: Set<number>; quests: Map<number, string[]> }> {
   const out = new Map<string, { shipped: Set<number>; quests: Map<number, string[]> }>();
-  for (const cell of input.cells) out.set(cell.episodeId, { shipped: new Set([1]), quests: new Map([[1, [...cell.questIds]]]) });
+  // The first volume's quests the cell needs: an optional addition (F-CURR-002 section 4.2) never holds it open.
+  for (const cell of input.cells) out.set(cell.episodeId, { shipped: new Set([1]), quests: new Map([[1, [...requiredQuestIds(cell)]]]) });
   for (const q of input.quests) {
     const m = VOLUME_CELL.exec(q.episodeId);
     const held = m ? out.get(m[1] as string) : undefined;

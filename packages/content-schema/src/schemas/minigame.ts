@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorph';
 import { isOneKeyFinal } from '../hangul/compose-typed';
-import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { syllableBuildIssues } from '../hangul/syllable-build';
+import { AudioRefSchema } from './audio';
+import { KoTextSchema, KoTextShape, PictureRefSchema, refineKoText } from './ko-text';
+import { RolePlaySceneSchema } from './role-play';
+import { ART_CANVAS } from './scene-art';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -39,6 +43,15 @@ export const MinigameKindSchema = z.enum([
   'type-hangul', // Construction · type on the in-app two-set Hangul keyboard
   'trace-word', // Construction · trace a whole syllable block or a two-syllable word
   'write-frame', // Construction · fill a sentence frame from a word bank ("my own sentence")
+  // F-CURR-002 §7.1 F1 (row CM-30), additive: read a sentence with one gap, pick the tile that fills it.
+  'cloze-pick', // Recognition · Cloze Pick (fallback: Listen & Pick with a text prompt)
+  // F-CURR-002 §7.1 (row CM-34), additive.
+  'story-order', // Discovery · put 3-5 Korean captions (with or without pictures) in order; fallback Story Sequence
+  // F-CURR-002 §7.1 (row CM-35), additive.
+  'role-play', // Interaction · a branching chat, read and tap a reply (fallback: Tap to Respond on the same turns)
+  'hidden-heritage', // Discovery · ⑩ find the named things in a large scene (F-CURR-002 §7.1 F7, row CM-36)
+  // F-CURR-002 §7.1 F8 (row CM-38), additive.
+  'my-story', // Construction · 3-5 chained word-bank frames make a short text, shown as My page and not kept
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -107,6 +120,28 @@ export const ListenPickRoundSchema = z
     prompt: KoTextSchema,
     options: z.array(ListenPickOptionSchema).min(2).max(4),
     answerId: z.string(),
+    /**
+     * F-CURR-002 section 4.5 (row CM-31): the read-plus-meaning spelling round of Letters S2. The prompt's meaning
+     * (`prompt.en`, in the UI language) and its picture are shown with the sound, and the options are spellings that
+     * may sound the same (책이 and 채기 are both [채기]); the meaning or the picture is what settles it.
+     */
+    promptKind: z.literal('spelling').optional(),
+    /** A spelling round's picture of the word (shown above its meaning). */
+    pictureRef: PictureRefSchema.optional(),
+    /**
+     * A spelling round's other options for its `game.spelling-pick` fallback (`spellingPickToListenPick`): taught words
+     * that sound different from the answer, so every option left has one right answer by sound alone. The lint's
+     * `dictation-unambiguous` checks the spelling round's shape (`spellingRoundIssues`, lesson-lint.ts), so these
+     * rules stay out of the start bundle.
+     */
+    fallbackOptions: z.array(ListenPickOptionSchema).min(1).max(3).optional(),
+    /**
+     * F-CURR-002 section 7.1 (row CM-3A S2): Read Pick Meaning, the read rung of section 4.3. The prompt's Korean and its
+     * romanization are shown as text and nothing is said before the answer (the word is said once after the right pick);
+     * the options are meanings (pictures with their labels), never spellings. A scope's rounds are all read or all
+     * heard. The lint checks the shape (`readPickRoundIssues`, lesson-lint.ts), so the start bundle carries only the field.
+     */
+    promptShown: z.literal(true).optional(),
   })
   .superRefine((round, ctx) => {
     const ids = new Set<string>();
@@ -143,6 +178,29 @@ export const ListenPickRoundSchema = z
     }
   });
 export type ListenPickRound = z.infer<typeof ListenPickRoundSchema>;
+
+/** Whether a Listen & Pick scope is Read Pick Meaning (row CM-3A S2): its rounds show their Korean prompt, none is heard. */
+export function isReadPickScope(rounds: readonly ListenPickRound[]): boolean {
+  return rounds.length > 0 && rounds.every((r) => r.promptShown === true);
+}
+
+/** Whether a Listen & Pick round is the spelling round of section 4.5 (row CM-31). */
+export function isSpellingRound(round: Pick<ListenPickRound, 'promptKind'>): boolean {
+  return round.promptKind === 'spelling';
+}
+
+/**
+ * The `game.spelling-pick` fallback (row CM-31, design/wireframes/minigame/type-hangul.md): Listen & Pick on the same
+ * word in its shipped audio prompt. The right spelling stays, the look-alike spellings go, and the round's fallback
+ * options (taught words that sound different) take their place; no picture and no meaning, as Listen & Pick shows.
+ * A round that is not a spelling round comes back as it is.
+ */
+export function spellingPickToListenPick(round: ListenPickRound): ListenPickRound {
+  if (!isSpellingRound(round)) return round;
+  const answer = round.options.find((o) => o.id === round.answerId);
+  const options = [...(answer ? [answer] : []), ...(round.fallbackOptions ?? [])].slice(0, 4);
+  return { id: round.id, prompt: round.prompt, options, answerId: round.answerId };
+}
 
 /** Pic-Word Match (F-QUEST-002 §3.11): pair 3-5 pictures with their Korean words. */
 export const PicWordPairSchema = z.object({
@@ -359,6 +417,14 @@ export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRoun
 export const TypeHangulRoundSchema = z.object({
   id: z.string().min(1),
   promptEn: z.string().trim().min(1).max(90),
+  /**
+   * F-CURR-002 section 7.1 F2 (row CM-31), additive: `hear` is Dictation (hear the word, type it; its Korean and
+   * romanization are hidden until Done). Absent is `see`, so every round written before it reads as before; a `see`
+   * round with a `pictureRef` is the picture prompt. Only an item that passes `dictation-unambiguous` is heard.
+   */
+  mode: z.enum(['see', 'hear']).optional(),
+  /** A recording of the word for `hear` (it wins over the device voice, F-AUDIO-004). */
+  audioRef: AudioRefSchema.optional(),
   pictureRef: PictureRefSchema.optional(),
   target: KoTextSchema.refine((t) => isComposable(t.ko) && t.ko.length <= 12, {
     message: 'a typed target is 1-12 characters of Hangul syllables and single spaces',
@@ -366,6 +432,11 @@ export const TypeHangulRoundSchema = z.object({
   }),
 });
 export type TypeHangulRound = z.infer<typeof TypeHangulRoundSchema>;
+
+/** A Type Hangul round's mode: an absent mode is `see` (rounds written before row CM-31). */
+export function typeHangulMode(round: Pick<TypeHangulRound, 'mode'>): 'see' | 'hear' {
+  return round.mode === 'hear' ? 'hear' : 'see';
+}
 
 /** Trace a Word: one syllable block or a two-syllable word over a ghost, at the relaxed tolerance. */
 export const TraceWordRoundSchema = z.object({
@@ -430,42 +501,341 @@ export type SoundTable = z.infer<typeof SoundTableSchema>;
  * marks the one round composed without a bank (Write Your Name q3): unscored,
  * held in component state only (F-CURR-001 §3.7).
  */
-export const WriteFrameRoundSchema = z
+export const WriteFrameRoundShape = z.object({
+  id: z.string().min(1),
+  frame: KoTextSchema,
+  slots: z
+    .array(z.object({ id: z.string().min(1), bank: z.array(KoTextSchema).max(6).default([]) }))
+    .min(1)
+    .max(2),
+  entry: z.enum(['type', 'trace', 'pick']),
+  freeEntry: z.boolean().default(false),
+  /** The name round's Blocks tab; only a free-entry round has one. */
+  soundTable: SoundTableSchema.optional(),
+});
+
+/**
+ * The rules of a Write Frame round, shared with the frames of My Story (F-CURR-002 row CM-38), which
+ * extend the shape (a `ZodEffects` has no `.extend`).
+ */
+export function writeFrameRoundRules(round: z.infer<typeof WriteFrameRoundShape>, ctx: z.RefinementCtx): void {
+  const issue = (path: (string | number)[], message: string) =>
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+  const slots = round.frame.ko.split('___').length - 1;
+  if (slots !== round.slots.length) issue(['frame', 'ko'], `the frame has ${slots} slot(s) but ${round.slots.length} slot entries`);
+  round.slots.forEach((slot, i) => {
+    if (round.freeEntry) {
+      if (slot.bank.length > 0) issue(['slots', i, 'bank'], 'a free-entry slot has no word bank');
+    } else if (slot.bank.length < 2) {
+      issue(['slots', i, 'bank'], 'a word bank holds 2-6 taught words');
+    }
+    slot.bank.forEach((w, j) => {
+      if (!isComposable(w.ko)) issue(['slots', i, 'bank', j, 'ko'], 'a bank word is Hangul syllables only');
+    });
+  });
+  if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
+  if (!round.freeEntry && round.soundTable !== undefined) issue(['soundTable'], 'only a free-entry round has a sound table');
+  // Each slot is followed by a known pair, a single form or nothing, and every bank word is
+  // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
+  // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).
+  slotEndingIssues(round.frame.ko).forEach((message) => issue(['frame', 'ko'], message));
+}
+
+export const WriteFrameRoundSchema = WriteFrameRoundShape.superRefine(writeFrameRoundRules);
+export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
+
+// ---- Cloze Pick (F-CURR-002 §7.1 F1, row CM-30) ------------------------------------------------
+
+/** The gap of a Cloze Pick sentence; the same `___` as `SLOT_MARKER` in `schemas/quest` (a test checks). */
+export const CLOZE_GAP = '___';
+const gapsIn = (text: string): number => text.split(CLOZE_GAP).length - 1;
+
+/**
+ * What the gap holds (design/wireframes/minigame/cloze-pick.md): a taught word, a particle or ending
+ * (`물___ 마셔요.` with 을 / 를 / 이), or a value read from the scope's realia card (`___ 원이에요.`,
+ * the produce rung of a `rea` item, §4.3).
+ */
+export const CLOZE_GAP_KINDS = ['word', 'particle', 'value'] as const;
+export const ClozeGapKindSchema = z.enum(CLOZE_GAP_KINDS);
+export type ClozeGapKind = z.infer<typeof ClozeGapKindSchema>;
+
+/**
+ * Cloze Pick: one Korean sentence with one gap (`___` in `ko` and in `romanization`) and 3 or 4
+ * tiles; exactly the tile at `answerIndex` fills it. `en` is the sentence's meaning in full (a word
+ * or particle gap: the meaning is the input the round reads from, D3), or with the gap kept for a
+ * value gap (`It is ___ won.`), whose value is read from the card. `filledRomanization` is the
+ * completed sentence's romanization when it is not the gap's text filled with the tile's (a
+ * particle links to the word before it: `mul___` with `eul` reads `mureul`); a particle gap needs it.
+ * Tiles show Korean and romanization only; their `en` is the content gloss every Korean item carries.
+ */
+export const ClozePickRoundSchema = z
   .object({
     id: z.string().min(1),
-    frame: KoTextSchema,
-    slots: z
-      .array(z.object({ id: z.string().min(1), bank: z.array(KoTextSchema).max(6).default([]) }))
-      .min(1)
-      .max(2),
-    entry: z.enum(['type', 'trace', 'pick']),
-    freeEntry: z.boolean().default(false),
-    /** The name round's Blocks tab; only a free-entry round has one. */
-    soundTable: SoundTableSchema.optional(),
+    sentence: KoTextSchema,
+    gapKind: ClozeGapKindSchema.default('word'),
+    tiles: z.array(KoTextSchema).min(3).max(4),
+    answerIndex: z.number().int().min(0),
+    filledRomanization: z.string().trim().min(1).optional(),
   })
   .superRefine((round, ctx) => {
-    const issue = (path: (string | number)[], message: string) =>
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
-    const slots = round.frame.ko.split('___').length - 1;
-    if (slots !== round.slots.length) issue(['frame', 'ko'], `the frame has ${slots} slot(s) but ${round.slots.length} slot entries`);
-    round.slots.forEach((slot, i) => {
-      if (round.freeEntry) {
-        if (slot.bank.length > 0) issue(['slots', i, 'bank'], 'a free-entry slot has no word bank');
-      } else if (slot.bank.length < 2) {
-        issue(['slots', i, 'bank'], 'a word bank holds 2-6 taught words');
-      }
-      slot.bank.forEach((w, j) => {
-        if (!isComposable(w.ko)) issue(['slots', i, 'bank', j, 'ko'], 'a bank word is Hangul syllables only');
-      });
-    });
-    if (round.freeEntry && round.slots.length !== 1) issue(['slots'], 'a free-entry round has exactly one slot');
-    if (!round.freeEntry && round.soundTable !== undefined) issue(['soundTable'], 'only a free-entry round has a sound table');
-    // Each slot is followed by a known pair, a single form or nothing, and every bank word is
-    // Hangul syllables (above), so `fillFrame` fills every pick as correct Korean: the form of a
-    // pair is chosen from the pick's last syllable (a test fills every bank word of a sound frame).
-    slotEndingIssues(round.frame.ko).forEach((message) => issue(['frame', 'ko'], message));
+    const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+    const { sentence: s, tiles, gapKind } = round;
+    if (gapsIn(s.ko) !== 1 || gapsIn(s.romanization) !== 1) issue(['sentence'], 'one gap (___) in the Korean and one in the romanization');
+    if (gapsIn(s.en) !== (gapKind === 'value' ? 1 : 0)) issue(['sentence', 'en'], 'the meaning keeps the gap for a value gap only (It is ___ won.)');
+    if (round.answerIndex >= tiles.length) issue(['answerIndex'], 'answerIndex must point at a tile');
+    if (new Set(tiles.map((t) => t.ko)).size !== tiles.length || tiles.some((t) => gapsIn(t.ko) > 0)) issue(['tiles'], 'tiles differ and carry no gap');
+    if (gapKind !== 'particle') return;
+    if (round.filledRomanization === undefined) issue(['filledRomanization'], 'a particle gap gives the completed romanization (the particle links)');
+    // The word before the gap picks the particle: `사과___` takes 를, so a round whose answer is 을 is caught here.
+    const stem = (s.ko.split(CLOZE_GAP)[0] ?? '').split(' ').pop() ?? '';
+    const answer = tiles[round.answerIndex]?.ko ?? '';
+    const pair = ALLOMORPH_PAIRS.find((p) => p.split('/').includes(answer));
+    if (!/[가-힣]$/.test(stem)) issue(['sentence', 'ko'], 'a particle gap follows its word (물___ 마셔요.)');
+    else if (pair !== undefined && allomorph(stem, pair) !== answer) issue(['answerIndex'], `"${stem}" takes ${allomorph(stem, pair)}, not ${answer}`);
   });
-export type WriteFrameRound = z.infer<typeof WriteFrameRoundSchema>;
+export type ClozePickRound = z.infer<typeof ClozePickRoundSchema>;
+
+/** The text with its one gap filled (`책을 ___.` with 읽어요 is `책을 읽어요.`). */
+export const fillClozeGap = (text: string, fill: string): string => text.replace(CLOZE_GAP, fill);
+/**
+ * Story Order (F-CURR-002 §7.1 F5, row CM-34; design/wireframes/minigame/story-order.md): 3-5 panels, each
+ * a Korean caption (one short line of taught words, with romanization and gloss) and, on an illustrated
+ * round, its picture, listed in the RIGHT order (the game deranges them). The cards show the Korean and
+ * its romanization only while the learner orders them; the gloss shows on Show meanings and in the replay.
+ */
+/**
+ * A slug: the memory item id is `<round>/<panel>` and the gloss overlay key joins ids with `.`, so neither may hold one.
+ */
+const StoryOrderIdSchema = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'a lowercase slug (letters, digits, hyphens)');
+
+/** Strict: an unknown key (such as an `art` the game never draws) fails the build instead of being dropped. */
+export const StoryOrderPanelSchema = z
+  .object({
+    id: StoryOrderIdSchema,
+    caption: KoTextSchema,
+    pictureRef: PictureRefSchema.optional(),
+  })
+  .strict();
+export type StoryOrderPanel = z.infer<typeof StoryOrderPanelSchema>;
+
+export const StoryOrderRoundSchema = z
+  .object({
+    id: StoryOrderIdSchema,
+    panels: z.array(StoryOrderPanelSchema).min(3).max(5),
+    /** Drawn without its pictures (a panel may still name one): the order comes from the Korean alone. */
+    captionsOnly: z.boolean().optional(),
+    /**
+     * Illustrated, with captions that settle the order on their own (sequence or time words such as
+     * 먼저 and 마지막에, or cause and result), as the MAR confirms. Read by the lint `story-order-text`.
+     */
+    captionsSettleOrder: z.boolean().optional(),
+  })
+  .superRefine((round, ctx) => {
+    const ids = new Set<string>();
+    const lines = new Set<string>();
+    round.panels.forEach((panel, i) => {
+      if (ids.has(panel.id)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['panels', i, 'id'], message: 'panel ids must be unique' });
+      ids.add(panel.id);
+      if (lines.has(panel.caption.ko)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['panels', i, 'caption', 'ko'], message: 'two panels share the same caption' });
+      }
+      lines.add(panel.caption.ko);
+    });
+  });
+export type StoryOrderRound = z.infer<typeof StoryOrderRoundSchema>;
+
+/** Whether a Story Order round draws its pictures: not captions only, and at least one panel has one. */
+export function storyOrderPictures(round: StoryOrderRound): boolean {
+  return round.captionsOnly !== true && round.panels.some((p) => p.pictureRef !== undefined);
+}
+
+/**
+ * Whether the round's order comes from its text (the rule of the lint `story-order-text`, which
+ * reads the same fields off raw JSON): captions only, no picture at all, or marked as settled by its captions.
+ */
+export function storyOrderTextSettled(round: StoryOrderRound): boolean {
+  return !storyOrderPictures(round) || round.captionsSettleOrder === true;
+}
+
+/**
+ * The Story Sequence round a Story Order round falls back to while `game.story-order` is off
+ * (§7.1, §12.2): the same panels in the same order, the caption's gloss as the step label (Story
+ * Sequence shows it), its Korean and romanization, and the picture unless the round is captions only.
+ */
+export function storyOrderToSequence(round: StoryOrderRound): z.infer<typeof StorySequenceRoundSchema> {
+  const pictures = round.captionsOnly !== true;
+  return {
+    steps: round.panels.map((p) => ({
+      id: p.id,
+      labelEn: p.caption.en,
+      labelKo: p.caption.ko,
+      romanization: p.caption.romanization,
+      ...(pictures && p.pictureRef !== undefined ? { illustrationRef: p.pictureRef } : {}),
+    })),
+  };
+}
+// ---- Hidden Heritage (F-CURR-002 §7.1 F7 and OD-10, row CM-36; design/wireframes/minigame/hidden-heritage.md) ----
+
+/** Hit-area rules of the scene style guide: H-1 a spot is at least 75 x 75 canvas units, H-2 spots keep 11 apart. */
+export const HIDDEN_HERITAGE_SPOT = { min: 75, gap: 11 } as const;
+
+/** A thing's hit area on the 400 x 300 scene canvas (H-1, H-4). */
+export const HiddenHeritageSpotSchema = z
+  .object({ x: z.number().min(0), y: z.number().min(0), w: z.number().min(HIDDEN_HERITAGE_SPOT.min), h: z.number().min(HIDDEN_HERITAGE_SPOT.min) })
+  .refine((s) => s.x + s.w <= ART_CANVAS.width && s.y + s.h <= ART_CANVAS.height, 'a spot lies inside the 400 x 300 canvas');
+export type HiddenHeritageSpot = z.infer<typeof HiddenHeritageSpotSchema>;
+
+/** The gap between two spots in canvas units; 0 when they touch or overlap (H-2). */
+export function spotGap(a: HiddenHeritageSpot, b: HiddenHeritageSpot): number {
+  const dx = Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w), 0);
+  const dy = Math.max(a.y - (b.y + b.h), b.y - (a.y + a.h), 0);
+  return Math.max(dx, dy);
+}
+
+/**
+ * A drawn thing of the scene: its Korean word and its spot. A target's word is the prompt (Korean, heard and written
+ * with romanization, never an English label); every spot is named by its word's meaning for a screen reader.
+ */
+const HiddenHeritageThingSchema = z.object({ id: z.string().regex(/^[a-z0-9-]+$/), word: KoTextSchema, spot: HiddenHeritageSpotSchema });
+
+/**
+ * One scene to search: the scene (art in a lazy chunk), its alt text (the setting, never the things), the 3-5 targets
+ * with the bundled picture the Pic-Word Match fallback draws (`card:` / `word:`), and 3-6 other things, at least as
+ * many as targets, so a random tap or the screen-reader list never gives the answer away.
+ */
+export const HiddenHeritageRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    sceneId: z.string().regex(/^scene:[a-z0-9-]+$/),
+    altEn: z.string().trim().min(1).max(140),
+    targets: z.array(HiddenHeritageThingSchema.extend({ picture: PictureRefSchema })).min(3).max(5),
+    others: z.array(HiddenHeritageThingSchema).min(3).max(6),
+  })
+  .superRefine((round, ctx) => {
+    // Short messages: this schema is in the app's start bundle (F-CURR-002 §10).
+    const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+    const things = [...round.targets, ...round.others];
+    const ids = new Set(things.map((t) => t.id));
+    const words = new Set(things.map((t) => t.word.ko));
+    if (ids.size < things.length) issue('thing ids repeat');
+    if (words.size < things.length) issue('two things share a word');
+    if (round.others.length < round.targets.length) issue('fewer other things than targets');
+    things.forEach((a, i) => things.slice(i + 1).forEach((b) => spotGap(a.spot, b.spot) < HIDDEN_HERITAGE_SPOT.gap && issue(`spots ${a.id} and ${b.id} too close`)));
+    const c = round.targets.map((t) => t.spot.x + t.spot.w / 2 - ART_CANVAS.width / 2);
+    if (!c.some((x) => x < 0) || !c.some((x) => x > 0)) issue('a target in each half');
+    if (/[\u3130-\u318F\uAC00-\uD7A3]|^\s*image of\b/i.test(round.altEn)) issue('altEn: no Hangul, no "Image of"');
+  });
+export type HiddenHeritageRound = z.infer<typeof HiddenHeritageRoundSchema>;
+/**
+ * Syllable Build (F-CURR-002 section 7.1 F3, row CM-32; design/wireframes/minigame/syllable-build.md): hear one real
+ * block, then tap its first letter, vowel and final (or No final, implicit) into the zones of a block. Tiles are
+ * compatibility jamo, 3-4 first letters, 3-4 vowels and 2-3 finals; the tile faces show the jamo only. The target is a
+ * block of the Stage 1 table or of a taught word, never a pseudo-word (section 19 assumption 5). Its `en` is the word's
+ * meaning, shown under the speaker; a block that is not a word has none, so no meaning line (and no "the sound ga" line,
+ * which would read out the answer). `fixedZone`: that zone is filled and locked (a symbol item at the produce rung, 4.3).
+ */
+export const SyllableBuildTargetSchema = KoTextShape.extend({ en: z.string().min(1).optional() }).superRefine(refineKoText);
+export const SyllableBuildRoundSchema = z
+  .object({
+    id: z.string().min(1),
+    target: SyllableBuildTargetSchema,
+    firstTiles: z.array(z.string().min(1)).min(3).max(4),
+    vowelTiles: z.array(z.string().min(1)).min(3).max(4),
+    finalTiles: z.array(z.string().min(1)).min(2).max(3),
+    fixedZone: z.enum(['first', 'vowel', 'final']).optional(),
+  })
+  .superRefine((round, ctx) => {
+    for (const { path, message } of syllableBuildIssues(round)) ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
+  });
+export type SyllableBuildRound = z.infer<typeof SyllableBuildRoundSchema>;
+/**
+ * Match Shape (F-CURR-002 section 7.1 F4, row CM-33): its round schema is `./match-shape.ts`
+ * (`@hangul-route/content-schema/match-shape`), outside the barrel and `RoundSchema`, because its rounds are Stage 1
+ * TypeScript rows (section 4.2), never lesson JSON, so the start bundle carries only the type.
+ */
+export type { MatchShapeRound } from './match-shape';
+/** The look-alike letters a pair round sets against each other (7.1 F4), each letter's first; review asks these. */
+export const SHAPE_LOOK_ALIKES: Readonly<Record<string, string>> = { ㅂ: 'ㅍ', ㅍ: 'ㅂ', ㅓ: 'ㅗ', ㅗ: 'ㅓ', ㅏ: 'ㅓ', ㄹ: 'ㄷ', ㄷ: 'ㄹ' };
+// ---- My Story (F-CURR-002 §7.1 F8, OD-13; row CM-38) -------------------------------------------
+
+/** A chain holds 3 to 5 frames (F-CURR-002 §7.1 F8). */
+export const MY_STORY_FRAMES_MIN = 3;
+export const MY_STORY_FRAMES_MAX = 5;
+/** Every slot of a My Story frame offers 3 to 5 taught words (design/wireframes/minigame/my-story.md). */
+export const MY_STORY_BANK_MIN = 3;
+export const MY_STORY_BANK_MAX = 5;
+
+/**
+ * Slot topics a My Story frame may never ask of the learner (F-CURR-002 §6.6 and §13, personal disclosure;
+ * design/wireframes/minigame/my-story.md: no home address, school name, real name, age, health or religion). Read
+ * in the frame's English gloss, any case, and only where the frame asks about the learner ("my" or "your" before the
+ * topic, or "I" or "you" with the fact): a frame about Hoya or the cast ("Her name is ___", "Hoya's grandmother
+ * lives in ___", "After school I ___") is not a disclosure and parses. The learner's own family is a topic too
+ * (§6.6: content never requires it). The MAR still checks every frame.
+ */
+export const MY_STORY_PRIVATE_TOPICS =
+  /\b(?:(?:my|your)\s+(?:(?:real|full|first|last|home|e-?mail|phone)\s+)?(?:names?|address(?:es)?|street|school|class|grade|teachers?|age|birthday|phone|e-?mail|password|home(?:town)?|house|neighbou?rhood|city|town|country|health|illness|medicine|religion|doctor|hospital|church|mosque|temple|family|mom|mum|dad|mother|father|parents?|brothers?|sisters?|grand(?:ma|pa|mother|father|parents?))|(?:I|you)\s+(?:live|lives|lived|am from|are from|come from|grew up|was born|were born|pray)|(?:I am|I'm|you are|you're)\s+(?:\S+\s+)?years?\s+old|(?:I am|I'm|I feel|you are|you're|you feel)\s+(?:sick|ill)|(?:I|you)\s+go\s+to\s+(?:church|mosque|temple)|where\s+(?:(?:do|did|are|am)\s+)?(?:I|you)\s+(?:live|from|come from|grew up)|how\s+old\s+(?:are\s+you|am\s+I)|(?:I am|I'm|you are|you're)\s+(?:called|named)|call\s+me)\b/i;
+
+/** A bank word of a My Story slot: taught Korean, and `neutral: true` on the one option that tells nothing about the learner. */
+export const MyStoryBankWordSchema = KoTextShape.extend({ neutral: z.literal(true).optional() }).superRefine(refineKoText);
+export type MyStoryBankWord = z.infer<typeof MyStoryBankWordSchema>;
+
+/**
+ * The rules a My Story frame adds to Write Frame's (row CM-38):
+ * - `my-story-neutral-option`: every slot's bank has exactly one neutral option (호야 for a person, 괜찮아요 for a
+ *   feeling, 공원 for a place), so nobody has to share a family, a feeling or a place to finish. It is drawn like the
+ *   others, so it is never the first card of the bank (it is not the default).
+ * - `my-story-private-topic`: the frame never asks for a private fact (`MY_STORY_PRIVATE_TOPICS`).
+ * Word bank only (no free text) and no sound table are in the shape itself.
+ */
+export function myStoryFrameRules(frame: { frame: { en: string }; slots: readonly { bank: readonly { neutral?: true | undefined }[] }[] }, ctx: z.RefinementCtx): void {
+  frame.slots.forEach((slot, i) => {
+    const neutral = slot.bank.flatMap((w, j) => (w.neutral === true ? [j] : []));
+    if (neutral.length !== 1) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slots', i, 'bank'], message: `my-story-neutral-option: a slot's bank has exactly one neutral option (it has ${neutral.length})` });
+    } else if (neutral[0] === 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['slots', i, 'bank', 0], message: 'my-story-neutral-option: the neutral option is drawn like the others, never first in the bank' });
+    }
+  });
+  const topic = MY_STORY_PRIVATE_TOPICS.exec(frame.frame.en);
+  if (topic) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['frame', 'en'], message: `my-story-private-topic: a frame never asks for a private fact ("${topic[0]}")` });
+  }
+}
+
+/**
+ * One frame of a My Story chain: a Write Frame round with a bank of 3 to 5 words per slot, one of them neutral, and
+ * no free entry and no sound table (slots are word-bank only, F-CURR-002 §7.1 F8). It parses to a `WriteFrameRound`
+ * (each bank word may carry `neutral`), so the fallback plays it in Write Frame unchanged.
+ */
+export const MyStoryFrameSchema = WriteFrameRoundShape.extend({
+  slots: z
+    .array(z.object({ id: z.string().min(1), bank: z.array(MyStoryBankWordSchema).min(MY_STORY_BANK_MIN).max(MY_STORY_BANK_MAX) }))
+    .min(1)
+    .max(2),
+  freeEntry: z.literal(false, { errorMap: () => ({ message: 'a My Story frame is word-bank only: no free entry' }) }).default(false),
+  soundTable: z.never({ errorMap: () => ({ message: 'a My Story frame is word-bank only: no sound table' }) }).optional(),
+})
+  .superRefine(writeFrameRoundRules)
+  .superRefine(myStoryFrameRules);
+export type MyStoryFrame = z.infer<typeof MyStoryFrameSchema>;
+
+/** A chain of 3 to 5 frames with distinct ids, in story order. */
+export const MyStoryFramesSchema = z
+  .array(MyStoryFrameSchema)
+  .min(MY_STORY_FRAMES_MIN)
+  .max(MY_STORY_FRAMES_MAX)
+  .superRefine((frames, ctx) => {
+    const ids = frames.map((f) => f.id);
+    if (new Set(ids).size !== ids.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'frame ids must be unique' });
+  });
+
+/**
+ * My Story (F-CURR-002 §7.1 F8, blueprint 06 game 12): 3-5 chained Write Frame rounds that make a short text, shown at
+ * the end as "My page" and not kept (OD-13, F-CURR-001 OD-6). The text is never stored or sent.
+ */
+export const MyStoryRoundSchema = z.object({ id: z.string().min(1), frames: MyStoryFramesSchema });
+export type MyStoryRound = z.infer<typeof MyStoryRoundSchema>;
 
 export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('match-sound'), data: MatchSoundRoundSchema }),
@@ -481,6 +851,12 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('type-hangul'), data: TypeHangulRoundSchema }),
   z.object({ kind: z.literal('trace-word'), data: TraceWordRoundSchema }),
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
+  z.object({ kind: z.literal('cloze-pick'), data: ClozePickRoundSchema }),
+  z.object({ kind: z.literal('story-order'), data: StoryOrderRoundSchema }),
+  z.object({ kind: z.literal('role-play'), data: RolePlaySceneSchema }),
+  z.object({ kind: z.literal('hidden-heritage'), data: HiddenHeritageRoundSchema }),
+  z.object({ kind: z.literal('syllable-build'), data: SyllableBuildRoundSchema }),
+  z.object({ kind: z.literal('my-story'), data: MyStoryRoundSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

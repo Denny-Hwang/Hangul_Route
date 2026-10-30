@@ -4,6 +4,7 @@ import type { MemoryRow } from '../../memory/memory-file';
 import { cellOfEpisode } from '../../memory/resolve';
 import { applyAnswer, type Rung } from '../../memory/spacing';
 import { addDays } from '../../vocab/srs';
+import { stage1Quests } from '../../../content/quests';
 import { INDEX, LESSON_QUESTS } from '../../memory/__tests__/fixtures';
 import {
   CREDIT_INSIDE_SENTENCES,
@@ -21,6 +22,7 @@ import {
   type EngineContext,
   type ReviewSession,
 } from '../engine';
+import { roundFor, surfaceIndex } from '../review-rounds';
 
 /**
  * The 60-day simulation of the review engine (F-CURR-002 section 4.3, row CM-13). A simulated
@@ -60,6 +62,16 @@ export interface QuestPlan {
 
 const stageOf = (cell: string): number => Number(/stage(\d)/.exec(cell)?.[1] ?? 1);
 
+/**
+ * The quests that introduce no item: a Stage 1 quest with no Discover page, as the Stage 1 addition of F-CURR-002
+ * section 4.2 (row CM-33), which only asks letters earlier quests teach. A cell's items are not split onto them; they
+ * only ask again (recycles). Derived from the Stage 1 table (every other Stage 1 quest has a Discover step; the
+ * Stage 5 books, which also have none, keep their share as before).
+ */
+const INTRODUCE_NONE: ReadonlySet<string> = new Set(
+  stage1Quests.filter((q) => !q.steps.some((s) => (s.discover?.pages.length ?? 0) > 0)).map((q) => q.id),
+);
+
 /** The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests. */
 export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPlan[] {
   const firstCell = (item: ReviewItem): string | undefined => item.cells.find((c) => c.startsWith('episode:'));
@@ -69,9 +81,11 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
     if (cell !== undefined) byCell.set(cell, [...(byCell.get(cell) ?? []), item.id]);
   }
   const questsOf = new Map<string, string[]>();
+  const lastOf = new Map<string, string>();
   for (const q of LESSON_QUESTS) {
     const cell = cellOfEpisode(q.episodeId);
-    questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
+    lastOf.set(cell, q.id);
+    if (!INTRODUCE_NONE.has(q.id)) questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
   }
   return LESSON_QUESTS.map((q) => {
     const cell = cellOfEpisode(q.episodeId);
@@ -80,7 +94,8 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
     const own = byCell.get(cell) ?? [];
     const per = Math.ceil(own.length / quests.length);
     const recycles = items.filter((i) => i.asked.includes(cell)).map((i) => i.id);
-    return { questId: q.id, cell, stage: stageOf(cell), introduces: own.slice(at * per, (at + 1) * per), recycles: at === quests.length - 1 ? recycles : [] };
+    const introduces = at < 0 ? [] : own.slice(at * per, (at + 1) * per);
+    return { questId: q.id, cell, stage: stageOf(cell), introduces, recycles: lastOf.get(cell) === q.id ? recycles : [] };
   });
 }
 
@@ -100,7 +115,14 @@ export interface Knobs {
   warmupSize: number;
   credit: boolean;
   voice: boolean;
+  /**
+   * Row CM-32: the review surfaces with `game.syllable-build` on: the engine reads the surface index with Syllable Build,
+   * and a question its round cannot be built for is left out of the session, as the Daily Review and the Checks do.
+   */
+  games?: boolean;
 }
+
+const GAMES_ON = new Set(['syllable-build'] as const);
 
 export const DEFAULT_KNOBS: Knobs = { keepGoingRounds: KEEP_GOING_ROUNDS_PER_DAY, warmupSize: WARMUP_SIZE, credit: CREDIT_INSIDE_SENTENCES, voice: true };
 
@@ -132,8 +154,12 @@ export class Sim {
     return addDays(START_DAY, this.dayIndex);
   }
 
+  /** Questions left out because their round could not be built (row CM-32; always 0 without `games`). */
+  dropped = 0;
+
   ctx(): EngineContext {
-    return { index: INDEX, states: this.rows, today: this.today, voice: this.knobs.voice, seed: `sim:${this.today}` };
+    const index = this.knobs.games === true ? surfaceIndex(INDEX, GAMES_ON) : INDEX;
+    return { index, states: this.rows, today: this.today, voice: this.knobs.voice, seed: `sim:${this.today}` };
   }
 
   private answerOf(itemId: string, rung: Rung): MemoryAnswer {
@@ -163,8 +189,14 @@ export class Sim {
   /** Plays a review session: every question answered by the learner. Returns the due items it drew. */
   play(session: ReviewSession | null): number {
     if (session === null) return 0;
-    this.record(session.questions.map((q) => this.answerOf(q.itemId, q.rung)));
-    return session.questions.filter((q) => !q.stretch).length;
+    let questions = session.questions;
+    if (this.knobs.games === true) {
+      const ctx = this.ctx();
+      questions = questions.filter((q) => roundFor(q, { index: ctx.index, states: ctx.states, gloss: (_k, en) => en, seed: ctx.seed ?? '' }) !== null);
+      this.dropped += session.questions.length - questions.length;
+    }
+    this.record(questions.map((q) => this.answerOf(q.itemId, q.rung)));
+    return questions.filter((q) => !q.stretch).length;
   }
 
   /** One lesson quest: the warm-up (Stage 2 and up), the new items met and practised, and the cell's recycle rounds. */

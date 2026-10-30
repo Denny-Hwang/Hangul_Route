@@ -15,7 +15,8 @@
 //                            apps/mobile/src/content/__tests__/overlays.test.ts), or a path
 //                            naming an element the entity does not have
 //   overlay-forbidden-field  a field outside OVERLAY_FIELDS for the id prefix
-//   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields
+//   korean-in-ui-field       es: Hangul in any value; ko: Hangul outside translatable fields (the
+//                            {ko:} tokens of a lesson note, Discover or cell `culture[]`, are taught Korean)
 //   overlay-circular-gloss   a ko gloss equal to the Korean it glosses (warning when it only
 //                            wraps it in spaces or punctuation)
 //   overlay-token-mismatch   a story narration whose {kw:id} tokens are not the base multiset
@@ -102,8 +103,18 @@ const tokenList = (text) => Array.from(text.matchAll(TOKEN), (m) => m[1]).sort()
  */
 const KO_TOKEN = /\{ko:([^}]*)\}/g;
 const LESSON_NOTE_FIELD = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.note$/;
-const isLessonNote = (id, field) => /^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field);
+/** A lesson cell's own note (`culture[]`, F-CURR-002 row CM-3C), shown as the Did you know? tip: the same `{ko:}` rule. */
+const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
+const isLessonNote = (id, field) =>
+  (/^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field)) || (/^episode:stage[2-467]-/.test(id) && CELL_NOTE_FIELD.test(field));
 const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
+/**
+ * F-CURR-002 row CM-33: a Match Shape difference line of a Stage 1 scope names its two letters as `{ko:...}` tokens,
+ * rendered as taught Korean, so the Hangul inside them is not UI text either. The scope is TypeScript, so the tokens'
+ * parity with the English is held by the app's Stage 1 additions test.
+ */
+const SHAPE_NOTE_FIELD = /^matchShape\.rounds\.[^.]+\.diffNote$/;
+const isShapeNote = (id, field) => /^minigame:s1-/.test(id) && SHAPE_NOTE_FIELD.test(field);
 
 /**
  * id -> { entity, file } for every object with an entity id in the base content (first
@@ -272,7 +283,7 @@ function checkField(locale, id, field, value, base, add, ctx) {
   if (typeof value !== "string" || value.trim() === "") return add("overlay-bad-shape: a translated field is a non-blank string");
   const allowed = isOverlayFieldAllowed(id, field);
   if (!allowed) add(`overlay-forbidden-field: ${field} cannot be translated on ${id}`);
-  const shown = isLessonNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
+  const shown = isLessonNote(id, field) || isShapeNote(id, field) ? value.replace(KO_TOKEN, " ") : value;
   if (HANGUL.test(shown) && (locale === "es" || !allowed)) add("korean-in-ui-field");
   const banned = bannedWordIn(value, locale);
   if (banned !== null) add(`banned-on-learner-surface: "${banned}"`);

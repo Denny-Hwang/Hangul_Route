@@ -146,7 +146,7 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
+          "titleEn": "Read the Word",
           "minigameKind": "listen-pick",
           "minigameRef": "minigame:s2-life-q1-check",
           "durationSeconds": 35
@@ -385,6 +385,7 @@
           "rounds": [
             {
               "id": "pic-gimbap",
+              "promptShown": true,
               "prompt": {
                 "ko": "김밥",
                 "romanization": "gimbap",
@@ -394,7 +395,7 @@
                 {
                   "id": "gimbap",
                   "pictureRef": "card:kimbap",
-                  "labelEn": "gimbap"
+                  "labelEn": "seaweed rice roll"
                 },
                 {
                   "id": "uyu",
@@ -415,39 +416,31 @@
               "answerId": "gimbap"
             },
             {
-              "id": "read-dosirak",
+              "id": "see-uyu",
+              "promptShown": true,
               "prompt": {
-                "ko": "도시락",
-                "romanization": "dosirak",
-                "en": "lunch box"
+                "ko": "우유",
+                "romanization": "uyu",
+                "en": "milk"
               },
               "options": [
                 {
-                  "id": "dosirak",
-                  "text": {
-                    "ko": "도시락",
-                    "romanization": "dosirak",
-                    "en": "lunch box"
-                  }
+                  "id": "uyu",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "milk"
                 },
                 {
-                  "id": "dojagi",
-                  "text": {
-                    "ko": "도자기",
-                    "romanization": "dojagi",
-                    "en": "pottery"
-                  }
+                  "id": "dalgyal",
+                  "pictureRef": "word:food-egg",
+                  "labelEn": "egg"
                 },
                 {
-                  "id": "sarang",
-                  "text": {
-                    "ko": "사랑",
-                    "romanization": "sarang",
-                    "en": "love"
-                  }
+                  "id": "banana",
+                  "pictureRef": "word:food-banana",
+                  "labelEn": "banana"
                 }
               ],
-              "answerId": "dosirak"
+              "answerId": "uyu"
             }
           ]
         }
@@ -551,8 +544,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-life-q2-check",
           "durationSeconds": 35
         },
@@ -783,73 +776,27 @@
         },
         {
           "ref": "minigame:s2-life-q2-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "pic-banana",
-              "prompt": {
-                "ko": "바나나",
-                "romanization": "banana",
-                "en": "banana"
-              },
-              "options": [
-                {
-                  "id": "banana",
-                  "pictureRef": "word:food-banana",
-                  "labelEn": "banana"
-                },
-                {
-                  "id": "ramyeon",
-                  "pictureRef": "word:food-ramyeon",
-                  "labelEn": "instant noodles"
-                },
-                {
-                  "id": "uyu",
-                  "pictureRef": "word:food-milk",
-                  "labelEn": "milk"
-                },
-                {
-                  "id": "mul",
-                  "pictureRef": "word:food-water",
-                  "labelEn": "water"
-                }
-              ],
-              "answerId": "banana"
-            },
-            {
-              "id": "read-subak",
-              "prompt": {
+              "id": "hear-subak",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "수박",
                 "romanization": "subak",
                 "en": "watermelon"
-              },
-              "options": [
-                {
-                  "id": "subak",
-                  "text": {
-                    "ko": "수박",
-                    "romanization": "subak",
-                    "en": "watermelon"
-                  }
-                },
-                {
-                  "id": "suyeong",
-                  "text": {
-                    "ko": "수영",
-                    "romanization": "suyeong",
-                    "en": "swimming"
-                  }
-                },
-                {
-                  "id": "gabang",
-                  "text": {
-                    "ko": "가방",
-                    "romanization": "gabang",
-                    "en": "bag"
-                  }
-                }
-              ],
-              "answerId": "subak"
+              }
+            },
+            {
+              "id": "hear-banana",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "바나나",
+                "romanization": "banana",
+                "en": "a long, yellow fruit"
+              }
             }
           ]
         }
@@ -950,8 +897,8 @@
         {
           "id": "s5",
           "kind": "check",
-          "titleEn": "Listen and Read",
-          "minigameKind": "listen-pick",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s2-life-q3-check",
           "durationSeconds": 35
         },
@@ -1184,73 +1131,27 @@
         },
         {
           "ref": "minigame:s2-life-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
-              "id": "pic-bibimbap",
-              "prompt": {
-                "ko": "비빔밥",
-                "romanization": "bibimbap",
-                "en": "mixed rice bowl"
-              },
-              "options": [
-                {
-                  "id": "bibimbap",
-                  "pictureRef": "word:culture-bibimbap",
-                  "labelEn": "bibimbap"
-                },
-                {
-                  "id": "bap",
-                  "pictureRef": "card:rice",
-                  "labelEn": "cooked rice"
-                },
-                {
-                  "id": "gimchi",
-                  "pictureRef": "card:kimchi",
-                  "labelEn": "kimchi"
-                },
-                {
-                  "id": "gimbap",
-                  "pictureRef": "card:kimbap",
-                  "labelEn": "gimbap"
-                }
-              ],
-              "answerId": "bibimbap"
-            },
-            {
-              "id": "read-banchan",
-              "prompt": {
+              "id": "hear-banchan",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
                 "ko": "반찬",
                 "romanization": "banchan",
                 "en": "side dishes"
-              },
-              "options": [
-                {
-                  "id": "banchan",
-                  "text": {
-                    "ko": "반찬",
-                    "romanization": "banchan",
-                    "en": "side dishes"
-                  }
-                },
-                {
-                  "id": "banji",
-                  "text": {
-                    "ko": "반지",
-                    "romanization": "banji",
-                    "en": "ring"
-                  }
-                },
-                {
-                  "id": "baji",
-                  "text": {
-                    "ko": "바지",
-                    "romanization": "baji",
-                    "en": "pants, trousers"
-                  }
-                }
-              ],
-              "answerId": "banchan"
+              }
+            },
+            {
+              "id": "hear-dubu",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "두부",
+                "romanization": "dubu",
+                "en": "tofu"
+              }
             }
           ]
         }
@@ -1264,6 +1165,13 @@
       "textEn": "In a traditional everyday Korean meal, rice ({ko:밥}) is served with side dishes, called {ko:반찬}, and with soup ({ko:국}) or stew.",
       "sources": [
         {
+          "title": "반찬",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%B0%AC",
+          "accessed": "2026-10-14",
+          "quoteOrLocator": "Headword 반찬(飯饌) 「명사」, the definition (its only sense): the general word for the foods eaten along with rice."
+        },
+        {
           "title": "반상(飯床)",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
           "url": "https://encykorea.aks.ac.kr/Article/E0021491",
@@ -1276,20 +1184,13 @@
           "url": "https://encykorea.aks.ac.kr/Article/E0021492",
           "accessed": "2026-10-14",
           "quoteOrLocator": "Entry 반상기, section 내용, first sentence: the dishes a 반상 is made of, listing rice, soup, stew, kimchi, sauces and side dishes."
-        },
-        {
-          "title": "반찬",
-          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, Standard Korean Language Dictionary)",
-          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%B0%AC",
-          "accessed": "2026-10-14",
-          "quoteOrLocator": "Headword 반찬(飯饌) 「명사」, the definition (its only sense): the general word for the foods eaten along with rice."
         }
       ],
       "verification": {
         "passes": 3,
         "checkedAt": "2026-10-14",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, 2026-10-14): all three pages opened. The Encyclopedia of Korean Culture entry 반상 defines it as a setting of rice and side dishes, says rice is the staple with side dishes alongside, and that soup or stew is set with them; the entry 반상기 lists rice, soup, stew, kimchi, sauces and side dishes as what a 반상 holds; the Standard Korean Language Dictionary defines 반찬 as the foods eaten with rice. Backs the note and the q3 Discover line. The note says traditional everyday meal (the 반상 the sources describe), not what every household eats. English paraphrase, no wording copied.\nPass 2b (independent fact check, 2026-10-14): all three pages re-opened. Encyclopedia of Korean Culture 반상: the definition is a setting made of rice and side dishes, and 내용 paragraph 1 calls it the everyday meal setting, with rice as the staple, side dishes as the accompaniment, and soup or stew set alongside them. 반상기 내용 sentence 1 lists rice, soup, stew, kimchi, the sauces and side dishes. The Standard Korean Language Dictionary entry 반찬(飯饌) has one sense: a general word for the food eaten with rice. Locators match. The note's 'traditional everyday meal' follows the encyclopedia's own framing and makes no claim about every household. Claim holds. The note is an English paraphrase and shares no wording with the sources. Both hosts are on SOURCE_HOST_ALLOWLIST, and both publishers are Korean public institutions.\nPass 5 (MAR culture review, independent final check, 2026-10-14): the Encyclopedia of Korean Culture entries 반상 and 반상기 and the Standard Korean Language Dictionary entry 반찬(飯饌) re-read. 반상 is a setting of rice and side dishes with soup or stew alongside, the everyday native meal; 반상기 lists rice, soup, stew, kimchi, sauces and side dishes; 반찬 has one sense, the foods eaten with rice, and its locator now says so. Claim holds as the traditional everyday meal, not what every household eats. No wording shared with the sources."
+        "notes": "Pass 1 (author sourcing, 2026-10-14): all three pages opened. The Encyclopedia of Korean Culture entry 반상 defines it as a setting of rice and side dishes, says rice is the staple with side dishes alongside, and that soup or stew is set with them; the entry 반상기 lists rice, soup, stew, kimchi, sauces and side dishes as what a 반상 holds; the Standard Korean Language Dictionary defines 반찬 as the foods eaten with rice. Backs the note and the q3 Discover line. The note says traditional everyday meal (the 반상 the sources describe), not what every household eats. English paraphrase, no wording copied.\nPass 2b (independent fact check, 2026-10-14): all three pages re-opened. Encyclopedia of Korean Culture 반상: the definition is a setting made of rice and side dishes, and 내용 paragraph 1 calls it the everyday meal setting, with rice as the staple, side dishes as the accompaniment, and soup or stew set alongside them. 반상기 내용 sentence 1 lists rice, soup, stew, kimchi, the sauces and side dishes. The Standard Korean Language Dictionary entry 반찬(飯饌) has one sense: a general word for the food eaten with rice. Locators match. The note's 'traditional everyday meal' follows the encyclopedia's own framing and makes no claim about every household. Claim holds. The note is an English paraphrase and shares no wording with the sources. Both hosts are on SOURCE_HOST_ALLOWLIST, and both publishers are Korean public institutions.\nPass 5 (MAR culture review, independent final check, 2026-10-14): the Encyclopedia of Korean Culture entries 반상 and 반상기 and the Standard Korean Language Dictionary entry 반찬(飯饌) re-read. 반상 is a setting of rice and side dishes with soup or stew alongside, the everyday native meal; 반상기 lists rice, soup, stew, kimchi, sauces and side dishes; 반찬 has one sense, the foods eaten with rice, and its locator now says so. Claim holds as the traditional everyday meal, not what every household eats. No wording shared with the sources.\nCM-3C (2026-10-23): sources reordered, none added or removed; the allowlisted one is first, as the tip prints the first source."
       }
     }
   ],
@@ -1297,10 +1198,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-29",
     "notes": [
       "Language (pass 4, MAR 2026-10-14): spelling, 해요체 and RR clean; scored reading decodable. ko: Hoya names the '들어 보기' button; Build the Word is '낱말 완성하기'; caption points to 「낱말 만들기」; 나물 and 국 glosses no longer echo the word; 사과, 빵 match Word Builder. es: lonchera, 'plátano, banana', sazonadas, tazón. 바나나 (q1) and 사랑 stay: Stage 1 words.",
-      "Culture (pass 5, MAR 2026-10-14): n1 re-checked against all three sources (verification line 3); the 반찬 locator names its single sense. The meal is framed as the traditional everyday 반상, not what every household eats. No person, brand, shop or price, no holiday content, no age wording."
+      "Culture (pass 5, MAR 2026-10-14): n1 re-checked against all three sources (verification line 3); the 반찬 locator names its single sense. The meal is framed as the traditional everyday 반상, not what every household eats. No person, brand, shop or price, no holiday content, no age wording.",
+      "Check rotation (row CM-3A S2, MAR 2026-10-23; language, culture and learning-design checkers, reviser, third pass): q1 is Read Pick Meaning (김밥, 우유), q2 Dictation (수박, 바나나: Stage 1 letters only, no sound change), q3 Pic-Word Match (비빔밥, 김치, 밥; 김밥, 달걀, 물). Every read or written word uses Stage 1 letters only; reuse stays at half or more. The reviser restored the shipped ko gloss of pic-gimbap.",
+      "Check rotation re-check (row CM-3A S2, MAR 2026-10-27, on the CM-30/31/34/35/3C stack; language, culture and learning-design passes, reviser, third pass): every read or written Check word uses only letters taught by then (Stage 1 letters outside Word Builder), the ko lines keep polite 해요체 and romanization comes from the converter.",
+      "Check rotation re-check, design (2026-10-27): Dictation words have one spelling among taught words and no sound change (dictation-unambiguous clean); the Stage 2 Checks are Read Pick Meaning 7, Dictation 7 and Pic-Word Match 4 of 18 (the largest share 38.9%); every Check has a read-meaning or produce round; no adjacent quests share a triple. No native-speaker or expert review is claimed.",
+      "Check rotation review fixes (row CM-3A S2, MAR 2026-10-29): every Check asks at least one word its own quest's Discover teaches (F-CURR-001 section 3.1 rule 4); a Dictation round's meaning never carries the word's sound (no romanization or loanword in en or es); a ko Read Pick label shares no syllable with its round's prompt."
     ]
   },
   "contentVer": 1

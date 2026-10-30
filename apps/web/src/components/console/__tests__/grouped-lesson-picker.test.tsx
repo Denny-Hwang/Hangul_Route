@@ -92,7 +92,7 @@ describe('GroupedLessonPicker', () => {
     const chips = root.findAll((n) => n.type === 'input' && n.props.type === 'radio');
     expect(chips.map((c) => c.props['data-testid'])).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'].map((s) => `pick-chip-${s}`));
     expect(byTestId(root, 'pick-chip-stage1').props.checked).toBe(true);
-    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 1 · 15 lessons');
+    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 1 · 16 lessons');
     // Five episode rows, their lessons rendered but hidden until opened.
     const rows = root.findAll((n) => typeof n.props['data-testid'] === 'string' && n.props['data-testid'].startsWith('pick-row-'));
     expect(rows).toHaveLength(5);
@@ -265,7 +265,7 @@ describe('GroupedLessonPicker', () => {
   it('titles follow the console language (owner report: English titles in the ko console)', () => {
     const { renderer } = planHarness([], 30, 'ko');
     const root = renderer.root;
-    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('1단계 · 수업 15개');
+    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('1단계 · 수업 16개');
     const row = byTestId(root, 'pick-row-episode:stage1-letters');
     const label = root.find((n) => n.type === 'label' && n.findAll((c) => c === row).length > 0);
     expect(textOf(label)).toContain('글자 만나기');
@@ -360,7 +360,7 @@ describe('LectureChooserSection (the lecture page, tabs)', () => {
     expect(stageChips.map((c) => c.props['data-testid'])).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'].map((s) => `lecture-picker-stage-${s}`));
     expect(textOf(root.find((n) => n.type === 'legend'))).toBe(lw.stage.choose);
     expect(hasTestId(root, 'lecture-picker-chip-stories')).toBe(false);
-    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 1 · 15 lessons');
+    expect(textOf(root.find((n) => n.type === 'h3'))).toBe('Stage 1 · 16 lessons');
   });
 
   it('the arrow keys, Home and End move between the tabs and select them', () => {

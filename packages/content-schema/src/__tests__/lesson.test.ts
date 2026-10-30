@@ -144,14 +144,27 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
     expect(messages(dup)).toEqual(['quests.0.scopes.3.ref: scope ref minigame:s3-letters-q1-apply is listed twice']);
   });
 
-  it('applies the Check rule: Listen & Pick (Sentence Builder too in stage7), exactly 2 rounds', () => {
+  it('applies the Check rule: Listen & Pick (Sentence Builder too in stage7, the Stage 3 rotation in stage3), exactly 2 rounds', () => {
     expect(CHECK_ROUNDS).toBe(2);
-    expect(checkKindsFor('stage3')).toEqual(['listen-pick']);
-    expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it']);
+    // Row CM-3A S3 (F-CURR-002 section 7.1): the Stage 3 Check rotation, Cloze Pick and Sentence Builder by default, Dictation too.
+    expect(checkKindsFor('stage3')).toEqual(['listen-pick', 'cloze-pick', 'order-it', 'type-hangul']);
+    // Row CM-3A S2: the Stage 2 Check rotation (Read Pick Meaning, Dictation, Pic-Word Match).
+    expect(checkKindsFor('stage2')).toEqual(['listen-pick', 'type-hangul', 'pic-word-match']);
+    // Row CM-3A S4: the Stage 4 Check rotation (Dialogue reply pick as Tap to Respond, Cloze Pick, Sentence Builder).
+    expect(checkKindsFor('stage4')).toEqual(['listen-pick', 'tap-respond', 'cloze-pick', 'order-it']);
+    // Row CM-3A S6: a Stage 6 Check is a realia question (Realia Read, Cloze Pick on a value) or Dictation.
+    expect(checkKindsFor('stage6')).toEqual(['listen-pick', 'realia-read', 'cloze-pick', 'type-hangul']);
+    expect(checkKindsFor('stage1')).toEqual(['listen-pick']);
+    // Row CM-3A S7: the Stage 7 Check rotation (F-CURR-002 section 7.1): Write Frame, Cloze Pick and Sentence Builder.
+    expect(checkKindsFor('stage7')).toEqual(['listen-pick', 'order-it', 'write-frame', 'cloze-pick']);
 
     const s3 = lessonCell() as Json;
     s3.quests[0] = lessonQuest('stage3', 'letters', 1, 'order-it');
-    expect(messages(s3)).toEqual(['quests.0.steps.4.minigameKind: a stage3 Check plays listen-pick, not order-it']);
+    expect(messages(s3)).toEqual([]);
+    // Stage 6's rotation (row CM-3A S6) still has no Sentence Builder Check.
+    const s6 = lessonCell('stage6') as Json;
+    s6.quests[0] = lessonQuest('stage6', 'letters', 1, 'order-it');
+    expect(messages(s6)).toEqual(['quests.0.steps.4.minigameKind: a stage6 Check plays listen-pick or realia-read or cloze-pick or type-hangul, not order-it']);
 
     const three = lessonCell() as Json;
     three.quests[0].scopes[2].rounds.push(clone(three.quests[0].scopes[2].rounds[0]));
@@ -323,15 +336,20 @@ describe('LessonScopeSchema', () => {
       [
         'build-letter',
         'card-match',
+        'cloze-pick',
         'listen-pick',
+        'my-story',
         'order-it',
         'pic-word-match',
         'realia-read',
+        'role-play',
         'story-sequence',
         'tap-respond',
         'trace-word',
         'type-hangul',
         'write-frame',
+        'story-order',
+        'hidden-heritage',
       ].sort(),
     );
     for (const kind of LESSON_SCOPE_KINDS) expect(MinigameKindSchema.options).toContain(kind);

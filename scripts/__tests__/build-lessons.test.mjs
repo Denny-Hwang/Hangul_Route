@@ -202,6 +202,53 @@ describe("build-lessons.mjs: cells", () => {
     assert.deepEqual(plan.titles.map((t) => t.locale), ["es", "ko"]);
   });
 
+  test("Did you know? (F-CURR-002 row CM-3C): each quest's note rides in its cell's chunk, culture notes first, with its source line", () => {
+    const root = makeRoot();
+    const src = (publisher, title) => ({ title, publisher, url: "https://folkency.nfm.go.kr/kr/topic/detail/1", accessed: "2026-10-01", quoteOrLocator: "q" });
+    const ver = { passes: 3, checkedAt: "2026-10-01", scope: "lesson", notes: "x" };
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", {
+      culture: [
+        { id: "n1", kind: "language", textEn: "A grammar tip.", sources: [src("국립국어원 (National Institute of Korean Language)", "사전")], verification: ver },
+        { id: "n2", kind: "culture", textEn: "Kites fly at {ko:설날}.", sources: [src("국립민속박물관 (National Folk Museum of Korea)", "연날리기"), src("b", "c")], verification: ver },
+      ],
+    }));
+    put(root, "content/i18n/es/lessons-stage2-rites.json", overlay("es", "lessons-stage2-rites", {
+      "episode:stage2-rites": { title: "Palabras de fiesta", "culture.n2.text": "Las cometas vuelan en {ko:설날}." },
+    }));
+    assert.equal(run(root).status, 0);
+    const body = chunk(root, "lessons-cell-stage2-rites");
+    const notes = JSON.parse(/export const LESSON_NOTES: LessonCellChunk\['LESSON_NOTES'\] = (.*);\n/.exec(body)?.[1] ?? "null");
+    // Three quests over two notes: the culture note first, then the language note, then round again.
+    assert.deepEqual(Object.keys(notes), ["quest:stage2-rites-q1", "quest:stage2-rites-q2", "quest:stage2-rites-q3"]);
+    assert.deepEqual(notes["quest:stage2-rites-q1"], {
+      id: "n2",
+      textEn: "Kites fly at {ko:설날}.",
+      citation: { title: "연날리기", publisher: "국립민속박물관 (National Folk Museum of Korea)", more: 1 },
+    });
+    assert.equal(notes["quest:stage2-rites-q2"].id, "n1");
+    assert.equal(notes["quest:stage2-rites-q3"].id, "n2");
+    // The note's es text is a body gloss of the cell's chunk, never in the title chunk or the manifest.
+    assert.match(body, /"episode:stage2-rites":\{"culture.n2.text":"Las cometas vuelan en \{ko:설날\}."\}/);
+    assert.doesNotMatch(chunk(root, "lessons-titles-es"), /cometas/);
+    assert.doesNotMatch(read(root, "lessons-index.ts"), /Kites|cometas|LESSON_NOTES =/);
+    // The notes are part of the chunk's content hash.
+    const plain = planChunks(readCellsOf(root)).cells[0].hash;
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    assert.notEqual(planChunks(readCellsOf(root)).cells[0].hash, plain);
+  });
+
+  test("Did you know?: a cell with no notes ships an empty table; a ready cell's note with only a factRef fails (row CM-3C)", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { culture: [] }));
+    assert.equal(run(root).status, 0);
+    assert.match(chunk(root, "lessons-cell-stage2-rites"), /export const LESSON_NOTES: LessonCellChunk\['LESSON_NOTES'\] = \{\};/);
+    const ver = { passes: 3, checkedAt: "2026-10-01", scope: "lesson", notes: "x" };
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites", "ready", { culture: [{ id: "n1", kind: "culture", textEn: "A fact.", factRef: "story:x#f1", verification: ver }] }));
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error file=content\/episodes\/stage-2\/rites\.json::culture n1 has no sources\[\] of its own/);
+  });
+
   test("an overlay naming an entity of another cell, or a malformed overlay file, fails", () => {
     const root = makeRoot();
     put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
@@ -274,6 +321,24 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       [{ kind: "type-hangul", rounds: [1] }, { kind: "type-hangul", rounds: 1, typeHangul: { rounds: [1] } }],
       [{ kind: "trace-word", rounds: [1, 2, 3] }, { kind: "trace-word", rounds: 3, traceWord: { rounds: [1, 2, 3] } }],
       [{ kind: "write-frame", rounds: [1] }, { kind: "write-frame", rounds: 1, writeFrame: { rounds: [1] } }],
+      // Row CM-30: a round with no gapKind is a word gap (the schema default); a value gap's card rides along.
+      [
+        { kind: "cloze-pick", rounds: [{ id: "c1" }, { id: "c2", gapKind: "particle" }] },
+        { kind: "cloze-pick", rounds: 2, clozePick: { rounds: [{ id: "c1", gapKind: "word" }, { id: "c2", gapKind: "particle" }] } },
+      ],
+      [
+        { kind: "cloze-pick", rounds: [{ id: "c1", gapKind: "value" }], realia },
+        { kind: "cloze-pick", rounds: 1, clozePick: { rounds: [{ id: "c1", gapKind: "value" }], realia } },
+      ],
+      // F-CURR-002 row CM-34: Story Order's rounds as authored.
+      [{ kind: "story-order", rounds: [1, 2] }, { kind: "story-order", rounds: 2, storyOrder: { rounds: [1, 2] } }],
+      // F-CURR-002 row CM-36: a Hidden Heritage scene plays one round per target found (`scopeRoundCount`).
+      [
+        { kind: "hidden-heritage", rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] },
+        { kind: "hidden-heritage", rounds: 7, hiddenHeritage: { rounds: [{ targets: [1, 2, 3] }, { targets: [4, 5, 6, 7] }] } },
+      ],
+      // F-CURR-002 row CM-38: a chain plays one round per frame.
+      [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });
@@ -319,6 +384,18 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
     });
     assert.throws(() => runtimeScope({ ref, kind: "build-letter", words: [kt("설날", "seollal", "x")] }, "t"), /needs its syllables split/);
     assert.throws(() => runtimeScope({ ref, kind: "build-letter", words: [kt("A", "a", "x")] }, "t"), /is not a Hangul syllable block/);
+  });
+
+  test("role-play (row CM-35) keeps the scene as authored and counts the learner turns of a way through it", () => {
+    const reply = (id, next) => ({ id, text: kt("네.", "ne", "yes"), kind: "natural", next });
+    const nudge = { id: "x", text: kt("아니요.", "aniyo", "no"), kind: "lessNatural", whyEn: "Try another." };
+    const turnNode = (id, next) => ({ id, line: kt("뭐예요?", "mwoyeyo", "what is it?"), replies: [reply("a", next), nudge] });
+    const scene = { title: kt("도서관", "doseogwan", "At the library"), partner: kt("사서", "saseo", "librarian"), start: "t1", nodes: [turnNode("t1", "t2"), turnNode("t2", "t3"), turnNode("t3", "t4"), turnNode("t4", "end"), { id: "end", end: true, closingEn: "Well done!" }] };
+    assert.deepEqual(runtimeScope({ ref, kind: "role-play", scene }, "t"), { kind: "role-play", rounds: 4, rolePlay: { scene } });
+    const dead = { ...scene, nodes: scene.nodes.slice(0, 4) };
+    assert.throws(() => runtimeScope({ ref, kind: "role-play", scene: dead }, "t"), /role-play-good-endings/);
+    const loop = { ...scene, nodes: [turnNode("t1", "t1"), ...scene.nodes.slice(1)] };
+    assert.throws(() => runtimeScope({ ref, kind: "role-play", scene: loop }, "t"), /role-play-good-endings/);
   });
 
   test("voice-echo (and any unknown kind) has no lesson scope", () => {

@@ -1,4 +1,4 @@
-import type { Episode, Quest, QuestProgress, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
+import { requiredQuestIds, type Episode, type Quest, type QuestProgress, type StageKey, type ThemeDef, type ThemeKey } from '@hangul-route/content-schema';
 import type { IconName } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { cellKey, gridEpisodes } from '../content/episodes';
@@ -42,15 +42,20 @@ export function stagePillLabel(
   return m[state].pill;
 }
 
+/**
+ * Every quest the episode needs is done: its `questIds` without the optional additions (F-CURR-002 section 4.2,
+ * `requiredQuestIds`), so a quest that joins a finished episode never reopens it.
+ */
 export function isEpisodeComplete(
-  episode: Pick<Episode, 'id' | 'questIds'>,
+  episode: Pick<Episode, 'id' | 'questIds' | 'optionalQuestIds'>,
   quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[],
 ): boolean {
-  if (episode.questIds.length === 0) return false;
+  const required = requiredQuestIds(episode);
+  if (required.length === 0) return false;
   const done = new Set(
     quests.filter((q) => q.episodeId === episode.id && q.completedAt).map((q) => q.questId),
   );
-  return episode.questIds.every((id) => done.has(id));
+  return required.every((id) => done.has(id));
 }
 
 /**
@@ -59,7 +64,7 @@ export function isEpisodeComplete(
  * never complete.
  */
 export function isCellComplete(
-  episodes: readonly Pick<Episode, 'id' | 'questIds'>[],
+  episodes: readonly Pick<Episode, 'id' | 'questIds' | 'optionalQuestIds'>[],
   quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[],
 ): boolean {
   return episodes.length > 0 && episodes.every((e) => isEpisodeComplete(e, quests));
@@ -72,14 +77,19 @@ export function isCellComplete(
  * grid episode lists but the bundle does not ship, is left out of both sides.
  */
 export function gridQuestProgress(
-  episodes: readonly Pick<Episode, 'placement' | 'questIds'>[],
+  episodes: readonly Pick<Episode, 'placement' | 'questIds' | 'optionalQuestIds'>[],
   quests: readonly Pick<Quest, 'id'>[],
   progress: readonly Pick<QuestProgress, 'questId' | 'completedAt'>[],
 ): { completed: number; total: number } {
-  const gridIds = new Set(gridEpisodes(episodes).flatMap((e) => e.questIds));
+  const grid = gridEpisodes(episodes);
+  const gridIds = new Set(grid.flatMap((e) => e.questIds));
+  const finished = new Set(progress.filter((q) => q.completedAt).map((q) => q.questId));
+  // An optional addition (F-CURR-002 section 4.2) counts on both sides once it is done, never before: shipping one
+  // never turns a learner's finished count into "one left".
+  const optional = new Set(grid.flatMap((e) => e.optionalQuestIds ?? []));
   // One set feeds both sides: a grid id with no bundled quest counts on neither.
-  const countable = new Set(quests.filter((q) => gridIds.has(q.id)).map((q) => q.id));
-  const done = new Set(progress.filter((q) => q.completedAt && countable.has(q.questId)).map((q) => q.questId));
+  const countable = new Set(quests.filter((q) => gridIds.has(q.id) && (!optional.has(q.id) || finished.has(q.id))).map((q) => q.id));
+  const done = new Set([...finished].filter((id) => countable.has(id)));
   return { completed: done.size, total: countable.size };
 }
 

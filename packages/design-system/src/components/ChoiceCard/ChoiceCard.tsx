@@ -30,6 +30,7 @@ export function ChoiceCard({
   onPress,
   accessibilityLabel,
   testID,
+  pressableRef,
 }: ChoiceCardProps): ReactElement {
   const look = choiceCardStyle(state, { wrongMark });
   const bodySize = useTypeScale().size.body;
@@ -97,6 +98,7 @@ export function ChoiceCard({
 
   return (
     <Pressable
+      ref={pressableRef}
       testID={testID}
       onPress={look.interactive ? onPress : undefined}
       accessibilityRole="button"

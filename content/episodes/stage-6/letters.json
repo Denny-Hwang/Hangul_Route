@@ -87,7 +87,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "realia-read",
           "minigameRef": "minigame:s6-letters-q1-check",
           "durationSeconds": 40
         },
@@ -277,11 +277,83 @@
         },
         {
           "ref": "minigame:s6-letters-q1-check",
-          "kind": "listen-pick",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:menu-dishes",
+            "kind": "menu",
+            "entries": [
+              {
+                "id": "e1",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice rolls"
+                }
+              },
+              {
+                "id": "e2",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                }
+              },
+              {
+                "id": "e3",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                }
+              },
+              {
+                "id": "e4",
+                "text": {
+                  "ko": "비빔밥",
+                  "romanization": "bibimbap",
+                  "en": "mixed rice"
+                }
+              }
+            ],
+            "altEn": "A snack-bar menu of four dishes"
+          },
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
+              "questionEn": "Which dish is seaweed rice rolls?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "라면",
+                    "romanization": "ramyeon",
+                    "en": "instant noodles"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "김밥",
+                    "romanization": "gimbap",
+                    "en": "seaweed rice rolls"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "비빔밥",
+                    "romanization": "bibimbap",
+                    "en": "mixed rice"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "e1"
+            },
+            {
+              "id": "c2",
+              "questionEn": "Find this dish on the menu. Which picture shows it?",
+              "key": {
                 "ko": "라면",
                 "romanization": "ramyeon",
                 "en": "instant noodles"
@@ -289,42 +361,22 @@
               "options": [
                 {
                   "id": "a",
-                  "pictureRef": "word:culture-bibimbap",
-                  "labelEn": "mixed rice"
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "seaweed rice rolls"
                 },
                 {
                   "id": "b",
-                  "pictureRef": "word:food-ramyeon",
-                  "labelEn": "instant noodles"
-                },
-                {
-                  "id": "c",
-                  "pictureRef": "card:kimbap",
-                  "labelEn": "seaweed rice rolls"
-                }
-              ],
-              "answerId": "b"
-            },
-            {
-              "id": "c2",
-              "prompt": {
-                "ko": "떡볶이",
-                "romanization": "tteokbokki",
-                "en": "spicy rice cakes"
-              },
-              "options": [
-                {
-                  "id": "a",
                   "pictureRef": "word:culture-tteokbokki",
                   "labelEn": "spicy rice cakes"
                 },
                 {
-                  "id": "b",
-                  "pictureRef": "card:kimbap",
-                  "labelEn": "seaweed rice rolls"
+                  "id": "c",
+                  "pictureRef": "word:food-ramyeon",
+                  "labelEn": "instant noodles"
                 }
               ],
-              "answerId": "a"
+              "answerId": "c",
+              "answerEntryId": "e3"
             }
           ]
         }
@@ -411,7 +463,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "cloze-pick",
           "minigameRef": "minigame:s6-letters-q2-check",
           "durationSeconds": 40
         },
@@ -625,63 +677,122 @@
         },
         {
           "ref": "minigame:s6-letters-q2-check",
-          "kind": "listen-pick",
+          "kind": "cloze-pick",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "오천 원",
-                "romanization": "ocheon won",
-                "en": "5,000 won"
+              "sentence": {
+                "ko": "김밥은 ___ 원이에요.",
+                "romanization": "gimbabeun ___ wonieyo",
+                "en": "Seaweed rice rolls are ___ won."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "오천 원",
-                    "romanization": "ocheon won",
-                    "en": "5,000 won"
-                  }
+                  "ko": "사천",
+                  "romanization": "sacheon",
+                  "en": "four thousand"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "이천 원",
-                    "romanization": "icheon won",
-                    "en": "2,000 won"
-                  }
+                  "ko": "이천",
+                  "romanization": "icheon",
+                  "en": "two thousand"
+                },
+                {
+                  "ko": "오천",
+                  "romanization": "ocheon",
+                  "en": "five thousand"
                 }
               ],
-              "answerId": "a"
+              "answerIndex": 1
             },
             {
               "id": "c2",
-              "prompt": {
-                "ko": "이천 원",
-                "romanization": "icheon won",
-                "en": "2,000 won"
+              "sentence": {
+                "ko": "떡볶이는 ___ 원이에요.",
+                "romanization": "tteokbokkineun ___ wonieyo",
+                "en": "Spicy rice cakes are ___ won."
               },
-              "options": [
+              "gapKind": "value",
+              "tiles": [
                 {
-                  "id": "a",
-                  "text": {
-                    "ko": "사천 원",
-                    "romanization": "sacheon won",
-                    "en": "4,000 won"
-                  }
+                  "ko": "이천",
+                  "romanization": "icheon",
+                  "en": "two thousand"
                 },
                 {
-                  "id": "b",
-                  "text": {
-                    "ko": "이천 원",
-                    "romanization": "icheon won",
-                    "en": "2,000 won"
-                  }
+                  "ko": "사천",
+                  "romanization": "sacheon",
+                  "en": "four thousand"
+                },
+                {
+                  "ko": "삼천",
+                  "romanization": "samcheon",
+                  "en": "three thousand"
                 }
               ],
-              "answerId": "b"
+              "answerIndex": 2
             }
-          ]
+          ],
+          "realia": {
+            "ref": "realia:menu-prices",
+            "kind": "menu",
+            "entries": [
+              {
+                "id": "e1",
+                "text": {
+                  "ko": "김밥",
+                  "romanization": "gimbap",
+                  "en": "seaweed rice rolls"
+                },
+                "value": {
+                  "ko": "이천 원",
+                  "romanization": "icheon won",
+                  "en": "2,000 won"
+                }
+              },
+              {
+                "id": "e2",
+                "text": {
+                  "ko": "떡볶이",
+                  "romanization": "tteokbokki",
+                  "en": "spicy rice cakes"
+                },
+                "value": {
+                  "ko": "삼천 원",
+                  "romanization": "samcheon won",
+                  "en": "3,000 won"
+                }
+              },
+              {
+                "id": "e3",
+                "text": {
+                  "ko": "라면",
+                  "romanization": "ramyeon",
+                  "en": "instant noodles"
+                },
+                "value": {
+                  "ko": "사천 원",
+                  "romanization": "sacheon won",
+                  "en": "4,000 won"
+                }
+              },
+              {
+                "id": "e4",
+                "text": {
+                  "ko": "비빔밥",
+                  "romanization": "bibimbap",
+                  "en": "mixed rice"
+                },
+                "value": {
+                  "ko": "오천 원",
+                  "romanization": "ocheon won",
+                  "en": "5,000 won"
+                }
+              }
+            ],
+            "altEn": "A snack-bar menu of four dishes with prices in won"
+          }
         }
       ]
     },
@@ -770,7 +881,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "listen-pick",
+          "minigameKind": "type-hangul",
           "minigameRef": "minigame:s6-letters-q3-check",
           "durationSeconds": 40
         },
@@ -976,61 +1087,27 @@
         },
         {
           "ref": "minigame:s6-letters-q3-check",
-          "kind": "listen-pick",
+          "kind": "type-hangul",
           "rounds": [
             {
               "id": "c1",
-              "prompt": {
-                "ko": "매운맛",
-                "romanization": "maeunmat",
-                "en": "spicy flavour"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "차",
-                    "romanization": "cha",
-                    "en": "tea"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "매운맛",
-                    "romanization": "maeunmat",
-                    "en": "spicy flavour"
-                  }
-                }
-              ],
-              "answerId": "b"
+              "promptEn": "Type the price you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "이천 원",
+                "romanization": "icheon won",
+                "en": "2,000 won"
+              }
             },
             {
               "id": "c2",
-              "prompt": {
+              "promptEn": "Type the price you hear.",
+              "mode": "hear",
+              "target": {
                 "ko": "칠천 원",
                 "romanization": "chilcheon won",
                 "en": "7,000 won"
-              },
-              "options": [
-                {
-                  "id": "a",
-                  "text": {
-                    "ko": "칠천 원",
-                    "romanization": "chilcheon won",
-                    "en": "7,000 won"
-                  }
-                },
-                {
-                  "id": "b",
-                  "text": {
-                    "ko": "팔천 원",
-                    "romanization": "palcheon won",
-                    "en": "8,000 won"
-                  }
-                }
-              ],
-              "answerId": "a"
+              }
             }
           ]
         }
@@ -1104,10 +1181,14 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14",
+    "reviewedAt": "2026-10-27",
     "notes": [
       "Language pass 4 (MAR): romanization, spelling (매운맛 one headword) and particles clean; applied number-set captions that name only the numbers on the board, extra-spicy for 매운맛 떡볶이, seaweed rice rolls, a ko tea question without 차, non-echo ko labels, shorter ko glosses; kept 육-십 as one number-set item (rule 4 count).",
-      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (verification line 3); q3 is another drawn menu board; Type Hangul prompts name the target; topic snack-bar dishes: no fact claim (dishes are only glossed), so no note, and n1 covers the won; no real person, shop, brand or price; no age wording."
+      "Culture pass 5 (MAR): n1 and n2 re-checked against every source (verification line 3); q3 is another drawn menu board; Type Hangul prompts name the target; topic snack-bar dishes: no fact claim (dishes are only glossed), so no note, and n1 covers the won; no real person, shop, brand or price; no age wording.",
+      "Check rotation MAR (row CM-3A S6, F-CURR-002 7.1, 2026-10-27; passes: language, culture and facts, learning design, reviser, third pass): Stage 6 Checks: Realia Read 6, Cloze Pick 5 (values read on the quest's own card), Dictation 4; none above 40 in 100; each reads a meaning or produces; no adjacent quests share a triple.",
+      "CM-3A S6 Checks here: q1 Realia Read (dish menu), q2 Cloze Pick (price menu), q3 Dictation of 이천 원 and 칠천 원 (review fix, 2026-10-29: speech links 원 to the number before it, [이처눤], [칠처눤]; the spelling is still one, as Type Hangul grading ignores spaces; `game.type-hangul-hear` ramps above 0 only with recorded clips for these targets, AMENDMENTS-AUDIO-CLIPS).",
+      "CM-3A S6 language: 김밥은 and 떡볶이는 take 은 / 는 by the last sound; ___ 원이에요 reads a whole value of the card. Learning design: q2 asks 김밥 and 떡볶이 in Korean numbers, which Practice read only as digits (2,000) or from the price back to the dish, so no Check repeats a Practice question.",
+      "CM-3A S6 reviser: es q1 c1 follows the cell pattern (¿Qué platillo es de ...?); ko Dictation prompts end with a period. Third pass: no gloss names a tile before the tap; no change."
     ]
   },
   "contentVer": 1

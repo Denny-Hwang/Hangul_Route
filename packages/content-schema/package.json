@@ -10,13 +10,16 @@
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
     "./review-items": "./src/review-items/review-item.ts",
+    "./letter-names": "./src/hangul/letter-names.ts",
     "./memory": "./src/memory/memory-sync.ts",
+    "./match-shape": "./src/schemas/match-shape.ts",
     "./learning-summary": "./src/schemas/learning-summary.ts",
     "./overlays": "./overlays.ts",
     "./overlays-es": "./overlays-es.ts",
     "./overlays-ko": "./overlays-ko.ts",
     "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts",
-    "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts"
+    "./testing/lecture-decks": "./src/__tests__/fixtures/lecture-decks.ts",
+    "./testing/role-play": "./src/__tests__/fixtures/role-play-scenes.ts"
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/content-schema)'",

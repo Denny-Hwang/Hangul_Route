@@ -9,10 +9,16 @@ import {
   type Overlays,
 } from '@hangul-route/content-schema';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
+import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
+import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';
+import { SEOLLAL_ROOM_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/seollal-room';
+import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
+import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { glossRepeatsRomanization } from '../../../../../scripts/overlay-rules.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
+import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import { episodesAll } from '../episodes';
@@ -46,6 +52,8 @@ const SHIPPED: Shipped = {
   minigame: new Map([...Object.entries(minigameScopes), ...Object.entries(ALL_LESSON_SCOPES)]),
   stage: new Map(stages.map((s) => [`stage:${s.key}`, s])),
   theme: new Map(themes.map((t) => [`theme:${t.key}`, t])),
+  // F-CURR-002 row CM-37: the Hidden Heritage scenes (design-system data, each in a lazy chunk of its own).
+  scene: new Map([FOOD_MARKET_SCENE, LETTERS_SCHOOL_SCENE, SEOLLAL_ROOM_SCENE, FOUR_SEASONS_SCENE, PLAY_COURTYARD_SCENE].map((s) => [s.id, s])),
 };
 
 /**
@@ -59,8 +67,10 @@ const JSON_ONLY_CARD_IDS: ReadonlySet<string> = new Set(
     .map((card) => card.id)
     .filter((id) => !SHIPPED.card!.has(id)),
 );
+/** A lesson cell's note (`culture.<id>.text`, F-CURR-002 row CM-3C): its English is the cell file's `culture[]` (checked by culture-notes.test.ts and the validator), not the runtime episode. */
+const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
 const jsonBaseField = (id: string, field?: string): boolean =>
-  JSON_ONLY_CARD_IDS.has(id) || (field === 'gloss' && overlayPrefix(id) === 'jamo');
+  JSON_ONLY_CARD_IDS.has(id) || (field === 'gloss' && overlayPrefix(id) === 'jamo') || (field !== undefined && overlayPrefix(id) === 'episode' && CELL_NOTE_FIELD.test(field));
 
 type Rec = Record<string | number, unknown>;
 const getIn = (root: unknown, path: ReadonlyArray<string | number>): unknown =>
@@ -85,6 +95,14 @@ function repeatsRomanization(entity: object, path: ReadonlyArray<string | number
   const holder = getIn(entity, path.slice(0, -1)) as Rec | undefined;
   return glossRepeatsRomanization({ ko: holder?.ko, romanization: holder?.romanization, gloss: value });
 }
+
+/**
+ * A Cloze Pick sentence meaning (row CM-30): a value gap's keeps its one ___ until the answer fills it with the value's
+ * meaning (It is ___ won.), and a word or particle gap's has none. A translation that drops the gap, or writes the
+ * amount out, would show the answer before the tap.
+ */
+const CLOZE_SENTENCE_GLOSS = /^clozePick\.rounds\.[^.]+\.sentence\.gloss$/;
+const gapsOf = (text: unknown): number => (typeof text === 'string' ? text.split('___').length - 1 : -1);
 
 /** Every `{ ko, romanization, en | gloss_en }` of the TypeScript-resident base whose English opens with its romanization. */
 function baseGlossesRepeatingRomanization(shippedByPrefix: Shipped = SHIPPED): string[] {
@@ -128,6 +146,8 @@ function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED)
           problems.push(`ko ${id}.${field}: echoes the Korean it explains (overlay-circular-gloss)`);
         } else if (locale === 'es' && targets.some((path) => repeatsRomanization(entity, path, value))) {
           problems.push(`es ${id}.${field}: opens with the romanization of its Korean (gloss-repeats-romanization)`);
+        } else if (CLOZE_SENTENCE_GLOSS.test(field) && targets.some((path) => gapsOf(getIn(entity, path)) !== gapsOf(value))) {
+          problems.push(`${locale} ${id}.${field}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`);
         }
       }
     }
@@ -251,6 +271,24 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
       'ko jamo:giyeok.exampleWord.gloss: echoes the Korean it explains (overlay-circular-gloss)',
       'ko jamo:giyeok.soundHint: echoes the Korean it explains (overlay-circular-gloss)',
       `ko minigame:s1-life-q3-apply.cardPairs.${slug}.gloss: echoes the Korean it explains (overlay-circular-gloss)`,
+    ]);
+  });
+
+  it('reports a Cloze Pick sentence meaning that drops, or adds, the gap of its English (row CM-30)', () => {
+    const shipped: Shipped = { minigame: new Map([['minigame:e2e-cloze', clozeFixtureScope(['word', 'value'])]]) };
+    const field = (round: string) => `clozePick.rounds.${round}.sentence.gloss`;
+    const good: Overlays = {
+      es: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: 'Leo un libro.', [field('e2e-cloze-value')]: 'Son ___ wones.' } },
+      ko: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: '책을 읽는다는 뜻', [field('e2e-cloze-value')]: '___원이라는 뜻' } },
+    };
+    expect(overlayProblems(good, shipped)).toEqual([]);
+    const bad: Overlays = {
+      es: { 'minigame:e2e-cloze': { [field('e2e-cloze-value')]: 'Son 3.000 wones.' } },
+      ko: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: '책을 ___ 뜻' } },
+    };
+    expect(overlayProblems(bad, shipped)).toEqual([
+      `es minigame:e2e-cloze.${field('e2e-cloze-value')}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`,
+      `ko minigame:e2e-cloze.${field('e2e-cloze-word')}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`,
     ]);
   });
 
@@ -517,5 +555,66 @@ describe('release guard: no es/ko ship while TypeScript-resident content lacks i
   it('the jamo hints and glosses are done in both locales (PR 15 / 16)', () => {
     expect(missingContent('es').filter((row) => row.startsWith('jamo:'))).toEqual([]);
     expect(missingContent('ko').filter((row) => row.startsWith('jamo:'))).toEqual([]);
+  });
+});
+
+/**
+ * Row CM-3A S4 review: a Cloze Pick round shows its meaning in the UI language as the prompt, and no translation shows
+ * the answer before the tap (row CM-30). A Korean meaning is Hangul, so it describes the answer without naming it: a word
+ * gap's answer tile, a particle gap's word with its particle, and a particle Sentence Builder round's word with its
+ * particle never appear in the round's es or ko meaning. Stage 4 is held to it here; the older stages are follow-ups.
+ */
+function meaningsThatGiveAway(scopes: Readonly<Record<string, MinigameScope>>, overlays: Overlays): string[] {
+  const out: string[] = [];
+  for (const [id, scope] of Object.entries(scopes)) {
+    for (const locale of ['es', 'ko'] as const) {
+      const fields = (overlays[locale][id] ?? {}) as Readonly<Record<string, string>>;
+      for (const round of scope.clozePick?.rounds ?? []) {
+        const gloss = fields[`clozePick.rounds.${round.id}.sentence.gloss`];
+        const answer = round.tiles[round.answerIndex]?.ko;
+        if (gloss === undefined || answer === undefined || round.gapKind === 'value') continue;
+        const word = round.gapKind === 'particle' ? (/(\S*)___/.exec(round.sentence.ko)?.[1] ?? '') : '';
+        if (gloss.includes(word + answer)) out.push(`${locale} ${id} ${round.id}: "${gloss}" shows ${word + answer}`);
+      }
+      for (const round of scope.orderIt?.rounds ?? []) {
+        const gloss = fields[`orderIt.rounds.${round.id}.sentence.gloss`];
+        const tile = round.particle ? round.sentence.ko.split(' ')[round.particle.tile]?.replace(/[.?!]+$/, '') : undefined;
+        if (gloss !== undefined && tile !== undefined && gloss.includes(tile)) out.push(`${locale} ${id} ${round.id}: "${gloss}" shows ${tile}`);
+      }
+    }
+  }
+  return out;
+}
+
+describe('a round meaning never shows the answer before the tap (row CM-3A S4, row CM-30)', () => {
+  it('Stage 4: no es or ko Cloze Pick or particle Sentence Builder meaning spells its answer', () => {
+    const stage4 = LESSON_STAGE_MODULES[4];
+    const clozeRounds = Object.values(stage4.LESSON_SCOPES).flatMap((s) => s.clozePick?.rounds ?? []);
+    expect(clozeRounds.length).toBeGreaterThanOrEqual(20);
+    expect(meaningsThatGiveAway(stage4.LESSON_SCOPES, stage4.LESSON_SCOPE_OVERLAYS)).toEqual([]);
+  });
+
+  it('reports a word gap, a particle gap and a particle tile named in the meaning', () => {
+    const scope = {
+      kind: 'cloze-pick',
+      rounds: 2,
+      clozePick: {
+        rounds: [
+          { id: 'w', sentence: { ko: '___가 어때요?', romanization: '___ga eottaeyo', en: 'How is the kimchi?' }, tiles: [{ ko: '김치', romanization: 'gimchi', en: 'kimchi' }, { ko: '우유', romanization: 'uyu', en: 'milk' }], answerIndex: 0 },
+          { id: 'p', gapKind: 'particle', sentence: { ko: '사과___ 어때요?', romanization: 'sagwa___ eottaeyo', en: 'How is the apple?' }, tiles: [{ ko: '이', romanization: 'i', en: 'i' }, { ko: '가', romanization: 'ga', en: 'ga' }], answerIndex: 1 },
+        ],
+      },
+      orderIt: { rounds: [{ id: 'o', sentence: { ko: '국이 뜨거워요?', romanization: 'gugi tteugeowoyo', en: 'Is the soup hot?' }, distractors: [], particle: { tile: 0, choices: [{ ko: '이', romanization: 'i', en: 'i' }, { ko: '가', romanization: 'ga', en: 'ga' }] } }] },
+    } as unknown as MinigameScope;
+    const ko = (w: string, p: string, o: string): Overlays => ({
+      es: {},
+      ko: { 'minigame:x': { 'clozePick.rounds.w.sentence.gloss': w, 'clozePick.rounds.p.sentence.gloss': p, 'orderIt.rounds.o.sentence.gloss': o } },
+    });
+    expect(meaningsThatGiveAway({ 'minigame:x': scope }, ko('채소를 절여 만든 한국 음식이 어떤지 묻는 말', '빨갛고 둥근 과일이 어떤지 묻는 말', '국물 음식이 뜨거운지 묻는 말'))).toEqual([]);
+    expect(meaningsThatGiveAway({ 'minigame:x': scope }, ko('김치가 어떤지 묻는 말', '사과가 어떤지 묻는 말', '국이 뜨거운지 묻는 말'))).toEqual([
+      'ko minigame:x w: "김치가 어떤지 묻는 말" shows 김치',
+      'ko minigame:x p: "사과가 어떤지 묻는 말" shows 사과가',
+      'ko minigame:x o: "국이 뜨거운지 묻는 말" shows 국이',
+    ]);
   });
 });

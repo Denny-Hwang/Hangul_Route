@@ -5,7 +5,12 @@
     "episode:stage3-life": {
       "title": "하루의 짧은 문장",
       "subtitle": "먹고, 마시고, 나가는 일을 짧은 문장으로 말해요.",
-      "hoyaIntro": "먹고, 마시고, 가고, 오고! 하루를 짧은 문장으로 만들어 봐요!"
+      "hoyaIntro": "먹고, 마시고, 가고, 오고! 하루를 짧은 문장으로 만들어 봐요!",
+      "culture.n1.text": "{ko:요}로 끝나는 문장은 공손한 말이에요. 이런 말투를 {ko:해요체}라고 하는데, 일상 대화에서 가장 많이 쓰는 높임 말투예요.",
+      "culture.n2.text": "{ko:을}, {ko:를} 조사는 먹거나 마시는 것처럼 행동의 대상을 나타내요. 받침 뒤에는 {ko:을}, 모음 뒤에는 {ko:를}을 써요.",
+      "culture.n3.text": "{ko:이}, {ko:가} 조사는 문장의 주어를 나타내요. 여기서는 설명하거나 좋아하는 대상이에요. 받침 뒤에는 {ko:이}, 모음 뒤에는 {ko:가}를 써요.",
+      "culture.n4.text": "{ko:뜨거워요}처럼 모습이나 상태를 나타내는 말은 혼자서 문장을 끝낼 수 있어요. 영어와 달리 'is' 같은 말이 따로 필요 없어요.",
+      "culture.n5.text": "{ko:에}는 장소를 나타내는 말 뒤에 붙어서 가거나 오는 곳을 나타내요. {ko:가요}는 가는 것, {ko:와요}는 오는 것이에요. 오는 것은 말하는 사람이나 생각하고 있는 사람 쪽으로 움직이는 거예요."
     },
     "quest:stage3-life-q1": {
       "title": "먹어요, 마셔요",
@@ -65,7 +70,7 @@
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 곳으로 간다는 틀",
       "steps.s2.discover.pages.0.items.0.examples.hakgyoe-gayo.gloss": "공부하는 곳으로 간다는 뜻",
       "steps.s2.discover.pages.0.items.0.examples.badae-gayo.gloss": "넓고 짠 물이 있는 곳으로 간다는 뜻",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "사는 곳으로 온다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "가족이 사는 곳으로 온다는 뜻",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "가깝게 지내는 사람이 온다는 뜻"
     },
     "minigame:s3-life-q1-practice": {
@@ -97,8 +102,14 @@
       "picWord.boards.3.pairs.p3.word.gloss": "쌀로 지은 음식을 먹는다는 뜻"
     },
     "minigame:s3-life-q1-check": {
-      "listenPick.rounds.c1.prompt": "소의 젖을 마신다는 뜻",
-      "listenPick.rounds.c2.prompt": "밀가루 반죽을 구운 음식을 먹는다는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "밀가루 반죽을 구운 음식을 먹는다는 뜻",
+      "clozePick.rounds.c1.tiles.ppang.gloss": "밀가루 반죽을 구운 음식",
+      "clozePick.rounds.c1.tiles.tteok.gloss": "곡식 가루를 쪄서 만든 음식",
+      "clozePick.rounds.c1.tiles.bap.gloss": "쌀로 지은 음식",
+      "clozePick.rounds.c2.sentence.gloss": "아삭하고 둥근 과일을 먹는다는 뜻",
+      "clozePick.rounds.c2.tiles.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-life-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "김으로 만 밥의 맛이 좋다는 뜻",
@@ -129,13 +140,16 @@
       "picWord.boards.3.pairs.p3.word.gloss": "쌀로 지은 음식의 맛이 좋다는 뜻"
     },
     "minigame:s3-life-q2-check": {
-      "listenPick.rounds.c1.prompt": "꼬불꼬불한 국수의 온도가 높다는 뜻",
-      "listenPick.rounds.c2.prompt": "아삭하고 둥근 과일의 맛이 좋다는 뜻"
+      "orderIt.rounds.c1.sentence.gloss": "채소를 절여 양념한 반찬의 맛이 좋다는 뜻",
+      "orderIt.rounds.c1.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "orderIt.rounds.c1.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시",
+      "orderIt.rounds.c2.sentence.gloss": "소의 젖이 마음에 든다는 뜻",
+      "orderIt.rounds.c2.distractors.tteugeowoyo.gloss": "온도가 높다"
     },
     "minigame:s3-life-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "가깝게 지내는 사람이 공부하는 곳으로 간다는 뜻",
       "orderIt.rounds.r1.distractors.wayo.gloss": "말하는 사람이나 마음에 둔 사람 쪽으로 움직이다",
-      "orderIt.rounds.r2.sentence.gloss": "어머니가 사는 곳으로 온다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
       "orderIt.rounds.r2.distractors.gayo.gloss": "여기에서 다른 곳으로 움직이다",
       "orderIt.rounds.r3.sentence.gloss": "아버지가 넓고 짠 물이 있는 곳으로 간다는 뜻",
       "orderIt.rounds.r3.distractors.sane.gloss": "높이 솟은 땅으로",
@@ -154,13 +168,19 @@
       "picWord.boards.2.pairs.p1.word.gloss": "어머니가 넓고 짠 물이 있는 곳으로 간다는 뜻",
       "picWord.boards.2.pairs.p2.word.gloss": "아버지가 높이 솟은 땅으로 간다는 뜻",
       "picWord.boards.2.pairs.p3.word.gloss": "가깝게 지내는 사람이 공부하는 곳으로 간다는 뜻",
-      "picWord.boards.3.pairs.p1.word.gloss": "가깝게 지내는 사람이 사는 곳으로 온다는 뜻",
-      "picWord.boards.3.pairs.p2.word.gloss": "어머니가 사는 곳으로 온다는 뜻",
-      "picWord.boards.3.pairs.p3.word.gloss": "나보다 어린 형제자매가 사는 곳으로 온다는 뜻"
+      "picWord.boards.3.pairs.p1.word.gloss": "가깝게 지내는 사람이 우리 가족이 사는 곳으로 온다는 뜻",
+      "picWord.boards.3.pairs.p2.word.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
+      "picWord.boards.3.pairs.p3.word.gloss": "나보다 어린 형제자매가 가족이 사는 곳으로 온다는 뜻"
     },
     "minigame:s3-life-q3-check": {
-      "listenPick.rounds.c1.prompt": "넓고 짠 물이 있는 곳으로 간다는 뜻",
-      "listenPick.rounds.c2.prompt": "가깝게 지내는 사람이 온다는 뜻"
+      "clozePick.rounds.c1.sentence.gloss": "어머니가 가족이 사는 곳으로 온다는 뜻",
+      "clozePick.rounds.c1.tiles.wayo.gloss": "말하는 사람이나 마음에 둔 사람 쪽으로 움직이다",
+      "clozePick.rounds.c1.tiles.gayo.gloss": "여기에서 다른 곳으로 움직이다",
+      "clozePick.rounds.c1.tiles.masyeoyo.gloss": "물 같은 것을 목으로 넘기다",
+      "clozePick.rounds.c2.sentence.gloss": "나보다 어린 형제자매가 공부하는 곳으로 간다는 뜻",
+      "clozePick.rounds.c2.tiles.i.gloss": "받침 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시",
+      "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시"
     }
   }
 }

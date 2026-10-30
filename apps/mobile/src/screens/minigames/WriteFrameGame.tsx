@@ -45,8 +45,19 @@ import {
   type WriteFrameEffect,
   type WriteFrameEvent,
   type WriteFrameState,
+  type WrittenFrame,
 } from '../../logic/write-frame/flow';
-import { fillGloss, fittedEnding, frameParts, frameReading, nameGloss, sentenceKo, sentenceRomanization, type FramePart } from '../../logic/write-frame/view';
+import {
+  fillGloss,
+  fittedEnding,
+  frameParts,
+  frameReading,
+  nameGloss,
+  sentenceKo,
+  sentenceRomanization,
+  writeFrameHeader,
+  type FramePart,
+} from '../../logic/write-frame/view';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
@@ -80,6 +91,26 @@ interface Props {
    * so the name round opens on the cast name and a grown-up never needs to type a real name there.
    */
   inPreview?: boolean;
+  /** A game that chains the frames into a text (My Story, F-CURR-002 row CM-38) draws its own parts here. */
+  chain?: WriteFrameChain;
+}
+
+/**
+ * The parts a chained game adds to Write Frame (My Story, F-CURR-002 row CM-38; design/wireframes/minigame/my-story.md).
+ * Each reads the sentences from this component's state when it draws and keeps none of them: the text lives here only,
+ * and goes when the step unmounts (OD-13). With a chain, Skip shows My page with the sentences written so far.
+ */
+export interface WriteFrameChain {
+  /** The heading over the pick (in place of "Make your own sentence"). */
+  heading: string;
+  /** Above the frame card: the sentences written so far; `writing` while the learner writes the picked word. */
+  soFar: (written: readonly WrittenFrame[], writing: boolean) => ReactNode;
+  /** A sentence was just written (said once by the chain). */
+  onSentence: (entry: WrittenFrame) => void;
+  /** Drawn under the finished sentence (the chain's sound status). */
+  sentenceExtra?: ReactNode;
+  /** My page's content, in place of Write Frame's (inside its Screen): every sentence written, and `finish` (Done) ends the step. */
+  page: (written: readonly WrittenFrame[], finish: () => void) => ReactNode;
 }
 
 /** The grown-up preview's name (F-BROWSE-001): the cast name, never a learner's entry. */
@@ -94,7 +125,7 @@ function focusNode(node: Focusable | null): void {
   else focusForScreenReader(node);
 }
 
-export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props): ReactElement {
+export function WriteFrameGame({ scope, host, onBack, inPreview = false, chain }: Props): ReactElement {
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame;
@@ -106,7 +137,9 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     () => rounds.map((r) => ({ banks: r.slots.map((s) => s.bank.map((word) => word.ko)), entry: r.entry, freeEntry: r.freeEntry })),
     [rounds],
   );
-  const [state, setState] = useState<WriteFrameState>(() => startFlow(frames, inPreview || host.mode === 'preview' ? keysFor(PREVIEW_NAME) : []));
+  const [state, setState] = useState<WriteFrameState>(() =>
+    startFlow(frames, inPreview || host.mode === 'preview' ? keysFor(PREVIEW_NAME) : [], { skipShowsPage: chain !== undefined }),
+  );
   const stateRef = useRef(state);
   const hostRef = useRef(host);
   hostRef.current = host;
@@ -181,6 +214,14 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   // Each frame starts with the romanization hidden again when the setting is "tap to show".
   useEffect(() => setRevealed(false), [state.roundIdx]);
 
+  // A chain says each sentence once as it is written (My Story); Write Frame says nothing here.
+  const chainRef = useRef(chain);
+  chainRef.current = chain;
+  const lastWritten = state.phase === 'sentence' ? state.written[state.written.length - 1] : undefined;
+  useEffect(() => {
+    if (lastWritten !== undefined) chainRef.current?.onSentence(lastWritten);
+  }, [lastWritten]);
+
   const round = rounds[state.roundIdx];
   const words = pickedWords(state);
   const field = fieldView(state);
@@ -206,10 +247,15 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     );
   }
 
-  const skip = (): void => dispatch({ type: 'skip' });
-  const skipButton = (size: 'sm' | 'md', fullWidth = false): ReactElement => (
-    <Button label={copy.skip.cta} tone="ghost" size={size} fullWidth={fullWidth} onPress={skip} testID="write-frame-skip" />
+  // The Check has no Skip and shows the two fill-only dots and "Quick check" (row CM-3A S7); any other host keeps both.
+  const headerView = writeFrameHeader(
+    host.mode,
+    { roundIdx: state.roundIdx, total: state.total, written: state.written.length },
+    { checkPill: copy.listenPick.checkTitle.pill, progress: copy.progress.pill },
   );
+  const skip = (): void => dispatch({ type: 'skip' });
+  const skipButton = (size: 'sm' | 'md', fullWidth = false): ReactElement | null =>
+    headerView.skip ? <Button label={copy.skip.cta} tone="ghost" size={size} fullWidth={fullWidth} onPress={skip} testID="write-frame-skip" /> : null;
   const romanizationVisible = romanizationShown(romanizationMode, revealed);
   const reveal = (): void => setRevealed(true);
   const bankOf = (slot: number): readonly KoText[] => round.slots[slot]?.bank ?? [];
@@ -220,17 +266,33 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   const slotWords: (string | null)[] = free ? [field.text.trim() === '' ? null : field.text.trim()] : words;
   const parts = frameParts(round.frame.ko, slotWords);
 
+  const headerPill = headerView.title ? (
+    <Pill label={headerView.title} tone="primary" size="sm" />
+  ) : headerView.label ? (
+    <Pill label={headerView.label} size="sm" />
+  ) : null;
   const progressRow = (withSkip: boolean): ReactElement => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }} testID="write-frame-header">
       <View style={{ flex: 1 }}>
-        <Progress value={state.roundIdx + 1} max={state.total} tone="primary" />
+        {headerView.kind === 'dots' ? (
+          <Progress variant="dots" value={headerView.value} max={headerView.max} tone="primary" />
+        ) : (
+          <Progress value={headerView.value} max={headerView.max} tone="primary" />
+        )}
       </View>
-      <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
+      {headerPill}
       {withSkip ? skipButton('sm') : null}
     </View>
   );
 
   // ---- My page: the step's closing panel, in the reward look; not kept (OD-6). ----
+  if (state.phase === 'myPage' && chain) {
+    return (
+      <Screen tone="canvas" testID="write-frame-my-page">
+        {chain.page(state.written, () => dispatch({ type: 'continue' }))}
+      </Screen>
+    );
+  }
   if (state.phase === 'myPage') {
     return (
       <Screen tone="canvas" testID="write-frame-my-page">
@@ -314,6 +376,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
             <Body weight="bold">{w.sentenceDone}</Body>
           </View>
         </View>
+        {chain?.sentenceExtra}
       </Screen>
     );
   }
@@ -363,13 +426,25 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       if (said !== '') announceForScreenReader(said);
     };
     const columns = lc.width === 'compact' ? 2 : lc.width === 'regular' ? 3 : 4;
+    const soFar = chain?.soFar(state.written, false) ?? null;
     return (
       <Screen tone="canvas" testID="write-frame">
         {progressRow(false)}
         <Spacer size="md" />
-        <Heading level="prompt">{w.heading}</Heading>
+        <Heading level="prompt">{chain?.heading ?? w.heading}</Heading>
         <Spacer size="sm" />
-        {frameCard}
+        {soFar !== null && lc.width !== 'compact' ? (
+          // From regular width, the story so far sits beside the frame card (two panes).
+          <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' }}>
+            <View style={{ flex: 1 }}>{soFar}</View>
+            <View style={{ flex: 1 }}>{frameCard}</View>
+          </View>
+        ) : (
+          <>
+            {soFar}
+            {frameCard}
+          </>
+        )}
         {revealButton}
         <Spacer size="md" />
         <Body>{w.pick}</Body>
@@ -412,7 +487,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
     <>
       {compactRow ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Pill label={copy.progress.pill(state.roundIdx + 1, state.total)} size="sm" />
+          {headerPill}
           <View style={{ flex: 1 }}>{changeWord}</View>
           {skipIn === 'top' ? skipButton('sm') : null}
         </View>
@@ -420,6 +495,8 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
         progressRow(skipIn === 'top')
       )}
       {compactRow && !free ? null : <Spacer size="sm" />}
+      {/* On a phone the pinned keyboard leaves room for the frame only: the story so far waits for the next pick. */}
+      {phone || compactRow ? null : (chain?.soFar(state.written, true) ?? null)}
       {free ? (
         <>
           <Heading level="prompt">{w.name.heading}</Heading>
@@ -558,7 +635,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
       </View>
       {nameTabs}
       {panel}
-      {skipIn === 'bottom' ? (
+      {skipIn === 'bottom' && (headerView.skip || (typing && !inlineDone)) ? (
         <View style={{ width: kbWidth, alignSelf: 'center', paddingTop: spacing.md, gap: spacing.sm }}>
           {typing && !inlineDone ? doneButton : null}
           {skipButton('md', true)}
@@ -571,7 +648,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false }: Props
   // left for the frame (as Type Hangul); a shorter window scrolls them with the frame instead.
   const answerRow = touchTarget.min + (lc.short ? spacing.xs : spacing.sm) + (helper ? textScale.size.bodySm * 2 : 0);
   const tabsRow = nameTabs ? touchTarget.min + spacing.sm : 0;
-  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + touchTarget.min : 0;
+  const underKeyboard = skipIn === 'bottom' ? spacing.md + (inlineDone ? 0 : touchTarget.min + spacing.sm) + (headerView.skip ? touchTarget.min : 0) : 0;
   const pinned = lc.windowHeight <= 0 || lc.windowHeight >= answerRow + tabsRow + kb.height + underKeyboard + touchTarget.min;
 
   return (

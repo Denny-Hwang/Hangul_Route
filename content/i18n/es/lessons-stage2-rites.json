@@ -5,7 +5,15 @@
     "episode:stage2-rites": {
       "title": "Palabras de fiesta",
       "subtitle": "Palabras de Seollal, Chuseok y juegos de fiesta",
-      "hoyaIntro": "¡Las fiestas están llenas de palabras! Vamos a leer las palabras de Seollal y Chuseok."
+      "hoyaIntro": "¡Las fiestas están llenas de palabras! Vamos a leer las palabras de Seollal y Chuseok.",
+      "culture.n1.text": "Seollal es el primer día del año según el calendario lunar. El tteokguk, una sopa clara con pastel de arroz blanco en rodajas finas, es la comida más ligada a ese día.",
+      "culture.n2.text": "El sebae es una reverencia profunda ante los mayores y el primer saludo del año nuevo. Ese día, por tradición, la gente se pone ropa nueva, llamada seolbim.",
+      "culture.n3.text": "Chuseok cae el día 15 del octavo mes del calendario lunar, cuando empieza la cosecha. Se dan gracias por los cultivos del año, y su luna llena simboliza la abundancia.",
+      "culture.n4.text": "El songpyeon es un pastel de arroz en forma de media luna, relleno de frijoles, sésamo o castañas y cocido al vapor sobre agujas de pino. Prepararlo juntos es una costumbre familiar de Chuseok.",
+      "culture.n5.text": "El yunnori es un juego de tablero en el que dos equipos se turnan para lanzar cuatro palitos de madera, los yut, y mueven sus fichas según cómo caen. Por tradición se juega desde el Año Nuevo hasta la primera luna llena del año.",
+      "culture.n6.text": "Volar cometas es un juego tradicional de la temporada de Año Nuevo, sobre todo desde el Año Nuevo hasta la primera luna llena del año.",
+      "culture.n7.text": "El bokjumeoni es una bolsita que lleva un deseo de buena suerte. Al comenzar el año, por tradición se ataba a la ropa de los niños, con unos granos dentro.",
+      "culture.n8.text": "Los mayores que reciben la reverencia de Año Nuevo responden con buenos deseos y a veces dan a los niños un poco de dinero, llamado sebaetdon."
     },
     "quest:stage2-rites-q1": {
       "title": "Palabras de Seollal",
@@ -15,7 +23,7 @@
       "steps.s2.title": "Cuatro palabras de Seollal",
       "steps.s3.title": "Une las imágenes",
       "steps.s4.title": "Arma las palabras",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Lee la palabra",
       "steps.s6.title": "¡Palabras de Seollal!",
       "steps.s1.hoyaLine": "Seollal es el Año Nuevo lunar. ¡Vamos a leer sus palabras!",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
@@ -36,7 +44,7 @@
       "steps.s2.title": "Cuatro palabras de Chuseok",
       "steps.s3.title": "Une las imágenes",
       "steps.s4.title": "Arma palabras de Chuseok",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Escribe la palabra",
       "steps.s6.title": "¡Palabras de Chuseok!",
       "steps.s1.hoyaLine": "Chuseok es la fiesta de la cosecha y de la luna llena. ¡Vamos a leer sus palabras!",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
@@ -56,7 +64,7 @@
       "steps.s2.title": "Cuatro palabras de fiesta",
       "steps.s3.title": "Une las imágenes",
       "steps.s4.title": "Une los significados",
-      "steps.s5.title": "Escucha y lee",
+      "steps.s5.title": "Lee y une",
       "steps.s6.title": "¡Palabras de fiesta!",
       "steps.s1.hoyaLine": "Los juegos y regalos de Año Nuevo también tienen palabras. ¡Vamos a leerlas!",
       "steps.s2.hoyaLine": "Toca Escuchar para oír cada palabra.",
@@ -72,12 +80,20 @@
       "steps.s2.discover.pages.1.items.1.note": "Un poco de dinero que los mayores pueden dar tras la reverencia de Año Nuevo"
     },
     "minigame:s2-rites-q1-check": {
-      "listenPick.rounds.r1.prompt": "reverencia de Año Nuevo",
-      "listenPick.rounds.r2.prompt": "día del Año Nuevo lunar"
+      "listenPick.rounds.see-seollal.prompt": "día del Año Nuevo lunar",
+      "listenPick.rounds.see-hanbok.prompt": "ropa tradicional coreana",
+      "listenPick.rounds.see-seollal.options.seollal.label": "día del Año Nuevo lunar",
+      "listenPick.rounds.see-seollal.options.san.label": "montaña",
+      "listenPick.rounds.see-seollal.options.bap.label": "arroz cocido",
+      "listenPick.rounds.see-hanbok.options.hanbok.label": "ropa tradicional coreana",
+      "listenPick.rounds.see-hanbok.options.tteokguk.label": "sopa de masa de arroz",
+      "listenPick.rounds.see-hanbok.options.san.label": "montaña"
     },
     "minigame:s2-rites-q2-check": {
-      "listenPick.rounds.r1.prompt": "luna llena",
-      "listenPick.rounds.r2.prompt": "familia"
+      "typeHangul.rounds.hear-chuseok.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-chuseok.target.gloss": "la fiesta de la cosecha de otoño",
+      "typeHangul.rounds.hear-gajok.prompt": "Escucha la palabra y escríbela en hangul.",
+      "typeHangul.rounds.hear-gajok.target.gloss": "familia"
     },
     "minigame:s2-rites-q3-apply": {
       "cardPairs.yunnori.gloss": "yut, juego de tablero con palitos",
@@ -86,8 +102,12 @@
       "cardPairs.sebaetdon.gloss": "dinero de Año Nuevo"
     },
     "minigame:s2-rites-q3-check": {
-      "listenPick.rounds.r1.prompt": "cometa",
-      "listenPick.rounds.r2.prompt": "bolsita de la suerte"
+      "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
+      "picWord.boards.0.pairs.yunnori.word.gloss": "yut, juego de tablero con palitos",
+      "picWord.boards.0.pairs.hanbok.word.gloss": "ropa tradicional coreana",
+      "picWord.boards.1.pairs.songpyeon.word.gloss": "masa de arroz en media luna",
+      "picWord.boards.1.pairs.tteokguk.word.gloss": "sopa de masa de arroz",
+      "picWord.boards.1.pairs.gajok.word.gloss": "familia"
     },
     "minigame:s2-rites-q1-practice": {
       "picWord.boards.0.pairs.seollal.word.gloss": "día del Año Nuevo lunar",

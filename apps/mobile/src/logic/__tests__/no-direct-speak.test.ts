@@ -36,6 +36,8 @@ const SLOT_SCREENS = [
   // The menu, ticket and sign lines and options, and the Story Order replay line (review of #740).
   'minigames/RealiaReadGame.tsx',
   'minigames/StorySequenceGame.tsx',
+  // F-CURR-002 row CM-35: Role Play says each partner line without a tap, and each reply as it is sent.
+  'minigames/role-play/RolePlayGame.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
@@ -97,6 +99,7 @@ describe('no direct speak from screens', () => {
     'vocab/VocabCardsScreen.tsx',
     'minigames/TraceWordGame.tsx',
     'minigames/TraceStrokeGame.tsx',
+    'minigames/role-play/RolePlayGame.tsx',
   ])(
     '%s stops its speech on unmount',
     (rel) => {
@@ -125,7 +128,8 @@ describe('no direct speak from screens', () => {
 
   it('Listen & Pick plays through a prompt slot and shows the text panel (the prompt as text, why, the one action)', () => {
     const file = files.find((f) => f.rel === 'minigames/ListenPickGame.tsx')!;
-    expect(file.source).toMatch(/usePromptSlot\(\{\s*source: LISTEN_PICK_AUDIO_SOURCE,\s*hasClip: hasClip\(/);
+    // The spelling round (F-CURR-002 row CM-31) reports under its own source; every other round under Listen & Pick's.
+    expect(file.source).toMatch(/usePromptSlot\(\{\s*source: (?:spellingNow \? spelling\.SPELLING_AUDIO_SOURCE : )?LISTEN_PICK_AUDIO_SOURCE,\s*hasClip: hasClip\(/);
     expect(file.source).toMatch(/<PromptPanel\b[\s\S]*?testID="listen-pick-prompt"[\s\S]*?\/>/);
     expect(file.source).not.toMatch(/void playPrompt\(/);
   });

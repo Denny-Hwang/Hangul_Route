@@ -146,6 +146,14 @@ export const REVIEW_COPY_NAMESPACES: readonly string[] = [
   'library',
   // Stage Jump Ahead (row CM-25): the Test out rule over a whole stage, stars only.
   'stageJump',
+  // Story Order (row CM-34): Show meanings is a hint, never a penalty line.
+  'storyOrder',
+  // Hidden Heritage (row CM-36): a find is never a score, a miss only "Look again".
+  'hiddenHeritage',
+  // The Block Sprint (row CM-32, the Decoding Sprint of section 7.1 F9): a count and the learner's own best, no percentage.
+  'decodingSprint',
+  // The Yut Review board over the Daily Review (row CM-39): play only, never a station out of a total or a score.
+  'yutReview',
 ];
 
 export interface ReviewStringFinding {

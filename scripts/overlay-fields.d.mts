@@ -3,6 +3,7 @@ export type OverlayPath = (string | number)[];
 export const OVERLAY_LOCALES: readonly string[];
 export const OVERLAY_ENTITY_ID: RegExp;
 export const OVERLAY_FIELDS: Readonly<Record<string, readonly string[]>>;
+export const OPTIONAL_OVERLAY_FIELDS: readonly string[];
 export const NEVER_OVERRIDABLE_FIELDS: readonly string[];
 export const TS_RESIDENT_PREFIXES: readonly string[];
 export function overlayPrefix(entityId: string): string;

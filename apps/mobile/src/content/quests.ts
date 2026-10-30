@@ -623,7 +623,40 @@ export const stage1Quests: Quest[] = [
     ],
     rewardCardId: 'card:kite',
   },
+  ...stage1Additions(),
 ];
+
+/**
+ * The Stage 1 additions of F-CURR-002 section 5.2 (row CM-33): quest 4 of the Crafts cell, the last of Stage 1 in
+ * cursor and route order, so every letter it asks was taught first, and it teaches no new symbol (a Letters cell row
+ * would sit fourth on the route, before ㅂ, ㅅ and ㅍ are taught). It shows where letter shapes come from
+ * and tells look-alike letters apart (Match Shape). The batchim quest of section 5.2 is a later row.
+ */
+function stage1Additions(): Quest[] {
+  const s = (id: string, kind: 'practice' | 'apply' | 'check', titleEn: string, game: 'match-shape' | 'listen-pick', ref: string, durationSeconds: number) => ({
+    id,
+    kind,
+    titleEn,
+    minigameKind: game,
+    minigameRef: `minigame:s1-crafts-${ref}`,
+    durationSeconds,
+  });
+  return [
+    {
+      id: 'quest:stage1-crafts-q4',
+      titleEn: 'Where Shapes Come From',
+      blurbEn: 'See what the basic letters copy, and tell look-alike letters apart.',
+      estimatedMinutes: 4,
+      steps: [
+        { id: 's1', kind: 'intro', titleEn: 'Letter Shapes', hoyaLineEn: 'Some letters copy the shapes of the mouth, the tongue, a tooth and the throat. Let\'s take a look!', durationSeconds: 8 },
+        s('s2', 'practice', 'Match the Shape', 'match-shape', 'q4-play', 90),
+        s('s3', 'apply', 'Earth, Person, Sky', 'match-shape', 'q4-apply', 90),
+        s('s4', 'check', 'Listen and Read', 'listen-pick', 'q4-check', 35),
+        { id: 's5', kind: 'reward', titleEn: 'Shape Spotter!', hoyaLineEn: 'Now you know where these shapes come from!', durationSeconds: 8 },
+      ],
+    },
+  ];
+}
 
 /**
  * Every quest in cursor order: Stages 1-4 (the generated lesson quests of F-CURR-001 by

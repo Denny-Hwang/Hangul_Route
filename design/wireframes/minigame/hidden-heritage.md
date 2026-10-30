@@ -189,7 +189,7 @@ A Hidden Heritage scene is a **scene-art description** (`design/brief/illustrati
 | H-4 edges | a spot lies inside the canvas | no target is cut by the frame |
 | H-5 review | the reviewer taps every spot on the 320 contact sheet and confirms the composition is not a copy (rule 1) | |
 
-- The 54 dp spot at 320 px is under `touchTarget.min`, like the Journey cells at 320 (F-LAYOUT-001 audit UX-25), but it is a new kind of target, so it gets **its own recorded exception**: a picture search cannot fit 64 dp spots into a 288 dp scene. Row CM-36 adds it to the touch-target allowlist with this reason, keyed by the scene's test id (never a blanket skip). From 375 px every spot meets `touchTarget.min`, and every spot clears the 48 dp of §7.1 and §14 at every width.
+- The 54 dp spot at 320 px is under `touchTarget.min`, like the Journey cells at 320 (F-LAYOUT-001 audit UX-25), but it is a new kind of target, so it gets **its own recorded exception**: a picture search cannot fit 64 dp spots into a 288 dp scene. Row CM-36 recorded it in its decision record (spec §7.1) rather than the touch-target allowlist: the F-LAYOUT-001 audit windows start at 375 px, where no spot is under `touchTarget.min`, so an allowlist entry would key a window the audit never draws (never a blanket skip either way). From 375 px every spot meets `touchTarget.min`, and every spot clears the 48 dp of §7.1 and §14 at every width.
 
 ### 4. Composition and budget
 

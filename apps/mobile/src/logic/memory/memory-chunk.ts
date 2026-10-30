@@ -11,6 +11,7 @@ import { useAudioStore } from '../../store/audio-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { currFlagOn } from '../../store/remote-config-store';
+import { DICTATION_SWITCH } from '../game-switches';
 import { useSyncStore } from '../../store/sync-store';
 import { questOpenFor, useTierStore } from '../../store/tier-store';
 import { episodesAll } from '../../content';
@@ -20,6 +21,7 @@ import { createCellCheckApi, type CellCheckApi } from '../reviews/cell-check-api
 import { createDailyReviewApi, type DailyReviewApi } from '../reviews/daily-review-api';
 import { planQuestTryAgain, planQuestWarmup, type ReviewInputs, type TryAgainRequest, type WarmupRequest } from '../reviews/quest-review-planner';
 import { createReviewItemStore } from '../reviews/review-items-store';
+import { NO_GAME_FORMATS, type GameFormats } from '../reviews/review-rounds';
 import { createStageCheckApi, type StageCheckApi } from '../reviews/stage-check-api';
 import { notifyProgressPersisted } from '../sync/persist-hook';
 import { localDay } from '../vocab/progress';
@@ -39,6 +41,16 @@ export const MEMORY_CHUNK = 'memory-chunk:runtime';
 
 /** The review items of this build, loaded once (the lazy `review-items` chunk of row CM-10). */
 export const reviewItemStore = createReviewItemStore(reviewItemsChunk);
+
+/** Rows CM-32 and CM-33: Syllable Build and Match Shape join the review rounds at the produce rung while their switches are on for the profile. */
+const SYLLABLE_BUILD: GameFormats = new Set(['syllable-build']);
+const MATCH_SHAPE: GameFormats = new Set(['match-shape']);
+const BOTH_GAMES: GameFormats = new Set(['syllable-build', 'match-shape']);
+function reviewGames(profileId: string): GameFormats {
+  const build = currFlagOn('game.syllable-build', profileId);
+  const shape = currFlagOn('game.match-shape', profileId);
+  return build && shape ? BOTH_GAMES : build ? SYLLABLE_BUILD : shape ? MATCH_SHAPE : NO_GAME_FORMATS;
+}
 
 let runtime: MemoryRuntime | null = null;
 
@@ -112,10 +124,14 @@ export function dailyReviewApi(): DailyReviewApi {
     // With answers not recorded the review would repeat itself, so `memoryRecord` gates it too (daily-review.md).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('dailyReview', profileId),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     reviews: (profileId) => useProgressStore.getState().byProfile[profileId]?.reviews,
     vocab: (profileId) => useProgressStore.getState().byProfile[profileId],
@@ -143,10 +159,14 @@ export function cellCheckApi(): CellCheckApi {
     // With answers not recorded a Check could latch a result while no memory state moved (cell-check.md States).
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('cellCheck', profileId),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),
@@ -196,10 +216,14 @@ export function stageCheckApi(): StageCheckApi {
     on: (profileId) => memoryRecordsFor(profileId) && currFlagOn('stageChecks', profileId),
     cells: (stage) => gridEpisodesOf(episodesAll).filter((e) => e.stage === stage).map((e) => e.id),
     visibility: (profileId) => ({ volumes: currFlagOn('volumes', profileId), topicPacks: currFlagOn('topicPacks', profileId), pack: (key) => currFlagOn(`pack.${key}`, profileId) }),
+    games: reviewGames,
     voice: () => {
       const audio = useAudioStore.getState();
       return audio.tts.state === 'ready' && !audio.muted;
     },
+    clozePick: (profileId) => currFlagOn('game.cloze-pick', profileId),
+    // Dictation at the produce rung behind its switch (F-CURR-002 row CM-31; the engine adds the voice and the rule).
+    dictation: (profileId) => currFlagOn(DICTATION_SWITCH, profileId),
     hydrate: (profileId) => useProgressStore.getState().hydrate(profileId),
     snapshot: (profileId) => useProgressStore.getState().byProfile[profileId],
     recordReview: (profileId, entry) => void useProgressStore.getState().recordReview(profileId, entry),

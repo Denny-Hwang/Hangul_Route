@@ -197,6 +197,30 @@ describe('Write Frame: pick, write, sentence, My page', () => {
     expect(byTestId(root(r), 'write-frame-done')).toHaveLength(1);
   });
 
+  it.each([
+    [320, 568],
+    [375, 667],
+    [768, 1024],
+    [844, 390],
+    [568, 320],
+  ])('%i x %i, as a Check (row CM-3A S7): no Skip in any phase, the fill-only dots and "Quick check", one Done', async (width, height) => {
+    vi.useFakeTimers();
+    const h = host('check');
+    const { r } = await play(['food'], { size: { width, height }, h });
+    expect(byTestId(root(r), 'write-frame-skip')).toHaveLength(0);
+    expect(texts(r)).toContain('Quick check');
+    expect(texts(r).join(' ')).not.toMatch(/\b1 \/ 1\b/);
+    await tap(r, 'write-frame-word-0');
+    expect(byTestId(root(r), 'write-frame-skip')).toHaveLength(0);
+    expect(byTestId(root(r), 'write-frame-done')).toHaveLength(1);
+    await typeWord(r, '떡볶이');
+    await tap(r, 'write-frame-done');
+    await advance(PASS_PAUSE_MS);
+    expect(byTestId(root(r), 'write-frame-sentence')).toHaveLength(1);
+    expect(byTestId(root(r), 'write-frame-skip')).toHaveLength(0);
+    expect(h.answers).toEqual([[0, true, { itemId: 'e2e-food' }]]);
+  });
+
   it('"tap to show" hides the romanization of the frame and the bank until a tap', async () => {
     const { r } = await play(['food'], { mode: 'tap' });
     expect(texts(r)).not.toContain('tteokbokki');

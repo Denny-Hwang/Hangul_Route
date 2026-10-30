@@ -5,7 +5,10 @@
     "episode:stage3-crafts": {
       "title": "Frases de juegos",
       "subtitle": "Arma frases sobre juegos y lugares para jugar.",
-      "hoyaIntro": "¡Digamos a qué queremos jugar, adónde vamos y qué hacemos!"
+      "hoyaIntro": "¡Digamos a qué queremos jugar, adónde vamos y qué hacemos!",
+      "culture.n1.text": "{ko:을} y {ko:를} marcan aquello sobre lo que recae una acción. La palabra anterior decide cuál va: {ko:을} tras consonante final, {ko:를} tras vocal.",
+      "culture.n2.text": "{ko:싶어요} después de una palabra de acción terminada en {ko:고} dice que quieres hacerlo: {ko:하고} {ko:싶어요}, quiero hacerlo.",
+      "culture.n3.text": "{ko:에} después de un lugar, con una palabra de ir como {ko:가요}, marca adónde vas: {ko:공원에} {ko:가요}, voy al parque."
     },
     "quest:stage3-crafts-q1": {
       "title": "Quiero jugar",
@@ -82,8 +85,14 @@
       "orderIt.rounds.r5.distractors.nalligo.gloss": "volar (en 'quiero volar')"
     },
     "minigame:s3-crafts-q1-check": {
-      "listenPick.rounds.hear-yeon.prompt": "Quiero volar una cometa.",
-      "listenPick.rounds.read-chukgu.prompt": "Quiero jugar al fútbol."
+      "clozePick.rounds.c1.sentence.gloss": "Quiero jugar al béisbol.",
+      "clozePick.rounds.c1.tiles.yagu.gloss": "béisbol",
+      "clozePick.rounds.c1.tiles.chukgu.gloss": "fútbol",
+      "clozePick.rounds.c1.tiles.nonggu.gloss": "baloncesto",
+      "clozePick.rounds.c2.sentence.gloss": "Quiero volar una cometa.",
+      "clozePick.rounds.c2.tiles.eul.gloss": "marcador de objeto, tras consonante final",
+      "clozePick.rounds.c2.tiles.reul.gloss": "marcador de objeto, tras vocal",
+      "clozePick.rounds.c2.tiles.i.gloss": "marcador de sujeto, tras consonante final"
     },
     "minigame:s3-crafts-q2-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Voy al área de juegos.",
@@ -98,8 +107,10 @@
       "orderIt.rounds.r3.distractors.nalligo.gloss": "volar (en 'quiero volar')"
     },
     "minigame:s3-crafts-q2-check": {
-      "listenPick.rounds.hear-san.prompt": "Voy a la montaña.",
-      "listenPick.rounds.read-noriteo.prompt": "Voy al área de juegos."
+      "orderIt.rounds.c1.sentence.gloss": "Quiero ir al mar.",
+      "orderIt.rounds.c1.distractors.hago.gloss": "hacer (en 'quiero hacer')",
+      "orderIt.rounds.c2.sentence.gloss": "Quiero ir al parque.",
+      "orderIt.rounds.c2.distractors.nalligo.gloss": "volar (en 'quiero volar')"
     },
     "minigame:s3-crafts-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Hago girar el trompo.",
@@ -117,8 +128,10 @@
       "orderIt.rounds.r5.distractors.dollyeoyo.gloss": "girar"
     },
     "minigame:s3-crafts-q3-check": {
-      "listenPick.rounds.hear-jegi.prompt": "Pateo el jegi.",
-      "listenPick.rounds.read-paengi.prompt": "Hago girar el trompo."
+      "typeHangul.rounds.d1.prompt": "Escribe la palabra para el trompo.",
+      "typeHangul.rounds.d1.target.gloss": "trompo",
+      "typeHangul.rounds.d2.prompt": "Escribe la palabra para el volante que se patea.",
+      "typeHangul.rounds.d2.target.gloss": "volante que se patea"
     },
     "minigame:s3-crafts-q1-apply": {
       "picWord.boards.0.pairs.yunnori.word.gloss": "Quiero jugar al yut.",
