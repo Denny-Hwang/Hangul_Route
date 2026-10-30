@@ -112,7 +112,7 @@ export const BUDGET = Object.freeze({
   stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
   stageGzip: 40_000, // F-CURR-002 CM-5 (OD-5): was 32,000
   totalRaw: 1_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000)
-  totalGzip: 210_000, // F-CURR-002 CM-5 (OD-5): was 140,000
+  totalGzip: 240_000, // F-CURR-002 CM-43 S7 (OD-5): 213,861 B with a third Volume 2 cell; was 210,000 (CM-5), 140,000 before
 });
 
 export class ContentError extends Error {
