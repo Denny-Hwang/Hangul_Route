@@ -21,6 +21,7 @@ import {
   renderAudioModules,
   renderPackChunk,
   splitAssetMap,
+  WORD_BUILDER_UNIT,
   JAMO_PACK_STAGE1,
   JAMO_PACK_WORD_BUILDER,
   RUNTIME_AUDIO_GROUPS,
@@ -356,6 +357,15 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     expect(chunks.find((c) => c.pack === 'stage1')?.entries.map((e) => e.ref)).toEqual([SAY_Q1]);
   });
 
+  it('a say clip with no pack (no manifest row) never lands in the start map: the map generator stops on it', () => {
+    const orphan = buildAssetMap(['jamo/giyeok.mp3', 'say/00000000deadbeef.mp3'], undefined, (ref) => PACKS.get(ref));
+    expect(() => splitAssetMap(orphan)).toThrow(/audio\/say\/00000000deadbeef\.mp3/);
+    expect(() => renderAudioModules(orphan)).toThrow(/no row in content\/audio\/tts-manifest\.json/);
+    // With its pack, the same clip is a chunk's.
+    const packed = buildAssetMap(['say/00000000deadbeef.mp3'], undefined, () => 'stage3');
+    expect(splitAssetMap(packed).start).toEqual([]);
+  });
+
   it('the rendered start map carries no chunk ref; the loader module loads each chunk through one literal import()', () => {
     const modules = renderAudioModules(entries, clipUnitsOf(FIXTURE_MANIFEST));
     const start = modules['audio-assets.ts'] ?? '';
@@ -363,14 +373,12 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     for (const ref of [SAY_Q1, SAY_S2, SAY_STORY, 'audio/jamo/ae.mp3', 'audio/vocab/gangaji.mp3']) expect(start).not.toContain(ref);
     expect(start).toContain('export const AUDIO_CLIP_COUNT = 7;');
     expect(start).toContain("export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab'];");
-    // The literal import()s are the loader module's, which only the lazy clip pack loader imports.
-    expect(start).not.toContain('import(');
-    const loader = modules['audio-pack-loaders.ts'] ?? '';
-    expect(loader).toContain("    case 'stage1':\n      return import('./audio-packs/audio-pack-stage1');");
-    expect(loader).not.toMatch(/^import .*audio-packs/m);
-    expect(Object.keys(modules).sort()).toEqual(
-      ['audio-assets.ts', 'audio-pack-loaders.ts', ...['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab'].map(packChunkModule)].sort(),
-    );
+    // The start map's loader holds one literal import() per pack chunk (never a static import of one), so a chunk's
+    // URL is in the start bundle and its clips are not.
+    expect(start).toContain("    case 'stage1':\n      return import('./audio-packs/audio-pack-stage1');");
+    expect(start.match(/return import\(/g)).toHaveLength(5);
+    expect(start).not.toMatch(/^import .*audio-packs/m);
+    expect(Object.keys(modules).sort()).toEqual(['audio-assets.ts', ...['jamo-wb', 'stage1', 'stage2', 'stories', 'vocab'].map(packChunkModule)].sort());
   });
 
   it('a chunk carries its marker, its clips one folder deeper and the warm units of their sources', () => {
@@ -393,8 +401,29 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     expect(clipUnitOfSource('content/episodes/stage-7/crafts.json')).toBe('episode:stage7-crafts');
     expect(clipUnitOfSource('content/stories/hangeul-day.json')).toBe('story:hangeul-day');
     expect(clipUnitOfSource('content/placement/sentences.json')).toBe('placement');
-    for (const other of ['lex:gansik', 'pat:gamsahamnida', 'exc:gachi-gayo', 'card:gamsa', 'vocab:gajok', 'content/vocab/family.json', 'syl:ga', 'jamo:giyeok#sound']) {
+    expect(clipUnitOfSource('content/vocab/family.json')).toBe('topic:family');
+    expect(clipUnitOfSource('card:gamsa')).toBe('card:gamsa');
+    // A Word Builder jamo warms with the Word Builder cell; a Stage 1 jamo is precached, so it has no unit.
+    expect(clipUnitOfSource('jamo:ae#sound', JAMO_PACK_WORD_BUILDER)).toBe(WORD_BUILDER_UNIT);
+    expect(clipUnitOfSource('jamo:ssanggiyeok#letter', JAMO_PACK_WORD_BUILDER)).toBe('episode:stage2-letters');
+    expect(clipUnitOfSource('jamo:giyeok#sound', JAMO_PACK_STAGE1)).toBeNull();
+    for (const other of ['lex:gansik', 'pat:gamsahamnida', 'exc:gachi-gayo', 'vocab:gajok', 'content/vocab/_senses.json', 'syl:ga', 'jamo:giyeok#sound']) {
       expect(clipUnitOfSource(other), other).toBeNull();
+    }
+  });
+
+  it('every jamo-wb clip of the real manifest has the Word Builder unit; vocabulary and card clips have their screen\'s unit', () => {
+    const manifest = JSON.parse(readFileSync(join(__dirname, '../../../../../../content/audio/tts-manifest.json'), 'utf8')) as {
+      rows: { ref: string; pack: string; sources: string[] }[];
+    };
+    const units = clipUnitsOf(manifest);
+    const wb = manifest.rows.filter((r) => r.pack === JAMO_PACK_WORD_BUILDER);
+    expect(wb).toHaveLength(22);
+    for (const row of wb) expect(units.get(row.ref), row.ref).toContain(WORD_BUILDER_UNIT);
+    for (const pack of ['vocab', 'cards']) {
+      const rows = manifest.rows.filter((r) => r.pack === pack);
+      expect(rows.length, pack).toBeGreaterThan(0);
+      for (const row of rows) expect(units.get(row.ref)?.length ?? 0, row.ref).toBeGreaterThan(0);
     }
   });
 
@@ -402,7 +431,7 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     const manifest = JSON.parse(readFileSync(join(__dirname, '../../../../../../content/audio/tts-manifest.json'), 'utf8')) as typeof FIXTURE_MANIFEST;
     const units = new Set([...clipUnitsOf(manifest).values()].flat());
     expect(units.size).toBeGreaterThan(30);
-    for (const unit of units) expect(unit).toMatch(/^(?:episode:stage\d-[a-z0-9-]+|story:[a-z0-9-]+|quest:[a-z0-9-]+|minigame:[a-z0-9-]+|placement)$/);
+    for (const unit of units) expect(unit).toMatch(/^(?:episode:stage\d-[a-z0-9-]+|story:[a-z0-9-]+|quest:[a-z0-9-]+|minigame:[a-z0-9-]+|topic:[a-z0-9-]+|card:[a-z0-9-]+|placement)$/);
   });
 });
 

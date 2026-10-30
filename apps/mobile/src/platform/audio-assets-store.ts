@@ -1,7 +1,7 @@
 import type { AudioPack } from '@hangul-route/content-schema/audio-packs';
 import { useEffect } from 'react';
 import { AUDIO_ASSETS, AUDIO_ASSET_PACKS, AUDIO_CHUNK_PACKS, AUDIO_CLIP_COUNT } from '../content/__generated__/audio-assets';
-import { loadAudioPackChunk } from '../content/__generated__/audio-pack-loaders';
+import { PACK_WAIT_MS } from '../logic/audio/controller';
 import type { ClipRegistry } from '../logic/audio/clip-assets';
 import type { ClipPrep } from './clip-packs-chunk';
 
@@ -10,21 +10,30 @@ import type { ClipPrep } from './clip-packs-chunk';
  * start map of `__generated__/audio-assets.ts` (the `jamo-s1` pack), and the per-pack map chunks the lazy loader
  * (`clip-packs-chunk.ts`) adds when a lesson, story or level check opens. Both audio adapters read clips through it.
  * Kept to one small module: everything else of the clip packs loads lazily (`clip-packs-chunk`). The pack chunks' own
- * literal `import()`s (`loadAudioPackChunk`) stay here, in the start bundle (one short case per pack): a chunk that
- * imported them would name the pack chunks' URLs in its content after Metro hashed it, so its file name would no
- * longer be the md5 of its content (the post-build's chunk check).
+ * literal `import()`s (`loadAudioPackChunk`) are the generated start map's, in the start bundle (one short case per
+ * pack): a lazy chunk that held them would name the pack chunks' URLs in its content after Metro hashed it, so its file
+ * name would no longer be the md5 of its content (the post-build's chunk check).
  */
-export { loadAudioPackChunk };
 
-export function createClipRegistry(input: {
-  start: Readonly<Record<string, number | string>>;
-  startPacks: Readonly<Record<string, AudioPack>>;
-  count: number;
-  chunkPacks: readonly AudioPack[];
-}): ClipRegistry {
+/**
+ * The registry over the start map. A chunk's clips arrive after a screen first renders, so `version` / `subscribe` let a
+ * prompt slot re-render when they do (`useClipRegistryVersion`). A load counts as pending until it settles or
+ * `stallMs` passes, whichever is first, so a stalled request costs a prompt at most one wait.
+ */
+export function createClipRegistry(
+  input: {
+    start: Readonly<Record<string, number | string>>;
+    startPacks: Readonly<Record<string, AudioPack>>;
+    count: number;
+    chunkPacks: readonly AudioPack[];
+  },
+  stallMs = PACK_WAIT_MS,
+): ClipRegistry {
   const assets = new Map(Object.entries(input.start));
   const packs = new Map(Object.entries(input.startPacks));
   const loads = new Set<Promise<unknown>>();
+  const listeners = new Set<() => void>();
+  let version = 0;
   return {
     has: (ref) => assets.has(ref),
     asset: (ref) => assets.get(ref),
@@ -37,15 +46,23 @@ export function createClipRegistry(input: {
         assets.set(ref, value);
         packs.set(ref, chunk.pack);
       }
+      version += 1;
+      for (const listener of [...listeners]) listener();
     },
     track: (load) => {
-      const settled: Promise<unknown> = load.then(
-        () => loads.delete(settled),
-        () => loads.delete(settled),
-      );
+      const done = (): boolean => loads.delete(settled);
+      const settled = load.then(done, done);
       loads.add(settled);
+      setTimeout(done, stallMs);
     },
     pending: () => (loads.size === 0 ? null : Promise.all(loads).then(() => undefined)),
+    version: () => version,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
   };
 }
 

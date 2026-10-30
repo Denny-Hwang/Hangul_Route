@@ -108,7 +108,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // JV-1's 4,754,506 B (+5,780 B, release `build:web`): the line is that measurement plus a 4,714 B rounding margin.
   // AC-1 and JV-3 together (AC-2's stack: #879 de336f341 plus #880 3bfa80a03, each under its own line alone; AC-2 adds
   // no app code) measure 4,766,690 B raw / 1,271,296 B gzip (release `build:web`, Metro cache cleared); the app-host
-  // build 4,766,846 B. The line is the release measurement plus a 2,310 B rounding margin.
+  // build 4,766,846 B. The line is the release measurement plus a 2,310 B rounding margin. AC-6 (web packs: the start-side
+  // clip registry and its change notice, the pack chunks' import() switch in the start map, the controller's wait and
+  // the screens' one-line hooks; the loader is the lazy clip-packs-chunk) measures 4,768,643 B raw / 1,272,049 B gzip
+  // on that stack (+1,953 B), under the line, which AC-6 does not raise.
   startBundleRaw: 4_769_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
@@ -133,10 +136,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // AMENDMENTS-AUDIO-CLIPS G5 (row AC-6): the clips the learner precache holds, which is the `jamo-s1` pack alone (43
   // clips, about 0.35 MB at 64 kbps); its line is the pack's set limit of AC-B6 (at most 520,000 B), so the clips can
   // never take the precache past `learnerPrecacheRaw` above, which does not move for audio: on main 8dfb8a43c the
-  // precache left 1,925,471 B under that line; at AC-6 (no recorded clips, release `build:web` on the AC-1 and AC-2
-  // heads) it measures 9,416,202 B in 78 files (the clip pack loader chunk is the one new file), 1,871,127 B under it,
-  // so the jamo-s1 pack (about 0.35 MB, at most 520,000 B) fits with about 1.35 MB to spare. Every other pack is
-  // runtime-cached (`hr-audio-v1`, `hr-audio-say-v1`).
+  // precache left 1,925,471 B under that line; at AC-6 (no recorded clips, release `build:web` on the AC-1, JV-3 and
+  // AC-2 heads) it measures 9,417,117 B in 78 files (the clip pack loader chunk is the one new file), and with the whole
+  // jamo-s1 pack at this line 9,937,117 B, 1,350,212 B under it. `--budget` holds that sum (`withWholeClipPack`) under
+  // `learnerPrecacheRaw`, so a build with no recorded clips already proves they fit. Every other pack is runtime-cached
+  // (`hr-audio-v1`, `hr-audio-say-v1`); their map chunks (about 230 KB of JavaScript once every pack ships) are precached.
   precachedClipsRaw: 520_000,
   // The story lines of scripts/build-stories.mjs `BUDGET` (perStoryRaw, totalRaw, totalGzip), held on the built story
   // bundles too, which are what the service worker caches: a built bundle is about 13% larger than its generated
@@ -348,16 +352,27 @@ function chunkTotals(manifest, bundles) {
 }
 
 /**
+ * The learner precache once the whole `jamo-s1` pack is in at its line (AMENDMENTS-AUDIO-CLIPS G5): the measured
+ * precache plus the clip bytes the build does not hold yet (none once the pack is in full). This, not the precache
+ * alone, is held under `learnerPrecacheRaw`, so a build with no recorded clips already proves the clips will fit.
+ * @param {{ precache: { raw: number }, clips?: { bytes: number } }} report
+ */
+export function withWholeClipPack(report, budget = PRECACHE_BUDGET) {
+  return report.precache.raw + Math.max(0, budget.precachedClipsRaw - (report.clips?.bytes ?? 0));
+}
+
+/**
  * The precache report: the start bundle, the lesson chunks, the story chunks (row CM-8), the locale chunks, the grown-up
  * root chunks, the review-item chunk (row CM-10), the learner screen chunks (row GU-3), the clip map chunks and the
  * precached clips (AMENDMENTS-AUDIO-CLIPS AC-6) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], audioPacks?: readonly { name: string }[], clips?: { count: number, bytes: number }, bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], audioPacks = [], clips = { count: 0, bytes: 0 }, bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], screens = [], audioPacks = [], clips, bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     audioPackChunks: chunkTotals(audioPacks, bundles),
-    clips: { count: clips.count, bytes: clips.bytes },
+    // Only the post-build measures the precached clips; a report without them skips the clip lines and checks.
+    clips: clips === undefined ? undefined : { count: clips.count, bytes: clips.bytes },
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
     lessonChunks: chunkTotals(manifest, bundles),
     storyChunks: chunkTotals(stories, bundles),
@@ -406,6 +421,9 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
     lines.push(`  precached clips  ${report.clips.count} files  ${report.clips.bytes} B  (ceiling ${budget.precachedClipsRaw} B, jamo-s1 only)`);
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
+  if (report.clips !== undefined) {
+    lines.push(`  learner precache with the whole jamo-s1 pack  ${withWholeClipPack(report, budget)} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
+  }
   return lines;
 }
 
@@ -464,6 +482,13 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
     problems.push(
       `the precached clips are ${report.clips.bytes} B, over their ceiling of ${budget.precachedClipsRaw} B (the jamo-s1 set limit, AMENDMENTS-AUDIO-CLIPS G5): ` +
         'only jamo-s1 is precached; a larger pack is runtime-cached, never a reason to move learnerPrecacheRaw',
+    );
+  }
+  if (report.clips !== undefined && report.precache.raw <= budget.learnerPrecacheRaw && withWholeClipPack(report, budget) > budget.learnerPrecacheRaw) {
+    problems.push(
+      `the learner precache is ${report.precache.raw} B, and with the whole jamo-s1 pack at its line (${budget.precachedClipsRaw} B) it would be ` +
+        `${withWholeClipPack(report, budget)} B, over the ceiling of ${budget.learnerPrecacheRaw} B: the jamo clips would trigger CM-5B ` +
+        '(AMENDMENTS-AUDIO-CLIPS G5): make room in the precache, never move learnerPrecacheRaw for audio',
     );
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {

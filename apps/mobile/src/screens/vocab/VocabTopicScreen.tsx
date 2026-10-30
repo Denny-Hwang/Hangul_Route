@@ -66,8 +66,9 @@ const HIDDEN = { 'aria-hidden': true, accessibilityElementsHidden: true, importa
  * Design: design/screens/vocab/topic.md.
  */
 export function VocabTopicScreen({ route, navigation }: Props): ReactElement {
-  // The vocabulary clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6), loaded with the topic.
-  useClipPacks('vocab');
+  // The vocabulary clip pack (and every pack before it, AMENDMENTS-AUDIO-CLIPS AC-B6), loaded with the topic, and this
+  // topic's clips warmed (`topic:<key>`), so its words are heard offline once it is opened.
+  useClipPacks('vocab', `topic:${route.params.topicKey}`);
   const topic = pickerTopic(route.params.topicKey);
   const profile = useProfileStore(activeProfileSelector);
   // The access tier (F-ENT-003 section 3.4); nothing is locked while the switch is off (D5).

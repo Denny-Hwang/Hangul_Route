@@ -1599,6 +1599,27 @@ describe('controller: a pack map chunk still on its way (AC-B6)', () => {
     expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
   });
 
+  it('an English or Spanish prompt never waits for a chunk (it has no clip to look for)', async () => {
+    const r = rig();
+    // A chunk that never arrives: no timer is advanced, so a wait would never end.
+    r.state.pending = new Promise<void>(() => undefined);
+    await expect(r.ctl.playPrompt({ text: 'Hello', language: 'en-US', kind: 'word' })).resolves.toBe('played');
+    await expect(r.ctl.playPrompt({ text: 'Hola', language: 'es-US', kind: 'word' })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['Hello', 'Hola']);
+    expect(r.clips.played).toEqual([]);
+  });
+
+  it('a prompt whose clips are all in but their pack is switched off never waits: the device voice at once', async () => {
+    const r = rig();
+    r.state.assets.add(SAY);
+    r.state.packs.set(SAY, 'stage1');
+    r.state.packsOff.add('stage1');
+    r.state.pending = new Promise<void>(() => undefined);
+    await expect(r.ctl.playPrompt({ text: '나', kind: 'word' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+  });
+
   it('a newer prompt supersedes one that is waiting for its chunk', async () => {
     const r = rig();
     r.state.pending = new Promise<void>(() => undefined);

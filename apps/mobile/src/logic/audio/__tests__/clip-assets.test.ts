@@ -1,6 +1,7 @@
 import { AUDIO_PACKS, type AudioPack } from '@hangul-route/content-schema/audio-packs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createClipRegistry } from '../../../platform/audio-assets-store';
+import { PACK_WAIT_MS } from '../controller';
 import type { AudioPackChunk } from '../clip-assets';
 import { createClipPackLoader, packsUpTo, type ClipPackLoaderDeps } from '../clip-pack-loader';
 
@@ -41,6 +42,10 @@ function setup(over: Partial<ClipPackLoaderDeps> & { off?: Set<AudioPack>; fail?
   return { registry, loader, loads };
 }
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('logic/audio/clip-assets: the start-side registry', () => {
   it('starts with the start map only (jamo-s1), and counts every clip the build holds', () => {
     const { registry, loads } = setup();
@@ -70,6 +75,31 @@ describe('logic/audio/clip-assets: the start-side registry', () => {
     await pending;
     await Promise.resolve();
     expect(registry.pending()).toBeNull();
+  });
+
+  it(`a load that never settles stops counting as pending after ${PACK_WAIT_MS} ms (a stalled chunk costs one wait at most)`, async () => {
+    vi.useFakeTimers();
+    const { registry } = setup();
+    registry.track(new Promise<void>(() => undefined));
+    expect(registry.pending()).not.toBeNull();
+    await vi.advanceTimersByTimeAsync(PACK_WAIT_MS - 10);
+    expect(registry.pending()).not.toBeNull();
+    await vi.advanceTimersByTimeAsync(20);
+    expect(registry.pending()).toBeNull();
+  });
+
+  it("tells its subscribers each time a chunk's clips are added, and bumps its version", () => {
+    const { registry } = setup();
+    const heard: number[] = [];
+    const off = registry.subscribe(() => heard.push(registry.version()));
+    expect(registry.version()).toBe(0);
+    registry.add(CHUNKS.stage1!);
+    expect(registry.has(NA)).toBe(true);
+    expect(heard).toEqual([1]);
+    off();
+    registry.add(CHUNKS.stage2!);
+    expect(registry.version()).toBe(2);
+    expect(heard).toEqual([1]);
   });
 
   it('ignores inherited keys of the start map', () => {

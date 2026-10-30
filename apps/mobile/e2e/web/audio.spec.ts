@@ -581,6 +581,32 @@ async function controlledBySw(page: Page): Promise<void> {
   });
 }
 
+/** Records, on the page's own clock, when each clip (a decoded buffer longer than 0.1 s) starts (G7). */
+async function recordClipTimes(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const w = window as Window & { __clipAt?: number[] };
+    w.__clipAt = [];
+    const proto = window.AudioBufferSourceNode?.prototype;
+    if (!proto) return;
+    const start = proto.start;
+    proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
+      if ((this.buffer?.duration ?? 0) > 0.1) w.__clipAt?.push(performance.now());
+      return start.apply(this, args);
+    };
+  });
+}
+
+/** Milliseconds from the moment stored in `window[mark]` to the first clip start after it, or null before either. */
+async function clipGapAfter(page: Page, mark: '__roundAt' | '__tapAt'): Promise<number | null> {
+  return page.evaluate((key) => {
+    const w = window as unknown as Record<string, unknown> & { __clipAt?: number[] };
+    const at = w[key];
+    if (typeof at !== 'number') return null;
+    const first = (w.__clipAt ?? []).find((t) => t >= at);
+    return first === undefined ? null : first - at;
+  }, mark);
+}
+
 test.describe('bundled clips (A-6)', () => {
   test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
     if (FIXTURE_BUILD) {
@@ -727,23 +753,21 @@ test.describe('bundled clips (A-6)', () => {
     test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
     await fakeSpeech(page, 'none');
     await recordClipStarts(page);
-    // When Match Sound's second round is on screen, and when each clip starts, on the page's own clock. The second
-    // round's clip was warmed when the game opened (the first round's plays while its warm-up is still on its way).
+    await recordClipTimes(page);
+    // When Match Sound's second round is on screen, on the page's own clock. The second round's clip was warmed when
+    // the game opened (the first round's plays while its warm-up is still on its way). The round is found from the
+    // mutated nodes' own text (textContent, which never forces a layout inside the measured window).
     await page.addInitScript(() => {
-      const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
-      w.__clipAt = [];
-      const proto = window.AudioBufferSourceNode?.prototype;
-      if (proto) {
-        const start = proto.start;
-        proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
-          if ((this.buffer?.duration ?? 0) > 0.1) w.__clipAt?.push(performance.now());
-          return start.apply(this, args);
-        };
-      }
-      const seen = (): void => {
-        if (w.__roundAt === undefined && document.body?.innerText.includes('2 / 6')) w.__roundAt = performance.now();
-      };
-      new MutationObserver(seen).observe(document, { subtree: true, childList: true, characterData: true });
+      const w = window as Window & { __roundAt?: number };
+      new MutationObserver((records) => {
+        if (w.__roundAt !== undefined) return;
+        for (const r of records) {
+          if ((r.target.textContent ?? '').includes('2 / 6')) {
+            w.__roundAt = performance.now();
+            return;
+          }
+        }
+      }).observe(document, { subtree: true, childList: true, characterData: true });
     });
     await onboardChild(page, { name: 'Dami' });
     await openMatchSound(page);
@@ -756,18 +780,37 @@ test.describe('bundled clips (A-6)', () => {
       await expect(second).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
     }
     await expect(second).toBeVisible();
-    await expect
-      .poll(() => page.evaluate(() => {
-        const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
-        return (w.__clipAt ?? []).some((t) => t >= (w.__roundAt ?? Infinity));
-      }))
-      .toBe(true);
-    const gap = await page.evaluate(() => {
-      const w = window as Window & { __roundAt?: number; __clipAt?: number[] };
-      const at = w.__roundAt ?? Number.NaN;
-      return (w.__clipAt ?? []).find((t) => t >= at)! - at;
-    });
-    expect(Number.isFinite(gap)).toBe(true);
+    await expect.poll(() => clipGapAfter(page, '__roundAt')).not.toBeNull();
+    const gap = await clipGapAfter(page, '__roundAt');
     expect(gap).toBeLessThan(150);
+  });
+
+  test('a warmed say clip from a pack map chunk starts within 150 ms of the tap (G7, AC-B6)', async ({ page }) => {
+    test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await recordClipTimes(page);
+    // The tap, on the page's clock, before any app handler runs (capture phase).
+    await page.addInitScript(() => {
+      const w = window as Window & { __tapAt?: number };
+      document.addEventListener('pointerdown', () => (w.__tapAt = performance.now()), true);
+    });
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    // The lesson's stage1 pack chunk loads and its say clips are warmed when the lesson opens (useLessonClips).
+    await page.getByTestId('home-next-lesson-start').click();
+    await expect
+      .poll(() => page.evaluate(async (k) => (await (await caches.open('hr-audio-say-v1')).keys()).some((r) => r.url.includes(`/audio/say/${k}.`)), SAY_NA), { timeout: 15_000 })
+      .toBe(true);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    const before = await clipStarts(page);
+    // 나 (the first example word): its say clip lives in the stage1 pack chunk, not the start map.
+    await page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]').nth(0).click();
+    await expect.poll(() => clipStarts(page)).toBe(before + 1);
+    await expect.poll(() => clipGapAfter(page, '__tapAt')).not.toBeNull();
+    expect(await clipGapAfter(page, '__tapAt')).toBeLessThan(150);
+    expect((await utterances(page)).filter((u) => u.text === '나')).toEqual([]);
   });
 });

@@ -35,8 +35,12 @@ export interface ClipRegistry {
   readonly chunkPacks: readonly AudioPack[];
   /** Adds a pack chunk's clips. */
   add(chunk: AudioPackChunk): void;
-  /** Counts a load as pending until it settles. */
+  /** Counts a load as pending until it settles, or until the stall time passes (one wait at most per stalled load). */
   track(load: Promise<unknown>): void;
   /** The loads still on their way, or null when none is. */
   pending(): Promise<void> | null;
+  /** Bumped each time a chunk's clips are added. */
+  version(): number;
+  /** Called after each `add`; returns the unsubscribe. */
+  subscribe(listener: () => void): () => void;
 }

@@ -7,7 +7,6 @@ import {
   ASSET_MAP_MODULE,
   AUDIO_DIR,
   PACK_CHUNK_DIR,
-  PACK_LOADER_MODULE,
   TTS_MANIFEST_FILE,
   buildAssetMap,
   clipPacksOf,
@@ -81,8 +80,7 @@ describe('__generated__/audio-assets.ts', () => {
   it('is exactly what the generator writes for assets/audio, its pack chunks included (run `audio:map` after adding a clip)', () => {
     const expected = renderAudioModules(buildAssetMap(files, undefined, packOf), clipUnitsOf(manifest));
     expect(committed).toBe(expected[ASSET_MAP_MODULE]);
-    expect(readFileSync(join(GENERATED_DIR, PACK_LOADER_MODULE), 'utf8')).toBe(expected[PACK_LOADER_MODULE]);
-    const { [ASSET_MAP_MODULE]: _start, [PACK_LOADER_MODULE]: _loader, ...chunks } = expected;
+    const { [ASSET_MAP_MODULE]: _start, ...chunks } = expected;
     expect(committedChunks).toEqual(chunks);
   });
 

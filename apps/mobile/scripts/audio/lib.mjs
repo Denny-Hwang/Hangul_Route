@@ -81,8 +81,6 @@ const PACK_MAP_TYPE = 'Readonly<Record<string, AudioPack>>';
 export const PACK_CHUNK_DIR = 'audio-packs';
 /** The generated map's file name inside its folder (`ASSET_MAP_FILE`). */
 export const ASSET_MAP_MODULE = 'audio-assets.ts';
-/** The chunk loader's file name, beside the map: one literal `import()` per pack map chunk. */
-export const PACK_LOADER_MODULE = 'audio-pack-loaders.ts';
 
 /** The module of a pack's map chunk, relative to the generated map's folder; Metro names its web bundle after it. */
 export const packChunkModule = (pack) => `${PACK_CHUNK_DIR}/audio-pack-${pack}.ts`;
@@ -94,11 +92,20 @@ export const packChunkMarker = (pack) => `audio-pack:${pack}`;
 /**
  * The start map and the per-pack map chunks (AMENDMENTS-AUDIO-CLIPS AC-B6, bundle size): the start bundle carries only
  * the precached pack's refs (`jamo-s1`) and the refs that have no pack (governed by `audioClips` alone); every other
- * pack's refs are a chunk of their own, sorted by pack id.
+ * pack's refs are a chunk of their own, sorted by pack id. Throws on a say clip with no pack (no manifest row).
  *
  * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the merged asset map
  */
 export function splitAssetMap(entries) {
+  // A say clip always has a manifest row, so a pack: one with none (an orphan, or a file added before the manifest was
+  // regenerated) would land in the start bundle silently, so the map generator stops on it instead.
+  const orphans = entries.filter((e) => e.pack === undefined && e.ref.startsWith(`audio/${SAY_AUDIO_GROUP}/`)).map((e) => e.ref);
+  if (orphans.length > 0) {
+    throw new Error(
+      `audio:map: ${orphans.length} say clip(s) have no row in ${TTS_MANIFEST_FILE}, so no pack (${orphans.slice(0, 5).join(', ')}): ` +
+        'regenerate the manifest (pnpm audio:tts:manifest) or remove the file',
+    );
+  }
   const start = [];
   const byPack = new Map();
   for (const e of entries) {
@@ -113,26 +120,38 @@ export function splitAssetMap(entries) {
   return { start, chunks };
 }
 
+/** The Stage 2 cell that teaches the Word Builder symbols (F-CURR-001 §3.3): the `jamo-wb` clips warm with it (AC-B6). */
+export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
+
 /**
  * The warm unit of a manifest source (AC-B6, warming): a Stage 1 quest or game (`quest:<id>`, `minigame:<ref>`), a
  * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under), a
- * story (`content/stories/<slug>.json` => `story:<slug>`) or the level check (`placement`). Any other source (a lexicon
- * entry, a pattern, a card, a vocabulary topic) is not a unit a screen warms by: null.
+ * story (`content/stories/<slug>.json` => `story:<slug>`), the level check (`placement`), a vocabulary topic
+ * (`content/vocab/<topic>.json` => `topic:<topic>`, the topic screen's), a card (`card:<id>`, its detail page's) and,
+ * for a `jamo-wb` clip (`jamo:<id>#sound|letter`), the Word Builder cell (`WORD_BUILDER_UNIT`). Any other source (a
+ * lexicon entry, a pattern, a vocabulary word, a Stage 1 jamo, which is precached) is not a unit a screen warms by:
+ * null.
+ *
+ * @param {string} source a manifest row's source
+ * @param {string} [pack] the row's pack
  */
-export function clipUnitOfSource(source) {
+export function clipUnitOfSource(source, pack) {
   const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)\.json$/.exec(source);
   if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}`;
   const story = /^content\/stories\/([a-z0-9-]+)\.json$/.exec(source);
   if (story !== null) return `story:${story[1]}`;
+  const topic = /^content\/vocab\/([a-z0-9][a-z0-9-]*)\.json$/.exec(source);
+  if (topic !== null) return `topic:${topic[1]}`;
   if (source.startsWith('content/placement/')) return 'placement';
-  if (/^(?:quest|minigame):[a-z0-9-]+$/.test(source)) return source;
+  if (/^(?:quest|minigame|card):[a-z0-9-]+$/.test(source)) return source;
+  if (pack === JAMO_PACK_WORD_BUILDER && /^jamo:[a-z0-9-]+#(?:sound|letter)$/.test(source)) return WORD_BUILDER_UNIT;
   return null;
 }
 
 /**
  * The warm units of every clip the manifest lists (`clipUnitOfSource` of its sources), by ref, each list sorted.
  *
- * @param {{ rows?: readonly { ref: string, sources?: readonly string[] }[] } | null | undefined} manifest
+ * @param {{ rows?: readonly { ref: string, pack?: string, sources?: readonly string[] }[] } | null | undefined} manifest
  * @returns {Map<string, string[]>}
  */
 export function clipUnitsOf(manifest) {
@@ -140,7 +159,7 @@ export function clipUnitsOf(manifest) {
   for (const row of manifest?.rows ?? []) {
     const own = new Set(units.get(row.ref) ?? []);
     for (const source of row.sources ?? []) {
-      const unit = clipUnitOfSource(source);
+      const unit = clipUnitOfSource(source, row.pack);
       if (unit !== null) own.add(unit);
     }
     if (own.size > 0) units.set(row.ref, [...own].sort());
@@ -156,14 +175,22 @@ const HEADER = [
 /**
  * The source of `src/content/__generated__/audio-assets.ts` (the start map). Metro needs literal require paths. The
  * pack map (`AUDIO_ASSET_PACKS`) is typed by the shared pack list, so a pack id off that list fails the typecheck.
- * With `chunks` (from `splitAssetMap`), the map also names every clip the build holds (`AUDIO_CLIP_COUNT`) and the
- * packs that are chunks of their own (`AUDIO_CHUNK_PACKS`); their literal `import()`s are `renderPackLoader`'s.
+ * With `chunks` (from `splitAssetMap`), the map also names every clip the build holds (`AUDIO_CLIP_COUNT`), the
+ * packs that are chunks of their own (`AUDIO_CHUNK_PACKS`) and their loader (`loadAudioPackChunk`): one literal
+ * `import()` per pack map chunk (Metro resolves only literals). The loader lives here, in the start map, so a pack
+ * chunk's URL is in the start bundle (one short case per pack, never its clips) and the lazy clip pack loader chunk,
+ * which calls it, keeps a file name that is the md5 of its content.
  *
  * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the start map's entries
  * @param {readonly { pack: string, entries: readonly import('./lib.d.mts').AssetEntry[] }[]} [chunks]
  */
 export function renderAssetMap(entries, chunks = []) {
-  const lines = [...HEADER, "import type { AudioPack } from '@hangul-route/content-schema';", ''];
+  const lines = [
+    ...HEADER,
+    "import type { AudioPack } from '@hangul-route/content-schema';",
+    "import type { AudioPackChunk } from '../../logic/audio/clip-assets';",
+    '',
+  ];
   if (entries.length === 0) {
     lines.push(`export const AUDIO_ASSETS: ${MAP_TYPE} = {};`);
   } else {
@@ -189,29 +216,13 @@ export function renderAssetMap(entries, chunks = []) {
     '/** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */',
     `export const AUDIO_CLIP_COUNT = ${total};`,
     '',
-    `/** The packs whose clips are a map chunk of their own (${PACK_LOADER_MODULE}), loaded with their lesson or story, never at start. */`,
+    '/** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */',
     `export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = [${chunks.map((c) => `'${c.pack}'`).join(', ')}];`,
-  );
-  return `${lines.join('\n')}\n`;
-}
-
-/**
- * The source of `audio-pack-loaders.ts`: one literal `import()` per pack map chunk (Metro resolves only literals). The
- * start-side store (`src/platform/audio-assets-store.ts`) imports it, so a pack chunk's URL lives in the start bundle
- * (one short case per pack, never its clips) and the lazy loader chunk's file name stays the md5 of its content.
- *
- * @param {readonly { pack: string }[]} chunks
- */
-export function renderPackLoader(chunks) {
-  const lines = [
-    ...HEADER,
-    "import type { AudioPack } from '@hangul-route/content-schema';",
-    "import type { AudioPackChunk } from '../../logic/audio/clip-assets';",
     '',
     '/** A pack\'s map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6); undefined for a pack with none. */',
     'export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: AudioPackChunk }> | undefined {',
     '  switch (pack) {',
-  ];
+  );
   for (const c of chunks) lines.push(`    case '${c.pack}':`, `      return import('./${packChunkModule(c.pack).replace(/\.ts$/, '')}');`);
   lines.push('    default:', '      return undefined;', '  }', '}');
   return `${lines.join('\n')}\n`;
@@ -235,7 +246,7 @@ export function renderPackChunk(pack, entries, units = new Map()) {
   });
   const lines = [
     ...HEADER,
-    `// The ${pack} pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6): reached only through loadAudioPackChunk in ../${PACK_LOADER_MODULE}.`,
+    `// The ${pack} pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6): reached only through loadAudioPackChunk in ../${ASSET_MAP_MODULE}.`,
     "import type { AudioPackChunk } from '../../../logic/audio/clip-assets';",
     '',
     '/** This chunk\'s marker: the PWA build checks the start bundle never carries it (scripts/pwa-postbuild.mjs). */',
@@ -255,8 +266,8 @@ export function renderPackChunk(pack, entries, units = new Map()) {
 }
 
 /**
- * Every generated audio module, by path relative to the generated map's folder: the start map, the chunk loader and one
- * chunk per pack outside the precache (AC-B6). What gen-audio-map.mjs writes and its drift test compares.
+ * Every generated audio module, by path relative to the generated map's folder: the start map (with the chunk loader)
+ * and one chunk per pack outside the precache (AC-B6). What gen-audio-map.mjs writes and its drift test compares.
  *
  * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the merged asset map
  * @param {Map<string, readonly string[]>} [units] the warm units of each ref (`clipUnitsOf`)
@@ -264,7 +275,7 @@ export function renderPackChunk(pack, entries, units = new Map()) {
  */
 export function renderAudioModules(entries, units = new Map()) {
   const { start, chunks } = splitAssetMap(entries);
-  const modules = { [ASSET_MAP_MODULE]: renderAssetMap(start, chunks), [PACK_LOADER_MODULE]: renderPackLoader(chunks) };
+  const modules = { [ASSET_MAP_MODULE]: renderAssetMap(start, chunks) };
   for (const c of chunks) modules[packChunkModule(c.pack)] = renderPackChunk(c.pack, c.entries, units);
   return modules;
 }

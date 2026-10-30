@@ -28,8 +28,6 @@ function mockMap(): void {
     AUDIO_ASSET_PACKS: { 'audio/jamo/giyeok.mp3': 'jamo-s1' },
     AUDIO_CLIP_COUNT: 2,
     AUDIO_CHUNK_PACKS: ['stage1'],
-  }));
-  vi.doMock('../../content/__generated__/audio-pack-loaders', () => ({
     loadAudioPackChunk: (pack: string) => {
       loads.push(pack);
       return pack === 'stage1' ? Promise.resolve({ AUDIO_PACK: { pack: 'stage1', clips: { [NA]: 9 }, units: { 'quest:stage1-letters-q1': [0] } } }) : undefined;
@@ -62,7 +60,6 @@ beforeEach(() => {
 afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
   vi.doUnmock('../../content/__generated__/audio-assets');
-  vi.doUnmock('../../content/__generated__/audio-pack-loaders');
   vi.doUnmock('../audio');
 });
 

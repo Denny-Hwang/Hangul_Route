@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PRECACHE_BUDGET } from '../pwa/lesson-chunks.mjs';
+import { PRECACHE_BUDGET, precacheBudgetProblems, precacheReport, withWholeClipPack } from '../pwa/lesson-chunks.mjs';
 import { headersFor, parseHeaders } from '../app-host/headers.mjs';
 import { LESSON_MANIFEST, REVIEW_ITEM_MANIFEST, STORY_MANIFEST, lessonBundles } from './helpers/lesson-bundles.mjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -446,14 +446,13 @@ describe('pwa-postbuild.mjs precaches only the jamo-s1 pack (AMENDMENTS-AUDIO-CL
   it('reports the precached clips (the G5 growth) against their own line, and the learner precache against its line', () => {
     expect(run.stdout).toContain(`  precached clips  3 files  27000 B  (ceiling ${PRECACHE_BUDGET.precachedClipsRaw} B, jamo-s1 only)`);
     expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling 11287329 B\)/);
+    // The built precache plus the jamo-s1 bytes not held yet, which --budget holds under the same line.
+    expect(run.stdout).toMatch(/ {2}learner precache with the whole jamo-s1 pack {2}\d+ B {2}\(ceiling 11287329 B\)/);
   });
 });
 
-/**
- * AC-6's release `build:web` (Metro cache cleared, no recorded clips, on the AC-1 and AC-2 heads): the learner precache
- * is 78 files, 9,416,202 B (9,411,393 B, 77 files, before AC-6: the clip pack loader chunk is the one more file).
- */
-const AC6_MEASURED_LEARNER_PRECACHE = 9_416_202;
+/** A precache report with a small start bundle and nothing else, for the budget's own arithmetic. */
+const emptyReport = () => precacheReport({ manifest: [], bundles: [{ url: '_expo/static/js/web/index-0123456789abcdef0123456789abcdef.js', text: 'x' }], precache: { count: 1, size: 1 } });
 
 describe('the offline budget does not move for audio (AMENDMENTS-AUDIO-CLIPS G5, row AC-6)', () => {
   it('keeps learnerPrecacheRaw at 11,287,329 B: CM-5B is never triggered by audio', () => {
@@ -464,11 +463,21 @@ describe('the offline budget does not move for audio (AMENDMENTS-AUDIO-CLIPS G5,
     expect(PRECACHE_BUDGET.precachedClipsRaw).toBe(520_000);
   });
 
-  it('the measured learner precache plus the whole jamo-s1 pack stays under the line', () => {
-    // About 1.87 MB of headroom; the whole jamo-s1 pack at its set limit takes 0.52 MB of it (about 0.35 MB expected).
-    const measured = AC6_MEASURED_LEARNER_PRECACHE;
-    expect(measured).toBeGreaterThan(0);
-    expect(measured + PRECACHE_BUDGET.precachedClipsRaw).toBeLessThan(PRECACHE_BUDGET.learnerPrecacheRaw);
+  it('the budget holds the measured precache plus the jamo-s1 bytes the build does not hold yet under the line', () => {
+    const line = PRECACHE_BUDGET.learnerPrecacheRaw;
+    const report = (raw, clipBytes) => ({ ...emptyReport(), precache: { count: 1, raw }, clips: { count: clipBytes > 0 ? 1 : 0, bytes: clipBytes } });
+    // No recorded clip yet: the whole pack (its line) is counted on top of the measured precache.
+    expect(withWholeClipPack(report(9_000_000, 0))).toBe(9_000_000 + PRECACHE_BUDGET.precachedClipsRaw);
+    expect(precacheBudgetProblems(report(line - PRECACHE_BUDGET.precachedClipsRaw, 0))).toEqual([]);
+    const tight = precacheBudgetProblems(report(line - PRECACHE_BUDGET.precachedClipsRaw + 1, 0));
+    expect(tight.join('\n')).toMatch(/with the whole jamo-s1 pack at its line \(520000 B\) it would be 11287330 B, over the ceiling of 11287329 B/);
+    // Once the pack is in (its bytes are part of the measured precache), only the measured precache counts.
+    expect(withWholeClipPack(report(line, PRECACHE_BUDGET.precachedClipsRaw))).toBe(line);
+    expect(precacheBudgetProblems(report(line, PRECACHE_BUDGET.precachedClipsRaw))).toEqual([]);
+    // Over the line itself: the CM-5B problem alone, not both.
+    const over = precacheBudgetProblems(report(line + 1, 0));
+    expect(over).toHaveLength(1);
+    expect(over[0]).toMatch(/row CM-5B/);
   });
 });
 

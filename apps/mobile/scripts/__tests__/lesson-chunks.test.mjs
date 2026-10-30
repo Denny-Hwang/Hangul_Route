@@ -245,8 +245,10 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     const store = read('src/platform/audio-assets-store.ts');
     expect(store).toContain("import('./clip-packs-chunk')");
     expect(store).not.toMatch(/^import [^t].*clip-packs-chunk/m);
-    expect(store).toContain("from '../content/__generated__/audio-pack-loaders'");
-    expect(read('src/platform/clip-packs-chunk.ts')).not.toContain('audio-pack-loaders');
+    // The pack chunks' import()s are the generated start map's (`loadAudioPackChunk`), which the store imports too.
+    expect(store).toContain("from '../content/__generated__/audio-assets'");
+    expect(read('src/content/__generated__/audio-assets.ts')).toContain('export function loadAudioPackChunk(');
+    expect(read('src/platform/clip-packs-chunk.ts')).not.toMatch(/\bimport\(['"]/);
     const text = `__d(function(){var m="${LEARNER_CHUNKS[3].marker}"})`;
     const chunk = { url: `${WEB_JS_DIR}/clip-packs-chunk-${md5(text)}.js`, text };
     const start = { url: START, text: 'var g=1;' };

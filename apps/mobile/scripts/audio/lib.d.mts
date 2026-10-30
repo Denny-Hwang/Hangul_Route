@@ -34,7 +34,6 @@ export const REF_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntrie
 export const SAY_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
 export const PACK_CHUNK_DIR: string;
 export const ASSET_MAP_MODULE: string;
-export const PACK_LOADER_MODULE: string;
 
 /** Each clip's pack: a ref => pack map (`clipPackMap`), or a lookup. */
 export type ClipPacks = ReadonlyMap<string, string> | ((ref: string) => string | undefined);
@@ -52,9 +51,9 @@ export function packChunkModule(pack: string): string;
 export function packChunkName(pack: string): string;
 export function packChunkMarker(pack: string): string;
 export function splitAssetMap(entries: readonly AssetEntry[]): { start: AssetEntry[]; chunks: { pack: string; entries: AssetEntry[] }[] };
-export function clipUnitOfSource(source: string): string | null;
+export const WORD_BUILDER_UNIT: 'episode:stage2-letters';
+export function clipUnitOfSource(source: string, pack?: string): string | null;
 export function clipUnitsOf(manifest: ClipManifestLike | null | undefined): Map<string, string[]>;
-export function renderPackLoader(chunks: readonly { pack: string }[]): string;
 export function renderPackChunk(pack: string, entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): string;
 export function renderAudioModules(entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): Record<string, string>;
 export function clipPackMap(manifest: ClipManifestLike | null | undefined, jamoSource: string): Map<string, string>;

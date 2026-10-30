@@ -395,7 +395,10 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     const clips = deps.clips;
     if (clips === null || !deps.clipsEnabled()) return 'skipped';
     const refs = clipRefsFor(spec);
-    const pending = refs.some(playable) ? null : (deps.clipsReady?.() ?? null);
+    // Wait only for a clip that could still arrive in a pack chunk on its way: never for a prompt with no clip to look
+    // for (a non-Korean line, an empty text), one whose clip is already playable, or one whose clips are all in but
+    // switched off.
+    const pending = refs.some(playable) || refs.every((ref) => deps.assets.has(ref)) ? null : (deps.clipsReady?.() ?? null);
     if (pending !== null) {
       const waited = await waitFor<'ready'>(t, (resolve) => {
         let timer: unknown;

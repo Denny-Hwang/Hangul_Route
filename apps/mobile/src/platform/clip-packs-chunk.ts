@@ -1,9 +1,10 @@
 import type { AudioPack } from '@hangul-route/content-schema/audio-packs';
 import { episodesAll, questsAll } from '../content';
+import { loadAudioPackChunk } from '../content/__generated__/audio-assets';
 import { createClipPackLoader } from '../logic/audio/clip-pack-loader';
 import { lessonClipPlan } from '../logic/audio/lesson-clips';
 import { warmClips } from './audio';
-import { clipRegistry, loadAudioPackChunk } from './audio-assets-store';
+import { clipRegistry } from './audio-assets-store';
 import { packSwitchOn } from './audio-switches';
 
 /**

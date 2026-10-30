@@ -7,7 +7,9 @@ import { AUDIO_PACKS, type AudioPack } from '@hangul-route/content-schema/audio-
  *
  * The warm units are the clip manifest's sources as the map generator writes them (`clipUnitOfSource` in
  * scripts/audio/lib.mjs): a Stage 1 quest (`quest:<id>`) and its games (`minigame:<ref>`), a lesson cell (its episode
- * id, `episode:stage2-life`) and a story (`story:<slug>`).
+ * id, `episode:stage2-life`; the Word Builder cell `episode:stage2-letters` also warms the `jamo-wb` clips) and a story
+ * (`story:<slug>`), reached from a shelf episode (`episode:shelf-<slug>`) or from a story quest's own id
+ * (`quest:story-<slug>-<level>`, which a Stage 5 book's Read quests are too).
  */
 
 export interface ClipPlanQuest {
@@ -46,14 +48,18 @@ export function clipScopeOfEpisode(episode: Pick<ClipPlanEpisode, 'stage' | 'for
 }
 
 const SHELF_EPISODE = /^episode:shelf-([a-z0-9-]+)$/;
+/** A story quest's id (`storyQuestSkeleton`): `quest:story-<slug>-<listen|along|read>`. */
+const STORY_QUEST = /^quest:story-([a-z0-9-]+)-(?:listen|along|read)$/;
 
 function unitsOf(quest: ClipPlanQuest, episode: ClipPlanEpisode | undefined): string[] {
   const units = [quest.id];
   for (const step of quest.steps) if (step.minigameRef !== undefined && step.minigameRef !== '') units.push(step.minigameRef);
+  const story = STORY_QUEST.exec(quest.id);
+  if (story !== null) units.push(`story:${story[1]}`);
   if (episode !== undefined) {
     units.push(episode.id);
     const shelf = SHELF_EPISODE.exec(episode.id);
-    if (shelf !== null) units.push(`story:${shelf[1]}`);
+    if (shelf !== null && !units.includes(`story:${shelf[1]}`)) units.push(`story:${shelf[1]}`);
   }
   return units;
 }

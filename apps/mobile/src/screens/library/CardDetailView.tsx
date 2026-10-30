@@ -59,8 +59,9 @@ export interface CardDetailViewProps {
 }
 
 export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): ReactElement {
-  // The card clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6), loaded with the card.
-  useClipPacks('cards');
+  // Every clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6: a card's texts may belong to any earlier pack, and `cards` is last),
+  // loaded with the card, and this card's clips warmed (`card:<id>`).
+  useClipPacks('cards', cardId);
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();

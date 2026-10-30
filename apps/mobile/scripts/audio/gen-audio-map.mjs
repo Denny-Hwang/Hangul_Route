@@ -5,10 +5,10 @@
 // before every `build:web`.
 // AMENDMENTS-AUDIO-CLIPS AC-B6 (row AC-6): the start map holds only the precached pack's clips (`jamo-s1`) and the ones
 // with no pack; every other pack's clips are a map chunk of their own, `__generated__/audio-packs/audio-pack-<pack>.ts`,
-// reached only through the literal `import()`s of `__generated__/audio-pack-loaders.ts` (`loadAudioPackChunk`), with the
-// warm units of the clip
-// manifest's sources (lessons, quests, games, stories, the level check) so a screen can warm the next lesson's clips.
-// A chunk no longer built is removed.
+// reached only through the start map's literal `import()`s (`loadAudioPackChunk`), with the warm units of the clip
+// manifest's sources (lessons, quests, games, stories, the level check, vocabulary topics, cards, Word Builder) so a
+// screen can warm the next lesson's clips. A chunk no longer built is removed. A say clip with no manifest row stops
+// the run (`splitAssetMap`): it would land in the start bundle.
 //
 //   node scripts/audio/gen-audio-map.mjs                       write the map
 //   node scripts/audio/gen-audio-map.mjs --check               exit 1 if the committed map is stale
@@ -75,7 +75,7 @@ const stale = existsSync(chunkDir)
       .map((f) => `${PACK_CHUNK_DIR}/${f}`)
       .filter((f) => !(f in modules))
   : [];
-const chunks = Object.keys(modules).length - 2;
+const chunks = Object.keys(modules).length - 1;
 
 if (process.argv.includes('--check')) {
   const drifted = Object.entries(modules).filter(([name, source]) => {
