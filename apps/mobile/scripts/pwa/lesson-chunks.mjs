@@ -119,7 +119,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // The merged CM-30, CM-31, CM-34, CM-35 and CM-3C stack (each under its own line alone) measures 4,783,247 B raw /
   // 1,276,097 B gzip (release `build:web`); row CM-3A S4 on it (content in the lesson chunks, the Role Play case of the
   // scaffold) adds 67 B, and with CM-35's review fixes (83b6ffa43) the stack measures 4,783,492 B raw / 1,276,171 B gzip.
-  // The line is that measurement plus a 6,508 B margin.
+  // Re-measured on the parents' current heads (CM-30 c5f24e1f8, CM-31 07d65cdae, CM-34 0b252809d, CM-35 eff0df902,
+  // CM-3C ed383508c) merged with this row onto main c84df434e: 4,783,739 B raw / 1,276,225 B gzip (release
+  // `build:web`, Metro cache cleared). The raise is the parents' growth, each measured on main 524961dae (4,751,444 B):
+  // CM-30 +10,791, CM-34 +7,102, CM-35 +6,977, CM-31 +6,168, CM-3C +927 (sum 4,783,409 B); this row adds about 330 B
+  // (content lives in the lesson chunks). The line is that measurement plus a 6,261 B margin. Each parent alone stays
+  // under its own line; merged one by one onto main, the later ones pass the 4,765,000 B line, so the stack lands with
+  // this line (F-CURR-002 section 10, the CM-3A S4 record).
   startBundleRaw: 4_790_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
