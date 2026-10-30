@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 import {
   ASSET_MAP_FILE,
   AUDIO_DIR,
+  TTS_MANIFEST_FILE,
   buildAssetMap,
+  clipPacksOf,
   jamoClipRefs,
   refsInRenderedMap,
   renderAssetMap,
@@ -61,10 +63,13 @@ const files = listFiles(join(APP_ROOT, AUDIO_DIR));
 const mapRefs = refsInRenderedMap(committed);
 /** The pack of each jamo ref (AMENDMENTS-AUDIO-CLIPS AC-B6), as gen-audio-map.mjs reads it from jamo.ts. */
 const jamoPacks = new Map(jamoClipRefs(readFileSync(join(APP_ROOT, 'src/content/jamo.ts'), 'utf8')).map((r) => [r.ref, r.pack]));
+/** The pack of each clip the clip manifest lists (row AC-2), which gen-audio-map.mjs reads first. */
+const manifestPacks = clipPacksOf(JSON.parse(readFileSync(join(APP_ROOT, '../..', TTS_MANIFEST_FILE), 'utf8')) as { rows: { ref: string; pack: string }[] });
+const packOf = (ref: string): string | undefined => manifestPacks.get(ref) ?? jamoPacks.get(ref);
 
 describe('__generated__/audio-assets.ts', () => {
   it('is exactly what the generator writes for assets/audio (run `audio:map` after adding a clip)', () => {
-    expect(committed).toBe(renderAssetMap(buildAssetMap(files, undefined, (ref) => jamoPacks.get(ref))));
+    expect(committed).toBe(renderAssetMap(buildAssetMap(files, undefined, packOf)));
   });
 
   it('holds no test fixture clips', () => {
@@ -79,6 +84,10 @@ describe('__generated__/audio-assets.ts', () => {
       if (ref.startsWith('audio/say/')) continue;
       expect(refs.has(ref), `${ref} has a file but no content audioRef`).toBe(true);
     }
+  });
+
+  it('the clip manifest and jamo.ts give every jamo ref the same pack (AC-B6)', () => {
+    for (const [ref, pack] of jamoPacks) expect(manifestPacks.get(ref), ref).toBe(pack);
   });
 
   it('every jamo ref carries its pack: jamoAll refs jamo-s1, the Word Builder ones jamo-wb (AC-B6)', () => {

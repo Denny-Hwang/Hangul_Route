@@ -50,9 +50,10 @@ describe('romanization of the shipped content JSON (class A)', () => {
 
   it('skips the same directories as scripts/validate-content.mjs', () => {
     const script = readFileSync(join(REPO_ROOT, 'scripts/validate-content.mjs'), 'utf8');
-    const m = /const SKIPPED_DIRS = \[join\(([^)]*)\)\]/.exec(script);
-    const dirs = (m?.[1] ?? '').replace(/["'\s]/g, '').split(',').join('/');
-    expect(CONTENT_SKIPPED_DIRS).toEqual([dirs]);
+    const list = /const SKIPPED_DIRS = \[(.*)\];/.exec(script)?.[1] ?? '';
+    const dirs = [...list.matchAll(/join\(([^)]*)\)/g)].map((m) => (m[1] ?? '').replace(/["'\s]/g, '').split(',').join('/'));
+    expect(dirs.length).toBeGreaterThan(0);
+    expect([...CONTENT_SKIPPED_DIRS].sort()).toEqual([...dirs].sort());
     expect(files.some((f) => f.startsWith('content/stories/research/'))).toBe(false);
   });
 

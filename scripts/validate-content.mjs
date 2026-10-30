@@ -68,7 +68,9 @@ const CONTENT_DIR = join(ROOT, "content");
 // Research data that no screen reads (verified story drafts: Korean fields such as
 // claim_ko and source titles are data, not UI text). Shipped story content under
 // content/stories/*.json is scanned; F-STORY-001 adds its own story rules.
-const SKIPPED_DIRS = [join("content", "stories", "research")];
+// content/audio holds the clip manifest and the pronunciation overrides (AMENDMENTS-AUDIO-CLIPS AC-B5): generated
+// and hand-edited data about what the voice sends, not content a screen shows; its own schema test checks it.
+const SKIPPED_DIRS = [join("content", "stories", "research"), join("content", "audio")];
 
 // Locale overlays (F-I18N-001 §3.6) are checked by scripts/overlay-rules.mjs, not as base content.
 const OVERLAY_DIR_PREFIX = "content/i18n/";

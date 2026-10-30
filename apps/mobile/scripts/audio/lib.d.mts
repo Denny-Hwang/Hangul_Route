@@ -128,6 +128,8 @@ export function renderRecordingScript(rows: readonly RecordingRow[], names: read
 export function parseJamoSource(source: string): ParsedJamo[];
 /** Every jamo clip ref jamo.ts declares (sound and name clips, Stage 1 and Word Builder), each once, with its pack. */
 export function jamoClipRefs(source: string): Array<{ ref: string; pack: string }>;
+export const TTS_MANIFEST_FILE: string;
+export function clipPacksOf(manifest: { rows?: ReadonlyArray<{ ref: string; pack: string }> } | null | undefined): Map<string, string>;
 export function evaluateReport(kind: ClipKind, report: ClipReport): string[];
 export function evaluateSet(kind: ClipKind, sizes: readonly number[], label?: string): string[];
 export function clipSets(
