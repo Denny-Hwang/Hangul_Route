@@ -130,7 +130,7 @@ Panel 7 — **write together** (type, trace, frame, own name): the line "Write o
 
 ## Interaction points
 
-- `next` (right arrow, PageDown, clicker, tap on the right two thirds) → the next build; `prev` → the previous build (going back is silent, F-TCH-004 §3.5 amendment 2).
+- `next` (right arrow, PageDown, clicker, Next on the bar, swipe left, a mouse click on a slide with nothing to point at; the right-two-thirds tap is removed, `AMENDMENTS-PRESENTER-NAV.md` section 7) → the next build; `prev` → the previous build (going back is silent, F-TCH-004 §3.5 amendment 2).
 - Sound control / `S` → plays the current line (read along) or the prompt (listen quiz); no voice → the text variant, never an error.
 - `Shift+R` → romanization `always` / `tap` rebuilds the current slide's builds (section 5.2 of the amendment).
 - Grid → each new slide shows as its kind label + title text (no tiny Korean), skippable as today.

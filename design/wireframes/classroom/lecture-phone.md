@@ -6,13 +6,13 @@
 Spec: `docs/specs/F-TCH-004-lecture-mode.md` §3.5 (phone start screen, "History"), §3.6 (phone exception to README D1) · `docs/specs/AMENDMENTS-LECTURE-V2.md` section 18 (row **LV-M1**) · amends `classroom/lecture-presenter.md` B (start screen) and C (stage) for phone windows only
 Audience: **teacher, parent or caregiver presenting from a phone** (to a TV over a cable or casting, or to a small group around the phone)
 Route: `app.hangulroute.com/present` (no new route)
-Mock: `design/screens/presenter/stage-and-bar.md` "Phone", `states.md` (rotate page), `start-screen.md` "Phone"
+Mock: `design/screens/presenter/stage-and-bar.md` "Phone", `states.md` (rotate page), `start-screen.md` "Phone"; the rail, the compact rail and the overlay without the strip (PN-0b): `stage-and-bar.md` "Navigation (PN-0b)"
 
 ## Scenario (Given-When-Then)
 
 Given: a grown-up opens a lesson on a phone (`isPhoneWindow`: short side under 600, long side at most 1000)
 When: they tap Start and turn the phone sideways
-Then: the slide fills the screen (no 120 px band, no "make the window bigger" page); a small bar floats over the bottom, hides at every step so a new slide is always seen whole, and comes back from its own strip; upright, a rotate page says to turn the phone, with a way back
+Then: the slide fills the screen (no 120 px band, no "make the window bigger" page); a small bar floats over the bottom, hides at every step so a new slide is always seen whole, and comes back from a tap on empty slide area (the strip is gone, `AMENDMENTS-PRESENTER-NAV.md` section 5.3); upright, a rotate page says to turn the phone, with a way back
 
 ## Screen goal
 
@@ -20,7 +20,7 @@ Then: the slide fills the screen (no 120 px band, no "make the window bigger" pa
 
 ## Box diagram
 
-Panel A — 640 x 360 sideways, bar shown (the start of the lesson, or a tap in the bar's strip)
+Panel A — 640 x 360 sideways, bar shown (the start of the lesson, or a tap on empty slide area). *Since PN-0b this floating bar is the overlay layout only: 568 x 320 class phones and every phone with `EXPO_PUBLIC_PRESENTER_RAIL` off; 640 x 360 and wider show the rail of `classroom/lecture-nav.md` Panels D and D2.*
 
 ```
 +--------------------------------------------------------------+
@@ -45,10 +45,10 @@ Panel B — 640 x 360, bar hidden (after any step, or 3 s with no touch on it)
 |        ㄱ                                 example word        |
 |       g/k                                                    |
 |                                                              |  <- the slide is drawn in full; nothing moved
-|                            ====                              |  <- grabber: marks the bar's strip, in the stage margin
+|                                                              |  <- no grabber and no strip (removed in PN-0b)
 +--------------------------------------------------------------+
-   tap above the strip: steps (right two thirds next, left third previous); the bar stays hidden
-   tap in the strip (the bottom 80 px): shows the bar
+   swipe left / right: next / previous; the bar stays hidden
+   tap on empty slide area (outside every answer option): shows the bar; a tap on an option points at it (`classroom/lecture-nav.md`)
 ```
 
 Panel C — 844 x 390 sideways (a notched phone), bar shown; the stage box is the window minus the insets
@@ -130,8 +130,7 @@ Panel G — the same start screen at 640 x 360 sideways: one column, the same st
 
 ## Interaction points
 
-- Tap the stage above the bar's strip: right two thirds next, left third previous (F-TCH-004 §3.5). It never shows the bar, and it hides the bar if it was showing, so the new slide is seen whole.
-- Tap in the bar's strip (the bottom `touchTarget.min + 2 x spacing.sm`, marked by the grabber): shows the bar; tap there again: hides it.
+- ~~Tap the stage above the bar's strip: right two thirds next, left third previous.~~ ~~Tap in the bar's strip (marked by the grabber): shows the bar.~~ Superseded 2026-10-29 (`AMENDMENTS-PRESENTER-NAV.md` sections 5.3 and 7): a stage tap never steps. A tap on empty slide area (not an answer option, not the speaker) shows the bar, or hides it while it shows; a tap on an answer option points at it and never touches the bar. There is no strip and no grabber.
 - Swipe left or right: next / previous; hides the bar.
 - [ Next ] / Reveal, [< Previous], [ Sound ]: as the docked bar; Next, Reveal and Previous hide the bar at once after the step. A focused control keeps the bar shown (keyboard, switch, screen reader).
 - Lesson start: the bar shows for 3 s so its place is learned, then hides.
