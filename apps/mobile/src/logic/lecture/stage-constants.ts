@@ -193,13 +193,50 @@ const inset = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
 /**
  * The stage box: the window minus the safe-area insets and the docked bar band, which stays when
  * the bar hides (README D1). A phone window passes a band of 0: its compact bar floats over the
- * stage's bottom edge instead.
+ * stage's bottom edge instead, or (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4) its rail takes a
+ * column of `rail` px at the right, so the stage box is the window minus the four insets minus the rail.
  */
-export function stageBox(window: WindowSize, band: number, insets: StageInsets): WindowSize {
+export function stageBox(window: WindowSize, band: number, insets: StageInsets, rail = 0): WindowSize {
   return {
-    width: Math.max(0, window.width - inset(insets.left) - inset(insets.right)),
+    width: Math.max(0, window.width - inset(insets.left) - inset(insets.right) - inset(rail)),
     height: Math.max(0, window.height - band - inset(insets.top) - inset(insets.bottom)),
   };
+}
+
+/**
+ * The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4), from its tokens (applied in
+ * `screens/presenter/stage-metrics.ts`): the full rail column `PHONE_RAIL = touchTarget.hero +
+ * spacing.sm` (104), the compact icon rail `PHONE_RAIL_COMPACT = touchTarget.min + spacing.md +
+ * spacing.xs` (80). Each is the inert gap `PHONE_RAIL_GAP` (`spacing.md`, its `border.strong` rule
+ * included) on the stage side, the button, and `spacing.xs` on the window side.
+ */
+export function phoneRail(hero: number, sm: number): number {
+  return hero + sm;
+}
+
+export function phoneRailCompact(min: number, md: number, xs: number): number {
+  return min + md + xs;
+}
+
+/** A rail button's width: the column less the inert gap and the window-side `spacing.xs` (88 full, 64 compact). */
+export function railButtonWidth(rail: number, gap: number, xs: number): number {
+  return rail - gap - xs;
+}
+
+/** The full rail's Next / Reveal is `NEXT_MIN_FACTOR x touchTarget.min` (96) tall while the rail has room for it. */
+export const RAIL_NEXT_FACTOR = NEXT_MIN_FACTOR;
+
+/**
+ * The height the full rail's four buttons need with Next at 96: three 64 px buttons, Next, three
+ * `spacing.sm` gaps between them and `spacing.sm` above and below (`3 x 64 + 96 + 3 x 8 + 2 x 8` = 328).
+ */
+export function railNeed(min: number, sm: number): number {
+  return 3 * min + RAIL_NEXT_FACTOR * min + 5 * sm;
+}
+
+/** Next's height on the full rail: 96, or 64 on a rail shorter than `railNeed` (section 5.2). */
+export function railNextHeight(railHeight: number, min: number, sm: number): number {
+  return railHeight >= railNeed(min, sm) ? RAIL_NEXT_FACTOR * min : min;
 }
 
 /**
