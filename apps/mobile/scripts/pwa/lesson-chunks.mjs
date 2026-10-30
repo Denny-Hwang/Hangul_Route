@@ -120,7 +120,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // and AC-4 0 (scripts), AC-6 +1,959 (the clip registry and the pack hooks; the loader is a lazy chunk), the
   // integration's Match Shape migration 0 (a screen chunk). The line is the measurement plus a 4,896 B rounding margin.
   // F-CURR-002 row CM-48 (This week in Korea): main 1bfda3fc8 measures 4,838,051 B raw (release `build:web`, Metro cache
-  // cleared), 1,949 B under the old 4,840,000 B line; the row adds 2,700 B (4,840,751 B raw / 1,294,654 B gzip): its door
+  // cleared), 1,949 B under the old 4,840,000 B line; the row adds 2,700 B (4,840,751 B raw / 1,294,652 B gzip): its door
   // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
   // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
   // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
@@ -173,7 +173,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   reviewItemsGzip: 30_000,
   // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
   // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,
-  // the same lines). Set at CM-48 from the first 13 drops (24,158 B raw / 6,658 B gzip as generated); a year of drops is
+  // the same lines). Set at CM-48 from the first 13 drops (24,172 B raw / 6,662 B gzip as generated, 27,699 B raw / 6,491 B gzip as built); a year of drops is
   // about four times that, so the batch that crosses it raises both lines with its measurement or splits the chunk.
   weekDropsRaw: 60_000,
   weekDropsGzip: 16_000,
