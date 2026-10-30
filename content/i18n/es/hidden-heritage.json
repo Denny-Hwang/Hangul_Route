@@ -50,6 +50,25 @@
       "note.facts.f4.claim": "El oso negro asiático tiene una mancha blanca en forma de media luna en el pecho. En otoño come mucho y luego pasa el invierno durmiendo en una cueva o en el hueco de un árbol.",
       "note.facts.f5.claim": "El oso negro asiático vivía antes en toda la península de Corea y hoy está en peligro de extinción. En 2004 empezó en el Parque Nacional de Jirisan un proyecto para recuperarlo.",
       "note.facts.f6.claim": "Las pinturas kkachihorangi, de una urraca y un tigre, nacieron de las pinturas chinas de tigres de las dinastías Yuan y Ming. Se hicieron muy populares en la pintura popular (minhwa) del siglo XIX, y con el tiempo el tigre se volvió un personaje más amable."
+    },
+    "scene:play-courtyard": {
+      "art.alt": "Un patio preparado para jugar.",
+      "round.alt": "Un patio preparado para jugar.",
+      "round.targets.yeon.word.gloss": "cometa",
+      "round.targets.paengi.word.gloss": "peonza, trompo",
+      "round.targets.yut.word.gloss": "palitos de yut",
+      "round.targets.jegi.word.gloss": "un volante que se patea",
+      "round.others.eolle.word.gloss": "carrete de hilo",
+      "round.others.ttakji.word.gloss": "ficha de papel doblado",
+      "round.others.gonggi.word.gloss": "piedritas para lanzar y atrapar",
+      "round.others.yutpan.word.gloss": "tablero de yut",
+      "note.subject": "Juegos tradicionales preparados en un patio: el yunnori, las cometas, el jegichagi, las peonzas, el ttakji y el gonggi.",
+      "note.facts.f1.claim": "El yunnori se juega con cuatro palitos de yut. Dos equipos los lanzan, y la forma en que caen, boca abajo o boca arriba, decide cuánto avanzan las fichas en el tablero de yut.",
+      "note.facts.f2.claim": "El yunnori se juega desde el primer día del Año Nuevo lunar hasta la primera luna llena del año lunar, y lo juegan juntas personas de todas las edades.",
+      "note.facts.f3.claim": "Una cometa se hace con papel sobre varillas finas de bambú y se vuela con un hilo enrollado en un carrete. La cometa coreana más común es la cometa escudo, un rectángulo con un agujero redondo en el centro.",
+      "note.facts.f4.claim": "Un jegi es una moneda o una pieza de metal envuelta en papel o tela fina y resistente, con los extremos cortados en flecos. Se patea con el pie.",
+      "note.facts.f5.claim": "Un paengi es un trozo de madera tallado en forma de cono. Se mantiene girando sobre suelo llano o sobre hielo golpeándolo con un látigo.",
+      "note.facts.f6.claim": "En el ttakji, se golpea un ttakji de papel contra otro para darle la vuelta y ganarlo. En el gonggi, se lanzan al aire unas piezas pequeñas llamadas gonggi y se atrapan y se recogen con la mano."
     }
   }
 }

@@ -33,6 +33,7 @@
     "./src/scene-art/shape-origin-registry": "./src/scene-art/shape-origin-registry.ts",
     "./src/scene-art/hidden-heritage/seollal-room": "./src/scene-art/hidden-heritage/seollal-room.ts",
     "./src/scene-art/hidden-heritage/four-seasons": "./src/scene-art/hidden-heritage/four-seasons.ts",
+    "./src/scene-art/hidden-heritage/play-courtyard": "./src/scene-art/hidden-heritage/play-courtyard.ts",
     "./hangul-keyboard-layout": "./src/components/HangulKeyboard/layout.ts",
     "./components/*": "./src/components/*/index.ts"
   },

@@ -197,6 +197,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'scene-seollal-room', marker: 'scene-chunk:seollal-room' },
       // Row CM-37 part 3: the Nature & Animals four-season scene.
       { name: 'scene-four-seasons', marker: 'scene-chunk:four-seasons' },
+      // Row CM-37 part 4: the Play & Crafts courtyard.
+      { name: 'scene-play-courtyard', marker: 'scene-chunk:play-courtyard' },
     ]);
   });
 
@@ -269,6 +271,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(new Set(SCENE_CHUNKS.map((c) => c.name)).size).toBe(SCENE_CHUNKS.length);
     expect(new Set(SCENE_CHUNKS.map((c) => c.marker)).size).toBe(SCENE_CHUNKS.length);
     for (const c of SCENE_CHUNKS) expect(read('src/screens/minigames/hidden-heritage-scenes.ts'), c.name).toContain(`import('./scenes/${c.name}')`);
+    // Row CM-37 part 4: the Play & Crafts courtyard.
+    expect(read('src/screens/minigames/scenes/scene-play-courtyard.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS.find((c) => c.name === 'scene-play-courtyard').marker}';`);
+    expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-play-courtyard')");
   });
 
   it('[CM-36] reports the Hidden Heritage scene chunks on a line of their own, held to 25,000 B each (§10)', () => {

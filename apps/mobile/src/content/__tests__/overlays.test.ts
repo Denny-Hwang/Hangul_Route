@@ -13,6 +13,7 @@ import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hid
 import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';
 import { SEOLLAL_ROOM_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/seollal-room';
 import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
+import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
 import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { glossRepeatsRomanization } from '../../../../../scripts/overlay-rules.mjs';
@@ -52,7 +53,7 @@ const SHIPPED: Shipped = {
   stage: new Map(stages.map((s) => [`stage:${s.key}`, s])),
   theme: new Map(themes.map((t) => [`theme:${t.key}`, t])),
   // F-CURR-002 row CM-37: the Hidden Heritage scenes (design-system data, each in a lazy chunk of its own).
-  scene: new Map([FOOD_MARKET_SCENE, LETTERS_SCHOOL_SCENE, SEOLLAL_ROOM_SCENE, FOUR_SEASONS_SCENE].map((s) => [s.id, s])),
+  scene: new Map([FOOD_MARKET_SCENE, LETTERS_SCHOOL_SCENE, SEOLLAL_ROOM_SCENE, FOUR_SEASONS_SCENE, PLAY_COURTYARD_SCENE].map((s) => [s.id, s])),
 };
 
 /**
