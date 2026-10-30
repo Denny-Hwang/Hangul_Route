@@ -91,10 +91,13 @@ describe('every quest with the switches off (section 14)', () => {
     expect(scopes.length).toBeGreaterThan(100);
   });
 
-  it('the shipped Stage 2 Dictation Checks (row CM-3A S2): 7 steps, 14 hear rounds, each a see round with the switch off', () => {
+  it('the shipped Stage 2 Dictation Checks (row CM-3A S2): 7 steps, 14 hear rounds, each a see round with the switch off; each Volume 2 one too', () => {
     const dictation = scopes.filter(({ at, scope }) => at.startsWith('quest:stage2-') && (scope.typeHangul?.rounds ?? []).some((r) => typeHangulMode(r) === 'hear'));
-    expect(dictation).toHaveLength(7);
-    expect(dictation.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(14);
+    const volume1 = dictation.filter(({ at }) => !at.includes('-v2-'));
+    expect(volume1).toHaveLength(7);
+    expect(volume1.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(14);
+    // Food & Daily Life Volume 2 q1 (F-CURR-002 row CM-43 S2).
+    expect(dictation.some(({ at }) => at.startsWith('quest:stage2-life-v2-q1 '))).toBe(true);
     for (const { at, scope } of dictation) {
       expect(needsDictationChunk(scope), at).toBe(true);
       const off = applyGameSwitches(scope, ALL_OFF);

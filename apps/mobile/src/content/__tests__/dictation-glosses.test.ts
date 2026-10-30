@@ -36,8 +36,11 @@ const hearRounds = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
 );
 
 describe('Dictation: the shown meaning never carries the word (row CM-3A S2)', () => {
-  it('the Stage 2 Dictation Checks are shipped: fourteen rounds', () => {
-    expect(hearRounds.filter(({ ref }) => /^minigame:s2-.*-check$/.test(ref))).toHaveLength(14);
+  it('the Stage 2 Dictation Checks are shipped: fourteen rounds in Volume 1, and each Volume 2 Dictation Check beside them', () => {
+    const stage2 = hearRounds.filter(({ ref }) => /^minigame:s2-.*-check$/.test(ref));
+    expect(stage2.filter(({ ref }) => !ref.includes('-v2-'))).toHaveLength(14);
+    // Food & Daily Life Volume 2 q1 (F-CURR-002 row CM-43 S2): 달다 and 밥.
+    expect(stage2.filter(({ ref }) => ref === 'minigame:s2-life-v2-q1-check').map(({ round }) => round.target.ko)).toEqual(['달다', '밥']);
   });
 
   it('en and es: no meaning holds the romanization', () => {
