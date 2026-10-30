@@ -35,10 +35,15 @@ function letters(jamoIds: string[]): LetterBody[] {
   return expandDeck(deck, bundle, { canPlayKorean: true }).slides.filter((s): s is LetterBody => s.kind === 'letter');
 }
 
-async function draw(slide: LetterBody, locale: UiLocale = 'en', handlers: { sound?: () => void; second?: () => void } = {}): Promise<ReactTestInstance> {
+async function draw(
+  slide: LetterBody,
+  locale: UiLocale = 'en',
+  handlers: { sound?: () => void; second?: () => void } = {},
+  sayIt = false,
+): Promise<ReactTestInstance> {
   const el: ReactElement = (
     <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: true }}>
-      <LetterSlide slide={slide} shown={ALL} strokeToken={0} onPlaySound={handlers.sound ?? (() => undefined)} onPlayLetterSound={handlers.second ?? (() => undefined)} />
+      <LetterSlide slide={slide} shown={ALL} strokeToken={0} sayIt={sayIt} onPlaySound={handlers.sound ?? (() => undefined)} onPlayLetterSound={handlers.second ?? (() => undefined)} />
     </PresenterViewProvider>
   );
   const r = await render(el);
@@ -82,6 +87,18 @@ describe('LetterSlide: name first, then the sound on a vowel; a final by its syl
   it('the Korean UI names the letter in Hangul with its romanization', async () => {
     const root = await draw(nieun!, 'ko');
     expect(textOf(byTestId(root, 'presenter-letter-name')[0]!)).toBe('글자 이름: 니은 (nieun)');
+  });
+
+  it('Say it: the box says the name; a consonant\'s IPA sits beside its sound on a vowel, a vowel\'s in the box', async () => {
+    const root = await draw(nieun!, 'en', {}, true);
+    const say = textOf(byTestId(root, 'presenter-say-it')[0]!);
+    expect(say).toContain('니은');
+    expect(say).not.toContain('[');
+    expect(byTestId(root, 'presenter-letter-sound')).toHaveLength(0);
+    expect(textOf(byTestId(root, 'presenter-letter-sound-ipa')[0]!)).toBe(`[${nieun!.ipa}]`);
+    const vowel = await draw(a!, 'en', {}, true);
+    expect(byTestId(vowel, 'presenter-letter-sound-ipa')).toHaveLength(0);
+    if (a!.ipa !== undefined) expect(textOf(byTestId(vowel, 'presenter-say-it')[0]!)).toContain(`[${a!.ipa}]`);
   });
 
   it('a vowel has one speaker: its name is its sound', async () => {
