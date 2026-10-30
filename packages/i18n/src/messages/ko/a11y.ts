@@ -320,6 +320,8 @@ export const a11y = {
     slot: '빈칸',
     tilePlaced: (word: string) => `놓은 낱말: ${word}`,
     rolePlayClass: (line: string) => `우리 반의 대답: ${line}`,
+    pointed: (n: number) => `${n}번 선택지를 표시했어요`,
+    unpointed: '표시한 선택지가 없어요',
   },
   /** [OA] 선택 화면의 접근성 이름 (OA-4a, 17.2): 이름 뒤에는 조사 대신 쌍점. */
   who: {

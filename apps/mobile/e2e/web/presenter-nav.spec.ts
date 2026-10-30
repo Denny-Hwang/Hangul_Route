@@ -25,7 +25,13 @@ import { shot } from './shots';
  * nothing; More open blocks a swipe and an option tap, and a tap closes it (the rail and the overlay
  * layout). Swipes drive CDP
  * touch events (`swipeStage`), Chromium only: under `E2E_WEBKIT` they skip and the taps run.
- * Screenshots with `HR_SHOTS=1`.
+ *
+ * Row PN-5 (section 7.3, owner choice O2): a tap or click on an option points at it. It sets
+ * `data-pointed="true"` on that option only and changes nothing else (the counter, the build, the
+ * bar, no control pressed); a second tap clears it; a step clears it; keys 1 to 4 do the same, with
+ * focus on a bar button too; the live region names the pointed option; the dashed outline and the
+ * pin stay inside the stage, and on docked windows the 32 px clearance still holds while an option
+ * is pointed at. Screenshots with `HR_SHOTS=1`, plus a 1280 x 720 projector-style shot.
  */
 
 const DECK: LectureDeckInput = {
@@ -112,6 +118,12 @@ async function open(page: Page, vp: Viewport, input: Input): Promise<void> {
 
 const counter = async (page: Page): Promise<string> => (await page.getByTestId('presenter-counter').textContent()) ?? '';
 const live = async (page: Page): Promise<string> => (await page.getByTestId('presenter-live').textContent()) ?? '';
+/** The markers of the options carrying `data-pointed="true"` (section 7.3). */
+const pointedNow = (page: Page): Promise<string[]> =>
+  page.getByTestId('presenter-stage').evaluate((stage) => Array.from(stage.querySelectorAll('[data-pointed="true"]')).map((el) => el.getAttribute('data-stage-target') ?? ''));
+/** What the live region says for a pointed option, or for none (`a11y.presenter.pointed` / `unpointed`, en). */
+const POINTED = (n: number): string => `Option ${n} pointed at`;
+const UNPOINTED = 'No option pointed at';
 
 /** Every overlay or flash a pressed control would open: none may appear after a tap on the stage. */
 const PRESSED = ['presenter-more-sheet', 'presenter-grid', 'presenter-help', 'presenter-blank', 'presenter-exit-dialog', 'presenter-timer-full', 'presenter-timer-corner', 'presenter-no-sound-flash', 'presenter-sound-failed-flash'];
@@ -315,6 +327,12 @@ for (const vp of MATRIX) {
           await goToFamily(page, presses, family);
           // Overlay: the keyboard step hid the bar; a tap on a target must leave it so.
           if (layout === 'overlay') await overlayBar(page, false);
+          else {
+            // A first pointer on empty stage (a ring on touch, nothing for a mouse on a target slide) lets the docked
+            // band take its shown height, and wrap on a narrow window, before the boxes are measured and tapped.
+            await tapAt(page, input, await emptyPoint(page));
+            await page.waitForTimeout(600);
+          }
           const boxes = await settledTargets(page);
           expect(boxes.length, family).toBeGreaterThan(0);
           if (family === 'grid' || family === 'rows') expect(boxes.every((b) => /^option:[1-4]$/.test(b.marker)), family).toBe(true);
@@ -330,12 +348,32 @@ for (const vp of MATRIX) {
             expect(least.gap, `${family}: clearance, ${least.pair}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
           }
           const before = await state(page);
-          for (const t of boxes) {
-            for (const point of pointsOn(t)) {
-              await tapAt(page, input, point.at);
-              await page.waitForTimeout(60);
-              expect(await state(page), `${family} ${t.marker} ${point.name} at ${Math.round(point.at.x)},${Math.round(point.at.y)}`).toEqual(before);
+          // Pointing (O2, row PN-5) changes only the option's `data-pointed` and the live region: each tap on
+          // an option toggles it; a tap on any other target changes nothing at all.
+          const still = ({ live: _live, ...rest }: Awaited<ReturnType<typeof state>>) => rest;
+          for (const [i, t] of boxes.entries()) {
+            const option = /^option:(\d)$/.exec(t.marker);
+            for (const name of pointsOn(t).map((p) => p.name)) {
+              // Read the target's box again before each tap, in case anything moved the stage since the last one.
+              const point = pointsOn((await targets(page))[i]!).find((p) => p.name === name)!;
+              const where = `${family} ${t.marker} ${point.name} at ${Math.round(point.at.x)},${Math.round(point.at.y)}`;
+              if (option) {
+                // A tap toggles the option: what it should show next is read from the page, not counted here.
+                const pointed = (await pointedNow(page)).length === 0;
+                await tapAt(page, input, point.at);
+                await expect.poll(() => pointedNow(page), where).toEqual(pointed ? [t.marker] : []);
+                await expect.poll(() => live(page), where).toBe(pointed ? POINTED(Number(option[1])) : UNPOINTED);
+                expect(still(await state(page)), where).toEqual(still(before));
+              } else {
+                await tapAt(page, input, point.at);
+                await page.waitForTimeout(60);
+                expect(await state(page), where).toEqual(before);
+                expect(await pointedNow(page), where).toEqual([]);
+              }
             }
+            // Leave nothing pointed for the next target.
+            if ((await pointedNow(page)).length > 0) await tapAt(page, input, pointsOn((await targets(page))[i]!)[0]!.at);
+            await expect.poll(() => pointedNow(page)).toEqual([]);
           }
           if (family === 'grid') await shot(page, `presenter-nav-${vp.id}-${input}-grid`);
         }
@@ -526,9 +564,12 @@ for (const vp of MATRIX) {
             expect({ counter: await counter(page), live: await live(page) }).toEqual(before);
           }
           await shot(page, `presenter-nav-${vp.id}-more`);
+          // Key 1 points at nothing while More covers the stage (row PN-5).
+          await page.keyboard.press('1');
           await page.touchscreen.tap(exposed.x, exposed.y);
           await expect(page.getByTestId('presenter-more-sheet')).toHaveCount(0);
           expect({ counter: await counter(page), live: await live(page) }).toEqual(before);
+          expect(await pointedNow(page)).toEqual([]);
           if (layout === 'rail') {
             // Beside the rail (PN-3's rule for an open sheet, section 5.1 as built): the rail's Next stays enabled,
             // and a press closes the sheet and then steps once.
@@ -577,7 +618,7 @@ for (const vp of MATRIX) {
       }
 
       if (layout === 'overlay') {
-        test('after a step the bar is hidden: taps on options 3 and 4 change nothing; an empty tap shows the bar in full before the next tap', async ({ page }) => {
+        test('after a step the bar is hidden: taps on options 3 and 4 only point; an empty tap shows the bar in full before the next tap', async ({ page }) => {
           await open(page, vp, input);
           const presses = await familyPresses(page);
           await goToFamily(page, presses, 'grid');
@@ -589,7 +630,9 @@ for (const vp of MATRIX) {
             await tapAt(page, input, { x: (t.left + t.right) / 2, y: (t.top + t.bottom) / 2 });
           }
           await page.waitForTimeout(150);
-          expect(await state(page)).toEqual(before);
+          // No step, no reveal, the bar still hidden: option 4 is pointed at (row PN-5), nothing else changed.
+          expect(await state(page)).toEqual({ ...before, live: POINTED(4) });
+          expect(await pointedNow(page)).toEqual(['option:4']);
           await tapAt(page, input, await emptyPoint(page));
           // The bar the teacher brought up is fully drawn (and taking taps) before anything else is tapped.
           await overlayBar(page, true);
@@ -744,7 +787,7 @@ for (const vp of MATRIX) {
         const group = page.getByTestId('presenter-help-touch');
         await expect(group).toBeVisible();
         await expect(group.getByRole('heading')).toHaveText('Touch and mouse');
-        for (const row of ['swipe', 'buttons', 'click', 'keep']) await expect(page.getByTestId(`presenter-help-touch-${row}`)).toBeVisible();
+        for (const row of ['swipe', 'buttons', 'click', 'point', 'keep']) await expect(page.getByTestId(`presenter-help-touch-${row}`)).toBeVisible();
         const groupBox = (await group.boundingBox())!;
         const firstRow = (await page.getByTestId('presenter-help').getByRole('listitem').first().boundingBox())!;
         expect(groupBox.y + groupBox.height).toBeLessThanOrEqual(firstRow.y + 0.5);
@@ -1160,3 +1203,173 @@ test.describe('PN-4 the rail label fallback at the largest text size, 844 x 390'
     await shot(page, 'presenter-nav-pn4-844x390-largest');
   });
 });
+
+// --- Row PN-5: pointing at an option (section 7.3, owner choice O2) ---------------------------------
+
+/** The PN-5 matrix: V1 (overlay), V2c and V2 (the rail from PN-4; touch), V3 and V3-4x3 (touch and mouse), V4 (mouse and touch), and the 1280 x 720 projector (mouse). */
+const POINT_MATRIX: readonly Viewport[] = [
+  // V3-4x3 (1024 x 768) is the tightest docked window: its band wraps, so the clearance check runs there too.
+  ...MATRIX.filter((vp) => ['V1', 'V2c', 'V2', 'V3', 'V3-4x3', 'V4'].includes(vp.id)),
+  { id: 'P', width: 1280, height: 720, phone: false, inputs: ['mouse'] },
+];
+
+/** Where the pointed option's outline and pin reach (the target box grown by the outline's offset and width, and the pin's box). */
+function pointedReach(page: Page): Promise<{ outline: { left: number; top: number; right: number; bottom: number }; pin: { left: number; top: number; right: number; bottom: number } | null; style: string; colour: string } | null> {
+  return page.getByTestId('presenter-stage').evaluate((stage) => {
+    const el = stage.querySelector('[data-pointed="true"]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const grow = Number.parseFloat(cs.outlineOffset) + Number.parseFloat(cs.outlineWidth);
+    const pin = el.querySelector('[data-testid="presenter-quiz-pin"]')?.getBoundingClientRect();
+    return {
+      outline: { left: r.left - grow, top: r.top - grow, right: r.right + grow, bottom: r.bottom + grow },
+      pin: pin ? { left: pin.left, top: pin.top, right: pin.right, bottom: pin.bottom } : null,
+      style: cs.outlineStyle,
+      colour: cs.outlineColor,
+    };
+  });
+}
+
+for (const vp of POINT_MATRIX) {
+  for (const input of vp.inputs) {
+    const layout = layoutOf(vp);
+    test.describe(`PN-5 pointing: ${vp.id} ${vp.width} x ${vp.height}, ${input} (${layout})`, () => {
+      test.use({ viewport: { width: vp.width, height: vp.height }, isMobile: vp.phone, hasTouch: input === 'touch' });
+
+      test('a tap or click on each option points at it and changes nothing else; a second clears it; a step clears it; outline inside the stage; clearance holds', async ({ page }) => {
+        test.setTimeout(180_000);
+        await open(page, vp, input);
+        const presses = await familyPresses(page);
+        for (const family of ['grid', 'rows'] as const) {
+          await goToFamily(page, presses, family);
+          if (layout === 'overlay') await overlayBar(page, false);
+          else {
+            // A first pointer on empty stage (a ring, or nothing on a question slide) lets the docked band take its
+            // shown height before the boxes are measured; it may wrap on a narrow window and move the stage. The
+            // rail (PN-4) is always shown, so the wait only lets the slide settle there.
+            await tapAt(page, input, await emptyPoint(page));
+            await page.waitForTimeout(600);
+          }
+          const boxes = await settledTargets(page);
+          const options = boxes.filter((b) => /^option:[1-4]$/.test(b.marker));
+          expect(options.length, family).toBeGreaterThanOrEqual(3);
+          const before = await state(page);
+          const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+          for (const t of options) {
+            const n = Number(t.marker.slice('option:'.length));
+            const centre = { x: (t.left + t.right) / 2, y: (t.top + t.bottom) / 2 };
+            await tapAt(page, input, centre);
+            await expect.poll(() => pointedNow(page), `${family} ${t.marker}`).toEqual([t.marker]);
+            // Nothing else: the counter, the build (Next still reads Reveal), no control pressed, the bar as it was, no answer mark.
+            expect({ ...(await state(page)), live: '' }, `${family} ${t.marker}`).toEqual({ ...before, live: '' });
+            expect(await page.getByTestId('presenter-quiz-mark').count(), `${family} ${t.marker}`).toBe(0);
+            await expect.poll(() => live(page)).toBe(POINTED(n));
+            // The target boxes do not move or grow (an outline takes no room).
+            expect(await targets(page), `${family} ${t.marker}`).toEqual(boxes);
+            const reach = (await pointedReach(page))!;
+            expect(reach.style).toBe('dashed');
+            // The outline and the pin stay inside the stage.
+            for (const box of [reach.outline, ...(reach.pin ? [reach.pin] : [])]) {
+              expect(box.left, `${family} ${t.marker} inside the stage`).toBeGreaterThanOrEqual(stage.x - 0.5);
+              expect(box.top, `${family} ${t.marker} inside the stage`).toBeGreaterThanOrEqual(stage.y - 0.5);
+              expect(box.right, `${family} ${t.marker} inside the stage`).toBeLessThanOrEqual(stage.x + stage.width + 0.5);
+              expect(box.bottom, `${family} ${t.marker} inside the stage`).toBeLessThanOrEqual(stage.y + stage.height + 0.5);
+            }
+            expect(reach.pin, `${family} ${t.marker} pin`).not.toBeNull();
+            if (layout !== 'overlay') {
+              // Section 5.0 with an option pointed at: every target box still 32 px or more from every visible control
+              // (the docked band, or the phone rail beside the stage, PN-4).
+              const shown = await controls(page);
+              expect(shown.length).toBeGreaterThan(0);
+              for (const b of boxes) for (const c of shown) expect(gap(b, c), `${family} ${t.marker}: ${b.marker} / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+              // The outline and the pin themselves keep the clearance too: drawing them never brings the content within 32 px of a control.
+              for (const c of shown) {
+                expect(gap(reach.outline, c), `${family} ${t.marker}: outline / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+                if (reach.pin) expect(gap(reach.pin, c), `${family} ${t.marker}: pin / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+              }
+            }
+            // The pin takes no taps.
+            expect(await page.getByTestId('presenter-quiz-pin').evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none');
+            if (t.marker === 'option:2') await shot(page, `presenter-point-${vp.id}-${input}-${family}`);
+            // A second tap on the same option clears it.
+            await tapAt(page, input, centre);
+            await expect.poll(() => pointedNow(page)).toEqual([]);
+            await expect.poll(() => live(page)).toBe(UNPOINTED);
+            expect({ ...(await state(page)), live: '' }).toEqual({ ...before, live: '' });
+          }
+          // One at a time: pointing at another moves it.
+          const [a, b] = options;
+          await tapAt(page, input, { x: (a!.left + a!.right) / 2, y: (a!.top + a!.bottom) / 2 });
+          await tapAt(page, input, { x: (b!.left + b!.right) / 2, y: (b!.top + b!.bottom) / 2 });
+          await expect.poll(() => pointedNow(page)).toEqual([b!.marker]);
+          // A step clears it: Reveal shows the answer with nothing outlined.
+          await page.keyboard.press('ArrowRight');
+          await expect.poll(() => page.getByTestId('presenter-quiz-mark').count()).toBe(1);
+          expect(await pointedNow(page)).toEqual([]);
+          expect(await live(page)).not.toContain('pointed');
+          // Once the answer shows, a tap or a key points at nothing: no pick is outlined beside the answer.
+          const revealed = await state(page);
+          const answerBoxes = (await targets(page)).filter((x) => /^option:[1-4]$/.test(x.marker));
+          for (const x of answerBoxes) await tapAt(page, input, { x: (x.left + x.right) / 2, y: (x.top + x.bottom) / 2 });
+          await page.keyboard.press('2');
+          await page.waitForTimeout(150);
+          expect(await pointedNow(page), `${family} after the reveal`).toEqual([]);
+          expect(await page.getByTestId('presenter-quiz-pin').count()).toBe(0);
+          expect(await state(page), `${family} after the reveal`).toEqual(revealed);
+        }
+      });
+
+      test('keys 1 to 4 point at an option, also with focus on a bar button; a step clears it', async ({ page }) => {
+        await open(page, vp, input);
+        const presses = await familyPresses(page);
+        await goToFamily(page, presses, 'grid');
+        const before = await counter(page);
+        for (const n of [1, 2, 3, 4]) {
+          await page.keyboard.press(String(n));
+          await expect.poll(() => pointedNow(page)).toEqual([`option:${n}`]);
+          await expect.poll(() => live(page)).toBe(POINTED(n));
+        }
+        await page.keyboard.press('4');
+        await expect.poll(() => pointedNow(page)).toEqual([]);
+        expect(await counter(page)).toBe(before);
+        if (layout === 'docked') {
+          // Focus on a bar button (as after a click on Previous or Next) does not block a digit.
+          await page.getByTestId('presenter-back').focus();
+          await page.keyboard.press('2');
+          await expect.poll(() => pointedNow(page)).toEqual(['option:2']);
+          expect(await counter(page)).toBe(before);
+          await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+        } else {
+          await page.keyboard.press('2');
+          await expect.poll(() => pointedNow(page)).toEqual(['option:2']);
+        }
+        await page.keyboard.press('ArrowLeft');
+        await expect.poll(() => pointedNow(page)).toEqual([]);
+        // A slide with no options: a digit points at nothing and steps nothing.
+        await page.keyboard.press('Home');
+        await expect.poll(() => counter(page)).toMatch(/^1 \//);
+        await page.keyboard.press('1');
+        await page.waitForTimeout(100);
+        expect(await pointedNow(page)).toEqual([]);
+        expect(await counter(page)).toMatch(/^1 \//);
+      });
+
+      if (vp.id === 'P') {
+        test('the 1280 x 720 projector look: the pointed option at lowered contrast', async ({ page }) => {
+          await open(page, vp, input);
+          const presses = await familyPresses(page);
+          for (const family of ['grid', 'rows'] as const) {
+            await goToFamily(page, presses, family);
+            await page.keyboard.press('2');
+            await expect.poll(() => pointedNow(page)).toEqual(['option:2']);
+            // The design mock's washed-out projector in a lit room (design/screens/presenter/mock/presenter-nav.css --mock-projector).
+            await page.addStyleTag({ content: 'html { filter: contrast(0.55) brightness(1.2) saturate(0.7); }' });
+            await shot(page, `presenter-point-P-projector-${family}`);
+            await page.evaluate(() => document.querySelectorAll('style').forEach((el) => { if (el.textContent?.includes('contrast(0.55)')) el.remove(); }));
+          }
+        });
+      }
+    });
+  }
+}

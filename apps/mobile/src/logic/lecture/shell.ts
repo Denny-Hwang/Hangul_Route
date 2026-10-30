@@ -403,6 +403,34 @@ export function buildLive(slide: Slide, reveal: number, previous: BuildLive | nu
   return { ...now, words: 'placed' in move ? placed(move.placed) : move.whole };
 }
 
+/** What the live region last said about pointing (`pointLive`), at a slide and build. */
+export interface PointLive {
+  key: string;
+  reveal: number;
+  pointed: number | null;
+  /** `a11y.presenter.pointed(n)` or `unpointed`; absent: the slide's own announcement. */
+  words?: string;
+}
+
+/**
+ * The live region when the presenter points at an option (AMENDMENTS-PRESENTER-NAV section 7.3,
+ * owner choice O2): at the same slide and build, a change of the pointed option says which option is
+ * pointed at now, or that none is; a redraw keeps what was said. Arriving on a slide or a build
+ * (which clears the pointed option) says nothing of pointing, so the step announces itself.
+ */
+export function pointLive(
+  key: string,
+  reveal: number,
+  pointed: number | null,
+  previous: PointLive | null,
+  names: { pointed: (n: number) => string; unpointed: string },
+): PointLive {
+  const now = { key, reveal, pointed };
+  if (previous === null || previous.key !== key || previous.reveal !== reveal) return now;
+  if (previous.pointed === pointed) return previous;
+  return { ...now, words: pointed === null ? names.unpointed : names.pointed(pointed) };
+}
+
 // --- start screen and stage ---------------------------------------------------------------------
 
 /** The start screen's Korean voice line. `clips` is bundled audio with no named voice. */

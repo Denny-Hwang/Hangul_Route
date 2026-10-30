@@ -9,7 +9,7 @@ import { PresenterViewProvider } from '../presenter-context';
 /**
  * Keys and controls gains a Touch and mouse group above the key rows, in every layout (AMENDMENTS-PRESENTER-NAV
  * section 9.2, row PN-3; mock design/screens/presenter/overlays.md "Touch and mouse"): the heading and the lines
- * swipe, buttons, click, keep (`HELP_TOUCH`), in every locale, as plain text that takes no input. The phone line
+ * swipe, buttons, click, point, keep (`HELP_TOUCH`), in every locale, as plain text that takes no input. The phone line
  * (`help.phoneBar`) stays above it in a phone window only.
  */
 
@@ -34,7 +34,7 @@ describe('Help: the Touch and mouse group (section 9.2)', () => {
     const heading = hostNodes(group, (n) => n.props.role === 'heading')[0]!;
     expect(textOf(heading)).toBe(m.title);
     expect(heading.props['aria-level']).toBe(3);
-    expect(HELP_TOUCH.map((row) => textOf(byTestId(group, `presenter-help-touch-${row}`)[0]!))).toEqual([m.swipe, m.buttons, m.click, m.keep]);
+    expect(HELP_TOUCH.map((row) => textOf(byTestId(group, `presenter-help-touch-${row}`)[0]!))).toEqual([m.swipe, m.buttons, m.click, m.point, m.keep]);
     // Plain lines: nothing in the group takes input.
     expect(hostNodes(group, (n) => n.props.role === 'button' || n.props.role === 'switch' || typeof n.props.onClick === 'function')).toEqual([]);
   });

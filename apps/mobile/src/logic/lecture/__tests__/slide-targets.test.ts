@@ -96,9 +96,13 @@ describe('every list item a target slide draws is a content target (section 7.1 
   const read = (file: string): string => readFileSync(join(SLIDES, file), 'utf8');
 
   it('QuizParts: each option card and row carries its option number (option:1 to option:4)', () => {
-    const tags = listItemTags(read('QuizParts.tsx'));
+    const source = read('QuizParts.tsx');
+    const tags = listItemTags(source);
     expect(tags).toHaveLength(2);
-    for (const tag of tags) expect(tag).toContain('stageTarget: optionTarget(index)');
+    // The marker comes from `optionData` (row PN-5 adds `data-pointed` there), which always sets it.
+    for (const tag of tags) expect(tag).toContain('dataSet: optionData(index, pointed)');
+    const optionData = /function optionData\([^)]*\)[^{]*\{([\s\S]*?)\n\}/.exec(source)?.[1] ?? '';
+    expect(optionData.match(/stageTarget: optionTarget\(index\)/g)).toHaveLength(2);
   });
 
   it('SequenceSlide: each step is a step target', () => {

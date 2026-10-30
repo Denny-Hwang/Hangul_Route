@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   initialPresenterState,
+  pointableOptions,
   reduce,
   revealsOf,
   type ControlSlide,
@@ -36,6 +37,7 @@ describe('initialPresenterState', () => {
       timerMode: 'corner',
       skipped: new Set(),
       ended: false,
+      pointed: null,
     });
   });
 
@@ -381,5 +383,124 @@ describe('an empty deck', () => {
       expect(reduce(s, ev, empty).state).toEqual(s);
     }
     expect(reduce(s, 'replay-sound', empty).effect).toBeUndefined();
+  });
+});
+
+describe('{ point: n }: pointing at an option (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2)', () => {
+  /** A quiz slide with `n` options and a question and an answer build. */
+  const quiz = (key: string, n: number): ControlSlide => ({ key, kind: 'quiz', options: Array.from({ length: n }, (_, i) => ({ i })), builds: ['question', 'answer'] });
+  // title · quiz of 4 · quiz of 3 · a sequence that carries no options · end
+  const POINT_DECK = {
+    slides: [slide('t', 1), quiz('q4', 4), quiz('q3', 3), { key: 's', kind: 'sequence', builds: ['b0', 'b1'] }, slide('e', 1)],
+  };
+  const on = (slideIdx: number, extra: Partial<PresenterState> = {}): PresenterState => ({ ...initialPresenterState(POINT_DECK), slideIdx, ...extra });
+  const go = (state: PresenterState, ...events: PresenterEvent[]): PresenterState => events.reduce<PresenterState>((s, e) => reduce(s, e, POINT_DECK).state, state);
+
+  it('sets pointed to the option, moves it to another, and the same option again clears it (one at a time)', () => {
+    expect(go(on(1), { point: 3 }).pointed).toBe(3);
+    expect(go(on(1), { point: 3 }, { point: 1 }).pointed).toBe(1);
+    expect(go(on(1), { point: 3 }, { point: 3 }).pointed).toBeNull();
+    expect(go(on(1), { point: 3 }, { point: 3 }, { point: 3 }).pointed).toBe(3);
+  });
+
+  it('changes nothing else: the slide, the build, the overlay, the timer and the skips stay; no effect', () => {
+    const before = on(1, { timerOpen: true, skipped: new Set(['e']) });
+    const { state, effect } = reduce(before, { point: 2 }, POINT_DECK);
+    expect(state).toEqual({ ...before, pointed: 2 });
+    expect(effect).toBeUndefined();
+  });
+
+  it('an index the slide has no option for does nothing (the same state back)', () => {
+    for (const n of [0, 4, 5, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const before = on(2, { pointed: 2 });
+      expect(reduce(before, { point: n }, POINT_DECK).state, String(n)).toBe(before);
+    }
+    expect(go(on(2), { point: 3 }).pointed).toBe(3);
+  });
+
+  it('a slide with no options (title, sequence, end, any slide without kind quiz) takes no point', () => {
+    for (const idx of [0, 3, 4]) {
+      const before = on(idx);
+      expect(reduce(before, { point: 1 }, POINT_DECK).state, String(idx)).toBe(before);
+    }
+    // A slide that only carries options but is not a quiz is not pointable either.
+    const odd = { slides: [{ key: 'x', kind: 'card', options: [1, 2], builds: ['b0'] }] };
+    const s = initialPresenterState(odd);
+    expect(reduce(s, { point: 1 }, odd).state).toBe(s);
+  });
+
+  it('every step clears it: next (a reveal build too), prev, first, last and goto', () => {
+    const pointed = on(1, { pointed: 2 });
+    const reveal = go(pointed, 'next');
+    expect([reveal.slideIdx, reveal.reveal, reveal.pointed]).toEqual([1, 1, null]);
+    expect(go(on(1, { reveal: 1, pointed: 2 }), 'prev').pointed).toBeNull();
+    expect(go(on(1, { reveal: 1, pointed: 2 }), 'next').slideIdx).toBe(2);
+    expect(go(on(1, { reveal: 1, pointed: 2 }), 'next').pointed).toBeNull();
+    expect(go(pointed, 'prev').pointed).toBeNull();
+    expect(go(pointed, 'first').pointed).toBeNull();
+    expect(go(pointed, 'last').pointed).toBeNull();
+    expect(go(pointed, { goto: 1 }).pointed).toBeNull();
+    expect(go(on(1, { pointed: 2, overlay: 'grid' }), { goto: 2 }).pointed).toBeNull();
+  });
+
+  it('the answer build never shows a pick still outlined: point, then Reveal, leaves nothing pointed', () => {
+    const revealed = go(on(1), { point: 4 }, 'next');
+    expect(revealed.reveal).toBe(1);
+    expect(revealed.pointed).toBeNull();
+  });
+
+  it('once the answer shows it takes no point: no pick is ever outlined beside the answer (section 7.3, anti-shame)', () => {
+    const answer = on(1, { reveal: 1 });
+    for (const n of [1, 2, 3, 4]) expect(reduce(answer, { point: n }, POINT_DECK).state, String(n)).toBe(answer);
+    // Back on the question build it points again.
+    expect(go(answer, 'prev', { point: 2 }).pointed).toBe(2);
+    expect(pointableOptions(POINT_DECK.slides[1]!, 0)).toBe(4);
+    expect(pointableOptions(POINT_DECK.slides[1]!, 1)).toBe(0);
+    expect(pointableOptions(POINT_DECK.slides[0]!, 0)).toBe(0);
+  });
+
+  it('covering overlays swallow it (blank, pause, grid, help, exit, the full timer); the corner timer lets it through', () => {
+    for (const overlay of ['blank', 'pause', 'grid', 'help', 'exit'] as const) {
+      const before = on(1, { overlay });
+      expect(reduce(before, { point: 1 }, POINT_DECK).state, overlay).toBe(before);
+    }
+    const full = on(1, { timerOpen: true, timerMode: 'full' });
+    expect(reduce(full, { point: 1 }, POINT_DECK).state).toBe(full);
+    expect(go(on(1, { timerOpen: true, timerMode: 'corner' }), { point: 1 }).pointed).toBe(1);
+  });
+
+  it('a swallowed step keeps it (Blank cleared by a key changes no slide), a real step after it clears it', () => {
+    const blanked = on(1, { pointed: 3, overlay: 'blank' });
+    const cleared = go(blanked, 'next');
+    expect([cleared.overlay, cleared.slideIdx, cleared.pointed]).toEqual([null, 1, 3]);
+    expect(go(cleared, 'next').pointed).toBeNull();
+  });
+
+  it('never survives a slide change, whatever the route (walked through the whole deck)', () => {
+    let state = on(0);
+    const seen: number[] = [];
+    for (let i = 0; i < 12; i += 1) {
+      state = go(state, { point: 1 });
+      const before = state.slideIdx;
+      state = go(state, i % 3 === 2 ? 'prev' : 'next');
+      if (state.slideIdx !== before) {
+        seen.push(state.slideIdx);
+        expect(state.pointed, `landing on ${state.slideIdx}`).toBeNull();
+      }
+    }
+    expect(seen.length).toBeGreaterThan(3);
+  });
+
+  it('a step that cannot move gives back the same state object (the End slide hint reads it)', () => {
+    const end = on(4);
+    expect(reduce(end, 'next', POINT_DECK).state).toBe(end);
+    const first = on(0);
+    expect(reduce(first, 'prev', POINT_DECK).state).toBe(first);
+  });
+
+  it('an empty deck never points', () => {
+    const empty = { slides: [] };
+    const s = initialPresenterState(empty);
+    expect(reduce(s, { point: 1 }, empty).state).toBe(s);
   });
 });

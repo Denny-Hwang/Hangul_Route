@@ -1,16 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import { dockedOrder } from '../bar-layout';
-import { HELP_KEYS, HELP_TOUCH } from '../help-keys';
+import { HELP_KEYS, HELP_TOUCH, rowCommands } from '../help-keys';
 import { commandForKey } from '../keymap';
 import { stageGesture, type StageGesture } from '../stage-gesture';
 
 describe('HELP_KEYS (the Keys and controls overlay, section 3.5)', () => {
-  it('every key a row shows sends that row command', () => {
+  it('every key a row shows sends that row command (the point row: each digit its own option)', () => {
     for (const row of HELP_KEYS) {
-      for (const key of row.keys) {
-        expect(commandForKey({ key, ...(row.shift ? { shiftKey: true } : {}) }), `${row.row}: ${key}`).toEqual(row.command);
-      }
+      const commands = rowCommands(row);
+      expect(commands, row.row).toHaveLength(row.keys.length);
+      row.keys.forEach((key, i) => {
+        expect(commandForKey({ key, ...(row.shift ? { shiftKey: true } : {}) }), `${row.row}: ${key}`).toEqual(commands[i]);
+      });
     }
+  });
+
+  it('the point row lists exactly 1, 2, 3 and 4, each pointing at its option (section 9.2, O2)', () => {
+    const point = HELP_KEYS.find((r) => r.row === 'point')!;
+    expect(point.caps).toEqual(['1', '2', '3', '4'].map((text) => ({ kind: 'plain', text })));
+    expect(point.keys).toEqual(['1', '2', '3', '4']);
+    expect(rowCommands(point)).toEqual([{ point: 1 }, { point: 2 }, { point: 3 }, { point: 4 }]);
+    // It sits after the navigation rows, before the tools.
+    const rows = HELP_KEYS.map((r) => r.row);
+    expect(rows.indexOf('point')).toBe(rows.indexOf('first') + 1);
+  });
+
+  it('HELP_TOUCH has the point line once (section 9.2, O2, row PN-5)', () => {
+    expect(HELP_TOUCH).toContain('point');
+    expect(new Set(HELP_TOUCH).size).toBe(HELP_TOUCH.length);
   });
 
   it('End is the last slide, beside Home on the first-and-last row', () => {
@@ -22,12 +39,14 @@ describe('HELP_KEYS (the Keys and controls overlay, section 3.5)', () => {
   });
 
   it('lists every command of the key map once', () => {
-    const commands = HELP_KEYS.map((r) => JSON.stringify(r.command));
+    // A row's own keys may share its command (Next has five); no command shows on two rows.
+    const commands = HELP_KEYS.flatMap((r) => [...new Set(rowCommands(r).map((c) => JSON.stringify(c)))]);
     expect(new Set(commands).size).toBe(commands.length);
     for (const c of ['next', 'prev', 'first', 'replay-sound', 'replay-stroke', 'toggle-romanization', 'fullscreen', 'escape']) {
       expect(commands).toContain(JSON.stringify(c));
     }
     for (const o of ['blank', 'timer', 'grid', 'help']) expect(commands).toContain(JSON.stringify({ overlay: o }));
+    for (const n of [1, 2, 3, 4]) expect(commands).toContain(JSON.stringify({ point: n }));
   });
 
   it('has no helper picker row (LV-H)', () => {
@@ -62,8 +81,8 @@ describe('HELP_TOUCH (the Touch and mouse group, AMENDMENTS-PRESENTER-NAV sectio
       ...g,
     });
 
-  it('lists swipe, buttons, click and keep, in that order (PN-5 adds point after click)', () => {
-    expect(HELP_TOUCH).toEqual(['swipe', 'buttons', 'click', 'keep']);
+  it('lists swipe, buttons, click, point and keep, in that order (PN-5 adds point after click)', () => {
+    expect(HELP_TOUCH).toEqual(['swipe', 'buttons', 'click', 'point', 'keep']);
   });
 
   it('swipe: left goes on and right goes back, by touch or mouse, in every layout, over an option too (section 6)', () => {

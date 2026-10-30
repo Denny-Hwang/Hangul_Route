@@ -22,7 +22,9 @@ import { ChipRadios, Cover, ToolButton } from './OverlayParts';
  * (row PN-4) the controls are always shown, so the line is not drawn.
  * Above the key rows, in every layout, the Touch and mouse group (AMENDMENTS-PRESENTER-NAV section 9.2,
  * `HELP_TOUCH`; mock overlays.md "Touch and mouse", `mock/overlay-help-touch.html`): a heading and plain lines on swipe, the Previous and Next buttons, a mouse click, and
- * what Keep controls visible does; nothing in it takes input.
+ * what Keep controls visible does, with the point line (owner choice O2, row PN-5): a tap on an answer
+ * points at it and does not show the answer; the key rows hold `1` to `4` for the same. Nothing in it
+ * takes input.
  */
 export function HelpOverlay({
   romanization,

@@ -908,6 +908,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.join.errors.familyFull': [[4], [6]],
   // A sentence-build move (AMENDMENTS-LECTURE-V2 row LV-S3): the slide passes the tile's Korean and its romanization; samples stay Latin (no Hangul in a message).
   'a11y.presenter.tilePlaced': [['hakgyoe'], ['dalgyareul'], ['ne']],
+  'a11y.presenter.pointed': [[1], [4]],
   // The console lecture setup page, presets first (AMENDMENTS-LECTURE-V2 row LV-4).
   'console.lecture.outline.block.words': [[1], [10], [20]],
   'console.lecture.presets.next.plan': [['Week 3 letters']],

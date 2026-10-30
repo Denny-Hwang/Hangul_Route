@@ -2,7 +2,7 @@ import type { RomanizationMode } from '@hangul-route/content-schema';
 import { Hoya, Icon, borderWidth, colors, presenter, radii, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type ViewStyle } from 'react-native';
 import type { QuizOption } from '../../../logic/lecture/build-steps';
 import { markerFor } from '../../../logic/lecture/slide-view';
 import { MARKER_BODY_FACTOR, PIC_OPT, units } from '../../../logic/lecture/stage-constants';
@@ -25,6 +25,15 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * border, the `feedback.successLight` ground and the check mark; the others drop to
  * `presenter.dimOpacity` with every line in `text.primary`. No red, no cross, nothing tallied.
  * The options never move between builds.
+ *
+ * A pointed option (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2; slide-quiz.md and
+ * slide-listen-reply.md "Pointed option"): `data-pointed="true"`, a dashed `text.primary` outline
+ * `STAGE_BORDER` units wide (never under `STAGE_BORDER_MIN`) drawn `spacing.sm` units outside the
+ * card's own border (on one-column rows, in the middle of the row gap), and the `pin` glyph on a
+ * paper disc at the marker's top right. No fill change, no `feedback` colour, no motion; an outline
+ * takes no room and no taps, so nothing on the slide moves and the target boxes stay as they are.
+ * Once the answer shows nothing is drawn pointed (the reducer takes no point then either), so no pick
+ * is ever outlined beside the answer.
  */
 
 /** The 2 x 2 option grid (2 or 3 options fill it in order). */
@@ -32,11 +41,14 @@ export function QuizOptions({
   options,
   revealed,
   romanization,
+  pointed = null,
   onCrowded,
 }: {
   options: readonly QuizOption[];
   revealed: boolean;
   romanization: RomanizationMode;
+  /** The option the presenter points at (from 1), or none (section 7.3). */
+  pointed?: number | null;
   /**
    * A gloss spills out of its card even at body size, or a row of picture cards is shorter than its
    * shape marker: the slide gives the grid more room.
@@ -70,6 +82,7 @@ export function QuizOptions({
               option={option}
               index={r * 2 + c}
               revealed={revealed}
+              pointed={!revealed && pointed === r * 2 + c + 1}
               romOn={romOn}
               rowHeight={rowHeight}
               glossSmall={glossSmall}
@@ -104,6 +117,7 @@ function OptionCard({
   option,
   index,
   revealed,
+  pointed,
   romOn,
   rowHeight,
   glossSmall,
@@ -113,6 +127,7 @@ function OptionCard({
   option: QuizOption;
   index: number;
   revealed: boolean;
+  pointed: boolean;
   romOn: boolean;
   rowHeight: number;
   glossSmall: boolean;
@@ -149,12 +164,14 @@ function OptionCard({
   useEffect(() => {
     if (crowded) onCrowded?.();
   }, [crowded, onCrowded]);
+  const padH = units(unit, spacing.xl) + line - border;
   return (
     <View
       role="listitem"
       testID={`presenter-quiz-option-${index + 1}`}
-      {...{ dataSet: { stageTarget: optionTarget(index) } }}
+      {...{ dataSet: optionData(index, pointed) }}
       style={{
+        ...(pointed ? pointedOutline(unit, units(unit, spacing.sm)) : {}),
         flex: 1,
         minWidth: 0,
         flexDirection: 'row',
@@ -162,7 +179,7 @@ function OptionCard({
         gap: units(unit, STAGE_GAP_INNER),
         // The thicker border keeps the outer size: the padding gives back what the border takes.
         paddingVertical: padV + line - border,
-        paddingHorizontal: units(unit, spacing.xl) + line - border,
+        paddingHorizontal: padH,
         borderWidth: border,
         borderColor: correct ? colors.feedback.success : colors.border.strong,
         borderRadius: units(unit, STAGE_RADIUS),
@@ -224,9 +241,67 @@ function OptionCard({
           <Icon name="check-circle" size={units(unit, spacing.jumbo)} color={colors.feedback.success} />
         </View>
       ) : null}
+      {pointed ? <PointPin left={padH} marker={units(unit, MARKER_BODY_FACTOR * presenter.size.body)} /> : null}
     </View>
   );
 }
+
+/** An option's `dataSet`: its content-target marker (`option:n`) and, while pointed at, `data-pointed="true"`. */
+function optionData(index: number, pointed: boolean): Record<string, string> {
+  return pointed ? { stageTarget: optionTarget(index), pointed: 'true' } : { stageTarget: optionTarget(index) };
+}
+
+/** The pointed outline's width: `STAGE_BORDER` units, never under `STAGE_BORDER_MIN` (it would vanish on a phone or a projector). */
+function pointLine(unit: number): number {
+  return Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
+}
+
+/**
+ * The pointed option's dashed outline, `offset` px outside the card's border (web: an outline takes
+ * no layout room and no taps, follows the card's radius, and draws at once).
+ */
+function pointedOutline(unit: number, offset: number): ViewStyle {
+  return { outlineStyle: 'dashed', outlineWidth: pointLine(unit), outlineColor: colors.text.primary, outlineOffset: offset } as unknown as ViewStyle;
+}
+
+/**
+ * The pin on a pointed option (slide-quiz.md "Pointed option"): the `pin` glyph on a `surface.paper`
+ * disc over the marker's top-right corner, `max(spacing.xl, presenter.size.body units)` square, so
+ * the marker's numeral stays readable and the letter, word or picture beside it is never covered.
+ * `left`: where the marker starts in the card (its padding); `marker`: the marker's side. Decorative:
+ * the live region says which option is pointed at.
+ */
+function PointPin({ left, marker }: { left: number; marker: number }): ReactElement {
+  const { unit } = usePresenterView();
+  const side = Math.max(spacing.xl, units(unit, presenter.size.body));
+  return (
+    <View
+      testID="presenter-quiz-pin"
+      aria-hidden
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        pointerEvents: 'none',
+        position: 'absolute',
+        left: left + marker - side * PIN_INSET,
+        top: '50%',
+        marginTop: -marker / 2 - side * PIN_RISE,
+        width: side,
+        height: side,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: radii.circle,
+        backgroundColor: colors.surface.paper,
+      }}
+    >
+      <Icon name="pin" size={side} color={colors.text.primary} />
+    </View>
+  );
+}
+
+/** How far the pin's disc sits inside the marker's right edge, and above its top, as parts of the pin's side (the mock's 0.6 and 0.25). */
+const PIN_INSET = 0.6;
+const PIN_RISE = 0.25;
 
 /**
  * "Hoya's answer" with a cheering Hoya; it joins the story check's question row at the reveal. `compact`
@@ -268,12 +343,15 @@ export function OptionRows({
   options,
   revealed,
   romanization,
+  pointed = null,
   compact = false,
   small = false,
 }: {
   options: readonly QuizOption[];
   revealed: boolean;
   romanization: RomanizationMode;
+  /** The option the presenter points at (from 1), or none (section 7.3). */
+  pointed?: number | null;
   compact?: boolean;
   small?: boolean;
 }): ReactElement {
@@ -283,9 +361,9 @@ export function OptionRows({
   // room at its top and bottom from the first build, so the answer in the first or last row stays inside the fit.
   const grow = Math.max(STAGE_BORDER_MIN, units(unit, spacing.sm)) - Math.max(STAGE_BORDER_MIN, units(unit, STAGE_BORDER));
   return (
-    <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, compact ? spacing.sm : spacing.md), paddingVertical: Math.max(0, grow) }}>
+    <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, rowGap(compact)), paddingVertical: Math.max(0, grow) }}>
       {options.map((option, i) => (
-        <OptionRow key={i} option={option} index={i} revealed={revealed} romOn={romOn} compact={compact} small={small} />
+        <OptionRow key={i} option={option} index={i} revealed={revealed} pointed={!revealed && pointed === i + 1} romOn={romOn} compact={compact} small={small} />
       ))}
     </View>
   );
@@ -296,7 +374,28 @@ function pictureTile(unit: number): { padding: number; border: number; radius: n
   return { padding: units(unit, spacing.xs), border: Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base)), radius: units(unit, radii.md), minArt: units(unit, spacing.xxxl) };
 }
 
-function OptionRow({ option, index, revealed, romOn, compact, small }: { option: QuizOption; index: number; revealed: boolean; romOn: boolean; compact: boolean; small: boolean }): ReactElement {
+/** The gap between option rows, in units. */
+function rowGap(compact: boolean): number {
+  return compact ? spacing.sm : spacing.md;
+}
+
+function OptionRow({
+  option,
+  index,
+  revealed,
+  pointed,
+  romOn,
+  compact,
+  small,
+}: {
+  option: QuizOption;
+  index: number;
+  revealed: boolean;
+  pointed: boolean;
+  romOn: boolean;
+  compact: boolean;
+  small: boolean;
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const size = useStageText();
   const correct = revealed && option.correct;
@@ -311,16 +410,21 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
   // A picture's gloss is its name (PictureArt's), never drawn as text.
   const glossShown = revealed && option.gloss !== undefined;
   const markSide = units(unit, compact ? spacing.xxxl : spacing.jumbo);
+  const padH = units(unit, spacing.xl) + line - (correct ? rule : line);
+  // On one-column rows the outline sits in the middle of the gap to the next row, so it never reaches that row at a phone's unit.
+  // A row is pointed only before the reveal, so no answer row's thicker border narrows that gap.
+  const pointOffset = Math.max(0, (units(unit, rowGap(compact)) - pointLine(unit)) / 2);
   return (
     <View
       role="listitem"
       testID={`presenter-quiz-option-${index + 1}`}
-      {...{ dataSet: { stageTarget: optionTarget(index) } }}
+      {...{ dataSet: optionData(index, pointed) }}
       style={{
+        ...(pointed ? pointedOutline(unit, pointOffset) : {}),
         flexDirection: 'row',
         alignItems: 'center',
         gap: units(unit, STAGE_GAP_INNER),
-        paddingHorizontal: units(unit, spacing.xl) + line - (correct ? rule : line),
+        paddingHorizontal: padH,
         borderWidth: correct ? rule : line,
         marginVertical: -grow,
         borderColor: correct ? colors.feedback.success : colors.border.strong,
@@ -371,6 +475,7 @@ function OptionRow({ option, index, revealed, romOn, compact, small }: { option:
       ) : (
         <View aria-hidden testID="presenter-quiz-mark-room" style={{ width: markSide, height: markSide }} />
       )}
+      {pointed ? <PointPin left={padH} marker={units(unit, compact ? presenter.size.prompt : MARKER_BODY_FACTOR * presenter.size.body)} /> : null}
     </View>
   );
 }

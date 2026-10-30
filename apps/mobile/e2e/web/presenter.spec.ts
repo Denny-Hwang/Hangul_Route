@@ -321,16 +321,20 @@ test.describe('presenter at 1280 x 720', () => {
     await expect.poll(() => counter(page)).toMatch(/^1 \//);
     await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
     await expect.poll(() => counter(page)).toMatch(/^2 \//);
-    // A question slide: neither click moves (the room points at its options).
+    // A question slide: neither click moves or reveals (the room points at its options). Both land on an
+    // option, so each points at it (owner choice O2, row PN-5): the second moves the outline to option 2.
     for (let i = 0; i < 60 && (await page.getByTestId('presenter-quiz-options').count()) === 0; i++) await page.keyboard.press('ArrowRight');
     await expect(page.getByTestId('presenter-quiz-options')).toBeVisible();
     const at = await counter(page);
-    const live = await page.getByTestId('presenter-live').textContent();
+    const next = await page.getByTestId('presenter-next').getAttribute('aria-label');
     await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5);
     await page.mouse.click(box.x + box.width * 0.8, box.y + box.height * 0.5);
     await page.waitForTimeout(300);
     expect(await counter(page)).toBe(at);
-    expect(await page.getByTestId('presenter-live').textContent()).toBe(live);
+    expect(await page.getByTestId('presenter-next').getAttribute('aria-label')).toBe(next);
+    await expect(page.getByTestId('presenter-quiz-mark')).toHaveCount(0);
+    await expect(page.locator('[data-pointed="true"]')).toHaveAttribute('data-stage-target', 'option:2');
+    await expect(page.getByTestId('presenter-live')).toHaveText('Option 2 pointed at');
   });
 
   test('Shift+R gives romanization its own reveal, and Back on the first build stays put', async ({ page }) => {

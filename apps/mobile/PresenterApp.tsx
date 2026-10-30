@@ -327,6 +327,8 @@ function Presenter(): ReactElement {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreOpenRef = useRef(moreOpen);
   moreOpenRef.current = moreOpen;
+  /** A slide is on the stage (not the rotate or too-small page); set where the render works it out. */
+  const slideShownRef = useRef(false);
   /** Opens or closes the More sheet; the ref follows at once, so a sheet button's own tool runs after it closed. */
   const openMore = useCallback((open: boolean) => {
     moreOpenRef.current = open;
@@ -746,6 +748,15 @@ function Presenter(): ReactElement {
       const before = stateRef.current;
       if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
+      // Pointing at an option (AMENDMENTS-PRESENTER-NAV section 7.3) changes only `pointed`: no step, no
+      // sound, no bar, no Recent, nothing tallied here (PN-6 counts it); never stored, never sent.
+      if (typeof event === 'object' && 'point' in event) {
+        if (state !== before) {
+          stateRef.current = state;
+          setPstate(state);
+        }
+        return;
+      }
       stateRef.current = state;
       setPstate(state);
       reportTools(toolsOpened(before, state));
@@ -978,6 +989,12 @@ function Presenter(): ReactElement {
         showBar();
         return;
       }
+      // Keys 1 to 4 point at an option (section 7.3); the More sheet covers the stage, so it takes none,
+      // and the rotate and too-small pages show no slide (and no live region), so they take none either.
+      if (typeof command === 'object' && 'point' in command) {
+        if (!moreOpenRef.current && slideShownRef.current) dispatch(command);
+        return;
+      }
       // A step key (arrows, PageDown, Home, End, a clicker) goes the way a bar press does: with More
       // open it closes the sheet and then steps (`userDispatch`).
       if (command === 'next' || command === 'prev' || command === 'first' || command === 'last') {
@@ -1004,7 +1021,7 @@ function Presenter(): ReactElement {
   useEffect(() => {
     if (phase.kind !== 'home' || !homeHelp) return undefined;
     return subscribeKeys((command: KeyCommand) => {
-      if (command !== 'escape' && !(typeof command === 'object' && command.overlay === 'help')) return false;
+      if (command !== 'escape' && !(typeof command === 'object' && 'overlay' in command && command.overlay === 'help')) return false;
       setHomeHelp(false);
       return true;
     });
@@ -1191,6 +1208,7 @@ function Presenter(): ReactElement {
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
   const slideShown = phase.kind === 'running' && stageShows === 'slide' && pstate !== null && slides[pstate.slideIdx] !== undefined;
+  slideShownRef.current = slideShown;
   useEffect(() => {
     if (slideShown) begin();
   }, [slideShown, begin]);
@@ -1404,8 +1422,10 @@ function Presenter(): ReactElement {
         else hideBarNow();
       } else if (command === 'nudge-next') {
         ringNext();
+      } else if (typeof command === 'object') {
+        // A tap or click on an option points at it (owner choice O2, section 7.3).
+        dispatch(command);
       }
-      // `{ point }` comes only with pointing on (owner choice O2, row PN-5).
     };
     const bar =
       page !== null ? null : (
@@ -1487,7 +1507,8 @@ function Presenter(): ReactElement {
               onGesture={onGesture}
               layout={nav}
               covering={stageCovering}
-              pointing={false}
+              pointing
+              pointed={p.pointed}
               lastPointer={lastPointer}
               onPlaySound={() => userDispatch('replay-sound')}
               onStartTimer={(ms) => userDispatch({ startTimer: ms })}

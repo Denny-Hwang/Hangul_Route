@@ -2550,13 +2550,15 @@ export const learner = {
       keepVisible: 'Keep controls visible',
       /**
        * The Touch and mouse group above the key rows, in every layout (AMENDMENTS-PRESENTER-NAV section 9.2,
-       * row PN-3): plain lines, not controls. `keep` explains the Keep controls visible switch further down.
+       * row PN-3): plain lines, not controls. `point` is owner choice O2 (row PN-5). `keep` explains the Keep controls visible
+       * switch further down.
        */
       touch: {
         title: 'Touch and mouse',
         swipe: 'Swipe left to go on, right to go back.',
         buttons: 'Or tap Previous and Next.',
         click: 'With a mouse, click the slide to go on (not on question slides).',
+        point: 'Tap an answer to point at it. It does not show the answer.',
         keep: 'Keep controls visible shows every button all the time.',
       },
       romanization: 'Romanization',
@@ -2567,6 +2569,8 @@ export const learner = {
         next: 'Next',
         back: 'Previous',
         first: 'First and last slide',
+        /** Keys 1 to 4 (section 7.3). */
+        point: 'Point at an answer',
         blank: 'Blank the screen',
         sound: 'Play the sound again',
         strokes: 'Replay the stroke guide',
