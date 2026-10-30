@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
 import { shot } from './shots';
+import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -40,9 +41,10 @@ type E2eWindow = Window & {
   __hrClozePickE2E?: { open(params: { rounds: Fixture[] }): void; log(): Log; events(): TelemetryEvent[] };
 };
 
-async function open(page: Page, rounds: Fixture[], game: boolean): Promise<void> {
+async function open(page: Page, rounds: Fixture[], game: boolean, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { 'game.cloze-pick': { on: game, pct: 100 } } });
+  if (textSize) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize });
   await page.reload();
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrClozePickE2E), undefined, { timeout: 10_000 });
   await page.evaluate((r) => (window as E2eWindow).__hrClozePickE2E?.open({ rounds: r }), rounds);
@@ -91,6 +93,23 @@ test.describe('Cloze Pick (F-CURR-002 row CM-30)', () => {
     expect(last!.y + last!.height).toBeLessThanOrEqual(568);
     await expectNoHorizontalOverflow(page);
     await shot(page, 'cloze-pick-320-asking');
+  });
+
+  test('320 px at the largest text size (reading sizes x 1.5): the card, its gap and the tiles wrap, 48 dp targets, no sideways scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, ['value', 'word'], true, 'largest');
+    expect((await log(page)).rendered).toBe('cloze-pick');
+    await expect(page.getByTestId('cloze-pick-realia')).toBeVisible();
+    await expectTargets(page, 320, 'cloze-pick-tile-');
+    await expectNoSidewaysScroll(page, 'cloze-pick largest, value gap');
+    await expectNoClippedText(page, 'cloze-pick largest, value gap');
+    // The sentence card (with its gap) stays inside the window.
+    const card = await page.getByTestId('cloze-pick-sentence').boundingBox();
+    expect(card!.x).toBeGreaterThanOrEqual(-0.5);
+    expect(card!.x + card!.width).toBeLessThanOrEqual(320.5);
+    const gap = await page.getByTestId('cloze-pick-gap').boundingBox();
+    expect(gap!.x + gap!.width).toBeLessThanOrEqual(card!.x + card!.width + 0.5);
+    await shot(page, 'cloze-pick-320-largest');
   });
 
   test('a miss is amber with Hoya and never scored again; the right tile fills the gap; first tries score; telemetry has no Korean', async ({ page }) => {

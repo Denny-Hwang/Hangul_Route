@@ -291,19 +291,21 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
               <Body size="sm" tone="secondary" testID="cloze-pick-meaning">
                 {view.meaning}
               </Body>
-              {view.hearIt ? (
-                <View style={{ alignItems: 'flex-start' }}>
-                  <Button
-                    label={m.learner.audio.hearIt.cta}
-                    tone="secondary"
-                    size="md"
-                    leading={<Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />}
-                    onPress={hear}
-                    testID="cloze-pick-hear-it"
-                  />
-                </View>
-              ) : null}
             </View>
+            {/* Outside the accessible card: VoiceOver and TalkBack read an accessible View as one element, so a control
+                inside it could not be reached (Sentence Builder keeps its Hear it outside the grouped text too). */}
+            {view.hearIt ? (
+              <View style={{ alignItems: 'flex-start' }}>
+                <Button
+                  label={m.learner.audio.hearIt.cta}
+                  tone="secondary"
+                  size="md"
+                  leading={<Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />}
+                  onPress={hear}
+                  testID="cloze-pick-hear-it"
+                />
+              </View>
+            ) : null}
             {view.found ? (
               <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} onHelp={() => setHelpOpen(true)} testID="cloze-pick-sound" />
             ) : null}
