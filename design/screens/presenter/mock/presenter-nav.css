@@ -41,10 +41,20 @@
 /* the bottom row at its two ends (together at its end on a wide touch window); the band grows by one BAR_BAND.     */
 .bar.nav.wrapped { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "tools tools tools" "prev status next"; row-gap: var(--bar-row-gap); column-gap: var(--spacing-lg); align-items: center; }
 .bar.nav.wrapped.o9 { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "tools tools tools" "status prev next"; }
-.bar.nav.wrapped .tools { grid-area: tools; justify-self: end; flex-wrap: wrap; justify-content: flex-end; }
+.bar.nav.wrapped .tools { grid-area: tools; justify-self: end; flex-wrap: nowrap; justify-content: flex-end; width: max-content; }
+.bar.nav .tools > .ctl { flex: none; }  /* a tool never shrinks, so a label never breaks inside a word to make room */
 .bar.nav.wrapped .nav-prev { grid-area: prev; }
 .bar.nav.wrapped .status { grid-area: status; min-width: 0; }
 .bar.nav.wrapped .nav-next { grid-area: next; }
+/* The More fallback (section 5.1): when the tools do not fit one row above either (Spanish on an upright iPad,  */
+/* 768 x 1024 or 744 x 1133), Timer, Blank and Slides move into More, on the bottom row just before Next (after  */
+/* Previous under O9). The tools never break onto a third row. DOM and focus order: Previous, the chips, Exit,   */
+/* Full screen, Sound, More, Next; the step pair stays first and last.                                            */
+.bar.nav .nav-more { display: none; }
+.bar.nav.wrapped.more-fallback { grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "tools tools tools tools" "prev status more next"; }
+.bar.nav.wrapped.more-fallback.o9 { grid-template-columns: minmax(0, 1fr) auto auto auto; grid-template-areas: "tools tools tools tools" "status more prev next"; }
+.bar.nav.more-fallback .nav-more { display: inline-flex; grid-area: more; }
+.bar.nav.more-fallback .tools [data-in-more] { display: none; }
 /* Touch seen: Previous and Next never fade and take taps at once; the chips and tools keep the 3 s fade (D3).      */
 /* Mouse only: presenter.css's `.bar.hidden > *` fades the whole bar as before.                                     */
 .presenter.touch .bar.nav.hidden > .nav-pin { opacity: 1; }
@@ -71,6 +81,10 @@
 .presenter.nav-rail.compact .rail .ctl { width: var(--touch-min); height: var(--touch-min); min-height: var(--touch-min); padding: var(--spacing-xs); }
 .presenter.nav-rail.compact .rail .ctl:not(.more) > span { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .presenter.nav-rail.compact .rail .ctl .icon { width: var(--spacing-xxl); height: var(--spacing-xxl); }
+/* The label fallback (PN-4): a full-rail label word wider than its 84 px of room (a wider fallback font, a larger */
+/* browser text size) turns the rail into the compact rail; a More word wider than its 52 px shows the `more`     */
+/* (three dots) icon PN-4 adds, with the label as the accessible name. No label ever overflows its button.        */
+.presenter.nav-rail.compact .rail .ctl.more.dots > span { position: absolute; width: var(--border-width-thin); height: var(--border-width-thin); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* ---------------------------------------------------------------- Overlay fallback (section 5.3) */
 /* The floating compact bar of presenter-or.css, which no longer has a strip or a grabber: no part of the stage */
@@ -81,7 +95,11 @@
 /* (borderWidth.base: 1.3 px at a phone's unit would vanish), spacing.sm units outside the card's own border, so */
 /* it reads as a second line; the pin glyph so colour is never the only cue. No fill change, no feedback colour, */
 /* no motion; one option at a time; any step clears it.                                                           */
-.opt.pointed { outline: max(var(--border-width-base), var(--stage-line)) dashed var(--colors-text-primary); outline-offset: calc(var(--u) * var(--spacing-n-sm)); }
+.opt.pointed { --point-line: max(var(--border-width-base), var(--stage-line)); outline: var(--point-line) dashed var(--colors-text-primary); outline-offset: calc(var(--u) * var(--spacing-n-sm)); }
+/* Rows (one column, row gap spacing.md units): the outline sits in the middle of the row gap, so it keeps the     */
+/* same space to its own card and to the next row at every unit (at a phone's unit the 2 px floor would otherwise */
+/* touch the neighbour: 844 x 390, 667 x 375, 640 x 360). The grid's gaps (32 x 48 units) keep spacing.sm units.  */
+.options.one-col .opt.pointed { outline-offset: calc((var(--tile-gap) - var(--point-line)) / 2); }
 .opt { position: relative; }
 .opt .pin { position: absolute; display: flex; align-items: center; justify-content: center; width: var(--pin); height: var(--pin); }
 .opt .pin svg { width: 100%; height: 100%; display: block; }

@@ -33,5 +33,5 @@ Mock: `mock/nav-quiz.html#b=0&point=3` (and `#point=1` to `4`) · shots `slide-q
 - **At the back of a room** (`slide-quiz-pointed-1280x720-projector.png`, lowered contrast, washed out): the dashed line and the pin still read against the cards; the outline is `text.primary` on `surface.paper` (16.10:1 before the projector). Greyscale (`-gray`): the same picture, since no colour is involved.
 - **Announced**: the live region says `a11y.presenter.pointed(n)` ("Option 3 pointed at" / "Opción 3 señalada" / "3번 선택지를 표시했어요") or `a11y.presenter.unpointed`.
 - **The phone** (`slide-quiz-pointed-844x390.png`): the same outline at the rail's unit (0.58); the 2 px floor keeps it visible.
-- Listen and reply grids and rows: `slide-listen-reply.md` "Pointed option".
+- Listen and reply grids and rows: `slide-listen-reply.md` "Pointed option" (on one-column rows the outline is centred in the row gap instead of `spacing.sm` units out, so the 2 px floor never reaches the next row at a phone's unit).
 

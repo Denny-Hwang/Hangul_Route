@@ -49,7 +49,7 @@ Mock: `mock/overlay-help-touch.html` (`#lang=es`, `#lang=ko`; a touch window of 
 | `help.touch.buttons` | Or tap Previous and Next. | O toca Anterior y Siguiente. | 이전, 다음 버튼을 눌러도 돼요. |
 | `help.touch.click` | With a mouse, click the slide to go on (not on question slides). | Con el mouse, haz clic en la diapositiva para avanzar (no en las preguntas). | 마우스로 슬라이드를 클릭하면 다음으로 가요. 문제 슬라이드에서는 안 돼요. |
 | `help.touch.point` | Tap an answer to point at it. It does not show the answer. | Toca una opción para señalarla. No muestra la respuesta. | 선택지를 누르면 표시만 돼요. 정답은 보여 주지 않아요. |
-| `help.touch.keep` | Keep controls visible shows every button all the time. | Con "Dejar los controles a la vista" activado, todos los botones se ven siempre. | '조작 버튼 계속 보이기'를 켜면 모든 버튼이 계속 보여요. |
+| `help.touch.keep` | Keep controls visible shows every button all the time. | Con «Dejar los controles a la vista» activado, todos los botones se ven siempre. | '조작 버튼 계속 보이기'를 켜면 모든 버튼이 계속 보여요. |
 | `help.row.point` | Point at an answer | Señalar una opción | 선택지 표시하기 |
 
 The values are the spec's section 13 exactly (copied into `mock/presenter-nav.js` from it); they land in the rows named there, each with its own Spanish and Korean review.
