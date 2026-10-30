@@ -28,17 +28,44 @@ export const AUDIO_DIR: string;
 export const AUDIO_REQUIRE_BASE: string;
 export const E2E_FIXTURE_DIR: string;
 export const E2E_FIXTURE_REQUIRE_BASE: string;
-export const AUDIO_PRECACHE_IGNORES: readonly string[];
+export const PRECACHED_AUDIO_PACKS: readonly string[];
+export const SAY_AUDIO_GROUP: 'say';
+export const REF_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
+export const SAY_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
+export const PACK_CHUNK_DIR: string;
+export const ASSET_MAP_MODULE: string;
+
+/** Each clip's pack: a ref => pack map (`clipPackMap`), or a lookup. */
+export type ClipPacks = ReadonlyMap<string, string> | ((ref: string) => string | undefined);
+
+export interface ClipManifestLike {
+  rows?: readonly { ref: string; pack: string; sources?: readonly string[] }[];
+}
 
 export function refFromFile(file: string): string;
 export function buildAssetMap(files: readonly string[], base?: string, packOf?: (ref: string) => string | undefined): AssetEntry[];
 export function mergeAssetMaps(...lists: ReadonlyArray<readonly AssetEntry[]>): AssetEntry[];
-export function renderAssetMap(entries: readonly AssetEntry[]): string;
+export function renderAssetMap(entries: readonly AssetEntry[], chunks?: readonly { pack: string; entries: readonly AssetEntry[] }[]): string;
 export function refsInRenderedMap(source: string): string[];
-export function isRuntimeAudio(path: string): boolean;
-export function audioRuntimeCaching(): AudioRuntimeCachingRule;
-export function precacheGaps(distMp3s: readonly string[], manifestUrls: readonly string[]): string[];
-export function precacheLeaks(manifestUrls: readonly string[]): string[];
+export function packChunkModule(pack: string): string;
+export function packChunkName(pack: string): string;
+export function packChunkMarker(pack: string): string;
+export function splitAssetMap(entries: readonly AssetEntry[]): { start: AssetEntry[]; chunks: { pack: string; entries: AssetEntry[] }[] };
+export const WORD_BUILDER_UNIT: 'episode:stage2-letters';
+export function clipUnitOfSource(source: string, pack?: string): string | null;
+export function clipUnitsOf(manifest: ClipManifestLike | null | undefined): Map<string, string[]>;
+export function renderPackChunk(pack: string, entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): string;
+export function renderAudioModules(entries: readonly AssetEntry[], units?: ReadonlyMap<string, readonly string[]>): Record<string, string>;
+export function clipPackMap(manifest: ClipManifestLike | null | undefined, jamoSource: string): Map<string, string>;
+export function refOfBuiltClip(path: string): string | null;
+export function isPrecachedAudio(path: string, packs?: ClipPacks): boolean;
+export function isRuntimeAudio(path: string, packs?: ClipPacks): boolean;
+export function audioPrecacheIgnores(packs: ReadonlyMap<string, string>): string[];
+export function audioRuntimeCaching(): AudioRuntimeCachingRule[];
+export function precacheGaps(distMp3s: readonly string[], manifestUrls: readonly string[], packs?: ClipPacks): string[];
+export function precacheLeaks(manifestUrls: readonly string[], packs?: ClipPacks): string[];
+export function precachedPackFiles(manifestUrls: readonly string[], packs: ClipPacks, pack: string): string[];
+export function precachedClipBytes(manifestEntries: readonly { url: string; size: number }[], packs: ClipPacks): { count: number; bytes: number };
 
 // --- Recording script, processing and acceptance (F-AUDIO-004 §3.11) ---
 

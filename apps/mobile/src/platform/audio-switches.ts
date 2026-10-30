@@ -1,6 +1,5 @@
 import type { AudioPack } from '@hangul-route/content-schema';
 import { audioPackFlag, type AudioFlagName } from '../config/flags';
-import { AUDIO_ASSET_PACKS } from '../content/__generated__/audio-assets';
 import { currFlagOn, useRemoteConfigStore } from '../store/remote-config-store';
 
 /**
@@ -53,14 +52,4 @@ export function clipsSwitchOn(): boolean {
 /** `audioPack.<pack>`: the build ceiling, `audioClips` and the pack's remote switch. */
 export function packSwitchOn(pack: AudioPack): boolean {
   return switchOn(audioPackFlag(pack));
-}
-
-/** The pack of a bundled clip, from the generated map (AC-B6); none for a clip the map gives no pack. */
-export function bundledPackOf(ref: string): AudioPack | undefined {
-  return Object.prototype.hasOwnProperty.call(AUDIO_ASSET_PACKS, ref) ? AUDIO_ASSET_PACKS[ref] : undefined;
-}
-
-/** Whether the generated map holds at least one clip of this pack (AC-B6). */
-export function bundledPackHas(pack: AudioPack): boolean {
-  return Object.values(AUDIO_ASSET_PACKS).includes(pack);
 }

@@ -1,16 +1,19 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { AUDIO_REF_PATTERN } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   ASSET_MAP_FILE,
+  ASSET_MAP_MODULE,
   AUDIO_DIR,
+  PACK_CHUNK_DIR,
   TTS_MANIFEST_FILE,
   buildAssetMap,
   clipPacksOf,
+  clipUnitsOf,
   jamoClipRefs,
   refsInRenderedMap,
-  renderAssetMap,
+  renderAudioModules,
 } from '../../../scripts/audio/lib.mjs';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../__generated__/vocab';
 import { episodesAll } from '../episodes';
@@ -59,21 +62,38 @@ function contentAudioRefs(): Set<string> {
 }
 
 const committed = readFileSync(join(APP_ROOT, ASSET_MAP_FILE), 'utf8');
+const GENERATED_DIR = dirname(join(APP_ROOT, ASSET_MAP_FILE));
+/** The committed per-pack map chunks (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6), by path relative to the map's folder. */
+const committedChunks = Object.fromEntries(
+  listFiles(join(GENERATED_DIR, PACK_CHUNK_DIR)).map((f) => [`${PACK_CHUNK_DIR}/${f}`, readFileSync(join(GENERATED_DIR, PACK_CHUNK_DIR, f), 'utf8')]),
+);
 const files = listFiles(join(APP_ROOT, AUDIO_DIR));
-const mapRefs = refsInRenderedMap(committed);
+const mapRefs = [committed, ...Object.values(committedChunks)].flatMap(refsInRenderedMap);
 /** The pack of each jamo ref (AMENDMENTS-AUDIO-CLIPS AC-B6), as gen-audio-map.mjs reads it from jamo.ts. */
 const jamoPacks = new Map(jamoClipRefs(readFileSync(join(APP_ROOT, 'src/content/jamo.ts'), 'utf8')).map((r) => [r.ref, r.pack]));
 /** The pack of each clip the clip manifest lists (row AC-2), which gen-audio-map.mjs reads first. */
-const manifestPacks = clipPacksOf(JSON.parse(readFileSync(join(APP_ROOT, '../..', TTS_MANIFEST_FILE), 'utf8')) as { rows: { ref: string; pack: string }[] });
+const manifest = JSON.parse(readFileSync(join(APP_ROOT, '../..', TTS_MANIFEST_FILE), 'utf8')) as { rows: { ref: string; pack: string; sources: string[] }[] };
+const manifestPacks = clipPacksOf(manifest);
 const packOf = (ref: string): string | undefined => manifestPacks.get(ref) ?? jamoPacks.get(ref);
 
 describe('__generated__/audio-assets.ts', () => {
-  it('is exactly what the generator writes for assets/audio (run `audio:map` after adding a clip)', () => {
-    expect(committed).toBe(renderAssetMap(buildAssetMap(files, undefined, packOf)));
+  it('is exactly what the generator writes for assets/audio, its pack chunks included (run `audio:map` after adding a clip)', () => {
+    const expected = renderAudioModules(buildAssetMap(files, undefined, packOf), clipUnitsOf(manifest));
+    expect(committed).toBe(expected[ASSET_MAP_MODULE]);
+    const { [ASSET_MAP_MODULE]: _start, ...chunks } = expected;
+    expect(committedChunks).toEqual(chunks);
   });
 
   it('holds no test fixture clips', () => {
     expect(committed).not.toContain('e2e/');
+    for (const chunk of Object.values(committedChunks)) expect(chunk).not.toContain('e2e/');
+  });
+
+  it('the start map holds only jamo-s1 clips (and clips with no pack): every other pack is a chunk (AC-B6)', () => {
+    for (const ref of refsInRenderedMap(committed)) {
+      const pack = packOf(ref);
+      expect(pack === undefined || pack === 'jamo-s1', `${ref} (${pack}) belongs in its pack's chunk`).toBe(true);
+    }
   });
 
   it('every clip in the map is a valid ref that some content record points at', () => {

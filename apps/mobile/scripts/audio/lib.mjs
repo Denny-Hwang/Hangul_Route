@@ -12,7 +12,7 @@ export const AUDIO_REF_PATTERN = /^audio\/(?:(?:jamo|vocab|story|card|dialogue)\
 export const JAMO_PACK_STAGE1 = 'jamo-s1';
 export const JAMO_PACK_WORD_BUILDER = 'jamo-wb';
 
-/** Clip groups that are not precached: served by a runtime cache rule instead (AD10). */
+/** The record-clip groups that are never precached: served by the `hr-audio-v1` runtime rule instead (AD10). */
 export const RUNTIME_AUDIO_GROUPS = ['vocab', 'story', 'card', 'dialogue'];
 
 /** Where the generated map lives, and how it reaches the clip folder. */
@@ -77,15 +77,118 @@ const MAP_TYPE = 'Readonly<Record<string, number | string>>';
 
 const PACK_MAP_TYPE = 'Readonly<Record<string, AudioPack>>';
 
+/** Where the per-pack map chunks live, relative to the generated map's folder (AC-B6). */
+export const PACK_CHUNK_DIR = 'audio-packs';
+/** The generated map's file name inside its folder (`ASSET_MAP_FILE`). */
+export const ASSET_MAP_MODULE = 'audio-assets.ts';
+
+/** The module of a pack's map chunk, relative to the generated map's folder; Metro names its web bundle after it. */
+export const packChunkModule = (pack) => `${PACK_CHUNK_DIR}/audio-pack-${pack}.ts`;
+/** The web bundle name of a pack's map chunk (`_expo/static/js/web/audio-pack-<pack>-<md5>.js`). */
+export const packChunkName = (pack) => `audio-pack-${pack}`;
+/** The marker a pack's chunk exports: the PWA build checks the start bundle never carries it. */
+export const packChunkMarker = (pack) => `audio-pack:${pack}`;
+
 /**
- * The source of `src/content/__generated__/audio-assets.ts`. Metro needs literal require paths. The pack map
- * (`AUDIO_ASSET_PACKS`) is typed by the shared pack list, so a pack id off that list fails the typecheck.
+ * The start map and the per-pack map chunks (AMENDMENTS-AUDIO-CLIPS AC-B6, bundle size): the start bundle carries only
+ * the precached pack's refs (`jamo-s1`) and the refs that have no pack (governed by `audioClips` alone); every other
+ * pack's refs are a chunk of their own, sorted by pack id. Throws on a say clip with no pack (no manifest row).
+ *
+ * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the merged asset map
  */
-export function renderAssetMap(entries) {
+export function splitAssetMap(entries) {
+  // A say clip always has a manifest row, so a pack: one with none (an orphan, or a file added before the manifest was
+  // regenerated) would land in the start bundle silently, so the map generator stops on it instead.
+  const orphans = entries.filter((e) => e.pack === undefined && e.ref.startsWith(`audio/${SAY_AUDIO_GROUP}/`)).map((e) => e.ref);
+  if (orphans.length > 0) {
+    throw new Error(
+      `audio:map: ${orphans.length} say clip(s) have no row in ${TTS_MANIFEST_FILE}, so no pack (${orphans.slice(0, 5).join(', ')}): ` +
+        'regenerate the manifest (pnpm audio:tts:manifest) or remove the file',
+    );
+  }
+  const start = [];
+  const byPack = new Map();
+  for (const e of entries) {
+    if (e.pack === undefined || PRECACHED_AUDIO_PACKS.includes(e.pack)) {
+      start.push(e);
+      continue;
+    }
+    if (!byPack.has(e.pack)) byPack.set(e.pack, []);
+    byPack.get(e.pack).push(e);
+  }
+  const chunks = [...byPack.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([pack, list]) => ({ pack, entries: list }));
+  return { start, chunks };
+}
+
+/** The Stage 2 cell that teaches the Word Builder symbols (F-CURR-001 §3.3): the `jamo-wb` clips warm with it (AC-B6). */
+export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
+
+/**
+ * The warm unit of a manifest source (AC-B6, warming): a Stage 1 quest or game (`quest:<id>`, `minigame:<ref>`), a
+ * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under), a
+ * story (`content/stories/<slug>.json` => `story:<slug>`), the level check (`placement`), a vocabulary topic
+ * (`content/vocab/<topic>.json` => `topic:<topic>`, the topic screen's), a card (`card:<id>`, its detail page's) and,
+ * for a `jamo-wb` clip (`jamo:<id>#sound|letter`), the Word Builder cell (`WORD_BUILDER_UNIT`). Any other source (a
+ * lexicon entry, a pattern, a vocabulary word, a Stage 1 jamo, which is precached) is not a unit a screen warms by:
+ * null.
+ *
+ * @param {string} source a manifest row's source
+ * @param {string} [pack] the row's pack
+ */
+export function clipUnitOfSource(source, pack) {
+  const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)\.json$/.exec(source);
+  if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}`;
+  const story = /^content\/stories\/([a-z0-9-]+)\.json$/.exec(source);
+  if (story !== null) return `story:${story[1]}`;
+  const topic = /^content\/vocab\/([a-z0-9][a-z0-9-]*)\.json$/.exec(source);
+  if (topic !== null) return `topic:${topic[1]}`;
+  if (source.startsWith('content/placement/')) return 'placement';
+  if (/^(?:quest|minigame|card):[a-z0-9-]+$/.test(source)) return source;
+  if (pack === JAMO_PACK_WORD_BUILDER && /^jamo:[a-z0-9-]+#(?:sound|letter)$/.test(source)) return WORD_BUILDER_UNIT;
+  return null;
+}
+
+/**
+ * The warm units of every clip the manifest lists (`clipUnitOfSource` of its sources), by ref, each list sorted.
+ *
+ * @param {{ rows?: readonly { ref: string, pack?: string, sources?: readonly string[] }[] } | null | undefined} manifest
+ * @returns {Map<string, string[]>}
+ */
+export function clipUnitsOf(manifest) {
+  const units = new Map();
+  for (const row of manifest?.rows ?? []) {
+    const own = new Set(units.get(row.ref) ?? []);
+    for (const source of row.sources ?? []) {
+      const unit = clipUnitOfSource(source, row.pack);
+      if (unit !== null) own.add(unit);
+    }
+    if (own.size > 0) units.set(row.ref, [...own].sort());
+  }
+  return units;
+}
+
+const HEADER = [
+  '// GENERATED by scripts/audio/gen-audio-map.mjs (pnpm --filter @hangul-route/mobile audio:map) — do not edit.',
+  '// Source: assets/audio/**/*.mp3. A content audioRef with no file here plays through the device voice (AD4).',
+];
+
+/**
+ * The source of `src/content/__generated__/audio-assets.ts` (the start map). Metro needs literal require paths. The
+ * pack map (`AUDIO_ASSET_PACKS`) is typed by the shared pack list, so a pack id off that list fails the typecheck.
+ * With `chunks` (from `splitAssetMap`), the map also names every clip the build holds (`AUDIO_CLIP_COUNT`), the
+ * packs that are chunks of their own (`AUDIO_CHUNK_PACKS`) and their loader (`loadAudioPackChunk`): one literal
+ * `import()` per pack map chunk (Metro resolves only literals). The loader lives here, in the start map, so a pack
+ * chunk's URL is in the start bundle (one short case per pack, never its clips) and the lazy clip pack loader chunk,
+ * which calls it, keeps a file name that is the md5 of its content.
+ *
+ * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the start map's entries
+ * @param {readonly { pack: string, entries: readonly import('./lib.d.mts').AssetEntry[] }[]} [chunks]
+ */
+export function renderAssetMap(entries, chunks = []) {
   const lines = [
-    '// GENERATED by scripts/audio/gen-audio-map.mjs (pnpm --filter @hangul-route/mobile audio:map) — do not edit.',
-    '// Source: assets/audio/**/*.mp3. A content audioRef with no file here plays through the device voice (AD4).',
+    ...HEADER,
     "import type { AudioPack } from '@hangul-route/content-schema';",
+    "import type { AudioPackChunk } from '../../logic/audio/clip-assets';",
     '',
   ];
   if (entries.length === 0) {
@@ -107,7 +210,74 @@ export function renderAssetMap(entries) {
     for (const e of packed) lines.push(`  '${e.ref}': '${e.pack}',`);
     lines.push('};');
   }
+  const total = entries.length + chunks.reduce((sum, c) => sum + c.entries.length, 0);
+  lines.push(
+    '',
+    '/** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */',
+    `export const AUDIO_CLIP_COUNT = ${total};`,
+    '',
+    '/** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */',
+    `export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = [${chunks.map((c) => `'${c.pack}'`).join(', ')}];`,
+    '',
+    '/** A pack\'s map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6); undefined for a pack with none. */',
+    'export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: AudioPackChunk }> | undefined {',
+    '  switch (pack) {',
+  );
+  for (const c of chunks) lines.push(`    case '${c.pack}':`, `      return import('./${packChunkModule(c.pack).replace(/\.ts$/, '')}');`);
+  lines.push('    default:', '      return undefined;', '  }', '}');
   return `${lines.join('\n')}\n`;
+}
+
+/**
+ * The source of one pack's map chunk (`audio-packs/audio-pack-<pack>.ts`): its clips (require paths one folder deeper
+ * than the start map's) and, for each warm unit that uses them (`clipUnitsOf`), the indexes of those clips.
+ *
+ * @param {string} pack
+ * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the pack's entries
+ * @param {Map<string, readonly string[]>} [units] the warm units of each ref
+ */
+export function renderPackChunk(pack, entries, units = new Map()) {
+  const byUnit = new Map();
+  entries.forEach((e, index) => {
+    for (const unit of units.get(e.ref) ?? []) {
+      if (!byUnit.has(unit)) byUnit.set(unit, []);
+      byUnit.get(unit).push(index);
+    }
+  });
+  const lines = [
+    ...HEADER,
+    `// The ${pack} pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6): reached only through loadAudioPackChunk in ../${ASSET_MAP_MODULE}.`,
+    "import type { AudioPackChunk } from '../../../logic/audio/clip-assets';",
+    '',
+    '/** This chunk\'s marker: the PWA build checks the start bundle never carries it (scripts/pwa-postbuild.mjs). */',
+    `export const AUDIO_PACK_CHUNK = '${packChunkMarker(pack)}';`,
+    '',
+    'export const AUDIO_PACK: AudioPackChunk = {',
+    `  pack: '${pack}',`,
+    '  clips: {',
+    ...entries.map((e) => `    '${e.ref}': require('../${e.require}'),`),
+    '  },',
+    '  units: {',
+    ...[...byUnit.keys()].sort().map((unit) => `    '${unit}': [${byUnit.get(unit).join(', ')}],`),
+    '  },',
+    '};',
+  ];
+  return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Every generated audio module, by path relative to the generated map's folder: the start map (with the chunk loader)
+ * and one chunk per pack outside the precache (AC-B6). What gen-audio-map.mjs writes and its drift test compares.
+ *
+ * @param {readonly import('./lib.d.mts').AssetEntry[]} entries the merged asset map
+ * @param {Map<string, readonly string[]>} [units] the warm units of each ref (`clipUnitsOf`)
+ * @returns {Record<string, string>}
+ */
+export function renderAudioModules(entries, units = new Map()) {
+  const { start, chunks } = splitAssetMap(entries);
+  const modules = { [ASSET_MAP_MODULE]: renderAssetMap(start, chunks) };
+  for (const c of chunks) modules[packChunkModule(c.pack)] = renderPackChunk(c.pack, c.entries, units);
+  return modules;
 }
 
 /** The refs a committed map declares (read as text: the map is never imported by tests). */
@@ -117,50 +287,154 @@ export function refsInRenderedMap(source) {
 
 // --- PWA build (pwa-postbuild.mjs) ----------------------------------------------
 
-const RUNTIME_GROUP_ALT = RUNTIME_AUDIO_GROUPS.join('|');
+/**
+ * The packs the learner precache holds (AMENDMENTS-AUDIO-CLIPS AC-B6, G5): only the Stage 1 jamo pack (43 clips, about
+ * 0.35 MB). Every other pack, `jamo-wb` included although its clips also live under `audio/jamo/`, is runtime-cached.
+ */
+export const PRECACHED_AUDIO_PACKS = [JAMO_PACK_STAGE1];
 
-/** Is this built file (a dist path or a URL) a clip of a runtime-cached group? */
-export function isRuntimeAudio(path) {
-  return new RegExp(`(^|/)audio/(${RUNTIME_GROUP_ALT})/.+\\.mp3$`, 'i').test(toPosix(path));
+/** The text-keyed clip group (AC-B4): runtime-cached in a cache of its own (`SAY_RUNTIME_CACHE`). */
+export const SAY_AUDIO_GROUP = 'say';
+
+/** The record-clip runtime cache (§3.10): vocabulary, story, card and dialogue refs, and the jamo clips not precached. */
+export const REF_RUNTIME_CACHE = Object.freeze({ cacheName: 'hr-audio-v1', maxEntries: 400 });
+/** The say-clip runtime cache (AC-B6): about 1,213 text-keyed clips in all packs, so room for every one of them. */
+export const SAY_RUNTIME_CACHE = Object.freeze({ cacheName: 'hr-audio-say-v1', maxEntries: 1_600 });
+
+const CLIP_GROUPS = ['jamo', ...RUNTIME_AUDIO_GROUPS, SAY_AUDIO_GROUP];
+// `audio/<group>/<id>[.<anything, such as Expo's content hash>].mp3[?query]`, anywhere in a dist path or a URL.
+const BUILT_CLIP = new RegExp(`(?:^|/)audio/(${CLIP_GROUPS.join('|')})/([^.?#]+)(?:\\.[^/?#]*)?\\.mp3(?:[?#].*)?$`, 'i');
+
+/**
+ * The ref of a built clip (a dist path or a URL): `assets/assets/audio/jamo/giyeok.<md5>.mp3` => `audio/jamo/giyeok.mp3`
+ * (Expo's content hash and a query string dropped); null for any other file.
+ */
+export function refOfBuiltClip(path) {
+  const m = BUILT_CLIP.exec(toPosix(path));
+  return m === null ? null : `audio/${m[1].toLowerCase()}/${m[2]}.mp3`;
 }
 
-/** Workbox `globIgnores`: vocabulary, story, card and dialogue clips stay out of the precache. */
-export const AUDIO_PRECACHE_IGNORES = [`**/audio/{${RUNTIME_AUDIO_GROUPS.join(',')}}/**`];
+/** Each clip's pack, as a lookup: a `Map` of ref => pack (`clipPackMap`), or a function. */
+const lookupOf = (packs) => (typeof packs === 'function' ? packs : (ref) => packs?.get(ref));
 
-/** Workbox `runtimeCaching` rule for the same clips: cache-first, bounded (§3.10). */
-export function audioRuntimeCaching() {
-  return {
-    urlPattern: new RegExp(`/audio/(?:${RUNTIME_GROUP_ALT})/.+\\.mp3$`, 'i'),
-    handler: 'CacheFirst',
-    options: {
-      cacheName: 'hr-audio-v1',
-      expiration: { maxEntries: 400 },
-      // Same-origin only (never opaque), and only a real clip: a single-page host answers a
-      // missing file with index.html and status 200, which must never be cached as a clip.
-      cacheableResponse: { statuses: [200], headers: { 'content-type': 'audio/mpeg' } },
-    },
-  };
+/**
+ * Every clip's pack (AC-B6), the one lookup the map generator and the PWA build share: the clip manifest's
+ * (content/audio/tts-manifest.json, row AC-2), else the one jamo.ts declares for a jamo clip.
+ *
+ * @param {Parameters<typeof clipPacksOf>[0]} manifest the parsed manifest (null when there is none)
+ * @param {string} jamoSource the text of apps/mobile/src/content/jamo.ts
+ * @returns {Map<string, string>}
+ */
+export function clipPackMap(manifest, jamoSource) {
+  const packs = new Map(jamoClipRefs(jamoSource).map((r) => [r.ref, r.pack]));
+  for (const [ref, pack] of clipPacksOf(manifest)) packs.set(ref, pack);
+  return packs;
+}
+
+/** Is this built file (a dist path or a URL) a clip of a precached pack? Only `jamo-s1` jamo clips are (G5). */
+export function isPrecachedAudio(path, packs) {
+  const ref = refOfBuiltClip(path);
+  if (ref === null || !ref.startsWith('audio/jamo/')) return false;
+  return PRECACHED_AUDIO_PACKS.includes(lookupOf(packs)(ref));
 }
 
 /**
- * Built `.mp3` files that must be precached but are not in the manifest
- * (Workbox's glob skips dot folders, found while reading dist/). Runtime-cached
- * groups are not expected there.
+ * Is this built file a clip the precache must not hold? Every clip outside a precached pack: the vocabulary, story,
+ * card, dialogue and say groups, a `jamo-wb` jamo clip, and a jamo clip with no pack (it would be precached by
+ * accident, so the build names it rather than guess).
+ *
+ * @param {string} path a dist path or a URL
+ * @param {Map<string, string> | ((ref: string) => string | undefined)} [packs] each clip's pack (`clipPackMap`)
+ */
+export function isRuntimeAudio(path, packs) {
+  return refOfBuiltClip(path) !== null && !isPrecachedAudio(path, packs);
+}
+
+/**
+ * Workbox `globIgnores` for every clip outside the precached packs: the record and say groups by folder, and each
+ * jamo clip of another pack by name (with and without Expo's content hash). A jamo clip with no pack is not listed:
+ * `precacheLeaks` fails the build on it instead.
+ *
+ * @param {Map<string, string>} packs each clip's pack (`clipPackMap`)
+ */
+export function audioPrecacheIgnores(packs) {
+  const ignores = [`**/audio/{${[...RUNTIME_AUDIO_GROUPS, SAY_AUDIO_GROUP].join(',')}}/**`];
+  const runtimeJamo = [...(packs?.entries() ?? [])]
+    .filter(([ref, pack]) => ref.startsWith('audio/jamo/') && !PRECACHED_AUDIO_PACKS.includes(pack))
+    .map(([ref]) => ref.slice('audio/jamo/'.length, -'.mp3'.length))
+    .sort();
+  for (const id of runtimeJamo) ignores.push(`**/audio/jamo/${id}.mp3`, `**/audio/jamo/${id}.*.mp3`);
+  return ignores;
+}
+
+const cacheable = { statuses: [200], headers: { 'content-type': 'audio/mpeg' } };
+
+/**
+ * Workbox `runtimeCaching` rules for the clips the precache does not hold: cache-first and bounded (§3.10, AC-B6).
+ * - `hr-audio-say-v1` (the say group, maxEntries 1,600);
+ * - `hr-audio-v1` (maxEntries 400) for vocabulary, story, card and dialogue refs, and the jamo clips outside the
+ *   precached pack (`jamo-wb`). A precached `jamo-s1` clip never reaches it: the precache route is registered first.
+ * Same-origin only (never opaque), and only a real clip: a single-page host answers a missing file with index.html
+ * and status 200, which must never be cached as a clip.
+ */
+export function audioRuntimeCaching() {
+  return [
+    {
+      urlPattern: /\/audio\/say\/[0-9a-f]{16}(?:\.[^/]*)?\.mp3$/i,
+      handler: 'CacheFirst',
+      options: { cacheName: SAY_RUNTIME_CACHE.cacheName, expiration: { maxEntries: SAY_RUNTIME_CACHE.maxEntries }, cacheableResponse: cacheable },
+    },
+    {
+      urlPattern: new RegExp(`/audio/(?:jamo|${RUNTIME_AUDIO_GROUPS.join('|')})/.+\\.mp3$`, 'i'),
+      handler: 'CacheFirst',
+      options: { cacheName: REF_RUNTIME_CACHE.cacheName, expiration: { maxEntries: REF_RUNTIME_CACHE.maxEntries }, cacheableResponse: cacheable },
+    },
+  ];
+}
+
+const listedSet = (manifestUrls) => new Set(manifestUrls.map((u) => toPosix(u).replace(/^\/+/, '').split('?')[0]));
+
+/**
+ * Built `.mp3` files of a precached pack that are not in the manifest (Workbox's glob skips dot folders, found while
+ * reading dist/). Runtime-cached clips are not expected there.
  *
  * @param {readonly string[]} distMp3s paths relative to dist
  * @param {readonly string[]} manifestUrls the precache manifest's urls
+ * @param {Map<string, string> | ((ref: string) => string | undefined)} [packs] each clip's pack (`clipPackMap`)
  */
-export function precacheGaps(distMp3s, manifestUrls) {
-  const listed = new Set(manifestUrls.map((u) => toPosix(u).replace(/^\/+/, '').split('?')[0]));
+export function precacheGaps(distMp3s, manifestUrls, packs) {
+  const listed = listedSet(manifestUrls);
   return distMp3s
     .map((p) => toPosix(p).replace(/^\/+/, ''))
-    .filter((p) => !isRuntimeAudio(p) && !listed.has(p))
+    .filter((p) => isPrecachedAudio(p, packs) && !listed.has(p))
     .sort();
 }
 
-/** Runtime-cached clips that ended up in the precache anyway (the ignore glob missed them). */
-export function precacheLeaks(manifestUrls) {
-  return manifestUrls.filter((u) => isRuntimeAudio(u)).sort();
+/** Clips outside the precached packs that ended up in the precache anyway (an ignore glob missed them). */
+export function precacheLeaks(manifestUrls, packs) {
+  return manifestUrls.filter((u) => isRuntimeAudio(u, packs)).sort();
+}
+
+/** The precached files of one pack (the build asserts there is no `jamo-wb` file among them, AC-B6). */
+export function precachedPackFiles(manifestUrls, packs, pack) {
+  const lookup = lookupOf(packs);
+  return manifestUrls.filter((u) => {
+    const ref = refOfBuiltClip(u);
+    return ref !== null && lookup(ref) === pack;
+  }).sort();
+}
+
+/**
+ * The bytes the precached clips add to the learner precache (G5): the measured growth that must stay under the
+ * `learnerPrecacheRaw` line (scripts/pwa/lesson-chunks.mjs), so CM-5B is never triggered by audio.
+ *
+ * @param {readonly { url: string, size: number }[]} manifestEntries Workbox's precache entries, with their sizes
+ * @param {Map<string, string> | ((ref: string) => string | undefined)} packs each clip's pack
+ * @returns {{ count: number, bytes: number }}
+ */
+export function precachedClipBytes(manifestEntries, packs) {
+  const clips = manifestEntries.filter((e) => isPrecachedAudio(e.url, packs));
+  return { count: clips.length, bytes: clips.reduce((sum, e) => sum + e.size, 0) };
 }
 
 // --- Recording script (gen-recording-script.mjs, F-AUDIO-004 §3.11) ------------

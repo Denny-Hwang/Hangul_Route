@@ -2,7 +2,6 @@ import type { AudioPack, SpeechLang } from '@hangul-route/content-schema';
 import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
 import { APP_VERSION } from '../config/app-version';
-import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachNativeVoices,
   createCapabilityTracker,
@@ -30,7 +29,8 @@ import type { JamoQuestion, LegacyJamoMode } from '../logic/audio/jamo-voice';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
 import { createNativeClipPlayer, expoAvClipEnv } from './audio-player';
-import { bundledPackHas, bundledPackOf, clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
+import { clipRegistry } from './audio-assets-store';
+import { clipsSwitchOn, packSwitchOn, primeAudioSwitches } from './audio-switches';
 import { subscribeAppVisibility } from './app-visibility';
 import { track } from './telemetry';
 
@@ -87,8 +87,14 @@ export interface NativeAudioEnv {
 
 export interface NativeClipSetup {
   player: ClipPlayer;
-  /** The bundled asset map: `has(ref)`, how many clips it holds, and a clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6). */
-  assets: { has(ref: string): boolean; readonly size: number; packOf?(ref: string): AudioPack | undefined; packHas?(pack: AudioPack): boolean };
+  /** The bundled asset map: `has(ref)`, how many clips it holds, a clip's pack and the pack chunks on their way (AC-B6). */
+  assets: {
+    has(ref: string): boolean;
+    readonly size: number;
+    packOf?(ref: string): AudioPack | undefined;
+    packHas?(pack: AudioPack): boolean;
+    pending?(): Promise<void> | null;
+  };
   /** `flags.audioClips` and the remote `audioClips`: off switches every clip off without a code change or a release. */
   enabled(): boolean;
   /** The build ceiling and the remote `audioPack.<pack>` (AC-B8). Absent: every pack is on. */
@@ -99,10 +105,10 @@ export interface NativeClipSetup {
 function bundledClips(): NativeClipSetup {
   // The remote clip switches are read (stored copy, then a fetch when due) before the first prompt (AC-B8).
   primeAudioSwitches();
-  const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
   return {
-    player: createNativeClipPlayer(expoAvClipEnv(AUDIO_ASSETS)),
-    assets: { has, size: Object.keys(AUDIO_ASSETS).length, packOf: bundledPackOf, packHas: bundledPackHas },
+    // The start map's clips and each pack map chunk's once loaded (`audio-assets-store.ts`, AC-B6).
+    player: createNativeClipPlayer(expoAvClipEnv((ref) => clipRegistry.asset(ref))),
+    assets: clipRegistry,
     enabled: clipsSwitchOn,
     packEnabled: packSwitchOn,
   };
@@ -178,6 +184,7 @@ export function createNativeAudio(env: NativeAudioEnv) {
     engine,
     clips: clipSetup?.player ?? null,
     assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false, packOf },
+    clipsReady: () => clipSetup?.assets.pending?.() ?? null,
     clipsEnabled: clipsOn,
     packEnabled,
     appVersion: APP_VERSION,

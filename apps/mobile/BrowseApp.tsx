@@ -46,6 +46,7 @@ import { flushQueue } from './src/platform/telemetry';
 import { useAudioStore } from './src/store/audio-store';
 import { followDeviceSettings, useLocaleStore } from './src/store/locale-store';
 import { currFlagOn } from './src/store/remote-config-store';
+import { useClipPacks } from './src/platform/audio-assets-store';
 
 /**
  * All lessons, the third root of the learner web build at `/browse`
@@ -101,6 +102,8 @@ export const ROOT_CHUNK = 'root-chunk:browse';
 
 export default function BrowseApp(): ReactElement {
   const start = useMemo(startBrowse, []);
+  // Every clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6): All lessons opens any lesson, story or word list.
+  useClipPacks('cards');
   useDocumentLang();
   const messages = useMessages();
   // The device record's text size (owner items 6 and 7).

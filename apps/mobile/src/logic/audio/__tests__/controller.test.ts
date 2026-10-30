@@ -8,6 +8,7 @@ import {
   type NetworkLike,
 } from '../capability';
 import {
+  PACK_WAIT_MS,
   classifySpeechError,
   createAudioController,
   type AudioController,
@@ -195,6 +196,8 @@ interface Rig {
     packs: Map<string, AudioPack>;
     /** Packs switched off (the build ceiling or the remote `audioPack.<pack>`, read at prompt time). */
     packsOff: Set<AudioPack>;
+    /** The pack map chunks still on their way (AC-B6, row AC-6). */
+    pending: Promise<void> | null;
   };
 }
 
@@ -213,11 +216,13 @@ function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; cl
     assets: new Set(['audio/jamo/giyeok.mp3']),
     packs: new Map(),
     packsOff: new Set(),
+    pending: null,
   };
   const ctl = createAudioController({
     engine: opts.engine === false ? null : engine,
     clips: opts.clips === false ? null : clips,
     assets: { has: (ref) => state.assets.has(ref), packOf: (ref) => state.packs.get(ref) },
+    clipsReady: () => state.pending,
     clipsEnabled: () => state.clipsEnabled,
     packEnabled: (pack) => !state.packsOff.has(pack),
     appVersion: '1.0.0',
@@ -1530,5 +1535,101 @@ describe('controller with FakeSpeechSynthesis', () => {
     });
     await expect(ctl.playPrompt({ text: '가' })).resolves.toBe('unavailable');
     expect(synth.spoken).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-AUDIO-CLIPS AC-B6 (row AC-6): a pack's map chunk loads with its lesson
+// ---------------------------------------------------------------------------
+
+describe('controller: a pack map chunk still on its way (AC-B6)', () => {
+  const SAY = sayRef('나');
+
+  it('waits for the chunk, then plays the say clip it brought', async () => {
+    const r = rig();
+    let arrive: () => void = () => undefined;
+    r.state.pending = new Promise<void>((resolve) => {
+      arrive = () => {
+        r.state.assets.add(SAY);
+        r.state.packs.set(SAY, 'stage1');
+        r.state.pending = null;
+        resolve();
+      };
+    });
+    const played = r.ctl.playPrompt({ text: '나', kind: 'word' });
+    await vi.advanceTimersByTimeAsync(40);
+    expect(r.clips.played).toEqual([]);
+    arrive();
+    await expect(played).resolves.toBe('played');
+    expect(r.clips.played).toEqual([SAY]);
+    expect(r.engine.requests).toEqual([]);
+    expect(r.ctl.sourceCounts().say).toBe(1);
+  });
+
+  it(`a chunk that has not arrived after ${PACK_WAIT_MS} ms leaves the prompt to the device voice`, async () => {
+    const r = rig();
+    r.state.pending = new Promise<void>(() => undefined);
+    const played = r.ctl.playPrompt({ text: '나', kind: 'word' });
+    await vi.advanceTimersByTimeAsync(PACK_WAIT_MS - 10);
+    expect(r.engine.requests).toEqual([]);
+    await vi.advanceTimersByTimeAsync(20);
+    await expect(played).resolves.toBe('played');
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+    expect(r.ctl.sourceCounts().tts).toBe(1);
+  });
+
+  it('a chunk that fails to load falls through to the device voice, with no clip failure reported', async () => {
+    const r = rig();
+    r.state.pending = Promise.reject(new Error('offline'));
+    r.state.pending.catch(() => undefined);
+    await expect(r.ctl.playPrompt({ text: '나', kind: 'word' })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+    expect(names(r.events)).not.toContain('audio.playback_failed');
+  });
+
+  it('never waits when a clip is already playable, or when clips are off', async () => {
+    const r = rig();
+    // A chunk that never arrives: neither prompt below may wait for it (no timer is advanced).
+    r.state.pending = new Promise<void>(() => undefined);
+    await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+    r.state.clipsEnabled = false;
+    await expect(r.ctl.playPrompt({ text: '나', kind: 'word' })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+  });
+
+  it('an English or Spanish prompt never waits for a chunk (it has no clip to look for)', async () => {
+    const r = rig();
+    // A chunk that never arrives: no timer is advanced, so a wait would never end.
+    r.state.pending = new Promise<void>(() => undefined);
+    await expect(r.ctl.playPrompt({ text: 'Hello', language: 'en-US', kind: 'word' })).resolves.toBe('played');
+    await expect(r.ctl.playPrompt({ text: 'Hola', language: 'es-US', kind: 'word' })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['Hello', 'Hola']);
+    expect(r.clips.played).toEqual([]);
+  });
+
+  it('a prompt whose clips are all in but their pack is switched off never waits: the device voice at once', async () => {
+    const r = rig();
+    r.state.assets.add(SAY);
+    r.state.packs.set(SAY, 'stage1');
+    r.state.packsOff.add('stage1');
+    r.state.pending = new Promise<void>(() => undefined);
+    await expect(r.ctl.playPrompt({ text: '나', kind: 'word' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+  });
+
+  it('a newer prompt supersedes one that is waiting for its chunk', async () => {
+    const r = rig();
+    r.state.pending = new Promise<void>(() => undefined);
+    const first = r.ctl.playPrompt({ text: '나', kind: 'word' });
+    await vi.advanceTimersByTimeAsync(10);
+    r.state.pending = null;
+    const second = r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' });
+    await expect(first).resolves.toBe('played');
+    await expect(second).resolves.toBe('played');
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+    expect(r.engine.requests).toEqual([]);
   });
 });

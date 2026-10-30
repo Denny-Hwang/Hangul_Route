@@ -43,6 +43,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryLoaded } from '../story-content';
 import { useUpperCardBack } from './upper-cards-entry';
 import { CultureTip } from '../quest/culture-tip-entry';
+import { useClipPacks } from '../../platform/audio-assets-store';
 
 /** Side of the card face on the front of the card page. */
 const CARD_FACE = 200;
@@ -59,6 +60,9 @@ export interface CardDetailViewProps {
 }
 
 export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner' }: CardDetailViewProps): ReactElement {
+  // Every clip pack (AMENDMENTS-AUDIO-CLIPS AC-B6: a card's texts may belong to any earlier pack, and `cards` is last),
+  // loaded with the card, and this card's clips warmed (`card:<id>`).
+  useClipPacks('cards', cardId);
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const locale = useLocale();

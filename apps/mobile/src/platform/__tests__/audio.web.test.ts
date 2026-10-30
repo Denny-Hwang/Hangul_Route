@@ -1348,7 +1348,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
 
   it('resolves a bundled clip through expo-asset and plays it with Web Audio and fetch', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {} }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1378,7 +1378,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
 
   it('with no bundled clips a gesture creates no AudioContext (production before A-9)', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: {}, AUDIO_ASSET_PACKS: {} }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: {}, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 0, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1398,7 +1398,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
   it('a web asset module that is a URL string (Metro on web) resolves through expo-asset', async () => {
     vi.resetModules();
     const url = '/assets/assets/audio/jamo/giyeok.abc.mp3';
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': url }, AUDIO_ASSET_PACKS: {} }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': url }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     const contexts: FakeAudioContext[] = [];
     class RecordingContext extends FakeAudioContext {
       constructor() {
@@ -1421,7 +1421,7 @@ describe('platform/audio.web: the module-level API (browser globals)', RELOAD_SU
 
   it('an asset that expo-asset cannot resolve is a missing clip, and the voice speaks', async () => {
     vi.resetModules();
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {} }));
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': 7 }, AUDIO_ASSET_PACKS: {}, AUDIO_CLIP_COUNT: 1, AUDIO_CHUNK_PACKS: [] }));
     vi.doMock('expo-asset', () => ({
       Asset: {
         fromModule: () => {
