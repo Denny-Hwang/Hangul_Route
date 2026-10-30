@@ -4,6 +4,9 @@ import {
   Caption,
   Heading,
   HoyaBubble,
+  Icon,
+  KOREAN_LANGUAGE,
+  KOREAN_LINE_BREAK,
   KoreanText,
   Pill,
   Progress,
@@ -16,18 +19,22 @@ import {
   resolveColor,
   spacing,
   touchTarget,
+  typography,
   useLayoutClass,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import type { HiddenHeritageScene } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { HIDDEN_HERITAGE_RINGS } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Pressable, ScrollView, View, type LayoutChangeEvent, type PressableStateCallbackType } from 'react-native';
+import { Pressable, ScrollView, Text, View, type LayoutChangeEvent, type PressableStateCallbackType } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { koSpeech } from '../../logic/audio/ko-speech';
+import { CONTENT_OVERLAYS } from '../../logic/content-locale';
+import { sceneCardBack } from '../../logic/hidden-heritage-card-back';
 import {
   canSkip,
   endView,
@@ -138,6 +145,61 @@ function Spot({ view, sceneWidth, onTap }: { view: SpotView; sceneWidth: number;
         </>
       )}
     </Pressable>
+  );
+}
+
+// Speech language for the Korean of a source line; `lang` is forwarded to the DOM on the web.
+const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
+
+/**
+ * The scene's card back (F-CURR-002 §17 Phase 4, row CM-41 S2; wireframe "Facts on the card back"): under the found
+ * words, Did you know? and every fact of the scene's note in the UI language, each with its source line (the card back's
+ * citation: institution and title, never a URL). A named region a screen reader can jump to, as the reward step's tip.
+ */
+function SceneCardBack({ scene }: { scene: HiddenHeritageScene }): ReactElement | null {
+  const m = useMessages();
+  const locale = useLocale();
+  const textScale = useTypeScale();
+  const facts = useMemo(() => sceneCardBack(scene, locale, CONTENT_OVERLAYS, m.learner.cardDetail.citation), [scene, locale, m]);
+  if (facts.length === 0) return null;
+  const line = { fontSize: textScale.size.bodySm, lineHeight: textScale.size.bodySm * typography.leading.relaxed, color: colors.text.secondary };
+  const source = {
+    fontSize: textScale.size.caption,
+    lineHeight: textScale.size.caption * typography.leading.normal,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+  };
+  return (
+    <View
+      role="region"
+      aria-label={m.learner.cultureTip.region}
+      testID="hh-card-back"
+      style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, gap: spacing.sm }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+        <Icon name="sparkle" size={16} color={colors.brand.primary} />
+        <Heading level="caption" testID="hh-card-back-title">
+          {m.learner.cultureTip.title}
+        </Heading>
+      </View>
+      {facts.map((fact) => (
+        <View key={fact.id} testID={`hh-card-back-${fact.id}`} style={{ gap: spacing.xxs }}>
+          <Text {...KOREAN_LINE_BREAK} style={line}>
+            {fact.claim}
+          </Text>
+          {fact.citation ? (
+            <Text {...KOREAN_LINE_BREAK} style={source}>
+              {fact.citation.runs.map((run, i) => (
+                <Text {...KOREAN_LINE_BREAK} key={i} {...(run.korean ? koreanSpeech : {})}>
+                  {run.text}
+                </Text>
+              ))}
+              {fact.citation.more ? ` ${fact.citation.more}` : ''}
+            </Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -345,6 +407,8 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
               </View>
             ))}
           </View>
+          <Spacer size="md" />
+          <SceneCardBack scene={scene} />
           <Spacer size="lg" />
           <Button label={m.common.buttons.continue} tone="primary" size="lg" onPress={() => dispatch({ type: 'continue' })} testID="hh-continue" />
           <Spacer size="xl" />
