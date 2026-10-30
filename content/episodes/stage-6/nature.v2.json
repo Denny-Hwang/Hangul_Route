@@ -1,0 +1,1679 @@
+{
+  "id": "episode:stage6-nature-v2",
+  "stage": "stage6",
+  "theme": "nature",
+  "volume": 2,
+  "status": "ready",
+  "titleEn": "Weather & Park Map",
+  "subtitleEn": "Read a weather card, a trail sign and a park map.",
+  "hoyaIntroEn": "Check the weather, then read the trail sign and the park map. Let's go!",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-nature-v2-q1",
+      "titleEn": "Weather Card",
+      "blurbEn": "Read a weather card for today, tomorrow and the day after.",
+      "teaserEn": "Next: read the minutes on a trail sign.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Weather Card",
+          "hoyaLineEn": "A weather card! Let's read it before our walk in the park.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Card",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q1-forecast",
+                    "keyWords": [
+                      {
+                        "ko": "일기 예보",
+                        "romanization": "ilgi yebo",
+                        "en": "weather forecast"
+                      },
+                      {
+                        "ko": "맑음",
+                        "romanization": "malgeum",
+                        "en": "clear"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A weather card gives each day one weather word."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q1-forecast",
+                    "keyWords": [
+                      {
+                        "ko": "모레",
+                        "romanization": "more",
+                        "en": "the day after tomorrow"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "First today, then tomorrow, then the day after tomorrow."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "오늘은 맑아요.",
+                      "romanization": "oneureun malgayo",
+                      "en": "Today is clear."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "모레 눈이 와요.",
+                      "romanization": "more nuni wayo",
+                      "en": "It will snow the day after tomorrow."
+                    }
+                  }
+                ],
+                "captionEn": "Now read what the card shows, in a sentence."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Card",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-v2-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-nature-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-nature-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Weather Reader!",
+          "hoyaLineEn": "You read a weather card. Rain tomorrow, so let's take an umbrella!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-v2-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-nature-v2-q1-forecast",
+            "kind": "forecast",
+            "title": {
+              "ko": "일기 예보",
+              "romanization": "ilgi yebo",
+              "en": "weather forecast"
+            },
+            "entries": [
+              {
+                "id": "today",
+                "text": {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                },
+                "value": {
+                  "ko": "맑음",
+                  "romanization": "malgeum",
+                  "en": "clear"
+                }
+              },
+              {
+                "id": "tomorrow",
+                "text": {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
+              },
+              {
+                "id": "dayafter",
+                "text": {
+                  "ko": "모레",
+                  "romanization": "more",
+                  "en": "the day after tomorrow"
+                },
+                "value": {
+                  "ko": "눈",
+                  "romanization": "nun",
+                  "en": "snow"
+                }
+              }
+            ],
+            "altEn": "A weather card for three days: clear today, rain tomorrow and snow the day after tomorrow"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What is the weather tomorrow?",
+              "key": {
+                "ko": "내일",
+                "romanization": "naeil",
+                "en": "tomorrow"
+              },
+              "options": [
+                {
+                  "id": "malgeum",
+                  "text": {
+                    "ko": "맑음",
+                    "romanization": "malgeum",
+                    "en": "clear"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "text": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ],
+              "answerId": "bi",
+              "answerEntryId": "tomorrow"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which day is clear?",
+              "key": {
+                "ko": "맑음",
+                "romanization": "malgeum",
+                "en": "clear"
+              },
+              "options": [
+                {
+                  "id": "oneul",
+                  "text": {
+                    "ko": "오늘",
+                    "romanization": "oneul",
+                    "en": "today"
+                  }
+                },
+                {
+                  "id": "naeil",
+                  "text": {
+                    "ko": "내일",
+                    "romanization": "naeil",
+                    "en": "tomorrow"
+                  }
+                },
+                {
+                  "id": "more",
+                  "text": {
+                    "ko": "모레",
+                    "romanization": "more",
+                    "en": "the day after tomorrow"
+                  }
+                }
+              ],
+              "answerId": "oneul",
+              "answerEntryId": "today"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What is the weather the day after tomorrow?",
+              "key": {
+                "ko": "모레",
+                "romanization": "more",
+                "en": "the day after tomorrow"
+              },
+              "options": [
+                {
+                  "id": "heurim",
+                  "text": {
+                    "ko": "흐림",
+                    "romanization": "heurim",
+                    "en": "cloudy"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "text": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ],
+              "answerId": "nun",
+              "answerEntryId": "dayafter"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which day will it rain?",
+              "key": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "more",
+                  "text": {
+                    "ko": "모레",
+                    "romanization": "more",
+                    "en": "the day after tomorrow"
+                  }
+                },
+                {
+                  "id": "oneul",
+                  "text": {
+                    "ko": "오늘",
+                    "romanization": "oneul",
+                    "en": "today"
+                  }
+                },
+                {
+                  "id": "naeil",
+                  "text": {
+                    "ko": "내일",
+                    "romanization": "naeil",
+                    "en": "tomorrow"
+                  }
+                }
+              ],
+              "answerId": "naeil",
+              "answerEntryId": "tomorrow"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "___ 눈이 와요.",
+                "romanization": "___ nuni wayo",
+                "en": "It will snow ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                },
+                {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                },
+                {
+                  "ko": "모레",
+                  "romanization": "more",
+                  "en": "the day after tomorrow"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "___ 비가 와요.",
+                "romanization": "___ biga wayo",
+                "en": "It will rain ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "모레",
+                  "romanization": "more",
+                  "en": "the day after tomorrow"
+                },
+                {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                },
+                {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "오늘은 날씨가 ___.",
+                "romanization": "oneureun nalssiga ___",
+                "en": "Today the weather is clear."
+              },
+              "tiles": [
+                {
+                  "ko": "흐려요",
+                  "romanization": "heuryeoyo",
+                  "en": "is cloudy"
+                },
+                {
+                  "ko": "맑아요",
+                  "romanization": "malgayo",
+                  "en": "is clear"
+                },
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "is cold"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-nature-v2-q1-forecast",
+            "kind": "forecast",
+            "title": {
+              "ko": "일기 예보",
+              "romanization": "ilgi yebo",
+              "en": "weather forecast"
+            },
+            "entries": [
+              {
+                "id": "today",
+                "text": {
+                  "ko": "오늘",
+                  "romanization": "oneul",
+                  "en": "today"
+                },
+                "value": {
+                  "ko": "맑음",
+                  "romanization": "malgeum",
+                  "en": "clear"
+                }
+              },
+              {
+                "id": "tomorrow",
+                "text": {
+                  "ko": "내일",
+                  "romanization": "naeil",
+                  "en": "tomorrow"
+                },
+                "value": {
+                  "ko": "비",
+                  "romanization": "bi",
+                  "en": "rain"
+                }
+              },
+              {
+                "id": "dayafter",
+                "text": {
+                  "ko": "모레",
+                  "romanization": "more",
+                  "en": "the day after tomorrow"
+                },
+                "value": {
+                  "ko": "눈",
+                  "romanization": "nun",
+                  "en": "snow"
+                }
+              }
+            ],
+            "altEn": "A weather card for three days: clear today, rain tomorrow and snow the day after tomorrow"
+          }
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptEn": "Type the weather word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the weather word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "눈",
+                "romanization": "nun",
+                "en": "snow"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-nature-v2-q2",
+      "titleEn": "Trail Minutes",
+      "blurbEn": "Read the places and the minutes on a trail sign.",
+      "teaserEn": "Next: find your way on a park map.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Trail Minutes",
+          "hoyaLineEn": "This trail sign gives the minutes to each place. Let's read them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Trail Sign",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q2-trail",
+                    "keyWords": [
+                      {
+                        "ko": "산길",
+                        "romanization": "sangil",
+                        "en": "mountain trail"
+                      },
+                      {
+                        "ko": "약수터",
+                        "romanization": "yaksuteo",
+                        "en": "spring water spot"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A trail sign names the places along the trail."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q2-trail",
+                    "keyWords": [
+                      {
+                        "ko": "대피소",
+                        "romanization": "daepiso",
+                        "en": "mountain shelter"
+                      },
+                      {
+                        "ko": "이십 분",
+                        "romanization": "isip bun",
+                        "en": "twenty minutes"
+                      },
+                      {
+                        "ko": "삼십 분",
+                        "romanization": "samsip bun",
+                        "en": "thirty minutes"
+                      },
+                      {
+                        "ko": "사십 분",
+                        "romanization": "sasip bun",
+                        "en": "forty minutes"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Each board also gives the minutes it takes to walk there."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "약수터까지 얼마나 걸려요?",
+                          "romanization": "yaksuteokkaji eolmana geollyeoyo",
+                          "en": "How long does it take to the spring water spot?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hiker",
+                        "line": {
+                          "ko": "이십 분 걸려요.",
+                          "romanization": "isip bun geollyeoyo",
+                          "en": "It takes twenty minutes."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Ask how long it takes. The reply gives the minutes."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Sign",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-v2-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Trail Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-nature-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-nature-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Trail Reader!",
+          "hoyaLineEn": "You read the minutes on a trail sign. Have a good walk!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-v2-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-nature-v2-q2-trail",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "spring",
+                "text": {
+                  "ko": "약수터",
+                  "romanization": "yaksuteo",
+                  "en": "spring water spot"
+                },
+                "value": {
+                  "ko": "이십 분",
+                  "romanization": "isip bun",
+                  "en": "twenty minutes"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "shelter",
+                "text": {
+                  "ko": "대피소",
+                  "romanization": "daepiso",
+                  "en": "mountain shelter"
+                },
+                "value": {
+                  "ko": "삼십 분",
+                  "romanization": "samsip bun",
+                  "en": "thirty minutes"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "value": {
+                  "ko": "사십 분",
+                  "romanization": "sasip bun",
+                  "en": "forty minutes"
+                },
+                "dir": "right"
+              }
+            ],
+            "altEn": "A trail sign with minutes: the spring water spot and the restroom to the left; the shelter and the summit to the right"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "How long does it take to the summit?",
+              "key": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              },
+              "options": [
+                {
+                  "id": "isip-bun",
+                  "text": {
+                    "ko": "이십 분",
+                    "romanization": "isip bun",
+                    "en": "twenty minutes"
+                  }
+                },
+                {
+                  "id": "samsip-bun",
+                  "text": {
+                    "ko": "삼십 분",
+                    "romanization": "samsip bun",
+                    "en": "thirty minutes"
+                  }
+                },
+                {
+                  "id": "sasip-bun",
+                  "text": {
+                    "ko": "사십 분",
+                    "romanization": "sasip bun",
+                    "en": "forty minutes"
+                  }
+                }
+              ],
+              "answerId": "sasip-bun",
+              "answerEntryId": "summit"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which place is thirty minutes away?",
+              "options": [
+                {
+                  "id": "yaksuteo",
+                  "text": {
+                    "ko": "약수터",
+                    "romanization": "yaksuteo",
+                    "en": "spring water spot"
+                  }
+                },
+                {
+                  "id": "daepiso",
+                  "text": {
+                    "ko": "대피소",
+                    "romanization": "daepiso",
+                    "en": "mountain shelter"
+                  }
+                },
+                {
+                  "id": "jeongsang",
+                  "text": {
+                    "ko": "정상",
+                    "romanization": "jeongsang",
+                    "en": "summit"
+                  }
+                }
+              ],
+              "answerId": "daepiso",
+              "answerEntryId": "shelter"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which way is the spring water spot?",
+              "key": {
+                "ko": "약수터",
+                "romanization": "yaksuteo",
+                "en": "spring water spot"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oenjjok",
+              "answerEntryId": "spring"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which way is the shelter?",
+              "key": {
+                "ko": "대피소",
+                "romanization": "daepiso",
+                "en": "mountain shelter"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "shelter"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for a spring water spot.",
+              "target": {
+                "ko": "약수터",
+                "romanization": "yaksuteo",
+                "en": "spring water spot"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type the word for a mountain shelter.",
+              "target": {
+                "ko": "대피소",
+                "romanization": "daepiso",
+                "en": "mountain shelter"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for the top of a mountain.",
+              "target": {
+                "ko": "정상",
+                "romanization": "jeongsang",
+                "en": "summit"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type how you write twenty minutes.",
+              "target": {
+                "ko": "이십 분",
+                "romanization": "isip bun",
+                "en": "twenty minutes"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q2-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "약수터까지 ___ 걸려요.",
+                "romanization": "yaksuteokkaji ___ geollyeoyo",
+                "en": "It takes ___ to the spring water spot."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "이십 분",
+                  "romanization": "isip bun",
+                  "en": "twenty minutes"
+                },
+                {
+                  "ko": "삼십 분",
+                  "romanization": "samsip bun",
+                  "en": "thirty minutes"
+                },
+                {
+                  "ko": "사십 분",
+                  "romanization": "sasip bun",
+                  "en": "forty minutes"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "___까지 사십 분 걸려요.",
+                "romanization": "___kkaji sasip bun geollyeoyo",
+                "en": "It takes forty minutes to the ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "대피소",
+                  "romanization": "daepiso",
+                  "en": "mountain shelter"
+                },
+                {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                {
+                  "ko": "약수터",
+                  "romanization": "yaksuteo",
+                  "en": "spring water spot"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-nature-v2-q2-trail",
+            "kind": "sign",
+            "title": {
+              "ko": "산길",
+              "romanization": "sangil",
+              "en": "mountain trail"
+            },
+            "entries": [
+              {
+                "id": "spring",
+                "text": {
+                  "ko": "약수터",
+                  "romanization": "yaksuteo",
+                  "en": "spring water spot"
+                },
+                "value": {
+                  "ko": "이십 분",
+                  "romanization": "isip bun",
+                  "en": "twenty minutes"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "shelter",
+                "text": {
+                  "ko": "대피소",
+                  "romanization": "daepiso",
+                  "en": "mountain shelter"
+                },
+                "value": {
+                  "ko": "삼십 분",
+                  "romanization": "samsip bun",
+                  "en": "thirty minutes"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "summit",
+                "text": {
+                  "ko": "정상",
+                  "romanization": "jeongsang",
+                  "en": "summit"
+                },
+                "value": {
+                  "ko": "사십 분",
+                  "romanization": "sasip bun",
+                  "en": "forty minutes"
+                },
+                "dir": "right"
+              }
+            ],
+            "altEn": "A trail sign with minutes: the spring water spot and the restroom to the left; the shelter and the summit to the right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-nature-v2-q3",
+      "titleEn": "Park Map",
+      "blurbEn": "Find places on a park map, and show someone the way.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Park Map",
+          "hoyaLineEn": "A park map shows where each place is. Let's find our way!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Map",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q3-map",
+                    "keyWords": [
+                      {
+                        "ko": "지도",
+                        "romanization": "jido",
+                        "en": "map"
+                      },
+                      {
+                        "ko": "주차장",
+                        "romanization": "juchajang",
+                        "en": "parking lot"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A park map shows the places in the park."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-nature-v2-q3-map",
+                    "keyWords": [
+                      {
+                        "ko": "안내소",
+                        "romanization": "annaeso",
+                        "en": "information center"
+                      },
+                      {
+                        "ko": "매점",
+                        "romanization": "maejeom",
+                        "en": "snack shop"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Two more places on the map."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Visitor",
+                        "line": {
+                          "ko": "안내소가 어디예요?",
+                          "romanization": "annaesoga eodiyeyo",
+                          "en": "Where is the information center?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "왼쪽으로 가세요.",
+                          "romanization": "oenjjogeuro gaseyo",
+                          "en": "Go to the left, please."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Someone asks where a place is. Hoya reads the map to answer."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Map",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-v2-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Show the Way",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-nature-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-nature-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Map Reader!",
+          "hoyaLineEn": "You read a park map and showed the way. Enjoy the park!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-nature-v2-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-nature-v2-q3-map",
+            "kind": "map",
+            "title": {
+              "ko": "공원 지도",
+              "romanization": "gongwon jido",
+              "en": "park map"
+            },
+            "entries": [
+              {
+                "id": "parking",
+                "text": {
+                  "ko": "주차장",
+                  "romanization": "juchajang",
+                  "en": "parking lot"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "info",
+                "text": {
+                  "ko": "안내소",
+                  "romanization": "annaeso",
+                  "en": "information center"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "lake",
+                "text": {
+                  "ko": "호수",
+                  "romanization": "hosu",
+                  "en": "lake"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "shop",
+                "text": {
+                  "ko": "매점",
+                  "romanization": "maejeom",
+                  "en": "snack shop"
+                },
+                "dir": "right"
+              }
+            ],
+            "altEn": "A park map: the parking lot and the information center to the left; the lake and the snack shop to the right"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Where can you leave a car?",
+              "options": [
+                {
+                  "id": "juchajang",
+                  "text": {
+                    "ko": "주차장",
+                    "romanization": "juchajang",
+                    "en": "parking lot"
+                  }
+                },
+                {
+                  "id": "hosu",
+                  "text": {
+                    "ko": "호수",
+                    "romanization": "hosu",
+                    "en": "lake"
+                  }
+                },
+                {
+                  "id": "maejeom",
+                  "text": {
+                    "ko": "매점",
+                    "romanization": "maejeom",
+                    "en": "snack shop"
+                  }
+                }
+              ],
+              "answerId": "juchajang",
+              "answerEntryId": "parking"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which way is the lake?",
+              "key": {
+                "ko": "호수",
+                "romanization": "hosu",
+                "en": "lake"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "lake"
+            },
+            {
+              "id": "r3",
+              "questionEn": "You have a question about the park. Where do you go?",
+              "options": [
+                {
+                  "id": "maejeom",
+                  "text": {
+                    "ko": "매점",
+                    "romanization": "maejeom",
+                    "en": "snack shop"
+                  }
+                },
+                {
+                  "id": "annaeso",
+                  "text": {
+                    "ko": "안내소",
+                    "romanization": "annaeso",
+                    "en": "information center"
+                  }
+                },
+                {
+                  "id": "hosu",
+                  "text": {
+                    "ko": "호수",
+                    "romanization": "hosu",
+                    "en": "lake"
+                  }
+                }
+              ],
+              "answerId": "annaeso",
+              "answerEntryId": "info"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which way is the snack shop?",
+              "key": {
+                "ko": "매점",
+                "romanization": "maejeom",
+                "en": "snack shop"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "shop"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q3-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Visitor",
+              "line": {
+                "ko": "안녕하세요!",
+                "romanization": "annyeonghaseyo",
+                "en": "Hello!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "왼쪽으로 가세요.",
+                    "romanization": "oenjjogeuro gaseyo",
+                    "en": "Go to the left, please."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "호수예요.",
+                    "romanization": "hosuyeyo",
+                    "en": "It is the lake."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Visitor",
+              "line": {
+                "ko": "주차장이 어디예요?",
+                "romanization": "juchajangi eodiyeyo",
+                "en": "Where is the parking lot?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "왼쪽으로 가세요.",
+                    "romanization": "oenjjogeuro gaseyo",
+                    "en": "Go to the left, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "매점이에요.",
+                    "romanization": "maejeomieyo",
+                    "en": "It is the snack shop."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Visitor",
+              "line": {
+                "ko": "호수가 어디예요?",
+                "romanization": "hosuga eodiyeyo",
+                "en": "Where is the lake?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "주차장이에요.",
+                    "romanization": "juchajangieyo",
+                    "en": "It is the parking lot."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Visitor",
+              "line": {
+                "ko": "매점이 어디예요?",
+                "romanization": "maejeomi eodiyeyo",
+                "en": "Where is the snack shop?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "오른쪽으로 가세요.",
+                    "romanization": "oreunjjogeuro gaseyo",
+                    "en": "Go to the right, please."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안내소예요.",
+                    "romanization": "annaesoyeyo",
+                    "en": "It is the information center."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-nature-v2-q3-check",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-nature-v2-q3-map",
+            "kind": "map",
+            "title": {
+              "ko": "공원 지도",
+              "romanization": "gongwon jido",
+              "en": "park map"
+            },
+            "entries": [
+              {
+                "id": "parking",
+                "text": {
+                  "ko": "주차장",
+                  "romanization": "juchajang",
+                  "en": "parking lot"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "info",
+                "text": {
+                  "ko": "안내소",
+                  "romanization": "annaeso",
+                  "en": "information center"
+                },
+                "dir": "left"
+              },
+              {
+                "id": "lake",
+                "text": {
+                  "ko": "호수",
+                  "romanization": "hosu",
+                  "en": "lake"
+                },
+                "dir": "right"
+              },
+              {
+                "id": "shop",
+                "text": {
+                  "ko": "매점",
+                  "romanization": "maejeom",
+                  "en": "snack shop"
+                },
+                "dir": "right"
+              }
+            ],
+            "altEn": "A park map: the parking lot and the information center to the left; the lake and the snack shop to the right"
+          },
+          "rounds": [
+            {
+              "id": "c1",
+              "questionEn": "Which way is the information center?",
+              "key": {
+                "ko": "안내소",
+                "romanization": "annaeso",
+                "en": "information center"
+              },
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "a",
+              "answerEntryId": "info"
+            },
+            {
+              "id": "c2",
+              "questionEn": "Where can you buy a snack?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": {
+                    "ko": "안내소",
+                    "romanization": "annaeso",
+                    "en": "information center"
+                  }
+                },
+                {
+                  "id": "b",
+                  "text": {
+                    "ko": "매점",
+                    "romanization": "maejeom",
+                    "en": "snack shop"
+                  }
+                },
+                {
+                  "id": "c",
+                  "text": {
+                    "ko": "주차장",
+                    "romanization": "juchajang",
+                    "en": "parking lot"
+                  }
+                }
+              ],
+              "answerId": "b",
+              "answerEntryId": "shop"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Korean weather forecasts name the sky by how much of it clouds cover: {ko:맑음} (clear) up to half, {ko:구름많음} (mostly cloudy) six to eight tenths, and {ko:흐림} (cloudy) nine or ten tenths.",
+      "sources": [
+        {
+          "title": "예보용어해설",
+          "publisher": "기상청 (Korea Meteorological Administration) — 날씨누리",
+          "url": "https://www.weather.go.kr/w/forecast/guide/fct-term-exp.do",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "하늘 상태 표현: ‘하늘상태 표현을 구름량(운량)으로 알려주는 표입니다.’ 맑음 ‘구름이 0~5할의 상태’ / 구름많음 ‘구름이 6~8할의 상태’ / 흐림 ‘구름이 9~10할의 상태’"
+        },
+        {
+          "title": "예보용어해설 (주요업무 > 예보업무)",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.kma.go.kr/kma/biz/forecast05.jsp",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘예보용어는 날씨해설, 기상정보, 예보통보문 등 예보를 전달하는 문서와 영상에 사용되는 언어’ 하늘 상태 표현: 맑음 ‘구름이 0~5할의 상태’ / 구름많음 ‘구름이 6~8할의 상태’ / 흐림 ‘구름이 9~10할의 상태’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-41 S6, 2026-10-30): both Korea Meteorological Administration pages fetched 2026-10-30, HTTP 200. Each gives the sky-state table of the forecast terms: 맑음 0~5할, 구름많음 6~8할, 흐림 9~10할 of the sky covered by cloud; the kma.go.kr page says the terms are the words of forecast documents and broadcasts. 'up to half' = 0~5할; 'six to eight tenths' = 6~8할; 'nine or ten tenths' = 9~10할. Used in: q1 (the card's 맑음, the r3 distractor 흐림) and the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read; each quoteOrLocator found word for word. The note names the institution as it was on the access date (기상청, Korea Meteorological Administration). It claims no more than the table: no rule about icons, apps or rain, and 구름많음 is shown only in the note, never asked. No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): the q1 card, Hoya lines and captions make no claim beyond this note (the card is drawn and generic, no weather service, place or brand). Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "The Korea National Park Service shows a weather forecast for its national parks, with data from the Korea Meteorological Administration, whose weather site can also find a park or a well-known mountain by name.",
+      "sources": [
+        {
+          "title": "국립공원 날씨",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020071",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "국립공원탐방 > 안전한 탐방 > 국립공원 날씨: ‘기상예보 공원별 정보’ (가야산 … 한려해상) ‘자료제공 :’ [기상청 로고] ‘동네예보를 시간별로 날씨, 기온, 강수확률, 최저/최고기온 을 나타낸 도표입니다.’"
+        },
+        {
+          "title": "예보용어해설 (도움말: 현재위치 확인 및 지역검색 방법)",
+          "publisher": "기상청 (Korea Meteorological Administration) — 날씨누리",
+          "url": "https://www.weather.go.kr/w/forecast/guide/fct-term-exp.do",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘육상지역 검색은 지역의 읍면동지역 뿐만 아니라 주요건물, 유명산, 공원 등 지명을 검색창에 입력하여 조회된 검색결과를 선택하여 확인할 수 있습니다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-41 S6, 2026-10-30): the Korea National Park Service page 국립공원 날씨 (fetched 2026-10-30, HTTP 200 with a browser user agent) lists a forecast by park (공원별 정보, from 가야산 to 한려해상) and credits its data (자료제공) to the Korea Meteorological Administration: the credit is the KMA logo, whose alt text is 기상청 로고 and whose link is kma.go.kr. The KMA weather site's help text, on the 날씨누리 page fetched the same day, says a land search finds places by name, 유명산 and 공원 included. 'a forecast for its national parks' = 공원별 정보 (23 parks listed; Hallasan is not among them, so the note says 'its national parks', not 'each'); 'with data from' = 자료제공; 'a park or a well-known mountain by name' = 유명산, 공원 등 지명. Used in: the q2 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read; the quotes match. Both institutions are named as on the access date (국립공원공단; 기상청). The note makes no claim about accuracy, apps or the number of parks. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): no Hoya line or caption of q2 claims anything about real signs or services. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "The Korea National Park Service gives guide maps of the national parks, and for most parks a grade map, where the colour of a trail shows how hard it is, in five grades from very easy to very hard.",
+      "sources": [
+        {
+          "title": "국립공원 지도",
+          "publisher": "국립공원공단 (Korea National Park Service)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=8000575",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "국립공원탐방 > 국립공원 지도: ‘북한산국립공원 안내지도 PDF JPG 등급지도 PDF JPG … 지리산국립공원 안내지도 PDF JPG 등급지도 PDF JPG … 한라산국립공원 안내지도 PDF JPG’ (23 parks with a 안내지도; 22 of them with a 등급지도)"
+        },
+        {
+          "title": "체력 맞춰 사고 없이! 가을로 물든 북한산 '안전' 산행",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 국민이 말하는 정책",
+          "url": "https://www.korea.kr/news/reporterView.do?newsId=148974242",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘국립공원공단 누리집에서 '국립공원탐방 → 국립공원 지도'로 들어간 뒤, 북한산국립공원의 '등급지도'를 선택하면 된다.’ ‘이 선의 색깔은 탐방로의 난이도를 나타내는 역할이었다. 탐방로는 '매우 쉬움·쉬움·보통·어려움·매우 어려움'의 다섯 등급으로 나뉘어 있었다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-41 S6, 2026-10-30): the Korea National Park Service page 국립공원 지도 (fetched 2026-10-30, HTTP 200 with a browser user agent) offers a 안내지도 (guide map) for 23 national parks and a 등급지도 (grade map) for 22 of them (Hallasan has a guide map only), so the note says 'for most parks', not 'each'. The korea.kr page (the government's policy briefing site, fetched the same day) follows that menu to the Bukhansan grade map and says the line colour shows a trail's difficulty in five grades, 매우 쉬움 to 매우 어려움. Used in: the q3 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read; each quote found. The colours themselves and the count of parks stay out of learner copy, because they can change; the grades are given as 'very easy to very hard'. The institution is named as on the access date (국립공원공단). Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): the q3 map is drawn and generic (no park, place or organiser named) and the q3 lines make no claim about real maps. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Volume 2 MAR (row CM-41 S6, F-CURR-002 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). No native-speaker or expert review is claimed; language: native-reviewed is the schema's name for the signed-off language gate.",
+      "Language pass: spelling, spacing, particles and the polite 해요체 checked line by line (예요 after a vowel, 이에요 after a final: 호수예요, 안내소예요, 매점이에요, 주차장이에요); every romanization is the F-CNT-002 converter's (checkRomanization). 등산로 was dropped for 산길: the converter gives deungsallo where the dictionary pronunciation needs checking, so no word with an unverified sound change ships.",
+      "Language pass (cont.): Applied: ko q1 r1 asks 하루 뒤에는 (no echo of the key 내일), ko q3 reward line any-age (즐거운 시간 보내요), es q3 r1 says auto, es tú throughout; no tile gloss gives a value gap away by grammar (es tiles of q2 c2 carry their article).",
+      "Culture and facts pass: n1 (sky words 맑음, 구름많음, 흐림 by cloud cover) on two Korea Meteorological Administration pages; n2 (the park forecast with KMA data, and the KMA site's place search) on the Korea National Park Service and KMA pages; n3 (guide and grade maps, five grades) on the Korea National Park Service page and korea.kr.",
+      "Culture and facts pass (cont.): Applied: n2 says 'its national parks' and n3 'for most parks', since Hallasan is not in the KNPS forecast list and has no grade map. The forecast card, the trail sign and the park map are drawn and generic: no park, place, weather service, shop or brand; numbers are practice values; no line claims anything about real signs, maps or services; suits any age.",
+      "Learning design pass: 3 quests; new items per quest 5, 6 and 5 (at most 8); Practice and Check items from earlier quests 4 of 6, 3 of 6 and 3 of 6 (lesson-recycle at least 30 in 100); Checks Type Hangul (Dictation of 비 and 눈), Cloze Pick (value gaps on the quest's own trail sign) and Realia Read (the park map), one of each, none above 40 in 100 of the stage's Volume 2 Checks;",
+      "Learning design pass (cont.): each Check reads a meaning or produces and asks what Practice did not (q2 c1 the spring's minutes, c2 the place forty minutes away; q3 c1 the information center's side, c2 the shop by what it sells). Triples RR/CP/TH, RR/TH/CP, RR/TR/RR differ from Volume 1's (RR/TH/RR, RR/TR/TH, RR/TH/RR) and from each other.",
+      "Learning design pass (cont.): Device voice: 이십 분, 삼십 분, 사십 분 are said with a tense ㅂ ([이십뿐]), 약수터 [약쑤터] and 맑음 [말금] change in speech, so none is asked in Dictation; the Dictation targets 비 and 눈 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0.",
+      "Reviser: applied the fixes above (the 등산로 swap, the n2 and n3 scope words, the ko and es wording). Third pass: no change."
+    ]
+  },
+  "contentVer": 1
+}
