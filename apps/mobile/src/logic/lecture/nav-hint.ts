@@ -59,10 +59,12 @@ export function navHintKey(layout: NavLayout): 'hint' | 'hintOverlay' {
   return layout === 'overlay' ? 'hintOverlay' : 'hint';
 }
 
-function bounded<T>(read: Promise<T>, ms: number, fallback: T): Promise<T> {
+const TIMED_OUT = Symbol('navHintTimedOut');
+
+function bounded<T, F>(work: Promise<T>, ms: number, fallback: F): Promise<T | F | typeof TIMED_OUT> {
   return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(fallback), ms);
-    read.then(
+    const timer = setTimeout(() => resolve(TIMED_OUT), ms);
+    work.then(
       (value) => {
         clearTimeout(timer);
         resolve(value);
@@ -77,15 +79,18 @@ function bounded<T>(read: Promise<T>, ms: number, fallback: T): Promise<T> {
 
 /**
  * At the start of a lesson that may show the hint: reads the record and, when the hint is due, counts
- * this lesson (a failed write is ignored). Resolves to whether the hint shows; a failed, blocked or
- * slow read (`boundMs`) shows it.
+ * this lesson (a failed write is ignored). Resolves to whether the hint shows. A failed or blocked read
+ * shows it and counts the lesson as a first one; a slow read (`boundMs`) shows it and writes nothing,
+ * so a record the store really holds ('done', or a count) is never overwritten by a late open. The
+ * write is fired and not awaited, so a store that never settles still shows the hint.
  */
 export async function claimNavHint(store: NavHintStore, boundMs: number = NAV_HINT_READ_BOUND_MS): Promise<boolean> {
   const read = (async () => parseNavHint(await store.readJson(NAV_HINT_KEY)))();
-  const record = await bounded<NavHintRecord | null>(read, boundMs, null);
+  const record = await bounded<NavHintRecord | null, null>(read, boundMs, null);
+  if (record === TIMED_OUT) return true;
   if (!navHintDue(record)) return false;
   try {
-    await store.writeJson(NAV_HINT_KEY, navHintAfterShow(record));
+    void store.writeJson(NAV_HINT_KEY, navHintAfterShow(record)).catch(() => undefined);
   } catch {
     // A blocked store shows the hint on each lesson.
   }

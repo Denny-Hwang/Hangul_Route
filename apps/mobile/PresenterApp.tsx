@@ -684,10 +684,11 @@ function Presenter(): ReactElement {
     [deck, stories, narrator, canPlay, voiceChecked],
   );
 
+  /** Runs one event on the lesson; true when it moved the lesson (another slide or another build). */
   const dispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent): boolean => {
       const before = stateRef.current;
-      if (!before || slides.length === 0) return;
+      if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
       stateRef.current = state;
       setPstate(state);
@@ -728,6 +729,7 @@ function Presenter(): ReactElement {
       if (sound && !explicit && phoneRef.current && !canPlay && slideSound(slides[state.slideIdx], state.reveal) !== undefined) {
         setSoundFlash({ key: 'noVoice', at: Date.now() });
       }
+      return state.slideIdx !== before.slideIdx || state.reveal !== before.reveal;
     },
     [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay, endNavHint],
   );
@@ -748,18 +750,21 @@ function Presenter(): ReactElement {
     void pushPresenterEntry('running', rawOf(phase.deck));
   }, [phase, rawOf]);
   /**
-   * A press, a tap or a key in the lesson: an activation, then the event. While the More sheet is open
-   * it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): no step reaches the lesson until it
-   * closes (each of its own buttons closes it first; the rotate page's Back still opens the Exit confirm).
+   * A press or a key in the lesson: an activation, then the event; true when it moved the lesson. While
+   * the More sheet is open it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): a swipe or tap on
+   * the stage steps nothing (`stageGesture` gives only `'close-more'`). A step that does arrive comes
+   * from a control the teacher can see or a key (the docked band's pinned Previous and Next stay beside
+   * its sheet; a clicker's key): it closes the sheet first and then steps, so a visible, enabled Next
+   * never does nothing. Each of the sheet's own buttons closes it first too.
    */
   const userDispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent): boolean => {
       activate();
       const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (step && moreOpenRef.current) return;
-      dispatch(event);
+      if (step && moreOpenRef.current) openMore(false);
+      return dispatch(event);
     },
-    [activate, dispatch],
+    [activate, dispatch, openMore],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -916,6 +921,14 @@ function Presenter(): ReactElement {
         showBar();
         return;
       }
+      // A step key (arrows, PageDown, Home, End, a clicker) goes the way a bar press does: with More
+      // open it closes the sheet and then steps (`userDispatch`).
+      if (command === 'next' || command === 'prev' || command === 'first' || command === 'last') {
+        userDispatch(command);
+        return;
+      }
+      // A tool key (G, B, T, H) closes the More sheet first, as the sheet's own buttons do, so no tool opens under it.
+      if (typeof command === 'object' && moreOpenRef.current) openMore(false);
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
         if (command.overlay === 'timer') {
@@ -927,7 +940,7 @@ function Presenter(): ReactElement {
       }
       dispatch(command);
     });
-  }, [phase, dispatch, toggleFullscreen, activate, showBar]);
+  }, [phase, dispatch, userDispatch, openMore, toggleFullscreen, activate, showBar]);
 
   // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
   // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
@@ -1321,8 +1334,8 @@ function Presenter(): ReactElement {
     const stageCovering = moreOpen ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
     const onGesture = (command: Exclude<StageCommand, null>, via: { swipe: boolean }): void => {
       if (command === 'next' || command === 'prev') {
-        if (via.swipe) navStepSeen();
-        userDispatch(command);
+        // Only a swipe that moved the lesson ends the start hint (section 9.3: the first swipe *step*).
+        if (userDispatch(command) && via.swipe) navStepSeen();
         return;
       }
       // Every other command is a user activation too (rule 4) and changes no slide.
@@ -1350,13 +1363,12 @@ function Presenter(): ReactElement {
           fullscreenSupported={fullscreenSupported()}
           fullscreen={fullscreen}
           onPrev={() => {
-            // The step a bar button makes ends the start hint (More open swallows it, so it is no step).
-            if (!moreOpenRef.current) navStepSeen();
-            userDispatch('prev');
+            // Only a press that moved the lesson ends the start hint (section 9.3: the first button *step*;
+            // Previous on the first slide steps nothing and keeps it).
+            if (userDispatch('prev')) navStepSeen();
           }}
           onNext={() => {
-            if (!moreOpenRef.current) navStepSeen();
-            userDispatch('next');
+            if (userDispatch('next')) navStepSeen();
           }}
           onSound={() => userDispatch('replay-sound')}
           onFullscreen={() => {

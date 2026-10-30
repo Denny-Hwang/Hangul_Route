@@ -151,6 +151,21 @@ describe('the start hint on touch (section 9.3)', () => {
     expect(store.get(NAV_HINT_KEY)).toBe('done');
   });
 
+  it('Previous on the first slide steps nothing: the hint and its record stay (only a step ends it)', async () => {
+    const r = await lesson(true);
+    await press(one(r, 'presenter-back'));
+    await tick(10);
+    expect(counter(r)).toMatch(/^1 \//);
+    expect(hint(r)).toBeDefined();
+    expect(store.get(NAV_HINT_KEY)).toBe('1');
+    // A swipe right (Previous) on the first slide steps nothing either.
+    gesture(r, 100);
+    await tick(10);
+    expect(counter(r)).toMatch(/^1 \//);
+    expect(hint(r)).toBeDefined();
+    expect(store.get(NAV_HINT_KEY)).toBe('1');
+  });
+
   it('shows on at most three lessons', async () => {
     store.set(NAV_HINT_KEY, '2');
     const third = await lesson(true);

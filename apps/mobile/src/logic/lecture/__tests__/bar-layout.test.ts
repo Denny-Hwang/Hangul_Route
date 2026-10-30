@@ -134,4 +134,18 @@ describe('More (the wrapped band fallback)', () => {
   it('an empty tools row is 0 px wide', () => {
     expect(toolsWidth([], EN, spacing.sm)).toBe(0);
   });
+
+  it("checks that More's rows fit: Spanish at the largest text step on a 600 px mouse window keeps two rows", () => {
+    // Every tool at its cap (CTL_MAX_WIDTH, 1.5 x hero): Exit, Full screen and Sound need 3 x 144 + 2 x 8 = 448 px.
+    const capped: Record<DockedTool, number> = { exit: NEXT, fullscreen: NEXT, grid: NEXT, blank: NEXT, timer: NEXT, sound: NEXT };
+    expect(toolsWidth(bandTools(DOCKED_TOOLS, true), capped, spacing.sm)).toBe(448);
+    expect(dockedBarLayout({ ...fit(600, capped), next: 2 * HERO })).toEqual({ rows: 2, more: true });
+    expect(dockedBarLayout({ ...fit(744, ES) })).toEqual({ rows: 2, more: true });
+  });
+
+  it('a band too narrow for even the tools More leaves wraps them onto a second tools row, never clipping one', () => {
+    const capped: Record<DockedTool, number> = { exit: NEXT, fullscreen: NEXT, grid: NEXT, blank: NEXT, timer: NEXT, sound: NEXT };
+    expect(dockedBarLayout({ ...fit(0, capped), room: 447 })).toEqual({ rows: 3, more: true });
+    expect(dockedBarLayout({ ...fit(0, capped), room: 448 })).toEqual({ rows: 2, more: true });
+  });
 });
