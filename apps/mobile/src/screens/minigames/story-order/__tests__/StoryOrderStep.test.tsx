@@ -1,7 +1,11 @@
 import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { questsAll } from '../../../../content';
 import { RomanizationModeOverride } from '../../../../i18n/use-romanization-mode';
+import { GAME_SWITCHES } from '../../../../logic/game-switches';
+import { scopeFor } from '../../../../logic/minigame-config';
+import { playableStoryOrder } from '../../../../logic/story-order/fallback';
 import { STORY_ORDER_FIXTURES } from '../../../../navigation/story-order-e2e-fixture';
 import { setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../../../../store/quest-run-store';
 import { useRemoteConfigStore } from '../../../../store/remote-config-store';
@@ -44,9 +48,11 @@ function flag(on: boolean | null): void {
   useRemoteConfigStore.setState({ hydrated: true, cache: on === null ? null : { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.story-order': { on, pct: 100 } } } });
 }
 
-async function open(fixture: keyof typeof STORY_ORDER_FIXTURES, mode: MinigameHost['mode'] = 'quest'): Promise<{ r: ReactTestRenderer; host: MinigameHost; finished: () => number }> {
+type Scope = (typeof STORY_ORDER_FIXTURES)[keyof typeof STORY_ORDER_FIXTURES];
+
+async function open(fixture: keyof typeof STORY_ORDER_FIXTURES | Scope, mode: MinigameHost['mode'] = 'quest'): Promise<{ r: ReactTestRenderer; host: MinigameHost; finished: () => number }> {
   let finished = 0;
-  const scope = STORY_ORDER_FIXTURES[fixture];
+  const scope = typeof fixture === 'string' ? STORY_ORDER_FIXTURES[fixture] : fixture;
   // As MinigameScreen's quest host: the answer goes to the run store with what it asked.
   const host: MinigameHost = {
     mode,
@@ -229,5 +235,38 @@ describe('StoryOrderStep: game.story-order on', () => {
     });
     for (let i = 0; i < 100 && byTestId(r.root, 'story-order-cards').length === 0; i += 1) await settle();
     expect(byTestId(r.root, 'story-order-cards')).toHaveLength(1);
+  });
+});
+
+describe('every catalogue quest step whose kind has a game switch renders its fallback with the switch off (§12.2, §14)', () => {
+  // Each quest step whose kind is gated (`GAME_SWITCHES`; today only story-order). No shipped quest authors one yet, so
+  // the catalogue part is empty until CM-3A / CM-46 author Story Order steps; they are rendered here without a new test.
+  const gated = questsAll.flatMap((quest) =>
+    quest.steps.flatMap((step, i) => {
+      const scope = step.minigameRef ? scopeFor(step.minigameRef) : undefined;
+      return scope && GAME_SWITCHES[scope.kind] ? [{ name: `${quest.id} step ${i} ${step.minigameRef}`, scope: scope as Scope }] : [];
+    }),
+  );
+
+  it('only story-order is gated, so StoryOrderStep is the screen each gated step mounts', () => {
+    expect(Object.keys(GAME_SWITCHES)).toEqual(['story-order']);
+    for (const { name, scope } of gated) expect(scope.kind, name).toBe('story-order');
+  });
+
+  it('each one (and each fixture) mounts as Story Sequence with text cards: never the game, never a dead end', async () => {
+    flag(false);
+    const all = [...gated, ...Object.entries(STORY_ORDER_FIXTURES).map(([k, scope]) => ({ name: `fixture ${k}`, scope }))];
+    for (const { name, scope } of all) {
+      const { r } = await open(scope);
+      const texts = screenTexts(r.root);
+      expect(byTestId(r.root, 'story-order-cards'), name).toHaveLength(0);
+      const first = playableStoryOrder(scope)[0];
+      if (!first) {
+        expect(texts, name).toContain(SEQ.emptyLine);
+        continue;
+      }
+      expect(texts, name).toContain(SEQ.title);
+      for (const p of first.panels) expect(byTestId(r.root, `story-sequence-card-${p.id}`).length, `${name} ${p.id}`).toBeGreaterThan(0);
+    }
   });
 });

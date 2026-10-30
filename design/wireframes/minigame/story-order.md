@@ -82,7 +82,7 @@ Replay (after the last slot):
 
 ## Fallback round when `game.story-order` is off
 
-**Story Sequence** (`story-sequence`, shipped), derived by `storyOrderToSequence(round)`: the same cards as Story Sequence cards (picture when there is one, the text block alone when there is none, its shipped "cards without art" rule), the meaning shown as the card caption as Story Sequence does, the same slots, the same replay. Same scoring per slot. The caption-only rule does not apply to the fallback (it is a shipped game with its own rules); the memory model records the round at the read rung, not the produce rung.
+**Story Sequence** (`story-sequence`, shipped), derived by `storyOrderToSequence(round)`: the same cards as Story Sequence text cards (built in CM-34: text cards only, with no panel pictures while the switch is off, since Story Sequence draws story scene art only and a panel's `pictureRef` is a word picture; its shipped "cards without art" rule), the meaning shown as the card caption as Story Sequence does, the same slots, the same replay. Same scoring per slot. The caption-only rule does not apply to the fallback (it is a shipped game with its own rules); the memory model records the round at the read rung, not the produce rung.
 
 ## No device voice
 
