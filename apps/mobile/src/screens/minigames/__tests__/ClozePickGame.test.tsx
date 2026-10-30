@@ -117,6 +117,8 @@ describe('Cloze Pick', () => {
     expect(audio.playPrompt).toHaveBeenCalledTimes(1);
     expect(audio.playPrompt.mock.calls[0]?.[0]).toMatchObject({ text: '책을 읽어요.', kind: 'sentence', source: 'cloze-pick' });
     const hear = byTestId(r.root, 'cloze-pick-hear-it').find((n) => typeof n.props.onClick === 'function');
+    // A screen reader reaches it: no ancestor groups it into one accessible element (VoiceOver, TalkBack).
+    for (let up = hear?.parent; up; up = up.parent) expect(up.props.accessible, 'an accessible ancestor').not.toBe(true);
     await press(hear!);
     expect(audio.playPrompt).toHaveBeenCalledTimes(2);
     await act(async () => {
