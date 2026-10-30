@@ -280,6 +280,8 @@ function Presenter(): ReactElement {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreOpenRef = useRef(moreOpen);
   moreOpenRef.current = moreOpen;
+  /** A slide is on the stage (not the rotate or too-small page); set where the render works it out. */
+  const slideShownRef = useRef(false);
   /** Opens or closes the More sheet; the ref follows at once, so a sheet button's own tool runs after it closed. */
   const openMore = useCallback((open: boolean) => {
     moreOpenRef.current = open;
@@ -876,9 +878,10 @@ function Presenter(): ReactElement {
         showBar();
         return;
       }
-      // Keys 1 to 4 point at an option (section 7.3); the More sheet covers the stage, so it takes none.
+      // Keys 1 to 4 point at an option (section 7.3); the More sheet covers the stage, so it takes none,
+      // and the rotate and too-small pages show no slide (and no live region), so they take none either.
       if (typeof command === 'object' && 'point' in command) {
-        if (!moreOpenRef.current) dispatch(command);
+        if (!moreOpenRef.current && slideShownRef.current) dispatch(command);
         return;
       }
       if (typeof command === 'object') {
@@ -1087,6 +1090,7 @@ function Presenter(): ReactElement {
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
   const slideShown = phase.kind === 'running' && stageShows === 'slide' && pstate !== null && slides[pstate.slideIdx] !== undefined;
+  slideShownRef.current = slideShown;
   useEffect(() => {
     if (slideShown) begin();
   }, [slideShown, begin]);

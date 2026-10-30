@@ -33,7 +33,6 @@ import { StoryCheckSlide, isStoryCheck } from '../slides/StoryCheckSlide';
 vi.mock('../../../components/StrokeHint', () => ({ StrokeHint: () => null }));
 
 const QUESTION: ReadonlySet<BuildName> = new Set(['question']);
-const ANSWER: ReadonlySet<BuildName> = new Set(['question', 'answer']);
 
 function slidesOf(blocks: LectureBlock[]): Slide[] {
   const deck = LectureDeckSchema.parse({ v: 1, id: 'lecture:point2', title: 'Point', createdAt: '2026-10-29T09:00:00Z', seed: 3, blocks });
@@ -107,7 +106,7 @@ describe('a pointed grid card (QuizOptions)', () => {
     const probe = await render(<View testID="probe" style={{ backgroundColor: colors.surface.paper }} />);
     expect(s.backgroundColor).toBe(styleOf(byTestId(probe.root, 'probe')[0]!).backgroundColor);
     expect(pins[0]!.props['aria-hidden']).toBe(true);
-    expect(String(pins[0]!.props.className ?? '') + JSON.stringify(s)).toMatch(/pointerEvents/);
+    expect(s.pointerEvents).toBe('none');
   });
 
   it('on a phone stage (unit 0.44) the outline keeps its STAGE_BORDER_MIN floor and the pin its spacing.xl floor', async () => {
@@ -147,12 +146,17 @@ describe('a pointed row (OptionRows)', () => {
     }
   });
 
-  it('the answer row keeps its own look when pointed after the reveal: the outline is added, nothing else changes', async () => {
-    const answer = listenRows.options.findIndex((o) => o.correct) + 1;
-    const plain = await render(inView(<OptionRows options={listenRows.options} revealed romanization="always" />));
-    const pointed = await render(inView(<OptionRows options={listenRows.options} revealed romanization="always" pointed={answer} />));
-    expect(withoutOutline(styleOf(optionHost(pointed, answer)))).toEqual(styleOf(optionHost(plain, answer)));
-    expect(px(styleOf(optionHost(pointed, answer)).outlineOffset)).toBeGreaterThanOrEqual(0);
+  it('once the answer shows nothing is drawn pointed (no pick outlined beside the answer), even if a point were passed', async () => {
+    for (const n of [1, 2, 3]) {
+      const plain = await render(inView(<OptionRows options={listenRows.options} revealed romanization="always" />));
+      const pointed = await render(inView(<OptionRows options={listenRows.options} revealed romanization="always" pointed={n} />));
+      expect(pointedOptions(pointed), `row ${n}`).toEqual([]);
+      expect(byTestId(pointed.root, 'presenter-quiz-pin')).toHaveLength(0);
+      expect(styleOf(optionHost(pointed, n))).toEqual(styleOf(optionHost(plain, n)));
+    }
+    const grid = await render(inView(<QuizOptions options={quiz.options} revealed romanization="always" pointed={2} />));
+    expect(pointedOptions(grid)).toEqual([]);
+    expect(byTestId(grid.root, 'presenter-quiz-pin')).toHaveLength(0);
   });
 });
 
@@ -161,7 +165,7 @@ describe('every slide with options draws it (section 7.1)', () => {
     ['quiz', () => <QuizSlide slide={quiz} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} pointed={3} />],
     ['story check', () => <StoryCheckSlide slide={check} shown={QUESTION} romanization="always" pointed={3} />],
     ['listen rows', () => <QuestionSlide slide={listenRows} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} pointed={3} />],
-    ['reply', () => <QuestionSlide slide={reply} shown={ANSWER} romanization="always" sayIt={false} onPlaySound={() => undefined} pointed={3} />],
+    ['reply', () => <QuestionSlide slide={reply} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} pointed={3} />],
     ['realia question', () => <RealiaQuestionSlide slide={realia} shown={QUESTION} romanization="always" pointed={3} />],
   ] as Array<[string, () => ReactElement]>)('%s: option 3 pointed, nothing else', async (_name, slide) => {
     const r = await render(inView(slide()));

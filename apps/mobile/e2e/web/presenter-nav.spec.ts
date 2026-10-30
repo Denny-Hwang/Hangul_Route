@@ -315,6 +315,12 @@ for (const vp of MATRIX) {
           await goToFamily(page, presses, family);
           // Overlay: the keyboard step hid the bar; a tap on a target must leave it so.
           if (layout === 'overlay') await overlayBar(page, false);
+          else {
+            // A first pointer on empty stage (a ring on touch, nothing for a mouse on a target slide) lets the docked
+            // band take its shown height, and wrap on a narrow window, before the boxes are measured and tapped.
+            await tapAt(page, input, await emptyPoint(page));
+            await page.waitForTimeout(600);
+          }
           const boxes = await settledTargets(page);
           expect(boxes.length, family).toBeGreaterThan(0);
           if (family === 'grid' || family === 'rows') expect(boxes.every((b) => /^option:[1-4]$/.test(b.marker)), family).toBe(true);
@@ -335,26 +341,26 @@ for (const vp of MATRIX) {
           const still = ({ live: _live, ...rest }: Awaited<ReturnType<typeof state>>) => rest;
           for (const [i, t] of boxes.entries()) {
             const option = /^option:(\d)$/.exec(t.marker);
-            let pointed = false;
             for (const name of pointsOn(t).map((p) => p.name)) {
-              // Read the target's box again before each tap: the first pointer activity on a window can show
-              // the bar and wrap its band (1024 x 768), which moves the stage a few hundred ms later.
+              // Read the target's box again before each tap, in case anything moved the stage since the last one.
               const point = pointsOn((await targets(page))[i]!).find((p) => p.name === name)!;
               const where = `${family} ${t.marker} ${point.name} at ${Math.round(point.at.x)},${Math.round(point.at.y)}`;
-              await tapAt(page, input, point.at);
-              await page.waitForTimeout(60);
               if (option) {
-                pointed = !pointed;
+                // A tap toggles the option: what it should show next is read from the page, not counted here.
+                const pointed = (await pointedNow(page)).length === 0;
+                await tapAt(page, input, point.at);
+                await expect.poll(() => pointedNow(page), where).toEqual(pointed ? [t.marker] : []);
+                await expect.poll(() => live(page), where).toBe(pointed ? POINTED(Number(option[1])) : UNPOINTED);
                 expect(still(await state(page)), where).toEqual(still(before));
-                expect(await pointedNow(page), where).toEqual(pointed ? [t.marker] : []);
-                expect(await live(page), where).toBe(pointed ? POINTED(Number(option[1])) : UNPOINTED);
               } else {
+                await tapAt(page, input, point.at);
+                await page.waitForTimeout(60);
                 expect(await state(page), where).toEqual(before);
                 expect(await pointedNow(page), where).toEqual([]);
               }
             }
             // Leave nothing pointed for the next target.
-            if (pointed) await tapAt(page, input, pointsOn((await targets(page))[i]!)[0]!.at);
+            if ((await pointedNow(page)).length > 0) await tapAt(page, input, pointsOn((await targets(page))[i]!)[0]!.at);
             await expect.poll(() => pointedNow(page)).toEqual([]);
           }
           if (family === 'grid') await shot(page, `presenter-nav-${vp.id}-${input}-grid`);
@@ -578,9 +584,10 @@ for (const vp of MATRIX) {
 
 // --- Row PN-5: pointing at an option (section 7.3, owner choice O2) ---------------------------------
 
-/** The PN-5 matrix: V1, V2c, V2 (touch), V3 (touch and mouse), V4 (mouse and touch), and the 1280 x 720 projector (mouse). */
+/** The PN-5 matrix: V1, V2c, V2 (touch), V3 and V3-4x3 (touch and mouse), V4 (mouse and touch), and the 1280 x 720 projector (mouse). */
 const POINT_MATRIX: readonly Viewport[] = [
-  ...MATRIX.filter((vp) => ['V1', 'V2c', 'V2', 'V3', 'V4'].includes(vp.id)),
+  // V3-4x3 (1024 x 768) is the tightest docked window: its band wraps, so the clearance check runs there too.
+  ...MATRIX.filter((vp) => ['V1', 'V2c', 'V2', 'V3', 'V3-4x3', 'V4'].includes(vp.id)),
   { id: 'P', width: 1280, height: 720, phone: false, inputs: ['mouse'] },
 ];
 
@@ -652,7 +659,14 @@ for (const vp of POINT_MATRIX) {
               const shown = await controls(page);
               expect(shown.length).toBeGreaterThan(0);
               for (const b of boxes) for (const c of shown) expect(gap(b, c), `${family} ${t.marker}: ${b.marker} / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+              // The outline and the pin themselves keep the clearance too: drawing them never brings the content within 32 px of a control.
+              for (const c of shown) {
+                expect(gap(reach.outline, c), `${family} ${t.marker}: outline / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+                if (reach.pin) expect(gap(reach.pin, c), `${family} ${t.marker}: pin / ${c.id}`).toBeGreaterThanOrEqual(NAV_CLEARANCE);
+              }
             }
+            // The pin takes no taps.
+            expect(await page.getByTestId('presenter-quiz-pin').evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none');
             if (t.marker === 'option:2') await shot(page, `presenter-point-${vp.id}-${input}-${family}`);
             // A second tap on the same option clears it.
             await tapAt(page, input, centre);
@@ -670,6 +684,15 @@ for (const vp of POINT_MATRIX) {
           await expect.poll(() => page.getByTestId('presenter-quiz-mark').count()).toBe(1);
           expect(await pointedNow(page)).toEqual([]);
           expect(await live(page)).not.toContain('pointed');
+          // Once the answer shows, a tap or a key points at nothing: no pick is outlined beside the answer.
+          const revealed = await state(page);
+          const answerBoxes = (await targets(page)).filter((x) => /^option:[1-4]$/.test(x.marker));
+          for (const x of answerBoxes) await tapAt(page, input, { x: (x.left + x.right) / 2, y: (x.top + x.bottom) / 2 });
+          await page.keyboard.press('2');
+          await page.waitForTimeout(150);
+          expect(await pointedNow(page), `${family} after the reveal`).toEqual([]);
+          expect(await page.getByTestId('presenter-quiz-pin').count()).toBe(0);
+          expect(await state(page), `${family} after the reveal`).toEqual(revealed);
         }
       });
 

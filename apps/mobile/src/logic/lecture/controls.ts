@@ -24,9 +24,10 @@
  *   timer card's own Close) closes the timer and nothing else.
  * - `{ point: n }` (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2): a tap on option n, or
  *   key n, points at it; the same option again clears it; one option at a time. It does nothing on
- *   a slide with no option n or under a covering overlay or the full timer, and any step (`next`,
- *   a reveal build included, `prev`, `first`, `last`, `goto`) clears it, so the answer is never
- *   shown with a pick still outlined. It lives in memory only: never saved, never sent.
+ *   a slide with no option n, once the slide shows its answer build, or under a covering overlay or
+ *   the full timer, and any step (`next`, a reveal build included, `prev`, `first`, `last`, `goto`)
+ *   clears it, so the answer is never shown with a pick still outlined and nothing on the stage can
+ *   read as "your pick was wrong". It lives in memory only: never saved, never sent.
  * - A forward step (`next`, `first`, `last`, `goto`) that moves returns a
  *   `revealed` effect naming the build now showing; the screen plays it when
  *   it is a sound or stroke build. `prev` never returns one, so going back to
@@ -104,9 +105,13 @@ export interface ReduceResult {
   effect?: PresenterEffect;
 }
 
-/** How many options a slide has to point at: a quiz slide's options, else none. */
-export function pointableOptions(slide: ControlSlide): number {
-  return slide.kind === 'quiz' && Array.isArray(slide.options) ? slide.options.length : 0;
+/**
+ * How many options a slide has to point at at a build: a quiz slide's options until its answer
+ * build shows, else none (section 7.3: a pick is never outlined beside the answer).
+ */
+export function pointableOptions(slide: ControlSlide, reveal = 0): number {
+  if (slide.kind !== 'quiz' || !Array.isArray(slide.options)) return 0;
+  return slide.builds.slice(0, reveal + 1).includes('answer') ? 0 : slide.options.length;
 }
 
 /** Reveals after build 0 (`builds.length - 1`, never negative). */
@@ -249,7 +254,7 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
 
   if ('point' in event) {
     const n = event.point;
-    const count = pointableOptions(deck.slides[state.slideIdx]!);
+    const count = pointableOptions(deck.slides[state.slideIdx]!, state.reveal);
     if (!slideVisible(state) || !Number.isInteger(n) || n < 1 || n > count) return { state };
     return { state: { ...state, pointed: state.pointed === n ? null : n } };
   }

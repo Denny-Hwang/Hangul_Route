@@ -32,6 +32,8 @@ import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
  * card's own border (on one-column rows, in the middle of the row gap), and the `pin` glyph on a
  * paper disc at the marker's top right. No fill change, no `feedback` colour, no motion; an outline
  * takes no room and no taps, so nothing on the slide moves and the target boxes stay as they are.
+ * Once the answer shows nothing is drawn pointed (the reducer takes no point then either), so no pick
+ * is ever outlined beside the answer.
  */
 
 /** The 2 x 2 option grid (2 or 3 options fill it in order). */
@@ -80,7 +82,7 @@ export function QuizOptions({
               option={option}
               index={r * 2 + c}
               revealed={revealed}
-              pointed={pointed === r * 2 + c + 1}
+              pointed={!revealed && pointed === r * 2 + c + 1}
               romOn={romOn}
               rowHeight={rowHeight}
               glossSmall={glossSmall}
@@ -278,8 +280,8 @@ function PointPin({ left, marker }: { left: number; marker: number }): ReactElem
       aria-hidden
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      pointerEvents="none"
       style={{
+        pointerEvents: 'none',
         position: 'absolute',
         left: left + marker - side * PIN_INSET,
         top: '50%',
@@ -361,7 +363,7 @@ export function OptionRows({
   return (
     <View role="list" testID="presenter-quiz-options" style={{ gap: units(unit, rowGap(compact)), paddingVertical: Math.max(0, grow) }}>
       {options.map((option, i) => (
-        <OptionRow key={i} option={option} index={i} revealed={revealed} pointed={pointed === i + 1} romOn={romOn} compact={compact} small={small} />
+        <OptionRow key={i} option={option} index={i} revealed={revealed} pointed={!revealed && pointed === i + 1} romOn={romOn} compact={compact} small={small} />
       ))}
     </View>
   );
@@ -409,8 +411,9 @@ function OptionRow({
   const glossShown = revealed && option.gloss !== undefined;
   const markSide = units(unit, compact ? spacing.xxxl : spacing.jumbo);
   const padH = units(unit, spacing.xl) + line - (correct ? rule : line);
-  // On one-column rows the outline sits in the middle of the gap to the next row (less what an answer's thicker border takes of it), so it never reaches that row at a phone's unit.
-  const pointOffset = Math.max(0, (units(unit, rowGap(compact)) - grow - pointLine(unit)) / 2);
+  // On one-column rows the outline sits in the middle of the gap to the next row, so it never reaches that row at a phone's unit.
+  // A row is pointed only before the reveal, so no answer row's thicker border narrows that gap.
+  const pointOffset = Math.max(0, (units(unit, rowGap(compact)) - pointLine(unit)) / 2);
   return (
     <View
       role="listitem"

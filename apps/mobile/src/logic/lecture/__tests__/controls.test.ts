@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   initialPresenterState,
+  pointableOptions,
   reduce,
   revealsOf,
   type ControlSlide,
@@ -403,7 +404,7 @@ describe('{ point: n }: pointing at an option (AMENDMENTS-PRESENTER-NAV section 
   });
 
   it('changes nothing else: the slide, the build, the overlay, the timer and the skips stay; no effect', () => {
-    const before = on(1, { reveal: 1, timerOpen: true });
+    const before = on(1, { timerOpen: true, skipped: new Set(['e']) });
     const { state, effect } = reduce(before, { point: 2 }, POINT_DECK);
     expect(state).toEqual({ ...before, pointed: 2 });
     expect(effect).toBeUndefined();
@@ -446,6 +447,16 @@ describe('{ point: n }: pointing at an option (AMENDMENTS-PRESENTER-NAV section 
     const revealed = go(on(1), { point: 4 }, 'next');
     expect(revealed.reveal).toBe(1);
     expect(revealed.pointed).toBeNull();
+  });
+
+  it('once the answer shows it takes no point: no pick is ever outlined beside the answer (section 7.3, anti-shame)', () => {
+    const answer = on(1, { reveal: 1 });
+    for (const n of [1, 2, 3, 4]) expect(reduce(answer, { point: n }, POINT_DECK).state, String(n)).toBe(answer);
+    // Back on the question build it points again.
+    expect(go(answer, 'prev', { point: 2 }).pointed).toBe(2);
+    expect(pointableOptions(POINT_DECK.slides[1]!, 0)).toBe(4);
+    expect(pointableOptions(POINT_DECK.slides[1]!, 1)).toBe(0);
+    expect(pointableOptions(POINT_DECK.slides[0]!, 0)).toBe(0);
   });
 
   it('covering overlays swallow it (blank, pause, grid, help, exit, the full timer); the corner timer lets it through', () => {

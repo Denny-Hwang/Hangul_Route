@@ -9,7 +9,8 @@ import { byTestId, press, render, textOf } from '../../../test-support/render';
  * Pointing at an option on the whole presenter (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice
  * O2, row PN-5): a touch tap or a mouse click on an option, or keys 1 to 4, set `data-pointed="true"`
  * on that option only and change nothing else (the counter, the build, the bar); the same option
- * again clears it; a step (Reveal included) clears it; the live region names the pointed option.
+ * again clears it; a step (Reveal included) clears it, and once the answer shows nothing points;
+ * the live region names the pointed option; the rotate page takes no point key.
  * With the phone's More sheet open the stage is covered, so neither a tap nor a key points.
  */
 
@@ -152,7 +153,7 @@ describe('a tap or click on an option points at it (section 7.3)', () => {
     expect(counter(r)).toBe(was);
   });
 
-  it('a step clears it: Reveal shows the answer with nothing outlined, and a swipe on to the next slide too', async () => {
+  it('a step clears it: Reveal shows the answer with nothing outlined, and after it a tap or key points at nothing', async () => {
     const r = await onQuiz();
     gesture(r, 'touch', 'option:1');
     await tick(10);
@@ -162,9 +163,16 @@ describe('a tap or click on an option points at it (section 7.3)', () => {
     expect(byTestId(r.root, 'presenter-quiz-mark')).toHaveLength(1);
     expect(pointedNow(r)).toEqual([]);
     expect(live(r)).not.toContain('pointed');
+    // The answer is showing: no pick is ever outlined beside it (anti-shame), by tap or by key.
+    const said = live(r);
     gesture(r, 'touch', 'option:2');
     await tick(10);
-    expect(pointedNow(r)).toEqual([2]);
+    key({ point: 3 });
+    await tick(10);
+    expect(pointedNow(r)).toEqual([]);
+    expect(byTestId(r.root, 'presenter-quiz-pin')).toHaveLength(0);
+    expect(live(r)).toBe(said);
+    // A swipe on still steps.
     const was = counter(r);
     gesture(r, 'touch', 'option:2', -100);
     await tick(10);
@@ -224,6 +232,42 @@ describe('a phone window with More open (section 5.2: More covers the stage)', (
     await tick(10);
     expect(pointedNow(r)).toEqual([1]);
     expect(one(r, 'presenter-next')).toBe(bar);
+  });
+});
+
+describe('a page with no slide on it (section 7.3)', () => {
+  it('on the rotate page keys 1 to 4 point at nothing, so turning back shows no outline nobody heard of', async () => {
+    Dimensions.set({ window: phone, screen: phone });
+    // The Node lane has no window resize: the test hands useWindowDimensions its 'change' itself.
+    const changes: ((d: { window: typeof phone; screen: typeof phone }) => void)[] = [];
+    const spy = vi.spyOn(Dimensions, 'addEventListener').mockImplementation(((type: string, handler: (typeof changes)[number]) => {
+      if (type === 'change') changes.push(handler);
+      return { remove: () => undefined };
+    }) as never);
+    const turn = (size: typeof phone): void => {
+      act(() => {
+        Dimensions.set({ window: size, screen: size });
+        for (const change of changes) change({ window: size, screen: size });
+      });
+    };
+    try {
+      const r = await onQuiz();
+      turn({ ...phone, width: phone.height, height: phone.width });
+      await tick(10);
+      expect(byTestId(r.root, 'presenter-rotate')).toHaveLength(1);
+      key({ point: 2 });
+      await tick(10);
+      turn(phone);
+      await tick(10);
+      expect(byTestId(r.root, 'presenter-quiz-option-2').length).toBeGreaterThan(0);
+      expect(pointedNow(r)).toEqual([]);
+      // Back on the slide, the key points again.
+      key({ point: 2 });
+      await tick(10);
+      expect(pointedNow(r)).toEqual([2]);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
