@@ -3,6 +3,7 @@ import { ALLOMORPH_PAIRS, allomorph, slotEndingIssues } from '../hangul/allomorp
 import { isOneKeyFinal } from '../hangul/compose-typed';
 import { AudioRefSchema } from './audio';
 import { KoTextSchema, PictureRefSchema } from './ko-text';
+import { RolePlaySceneSchema } from './role-play';
 
 /**
  * Minigame catalog — 4 families × 12 games (see docs/blueprints/06).
@@ -44,6 +45,8 @@ export const MinigameKindSchema = z.enum([
   'cloze-pick', // Recognition · Cloze Pick (fallback: Listen & Pick with a text prompt)
   // F-CURR-002 §7.1 (row CM-34), additive.
   'story-order', // Discovery · put 3-5 Korean captions (with or without pictures) in order; fallback Story Sequence
+  // F-CURR-002 §7.1 (row CM-35), additive.
+  'role-play', // Interaction · a branching chat, read and tap a reply (fallback: Tap to Respond on the same turns)
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 
@@ -571,20 +574,29 @@ export type ClozePickRound = z.infer<typeof ClozePickRoundSchema>;
 
 /** The text with its one gap filled (`책을 ___.` with 읽어요 is `책을 읽어요.`). */
 export const fillClozeGap = (text: string, fill: string): string => text.replace(CLOZE_GAP, fill);
+/**
  * Story Order (F-CURR-002 §7.1 F5, row CM-34; design/wireframes/minigame/story-order.md): 3-5 panels, each
  * a Korean caption (one short line of taught words, with romanization and gloss) and, on an illustrated
  * round, its picture, listed in the RIGHT order (the game deranges them). The cards show the Korean and
  * its romanization only while the learner orders them; the gloss shows on Show meanings and in the replay.
+ */
+/**
  * A slug: the memory item id is `<round>/<panel>` and the gloss overlay key joins ids with `.`, so neither may hold one.
+ */
 const StoryOrderIdSchema = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'a lowercase slug (letters, digits, hyphens)');
+
 /** Strict: an unknown key (such as an `art` the game never draws) fails the build instead of being dropped. */
 export const StoryOrderPanelSchema = z
+  .object({
     id: StoryOrderIdSchema,
     caption: KoTextSchema,
     pictureRef: PictureRefSchema.optional(),
+  })
   .strict();
 export type StoryOrderPanel = z.infer<typeof StoryOrderPanelSchema>;
+
 export const StoryOrderRoundSchema = z
+  .object({
     id: StoryOrderIdSchema,
     panels: z.array(StoryOrderPanelSchema).min(3).max(5),
     /** Drawn without its pictures (a panel may still name one): the order comes from the Korean alone. */
@@ -594,6 +606,8 @@ export const StoryOrderRoundSchema = z
      * 먼저 and 마지막에, or cause and result), as the MAR confirms. Read by the lint `story-order-text`.
      */
     captionsSettleOrder: z.boolean().optional(),
+  })
+  .superRefine((round, ctx) => {
     const ids = new Set<string>();
     const lines = new Set<string>();
     round.panels.forEach((panel, i) => {
@@ -604,19 +618,27 @@ export const StoryOrderRoundSchema = z
       }
       lines.add(panel.caption.ko);
     });
+  });
 export type StoryOrderRound = z.infer<typeof StoryOrderRoundSchema>;
+
 /** Whether a Story Order round draws its pictures: not captions only, and at least one panel has one. */
 export function storyOrderPictures(round: StoryOrderRound): boolean {
   return round.captionsOnly !== true && round.panels.some((p) => p.pictureRef !== undefined);
 }
+
+/**
  * Whether the round's order comes from its text (the rule of the lint `story-order-text`, which
  * reads the same fields off raw JSON): captions only, no picture at all, or marked as settled by its captions.
+ */
 export function storyOrderTextSettled(round: StoryOrderRound): boolean {
   return !storyOrderPictures(round) || round.captionsSettleOrder === true;
 }
+
+/**
  * The Story Sequence round a Story Order round falls back to while `game.story-order` is off
  * (§7.1, §12.2): the same panels in the same order, the caption's gloss as the step label (Story
  * Sequence shows it), its Korean and romanization, and the picture unless the round is captions only.
+ */
 export function storyOrderToSequence(round: StoryOrderRound): z.infer<typeof StorySequenceRoundSchema> {
   const pictures = round.captionsOnly !== true;
   return {
@@ -646,6 +668,7 @@ export const RoundSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('write-frame'), data: WriteFrameRoundSchema }),
   z.object({ kind: z.literal('cloze-pick'), data: ClozePickRoundSchema }),
   z.object({ kind: z.literal('story-order'), data: StoryOrderRoundSchema }),
+  z.object({ kind: z.literal('role-play'), data: RolePlaySceneSchema }),
 ]);
 export type Round = z.infer<typeof RoundSchema>;
 

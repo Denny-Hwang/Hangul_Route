@@ -230,11 +230,11 @@ describe('quest-run-store', () => {
       const store = useQuestRunStore.getState();
       store.beginQuest('quest:x', 'episode:y');
       store.answerRound('so:r1:0', true, { texts: ['먼저 일어나요.'] }, true);
-      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] }, true);
+      // Story Order passes the hint with a right answer only, so its miss reaches the store as a plain miss.
+      store.answerRound('so:r1:1', false, { texts: ['그다음에 세수해요.'] });
       store.answerRound('so:r1:2', true, { texts: ['그리고 밥을 먹어요.'] });
       expect(heard.map((a) => [a.correct, a.hinted ?? false])).toEqual([
         [true, true],
-        // A hinted answer is never wrong: a miss stays a plain miss.
         [false, false],
         [true, false],
       ]);
@@ -287,5 +287,20 @@ describe('quest-run-store', () => {
       setFirstRoundAnswerListener(null);
     }
   });
-});
 
+  it('a first answer given with a hint showing reaches the memory store hinted when right, as a plain miss when wrong (row CM-35)', () => {
+    const heard: FirstRoundAnswer[] = [];
+    setFirstRoundAnswerListener((a) => heard.push(a));
+    try {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('quest:x', 'episode:y');
+      store.answerRound('t1', true, { texts: ['안녕하세요!'], hinted: true });
+      store.answerRound('t2', false, { texts: ['무슨 책을 찾아요?'], hinted: true });
+      store.answerRound('t3', true, { texts: ['또 오세요!'] });
+      expect(heard.map((a) => a.hinted)).toEqual([true, undefined, undefined]);
+      expect(useQuestRunStore.getState()).toMatchObject({ totalCount: 3, correctCount: 2 });
+    } finally {
+      setFirstRoundAnswerListener(null);
+    }
+  });
+});

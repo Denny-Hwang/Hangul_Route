@@ -28,7 +28,6 @@ export interface MinigameHost {
    * row CM-34), still scored as usual; a right one reaches the memory store as hinted.
    */
   answer(roundKey: string | number, correct: boolean, meta?: AnswerMeta): void;
-  answer(roundKey: string | number, correct: boolean, meta?: { itemId?: string; hinted?: boolean }): void;
   /** The game is over. A quest host marks the step complete, then closes. */
   complete(): void;
 }

@@ -980,6 +980,17 @@ export const learner = {
       miss: 'Read the sentence again. Which one fits?',
       /** The second miss on one round: the tile that fits is ringed. */
       lookHere: 'This one fits here.',
+     * Role Play (F-CURR-002 row CM-35, design/wireframes/minigame/role-play.md): a short chat, read the partner's line
+     * and tap a reply. The partner lines, replies, Hoya's why lines and the closing line are content; Continue is
+     * `common.buttons.continue`. No speaking: the learner's turn is a tap.
+    rolePlay: {
+      tapReply: 'Tap a reply',
+      /** Shows the meanings of this turn's replies; the turn counts as hinted, never as a miss. */
+      showMeanings: { cta: 'Show meanings' },
+      /** The same button once pressed, for this turn. */
+      meaningsShown: 'Meanings shown',
+      /** The cue at the bottom of the pinned replies while some are below its edge. */
+      moreReplies: 'More replies below',
     },
   },
 
@@ -1623,6 +1634,8 @@ export const learner = {
       /** Sentence Builder (`order-it`, row G-1): it counts for reading and writing. */
       sentenceBuilder: 'Build a sentence',
       clozePick: 'Fill the gap in a sentence',
+      /** Role Play (row CM-35): it counts for reading and listening. */
+      rolePlay: 'Read a chat, tap a reply',
     },
     /** The pip legend in an open stage (section 3.4): drawn shapes plus these words. */
     legend: {
@@ -2308,6 +2321,8 @@ export const learner = {
         build: 'Build a sentence',
         /** The write-together slide (LV-S4): the same value as `slide.write.title`. */
         write: 'Write together',
+        /** The Role Play slide (F-CURR-002 section 8, row CM-35): the same value as `slide.rolePlay.label`. */
+        rolePlay: 'Role play',
       },
       /** The slide grid overlay (PR 9, README D13). */
       title: 'All slides',
@@ -2372,6 +2387,8 @@ export const learner = {
       sentence: { label: 'Sentence' },
       pattern: { label: 'Sentence pattern' },
       readAlong: { label: 'Read along' },
+      /** The Role Play slide's kind label (F-CURR-002 section 8, row CM-35): a chat the room reads together, then picks the reply. */
+      rolePlay: { label: 'Role play' },
       /** A realia question's line beside its key word, until "Hoya's answer" takes its place (LV-S2, design V7). */
       realia: { ask: 'Look closely and find the answer.' },
       /**

@@ -226,6 +226,15 @@ export const a11y = {
       /** A name-round tile: its block (or final letter) and its sound. */
       tile: (block: string, sound: string) => `${block}, ${sound}`,
     },
+    /**
+     * Role Play (row CM-35): the chat log, a partner bubble (`role` is the partner's role in the UI language, `meaning`
+     * the line's meaning) and a reply the learner sent. `line` is the taught Korean, passed in.
+     */
+    rolePlay: {
+      log: 'Chat',
+      partner: (role: string, line: string, romanization: string, meaning: string) => `${role} says: ${line}, ${romanization}. ${meaning}`,
+      me: (line: string, romanization: string) => `You said: ${line}, ${romanization}`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
@@ -441,6 +450,8 @@ export const a11y = {
     slot: 'gap',
     /** A sentence-build move, announced politely (AMENDMENTS-LECTURE-V2 section 10, LV-S3): the tile just placed. */
     tilePlaced: (word: string) => `${word} placed`,
+    /** A Role Play slide's reply bubble from the room (F-CURR-002 section 8, row CM-35): the class, never a name; `line` is the Korean with its romanization once it shows. */
+    rolePlayClass: (line: string) => `The class said: ${line}`,
   },
   /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
   who: {

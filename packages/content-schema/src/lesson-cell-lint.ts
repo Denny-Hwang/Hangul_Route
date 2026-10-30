@@ -31,7 +31,11 @@ export type LessonRule =
   | 'lesson-source-shape'
   | 'lesson-copies-source'
   | 'lesson-national-treasure-number'
-  | 'lesson-verification-passes';
+  | 'lesson-verification-passes'
+  // F-CURR-002 row CM-35: the Role Play graph rules (`role-play-rules.ts`, run by the `./lint` subpath).
+  | 'role-play-good-endings'
+  | 'role-play-even-branches'
+  | 'role-play-turn-options';
 
 export interface LessonFinding {
   rule: LessonRule;

@@ -17,6 +17,7 @@ import {
   type QuestStepKind,
   type StageKey,
 } from '@hangul-route/content-schema';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { getMessages as getMessagesEn } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RoundAsked } from '../../logic/memory/asked';
@@ -247,6 +248,12 @@ describe('U-1, U-5, U-7, U-9 per quest of every cell', () => {
       words: [kt('설날', 'seollal', 'Lunar New Year', ['seol', 'lal']), kt('떡국', 'tteokguk', 'rice-cake soup', ['tteok', 'guk']), kt('연', 'yeon', 'kite')],
     });
     expect(scopeRoundCount(scope)).toBe(5);
+    expect(runtimeScope(scope, 'test').rounds).toBe(scopeRoundCount(scope));
+  });
+
+  it('counts a Role Play scope as the generated scope plays it: the learner turns of a way through it (row CM-35)', () => {
+    const scope = LessonScopeSchema.parse({ ref: 'minigame:s4-letters-q1-apply', kind: 'role-play', scene: LIBRARY_SCENE });
+    expect(scopeRoundCount(scope)).toBe(4);
     expect(runtimeScope(scope, 'test').rounds).toBe(scopeRoundCount(scope));
   });
 
@@ -910,6 +917,9 @@ function missesOf(scope: MinigameScope): RoundAsked[] {
       return [...new Set(scope.picWord?.boards.flatMap((b) => b.pairs.map((p) => p.id)))].map((itemId) => ({ scope, itemId }));
     case 'tap-respond':
       return (scope.dialogue ?? []).map((t) => ({ texts: [t.npcKo] }));
+    case 'role-play':
+      // A first-try miss names the turn and the less natural reply tapped (row CM-35).
+      return (scope.rolePlay?.scene.nodes ?? []).flatMap((n) => ('replies' in n ? n.replies.filter((r) => r.kind === 'lessNatural').map((r) => ({ scope, itemId: `${n.id}/${r.id}` })) : []));
     default:
       return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
   }

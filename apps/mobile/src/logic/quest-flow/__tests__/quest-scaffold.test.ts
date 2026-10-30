@@ -1,5 +1,7 @@
 import type { KoText } from '@hangul-route/content-schema';
+import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { describe, expect, it } from 'vitest';
+import { soundKey } from '../../../content/__tests__/helpers/distractors';
 import { scopeFor, type MinigameScope } from '../../minigame-config';
 import { SCAFFOLD_ROUND_ID, scaffoldScope, scopeItems } from '../quest-scaffold';
 
@@ -102,5 +104,21 @@ describe('the scaffold round', () => {
     const round = scaffoldScope(practice, [{ scope: practice, itemId: 'byeol' }, { scope: practice, itemId: 'haneul' }])?.listenPick?.rounds[0];
     expect(round?.prompt.ko).toBe('하늘');
     expect(round?.options.map((o) => o.text?.ko)).toEqual(['하늘', '별', '나무']);
+  });
+
+  it('scaffolds a hard Role Play Practice by its partner lines (row CM-35): the turns missed, nothing new', () => {
+    const rp: MinigameScope = { kind: 'role-play', rolePlay: { scene: LIBRARY_SCENE } };
+    // The main path's lines first (as its Tap to Respond fallback), then the other branch's turn.
+    expect(scopeItems(rp).map((t) => t.ko)).toEqual(['안녕하세요!', '무슨 책을 찾아요?', '동화책은 여기 있어요.', '또 오세요!', '한글 책은 여기 있어요.']);
+    const round = scaffoldScope(rp, [{ scope: rp, itemId: 't1/meal' }, { scope: rp, itemId: 't2/fine' }])?.listenPick?.rounds[0];
+    expect(round?.prompt.ko).toBe('무슨 책을 찾아요?');
+    const options = round?.options.map((o) => o.text?.ko ?? '') ?? [];
+    expect(options).toEqual(['무슨 책을 찾아요?', '안녕하세요!', '동화책은 여기 있어요.']);
+    const own = new Set(LIBRARY_SCENE.nodes.flatMap((n) => ('line' in n ? [n.line.ko] : [])));
+    for (const ko of options) expect(own.has(ko), ko).toBe(true);
+    expect(new Set(options.map(soundKey)).size).toBe(options.length);
+    // A miss on the other branch's turn still names its line.
+    expect(scaffoldScope(rp, [{ scope: rp, itemId: 't3b/sorry' }])?.listenPick?.rounds[0]?.prompt.ko).toBe('한글 책은 여기 있어요.');
+    expect(scaffoldScope(rp, [{ scope: rp, itemId: 'nope/x' }])).toBeNull();
   });
 });

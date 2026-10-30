@@ -17,6 +17,7 @@ import {
   realiaReadIssues,
   type MinigameKind,
 } from './minigame';
+import { RolePlaySceneSchema, rolePlayTurnCount } from './role-play';
 import { CHECK_ROUNDS, checkKindsFor, QuestObjectSchema, questRules, slotCount, type QuestStepKind } from './quest';
 import { AddedInSchema, CardIdSchema, IsoDateSchema, SourceSchema, VerificationSchema } from './story';
 
@@ -97,7 +98,10 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
     kind: z.literal('cloze-pick'),
     rounds: z.array(ClozePickRoundSchema).min(1).max(6),
     realia: RealiaSchema.optional(),
+  }),
   /** Story Order (F-CURR-002 §7.1 F5, row CM-34): 1 or 2 rounds a step, each with its own id. */
+  z.object({
+    ref: ScopeRefSchema,
     kind: z.literal('story-order'),
     rounds: z
       .array(StoryOrderRoundSchema)
@@ -105,6 +109,8 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
       .max(2)
       .refine((rounds) => new Set(rounds.map((r) => r.id)).size === rounds.length, 'round ids must be unique'),
   }),
+  /** Role Play (F-CURR-002 §7.1 F6, row CM-35): one branching chat; its rounds are the learner turns of a way through it. */
+  z.object({ ref: ScopeRefSchema, kind: z.literal('role-play'), scene: RolePlaySceneSchema }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -129,6 +135,8 @@ export function scopeRoundCount(scope: LessonScope): number {
       return scope.turns.length;
     case 'story-sequence':
       return 1;
+    case 'role-play':
+      return rolePlayTurnCount(scope.scene);
     default:
       return scope.rounds.length;
   }

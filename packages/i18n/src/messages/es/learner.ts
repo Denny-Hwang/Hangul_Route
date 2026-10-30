@@ -695,6 +695,11 @@ export const learner = {
       },
       miss: 'Lee la oración otra vez. ¿Cuál encaja?',
       lookHere: 'Esta encaja aquí.',
+    rolePlay: {
+      tapReply: 'Toca tu respuesta',
+      showMeanings: { cta: 'Ver significados' },
+      meaningsShown: 'Significados visibles',
+      moreReplies: 'Más respuestas abajo',
     },
   },
 
@@ -1210,6 +1215,7 @@ export const learner = {
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
       clozePick: 'Completa el hueco de una oración',
+      rolePlay: 'Lee un diálogo y toca una respuesta',
     },
     legend: {
       title: 'Qué significan las formas',
@@ -1768,6 +1774,7 @@ export const learner = {
         realia: 'Mira y lee',
         build: 'Arma una oración',
         write: 'Escribir en grupo',
+        rolePlay: 'Juego de roles',
       },
       title: 'Diapositivas',
       hint: 'Elige una diapositiva para ir a ella. Oculta una solo para esta lección.',
@@ -1816,6 +1823,7 @@ export const learner = {
       sentence: { label: 'Oración' },
       pattern: { label: 'Patrón de oración' },
       readAlong: { label: 'Leer juntos' },
+      rolePlay: { label: 'Juego de roles' },
       realia: { ask: 'Mira con atención y busca la respuesta.' },
       build: { title: 'Armar la oración en grupo', next: '¿Qué palabra va después?', particle: '¿Qué terminación va?' },
       write: {

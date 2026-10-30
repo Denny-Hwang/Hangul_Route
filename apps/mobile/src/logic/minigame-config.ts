@@ -7,6 +7,7 @@ import type {
   PicWordRound,
   Realia,
   RealiaReadRound,
+  RolePlayScene,
   StoryLevel,
   StoryOrderRound,
   TraceWordRound,
@@ -70,6 +71,8 @@ export interface MinigameScope {
   clozePick?: { rounds: ClozePickRound[]; realia?: Realia };
   /** Story Order (F-CURR-002 row CM-34): its rounds as authored, panels in the right order. */
   storyOrder?: { rounds: StoryOrderRound[] };
+  /** Role Play (F-CURR-002 row CM-35): one branching chat, filled by scripts/build-lessons.mjs. */
+  rolePlay?: { scene: RolePlayScene };
 }
 
 const J = (id: string): string => `jamo:${id}`;

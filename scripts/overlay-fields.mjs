@@ -76,6 +76,13 @@ export const OVERLAY_FIELDS = Object.freeze({
     "clozePick.realia.entries.<entry>.value.gloss",
     // F-CURR-002 row CM-34: a Story Order panel's caption gloss (Show meanings, the replay, the fallback's label).
     "storyOrder.rounds.<roundId>.panels.<panelId>.caption.gloss",
+    // F-CURR-002 row CM-35: a Role Play scene.
+    "rolePlay.scene.title.gloss",
+    "rolePlay.scene.partner.gloss",
+    "rolePlay.scene.nodes.<nodeId>.line.gloss",
+    "rolePlay.scene.nodes.<nodeId>.replies.<replyId>.text.gloss",
+    "rolePlay.scene.nodes.<nodeId>.replies.<replyId>.why",
+    "rolePlay.scene.nodes.<nodeId>.closing",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],

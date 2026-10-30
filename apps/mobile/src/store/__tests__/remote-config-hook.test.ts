@@ -22,7 +22,7 @@ vi.mock('../../config/flags', async (importOriginal) => {
 });
 
 import { useProfileStore } from '../profile-store';
-import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useRemoteConfigStore } from '../remote-config-store';
+import { currFlagOn, REMOTE_CONFIG_KEY, resetRemoteConfigForTests, useCurrFlag, useFrozenCurrFlag, useRemoteConfigStore } from '../remote-config-store';
 
 /**
  * `useCurrFlag` (F-CURR-002 section 12.2, row CM-2): a surface re-renders when the remote copy arrives or the active
@@ -105,5 +105,45 @@ describe('useCurrFlag', () => {
       expect(seen.at(-1), id).toBe(currFlagOn('dailyReview', id));
     }
     expect(new Set(answers.values()).size).toBe(2);
+  });
+});
+
+const frozenSeen: Array<boolean | null> = [];
+function FrozenProbe({ flag }: { flag: 'goals' | 'dailyReview' }): null {
+  frozenSeen.push(useFrozenCurrFlag(flag));
+  return null;
+}
+
+describe('useFrozenCurrFlag (row CM-35: a game read once as its step opens)', () => {
+  beforeEach(() => {
+    frozenSeen.length = 0;
+  });
+  async function mountFrozen(flag: 'goals' | 'dailyReview'): Promise<void> {
+    await act(async () => {
+      renderer = TestRenderer.create(createElement(FrozenProbe, { flag }));
+    });
+  }
+
+  it('undecided (null) until the stored copy is read, then the stored answer, not the off a cold start reads', async () => {
+    mem.set(REMOTE_CONFIG_KEY, { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { dailyReview: { on: true, pct: 100 } } });
+    await mountFrozen('dailyReview');
+    expect(frozenSeen).toEqual([null]);
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+    });
+    expect(frozenSeen.at(-1)).toBe(true);
+  });
+
+  it('once decided it never changes: a copy that arrives mid-step does not swap the game', async () => {
+    await act(async () => {
+      await useRemoteConfigStore.getState().hydrate();
+    });
+    await mountFrozen('dailyReview');
+    expect(frozenSeen).toEqual([false]);
+    await act(async () => {
+      useRemoteConfigStore.setState({ cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { dailyReview: { on: true, pct: 100 } } } });
+    });
+    expect(useRemoteConfigStore.getState().cache).not.toBeNull();
+    expect(frozenSeen.every((v) => v === false)).toBe(true);
   });
 });
