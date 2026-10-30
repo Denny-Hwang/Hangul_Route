@@ -11,6 +11,14 @@
 // The key is only ever sent in the request header; it is never printed or written anywhere.
 import { GENERATIVE_REASON, VoiceRefused, billedChars, checkRate, ssmlContent } from './shared.mjs';
 
+/**
+ * The date the Azure Product Terms output-right clause (paid tier, prebuilt neural voices) was read first-hand and
+ * recorded in docs/launch/tts-vendor-terms.md, or null. While it is null a real Azure run is refused (a dry run still
+ * works): on 2026-10-29 the page did not load for the agent and the clause is quoted from a secondary source. The
+ * change that sets this date also adds the dated first-hand entry to that doc.
+ */
+export const AZURE_TERMS_READ = null;
+
 const STANDARD_NEURAL = /^ko-KR-(?!.*Multilingual)[A-Z][A-Za-z]*Neural$/;
 const GENERATIVE = /dragon|hd|:/i;
 export const AZURE_OUTPUT_FORMAT = 'riff-48khz-16bit-mono-pcm';
@@ -39,8 +47,18 @@ export const azure = Object.freeze({
     return 'neural';
   },
 
+  // An unsourced estimate for the dry-run line only: the Azure pricing page was not read for a figure on 2026-10-29
+  // (docs/launch/tts-vendor-terms.md). It is the same rate as Polly Neural and Google Neural2.
   pricePerMillion() {
     return 16;
+  },
+
+  realRunProblem() {
+    if (AZURE_TERMS_READ !== null) return null;
+    return (
+      'the Azure Product Terms output-right clause has not been read first-hand yet (docs/launch/tts-vendor-terms.md). ' +
+      'Azure is the fallback: use Polly or Google, or record a dated first-hand reading and set AZURE_TERMS_READ first.'
+    );
   },
 
   request(row, voice) {

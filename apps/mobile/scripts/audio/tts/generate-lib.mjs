@@ -7,8 +7,9 @@
 //   selectRows       --pack, --pilot (about 81 rows) and --only over the committed manifest
 //   planRequests     one request per row and voice, minus the rows tts-lock.json already holds
 //   runGenerate      the whole command with its effects injected: a dry run prints the requests and the billed
-//                    characters and sends nothing; a real run stops before the request that would cross --max-chars
-import { join, relative, resolve, sep } from 'node:path';
+//                    characters and sends nothing; a real run stops before the request that would cross --max-chars,
+//                    and never plans past the $50 budget whatever --max-chars says
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { AUDIO_PACKS } from '@hangul-route/content-schema';
 import { ENGINE_IDS, VoiceRefused, engineOf } from './engines/index.mjs';
 import { LOCK_FILE, emptyLock, lockMatches, lockRowOf, parseLock, renderLock, saySha256, upsertLockRow } from './lock-lib.mjs';
@@ -17,7 +18,11 @@ import { KIND_RATES, MANIFEST_FILE } from './manifest-lib.mjs';
 export const OUTPUT_ROOT = 'apps/mobile/recordings/tts';
 /** Set in CI and in Claude Code shells; a real run refuses to start when any of them is set (AC-B5 key safety). */
 export const REFUSED_ENV = ['CI', 'CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT'];
-/** The default spend guard: the dry-run character count of the same command plus 10 % (AU-OD-8). */
+/**
+ * The default spend guard: the character count of the same command plus 10 % (AU-OD-8). It is computed from this
+ * run's own plan, so on its own it only restates the plan; what does not depend on the plan is the budget ceiling
+ * (budgetChars) and an explicit --max-chars, such as the number a dry run printed.
+ */
 export const MAX_CHARS_HEADROOM = 0.1;
 /** The budget the owner set (AU-OD-8): a billing alert plus this script's cap. */
 export const BUDGET_USD = 50;
@@ -173,6 +178,15 @@ export function defaultMaxChars(chars) {
   return Math.ceil((chars * Math.round((1 + MAX_CHARS_HEADROOM) * 100)) / 100);
 }
 
+/**
+ * The budget ceiling in billed characters (AU-OD-8): what $50 buys at the dearest voice of the run, before any free
+ * allowance. It does not depend on the plan, so it holds even when the plan changed after the dry run the owner read.
+ */
+export function budgetChars(engine, voices) {
+  const price = Math.max(...voices.map((v) => engine.pricePerMillion(v)));
+  return Math.floor((BUDGET_USD * 1e6) / price);
+}
+
 /** The estimated cost of a plan before any free allowance, in US$. */
 export function estimateUsd(requests, engine) {
   return requests.reduce((usd, r) => usd + (r.chars * engine.pricePerMillion(r.voice)) / 1e6, 0);
@@ -198,7 +212,7 @@ const usd = (n) => `$${n.toFixed(2)}`;
 const fmt = (n) => n.toLocaleString('en-US');
 
 /** The dry-run report: every request as it would be sent, the billed characters and the spend guard. */
-export function dryRunLines({ engine, voices, plan, maxChars, lockPath }) {
+export function dryRunLines({ engine, voices, plan, maxChars, ceiling, lockPath }) {
   const lines = [`audio:tts:generate --dry-run: ${engine.label} (${engine.id}), voices ${voices.join(', ')}. No network: nothing is sent.`];
   for (const r of plan.requests) {
     lines.push(`request ${engine.id}/${r.voice} ${r.row.ref} (${r.row.kind}, rate ${r.row.rate}, ${r.chars} billed characters): ${JSON.stringify(r.payload)}`);
@@ -213,18 +227,40 @@ export function dryRunLines({ engine, voices, plan, maxChars, lockPath }) {
     `total: ${plan.requests.length} requests, ${fmt(chars)} billed characters (the whole text sent, SSML tags included), ` +
       `about ${usd(estimateUsd(plan.requests, engine))} before the free allowance (budget ${usd(BUDGET_USD)}, AU-OD-8)`,
   );
-  lines.push(`spend guard: --max-chars ${fmt(maxChars)}${maxChars === defaultMaxChars(chars) ? ' (default: this count plus 10 %)' : ''}`);
+  const note = maxChars === ceiling ? ' (the $50 budget ceiling)' : maxChars === defaultMaxChars(chars) ? ' (default: this count plus 10 %)' : '';
+  lines.push(`spend guard: --max-chars ${fmt(maxChars)}${note}`);
+  const blocked = engine.realRunProblem?.() ?? null;
+  if (blocked !== null) lines.push(`note: a real run is refused for now: ${blocked}`);
   return lines;
 }
 
 const today = (now) => now().toISOString().slice(0, 10);
+
+/** Whether a resolved path is the repository root or inside it. */
+export function insideRepo(path, repoRoot) {
+  const rel = relative(repoRoot, path);
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+/**
+ * A JSON file's content. A file that is not JSON fails with its path only: Node's parse error quotes the start of
+ * the text, which must never reach the terminal (the file could be anything, a key file included).
+ */
+function readJson(deps, path, shown) {
+  const text = deps.readText(path);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`not valid JSON: ${shown}`);
+  }
+}
 
 /**
  * The whole command. `deps` carries every effect so tests run with no network, no SDK and no credential:
  *   repoRoot, readText(path), exists(path), writeAtomic(path, text|Buffer), mkdirp(dir), isIgnored(dir),
  *   createClient(engine, { env }), canDecode() -> boolean, toWav(bytes, format, sampleRate) -> Buffer, now() -> Date,
  *   keys { sayKey, sayRef },
- *   out(line), err(line)
+ *   out(line), err(line), and optionally engineOf(id) (tests only: an engine with a gate lifted)
  * Exit codes: 0 done, 1 a request or the content failed, 2 a usage error or a refusal, 3 the spend guard stopped it.
  */
 export async function runGenerate(argv, env, deps) {
@@ -240,7 +276,7 @@ export async function runGenerate(argv, env, deps) {
       return 2;
     }
   }
-  const engine = engineOf(opts.engine);
+  const engine = (deps.engineOf ?? engineOf)(opts.engine);
   let voices;
   try {
     voices = voicesOf(engine, opts);
@@ -256,15 +292,21 @@ export async function runGenerate(argv, env, deps) {
   const manifestPath = abs(opts.manifest ?? MANIFEST_FILE);
   const lockPath = abs(opts.lock ?? LOCK_FILE);
   const outRoot = abs(opts.out ?? OUTPUT_ROOT);
-  const shown = (p) => {
-    const rel = relative(deps.repoRoot, p);
-    return rel.startsWith('..') ? p : rel.split(sep).join('/');
-  };
+  const shown = (p) => relative(deps.repoRoot, p).split(sep).join('/');
+  // Every file the command reads or writes stays inside the repository, in a dry run too.
+  for (const [flag, given, path] of [['--manifest', opts.manifest, manifestPath], ['--lock', opts.lock, lockPath], ['--out', opts.out, outRoot]]) {
+    if (!insideRepo(path, deps.repoRoot)) {
+      deps.err(`refused: ${flag} ${given} is outside the repository`);
+      return 2;
+    }
+  }
 
-  const manifest = JSON.parse(deps.readText(manifestPath));
-  let lock = deps.exists(lockPath) ? parseLock(JSON.parse(deps.readText(lockPath))) : emptyLock();
+  let manifest;
+  let lock;
   let rows;
   try {
+    manifest = readJson(deps, manifestPath, shown(manifestPath));
+    lock = deps.exists(lockPath) ? parseLock(readJson(deps, lockPath, shown(lockPath))) : emptyLock();
     rows = selectRows(manifest.rows, opts, deps.keys);
   } catch (e) {
     deps.err(e instanceof Error ? e.message : String(e));
@@ -272,11 +314,18 @@ export async function runGenerate(argv, env, deps) {
   }
   const plan = planRequests({ rows, engine, voices, lock, outRoot, hasMaster: deps.exists });
   const planned = totalChars(plan.requests);
-  const maxChars = opts.maxChars ?? defaultMaxChars(planned);
+  const ceiling = budgetChars(engine, voices);
+  const maxChars = Math.min(opts.maxChars ?? defaultMaxChars(planned), ceiling);
 
   if (opts.dryRun) {
-    for (const line of dryRunLines({ engine, voices, plan, maxChars, lockPath: shown(lockPath) })) deps.out(line);
+    for (const line of dryRunLines({ engine, voices, plan, maxChars, ceiling, lockPath: shown(lockPath) })) deps.out(line);
     return 0;
+  }
+
+  const blocked = engine.realRunProblem?.() ?? null;
+  if (blocked !== null) {
+    deps.err(`refused: ${blocked}`);
+    return 2;
   }
 
   for (const voice of voices) {
@@ -291,7 +340,8 @@ export async function runGenerate(argv, env, deps) {
     return 0;
   }
   if (planned > maxChars) {
-    deps.out(`note: the plan is ${fmt(planned)} billed characters and --max-chars is ${fmt(maxChars)}; the run stops at the cap`);
+    const why = maxChars === ceiling ? ` (the $${BUDGET_USD} budget ceiling)` : '';
+    deps.out(`note: the plan is ${fmt(planned)} billed characters and --max-chars is ${fmt(maxChars)}${why}; the run stops at the cap`);
   }
 
   if (engine.needsDecoder === true && !deps.canDecode()) {

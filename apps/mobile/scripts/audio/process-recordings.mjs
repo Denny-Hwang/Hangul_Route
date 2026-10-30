@@ -1,7 +1,7 @@
 // Turns the owner's recordings into app clips (F-AUDIO-004 §3.11). Needs ffmpeg
 // and ffprobe on the PATH; runs locally, never in CI.
 //
-//   node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]
+//   node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab|say] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]
 //
 // The raw recordings and the speaker's signed voice-use release stay OUTSIDE the
 // repo (it is public): the folder must be outside it, or in the gitignored
@@ -12,8 +12,10 @@
 // used, or the take the owner marked in the name (giyeok.2.m4a = take 2). Per
 // clip: cut the take, trim silence, add 0.3 s of silence each side,
 // loudness-normalise to -16 LUFS, mono, 44.1 kHz, 64 kbps CBR MP3, no metadata.
-// `--bitrate 48` encodes 48 kbps at 24 kHz instead, for the generated `say` group (AMENDMENTS-AUDIO-CLIPS AC-B5
-// step 3, AU-OD-7); trimming, padding, loudness, mono and the metadata strip are the same.
+// `--group say` is the generated text-keyed clips (AMENDMENTS-AUDIO-CLIPS AC-B4, AC-B5 step 3): the file ids are the
+// `audio/say/` keys of content/audio/tts-manifest.json, and they encode at 48 kbps and 24 kHz (AU-OD-7), or with
+// `--bitrate 64` if the pilot listen in section 13 rules 48 out. jamo and vocab stay 64 kbps (`--bitrate 48` is
+// refused for them). Trimming, padding, loudness, mono and the metadata strip are the same for every group.
 // loudnorm needs about 3 s of audio, so a short syllable is then topped up
 // (gain behind a peak limiter at -2 dBFS, at 4x oversampling), at most
 // MAX_TOP_UP_PASSES passes and MAX_TOP_UP_DB in all. A clip that still misses
@@ -26,7 +28,7 @@
 // content refers to. One bad file is reported and the rest still run.
 // Output: assets/audio/<group>/<id>.mp3 (git shows every overwrite). Then run
 // audio:check and audio:map, and play the six final-consonant clips back to back.
-import { mkdtempSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -36,16 +38,18 @@ import {
   LIMITING_WARN_DB,
   MAX_TOP_UP_DB,
   MAX_TOP_UP_PASSES,
+  RECORDING_GROUPS,
+  groupBitrate,
   isInsideDir,
   mp3EncodeArgs,
   nameRows,
   nextTopUp,
-  parseBitrate,
   parseEbur128,
   parseSilences,
   parseTakeFile,
   planRecording,
   recordingRows,
+  sayRecordingIds,
   takeSegments,
   topUpOutcome,
   vocabRecordingRows,
@@ -66,26 +70,34 @@ const measure = (file) =>
 
 const args = process.argv.slice(2);
 const VALUE_FLAGS = ['--group', '--out', '--bitrate'];
+const USAGE =
+  'usage: node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab|say] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]\n';
+// A value flag with no value (`--bitrate` at the end, or followed by another flag) is a usage error, never a default.
+for (const name of VALUE_FLAGS) {
+  const i = args.indexOf(name);
+  if (i >= 0 && (args[i + 1] === undefined || args[i + 1].startsWith('--'))) {
+    process.stderr.write(`${name} needs a value\n${USAGE}`);
+    process.exit(2);
+  }
+}
 const flag = (name, fallback) => {
   const i = args.indexOf(name);
-  return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
+  return i >= 0 ? args[i + 1] : fallback;
 };
 const input = args.find((a, i) => !a.startsWith('--') && !VALUE_FLAGS.includes(args[i - 1] ?? ''));
 if (!input) {
-  process.stderr.write(
-    'usage: node scripts/audio/process-recordings.mjs <folder> [--group jamo|vocab] [--out <dir>] [--bitrate 64|48] [--names] [--allow-extra]\n',
-  );
+  process.stderr.write(USAGE);
   process.exit(2);
 }
 const group = flag('--group', 'jamo');
-if (!['jamo', 'vocab'].includes(group)) {
-  process.stderr.write(`--group must be jamo or vocab, not ${group}\n`);
+if (!RECORDING_GROUPS.includes(group)) {
+  process.stderr.write(`--group must be ${RECORDING_GROUPS.join(', ')}, not ${group}\n`);
   process.exit(2);
 }
 const opts = { names: args.includes('--names'), allowExtra: args.includes('--allow-extra') };
 let bitrate;
 try {
-  bitrate = parseBitrate(flag('--bitrate', undefined));
+  bitrate = groupBitrate(group, flag('--bitrate', undefined));
 } catch (e) {
   process.stderr.write(`${e instanceof Error ? e.message : String(e)}\n`);
   process.exit(2);
@@ -106,10 +118,14 @@ if (isInsideDir(inputDir, resolve(repoRoot))) {
 
 const outDir = resolve(flag('--out', join(appRoot, 'assets/audio', group)));
 const jamo = group === 'jamo' ? readJamo() : [];
+/** The file ids a group expects: the recording script's for jamo and vocab, the clip manifest's keys for say. */
+function expectedIds() {
+  if (group === 'jamo') return recordingRows(jamo).map((r) => r.fileId);
+  if (group === 'vocab') return vocabRecordingRows(readVocabTopics()).map((r) => r.fileId);
+  return sayRecordingIds(JSON.parse(readFileSync(join(repoRoot, 'content/audio/tts-manifest.json'), 'utf8')));
+}
 const sets = {
-  expected: new Set(
-    group === 'jamo' ? recordingRows(jamo).map((r) => r.fileId) : vocabRecordingRows(readVocabTopics()).map((r) => r.fileId),
-  ),
+  expected: new Set(expectedIds()),
   names: new Set(group === 'jamo' ? nameRows(jamo).map((r) => r.fileId) : []),
 };
 

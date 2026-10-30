@@ -698,7 +698,7 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **M-0. 한 번만: 준비 (5분)**
 1. 저장소 폴더에서 `pnpm install` (생성 스크립트가 쓰는 AWS · Google 라이브러리가 함께 설치된다).
-2. `pnpm hooks:install` 을 한 번 실행한다. 이제 커밋할 때마다 `scripts/check-no-secrets.mjs` 가 올라가는 파일에 Google 서비스 계정 키, AWS 액세스 키, Azure Speech 키가 있는지 보고, 있으면 커밋을 막는다 (CI 도 같은 검사를 한다).
+2. `pnpm hooks:install` 을 한 번 실행한다. 이제 커밋할 때마다 `scripts/check-no-secrets.mjs` 가 올라가는 파일에 Google 서비스 계정 키, AWS 액세스 키, Azure Speech 키가 있는지 보고, 있으면 커밋을 막는다 (CI 도 같은 검사를 한다). 이 설정 (`core.hooksPath`) 은 같은 저장소의 모든 worktree 가 함께 쓰므로, 메인 폴더에서 한 번만 하면 에이전트의 worktree 에도 적용된다. 새로 clone 한 폴더에서는 다시 한 번 한다.
 3. Polly 결과를 WAV 로 바꾸는 데 ffmpeg 가 필요하다: `brew install ffmpeg` (이미 있으면 건너뛴다).
 
 **M-1. 계정 두 개, 음성만 켜고 $50 알림 (오너 단계 2, 각 20분)**
@@ -714,12 +714,14 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **M-2. 파일럿 (오너 단계 3, 약 20분, 무료 한도 안)**
 1. **Claude Code 가 아닌 새 터미널 창** (예: 터미널 앱의 새 창) 을 열고 저장소 폴더로 간다. 회사 네트워크가 막으면 집 네트워크에서 한다.
-2. 먼저 미리보기 (네트워크 없음, 자격 증명 필요 없음): `pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot --dry-run`. 목소리마다 81줄 (자모 65 + 낱말 10 + 문장 6), 합계 약 7,700 문자, `spend guard: --max-chars ...` 가 보이면 된다.
+2. 먼저 미리보기 (네트워크 없음, 자격 증명 필요 없음): `pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot --dry-run`. 목소리마다 81줄 (자모 65 + 낱말 10 + 문장 6), 합계 약 7,700 문자, `spend guard: --max-chars <숫자>` 가 보이면 된다. 그 숫자를 적어 두고, 아래 실제 실행 명령 끝에 `--max-chars <그 숫자>` 를 붙이면 미리보기 뒤에 무언가 바뀌어도 그 이상은 보내지 않는다 (붙이지 않아도 $50 상한은 항상 걸려 있다).
 3. Polly (Seoyeon, Jihye 두 목소리):
    `aws sso login --profile hr-tts`
    `AWS_PROFILE=hr-tts pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot`
    `aws sso logout`
-4. IAM 사용자로 할 때는 3 대신: 콘솔에서 액세스 키를 새로 만들고, 그 터미널에서만 `read -rs AWS_ACCESS_KEY_ID; read -rs AWS_SECRET_ACCESS_KEY; export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY` (화면과 셸 기록에 남지 않게 붙여 넣는다) → `AWS_REGION=ap-northeast-2 pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot` → 터미널 창을 닫고 → 콘솔에서 **그 액세스 키를 삭제**한다. `aws configure` 로 키를 `~/.aws/credentials` 에 저장하지 않는다.
+4. IAM 사용자로 할 때는 3 대신: 콘솔에서 액세스 키를 새로 만들고, 그 터미널에서 `read -rs KEY_ID; read -rs KEY_SECRET` 로 붙여 넣는다 (화면과 셸 기록에 남지 않는다). `export` 는 하지 않는다. 그 명령 하나에만 넘긴다:
+   `AWS_ACCESS_KEY_ID=$KEY_ID AWS_SECRET_ACCESS_KEY=$KEY_SECRET AWS_REGION=ap-northeast-2 pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot`
+   → `unset KEY_ID KEY_SECRET` → 터미널 창을 닫고 → 콘솔에서 **그 액세스 키를 삭제**한다. `aws configure` 로 키를 `~/.aws/credentials` 에 저장하지 않는다.
 5. Google (ko-KR-Neural2-A, -C 두 목소리):
    `gcloud auth application-default login` (필요하면 `set-quota-project` 다시)
    `pnpm --filter @hangul-route/mobile audio:tts:generate --engine google --pilot`
@@ -741,9 +743,11 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - `refused: CLAUDECODE ...` 또는 `refused: CI ...`: Claude Code 터미널이나 CI 안이다. 별도 터미널에서 다시 한다.
 - `refused: ... is a generative voice`: 생성형 (generative) 목소리다. 18세 미만도 쓰는 앱이라 약관상 쓰지 않는다 (AC-B1). 위의 목소리 이름을 쓴다.
 - `refused: ... is not gitignored`: 출력 폴더를 바꾼 경우다. `--out` 을 빼고 기본 폴더를 쓴다.
-- `spend guard: stopped before ...` (종료 코드 3): 미리보기 문자 수 + 10 % 상한에 닿았다. 쓴 것까지는 남아 있다. 이유를 모르면 멈추고 에이전트에게 메시지만 보낸다. 상한을 올릴 때만 `--max-chars <숫자>` 를 붙인다 (예산 $50 안에서).
+- `spend guard: stopped before ...` (종료 코드 3): 상한에 닿았다. 붙인 `--max-chars` (미리보기 숫자) 이거나, $50 상한 (`the $50 budget ceiling`) 이다. `--max-chars` 를 붙이지 않았을 때의 기본값은 그 실행의 문자 수 + 10 % 라서 그것만으로는 멈추지 않는다. 쓴 것까지는 남아 있다. 이유를 모르면 멈추고 에이전트에게 메시지만 보낸다. 상한을 올릴 때만 더 큰 `--max-chars <숫자>` 를 붙인다 ($50 상한은 넘길 수 없다).
+- `refused: --manifest ... is outside the repository` (또는 `--lock`, `--out`): 저장소 밖의 경로다. 그 옵션을 빼고 기본 경로를 쓴다.
+- `refused: the Azure Product Terms ...`: 아래 Azure 항목을 먼저 해야 한다.
 - 인증 오류 (`security token ... invalid`, `Could not load the default credentials`): 로그인이 끝났다. M-2 의 로그인부터 다시 한다. 오류 문구에는 키가 들어 있지 않으니 그대로 보내도 된다.
-- Azure 는 예비 (fallback) 다. 쓰기 전에 Microsoft Product Terms 의 Azure Speech 항목을 브라우저에서 읽고 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 날짜와 함께 기록해야 한다 (에이전트가 2026-10-29 에 직접 읽지 못했다). 쓸 때는 S0 (유료) 리소스만, 키는 `read -rs AZURE_SPEECH_KEY; export AZURE_SPEECH_KEY` 로 그 터미널에만, `AZURE_SPEECH_REGION=koreacentral` 을 명령 앞에 붙인다. 끝나면 포털에서 키를 다시 만든다 (regenerate).
+- Azure 는 예비 (fallback) 다. 쓰기 전에 Microsoft Product Terms 의 Azure Speech 항목을 브라우저에서 읽고 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 날짜와 함께 기록해야 한다 (에이전트가 2026-10-29 에 직접 읽지 못했다). 그 기록이 들어가기 전에는 스크립트가 실제 Azure 실행을 거부한다 (미리보기는 된다). 쓸 때는 S0 (유료) 리소스만, 키는 `read -rs SPEECH_KEY` 로 붙여 넣고 (`export` 하지 않는다) 그 명령 하나에만 넘긴다: `AZURE_SPEECH_KEY=$SPEECH_KEY AZURE_SPEECH_REGION=koreacentral pnpm --filter @hangul-route/mobile audio:tts:generate --engine azure --voice ko-KR-SunHiNeural --pilot` → `unset SPEECH_KEY` → 창을 닫는다. 끝나면 포털에서 키를 다시 만든다 (regenerate).
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.

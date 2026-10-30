@@ -307,7 +307,6 @@ export function parseCsv(text) {
   return body.map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] ?? "").trim()])));
 }
 
-/** The SPDX id of an asset's license column ("SIL OFL 1.1" and the like). */
 /**
  * Generated speech clips (AMENDMENTS-AUDIO-CLIPS AC-B1 "Licence rows"): the CSV holds one `audio-tts` row per clip
  * (validated against content/audio/tts-lock.json by apps/mobile/scripts/audio/tts/licence-rows.mjs). They are under
@@ -339,6 +338,7 @@ export function summarizeTtsAssets(rows) {
     }));
 }
 
+/** The SPDX id of an asset's license column ("SIL OFL 1.1" and the like). */
 export function assetLicenseId(text) {
   if (/\bOFL\b.*1\.1|Open Font License.*1\.1/i.test(text)) return "OFL-1.1";
   const id = text.trim();

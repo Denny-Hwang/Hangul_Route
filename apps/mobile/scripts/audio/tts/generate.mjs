@@ -15,8 +15,10 @@
 // (gitignored; refused otherwise), and content/audio/tts-lock.json, written after every clip so an interrupted run
 // keeps what it paid for. Rows already in the lock with the same say, voice and rate are skipped.
 //
-// Spend guard: --max-chars defaults to the dry-run count of the same command plus 10 %; the run stops before the
-// request that would cross it (exit 3). The rules are in generate-lib.mjs and tested there with no network.
+// Spend guard: --max-chars defaults to the dry-run count of the same command plus 10 %, and neither the default nor
+// an explicit --max-chars can pass the $50 budget ceiling; the run stops before the request that would cross the cap
+// (exit 3). --manifest, --lock and --out must stay inside the repository. A real Azure run is refused until its terms
+// are read first-hand (engines/azure.mjs). The rules are in generate-lib.mjs and tested there with no network.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

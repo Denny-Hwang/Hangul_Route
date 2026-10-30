@@ -7,14 +7,19 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sayKey, sayRef } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
+import { azure } from '../audio/tts/engines/azure.mjs';
+import { engineOf } from '../audio/tts/engines/index.mjs';
 import {
+  BUDGET_USD,
   MAX_CHARS_HEADROOM,
   OUTPUT_ROOT,
   PILOT_CONTENT_WORDS,
   PILOT_PROBE_WORDS,
   PILOT_SENTENCES,
   REFUSED_ENV,
+  budgetChars,
   defaultMaxChars,
+  insideRepo,
   outputProblem,
   parseArgs,
   pilotRows,
@@ -56,7 +61,7 @@ const row = (key, say, extra = {}) => ({ ref: `audio/say/${key}.mp3`, key, kind:
 const SMALL = { schemaVersion: 1, rows: [row('aaaaaaaaaaaaaaaa', '가방'), row('bbbbbbbbbbbbbbbb', '나무'), row('cccccccccccccccc', '다리'), row('dddddddddddddddd', '학교', { pack: 'stage6' })] };
 
 /** In-memory effects for runGenerate: a fake file system and a mocked vendor client. */
-function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut, decoder = true } = {}) {
+function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut, decoder = true, engines } = {}) {
   const fs = new Map(Object.entries(files));
   fs.set(`/repo/${MANIFEST_FILE}`, JSON.stringify(manifest));
   const sent = [];
@@ -89,6 +94,7 @@ function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut,
     out: (l) => out.push(l),
     err: (l) => err.push(l),
   };
+  if (engines !== undefined) deps.engineOf = (id) => engines[id] ?? engineOf(id);
   const lock = () => parseLock(JSON.parse(fs.get(`/repo/${LOCK_FILE}`)));
   return { deps, fs, sent, out, err, client, lock };
 }
@@ -333,8 +339,8 @@ describe('a run with a mocked client: WAV masters, the lock, the skip rule', () 
     expect(g.deps.canDecode).not.toHaveBeenCalled();
   });
 
-  it('Azure masters must be 48 kHz', async () => {
-    const h = harness({ rateOut: 48000 });
+  it('Azure masters must be 48 kHz (with the terms gate lifted, as the change that records the reading will)', async () => {
+    const h = harness({ rateOut: 48000, engines: { azure: { ...azure, realRunProblem: () => null } } });
     expect(await runGenerate(['--engine', 'azure', '--voice', 'ko-KR-SunHiNeural', '--pack', 'stage6'], {}, h.deps)).toBe(0);
     expect(wavInfo(h.fs.get(`/repo/${OUTPUT_ROOT}/azure/ko-KR-SunHiNeural/dddddddddddddddd.wav`)).sampleRate).toBe(48000);
   });
@@ -351,6 +357,59 @@ describe('a run with a mocked client: WAV masters, the lock, the skip rule', () 
     expect(await runGenerate(argv, {}, h.deps)).toBe(1);
     expect(h.err).toEqual(['google/ko-KR-Neural2-A audio/say/bbbbbbbbbbbbbbbb.mp3: The security token included in the request is invalid. Stopped; 1 written, rerun to continue.']);
     expect(h.lock().rows.map((r) => r.key)).toEqual(['aaaaaaaaaaaaaaaa']);
+  });
+});
+
+describe('the Azure terms gate (tts-vendor-terms.md: the output right was not read first-hand)', () => {
+  it('a real Azure run is refused before any client while AZURE_TERMS_READ is null', async () => {
+    const h = harness({ rateOut: 48000 });
+    expect(await runGenerate(['--engine', 'azure', '--voice', 'ko-KR-SunHiNeural', '--pack', 'stage6'], {}, h.deps)).toBe(2);
+    expect(h.err).toEqual([expect.stringMatching(/^refused: the Azure Product Terms output-right clause has not been read first-hand yet/)]);
+    expect(h.deps.createClient).not.toHaveBeenCalled();
+    expect(h.deps.writeAtomic).not.toHaveBeenCalled();
+  });
+
+  it('an Azure dry run still works and says a real run is refused for now', async () => {
+    const h = harness();
+    expect(await runGenerate(['--engine', 'azure', '--voice', 'ko-KR-SunHiNeural', '--pack', 'stage6', '--dry-run'], {}, h.deps)).toBe(0);
+    expect(h.out.at(-1)).toMatch(/^note: a real run is refused for now: the Azure Product Terms/);
+  });
+
+  it('Polly and Google have no such gate', () => {
+    expect(engineOf('polly').realRunProblem?.() ?? null).toBeNull();
+    expect(engineOf('google').realRunProblem?.() ?? null).toBeNull();
+  });
+});
+
+describe('paths: everything stays inside the repository, and a bad file never echoes its text', () => {
+  it('insideRepo', () => {
+    expect(insideRepo('/repo', '/repo')).toBe(true);
+    expect(insideRepo('/repo/content/a.json', '/repo')).toBe(true);
+    expect(insideRepo('/repo2/a.json', '/repo')).toBe(false);
+    expect(insideRepo('/etc/a.json', '/repo')).toBe(false);
+  });
+
+  it.each([
+    ['--manifest', '/home/someone/.config/gcloud/application_default_credentials.json'],
+    ['--lock', '../outside/lock.json'],
+    ['--out', '/tmp/tts'],
+  ])('%s outside the repository is refused, in a dry run too, before reading anything', async (flag, value) => {
+    const h = harness();
+    expect(await runGenerate(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'stage2', flag, value, '--dry-run'], {}, h.deps)).toBe(2);
+    expect(h.err).toEqual([`refused: ${flag} ${value} is outside the repository`]);
+    expect(h.deps.readText).not.toHaveBeenCalled();
+    expect(h.out).toEqual([]);
+  });
+
+  it('a manifest or lock that is not JSON fails with its path only, never its text', async () => {
+    const keyLike = '{"type": "service_account", "private_key_id": "0123';
+    const plain = 'not json at all: s3cr3t-value';
+    for (const [flag, path, text] of [['--manifest', 'content/fake-manifest.json', plain], ['--lock', 'content/fake-lock.json', keyLike]]) {
+      const h = harness({ files: { [`/repo/${path}`]: text } });
+      expect(await runGenerate(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'stage2', flag, path, '--dry-run'], {}, h.deps)).toBe(2);
+      expect(h.err).toEqual([`not valid JSON: ${path}`]);
+      expect(h.err.join('\n')).not.toMatch(/s3cr3t|service_account|private_key/);
+    }
   });
 });
 
@@ -384,12 +443,44 @@ describe('the spend guard (--max-chars, AU-OD-8)', () => {
     expect(await runGenerate(argv, {}, h.deps)).toBe(0);
     expect(h.client.synthesize).toHaveBeenCalledTimes(3);
   });
+
+  it('the $50 budget ceiling does not depend on the plan: what $50 buys at the dearest voice of the run', () => {
+    expect(BUDGET_USD).toBe(50);
+    expect(budgetChars(engineOf('polly'), ['Seoyeon', 'Jihye'])).toBe(3_125_000);
+    expect(budgetChars(engineOf('google'), ['ko-KR-Wavenet-A'])).toBe(12_500_000);
+    expect(budgetChars(engineOf('google'), ['ko-KR-Wavenet-A', 'ko-KR-Neural2-A'])).toBe(3_125_000);
+  });
+
+  it('the ceiling caps the default and an explicit --max-chars, and the run stops at it', async () => {
+    // A test engine at $500,000 per 1M characters: $50 buys 100 characters, two of the three 47-character rows.
+    const dear = { ...engineOf('polly'), pricePerMillion: () => 500_000 };
+    for (const extra of [[], ['--max-chars', '100000']]) {
+      const h = harness({ engines: { polly: dear } });
+      expect(await runGenerate([...argv, ...extra], {}, h.deps)).toBe(3);
+      expect(h.client.synthesize).toHaveBeenCalledTimes(2);
+      expect(h.out[0]).toBe('note: the plan is 141 billed characters and --max-chars is 100 (the $50 budget ceiling); the run stops at the cap');
+      expect(h.err.at(-1)).toMatch(/^spend guard: stopped before polly\/Seoyeon audio\/say\/cccccccccccccccc\.mp3: 94 \+ 47 billed characters would cross --max-chars 100\./);
+    }
+    const dry = harness({ engines: { polly: dear } });
+    expect(await runGenerate([...argv, '--dry-run'], {}, dry.deps)).toBe(0);
+    expect(dry.out.find((l) => l.startsWith('spend guard:'))).toBe('spend guard: --max-chars 100 (the $50 budget ceiling)');
+  });
 });
 
 describe('the command (its own process, as the package script runs it)', () => {
+  // The child never sees a vendor credential or a credential file, whatever the developer's shell holds: every
+  // AWS_*, GOOGLE_*, GCLOUD_*, CLOUDSDK_* and AZURE_* variable is dropped, and the credential files point nowhere.
+  const CREDENTIAL_ENV = /^(AWS_|GOOGLE_|GCLOUD_|CLOUDSDK_|AZURE_)/;
   const run = (args, env) => {
-    const e = { ...process.env, ...env };
-    delete e.VITEST;
+    const e = Object.fromEntries(Object.entries(process.env).filter(([k]) => !CREDENTIAL_ENV.test(k) && k !== 'VITEST'));
+    Object.assign(e, {
+      AWS_SHARED_CREDENTIALS_FILE: '/dev/null',
+      AWS_CONFIG_FILE: '/dev/null',
+      AWS_EC2_METADATA_DISABLED: 'true',
+      GOOGLE_APPLICATION_CREDENTIALS: '/nonexistent/hr-tts-test',
+      CLOUDSDK_CONFIG: '/nonexistent/hr-tts-test',
+      ...env,
+    });
     return spawnSync(process.execPath, [GENERATE, ...args], { cwd: REPO_ROOT, encoding: 'utf8', env: e });
   };
 
@@ -402,7 +493,9 @@ describe('the command (its own process, as the package script runs it)', () => {
   }, TIMEOUT);
 
   it('without --dry-run it refuses in CI and in an agent shell, before anything else', () => {
-    const r = run(['--engine', 'polly', '--pilot'], { CI: 'true', CLAUDECODE: '1' });
+    // More barriers stand behind the refusal: --out outside the repository is refused before anything is read or
+    // any client exists, and --max-chars 1 is below every request. No credential is reachable either (run() above).
+    const r = run(['--engine', 'polly', '--pilot', '--out', '/nonexistent/hr-tts-test', '--max-chars', '1'], { CI: 'true', CLAUDECODE: '1' });
     expect(r.status).toBe(2);
     expect(r.stdout).toBe('');
     expect(r.stderr).toMatch(/^refused: CI, CLAUDECODE/);

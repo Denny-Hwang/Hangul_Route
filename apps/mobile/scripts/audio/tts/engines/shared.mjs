@@ -2,7 +2,8 @@
 //
 // An engine module exports one object with the same shape (see engines/index.mjs):
 //
-//   id, vendor, label           'polly' | 'google' | 'azure', the licence-row vendor, the name a person reads
+//   id, vendor, label           'polly' | 'google' | 'azure' (also the <vendor> of a licence row, licence-rows.mjs),
+//                                the company ('aws' | 'google' | 'azure', for a person reading), the name a person reads
 //   sampleRate                   the WAV master's rate (24 kHz Google and Polly, 48 kHz Azure)
 //   pilotVoices                  the candidate voices the pilot generates when no --voice is given
 //   termsUrl, pricingUrl         the pages recorded in docs/launch/tts-vendor-terms.md and in every licence row
@@ -10,6 +11,7 @@
 //   modelOf(voice)               the vendor model id written to the lock ('neural', 'neural2', 'wavenet')
 //   pricePerMillion(voice)       US$ per 1M characters after the free allowance (for the dry-run estimate)
 //   request(row, voice)          { payload, text, chars }: the exact request body, the text it bills, its count
+//   realRunProblem()             optional: why a real run with this engine is refused for now, or null
 //   createClient({ env, load, fetch })  lazily imports the vendor SDK; credentials come only from the SDK's own
 //                                default chain (for Azure, which has none, the environment of the one command)
 //
