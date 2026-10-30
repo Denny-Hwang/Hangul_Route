@@ -239,7 +239,7 @@
       "realiaRead.realia.entries.milk.value.gloss": "한국 돈 1,000",
       "realiaRead.rounds.r1.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r2.question": "이것은 얼마일까요?",
-      "realiaRead.rounds.r3.question": "이 값인 것은 어느 것일까요?",
+      "realiaRead.rounds.r3.question": "이 값에 파는 것은 어느 것일까요?",
       "realiaRead.rounds.r4.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r5.question": "우유는 얼마일까요? 숫자를 골라요.",
       "realiaRead.rounds.r1.options.a.text.gloss": "한국 돈 1,000",
@@ -274,9 +274,9 @@
       "dialogue.3.options.masitge-deuseyo.gloss": "음식을 내주며 즐겁게 먹으라는 말"
     },
     "minigame:s6-life-q3-check": {
-      "typeHangul.rounds.c1.prompt": "들리는 값을 써 봐요.",
+      "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
       "typeHangul.rounds.c1.target.gloss": "한국 돈 3,000",
-      "typeHangul.rounds.c2.prompt": "들리는 값을 써 봐요.",
+      "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
       "typeHangul.rounds.c2.target.gloss": "한국 돈 1,000"
     }
   }
