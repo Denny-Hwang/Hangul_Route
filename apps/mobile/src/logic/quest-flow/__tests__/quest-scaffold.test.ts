@@ -84,13 +84,13 @@ describe('a Role Play Practice (F-CURR-002 row CM-3A S4)', () => {
     },
   };
 
-  it('lists the partner lines of its main path, the turns its fallback plays', () => {
-    expect(scopeItems(rolePlay).map((t) => t.ko)).toEqual(['밥 먹었어요?', '우유 마셨어요?']);
+  it('lists the partner lines of its main path (the turns its fallback plays) first, then the other branches\' (row CM-35)', () => {
+    expect(scopeItems(rolePlay).map((t) => t.ko)).toEqual(['밥 먹었어요?', '우유 마셨어요?', '김치 먹었어요?']);
   });
 
   it('reads a miss of the game (<node>/<reply>) and of its Tap to Respond fallback (the line)', () => {
     expect(scaffoldScope(rolePlay, [{ scope: rolePlay, itemId: 't2/ate' }, { scope: rolePlay, itemId: 't1/bye' }])?.listenPick?.rounds[0]?.prompt.ko).toBe('밥 먹었어요?');
-    expect(scaffoldScope(rolePlay, [{ texts: ['우유 마셨어요?'] }])?.listenPick?.rounds[0]?.options.map((o) => o.text?.ko)).toEqual(['우유 마셨어요?', '밥 먹었어요?']);
+    expect(scaffoldScope(rolePlay, [{ texts: ['우유 마셨어요?'] }])?.listenPick?.rounds[0]?.options.map((o) => o.text?.ko)).toEqual(['우유 마셨어요?', '밥 먹었어요?', '김치 먹었어요?']);
   });
 });
 
