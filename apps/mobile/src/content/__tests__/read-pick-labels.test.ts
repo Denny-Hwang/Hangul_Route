@@ -22,7 +22,7 @@ const OVERLAYS = {
 };
 
 describe('Read Pick Meaning: options in the UI language (row CM-3A S2)', () => {
-  it('the Stage 2 Read Pick Checks are shipped: seven scopes', () => {
+  it('the Stage 2 Read Pick Checks are shipped: eight scopes (Nature Volume 2 q2, row CM-41 S2)', () => {
     expect(readPick.filter(([ref]) => ref.startsWith('minigame:s2-')).map(([ref]) => ref).sort()).toEqual([
       'minigame:s2-crafts-q3-check',
       'minigame:s2-letters-q1-check',
@@ -30,6 +30,7 @@ describe('Read Pick Meaning: options in the UI language (row CM-3A S2)', () => {
       'minigame:s2-letters-q6-check',
       'minigame:s2-life-q1-check',
       'minigame:s2-nature-q2-check',
+      'minigame:s2-nature-v2-q2-check',
       'minigame:s2-rites-q1-check',
     ]);
   });

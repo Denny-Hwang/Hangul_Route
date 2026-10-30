@@ -143,18 +143,26 @@ describe('catalogTitle', () => {
 });
 
 describe('a cell\'s Volume 2 in the console (F-CURR-002 row CM-40)', () => {
-  const v2 = 'episode:stage2-nature-v2';
+  // A fixture Volume 2 of Stage 4 Play & Crafts; Stage 2 Nature ships a real one (row CM-41 S2).
+  const v2 = 'episode:stage4-crafts-v2';
   const withV2: Catalog = {
     ...CATALOG,
     cells: CATALOG.cells.map((c) =>
-      c.episodeId === 'episode:stage2-nature' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Outdoor Words 2', minutes: 8, questIds: [] }] } : c,
+      c.episodeId === 'episode:stage4-crafts' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Playdate Talk 2', minutes: 8, questIds: [] }] } : c,
     ),
   };
 
   it('names a Volume 2 episode by its own English title, and an unknown one by its id', () => {
-    expect(catalogTitle(v2, 'en', withV2)).toBe('Outdoor Words 2');
-    expect(catalogTitleEntry(v2, 'es', withV2)).toEqual({ title: 'Outdoor Words 2', fallback: true });
+    expect(catalogTitle(v2, 'en', withV2)).toBe('Playdate Talk 2');
+    expect(catalogTitleEntry(v2, 'es', withV2)).toEqual({ title: 'Playdate Talk 2', fallback: true });
     expect(catalogTitle(v2, 'en', CATALOG)).toBe(v2);
+  });
+
+  it('names the shipped Volume 2 (Stage 2 Nature & Animals, row CM-41 S2) by its own title in each language', () => {
+    const shipped = 'episode:stage2-nature-v2';
+    expect(catalogTitle(shipped, 'en', CATALOG)).toBe('Seasons and Animals');
+    expect(catalogTitleEntry(shipped, 'es', CATALOG)).toEqual({ title: 'Estaciones y animales', fallback: false });
+    expect(catalogTitleEntry(shipped, 'ko', CATALOG)).toEqual({ title: '계절과 동물', fallback: false });
   });
 
   it('the console chooser offers no Volume 2 row (the console reads no learner switch)', () => {

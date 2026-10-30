@@ -322,12 +322,13 @@ test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x
 });
 
 /**
- * F-STORY-005 PR 5.8 and F-CURR-002 row CM-40 (wireframe `journey/volumes.md`): two volumes in a cell. The fixture
- * bundle gives Stage 2 Nature & Animals a Volume 2 (`build-lessons.mjs --include-fixtures`: a copy of Outdoor Words
- * named "Outdoor Words 2", no Volume 2 ships yet). `volumes` is at built-in pct 0, so each case turns it on through the
- * stored remote copy, as a ramp would; with it off the cell is its Volume 1 alone.
+ * F-STORY-005 PR 5.8 and F-CURR-002 row CM-40 (wireframe `journey/volumes.md`): two volumes in a cell. Stage 2 Nature &
+ * Animals ships its Volume 2, Seasons and Animals (row CM-41 S2), so the fixture copy of Outdoor Words that row CM-40
+ * gave the e2e bundle (`build-lessons.mjs --include-fixtures`) is no longer made. `volumes` is at built-in pct 0, so each
+ * case turns it on through the stored remote copy, as a ramp would; with it off the cell is its Volume 1 alone.
  */
 const NATURE_V1 = CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature');
+const V2_TITLE = NATURE_V1?.volumes?.[0]?.title ?? 'Seasons and Animals';
 const VOLUMES_ON = { volumes: { on: true, pct: 100 } };
 const V2_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-nature-v2-[0-9a-f]{32}\.js$/;
 const natureCell = (page: Page) => page.getByRole('button', { name: /^Stage 2 [^,]+, Nature & Animals/ });
@@ -384,7 +385,7 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
       await natureCell(page).scrollIntoViewIfNeeded();
       await shot(page, `volumes-grid-${label}`);
       await natureCell(page).click();
-      await expect(page.getByText('Outdoor Words 2').first()).toBeVisible();
+      await expect(page.getByText(V2_TITLE).first()).toBeVisible();
       const tabs = page.getByRole('tablist', { name: 'Volumes' });
       await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
       await expect(tabs.getByRole('tab', { name: 'Volume 1' })).toHaveAttribute('aria-selected', 'false');
@@ -404,7 +405,7 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
     await natureCell(page).click();
     await expect(page.getByText('Outdoor Words', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
-    await expect(page.getByText('Outdoor Words 2')).toHaveCount(0);
+    await expect(page.getByText(V2_TITLE)).toHaveCount(0);
   });
 
   test('offline: Volume 2 is a precached chunk of its own, and its first quest plays from it with the network gone', async ({ page, context }) => {
@@ -423,7 +424,7 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     await page.getByText('Journey', { exact: true }).last().click();
     await natureCell(page).click();
-    await expect(page.getByText('Outdoor Words 2').first()).toBeVisible();
+    await expect(page.getByText(V2_TITLE).first()).toBeVisible();
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     const anyway = page.getByRole('button', { name: 'Play anyway' });
     await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
