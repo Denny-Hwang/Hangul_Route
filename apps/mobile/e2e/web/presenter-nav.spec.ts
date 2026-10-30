@@ -736,6 +736,21 @@ test.describe('PN-3: Spanish at 768 x 1024 (touch) takes the docked More fallbac
     const sheetBox = (await sheet.boundingBox())!;
     expect(sheetBox.y + sheetBox.height).toBeLessThanOrEqual(band.y + 0.5);
     await shot(page, 'presenter-nav-pn3-768x1024-touch-es-more');
+    // While it is open it covers the stage (section 5.2): a swipe there steps nothing, a tap there closes it.
+    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+    const exposed = { x: stage.x + stage.width / 2, y: stage.y + 60 };
+    const at = await counter(page);
+    if (!SWIPES_SKIPPED) {
+      await swipeStage(page, exposed, { x: exposed.x - 150, y: exposed.y });
+      await page.waitForTimeout(150);
+      expect(await counter(page)).toBe(at);
+      await expect(sheet).toBeVisible();
+    }
+    await page.touchscreen.tap(exposed.x, exposed.y);
+    await expect(sheet).toHaveCount(0);
+    expect(await counter(page)).toBe(at);
+    await page.getByTestId('presenter-more').tap();
+    await expect(sheet).toBeVisible();
     await page.getByTestId('presenter-timer').tap();
     await expect(sheet).toHaveCount(0);
     await expect(page.getByTestId('presenter-timer-corner').or(page.getByTestId('presenter-timer-full'))).toBeVisible();
