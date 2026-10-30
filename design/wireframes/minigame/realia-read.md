@@ -70,7 +70,7 @@ RECIPE (Life S6: a recipe card)          RECEIPT (Life S6: an order slip, a rece
 
 LABEL (Life S6: a packaged-food label)   FORECAST (Nature S6: a weather card)
    { a box and a jar }                     +--{ sun, cloud and rain }-----------+
-+================================+         |  == 오늘 날씨 ==                    |
++================================+         |  == 이번 주 날씨 ==                 |
 | == 김 ==                        |  <- a  | +--------+ +--------+ +--------+ |
 |================================|  thick | |== 월 == | |== 화 == | |== 수 == | |   <- tiles, a row
 | == 내용량 ==          == 20g == |  frame | |== 맑음 ==| |== 비 == | |== 눈 == | |      that wraps
@@ -80,11 +80,11 @@ LABEL (Life S6: a packaged-food label)   FORECAST (Nature S6: a weather card)
 
 CALENDAR (Holidays S6, packs L4)         TIMETABLE (Holidays S6: a station board, a trip plan)
 +--{ two binder rings on a bar }-----+   +--{ band with a drawn clock }-------+
-|        == 9월 == (guwol)           |   | == 출발 == (chulbal)               |
-| +------+ +------+ +------+         |   | == 대전 ==               == 한 시 == |   <- the time in its
-| |== 9일 ==| |==17일==| |==18일==|   |   |------------------------------------|      own column, a
-| |==한글날==| |== 추석 ==| |       |   |   | == 부산 ==               == 두 시 == |      rule between
-| +------+ +------+ +------+         |   |------------------------------------|      rows
+|        == 10월 == (siwol)          |   | == 출발 == (chulbal)               |
+| +------+ +------+                  |   | == 대전 ==               == 한 시 == |   <- the time in its
+| |== 3일 ==| |== 9일 ==|              |   |------------------------------------|      own column, a
+| |==개천절==| |==한글날==|             |   | == 부산 ==               == 두 시 == |      rule between
+| +------+ +------+                  |   |------------------------------------|      rows
 +------------------------------------+   +------------------------------------+
 
 MAP (Nature S6, Town & Travel L4)        POSTER (Letters S6, Holidays S6)

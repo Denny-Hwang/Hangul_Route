@@ -363,6 +363,11 @@ function KindSheet({
   tight: boolean;
 }): ReactElement {
   const { unit } = usePresenterView();
+  const size = useStageText();
+  // A receipt's strip widens with its text as the sheet does (`sheetUnits`): on a small phone the 18 px floor draws the
+  // text bigger than its units, and a cap in plain units would wrap its lines more than the other kinds'.
+  const textScale = Math.max(1, size(presenter.size.caption) / (unit * presenter.size.caption));
+  const maxWidth = look.maxWidth === undefined ? undefined : units(unit, Math.round(look.maxWidth * textScale));
   const line = Math.max(STAGE_BORDER_MIN, units(unit, borderWidth.base));
   const box: ViewStyle = {
     backgroundColor: look.paper.backgroundColor,
@@ -480,7 +485,7 @@ function KindSheet({
   );
   return (
     <View testID="presenter-realia-sheet" role="group" aria-label={sheet.alt} accessibilityLabel={sheet.alt} style={{ width }}>
-      <View testID={`presenter-realia-kind-${sheet.kind}`} style={{ width: '100%', maxWidth: look.maxWidth === undefined ? undefined : units(unit, look.maxWidth), alignSelf: 'center' }}>
+      <View testID={`presenter-realia-kind-${sheet.kind}`} style={{ width: '100%', maxWidth, alignSelf: 'center' }}>
         {look.top ? strip(look.top) : null}
         {body}
         {look.bottom ? <Dressing refId={look.bottom.ref} height={units(unit, spacing.sm)} stretch registry={kinds.REALIA_KIND_REGISTRY} /> : null}

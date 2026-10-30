@@ -45,7 +45,7 @@ export const REALIA_KIND_FIXTURES = {
     { id: 'local', text: k('국산', 'guksan', 'made in Korea') },
     { id: 'import', text: k('수입', 'suip', 'imported') },
   ], answerId: 'local', answerEntryId: 'origin' }),
-  forecast: realiaScope('forecast', 'A weather card: sunny on Monday, rain on Tuesday, snow on Wednesday', k('오늘 날씨', 'oneul nalssi', "today's weather"), [
+  forecast: realiaScope('forecast', 'A weather card: sunny on Monday, rain on Tuesday, snow on Wednesday', k('이번 주 날씨', 'ibeon ju nalssi', "this week's weather"), [
     { id: 'mon', text: k('월', 'wol', 'Monday'), value: k('맑음', 'malgeum', 'sunny') },
     { id: 'tue', text: k('화', 'hwa', 'Tuesday'), value: k('비', 'bi', 'rain') },
     { id: 'wed', text: k('수', 'su', 'Wednesday'), value: k('눈', 'nun', 'snow') },

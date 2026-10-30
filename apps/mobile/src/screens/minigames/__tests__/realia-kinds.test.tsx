@@ -145,10 +145,10 @@ describe.each(ADDED)('Realia Read on a %s (row CM-47)', (kind) => {
 });
 
 describe('Cloze Pick realia card on a CM-47 sheet', () => {
-  it.each(['receipt', 'timetable'] as const)('the %s card draws its own layout through the same door', async (kind) => {
+  it.each(ADDED)('the %s card draws its own layout through the same door', async (kind) => {
     const r = await render(<ClozeRealia realia={REALIA_KIND_FIXTURES[kind].realiaRead.realia} testID="cloze-realia" />);
     await chunkIn();
     expect(byTestId(r.root, `cloze-realia-kind-${kind}`)).toHaveLength(1);
-    expect(carrying(r.root, 'cloze-realia', 'role')?.props.accessibilityLabel).toBe(`${a11y.realia.kind[kind]}, ${REALIA_KIND_FIXTURES[kind].realiaRead.realia.entries.length} lines`);
+    expect(carrying(r.root, 'cloze-realia', 'role')?.props.accessibilityLabel).toBe(`${a11y.realia.kind[kind]}, ${REALIA_KIND_FIXTURES[kind].realiaRead.realia.entries.length} line${REALIA_KIND_FIXTURES[kind].realiaRead.realia.entries.length === 1 ? '' : 's'}`);
   });
 });

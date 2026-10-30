@@ -11,10 +11,10 @@ import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
 import { MARKER_BODY_FACTOR } from '../../../logic/lecture/stage-constants';
 import { cleanup, render, unmount } from '../../../test-support/render';
 import { PresenterViewProvider, TaughtKo as TaughtKoType } from '../presenter-context';
-import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER } from '../stage-metrics';
+import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER, TEXT_FLOOR } from '../stage-metrics';
 import { pictureCrowded, QuizOptions } from '../slides/QuizParts';
 import { QuizSlide } from '../slides/QuizSlide';
-import { RealiaQuestionSlide, isRealiaQuestion, type RealiaQuestionBody } from '../slides/RealiaQuestionSlide';
+import { RealiaQuestionSlide, isRealiaQuestion, showsRealiaKind, type RealiaQuestionBody } from '../slides/RealiaQuestionSlide';
 import { RealiaSheetStage } from '../slides/RealiaSheetStage';
 import { loadRealiaKinds } from '../../minigames/realia-kinds-entry';
 import { REALIA_KIND_LOOKS } from '@hangul-route/design-system/src/components/RealiaSheet/kinds-style';
@@ -252,6 +252,32 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
       };
       expect(await widths(true), slide.prompt.sheet.kind).toEqual(await widths(false));
     }
+  });
+
+  it('a deck asks for the realia kinds chunk when it opens only for a slide with a CM-47 sheet (showsRealiaKind)', () => {
+    const byKind = (kind: string): RealiaQuestionBody => shippedKinds.find((x) => x.prompt.sheet.kind === kind)!;
+    for (const kind of ['timetable', 'receipt']) expect(showsRealiaKind(byKind(kind)), kind).toBe(true);
+    for (const kind of ['menu', 'ticket', 'sign', 'price-card']) expect(showsRealiaKind(byKind(kind)), kind).toBe(false);
+    for (const kind of Object.keys(ADDED)) expect(showsRealiaKind(asKind(kind)), kind).toBe(true);
+  });
+
+  it("a receipt's strip widens with its text on a small phone (the 18 px floor), as the sheet does (sheetUnits)", async () => {
+    const receiptWidth = async (unit: number): Promise<number> => {
+      const r = await render(
+        <PresenterViewProvider value={{ messages: en, locale: 'en', unit, reducedMotion: true }}>
+          <RealiaSheetStage sheet={asKind('receipt').prompt.sheet} rom width={4000} answer={{ entryId: menu.prompt.answerEntryId, shown: false }} />
+        </PresenterViewProvider>,
+      );
+      return styleOf(composite(r.root, 'presenter-realia-kind-receipt')).maxWidth as number;
+    };
+    const max = REALIA_KIND_LOOKS.receipt.maxWidth!;
+    // At one unit the caption is above the floor: the cap is its units.
+    expect(await receiptWidth(1)).toBe(max);
+    // On a small phone the floor draws the caption bigger than its units, and the cap grows by the same factor.
+    const unit = 0.4;
+    const scale = Math.max(TEXT_FLOOR, Math.round(unit * presenter.size.caption)) / (unit * presenter.size.caption);
+    expect(scale).toBeGreaterThan(1);
+    expect(await receiptWidth(unit)).toBe(Math.round(unit * Math.round(max * scale)));
   });
 });
 

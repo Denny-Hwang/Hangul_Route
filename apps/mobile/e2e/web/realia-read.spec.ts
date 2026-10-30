@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { seedStored } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -179,6 +180,38 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
       }
     });
   }
+
+  // Row CM-47 at the text size's Largest (1.5 x the reading sizes) at 320: the layouts most at risk with big text (a
+  // calendar's day tiles, a forecast's tiles, a receipt's rows with no leader, a map's pinned places) still fit the
+  // column with every line button on screen, and the text really is larger.
+  test.describe('the CM-47 layouts at Largest text, 320', () => {
+    test.use({ viewport: { width: 320, height: 568 } });
+    for (const [kind, group, ko] of [
+      ['calendar', 'Calendar, 2 lines', '한글날'],
+      ['forecast', 'Weather forecast, 3 lines', '맑음'],
+      ['receipt', 'Receipt, 4 lines', '합계'],
+      ['map', 'Map, 3 lines', '정상'],
+    ] as const satisfies ReadonlyArray<readonly [AddedKind, string, string]>) {
+      test(`a ${kind} fits, with every line button visible`, async ({ page }) => {
+        await page.goto('/');
+        await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+        await open(page, { fixture: kind });
+        const sheet = page.getByRole('group', { name: group });
+        await expect(page.getByTestId(`realia-read-sheet-kind-${kind}`)).toBeVisible({ timeout: 10_000 });
+        // bodyLg (20) x 1.5: the setting reached the sheet.
+        expect(await sheet.getByText(ko, { exact: true }).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(30);
+        const buttons = sheet.getByRole('button');
+        expect(await buttons.count()).toBeGreaterThan(0);
+        for (const button of await buttons.all()) {
+          await button.scrollIntoViewIfNeeded();
+          await expect(button).toBeVisible();
+          expect((await button.boundingBox())!.width).toBeLessThanOrEqual(320);
+        }
+        await expectNoHorizontalOverflow(page);
+        await shot(page, `realia-read-${kind}-320-largest`);
+      });
+    }
+  });
 
   test('tap mode hides the romanization until a line is tapped; the line keeps it in its name', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
