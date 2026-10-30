@@ -11,8 +11,12 @@ import {
   gridEpisodes,
   handWrittenEpisodes,
   isGridEpisode,
+  episodesWithVolumes,
   previewEpisodesFor,
   shelfEpisodes,
+  volumeEpisodes,
+  volumeOf,
+  withVolumes,
 } from '../episodes';
 import { questsAll } from '../quests';
 import { stages, themes } from '../stages';
@@ -69,9 +73,11 @@ describe('gridEpisodes / shelfEpisodes', () => {
     for (const e of shelfEpisodes(episodesAll)) expect(storyEpisodes).toContain(e);
   });
 
-  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
+  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest of a first volume', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // F-CURR-002 row CM-40: a later volume's quests are kept and synced (`questsAll`) but add no count to Home.
+    const laterQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !laterQuestIds.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -99,8 +105,16 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('launches with one grid episode per cell', () => {
-    expect(MAX_EPISODES_PER_CELL).toBe(1);
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the later volumes stay off the route list', () => {
+    expect(MAX_EPISODES_PER_CELL).toBe(2);
+    // The first Volume 2 to ship is Play & Crafts, Stage 2 (row CM-42 S2).
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage2-crafts-v2');
+    for (const episode of volumeEpisodes) {
+      expect(episode.volume, episode.id).toBe(2);
+      expect(episodesAll.some((e) => e.id === episode.id), episode.id).toBe(false);
+      expect(episodesAll.some((e) => e.stage === episode.stage && e.theme === episode.theme && (e.volume ?? 1) === 1), episode.id).toBe(true);
+    }
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
@@ -112,19 +126,34 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
       expect(inCell, key).toBeLessThanOrEqual(MAX_EPISODES_PER_CELL);
     }
     expect(new Set(gridEpisodes(episodesAll).map(cellKey))).toEqual(new Set(ALL_CELLS));
-    expect(cellsOverCapacity(episodesAll)).toEqual([]);
+    expect(cellsOverCapacity(episodesWithVolumes)).toEqual([]);
   });
 
-  it('fails the invariant when a test adds a second grid episode to one cell', () => {
-    const extra = episode('episode:stage1-letters-extra', { stage: 'stage1', theme: 'letters' });
-    expect(cellsOverCapacity([...episodesAll, extra])).toEqual(['stage1:letters']);
+  it('takes a cell\'s Volume 2 and refuses a third grid episode (the capacity of two)', () => {
+    const v2 = episode('episode:stage2-nature-v2', { stage: 'stage2', theme: 'nature', order: 4, volume: 2 });
+    expect(cellsOverCapacity([...episodesAll, v2])).toEqual([]);
+    const third = episode('episode:stage2-nature-extra', { stage: 'stage2', theme: 'nature', order: 4 });
+    expect(cellsOverCapacity([...episodesAll, v2, third])).toEqual(['stage2:nature']);
   });
 
   it('never counts shelf episodes toward a cell, and honours an explicit max', () => {
     const shelfHere = episode('episode:shelf-z', { stage: 'stage1', theme: 'letters', placement: 'shelf' });
     expect(cellsOverCapacity([...episodesAll, shelfHere])).toEqual([]);
     const extra = episode('episode:stage1-letters-extra', { stage: 'stage1', theme: 'letters' });
-    expect(cellsOverCapacity([...episodesAll, extra], 2)).toEqual([]);
+    expect(cellsOverCapacity([...episodesAll, extra], 1)).toEqual(['stage1:letters']);
+    expect(cellsOverCapacity([...episodesAll, extra])).toEqual([]);
+  });
+
+  it('keeps the later volumes off the route list and on the cells: withVolumes adds them only while volumes is on', () => {
+    const v2 = episode('episode:stage2-nature-v2', { stage: 'stage2', theme: 'nature', order: 4, volume: 2 });
+    const list = [...episodesAll, v2];
+    expect(withVolumes(true, list)).toEqual(list);
+    expect(withVolumes(false, list)).toEqual(episodesAll);
+    expect(volumeOf(v2)).toBe(2);
+    expect(volumeOf(episodesAll[0] as Episode)).toBe(1);
+    expect(episodesFor('stage2', 'nature', withVolumes(true, list)).map((e) => e.id)).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);
+    expect(episodesFor('stage2', 'nature', withVolumes(false, list)).map((e) => e.id)).toEqual(['episode:stage2-nature']);
+    expect(episodeFor('stage2', 'nature', withVolumes(true, list))?.id).toBe('episode:stage2-nature');
   });
 
   it('builds the bundle as hand-written, then shelf stories, then previews of unclaimed cells', () => {

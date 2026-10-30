@@ -1,4 +1,4 @@
-import type { OverlayLocale, Overlays, QuestStep } from '@hangul-route/content-schema';
+import type { OverlayLocale, Overlays, QuestStep, UiLocale } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameScope } from '../../minigame-config';
 import {
@@ -8,9 +8,11 @@ import {
   chunkBundleName,
   isNewBuildError,
   createLessonStore,
+  episodesOverStore,
   mergeOverlaysInto,
   questsOverStore,
   type LessonCellChunk,
+  type LessonHeaderChunk,
   type LessonManifest,
   type LessonTitleChunk,
 } from '../lesson-store';
@@ -370,6 +372,138 @@ describe('titles grace (the first screen and a newly chosen locale wait for the 
     void store.ensureTitles('es');
     await vi.advanceTimersByTimeAsync(60_000);
     expect(store.titlesSettled('es')).toBe(false);
+  });
+});
+
+describe('the lesson headers chunks (F-CURR-002 §10, row CM-40: the display lines before the first screen)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const lines: LessonHeaderChunk = {
+    CHUNK_HASH: 'h-headers-en',
+    LESSON_EPISODE_HEADERS: { 'episode:stage2-rites': { subtitleEn: 'Words of the holidays', hoyaIntroEn: 'Let us read!', rewardCardIds: ['card:insa'] } },
+    LESSON_QUEST_HEADERS: { 'quest:stage2-rites-q1': { blurbEn: 'Read the holiday words.', teaserEn: 'Next: kites!' } },
+    LESSON_HEADER_OVERLAYS: {},
+  };
+  const glossed = (locale: OverlayLocale): LessonHeaderChunk => ({
+    CHUNK_HASH: `h-headers-${locale}`,
+    LESSON_EPISODE_HEADERS: {},
+    LESSON_QUEST_HEADERS: {},
+    LESSON_HEADER_OVERLAYS: { 'episode:stage2-rites': { subtitle: locale === 'es' ? 'Palabras de las fiestas' : '명절 낱말' } },
+  });
+  const withHeaders: LessonManifest = { ...manifest, headers: { en: 'h-headers-en', es: 'h-headers-es', ko: 'h-headers-ko' } };
+  function headerLoaders() {
+    const base = loaders();
+    return {
+      ...base,
+      headers: (locale: UiLocale): Promise<LessonHeaderChunk> => {
+        base.asked.push(`headers-${locale}`);
+        return base.failNext.delete(`headers-${locale}`) ? Promise.reject(new Error('offline')) : Promise.resolve(locale === 'en' ? lines : glossed(locale));
+      },
+    };
+  }
+
+  it('English waits for its headers; es and ko wait for the English headers, their titles and their own headers', async () => {
+    const load = headerLoaders();
+    const store = createLessonStore(withHeaders, load);
+    expect(store.titlesSettled('en')).toBe(false);
+    expect(store.episodeLines('episode:stage2-rites')).toBeUndefined();
+    await store.ensureTitles('en');
+    expect(load.asked).toEqual(['headers-en']);
+    expect(store.titlesSettled('en')).toBe(true);
+    expect(store.episodeLines('episode:stage2-rites')).toEqual(lines.LESSON_EPISODE_HEADERS['episode:stage2-rites']);
+    expect(store.questLines('quest:stage2-rites-q1')).toEqual({ blurbEn: 'Read the holiday words.', teaserEn: 'Next: kites!' });
+    expect(store.titlesSettled('es')).toBe(false);
+    await store.ensureTitles('es');
+    expect(load.asked).toEqual(['headers-en', 'titles-es', 'headers-es']);
+    expect(store.titlesSettled('es')).toBe(true);
+    const glosses: Overlays[] = [];
+    store.onOverlays((o) => glosses.push(o));
+    expect(glosses).toContainEqual({ es: glossed('es').LESSON_HEADER_OVERLAYS, ko: {} });
+    expect(chunkBundleName('headers-en')).toBe('lessons-headers-en');
+  });
+
+  it('a failed headers load settles (the English lines stay out until a later try brings them); a mismatched one is refused', async () => {
+    const load = headerLoaders();
+    load.failNext.add('headers-en');
+    const store = createLessonStore(withHeaders, load);
+    await expect(store.ensureTitles('en')).rejects.toThrow('offline');
+    expect(store.titlesSettled('en')).toBe(true);
+    expect(store.episodeLines('episode:stage2-rites')).toBeUndefined();
+    await store.ensureTitles('en');
+    expect(store.episodeLines('episode:stage2-rites')?.subtitleEn).toBe('Words of the holidays');
+    const wrong = createLessonStore({ ...withHeaders, headers: { en: 'h-other', es: 'h-headers-es', ko: 'h-headers-ko' } }, headerLoaders());
+    await expect(wrong.ensureTitles('en')).rejects.toBeInstanceOf(LessonChunkMismatch);
+  });
+
+  it('the first screen waits 2.5 s at most: past that it shows without the lines, and they arrive in place (titlesVersion)', async () => {
+    vi.useFakeTimers();
+    let arrive: (mod: LessonHeaderChunk) => void = () => undefined;
+    const store = createLessonStore(
+      withHeaders,
+      { ...headerLoaders(), headers: () => new Promise<LessonHeaderChunk>((resolve) => (arrive = resolve)) },
+      { timeoutMs: 15_000, titlesGraceMs: 2_500 },
+    );
+    const [episode] = episodesOverStore([{ id: 'episode:stage2-rites', stage: 'stage2', theme: 'rites', order: 3, titleEn: 'Holiday Words', questIds: [], estimatedMinutes: 12, status: 'shipped' }], store);
+    let shown = false;
+    void store.untilTitlesSettled('en').then(() => (shown = true));
+    await vi.advanceTimersByTimeAsync(2_499);
+    expect(shown).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(shown).toBe(true);
+    // The English fallback before the chunk: no subtitle, an empty Hoya line, no cards; never a crash.
+    expect(episode?.subtitleEn).toBeUndefined();
+    expect(episode?.hoyaIntroEn).toBe('');
+    expect(episode?.rewardCardIds).toEqual([]);
+    const v = store.titlesVersion();
+    arrive(lines);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(store.titlesVersion()).toBeGreaterThan(v);
+    expect(episode?.subtitleEn).toBe('Words of the holidays');
+    expect(episode?.hoyaIntroEn).toBe('Let us read!');
+    expect(episode?.rewardCardIds).toEqual(['card:insa']);
+    expect(JSON.parse(JSON.stringify(episode))).toMatchObject({ subtitleEn: 'Words of the holidays', rewardCardIds: ['card:insa'] });
+  });
+
+  it('a quest over the store reads its blurb and teaser from the English headers', async () => {
+    const store = createLessonStore(withHeaders, headerLoaders());
+    const [quest] = questsOverStore([{ id: 'quest:stage2-rites-q1', titleEn: 'Q1', estimatedMinutes: 4 }], store);
+    expect(quest?.blurbEn).toBeUndefined();
+    await store.ensureTitles('en');
+    expect(quest?.blurbEn).toBe('Read the holiday words.');
+    expect(quest?.teaserEn).toBe('Next: kites!');
+    expect(Object.keys(quest ?? {})).toEqual(expect.arrayContaining(['steps', 'blurbEn', 'teaserEn']));
+  });
+
+  it('a manifest without headers waits for none (English settles at once)', () => {
+    const store = createLessonStore(manifest, loaders());
+    expect(store.titlesSettled('en')).toBe(true);
+  });
+});
+
+describe('Volume 2 of a cell (F-CURR-002 row CM-40): a body chunk of its own', () => {
+  it('maps a Volume 2 ref to its own chunk, and loads it apart from Volume 1', async () => {
+    expect(cellOfScopeRef('minigame:s2-rites-v2-q1-practice')).toBe('episode:stage2-rites-v2');
+    expect(cellOfScopeRef('minigame:s2-rites-v3-q1-practice')).toBeUndefined();
+    expect(chunkBundleName('episode:stage2-rites-v2')).toBe('lessons-cell-stage2-rites-v2');
+    const v2Ref = 'minigame:s2-rites-v2-q1-practice';
+    const v2: LessonCellChunk = { CHUNK_HASH: 'h-rites-v2', LESSON_STEPS: { 'quest:stage2-rites-v2-q1': steps }, LESSON_SCOPES: { [v2Ref]: scope }, LESSON_OVERLAYS: { es: {}, ko: {} }, LESSON_NOTES: {} };
+    const load = loaders({ 'episode:stage2-rites': rites, 'episode:stage2-rites-v2': v2 });
+    const store = createLessonStore(
+      {
+        ...manifest,
+        episodes: [...manifest.episodes, { id: 'episode:stage2-rites-v2', questIds: ['quest:stage2-rites-v2-q1'] }],
+        cells: { ...manifest.cells, 'episode:stage2-rites-v2': 'h-rites-v2' },
+      },
+      load,
+    );
+    expect(store.cellOfQuest('quest:stage2-rites-v2-q1')).toBe('episode:stage2-rites-v2');
+    await store.ensureCells(['episode:stage2-rites-v2']);
+    expect(load.asked).toEqual(['episode:stage2-rites-v2']);
+    expect(store.isQuestReady('quest:stage2-rites-v2-q1')).toBe(true);
+    expect(store.isQuestReady('quest:stage2-rites-q1')).toBe(false);
+    expect(store.scopeFor(v2Ref)).toBe(scope);
   });
 });
 
