@@ -1,0 +1,1075 @@
+{
+  "id": "episode:stage7-nature-v2",
+  "stage": "stage7",
+  "theme": "nature",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "My Favorite Season",
+  "subtitleEn": "Write about the four seasons and the one you like best.",
+  "hoyaIntroEn": "Spring, summer, autumn or winter: which do you like? Let us write!",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-nature-v2-q1",
+      "titleEn": "Warm Spring, Hot Summer",
+      "blurbEn": "Write the words for spring and summer, and how they feel.",
+      "teaserEn": "Next: write about autumn and winter.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Warm Spring, Hot Summer",
+          "hoyaLineEn": "Flowers in spring, sun in summer. Let us write about them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Spring Is Warm",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "봄",
+                      "romanization": "bom",
+                      "en": "spring"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "여름",
+                      "romanization": "yeoreum",
+                      "en": "summer"
+                    }
+                  }
+                ],
+                "captionEn": "Two seasons: spring, then summer."
+              },
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___은/는 따뜻해요.",
+                      "romanization": "___eun/neun ttatteuthaeyo",
+                      "en": "___ is warm."
+                    },
+                    "noteEn": "{ko:은} after a final consonant, {ko:는} after a vowel: it marks what the sentence is about.",
+                    "examples": [
+                      {
+                        "ko": "봄은 따뜻해요.",
+                        "romanization": "bomeun ttatteuthaeyo",
+                        "en": "Spring is warm."
+                      },
+                      {
+                        "ko": "오늘은 따뜻해요.",
+                        "romanization": "oneureun ttatteuthaeyo",
+                        "en": "It is warm today."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Write the season first, then how it feels."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "여름은 더워요.",
+                      "romanization": "yeoreumeun deowoyo",
+                      "en": "Summer is hot."
+                    },
+                    "picture": "word:nature-sun"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "봄에 꽃을 봐요.",
+                      "romanization": "bome kkocheul bwayo",
+                      "en": "In spring I see flowers."
+                    },
+                    "picture": "word:nature-flower"
+                  }
+                ],
+                "captionEn": "Each season has its own weather."
+              }
+            ]
+          },
+          "durationSeconds": 75
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Word",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-nature-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Hear and Type",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-nature-v2-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Spring and Summer!",
+          "hoyaLineEn": "You wrote about spring and summer in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-v2-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "t1",
+              "word": {
+                "ko": "봄",
+                "romanization": "bom",
+                "en": "spring"
+              }
+            },
+            {
+              "id": "t2",
+              "word": {
+                "ko": "여름",
+                "romanization": "yeoreum",
+                "en": "summer"
+              }
+            },
+            {
+              "id": "t3",
+              "word": {
+                "ko": "꽃",
+                "romanization": "kkot",
+                "en": "flower"
+              }
+            },
+            {
+              "id": "t4",
+              "word": {
+                "ko": "해",
+                "romanization": "hae",
+                "en": "sun"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type the word for spring.",
+              "target": {
+                "ko": "봄",
+                "romanization": "bom",
+                "en": "spring"
+              },
+              "mode": "hear"
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type the word for summer.",
+              "target": {
+                "ko": "여름",
+                "romanization": "yeoreum",
+                "en": "summer"
+              },
+              "mode": "hear"
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: Spring is warm.",
+              "target": {
+                "ko": "봄은 따뜻해요",
+                "romanization": "bomeun ttatteuthaeyo",
+                "en": "spring is warm"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: Summer is hot.",
+              "pictureRef": "word:nature-sun",
+              "target": {
+                "ko": "여름은 더워요",
+                "romanization": "yeoreumeun deowoyo",
+                "en": "summer is hot"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q1-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "여름은 더워요.",
+                "romanization": "yeoreumeun deowoyo",
+                "en": "Summer is hot."
+              },
+              "pictureRef": "word:nature-sun",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "봄에 꽃을 봐요.",
+                "romanization": "bome kkocheul bwayo",
+                "en": "In spring I see flowers."
+              },
+              "pictureRef": "word:nature-flower",
+              "distractors": [
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-nature-v2-q2",
+      "titleEn": "Cool Autumn, Cold Winter",
+      "blurbEn": "Write the words for autumn and winter, and their weather.",
+      "teaserEn": "Next: write about your favorite season.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Cool Autumn, Cold Winter",
+          "hoyaLineEn": "Cool wind in autumn, snow in winter. Let us write about them!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Winter Is Cold",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "가을",
+                      "romanization": "gaeul",
+                      "en": "autumn"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "겨울",
+                      "romanization": "gyeoul",
+                      "en": "winter"
+                    }
+                  }
+                ],
+                "captionEn": "Two more seasons: autumn, then winter."
+              },
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___은/는 추워요.",
+                      "romanization": "___eun/neun chuwoyo",
+                      "en": "___ is cold."
+                    },
+                    "noteEn": "The same marker as before: {ko:은} after a final consonant, {ko:는} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "겨울은 추워요.",
+                        "romanization": "gyeoureun chuwoyo",
+                        "en": "Winter is cold."
+                      },
+                      {
+                        "ko": "오늘은 추워요.",
+                        "romanization": "oneureun chuwoyo",
+                        "en": "It is cold today."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Write the season first, then how it feels."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "가을은 시원해요.",
+                      "romanization": "gaeureun siwonhaeyo",
+                      "en": "Autumn is cool."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "겨울에 눈이 와요.",
+                      "romanization": "gyeoure nuni wayo",
+                      "en": "It snows in winter."
+                    },
+                    "picture": "word:nature-snow"
+                  }
+                ],
+                "captionEn": "Autumn is cool, and snow comes in winter."
+              }
+            ]
+          },
+          "durationSeconds": 75
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-v2-q2-practice",
+          "durationSeconds": 95
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type It",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-nature-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-nature-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Autumn and Winter!",
+          "hoyaLineEn": "You wrote about autumn and winter. Great writing!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "겨울은 추워요.",
+                "romanization": "gyeoureun chuwoyo",
+                "en": "Winter is cold."
+              },
+              "pictureRef": "word:nature-snow",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "가을은 시원해요.",
+                "romanization": "gaeureun siwonhaeyo",
+                "en": "Autumn is cool."
+              },
+              "distractors": [
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "비가 와요.",
+                "romanization": "biga wayo",
+                "en": "It is raining."
+              },
+              "pictureRef": "word:nature-rain",
+              "distractors": []
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "날씨가 좋아요.",
+                "romanization": "nalssiga joayo",
+                "en": "The weather is nice."
+              },
+              "distractors": [
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "it comes"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type: Autumn is cool.",
+              "target": {
+                "ko": "가을은 시원해요",
+                "romanization": "gaeureun siwonhaeyo",
+                "en": "autumn is cool"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: Winter is cold.",
+              "target": {
+                "ko": "겨울은 추워요",
+                "romanization": "gyeoureun chuwoyo",
+                "en": "winter is cold"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: It is snowing.",
+              "pictureRef": "word:nature-snow",
+              "target": {
+                "ko": "눈이 와요",
+                "romanization": "nuni wayo",
+                "en": "it is snowing"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q2-check",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "날씨가 ___.",
+                "romanization": "nalssiga ___",
+                "en": "The weather is ___."
+              },
+              "slots": [
+                {
+                  "id": "weather",
+                  "bank": [
+                    {
+                      "ko": "따뜻해요",
+                      "romanization": "ttatteuthaeyo",
+                      "en": "warm"
+                    },
+                    {
+                      "ko": "더워요",
+                      "romanization": "deowoyo",
+                      "en": "hot"
+                    },
+                    {
+                      "ko": "시원해요",
+                      "romanization": "siwonhaeyo",
+                      "en": "cool"
+                    },
+                    {
+                      "ko": "추워요",
+                      "romanization": "chuwoyo",
+                      "en": "cold"
+                    },
+                    {
+                      "ko": "좋아요",
+                      "romanization": "joayo",
+                      "en": "nice"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "호야는 ___이/가 좋아요.",
+                "romanization": "hoyaneun ___i/ga joayo",
+                "en": "Hoya likes ___."
+              },
+              "slots": [
+                {
+                  "id": "season",
+                  "bank": [
+                    {
+                      "ko": "봄",
+                      "romanization": "bom",
+                      "en": "spring"
+                    },
+                    {
+                      "ko": "여름",
+                      "romanization": "yeoreum",
+                      "en": "summer"
+                    },
+                    {
+                      "ko": "가을",
+                      "romanization": "gaeul",
+                      "en": "autumn"
+                    },
+                    {
+                      "ko": "겨울",
+                      "romanization": "gyeoul",
+                      "en": "winter"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-nature-v2-q3",
+      "titleEn": "My Favorite Season",
+      "blurbEn": "Write a short story about the season you like best.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Favorite Season",
+          "hoyaLineEn": "Which season do you like best? Any answer is a good one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "My Favorite Season Is ...",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "제가 좋아하는 계절은 ___이에요/예요.",
+                      "romanization": "jega joahaneun gyejeoreun ___ieyo/yeyo",
+                      "en": "My favorite season is ___."
+                    },
+                    "noteEn": "{ko:계절} means season. {ko:봄}, {ko:여름}, {ko:가을} and {ko:겨울} end in a final consonant, so they take {ko:이에요}.",
+                    "examples": [
+                      {
+                        "ko": "제가 좋아하는 계절은 봄이에요.",
+                        "romanization": "jega joahaneun gyejeoreun bomieyo",
+                        "en": "My favorite season is spring."
+                      },
+                      {
+                        "ko": "제가 좋아하는 계절은 겨울이에요.",
+                        "romanization": "jega joahaneun gyejeoreun gyeourieyo",
+                        "en": "My favorite season is winter."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Name the season you like, then add the ending."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "호야가 좋아하는 계절은 가을이에요.",
+                      "romanization": "hoyaga joahaneun gyejeoreun gaeurieyo",
+                      "en": "Hoya's favorite season is autumn."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "저는 사계절이 다 좋아요.",
+                      "romanization": "jeoneun sagyejeori da joayo",
+                      "en": "I like all four seasons."
+                    }
+                  }
+                ],
+                "captionEn": "Any season is a good answer, or all four."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-nature-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Story",
+          "minigameKind": "my-story",
+          "minigameRef": "minigame:s7-nature-v2-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s7-nature-v2-q3-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Story!",
+          "hoyaLineEn": "You wrote about your favorite season, in your own Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-nature-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "제가 좋아하는 계절은 봄이에요.",
+                "romanization": "jega joahaneun gyejeoreun bomieyo",
+                "en": "My favorite season is spring."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "봄은 따뜻해요.",
+                "romanization": "bomeun ttatteuthaeyo",
+                "en": "Spring is warm."
+              },
+              "distractors": [
+                {
+                  "ko": "추워요",
+                  "romanization": "chuwoyo",
+                  "en": "it is cold"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "호야가 좋아하는 계절은 가을이에요.",
+                "romanization": "hoyaga joahaneun gyejeoreun gaeurieyo",
+                "en": "Hoya's favorite season is autumn."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 3,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "저는 사계절이 다 좋아요.",
+                "romanization": "jeoneun sagyejeori da joayo",
+                "en": "I like all four seasons."
+              },
+              "distractors": [
+                {
+                  "ko": "더워요",
+                  "romanization": "deowoyo",
+                  "en": "it is hot"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q3-apply",
+          "kind": "my-story",
+          "frames": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "___이/가 좋아요.",
+                "romanization": "___i/ga joayo",
+                "en": "I like ___."
+              },
+              "slots": [
+                {
+                  "id": "season",
+                  "bank": [
+                    {
+                      "ko": "봄",
+                      "romanization": "bom",
+                      "en": "spring"
+                    },
+                    {
+                      "ko": "여름",
+                      "romanization": "yeoreum",
+                      "en": "summer"
+                    },
+                    {
+                      "ko": "가을",
+                      "romanization": "gaeul",
+                      "en": "autumn"
+                    },
+                    {
+                      "ko": "겨울",
+                      "romanization": "gyeoul",
+                      "en": "winter"
+                    },
+                    {
+                      "ko": "사계절",
+                      "romanization": "sagyejeol",
+                      "en": "all four seasons",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "날씨가 ___.",
+                "romanization": "nalssiga ___",
+                "en": "The weather is ___."
+              },
+              "slots": [
+                {
+                  "id": "weather",
+                  "bank": [
+                    {
+                      "ko": "따뜻해요",
+                      "romanization": "ttatteuthaeyo",
+                      "en": "warm"
+                    },
+                    {
+                      "ko": "더워요",
+                      "romanization": "deowoyo",
+                      "en": "hot"
+                    },
+                    {
+                      "ko": "시원해요",
+                      "romanization": "siwonhaeyo",
+                      "en": "cool"
+                    },
+                    {
+                      "ko": "추워요",
+                      "romanization": "chuwoyo",
+                      "en": "cold"
+                    },
+                    {
+                      "ko": "좋아요",
+                      "romanization": "joayo",
+                      "en": "nice",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___에 가요.",
+                "romanization": "___e gayo",
+                "en": "I go to ___."
+              },
+              "slots": [
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "산",
+                      "romanization": "san",
+                      "en": "the mountains"
+                    },
+                    {
+                      "ko": "바다",
+                      "romanization": "bada",
+                      "en": "the sea"
+                    },
+                    {
+                      "ko": "강",
+                      "romanization": "gang",
+                      "en": "the river"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "the park",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-nature-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "제가 좋아하는 계절은 여름___.",
+                "romanization": "jega joahaneun gyejeoreun yeoreum___",
+                "en": "My favorite season is summer."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이에요",
+                  "romanization": "ieyo",
+                  "en": "it is (after a final consonant)"
+                },
+                {
+                  "ko": "예요",
+                  "romanization": "yeyo",
+                  "en": "it is (after a vowel)"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "jega joahaneun gyejeoreun yeoreumieyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "겨울에 눈이 ___.",
+                "romanization": "gyeoure nuni ___",
+                "en": "It snows in winter."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "I see it"
+                },
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "it comes"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "The Korea Meteorological Administration starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C. In 1991-2020, summer was the longest season, 118 days.",
+      "sources": [
+        {
+          "title": "보도자료: 기상청, 새로운 기후평년값(1991~2020년) 산출 (2021-03-25)",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.kma.go.kr/kma/flexer/html/press/2021/03/25/ATC202103250932093_863521e7-fd31-4f26-bfce-04a9e14ffb33.hwp.files/Sections1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "계절길이 변화 표의 주: “계절 시작의 정의 - 봄/여름: 일평균기온이 5℃ / 20℃ 이상 올라간 후 다시 떨어지지 않는 첫날 - 가을/겨울: 일평균기온이 20℃ / 5℃ 미만으로 떨어진 후 다시 올라가지 않는 첫날”; 신 평년 여름 “5월 31일 9월 25일 118일”."
+        },
+        {
+          "title": "보도자료: 기후변화가 바꾼 우리나라 사계절과 24절기 (2021-04-27)",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.kma.go.kr/kma/flexer/html/press/2021/04/27/ATC202104271102111_226ab095-6244-4ed5-86cc-e7b6240fb7e7.hwp.files/Sections1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "<계절, 24절기>: “※ 최근 30년 여름은 118일(약 4개월)로 가장 긴 계절이며, 가을은 69일로 가장 짧음”; 최근 30년은 “(1991∼2020년)”."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): both Korea Meteorological Administration press releases opened (kma.go.kr flexer pages, HTTP 200). The 2021-03-25 release on the 1991-2020 normals defines each season's start (spring and summer: the first day the daily mean temperature rises to 5 °C / 20 °C or above and does not fall back; autumn and winter: below 20 °C / 5 °C and does not rise back) and gives the new-normal summer as 5/31-9/25, 118 days. The 2021-04-27 release says that over the recent 30 years (1991-2020) summer, 118 days, is the longest season. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order).\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched and read against the note. 'Starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C' matches the definition note of the 2021-03-25 table; '1991-2020' and '118 days, the longest season' match the 2021-04-27 line and the 2021-03-25 new-normal row. No moving-average detail is claimed. The institution is named as on the access date (기상청, Korea Meteorological Administration). Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-opened both releases; the claim is about the KMA's own season definition and its own normals, so no 'all Koreans' or origin claim; the ko overlay said '5 °C 넘게' (above 5), now '5 °C 이상으로' (5 or above), as the source says. Outcome: pass, ko overlay wording fixed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:동지}, around 22 December, is the longest night of the year. A Dongji custom is to make and eat red bean porridge, {ko:팥죽}.",
+      "sources": [
+        {
+          "title": "동지 (어린이민속사전, 명절)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) 어린이박물관",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "“동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다. … 보통 양력 12월 22일경입니다. … 동지에는 ‘팥죽’을 만들어 먹고, ‘새해 달력’을 선물합니다.”"
+        },
+        {
+          "title": "보도자료: 기후변화가 바꾼 우리나라 사계절과 24절기 (2021-04-27)",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.kma.go.kr/kma/flexer/html/press/2021/04/27/ATC202104271102111_226ab095-6244-4ed5-86cc-e7b6240fb7e7.hwp.files/Sections1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "붙임 3, 24절기 표의 겨울 절기 행: “동지 12.22./23. 밤이 가장 긺”."
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea children's folk dictionary page on 동지 (nfm.go.kr/kids, HTTP 200) says Dongji is usually around 22 December, the day of the year with the longest night and shortest day, and that on Dongji people make and eat 팥죽 (red bean porridge); the KMA 2021-04-27 release lists 동지 at 12.22./23. with '밤이 가장 긺'. The note says only these three things in its own words. Carried by: the q2 Did you know? tip.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched. Date (around 22 December), longest night and the porridge custom match the quotes; the note claims no origin, no belief about the porridge and no solar-term framing, so the §5.1 shared-calendar rule is not engaged; 'a Dongji custom' does not say everyone keeps it. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-read against the NFM page; neutral, no religious practice presented as universal, no peril; es and ko keep the two {ko:} tokens. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:사계절} is {ko:사}, four, and {ko:계절}, season: spring, summer, autumn and winter together.",
+      "sources": [
+        {
+          "title": "사계절 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=437883&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘사-계절(四季節)’(word_no 437883) 「명사」: “봄·여름·가을·겨울의 네 철.=사철.”"
+        },
+        {
+          "title": "계절 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=395576&searchKeywordTo=3",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘계절 1(季節)’(word_no 395576) 「명사」: “규칙적으로 되풀이되는 자연 현상에 따라서 일 년을 구분한 것. 일반적으로 온대 지방은 기온의 차이를 기준으로 하여 봄, 여름, 가을, 겨울의 네 계절로 나누고 …”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): stdict search results for 사계절 (word_no 437883: 사-계절(四季節) 「명사」 봄·여름·가을·겨울의 네 철) and 계절 (word_no 395576: 계절 1(季節), the year divided by recurring natural change, in the temperate zone into spring, summer, autumn and winter) opened (HTTP 200). The note restates them with the 四 of the headword as 'four'; nothing copied. Carried by: the q3 Did you know? tip and the q3 Discover sentence 저는 사계절이 다 좋아요.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both entries re-read; 사 is the 四 of 四季節 and 계절 is season, and the headword names the four seasons together, as the note says. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): plain language note, no cultural claim; tokens kept in es and ko. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Author pass (MAR, 2026-10-30): §5.5 S7 (describe my favourite season) as three quests: spring and summer (___은/는 따뜻해요), autumn and winter (___은/는 추워요), my favorite season (제가 좋아하는 계절은 ___이에요/예요) with the q3 My Story chain ___이/가 좋아요 / 날씨가 ___ / ___에 가요. Triples differ from Volume 1; Checks are Sentence Builder, Write Frame and Cloze Pick, one each.",
+      "Language lens (MAR, 2026-10-30): 해요체, spacing and particles clean; romanization from the F-CNT-002 converter (따뜻해요 ttatteuthaeyo, 사계절이 sagyejeori); applied: es 'Voy a el mar' contraction fixed (frame 'Voy hacia ___'), es 'calorcito' replaced, ko park gloss shortened to a definition; ko glosses describe and never echo the taught Korean.",
+      "Culture and facts lens (MAR, 2026-10-30): n1 (KMA season start and 1991-2020 summer of 118 days) and n2 (Dongji, about 22 December, the longest night, red bean porridge) checked against KMA and National Folk Museum of Korea pages, n3 against stdict; names as of the access date; no brand, lyric, artist or living person; ko n1 '5 °C 넘게' corrected to '이상으로'.",
+      "Learning design lens (MAR, 2026-10-30): curriculum lint clean; new Discover items 5, 5, 3 a quest (Stage 7 cap: 3 new words and one frame); lesson-recycle 33, 33 and 43 in 100; Dictation only 봄 and 여름, shown whole on Discover, no sound change (따뜻해요 and 사계절 are typed with the word shown); a cloze-pick Practice could not scaffold (CM-24), so q2 Practice is Sentence Builder.",
+      "My Story lens (MAR, 2026-10-30, §6.6): every bank has one neutral option, never first (사계절, 좋아요, 공원); no frame asks about the learner's family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (봄이 좋아요); frames 2-3 teach no item that a played step does not (날씨가 ___ and its bank are the q2 Check, ___에 가요 and its places are Volume 1 items).",
+      "Reviser and third pass (MAR, 2026-10-30): the lens fixes above applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+    ]
+  },
+  "contentVer": 1
+}
