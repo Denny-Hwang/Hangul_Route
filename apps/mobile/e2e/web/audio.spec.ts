@@ -796,20 +796,26 @@ test.describe('bundled clips (A-6)', () => {
     await fakeSpeech(page, 'none');
     await recordClipStarts(page);
     await recordClipTimes(page);
-    // When Match Sound's second round is in the DOM, on the page's own clock. Round 2 was warmed when the game opened
-    // (round 1 plays while its warm-up is still on its way). The observer arms once round 1's clip has started, and takes only a text that changed to "2 / 6" (the round pill),
-    // never a container that merely holds such a text, from the mutation records themselves (no layout is forced).
+    // When each later round of Match Sound is in the DOM, on the page's own clock. The rounds after the first were warmed
+    // when the game opened (round 1 plays while its warm-up is still on its way). The observer takes only a text that
+    // changed to "n / 6" (the round pill), never a container that merely holds such a text, from the mutation records
+    // themselves (no layout is forced).
     await page.addInitScript(() => {
-      const w = window as Window & { __roundIn?: Record<number, number>; __clipAt?: number[] };
+      const w = window as Window & { __roundIn?: Record<number, number> };
       w.__roundIn = {};
-      const isRound = (text: string | null): boolean => (text ?? '').trim() === '2 / 6';
+      const roundOf = (text: string | null): number | undefined => {
+        const m = /^([2-6]) \/ 6$/.exec((text ?? '').trim());
+        return m ? Number(m[1]) : undefined;
+      };
+      const mark = (text: string | null): void => {
+        const n = roundOf(text);
+        if (n !== undefined && w.__roundIn![n] === undefined) w.__roundIn![n] = performance.now();
+      };
       new MutationObserver((records) => {
-        if (w.__roundIn![2] !== undefined || (w.__clipAt?.length ?? 0) === 0) return;
-        const hit = records.some((r) =>
-          r.type === 'characterData' ? isRound(r.target.textContent) : [...r.addedNodes].some((node) => isRound(node.textContent)),
-        );
-        if (!hit) return;
-        w.__roundIn![2] = performance.now();
+        for (const r of records) {
+          if (r.type === 'characterData') mark(r.target.textContent);
+          else for (const node of r.addedNodes) mark(node.textContent);
+        }
       }).observe(document, { subtree: true, childList: true, characterData: true });
     });
     /**
@@ -827,18 +833,31 @@ test.describe('bundled clips (A-6)', () => {
       }, n);
     await onboardChild(page, { name: 'Dami' });
     await openMatchSound(page);
-    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // A letter question says the letter's name (JV-A1): a vowel's and ㄴ's name clips are in the fixture build, ㄱ's
+    // (giyeok-name) is not, so a ㄱ round shows its name as text (no voice here) and plays no clip. Round 1 has spoken
+    // either way before the tiles are tried.
+    await expect.poll(async () => (await clipStarts(page)) > 0 || (await panelText(page).isVisible())).toBe(true);
     // The right tile is not known from outside (every fixture letter is the same tone): try them in turn.
     const tiles = page.getByRole('button', { name: /^Korean letter / });
-    const second = page.getByText('2 / 6');
-    for (let i = 0; i < 4 && !(await second.isVisible()); i += 1) {
-      await tiles.nth(i).click({ timeout: 2_000 }).catch(() => undefined);
-      await expect(second).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
+    const gaps: number[] = [];
+    for (let round = 2; round <= 6 && gaps.length === 0; round += 1) {
+      const pill = page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true }).first();
+      for (let i = 0; i < 4 && !(await pill.isVisible()); i += 1) {
+        await tiles.nth(i).click({ timeout: 2_000 }).catch(() => undefined);
+        await expect(pill).toBeVisible({ timeout: 1_500 }).catch(() => undefined);
+      }
+      await expect(pill).toBeVisible();
+      // A round with a clip: its gap. A round shown as text (ㄱ): on to the next one.
+      await expect
+        .poll(() => roundGap(round), { timeout: 3_000 })
+        .not.toBeNull()
+        .catch(() => undefined);
+      const gap = await roundGap(round);
+      if (gap !== null) gaps.push(gap);
+      else await expect(panelText(page), `round ${round} played no clip, so it shows its prompt as text`).toBeVisible();
     }
-    await expect(second).toBeVisible();
-    await expect.poll(() => roundGap(2)).not.toBeNull();
-    const gap = (await roundGap(2))!;
-    expect(gap).toBeLessThan(150);
+    expect(gaps, 'a later round played a warmed clip').toHaveLength(1);
+    expect(gaps[0]).toBeLessThan(150);
   });
 
   test('a warmed say clip from a pack map chunk starts within 150 ms of the tap (G7, AC-B6)', async ({ page }) => {
