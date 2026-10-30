@@ -131,6 +131,63 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
   });
 
   it('unmapped keys return null (so the browser keeps them)', () => {
-    for (const k of ['a', 'x', 'Tab', 'F5', 'Shift', 'Control', '1', 'Delete', '', 'ArrowRightX']) expect(key(k)).toBeNull();
+    for (const k of ['a', 'x', 'Tab', 'F5', 'Shift', 'Control', '0', '5', '9', 'Delete', '', 'ArrowRightX']) expect(key(k)).toBeNull();
+  });
+});
+
+describe('keys 1 to 4 point at an option (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2)', () => {
+  it.each([1, 2, 3, 4])('key %j points at that option', (n) => {
+    expect(key(String(n))).toEqual({ point: n });
+  });
+
+  it.each([1, 2, 3, 4])('matched by the physical key too: Digit%i and Numpad%i, whatever the layout gives (AZERTY, a Hangul source)', (n) => {
+    expect(commandForKey({ key: ['&', 'é', '"', "'"][n - 1]!, code: `Digit${n}` })).toEqual({ point: n });
+    expect(commandForKey({ key: 'Process', code: `Digit${n}` })).toEqual({ point: n });
+    expect(commandForKey({ key: 'Unidentified', code: `Numpad${n}` })).toEqual({ point: n });
+    expect(commandForKey({ key: String(n), code: `Numpad${n}` })).toEqual({ point: n });
+  });
+
+  it('AZERTY with Shift (the digit row needs it there) still points', () => {
+    expect(commandForKey({ key: '3', code: 'Digit3', shiftKey: true })).toEqual({ point: 3 });
+  });
+
+  it('a numpad key with Num Lock off keeps its navigation meaning (End, the arrows, PageDown)', () => {
+    expect(commandForKey({ key: 'End', code: 'Numpad1' })).toBe('last');
+    expect(commandForKey({ key: 'ArrowDown', code: 'Numpad2' })).toBe('next');
+    expect(commandForKey({ key: 'PageDown', code: 'Numpad3' })).toBe('next');
+    expect(commandForKey({ key: 'ArrowLeft', code: 'Numpad4' })).toBe('prev');
+  });
+
+  it('other digits and their physical keys point at nothing', () => {
+    for (const code of ['Digit0', 'Digit5', 'Digit9', 'Numpad0', 'Numpad5', 'Numpad9', 'NumpadEnter']) {
+      expect(commandForKey({ key: 'Unidentified', code }), code).toBeNull();
+    }
+  });
+
+  it.each([{ ctrlKey: true }, { metaKey: true }, { altKey: true }])('not with %j held (Ctrl+1 is the browser tab)', (mods) => {
+    for (const n of ['1', '2', '3', '4']) {
+      expect(commandForKey({ key: n, code: `Digit${n}`, ...mods })).toBeNull();
+      expect(commandForKey({ key: n, code: `Numpad${n}`, ...mods })).toBeNull();
+    }
+  });
+
+  it('not on auto-repeat, not during IME composition, not in a text field', () => {
+    for (const n of ['1', '2', '3', '4']) {
+      expect(commandForKey({ key: n, code: `Digit${n}`, repeat: true })).toBeNull();
+      expect(commandForKey({ key: n, code: `Digit${n}`, isComposing: true })).toBeNull();
+      expect(commandForKey({ key: 'Process', code: `Digit${n}`, isComposing: true })).toBeNull();
+      expect(commandForKey({ key: n, inTextInput: true })).toBeNull();
+    }
+  });
+
+  it('focus on a control does not block them (after a click on Previous or Next, focus stays there)', () => {
+    for (const n of [1, 2, 3, 4]) {
+      expect(commandForKey({ key: String(n), onActivatable: true })).toEqual({ point: n });
+      expect(commandForKey({ key: 'Unidentified', code: `Digit${n}`, onActivatable: true })).toEqual({ point: n });
+    }
+  });
+
+  it('Enter and Space on a focused control still map to nothing (they activate the control)', () => {
+    for (const k of ['Enter', ' ', 'Spacebar']) expect(commandForKey({ key: k, onActivatable: true })).toBeNull();
   });
 });

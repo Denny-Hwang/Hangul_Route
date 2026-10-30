@@ -22,6 +22,11 @@
  *   timer; `close` also closes a corner timer, while `escape` with only a
  *   corner timer open asks to exit, like with nothing open. `close-timer` (the
  *   timer card's own Close) closes the timer and nothing else.
+ * - `{ point: n }` (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2): a tap on option n, or
+ *   key n, points at it; the same option again clears it; one option at a time. It does nothing on
+ *   a slide with no option n or under a covering overlay or the full timer, and any step (`next`,
+ *   a reveal build included, `prev`, `first`, `last`, `goto`) clears it, so the answer is never
+ *   shown with a pick still outlined. It lives in memory only: never saved, never sent.
  * - A forward step (`next`, `first`, `last`, `goto`) that moves returns a
  *   `revealed` effect naming the build now showing; the screen plays it when
  *   it is a sound or stroke build. `prev` never returns one, so going back to
@@ -42,6 +47,10 @@ export interface ControlSlide {
   readonly key: string;
   /** Ordered reveal builds; the slide starts on build 0. */
   readonly builds: readonly unknown[];
+  /** The slide kind; only a `quiz` slide (quiz, story check, listen and reply, realia question) has options to point at. */
+  readonly kind?: string;
+  /** A quiz slide's options, numbered from 1 on the stage. */
+  readonly options?: readonly unknown[];
 }
 
 export interface ControlDeck {
@@ -59,6 +68,8 @@ export interface PresenterState {
   skipped: ReadonlySet<string>;
   /** The last slide has been reached at least once (`lecture.complete` reads it). */
   ended: boolean;
+  /** The option the presenter points at (1 to the slide's option count), or none; any step clears it (section 7.3). */
+  pointed: number | null;
 }
 
 export type PresenterEvent =
@@ -77,7 +88,9 @@ export type PresenterEvent =
   | { timerMode: TimerMode }
   | { toggleSkip: string }
   /** An activity slide's [ Start timer ]: open the timer and start it with this many ms. */
-  | { startTimer: number };
+  | { startTimer: number }
+  /** Point at option n (from 1), or clear it when it is already pointed at (owner choice O2). */
+  | { point: number };
 
 export type PresenterEffect =
   /** A forward step now shows `build` of `slideKey`; the screen plays it if it is a sound or stroke build. */
@@ -89,6 +102,11 @@ export type PresenterEffect =
 export interface ReduceResult {
   state: PresenterState;
   effect?: PresenterEffect;
+}
+
+/** How many options a slide has to point at: a quiz slide's options, else none. */
+export function pointableOptions(slide: ControlSlide): number {
+  return slide.kind === 'quiz' && Array.isArray(slide.options) ? slide.options.length : 0;
 }
 
 /** Reveals after build 0 (`builds.length - 1`, never negative). */
@@ -124,6 +142,7 @@ export function initialPresenterState(deck: ControlDeck, startKey?: string): Pre
     timerMode: 'corner',
     skipped: new Set<string>(),
     ended: deck.slides.length > 0 && slideIdx === deck.slides.length - 1,
+    pointed: null,
   };
 }
 
@@ -186,7 +205,10 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
     if (overlay === 'blank' || overlay === 'pause') return { state: { ...state, overlay: null } };
     const passes = (overlay === null && !fullTimer(state)) || (overlay === 'grid' && typeof event === 'object');
     if (!passes) return { state };
-    const next = navigate(state, event, deck);
+    // Any step clears the pointed option (section 7.3), a reveal build included. A step that cannot move
+    // (Next on the End slide) gives back the same state, which the screen reads as "nothing moved".
+    const navigated = navigate(state, event, deck);
+    const next = navigated.pointed === null ? navigated : { ...navigated, pointed: null };
     const moved = next.slideIdx !== state.slideIdx || next.reveal !== state.reveal;
     if (!moved || event === 'prev') return { state: next };
     return { state: next, effect: { type: 'revealed', slideKey: deck.slides[next.slideIdx]!.key, build: next.reveal } };
@@ -223,6 +245,13 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
     // Opening a closed timer (an empty one opens full screen) brings it forward over a covering overlay, like T.
     const overlay = state.timerOpen ? state.overlay : null;
     return { state: { ...state, overlay, timerOpen: true, timerMode: event.timerMode } };
+  }
+
+  if ('point' in event) {
+    const n = event.point;
+    const count = pointableOptions(deck.slides[state.slideIdx]!);
+    if (!slideVisible(state) || !Number.isInteger(n) || n < 1 || n > count) return { state };
+    return { state: { ...state, pointed: state.pointed === n ? null : n } };
   }
 
   if ('startTimer' in event) {

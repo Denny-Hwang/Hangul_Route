@@ -11,6 +11,7 @@ import {
   SHELL_SLIDE_KINDS,
   blockIndexOfSlide,
   buildLive,
+  pointLive,
   countRows,
   distinctParts,
   completePayload,
@@ -553,6 +554,38 @@ describe('the sentence builds in the live region (AMENDMENTS-LECTURE-V2 section 
     // Any other slide always announces itself.
     const title = slides[0]!;
     expect(buildLive(title, 0, { key: title.key, reveal: -1 }, placed)).toEqual({ key: title.key, reveal: 0 });
+  });
+});
+
+describe('pointLive: the live region names a pointed option (AMENDMENTS-PRESENTER-NAV section 7.3)', () => {
+  const names = { pointed: (n: number) => `Option ${n} pointed at`, unpointed: 'No option pointed at' };
+  const first = pointLive('q', 0, null, null, names);
+
+  it('arriving on a slide or a build says nothing of pointing (the slide announces itself)', () => {
+    expect(first).toEqual({ key: 'q', reveal: 0, pointed: null });
+    expect(pointLive('q', 1, null, first, names).words).toBeUndefined();
+    expect(pointLive('r', 0, null, first, names).words).toBeUndefined();
+  });
+
+  it('a point says which option; another point moves it; the same option again says nothing is pointed at', () => {
+    const three = pointLive('q', 0, 3, first, names);
+    expect(three.words).toBe('Option 3 pointed at');
+    const one = pointLive('q', 0, 1, three, names);
+    expect(one.words).toBe('Option 1 pointed at');
+    const none = pointLive('q', 0, null, one, names);
+    expect(none.words).toBe('No option pointed at');
+    expect(pointLive('q', 0, 1, none, names).words).toBe('Option 1 pointed at');
+  });
+
+  it('a redraw with nothing changed keeps what was said (the same object back)', () => {
+    const three = pointLive('q', 0, 3, first, names);
+    expect(pointLive('q', 0, 3, three, names)).toBe(three);
+  });
+
+  it('a step that clears it (a reveal build, another slide) announces the step, never "No option pointed at"', () => {
+    const three = pointLive('q', 0, 3, first, names);
+    expect(pointLive('q', 1, null, three, names).words).toBeUndefined();
+    expect(pointLive('r', 0, null, three, names).words).toBeUndefined();
   });
 });
 
