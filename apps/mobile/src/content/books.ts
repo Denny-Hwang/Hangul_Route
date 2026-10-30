@@ -29,6 +29,11 @@ export interface BookDefinition {
   /** The stories in reading order (an editorial decision, §3.3 book plan). */
   storyIds: readonly string[];
   pillarTags: NonNullable<Episode['pillarTags']>;
+  /**
+   * A cell's book 2 (F-CURR-002 §5.1, row CM-40): volume 2, id `episode:stage5-<theme>-v2`, the second episode of its
+   * cell, on the same path as a lesson cell's Volume 2. Absent for book 1.
+   */
+  volume?: 2;
 }
 
 /** The books, in grid order. */
@@ -126,7 +131,7 @@ export function buildBook(definition: BookDefinition, lookup: (id: string) => St
       status: 'shipped',
       format: 'story',
       placement: 'grid',
-      volume: 1,
+      volume: definition.volume ?? 1,
       storyIds: stories.map((s) => s.id),
       pillarTags: [...definition.pillarTags],
       companionId: 'hoya',

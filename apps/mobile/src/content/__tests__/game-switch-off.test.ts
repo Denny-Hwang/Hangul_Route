@@ -71,7 +71,7 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',
@@ -79,6 +79,11 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage3-nature-q1',
       'quest:stage3-rites-q3',
     ]);
+  });
+
+  it('reads the Volume 2 Cloze Pick steps too: q1 and q2 of Stage 3 Letters & Books Volume 2 play one (row CM-44 S3)', () => {
+    const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
+    for (const id of ['quest:stage3-letters-v2-q1', 'quest:stage3-letters-v2-q2']) expect(cloze, id).toContain(id);
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {

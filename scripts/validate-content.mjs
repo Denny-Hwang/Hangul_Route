@@ -143,7 +143,8 @@ function isStoryFile(file) {
 // F-CURR-001 §3.9: a lesson cell's sources, verification and review records are reference text,
 // exactly where the schema puts them: `review` on the cell, `sources` / `verification` on a
 // `culture[]` note. The same key anywhere else is checked like any other field.
-const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+\.json$/;
+// F-CURR-002 row CM-40: a cell's Volume 2, `<theme>.v2.json`, is a lesson cell too (LessonCellSchema reads its `volume`).
+const LESSON_FILE = /^content\/episodes\/stage-[2-467]\/[a-z]+(?:\.v2)?\.json$/;
 const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
 // F-CURR-002 §9.3: Volume 2 cells (`<theme>.v<k>.json`) and any other file of an upper-stage directory,
 // everything under content/packs/ and the stories, linted by lintCurriculum.
