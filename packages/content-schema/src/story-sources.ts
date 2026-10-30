@@ -40,6 +40,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.heritage.go.kr',
   'www.khan.co.kr',
   'www.khs.go.kr',
+  'www.kma.go.kr',
   'www.knps.or.kr',
   'www.korea.kr',
   'www.korean.go.kr',
@@ -50,6 +51,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.seoul.co.kr',
   'www.suwon.go.kr',
   'www.unesco.org',
+  'www.weather.go.kr',
 ];
 
 /** True when `host` is the suffix's own domain or a subdomain of it (never `evilunesco.org`). */
