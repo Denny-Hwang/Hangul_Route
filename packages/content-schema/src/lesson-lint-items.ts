@@ -163,8 +163,11 @@ export function stepGameKind(quest: LessonBodyQuest, kind: string): string | und
   return step?.minigameKind ?? scopeOfStep(quest, kind)?.kind;
 }
 
-/** Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet. */
-const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia']);
+/**
+ * Keys whose Korean is never an answer: wrong tiles, the particle pair, the drawn realia sheet, and the other
+ * things of a Hidden Heritage round (their spots are named by meaning; only the targets are asked, F-CURR-002 CM-36).
+ */
+const UNASKED_KEYS = new Set(['distractors', 'particle', 'realia', 'others']);
 
 /**
  * The Korean a scope asks for and accepts as right, normalized: a round's prompt, target,

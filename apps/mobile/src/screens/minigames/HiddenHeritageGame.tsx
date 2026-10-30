@@ -143,6 +143,7 @@ function Spot({ view, sceneWidth, onTap }: { view: SpotView; sceneWidth: number;
 
 export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): ReactElement {
   const rounds = useMemo(() => validRounds(scope).filter((r) => scenes.has(r.sceneId)), [scope, scenes]);
+  const fallbackScope = useMemo(() => picWordFallback(scope), [scope]);
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const m = useMessages();
   const copy = m.learner.hiddenHeritage;
@@ -277,7 +278,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
 
   const measure = (e: LayoutChangeEvent): void => setContentWidth(Math.floor(e.nativeEvent.layout.width));
   // Too narrow for a 256 dp scene (a split screen): the same targets as a Pic-Word Match board.
-  if (fit === null) return <PicWordMatchGame scope={picWordFallback(scope)} host={host} onBack={onBack} />;
+  if (fit === null) return <PicWordMatchGame scope={fallbackScope} host={host} onBack={onBack} />;
 
   const header = headerView(state, rounds, m.learner.minigame);
   const sceneBox = (views: readonly SpotView[], tappable: boolean, width: number): ReactElement => (
@@ -401,8 +402,9 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
       )}
     </View>
   );
+  // Not a live region: the caption under the prompt already announces "Look again" once.
   const hoya = (
-    <View accessibilityLiveRegion="polite">
+    <View>
       {showsHoya(state) ? (
         <>
           <Spacer size="md" />
