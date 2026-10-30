@@ -319,6 +319,8 @@ export const a11y = {
     slot: 'espacio',
     tilePlaced: (word: string) => `Se colocó: ${word}`,
     rolePlayClass: (line: string) => `La clase dijo: ${line}`,
+    pointed: (n: number) => `Opción ${n} señalada`,
+    unpointed: 'Ninguna opción señalada',
   },
   /** [OA] Nombres accesibles del selector (OA-4a, 17.2). */
   who: {

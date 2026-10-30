@@ -13,6 +13,7 @@ export type HelpRow =
   | 'next'
   | 'back'
   | 'first'
+  | 'point'
   | 'blank'
   | 'sound'
   | 'strokes'
@@ -25,13 +26,22 @@ export type HelpRow =
 
 export type KeyCap = { kind: 'arrow'; dir: 'left' | 'right' | 'up' | 'down' } | { kind: 'named'; name: 'space' | 'backspace' } | { kind: 'plain'; text: string };
 
-export interface HelpKeys {
+export type HelpKeys = {
   row: HelpRow;
   caps: KeyCap[];
   /** What the caps send (`KeyboardEvent.key`, with Shift where `shift`). */
   keys: string[];
   shift?: true;
-  command: KeyCommand;
+} & (
+  /** Every key of the row sends this command. */
+  | { command: KeyCommand }
+  /** Each key sends its own command, in the order of `keys` (the point row: `1` points at option 1, and so on). */
+  | { commands: readonly KeyCommand[] }
+);
+
+/** What each key of a row sends, in the order of `keys`. */
+export function rowCommands(row: HelpKeys): readonly KeyCommand[] {
+  return 'commands' in row ? row.commands : row.keys.map(() => row.command);
 }
 
 const arrow = (dir: 'left' | 'right' | 'up' | 'down'): KeyCap => ({ kind: 'arrow', dir });
@@ -41,6 +51,7 @@ export const HELP_KEYS: readonly HelpKeys[] = [
   { row: 'next', caps: [arrow('right'), arrow('down'), { kind: 'named', name: 'space' }, plain('PageDown'), plain('Enter')], keys: ['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'], command: 'next' },
   { row: 'back', caps: [arrow('left'), arrow('up'), plain('PageUp'), { kind: 'named', name: 'backspace' }], keys: ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'], command: 'prev' },
   { row: 'first', caps: [plain('Home'), plain('End')], keys: ['Home'], command: 'first' },
+  { row: 'point', caps: ['1', '2', '3', '4'].map(plain), keys: ['1', '2', '3', '4'], commands: [1, 2, 3, 4].map((point) => ({ point })) },
   { row: 'blank', caps: [plain('B'), plain('.')], keys: ['b', '.'], command: { overlay: 'blank' } },
   { row: 'sound', caps: [plain('S')], keys: ['s'], command: 'replay-sound' },
   { row: 'strokes', caps: [plain('R')], keys: ['r'], command: 'replay-stroke' },
@@ -51,3 +62,14 @@ export const HELP_KEYS: readonly HelpKeys[] = [
   { row: 'help', caps: [plain('H'), plain('?')], keys: ['h', '?'], command: { overlay: 'help' } },
   { row: 'close', caps: [plain('Esc')], keys: ['Escape'], command: 'escape' },
 ];
+
+/**
+ * The Touch and mouse group above the key rows (AMENDMENTS-PRESENTER-NAV section 9.2; design overlays.md
+ * "Touch and mouse"), in its order, in every layout: swipe (section 6), the Previous and Next buttons
+ * (section 5), a mouse click on a slide with nothing to point at (section 7.2, O4), a tap on an answer
+ * points at it and does not show the answer (O2, row PN-5), and what Keep controls visible does for a
+ * screen where the buttons fade. Plain lines, not controls.
+ */
+export type HelpTouchRow = 'swipe' | 'buttons' | 'click' | 'point' | 'keep';
+
+export const HELP_TOUCH: readonly HelpTouchRow[] = ['swipe', 'buttons', 'click', 'point', 'keep'];

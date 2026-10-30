@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { onboardChild, passDiscover, seedStored } from './helpers';
+import { onboardChild, passDiscover, phoneHasRail, seedStored, showPhoneControls } from './helpers';
 import { shot } from './shots';
 import { expectTextFits, fontSizeOf } from './text-fit';
 
@@ -225,11 +225,10 @@ test.describe('(a) Android Chrome, a phone sideways, the presenter', () => {
     await expect(page.getByTestId('presenter-stage')).toBeVisible();
     await page.getByTestId('presenter-next').tap();
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
-    // A phone step hides the bar at once; a tap in its strip shows it again.
-    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-    await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
-    await expect(page.getByTestId('presenter-bar-compact')).toHaveCSS('opacity', '1');
-    await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+    // 915 x 412 has room for the phone rail (AMENDMENTS-PRESENTER-NAV section 5.2): it never hides, so its Sound
+    // is pressed directly (with the rail switched off, a tap on empty stage area shows the floating bar first).
+    if (process.env.E2E_RAIL_OFF !== '1') expect(await phoneHasRail(page)).toBe(true);
+    await showPhoneControls(page);
     const before = (await spoken(page)).length;
     const cancelsBefore = (await cancels(page)).length;
     await page.getByTestId('presenter-sound').tap();
@@ -477,9 +476,9 @@ test.describe('(c) an engine that never answers the silent unlock, the presenter
     await expect(page.getByTestId('presenter-stage')).toBeVisible();
     await page.getByTestId('presenter-next').tap();
     await expect(page.getByTestId('presenter-glyph')).toBeVisible();
-    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-    await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
-    await expect(page.getByTestId('presenter-bar-compact')).toHaveCSS('opacity', '1');
+    // The rail's Sound, pressed directly (or the floating bar's, shown first, with the rail switched off).
+    if (process.env.E2E_RAIL_OFF !== '1') expect(await phoneHasRail(page)).toBe(true);
+    await showPhoneControls(page);
     const before = (await heardOf(page)).length;
     await page.getByTestId('presenter-sound').tap();
     await expect

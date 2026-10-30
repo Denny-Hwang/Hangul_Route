@@ -1,4 +1,4 @@
-import { TextSizeProvider, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { TextSizeProvider, textSizeFactor, typeScale, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
 import { useLocalePacks } from './src/i18n/use-messages';
@@ -47,9 +47,13 @@ import {
   readyFromBoot,
   startTally,
   strokeTokenFor,
+  tallyLayout,
   tallyStep,
   voiceCheck,
+  settleWithin,
+  START_SETTLE_MAX_MS,
   type BootResult,
+  type NavSource,
   type ReadyStart,
   type RunTally,
   type StartSource,
@@ -61,9 +65,13 @@ import { FONT_WAIT_MS, TIMER_TICK_MS, stageBox } from './src/logic/lecture/stage
 import { popPlan, type HistoryEntry } from './src/logic/lecture/history';
 import { initialTimer, justFinished, reduceTimer, type TimerEvent, type TimerState } from './src/logic/lecture/timer';
 import { firstUses, fullscreenToggle, gridItems, narrationStops, sayItShown, statusChips, timerOpenEvent, toolsOpened, type LectureTool } from './src/logic/lecture/tools';
-import { BAR_BAND, PHONE_BAR_STRIP, PHONE_RULE, PHONE_STAGE_BOUNDS, STAGE_BOUNDS } from './src/screens/presenter/stage-metrics';
+import { BAR_BAND, PHONE_RULE, PHONE_STAGE_BOUNDS, RAIL_RULE, STAGE_BOUNDS, railHeightNeeds, railHeightsEstimate } from './src/screens/presenter/stage-metrics';
 import { letterSecondSound, readAlongView, slideSound, soundOutcome, soundPress, soundPrompt } from './src/logic/lecture/slide-view';
-import { isPhoneWindow, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { isPhoneWindow, navLayout, railSize, railWidth, stageScale, stageView } from './src/logic/lecture/stage-scale';
+import { flags } from './src/config/flags';
+import { NUDGE_MS, type GesturePointer, type StageCommand, type StageStepSource } from './src/logic/lecture/stage-gesture';
+import { wideTouchWindow } from './src/logic/lecture/bar-layout';
+import { claimNavHint, finishNavHint, navHintKey, navHintStarts, type NavHintStore } from './src/logic/lecture/nav-hint';
 import {
   getCapability,
   hasClip,
@@ -106,6 +114,7 @@ import {
   subscribeKeys,
   subscribePresenterPop,
   takeDeckFragment,
+  touchSeenAtStart,
   unlockChime,
   unlockOrientation,
   waitForPresenterFont,
@@ -113,9 +122,9 @@ import {
   type DeckAddress,
 } from './src/platform/presenter';
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
-import { readJsonExact, writeJson } from './src/platform/storage';
+import { readJson, readJsonExact, writeJson } from './src/platform/storage';
 import { flushQueue, track } from './src/platform/telemetry';
-import { ControlBar } from './src/screens/presenter/ControlBar';
+import { ControlBar, type RailMeasure } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
 import { PresenterHomeScreen } from './src/screens/presenter/HomeScreen';
 import { BlankOverlay, PauseOverlay } from './src/screens/presenter/overlays/BlankOverlay';
@@ -123,7 +132,7 @@ import { GridOverlay } from './src/screens/presenter/overlays/GridOverlay';
 import { HelpOverlay } from './src/screens/presenter/overlays/HelpOverlay';
 import { TimerOverlay, type TimerControls } from './src/screens/presenter/overlays/TimerOverlay';
 import { PresenterViewProvider, type PresenterView } from './src/screens/presenter/presenter-context';
-import { Stage, StageHint } from './src/screens/presenter/Stage';
+import { Stage, StageHint, StartHint } from './src/screens/presenter/Stage';
 import { StartScreen } from './src/screens/presenter/StartScreen';
 import { useSoundCheck } from './src/screens/presenter/use-sound-check';
 import { StatePage } from './src/screens/presenter/StatePage';
@@ -153,9 +162,24 @@ import { useClipPacks } from './src/platform/audio-assets-store';
  * Phones (F-TCH-004 section 3.6 phone exception; owner report 2026-10-16 item 1): in a phone window
  * (`isPhoneWindow`: window, screen and a coarse pointer) the stage is the whole window less the
  * safe-area insets, judged too small only below `PHONE_STAGE_MIN`; upright, a lesson shows the
- * rotate page. The compact bar floats over the stage bottom and never covers a new slide: every
- * step hides it at once, a stage tap never shows it; it shows at the start of the lesson, on a tap
- * in its strip (the grabber marks it) and while keyboard or screen-reader focus is inside it.
+ * rotate page. Where it fits (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4: `railSize`, the
+ * full rail at 104 px or the compact one at 80 px, while `flags.presenterRail` is on) the phone rail
+ * stands at the right of the stage, inside the right inset, and the stage box is the window less the
+ * four insets and the rail; it never hides, a touch tap on empty stage rings its Next, and More opens
+ * beside it. Elsewhere (568 x 320 class phones, or the rail switched off: the overlay layout) the
+ * compact bar floats over the stage bottom and never covers a new slide: every
+ * step hides it at once; it shows at the start of the lesson, on a touch tap on empty stage area
+ * (another such tap hides it; section 5.3) and while keyboard or
+ * screen-reader focus is inside it. No part of the stage is a hidden zone: a tap on a content target
+ * never steps and never touches the bar, and a swipe moves (sections 6 and 7).
+ *
+ * Docked windows (section 5.1): once touch is seen (`touchSeenAtStart`, or the first touch or pen
+ * press), Previous and Next never fade and take taps at once; the other controls keep D3's fade. A
+ * touch tap on empty stage rings Next for `NUDGE_MS` instead of stepping; a mouse click steps on a
+ * slide with nothing to point at. The bar's order and wrap are `ControlBar`'s (section 5.1, O6, O9:
+ * `wideTouch` on a touch window 1600 px or wider). On touch, a lesson that opens on its title slide
+ * shows the start hint for 6 s (section 9.3, O7) until the device's first bar button or swipe step,
+ * on at most three lessons (`lecture:navHint`, `logic/lecture/nav-hint.ts`).
  *
  * The way back (section 3.5 "History"; item 3): one history entry per phase (`logic/lecture/
  * history.ts`), so the browser or phone back goes lesson -> Exit confirm (a covering overlay closes
@@ -178,6 +202,8 @@ const HOME_SAVE_MS = 300;
 
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
 const recentStore: RecentStore = { readJson: (key) => readJsonExact<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
+// The start hint's record (`lecture:navHint`) through the storage wrapper; a failed read is nothing stored (the hint shows).
+const navHintStore: NavHintStore = { readJson: (key) => readJson<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
 
 let bootRead: { address: DeckAddress | null } | null = null;
 
@@ -270,6 +296,40 @@ function Presenter(): ReactElement {
   const phone = isPhoneWindow({ w: window.width, h: window.height, screenW: screen?.width ?? null, screenH: screen?.height ?? null, coarse }, PHONE_RULE);
   const phoneRef = useRef(phone);
   phoneRef.current = phone;
+  // The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4): where it fits beside the stage, and
+  // while its kill switch (`flags.presenterRail`, read at build time) is on; else the floating bar.
+  // `railMeasure` is what the rail last measured, complete (ControlBar `onRailMeasure`): the label
+  // fallback (a full-rail word wider than its button draws the compact rail) and its buttons' drawn
+  // heights, so a window too short for them gets the compact rail or the overlay, never buttons drawn
+  // over each other. Before the first measure: every label on one line at the chosen text size.
+  const [railMeasure, setRailMeasure] = useState<RailMeasure>(() => ({ full: true, heights: railHeightsEstimate(typeScale(textSizeFactor(textSize)).size.body) }));
+  const railWordsFit = railMeasure.full;
+  const railNeed = railHeightNeeds(railMeasure.heights);
+  const rail = railSize({ phone, window, insets, enabled: flags.presenterRail, labelsFit: railWordsFit, need: railNeed }, RAIL_RULE);
+  // Where Previous and Next live (section 4): the docked band, the rail, or the floating bar (overlay).
+  const nav = navLayout(phone, rail);
+  const overlayRef = useRef(nav === 'overlay');
+  overlayRef.current = nav === 'overlay';
+  // The layout at Exit, for `lecture.complete` when the start never settled (section 12): the same gate, rail included.
+  const navRef = useRef(nav);
+  navRef.current = nav;
+  // The home's Help speaks of the lesson, which runs sideways: an upright phone asks the gate for the
+  // window turned (its top and bottom insets become side ones), so the phone line shows only where the
+  // lesson will use the floating bar.
+  const lessonRail =
+    window.height > window.width
+      ? railSize(
+        {
+          phone,
+          window: { width: window.height, height: window.width },
+          insets: { left: Math.max(insets.top, insets.bottom), right: Math.max(insets.top, insets.bottom), top: insets.left, bottom: insets.right },
+          enabled: flags.presenterRail,
+          labelsFit: railWordsFit,
+          need: railNeed,
+        },
+        RAIL_RULE,
+      )
+    : rail;
   const upright = window.height > window.width;
   // A short window (a phone sideways): the phone start screen steps its title and Start down.
   const short = window.height < layout.shortHeight;
@@ -277,6 +337,23 @@ function Presenter(): ReactElement {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreOpenRef = useRef(moreOpen);
   moreOpenRef.current = moreOpen;
+  /** A slide is on the stage (not the rotate or too-small page); set where the render works it out. */
+  const slideShownRef = useRef(false);
+  /** Opens or closes the More sheet; the ref follows at once, so a sheet button's own tool runs after it closed. */
+  const openMore = useCallback((open: boolean) => {
+    moreOpenRef.current = open;
+    setMoreOpen(open);
+  }, []);
+  // The More sheet belongs to the bar that opened it: the phone bar's, or the wrapped docked band's
+  // (PN-3, its More fallback). A window that changes between the two (a foldable opened, split screen
+  // widened or narrowed) closes it, so a stale sheet never swallows a step; the docked band also closes
+  // its sheet when it no longer needs More (`ControlBar`).
+  const phoneBefore = useRef(phone);
+  useEffect(() => {
+    if (phoneBefore.current === phone) return;
+    phoneBefore.current = phone;
+    if (moreOpenRef.current) openMore(false);
+  }, [phone, openMore]);
   const [capability, setCapability] = useState<AudioCapability>(getCapability);
   const [voiceChecked, setVoiceChecked] = useState(false);
   const muted = useAudioStore((s) => s.muted);
@@ -474,6 +551,10 @@ function Presenter(): ReactElement {
   const [pstate, setPstate] = useState<PresenterState | null>(null);
   const stateRef = useRef<PresenterState | null>(null);
   const tally = useRef<RunTally | null>(null);
+  // Start's fullscreen request (and the resize it brings) has settled: `lecture.complete` takes the layout
+  // of the first slide shown from then on, never the window of the Start tap (AMENDMENTS-PRESENTER-NAV section 12).
+  const [startSettled, setStartSettled] = useState(false);
+  const startToken = useRef(0);
   const [romanization, setRomanization] = useState<'always' | 'tap' | null>(null);
   const [strokePlay, setStrokePlay] = useState<StrokePlay | null>(null);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
@@ -493,6 +574,35 @@ function Presenter(): ReactElement {
   }, [soundFlash]);
   // The lesson began: its first slide was shown (Recent written, lecture.start sent).
   const begun = useRef(false);
+  // The start hint (AMENDMENTS-PRESENTER-NAV section 9.3, O7): on touch, at the top of a lesson's first slide for
+  // 2 x presenter.autoHideMs, until the device's first bar button or swipe step (at most three lessons). It fades
+  // out at its end or on such a step and goes at once with its slide. `navHintAsked`: this lesson's start was
+  // checked; `navHintLesson` tells a late read from another lesson; `navHintEnded`: the step was written here.
+  const [navHint, setNavHint] = useState<'shown' | 'fading' | null>(null);
+  const navHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navHintAsked = useRef(false);
+  const navHintLesson = useRef(0);
+  const navHintEnded = useRef(false);
+  const navHintPending = useRef<Promise<unknown>>(Promise.resolve());
+  const endNavHint = useCallback((fade: boolean) => {
+    if (navHintTimer.current) clearTimeout(navHintTimer.current);
+    navHintTimer.current = null;
+    setNavHint((now) => (now === null ? null : fade ? 'fading' : null));
+  }, []);
+  useEffect(
+    () => () => {
+      if (navHintTimer.current) clearTimeout(navHintTimer.current);
+    },
+    [],
+  );
+  /** A step by a bar button or a swipe: the hint fades and never shows again on this device. */
+  const navStepSeen = useCallback(() => {
+    endNavHint(true);
+    if (navHintEnded.current) return;
+    navHintEnded.current = true;
+    // After this lesson's own count, so the count never lands over `done`.
+    navHintPending.current = navHintPending.current.then(() => finishNavHint(navHintStore));
+  }, [endNavHint]);
   // After a browser back in the lesson (section 3.5 "History" rule 4) the lesson's entry is pushed
   // again at the next user activation, never from the popstate itself.
   const repush = useRef(false);
@@ -537,8 +647,37 @@ function Presenter(): ReactElement {
   // A keyboard, switch or screen-reader focus inside the bar holds it on screen (a press's own focus does not, on a phone).
   const barHeld = useRef(false);
   // The last input on the page: a focus given back after a tap (More's sheet closing) is the pointer's too.
-  const lastInput = useRef<'pointer' | 'key' | null>(null);
-  useEffect(() => subscribeInputKind((kind) => (lastInput.current = kind)), []);
+  const lastInput = useRef<'mouse' | 'touch' | 'key' | null>(null);
+  // Touch seen (AMENDMENTS-PRESENTER-NAV section 4): from the page's pointer media, or the first touch or
+  // pen press; it pins Previous and Next on a docked window until the lesson's Exit.
+  const [touchSeen, setTouchSeen] = useState(touchSeenAtStart);
+  useEffect(
+    () =>
+      subscribeInputKind((kind) => {
+        lastInput.current = kind;
+        if (kind === 'touch') setTouchSeen(true);
+      }),
+    [],
+  );
+  /** The last press's pointer for a stage gesture: a pen's mouse-type events count as touch. */
+  const lastPointer = useCallback((): GesturePointer | null => (lastInput.current === 'key' ? null : lastInput.current), []);
+  // Next's ring after a touch tap on empty stage (section 7.2): static, for NUDGE_MS, never announced.
+  const [nudge, setNudge] = useState(false);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ringNext = useCallback(() => {
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    setNudge(true);
+    nudgeTimer.current = setTimeout(() => {
+      nudgeTimer.current = null;
+      setNudge(false);
+    }, NUDGE_MS);
+  }, []);
+  useEffect(
+    () => () => {
+      if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    },
+    [],
+  );
   const barTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearBarTimer = useCallback(() => {
     if (barTimer.current) clearTimeout(barTimer.current);
@@ -618,25 +757,38 @@ function Presenter(): ReactElement {
     [deck, stories, narrator, canPlay, voiceChecked],
   );
 
+  /** Runs one event on the lesson; true when it moved the lesson (another slide or another build). `source` names where a step came from, for `lecture.complete` (section 12). */
   const dispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent, source?: NavSource): boolean => {
       const before = stateRef.current;
-      if (!before || slides.length === 0) return;
+      if (!before || slides.length === 0) return false;
       const { state, effect } = reduce(before, event, { slides });
+      // Pointing at an option (AMENDMENTS-PRESENTER-NAV section 7.3) changes only `pointed`: no step, no
+      // sound, no bar, no Recent; never stored, never sent. Only the count `points` (section 12, PN-6)
+      // takes it, and only a point the reducer took (a swallowed one returns `before`).
+      if (typeof event === 'object' && 'point' in event) {
+        if (state !== before) {
+          stateRef.current = state;
+          setPstate(state);
+        }
+        if (tally.current) tally.current = tallyStep(tally.current, before, state, slides, { event, at: Date.now() });
+        return false;
+      }
       stateRef.current = state;
       setPstate(state);
       reportTools(toolsOpened(before, state));
       if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
-      if (tally.current) tally.current = tallyStep(tally.current, before, state, slides);
+      if (tally.current) tally.current = tallyStep(tally.current, before, state, slides, { event, ...(source !== undefined ? { source } : {}), at: Date.now() });
       // A story's Read-to-me never runs on into the next slide, nor under an overlay or the full timer.
       if (narrationStops(before, state)) narrator.stop();
       if (state.slideIdx !== before.slideIdx && deck && begun.current) {
         const key = slides[state.slideIdx]!.key;
         updateRecent((list) => setLastSlide(list, deck.id, key));
       }
-      // A phone step hides the compact bar at once: it never covers a new slide or build (section 3.6).
+      // A phone step hides the floating bar at once: it never covers a new slide or build (section 3.6).
+      // The rail never hides (AMENDMENTS-PRESENTER-NAV section 5.2).
       const stepped = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
-      if (phoneRef.current && stepped) hideBarNow();
+      if (overlayRef.current && stepped) hideBarNow();
       // Next on the End slide: the hint, and focus on Exit (the docked bar) or More, which holds it (the phone bar, shown).
       const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
       setEndHint(atEnd);
@@ -652,15 +804,19 @@ function Presenter(): ReactElement {
       setStrokePlay((current) => nextStrokePlay(current, { slideKey, play: playStroke }));
       const sound = revealedBuild === 'sound' || effect?.type === 'play-sound';
       const explicit = effect?.type === 'play-sound';
-      // A flash belongs to its slide: a step to another slide takes it away.
-      if (state.slideIdx !== before.slideIdx) setSoundFlash(null);
+      // A flash belongs to its slide: a step to another slide takes it away, and the start hint with it.
+      if (state.slideIdx !== before.slideIdx) {
+        setSoundFlash(null);
+        endNavHint(false);
+      }
       if (sound) playSound(slides[state.slideIdx], { explicit });
       // A press answers from its own result (on both bars); a forward sound build flashes here, on a phone.
       if (sound && !explicit && phoneRef.current && !canPlay && slideSound(slides[state.slideIdx], state.reveal) !== undefined) {
         setSoundFlash({ key: 'noVoice', at: Date.now() });
       }
+      return state.slideIdx !== before.slideIdx || state.reveal !== before.reveal;
     },
-    [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay],
+    [slides, deck, playSound, updateRecent, reportTools, stepTimer, narrator, hideBarNow, showBar, canPlay, endNavHint],
   );
 
   /** The lesson's raw fragment for its history entry (null: a deck too long for a link, which still runs). */
@@ -678,13 +834,23 @@ function Presenter(): ReactElement {
     repush.current = false;
     void pushPresenterEntry('running', rawOf(phase.deck));
   }, [phase, rawOf]);
-  /** A press, a tap or a key in the lesson: an activation, then the event. */
+  /**
+   * A press or a key in the lesson: an activation, then the event; true when it moved the lesson. While
+   * the More sheet is open it covers the stage (AMENDMENTS-PRESENTER-NAV section 5.2): a swipe or tap on
+   * the stage steps nothing (`stageGesture` gives only `'close-more'`). A step that does arrive comes
+   * from a control the teacher can see or a key (the docked band's pinned Previous and Next stay beside
+   * its sheet; a clicker's key): it closes the sheet first and then steps, so a visible, enabled Next
+   * never does nothing. Each of the sheet's own buttons closes it first too.
+   * `source`: a bar or rail button, or a swipe or click on the stage (`lecture.complete`, section 12).
+   */
   const userDispatch = useCallback(
-    (event: PresenterEvent) => {
+    (event: PresenterEvent, source?: NavSource): boolean => {
       activate();
-      dispatch(event);
+      const step = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
+      if (step && moreOpenRef.current) openMore(false);
+      return dispatch(event, source);
     },
-    [activate, dispatch],
+    [activate, dispatch, openMore],
   );
 
   const toggleFullscreen = useCallback(() => {
@@ -703,7 +869,11 @@ function Presenter(): ReactElement {
     // sideways), and the screen wake lock; each is feature-detected and may be refused.
     unlockAudio();
     unlockChime();
-    void enterFullscreenLandscape();
+    const token = ++startToken.current;
+    setStartSettled(false);
+    void settleWithin(enterFullscreenLandscape(), START_SETTLE_MAX_MS).then(() => {
+      if (startToken.current === token) setStartSettled(true);
+    });
     void keepScreenAwake();
     // The lesson's own history entry, pushed in the tap: the browser's Back now asks before leaving.
     void pushPresenterEntry('running', rawOf(phase.deck));
@@ -713,13 +883,16 @@ function Presenter(): ReactElement {
     setPstate(state);
     toolsUsed.current = new Set();
     begun.current = false;
-    setMoreOpen(false);
+    openMore(false);
     setEndHint(false);
     setSoundFlash(null);
+    navHintLesson.current += 1;
+    navHintAsked.current = false;
+    endNavHint(false);
     setPhase({ kind: 'running', deck: phase.deck, source: phase.source, from: phase });
     const first = slides[state.slideIdx]!;
     setStrokePlay(first.builds[0] === 'stroke' ? nextStrokePlay(null, { slideKey: first.key, play: true }) : null);
-  }, [phase, run, slides, rawOf]);
+  }, [phase, run, slides, rawOf, endNavHint]);
 
   /**
    * The lesson begins when its first slide is actually on screen: only then it is saved to Recent
@@ -761,15 +934,23 @@ function Presenter(): ReactElement {
     setShowNumbers(true);
     toolsUsed.current = new Set();
     setRomanization(null);
-    setMoreOpen(false);
+    openMore(false);
     setEndHint(false);
     setSoundFlash(null);
+    navHintLesson.current += 1;
+    endNavHint(false);
+    // Touch seen lasts until Exit (section 4): the next lesson starts from the page's pointer media.
+    setTouchSeen(touchSeenAtStart());
+    // Next's ring ends with the lesson too, so it never shows on the next lesson's bar.
+    if (nudgeTimer.current) clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = null;
+    setNudge(false);
     repush.current = false;
     landHome(returnToPresenterHome(), () => {
       setHomeFocus(true);
       setPhase({ kind: 'home' });
     });
-  }, [narrator, landHome]);
+  }, [narrator, landHome, endNavHint]);
 
   const onExit = useCallback(() => {
     const started = begun.current;
@@ -778,7 +959,8 @@ function Presenter(): ReactElement {
     releaseDevice();
     // A Start the window never showed was not a lesson: nothing to count or apply.
     if (!started) return;
-    const payload = tally.current ? completePayload(tally.current, Date.now()) : { slidesShown: 0, minutes: 0, reveals: 0 };
+    const now = Date.now();
+    const payload = completePayload(tally.current ?? startTally(now, undefined), now, navRef.current);
     tally.current = null;
     void track({ name: 'lecture.complete', payload }).finally(() => {
       // A waiting update applies only now, never mid-lesson (section 3.8).
@@ -796,7 +978,7 @@ function Presenter(): ReactElement {
       if (phase.kind !== 'running' || begun.current) return;
       stateRef.current = null;
       setPstate(null);
-      setMoreOpen(false);
+      openMore(false);
       setSoundFlash(null);
       releaseDevice();
       if (!fromPop) void stepBackPresenter();
@@ -826,29 +1008,43 @@ function Presenter(): ReactElement {
       }
       // Esc closes the compact bar's More sheet first.
       if (command === 'escape' && moreOpenRef.current) {
-        setMoreOpen(false);
+        openMore(false);
         showBar();
         return;
       }
+      // Keys 1 to 4 point at an option (section 7.3); the More sheet covers the stage, so it takes none,
+      // and the rotate and too-small pages show no slide (and no live region), so they take none either.
+      if (typeof command === 'object' && 'point' in command) {
+        if (!moreOpenRef.current && slideShownRef.current) dispatch(command);
+        return;
+      }
+      // A step key (arrows, PageDown, Home, End, a clicker) goes the way a bar press does: with More
+      // open it closes the sheet and then steps (`userDispatch`).
+      if (command === 'next' || command === 'prev' || command === 'first' || command === 'last') {
+        userDispatch(command, 'key');
+        return;
+      }
+      // A tool key (G, B, T, H) closes the More sheet first, as the sheet's own buttons do, so no tool opens under it.
+      if (typeof command === 'object' && moreOpenRef.current) openMore(false);
       if (typeof command === 'object') {
         if (stateRef.current?.overlay === 'exit') return;
         if (command.overlay === 'timer') {
           if (stateRef.current) dispatch(timerOpenEvent(stateRef.current, timerRef.current));
           return;
         }
-        dispatch(command);
+        dispatch(command, 'key');
         return;
       }
-      dispatch(command);
+      dispatch(command, 'key');
     });
-  }, [phase, dispatch, toggleFullscreen, activate, showBar]);
+  }, [phase, dispatch, userDispatch, openMore, toggleFullscreen, activate, showBar]);
 
   // The home's Help overlay closes with Esc or H, as in a lesson. Every other key keeps its browser
   // meaning (arrows, PageDown and Space scroll the overlay on a short viewport).
   useEffect(() => {
     if (phase.kind !== 'home' || !homeHelp) return undefined;
     return subscribeKeys((command: KeyCommand) => {
-      if (command !== 'escape' && !(typeof command === 'object' && command.overlay === 'help')) return false;
+      if (command !== 'escape' && !(typeof command === 'object' && 'overlay' in command && command.overlay === 'help')) return false;
       setHomeHelp(false);
       return true;
     });
@@ -860,9 +1056,10 @@ function Presenter(): ReactElement {
   coveringRef.current = covering;
 
   // The docked bar hides after `presenter.autoHideMs` without pointer, touch or key and returns on any
-  // of them (README D3). The phone bar does not follow page activity (a stage tap never shows it):
-  // only while a covering tool is open, which changes no slide, does a touch bring it back, so the
-  // tool can be cleared or left.
+  // of them (README D3; once touch is seen, Previous and Next stay, section 5.1). The phone bar does
+  // not follow page activity (only a touch tap on empty stage shows or hides it, section 5.3): while
+  // a covering tool is open, which changes no slide, a touch anywhere brings it back, so the tool can
+  // be cleared or left.
   useEffect(() => {
     if (phase.kind !== 'running' || (phone && !covering)) return undefined;
     showBar();
@@ -997,7 +1194,7 @@ function Presenter(): ReactElement {
         return;
       case 'close-overlay':
         repush.current = true;
-        if (moreOpenRef.current) setMoreOpen(false);
+        if (moreOpenRef.current) openMore(false);
         else dispatch('close');
         return;
       case 'confirm':
@@ -1021,10 +1218,11 @@ function Presenter(): ReactElement {
   useEffect(() => subscribePresenterPop((landed) => onPop.current(landed)), []);
 
   // ---- render ----
-  // A phone window has no band: its compact bar floats over the stage, so the stage is the window less
-  // the safe area, judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so
-  // a bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
-  const box = stageBox(window, phone ? 0 : band, insets);
+  // A phone window has no band: its floating bar sits over the stage, so the stage is the window less
+  // the safe area, or (the rail, section 5.2) the window less the four insets and the rail's column;
+  // either is judged on the phone gate alone. Elsewhere too small is judged on the one-row band, so a
+  // bar that wraps cannot decide it; then the too-small page takes the whole window, and no bar is drawn.
+  const box = stageBox(window, phone ? 0 : band, insets, railWidth(rail, RAIL_RULE));
   const scale = stageScale(box, phone ? PHONE_STAGE_BOUNDS : STAGE_BOUNDS);
   const tooSmall = phone ? scale.tooSmall : stageScale(stageBox(window, BAR_BAND, insets), STAGE_BOUNDS).tooSmall || scale.tooSmall;
   const stageShows = stageView({ phone, window, tooSmall });
@@ -1033,9 +1231,33 @@ function Presenter(): ReactElement {
   const slideViewContext: PresenterView = { ...stageViewContext, messages: slideMessages, locale: slidesIn };
   // The first slide is on screen: the lesson begins (see `begin`).
   const slideShown = phase.kind === 'running' && stageShows === 'slide' && pstate !== null && slides[pstate.slideIdx] !== undefined;
+  slideShownRef.current = slideShown;
   useEffect(() => {
     if (slideShown) begin();
   }, [slideShown, begin]);
+  // The start hint, once per lesson when its first slide shows (section 9.3): on touch only, on a lesson that opens on
+  // its title slide, while `lecture:navHint` says it is still due (a blocked store shows it each lesson).
+  useEffect(() => {
+    if (!slideShown || navHintAsked.current) return;
+    navHintAsked.current = true;
+    if (navHintEnded.current || !navHintStarts({ touchSeen, slideIdx: stateRef.current?.slideIdx ?? -1, first: slides[0] })) return;
+    const lesson = navHintLesson.current;
+    const claim = claimNavHint(navHintStore);
+    navHintPending.current = claim;
+    void claim.then((show) => {
+      if (!show || lesson !== navHintLesson.current || navHintEnded.current || stateRef.current?.slideIdx !== 0) return;
+      setNavHint('shown');
+      navHintTimer.current = setTimeout(() => {
+        navHintTimer.current = null;
+        setNavHint((now) => (now === 'shown' ? 'fading' : now));
+      }, 2 * presenter.autoHideMs);
+    });
+  }, [slideShown, touchSeen, slides]);
+
+  // The layout `lecture.complete` reports: the first slide's once Start's fullscreen resize settled (section 12).
+  useEffect(() => {
+    if (slideShown && startSettled && tally.current) tally.current = tallyLayout(tally.current, nav);
+  }, [slideShown, startSettled, nav]);
   // On a phone the bar shows when the slide does (the start of the lesson, or back from the rotate page), so its place is learned.
   useEffect(() => {
     if (slideShown && phone) showBar();
@@ -1137,7 +1359,7 @@ function Presenter(): ReactElement {
             keepVisible={keepVisible}
             onKeepVisible={setKeepVisible}
             onClose={() => setHomeHelp(false)}
-            phone={phone}
+            phone={navLayout(phone, lessonRail) === 'overlay'}
           />
         ) : null}
       </View>
@@ -1209,16 +1431,49 @@ function Presenter(): ReactElement {
       ) : stageShows === 'too-small' || !slide ? (
         <StatePage testID="presenter-too-small" pose="thinking" line={state.tooSmall} cta={messages.learner.presenter.bar.exit.cta} onCta={() => userDispatch({ overlay: 'exit' })} />
       ) : null;
+    // What covers the stage for a gesture (section 7.2): the More sheet (a tap there closes it), or any
+    // other covering overlay or the Exit confirm, which swallow navigation.
+    const stageCovering = moreOpen ? 'more' : p.overlay !== null || (p.timerOpen && p.timerMode === 'full') ? 'other' : 'none';
+    const onGesture = (command: Exclude<StageCommand, null>, source: StageStepSource): void => {
+      if (command === 'next' || command === 'prev') {
+        // Only a swipe that moved the lesson ends the start hint (section 9.3: the first swipe *step*).
+        if (userDispatch(command, source) && source === 'swipe') navStepSeen();
+        return;
+      }
+      // Every other command is a user activation too (rule 4) and changes no slide.
+      activate();
+      if (command === 'close-more') {
+        openMore(false);
+        showBar();
+      } else if (command === 'toggle-bar') {
+        if (barHidden) showBar();
+        else hideBarNow();
+      } else if (command === 'nudge-next') {
+        ringNext();
+      } else if (typeof command === 'object') {
+        // A tap or click on an option points at it (owner choice O2, section 7.3).
+        dispatch(command);
+      }
+    };
     const bar =
       page !== null ? null : (
         <ControlBar
-          hidden={phone ? barHidden || moreOpen : barHidden}
+          hidden={nav === 'overlay' ? barHidden || moreOpen : nav === 'rail' ? false : barHidden}
+          pinNav={nav === 'docked' && touchSeen}
+          wideTouch={nav === 'docked' && wideTouchWindow(window.width, touchSeen)}
+          nudge={nudge}
           revealNext={revealNext}
           muted={muted}
           fullscreenSupported={fullscreenSupported()}
           fullscreen={fullscreen}
-          onPrev={() => userDispatch('prev')}
-          onNext={() => userDispatch('next')}
+          onPrev={() => {
+            // Only a press that moved the lesson ends the start hint (section 9.3: the first button *step*;
+            // Previous on the first slide steps nothing and keeps it).
+            if (userDispatch('prev', 'button')) navStepSeen();
+          }}
+          onNext={() => {
+            if (userDispatch('next', 'button')) navStepSeen();
+          }}
           onSound={() => userDispatch('replay-sound')}
           onFullscreen={() => {
             activate();
@@ -1237,7 +1492,7 @@ function Presenter(): ReactElement {
           onFocusWithin={(focused, pointer) => {
             // A keyboard, switch or screen-reader focus holds the bar on every device; on a phone a
             // press's own focus does not (the step it made hides the bar), on the docked bar it does.
-            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'pointer'));
+            barHeld.current = focused && (!phone || !(pointer || lastInput.current === 'mouse' || lastInput.current === 'touch'));
             if (!focused) {
               if (!barHidden) showBar();
               return;
@@ -1250,11 +1505,15 @@ function Presenter(): ReactElement {
           {...(phone ? {} : { onBandHeight: setBand })}
           exitRef={exitRef}
           compact={phone}
+          rail={rail}
+          railHeight={window.height - insets.top - insets.bottom}
+          railHeights={railMeasure.heights}
+          onRailMeasure={setRailMeasure}
           insets={insets}
           moreOpen={moreOpen}
           onMore={(open) => {
             activate();
-            setMoreOpen(open);
+            openMore(open);
             if (!open) showBar();
           }}
         />
@@ -1273,7 +1532,12 @@ function Presenter(): ReactElement {
               deckTitle={phase.deck.title}
               strokeToken={strokeTokenFor(strokePlay, slide?.key)}
               joinCta={slideMessages.caregiver.spaces.join.cta}
-              onCommand={userDispatch}
+              onGesture={onGesture}
+              layout={nav}
+              covering={stageCovering}
+              pointing
+              pointed={p.pointed}
+              lastPointer={lastPointer}
               onPlaySound={() => userDispatch('replay-sound')}
               onPlayLetterSound={() => {
                 activate();
@@ -1284,16 +1548,6 @@ function Presenter(): ReactElement {
               sayIt={sayIt}
               storyScene={stories.scene}
               playingLine={playingLine !== null && playingLine.key === slide?.key ? playingLine.line : null}
-              {...(phone
-                ? {
-                    barStrip: PHONE_BAR_STRIP,
-                    onStripTap: () => {
-                      activate();
-                      if (barHidden) showBar();
-                      else hideBarNow();
-                    },
-                  }
-                : {})}
             />
             </TextSizeProvider>
           </PresenterViewProvider>
@@ -1305,6 +1559,9 @@ function Presenter(): ReactElement {
           <Text {...KOREAN_LINE_BREAK} testID="presenter-sound-live" aria-live="polite" accessibilityLiveRegion="polite" style={VISUALLY_HIDDEN}>
             {soundFlash !== null ? messages.learner.presenter.bar[soundFlash.key] : ''}
           </Text>
+        ) : null}
+        {page === null && navHint !== null ? (
+          <StartHint text={messages.learner.presenter.nav[navHintKey(nav)]} line={navHintKey(nav)} shown={navHint === 'shown'} onGone={() => setNavHint(null)} />
         ) : null}
         {page === null && soundFlash !== null ? (
           <SoundFlash key={soundFlash.at} text={messages.learner.presenter.bar[soundFlash.key]} testID={SOUND_FLASH_TEST_IDS[soundFlash.key]} />
@@ -1334,7 +1591,7 @@ function Presenter(): ReactElement {
                   if (on) setBarHidden(false);
                 }}
                 onClose={() => userDispatch('close')}
-                phone={phone}
+                phone={nav === 'overlay'}
               />
             ) : null}
             {p.timerOpen && p.timerMode === 'corner' ? <TimerOverlay mode="corner" timer={timer} showNumbers={showNumbers} controls={timerControls} /> : null}
@@ -1343,7 +1600,27 @@ function Presenter(): ReactElement {
       </>
     );
     const exitConfirm = p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} /> : null;
-    body = phone ? (
+    body = nav === 'rail' ? (
+      // The rail (section 5.2): the stage column takes the window less the left, top and bottom insets;
+      // the rail sits at its right, inside the right inset, so the class tools cover the stage only and
+      // nothing of the rail ever overlaps it. The rail follows the stage in the DOM (left to right).
+      <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.surface.paper }}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+            paddingLeft: insets.left,
+          }}
+        >
+          {stageAndTools}
+        </View>
+        {bar}
+        {exitConfirm}
+      </View>
+    ) : phone ? (
       // The whole window, less the safe area, is the stage box; the compact bar floats over its
       // bottom edge, after the class tools, so a touch can always clear or leave them.
       <View style={{ flex: 1, backgroundColor: colors.surface.paper }}>
@@ -1411,8 +1688,12 @@ const SOUND_FLASH_TEST_IDS: Readonly<Record<SoundFlashKey, string>> = {
   deckSoundOff: 'presenter-deck-sound-off-flash',
 };
 
-/** Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). */
-const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0 };
+/**
+ * Read by assistive tech, not drawn (a 1 px clipped box, as the stage's own live line). It sits at the
+ * centre of the stage box, beside the stage, so it takes no pointer: a finger there is the stage's
+ * (AMENDMENTS-PRESENTER-NAV section 7).
+ */
+const VISUALLY_HIDDEN = { position: 'absolute' as const, width: 1, height: 1, overflow: 'hidden' as const, opacity: 0, pointerEvents: 'none' as const };
 
 /**
  * A sound flash at the top of the stage, for `presenter.autoHideMs`: the no-voice chip when a sound

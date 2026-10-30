@@ -506,3 +506,74 @@ export async function acceptConfirmSheets(page: Page): Promise<void> {
     await sheet.getByRole('button').last().click();
   });
 }
+
+/** A point in the window, in CSS px. */
+export interface WindowPoint {
+  x: number;
+  y: number;
+}
+
+export interface SwipeOptions {
+  /** Fingers down together (default 1). A second finger goes down beside the first, `spacing.xxxl` below it. */
+  fingers?: 1 | 2;
+  /** With two fingers: which one lifts first (`'tracked'`: the first one down). */
+  liftFirst?: 'tracked' | 'other';
+  /** Moves between the start and the end (default 6). */
+  steps?: number;
+}
+
+/**
+ * A real touch swipe on the page (AMENDMENTS-PRESENTER-NAV section 14): `page.touchscreen` only
+ * taps, so the swipe goes through CDP `Input.dispatchTouchEvent` (as `audio-engine.spec.ts` does),
+ * Chromium only; a spec skips its swipe cases under `E2E_WEBKIT`. Every finger moves by the same
+ * travel; the touch lifts at `to`.
+ */
+export async function swipeStage(page: Page, from: WindowPoint, to: WindowPoint, options: SwipeOptions = {}): Promise<void> {
+  const fingers = options.fingers ?? 1;
+  const steps = Math.max(1, options.steps ?? 6);
+  const cdp = await page.context().newCDPSession(page);
+  const at = (t: number, finger: number) => ({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t + finger * 48, id: finger });
+  const all = (t: number) => Array.from({ length: fingers }, (_, finger) => at(t, finger));
+  try {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at(0, 0)] });
+    if (fingers === 2) await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: all(0) });
+    for (let i = 1; i <= steps; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: all(i / steps) });
+    if (fingers === 2) {
+      // Chromium's touchEnd lifts the points it lists (checked: changedTouches is the listed one,
+      // touches the rest); the last touchEnd with none lifts every finger still down.
+      const lifts = options.liftFirst === 'other' ? at(1, 1) : at(1, 0);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [lifts] });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  } finally {
+    await cdp.detach();
+  }
+}
+
+/**
+ * A phone in a lesson, before a press on its controls (AMENDMENTS-PRESENTER-NAV sections 5.2 and 5.3, row PN-4):
+ * the rail beside the stage is always shown, so its buttons are pressed directly; the floating bar of the overlay
+ * layout (a 568 x 320 class phone, or any phone with `EXPO_PUBLIC_PRESENTER_RAIL` off) is shown first with a touch
+ * tap on empty stage area (its top-left padding), as a teacher does. A bar still shown from an earlier tap is let
+ * hide first (it fades after `presenter.autoHideMs`), so it cannot fade under the next tap.
+ */
+export async function showPhoneControls(page: Page): Promise<void> {
+  if ((await page.getByTestId('presenter-rail').count()) > 0) {
+    await expect(page.getByTestId('presenter-rail')).toBeVisible();
+    await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+    return;
+  }
+  const bar = page.getByTestId('presenter-bar-compact');
+  await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none', { timeout: 10_000 });
+  await expect(bar).toHaveCSS('opacity', '0');
+  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
+  await expect(bar).toHaveCSS('opacity', '1');
+  await expect(page.getByTestId('presenter-sound')).not.toHaveCSS('pointer-events', 'none');
+}
+
+/** The lesson on a phone uses the rail (true) or the floating bar of the overlay layout (false). */
+export async function phoneHasRail(page: Page): Promise<boolean> {
+  await expect(page.getByTestId('presenter-stage')).toBeVisible();
+  return (await page.getByTestId('presenter-rail').count()) > 0;
+}

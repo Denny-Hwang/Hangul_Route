@@ -283,6 +283,15 @@ export interface Flags {
    * still runs, row GU-2).
    */
   guestLessonEnabled: boolean;
+
+  /**
+   * [PN] The phone rail in lecture mode (AMENDMENTS-PRESENTER-NAV sections 5.2 and 15, row PN-4): on a sideways phone
+   * with room, Previous, Next, Sound and More sit in a rail beside the stage that never hides. ON at launch.
+   * `EXPO_PUBLIC_PRESENTER_RAIL` is a kill switch (`parseKillSwitch`), read at build time: switching it off needs a
+   * rebuild and redeploy of the learner web build, and an open lesson keeps the old build until its next load. Off:
+   * every phone window uses the floating bar of section 5.3 (no strip); the tap rules of row PN-2 stay.
+   */
+  presenterRail: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -312,6 +321,8 @@ const launchDefaults: Flags = {
   multiJoinEnabled: true,
   // [GU] GU-7 turned this on with the site claim; web only (GU-D16), so a native bundle's launch value stays off.
   guestLessonEnabled: !isNativeBundle(),
+  // [PN] PN-4: the phone rail ships on; the switch is for a rail problem without a revert (section 15).
+  presenterRail: true,
 };
 
 export const flags: Flags = {
@@ -347,6 +358,7 @@ export const flags: Flags = {
   multiJoinEnabled: parseKillSwitch(process.env.EXPO_PUBLIC_MULTI_JOIN, launchDefaults.multiJoinEnabled),
   // [GU] GU-D16: web only.
   guestLessonEnabled: !isNativeBundle() && parseKillSwitch(process.env.EXPO_PUBLIC_GUEST_LESSON, launchDefaults.guestLessonEnabled),
+  presenterRail: parseKillSwitch(process.env.EXPO_PUBLIC_PRESENTER_RAIL, launchDefaults.presenterRail),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

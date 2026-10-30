@@ -110,16 +110,23 @@ export function focusablesIn(_root: unknown): readonly unknown[] {
   return [];
 }
 
-export function rememberFocus(): () => void {
-  return () => undefined;
+/** Native keeps no opener: nothing left the page, so the caller has nothing to move (true). */
+export function rememberFocus(): () => boolean {
+  return () => true;
 }
 
 export function subscribeActivity(_handler: () => void): () => void {
   return () => undefined;
 }
 
-export function subscribeInputKind(_handler: (kind: 'pointer' | 'key') => void): () => void {
+export type InputKind = 'mouse' | 'touch' | 'key';
+
+export function subscribeInputKind(_handler: (kind: InputKind) => void): () => void {
   return () => undefined;
+}
+
+export function touchSeenAtStart(): boolean {
+  return false;
 }
 
 export function fullscreenSupported(): boolean {

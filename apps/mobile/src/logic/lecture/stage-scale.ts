@@ -148,3 +148,91 @@ export function stageView(input: { phone: boolean; window: WindowSize; tooSmall:
   if (input.phone && input.window.height > input.window.width) return 'rotate';
   return input.tooSmall ? 'too-small' : 'slide';
 }
+
+/**
+ * Where the presenter's Previous and Next live (AMENDMENTS-PRESENTER-NAV section 4): `'docked'` in
+ * the band under the stage on every window but a phone's; `'rail'`, the phone rail beside the stage,
+ * in a phone window where the full or the compact rail fits (section 5.2, row PN-4); `'overlay'`, the
+ * floating compact bar, in a phone window where neither does (section 5.3).
+ */
+export type NavLayout = 'docked' | 'rail' | 'overlay';
+
+/** Which phone rail (section 5.2): the full rail (labelled buttons) or the compact icon rail (O10). */
+export type RailSize = 'full' | 'compact';
+
+/**
+ * The layout for a window: from `isPhoneWindow` and the rail the gate gives (`railSize`; none: the
+ * overlay). The rail is required, so no caller can forget it and report a rail phone as the overlay.
+ */
+export function navLayout(phone: boolean, rail: RailSize | null): NavLayout {
+  if (!phone) return 'docked';
+  return rail === null ? 'overlay' : 'rail';
+}
+
+/**
+ * The rail gate's numbers, passed in like `PhoneRule` (`screens/presenter/stage-metrics.ts`
+ * `RAIL_RULE`): the full and compact rail columns (`PHONE_RAIL`, `PHONE_RAIL_COMPACT`) and the
+ * phone gate `PHONE_STAGE_MIN` the stage left beside them must keep.
+ */
+export interface RailRule {
+  readonly full: number;
+  readonly compact: number;
+  readonly stageMin: number;
+}
+
+const side = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
+
+/**
+ * The rail gate (section 5.2), pure. With `free = w - insets.left - insets.right` and the rail's height
+ * `h - insets.top - insets.bottom`: the full rail when the window is a phone's, `free - full >=
+ * stageMin` and the rail's height holds its four buttons as drawn (`need.full`, `railNeeds` in
+ * stage-constants.ts); else the compact rail when `free - compact >= stageMin` and the height holds
+ * its four 64 px squares (`need.compact`, 296); else none (the overlay layout). So a short window (a
+ * landscape phone with its browser bars showing, 780 x 280) never draws rail buttons over each other.
+ * An upright phone gets none (it shows the rotate page), and so does every phone with the kill switch
+ * off (`enabled`: `flags.presenterRail`, section 15). `labelsFit` false (the label fallback, PN-0b N8:
+ * a full-rail word wider than its button) turns a full rail compact; it never moves a window to or
+ * from the overlay.
+ */
+export function railSize(
+  input: {
+    phone: boolean;
+    window: WindowSize;
+    insets: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number };
+    enabled: boolean;
+    labelsFit?: boolean;
+    need: { readonly full: number; readonly compact: number };
+  },
+  rule: RailRule,
+): RailSize | null {
+  const { phone, window, enabled, need } = input;
+  if (!enabled || !phone || !usable(window.width) || !usable(window.height)) return null;
+  if (window.height > window.width) return null;
+  const free = window.width - side(input.insets.left) - side(input.insets.right);
+  const tall = window.height - side(input.insets.top) - side(input.insets.bottom);
+  if (free - rule.full >= rule.stageMin && tall >= need.full && input.labelsFit !== false) return 'full';
+  if (free - rule.compact >= rule.stageMin && tall >= need.compact) return 'compact';
+  return null;
+}
+
+/** The column the rail takes from the stage box, in window px (0 with no rail). */
+export function railWidth(rail: RailSize | null, rule: RailRule): number {
+  return rail === 'full' ? rule.full : rail === 'compact' ? rule.compact : 0;
+}
+
+const measured = (n: number): boolean => Number.isFinite(n) && n > 0;
+
+/**
+ * The rail label fallback (PN-0b N8, stage-and-bar.md "Phone rail"): the widest word of each label,
+ * measured on the real text. Every full-rail word inside `room.full` (84 px: the 88 px button less
+ * its two borders) keeps the full rail; one wider turns it compact. More's words inside `room.more`
+ * (52 px on the 64 px compact button) keep its text; one wider shows the `more` icon instead. A word
+ * never breaks, so this is how no label ever overflows. Nothing measured yet counts as fitting.
+ */
+export function railLabelsFit(
+  words: { readonly full: readonly number[]; readonly more: readonly number[] },
+  room: { readonly full: number; readonly more: number },
+): { full: boolean; moreText: boolean } {
+  const within = (list: readonly number[], max: number): boolean => list.filter(measured).every((w) => w <= max);
+  return { full: within(words.full, room.full), moreText: within(words.more, room.more) };
+}

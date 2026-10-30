@@ -154,7 +154,7 @@ async function fitProblems(page: Page, phone: boolean): Promise<string[]> {
   return page.getByTestId('presenter-stage').evaluate(
     (root, { box, min }) => {
       const out: string[] = [];
-      const skip = (el: Element): boolean => el.closest('[data-testid="presenter-live"], [data-testid="presenter-counter"], [data-testid="presenter-grabber"]') !== null;
+      const skip = (el: Element): boolean => el.closest('[data-testid="presenter-live"], [data-testid="presenter-counter"]') !== null;
       for (const el of Array.from(root.querySelectorAll('*'))) {
         if (skip(el)) continue;
         const r = el.getBoundingClientRect();
@@ -245,13 +245,32 @@ for (const size of [
   });
 }
 
+/**
+ * The rail at its sizes (row PN-4): drawn at the right of the stage, never over it, so a slide that stays
+ * inside the stage meets no control; none in the overlay layout (568 x 320, or the rail switched off).
+ */
+async function expectRailBeside(page: Page, rail: boolean): Promise<void> {
+  if (!rail || process.env.E2E_RAIL_OFF === '1') {
+    await expect(page.getByTestId('presenter-rail')).toHaveCount(0);
+    return;
+  }
+  await expect(page.getByTestId('presenter-rail')).toBeVisible();
+  const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+  const box = (await page.getByTestId('presenter-rail').boundingBox())!;
+  expect(stage.x + stage.width).toBeLessThanOrEqual(box.x + 0.5);
+}
+
 test.describe('the write-together slides on a phone sideways (LV-M1)', () => {
+  // 568 x 320 is the overlay layout; 640 x 360 (the compact rail), 667 x 375 and 844 x 390 (the full rail) hold the
+  // fit beside the rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4; every phone is the overlay with E2E_RAIL_OFF=1).
   for (const size of [
-    { width: 568, height: 320 },
-    { width: 844, height: 390 },
+    { width: 568, height: 320, rail: false },
+    { width: 640, height: 360, rail: true },
+    { width: 667, height: 375, rail: true },
+    { width: 844, height: 390, rail: true },
   ] as const) {
-    test.describe(`${size.width} x ${size.height}`, () => {
-      test.use({ viewport: size, isMobile: true, hasTouch: true });
+    test.describe(`${size.width} x ${size.height}${size.rail ? ' (the rail)' : ''}`, () => {
+      test.use({ viewport: { width: size.width, height: size.height }, isMobile: true, hasTouch: true });
 
       test('every build stays inside the stage, no text below 18 px, no sideways scroll', async ({ page }) => {
         test.setTimeout(240_000);
@@ -264,6 +283,7 @@ test.describe('the write-together slides on a phone sideways (LV-M1)', () => {
         await expect(page.getByTestId('presenter-start-footer')).toBeVisible();
         await startLesson(page, true);
         await expect(page.getByTestId('presenter-too-small')).toHaveCount(0);
+        await expectRailBeside(page, size.rail);
         const seen = await walkWrites(page, `phone-${size.width}x${size.height}`, true, KIND, 'Write on paper or on your own device. Nothing is typed here.');
         expect(seen['own-name']).toBe(1);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

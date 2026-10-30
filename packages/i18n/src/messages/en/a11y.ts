@@ -485,6 +485,10 @@ export const a11y = {
     tilePlaced: (word: string) => `${word} placed`,
     /** A Role Play slide's reply bubble from the room (F-CURR-002 section 8, row CM-35): the class, never a name; `line` is the Korean with its romanization once it shows. */
     rolePlayClass: (line: string) => `The class said: ${line}`,
+    /** A tap, click or key 1 to 4 points at an option (AMENDMENTS-PRESENTER-NAV section 7.3, owner choice O2), announced politely. */
+    pointed: (n: number) => `Option ${n} pointed at`,
+    /** The pointed option tapped again: nothing is pointed at now. */
+    unpointed: 'No option pointed at',
   },
   /** [OA] The chooser's accessible names (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 17.2, row OA-4a); a caption is a hint, never joined in. */
   who: {

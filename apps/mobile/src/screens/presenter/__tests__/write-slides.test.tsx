@@ -202,7 +202,11 @@ describe('Stage: the live region names a write slide by what its first build sho
         deckTitle="Write"
         strokeToken={0}
         joinCta="Join"
-        onCommand={() => undefined}
+        onGesture={() => undefined}
+        layout="docked"
+        covering="none"
+        pointing={false}
+        lastPointer={() => null}
         onPlaySound={() => undefined}
         romanization="always"
         sayIt={false}

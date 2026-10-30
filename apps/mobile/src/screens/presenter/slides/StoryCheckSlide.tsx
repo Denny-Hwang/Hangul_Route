@@ -29,7 +29,18 @@ export function isStoryCheck(slide: Slide): slide is StoryCheckBody {
  * Nothing is collected or scored (TD6, D3). With `romanization: 'tap'` the options' romanization
  * waits for the reveal (D2); a pick-meaning target's gloss waits too, since it is the answer.
  */
-export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCheckBody; shown: ReadonlySet<BuildName>; romanization: RomanizationMode }): ReactElement {
+export function StoryCheckSlide({
+  slide,
+  shown,
+  romanization,
+  pointed = null,
+}: {
+  slide: StoryCheckBody;
+  shown: ReadonlySet<BuildName>;
+  romanization: RomanizationMode;
+  /** The option the presenter points at (from 1), or none (AMENDMENTS-PRESENTER-NAV section 7.3). */
+  pointed?: number | null;
+}): ReactElement {
   const { unit } = usePresenterView();
   const size = useStageText();
   const revealed = shown.has('answer');
@@ -85,7 +96,7 @@ export function StoryCheckSlide({ slide, shown, romanization }: { slide: StoryCh
         </View>
         <AnswerLine shown={revealed} />
       </View>
-      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} />
+      <QuizOptions options={slide.options} revealed={revealed} romanization={romanization} pointed={pointed} />
       {slide.explain !== undefined ? (
         <Text {...KOREAN_LINE_BREAK}
           testID="presenter-check-explain"

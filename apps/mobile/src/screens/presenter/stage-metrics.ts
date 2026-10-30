@@ -15,9 +15,15 @@ import {
   STATE_HOYA_FACTOR,
   PHONE_STAGE_MIN,
   barBand,
-  phoneBarStrip,
+  phoneRail,
+  phoneRailCompact,
+  railButtonWidth,
+  railLabelButton,
+  railNeeds,
+  type RailButtonParts,
+  type RailHeights,
 } from '../../logic/lecture/stage-constants';
-import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
+import type { PhoneRule, RailRule, StageBounds } from '../../logic/lecture/stage-scale';
 
 /**
  * The presenter's layout numbers with the design tokens applied (design/screens/presenter/README.md
@@ -29,14 +35,66 @@ import type { PhoneRule, StageBounds } from '../../logic/lecture/stage-scale';
 export const STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: layout.breakpoint.regular };
 /** A phone window's stage: the same stage, judged too small only below `PHONE_STAGE_MIN` (README Constants). */
 export const PHONE_STAGE_BOUNDS: StageBounds = { ...presenter.stage, compactWidth: PHONE_STAGE_MIN };
-/** The compact bar's strip at the bottom of a phone stage: `touchTarget.min + 2 x spacing.sm` (section 3.6). */
-export const PHONE_BAR_STRIP = phoneBarStrip(touchTarget.min, spacing.sm);
 /** The design system's phone form factor (`layout.phoneShortSide`, `layout.phoneMaxLongSide`). */
 export const PHONE_RULE: PhoneRule = { shortSide: layout.phoneShortSide, maxLongSide: layout.phoneMaxLongSide };
 /** No text below `typography.size.body` anywhere (README D2). */
 export const TEXT_FLOOR = typography.size.body;
 /** 120 px: `touchTarget.hero + 2 x spacing.md` (README D1). */
 export const BAR_BAND = barBand(touchTarget.hero, spacing.md);
+/** Between the docked band's parts (Previous, the chips, the tools, More, Next): `spacing.lg` (PN-0b `.bar.nav`). */
+export const BAR_GROUP_GAP = spacing.lg;
+/** Between a wrapped band's two rows: `2 x spacing.md`, so each row adds one `BAR_BAND` (AMENDMENTS-PRESENTER-NAV section 5.1). */
+export const BAR_ROW_GAP = 2 * spacing.md;
+/**
+ * `spacing.xxl` (32) window px: the least inert space between any content target and any bar or rail
+ * button (AMENDMENTS-PRESENTER-NAV section 5.0). On the docked band it is the stage padding plus the
+ * band's own `spacing.md` padding, in every order and wrapped layout.
+ */
+export const NAV_CLEARANCE = spacing.xxl;
+
+/**
+ * The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4; mock `presenter-nav.css` `--rail`):
+ * `PHONE_RAIL = touchTarget.hero + spacing.sm` (104) for the full rail, `PHONE_RAIL_COMPACT =
+ * touchTarget.min + spacing.md + spacing.xs` (80) for the compact icon rail. Each column is the inert
+ * gap `PHONE_RAIL_GAP` (`spacing.md`, 12, its `border.strong` rule included) on the stage side, the
+ * button and `spacing.xs` on the window side, so the clearance is the stage padding (21 px at the
+ * smallest rail stage) plus 12 = 33 px, above `NAV_CLEARANCE`.
+ */
+export const PHONE_RAIL = phoneRail(touchTarget.hero, spacing.sm);
+export const PHONE_RAIL_COMPACT = phoneRailCompact(touchTarget.min, spacing.md, spacing.xs);
+export const PHONE_RAIL_GAP = spacing.md;
+/** A full rail button is 88 wide; a compact one `touchTarget.min` (64) square. */
+export const RAIL_BUTTON = railButtonWidth(PHONE_RAIL, PHONE_RAIL_GAP, spacing.xs);
+export const RAIL_BUTTON_COMPACT = railButtonWidth(PHONE_RAIL_COMPACT, PHONE_RAIL_GAP, spacing.xs);
+/** The rail gate's numbers for `railSize` (section 5.2). */
+export const RAIL_RULE: RailRule = { full: PHONE_RAIL, compact: PHONE_RAIL_COMPACT, stageMin: PHONE_STAGE_MIN };
+/**
+ * The room a label word has (PN-0b "Rail labels"): a full rail button has no side padding, so 88 less
+ * its two borders (84); the compact rail's More keeps `spacing.xs` padding inside 64 (52).
+ */
+export const RAIL_LABEL_ROOM = {
+  full: RAIL_BUTTON - 2 * borderWidth.base,
+  more: RAIL_BUTTON_COMPACT - 2 * borderWidth.base - 2 * spacing.xs,
+} as const;
+/** A full-rail label button around its label (the rail's `RailCtl`): its borders, `spacing.xs` padding, the `spacing.xxl` glyph and the `spacing.xs` gap. */
+export const RAIL_BUTTON_PARTS: RailButtonParts = { border: borderWidth.base, pad: spacing.xs, icon: spacing.xxl, gap: spacing.xs };
+/** One line of a rail label at the body size `body` (the label's line height). */
+export function railLabelLine(body: number): number {
+  return Math.round(body * typography.leading.tight);
+}
+/**
+ * The rail's button heights before its probe has measured the labels: every label on one line at
+ * `body` (69 px at 18 px). The rail then measures each label as drawn (two lines where it wraps) and
+ * reports the real heights, which the gate keeps until a new complete measure.
+ */
+export function railHeightsEstimate(body: number): RailHeights {
+  const h = railLabelButton(RAIL_BUTTON_PARTS, railLabelLine(body));
+  return { more: h, next: h, prev: h, sound: h };
+}
+/** What the rail gate needs of the rail's height for these heights (`railNeeds`): the full rail and the compact one (296). */
+export function railHeightNeeds(heights: RailHeights): { full: number; compact: number } {
+  return railNeeds(heights, touchTarget.min, spacing.sm);
+}
 
 /** Every slide keeps this margin inside the stage, in units. */
 export const STAGE_PADDING = spacing.xxxl;

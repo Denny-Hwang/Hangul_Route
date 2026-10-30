@@ -71,6 +71,7 @@ function StepRow({ step, lead, rom, on }: { step: SequenceStep; lead: ReactNode;
     <View
       testID="presenter-step"
       role="listitem"
+      {...{ dataSet: { stageTarget: 'step' } }}
       aria-hidden={hidden['aria-hidden']}
       style={[{ flexBasis: '40%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: units(unit, STAGE_GAP_INNER) }, hidden.style]}
     >

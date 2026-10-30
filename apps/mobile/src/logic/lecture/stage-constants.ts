@@ -161,11 +161,9 @@ export const SVG_UI_FONT = 'system-ui, sans-serif';
  */
 export const BAR_SHOW_GRACE_MS = 400;
 
-/** Touch: a horizontal swipe of at least 60 px with |dx| >= 1.5 |dy| (spec section 3.5). */
+/** A swipe on the stage: at least 60 px across with |dx| >= 1.5 |dy| (AMENDMENTS-PRESENTER-NAV section 6). */
 export const SWIPE_MIN = 60;
 export const SWIPE_RATIO = 1.5;
-/** A tap on the left third of the stage goes back, elsewhere forward. */
-export const TAP_BACK_FRACTION = 1 / 3;
 
 /** The docked control-bar band: one row of hero buttons with `spacing.md` above and below (README D1). */
 export function barBand(hero: number, gap: number): number {
@@ -179,15 +177,6 @@ export function barBand(hero: number, gap: number): number {
  * (600). Text keeps the 18 px floor either way.
  */
 export const PHONE_STAGE_MIN = 560;
-
-/**
- * The compact bar's strip at the bottom of a phone stage (section 3.6): as tall as the bar's own
- * footprint, its `touchTarget.min` row and `spacing.sm` padding (`min + 2 x gap`). A tap there shows
- * or hides the bar instead of stepping.
- */
-export function phoneBarStrip(min: number, gap: number): number {
-  return min + 2 * gap;
-}
 
 /** The safe-area insets of the window (the notch and the home indicator), in window pixels. */
 export interface StageInsets {
@@ -204,13 +193,97 @@ const inset = (n: number): number => (Number.isFinite(n) && n > 0 ? n : 0);
 /**
  * The stage box: the window minus the safe-area insets and the docked bar band, which stays when
  * the bar hides (README D1). A phone window passes a band of 0: its compact bar floats over the
- * stage's bottom edge instead.
+ * stage's bottom edge instead, or (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4) its rail takes a
+ * column of `rail` px at the right, so the stage box is the window minus the four insets minus the rail.
  */
-export function stageBox(window: WindowSize, band: number, insets: StageInsets): WindowSize {
+export function stageBox(window: WindowSize, band: number, insets: StageInsets, rail = 0): WindowSize {
   return {
-    width: Math.max(0, window.width - inset(insets.left) - inset(insets.right)),
+    width: Math.max(0, window.width - inset(insets.left) - inset(insets.right) - inset(rail)),
     height: Math.max(0, window.height - band - inset(insets.top) - inset(insets.bottom)),
   };
+}
+
+/**
+ * The phone rail (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4), from its tokens (applied in
+ * `screens/presenter/stage-metrics.ts`): the full rail column `PHONE_RAIL = touchTarget.hero +
+ * spacing.sm` (104), the compact icon rail `PHONE_RAIL_COMPACT = touchTarget.min + spacing.md +
+ * spacing.xs` (80). Each is the inert gap `PHONE_RAIL_GAP` (`spacing.md`, its `border.strong` rule
+ * included) on the stage side, the button, and `spacing.xs` on the window side.
+ */
+export function phoneRail(hero: number, sm: number): number {
+  return hero + sm;
+}
+
+export function phoneRailCompact(min: number, md: number, xs: number): number {
+  return min + md + xs;
+}
+
+/** A rail button's width: the column less the inert gap and the window-side `spacing.xs` (88 full, 64 compact). */
+export function railButtonWidth(rail: number, gap: number, xs: number): number {
+  return rail - gap - xs;
+}
+
+/** The full rail's Next / Reveal is `NEXT_MIN_FACTOR x touchTarget.min` (96) tall while the rail has room for it. */
+export const RAIL_NEXT_FACTOR = NEXT_MIN_FACTOR;
+
+/**
+ * The drawn heights of the full rail's four buttons as their labels lay out, in window px: More, Next
+ * (the taller of Next and Reveal, so the rail never changes between two builds of a slide), Previous
+ * and Sound. A button is never under `touchTarget.min` (`railNeed` applies the floor).
+ */
+export interface RailHeights {
+  readonly more: number;
+  readonly next: number;
+  readonly prev: number;
+  readonly sound: number;
+}
+
+/** The parts of a full-rail label button around its label (tokens applied in `stage-metrics.ts`). */
+export interface RailButtonParts {
+  /** `borderWidth.base`, above and below. */
+  readonly border: number;
+  /** `spacing.xs` padding above and below. */
+  readonly pad: number;
+  /** The glyph (`spacing.xxl`). */
+  readonly icon: number;
+  /** `spacing.xs` between the glyph and the label. */
+  readonly gap: number;
+}
+
+/**
+ * A full-rail label button's drawn height: two borders, its padding above and below, the glyph, the
+ * gap and the label's lines (`label`: one line is `round(body x leading.tight)`, 21 at 18 px, so 69).
+ */
+export function railLabelButton(parts: RailButtonParts, label: number): number {
+  return 2 * parts.border + 2 * parts.pad + parts.icon + parts.gap + (Number.isFinite(label) && label > 0 ? label : 0);
+}
+
+const drawn = (n: number, min: number): number => Math.max(min, Number.isFinite(n) ? n : 0);
+
+/**
+ * The height the rail's four buttons need (section 5.2), in window px: More and Sound each sit in one
+ * of two equal sections above and below the centred pair, so both sections are as tall as the taller
+ * of the two; then Next (at least `nextMin`) and Previous, three `spacing.sm` gaps (two between the
+ * sections, one inside the pair) and `spacing.sm` above and below. With the full rail's one-line
+ * labels at 18 px (69 px each) that is 343 with Next at 96 and 316 with Next at its label height; the
+ * compact rail (64 px squares, `COMPACT_RAIL_HEIGHTS`) needs `4 x 64 + 5 x 8` = 296.
+ */
+export function railNeed(heights: RailHeights, min: number, sm: number, nextMin: number = min): number {
+  const ends = Math.max(drawn(heights.more, min), drawn(heights.sound, min));
+  return 2 * ends + Math.max(nextMin, drawn(heights.next, min)) + drawn(heights.prev, min) + 5 * sm;
+}
+
+/** The compact rail's buttons are `touchTarget.min` squares: no label adds to them. */
+export const COMPACT_RAIL_HEIGHTS: RailHeights = { more: 0, next: 0, prev: 0, sound: 0 };
+
+/** What the rail gate needs of the rail's height (section 5.2): the full rail with Next at its least, and the compact rail. */
+export function railNeeds(heights: RailHeights, min: number, sm: number): { full: number; compact: number } {
+  return { full: railNeed(heights, min, sm), compact: railNeed(COMPACT_RAIL_HEIGHTS, min, sm) };
+}
+
+/** Next's least height on the full rail: 96 where the rail holds it at 96 (`railNeed`), else 64 (its label may draw it taller). */
+export function railNextHeight(railHeight: number, heights: RailHeights, min: number, sm: number): number {
+  return railHeight >= railNeed(heights, min, sm, RAIL_NEXT_FACTOR * min) ? RAIL_NEXT_FACTOR * min : min;
 }
 
 /**

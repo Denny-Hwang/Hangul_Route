@@ -1,19 +1,27 @@
 import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { readStored } from './helpers';
+import { readStored, swipeStage } from './helpers';
 import { shot } from './shots';
 
 /**
  * Row LV-M1 (owner report 2026-10-16; F-TCH-004 sections 3.5 "History" and 3.6 phone exception;
  * AMENDMENTS-LECTURE-V2 section 14 `presenter-phone.spec.ts`): the presenter on a phone, with
- * `isMobile` and touch. Sideways at 568 x 320, 640 x 360 and 844 x 390 the slide is drawn (no
- * too-small page) and every slide family stays inside the stage; the compact bar shows at the start
- * of the lesson and hides after `presenter.autoHideMs`, a stage tap steps without showing it, a tap
- * in its strip shows it, and after Next on the bar or a stage tap it is hidden at once, so no
- * control covers the new slide; its step back reads Previous; More holds the rest. Upright, the
- * rotate page with Back. The phone start screen. The browser's back steps back one phase. No
- * sideways scroll. Screenshots with `HR_SHOTS=1`.
+ * `isMobile` and touch. Sideways at 568 x 320, 640 x 360, 667 x 375 and 844 x 390 the slide is
+ * drawn (no too-small page) and every slide family stays inside the stage.
+ * - **The rail** (AMENDMENTS-PRESENTER-NAV section 5.2, row PN-4; 640 x 360 the compact rail, 667 x
+ *   375 and 844 x 390 the full rail): beside the stage at the right, never over it, shown at the
+ *   start, after `presenter.autoHideMs`, after Next and after a swipe, so its Sound is pressed
+ *   directly and no element of the new slide meets a visible control; a touch tap on empty stage
+ *   rings Next and steps nothing; More opens the sheet beside it; Help has no overlay line.
+ * - **The overlay layout** (568 x 320, and every phone with `E2E_RAIL_OFF=1`, a local
+ *   `EXPO_PUBLIC_PRESENTER_RAIL=0` build; section 5.3): the floating bar shows at the start of the
+ *   lesson and hides after `presenter.autoHideMs`, a swipe steps without showing it, a touch tap on
+ *   empty stage area shows it or hides it (the strip and its grabber are gone), and after Next on the
+ *   bar or a swipe it is hidden at once, so no control covers the new slide; its step back reads
+ *   Previous; More holds the rest.
+ * Upright, the rotate page with Back. The phone start screen. The browser's back steps back one
+ * phase. No sideways scroll. Screenshots with `HR_SHOTS=1`.
  */
 
 const DECK: LectureDeckInput = {
@@ -98,16 +106,26 @@ async function expectBarShown(page: Page): Promise<void> {
   await expect(page.getByTestId('presenter-next')).not.toHaveCSS('pointer-events', 'none');
 }
 
-/** A tap in the middle of the stage, above the bar's strip (the right two thirds: next). */
-async function tapStage(page: Page): Promise<void> {
+/** A swipe to the left across the middle of the stage: next (AMENDMENTS-PRESENTER-NAV section 6; Chromium only). */
+async function swipeNext(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.7, stage.y + stage.height * 0.4);
+  const y = stage.y + stage.height * 0.4;
+  await swipeStage(page, { x: stage.x + stage.width * 0.7, y }, { x: stage.x + stage.width * 0.3, y });
 }
 
-/** A tap in the bar's strip: the bottom of the stage, beside where the bar sits. */
-async function tapStrip(page: Page): Promise<void> {
+/** A touch tap on empty stage area (the stage's top-left padding, where no slide draws): it shows or hides the bar (section 5.3). */
+async function tapEmpty(page: Page): Promise<void> {
   const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-  await page.touchscreen.tap(stage.x + stage.width * 0.95, stage.y + stage.height - 20);
+  await page.touchscreen.tap(stage.x + 10, stage.y + 10);
+}
+
+/** The swipe cases drive CDP touch events, which only Chromium has (section 14). */
+const SWIPES_SKIPPED = process.env.E2E_WEBKIT === '1';
+
+/** A step while the bar shows: a swipe, or under `E2E_WEBKIT` (no CDP touch) a tap on the bar's Next, so the tap and focus checks still run there. */
+async function stepWhileShown(page: Page): Promise<void> {
+  if (SWIPES_SKIPPED) await page.getByTestId('presenter-next').tap();
+  else await swipeNext(page);
 }
 
 /** No element of the slide's text (the taught row: glyph, Korean, romanization, gloss, answer tiles) meets a visible control. */
@@ -120,7 +138,9 @@ async function expectNothingCovered(page: Page): Promise<void> {
       }
       return true;
     };
-    const controls = Array.from(document.querySelectorAll('[data-testid="presenter-bar-compact"] [role="button"]')).filter(visible).map((el) => el.getBoundingClientRect());
+    const controls = Array.from(document.querySelectorAll('[data-testid="presenter-bar-compact"] [role="button"], [data-testid="presenter-rail"] [role="button"]'))
+      .filter(visible)
+      .map((el) => el.getBoundingClientRect());
     const stage = document.querySelector('[data-testid="presenter-stage"]');
     const texts = Array.from(stage?.querySelectorAll('*') ?? []).filter((el) => el.childElementCount === 0 && (el.textContent ?? '').trim() !== '' && el.getAttribute('data-testid') !== 'presenter-live' && visible(el));
     const out: string[] = [];
@@ -165,15 +185,44 @@ function noSidewaysScroll(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 }
 
-const PHONES = [
-  { width: 568, height: 320 },
-  { width: 640, height: 360 },
-  { width: 844, height: 390 },
-] as const;
+/** `E2E_RAIL_OFF=1`: the suite runs on a local `EXPO_PUBLIC_PRESENTER_RAIL=0` build, where every phone uses the overlay layout. */
+const RAIL_OFF = process.env.E2E_RAIL_OFF === '1';
+
+interface Phone {
+  width: number;
+  height: number;
+  /** The layout section 5.2's gate gives (the overlay on every phone with the rail switched off). */
+  layout: 'overlay' | 'rail';
+  /** The rail column: 104 full, 80 compact. */
+  rail?: number;
+}
+
+const PHONES: readonly Phone[] = [
+  { width: 568, height: 320, layout: 'overlay' },
+  { width: 640, height: 360, layout: 'rail', rail: 80 },
+  { width: 667, height: 375, layout: 'rail', rail: 104 },
+  { width: 844, height: 390, layout: 'rail', rail: 104 },
+].map((p) => (RAIL_OFF ? { width: p.width, height: p.height, layout: 'overlay' as const } : (p as Phone)));
+
+const RAIL_IDS = ['presenter-more', 'presenter-next', 'presenter-back', 'presenter-sound'];
+
+/** The rail is on screen in full, every one of its buttons taking taps. */
+async function expectRailShown(page: Page): Promise<void> {
+  await expect(page.getByTestId('presenter-rail')).toBeVisible();
+  for (const id of RAIL_IDS) {
+    const opacity = await page.getByTestId(id).evaluate((el) => {
+      let out = 1;
+      for (let at: Element | null = el; at; at = at.parentElement) out *= Number(getComputedStyle(at).opacity);
+      return out;
+    });
+    expect(opacity, id).toBe(1);
+    await expect(page.getByTestId(id), id).not.toHaveCSS('pointer-events', 'none');
+  }
+}
 
 for (const size of PHONES) {
-  test.describe(`a phone sideways, ${size.width} x ${size.height}`, () => {
-    test.use({ viewport: size, isMobile: true, hasTouch: true });
+  test.describe(`a phone sideways, ${size.width} x ${size.height} (${size.layout}${size.rail === 80 ? ', compact' : ''})`, () => {
+    test.use({ viewport: { width: size.width, height: size.height }, isMobile: true, hasTouch: true });
 
     test('slide 1 is drawn, every slide family stays inside the stage, no picker and no sideways scroll', async ({ page }) => {
       const errors: string[] = [];
@@ -186,11 +235,22 @@ for (const size of PHONES) {
       await expect(page.getByTestId('presenter-rotate')).toHaveCount(0);
       await expect.poll(() => counter(page)).toMatch(/^1 \//);
       await expect(page.getByTestId('presenter-bar-band')).toHaveCount(0);
-      await expect(page.getByTestId('presenter-grabber')).toBeAttached();
+      // No strip and no grabber: no part of the stage is a hidden zone (section 5.3).
+      await expect(page.getByTestId('presenter-grabber')).toHaveCount(0);
       await expect(page.getByTestId('presenter-picker')).toHaveCount(0);
-      // No band: the stage takes the whole window in one direction.
       const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
-      expect(Math.max(stage.width / size.width, stage.height / size.height)).toBeGreaterThan(0.99);
+      if (size.layout === 'overlay') {
+        // No band and no rail: the stage takes the whole window in one direction.
+        await expect(page.getByTestId('presenter-rail')).toHaveCount(0);
+        expect(Math.max(stage.width / size.width, stage.height / size.height)).toBeGreaterThan(0.99);
+      } else {
+        // The rail takes its column at the right; the stage takes the rest in one direction, never under it.
+        const rail = (await page.getByTestId('presenter-rail').boundingBox())!;
+        expect(Math.round(rail.width)).toBe(size.rail);
+        expect(Math.round(rail.x + rail.width)).toBe(size.width);
+        expect(stage.x + stage.width).toBeLessThanOrEqual(rail.x + 0.5);
+        expect(Math.max(stage.width / (size.width - size.rail!), stage.height / size.height)).toBeGreaterThan(0.99);
+      }
       expect(await noSidewaysScroll(page)).toBe(true);
       await shot(page, `presenter-phone-title-${size.width}x${size.height}`);
       const kinds = await walkInsideStage(page, `${size.width}x${size.height}`);
@@ -199,7 +259,71 @@ for (const size of PHONES) {
       expect(errors).toEqual([]);
     });
 
-    test('the bar shows at the start and hides; a stage tap steps without it; its strip shows it; Next and a stage tap hide it at once', async ({ page }) => {
+    if (size.layout === 'rail') {
+      test('the rail: shown at the start, after 3 s, after Next and after a swipe; nothing of the new slide meets it; an empty tap rings Next', async ({ page }) => {
+        await page.goto(link());
+        await startLesson(page);
+        await expectRailShown(page);
+        const rail = (await page.getByTestId('presenter-rail').boundingBox())!;
+        for (const id of RAIL_IDS) {
+          const box = (await page.getByTestId(id).boundingBox())!;
+          expect(box.height, id).toBeGreaterThanOrEqual(64);
+          expect(box.width, id).toBeGreaterThanOrEqual(64);
+          expect(box.x + box.width, id).toBeLessThanOrEqual(size.width);
+          // The inert gap: no button reaches the rail's 12 px stage side.
+          expect(box.x - rail.x, id).toBeGreaterThanOrEqual(12 - 0.5);
+        }
+        await expect(page.getByTestId('presenter-back')).toHaveAccessibleName('Previous');
+        await expect(page.getByTestId('presenter-rail-toolbar')).toHaveAttribute('aria-orientation', 'vertical');
+        await shot(page, `presenter-phone-rail-${size.width}x${size.height}`);
+        await page.waitForTimeout(3600);
+        await expectRailShown(page);
+        // Next on the rail: the step happens, the rail stays, and nothing of the new slide meets it.
+        await revealAll(page);
+        const at = await liveText(page);
+        await page.getByTestId('presenter-next').tap();
+        await expect.poll(() => liveText(page)).not.toBe(at);
+        await expectRailShown(page);
+        await expectNothingCovered(page);
+        if (!SWIPES_SKIPPED) {
+          await revealAll(page);
+          const before = await liveText(page);
+          await swipeNext(page);
+          await expect.poll(() => liveText(page)).not.toBe(before);
+          await expectRailShown(page);
+          await expectNothingCovered(page);
+        }
+        // A touch tap on empty stage area rings the rail Next and steps nothing.
+        const now = await liveText(page);
+        await tapEmpty(page);
+        await expect(page.getByTestId('presenter-next')).toHaveAttribute('data-nudge', 'on');
+        expect(await liveText(page)).toBe(now);
+        await expectRailShown(page);
+        // Sound, pressed directly, answers (the e2e engine has no Korean voice: a flash on a slide with sound, or none to play).
+        await page.getByTestId('presenter-sound').tap();
+        await expect(page.getByTestId('presenter-sound-live')).not.toHaveText('');
+        await shot(page, `presenter-phone-rail-step-${size.width}x${size.height}`);
+      });
+
+      test('every slide, every build, with the rail shown: no element of the slide meets a visible control', async ({ page }) => {
+        test.setTimeout(120_000);
+        await page.goto(link(DECK));
+        await startLesson(page);
+        const total = Number((await counter(page)).split('/')[1]);
+        for (let n = 1; n <= total; n++) {
+          await expect.poll(() => counter(page)).toBe(`${n} / ${total}`);
+          for (let i = 0; i < 10; i++) {
+            await expectNothingCovered(page);
+            if ((await page.getByTestId('presenter-next').getAttribute('aria-label')) !== 'Reveal') break;
+            await page.getByTestId('presenter-next').tap();
+          }
+          if (n < total) await page.getByTestId('presenter-next').tap();
+        }
+        await expectRailShown(page);
+      });
+    }
+
+    if (size.layout === 'overlay') test('the bar shows at the start and hides; a swipe steps without it; a tap on empty stage shows or hides it; Next and a swipe hide it at once', async ({ page }) => {
       await page.goto(link());
       await startLesson(page);
       // The start of the lesson: shown, its controls one row of touch targets inside the window, then hidden after 3 s.
@@ -214,18 +338,20 @@ for (const size of PHONES) {
       await expect(page.getByTestId('presenter-back')).toHaveAccessibleName('Previous');
       await shot(page, `presenter-phone-bar-${size.width}x${size.height}`);
       await expectBarHidden(page);
-      // A stage tap steps; the bar stays out of the way.
-      const first = await counter(page);
-      await tapStage(page);
-      await expect.poll(() => liveText(page)).not.toContain('Slide 1 of');
-      await page.waitForTimeout(400);
-      await expectBarHidden(page);
-      expect(await counter(page)).not.toBe(first);
-      // A tap in the strip shows it, and steps nothing (the slide's builds revealed by key first, so Next steps a slide).
+      // A swipe steps; the bar stays out of the way (Chromium: CDP touch; the taps below run everywhere).
+      if (!SWIPES_SKIPPED) {
+        const first = await counter(page);
+        await swipeNext(page);
+        await expect.poll(() => liveText(page)).not.toContain('Slide 1 of');
+        await page.waitForTimeout(400);
+        await expectBarHidden(page);
+        expect(await counter(page)).not.toBe(first);
+      }
+      // A tap on empty stage shows it, and steps nothing (the slide's builds revealed by key first, so Next steps a slide).
       await revealAll(page);
       await expectBarHidden(page);
       const at = await liveText(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarShown(page);
       expect(await liveText(page)).toBe(at);
       // Next on the bar: the step happens and the bar is gone at once; nothing of the new slide is covered.
@@ -234,24 +360,24 @@ for (const size of PHONES) {
       await expect.poll(() => liveText(page)).not.toBe(at);
       await expectBarHidden(page);
       await expectNothingCovered(page);
-      // Shown again, a stage tap while it shows also hides it at once.
+      // Shown again, a swipe while it shows also hides it at once (under E2E_WEBKIT, the bar's Next).
       await revealAll(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarShown(page);
       const before = await liveText(page);
-      await tapStage(page);
+      await stepWhileShown(page);
       await expect(page.getByTestId('presenter-next')).toHaveCSS('pointer-events', 'none');
       await expect.poll(() => liveText(page)).not.toBe(before);
       await expectBarHidden(page);
       await expectNothingCovered(page);
-      // A tap in the strip while it shows hides it.
-      await tapStrip(page);
+      // A tap on empty stage while it shows hides it.
+      await tapEmpty(page);
       await expectBarShown(page);
-      await tapStrip(page);
+      await tapEmpty(page);
       await expectBarHidden(page);
     });
 
-    test('a tap where the hidden bar is presses nothing', async ({ page }) => {
+    if (size.layout === 'overlay') test('a tap where the hidden bar is presses nothing', async ({ page }) => {
       await page.goto(link());
       await startLesson(page);
       const more = (await page.getByTestId('presenter-more').boundingBox())!;
@@ -322,13 +448,13 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
     await expect(sheet).toHaveCount(0);
     const help = page.getByTestId('presenter-help');
     await expect(help).toBeVisible();
-    await expect(help.getByTestId('presenter-help-phone-bar')).toHaveText('On a phone, tap the bottom of the slide to show the controls.');
+    await expect(help.getByTestId('presenter-help-phone-bar')).toHaveText('On this phone, swipe to move. Tap the slide to show the controls.');
     await expect(help.getByText('Previous', { exact: true })).toBeVisible();
     await shot(page, 'presenter-phone-help-568x320');
     await page.getByTestId('presenter-help-close').tap();
     // Exit from More: the confirm fits the window.
     await expectBarHidden(page);
-    await tapStrip(page);
+    await tapEmpty(page);
     await expectBarShown(page);
     await page.getByTestId('presenter-more').tap();
     await page.getByTestId('presenter-more-sheet').getByTestId('presenter-exit').tap();
@@ -348,16 +474,18 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
     await startLesson(page);
     await expectBarHidden(page);
     // A tap: More, then Close; focus goes back to More, and the next step still hides the bar.
-    await tapStrip(page);
+    await tapEmpty(page);
     await expectBarShown(page);
     await page.getByTestId('presenter-more').tap();
     await page.getByTestId('presenter-more-close').tap();
     await expect(page.getByTestId('presenter-more')).toBeFocused();
     await revealAll(page);
     await expectBarShown(page);
-    await tapStage(page);
+    await stepWhileShown(page);
     await expectBarHidden(page);
     // A keyboard user: a key, then focus moves into the bar; it shows and stays past presenter.autoHideMs.
+    // (Past the bar's 500 ms after a press first, so the focus is not that press's: under E2E_WEBKIT the step was a tap on Next.)
+    await page.waitForTimeout(600);
     await page.keyboard.press('Shift');
     await page.getByTestId('presenter-sound').focus();
     await expectBarShown(page);
@@ -376,6 +504,70 @@ test.describe('More, Help and the Exit confirm on the smallest phone, 568 x 320'
     await expectBarShown(page);
     await page.getByTestId('presenter-next').tap();
     await expect(page.getByTestId('presenter-blank')).toHaveCount(0);
+  });
+});
+
+test.describe('More, Help, Blank and the Exit confirm beside the rail, 844 x 390 (row PN-4)', () => {
+  test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+  test.skip(RAIL_OFF, 'the rail is switched off in this build');
+
+  test('More opens the sheet beside the rail, over the stage; Help has no overlay line; the rail stays beside Blank and its Next clears it', async ({ page }) => {
+    await page.goto(link());
+    await startLesson(page);
+    await expectRailShown(page);
+    const rail = (await page.getByTestId('presenter-rail').boundingBox())!;
+    await page.getByTestId('presenter-more').tap();
+    const sheet = page.getByTestId('presenter-more-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(page.getByTestId('presenter-more-close')).toBeFocused();
+    await expect(page.getByTestId('presenter-more')).toHaveAttribute('aria-expanded', 'true');
+    const box = (await sheet.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(rail.x + 0.5);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(390);
+    // The status chips sit in the sheet's header (the e2e engine has no Korean voice).
+    await expect(sheet.getByTestId('presenter-chip-no-voice')).toBeVisible();
+    await expectRailShown(page);
+    expect(await noSidewaysScroll(page)).toBe(true);
+    await shot(page, 'presenter-phone-rail-more-844x390');
+    // A tap on the stage the sheet covers closes it and steps nothing.
+    const at = await liveText(page);
+    const stage = (await page.getByTestId('presenter-stage').boundingBox())!;
+    await page.touchscreen.tap(stage.x + 10, stage.y + 10);
+    await expect(sheet).toHaveCount(0);
+    expect(await liveText(page)).toBe(at);
+    // Keys and help from More: Help without the overlay's "tap the slide to show the controls" line.
+    await page.getByTestId('presenter-more').tap();
+    await page.getByTestId('presenter-more-sheet').getByTestId('presenter-help-button').tap();
+    const help = page.getByTestId('presenter-help');
+    await expect(help).toBeVisible();
+    await expect(help.getByTestId('presenter-help-phone-bar')).toHaveCount(0);
+    await expect(help.getByTestId('presenter-help-touch')).toBeVisible();
+    const helpBox = (await help.boundingBox())!;
+    expect(helpBox.x + helpBox.width).toBeLessThanOrEqual(rail.x + 0.5);
+    await shot(page, 'presenter-phone-rail-help-844x390');
+    await page.getByTestId('presenter-help-close').tap();
+    await expect(help).toHaveCount(0);
+    // Blank covers the stage only; the rail stays beside it, and its Next clears it.
+    await page.getByTestId('presenter-more').tap();
+    await page.getByTestId('presenter-more-sheet').getByTestId('presenter-blank-button').tap();
+    const blank = page.getByTestId('presenter-blank');
+    await expect(blank).toBeVisible();
+    const blankBox = (await blank.boundingBox())!;
+    expect(blankBox.x + blankBox.width).toBeLessThanOrEqual(rail.x + 0.5);
+    await expectRailShown(page);
+    await page.getByTestId('presenter-next').tap();
+    await expect(blank).toHaveCount(0);
+    // Exit from More: the confirm fits the window.
+    await page.getByTestId('presenter-more').tap();
+    await page.getByTestId('presenter-more-sheet').getByTestId('presenter-exit').tap();
+    const dialog = page.getByTestId('presenter-exit-dialog');
+    await expect(dialog).toBeVisible();
+    const d = (await dialog.boundingBox())!;
+    expect(d.y).toBeGreaterThanOrEqual(0);
+    expect(d.y + d.height).toBeLessThanOrEqual(390);
+    await page.getByTestId('presenter-keep-going').tap();
+    await expect(dialog).toHaveCount(0);
   });
 });
 

@@ -41,11 +41,12 @@ const TABLE: Record<string, { read: (p: Presenter) => string; en: string; es: st
   },
   'bar.more.cta': { read: (p) => p.bar.more.cta, en: 'More', es: 'Más', ko: '더 보기' },
   'bar.prev.cta': { read: (p) => p.bar.prev.cta, en: 'Previous', es: 'Anterior', ko: '이전' },
+  // Reworded by AMENDMENTS-PRESENTER-NAV section 13 (row PN-2): the strip is gone; swipe moves and a tap on the slide shows the bar.
   'help.phoneBar': {
     read: (p) => p.help.phoneBar,
-    en: 'On a phone, tap the bottom of the slide to show the controls.',
-    es: 'En un teléfono, toca la parte de abajo de la diapositiva para ver los controles.',
-    ko: '휴대폰에서는 슬라이드 아래쪽을 누르면 조작 버튼이 보여요.',
+    en: 'On this phone, swipe to move. Tap the slide to show the controls.',
+    es: 'En este teléfono, desliza para avanzar o volver. Toca la diapositiva para ver los controles.',
+    ko: '이 휴대폰에서는 화면을 밀어서 넘겨요. 슬라이드를 누르면 조작 버튼이 보여요.',
   },
   'help.row.back': { read: (p) => p.help.row.back, en: 'Previous', es: 'Anterior', ko: '이전' },
 };
