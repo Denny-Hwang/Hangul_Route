@@ -52,7 +52,7 @@ import {
   type NotePart,
   type TileView,
 } from '../../logic/sentence-builder/view';
-import { hasClip, playPrompt, stop, warmClips } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop, warmClips, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import type { MinigameHost } from './host';
@@ -97,6 +97,11 @@ const EASE = STANDARD ? Easing.bezier(...STANDARD) : Easing.ease;
 /** A pressed tile grows as the design system's `Tile` does (Tile.tsx); none under reduced motion. */
 const PRESS_SCALE = 1.04;
 
+/** What a round's sentence plays: its spoken Korean and its own recording, if any (AMENDMENTS-AUDIO-CLIPS AC-B7). */
+function sentenceSpeech(sentence: SbRound['sentence']): PlaySpec {
+  return { text: sentence.spokenKo ?? sentence.ko, audioRef: sentence.audioRef, kind: 'sentence', source: 'sentence-builder' };
+}
+
 const koreanSpeech = { accessibilityLanguage: 'ko', lang: 'ko' };
 /** One tile is one word: on the web its Korean never breaks inside the word (§3.14, word-break keep-all); native Text keeps a spaceless word whole. */
 const wholeWord = (Platform.OS === 'web' ? { whiteSpace: 'nowrap' } : {}) as unknown as TextStyle;
@@ -131,13 +136,14 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   const dispatchRef = useRef<(event: SbEvent) => void>(() => undefined);
 
   // The current round's sentence may have a bundled recording: then a missing Korean voice is not a missing sound (as Match Sound).
-  const slot = usePromptSlot({ source: 'sentence-builder', hasClip: hasClip(rounds[state.roundIdx]?.sentence.audioRef), textOnScreen: true });
+  const slotRound = rounds[state.roundIdx];
+  const slot = usePromptSlot({ source: 'sentence-builder', hasClip: slotRound !== undefined && hasClipFor(sentenceSpeech(slotRound.sentence)), textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
 
   // Bundled sentence recordings start without a fetch (as Match Sound and Discover warm theirs).
   useEffect(() => {
-    void warmClips(clipRefsOf(rounds.map((r) => r.sentence)));
+    void warmClips(clipRefsOf(rounds.map((r) => sentenceSpeech(r.sentence))));
   }, [rounds]);
 
   const later = (ms: number, run: () => void): void => {
@@ -148,7 +154,7 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
     const round = roundsRef.current[stateRef.current.roundIdx];
     if (!round) return Promise.resolve();
     const { sentence } = round;
-    return play(() => playPrompt({ text: sentence.spokenKo ?? sentence.ko, audioRef: sentence.audioRef, kind: 'sentence', source: 'sentence-builder' }));
+    return play(() => playPrompt(sentenceSpeech(sentence)));
   }, [play]);
 
   const runEffect = useCallback(

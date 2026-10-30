@@ -7,15 +7,14 @@ import type { SpokenJamo } from '../spoken';
 
 /**
  * AMENDMENTS-AUDIO-CLIPS section 5, row by row, for all 55 jamo records (`jamoAll` 30 +
- * `jamoWordBuilder` 25), and the JV-A2 rules. Clips are the refs the records carry today:
- * the Stage 1 30 have `audio/jamo/<id>.mp3`; the name clips (`nameAudioRef`) and the Word
- * Builder refs arrive with AC-1, so they are absent here and the voice falls to the device.
+ * `jamoWordBuilder` 25), and the JV-A2 rules, with the clips of the section 5 table (row AC-1):
+ * a letter question plays the name clip `<id>-name` (ㅇ and every vowel: the sound clip), a
+ * sound question the sound clip `<id>`, and the Word Builder finals the clip they share.
  */
 
 const LONE_JAMO = /[\u3131-\u318E\u1100-\u11FF]/u;
 
-const stage1Ref = (id: string): string | undefined =>
-  jamoAll.some((j) => j.id === `jamo:${id}`) ? `audio/jamo/${id}.mp3` : undefined;
+const clip = (fileId: string): string => `audio/jamo/${fileId}.mp3`;
 
 function voice(text: string, romanization: string, audioRef: string | undefined, kind: JamoVoice['kind'], shown = text): JamoVoice {
   return audioRef === undefined ? { text, shown, romanization, kind } : { text, shown, romanization, audioRef, kind };
@@ -75,23 +74,23 @@ const VOWELS: readonly (readonly [string, string])[] = [
   ['ui', '의'],
 ];
 
-/** Finals (15; sound question only): id, shown (spelled), text (pronounced, M12), RR. */
-const FINALS: readonly (readonly [string, string, string, string])[] = [
-  ['giyeok-batchim', '악', '악', 'ak'],
-  ['nieun-batchim', '안', '안', 'an'],
-  ['rieul-batchim', '알', '알', 'al'],
-  ['mieum-batchim', '암', '암', 'am'],
-  ['bieup-batchim', '압', '압', 'ap'],
-  ['ieung-batchim', '앙', '앙', 'ang'],
-  ['siot-batchim', '앗', '앋', 'at'],
-  ['jieut-batchim', '앚', '앋', 'at'],
-  ['chieut-batchim', '앛', '앋', 'at'],
-  ['tieut-batchim', '앝', '앋', 'at'],
-  ['digeut-batchim', '앋', '앋', 'at'],
-  ['ssangsiot-batchim', '았', '앋', 'at'],
-  ['kieuk-batchim', '앜', '악', 'ak'],
-  ['ssanggiyeok-batchim', '앆', '악', 'ak'],
-  ['pieup-batchim', '앞', '압', 'ap'],
+/** Finals (15; sound question only): id, shown (spelled), text (pronounced, M12), RR, clip (section 5; shared). */
+const FINALS: readonly (readonly [string, string, string, string, string])[] = [
+  ['giyeok-batchim', '악', '악', 'ak', 'giyeok-batchim'],
+  ['nieun-batchim', '안', '안', 'an', 'nieun-batchim'],
+  ['rieul-batchim', '알', '알', 'al', 'rieul-batchim'],
+  ['mieum-batchim', '암', '암', 'am', 'mieum-batchim'],
+  ['bieup-batchim', '압', '압', 'ap', 'bieup-batchim'],
+  ['ieung-batchim', '앙', '앙', 'ang', 'ieung-batchim'],
+  ['siot-batchim', '앗', '앋', 'at', 'digeut-batchim'],
+  ['jieut-batchim', '앚', '앋', 'at', 'digeut-batchim'],
+  ['chieut-batchim', '앛', '앋', 'at', 'digeut-batchim'],
+  ['tieut-batchim', '앝', '앋', 'at', 'digeut-batchim'],
+  ['digeut-batchim', '앋', '앋', 'at', 'digeut-batchim'],
+  ['ssangsiot-batchim', '았', '앋', 'at', 'digeut-batchim'],
+  ['kieuk-batchim', '앜', '악', 'ak', 'giyeok-batchim'],
+  ['ssanggiyeok-batchim', '앆', '악', 'ak', 'giyeok-batchim'],
+  ['pieup-batchim', '앞', '압', 'ap', 'bieup-batchim'],
 ];
 
 const giyeok: SpokenJamo = {
@@ -138,10 +137,20 @@ describe('jamoVoice: the section 5 table covers every jamo record', () => {
 describe('jamoVoice: consonants (19)', () => {
   it.each(CONSONANTS)('%s: letter says the name %s (%s), sound says %s (%s)', (id, name, nameRr, sound, soundRr) => {
     const j = record(id);
-    // The name clip is `nameAudioRef` (AC-1), or the sound clip when the name is the sound (ㅇ only).
-    const nameClip = name === sound ? stage1Ref(id) : undefined;
+    // The name clip is `nameAudioRef` (section 5, row AC-1), or the sound clip when the name is the sound (ㅇ only).
+    const nameClip = name === sound ? clip(id) : clip(`${id}-name`);
     expect(jamoVoice(j, 'letter')).toEqual(voice(name, nameRr, nameClip, 'name'));
-    expect(jamoVoice(j, 'sound')).toEqual(voice(sound, soundRr, stage1Ref(id), 'sound'));
+    expect(jamoVoice(j, 'sound')).toEqual(voice(sound, soundRr, clip(id), 'sound'));
+  });
+
+  it('returns the name clips of section 5: 18 consonants other than ㅇ, each <id>-name, never the sound clip', () => {
+    const named = CONSONANTS.filter(([id]) => id !== 'ieung');
+    expect(named).toHaveLength(18);
+    for (const [id] of named) {
+      const letter = jamoVoice(record(id), 'letter');
+      expect(letter.audioRef).toBe(clip(`${id}-name`));
+      expect(letter.audioRef).not.toBe(jamoVoice(record(id), 'sound').audioRef);
+    }
   });
 
   it('ㅇ: the letter and the sound are both 이응, one clip audio/jamo/ieung.mp3', () => {
@@ -165,15 +174,26 @@ describe('jamoVoice: consonants (19)', () => {
 describe('jamoVoice: vowels (21)', () => {
   it.each(VOWELS)('%s: both question types say %s; the name clip is the sound clip', (id, text) => {
     const j = record(id);
-    expect(jamoVoice(j, 'letter')).toEqual(voice(text, id, stage1Ref(id), 'name'));
-    expect(jamoVoice(j, 'sound')).toEqual(voice(text, id, stage1Ref(id), 'sound'));
+    expect(jamoVoice(j, 'letter')).toEqual(voice(text, id, clip(id), 'name'));
+    expect(jamoVoice(j, 'sound')).toEqual(voice(text, id, clip(id), 'sound'));
     expect(jamoVoice(j, 'letter').audioRef).toBe(jamoVoice(j, 'sound').audioRef);
   });
 });
 
 describe('jamoVoice: finals (15; sound question only)', () => {
-  it.each(FINALS)('%s: shown %s, spoken %s (%s)', (id, shown, text, rr) => {
-    expect(jamoVoice(record(id), 'sound')).toEqual(voice(text, rr, stage1Ref(id), 'sound', shown));
+  it.each(FINALS)('%s: shown %s, spoken %s (%s), clip %s', (id, shown, text, rr, fileId) => {
+    expect(jamoVoice(record(id), 'sound')).toEqual(voice(text, rr, clip(fileId), 'sound', shown));
+  });
+
+  it('the clip a final plays says its spoken text: every final with one clip says one text', () => {
+    const textByClip = new Map<string, Set<string>>();
+    for (const [id] of FINALS) {
+      const v = jamoVoice(record(id), 'sound');
+      const texts = textByClip.get(v.audioRef as string) ?? new Set<string>();
+      texts.add(v.text);
+      textByClip.set(v.audioRef as string, texts);
+    }
+    for (const [ref, texts] of textByClip) expect([...texts], ref).toHaveLength(1);
   });
 
   it.each(FINALS)('%s: a letter question throws (a final is asked only by its sound)', (id) => {
@@ -212,7 +232,7 @@ describe('jamoVoice: finals (15; sound question only)', () => {
   it('the pronounced form applies by record id only: a Stage 1 final is unchanged', () => {
     expect(jamoVoice(record('giyeok-batchim'), 'sound').shown).toBe('악');
     const { id: _id, ...noId } = record('jieut-batchim');
-    expect(jamoVoice(noId, 'sound')).toEqual(voice('앚', 'at', undefined, 'sound'));
+    expect(jamoVoice(noId, 'sound')).toEqual(voice('앚', 'at', clip('digeut-batchim'), 'sound'));
   });
 });
 

@@ -5,13 +5,18 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseJamoSource } from './lib.mjs';
+import { jamoClipRefs, parseJamoSource } from './lib.mjs';
 
 export const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const repoRoot = join(appRoot, '..', '..');
 
 export function readJamo() {
   return parseJamoSource(readFileSync(join(appRoot, 'src/content/jamo.ts'), 'utf8'));
+}
+
+/** Every jamo clip ref jamo.ts declares, with its pack (AMENDMENTS-AUDIO-CLIPS section 5). */
+export function readJamoClipRefs() {
+  return jamoClipRefs(readFileSync(join(appRoot, 'src/content/jamo.ts'), 'utf8'));
 }
 
 /** Topic files only: `_senses.json` and other `_`-prefixed files are not topics. */

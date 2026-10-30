@@ -49,7 +49,7 @@ import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../log
 import { roundItemId, shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { GameColumns } from './GameColumns';
@@ -178,7 +178,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const spellingNow = !textMode && spelling !== null && current !== undefined && isSpellingRound(current);
   const slot = usePromptSlot({
     source: spellingNow ? spelling.SPELLING_AUDIO_SOURCE : LISTEN_PICK_AUDIO_SOURCE,
-    hasClip: hasClip(current?.prompt.audioRef),
+    // The slot asks with the round's own spec, so a say clip of its text counts (AMENDMENTS-AUDIO-CLIPS AC-B7).
+    hasClip: current !== undefined && hasClipFor(listenPickSpeech(current)),
     textOnScreen: spellingNow || textMode,
   });
   const { play: slotPlay, reset: slotReset } = slot;

@@ -6,13 +6,14 @@ import {
   ASSET_MAP_FILE,
   AUDIO_DIR,
   buildAssetMap,
+  jamoClipRefs,
   refsInRenderedMap,
   renderAssetMap,
 } from '../../../scripts/audio/lib.mjs';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../__generated__/vocab';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
-import { jamoAll } from '../jamo';
+import { jamoAll, jamoWordBuilder } from '../jamo';
 import { questsAll } from '../quests';
 import { storiesAll } from '../stories';
 
@@ -51,17 +52,19 @@ function contentAudioRefs(): Set<string> {
       else visit(v);
     }
   };
-  visit([jamoAll, heritageCardsAll, episodesAll, questsAll, storiesAll, VOCAB_TOPICS, VOCAB_ITEMS]);
+  visit([jamoAll, jamoWordBuilder, heritageCardsAll, episodesAll, questsAll, storiesAll, VOCAB_TOPICS, VOCAB_ITEMS]);
   return refs;
 }
 
 const committed = readFileSync(join(APP_ROOT, ASSET_MAP_FILE), 'utf8');
 const files = listFiles(join(APP_ROOT, AUDIO_DIR));
 const mapRefs = refsInRenderedMap(committed);
+/** The pack of each jamo ref (AMENDMENTS-AUDIO-CLIPS AC-B6), as gen-audio-map.mjs reads it from jamo.ts. */
+const jamoPacks = new Map(jamoClipRefs(readFileSync(join(APP_ROOT, 'src/content/jamo.ts'), 'utf8')).map((r) => [r.ref, r.pack]));
 
 describe('__generated__/audio-assets.ts', () => {
   it('is exactly what the generator writes for assets/audio (run `audio:map` after adding a clip)', () => {
-    expect(committed).toBe(renderAssetMap(buildAssetMap(files)));
+    expect(committed).toBe(renderAssetMap(buildAssetMap(files, undefined, (ref) => jamoPacks.get(ref))));
   });
 
   it('holds no test fixture clips', () => {
@@ -72,7 +75,22 @@ describe('__generated__/audio-assets.ts', () => {
     const refs = contentAudioRefs();
     for (const ref of mapRefs) {
       expect(ref).toMatch(AUDIO_REF_PATTERN);
+      // A text-keyed clip (AMENDMENTS-AUDIO-CLIPS AC-B4) is named by its text, not by a record; AC-2's manifest lists them.
+      if (ref.startsWith('audio/say/')) continue;
       expect(refs.has(ref), `${ref} has a file but no content audioRef`).toBe(true);
+    }
+  });
+
+  it('every jamo ref carries its pack: jamoAll refs jamo-s1, the Word Builder ones jamo-wb (AC-B6)', () => {
+    for (const j of jamoAll) {
+      for (const ref of [j.audioRef, j.nameAudioRef]) if (ref !== undefined) expect(jamoPacks.get(ref), ref).toBe('jamo-s1');
+    }
+    for (const j of jamoWordBuilder) {
+      for (const ref of [j.audioRef, j.nameAudioRef]) {
+        if (ref === undefined) continue;
+        const sharedWithStage1 = jamoAll.some((s1) => s1.audioRef === ref);
+        expect(jamoPacks.get(ref), ref).toBe(sharedWithStage1 ? 'jamo-s1' : 'jamo-wb');
+      }
     }
   });
 
@@ -89,8 +107,8 @@ describe('__generated__/audio-assets.ts', () => {
       const head = missing.slice(0, 10).join(', ');
       console.info(`audio: ${missing.length} content audioRefs have no clip yet (voice plays them): ${head}${missing.length > 10 ? ', ...' : ''}`);
     }
-    // The 30 jamo sound refs are content refs whether or not their clip has arrived.
-    for (const j of jamoAll) if (j.audioRef) expect(refs).toContain(j.audioRef);
+    // The 65 jamo refs (sounds and names, Stage 1 and Word Builder) are content refs whether or not their clip has arrived.
+    for (const { ref } of jamoClipRefs(readFileSync(join(APP_ROOT, 'src/content/jamo.ts'), 'utf8'))) expect(refs).toContain(ref);
   });
 });
 

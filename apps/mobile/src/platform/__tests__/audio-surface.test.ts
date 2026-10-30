@@ -27,6 +27,8 @@ describe('audio.ts and audio.web.ts are one surface (Metro picks one per platfor
       [
         'getCapability',
         'hasClip',
+        'hasClipFor',
+        'hasPackClips',
         'hasVoiceFor',
         'installGestureUnlock',
         'isMuted',

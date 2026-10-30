@@ -6,7 +6,18 @@ vi.mock('expo-speech', () => ({
   stop: vi.fn(),
   getAvailableVoicesAsync: vi.fn(async () => []),
 }));
-vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
+// `AppState`: the module-level instance sends `audio.source_summary` when the app leaves the foreground (AC-B9).
+const appState = vi.hoisted(() => ({ listeners: [] as Array<(state: string) => void> }));
+vi.mock('react-native', () => ({
+  Platform: { OS: 'ios' },
+  AppState: {
+    currentState: 'active',
+    addEventListener: (_type: string, fn: (state: string) => void) => {
+      appState.listeners.push(fn);
+      return { remove: () => appState.listeners.splice(appState.listeners.indexOf(fn), 1) };
+    },
+  },
+}));
 // The clip player (A-7) loads expo-av and expo-asset: native module trees vitest cannot load.
 const av = vi.hoisted(() => ({
   modes: [] as unknown[],
@@ -665,7 +676,9 @@ describe('platform/audio (native): the module-level clip path', RELOAD_SUITE, ()
     vi.resetModules();
     av.modes.length = 0;
     av.loaded.length = 0;
-    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { [GIYEOK_CLIP]: 7 } }));
+    // Instances of earlier module loads stay subscribed: only this load's instance may answer the background below.
+    appState.listeners.length = 0;
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { [GIYEOK_CLIP]: 7 }, AUDIO_ASSET_PACKS: { [GIYEOK_CLIP]: 'jamo-s1' } }));
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([YUNA] as never);
     vi.mocked(Speech.speak).mockReset();
     const store = await import('../../store/audio-store');
@@ -688,7 +701,91 @@ describe('platform/audio (native): the module-level clip path', RELOAD_SUITE, ()
     ]);
     expect(av.loaded).toEqual([{ uri: 'file:///bundle/clip-7.mp3' }]);
     expect(vi.mocked(Speech.speak)).not.toHaveBeenCalled();
+    // The app going to the background ends the session: one summary of what played (AC-B9).
+    tracked.length = 0;
+    for (const fn of [...appState.listeners]) fn('background');
+    expect(tracked.filter((e) => e.name === 'audio.source_summary')).toEqual([
+      { name: 'audio.source_summary', payload: { clip: 1, say: 0, tts: 0, text: 0, appVersion: '1.0.0' } },
+    ]);
     vi.doUnmock('../../content/__generated__/audio-assets');
+  });
+});
+
+describe('platform/audio (native): pack switches and the source summary (AMENDMENTS-AUDIO-CLIPS AC-1)', () => {
+  it('a pack switched off plays the voice on the next prompt', async () => {
+    const player = new FakeClipPlayer();
+    const packsOff = new Set<string>();
+    const speech = new FakeSpeech();
+    speech.voices = [YUNA];
+    const audio = createNativeAudio({
+      speech,
+      platform: 'ios',
+      clips: {
+        player,
+        assets: { has: (ref) => ref === GIYEOK_CLIP, size: 1, packOf: (ref) => (ref === GIYEOK_CLIP ? 'jamo-s1' : undefined) },
+        enabled: () => true,
+        packEnabled: (pack) => !packsOff.has(pack),
+      },
+    });
+    await flush();
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    packsOff.add('jamo-s1');
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(false);
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    expect(speech.calls.map((c) => c.text)).toEqual(['가']);
+    audio.dispose();
+  });
+
+  it('hasClipFor and hasPackClips count the say clip of the text and its pack, as the controller plays it', async () => {
+    const said = contentSchema.sayRef('나무');
+    const packsOff = new Set<string>();
+    const speech = new FakeSpeech();
+    const audio = createNativeAudio({
+      speech,
+      platform: 'ios',
+      clips: {
+        player: new FakeClipPlayer(),
+        assets: { has: (ref) => ref === said, size: 1, packOf: (ref) => (ref === said ? 'stage1' : undefined), packHas: (pack) => pack === 'stage1' },
+        enabled: () => true,
+        packEnabled: (pack) => !packsOff.has(pack),
+      },
+    });
+    await flush();
+    expect(audio.hasClipFor({ text: '나무' })).toBe(true);
+    expect(audio.hasClipFor({ text: '나무', audioRef: GIYEOK_CLIP })).toBe(true);
+    expect(audio.hasClipFor({ text: '나비' })).toBe(false);
+    expect(audio.hasPackClips('stage1')).toBe(true);
+    expect(audio.hasPackClips('placement')).toBe(false);
+    packsOff.add('stage1');
+    expect(audio.hasClipFor({ text: '나무' })).toBe(false);
+    expect(audio.hasPackClips('stage1')).toBe(false);
+    audio.dispose();
+  });
+
+  it('the app leaving the foreground sends one audio.source_summary', async () => {
+    const player = new FakeClipPlayer();
+    const hidden: Array<() => void> = [];
+    const speech = new FakeSpeech();
+    speech.voices = [YUNA];
+    const audio = createNativeAudio({
+      speech,
+      platform: 'android',
+      clips: clipSetup({ player }),
+      onHidden: (fn) => {
+        hidden.push(fn);
+        return () => hidden.splice(hidden.indexOf(fn), 1);
+      },
+    });
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    for (const fn of [...hidden]) fn();
+    for (const fn of [...hidden]) fn();
+    expect(tracked.filter((e) => e.name === 'audio.source_summary')).toEqual([
+      { name: 'audio.source_summary', payload: { clip: 1, say: 0, tts: 0, text: 0, appVersion: '1.0.0' } },
+    ]);
+    audio.dispose();
+    expect(hidden).toEqual([]);
   });
 });
 

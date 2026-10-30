@@ -1,3 +1,4 @@
+import { AudioSourceSummaryPayloadSchema, sayRef, type AudioPack } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeSpeechSynthesis, FakeUtterance, type FakeVoice } from '../../../test-support/fake-speech-synthesis';
 import {
@@ -185,7 +186,16 @@ interface Rig {
   tracker: CapabilityTracker;
   events: AudioTelemetryEvent[];
   failures: FallbackReason[];
-  state: { muted: boolean; level: 0 | 1 | 2 | null; clipsEnabled: boolean; assets: Set<string> };
+  state: {
+    muted: boolean;
+    level: 0 | 1 | 2 | null;
+    clipsEnabled: boolean;
+    assets: Set<string>;
+    /** The pack of a bundled ref (the generated `AUDIO_ASSET_PACKS`). */
+    packs: Map<string, AudioPack>;
+    /** Packs switched off (the build ceiling or the remote `audioPack.<pack>`, read at prompt time). */
+    packsOff: Set<AudioPack>;
+  };
 }
 
 function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; clips?: boolean; keepInitial?: boolean } = {}): Rig {
@@ -196,12 +206,21 @@ function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; cl
   if (v !== 'unknown') tracker.setVoices(v);
   const events: AudioTelemetryEvent[] = [];
   const failures: FallbackReason[] = [];
-  const state: Rig['state'] = { muted: false, level: 1, clipsEnabled: true, assets: new Set(['audio/jamo/giyeok.mp3']) };
+  const state: Rig['state'] = {
+    muted: false,
+    level: 1,
+    clipsEnabled: true,
+    assets: new Set(['audio/jamo/giyeok.mp3']),
+    packs: new Map(),
+    packsOff: new Set(),
+  };
   const ctl = createAudioController({
     engine: opts.engine === false ? null : engine,
     clips: opts.clips === false ? null : clips,
-    assets: { has: (ref) => state.assets.has(ref) },
+    assets: { has: (ref) => state.assets.has(ref), packOf: (ref) => state.packs.get(ref) },
     clipsEnabled: () => state.clipsEnabled,
+    packEnabled: (pack) => !state.packsOff.has(pack),
+    appVersion: '1.0.0',
     voices: tracker,
     isMuted: () => state.muted,
     levelOrder: () => state.level,
@@ -280,6 +299,233 @@ describe('controller: clip first (AD4)', () => {
     const r = rig({ voices: [] });
     await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' })).resolves.toBe('played');
     expect(r.engine.requests).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-AUDIO-CLIPS AC-B7: record clip > text-keyed say clip > voice > text
+// ---------------------------------------------------------------------------
+
+describe('controller: the text-keyed say clip (AC-B4, AC-B7)', () => {
+  it('a prompt with no audioRef plays the say clip of its text', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    await expect(r.ctl.playPrompt({ text: '사과' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual([sayRef('사과')]);
+    expect(r.engine.requests).toEqual([]);
+  });
+
+  it('the say key is the trimmed NFC text, so surrounding spaces still find the clip', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    await r.ctl.playPrompt({ text: ' 사과 ' });
+    expect(r.clips.played).toEqual([sayRef('사과')]);
+  });
+
+  it('the record clip wins over the say clip when both are bundled', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('가'));
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+  });
+
+  it('a record ref with no file falls to the say clip of the same text', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('나'));
+    await r.ctl.playPrompt({ text: '나', audioRef: 'audio/jamo/nieun.mp3' });
+    expect(r.clips.played).toEqual([sayRef('나')]);
+    expect(r.engine.requests).toEqual([]);
+  });
+
+  it('stale text never plays a say clip: a changed text has a new key and the voice speaks it', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    await r.ctl.playPrompt({ text: '사과요' });
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['사과요']);
+  });
+
+  it('a record clip that fails falls through to the say clip and reports kind clip', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('가'));
+    r.clips.script = ['decode'];
+    await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', source: 'discover' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3', sayRef('가')]);
+    expect(r.engine.requests).toEqual([]);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode', code: 'none', source: 'discover' } }]);
+  });
+
+  it('a say clip that fails falls through to the voice and reports kind clip', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    r.clips.script = ['fetch'];
+    await expect(r.ctl.playPrompt({ text: '사과', source: 'vocab-card' })).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['사과']);
+    expect(r.events).toEqual([{ name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'fetch', code: 'none', source: 'vocab-card' } }]);
+  });
+
+  it('both clips failing reach the voice, each failure reported once', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('가'));
+    r.clips.script = ['decode', 'missing'];
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+    expect(r.events.map((e) => (e.name === 'audio.playback_failed' ? e.payload.reason : e.name))).toEqual(['decode', 'missing']);
+  });
+
+  it('only Korean is looked up: narration in the UI language never plays a say clip', async () => {
+    const r = rig({ voices: [YUNA, SAMANTHA] });
+    r.state.assets.add(sayRef('Tap the letter'));
+    await r.ctl.playPrompt({ text: 'Tap the letter', language: 'en-US', kind: 'narration' });
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests).toHaveLength(1);
+  });
+
+  it('flags.audioClips off skips the say clip too', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    r.state.clipsEnabled = false;
+    await r.ctl.playPrompt({ text: '사과' });
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests).toHaveLength(1);
+  });
+
+  it('an empty asset map: every prompt uses the voice, with no failure reported', async () => {
+    const r = rig();
+    r.state.assets.clear();
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    await r.ctl.playPrompt({ text: '사과' });
+    expect(r.clips.played).toEqual([]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '사과']);
+    expect(r.events).toEqual([]);
+  });
+});
+
+describe('controller: pack switches (AC-B8, reduce-only)', () => {
+  it('a pack switched off remotely plays the device voice on the next prompt, and its clip again once back on', async () => {
+    const r = rig();
+    r.state.packs.set('audio/jamo/giyeok.mp3', 'jamo-s1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+    // The remote copy arrives with `audioPack.jamo-s1` off: read at the next prompt, no reload.
+    r.state.packsOff.add('jamo-s1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+    r.state.packsOff.delete('jamo-s1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3', 'audio/jamo/giyeok.mp3']);
+    expect(r.events).toEqual([]);
+  });
+
+  it('a switched-off pack sends its say clips back to the voice; another pack keeps playing', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    r.state.assets.add(sayRef('물'));
+    r.state.packs.set(sayRef('사과'), 'vocab');
+    r.state.packs.set(sayRef('물'), 'stage2');
+    r.state.packsOff.add('vocab');
+    await r.ctl.playPrompt({ text: '사과' });
+    await r.ctl.playPrompt({ text: '물' });
+    expect(r.clips.played).toEqual([sayRef('물')]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['사과']);
+  });
+
+  it('a record clip in a switched-off pack falls to a say clip only if that clip\'s own pack is on', async () => {
+    const r = rig();
+    r.state.packs.set('audio/jamo/giyeok.mp3', 'jamo-s1');
+    r.state.assets.add(sayRef('가'));
+    r.state.packs.set(sayRef('가'), 'stage1');
+    r.state.packsOff.add('jamo-s1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual([sayRef('가')]);
+    r.state.packsOff.add('stage1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual([sayRef('가')]);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+  });
+
+  it('a clip with no pack is governed by audioClips alone', async () => {
+    const r = rig();
+    r.state.packsOff.add('jamo-s1');
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+  });
+
+  it('playJamo goes through the same switches: a letter question plays the name clip until jamo-s1 is off', async () => {
+    const r = rig();
+    const nieun = findJamo('jamo:nieun') as SpokenJamo;
+    r.state.assets.add('audio/jamo/nieun-name.mp3');
+    r.state.packs.set('audio/jamo/nieun-name.mp3', 'jamo-s1');
+    await r.ctl.playJamo(nieun, 'letter');
+    expect(r.clips.played).toEqual(['audio/jamo/nieun-name.mp3']);
+    r.state.packsOff.add('jamo-s1');
+    await r.ctl.playJamo(nieun, 'letter');
+    expect(r.clips.played).toEqual(['audio/jamo/nieun-name.mp3']);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['니은']);
+  });
+});
+
+describe('controller: audio.source_summary (AC-B9, counts only)', () => {
+  const summaries = (events: AudioTelemetryEvent[]) => events.filter((e) => e.name === 'audio.source_summary');
+
+  it('counts each prompt by the source that played it and sends one summary with the app version', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    await r.ctl.playPrompt({ text: '사과' });
+    await r.ctl.playPrompt({ text: '사과' });
+    await r.ctl.playPrompt({ text: '나무' });
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 1, say: 2, tts: 1, text: 0 });
+    r.ctl.flushSourceSummary();
+    expect(summaries(r.events)).toEqual([{ name: 'audio.source_summary', payload: { clip: 1, say: 2, tts: 1, text: 0, appVersion: '1.0.0' } }]);
+    expect(AudioSourceSummaryPayloadSchema.safeParse(summaries(r.events)[0]?.payload).success).toBe(true);
+  });
+
+  it('a prompt that ends on the visible text counts as text; muted and superseded prompts are not counted', async () => {
+    const r = rig({ voices: [] });
+    await expect(r.ctl.playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    r.state.muted = true;
+    await r.ctl.playPrompt({ text: '가' });
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 0, say: 0, tts: 0, text: 1 });
+    r.state.muted = false;
+    r.tracker.setVoices([YUNA]);
+    r.engine.script = ['never'];
+    let firstResult: string | null = null;
+    void r.ctl.playPrompt({ text: '가' }).then((v) => (firstResult = v));
+    await vi.advanceTimersByTimeAsync(0);
+    const second = r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(400);
+    expect(firstResult).toBe('played');
+    await expect(second).resolves.toBe('played');
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 0, say: 0, tts: 1, text: 1 });
+  });
+
+  it('sends at most once per session: a flush resets the counts, and a flush with nothing counted sends nothing', async () => {
+    const r = rig();
+    r.ctl.flushSourceSummary();
+    expect(summaries(r.events)).toEqual([]);
+    await r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    r.ctl.flushSourceSummary();
+    r.ctl.flushSourceSummary();
+    expect(summaries(r.events)).toHaveLength(1);
+    expect(r.ctl.sourceCounts()).toEqual({ clip: 0, say: 0, tts: 0, text: 0 });
+    await r.ctl.playPrompt({ text: '나' });
+    r.ctl.flushSourceSummary();
+    expect(summaries(r.events).map((e) => e.payload)).toEqual([
+      { clip: 1, say: 0, tts: 0, text: 0, appVersion: '1.0.0' },
+      { clip: 0, say: 0, tts: 1, text: 0, appVersion: '1.0.0' },
+    ]);
+  });
+
+  it('the payload carries no text, ref, voice or source', async () => {
+    const r = rig();
+    r.state.assets.add(sayRef('사과'));
+    await r.ctl.playPrompt({ text: '사과', source: 'vocab-card' });
+    r.ctl.flushSourceSummary();
+    const json = JSON.stringify(summaries(r.events));
+    for (const banned of ['사과', 'audio/', 'Yuna', 'vocab-card', 'say/']) expect(json).not.toContain(banned);
+    expect(Object.keys(summaries(r.events)[0]?.payload ?? {}).sort()).toEqual(['appVersion', 'clip', 'say', 'text', 'tts']);
   });
 });
 
@@ -1152,6 +1398,7 @@ describe('controller with FakeSpeechSynthesis', () => {
       clips: null,
       assets: { has: () => false },
       clipsEnabled: () => true,
+      appVersion: '1.0.0',
       voices: tracker,
       isMuted: () => false,
       levelOrder: () => 1,
@@ -1273,6 +1520,7 @@ describe('controller with FakeSpeechSynthesis', () => {
       clips: null,
       assets: { has: () => false },
       clipsEnabled: () => true,
+      appVersion: '1.0.0',
       voices: tracker,
       isMuted: () => false,
       levelOrder: () => 1,
