@@ -141,6 +141,55 @@ Reused, not new: `learner.minigame.backToQuest` (the empty state), `a11y.koreanI
 - **G-2 Playwright**: one spec at 320 and at 1024 x 768: the realia lines are buttons with the names above, a miss shows the amber card and "Look again", the second miss rings the answer line, a hit shows the found line with its gloss, and no telemetry payload contains realia text.
 - **S6 rows**: the mock words are fixtures (spec section 3.6). The menu title `메뉴`, the ticket stations `서울` / `대전` and the counter forms (`3개`, `1시간`) count against each cell's new-word budget (rule 4) unless taught earlier; the wireframe lists the open choice for the ticket.
 
+## Row CM-47: the eight added kinds (F-CURR-002, agent design pass)
+
+Spec: `docs/specs/F-CURR-002-category-expansion-and-mastery.md` row **CM-47** (sections 5.2-5.7, 6.6 and the CM-47 decision record in 7.1). Wireframe: "The eight kinds of row CM-47" in `design/wireframes/minigame/realia-read.md`. No HTML mock: the eight layouts are variations of the four shipped anatomies above on the same tokens, so this pass fixes them in words, the drawn parts table and the constants, and the as-built shots come from the Playwright smoke (`realia-read-<kind>-320.png` and `-1024x768.png`, `HR_SHOTS=1`, `e2e/web/realia-read.spec.ts`). Approved through the multi-agent review like the D-2 pass (owner decision 2026-10-12).
+
+**D9. One anatomy per kind, from four shared shapes.** `rows` (recipe card, receipt, food label, timetable): text at the start of a row, its value at the end; the kind's own mark sits between rows (a recipe's rule under each line with the menu's dotted leader to the amount, a receipt's dashed rule, a label's rules inside a thick frame with a thick rule under its title, a timetable's rule with the time in its own column and no leader). `tiles` (forecast, calendar): the price-card grid (cards that wrap onto more rows, then stack); a forecast's days on a sky board, a calendar's dates on the page, each day at least a hero target wide. `legend` (map): a drawn park above a list of places, each with a pin glyph (hidden; its name is the place). `poster`: every line centred, one under the other, in a thick frame. No kind needs a new token, a new glyph or a new component.
+
+**D10. The words say it, never a drawing or a colour.** A forecast tile says 맑음 or 비; it draws no weather glyph of its own (the sky band is decoration). A calendar day says its holiday in words. A map place with a direction says it in its name ("to the right"), as a trail board does; the map drawing is never the answer. Every dressing is hidden from assistive tech.
+
+**D11. The plain sheet until the layout is in.** The eight layouts and their dressings are a lazy chunk (`screen-chunk:realia-kinds`), so the start bundle does not grow by them. Until that chunk is in (or if it cannot load, or a build does not know the kind) the sheet is the plain sheet (S11): the same lines, the same buttons, the same names, the group's name keeping the kind's own name ("Timetable, 3 lines"). The round plays either way.
+
+**D12. Generic, drawn, small.** No brand, product, shop, company, station, line, train number, weather service, park or organiser; prices on a receipt are round practice amounts in won (OD-11). Each dressing has at most 8 shapes and 5 colour tokens (the art budget below), kept in a registry of its own (`REALIA_KIND_REGISTRY`) outside the start bundle.
+
+| Prop | Kind | Shapes | Colours (token paths) | Sizing |
+|---|---|---|---|---|
+| `prop:realia-recipe-bowl` | recipe | 6 | `theme.life`, `surface.paper`, `border.shape`, `text.secondary` | 136 x 40, kept, centred |
+| `prop:realia-receipt-edge` | receipt | 1 | `surface.paper`, `border.strong` | 400 x 16, stretched, under the strip |
+| `prop:realia-label-pack` | label | 5 | `theme.crafts`, `surface.paper`, `border.shape`, `theme.nature`, `theme.life` | 136 x 40, kept, centred |
+| `prop:realia-forecast-sky` | forecast | 4 | `theme.life`, `border.shape`, `surface.paper`, `brand.secondary` (band `brand.secondaryLight`) | 136 x 40, kept, at the start |
+| `prop:realia-calendar-rings` | calendar | 5 | `theme.rites`, `border.shape`, `surface.sunken`, `text.secondary` | 400 x 40, stretched |
+| `prop:realia-timetable-clock` | timetable | 4 | `surface.paper`, `text.secondary`, `text.primary` (band `brand.secondaryLight`) | 136 x 40, kept, at the start |
+| `prop:realia-map-park` | map | 8 | `theme.nature`, `brand.secondaryLight`, `border.shape`, `surface.paper` | 400 x 96, stretched |
+| `prop:realia-poster-bunting` | poster | 6 | `text.secondary`, `theme.rites`, `theme.life`, `theme.nature`, `border.shape` | 400 x 40, stretched |
+
+Art budget: 39 shapes in all, 6,873 B of registry JSON with the alt texts and accuracy notes (`REALIA_KIND_REGISTRY_RAW_MAX` 8 KB, `realia-kinds-registry.test.ts`), all of it in the lazy chunk. Every line sits on `surface.paper` (tiles too); a forecast's title sits on `brand.secondaryLight`, whose `text.primary` and `text.secondary` pairs are pinned in `contrast.test.ts`.
+
+| Constant (CM-47) | Value | Derived from |
+|---|---|---|
+| Receipt width | at most 384 | `touchTarget.hero` x 4: a narrow strip, centred; a narrower column wins |
+| Receipt torn edge | 12 | `spacing.md` |
+| Calendar day minimum width | 96 | `touchTarget.hero`: a two-digit date and a short word |
+| Forecast day minimum width | 8.5 rem | the price card's (`REALIA_CARD_MIN_WIDTH`) |
+| Map drawing height | 96 | `touchTarget.hero` |
+| Map pin | 24 | `spacing.xl`, the Icon row size |
+
+Accessibility tree: as the four kinds, `group "<kind>, n lines"` (names in `a11y.minigame.realia.kind.*`), the title, then a list of line buttons with the same names (`lineBaseLabel`). For example `group "Timetable, 3 lines"` > text "출발, chulbal" > list > button "대전, daejeon, 한 시, han si", and `group "Map, 3 lines"` > list > button "정상, jeongsang, to the right". Every line button is at least `touchTarget.min` tall.
+
+Strings (CM-47; en, es, ko in `packages/i18n`, MAR before the ledger is re-signed):
+
+| Key | en | es | ko |
+|---|---|---|---|
+| `a11y.minigame.realia.kind.recipe` | Recipe card | Receta | 요리법 카드 |
+| `a11y.minigame.realia.kind.receipt` | Receipt | Recibo | 영수증 |
+| `a11y.minigame.realia.kind.label` | Food label | Etiqueta de alimento | 식품 라벨 |
+| `a11y.minigame.realia.kind.forecast` | Weather forecast | Pronóstico del tiempo | 일기 예보 |
+| `a11y.minigame.realia.kind.calendar` | Calendar | Calendario | 달력 |
+| `a11y.minigame.realia.kind.timetable` | Timetable | Horario | 시간표 |
+| `a11y.minigame.realia.kind.map` | Map | Mapa | 지도 |
+| `a11y.minigame.realia.kind.poster` | Poster | Cartel | 포스터 |
+
 ## Shots
 
 Rendered in Chromium from `mock/` (pages at 2x for 320 and 375, 1x for tablet and boards; `-text200` is the browser text size at 200 %, which models the native text size: the text grows, the layout width stays). No page scrolls sideways at any of these sizes (checked in the render script).
