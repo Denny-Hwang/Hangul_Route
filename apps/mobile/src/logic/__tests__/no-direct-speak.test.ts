@@ -115,7 +115,8 @@ describe('no direct speak from screens', () => {
     expect(word.source).toMatch(/onPress=\{\(\) => say\(b\.syllable\)\}/);
     expect(word.source).toMatch(/void soundPlay\(\(\) => playPrompt\(blockSpeech\(syllable\)\)\)/);
     const stroke = files.find((f) => f.rel === 'minigames/TraceStrokeGame.tsx')!;
-    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,200}void soundPlay\(\(\) => playJamo\(round\.jamo, 'sound'\)\)/);
+    // A letter says its name and a final its closed syllable (AMENDMENTS-AUDIO-CLIPS M11).
+    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,300}void soundPlay\(\(\) => playJamo\(round\.jamo, loneLetterQuestion\(round\.jamo\)\)\)/);
   });
 
   it('the quest player stops the speech when its step changes, and Discover when it unmounts', () => {

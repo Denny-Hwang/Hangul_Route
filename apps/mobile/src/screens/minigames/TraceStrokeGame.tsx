@@ -24,6 +24,7 @@ import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
+import { finalLine, loneLetterQuestion } from '../../logic/audio/jamo-lines';
 import type { LayoutChangeEvent } from 'react-native';
 import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -153,7 +154,8 @@ export function TraceStrokeGame({
     // its result can come in mid-stroke, and a status row appearing then would move the canvas under the
     // finger. Show me plays through the slot and says why when it is silent.
     soundReset();
-    if (round) void playJamo(round.jamo, 'sound');
+    // An initial or a vowel says its name (ㅁ is mieum), a final its closed syllable (am): AMENDMENTS-AUDIO-CLIPS M11.
+    if (round) void playJamo(round.jamo, loneLetterQuestion(round.jamo));
   }, [roundIdx, round, soundReset]);
 
   if (!round) {
@@ -311,6 +313,12 @@ export function TraceStrokeGame({
         <View accessible accessibilityRole="header" accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}>
           <Heading level="prompt">{traceHeadingText(round.jamo, copy.trace)}</Heading>
         </View>
+        {/* A final is said as its closed syllable, so the syllable heard is the syllable shown (M11). */}
+        {round.jamo.kind === 'batchim' ? (
+          <Body tone="secondary" testID="trace-stroke-final-line">
+            {finalLine(round.jamo, m.learner.audio)}
+          </Body>
+        ) : null}
         {stacked ? <Caption tone="muted">{copy.trace.instruction}</Caption> : null}
       </View>
       {/* Why the letter did not sound, in one row (the canvas and Done / Skip keep their room). */}
@@ -318,7 +326,7 @@ export function TraceStrokeGame({
         variant="status"
         compact
         view={soundView}
-        onAction={(action) => sound.act(action, () => void soundPlay(() => playJamo(round.jamo, 'sound')))}
+        onAction={(action) => sound.act(action, () => void soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo))))}
         onHelp={() => setHelpOpen(true)}
         testID="trace-stroke-sound"
       />
@@ -402,8 +410,9 @@ export function TraceStrokeGame({
         onPress={() => {
           setHintToken((t) => t + 1);
           setHintPlaying(true);
-          // F-009 §3.1 (revised) — narrate the SOUND of the jamo at demo start; muting is enforced inside the audio controller.
-          void soundPlay(() => playJamo(round.jamo, 'sound'));
+          // F-009 §3.1 (revised by AMENDMENTS-AUDIO-CLIPS M11): say the letter at demo start (its name; a final its
+          // closed syllable); muting is enforced inside the audio controller.
+          void soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)));
         }}
       />
       <Button label={copy.trace.clear.cta} tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />

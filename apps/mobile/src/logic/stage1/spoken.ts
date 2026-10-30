@@ -23,8 +23,10 @@ export interface SpokenForm {
 }
 
 /**
- * What the voice says for a symbol, from the jamo data: `undefined` when the
- * record carries no spoken form (`spokenKo` with its `spokenRomanization`).
+ * A symbol's sound as the jamo data gives it: `undefined` when the record carries no spoken form
+ * (`spokenKo` with its `spokenRomanization`).
+ * @deprecated What a surface says for a symbol comes from `jamoVoice` with the question asked
+ * (AMENDMENTS-AUDIO-CLIPS JV-A2): a letter question says its name. No surface reads this since JV-2.
  */
 export function spokenFormFor(jamo: Jamo): SpokenForm | undefined {
   if (jamo.spokenKo === undefined || jamo.spokenRomanization === undefined) return undefined;

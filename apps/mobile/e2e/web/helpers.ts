@@ -365,9 +365,10 @@ const VOWELS = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ'
 const FINALS = ['', ...'ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'];
 
 /**
- * The letter a Match Sound prompt is the sound of. The app says the sound of a
- * letter as a syllable (F-AUDIO-004 AD2): 가 is ㄱ, 아 is ㅏ, 악 is the final ㄱ,
- * and the silent ㅇ is said by its name 이응.
+ * The letter a spoken prompt names. A letter question says the letter's name
+ * (AMENDMENTS-AUDIO-CLIPS JV-A1): 니은 is ㄴ (its first syllable starts with it),
+ * 아 is ㅏ, 이응 is ㅇ; a sound question says a syllable (F-AUDIO-004 AD2): 가 is
+ * ㄱ, and 악 is the final ㄱ.
  */
 export function jamoOfSpoken(spoken: string): string {
   if (spoken === '이응') return 'ㅇ';

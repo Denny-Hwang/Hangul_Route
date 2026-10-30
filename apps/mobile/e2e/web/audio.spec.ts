@@ -166,7 +166,7 @@ test('no Korean voice: the sound is shown as text, nothing is spoken, and the ro
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
 
-  // The text prompt: spoken syllable + romanization + the line, with the "this sound" heading.
+  // The text prompt: what the voice would say (the letter name) + romanization + the line, with the "this sound" heading.
   await expect(panelText(page)).toBeVisible();
   await expect(page.getByText('No sound? Read it here.')).toBeVisible();
   await expect(page.getByText('No Korean voice on this device.')).toBeVisible();
@@ -212,18 +212,18 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
 });
 
-test('a wrong tap says the sound, not the letter name', async ({ page }) => {
+test('a wrong tap names the letter: a letter question says the name, not a syllable (AMENDMENTS-AUDIO-CLIPS JV-A1)', async ({ page }) => {
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
   const [first] = await utterances(page);
-  // 가 not 기역: one syllable, spoken at the sound rate.
-  expect(first!.text).toMatch(/^[가-힣]$|^이응$/);
+  // Quest 1 asks among ㅏ ㅓ ㄱ ㄴ: 기역 or 니은 (never 가 or 나), or a vowel's name, its sound (아, 어).
+  expect(['아', '어', '기역', '니은']).toContain(first!.text);
   const answer = jamoOfSpoken(first!.text);
   const wrong = page.getByRole('button', { name: /^Korean letter / }).filter({ hasNotText: answer }).first();
   await wrong.click();
-  await expect(page.getByText('Listen again. This one says')).toBeVisible();
+  await expect(page.getByText('Listen again. This letter is')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Hear it' })).toBeVisible();
   const before = (await utterances(page)).length;
   await page.getByRole('button', { name: 'Hear it' }).click();
@@ -572,6 +572,45 @@ async function controlledBySw(page: Page): Promise<void> {
   });
 }
 
+/**
+ * Plays Match Sound until a round plays a clip, and returns what the rounds before it said. A letter
+ * question says the letter's name (AMENDMENTS-AUDIO-CLIPS JV-A1): a vowel's name is its sound, so its
+ * letter clip plays, while a consonant's name (giyeok, nieun) has no clip until AC-1 bundles name
+ * clips, so the device voice says it or, with no voice, the text prompt shows it. Those rounds are
+ * answered from what was said or shown. Quest 1 asks among two vowels and two consonants.
+ */
+async function playUntilClip(page: Page): Promise<string[]> {
+  const names: string[] = [];
+  let heard = 0;
+  for (let round = 1; round <= 6; round += 1) {
+    await expect(page.getByText(`${round} / 6`, { exact: true }).filter({ visible: true })).toBeVisible();
+    let said = '';
+    await expect
+      .poll(
+        async () => {
+          if ((await clipStarts(page)) > 0) return 'clip';
+          const ko = (await utterances(page)).filter((u) => u.lang === 'ko-KR');
+          if (ko.length > heard) {
+            heard = ko.length;
+            said = ko.at(-1)!.text;
+            return 'voice';
+          }
+          if (await panelText(page).isVisible()) {
+            said = ((await panelText(page).getAttribute('aria-label')) ?? '').split(',')[0]!.trim();
+            return 'text';
+          }
+          return 'waiting';
+        },
+        { message: `round ${round}: a clip, the voice or the text prompt` },
+      )
+      .not.toBe('waiting');
+    if ((await clipStarts(page)) > 0) return names;
+    names.push(said);
+    await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: jamoOfSpoken(said) }).click();
+  }
+  throw new Error(`no round played a clip; the rounds said ${names.join(', ')}`);
+}
+
 test.describe('bundled clips (A-6)', () => {
   test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
     if (FIXTURE_BUILD) {
@@ -629,8 +668,9 @@ test.describe('bundled clips (A-6)', () => {
     await page.getByTestId('home-next-lesson-start').click();
     await openMatchSound(page);
 
-    // A clip started, served by the service worker.
-    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // A vowel round's clip started, served by the service worker; a consonant's name has no clip yet, so it showed as text.
+    const names = await playUntilClip(page);
+    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
     // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
     await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
     await expect(page.getByText('Tap the letter you hear')).toBeVisible();
@@ -643,9 +683,11 @@ test.describe('bundled clips (A-6)', () => {
     await onboardChild(page, { name: 'Dami' });
     await openMatchSound(page);
 
-    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
-    // The clip played to its end: the Korean voice never spoke the letter.
+    const names = await playUntilClip(page);
+    // The clip played to its end: the Korean voice never spoke the letter. It said only the consonant
+    // names of the rounds before, which have no clip until AC-1.
     await page.waitForTimeout(1500);
-    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR')).toEqual([]);
+    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
+    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR' && !names.includes(u.text))).toEqual([]);
   });
 });

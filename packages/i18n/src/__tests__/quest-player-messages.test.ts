@@ -54,7 +54,8 @@ describe('learner.quest (English wording as shipped)', () => {
   it('keeps the Discover words', () => {
     const d = q.discover;
     expect(d.hearIt.cta).toBe('Hear it');
-    expect(d.letterName.cta).toBe('Letter name');
+    // AMENDMENTS-AUDIO-CLIPS JV-A4: a consonant page's second button plays the letter's sound on a vowel.
+    expect(d.soundWith.cta).toBe('Hear it with a vowel');
     expect(d.showHowToSay.cta).toBe('Show how to say it');
     expect(d.continue.cta).toBe('Continue');
     expect(d.heard.pill).toBe('Heard');

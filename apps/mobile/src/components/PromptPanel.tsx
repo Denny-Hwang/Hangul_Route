@@ -24,7 +24,7 @@ interface CommonProps {
 interface TextProps extends CommonProps {
   variant?: 'text';
   /**
-   * What the voice says for this prompt (`spokenFor(...)`), shown as taught content. Omit both when
+   * What the voice says for this prompt (a jamo's comes from `jamoVoice`), shown as taught content. Omit both when
    * the screen already shows that Korean right above the panel (the story reader's Korean block,
    * F-STORY-002): the panel then carries the read line, why and the action, so the Korean is not drawn
    * twice, and still shows as soon as the text does (unlike `status`, which waits for a play).
