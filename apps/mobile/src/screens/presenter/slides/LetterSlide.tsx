@@ -105,7 +105,7 @@ export function LetterSlide({
               </Text>
               {slide.sound !== undefined ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: units(unit, spacing.md), flexShrink: 1 }}>
-                  {sayIt || onPlayLetterSound === undefined ? null : <SpeakerButton testID="presenter-letter-sound" enabled={shown.has('name')} onPress={onPlayLetterSound} />}
+                  {sayIt || onPlayLetterSound === undefined ? null : <SpeakerButton testID="presenter-letter-sound" label={messages.learner.quest.discover.soundWith.cta} enabled={shown.has('name')} onPress={onPlayLetterSound} />}
                   <View accessibilityLabel={koreanTextLabel(slide.sound.line, slide.sound.romanization)} style={{ flexDirection: 'row', alignItems: 'baseline', gap: units(unit, spacing.md), flexShrink: 1, flexWrap: 'wrap' }}>
                     <TaughtKo size={bodySize}>{slide.sound.line}</TaughtKo>
                     <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: colors.text.secondary }}>{slide.sound.romanization}</Text>

@@ -1,5 +1,6 @@
 import type { Jamo, KoText, ListenPickRound, PictureRef, ThemeKey } from '@hangul-route/content-schema';
 import { jamoAll } from '../../content/jamo';
+import { jamoVoice } from '../audio/jamo-voice';
 import { seededRandom, shuffleOptions, type ItemRound } from '../listen-pick';
 import { lp } from '../scope-builders';
 
@@ -28,7 +29,6 @@ export interface HangulCheckItem {
   kind: HangulCheckItemKind;
   round: ItemRound;
 }
-
 
 export interface HangulCheck {
   items: HangulCheckItem[];
@@ -83,7 +83,8 @@ export function symbolRound(jamoId: string, records: readonly Jamo[] = jamoAll):
   if (jamo.kind !== 'batchim') return { ...lp.sym(jamoId, ALL_SYMBOL_IDS), itemId: jamoId };
   const distractors = FINAL_DISTRACTORS[jamoId];
   if (!distractors || jamo.spokenKo === undefined) throw new Error(`No final syllables for ${jamoId}`);
-  return { ...lp.syl(jamo.spokenKo, distractors), itemId: jamoId };
+  // The syllable heard is the final's sound voice (JV-A2): an for the final nieun.
+  return { ...lp.syl(jamoVoice(jamo, 'sound').text, distractors), itemId: jamoId };
 }
 
 function wordRound(word: HangulCheckWord, rnd: () => number): ListenPickRound {

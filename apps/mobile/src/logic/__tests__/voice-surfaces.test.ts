@@ -374,10 +374,45 @@ describe('the surface table is complete (section 6.2)', () => {
     const callers = files.filter((f) => !PLUMBING.has(f.rel) && SAYS_A_JAMO.test(f.source)).map((f) => f.rel);
     const listed = new Set(SURFACES.flatMap((s) => s.files));
     expect(callers.filter((f) => !listed.has(f)), 'a surface that says a jamo needs a row in SURFACES').toEqual([]);
-    // DiscoverStep and LetterSlide render what their builders said, and the Hangul Check builds its letter rounds
-    // with `lp.sym`; every other listed file calls the voice itself.
-    const throughAnother = new Set(['screens/quest/DiscoverStep.tsx', 'screens/presenter/slides/LetterSlide.tsx', 'logic/stage1/hangul-check.ts']);
+    // DiscoverStep and LetterSlide render what their builders said; every other listed file calls the voice itself.
+    const throughAnother = new Set(['screens/quest/DiscoverStep.tsx', 'screens/presenter/slides/LetterSlide.tsx']);
     expect([...listed].filter((f) => !throughAnother.has(f) && !callers.includes(f)).sort()).toEqual([]);
+  });
+
+  it('the lone-letter screens ask playJamo the question of the jamo they play, and no caller leaves the question out', () => {
+    // The Match Sound and Trace Stroke rows above read the round's jamo through `loneLetterVoice`; this pins the
+    // screens to the same call, so a screen that went back to `playJamo(j, 'sound')` (or to no question) fails.
+    const LONE_LETTER_SCREENS = ['screens/minigames/MatchSoundGame.tsx', 'screens/minigames/TraceStrokeGame.tsx'];
+    const calls = (source: string): string[] => {
+      const out: string[] = [];
+      for (const match of source.matchAll(/\bplayJamo\(/g)) {
+        // The balanced argument list after `playJamo(`.
+        let depth = 1;
+        let i = match.index + match[0].length;
+        const start = i;
+        for (; i < source.length && depth > 0; i++) {
+          if (source[i] === '(') depth++;
+          else if (source[i] === ')') depth--;
+        }
+        out.push(source.slice(start, i - 1).replace(/\s+/g, ' ').trim());
+      }
+      return out;
+    };
+    for (const rel of LONE_LETTER_SCREENS) {
+      const file = files.find((f) => f.rel === rel);
+      expect(file, rel).toBeDefined();
+      const args = calls(file!.source);
+      expect(args.length, rel).toBeGreaterThan(0);
+      const off = args.filter((a) => {
+        const m = /^([\w.]+), loneLetterQuestion\(([\w.]+)\)$/.exec(a);
+        return m === null || m[1] !== m[2];
+      });
+      expect(off, `${rel}: every playJamo(j, loneLetterQuestion(j))`).toEqual([]);
+    }
+    const unasked = files
+      .filter((f) => !PLUMBING.has(f.rel))
+      .flatMap((f) => calls(f.source).filter((a) => !/,/.test(a) || /,\s*['"]name['"]$/.test(a)).map((a) => `${f.rel}: playJamo(${a})`));
+    expect(unasked, 'a playJamo call names its question (letter or sound), never the legacy name mode').toEqual([]);
   });
 
   it('no screen or component imports spokenFor: they say a jamo through jamoVoice (JV-A1)', () => {
