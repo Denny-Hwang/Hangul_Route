@@ -196,6 +196,16 @@ export function useCurrFlag(flag: CurrFlagName): boolean {
   return ready ? currFlagOn(flag, guestRun ? null : activeId, cache) : false;
 }
 
+/**
+ * `useCurrFlag` that says when it cannot decide yet: null until the stored copy has been read (or a fetch kept one),
+ * then the flag. A surface that must not switch mid-way (a game round, row CM-30) waits for the first decision.
+ */
+export function useCurrFlagDecided(flag: CurrFlagName): boolean | null {
+  const on = useCurrFlag(flag);
+  const ready = useRemoteConfigStore(decidable);
+  return ready ? on : null;
+}
+
 /** Tests only. */
 export function resetRemoteConfigForTests(): void {
   inFlight = null;

@@ -85,6 +85,8 @@ export function shortenScope(scope: MinigameScope): MinigameScope | null {
       return drop(scope.typeHangul?.rounds, (rounds) => s({ typeHangul: { rounds } }));
     case 'write-frame':
       return drop(scope.writeFrame?.rounds, (rounds) => s({ writeFrame: { rounds } }));
+    case 'cloze-pick':
+      return drop(scope.clozePick?.rounds, (rounds) => s({ clozePick: { ...scope.clozePick, rounds } }));
     case 'card-match':
       return drop(scope.cardPairs, (cardPairs) => s({ cardPairs }));
     case 'tap-respond':

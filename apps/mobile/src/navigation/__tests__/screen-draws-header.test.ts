@@ -59,6 +59,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
   'screens/stage-check/stage-check-entry.tsx#StageCompleteScreen': 'screens/results/StageCompleteScreen.tsx#StageCompleteScreen',
+  // Row CM-30: the Cloze Pick game's chunk (its fallback, Listen & Pick, is imported as usual).
+  'screens/minigames/cloze-pick-entry.tsx#ClozePickGame': 'screens/minigames/ClozePickGame.tsx#ClozePickGame',
+  'screens/minigames/cloze-pick-entry.tsx#ClozePickE2eBody': 'navigation/cloze-pick-e2e.tsx#ClozePickE2eBody',
 };
 
 /**

@@ -1004,4 +1004,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.learnerGone': [['Mina']],
   'console.settings.unarchiveOverCap': [[1, 3], [2, 3], [null, 3]],
   'console.teacherMove.errors.alreadyMemberKeepOne': [['Mina', 'Saturday Class B']],
+  // F-CURR-002 row CM-30: Cloze Pick's prompt card, the romanization with its gap read as a word and the meaning.
+  'a11y.minigame.clozePick.sentence': [['chaegeul blank', 'I read a book.'], ['mulblank masyeoyo', 'I drink water.']],
+  'a11y.minigame.clozePick.sentenceDone': [['chaegeul ilgeoyo', 'I read a book.']],
 };

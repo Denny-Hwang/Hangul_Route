@@ -178,6 +178,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'cell-check-chunk', marker: 'screen-chunk:cell-check' },
       { name: 'stage-check-chunk', marker: 'screen-chunk:stage-check' },
       { name: 'upper-cards-chunk', marker: 'screen-chunk:upper-cards' },
+      { name: 'cloze-pick-chunk', marker: 'screen-chunk:cloze-pick' },
     ]);
   });
 
@@ -201,6 +202,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-23: the upper-cell cards' chunk, reached only through the entry's literal import().
     expect(read('src/screens/library/upper-cards-chunk.tsx')).toContain(`export const UPPER_CARDS_CHUNK = '${SCREEN_CHUNKS[4].marker}';`);
     expect(read('src/screens/library/upper-cards-entry.tsx')).toContain("import('./upper-cards-chunk')");
+    // Row CM-30: the Cloze Pick game's chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/cloze-pick-chunk.tsx')).toContain(`export const CLOZE_PICK_CHUNK = '${SCREEN_CHUNKS[5].marker}';`);
+    expect(read('src/screens/minigames/cloze-pick-entry.tsx')).toContain("import('./cloze-pick-chunk')");
   });
 
   it('the goals are a learner chunk of their own (row CM-17), whose module exports its marker', () => {
@@ -265,6 +269,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'cell-check-chunk has no web bundle: the chunk is missing from the build',
       'stage-check-chunk has no web bundle: the chunk is missing from the build',
       'upper-cards-chunk has no web bundle: the chunk is missing from the build',
+      'cloze-pick-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -419,10 +424,13 @@ describe('precacheReport and its budget lines', () => {
     // app-host build 4,742,847 B), 69,890 B under the phase-2 integration, so the line comes down to 4,750,000 B.
     // CM-23c (Stages 6-7 cards, #845) on main e31bc3b33 (4,749,283 B with #859 to #862) measures 4,751,444 B (release
     // build, Metro cache cleared; +2,161 B over that main; the app-host build 4,751,600 B), so the line is 4,760,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_760_000);
+    // CM-30 (Cloze Pick; the game in the cloze-pick chunk, its Listen & Pick fallback in the start bundle with the door)
+    // measures 4,762,235 B on main 524961dae (4,751,444 B), so the line is 4,765,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_765_000);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeGreaterThanOrEqual(0);
     expect(PRECACHE_BUDGET.startBundleRaw - 4_751_600).toBeGreaterThanOrEqual(0);
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_751_444).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeGreaterThanOrEqual(0);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_762_235).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(4_812_581);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);

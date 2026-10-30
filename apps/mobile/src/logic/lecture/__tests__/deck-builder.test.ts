@@ -2522,3 +2522,67 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
     }
   });
 });
+
+describe('expandDeck: Cloze Pick on the existing question slides (F-CURR-002 section 8, row CM-30)', () => {
+  const kt = (ko: string, romanization: string, en: string) => ({ ko, romanization, en });
+  const card = {
+    ref: 'realia:e2e-prices',
+    kind: 'price-card' as const,
+    entries: [{ id: 'apples', text: kt('사과', 'sagwa', 'apples'), value: kt('삼천 원', 'samcheon won', '3,000 won') }],
+    altEn: 'A market price card for apples',
+  };
+  const clozeScopes: Record<string, MinigameScope> = {
+    'mg:cloze': {
+      kind: 'cloze-pick',
+      clozePick: {
+        rounds: [
+          { id: 'c1', sentence: kt('책을 ___.', 'chaegeul ___.', 'I read a book.'), gapKind: 'word', tiles: [kt('읽어요', 'ilgeoyo', 'read'), kt('먹어요', 'meogeoyo', 'eat'), kt('마셔요', 'masyeoyo', 'drink')], answerIndex: 0 },
+          { id: 'c2', sentence: kt('___ 원이에요.', '___ wonieyo.', 'It is ___ won.'), gapKind: 'value', tiles: [kt('삼천', 'samcheon', 'three thousand'), kt('오천', 'ocheon', 'five thousand'), kt('이천', 'icheon', 'two thousand')], answerIndex: 0 },
+        ],
+        realia: card,
+      },
+    },
+    'mg:cloze-no-card': {
+      kind: 'cloze-pick',
+      clozePick: { rounds: [{ id: 'v1', sentence: kt('___ 원이에요.', '___ wonieyo.', 'It is ___ won.'), gapKind: 'value', tiles: [kt('삼천', 'samcheon', 'three thousand'), kt('오천', 'ocheon', 'five thousand'), kt('이천', 'icheon', 'two thousand')], answerIndex: 0 }] },
+    },
+    'mg:cloze-none': { kind: 'cloze-pick', clozePick: { rounds: [] } },
+  };
+  const clozeQuest = quest('cloze', [['practice', 'mg:cloze'], ['apply', 'mg:cloze-no-card'], ['check', 'mg:cloze-none']], { rewardCardId: undefined });
+  const run = () =>
+    expandDeck(
+      deckOf([{ kind: 'quest', id: clozeQuest.id }]),
+      bundle({ scopeFor: (ref) => clozeScopes[ref], questById: (id) => (id === clozeQuest.id ? clozeQuest : undefined) }),
+      VOICE,
+    );
+
+  it('a word gap is a check question: its sentence with the gap is the target, its meaning shows, the tiles are the options', () => {
+    const { slides } = run();
+    const checks = only(slides, 'quiz').filter((q) => q.prompt.ask === 'check');
+    expect(checks).toHaveLength(1);
+    expect(checks[0]!.prompt).toEqual({ ask: 'check', text: '{target}', target: { ko: '책을 ___.', romanization: 'chaegeul ___.', gloss: 'I read a book.' } });
+    expect([...checks[0]!.options].sort((a, b) => a.ko!.localeCompare(b.ko!))).toEqual([
+      { ko: '마셔요', romanization: 'masyeoyo', correct: false },
+      { ko: '먹어요', romanization: 'meogeoyo', correct: false },
+      { ko: '읽어요', romanization: 'ilgeoyo', correct: true },
+    ]);
+    expect(checks[0]!.builds.join()).toBe('question,answer');
+  });
+
+  it('a value gap is a realia question beside its card, shown once before the questions', () => {
+    const { slides } = run();
+    expect(kinds(slides)).toEqual(['title', 'quiz', 'realia', 'quiz', 'end']);
+    const realia = only(slides, 'quiz').find((q) => q.prompt.ask === 'realia');
+    expect(realia?.prompt).toMatchObject({ ask: 'realia', text: 'It is ___ won.', key: { ko: '___ 원이에요.', romanization: '___ wonieyo.' } });
+    expect(realia?.options.filter((o) => o.correct).map((o) => o.ko)).toEqual(['삼천']);
+  });
+
+  it('a value gap with no card and an empty scope are counted skips, never a crash; no new slide kind', () => {
+    const { skipped, slides } = run();
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'mg:cloze-no-card', reason: 'scope-too-small' },
+      { blockIndex: 0, ref: 'mg:cloze-none', reason: 'scope-too-small' },
+    ]);
+    expect(new Set(kinds(slides))).toEqual(new Set(['title', 'quiz', 'realia', 'end']));
+  });
+});

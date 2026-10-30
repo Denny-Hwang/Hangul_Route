@@ -41,6 +41,8 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
   'type-hangul': ['write'],
   'trace-word': ['write'],
   'write-frame': ['write'],
+  // F-CURR-002 row CM-30: Cloze Pick reads a sentence and picks the piece that completes it.
+  'cloze-pick': ['read'],
 };
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);

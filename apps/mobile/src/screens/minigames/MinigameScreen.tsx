@@ -1,7 +1,8 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ReactElement } from 'react';
+import type { MinigameKind } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
@@ -18,6 +19,7 @@ import { useActiveLearnerId } from '../../store/active-learner';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
+import { ClozePickStep } from './cloze-pick-entry';
 import { CultureQuizGame } from './CultureQuizGame';
 import type { MinigameHost } from './host';
 import { ListenPickGame } from './ListenPickGame';
@@ -89,6 +91,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // quest's session. Another host (All lessons) passes no navigation and records nothing.
   usePracticeSession(activeProfileId, navigation ? `minigame:${questId}:${stepIndex}` : null);
   const copy = useMessages().learner.minigame;
+  // The kind a step drew when it is not its scope's (a switched-off Cloze Pick plays Listen & Pick, row CM-30).
+  const renderedKind = useRef<MinigameKind | null>(null);
   // Leaving a game (Back, finishing it, Skip) stops a sound mid-way, whatever the game left running.
   useEffect(() => () => stop(), []);
   // Learner default: back to the quest player. A game has no home or link exit of its own.
@@ -101,7 +105,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
 
   const close = (): void => {
     if (scope) {
-      void track(minigameFinishedEvent(scope.kind, questId, stepIndex, activeProfileId));
+      void track(minigameFinishedEvent(renderedKind.current ?? scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
   };
@@ -172,6 +176,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
       return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
     case 'write-frame':
       return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
+    // F-CURR-002 row CM-30: the game behind `game.cloze-pick`, else its Listen & Pick fallback.
+    case 'cloze-pick':
+      return <ClozePickStep scope={scope} host={host} onBack={exits.back} onRendered={(kind) => (renderedKind.current = kind)} />;
     default:
       return fallback(copy.comingSoon);
   }

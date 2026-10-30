@@ -236,6 +236,8 @@ describe('slideSound: what Sound, S and a stage speaker play (section 3.4 amendm
     const target = { ko: '해', romanization: 'hae', gloss: 'sun' };
     expect(slideSound(quiz({ ask: 'check', text: 'What is {target}?', target }))).toEqual({ spoken: { text: '해', romanization: 'hae' }, kind: 'word' });
     expect(slideSound(quiz({ ask: 'check', text: 'What happened first?' }))).toBeUndefined();
+    // A Cloze Pick sentence with its gap (row CM-30) is not said: the gap would be read out as underscores.
+    expect(slideSound(quiz({ ask: 'check', text: '{target}', target: { ko: '책을 ___.', romanization: 'chaegeul ___.', gloss: 'I read a book.' } }))).toBeUndefined();
   });
 
   it('an order slide plays the last Korean step on screen at the reveal, in the order drawn, at the sentence rate', () => {

@@ -214,6 +214,7 @@ const GLOSS_KEY_TOKENS: readonly (readonly [long: string, short: string])[] = [
   ['#storySteps.', '^e'],
   ['#keywords.', '^k'],
   ['#checks.', '^h'],
+  ['#clozePick.rounds.', '^n'],
   ['.gloss', '^g'],
 ];
 

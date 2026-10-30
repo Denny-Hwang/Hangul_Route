@@ -128,6 +128,11 @@ export const a11y = {
       lookHere: 'Mira aquí',
       dir: { left: 'a la izquierda', right: 'a la derecha' },
     },
+    clozePick: {
+      sentence: (sentence: string, meaning: string) => `Oración: ${sentence}. ${meaning}`,
+      sentenceDone: (sentence: string, meaning: string) => `Oración completa: ${sentence}. ${meaning}`,
+      blank: 'hueco',
+    },
     keyboard: {
       key: (jamo: string, sound: string) => `${jamo}, ${sound}`,
       shift: 'Shift, más letras',

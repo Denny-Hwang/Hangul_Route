@@ -13,6 +13,7 @@ import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { glossRepeatsRomanization } from '../../../../../scripts/overlay-rules.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
+import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 import { episodesAll } from '../episodes';
@@ -86,6 +87,14 @@ function repeatsRomanization(entity: object, path: ReadonlyArray<string | number
   return glossRepeatsRomanization({ ko: holder?.ko, romanization: holder?.romanization, gloss: value });
 }
 
+/**
+ * A Cloze Pick sentence meaning (row CM-30): a value gap's keeps its one ___ until the answer fills it with the value's
+ * meaning (It is ___ won.), and a word or particle gap's has none. A translation that drops the gap, or writes the
+ * amount out, would show the answer before the tap.
+ */
+const CLOZE_SENTENCE_GLOSS = /^clozePick\.rounds\.[^.]+\.sentence\.gloss$/;
+const gapsOf = (text: unknown): number => (typeof text === 'string' ? text.split('___').length - 1 : -1);
+
 /** Every `{ ko, romanization, en | gloss_en }` of the TypeScript-resident base whose English opens with its romanization. */
 function baseGlossesRepeatingRomanization(shippedByPrefix: Shipped = SHIPPED): string[] {
   const problems: string[] = [];
@@ -128,6 +137,8 @@ function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED)
           problems.push(`ko ${id}.${field}: echoes the Korean it explains (overlay-circular-gloss)`);
         } else if (locale === 'es' && targets.some((path) => repeatsRomanization(entity, path, value))) {
           problems.push(`es ${id}.${field}: opens with the romanization of its Korean (gloss-repeats-romanization)`);
+        } else if (CLOZE_SENTENCE_GLOSS.test(field) && targets.some((path) => gapsOf(getIn(entity, path)) !== gapsOf(value))) {
+          problems.push(`${locale} ${id}.${field}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`);
         }
       }
     }
@@ -251,6 +262,24 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
       'ko jamo:giyeok.exampleWord.gloss: echoes the Korean it explains (overlay-circular-gloss)',
       'ko jamo:giyeok.soundHint: echoes the Korean it explains (overlay-circular-gloss)',
       `ko minigame:s1-life-q3-apply.cardPairs.${slug}.gloss: echoes the Korean it explains (overlay-circular-gloss)`,
+    ]);
+  });
+
+  it('reports a Cloze Pick sentence meaning that drops, or adds, the gap of its English (row CM-30)', () => {
+    const shipped: Shipped = { minigame: new Map([['minigame:e2e-cloze', clozeFixtureScope(['word', 'value'])]]) };
+    const field = (round: string) => `clozePick.rounds.${round}.sentence.gloss`;
+    const good: Overlays = {
+      es: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: 'Leo un libro.', [field('e2e-cloze-value')]: 'Son ___ wones.' } },
+      ko: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: '책을 읽는다는 뜻', [field('e2e-cloze-value')]: '___원이라는 뜻' } },
+    };
+    expect(overlayProblems(good, shipped)).toEqual([]);
+    const bad: Overlays = {
+      es: { 'minigame:e2e-cloze': { [field('e2e-cloze-value')]: 'Son 3.000 wones.' } },
+      ko: { 'minigame:e2e-cloze': { [field('e2e-cloze-word')]: '책을 ___ 뜻' } },
+    };
+    expect(overlayProblems(bad, shipped)).toEqual([
+      `es minigame:e2e-cloze.${field('e2e-cloze-value')}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`,
+      `ko minigame:e2e-cloze.${field('e2e-cloze-word')}: keeps exactly the gaps (___) of its English meaning (cloze-gap-mismatch)`,
     ]);
   });
 

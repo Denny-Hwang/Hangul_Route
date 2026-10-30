@@ -1,3 +1,4 @@
+import { fillClozeGap } from '@hangul-route/content-schema';
 import type { ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import type { MinigameScope } from '../minigame-config';
 import { buildCheckView, type CheckView } from '../story/check-view';
@@ -127,6 +128,22 @@ export function askedOfScope(scope: MinigameScope, itemId: string): ResolvedRoun
     case 'write-frame': {
       const round = scope.writeFrame?.rounds.find((r) => r.id === itemId);
       return round ? { texts: texts(text(round.frame, 'pat')), jamoIds: [], rung: 'produce' } : undefined;
+    }
+    case 'cloze-pick': {
+      // Row CM-30, the produce rung (section 4.3): a word or particle gap asks the completed sentence only (one answer
+      // grades the item the round asks, section 4.8; picking a tile is no lex produce format, so a due answer word gets
+      // its read-rung credit inside the sentence instead); a value gap asks the card it is read from (the `rea` item).
+      // Its Listen & Pick fallback answers with the same round ids.
+      const round = scope.clozePick?.rounds.find((r) => r.id === itemId);
+      if (!round) return undefined;
+      if (round.gapKind === 'value') {
+        const realia = scope.clozePick?.realia;
+        const shown = realia ? (realia.title ?? realia.entries[0]?.text) : undefined;
+        return shown ? { texts: texts(text(shown, 'rea')), jamoIds: [], rung: 'produce' } : undefined;
+      }
+      const answer = round.tiles[round.answerIndex];
+      if (!answer) return undefined;
+      return { texts: texts({ ko: fillClozeGap(round.sentence.ko, answer.ko), kind: 'pat' }), jamoIds: [], rung: 'produce' };
     }
     default:
       return undefined;

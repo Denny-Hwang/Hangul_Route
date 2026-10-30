@@ -4,6 +4,7 @@ import { themeOrder } from './episode';
 import { StageKeySchema, ThemeKeySchema, type StageKey } from './heritage-card';
 import { KoTextSchema } from './ko-text';
 import {
+  ClozePickRoundSchema,
   ListenPickRoundSchema,
   OrderItRoundSchema,
   PicWordRoundSchema,
@@ -89,6 +90,13 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('type-hangul'), rounds: z.array(TypeHangulRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('trace-word'), rounds: z.array(TraceWordRoundSchema).min(1).max(6) }),
   z.object({ ref: ScopeRefSchema, kind: z.literal('write-frame'), rounds: z.array(WriteFrameRoundSchema).min(1).max(4) }),
+  /** Cloze Pick (F-CURR-002 §7.1 F1, row CM-30): a value gap reads its value from `realia`, drawn above the sentence. */
+  z.object({
+    ref: ScopeRefSchema,
+    kind: z.literal('cloze-pick'),
+    rounds: z.array(ClozePickRoundSchema).min(1).max(6),
+    realia: RealiaSchema.optional(),
+  }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -118,6 +126,46 @@ export function scopeRoundCount(scope: LessonScope): number {
   }
 }
 
+/**
+ * Cross-checks of a Cloze Pick scope (row CM-30): a value gap needs the card it reads from, and a card
+ * goes with a value gap (it would be read for nothing); the card's entry ids are unique; a value gap's answer is
+ * written on the card as a whole value (an entry's text or value), so a round never shows 5,000 won and accepts 3,000,
+ * nor shows 15,000 won and accepts 5,000; and a tile that is another value of the card needs a sentence that names
+ * the line it asks.
+ */
+export function clozePickIssues(scope: Extract<LessonScope, { kind: 'cloze-pick' }>): Array<{ path: (string | number)[]; message: string }> {
+  const { realia, rounds } = scope;
+  const values = rounds.some((r) => r.gapKind === 'value');
+  if (values && realia === undefined) return [{ path: ['realia'], message: 'a value gap reads its value from the scope realia card' }];
+  if (realia === undefined) return [];
+  if (!values) return [{ path: ['realia'], message: 'a realia card goes with a value gap' }];
+  const ids = realia.entries.map((e) => e.id);
+  if (new Set(ids).size !== ids.length) return [{ path: ['realia', 'entries'], message: 'realia entry ids must be unique' }];
+  // Whole values only: a card of 15,000 won never accepts the tile for 5,000 because that is written inside it.
+  const entriesOf = (tile: string) => realia.entries.filter((e) => [e.text.ko, e.value?.ko].some((t) => t !== undefined && t !== '' && cardValue(t) === cardValue(tile)));
+  const out: Array<{ path: (string | number)[]; message: string }> = [];
+  rounds.forEach((r, i) => {
+    if (r.gapKind !== 'value') return;
+    const answer = r.tiles[r.answerIndex]?.ko;
+    if (answer === undefined) return;
+    const named = entriesOf(answer);
+    if (named.length === 0) {
+      out.push({ path: ['rounds', i, 'answerIndex'], message: `a value gap answer "${answer}" is on the realia card` });
+      return;
+    }
+    // Another value of the card as a tile is right too, unless the sentence names the line it asks (The apples are ___ won).
+    const namesItsLine = named.some((e) => r.sentence.ko.includes(e.text.ko));
+    r.tiles.forEach((tile, t) => {
+      if (t === r.answerIndex || namesItsLine || entriesOf(tile.ko).length === 0) return;
+      out.push({ path: ['rounds', i, 'tiles', t], message: `a value gap tile "${tile.ko}" is also on the realia card: the sentence names the line it asks` });
+    });
+  });
+  return out;
+}
+
+/** A value as the card and a tile write it, compared whole: no spaces, no closing unit (won, si, bun: hour and minute). */
+const cardValue = (text: string): string => text.replace(/\s+/g, '').replace(/(\uC6D0|\uC2DC|\uBD84)$/, '');
+
 // ---- quests ----------------------------------------------------------------------------------------
 
 export const LessonQuestSchema = QuestObjectSchema.extend({
@@ -128,6 +176,12 @@ export const LessonQuestSchema = QuestObjectSchema.extend({
   .superRefine(questRules)
   .superRefine((quest, ctx) => {
     quest.scopes.forEach((scope, i) => {
+      if (scope.kind === 'cloze-pick') {
+        for (const issue of clozePickIssues(scope)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['scopes', i, ...issue.path], message: issue.message });
+        }
+        return;
+      }
       if (scope.kind !== 'realia-read') return;
       for (const issue of realiaReadIssues(scope.realia, scope.rounds)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['scopes', i, ...issue.path], message: issue.message });

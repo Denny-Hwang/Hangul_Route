@@ -657,6 +657,16 @@ export const learner = {
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
+    clozePick: {
+      heading: '빈칸을 채워요',
+      instruction: {
+        word: '알맞은 낱말을 골라요.',
+        particle: '알맞은 조각을 골라요.',
+        value: '메뉴, 표지판, 표를 읽고 골라요.',
+      },
+      miss: '문장을 다시 읽어 봐요. 어느 것이 알맞을까요?',
+      lookHere: '여기에는 이게 알맞아요.',
+    },
   },
 
   audio: {
@@ -1161,6 +1171,7 @@ export const learner = {
       traceWord: '낱말 따라 쓰기',
       writeFrame: '나만의 문장 완성하기',
       sentenceBuilder: '문장 만들기',
+      clozePick: '문장의 빈칸 채우기',
     },
     legend: {
       title: '모양의 뜻',

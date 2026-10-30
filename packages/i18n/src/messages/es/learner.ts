@@ -677,6 +677,16 @@ export const learner = {
         finishBlock: 'Termina el último bloque.',
       },
     },
+    clozePick: {
+      heading: 'Completa el hueco',
+      instruction: {
+        word: 'Elige la palabra que encaja.',
+        particle: 'Elige la parte que encaja.',
+        value: 'Lee el menú, el letrero o el boleto, y luego elige.',
+      },
+      miss: 'Lee la oración otra vez. ¿Cuál encaja?',
+      lookHere: 'Esta encaja aquí.',
+    },
   },
 
   audio: {
@@ -1190,6 +1200,7 @@ export const learner = {
       traceWord: 'Traza una palabra',
       writeFrame: 'Completa tu propia oración',
       sentenceBuilder: 'Arma una oración',
+      clozePick: 'Completa el hueco de una oración',
     },
     legend: {
       title: 'Qué significan las formas',

@@ -30,4 +30,6 @@ export const PLAYABLE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>([
   'trace-word',
   // F-CURR-001 G-5
   'write-frame',
+  // F-CURR-002 row CM-30 (its Listen & Pick fallback while `game.cloze-pick` is off)
+  'cloze-pick',
 ]);
