@@ -430,6 +430,20 @@ describe("validate-content.mjs", () => {
     }
   });
 
+  test("content/audio (the clip manifest and pronunciation overrides, AMENDMENTS-AUDIO-CLIPS AC-B5) is skipped: its Korean is what the voice sends", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "audio/tts-manifest.json", { rows: [{ text: "국물", say: "궁물" }] });
+      writeContent(root, "audio/pronunciation-overrides.json", { schemaVersion: 1, overrides: { 국물: { say: "궁물" } } });
+      writeContent(root, "stories/ok.json", referenceZoneStory());
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, /1 file\(s\) scanned, 0 violation/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("content/stories/research stays skipped alongside shipped stories (SKIPPED_DIRS is unchanged)", () => {
     const root = makeRoot();
     try {

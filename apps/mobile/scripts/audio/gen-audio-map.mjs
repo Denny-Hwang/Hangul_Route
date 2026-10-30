@@ -21,7 +21,9 @@ import {
   AUDIO_REQUIRE_BASE,
   E2E_FIXTURE_DIR,
   E2E_FIXTURE_REQUIRE_BASE,
+  TTS_MANIFEST_FILE,
   buildAssetMap,
+  clipPacksOf,
   jamoClipRefs,
   mergeAssetMaps,
   renderAssetMap,
@@ -45,10 +47,12 @@ function listFiles(dir) {
 }
 
 const withFixtures = process.argv.includes('--with-e2e-fixtures');
-// Each jamo clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6) comes from jamo.ts; `say` clips get theirs from the clip
-// manifest (row AC-2) and carry none until then.
+// Each clip's pack (AMENDMENTS-AUDIO-CLIPS AC-B6): the clip manifest's (content/audio/tts-manifest.json, row AC-2),
+// else the one jamo.ts declares for a jamo clip. A clip in neither (a story or card recording) carries none.
 const jamoPacks = new Map(jamoClipRefs(readFileSync(join(appRoot, 'src/content/jamo.ts'), 'utf8')).map((r) => [r.ref, r.pack]));
-const packOf = (ref) => jamoPacks.get(ref);
+const manifestPath = join(appRoot, '..', '..', TTS_MANIFEST_FILE);
+const manifestPacks = clipPacksOf(existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : null);
+const packOf = (ref) => manifestPacks.get(ref) ?? jamoPacks.get(ref);
 const shipped = buildAssetMap(listFiles(join(appRoot, AUDIO_DIR)), AUDIO_REQUIRE_BASE, packOf);
 const shippedRefs = new Set(shipped.map((e) => e.ref));
 // A real recording always wins over a fixture for the same ref.

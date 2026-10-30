@@ -425,6 +425,26 @@ export function jamoClipRefs(source) {
   return out;
 }
 
+/** Where the clip manifest lives, relative to the repo root (AMENDMENTS-AUDIO-CLIPS AC-B5; tts/build-manifest.mjs writes it). */
+export const TTS_MANIFEST_FILE = 'content/audio/tts-manifest.json';
+
+/**
+ * The pack of every clip the manifest lists (AC-B6), by ref: what the audio map generator writes into
+ * `AUDIO_ASSET_PACKS` for a `say` clip (and, the same as jamo.ts declares, for a jamo clip).
+ *
+ * @param {{ rows?: readonly { ref: string, pack: string }[] } | null | undefined} manifest the parsed tts-manifest.json
+ * @returns {Map<string, string>}
+ */
+export function clipPacksOf(manifest) {
+  const packs = new Map();
+  for (const row of manifest?.rows ?? []) {
+    const seen = packs.get(row.ref);
+    if (seen !== undefined && seen !== row.pack) throw new Error(`${TTS_MANIFEST_FILE}: ${row.ref} is in packs ${seen} and ${row.pack}`);
+    packs.set(row.ref, row.pack);
+  }
+  return packs;
+}
+
 // --- Clip acceptance (check-audio.mjs, F-AUDIO-004 §3.11 table) ----------------
 
 /** The acceptance limits of §3.11. Sizes are bytes (1 KB = 1000 bytes: 1.5 s at 64 kbps is 12,000). */
