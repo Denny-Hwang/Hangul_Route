@@ -55,9 +55,9 @@ export interface KnownLoneJamoSpeaker {
 /**
  * Surfaces known to speak a lone jamo that the test suite plays through the controller, each
  * with the row that fixes it; an entry passes the guard silently until its PR deletes it.
- * Empty: no test trips the guard at JV-1. Story `shapes-of-hangeul` keywords (M8) still speak
- * bare jamo on `main`, but no test plays them through the controller, so they are not listed:
- * a development build warns on them until JV-3 adds their `spokenKo`.
+ * Empty: no test trips the guard at JV-1, and JV-3 gave the story `shapes-of-hangeul` letters
+ * (M8) their `spokenKo` (the letter name), so the reader, the check and the presenter no longer
+ * speak a bare letter (`no-bare-jamo-speech.test.ts`). The list stays empty once JV-2 is in too.
  */
 export const KNOWN_LONE_JAMO_SPEAKERS: readonly KnownLoneJamoSpeaker[] = [];
 

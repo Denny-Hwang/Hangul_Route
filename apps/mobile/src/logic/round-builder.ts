@@ -1,6 +1,7 @@
 import type { Jamo } from '@hangul-route/content-schema';
 import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../content/jamo';
 import { shuffle } from './shuffle';
+import { allowedDistractors, poolKindFault, type PoolQuestion } from './voice-pools';
 
 export interface MatchSoundRound {
   promptJamo: Jamo;
@@ -63,16 +64,16 @@ export const LETTER_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...jamoConsona
 export const FINAL_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set(jamoBatchim.map((j) => j.id));
 
 /**
- * Every Stage 1 symbol asked by ear: the union of the two sets above.
- * @deprecated Letters and finals are different questions (JV-A3); use `LETTER_QUIZ_JAMO_IDS` or
- * `FINAL_QUIZ_JAMO_IDS`. JV-3 moves the lecture quiz off this set and deletes it.
- */
-export const SOUND_QUIZ_JAMO_IDS: ReadonlySet<string> = new Set([...LETTER_QUIZ_JAMO_IDS, ...FINAL_QUIZ_JAMO_IDS]);
-
-/**
- * Build a Match Sound minigame: N rounds, each with `tileCount` distinct jamo.
- * Distractors drawn from the same scope. No duplicates within a round (F-001 §3.5).
- * `rounds` above the pool size cycle the prompts; `focusJamoIds` are always asked.
+ * Build a Match Sound round set: N rounds, each with `tileCount` distinct jamo, distractors
+ * drawn from the same scope, no duplicates within a round (F-001 §3.5). `rounds` above the pool
+ * size cycle the prompts; `focusJamoIds` are always asked.
+ *
+ * `question` (AMENDMENTS-AUDIO-CLIPS JV-A3): a `letter` question (the default: Match Sound and
+ * the lecture's letter quiz say the letter's name) takes no final, and its distractors follow
+ * rules 1, 1b and 1c; a `sound` question (the lecture's final rounds, said as a closed syllable) takes one kind
+ * of tile and rule 2. A distractor a rule refuses is dropped and another drawn. A pool that
+ * breaks the kind rule, or a target with too few allowed distractors, throws: the content test
+ * (`voice-pools.test.ts`) runs every shipped scope, so no learner meets it.
  */
 export function buildMatchSoundRounds(opts: {
   scopeJamoIds: string[];
@@ -80,12 +81,16 @@ export function buildMatchSoundRounds(opts: {
   tileCount?: number;
   focusJamoIds?: string[];
   seed?: number;
+  question?: PoolQuestion;
 }): MatchSoundRound[] {
   const tileCount = opts.tileCount ?? 4;
+  const question = opts.question ?? 'letter';
   const pool = jamoAll.filter((j) => opts.scopeJamoIds.includes(j.id));
   if (pool.length < tileCount) {
     throw new Error(`Not enough jamo in scope (${pool.length}) for ${tileCount} tiles`);
   }
+  const kindFault = poolKindFault(question, pool);
+  if (kindFault !== null) throw new Error(`Match Sound pool: ${kindFault}`);
 
   const out: MatchSoundRound[] = [];
   let seed = opts.seed ?? Date.now();
@@ -93,10 +98,11 @@ export function buildMatchSoundRounds(opts: {
 
   for (const prompt of prompts) {
     seed = seed + 1;
-    const distractors = shuffle(
-      pool.filter((j) => j.id !== prompt.id),
-      seed,
-    ).slice(0, tileCount - 1);
+    const allowed = allowedDistractors(question, prompt, pool);
+    if (allowed.length < tileCount - 1) {
+      throw new Error(`Match Sound pool: ${prompt.id} has ${allowed.length} allowed distractors, needs ${tileCount - 1} (JV-A3)`);
+    }
+    const distractors = shuffle(allowed, seed).slice(0, tileCount - 1);
     const tiles = shuffle([prompt, ...distractors], seed + 1);
     out.push({ promptJamo: prompt, tiles });
   }

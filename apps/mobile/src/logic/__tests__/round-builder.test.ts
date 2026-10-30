@@ -3,7 +3,6 @@ import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels, jamoWordBuilder } fro
 import {
   FINAL_QUIZ_JAMO_IDS,
   LETTER_QUIZ_JAMO_IDS,
-  SOUND_QUIZ_JAMO_IDS,
   buildBuildLetterRounds,
   buildCultureQuizRounds,
   buildMatchSoundRounds,
@@ -45,6 +44,19 @@ describe('buildMatchSoundRounds', () => {
       const ids = r.tiles.map((t) => t.id);
       expect(new Set(ids).size).toBe(ids.length);
     }
+  });
+
+  it('a sound question over the six finals: final tiles only, the answer among them (JV-A3 rules 2 and 3)', () => {
+    const rounds = buildMatchSoundRounds({ scopeJamoIds: [...FINAL_QUIZ_JAMO_IDS], rounds: 6, seed: 3, question: 'sound' });
+    expect(rounds).toHaveLength(6);
+    for (const r of rounds) {
+      expect(r.tiles.every((t) => t.kind === 'batchim')).toBe(true);
+      expect(r.tiles.map((t) => t.id)).toContain(r.promptJamo.id);
+    }
+  });
+
+  it('a letter question (the default) refuses a final in its pool', () => {
+    expect(() => buildMatchSoundRounds({ scopeJamoIds: [...scope4, 'jamo:nieun-batchim'], rounds: 2, seed: 1 })).toThrow(/no final/);
   });
 
   it('throws when scope is smaller than tileCount', () => {
@@ -292,10 +304,9 @@ describe('quiz-by-ear jamo sets (AMENDMENTS-AUDIO-CLIPS JV-A3 rule 1)', () => {
     for (const id of FINAL_QUIZ_JAMO_IDS) expect(jamoAll.find((j) => j.id === id)?.kind).toBe('batchim');
   });
 
-  it('the two sets are disjoint and their union is the deprecated SOUND_QUIZ_JAMO_IDS (all 30)', () => {
+  it('the two sets are disjoint and together hold all 30 Stage 1 symbols (the deprecated union is gone, JV-3)', () => {
     expect([...LETTER_QUIZ_JAMO_IDS].filter((id) => FINAL_QUIZ_JAMO_IDS.has(id))).toEqual([]);
-    expect(new Set([...LETTER_QUIZ_JAMO_IDS, ...FINAL_QUIZ_JAMO_IDS])).toEqual(SOUND_QUIZ_JAMO_IDS);
-    expect(SOUND_QUIZ_JAMO_IDS).toEqual(new Set(jamoAll.map((j) => j.id)));
+    expect(new Set([...LETTER_QUIZ_JAMO_IDS, ...FINAL_QUIZ_JAMO_IDS])).toEqual(new Set(jamoAll.map((j) => j.id)));
   });
 
   it('no tense consonant or compound vowel (Word Builder) is in either set', () => {

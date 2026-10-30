@@ -738,6 +738,8 @@ export const learner = {
       continue: { cta: 'Continue' },
       wordsTitle: 'Words you can read now',
       batchimLine: 'Sits at the bottom of the block',
+      /** Leads the example button's accessible name, so a screen-reader user never takes the word for the letter's sound. */
+      exampleWord: 'Example word',
       empty: 'Nothing to look at here. Tap Continue.',
       pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
       /** The `exchange` page (F-CURR-001 §3.5, D-1 S3): Read along plays each line and lights it. */
@@ -957,7 +959,14 @@ export const learner = {
   audio: {
     readHere: 'No sound? Read it here.',
     /** The Match Sound heading: listening, or reading the sound as text. */
-    heading: { listen: 'Tap the letter you hear', text: 'Tap the letter for this sound' },
+    heading: {
+      listen: 'Tap the letter you hear',
+      text: 'Tap the letter for this sound',
+      /** A sound question about an initial (Placement's consonant items): a syllable plays, pick the letter it starts with. */
+      startsWith: 'Which letter starts this sound?',
+      /** A sound question about a final, final-letter tiles only (the lecture quiz's final rounds). */
+      endsWith: 'Which letter is at the bottom of this sound?',
+    },
     /** Hoya after a miss; the spoken syllable and its romanization follow as taught content. */
     listenAgain: 'Listen again. This one says',
     hearIt: { cta: 'Hear it' },

@@ -13,6 +13,7 @@ import { cardById } from '../content/heritage-cards';
 import { findJamo } from '../content/jamo';
 import { checkOptionIds } from './stage1/confusables';
 import { spokenFormFor } from './stage1/spoken';
+import { letterTileAllowed } from './voice-pools';
 
 /**
  * Scope builders (F-QUEST-002 §3.7): short, validated constructors for the
@@ -62,6 +63,10 @@ export const lp = {
     const spoken = jamo && spokenFormFor(jamo);
     if (!jamo || !spoken) throw new Error(`Unknown symbol ${jamoId}`);
     const ids = opts.optionIds ? explicitOptionIds(jamoId, taughtIds, opts.optionIds) : checkOptionIds(jamoId, taughtIds);
+    // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A3 rules 1, 1b, 1c): no option is right by ear but the answer.
+    for (const id of ids.slice(1)) {
+      if (!letterTileAllowed(jamo, findJamo(id)!)) throw new Error(`Option ${id} is heard in ${jamoId}'s letter name or shares it (JV-A3)`);
+    }
     const options = ids.map((id) => {
       const option = findJamo(id)!;
       return { id, text: { ko: option.char, romanization: option.romanization, en: `the letter ${option.nameEn}` } };

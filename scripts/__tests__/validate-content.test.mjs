@@ -444,6 +444,108 @@ describe("validate-content.mjs", () => {
   });
 });
 
+describe("validate-content.mjs: a lone letter carries spokenKo (F-CNT-001, AMENDMENTS-AUDIO-CLIPS M8)", () => {
+  const withRoot = (files, check) => {
+    const root = makeRoot();
+    try {
+      for (const [rel, body] of Object.entries(files)) writeContent(root, rel, body);
+      check(run(root));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  };
+  const keyword = (extra = {}) => ({ id: "jamo-m", ko: "ㅁ", romanization: "m", en: "the letter mieum", kind: "jamo", ...extra });
+
+  test("a story keyword that is a lone compatibility jamo with no spokenKo: exit 1", () => {
+    withRoot({ "stories/s.json": { keywords: [keyword()] } }, (r) => {
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo at \.keywords\.0/);
+    });
+  });
+
+  test("a lone conjoining jamo (U+1100-11FF) is a lone letter too: exit 1", () => {
+    withRoot({ "stories/s.json": { keywords: [keyword({ ko: "\u1106" })] } }, (r) => {
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo/);
+    });
+  });
+
+  test("the same keyword with its name as spokenKo passes, and spokenKo is a Korean field, not a UI field", () => {
+    withRoot({ "stories/s.json": { keywords: [keyword({ spokenKo: "미음" })] } }, (r) => {
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, /0 violation/);
+    });
+  });
+
+  test("a blank spokenKo does not count", () => {
+    withRoot({ "stories/s.json": { keywords: [keyword({ spokenKo: " " })] } }, (r) => {
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo/);
+    });
+  });
+
+  test("a story check option and target are checked like keywords", () => {
+    const check = {
+      target: { ko: "ㄷ", romanization: "d/t", en: "the letter digeut" },
+      options: [{ id: "b", ko: "ㅣ", romanization: "i", en: "the vowel letter i", isCorrect: true }],
+    };
+    withRoot({ "stories/s.json": { tiers: [{ checks: [check] }] } }, (r) => {
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo at \.tiers\.0\.checks\.0\.target/);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo at \.tiers\.0\.checks\.0\.options\.0/);
+    });
+  });
+
+  test("a syllable or a word is not a lone letter", () => {
+    withRoot({ "ok.json": [{ ko: "나", romanization: "na", en: "I" }, { ko: "ㄱㄴ", romanization: "gn", en: "two letters" }] }, (r) => {
+      assert.equal(r.status, 0, r.stdout);
+    });
+  });
+
+  test("shown-only letters pass: Stage 1 letter records, placement written options and prompts, Listen & Pick options, write-frame finals", () => {
+    withRoot(
+      {
+        "episodes/stage-1/jamo.json": [{ id: "jamo:mieum", ko: "ㅁ", romanization: "m (mieum)", en: "M", kind: "consonant" }],
+        "placement/sound-letter.json": {
+          templates: [
+            {
+              question: {
+                spoken: { ko: "마", romanization: "ma", en: "the sound ma" },
+                prompt: { ko: "ㅁ", romanization: "m", en: "letter mieum" },
+                options: [{ id: "mieum", ko: "ㅁ", romanization: "m", en: "letter mieum", isCorrect: true }],
+              },
+            },
+          ],
+        },
+        "fixtures/lp.json": { rounds: [{ options: [{ id: "o", text: { ko: "ㅓ", romanization: "eo", en: "eo" } }] }] },
+        "episodes/stage-7/letters.json": { quests: [{ scopes: [{ rounds: [{ soundTable: { finals: [{ ko: "ㄴ", romanization: "n", en: "final n" }] } }] }] }] },
+      },
+      (r) => {
+        // Other rules (placement shape, lesson schema) may report on these partial files; this one may not.
+        assert.match(r.stdout, /4 file\(s\) scanned/);
+        assert.doesNotMatch(r.stdout, /lone-jamo-without-spokenKo/);
+      },
+    );
+  });
+
+  test("a placement heard prompt that is a lone letter is spoken, so it is not exempt", () => {
+    withRoot(
+      { "placement/sound-letter.json": { templates: [{ question: { spoken: { ko: "ㅁ", romanization: "m", en: "letter mieum" }, options: [] } }] } },
+      (r) => {
+        assert.equal(r.status, 1);
+        assert.match(r.stdout, /lone-jamo-without-spokenKo at \.templates\.0\.question\.spoken/);
+      },
+    );
+  });
+
+  test("a Stage 1 letter record outside its file is not exempt", () => {
+    withRoot({ "episodes/stage-2/jamo.json": [{ ko: "ㅁ", romanization: "m", en: "M" }] }, (r) => {
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /lone-jamo-without-spokenKo at \.0/);
+    });
+  });
+});
+
 describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
   const vocab = {
     topic: { id: "vocab-topic:food", key: "food", titleEn: "Food" },
