@@ -711,6 +711,15 @@ describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", (
     assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
     assert.equal(run(root, ["--include-fixtures", "--check"]).status, 2);
   });
+
+  test("gives no fixture once the cell ships a Volume 2 of its own (row CM-41 S2): the shipped one is played", async () => {
+    const { fixtureCells } = await import(SCRIPT);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" }));
+    assert.equal(fixtureCells(root).length, 1);
+    put(root, "content/episodes/stage-2/nature.v2.json", {});
+    assert.deepEqual(fixtureCells(root), []);
+  });
 });
 
 // ---- F-CURR-002 §9.1 (row CM-6): the generated catalogue rows and the addedIn stamps ----------

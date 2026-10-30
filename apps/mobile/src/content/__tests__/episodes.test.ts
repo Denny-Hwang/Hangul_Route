@@ -73,11 +73,13 @@ describe('gridEpisodes / shelfEpisodes', () => {
     for (const e of shelfEpisodes(episodesAll)) expect(storyEpisodes).toContain(e);
   });
 
-  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
+  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest of a first volume', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
+    // A cell's later volume (F-CURR-002 rows CM-40, CM-41 S2) adds no count: its quests are on `volumeEpisodes` only.
+    const laterQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
     const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
     expect(handWritten.length).toBeGreaterThan(0);
-    for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
+    for (const q of handWritten) expect(gridQuestIds.has(q.id), q.id).toBe(!laterQuestIds.has(q.id));
   });
 });
 
@@ -103,10 +105,11 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); Stage 2 Nature & Animals ships the first Volume 2 (row CM-41 S2)', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    expect(volumeEpisodes.map((e) => [e.id, e.stage, e.theme, e.volume])).toEqual([['episode:stage2-nature-v2', 'stage2', 'nature', 2]]);
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
+    expect(episodesAll.some((e) => volumeOf(e) > 1)).toBe(false);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
