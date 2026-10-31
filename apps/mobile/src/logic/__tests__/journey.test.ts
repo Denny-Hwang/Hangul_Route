@@ -4,6 +4,7 @@ import { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import { ThemeKeySchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
+import { volumeEpisodes } from '../../content/episodes';
 import { storyQuests } from '../../content/stories';
 import {
   gridQuestProgress,
@@ -16,6 +17,8 @@ import {
   themeGlyph,
 } from '../journey';
 import { completeStages } from '../my-route/latch';
+import { allPlayableDone, isDerivedComplete } from '../my-route/stage-rows';
+import { stageCompleteFor } from '../awards/transitions';
 
 const ep = (
   id: string,
@@ -206,8 +209,11 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
     // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done.
     const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
+    // A cell's later volume adds no count (F-CURR-002 rows CM-40, CM-41 S2): its quests are on `volumeEpisodes` only.
+    const later = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    expect(later.size).toBeGreaterThan(0);
     expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(
-      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id)).length,
+      questsAll.filter((q) => !storyQuests.includes(q) && !optional.has(q.id) && !later.has(q.id)).length,
     );
   });
 
@@ -252,8 +258,28 @@ describe('isCellComplete (F-STORY-005 §3.5)', () => {
     expect(isCellComplete([ep('soon', 'stage6', 'preview', [])], [])).toBe(false);
   });
 
-  // Before MAX_EPISODES_PER_CELL becomes 2 (PR 5.8): stage completion still counts
-  // grid episodes in awards/derive.ts `isStageComplete` and my-route/stage-rows.ts
-  // `isDerivedComplete`/`completionState`, while stageAvailability counts cells.
-  it.todo('a cell with a shipped volume 1 and a preview volume 2 still lets its stage complete (PR 5.8)');
+  // PR 5.8 (F-CURR-002 row CM-40): stage completion reads cells, each by its first volume, in awards/derive.ts
+  // `isStageComplete` and my-route/stage-rows.ts `isDerivedComplete` / `allPlayableDone`, as stageAvailability counts cells.
+  it('a cell with a shipped volume 1 and a preview volume 2 still lets its stage complete (PR 5.8)', () => {
+    const cells = ['letters', 'life', 'rites', 'nature', 'crafts'].map((theme, i) => ({
+      ...ep(`episode:stage2-${theme}`, 'stage2', 'shipped', [`quest:stage2-${theme}-q1`]),
+      theme: theme as Episode['theme'],
+      order: i + 1,
+    }));
+    const preview = { ...ep('episode:stage2-nature-v2', 'stage2', 'preview', []), theme: 'nature' as const, order: 4, volume: 2 };
+    const shipped = { ...ep('episode:stage2-nature-v2', 'stage2', 'shipped', ['quest:stage2-nature-v2-q1']), theme: 'nature' as const, order: 4, volume: 2 };
+    const at = '2026-10-01T00:00:00Z';
+    const firstVolumes = { quests: cells.map((c) => ({ questId: c.questIds[0] as string, episodeId: c.id, startedAt: at, completedAt: at, stars: 3 as const, attempts: 1, accuracy: 1 })) };
+    expect(stageAvailability('stage2', [...cells, preview])).toBe('open');
+    expect(stageCompleteFor('stage2', [...cells, preview], firstVolumes)).toBe(true);
+    // A shipped Volume 2 not started yet never holds the stage back, and the cell's own look still waits for it.
+    expect(stageCompleteFor('stage2', [...cells, shipped], firstVolumes)).toBe(true);
+    expect(isDerivedComplete('stage2', [...cells, shipped], firstVolumes)).toBe(true);
+    expect(allPlayableDone('stage2', [...cells, shipped], firstVolumes)).toBe(true);
+    const natureCell = [cells[3] as Episode, shipped];
+    expect(isCellComplete(natureCell, firstVolumes.quests)).toBe(false);
+    // Without its first volumes done the stage is not complete, whatever a Volume 2 says.
+    const v2Only = { quests: [{ questId: 'quest:stage2-nature-v2-q1', episodeId: shipped.id, startedAt: at, completedAt: at, stars: 3 as const, attempts: 1, accuracy: 1 }] };
+    expect(stageCompleteFor('stage2', [...cells, shipped], v2Only)).toBe(false);
+  });
 });

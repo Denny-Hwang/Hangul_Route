@@ -7,7 +7,8 @@ import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, u
 
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
- * snapshot points and for a learner with every lesson quest done (107, and 108 with the Stage 1 addition of row CM-33).
+ * snapshot points and for a learner with every lesson quest done (107, 108 with the Stage 1 addition of row CM-33, and 111
+ * with Stage 2 Nature & Animals Volume 2, row CM-41 S2).
  */
 
 const SEEDED_AT = '2026-10-22T08:00:00.000Z';
@@ -119,13 +120,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', () => {
-  const snap = finished(108);
+describe('the all-quests fixture (scenario S-c; 111 quests since row CM-41 S2)', () => {
+  const snap = finished(111);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
+    expect(LESSON_QUESTS).toHaveLength(111);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {

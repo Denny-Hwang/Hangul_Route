@@ -1,12 +1,14 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, headerBack } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, headerBack, readStored, seedStoredAll } from './helpers';
+import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-STORY-005 PR 5.5b: heritage stories on the Journey (wireframes journey/grid-with-stories A,
- * story/cell-stories B, episode/detail-cell-stories-row C). Needs the fixture bundle:
+ * story/cell-stories B, episode/detail-cell-stories-row C), and PR 5.8: two volumes in a cell (journey/volumes, at the
+ * end of this file, F-CURR-002 row CM-40). Needs the fixture bundle:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web journey-stories
@@ -316,5 +318,119 @@ test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x
     await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
     await expect(page.getByRole('button', { name: LESSON_CELL, exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('button', { name: LESSON_ROW, exact: true })).toBeVisible();
+  });
+});
+
+/**
+ * F-STORY-005 PR 5.8 and F-CURR-002 row CM-40 (wireframe `journey/volumes.md`): two volumes in a cell. Stage 2 Nature &
+ * Animals ships its Volume 2, Seasons and Animals (row CM-41 S2), so the fixture copy of Outdoor Words that row CM-40
+ * gave the e2e bundle (`build-lessons.mjs --include-fixtures`) is no longer made. `volumes` is at built-in pct 0, so each
+ * case turns it on through the stored remote copy, as a ramp would; with it off the cell is its Volume 1 alone.
+ */
+const NATURE_V1 = CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature');
+const V2_TITLE = NATURE_V1?.volumes?.[0]?.title ?? 'Seasons and Animals';
+const VOLUMES_ON = { volumes: { on: true, pct: 100 } };
+const V2_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-nature-v2-[0-9a-f]{32}\.js$/;
+const natureCell = (page: Page) => page.getByRole('button', { name: /^Stage 2 [^,]+, Nature & Animals/ });
+
+/** A learner with Stage 2 Nature's Volume 1 done, and `volumes` as given. */
+async function volumesLearner(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+  const AT = '2026-10-01T10:00:00.000Z';
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const id = (await readStored<string>(page, 'profiles:active')) as string;
+  const questIds = NATURE_V1?.questIds ?? [];
+  const quests = questIds.map((questId) => ({ questId, episodeId: 'episode:stage2-nature', startedAt: AT, completedAt: AT, stars: 3, attempts: 1, accuracy: 1 }));
+  const questDoneAt = Object.fromEntries(questIds.map((q) => [q, AT]));
+  await seedStoredAll(page, {
+    [`progress:${id}`]: { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt },
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+  });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR-002 CM-40)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1)');
+
+  for (const [label, size] of [
+    ['320', { width: 320, height: 800 }],
+    ['wide', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`${label}: volume dots on the cell, it opens Volume 2 once Volume 1 is done, and Vol 1 / Vol 2 on its page`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await volumesLearner(page, VOLUMES_ON);
+      await expect(natureCell(page)).toHaveAccessibleName(/Opens Volume 2\.$/);
+      await expect(page.getByTestId('journey-volumes-stage2-nature-1-done')).toHaveCount(1);
+      await expect(page.getByTestId('journey-volumes-stage2-nature-2-open')).toHaveCount(1);
+      await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveAttribute('aria-hidden', 'true');
+      // Only the cell with two volumes has dots.
+      await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(0);
+      if (label === '320') {
+        // The dots never make a cell wider than its neighbours (54 dp at 320).
+        const nature = await natureCell(page).boundingBox();
+        const life = await page.getByRole('button', { name: /^Stage 2 [^,]+, Food & Daily Life/ }).boundingBox();
+        expect(nature?.width).toBeCloseTo(life?.width ?? 0, 1);
+        await expectNoHorizontalOverflow(page);
+      }
+      await natureCell(page).scrollIntoViewIfNeeded();
+      await shot(page, `volumes-grid-${label}`);
+      await natureCell(page).click();
+      await expect(page.getByText(V2_TITLE).first()).toBeVisible();
+      const tabs = page.getByRole('tablist', { name: 'Volumes' });
+      await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+      await expect(tabs.getByRole('tab', { name: 'Volume 1' })).toHaveAttribute('aria-selected', 'false');
+      await expect(tabs.getByText('Vol 1', { exact: true })).toBeVisible();
+      await shot(page, `volumes-page-${label}`);
+      await tabs.getByRole('tab', { name: 'Volume 1' }).click();
+      await expect(page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 1' })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByText('Outdoor Words', { exact: true }).first()).toBeVisible();
+      if (label === '320') await expectNoHorizontalOverflow(page);
+    });
+  }
+
+  test('volumes off: no dots, no volume sentence, the cell opens Volume 1 and its page has no tabs', async ({ page }) => {
+    await volumesLearner(page, {});
+    await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveCount(0);
+    await expect(natureCell(page)).not.toHaveAccessibleName(/Volume/);
+    await natureCell(page).click();
+    await expect(page.getByText('Outdoor Words', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText(V2_TITLE)).toHaveCount(0);
+  });
+
+  test('offline: Volume 2 is a precached chunk of its own, and its first quest plays from it with the network gone', async ({ page, context }) => {
+    await volumesLearner(page, VOLUMES_ON);
+    await expect
+      .poll(() => page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.active && !!navigator.serviceWorker.controller), { timeout: 30_000 })
+      .toBe(true);
+    const cached = await page.evaluate(async () => {
+      const urls: string[] = [];
+      for (const name of await caches.keys()) for (const req of await (await caches.open(name)).keys()) urls.push(new URL(req.url).pathname);
+      return urls;
+    });
+    expect(cached.filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await natureCell(page).click();
+    await expect(page.getByText(V2_TITLE).first()).toBeVisible();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
   });
 });
