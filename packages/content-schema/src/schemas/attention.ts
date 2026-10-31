@@ -19,11 +19,23 @@ export type PendingMoveStep = z.infer<typeof PendingMoveStepSchema>;
 export const PendingMoveSourceSchema = z.enum(['transfer', 'teacher']);
 export type PendingMoveSource = z.infer<typeof PendingMoveSourceSchema>;
 
+/**
+ * Who else an open move still waits on, in step order (`waitingOn`): the source class, the learner's side (the family,
+ * or a learner who manages their own classes), the destination class. The destination is listed only once it may see
+ * the request (T8). It tells a `move_others` chip whether "Waiting for: {to}" is true: only when it lists `destination`.
+ */
+export const WaitingPartySchema = z.enum(['source', 'learner', 'destination']);
+export type WaitingParty = z.infer<typeof WaitingPartySchema>;
+
 /** A re-link request for this learner, pending in this space and inside its window. */
 export const RosterPendingRelinkSchema = z.object({ id: z.string().min(1), expiresAt: z.string().min(1) });
 export type RosterPendingRelink = z.infer<typeof RosterPendingRelinkSchema>;
 
-/** The learner's one open move. `to` only where the reader may read the class's name (TV-D8); `on` only when `scheduled`. */
+/**
+ * The learner's one open move. `to` only where the reader may read the class's name (TV-D8) and always the destination;
+ * `on` only when `scheduled`; `waitingOn` (added after the first GX-W round, so an older Worker may not send it, and a
+ * broken one reads as absent) names who else must answer, never the reader's own answerable step, empty once agreed.
+ */
 export const RosterPendingMoveSchema = z.object({
   source: PendingMoveSourceSchema,
   id: z.string().min(1),
@@ -31,6 +43,7 @@ export const RosterPendingMoveSchema = z.object({
   to: z.string().nullable(),
   on: z.string().nullable(),
   expiresAt: z.string().nullable(),
+  waitingOn: z.array(WaitingPartySchema).optional().catch(undefined),
 });
 export type RosterPendingMove = z.infer<typeof RosterPendingMoveSchema>;
 

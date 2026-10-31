@@ -1,7 +1,8 @@
 import type { StoredRelink } from '../db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { rosterGates } from '../lib/attention';
+import { ROSTER_SETTLE_MAX, rosterGates, spacesAttention } from '../lib/attention';
 import type { Action } from '../lib/can';
+import { newRequest } from '../lib/transfer';
 import { classMoveClientLimiter } from '../routes/class-moves';
 import { transferClientLimiter } from '../routes/transfers';
 import { testDb as db } from './helpers/db';
@@ -23,6 +24,7 @@ import {
   call,
   cancel,
   classCreate,
+  consent,
   create,
   familyCreate,
   list,
@@ -118,18 +120,18 @@ describe('roster pending.move of a family-started transfer (gate: learner.transf
   it('walks the source class through yours, others and scheduled, and the destination counts it as incoming while its step waits', async () => {
     const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     const a1 = await roster(A, 'teacher-a');
-    expect(rowOf(a1, SUNI)?.pending).toEqual({ move: { source: 'transfer', id: created.id, step: 'yours', to: null, on: null, expiresAt: created.expiresAt } });
+    expect(rowOf(a1, SUNI)?.pending).toEqual({ move: { source: 'transfer', id: created.id, step: 'yours', to: null, on: null, expiresAt: created.expiresAt, waitingOn: ['destination'] } });
     const b1 = await roster(B, 'teacher-b');
     expect(b1.body.data).toMatchObject({ incoming: 1 });
 
     expect((await approve(A, 'teacher-a', created.id, { slots: ['source'] })).status).toBe(200);
-    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'others' });
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'others', waitingOn: ['destination'] });
     expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 1 });
 
     expect((await approve(B, 'teacher-b', created.id, { slots: ['destination'] })).status).toBe(200);
     const stored = await db.getTransfer(created.id);
     expect(stored?.status).toBe('approved');
-    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'scheduled', on: stored?.executeAfter });
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'scheduled', on: stored?.executeAfter, waitingOn: [] });
     expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
 
     await db.blockTransfer(created.id, 'cap_class', new Date());
@@ -139,6 +141,16 @@ describe('roster pending.move of a family-started transfer (gate: learner.transf
   it('names the destination only when the family introduced the request (TV-D8)', async () => {
     await create(FAMILY, 'mom', familyCreate({ introduce: true }));
     expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'yours', to: 'Saturday Class B' });
+  });
+
+  it('a class-started move says who it waits on (review V1-1): the family first, then the destination once it may see it', async () => {
+    const created = requestOf(await create(A, 'teacher-a', classCreate()));
+    // `to` is the destination the source chose; it is not the one being waited on until the family says yes (T8)
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'others', to: 'Saturday Class B', waitingOn: ['learner'] });
+    expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
+    expect((await approve(FAMILY, 'mom', created.id, { slots: ['learner'], consent })).status).toBe(200);
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)?.pending?.move).toMatchObject({ step: 'others', to: 'Saturday Class B', waitingOn: ['destination'] });
+    expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 1 });
   });
 
   it('settles before reading the members: a transfer executed on read lists the learner as a member of the destination only', async () => {
@@ -155,11 +167,40 @@ describe('roster pending.move of a family-started transfer (gate: learner.transf
     expect(b.body.data).toMatchObject({ incoming: 0 });
   });
 
-  it('settles an expired request before reading: no chip, nothing incoming', async () => {
-    await create(FAMILY, 'mom', familyCreate());
+  it('leaves out an expired request without a write (review V1-2): no chip, nothing incoming; the list route ends it', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
     travel(15 * DAY);
     expect(rowOf(await roster(A, 'teacher-a'), SUNI)).not.toHaveProperty('pending');
     expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
+    expect((await db.getTransfer(created.id))?.status).toBe('requested');
+    await list(A, 'teacher-a');
+    expect((await db.getTransfer(created.id))?.status).toBe('expired');
+  });
+
+  it('leaves out a request whose learner left the source or whose destination was archived', async () => {
+    await create(FAMILY, 'mom', familyCreate());
+    await db.putSpace({ ...(await db.getSpace(B))!, archivedAt: OLD });
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)).not.toHaveProperty('pending');
+    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)).not.toHaveProperty('pending');
+  });
+
+  it(`settles at most ${ROSTER_SETTLE_MAX} due requests a read; the rest show as they stand and settle on the next reads`, async () => {
+    const learners = ['profile:due-1', 'profile:due-2', 'profile:due-3'];
+    for (const id of learners) {
+      await db.putLearner({ id, displayName: id, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
+      await member(A, 'learner', id, 'student');
+      await member(FAMILY, 'learner', id, 'student');
+      const created = requestOf(await create(FAMILY, 'mom', familyCreate({ learnerId: id })));
+      await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+      await approve(B, 'teacher-b', created.id, { slots: ['destination'] });
+    }
+    travel(3 * DAY);
+    const first = await roster(A, 'teacher-a');
+    expect(learners.filter((id) => rowOf(first, id) === undefined)).toHaveLength(ROSTER_SETTLE_MAX);
+    const left = learners.filter((id) => rowOf(first, id) !== undefined);
+    for (const id of left) expect(rowOf(first, id)?.pending?.move).toMatchObject({ step: 'scheduled' });
+    const second = await roster(A, 'teacher-a');
+    expect(learners.filter((id) => rowOf(second, id) !== undefined)).toEqual([]);
   });
 });
 
@@ -168,7 +209,7 @@ describe('roster pending.move of a teacher move (TV-D8) and its privacy at the d
     const id = await askB();
     const a = await roster(A, 'teacher-a');
     const move = (await db.getClassMove(id))!;
-    expect(rowOf(a, SUNI)?.pending).toEqual({ move: { source: 'teacher', id, step: 'others', to: 'Saturday Class B', on: null, expiresAt: move.expiresAt } });
+    expect(rowOf(a, SUNI)?.pending).toEqual({ move: { source: 'teacher', id, step: 'others', to: 'Saturday Class B', on: null, expiresAt: move.expiresAt, waitingOn: ['destination'] } });
     const b = await roster(B, 'teacher-b');
     expect(b.body.data).toMatchObject({ incoming: 1 });
     expect(JSON.stringify(b.body)).not.toMatch(/Suni|profile:suni/);
@@ -178,11 +219,18 @@ describe('roster pending.move of a teacher move (TV-D8) and its privacy at the d
     expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
   });
 
-  it('an ask past its 14 days is settled before reading', async () => {
-    await askB();
+  it('an ask past its 14 days is left out before reading, without a write', async () => {
+    const id = await askB();
     travel(15 * DAY);
     expect(rowOf(await roster(A, 'teacher-a'), SUNI)).not.toHaveProperty('pending');
     expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
+    expect((await db.getClassMove(id))?.status).toBe('requested');
+  });
+
+  it('an ask whose destination was archived, or whose learner left, shows nowhere', async () => {
+    await askB();
+    await db.putSpace({ ...(await db.getSpace(B))!, archivedAt: OLD });
+    expect(rowOf(await roster(A, 'teacher-a'), SUNI)).not.toHaveProperty('pending');
   });
 });
 
@@ -190,14 +238,16 @@ describe('family roster (gate: snapshot.read)', () => {
   it('a teacher-started request waits for the family: yours, with the class named; no incoming on a family', async () => {
     const created = requestOf(await create(A, 'teacher-a', classCreate()));
     const r = await roster(FAMILY, 'dad');
-    expect(rowOf(r, SUNI)?.pending).toEqual({ move: { source: 'transfer', id: created.id, step: 'yours', to: 'Saturday Class B', on: null, expiresAt: created.expiresAt } });
+    expect(rowOf(r, SUNI)?.pending).toEqual({ move: { source: 'transfer', id: created.id, step: 'yours', to: 'Saturday Class B', on: null, expiresAt: created.expiresAt, waitingOn: [] } });
     expect(rowOf(r, MINA)).not.toHaveProperty('pending');
     expect(r.body.data).not.toHaveProperty('incoming');
   });
 
-  it('a request the family started waits for the classes: others', async () => {
-    await create(FAMILY, 'mom', familyCreate());
-    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others' });
+  it('a request the family started waits for the classes: others, naming which classes still answer', async () => {
+    const created = requestOf(await create(FAMILY, 'mom', familyCreate()));
+    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others', waitingOn: ['source', 'destination'] });
+    await approve(A, 'teacher-a', created.id, { slots: ['source'] });
+    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others', waitingOn: ['destination'] });
   });
 
   it("shows a child's re-link on the family roster", async () => {
@@ -293,8 +343,22 @@ describe('GET /api/spaces attention', () => {
 
   it('does not count a move whose learner left the source class or whose destination was archived', async () => {
     await askB();
+    expect(attentionOf(await spaces('teacher-b'), B)?.moves).toBe(1);
     await db.removeMembership(A, 'learner', SUNI);
     expect(attentionOf(await spaces('teacher-b'), B)?.moves).toBe(0);
+  });
+
+  it('does not count a move into an archived destination, nor a family-started request into it', async () => {
+    await member(A, 'learner', MINA, 'student');
+    await post(moves(A), 'teacher-a', { learnerId: MINA, destinationSpaceId: B, code: CODE_B });
+    await create(FAMILY, 'mom', familyCreate());
+    await approve(A, 'teacher-a', requestsOf(await list(A, 'teacher-a'))[0]!.id, { slots: ['source'] });
+    const items = [{ space: (await db.getSpace(B))!, allowed: new Set<Action>(['roster.manage', 'learner.transfer']) }];
+    expect((await spacesAttention(db, items, new Date(), undefined)).get(B)?.moves).toBe(2);
+    const archived = { ...(await db.getSpace(B))!, archivedAt: OLD };
+    await db.putSpace(archived);
+    // counted as the live destination's own row would be, had it not been archived: the rows into it no longer count
+    expect((await spacesAttention(db, [{ space: { ...archived, archivedAt: null }, allowed: items[0]!.allowed }], new Date(), undefined)).get(B)?.moves).toBe(0);
   });
 
   it('counts re-links while class moves are locked; the moves are then 0', async () => {
@@ -323,7 +387,7 @@ describe('GET /api/spaces attention', () => {
     await db.setTransferPref(SUNI, 'selfManaged', true, NOW);
     expect(requestsOf(await list(FAMILY, 'mom'))[0]).toMatchObject({ learnerState: 'pending', learnerRoute: 'none' });
     expect(attentionOf(await spaces('mom'), FAMILY)?.moves).toBe(0);
-    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others' });
+    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others', waitingOn: ['learner'] });
   });
 
   it('leaves attention off an archived space', async () => {
@@ -391,14 +455,17 @@ describe("a school's GET /:id/attention", () => {
 });
 
 describe('statement budget of the attention reads (Workers Free: 50 a request)', () => {
-  async function prepared(classes: number, path: string): Promise<number> {
+  type D1 = InstanceType<(typeof import('../db/d1'))['D1Db']>;
+
+  /** Builds a world with `setup` on the real SQLite D1, then counts the statements `run` prepares. */
+  async function counted(setup: (d1db: D1) => Promise<void>, run: (d1db: D1) => Promise<void>): Promise<number> {
     const { openSqliteD1 } = await import('./helpers/sqlite');
     const { D1Db } = await import('../db/d1');
     const { setFallbackDb, fallbackDb } = await import('../db');
     const sqlite = openSqliteD1();
     let count = 0;
     let counting = false;
-    const counted = {
+    const wrapped = {
       prepare(text: string) {
         if (counting) count += 1;
         return sqlite.prepare(text);
@@ -407,41 +474,59 @@ describe('statement budget of the attention reads (Workers Free: 50 a request)',
     };
     const before = fallbackDb();
     try {
-      const d1db = new D1Db(counted);
+      const d1db = new D1Db(wrapped);
       setFallbackDb(d1db);
       await d1db.putAccount({ id: 'admin', email: null, displayName: null, consent: null, createdAt: OLD });
       await d1db.putAccount({ id: 'other', email: null, displayName: null, consent: null, createdAt: OLD });
-      await d1db.putSpace(space(SCHOOL, 'school', 'admin'));
-      await d1db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'admin', role: 'owner', joinedAt: OLD });
       await d1db.putSpace(space('space:elsewhere', 'class', 'other'));
-      const cls = (i: number) => `space:sc-${String(i).padStart(2, '0')}`;
-      for (let i = 0; i < classes; i += 1) await d1db.putSpace(space(cls(i), 'class', 'admin', { parentSpaceId: SCHOOL }));
-      for (let i = 0; i < classes; i += 1) {
-        const learner = `profile:l-${i}`;
-        await d1db.putLearner({ id: learner, displayName: `L ${i}`, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
-        await d1db.addMembership({ spaceId: cls(i), memberKind: 'learner', memberId: learner, role: 'student', joinedAt: OLD });
-        await d1db.putRelink(relink(`relink:r${i}`, cls(i), learner, ahead(5 * 60_000)));
-        // a learner of a class outside the school, asked into this class (a teacher move waiting for it)
-        const outsider = `profile:e-${i}`;
-        await d1db.putLearner({ id: outsider, displayName: `E ${i}`, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
-        await d1db.addMembership({ spaceId: 'space:elsewhere', memberKind: 'learner', memberId: outsider, role: 'student', joinedAt: OLD });
-        await d1db.createClassMove({ id: `move:m${i}`, learnerId: outsider, sourceSpaceId: 'space:elsewhere', destSpaceId: cls(i), kind: 'accept', status: 'requested', actorAccountId: 'other', actorVia: 'owner', decidedAccountId: null, decidedVia: null, endReason: null, createdAt: NOW.toISOString(), updatedAt: NOW.toISOString(), expiresAt: ahead(14 * DAY), executedAt: null, endedAt: null, familySeenAt: null });
-      }
+      await setup(d1db);
       await spaces('admin'); // the first-sign-in upsert is not part of the budget
       counting = true;
-      const r = await get(path, 'admin');
+      await run(d1db);
       counting = false;
-      expect(r.status).toBe(200);
-      if (path.endsWith('/attention')) {
-        const rows = (r.body.data as { classes: Array<{ relinks: number; moves: number }> }).classes;
-        expect(rows).toHaveLength(classes);
-        expect(rows.every((x) => x.relinks === 1 && x.moves === 1)).toBe(true);
-      }
       return count;
     } finally {
       setFallbackDb(before);
       sqlite.close();
     }
+  }
+
+  const cls = (i: number) => `space:sc-${String(i).padStart(2, '0')}`;
+  const putLearner = (d1db: D1, id: string) => d1db.putLearner({ id, displayName: id, ageGroup: '8-9', avatar: 'hoya-orange', recoveryHash: null, createdAt: OLD, lastActiveAt: OLD });
+  const askInto = (d1db: D1, id: string, learnerId: string, destSpaceId: string) =>
+    d1db.createClassMove({ id, learnerId, sourceSpaceId: 'space:elsewhere', destSpaceId, kind: 'accept', status: 'requested', actorAccountId: 'other', actorVia: 'owner', decidedAccountId: null, decidedVia: null, endReason: null, createdAt: NOW.toISOString(), updatedAt: NOW.toISOString(), expiresAt: ahead(14 * DAY), executedAt: null, endedAt: null, familySeenAt: null });
+
+  /** A school whose admin owns `classes` classes, each with a learner, a pending re-link and a teacher move waiting for it. */
+  async function busySchool(d1db: D1, classes: number): Promise<void> {
+    await d1db.putSpace(space(SCHOOL, 'school', 'admin'));
+    await d1db.addMembership({ spaceId: SCHOOL, memberKind: 'account', memberId: 'admin', role: 'owner', joinedAt: OLD });
+    for (let i = 0; i < classes; i += 1) await d1db.putSpace(space(cls(i), 'class', 'admin', { parentSpaceId: SCHOOL }));
+    for (let i = 0; i < classes; i += 1) {
+      const learner = `profile:l-${i}`;
+      await putLearner(d1db, learner);
+      await d1db.addMembership({ spaceId: cls(i), memberKind: 'learner', memberId: learner, role: 'student', joinedAt: OLD });
+      await d1db.putRelink(relink(`relink:r${i}`, cls(i), learner, ahead(5 * 60_000)));
+      // a learner of a class outside the school, asked into this class (a teacher move waiting for it)
+      const outsider = `profile:e-${i}`;
+      await putLearner(d1db, outsider);
+      await d1db.addMembership({ spaceId: 'space:elsewhere', memberKind: 'learner', memberId: outsider, role: 'student', joinedAt: OLD });
+      await askInto(d1db, `move:m${i}`, outsider, cls(i));
+    }
+  }
+
+  async function prepared(classes: number, path: string): Promise<number> {
+    return counted(
+      (d1db) => busySchool(d1db, classes),
+      async () => {
+        const r = await get(path, 'admin');
+        expect(r.status).toBe(200);
+        if (path.endsWith('/attention')) {
+          const rows = (r.body.data as { classes: Array<{ relinks: number; moves: number }> }).classes;
+          expect(rows).toHaveLength(classes);
+          expect(rows.every((x) => x.relinks === 1 && x.moves === 1)).toBe(true);
+        }
+      },
+    );
   }
 
   it("a school's attention with 60 busy classes prepares as many statements as with 1, well under 50", async () => {
@@ -456,5 +541,80 @@ describe('statement budget of the attention reads (Workers Free: 50 a request)',
     const sixty = await prepared(60, '/api/spaces');
     expect(sixty).toBe(one);
     expect(sixty).toBeLessThanOrEqual(15);
+  });
+
+  it('the attention of a teacher who holds 60 busy classes takes as many statements as of one class', async () => {
+    // spacesAttention itself, for a caller who is a member of every class (the route's own per-space reads are not GX-W's)
+    const run = (classes: number) =>
+      counted(
+        (d1db) => busySchool(d1db, classes),
+        async (d1db) => {
+          const items = await Promise.all(Array.from({ length: classes }, async (_, i) => ({ space: (await d1db.getSpace(cls(i)))!, allowed: new Set<Action>(['roster.manage', 'learner.transfer']) })));
+          const before = Date.now();
+          const counts = await spacesAttention(d1db, items, new Date(before), undefined);
+          expect([...counts.values()].every((x) => x.relinks === 1 && x.moves === 1)).toBe(true);
+        },
+      );
+    // the item spaces are read inside the counted window: one getSpace each, so subtract them
+    const one = (await run(1)) - 1;
+    const sixty = (await run(60)) - 60;
+    expect(sixty).toBe(one);
+    expect(sixty).toBeLessThanOrEqual(10);
+  });
+
+  it('the class roster with 20 open requests into it and 20 asks takes as many statements as with 1 of each (review V1-2)', async () => {
+    const DEST = 'space:dest';
+    const run = (open: number) =>
+      counted(
+        async (d1db) => {
+          await d1db.putSpace(space(DEST, 'class', 'admin'));
+          await d1db.addMembership({ spaceId: DEST, memberKind: 'account', memberId: 'admin', role: 'owner', joinedAt: OLD });
+          for (let i = 0; i < 3; i += 1) {
+            await putLearner(d1db, `profile:m-${i}`);
+            await d1db.addMembership({ spaceId: DEST, memberKind: 'learner', memberId: `profile:m-${i}`, role: 'student', joinedAt: OLD });
+          }
+          for (let i = 0; i < open; i += 1) {
+            for (const kind of ['t', 'a'] as const) {
+              const learner = `profile:${kind}-${i}`;
+              await putLearner(d1db, learner);
+              await d1db.addMembership({ spaceId: 'space:elsewhere', memberKind: 'learner', memberId: learner, role: 'student', joinedAt: OLD });
+            }
+            await askInto(d1db, `move:a${i}`, `profile:a-${i}`, DEST);
+            // a family-started request into DEST: the family said yes, so DEST's own step waits (T8)
+            const row = newRequest({
+              id: `transfer:t${i}`,
+              learnerId: `profile:t-${i}`,
+              sourceSpaceId: 'space:elsewhere',
+              destSpaceId: DEST,
+              introduce: false,
+              now: NOW,
+              initiator: 'learner_side',
+              initiatorAccountId: 'other',
+              consent: {
+                basis: 'caregiver',
+                attest: null,
+                evidence: 'other',
+                role: 'owner',
+                textVersion: consent.textVersion,
+                locale: 'en',
+                shown: { lineIds: ['moving'], flags: {} },
+                terms: { destNameHash: 'a'.repeat(64), destConsentMode: 'parent', destAnonymize: false, destOwnerId: 'admin', sourceNameHash: 'b'.repeat(64), premiumChange: 'none' },
+              },
+            });
+            expect(await d1db.createTransfer(row, { at: row.createdAt, actorKind: 'account', actorRef: 'other', event: 'created', slot: null, detail: null })).toBe('created');
+          }
+        },
+        async () => {
+          const r = await roster(DEST, 'admin');
+          expect(r.status).toBe(200);
+          expect(r.body.data).toMatchObject({ incoming: 2 * open });
+          expect(rowsOf(r)).toHaveLength(3);
+        },
+      );
+    const one = await run(1);
+    const twenty = await run(20);
+    expect(twenty).toBe(one);
+    // three members (two reads each) and the roster's own reads; the open moves add nothing per row
+    expect(twenty).toBeLessThanOrEqual(25);
   });
 });

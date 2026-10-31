@@ -3,6 +3,7 @@ import {
   PendingMoveStepSchema,
   RosterPendingSchema,
   SpaceAttentionSchema,
+  WaitingPartySchema,
   readRosterIncoming,
   readRosterPending,
   readSchoolAttention,
@@ -29,6 +30,17 @@ describe('RosterPendingSchema', () => {
   it('knows the four move steps and the two sources', () => {
     expect(PendingMoveStepSchema.options).toEqual(['yours', 'others', 'room', 'scheduled']);
     expect(RosterPendingSchema.parse({ move: { ...move, source: 'teacher', step: 'scheduled', on: '2026-11-20T00:00:00.000Z', to: null, expiresAt: null } }).move).toMatchObject({ source: 'teacher', step: 'scheduled', to: null, expiresAt: null });
+  });
+
+  it('takes who else a move waits on, and reads a missing or broken list as absent (an older Worker sends none)', () => {
+    expect(RosterPendingSchema.parse({ move: { ...move, step: 'others', waitingOn: ['learner'] } }).move?.waitingOn).toEqual(['learner']);
+    expect(RosterPendingSchema.parse({ move: { ...move, step: 'others', waitingOn: ['source', 'destination'] } }).move?.waitingOn).toEqual(['source', 'destination']);
+    expect(RosterPendingSchema.parse({ move: { ...move, waitingOn: [] } }).move?.waitingOn).toEqual([]);
+    expect(RosterPendingSchema.parse({ move }).move?.waitingOn).toBeUndefined();
+    const broken = RosterPendingSchema.parse({ move: { ...move, waitingOn: ['family'] } }).move;
+    expect(broken).toMatchObject({ id: move.id, step: 'yours' });
+    expect(broken?.waitingOn).toBeUndefined();
+    expect(WaitingPartySchema.options).toEqual(['source', 'learner', 'destination']);
   });
 
   it('drops a broken part and keeps the other (lenient on the client)', () => {

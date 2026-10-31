@@ -1,17 +1,18 @@
-import type { ClassAttention, Membership, PendingMoveStep, RosterPending, RosterPendingMove, Space, SpaceAttention, SpaceKind } from '@hangul-route/content-schema';
+import type { ClassAttention, Membership, PendingMoveStep, RosterPending, RosterPendingMove, Space, SpaceAttention, SpaceKind, WaitingParty } from '@hangul-route/content-schema';
 import type { Db, StoredClassMove, StoredRelink, StoredTransfer } from '../db';
-import { isOpenTransfer } from '../db/transfer-rules';
+import { allSlotsIn, isOpenTransfer } from '../db/transfer-rules';
 import type { Action } from './can';
-import { settleMove } from './moves';
 import { liveRelinks } from './relinks';
 import { classTransferEnabled, settle, type TransferEnv } from './transfer';
 
 /*
  * [GX-W] What waits for a grown-up's answer — AMENDMENTS-GROWNUP-UX section 12 (Worker first, additive, no migration).
  *
- * - The roster (`GET /:id/roster`) gets `learners[].pending` and, on a class, `incoming`. It settles the rows it reads
- *   first (expiry, executed or ended moves) and only then reads the members, so a move executed on this read lists the
- *   learner as a member and never also as pending. Each field is gated on the action that can decide it.
+ * - The roster (`GET /:id/roster`) gets `learners[].pending` and, on a class, `incoming`. Before it reads the members
+ *   it leaves out, without a write, every row a settle would end (past the window, learner left the source,
+ *   destination archived) and settles only the rows about to promote or due to execute (at most `ROSTER_SETTLE_MAX`
+ *   a read), so a move executed on this read lists the learner as a member and never also as pending, and the
+ *   statements of a read do not grow with the open moves. Each field is gated on the action that can decide it.
  * - The spaces list (`GET /api/spaces`) gets `attention` on each space of the caller, and a school's
  *   `GET /:id/attention` gives the same for every live child class (a school admin acts on them through the cascade
  *   without being a member). Counts only, and they never write: every count filters what a list route's settle would
@@ -56,25 +57,85 @@ function transferStep(t: StoredTransfer, side: 'source' | 'learner', answerable:
   return answerable && (side === 'source' ? t.source.state : t.learner.state) === 'pending' ? 'yours' : 'others';
 }
 
-function transferPending(t: StoredTransfer, side: 'source' | 'learner', to: string | null, answerable = true): RosterPendingMove {
-  const step = transferStep(t, side, answerable);
-  return { source: 'transfer', id: t.id, step, to, on: step === 'scheduled' ? t.executeAfter : null, expiresAt: t.expiresAt };
-}
-
-async function settleTransfers(db: Db, rows: readonly StoredTransfer[], now: Date, env: TransferEnv | undefined): Promise<StoredTransfer[]> {
-  const out: StoredTransfer[] = [];
-  for (const row of rows) {
-    const settled = (await settle(db, row, now, env)).request;
-    if (settled && isOpenTransfer(settled)) out.push(settled);
-  }
+/**
+ * Who else an open request still waits on, for the reader at `side`, in step order (review V1-1): the source class,
+ * the learner's side (the family, or a self-managed learner), the destination. The destination waits only once it may
+ * see the request (T8: the learner side said yes). Never the reader's own answerable step; empty once agreed.
+ */
+function transferWaitingOn(t: StoredTransfer, side: 'source' | 'learner', answerable: boolean): WaitingParty[] {
+  if (t.status !== 'requested') return [];
+  const out: WaitingParty[] = [];
+  if (side !== 'source' && t.source.state === 'pending') out.push('source');
+  if ((side !== 'learner' || !answerable) && t.learner.state === 'pending') out.push('learner');
+  if (destinationStepWaits(t)) out.push('destination');
   return out;
 }
 
-async function settleMoves(db: Db, rows: readonly StoredClassMove[], now: Date): Promise<StoredClassMove[]> {
-  const out: StoredClassMove[] = [];
+function transferPending(t: StoredTransfer, side: 'source' | 'learner', to: string | null, answerable = true): RosterPendingMove {
+  const step = transferStep(t, side, answerable);
+  return { source: 'transfer', id: t.id, step, to, on: step === 'scheduled' ? t.executeAfter : null, expiresAt: t.expiresAt, waitingOn: transferWaitingOn(t, side, answerable) };
+}
+
+/** An open transfer or class move: the fields that tell whether a settle would end it. */
+interface OpenRow {
+  learnerId: string;
+  sourceSpaceId: string;
+  destSpaceId: string;
+  expiresAt: string;
+}
+
+/** The spaces and source memberships behind a set of open rows, in two set-based reads (one statement per 90 ids each). */
+interface Liveness {
+  spaces: Map<string, Space>;
+  /** Whether a settle would leave the row open: inside its window, the destination live, the learner still in the source. */
+  live: (r: OpenRow) => boolean;
+}
+
+async function liveness(db: Db, rows: readonly OpenRow[], now: Date): Promise<Liveness> {
+  const at = now.toISOString();
+  const [spaces, sourceMembers] = rows.length
+    ? await Promise.all([db.getSpaces([...new Set(rows.flatMap((r) => [r.destSpaceId, r.sourceSpaceId]))]), db.membersOfSpaces([...new Set(rows.map((r) => r.sourceSpaceId))])])
+    : [[], []];
+  const byId = new Map(spaces.map((s) => [s.id, s]));
+  const inSource = new Set(sourceMembers.filter((m) => m.memberKind === 'learner').map((m) => `${m.spaceId}\n${m.memberId}`));
+  const live = (r: OpenRow): boolean => {
+    const dest = byId.get(r.destSpaceId);
+    return r.expiresAt > at && !!dest && !dest.archivedAt && inSource.has(`${r.sourceSpaceId}\n${r.learnerId}`);
+  };
+  return { spaces: byId, live };
+}
+
+/** At most this many open transfers are settled on one roster read (each settle may promote or execute). */
+export const ROSTER_SETTLE_MAX = 2;
+
+/**
+ * The open transfers that stay open, read without a write where that is enough (review V1-2): a row a settle would end
+ * (past its window, destination archived, learner left the source) is left out, as the attention counts do, and the
+ * list routes write the end. Only a row whose settle changes what the roster shows is settled: about to promote (all
+ * slots in), due to execute, or its source archived while the source step waits. At most `ROSTER_SETTLE_MAX` of them
+ * per read, so the statements of a read do not grow with the open moves; the rest settle on a later read.
+ */
+async function openTransfers(db: Db, rows: readonly StoredTransfer[], look: Liveness, now: Date, env: TransferEnv | undefined, budget: { left: number }): Promise<StoredTransfer[]> {
+  const at = now.toISOString();
+  const out: StoredTransfer[] = [];
+  const toSettle: StoredTransfer[] = [];
   for (const row of rows) {
-    const settled = await settleMove(db, row, now);
-    if (settled.status === 'requested') out.push(settled);
+    if (!isOpenTransfer(row) || !look.live(row)) continue;
+    const sourceArchived = !!look.spaces.get(row.sourceSpaceId)?.archivedAt && row.source.state === 'pending';
+    const due = row.status === 'approved' && row.executeAfter !== null && at >= row.executeAfter;
+    const promotes = row.status === 'requested' && allSlotsIn(row);
+    (due || promotes || sourceArchived ? toSettle : out).push(row);
+  }
+  // A row waiting for a seat retries on every settle; the others go first so a waiting seat never holds them back.
+  toSettle.sort((a, b) => Number(a.blockReason !== null) - Number(b.blockReason !== null));
+  for (const row of toSettle) {
+    if (budget.left <= 0) {
+      out.push(row);
+      continue;
+    }
+    budget.left -= 1;
+    const settled = (await settle(db, row, now, env)).request;
+    if (settled && isOpenTransfer(settled)) out.push(settled);
   }
   return out;
 }
@@ -89,10 +150,13 @@ export interface RosterAttention {
 /**
  * The roster's members with what waits for each learner. `readMembers` is called after the class's rows are
  * settled; a family's moves are read after its members (they name the learners), which no move changes: a move takes
- * a learner from one class to another and leaves the family as it is.
+ * a learner from one class to another and leaves the family as it is. Set-based: a fixed number of reads whatever the
+ * number of open moves, plus at most `ROSTER_SETTLE_MAX` settles.
  */
 export async function rosterAttention(db: Db, space: Space, gates: RosterGates, now: Date, env: TransferEnv | undefined, readMembers: () => Promise<Membership[]>): Promise<RosterAttention> {
   const relinks: StoredRelink[] = gates.relink ? (await liveRelinks(db, space.id, now)).filter((r) => r.status === 'pending') : [];
+  const budget = { left: ROSTER_SETTLE_MAX };
+  const names = new Map<string, string>();
   let transfersOut: StoredTransfer[] = [];
   let transfersIn: StoredTransfer[] = [];
   let movesOut: StoredClassMove[] = [];
@@ -104,22 +168,26 @@ export async function rosterAttention(db: Db, space: Space, gates: RosterGates, 
       db.openClassMovesOfSpaces([space.id], 'source'),
       db.openClassMovesOfSpaces([space.id], 'destination'),
     ]);
-    transfersOut = await settleTransfers(db, tOut, now, env);
-    transfersIn = await settleTransfers(db, tIn, now, env);
-    movesOut = await settleMoves(db, mOut, now);
-    movesIn = await settleMoves(db, mIn, now);
+    const look = await liveness(db, [...tOut, ...tIn, ...mOut, ...mIn], now);
+    for (const s of look.spaces.values()) names.set(s.id, s.name);
+    transfersOut = await openTransfers(db, tOut, look, now, env, budget);
+    transfersIn = await openTransfers(db, tIn, look, now, env, budget);
+    // A class move's settle only ends it, so a read-only filter is the whole settle here.
+    movesOut = mOut.filter((m) => m.status === 'requested' && look.live(m));
+    movesIn = mIn.filter((m) => m.status === 'requested' && look.live(m));
   }
   const members = await readMembers();
   const learnerIds = new Set(members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId));
   let familyTransfers: StoredTransfer[] = [];
   let selfManaged = new Set<string>();
   if (space.kind === 'family' && gates.move && learnerIds.size > 0) {
-    familyTransfers = await settleTransfers(db, await db.openTransfersOfLearners([...learnerIds]), now, env);
+    const rows = await db.openTransfersOfLearners([...learnerIds]);
+    const look = await liveness(db, rows, now);
+    for (const s of look.spaces.values()) names.set(s.id, s.name);
+    familyTransfers = await openTransfers(db, rows, look, now, env, budget);
     if (familyTransfers.length > 0) selfManaged = new Set(await db.selfManagedLearners(familyTransfers.map((t) => t.learnerId)));
   }
 
-  const destIds = [...new Set([...transfersOut, ...familyTransfers].map((t) => t.destSpaceId).concat(movesOut.map((m) => m.destSpaceId)))];
-  const names = new Map((destIds.length ? await db.getSpaces(destIds) : []).map((s) => [s.id, s.name]));
   const pending = new Map<string, RosterPending>();
   const entry = (learnerId: string): RosterPending | null => {
     if (!learnerIds.has(learnerId)) return null;
@@ -141,7 +209,7 @@ export async function rosterAttention(db: Db, space: Space, gates: RosterGates, 
     }
     for (const m of movesOut) {
       const p = entry(m.learnerId);
-      if (p && !p.move) p.move = { source: 'teacher', id: m.id, step: 'others', to: names.get(m.destSpaceId) ?? null, on: null, expiresAt: m.expiresAt };
+      if (p && !p.move) p.move = { source: 'teacher', id: m.id, step: 'others', to: names.get(m.destSpaceId) ?? null, on: null, expiresAt: m.expiresAt, waitingOn: asksDestination(m) ? ['destination'] : [] };
     }
     for (const t of familyTransfers) {
       const p = entry(t.learnerId);
@@ -173,7 +241,6 @@ interface Target {
  * inside their window; class moves by the console's rule with T8; a family's moves it can answer. Read-only.
  */
 async function attentionCounts(db: Db, targets: readonly Target[], now: Date): Promise<Map<string, SpaceAttention>> {
-  const at = now.toISOString();
   const relinkIds = targets.filter((t) => t.relinks).map((t) => t.id);
   const classIds = targets.filter((t) => t.classMoves).map((t) => t.id);
   const familyIds = targets.filter((t) => t.familyMoves).map((t) => t.id);
@@ -188,14 +255,8 @@ async function attentionCounts(db: Db, targets: readonly Target[], now: Date): P
   const familyT = familyLearners.length ? await db.openTransfersOfLearners([...new Set(familyLearners.map((m) => m.memberId))]) : [];
   const selfManaged = new Set(familyT.length ? await db.selfManagedLearners(familyT.map((t) => t.learnerId)) : []);
 
-  // What a settle would end, read without writing: the destination archived or gone, the learner gone from the source.
-  const rows: Array<{ learnerId: string; sourceSpaceId: string; destSpaceId: string }> = [...outT, ...inT, ...inM, ...familyT];
-  const [spaces, sourceMembers] = rows.length
-    ? await Promise.all([db.getSpaces([...new Set(rows.map((r) => r.destSpaceId))]), db.membersOfSpaces([...new Set(rows.map((r) => r.sourceSpaceId))])])
-    : [[], []];
-  const liveDest = new Set(spaces.filter((s) => !s.archivedAt).map((s) => s.id));
-  const inSource = new Set(sourceMembers.filter((m) => m.memberKind === 'learner').map((m) => `${m.spaceId}\n${m.memberId}`));
-  const live = (r: { learnerId: string; sourceSpaceId: string; destSpaceId: string; expiresAt: string }): boolean => r.expiresAt > at && liveDest.has(r.destSpaceId) && inSource.has(`${r.sourceSpaceId}\n${r.learnerId}`);
+  // What a settle would end, read without writing: past the window, the destination archived or gone, the learner gone from the source.
+  const { live } = await liveness(db, [...outT, ...inT, ...inM, ...familyT], now);
 
   const waitingAt = new Map<string, number>();
   const bump = (spaceId: string): void => {
