@@ -521,7 +521,7 @@ function LearnerCardHead({
             href={reviewHref}
             data-testid="move-review"
             aria-describedby={words.reason ? `${nameId} ${reasonId}` : nameId}
-            style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, textDecoration: 'none', boxSizing: 'border-box', backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary }}
+            style={{ ...buttonBase, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary }}
           >
             {c.status.review.cta}
           </Link>
