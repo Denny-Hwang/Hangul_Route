@@ -716,14 +716,14 @@
                   "en": "bear"
                 },
                 {
-                  "ko": "새",
-                  "romanization": "sae",
-                  "en": "bird"
+                  "ko": "꽃",
+                  "romanization": "kkot",
+                  "en": "flower"
                 },
                 {
-                  "ko": "토끼",
-                  "romanization": "tokki",
-                  "en": "rabbit"
+                  "ko": "별",
+                  "romanization": "byeol",
+                  "en": "star"
                 }
               ],
               "answerIndex": 0
@@ -1258,7 +1258,7 @@
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "In 1442, in Joseon, a rain gauge called {ko:측우기} was made to measure rain. The only Joseon-period gauge known today, made of bronze in 1837, is kept at the National Meteorological Museum in Seoul.",
+      "textEn": "In 1442, in Joseon, a rain gauge called {ko:측우기} was made to measure rain. The only Joseon-period gauge known today, made in 1837, is kept at the National Meteorological Museum in Seoul.",
       "sources": [
         {
           "title": "국보 공주 충청감영 측우기 (국가유산포털)",
@@ -1286,7 +1286,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-30): 1442 and 'made to measure rain' (in Joseon, the 세종 24 date) = Korea Heritage Service portal (1442년(세종 24)에 발명된 측우기, the description of the national treasure); 'the only Joseon-period gauge known today, made in 1837' = the same page (1837년(헌종 3)에 제작, 지금까지 … 유일하게 알려져 있다) and encykorea E0007902 (현존하는 것은 금영 측우기가 유일하다); 'made of bronze' = encykorea E0007902 (청동으로 제작된 이 측우기); 'kept at the National Meteorological Museum in Seoul' = the portal's 소재지 and the museum's own page (KMA).\npass 2 (MAR culture and facts, 2026-10-30): pages re-read (the portal description read through its open record, the same text). No 'first in the world' claim, which only the portal makes. Names as of the access date: 국가유산청 / Korea Heritage Service (since 2024-05-17), the museum's English name from its footer. Same fact as story:cheugugi-rain-gauge f1, f5 and f6, in plainer words.\nreviser (2026-10-30): the author draft said the 1442 gauge was 'metal'; none of the three sources cited here says so for 1442 (the Sillok does, story:cheugugi-rain-gauge f3, not cited), so 'metal' left the 1442 sentence and 'made of bronze' (encykorea) went to the 1837 one.\npass 3 (third pass after revision, 2026-10-30): every clause matched to a quote above; {ko:측우기} is cheugugi. Outcome: confirmed."
+        "notes": "pass 1 (author sourcing, 2026-10-30): 1442 and 'made to measure rain' (in Joseon, the 세종 24 date) = Korea Heritage Service portal (1442년(세종 24)에 발명된 측우기, the description of the national treasure); 'the only Joseon-period gauge known today, made in 1837' = the same page (1837년(헌종 3)에 제작, 지금까지 … 유일하게 알려져 있다) and encykorea E0007902 (현존하는 것은 금영 측우기가 유일하다); 'made of bronze' = encykorea E0007902 (청동으로 제작된 이 측우기); 'kept at the National Meteorological Museum in Seoul' = the portal's 소재지 and the museum's own page (KMA).\npass 2 (MAR culture and facts, 2026-10-30): pages re-read (the portal description read through its open record, the same text). No 'first in the world' claim, which only the portal makes. Names as of the access date: 국가유산청 / Korea Heritage Service (since 2024-05-17), the museum's English name from its footer. Same fact as story:cheugugi-rain-gauge f1, f5 and f6, in plainer words.\nreviser (2026-10-30): the author draft said the 1442 gauge was 'metal'; none of the three sources cited here says so for 1442 (the Sillok does, story:cheugugi-rain-gauge f3, not cited), so 'metal' left the 1442 sentence and 'made of bronze' (encykorea) went to the 1837 one.\npass 3 (third pass after revision, 2026-10-30): every clause matched to a quote above; {ko:측우기} is cheugugi. Outcome: confirmed.\nreviser (independent workflow review, 2026-10-31): 'made of bronze' rested only on encykorea (Academy of Korean Studies), which is not on the section 6.6 allowlist, and the allowlisted portal and KMA pages quoted here do not name the material; 'bronze' left en, es and ko. Every remaining clause (1442, 1837, the only one known, the museum in Seoul) matches the two allowlisted quotes; encykorea stays as a third, corroborating source. Outcome: confirmed."
       }
     },
     {
@@ -1328,14 +1328,17 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-30",
+    "reviewedAt": "2026-10-31",
     "notes": [
-      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, then three separate checker passes (language with the F-CNT-002 converter; culture and facts against each source; learning design: the section 9.3 lints, item load, Check variety, sound-change and homophone flags), a reviser and a third pass. No native-speaker or expert review is claimed.",
+      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, then three checker passes (language with the F-CNT-002 converter; culture and facts against each source; learning design: the section 9.3 lints, item load, Check variety, sound-change and homophone flags), a reviser and a third pass. No native-speaker or expert review is claimed.",
       "Language: 비가 와요, 눈이 와요, 바람이 불어요 and the 더 comparisons are plain polite speech. Finding: q1 Practice r3 offered 있어요 beside 불어요, and 바람이 있어요 (there is wind) is near the shown meaning; the tile is now 커요. Finding: the reward title Weather Read! read as a noun; it is You Read the Weather!. ko notes no longer say 견주어 보면 twice. Romanization: every string matches the converter.",
-      "Culture and facts: three culture notes, each with two or three sources, an allowlisted one first (NIKL, Korea Heritage Service, NIKL). Findings fixed by the reviser: n1 tense, n2 'metal' unsupported for 1442 (now bronze for 1837), n3 'for a day or two' misread 한두 차례 (now once or twice). Names as of 2026-10-30. No UNESCO claim, no origin claim, no person, brand or price.",
+      "Culture and facts: three culture notes, each with two or three sources, an allowlisted one first (NIKL, Korea Heritage Service, NIKL). Findings fixed by the reviser: n1 tense, n2 'metal' unsupported for 1442 (dropped), n3 'for a day or two' misread 한두 차례 (now once or twice). Names as of 2026-10-30. No UNESCO claim, no origin claim, no person, brand or price.",
       "Learning design: three quests, one new pattern each (N이/가 와요, 더 커요, 더 추워요), new words within the caps; lesson-recycle 37, 43 and 40 in 100 (Volume 1 sentences 호랑이가 커요, 곰이 커요, 새가 작아요 and the Stage 2 weather words in new frames); triples differ from Volume 1's; the stage's Volume 2 Checks are Sentence Builder, Read Pick Meaning and Dictation.",
       "Learning design (cont.): Dictation asks 겨울 and 바람, said as written, with no taught homophone (눈 is a homograph and stays out of Dictation; 비 has none taught); no audioRef, so while game.type-hangul-hear is at pct 0 the Check plays its Type Hangul see fallback. Liaison (하늘에, 겨울이, 산이, 곰이) is heard, never typed. 더 (more) and 더워요 (hot) share a first syllable; no round asks them apart by ear alone.",
-      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0)."
+      "Independent checkers (2026-10-31): the author's three checker passes ran in one session, so two independent workflow reviewers, each in its own session, re-checked the cell. Everything not listed in the next two notes passed both.",
+      "Independent checkers, findings fixed: es 'Di qué hace el tiempo' was word-for-word, now 'Di qué tiempo hace'; ko used 어디가 (where) for seasons, now 무엇이, and the q3 title is 더운 날, 추운 날; q2 Apply a3 '___이 더 커요' had one consonant-final tile, so the particle gave it away: the tiles are now 곰, 꽃, 별; n2 'bronze' rested on a source off the section 6.6 allowlist and left en, es and ko.",
+      "Independent checkers, production safety: the review-item builder ranked this Stage 3 file before the shipped Stage 4 and 7 cells, so pat:biga-wayo, lex:keoyo and lex:jagayo would have moved into this dark cell. The builder now ranks Volume 1 first, and a test holds every Volume 1 item as it is when a later volume ships.",
+      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0). Re-read after the independent checkers' fixes (2026-10-31): validate-content, the U-rules, items-stable-id and the overlay tests pass."
     ]
   },
   "contentVer": 1

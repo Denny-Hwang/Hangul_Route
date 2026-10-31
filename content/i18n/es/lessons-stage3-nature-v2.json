@@ -4,15 +4,15 @@
   "entries": {
     "episode:stage3-nature-v2": {
       "title": "Oraciones del tiempo",
-      "subtitle": "Di qué hace el tiempo y qué es más grande o más frío.",
+      "subtitle": "Di qué tiempo hace y qué es más grande o más frío.",
       "hoyaIntro": "¡Lluvia, nieve, sol y viento! Leamos oraciones sobre el tiempo.",
       "culture.n1.text": "En Corea, la lluvia de verano que cae muchos días seguidos se llama {ko:장마}. El antiguo calendario lunar sitúa esta temporada de lluvias en el quinto y el sexto mes.",
-      "culture.n2.text": "En 1442, en Joseon, se hizo un pluviómetro llamado {ko:측우기} para medir la lluvia. El único de la época Joseon que se conoce hoy, de bronce y de 1837, está en el Museo Nacional de Meteorología, en Seúl.",
+      "culture.n2.text": "En 1442, en Joseon, se hizo un pluviómetro llamado {ko:측우기} para medir la lluvia. El único de la época Joseon que se conoce hoy, de 1837, está en el Museo Nacional de Meteorología, en Seúl.",
       "culture.n3.text": "A principios de la primavera, cuando las flores empiezan a abrirse, el frío suele volver una o dos veces. En Corea lo llaman {ko:꽃샘추위}, el frío celoso de las flores."
     },
     "quest:stage3-nature-v2-q1": {
       "title": "Lluvia y nieve",
-      "blurb": "Di qué hace el tiempo: lluvia, nieve y viento.",
+      "blurb": "Di qué tiempo hace: lluvia, nieve y viento.",
       "teaser": "Siguiente: ¿qué es más grande?",
       "steps.s1.title": "Mira el cielo",
       "steps.s2.title": "¿Qué está cayendo?",
@@ -136,8 +136,8 @@
       "clozePick.rounds.a2.tiles.keoyo.gloss": "es grande",
       "clozePick.rounds.a2.tiles.wayo.gloss": "cae",
       "clozePick.rounds.a3.tiles.gom.gloss": "oso",
-      "clozePick.rounds.a3.tiles.sae.gloss": "pájaro",
-      "clozePick.rounds.a3.tiles.tokki.gloss": "conejo",
+      "clozePick.rounds.a3.tiles.kkot.gloss": "flor",
+      "clozePick.rounds.a3.tiles.byeol.gloss": "estrella",
       "clozePick.rounds.a4.tiles.ga.gloss": "marca de sujeto, tras vocal",
       "clozePick.rounds.a4.tiles.i.gloss": "marca de sujeto, tras consonante final",
       "clozePick.rounds.a4.tiles.reul.gloss": "marca de objeto, tras vocal"
