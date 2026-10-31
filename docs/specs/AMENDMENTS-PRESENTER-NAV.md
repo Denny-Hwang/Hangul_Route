@@ -170,7 +170,7 @@ A gesture is a pointer going down on the stage and up again, read by `Stage`'s r
 | Horizontal travel for a swipe | `|dx| >= 60` px | `SWIPE_MIN` (unchanged) |
 | Angle | `|dx| >= 1.5 x |dy|` (within about 34 degrees of horizontal) | `SWIPE_RATIO` (unchanged) |
 | Direction | `dx < 0` (to the left) = next; `dx > 0` = previous | — |
-| A tap | `|dx| < 12` and `|dy| < 12` px | `TAP_SLOP = spacing.md` (new; today any move under 60 px counted as a tap) |
+| A tap | `|dx| < 24` and `|dy| < 24` px | `TAP_SLOP = spacing.xl` (was `spacing.md`, 12 px, until AMENDMENTS-TOUCH section 6.10, row KT-10; before PN-2 any move under 60 px counted as a tap) |
 | Between a tap and a swipe | nothing (an abandoned move) | — |
 | Vertical drag | nothing: the stage never scrolls and never steps on a vertical move | — |
 | Two or more touches at any time during the gesture | nothing (a pinch or a two-finger move), whatever order the fingers lift in | — |
