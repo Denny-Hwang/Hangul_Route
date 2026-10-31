@@ -97,7 +97,7 @@ Then: the first screen shows a compact **Needs you** strip (the soonest-closing 
 - [[ SEE ALL ]] → the items in the review-sheet frame (title "Needs you"), each with its own action.
 - [[ APPROVE ]] → the re-link pop-up (platform, request time, the shipped safety hint); its Approve → `POST /:familyId/relink-requests/:rid/approve`. [ Deny ] (one tap) → `…/deny`; result line (family denial: "…will say "ask your grown-up".").
 - [[ READ AND OK ]] → until the owner answers GX-OD-3, scrolls to the shipped class-scope card (in place under the strip) and focuses its heading; with GX-5b, the class-scope sheet; [[ OK ]] → `POST …/learners/:learnerId/class-scope`; the row and the chip leave.
-- Child chip → no action (a status span); the strip owns the buttons.
+- Child chip → no action (a status span); the strip owns the buttons. Exception (GX-5b, only with `NEXT_PUBLIC_FAMILY_SCOPE_SHEET` on): the **Class info to read** chip is a button in the action-chip look (amber border, dot, bold) that opens the same class-scope sheet as [[ READ AND OK ]]; after its OK, focus goes to the child's card, scrolled into view.
 - Re-link pop-up: opened by Approve from GX-4; from GX-5 it also opens by itself when a quiet load finds a new re-link id (the alertdialog of `console/approvals.md`: Approve / Deny / Later).
 
 ## Navigation graph

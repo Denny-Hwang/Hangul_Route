@@ -102,8 +102,9 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
  * no dot: the card keeps its shipped border); `info` a dated move.
  *
  * With `onActivate` (only the **Class info to read** chip, with the class-scope sheet on: AMENDMENTS-GROWNUP-UX row
- * GX-5b) it is a button at least `touchTarget.min` tall, with the amber border of an action chip, named `label`
- * ("{chip}: {reason}"), that opens the class-scope sheet.
+ * GX-5b) it is a button at least `touchTarget.min` tall in the look of `StatusChip`'s action button (amber border,
+ * amber dot, bold), so "this needs you and opens something" looks the same on the family and the class pages and
+ * differs from the plain text chips beside it; named `label` ("{chip}: {reason}"), it opens the class-scope sheet.
  */
 export function TextChip({
   text,
@@ -133,10 +134,12 @@ export function TextChip({
           padding: `${spacing.sm}px ${spacing.lg}px`,
           border: `${borderWidth.base}px solid ${colors.feedback.nudge}`,
           backgroundColor: TONE_FILL[tone],
+          fontWeight: typography.weight.bold,
           fontFamily: 'inherit',
           cursor: 'pointer',
         }}
       >
+        <Dot color={colors.feedback.nudge} />
         {text}
       </button>
     );

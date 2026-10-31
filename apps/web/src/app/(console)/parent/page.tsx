@@ -369,13 +369,19 @@ export default function ParentHomePage(): JSX.Element {
     blocked: scopeOpen !== null || Object.values(stripDialogs).some(Boolean),
     enabled: !!api && liveKey !== '',
   });
-  // GX-5b: a sheet whose learner the family's class-scope read no longer lists (left the family meanwhile) closes, so
-  // the pop-up never waits on a sheet that draws nothing.
+  // GX-5b: a sheet closes when its family is no longer a live family on the page (archived or gone after a background
+  // read: `asks` keeps that family's last read, so the family list decides) or when the family's class-scope read no
+  // longer lists its learner (left the family meanwhile), so the pop-up never waits on a sheet for something not shown.
+  const homeLoaded = homeView !== null;
   useEffect(() => {
-    if (!scopeOpen) return;
+    if (!scopeOpen || !homeLoaded) return;
+    if (!(liveKey === '' ? [] : liveKey.split('\n')).includes(scopeOpen.familyId)) {
+      setScopeOpen(null);
+      return;
+    }
     const scope = asks[scopeOpen.familyId]?.scope;
     if (scope && !scope.learners.some((l) => l.learnerId === scopeOpen.learnerId)) setScopeOpen(null);
-  }, [asks, scopeOpen]);
+  }, [asks, scopeOpen, liveKey, homeLoaded]);
   const onStripDialog = useCallback((familyId: string, open: boolean) => setStripDialogs((prev) => (!!prev[familyId] === open ? prev : { ...prev, [familyId]: open })), []);
 
   // [SA] The inline rename of a family (AMENDMENTS-SEATS-ADMINS section 5.3): the heading, the actions' label and the
@@ -838,7 +844,9 @@ export default function ParentHomePage(): JSX.Element {
             setPopupResults((prev) => ({ ...prev, [id]: { key, text: c.settings.notes.saved } }));
           }}
           fallbackFocus={() => {
+            // The opener (a strip row, See all) may sit far above the child's card: bring the card into view with the focus.
             const target = typeof document === 'undefined' ? null : (document.getElementById(childCardDomId(scopeOpen.familyId, scopeOpen.learnerId)) as HTMLElement | null);
+            target?.scrollIntoView?.({ block: 'center' });
             target?.focus?.({ preventScroll: true });
           }}
         />
