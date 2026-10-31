@@ -1331,12 +1331,49 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     await send('sounds-good', '맛있어?');
     await page.getByTestId('role-play-reply-tasty').click();
     await expect(page.getByTestId('role-play-end')).toBeVisible();
-    await expect(page.getByText('Grandma gave you her New Year wish, and you thanked her and wished her well too. Happy Seollal!')).toBeVisible();
+    await expect(page.getByText('Grandma gave you her New Year wish and your New Year money, and you thanked her. Happy Seollal!')).toBeVisible();
     await expect(page.getByText(/microphone|say it|speak|record/i)).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
     await shot(page, 'cm45-s4-seollal-q1-end-320');
     await page.getByTestId('role-play-continue').click();
     await expect(page.getByTestId('role-play')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  // Row CM-45 S4 review: the cell's longest reply (감사합니다. 할머니도 새해 복 많이 받으세요.) at 320 x 568 with the text size at
+  // Largest: the reply buttons wrap inside the window and nothing scrolls sideways, on the first turn and after it.
+  test('episode:stage4-rites-v2 q1 (320 x 568, Largest): the New Year bow Role Play replies fit', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 568 });
+    await openJourney(page);
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 }, 'game.role-play': { on: true, pct: 100 } } },
+      'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' },
+    });
+    await page.reload();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await page.getByRole('button', { name: journeyCellName(4, THEME_LABEL.rites), exact: true }).click();
+    await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+    await page.getByTestId('episode-quest-quest:stage4-rites-v2-q1').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('role-play')).toBeVisible();
+    const longest = page.getByTestId('role-play-reply-wish-back');
+    await expect(longest).toContainText('감사합니다. 할머니도 새해 복 많이 받으세요.');
+    await longest.scrollIntoViewIfNeeded();
+    const box = await longest.boundingBox();
+    expect(box, 'the longest reply is drawn').not.toBeNull();
+    expect((box?.x ?? 0) + (box?.width ?? 0), 'the longest reply stays inside the window').toBeLessThanOrEqual(320);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'cm45-s4-seollal-q1-largest-320x568');
+    await longest.click();
+    await expect(page.getByTestId('role-play-partner-newest')).toContainText('여기 세뱃돈이야.');
+    await expectNoHorizontalOverflow(page);
     expect(errors).toEqual([]);
   });
 

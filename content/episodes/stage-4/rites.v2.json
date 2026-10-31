@@ -25,7 +25,7 @@
           "id": "s1",
           "kind": "intro",
           "titleEn": "Seollal Morning",
-          "hoyaLineEn": "It is Seollal morning! Hoya bows to Grandma first. Let us read what they say.",
+          "hoyaLineEn": "It is Seollal morning! Hoya does the New Year bow to Grandma. After the bow, let us read what they say.",
           "durationSeconds": 7
         },
         {
@@ -306,7 +306,7 @@
               {
                 "id": "end",
                 "end": true,
-                "closingEn": "Grandma gave you her New Year wish, and you thanked her and wished her well too. Happy Seollal!"
+                "closingEn": "Grandma gave you her New Year wish and your New Year money, and you thanked her. Happy Seollal!"
               }
             ]
           }
@@ -550,7 +550,7 @@
                     ]
                   }
                 ],
-                "captionEn": "Hoya answers with the polite yo, then asks about Grandpa with si, to show respect."
+                "captionEn": "Hoya ends with the polite -yo, then honors Grandpa with -si- (here inside -syeo-)."
               },
               {
                 "items": [
@@ -1596,7 +1596,7 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-31",
     "notes": [
-      "MAR (F-CURR-002 section 9.2, 2026-10-31): author, three checker passes (language with the F-CNT-002 converter, honorific register and kinship terms; culture and facts against each source; learning design), a reviser and a third pass. The passes ran one after another in the authoring session, which had no tool to start separate reviewer agents. No native-speaker or expert review is claimed.",
+      "MAR (F-CURR-002 section 9.2, 2026-10-31): author, three checker passes (language with the F-CNT-002 converter, honorific register and kinship terms; culture and facts; learning design), a reviser and a third pass, run in the authoring session; then an independent check by separate reviewer agents (last note). No native-speaker or expert review is claimed.",
       "Language: Hoya speaks to Grandma, Grandpa and the teacher in polite 해요체 with the set phrase 감사합니다, and honours Grandpa as the subject with -시- (지내셨어요). Grandma and Grandpa speak to their grandchild in plain 해라체 (받아라, 지냈니, 지냈다, 성취해라, 먹자, 가라, 있어라); the teacher keeps Volume 1's 해요체 (잘 가요). Every romanization is the converter's.",
       "Language (cont.): kinship and address follow 「표준 언어 예절」 (NIKL, 2011): Hoya calls his grandparents 할머니 and 할아버지, never by name. 계세요 is said to the one who stays and 가세요 to the one who leaves; each Cloze round on them is settled by its meaning (stay well, go well).",
       "Language findings fixed by the reviser: Hoya never speaks before Grandma's wish (the elder speaks first after the bow, NIKL column); 건강하세요 and 오래오래 사세요 are not used (the column asks for care with health wishes); plain-speech replies (잘 지냈다, 맛있어) are less natural replies with a why line, never a right answer; Cloze glosses in ko no longer name the answer.",
@@ -1606,7 +1606,8 @@
       "Learning design (cont.): the recycled items are Volume 1's New Year exchange with Mina (호야, 새해 복 많이 받으세요 / 고마워요. 미나도 …) and 네, 잘 지냈어요; Stage 4's 감사합니다 (Letters, Food) and 네, 좋아요 (Play, Nature); and, in q2 and q3, this cell's q1 and q2 lines.",
       "Learning design (cont.): triples Role Play / Cloze Pick / Tap to Respond, Tap to Respond / Role Play / Sentence Builder, Role Play / Tap to Respond / Cloze Pick; none is a Volume 1 triple (Volume 1 opens every quest with Story Sequence) and the three Checks differ. The greeting pick by occasion is Tap to Respond: q1's Check and q3's Apply.",
       "Learning design (cont.): every Role Play scene has 4 turns on every way (2 ways each) and every way ends on its closing line; off, each plays Tap to Respond on its main path. No Dictation. Sound changes are heard, never typed: 감사합니다 [감사함니다], 떡국 [떡꾹], 맛있어요 [마시써요], 세뱃돈 [세배똔]. 계세요 and 가세요 do not sound alike.",
-      "Third pass (2026-10-31): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. No real person, brand, price or age wording. Outcome: ready, behind volumes (built-in pct 0)."
+      "Third pass (2026-10-31): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. No real person, brand, price or age wording. Outcome: ready, behind volumes (built-in pct 0).",
+      "Independent check (PR #920 review, 2026-10-31): fixed q1's Role Play closing (true on both ways, en/es/ko, with a test); ko -시- for the grandparents (말씀하세요, 빌어 주세요, 떠나시니까, 남으시는); ko Cloze glosses that showed 께도 or lost the plain-speech cue; the q2 caption's -yo and -si- (here inside -syeo-); es 'informal' and the 덕담 agreement; 'first' in the q1 intro."
     ]
   },
   "contentVer": 1
