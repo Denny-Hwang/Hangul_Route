@@ -139,6 +139,15 @@ describe('class-move helpers (F-SPACE-002 section 4.8, T-6a)', () => {
       expect(stepDone('learner', family({ learnerState: 'consented' }))).toBe(true);
     });
 
+    it('a learner who manages their own classes (learnerRoute device or none): the family step only waits, never "your answer needed"', () => {
+      for (const learnerRoute of ['device', 'none'] as const) {
+        const v = family({ learnerRoute });
+        expect(stepWord('learner', v)).toBe('waiting');
+        expect(stepWord('learner', v, 'ko')).not.toBe('내 답을 기다려요');
+        expect(stepDone('learner', v)).toBe(false);
+      }
+    });
+
     it('a class page keeps "waiting" for the family step (Fix D is the family page only)', () => {
       expect(stepWord('learner', source({ steps: { learner: 'waiting', source: 'yes', destination: 'waiting' } }))).toBe('waiting');
     });
@@ -249,6 +258,8 @@ describe('class-move helpers (F-SPACE-002 section 4.8, T-6a)', () => {
       ];
       expect(pendingCount(views)).toBe(2);
       expect(pendingCount([family(), family({ learnerState: 'consented' }), family({ status: 'ended' })])).toBe(1);
+      // The family step of a self-managed learner is not the family's to answer (the Worker refuses it): never counted.
+      expect(pendingCount([family({ learnerRoute: 'device' }), family({ learnerRoute: 'none' })])).toBe(0);
       expect(pendingCount([])).toBe(0);
     });
   });

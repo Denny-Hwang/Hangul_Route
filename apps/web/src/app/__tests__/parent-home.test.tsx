@@ -66,6 +66,8 @@ const data = vi.hoisted(() => ({
   transfers: null as unknown,
   notices: null as unknown,
   calls: [] as string[],
+  /** The next re-link read answers with this promise instead (a read that is still under way). */
+  relinkNext: null as Promise<unknown> | null,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -97,6 +99,11 @@ vi.mock('@/components/console/use-console', async () => {
     },
     relinkRequests: async (id: string) => {
       data.calls.push(`relinks:${id}`);
+      if (data.relinkNext) {
+        const next = data.relinkNext;
+        data.relinkNext = null;
+        return next;
+      }
       return data.relinks ?? { ok: true, data: [] };
     },
     transferRequests: async (id: string) => {
@@ -180,6 +187,7 @@ beforeEach(() => {
   data.transfers = null;
   data.notices = null;
   data.calls = [];
+  data.relinkNext = null;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -709,6 +717,29 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     expect(target.scrollIntoView).toHaveBeenCalled();
     expect(target.focus).toHaveBeenCalledWith({ preventScroll: true });
     vi.unstubAllGlobals();
+  });
+
+  it('a read that started before an answer and ends after it never puts the answered row back (the newest read draws)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+    // A read of the family starts and is still under way (it will say the re-link is pending)...
+    let finishOld: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finishOld = resolve;
+    });
+    const classCards = r.root.find((n) => typeof n.type !== 'string' && typeof n.props.onStale === 'function' && 'scope' in n.props);
+    act(() => classCards.props.onStale());
+    // ...then Approve: the answer's own read lands first and the row leaves.
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now: it is dropped, so the decided row and its chip do not come back.
+    await act(async () => finishOld({ ok: true, data: [pendingRelink] }));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
   });
 
   it('an archived family asks nothing and draws no strip', async () => {
