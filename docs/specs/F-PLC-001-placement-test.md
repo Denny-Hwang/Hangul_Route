@@ -1,6 +1,6 @@
 Status: ready
 
-> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): an item takes one answer: the flow ignores a second answer for an answered item, and the item screen (not the per-item view that remounts after each answer) holds a 400 ms lock after a tap, so a bounce never answers the next item blind (section 6.4; row KT-5).
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): an item takes one answer: the flow ignores a second answer for an answered item, and the 400 ms lock after a tap lives on an app-level clock (not in the per-item view that remounts after each answer), so a bounce never answers the next item blind (section 6.4; row KT-5).
 
 # F-PLC-001 — Placement (the level check): choose a test language and a length (Short, Standard or Deep), answer a short adaptive run, start the route at the right spot
 
