@@ -31,7 +31,7 @@ import { STORY_SHELF } from '../catalog/data';
  * Two volumes per cell in the catalogue (F-CURR-002 §5.1 and §6.2, F-STORY-005 PR 5.8, row CM-40): a cell's Volume 2
  * joins its `episodeIds`, its quests are catalogue quests on its own episode, a level below its stage places them out
  * like Volume 1's, and it adds no route day. These tests add fixture rows to the catalogue for cells that ship no Volume 2
- * (Stage 2 Nature, Stage 7 Letters); a Volume 2 that ships (Stage 4 Play, row CM-42 S4) is in `CATALOG` already.
+ * (Stage 2 Nature, Stage 7 Letters); a Volume 2 that ships (Stage 4 Letters, row CM-44 S4) is in `CATALOG` already.
  */
 
 const quests3 = [
@@ -44,7 +44,7 @@ const V2_ROWS: GeneratedCellRow[] = [
   ['stage7', 'letters', 'Write Your Name', 'shipped', 13, quests3, 2],
 ];
 const V2 = expandCellRows(V2_ROWS);
-/** The later volumes the shipped catalogue holds (row CM-42 S4 ships the first), kept when the fixture rows are added. */
+/** The later volumes the shipped catalogue holds (a content row such as CM-44 S4 ships one), kept when the fixture rows are added. */
 const SHIPPED_VOLUMES = expandCellRows(GENERATED_LESSON_CELL_ROWS).volumes;
 
 /** The shipped catalogue with fixture Volume 2 rows added, assembled the way catalog/data.ts assembles it. */
@@ -63,8 +63,8 @@ function withVolumes(rows = V2): Catalog {
 }
 const NATURE_V2 = ['quest:stage2-nature-v2-q1', 'quest:stage2-nature-v2-q2', 'quest:stage2-nature-v2-q3'];
 const LETTERS7_V2 = ['quest:stage7-letters-v2-q1', 'quest:stage7-letters-v2-q2', 'quest:stage7-letters-v2-q3'];
-/** The shipped Volume 2 of Stage 4 Play (row CM-42 S4), in `CATALOG` itself. */
-const CRAFTS4_V2 = ['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'quest:stage4-crafts-v2-q3'];
+/** The shipped Volume 2 of Stage 4 Letters (row CM-44 S4), in `CATALOG` itself. */
+const LETTERS4_V2 = ['quest:stage4-letters-v2-q1', 'quest:stage4-letters-v2-q2', 'quest:stage4-letters-v2-q3'];
 /** The cells of the shipped catalogue that have a later volume (a content row shipped it). */
 const SHIPPED_LATER = new Set(CATALOG.cells.filter((c) => (c.volumes ?? []).length > 0).map((c) => c.episodeId));
 
@@ -87,7 +87,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
   });
 
   it('lists each cell’s episodes by volume, and a shipped cell with no Volume 2 holds its first volume alone', () => {
-    expect(SHIPPED_LATER.has('episode:stage4-crafts')).toBe(true);
+    expect(SHIPPED_LATER.has('episode:stage4-letters')).toBe(true);
     for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual(SHIPPED_LATER.has(cell.episodeId) ? [cell.episodeId, `${cell.episodeId}-v2`] : [cell.episodeId]);
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
@@ -153,7 +153,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const at = (id: string) => route.findIndex((q) => q.id === id);
     const lastFirstVolume = Math.max(...CATALOG.cells.flatMap((c) => c.questIds).map(at));
     const firstStory = Math.min(...route.filter((q) => !q.grid).map((q) => at(q.id)));
-    for (const id of [...NATURE_V2, ...CRAFTS4_V2, ...LETTERS7_V2]) {
+    for (const id of [...NATURE_V2, ...LETTERS4_V2, ...LETTERS7_V2]) {
       expect(at(id), id).toBeGreaterThan(lastFirstVolume);
       expect(at(id), id).toBeLessThan(firstStory);
       expect(route[at(id)]).toMatchObject({ grid: true, playable: true, episodeId: id.slice('quest:'.length).replace(/-q[0-9]+$/, '').replace(/^/, 'episode:') });
@@ -165,10 +165,10 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const route = routeCatalogOf(withVolumes());
     const at3 = questsPlacedOutAtLevel({ stage: 'stage3', band: 0 }, route);
     for (const id of NATURE_V2) expect(at3).toContain(id);
-    for (const id of CRAFTS4_V2) expect(at3).not.toContain(id);
+    for (const id of LETTERS4_V2) expect(at3).not.toContain(id);
     expect(at3).toContain('quest:stage2-nature-q1');
     const at5 = questsPlacedOutAtLevel({ stage: 'stage5', band: 0 }, route);
-    for (const id of CRAFTS4_V2) expect(at5).toContain(id);
+    for (const id of LETTERS4_V2) expect(at5).toContain(id);
     const at2 = questsPlacedOutAtLevel({ stage: 'stage2', band: 0 }, route);
     for (const id of NATURE_V2) expect(at2).not.toContain(id);
   });
@@ -177,7 +177,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const stamp = 20261201;
     const history: CatalogHistory = {
       version: stamp,
-      idsAt: (v) => new Set([...questIdsAtVersion(v), ...(v >= stamp ? [...NATURE_V2, ...CRAFTS4_V2] : [])]),
+      idsAt: (v) => new Set([...questIdsAtVersion(v), ...(v >= stamp ? [...NATURE_V2, ...LETTERS4_V2] : [])]),
     };
     const route = routeCatalogOf(withVolumes());
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set(), history)).toEqual(NATURE_V2);
