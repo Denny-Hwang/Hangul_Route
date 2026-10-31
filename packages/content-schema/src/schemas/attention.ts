@@ -69,3 +69,16 @@ export function readSpaceAttention(value: unknown): SpaceAttention | null {
   const parsed = SpaceAttentionSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
+
+/** One live class of a school's `GET /api/spaces/:id/attention` (`{ classes: [...] }`). */
+export const ClassAttentionSchema = SpaceAttentionSchema.extend({ spaceId: z.string().min(1) });
+export type ClassAttention = z.infer<typeof ClassAttentionSchema>;
+
+/** A school's `classes`, or null when the answer is not a list; a broken row is dropped (never read as zero). */
+export function readSchoolAttention(value: unknown): ClassAttention[] | null {
+  if (!isRecord(value) || !Array.isArray(value.classes)) return null;
+  return value.classes.flatMap((row) => {
+    const parsed = ClassAttentionSchema.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  });
+}

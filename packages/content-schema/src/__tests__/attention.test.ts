@@ -5,6 +5,7 @@ import {
   SpaceAttentionSchema,
   readRosterIncoming,
   readRosterPending,
+  readSchoolAttention,
   readSpaceAttention,
 } from '../index';
 
@@ -73,5 +74,18 @@ describe('SpaceAttentionSchema and readSpaceAttention', () => {
     expect(readSpaceAttention({ relinks: -1, moves: 0, relinkExpiresAt: null })).toBeNull();
     expect(readSpaceAttention({ relinks: 1, moves: 0.5, relinkExpiresAt: null })).toBeNull();
     expect(readSpaceAttention({ relinks: 1, moves: 0 })).toBeNull();
+  });
+});
+
+describe('readSchoolAttention', () => {
+  const row = { spaceId: 'space:a', relinks: 1, moves: 0, relinkExpiresAt: '2026-10-31T10:10:00.000Z' };
+
+  it("reads a school's classes and drops a broken row", () => {
+    expect(readSchoolAttention({ classes: [row, { ...row, spaceId: '' }, { ...row, spaceId: 'space:b', moves: -2 }, 'x'] })).toEqual([row]);
+    expect(readSchoolAttention({ classes: [] })).toEqual([]);
+  });
+
+  it('reads anything but a list of classes as null', () => {
+    for (const bad of [undefined, null, [], { classes: 'none' }, { rows: [row] }]) expect(readSchoolAttention(bad)).toBeNull();
   });
 });
