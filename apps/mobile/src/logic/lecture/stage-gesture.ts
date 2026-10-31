@@ -111,7 +111,8 @@ export type StageStepSource = 'swipe' | 'click';
 
 /**
  * The source of a step `stageGesture` gave: a tap that stepped is a mouse click (a touch tap never
- * steps); anything else that stepped is a swipe, a touch or a mouse drag.
+ * steps); anything else that stepped is a swipe, a touch or a mouse drag. It uses the mouse
+ * `TAP_SLOP` on purpose: only a mouse tap can step. If a touch tap ever steps, pass the touch slop here.
  */
 export function stageStepSource(g: Pick<StageGesture, 'dx' | 'dy'>): StageStepSource {
   return isTap(g.dx, g.dy) ? 'click' : 'swipe';
