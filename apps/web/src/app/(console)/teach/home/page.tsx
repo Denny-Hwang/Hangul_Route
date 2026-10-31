@@ -38,15 +38,7 @@ import { headRem, rem } from '@/lib/console/rem';
  * it) and the query is removed with `history.replaceState`, so a reload or a shared address does not repeat it.
  */
 
-const smallButton: CSSProperties = {
-  ...buttonBase,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: touchTarget.min,
-  boxSizing: 'border-box',
-  textDecoration: 'none',
-};
+const smallButton: CSSProperties = buttonBase;
 const primaryButton: CSSProperties = { ...smallButton, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const textLink: CSSProperties = {
   display: 'inline-flex',
