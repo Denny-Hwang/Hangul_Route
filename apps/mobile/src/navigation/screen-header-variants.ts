@@ -140,6 +140,7 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   StoryOrderE2e: 'close',
   RolePlayE2e: 'close',
   HiddenHeritageE2e: 'close',
+  TapBoardE2e: 'close',
 };
 
 const EXCEPTIONS: ReadonlySet<string> = new Set(SCREEN_HEADER_EXCEPTIONS);
