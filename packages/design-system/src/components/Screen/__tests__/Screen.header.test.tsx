@@ -10,14 +10,22 @@ import { Screen } from '../Screen';
  * through a mocked `useContext`, so the component is called directly.
  */
 const slot = vi.hoisted(() => ({ value: null as unknown }));
-vi.mock('react-native', () => ({ ScrollView: 'ScrollView', View: 'View' }));
+vi.mock('react-native', () => ({ Platform: { OS: 'web' }, ScrollView: 'ScrollView', View: 'View' }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaInsetsContext: { name: 'insets' } }));
 vi.mock('../../Layout', () => ({ useLayoutClass: () => ({ width: 'compact' }) }));
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   const { ScreenHeaderSlotContext: slotContext } = await import('../../ScreenHeader/slot');
   const useContext = (context: unknown): unknown => (context === slotContext ? slot.value : null);
-  return { ...actual, useContext, default: { ...actual, useContext } };
+  // Called outside a render: the fit state (screen-fit.test.tsx) is a plain stand-in here.
+  const stubs = {
+    useContext,
+    useState: <T,>(v: T) => [v, () => undefined] as const,
+    useRef: <T,>(v: T) => ({ current: v }),
+    useCallback: <T,>(fn: T): T => fn,
+    useMemo: <T,>(fn: () => T): T => fn(),
+  };
+  return { ...actual, ...stubs, default: { ...actual, ...stubs } };
 });
 
 type El = ReactElement<Record<string, unknown>>;

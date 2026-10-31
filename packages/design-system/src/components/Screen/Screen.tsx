@@ -1,11 +1,13 @@
-import { useContext } from 'react';
+import { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
+import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ViewStyle } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { ALL_SCREEN_EDGES, NO_INSETS, screenFrame } from '../../layout';
 import { colors } from '../../tokens';
 import { useLayoutClass } from '../Layout';
 import { ScreenHeaderSlotContext } from '../ScreenHeader/slot';
+import { ScreenFitContext, contentFits, type ScreenFit } from './fit';
 import type { ScreenProps } from './types';
 
 const toneBg = {
@@ -13,6 +15,12 @@ const toneBg = {
   paper: colors.surface.paper,
   sunken: colors.surface.sunken,
 } as const;
+
+/**
+ * `touch-action: manipulation` on the web (docs/specs/AMENDMENTS-TOUCH.md KT-D3): no double-tap zoom and no click delay
+ * on any screen, pinch zoom and panning kept. Not in the native style types; native gets nothing.
+ */
+const MANIPULATION = { touchAction: 'manipulation' } as unknown as ViewStyle;
 
 export function Screen({
   children,
@@ -38,6 +46,34 @@ export function Screen({
   const frame = screenFrame({ width, widthClass, padded, insets, edges, hasFooter });
   const backgroundColor = toneBg[tone];
 
+  // Whether the content fits (AMENDMENTS-TOUCH section 5): a fixed screen always does; a scrolling one is measured
+  // from its viewport and its content, again whenever either changes (text size, rotation, content that grows).
+  const [measuredFits, setMeasuredFits] = useState(false);
+  const size = useRef({ viewport: 0, content: 0 });
+  const offset = useRef(0);
+  const remeasure = useCallback(() => setMeasuredFits(contentFits(size.current.content, size.current.viewport)), []);
+  const onLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      size.current.viewport = e.nativeEvent.layout.height;
+      remeasure();
+    },
+    [remeasure],
+  );
+  const onContentSizeChange = useCallback(
+    (_w: number, h: number) => {
+      size.current.content = h;
+      remeasure();
+    },
+    [remeasure],
+  );
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    offset.current = e.nativeEvent.contentOffset.y;
+  }, []);
+  const fits = scrollable ? measuredFits : true;
+  const fit = useMemo<ScreenFit>(() => ({ fits, scrollY: () => offset.current }), [fits]);
+  const native = Platform.OS !== 'web';
+  const manipulation = native ? {} : MANIPULATION;
+
   // The cap sits INSIDE the padded container so insets and gutter stay outside it
   // and the background stays full-bleed.
   const capped = { width: '100%', maxWidth: frame.maxWidth, alignSelf: 'center' } as const;
@@ -54,26 +90,33 @@ export function Screen({
   const body = scrollable ? (
     <ScrollView
       testID={hasFooter ? undefined : testID}
-      style={{ flex: 1, backgroundColor }}
+      style={{ flex: 1, backgroundColor, ...(hasFooter ? {} : manipulation) }}
       // flexGrow keeps short content full-height so bottom-pinned CTAs stay put.
       contentContainerStyle={{ flexGrow: 1, ...frame.body }}
       keyboardShouldPersistTaps="handled"
+      onLayout={onLayout}
+      onContentSizeChange={onContentSizeChange}
+      // Native: a screen that fits cannot scroll, so a short drag on a board never becomes a scroll (R6); the offset
+      // lets a board move a rectangle it measured before a scroll. The web scrolls as the browser decides.
+      {...(native ? { scrollEnabled: !fits, onScroll, scrollEventThrottle: 16 } : {})}
     >
       {content}
     </ScrollView>
   ) : (
-    <View testID={hasFooter ? undefined : testID} style={{ flex: 1, backgroundColor, ...frame.body }}>
+    <View testID={hasFooter ? undefined : testID} style={{ flex: 1, backgroundColor, ...frame.body, ...(hasFooter ? {} : manipulation) }}>
       {content}
     </View>
   );
 
-  if (!hasFooter) return body;
+  if (!hasFooter) return <ScreenFitContext.Provider value={fit}>{body}</ScreenFitContext.Provider>;
   return (
-    <View testID={testID} style={{ flex: 1, backgroundColor }}>
-      {body}
-      <View style={frame.footer ?? undefined}>
-        <View style={capped}>{footer}</View>
+    <ScreenFitContext.Provider value={fit}>
+      <View testID={testID} style={{ flex: 1, backgroundColor, ...manipulation }}>
+        {body}
+        <View style={frame.footer ?? undefined}>
+          <View style={capped}>{footer}</View>
+        </View>
       </View>
-    </View>
+    </ScreenFitContext.Provider>
   );
 }
