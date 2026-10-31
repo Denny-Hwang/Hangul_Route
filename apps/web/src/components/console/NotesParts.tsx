@@ -27,7 +27,7 @@ import { clearComposerDraft, readComposerDraft, saveComposerDraft } from '@/lib/
 import { notesEnabled } from '@/lib/console/config';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { ROUTES } from '@/lib/console/routing';
-import { stageTitle } from '@/lib/console/stage-titles';
+import { stageTitleIn } from '@/lib/console/stage-titles';
 import { BrowseLink, useBrowseLinksShown, type BrowseOpenerEnv } from './BrowseLink';
 import { MoveButton, TransferSheet } from './TransferParts';
 
@@ -611,7 +611,7 @@ export function NoteComposer({
                 <option value="" disabled>
                   {c.quest.choose.cta}
                 </option>
-                {questOptions(stageTitle, undefined, locale).map((group) => (
+                {questOptions(stageTitleIn(locale), undefined, locale).map((group) => (
                   <optgroup key={group.stage} label={group.title}>
                     {group.quests.map((quest) => (
                       <option key={quest.id} value={quest.id}>
@@ -693,7 +693,7 @@ export function NoteComposer({
 
 /** A catalogue quest's title (content, not a dictionary string), in the console language. */
 function questTitleOf(questId: string, locale: UiLocale): string {
-  for (const group of questOptions(stageTitle, undefined, locale)) {
+  for (const group of questOptions(stageTitleIn(locale), undefined, locale)) {
     const quest = group.quests.find((q) => q.id === questId);
     if (quest) return quest.title;
   }

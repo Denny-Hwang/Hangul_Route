@@ -242,3 +242,38 @@ test.describe('the stage list page (LR-8)', () => {
     await expect(page.locator('ol')).toHaveCount(1);
   });
 });
+
+/**
+ * AMENDMENTS-GROWNUP-UX section 10.3 (GX-9): the stage titles in the viewer's language. A Korean or Spanish grown-up
+ * reads "1단계 · 한글" or "Etapa 2 · Palabras" on the card and in the list, never an English title inside their own
+ * line; English stays the shipped list. At 360 and 1280, with no sideways scroll.
+ */
+const ENGLISH_ONLY_TITLES = /\b(Words|Sentences|Dialogue|Stories|Real-use|Self-expression)\b/;
+
+for (const locale of ['ko', 'es', 'en'] as const) {
+  test.describe(`stage titles in ${locale} (GX-9)`, () => {
+    test.skip(!FULL, 'needs an export built with the Learning Route on (LEARNING_ROUTE_E2E=1)');
+    test.use({ locale: locale === 'ko' ? 'ko-KR' : locale === 'es' ? 'es-US' : 'en-US' });
+    const m = getMessages(locale).console;
+
+    for (const width of [360, 1280]) {
+      test(`class at ${width}: the card and the stage list name each stage in ${locale}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: width === 360 ? 740 : 800 });
+        await mockRoster(page, 'class');
+        await page.goto(`${routeUrl('class')}&lang=${locale}`);
+
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText(m.learningRoute.title('Mina'));
+        const card = page.getByRole('region', { name: m.learningRoute.section, exact: true });
+        await expect(card.getByText(m.learningRoute.now('Mina', 1, m.stageTitles.stage1), { exact: true })).toBeVisible();
+        await expect(card.getByText(m.learningRoute.planReaches.class(2, m.stageTitles.stage2), { exact: true })).toBeVisible();
+
+        const list = page.locator('ol');
+        for (const stage of ['stage1', 'stage2', 'stage3', 'stage4'] as const) await expect(list).toContainText(m.stageTitles[stage]);
+        if (locale !== 'en') await expect(page.locator('main')).not.toContainText(ENGLISH_ONLY_TITLES);
+
+        await noSidewaysScroll(page);
+        await page.screenshot({ path: test.info().outputPath(`stage-titles-${locale}-${width}.png`), fullPage: true });
+      });
+    }
+  });
+}
