@@ -7,7 +7,7 @@
       "subtitle": "날씨가 어떤지, 무엇이 더 크고 더 추운지 말해요.",
       "hoyaIntro": "비와 눈, 햇볕과 바람! 날씨 문장을 읽어 봐요.",
       "culture.n1.text": "한국에서는 여름에 여러 날 계속 내리는 비를 {ko:장마}라고 해요. 옛 음력으로는 다섯째 달과 여섯째 달이 이 비가 오는 철이에요.",
-      "culture.n2.text": "1442년 조선에서 빗물의 양을 재는 {ko:측우기}가 만들어졌어요. 오늘날 알려진 조선 시대의 것은 1837년에 청동으로 만든 하나뿐이고, 서울의 국립기상박물관에 있어요.",
+      "culture.n2.text": "1442년 조선에서 빗물의 양을 재는 {ko:측우기}가 만들어졌어요. 오늘날 알려진 조선 시대의 것은 1837년에 만든 하나뿐이고, 서울의 국립기상박물관에 있어요.",
       "culture.n3.text": "이른 봄 꽃이 피기 시작할 무렵이면 한두 차례 다시 추워질 때가 많아요. 꽃을 시샘하는 추위라는 뜻으로 이 추위를 {ko:꽃샘추위}라고 해요."
     },
     "quest:stage3-nature-v2-q1": {
@@ -55,10 +55,10 @@
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "깃털 달린 동물의 몸집이 다른 것과 견주어 한층 조그맣다는 말"
     },
     "quest:stage3-nature-v2-q3": {
-      "title": "덥고 추워요",
-      "blurb": "겨울, 여름, 산 가운데 어디가 더 춥고 더운지 말해요.",
+      "title": "더운 날, 추운 날",
+      "blurb": "겨울, 여름, 산 가운데 무엇이 더 춥고 더운지 말해요.",
       "steps.s1.title": "두 계절",
-      "steps.s2.title": "어디가 더 추울까요?",
+      "steps.s2.title": "무엇이 더 추울까요?",
       "steps.s3.title": "빈칸 채우기",
       "steps.s4.title": "듣고 고르기",
       "steps.s5.title": "짧은 문제 두 개",
@@ -136,8 +136,8 @@
       "clozePick.rounds.a2.tiles.keoyo.gloss": "몸집이 우람하다는 뜻",
       "clozePick.rounds.a2.tiles.wayo.gloss": "하늘에서 내린다는 뜻",
       "clozePick.rounds.a3.tiles.gom.gloss": "둥근 귀에 털이 덥수룩한 들짐승",
-      "clozePick.rounds.a3.tiles.sae.gloss": "깃털 달린 동물",
-      "clozePick.rounds.a3.tiles.tokki.gloss": "귀가 긴 동물",
+      "clozePick.rounds.a3.tiles.kkot.gloss": "식물에 피어나는 빛깔이 고운 부분",
+      "clozePick.rounds.a3.tiles.byeol.gloss": "밤하늘에 반짝이는 작은 빛",
       "clozePick.rounds.a4.tiles.ga.gloss": "모음 뒤에 쓰는 주어 표시",
       "clozePick.rounds.a4.tiles.i.gloss": "받침 뒤에 쓰는 주어 표시",
       "clozePick.rounds.a4.tiles.reul.gloss": "모음 뒤에 쓰는 목적어 표시"
