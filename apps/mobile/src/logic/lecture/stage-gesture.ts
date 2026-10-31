@@ -10,15 +10,18 @@ import type { NavLayout } from './stage-scale';
  * phone bar's strip (`inBarStrip`).
  *
  * Like `stage-scale.ts`, it imports no design-system runtime: the token values are named here and
- * a test holds them to the tokens (`TAP_SLOP` = `spacing.xl`, `EDGE_GUARD_MIN` = `spacing.xl`,
+ * a test holds them to the tokens (`TAP_SLOP` = `spacing.md`, `TAP_SLOP_TOUCH` = `spacing.xl`, `EDGE_GUARD_MIN` = `spacing.xl`,
  * `EDGE_GUARD_PAD` = `spacing.sm`).
  */
 
+/** A mouse click moves less than this on both axes, in window px (`spacing.md`). Between a tap and a swipe is nothing. */
+export const TAP_SLOP = 12;
 /**
- * A tap moves less than this on both axes, in window px (`spacing.xl`; AMENDMENTS-TOUCH section 6.10 raised it
- * from `spacing.md`, so a fingertip that rolls or grazes still taps). Between a tap and a swipe is nothing.
+ * A touch tap (a pen counts as touch) moves less than this on both axes, in window px (`spacing.xl`;
+ * AMENDMENTS-TOUCH section 6.10): a fingertip that rolls or grazes still taps. The mouse keeps `TAP_SLOP`,
+ * so a short mouse drag on a target-free slide still does not step Next.
  */
-export const TAP_SLOP = 24;
+export const TAP_SLOP_TOUCH = 24;
 /** A touch swipe never starts this close to the window's left or right edge: the system's own back and forward gestures own it (`spacing.xl`). */
 export const EDGE_GUARD_MIN = 24;
 /** Past a safe-area inset the guard reaches this much further (`spacing.sm`). */
@@ -73,8 +76,8 @@ export function isSwipe(dx: number, dy: number): boolean {
   return ax >= SWIPE_MIN && ax >= SWIPE_RATIO * Math.abs(dy);
 }
 
-function isTap(dx: number, dy: number): boolean {
-  return Math.abs(dx) < TAP_SLOP && Math.abs(dy) < TAP_SLOP;
+function isTap(dx: number, dy: number, slop: number = TAP_SLOP): boolean {
+  return Math.abs(dx) < slop && Math.abs(dy) < slop;
 }
 
 /**
@@ -82,13 +85,13 @@ function isTap(dx: number, dy: number): boolean {
  * 0. covering another overlay: nothing; covering More: a tap closes it, anything else nothing;
  * 1. two or more touches at any time: nothing;
  * 2. a swipe: left next, right previous; a touch swipe that starts in either edge guard: nothing;
- * 3. not a tap: nothing;
+ * 3. not a tap (a touch that moved `TAP_SLOP_TOUCH` or more, a mouse `TAP_SLOP` or more): nothing;
  * 4. a tap on an option points at it (when pointing), on any other target nothing;
  * 5. a tap on empty area: a mouse on a target-free slide next; a touch in the overlay layout shows or
  *    hides the bar; any other touch rings Next (no step); a mouse on a target slide nothing.
  */
 export function stageGesture(g: StageGesture): StageCommand {
-  const tap = isTap(g.dx, g.dy);
+  const tap = isTap(g.dx, g.dy, g.pointer === 'touch' ? TAP_SLOP_TOUCH : TAP_SLOP);
   if (g.covering === 'other') return null;
   if (g.covering === 'more') return tap ? 'close-more' : null;
   if (g.touches > 1) return null;

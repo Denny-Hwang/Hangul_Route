@@ -170,7 +170,7 @@ A gesture is a pointer going down on the stage and up again, read by `Stage`'s r
 | Horizontal travel for a swipe | `|dx| >= 60` px | `SWIPE_MIN` (unchanged) |
 | Angle | `|dx| >= 1.5 x |dy|` (within about 34 degrees of horizontal) | `SWIPE_RATIO` (unchanged) |
 | Direction | `dx < 0` (to the left) = next; `dx > 0` = previous | — |
-| A tap | `|dx| < 24` and `|dy| < 24` px | `TAP_SLOP = spacing.xl` (was `spacing.md`, 12 px, until AMENDMENTS-TOUCH section 6.10, row KT-10; before PN-2 any move under 60 px counted as a tap) |
+| A tap | touch: `|dx| < 24` and `|dy| < 24` px; mouse: `|dx| < 12` and `|dy| < 12` px | `TAP_SLOP_TOUCH = spacing.xl` for touch and a pen (AMENDMENTS-TOUCH section 6.10, row KT-10; touch used the 12 px `TAP_SLOP` before), `TAP_SLOP = spacing.md` for the mouse (new in PN-2; before it any move under 60 px counted as a tap) |
 | Between a tap and a swipe | nothing (an abandoned move) | — |
 | Vertical drag | nothing: the stage never scrolls and never steps on a vertical move | — |
 | Two or more touches at any time during the gesture | nothing (a pinch or a two-finger move), whatever order the fingers lift in | — |
@@ -226,7 +226,7 @@ export function stageGesture(g: {
 0. `covering === 'other'` -> `null`; `covering === 'more'` -> `'close-more'` for a tap, `null` for anything else (no step, no point).
 1. `touches > 1` -> `null`.
 2. A swipe (section 6) -> `'next'` / `'prev'`; a touch swipe that starts within the edge guard of either window edge -> `null`.
-3. Not a tap (`|dx| >= TAP_SLOP` or `|dy| >= TAP_SLOP`) -> `null`.
+3. Not a tap (`|dx| >= TAP_SLOP` or `|dy| >= TAP_SLOP`; for touch `TAP_SLOP_TOUCH`, AMENDMENTS-TOUCH section 6.10) -> `null`.
 4. A tap on an option -> `{ point: index }` when `pointing`, else `null`. A tap on any other target -> `null`.
 5. A tap on empty area: `pointer === 'mouse'` and `!slideHasTargets` -> `'next'` (O4); `pointer === 'touch'` and `layout === 'overlay'` -> `'toggle-bar'`; `pointer === 'touch'` otherwise -> `'nudge-next'` (O5: no step); a mouse click on a target slide -> `null`.
 

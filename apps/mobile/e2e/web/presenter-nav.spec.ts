@@ -1399,10 +1399,11 @@ for (const vp of POINT_MATRIX) {
 
 /**
  * AMENDMENTS-TOUCH section 6.10, row KT-10 (owner report 2026-10-31, "a slight graze selects and then
- * un-selects"): the stage's `TAP_SLOP` is `spacing.xl` (24 px). A real touch that wanders 20 px on both
- * axes before it lifts is still a tap: on empty stage it rings Next (docked) or shows and hides the bar
- * (overlay); on an option it points at it, and a second such graze clears it. A 30 px move is neither a
- * tap nor a swipe and does nothing. The swipe distance, the edge guard and two fingers keep their cases
+ * un-selects"): the stage's touch slop `TAP_SLOP_TOUCH` is `spacing.xl` (24 px). A real touch that wanders
+ * 20 px on both axes before it lifts is still a tap: on empty stage it rings Next (docked) or shows and
+ * hides the bar (overlay); on an option it points at it, and a second such graze clears it. A 30 px move
+ * is neither a tap nor a swipe and does nothing. The mouse keeps `TAP_SLOP` (12 px): a 20 px mouse drag on
+ * a target-free slide does not step. The swipe distance, the edge guard and two fingers keep their cases
  * above. On the smallest presenter window (568 x 320, a 320 px phone held sideways; upright it shows the
  * rotate page) and an upright tablet (820 x 1180). CDP touch events (`swipeStage`), Chromium only.
  */
@@ -1462,6 +1463,26 @@ for (const vp of SLOP_MATRIX) {
       await page.waitForTimeout(150);
       expect(await pointedNow(page), 'a 30 px drift').toEqual([]);
       expect(await state(page), 'a 30 px drift').toEqual(settled);
+    });
+  });
+}
+
+for (const vp of SLOP_MATRIX.filter((v) => v.inputs.includes('mouse'))) {
+  test.describe(`KT-10 tap slop: ${vp.id} ${vp.width} x ${vp.height}, mouse (docked)`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height }, isMobile: false, hasTouch: false });
+
+    test('the mouse keeps the 12 px slop: a 20 px drag on a target-free slide does not step, a still click does', async ({ page }) => {
+      await open(page, vp, 'mouse');
+      const title = await counter(page);
+      const from = await emptyPoint(page);
+      await page.mouse.move(from.x, from.y);
+      await page.mouse.down();
+      await page.mouse.move(from.x + GRAZE, from.y + GRAZE, { steps: 6 });
+      await page.mouse.up();
+      await page.waitForTimeout(150);
+      expect(await counter(page), 'a 20 px mouse drag').toBe(title);
+      await page.mouse.click(from.x, from.y);
+      await expect.poll(() => counter(page)).toMatch(/^2 \//);
     });
   });
 }

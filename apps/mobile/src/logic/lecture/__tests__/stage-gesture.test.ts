@@ -7,6 +7,7 @@ import {
   EDGE_GUARD_PAD,
   NUDGE_MS,
   TAP_SLOP,
+  TAP_SLOP_TOUCH,
   edgeGuard,
   gesturePointer,
   isCompatMouse,
@@ -46,8 +47,9 @@ function g(over: Partial<StageGesture> = {}): StageGesture {
 }
 
 describe('the constants are the tokens the spec names', () => {
-  it('TAP_SLOP is spacing.xl (AMENDMENTS-TOUCH 6.10), the edge guard spacing.xl or the inset plus spacing.sm, the ring 1 s', () => {
-    expect(TAP_SLOP).toBe(spacing.xl);
+  it('TAP_SLOP_TOUCH is spacing.xl and TAP_SLOP (the mouse) spacing.md (AMENDMENTS-TOUCH 6.10), the edge guard spacing.xl or the inset plus spacing.sm, the ring 1 s', () => {
+    expect(TAP_SLOP_TOUCH).toBe(spacing.xl);
+    expect(TAP_SLOP).toBe(spacing.md);
     expect(EDGE_GUARD_MIN).toBe(spacing.xl);
     expect(EDGE_GUARD_PAD).toBe(spacing.sm);
     expect(NUDGE_MS).toBe(1000);
@@ -146,12 +148,10 @@ describe('rule 2: a swipe (section 6)', () => {
 });
 
 describe('rule 3: anything between a tap and a swipe does nothing', () => {
-  it('a move of 23 px is a tap; 24 px on either axis is not (AMENDMENTS-TOUCH 6.10)', () => {
+  it('a touch that moves 23 px is a tap; 24 px on either axis is not (AMENDMENTS-TOUCH 6.10)', () => {
     expect(stageGesture(g({ dx: 23, dy: -23 }))).toBe('nudge-next');
     expect(stageGesture(g({ dx: -24 }))).toBeNull();
     expect(stageGesture(g({ dy: 24 }))).toBeNull();
-    expect(stageGesture(g({ pointer: 'mouse', dx: 23 }))).toBe('next');
-    expect(stageGesture(g({ pointer: 'mouse', dx: 24 }))).toBeNull();
     expect(stageGesture(g({ dy: 23, target: { kind: 'option', index: 2 } }))).toEqual({ point: 2 });
     expect(stageGesture(g({ dy: 24, target: { kind: 'option', index: 2 } }))).toBeNull();
     expect(stageGesture(g({ layout: 'overlay', dx: -23, dy: 23 }))).toBe('toggle-bar');
@@ -159,10 +159,30 @@ describe('rule 3: anything between a tap and a swipe does nothing', () => {
     expect(stageGesture(g({ covering: 'more', dx: 24 }))).toBeNull();
   });
 
-  it('a graze of 12 to 23 px, which did nothing under the old 12 px slop, is now a tap (owner report 2026-10-31)', () => {
-    for (const d of [12, 16, 20, 23]) {
-      expect(stageGesture(g({ dx: d, dy: d })), `${d} px`).toBe('nudge-next');
-      expect(stageGesture(g({ dx: -d, target: { kind: 'option', index: 1 } })), `${d} px on an option`).toEqual({ point: 1 });
+  it('a mouse that moves 11 px is a click; 12 px on either axis is not (TAP_SLOP stays spacing.md)', () => {
+    expect(stageGesture(g({ pointer: 'mouse', dx: 11, dy: -11 }))).toBe('next');
+    expect(stageGesture(g({ pointer: 'mouse', dx: 12 }))).toBeNull();
+    expect(stageGesture(g({ pointer: 'mouse', dy: -12 }))).toBeNull();
+    expect(stageGesture(g({ pointer: 'mouse', dy: 11, target: { kind: 'option', index: 2 } }))).toEqual({ point: 2 });
+    expect(stageGesture(g({ pointer: 'mouse', dy: 12, target: { kind: 'option', index: 2 } }))).toBeNull();
+  });
+
+  it('12, 20 and 23 px: a tap for touch (a graze the old 12 px slop dropped), not a tap for the mouse (owner report 2026-10-31)', () => {
+    for (const d of [12, 20, 23]) {
+      for (const [dx, dy] of [[d, 0], [0, -d], [-d, d]] as const) {
+        const at = `${dx}, ${dy}`;
+        expect(stageGesture(g({ dx, dy })), `touch empty ${at}`).toBe('nudge-next');
+        expect(stageGesture(g({ dx, dy, layout: 'overlay' })), `touch overlay ${at}`).toBe('toggle-bar');
+        expect(stageGesture(g({ dx, dy, covering: 'more' })), `touch More ${at}`).toBe('close-more');
+        expect(stageGesture(g({ dx, dy, target: { kind: 'option', index: 1 } })), `touch option ${at}`).toEqual({ point: 1 });
+        expect(stageGesture(g({ dx, dy, target: { kind: 'option', index: 1 }, pointing: false })), `touch option, no pointing ${at}`).toBeNull();
+        expect(stageGesture(g({ dx, dy, target: { kind: 'other' } })), `touch other target ${at}`).toBeNull();
+        // A touch tap never steps, also on a target-free slide.
+        expect(stageGesture(g({ dx, dy, slideHasTargets: false })), `touch never steps ${at}`).not.toBe('next');
+        expect(stageGesture(g({ pointer: 'mouse', dx, dy })), `mouse empty ${at}`).toBeNull();
+        expect(stageGesture(g({ pointer: 'mouse', dx, dy, covering: 'more' })), `mouse More ${at}`).toBeNull();
+        expect(stageGesture(g({ pointer: 'mouse', dx, dy, target: { kind: 'option', index: 1 } })), `mouse option ${at}`).toBeNull();
+      }
     }
   });
 
