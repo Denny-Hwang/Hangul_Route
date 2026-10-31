@@ -17,6 +17,7 @@ export const AUTHORITATIVE_HOST_SUFFIXES = [
 ] as const;
 
 export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
+  'astro.kasi.re.kr',
   'contents.history.go.kr',
   'db.itkc.or.kr',
   'encykorea.aks.ac.kr',
