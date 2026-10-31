@@ -1146,7 +1146,11 @@
                   "romanization": "juchajang",
                   "en": "parking lot"
                 },
-                "dir": "left"
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
               },
               {
                 "id": "info",
@@ -1155,7 +1159,11 @@
                   "romanization": "annaeso",
                   "en": "information center"
                 },
-                "dir": "left"
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
               },
               {
                 "id": "lake",
@@ -1164,7 +1172,11 @@
                   "romanization": "hosu",
                   "en": "lake"
                 },
-                "dir": "right"
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
               },
               {
                 "id": "shop",
@@ -1173,7 +1185,11 @@
                   "romanization": "maejeom",
                   "en": "snack shop"
                 },
-                "dir": "right"
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
               }
             ],
             "altEn": "A park map: the parking lot and the information center to the left; the lake and the snack shop to the right"
@@ -1476,7 +1492,11 @@
                   "romanization": "juchajang",
                   "en": "parking lot"
                 },
-                "dir": "left"
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
               },
               {
                 "id": "info",
@@ -1485,7 +1505,11 @@
                   "romanization": "annaeso",
                   "en": "information center"
                 },
-                "dir": "left"
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
               },
               {
                 "id": "lake",
@@ -1494,7 +1518,11 @@
                   "romanization": "hosu",
                   "en": "lake"
                 },
-                "dir": "right"
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
               },
               {
                 "id": "shop",
@@ -1503,7 +1531,11 @@
                   "romanization": "maejeom",
                   "en": "snack shop"
                 },
-                "dir": "right"
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
               }
             ],
             "altEn": "A park map: the parking lot and the information center to the left; the lake and the snack shop to the right"
@@ -1672,7 +1704,8 @@
       "Learning design pass: 3 quests; new items per quest 5, 6 and 5 (at most 8); Practice and Check items from earlier quests 4 of 6, 3 of 6 and 3 of 6 (lesson-recycle at least 30 in 100); Checks Type Hangul (Dictation of 비 and 눈), Cloze Pick (value gaps on the quest's own trail sign) and Realia Read (the park map), one of each, none above 40 in 100 of the stage's Volume 2 Checks;",
       "Learning design pass (cont.): each Check reads a meaning or produces and asks what Practice did not (q2 c1 the spring's minutes, c2 the place forty minutes away; q3 c1 the information center's side, c2 the shop by what it sells). Triples RR/CP/TH, RR/TH/CP, RR/TR/RR differ from Volume 1's (RR/TH/RR, RR/TR/TH, RR/TH/RR) and from each other.",
       "Learning design pass (cont.): Device voice: 이십 분, 삼십 분, 사십 분 are said with a tense ㅂ ([이십뿐]), 약수터 [약쑤터] and 맑음 [말금] change in speech, so none is asked in Dictation; the Dictation targets 비 and 눈 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0.",
-      "Reviser: applied the fixes above (the 등산로 swap, the n2 and n3 scope words, the ko and es wording). Third pass: no change."
+      "Reviser: applied the fixes above (the 등산로 swap, the n2 and n3 scope words, the ko and es wording). Third pass: no change.",
+      "Review fixes (PR review, 2026-10-31): the park map's legend draws no arrow, so each place now shows 왼쪽 or 오른쪽 as its value and the q3 way questions are read off the sheet (es izquierda/derecha, ko glosses); ko n2 keeps the parks' scope (공단이 관리하는 국립공원); q2 t4 asks for Hangul in ko and es."
     ]
   },
   "contentVer": 1
