@@ -168,7 +168,7 @@ for (const { locale, browser } of LOCALES) {
         await expect(sheet.getByTestId('sheet-outgoing-row')).toContainText(c.status.moveTo('Evening Class D'));
         await page.screenshot({ path: test.info().outputPath(`grownup-attention-sheet-${locale}-${label}.png`) });
         if (label === '360') await noSidewaysScroll(page);
-        // Close is a pill, never a circle, even with a two-letter label (ko "닫기").
+        // Close is a pill, never a circle, even with a two-letter label (the ko Close).
         const closeBox = await sheet.getByRole('button', { name: getMessages(locale).common.buttons.close }).boundingBox();
         expect((closeBox?.width ?? 0) > (closeBox?.height ?? 0)).toBeTruthy();
         // The move out of this class: Review opens the shipped consent card inside the sheet.
