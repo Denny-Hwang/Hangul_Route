@@ -1189,8 +1189,15 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
+/**
+ * The grid cells of the lesson manifest: each cell's Volume 1. A later volume (F-CURR-002 CM-40) sits behind
+ * `volumes` (built-in pct 0), so its grid cell opens Volume 1 here; each Volume 2 has its own spec with the
+ * switch on (e.g. `journey-volume2-season.spec.ts`).
+ */
+const GRID_EPISODES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+
 /** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+const CELLS: readonly UpperCell[] = GRID_EPISODES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1217,8 +1224,9 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
-    const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(GRID_EPISODES.map((e) => e.id));
+    expect(GRID_EPISODES.length, 'every grid cell has its Volume 1 in the manifest').toBe(new Set(LESSON_EPISODES.map((e) => `${e.stage}-${e.theme}`)).size);
+    const shipped = new Set(GRID_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
 
