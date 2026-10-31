@@ -1,4 +1,4 @@
-import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route/design-system';
+import { Screen, ScreenHeaderSlotContext, TapLockProvider, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
@@ -207,12 +207,15 @@ export default function App(): ReactElement {
               instead of closing the app; Try again remounts the navigator. */}
           <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
             {/* Every screen's top row (Back, its title, the Aa control) comes from its route (AMENDMENTS-DISPLAY-NAV section 7.1). */}
-            <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
-              <NavigationContainer ref={navigation} onReady={startBridge}>
-                {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
-                <StatusBar style="dark" />
-              </NavigationContainer>
-            </ScreenHeaderSlotContext.Provider>
+            {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
+            <TapLockProvider>
+              <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+                <NavigationContainer ref={navigation} onReady={startBridge}>
+                  {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
+                  <StatusBar style="dark" />
+                </NavigationContainer>
+              </ScreenHeaderSlotContext.Provider>
+            </TapLockProvider>
             {/* The web's confirm step in the UI language, in place of the browser's confirm() (section 8). */}
             <ConfirmHost />
             <PwaBanners />
