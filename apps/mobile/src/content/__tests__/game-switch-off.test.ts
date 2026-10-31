@@ -5,6 +5,7 @@ import { clozeFallbackScope, validClozeRounds } from '../../logic/cloze-pick/rou
 import { validRounds } from '../../logic/listen-pick';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
+import { LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
 
@@ -50,6 +51,13 @@ function fallbackProblems(scope: MinigameScope, where: string): string[] {
 describe('every quest with each game.<kind> off (section 12.2)', () => {
   it('reads every step of every quest', () => {
     expect(steps.length).toBeGreaterThan(100);
+  });
+
+  it('reads every built lesson quest, a cell\'s Volume 2 included, so a Volume 2 content row is checked here with no change (row CM-40)', () => {
+    const read = new Set(steps.map((s) => s.questId));
+    expect(LESSON_QUESTS.filter((q) => !read.has(q.id)).map((q) => q.id)).toEqual([]);
+    // The steps of a Volume 2 come from its own chunk, the way ALL_LESSON_STEPS reads every chunk the manifest names.
+    expect(Object.keys(ALL_LESSON_STEPS).length).toBeGreaterThanOrEqual(LESSON_QUESTS.length);
   });
 
   it('ships Cloze Pick steps, so the switch-off check below is not empty (CM-30 decision record, row CM-3A)', () => {
