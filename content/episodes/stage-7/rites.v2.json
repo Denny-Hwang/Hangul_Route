@@ -16,10 +16,10 @@
     {
       "id": "quest:stage7-rites-v2-q1",
       "titleEn": "Who Is It For?",
-      "blurbEn": "Write who your New Year card is for: Grandma, a teacher or a friend.",
+      "blurbEn": "Write who your New Year card is for: Hoya's grandma, a teacher or a friend.",
       "teaserEn": "Next: write a short holiday message.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -57,7 +57,7 @@
                       {
                         "ko": "할머니께 카드를 써요.",
                         "romanization": "halmeonikke kadeureul sseoyo",
-                        "en": "I write a card to Grandma."
+                        "en": "I write a card to Hoya's grandma."
                       },
                       {
                         "ko": "선생님께 카드를 써요.",
@@ -172,12 +172,12 @@
           "rounds": [
             {
               "id": "y1",
-              "promptEn": "Type: I write a card to Grandma.",
+              "promptEn": "Type: I write a card to Hoya's grandma.",
               "pictureRef": "word:family-grandma",
               "target": {
                 "ko": "할머니께 카드를 써요",
                 "romanization": "halmeonikke kadeureul sseoyo",
-                "en": "I write a card to Grandma"
+                "en": "I write a card to Hoya's grandma"
               }
             },
             {
@@ -277,10 +277,10 @@
     {
       "id": "quest:stage7-rites-v2-q2",
       "titleEn": "Have a Good Holiday",
-      "blurbEn": "Write a holiday wish, and a line of your own news.",
+      "blurbEn": "Write a holiday wish, and a line about your holiday.",
       "teaserEn": "Next: write a whole New Year card.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -304,7 +304,7 @@
                       "romanization": "___ jal bonaeseyo",
                       "en": "Have a good time on ___."
                     },
-                    "noteEn": "Put a day in the slot. {ko:보내세요} asks politely and shows respect, so it suits Grandma, a teacher or a friend.",
+                    "noteEn": "{ko:보내세요} is polite, so it is safe for anyone. To a close friend, people also say {ko:잘 보내}.",
                     "examples": [
                       {
                         "ko": "추석 잘 보내세요.",
@@ -348,14 +348,14 @@
                   {
                     "type": "sentence",
                     "sentence": {
-                      "ko": "아침에 떡국을 먹었어요.",
-                      "romanization": "achime tteokgugeul meogeosseoyo",
-                      "en": "I ate tteokguk in the morning."
+                      "ko": "설날에 떡국을 먹어요.",
+                      "romanization": "seollare tteokgugeul meogeoyo",
+                      "en": "On Seollal, I eat tteokguk."
                     },
                     "picture": "card:tteokguk"
                   }
                 ],
-                "captionEn": "A card can also share a little news about you."
+                "captionEn": "A card can also say a little about your holiday."
               }
             ]
           },
@@ -436,18 +436,12 @@
             {
               "id": "r4",
               "sentence": {
-                "ko": "아침에 떡국을 먹었어요.",
-                "romanization": "achime tteokgugeul meogeosseoyo",
-                "en": "I ate tteokguk in the morning."
+                "ko": "설날에 떡국을 먹어요.",
+                "romanization": "seollare tteokgugeul meogeoyo",
+                "en": "On Seollal, I eat tteokguk."
               },
               "pictureRef": "card:tteokguk",
-              "distractors": [
-                {
-                  "ko": "먹어요",
-                  "romanization": "meogeoyo",
-                  "en": "I eat"
-                }
-              ]
+              "distractors": []
             }
           ]
         },
@@ -485,12 +479,12 @@
             },
             {
               "id": "y4",
-              "promptEn": "Type: I ate tteokguk.",
+              "promptEn": "Type: I eat tteokguk.",
               "pictureRef": "card:tteokguk",
               "target": {
-                "ko": "떡국을 먹었어요",
-                "romanization": "tteokgugeul meogeosseoyo",
-                "en": "I ate tteokguk"
+                "ko": "떡국을 먹어요",
+                "romanization": "tteokgugeul meogeoyo",
+                "en": "I eat tteokguk"
               }
             }
           ]
@@ -502,9 +496,9 @@
             {
               "id": "w1",
               "frame": {
-                "ko": "설날에 ___을/를 먹었어요.",
-                "romanization": "seollare ___eul/reul meogeosseoyo",
-                "en": "On Seollal, I ate ___."
+                "ko": "설날에 ___을/를 먹어요.",
+                "romanization": "seollare ___eul/reul meogeoyo",
+                "en": "On Seollal, I eat ___."
               },
               "slots": [
                 {
@@ -543,6 +537,11 @@
                   "id": "day",
                   "bank": [
                     {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Seollal"
+                    },
+                    {
                       "ko": "명절",
                       "romanization": "myeongjeol",
                       "en": "the holiday"
@@ -551,11 +550,6 @@
                       "ko": "주말",
                       "romanization": "jumal",
                       "en": "the weekend"
-                    },
-                    {
-                      "ko": "추석",
-                      "romanization": "chuseok",
-                      "en": "the autumn harvest festival"
                     }
                   ]
                 }
@@ -572,7 +566,7 @@
       "titleEn": "My New Year Card",
       "blurbEn": "Write a New Year card of your own, from a word bank.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -584,7 +578,7 @@
         {
           "id": "s2",
           "kind": "discover",
-          "titleEn": "Happy New Year, Grandma",
+          "titleEn": "New Year Wishes",
           "discover": {
             "pages": [
               {
@@ -596,12 +590,12 @@
                       "romanization": "___ saehae bok mani badeuseyo",
                       "en": "Happy New Year, ___."
                     },
-                    "noteEn": "Start the card with who it is for. {ko:받으세요} shows respect, so the wish suits Grandma, a teacher or a friend.",
+                    "noteEn": "{ko:받으세요} is polite, so it is safe for anyone. To a close friend, people also say {ko:새해 복 많이 받아}.",
                     "examples": [
                       {
                         "ko": "할머니, 새해 복 많이 받으세요.",
                         "romanization": "halmeoni saehae bok mani badeuseyo",
-                        "en": "Happy New Year, Grandma."
+                        "en": "Happy New Year, Hoya's grandma."
                       },
                       {
                         "ko": "선생님, 새해 복 많이 받으세요.",
@@ -677,12 +671,12 @@
           "rounds": [
             {
               "id": "t1",
-              "promptEn": "Type the word for Grandma.",
+              "promptEn": "Type the word for Hoya's grandma.",
               "pictureRef": "word:family-grandma",
               "target": {
                 "ko": "할머니",
                 "romanization": "halmeoni",
-                "en": "Grandma"
+                "en": "Hoya's grandma"
               }
             },
             {
@@ -734,7 +728,7 @@
                     {
                       "ko": "할머니",
                       "romanization": "halmeoni",
-                      "en": "Grandma"
+                      "en": "Hoya's grandma"
                     },
                     {
                       "ko": "호야",
@@ -756,9 +750,9 @@
             {
               "id": "f2",
               "frame": {
-                "ko": "설날에 ___을/를 먹었어요.",
-                "romanization": "seollare ___eul/reul meogeosseoyo",
-                "en": "On Seollal, I ate ___."
+                "ko": "설날에 ___을/를 먹어요.",
+                "romanization": "seollare ___eul/reul meogeoyo",
+                "en": "On Seollal, I eat ___."
               },
               "slots": [
                 {
@@ -798,6 +792,11 @@
                   "id": "day",
                   "bank": [
                     {
+                      "ko": "설날",
+                      "romanization": "seollal",
+                      "en": "Seollal"
+                    },
+                    {
                       "ko": "명절",
                       "romanization": "myeongjeol",
                       "en": "the holiday"
@@ -807,11 +806,6 @@
                       "romanization": "jumal",
                       "en": "the weekend",
                       "neutral": true
-                    },
-                    {
-                      "ko": "추석",
-                      "romanization": "chuseok",
-                      "en": "the autumn harvest festival"
                     }
                   ]
                 }
@@ -839,7 +833,7 @@
               "sentence": {
                 "ko": "할머니께 카드를 써요.",
                 "romanization": "halmeonikke kadeureul sseoyo",
-                "en": "I write a card to Grandma."
+                "en": "I write a card to Hoya's grandma."
               },
               "pictureRef": "word:family-grandma",
               "distractors": [],
@@ -889,7 +883,7 @@
         "passes": 3,
         "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 연하장 (topic 4538, read through the site's own topic API, HTTP 200): 정의, a postcard or card that celebrates the new year; 의의, as industrialization and a growing population made it impossible to call on everyone for New Year greetings, the card took their place. Standard Korean Language Dictionary 연하장 (word_no 238036, search page, HTTP 200): a short letter of words or a picture sent to celebrate the new year. Restated in own words; the locators quote the Korean. Carried by: the q1 Did you know? tip, beside the card words.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): both pages read again against the note. The author's draft said 'as towns grew and people knew more people than they could visit'; the source names industrialization and population growth, so the note now says 'as society industrialized and grew, people could no longer visit everyone with New Year greetings'. The entry also says the card came to Korea through Japan and began abroad; the note makes no origin claim at all (§5.1: shared customs are never framed as Korean in origin). No UNESCO status, brand or person. Outcome: wording fixed.\nLine 3 (pass 3, MAR third pass after the reviser, 2026-10-31): note, sources and locators re-read against the fetched pages; the institution is named as on the access date (국립민속박물관); no run of words is shared with a quoted source; the es and ko texts say the same and keep the one {ko:} token."
+        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 연하장 (topic 4538, read through the site's own topic API, HTTP 200): 정의, a postcard or card that celebrates the new year; 의의, as industrialization and a growing population made it impossible to call on everyone for New Year greetings, the card took their place. Standard Korean Language Dictionary 연하장 (word_no 238036, search page, HTTP 200): a short letter of words or a picture sent to celebrate the new year. Restated in own words; the locators quote the Korean. Carried by: the q1 Did you know? tip, beside the card words.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): both pages read again against the note. The author's draft said 'as towns grew and people knew more people than they could visit'; the source names industrialization and population growth, so the note now says 'as society industrialized and grew, people could no longer visit everyone with New Year greetings'. The entry also says the card came to Korea through Japan and began abroad; the note makes no origin claim at all (§5.1: shared customs are never framed as Korean in origin). No UNESCO status, brand or person. Outcome: wording fixed.\nLine 3 (pass 3, MAR third pass after the reviser, 2026-10-31): note, sources and locators re-read against the fetched pages; the institution is named as on the access date (국립민속박물관); no run of words is shared with a quoted source; the es and ko texts say the same and keep the one {ko:} token.\nReview fix stage (2026-10-31): the independent review found the ko text followed the source wording too closely; it is paraphrased with the {ko:} token kept, and the en and es texts are unchanged."
       }
     },
     {
@@ -916,7 +910,7 @@
         "passes": 3,
         "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 덕담 (topic 3593, site topic API, HTTP 200): 정의, the greeting said at the new year to elders, friends and younger people; 내용, it is fitted to the other person's situation, and wishes were put in the past tense so that they would come true; sending a New Year card is this wish in writing. Standard Korean Language Dictionary 덕담 (word_no 412271, search page, HTTP 200): words wishing others well, mostly exchanged at the new year. Carried by: the q2 Did you know? tip, beside the holiday wishes.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): 'elders, friends and younger people' is the 정의 list; 'fitted to the person who hears them' renders 상대의 형편에 따라 말한다; the draft said a wish 'was often said' in the past tense, but the entry gives the past-tense wish as the traditional form and says the custom is now hard to find, so the note says 'In the past, a wish was said as if it had already come true', with no 'often' and no claim about today. The entry's examples (a son, wealth, passing an exam) are left out: they would ask about family and money. Outcome: wording narrowed.\nLine 3 (pass 3, MAR third pass, 2026-10-31): re-read; institution named as on the access date; a custom described, no blame for doing otherwise (anti-shame, F-CURR-002 7.7); es and ko keep the one {ko:} token."
+        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 덕담 (topic 3593, site topic API, HTTP 200): 정의, the greeting said at the new year to elders, friends and younger people; 내용, it is fitted to the other person's situation, and wishes were put in the past tense so that they would come true; sending a New Year card is this wish in writing. Standard Korean Language Dictionary 덕담 (word_no 412271, search page, HTTP 200): words wishing others well, mostly exchanged at the new year. Carried by: the q2 Did you know? tip, beside the holiday wishes.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): 'elders, friends and younger people' is the 정의 list; 'fitted to the person who hears them' renders 상대의 형편에 따라 말한다; the draft said a wish 'was often said' in the past tense, but the entry gives the past-tense wish as the traditional form and says the custom is now hard to find, so the note says 'In the past, a wish was said as if it had already come true', with no 'often' and no claim about today. The entry's examples (a son, wealth, passing an exam) are left out: they would ask about family and money. Outcome: wording narrowed.\nLine 3 (pass 3, MAR third pass, 2026-10-31): re-read; institution named as on the access date; a custom described, no blame for doing otherwise (anti-shame, F-CURR-002 7.7); es and ko keep the one {ko:} token.\nReview fix stage (2026-10-31): the independent review found the ko text followed the source wording too closely; it is paraphrased with the {ko:} token kept, and the en and es texts are unchanged."
       }
     },
     {
@@ -953,15 +947,17 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-31",
     "notes": [
-      "Author pass (MAR, 2026-10-31): §5.4 S7 in three quests: who the card is for (___께 카드를 써요), a holiday wish (___ 잘 보내세요, with 명절) and a line of the writer's news, and the whole New Year card as the q3 My Story chain (___, 새해 복 많이 받으세요). Triples trace-word / type-hangul / cloze-pick, order-it / type-hangul / write-frame, type-hangul / my-story / order-it: none is a Volume 1 triple.",
-      "Language lens (MAR, 2026-10-31): 해요체 throughout; the receiver's honorific per NIKL 언어 예절: 할머니께 and 선생님께, 호야에게; every wish to the receiver in the respectful -(으)세요 (받으세요, 보내세요), which suits an elder, a teacher and a friend alike; romanization from the F-CNT-002 converter (halmeonikke, seonsaengnimkke, myeongjeol, seollare).",
-      "Language lens (cont.): applied: the draft's last chain frame ___에 또 만나요 put an elder after 만나요, where the humble 뵈어요 belongs, and a chain cannot change a later frame by the first pick, so 또 and 만나요 left the cell and the middle frame became the writer's own news (설날에 ___을/를 먹었어요). No health wish (건강하세요): the NIKL New Year column asks for care with it toward elders.",
+      "Author pass (MAR, 2026-10-31): §5.4 S7 in three quests: who the card is for (___께 카드를 써요), a holiday wish (___ 잘 보내세요, with 명절) and a line about the writer's holiday (설날에 ___을/를 먹어요), and the whole New Year card as the q3 My Story chain. Triples trace-word / type-hangul / cloze-pick, order-it / type-hangul / write-frame, type-hangul / my-story / order-it: none is a Volume 1 triple.",
+      "Language lens (MAR, 2026-10-31): 해요체 throughout; the receiver's honorific per NIKL 언어 예절: 할머니께 and 선생님께, 호야에게; romanization from the F-CNT-002 converter (halmeonikke, seonsaengnimkke, myeongjeol, seollare).",
+      "Language lens (register, a learning-design choice): a chain cannot change a later frame by the first pick, so every wish to the receiver is the polite -(으)세요 (받으세요, 보내세요), safe to write to anyone; the Discover notes add that to a close friend people also say the plain 새해 복 많이 받아 and 잘 보내. No claim that one form fits every receiver.",
+      "Language lens (cont.): applied: the draft's last chain frame ___에 또 만나요 put an elder after 만나요, where the humble 뵈어요 belongs, so 또 and 만나요 left the cell and the middle frame became a line about the writer's holiday. No health wish (건강하세요): the NIKL New Year column asks for care with it toward elders.",
       "Culture and facts lens (MAR, 2026-10-31): n1 (연하장; cards took the place of New Year visits), n2 (덕담 to elders, friends and younger people, fitted to the hearer, once said as if already come true) and n3 (께, the respectful 에게, in a letter's opening) were each matched to NFM, NIKL and stdict quotes. Applied: n1 names industrialization, n2 drops 'often', n3 says 'can open'.",
       "Culture and facts lens (cont.): all three notes are new beside Volume 1's; institutions named as on the access date; no origin claim (the NFM entry says the card came to Korea from abroad, and the note says nothing of origin), no UNESCO status, no brand, no living person in the copy.",
-      "Learning design lens (MAR, 2026-10-31): curriculum lint clean; one new frame a quest and at most 2 new words (카드, 써요; 명절); lesson-recycle 33, 50 and 83 in 100. Of the 14 words and set lines the cell asks, 11 were taught before it: 5 by Volume 1 of this cell (설날, 추석, 주말, 떡국, 사과; 36 in 100) and 6 by earlier cells (새해, 밥, 할머니, 선생님, 호야, 새해 복 많이 받으세요).",
+      "Learning design lens (MAR, 2026-10-31): curriculum lint clean; one new frame a quest and at most 2 new words a quest; the cell recycles Volume 1 words (설날, 추석, 주말, 떡국, 사과) and earlier cells' words (새해, 밥, 할머니, 선생님, 호야, 새해 복 많이 받으세요, 먹어요). The q2 Check frame 설날에 ___을/를 먹어요 is a present-tense line, not Volume 1's past-tense ___에 ___을/를 먹었어요.",
       "Learning design lens (cont.): applied: the q1 Cloze Pick distractors are forms no sentence takes (선생님를, 선생님에; 호야을, 호야에), so each gap has one right answer without leaning on the meaning line, and 에게 is never offered before 선생님 nor 께 before 호야. No Dictation round.",
-      "My Story lens (MAR, 2026-10-31, §6.6): the receiver is picked from Hoya's grandmother, the friend Hoya (neutral) and a teacher; one neutral option per bank, never first (호야, 밥, 주말); the only family word is Hoya's grandmother, the receiver §5.4 names; no frame asks about the learner's family, feelings, home or school.",
+      "My Story lens (MAR, 2026-10-31, §6.6): the receiver is picked from Hoya's grandmother (glossed Hoya's grandma in en, es and ko), the friend Hoya (neutral) and a teacher; one neutral option per bank, never first (호야, 밥, 주말); the only family word is Hoya's grandmother, the receiver §5.4 names; no frame asks about the learner's family, feelings, home or school.",
       "My Story lens (cont.): with game.my-story off the step plays frame 1 alone, which reads well (할머니, 새해 복 많이 받으세요); frames 2 and 3 and every word of their banks are the q2 Write Frame Check, so the switch-off path teaches them (the CM-38 hand-off).",
+      "Review fix stage (MAR, 2026-10-31): the card was out of time or occasion for 6 of 9 picks (a past Seollal line, then a Chuseok wish). Frame 2 is present tense and frame 3 and the q2 Check offer 설날, 명절, 주말 (추석 left both); a test composes all 27 cards. ko writes 께 after an honorific receiver and paraphrases n1 and n2; es names the teacher docente.",
       "Reviser and third pass (MAR, 2026-10-31): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text. The passes ran inside the authoring session; no native-speaker or expert review is claimed."
     ]
   },
