@@ -107,8 +107,8 @@ const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 describe('grid capacity (F-STORY-005 §3.5)', () => {
   it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the later volumes stay off the route list', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    // A shipped Volume 2: Play & Crafts, Stage 4 (row CM-42 S4).
-    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage4-crafts-v2');
+    // A shipped Volume 2: Letters & Books, Stage 4 (row CM-44 S4).
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage4-letters-v2');
     for (const episode of volumeEpisodes) {
       expect(episode.volume, episode.id).toBe(2);
       expect(episodesAll.some((e) => e.id === episode.id), episode.id).toBe(false);

@@ -200,7 +200,8 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
     const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
     const THEME_ORDER = ['letters', 'life', 'rites', 'nature', 'crafts'];
     const expected = READY.filter((c) => c.cell.stage === 'stage4')
-      .sort((a, b) => THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
+      // Each cell's first volume in theme order, then the later volumes (F-CURR-002 row CM-40), as the bundle lists them.
+      .sort((a, b) => (a.cell.volume ?? 1) - (b.cell.volume ?? 1) || THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
       .flatMap((c) => c.cell.quests.map((q) => q.id));
     expect(expected.slice(0, 3)).toEqual(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']);
     expect(stage4).toEqual(expected);
@@ -1003,7 +1004,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
     // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 Volume 1 Practices scaffold, and
-    // every Volume 2 Practice does (row CM-42 S4 adds three).
+    // every Volume 2 Practice does (row CM-44 S4 adds three).
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
     expect([QUESTS.length, scaffolding.size]).toEqual([81, 78]);
   });

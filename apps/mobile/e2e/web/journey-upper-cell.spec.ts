@@ -1191,7 +1191,7 @@ async function openFirstQuest(page: Page): Promise<void> {
 
 /**
  * A cell's first volume: the grid opens it while `volumes` is off (launch state). A later volume has its own suite
- * (journey-volume2.spec.ts, F-CURR-002 row CM-40; the first ships with CM-42 S4).
+ * (journey-volume2.spec.ts, F-CURR-002 row CM-40; one ships with CM-44 S4).
  */
 const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
 

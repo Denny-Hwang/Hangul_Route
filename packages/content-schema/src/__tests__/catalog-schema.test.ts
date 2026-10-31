@@ -139,9 +139,9 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    // + each shipped later volume's quests (F-CURR-002 row CM-40; the first, Stage 4 Play, row CM-42 S4).
+    // + each shipped later volume's quests (F-CURR-002 row CM-40; Stage 4 Letters, row CM-44 S4).
     const later = CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds));
-    expect(later).toEqual(expect.arrayContaining(['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'quest:stage4-crafts-v2-q3']));
+    expect(later).toEqual(expect.arrayContaining(['quest:stage4-letters-v2-q1', 'quest:stage4-letters-v2-q2', 'quest:stage4-letters-v2-q3']));
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108 + later.length);
   });
 

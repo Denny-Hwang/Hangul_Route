@@ -76,7 +76,7 @@ const repeated = (list: readonly string[]): string[] => list.filter((x, i) => li
 describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => {
   it('every section 9.3 rule passes with zero findings for Stage 4, the frozen ids included', () => {
     const findings = lintCurriculum(tree, { today: '2026-10-23' }).filter(
-      // Volume 1's five cells (a Volume 2 cell has its own test, with its own access dates: stage4-crafts-v2.test.ts).
+      // Volume 1's five cells (a Volume 2 cell has its own test, with its own access dates: stage4-letters-v2.test.ts).
       (f) => FILES.includes(f.file) || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
     );
     expect(findings.map((f) => `${f.rule} ${f.severity} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);

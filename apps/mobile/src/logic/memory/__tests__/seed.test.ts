@@ -8,7 +8,7 @@ import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, u
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
  * snapshot points and for a learner with every lesson quest done (107, 108 with the Stage 1 addition of row CM-33, and
- * 111 with the Play Volume 2 of Stage 4, row CM-42 S4).
+ * 111 with the Letters Volume 2 of Stage 4, row CM-44 S4).
  */
 
 const SEEDED_AT = '2026-10-22T08:00:00.000Z';
@@ -120,7 +120,7 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 111 quests since row CM-42 S4)', () => {
+describe('the all-quests fixture (scenario S-c; 111 quests since row CM-44 S4)', () => {
   const snap = finished(111);
   const seed = deriveSeed(input(snap));
 
