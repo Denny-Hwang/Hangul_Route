@@ -1,5 +1,7 @@
 Status: ready (all rows built 2026-10-12, Q-1 to Q-11)
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Listen & Pick and the other pick-one answers take touches through the shared tap board (a graze still counts, a bounce never counts twice); Pic-Word Match no longer un-selects a tile tapped again, and its selection changes only by picking another tile (sections 3, 6.1; rows KT-3, KT-4a, KT-4b).
+
 # F-QUEST-002 — Discover and Check steps, the full Stage 1 (15 quests, 30 symbols), Stage 1 completion and the Hangul Check, plus Listen & Pick and Pic-Word Match
 
 > Start order (review of 2026-10-10): Q-1, Q-2 and Q-5b have no external dependency; Q-3b, Q-4 and Q-5a need `ChoiceCard` (F-STORY-003 PR 3.3) and `KoreanText` (F-I18N-001 PR 4), both startable now; **Q-9 alone is blocked** until F-STORY-006's award engine exists (interface in §3.8). Content PRs Q-6a-Q-8 need the native-speaker review listed under External before they ship to learners.
@@ -325,7 +327,7 @@ export const PicWordRoundSchema = z.object({ pairs: z.array(PicWordPairSchema).m
 **Board behaviour** (`screens/minigames/PicWordMatchGame.tsx`, props `{ scope, host }`):
 
 - Two columns: pictures (left, shuffled) and words (right, shuffled independently, never aligned with their pictures). Words show Korean + romanization; the gloss is **hidden until the pair is matched** (it would give the answer away), then appears under the word. Tiles >= `touchTarget.min` tall, 8 dp apart.
-- **Pairing is tap-tap**: tap a picture then a word, or a word then a picture; tapping the selected tile again clears it. Drag-to-draw-a-line (the catalog's gesture) is not v1 (accessibility, no gesture-handler dependency); see §4.
+- **Pairing is tap-tap**: tap a picture then a word, or a word then a picture; tapping the selected tile again keeps it selected (a bounce never un-selects; `AMENDMENTS-TOUCH.md` 6.1, row KT-4a). Drag-to-draw-a-line (the catalog's gesture) is not v1 (accessibility, no gesture-handler dependency); see §4.
 - **Given** a correct pair, **then** both tiles lock with the same number badge and a check mark (never colour alone), the word is spoken (`playPrompt`, §3.12) and its gloss appears; **given** a wrong pair, **then** the tapped word turns amber and clears after 600 ms, Hoya `thinking`, the picture stays selected, nothing ends.
 - **Scoring.** One scored round per pair, keyed `b<board>:<pairId>` where `pairId` is the id of the **first tile the learner selected** for that attempt (a wrong second tile does not score the pair it was mistakenly tapped against); first answer scores, later ones are retries (`logic/first-try.ts:24-34`, the same convention as Card Match's `pairRoundKey`, `logic/round-keys.ts:9-11`). After a pair's second wrong attempt its right partner gets a hint ring; the pair still resolves only when matched.
 - A board ends when all pairs are matched (700 ms), then the next board or `host.complete()`. **Skip** (ghost) is available after the first answer, as the other games (`CardMatchGame.tsx` pattern), and calls `host.complete()` without marking unmatched pairs.

@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): the presenter Stage's `TAP_SLOP` becomes 24 px (`spacing.xl`); the swipe distance, the edge guard and the two-finger behaviour stay (section 6.10; row KT-10).
+
 # F-TCH-004 — Lecture mode: a teacher's presenter for tablets, projectors and TVs
 
 **Scope**: `packages/content-schema` (`lecture` deck + codec + console-to-presenter roster message, telemetry names) · `packages/design-system` (`presenter` token group, `Screen width="bleed"` from F-LAYOUT-001) · `apps/mobile` (separate presenter root `PresenterApp`, `screens/presenter/`, `logic/lecture/`, `platform/presenter*.ts`, presenter font, shell CSS, e2e) · `apps/web` (console page `/teach/space/lecture`, `lib/console/lecture.ts`, entry buttons, catalogue mirror) · `scripts/` (presenter font subset, lecture catalogue mirror) · wireframe `design/wireframes/classroom/lecture-presenter.md`

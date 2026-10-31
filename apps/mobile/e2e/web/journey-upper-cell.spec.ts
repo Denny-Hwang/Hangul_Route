@@ -428,7 +428,7 @@ async function playDictationCheck(page: Page, name: string, words: readonly [str
   for (const word of words) await typeAnswer(page, word);
 }
 
-/** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards carry a label, not a button role. */
+/** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards are buttons named by their labels. */
 async function playCardMatch(page: Page, pairs: readonly (readonly [romanization: string, meaning: string])[]): Promise<void> {
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const [romanization, meaning] of pairs) {
