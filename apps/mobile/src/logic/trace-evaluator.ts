@@ -94,3 +94,19 @@ export function createTraceEvaluator({
     isLocked: () => locked || disposed,
   };
 }
+
+/**
+ * AMENDMENTS-TOUCH 6.8 (KT-D9): the idle check follows the fingers (`logic/trace-pointers`). A finger
+ * landing stops the countdown; the drawing finger lifting restarts it; a touch that never drew (a dot,
+ * a graze under 4 px, a palm) leaves no ink and restarts it when ink is already there, so the drawing is
+ * still scored without the Done button. Stroke effects (`start`, `point`) are the screen's own.
+ */
+export function idleOnTouch(
+  gate: Pick<TraceEvaluator, 'strokeStarted' | 'strokeEnded'> | null,
+  effect: 'hold' | 'start' | 'point' | 'end' | 'release',
+  hasInk: boolean,
+): void {
+  if (!gate) return;
+  if (effect === 'hold') gate.strokeStarted();
+  else if (effect === 'end' || (effect === 'release' && hasInk)) gate.strokeEnded();
+}
