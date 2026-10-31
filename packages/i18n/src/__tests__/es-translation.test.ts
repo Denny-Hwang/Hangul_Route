@@ -173,6 +173,8 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.lecture.outline.addQuiz.cta',
   'console.settings.grownUps.role.admin',
   'landing.footer.app',
+  'console.relink.platform.android', // the platform's name (GX-12)
+  'console.relink.platform.web', // the platform's name, the word Spanish uses as it is (GX-12)
   'landing.licenses.softwareTitle', // "Software", a word Spanish borrows (open-source notices, 2026-10-14)
   'landing.licenses.where.app', // "App", as landing.footer.app
   'learner.audio.voiceHelp.sections.android.title',

@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -274,7 +274,7 @@ function SpaceInner(): JSX.Element {
                       <Link
                         href={ROUTES.spaceLecture(spaceId, 'revisit', undefined, roster.space.kind)}
                         data-testid="revisit-together"
-                        style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: rem(typography.size.caption), fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        style={{ ...buttonBase, whiteSpace: 'nowrap' }}
                       >
                         {c.lecture.revisitChip.cta}
                       </Link>
@@ -300,8 +300,9 @@ function SpaceInner(): JSX.Element {
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
+            {/* A waiting request asks the grown-up to decide: the primary tone and the action wording (review of PR #933). */}
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
-              <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
+              <Button testId="relink-entry" tone={pendingRelinks > 0 ? 'primary' : 'secondary'}>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
             {movesShown && roster.space.kind === 'class' ? (
               <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
@@ -394,7 +395,7 @@ function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind
     <Link
       href={link.href}
       data-testid="see-report"
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, marginTop: spacing.sm }}
     >
       {link.text}
     </Link>
@@ -411,7 +412,7 @@ function NotesLink({ href, testId, text, describedBy }: { href: string; testId: 
       href={href}
       data-testid={testId}
       aria-describedby={describedBy}
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}), textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}) }}
     >
       {text}
     </Link>
@@ -426,7 +427,7 @@ function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Ros
     <Link
       href={link.href}
       data-testid="class-report-link"
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, marginTop: spacing.sm }}
     >
       {link.text}
     </Link>

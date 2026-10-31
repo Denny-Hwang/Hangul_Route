@@ -4,7 +4,7 @@ import { SLOT, aroundSlot } from '../slot';
 
 describe('aroundSlot (a one-argument message with its argument styled apart)', () => {
   it('splits the English sentence around the name', () => {
-    expect(aroundSlot(getMessages('en').console.relink.askingToBe)).toEqual({ before: 'Someone is asking to be ', after: '' });
+    expect(aroundSlot(getMessages('en').console.relink.askingToBe)).toEqual({ before: '', after: ' · on a new device' });
   });
 
   it('keeps text on both sides, wherever a translation puts the argument', () => {

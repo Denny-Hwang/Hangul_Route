@@ -174,7 +174,7 @@ export function SettingsSections({
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, alignItems: 'center' }}>
               {move && space.kind === 'class' && !archived ? <MoveRowAction name={l.name} online={move.online} onMove={() => move.onMove(l)} /> : null}
               {move && space.kind === 'family' && !archived && move.familyMovable?.has(l.memberId) ? <MoveRowAction family name={l.name} online={move.online} onMove={() => move.onMove(l)} /> : null}
-              <Button disabled={busy || archived} onClick={() => onRemoveLearner(l)}>
+              <Button tone="danger" disabled={busy || archived} onClick={() => onRemoveLearner(l)}>
                 {s.learners.remove[space.kind].cta}
               </Button>
             </span>

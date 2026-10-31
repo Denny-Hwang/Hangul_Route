@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
@@ -14,8 +14,21 @@ export const panelStyle: CSSProperties = {
   border: `1px solid ${colors.border.subtle}`,
 };
 
-/** The console button look; also used by a link that navigates (one interactive element, not a button inside a link). */
+/**
+ * The console button look; also used by a link that navigates (one interactive element, not a button inside a link).
+ * It owns the size (AMENDMENTS-GROWNUP-UX GX-D11, row GX-6): never shorter than `touchTarget.min`, never narrower than
+ * `touchTarget.child`, the label centred, so a short label never turns into a circle and no row mixes heights. A spread
+ * of it sets no size or box of its own (`button-size.test.tsx` scans the console for that).
+ */
 export const buttonBase: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box',
+  minHeight: touchTarget.min,
+  minWidth: touchTarget.child,
+  textAlign: 'center',
+  textDecoration: 'none',
   padding: `${spacing.sm}px ${spacing.lg}px`,
   borderRadius: radii.pill,
   fontWeight: typography.weight.bold,
@@ -26,7 +39,26 @@ export const buttonBase: CSSProperties = {
   cursor: 'pointer',
 };
 
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
+/**
+ * The console's pill select (the notes filter's look, AMENDMENTS-GROWNUP-UX T12): as tall as a button, never wider than
+ * its row, the label in the button type.
+ */
+export const selectBase: CSSProperties = {
+  minHeight: touchTarget.min,
+  maxWidth: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  padding: `0 ${spacing.lg}px`,
+  borderRadius: radii.pill,
+  border: `${borderWidth.thin}px solid ${colors.border.strong}`,
+  backgroundColor: colors.surface.paper,
+  color: colors.text.primary,
+  fontFamily: 'inherit',
+  fontSize: rem(typography.size.bodySm),
+  fontWeight: typography.weight.bold,
+};
+
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel, describedBy }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string; describedBy?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
@@ -34,7 +66,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
         : {};
   return (
-    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} aria-describedby={describedBy} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );

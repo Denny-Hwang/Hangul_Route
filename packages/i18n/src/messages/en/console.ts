@@ -69,7 +69,8 @@ export const consoleMsgs = {
   noPlanYet: 'No plan yet. Pick a few quests, spread the dates, and publish before class.',
   relinkApproveHint: 'Approve only if this learner is with you or you expect this device.',
   relinkNothing: 'Nothing waiting. Requests appear here for 10 minutes after a learner asks.',
-  relinkAnotherWay: 'Another way: issue a new rescue code and read it to the learner. The old code stops working.',
+  /** Under the page's "Another way" heading (`relink.anotherWay`), so it does not repeat the heading (GX-12). */
+  relinkAnotherWay: 'Issue a new rescue code and read it to the learner. The old code stops working.',
   relinkCardsComeBack: "Approving brings the learner back into this class. Their cards come back with the rescue code their grown-up keeps in the app (Save my progress) — teachers can't see or reissue it.",
   rescueIssued: 'Read this to the learner or their grown-up now — it is shown once.',
   archiveKeeps: 'Keeps everything, stops new joins. You can unarchive later.',
@@ -367,9 +368,11 @@ export const consoleMsgs = {
     },
     /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
-    relinkRequests: { cta: 'Re-link requests' },
+    /** One name for a re-link with the status chip (AMENDMENTS-GROWNUP-UX section 10.1 glossary, GX-12): "new device". */
+    relinkRequests: { cta: 'New device requests' },
+    /** A waiting count says the grown-up decides, in the one action wording (AMENDMENTS-GROWNUP-UX section 10.1, review of PR #933). */
     relinkPending: {
-      cta: (count: number) => plural('en', count, { one: `${count} re-link request`, other: `${count} re-link requests` }),
+      cta: (count: number) => plural('en', count, { one: `${count} new device needs your OK`, other: `${count} new devices need your OK` }),
     },
     settings: { cta: 'Settings' },
     studentsLabel: 'Students',
@@ -397,18 +400,25 @@ export const consoleMsgs = {
   },
   /** Re-link approval (`/teach/space/relink`, `relink.ts`): identity and timing only, no progress numbers. */
   relink: {
-    title: 'Re-link requests',
-    titleFor: (space: string) => `${space} · re-link requests`,
+    title: 'New device requests',
+    titleFor: (space: string) => `${space} · new device requests`,
     back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     approved: (name: string) => `${name} can open their new device now.`,
     denied: (name: string) => `Closed. ${name}'s device will say "ask your teacher".`,
+    /** The same note on a family's page (AMENDMENTS-GROWNUP-UX P8): a family has no teacher. */
+    deniedFamily: (name: string) => `Closed. ${name}'s device will say "ask your grown-up".`,
     /** Followed by `oldCodeStops` in the confirm dialog. */
     issueAsk: (name: string) => `Issue a new rescue code for ${name}?`,
     issueFailed: "Couldn't issue a code right now.",
-    /** The page shows the name in bold (`aroundSlot`), so a translation may put it anywhere, exactly once. */
-    askingToBe: (name: string) => `Someone is asking to be ${name}`,
-    /** When the request names no platform. */
+    /**
+     * The card's heading: the learner's name and what is asked, calm (GX-12; the safety hint sits next to Approve). The
+     * page shows the name in bold (`aroundSlot`), so a translation may put it anywhere, exactly once.
+     */
+    askingToBe: (name: string) => `${name} · on a new device`,
+    /** When the request names no platform, or one `platform` does not name. */
     device: 'device',
+    /** The device the request came from, by the platform the learner app sends (`relinkPlatform`, GX-12). */
+    platform: { ios: 'iPhone or iPad', android: 'Android', web: 'Web' },
     approve: { cta: 'Approve' },
     deny: { cta: 'Deny' },
     anotherWay: 'Another way',
@@ -421,6 +431,9 @@ export const consoleMsgs = {
     expiresIn: (minutes: number) => `expires in ${minutes} min`,
     askedJustNow: 'asked just now',
     askedAgo: (minutes: number) => `asked ${minutes} min ago`,
+    /** From 60 minutes on, the time rolls up to hours, then days (`requestedLabel`, GX-12). */
+    askedHoursAgo: (hours: number) => plural('en', hours, { one: `asked ${hours} hour ago`, other: `asked ${hours} hours ago` }),
+    askedDaysAgo: (days: number) => plural('en', days, { one: `asked ${days} day ago`, other: `asked ${days} days ago` }),
     closed: 'This request already closed — the learner can ask again.',
     failed: "Didn't go through. Try again.",
   },

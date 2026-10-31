@@ -1,7 +1,7 @@
 'use client';
 
 import { APP_ROUTES, SCHOOL_ADMIN_CAP } from '@hangul-route/content-schema';
-import { borderWidth, colors, layout, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, layout, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ConsoleApi } from '@/lib/console/api';
@@ -54,7 +54,7 @@ const INVITE_CSS = `
 @media (min-width:${layout.maxWidth.reading / 16}em){.hr-inv-actions{flex-direction:row;flex-wrap:wrap}.hr-inv-actions>button{width:auto}.hr-inv-actions>.hr-inv-primary{padding-left:${spacing.xxl}px;padding-right:${spacing.xxl}px}}
 `;
 
-const control: CSSProperties = { ...buttonBase, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: touchTarget.min, boxSizing: 'border-box', fontSize: rem(typography.size.body) };
+const control: CSSProperties = { ...buttonBase, fontSize: rem(typography.size.body) };
 const primary: CSSProperties = { ...control, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const markStyle: CSSProperties = {
   display: 'inline-flex',

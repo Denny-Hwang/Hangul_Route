@@ -47,6 +47,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'landing.captures.caption.home': '"Pantalla de inicio", one letter over, a caption under its capture that wraps (AMENDMENTS-SITE-NEWUSER §3.4)',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
+  // AMENDMENTS-GROWNUP-UX GX-12 (section 10.2): the glossary's one name for a re-link, "dispositivo nuevo".
+  'console.relink.title': '"Solicitudes de dispositivo nuevo" (32) against "New device requests" (19): Spanish needs "de" and puts the adjective after the noun; the page title wraps',
   'learner.library.toFind.next': 'the standard Spanish word "Siguiente" (9) against "Next" (4), with its noun ("Siguiente tarjeta"); a label above the card that wraps',
   'report.scope.allDevices': 'the plural "dispositivos" (12) against "devices" (7) needs its article ("Todos los dispositivos"); a caption under a heading that wraps',
   'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
@@ -124,6 +126,11 @@ const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = 
   'console.pinOwner.cta': {
     max: 48,
     reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
+  },
+  // AMENDMENTS-GROWNUP-UX section 10.1 (review of PR #933): the class page's waiting count in the one action wording.
+  'console.space.relinkPending.cta': {
+    max: 34,
+    reason: '"12 dispositivos nuevos por aprobar" (34) against "12 new devices need your OK" (27): the glossary name plus "por aprobar"; a tool-row button that wraps its words, no sideways scroll at 360 (relink-page e2e)',
   },
 };
 
