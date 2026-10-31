@@ -75,7 +75,10 @@ describe('gridEpisodes / shelfEpisodes', () => {
 
   it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // A later volume's quests are in questsAll but never in Home's total (F-CURR-002 row CM-40).
+    const later = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !later.has(q.id));
+    expect(later.size).toBe(3);
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -103,10 +106,13 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); Stage 6 Holidays ships a Volume 2 (row CM-45 S6)', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    expect(volumeEpisodes.map((e) => e.id)).toEqual(['episode:stage6-rites-v2']);
+    expect(volumeEpisodes.every((e) => e.volume === 2 && e.status === 'shipped')).toBe(true);
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
+    // The route's list keeps first volumes only: the Volume 2 adds no route day and no count (row CM-40).
+    expect(episodesAll.some((e) => e.id === 'episode:stage6-rites-v2')).toBe(false);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
