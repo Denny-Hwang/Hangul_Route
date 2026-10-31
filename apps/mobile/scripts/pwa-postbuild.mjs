@@ -272,8 +272,9 @@ if (existsSync(jsDir)) {
 }
 
 // The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
-// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline fixtures, never chunks).
-const lessonManifest = lessonBuild.chunkManifest(lessonBuild.readCells(repo));
+// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline story fixtures, never chunks, and,
+// with --lesson-fixtures, the fixture Volume 2 cell of `build-lessons.mjs --include-fixtures`, F-CURR-002 row CM-40).
+const lessonManifest = lessonBuild.chunkManifest(args.includes('--lesson-fixtures') ? lessonBuild.readCellsWithFixtures(repo) : lessonBuild.readCells(repo));
 const storyManifest = storyBuild.readChunkManifest(repo);
 // The review-item index (F-CURR-002 §4.2, row CM-10): one chunk, under the same checks.
 const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);

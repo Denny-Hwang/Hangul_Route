@@ -24,8 +24,9 @@ const raw = new Map<string, unknown>(files.map((f) => [f, JSON.parse(readFileSyn
 const cells = [...raw.entries()].map(([file, json]) => ({ file, cell: LessonCellSchema.parse(json) }));
 
 describe('culture notes (row CM-3C)', () => {
-  it('every Volume 1 cell is read (25 cells)', () => {
-    expect(cells).toHaveLength(25);
+  it('every Volume 1 cell is read (25 cells), and every Volume 2 cell beside it (row CM-40)', () => {
+    expect(cells.filter(({ cell }) => cell.volume === undefined)).toHaveLength(25);
+    for (const { file, cell } of cells.filter((c) => c.cell.volume !== undefined)) expect(file, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.v${cell.volume}.json`);
   });
 
   it('culture-source: no note of Volume 1 is reported, so CM-3B can make it an error', () => {
