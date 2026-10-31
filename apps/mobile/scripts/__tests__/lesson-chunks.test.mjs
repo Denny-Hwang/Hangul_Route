@@ -188,6 +188,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
       { name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' },
       { name: 'my-story-chunk', marker: 'screen-chunk:my-story' },
+      { name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -248,6 +249,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/minigames/match-shape-entry.tsx')).toContain("import('./match-shape-chunk')");
     // Row CM-38: the My Story game's chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/my-story-chunk.tsx')).toContain(`export const MY_STORY_CHUNK = '${SCREEN_CHUNKS[13].marker}';`);
+    // Row CM-48: This week in Korea's chunk, reached only through its door's literal import().
+    expect(read('src/screens/week-drop/week-drop-chunk.tsx')).toContain(`export const WEEK_DROP_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
+    expect(read('src/screens/week-drop/week-drop-entry.tsx')).toContain("import('./week-drop-chunk')");
     expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
     // Row CM-37 part 1: the Letters school room.
     expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
@@ -393,6 +397,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'syllable-build-chunk has no web bundle: the chunk is missing from the build',
       'match-shape-chunk has no web bundle: the chunk is missing from the build',
       'my-story-chunk has no web bundle: the chunk is missing from the build',
+      'week-drop-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -555,7 +560,8 @@ describe('precacheReport and its budget lines', () => {
     // 4,820,000 B. It passes the phase-2 integration's 4,812,581 B, which came before the named React imports.
     // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
     // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_840_000);
+    // Row CM-48 (This week in Korea) measured 4,840,751 B on main 1bfda3fc8 (4,838,051 B), so the line is 4,845,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_845_000);
     for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
@@ -695,5 +701,44 @@ describe('the quest warm-up and Try these again chunk (F-CURR-002 row CM-15)', (
     const start = { url: START, text: 'var m="quest-review-chunk:session";' };
     expect(markedChunkProblems({ chunks: QUEST_REVIEW_CHUNKS, bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([`quest-review-chunk is in the start bundle ${START}: a static import pulled it in`]);
     expect(markedChunkProblems({ chunks: QUEST_REVIEW_CHUNKS, bundles: [{ url: START, text: '' }, chunk], precached: all([chunk]) })).toEqual([]);
+  });
+});
+
+describe('the week-drop chunk of row CM-48 (the same checks, its own budget line)', () => {
+  const WEEK = [{ name: 'week-drops', hash: '9999aaaabbbbcccc' }];
+  const weekChunk = (hash) => {
+    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}";e.WEEK_DROPS=[]});`;
+    return { url: `${WEB_JS_DIR}/week-drops-${md5(text)}.js`, text };
+  };
+  const withWeek = (startHash = '9999aaaabbbbcccc') => [{ url: START, text: `${startText}var w="${startHash}";` }, ...MANIFEST.map((m) => chunk(m.name, m.hash)), weekChunk('9999aaaabbbbcccc')];
+
+  it('passes the chunk as its own precached bundle, out of the start bundle, and fails it unprecached or unnamed by the start bundle', () => {
+    const bundles = withWeek();
+    const manifest = [...MANIFEST, ...WEEK];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles).slice(0, 3) })).toEqual([`${bundles[3].url} is missing from the precache`]);
+    const stale = withWeek('0000000000000000');
+    expect(lessonChunkProblems({ manifest, bundles: stale, precached: all(stale) }).some((p) => p.includes("does not name week-drops's hash"))).toBe(true);
+  });
+
+  it('reports it on a line of its own, and holds the built bundle to its lines, raw and gzip', () => {
+    const bundles = withWeek();
+    const report = precacheReport({ manifest: MANIFEST, weekDrops: WEEK, bundles, precache: { count: 4, size: 99 } });
+    expect(report.weekDropChunks).toMatchObject({ count: 1, raw: bundles[3].text.length });
+    expect(reportLines(report).some((l) => new RegExp(`^ {2}week-drop chunk {2}1 bundles {2}\\d+ B raw {2}\\d+ B gzip {2}\\(ceiling ${PRECACHE_BUDGET.weekDropsRaw} B raw, ${PRECACHE_BUDGET.weekDropsGzip} B gzip\\)$`).test(l))).toBe(true);
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    const lines = { ...PRECACHE_BUDGET, weekDropsRaw: 100, weekDropsGzip: 40 };
+    const over = { start: { url: START, raw: 1, gzip: 1 }, weekDropChunks: { count: 1, raw: 101, gzip: 41, largest: { url: 'x', raw: 101 } }, precache: { count: 2, raw: 102 } };
+    expect(precacheBudgetProblems(over, lines)).toEqual([
+      expect.stringMatching(/^the week-drop bundle is 101 B raw, over its ceiling of 100 B .*build-week-drops\.mjs BUDGET/),
+      expect.stringMatching(/^the week-drop bundle is 41 B gzip, over its ceiling of 40 B gzip /),
+    ]);
+  });
+
+  it('the lines on the built bundle are the lines of scripts/build-week-drops.mjs (60,000 B raw / 16,000 B gzip)', async () => {
+    const { BUDGET } = await import('../../../../scripts/build-week-drops.mjs');
+    expect(PRECACHE_BUDGET.weekDropsRaw).toBe(BUDGET.raw);
+    expect(PRECACHE_BUDGET.weekDropsGzip).toBe(BUDGET.gzip);
+    expect(BUDGET).toEqual({ raw: 60_000, gzip: 16_000 });
   });
 });

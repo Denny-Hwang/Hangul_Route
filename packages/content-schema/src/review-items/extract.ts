@@ -14,7 +14,9 @@ import type { ReviewItemKind } from './review-item';
  *      (`stage1Occurrences`), frozen in `stage1-items.json` with a parity test against the
  *      Stage 1 data (apps/mobile/src/content/__tests__/review-items-stage1.test.ts);
  *   3. stories: the taught words of each story's check rounds (`storyOccurrences`, run by
- *      scripts/build-stories.mjs).
+ *      scripts/build-stories.mjs);
+ *   4. "This week in Korea" drops (row CM-48): each drop's items (`weekOccurrences`, run by
+ *      scripts/build-review-items.mjs).
  *
  * Every function is pure over parsed JSON (or the Stage 1 data), lax about shape like the
  * lesson lint: the zod schemas and the lesson rules gate the content, this module only reads it.
@@ -45,7 +47,7 @@ export interface ItemOccurrence {
   /** The content marks a sound change the converter cannot see (`soundChange: true` on a round or its target). */
   soundChange?: true;
   cell: string;
-  home: ThemeKey | `pack:${string}`;
+  home: ThemeKey | `pack:${string}` | 'week';
   stage: number;
   volume: number;
   source: 'discover' | 'round';
@@ -571,5 +573,31 @@ export function storyOccurrences(story: unknown, file: string, symbols: readonly
       });
     }
   });
+  return c.out;
+}
+
+// ---- 4. "This week in Korea" drops (row CM-48) --------------------------------------------------------------
+
+export interface WeekSource {
+  /** `content/weekly/<monday>.json`, for messages. */
+  file: string;
+  /** The parsed drop. */
+  body: unknown;
+}
+
+/**
+ * A drop's items: each is shown on its Meet page and asked by its practice, so each is a Discover occurrence of the
+ * drop's own cell (`week:<monday>`), glossed at the drop's overlay field (`items.<id>.gloss`). An item no grid cell or
+ * story teaches is homed `week` (its memory shard, §4.8) at the stage the drop is written for; one they teach keeps
+ * its home and stage, and the drop is one more cell that teaches it (stable-ids.ts ranks the drops after the route).
+ */
+export function weekOccurrences(source: WeekSource, symbols: readonly ReviewSymbol[]): ItemOccurrence[] {
+  const body = source.body;
+  if (!isRec(body) || typeof body.id !== 'string') return [];
+  const stage = typeof body.stage === 'number' ? body.stage : 2;
+  const c = new Collector({ cell: body.id, home: 'week', stage, volume: 1 }, symbolsByChar(symbols), new Map(symbols.map((s) => [s.id, s])));
+  arr(body.items)
+    .filter(isRec)
+    .forEach((item, i) => c.text(item, 'loose', 'discover', `${source.file} items[${i}]`, { glossKey: `${body.id}#items.${key(item, i)}.gloss` }));
   return c.out;
 }

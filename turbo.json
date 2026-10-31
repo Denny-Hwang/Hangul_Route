@@ -3,7 +3,7 @@
   "tasks": {
     "//#generate": {
       "cache": false,
-      "inputs": ["content/**", "scripts/**", "apps/mobile/src/content/jamo.ts", "packages/content-schema/src/catalog/hand-stamps.json", "packages/content-schema/src/review-items/**"],
+      "inputs": ["content/**", "scripts/**", "apps/mobile/src/content/jamo.ts", "packages/content-schema/src/catalog/hand-stamps.json", "packages/content-schema/src/review-items/**", "packages/content-schema/src/week-drops/**"],
       "outputs": [
         "apps/mobile/src/content/__generated__/vocab.ts",
         "apps/web/src/data/vocab-catalog.ts",
@@ -18,6 +18,8 @@
         "packages/content-schema/src/catalog/catalog.generated.ts",
         "apps/web/src/data/lecture-catalogue.generated.ts",
         "apps/web/src/data/catalogue-titles.generated.ts",
+        "apps/mobile/src/content/__generated__/week-drops-index.ts",
+        "apps/mobile/src/content/__generated__/week-drop-chunks/**",
         "apps/mobile/src/content/__generated__/review-items-index.ts",
         "apps/mobile/src/content/__generated__/review-item-chunks/**"
       ]

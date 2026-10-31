@@ -1,0 +1,77 @@
+{
+  "id": "week:2026-11-16",
+  "weekOf": "2026-11-16",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "soseol",
+  "day": "2026-11-22",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Light Snow",
+  "noteEn": "{ko:소설} comes on 22 November. Its name means light snow. It sits between {ko:입동}, the start of winter, and {ko:대설}, heavy snow.",
+  "items": [
+    {
+      "id": "soseol",
+      "ko": "소설",
+      "romanization": "soseol",
+      "en": "Light Snow, a solar term"
+    },
+    {
+      "id": "nun",
+      "ko": "눈",
+      "romanization": "nun",
+      "en": "snow"
+    },
+    {
+      "id": "cheonnun",
+      "ko": "첫눈",
+      "romanization": "cheonnun",
+      "en": "the first snow of winter"
+    },
+    {
+      "id": "baram",
+      "ko": "바람",
+      "romanization": "baram",
+      "en": "wind"
+    },
+    {
+      "id": "chuwoyo",
+      "ko": "추워요",
+      "romanization": "chuwoyo",
+      "en": "It's cold."
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"소설 11월 22일 16시 23분\""
+    },
+    {
+      "title": "표준국어대사전: 소설(小雪)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=443956&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 입동과 대설 사이에 들며, 이때 태양의 황경(黃經)은 240도가 된다. 11월 22일이나 23일경이다.\""
+    },
+    {
+      "title": "표준국어대사전: 대설(大雪)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=78442&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"아주 많이 오는 눈.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI table; its place between Ipdong and Daeseol is the NIKL entry's. The name's meaning reads 小雪 as the entry shows it; 'heavy snow' is NIKL's 대설 sense. 소설 is also the word for a novel; the gloss names the solar term. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

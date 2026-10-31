@@ -35,6 +35,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { StageReviewScreen } from '../screens/reviews/StageReviewScreen';
 import { DailyReviewRoute } from '../screens/reviews/DailyReviewRoute';
 import { CellCheckRoute } from '../screens/cell-check/cell-check-entry';
+import { WeekDropRoute } from '../screens/week-drop/week-drop-entry';
 import { DecodingSprintRoute } from '../screens/decode-sprint/DecodingSprintRoute';
 import { StageCheckRoute, StageCompleteRoute, StageRecapRoute } from '../screens/stage-check/stage-check-entry';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
@@ -167,6 +168,7 @@ export function RootNavigator(): ReactElement {
         {/* F-CURR-002 row CM-14: a chunk of its own; off (`dailyReview` or `memoryRecord`), it shows All refreshed today. */}
         <Stack.Screen name="DailyReview" component={DailyReviewRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CellCheck" component={CellCheckRoute} options={{ gestureEnabled: false }} />
+        <Stack.Screen name="WeekDrop" component={WeekDropRoute} options={{ gestureEnabled: false }} />
         {/* F-CURR-002 row CM-22: a chunk of its own, behind `stageChecks` (the check also needs `memoryRecord`). */}
         <Stack.Screen name="StageCheck" component={StageCheckRoute} options={{ gestureEnabled: false }} />
         <Stack.Screen name="StageRecap" component={StageRecapRoute} />

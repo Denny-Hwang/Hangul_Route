@@ -83,8 +83,10 @@ describe('overlay vocabulary (F-I18N-001 §3.6)', () => {
 
   it('has a row for every prefix the specs ask for (F-I18N-001, F-STORY-001, F-VOC-001, F-PLC-001)', () => {
     expect(Object.keys(OVERLAY_FIELDS).sort()).toEqual(
-      ['card', 'episode', 'jamo', 'minigame', 'pitem', 'quest', 'scene', 'stage', 'story', 'theme', 'vocab', 'vocab-topic'].sort(),
+      ['card', 'episode', 'jamo', 'minigame', 'pitem', 'quest', 'scene', 'stage', 'story', 'theme', 'vocab', 'vocab-topic', 'week'].sort(),
     );
+    // F-CURR-002 row CM-48: a "This week in Korea" drop's title, note and item meanings.
+    expect(OVERLAY_FIELDS.week).toEqual(['title', 'note', 'items.<item>.gloss']);
     // F-CURR-002 row CM-37: a Hidden Heritage scene's alt text, spot meanings, subject and card-back facts.
     expect(OVERLAY_FIELDS.scene).toEqual(['art.alt', 'round.alt', 'round.targets.<thing>.word.gloss', 'round.others.<thing>.word.gloss', 'note.subject', 'note.facts.<factId>.claim']);
     expect(OVERLAY_FIELDS.vocab).toEqual(['gloss', 'senseNote']);

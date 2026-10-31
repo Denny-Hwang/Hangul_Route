@@ -1,0 +1,64 @@
+{
+  "id": "week:2026-11-23",
+  "weekOf": "2026-11-23",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "soseol",
+  "day": "2026-11-22",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Wrap Up Warm",
+  "noteEn": "These are the days of {ko:소설}. They last until {ko:대설} on 7 December. In Korea, it is time for a scarf and gloves!",
+  "items": [
+    {
+      "id": "mokdori",
+      "ko": "목도리",
+      "romanization": "mokdori",
+      "en": "scarf"
+    },
+    {
+      "id": "janggap",
+      "ko": "장갑",
+      "romanization": "janggap",
+      "en": "gloves"
+    },
+    {
+      "id": "moja",
+      "ko": "모자",
+      "romanization": "moja",
+      "en": "hat"
+    },
+    {
+      "id": "ot",
+      "ko": "옷",
+      "romanization": "ot",
+      "en": "clothes"
+    },
+    {
+      "id": "ttatteuthaeyo",
+      "ko": "따뜻해요",
+      "romanization": "ttatteuthaeyo",
+      "en": "It's warm."
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"소설 11월 22일 16시 23분\" / \"대설 12월 7일 11시 53분\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "passes": 4,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Both dates from the KASI table. No claim about weather is made; the scarf and gloves line is a friendly suggestion, not a fact. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review.",
+      "Pass 4, PR review (MAR, 2026-10-31): the scarf and gloves line now says 'In Korea' (es 'En Corea', ko '한국에서는'), so it holds for a learner in the Southern Hemisphere; ko meaning of 따뜻해요 changed to '춥지 않고 포근해요' (warm, not hot). No fact changed."
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { lessonOccurrences, stage1Occurrences, storyOccurrences, type ItemOccurrence, type LessonSource, type ReviewSymbol, type Stage1Data } from './extract';
+import { lessonOccurrences, stage1Occurrences, storyOccurrences, weekOccurrences, type ItemOccurrence, type LessonSource, type ReviewSymbol, type Stage1Data, type WeekSource } from './extract';
 import { buildReviewItems, vocabIndex, type ReviewItemsBuild, type SenseGroup, type StableIdSnapshot, type TopicWord } from './stable-ids';
 
 /**
@@ -62,6 +62,8 @@ export interface ReviewItemSources {
   lessons: readonly LessonSource[];
   /** The shipped (ready) stories. */
   stories: readonly StorySource[];
+  /** The ready "This week in Korea" drops (row CM-48); none when absent. */
+  weeks?: readonly WeekSource[];
   /** Every topic word of content/vocab/<topic>.json. */
   topicWords: readonly TopicWord[];
   /** content/vocab/_senses.json `groups`. */
@@ -69,13 +71,14 @@ export interface ReviewItemSources {
   snapshot: StableIdSnapshot;
 }
 
-/** Every occurrence of the three sources: Stage 1, the lessons, the stories. */
-export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'lessons' | 'stories'>): ItemOccurrence[] {
+/** Every occurrence of the sources: Stage 1, the lessons, the stories and the week drops. */
+export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'lessons' | 'stories' | 'weeks'>): ItemOccurrence[] {
   const symbols: readonly ReviewSymbol[] = sources.stage1.symbols;
   return [
     ...(sources.stage1.occurrences as ItemOccurrence[]),
     ...sources.lessons.flatMap((l) => lessonOccurrences(l, symbols)),
     ...sources.stories.flatMap((s) => storyOccurrences(s.story, s.file, symbols)),
+    ...(sources.weeks ?? []).flatMap((w) => weekOccurrences(w, symbols)),
   ];
 }
 

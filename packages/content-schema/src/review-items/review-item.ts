@@ -81,8 +81,13 @@ export const FORMATS_BY_KIND: Readonly<Record<ReviewItemKind, readonly ReviewFor
 };
 
 const PACK_RE = /^pack:[a-z0-9]+(?:-[a-z0-9]+)*$/;
-/** A cell that teaches an item: a grid episode (Stage 1 and the lesson cells, Volume 2, pack levels) or a story. */
-export const TEACHING_CELL_RE = /^(?:episode:[a-z0-9]+(?:-[a-z0-9]+)*|story:[a-z0-9]+(?:-[a-z0-9]+)*)$/;
+/**
+ * A cell that teaches an item: a grid episode (Stage 1 and the lesson cells, Volume 2, pack levels), a story, or a
+ * "This week in Korea" drop (`week:<monday>`, row CM-48).
+ */
+export const TEACHING_CELL_RE = /^(?:episode:[a-z0-9]+(?:-[a-z0-9]+)*|story:[a-z0-9]+(?:-[a-z0-9]+)*|week:\d{4}-\d{2}-\d{2})$/;
+/** The home of an item only a "This week in Korea" drop teaches (row CM-48): its memory shard is `week` (§4.8). */
+export const WEEK_HOME = 'week';
 
 const KoLineSchema = z.object({
   ko: z.string().min(1),
@@ -106,8 +111,11 @@ export const ReviewItemSchema = z
     reply: KoLineSchema.optional(),
     /** A picture that shows the item (Type Hangul `picture`, a picture option). */
     picture: PictureRefSchema.optional(),
-    /** The grid theme of the first cell that teaches it, or the pack (`pack:<key>`) for an item a pack teaches first. */
-    home: z.union([ThemeKeySchema, z.string().regex(PACK_RE)]),
+    /**
+     * The grid theme of the first cell that teaches it, the pack (`pack:<key>`) for an item a pack teaches first, or
+     * `week` for an item only "This week in Korea" drops teach (row CM-48).
+     */
+    home: z.union([ThemeKeySchema, z.string().regex(PACK_RE), z.literal(WEEK_HOME)]),
     /** The first stage that teaches it (1-7). */
     stage: z.number().int().min(1).max(7),
     /** The first volume that teaches it (Volume 2 is row CM-40). */
@@ -234,7 +242,7 @@ export function unpackGlossKey(packed: string, id: string): string | undefined {
 
 const EPISODE = 'episode:';
 const packCell = (cell: string): string => (cell.startsWith(EPISODE) ? cell.slice(EPISODE.length) : cell);
-const unpackCell = (cell: string): string => (cell.startsWith('story:') ? cell : `${EPISODE}${cell}`);
+const unpackCell = (cell: string): string => (cell.startsWith('story:') || cell.startsWith('week:') ? cell : `${EPISODE}${cell}`);
 const opt = (value: string): string | undefined => (value === '' ? undefined : value);
 const reading = (ko: string): string => romanize(ko).text;
 const packRomanization = (romanization: string, ko: string): string => (romanization === reading(ko) ? '' : romanization);

@@ -245,8 +245,17 @@ function variant(id: string, n: number): string {
 
 const THEMES: readonly string[] = ThemeKeySchema.options;
 
-/** Route order of a cell: its stage, its theme, Stage 1 and the lesson cells before the stories, then the id. */
+/** A "This week in Korea" drop's cell (row CM-48): after every cell of the route. */
+const WEEK_RANK = 8;
+const isWeekCell = (cell: string): boolean => cell.startsWith('week:');
+
+/**
+ * Route order of a cell: its stage, its theme, Stage 1 and the lesson cells before the stories, then the id. The week
+ * drops come after the whole route (row CM-48), in week order: a drop keyed to the calendar never becomes the home of
+ * an item the route teaches, so that item keeps its home, stage and memory shard.
+ */
 function cellRank(occ: ItemOccurrence): [number, number, number, string] {
+  if (isWeekCell(occ.cell)) return [WEEK_RANK, 0, 0, occ.cell];
   const story = occ.cell.startsWith('story:') ? 1 : 0;
   const theme = THEMES.indexOf(occ.home);
   return [occ.stage, story, theme < 0 ? THEMES.length : theme, occ.cell];
@@ -476,14 +485,18 @@ const glossText = (ko: string, en: string): string => `${normalizeKo(ko)}|${en}`
  */
 function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrence[], vocab: VocabIndex, glossAt: ReadonlyMap<string, string>): ReviewItem {
   const first = list[0] as ItemOccurrence;
-  const lead = list.find((o) => o.source === 'discover') ?? first;
-  const glossed = list.find((o) => o.en !== undefined && o.source === 'discover') ?? list.find((o) => o.en !== undefined);
+  // Row CM-48: an item the route teaches keeps its text, gloss and picture from the route; a week drop only adds a cell.
+  const route = list.filter((o) => !isWeekCell(o.cell));
+  const own = route.length > 0 ? route : list;
+  const lead = own.find((o) => o.source === 'discover') ?? first;
+  const glossed = own.find((o) => o.en !== undefined && o.source === 'discover') ?? own.find((o) => o.en !== undefined);
   const word = identity.vocabId === undefined ? undefined : vocab.byId.get(identity.vocabId);
   const inOrder = [...new Set(list.map((o) => o.cell))];
   const discovered = new Set(list.filter((o) => o.source === 'discover').map((o) => o.cell));
   const firstEpisode = inOrder.find((cell) => cell.startsWith('episode:'));
   const cells = inOrder.filter((cell, i) => i === 0 || cell === firstEpisode || discovered.has(cell));
-  const teaching = list.filter((o) => cells.includes(o.cell));
+  // A drop that teaches an item the route teaches too adds a cell, never a lower stage or volume (row CM-48).
+  const teaching = own.filter((o) => cells.includes(o.cell));
   const item: ReviewItem = {
     id,
     kind: identity.kind,

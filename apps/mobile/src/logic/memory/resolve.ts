@@ -41,8 +41,9 @@ export function cellOfEpisode(episodeId: string): string {
   return episodeId.startsWith('episode:shelf-') ? `story:${episodeId.slice('episode:shelf-'.length)}` : episodeId;
 }
 
-/** The shard of an item (section 4.8): its pack for a pack item, else its first stage. */
+/** The shard of an item (section 4.8): its pack for a pack item, `week` for an item only week drops teach (row CM-48), else its first stage. */
 export function shardOf(item: Pick<ReviewItem, 'home' | 'stage'>): string {
+  if (item.home === 'week') return 'week';
   return item.home.startsWith('pack:') ? item.home : `stage${item.stage}`;
 }
 

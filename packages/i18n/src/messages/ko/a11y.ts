@@ -364,4 +364,7 @@ export const a11y = {
     board: '윷판',
     throw: (ko: string, romanization: string, n: number) => `던진 결과: ${ko}, ${romanization}. 말이 ${n}칸 움직였어요.`,
   },
+  weekDrop: {
+    card: (title: string, state: string) => `이번 주 한국 이야기: ${title}. ${state}.`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;

@@ -1,0 +1,84 @@
+{
+  "id": "week:2026-11-02",
+  "weekOf": "2026-11-02",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "ipdong",
+  "day": "2026-11-07",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Winter Begins",
+  "noteEn": "{ko:입동} falls on 7 November. Winter is said to begin on this day. Late autumn is kimjang season, when families make lots of kimchi for the winter.",
+  "items": [
+    {
+      "id": "ipdong",
+      "ko": "입동",
+      "romanization": "ipdong",
+      "en": "Start of Winter, a solar term"
+    },
+    {
+      "id": "gyeoul",
+      "ko": "겨울",
+      "romanization": "gyeoul",
+      "en": "winter"
+    },
+    {
+      "id": "gimjang",
+      "ko": "김장",
+      "romanization": "gimjang",
+      "en": "making lots of kimchi for winter"
+    },
+    {
+      "id": "baechu",
+      "ko": "배추",
+      "romanization": "baechu",
+      "en": "napa cabbage"
+    },
+    {
+      "id": "mu",
+      "ko": "무",
+      "romanization": "mu",
+      "en": "radish"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"입동 11월 7일 18시 52분\""
+    },
+    {
+      "title": "표준국어대사전: 입동(立冬)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=277238&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 상강(霜降)과 소설(小雪) 사이에 들며, 이때부터 겨울이 시작된다고 한다. 11월 8일경이다.\""
+    },
+    {
+      "title": "표준국어대사전: 김장",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=400037&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"겨우내 먹기 위하여 김치를 한꺼번에 많이 담그는 일. 또는 그렇게 담근 김치.\""
+    },
+    {
+      "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+      "publisher": "UNESCO Intangible Cultural Heritage",
+      "url": "https://ich.unesco.org/en/RL/kimjang-making-and-sharing-kimchi-in-the-republic-of-korea-00881",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"Inscribed in 2013 (8.COM) on the Representative List of the Intangible Cultural Heritage of Humanity\" / \"Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi\" / \"the custom of exchanging kimchi among households\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI table; 'winter is said to begin' is the NIKL entry's own hedge (시작된다고 한다). 'Late autumn is kimjang season' follows UNESCO's description; the kimjang gloss follows NIKL. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

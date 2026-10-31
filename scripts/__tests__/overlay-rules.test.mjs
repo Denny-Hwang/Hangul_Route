@@ -245,6 +245,29 @@ describe("overlay-rules: korean-in-ui-field", () => {
     assert.deepEqual(rules(tree("Usa {ko:을} y {ko:가}.")), ["overlay-token-mismatch"]);
   });
 
+  test("a week drop's note keeps the {ko:} tokens of its noteEn, its words take their meaning, and the ko copula rule runs (row CM-48)", () => {
+    const drop = {
+      id: "week:2026-11-02",
+      titleEn: "Winter Begins",
+      noteEn: "{ko:입동} falls on 7 November.",
+      items: [{ id: "ipdong", ko: "입동", romanization: "ipdong", en: "Start of Winter, a solar term" }],
+    };
+    const tree = (entries) => base({ "content/weekly/2026-11-02.json": drop, ...entries });
+    const W = (fields) => ({ "week:2026-11-02": fields });
+    const good = { title: "Empieza el invierno", note: "{ko:입동} cae el 7 de noviembre.", "items.ipdong.gloss": "Comienzo del invierno" };
+    assert.deepEqual(rules(tree(es(W(good), "weekly-2026-10-26"))), []);
+    assert.deepEqual(rules(tree(es(W({ ...good, note: "Cae el 7 de noviembre." }), "weekly-2026-10-26"))), ["overlay-token-mismatch"]);
+    assert.deepEqual(rules(tree(es(W({ ...good, title: "입동" }), "weekly-2026-10-26"))), ["korean-in-ui-field"]);
+    assert.deepEqual(rules(tree(es(W({ ...good, "items.nope.gloss": "x" }), "weekly-2026-10-26"))), ["overlay-unknown-id"]);
+    const koGood = { title: "겨울이 시작돼요", note: "{ko:입동}은 11월 7일이에요.", "items.ipdong.gloss": "겨울이 시작되는 절기" };
+    assert.deepEqual(rules(tree(ko(W(koGood), "weekly-2026-10-26"))), []);
+    assert.deepEqual(rules(tree(ko(W({ ...koGood, "items.ipdong.gloss": "입동" }), "weekly-2026-10-26"))), ["overlay-circular-gloss"]);
+    assert.deepEqual(rules(tree(ko(W({ ...koGood, title: "물건라는 겨울" }), "weekly-2026-10-26"))), ["overlay-ko-copula"]);
+    // A drop with no translation is counted missing (an error where the locale is strict).
+    const missing = checkOverlayTree(tree({}), { strictLocales: ["es"] }).violations.filter((v) => v.path.startsWith("week:")).map((v) => v.path);
+    assert.deepEqual(missing.sort(), ["week:2026-11-02.items.ipdong.gloss", "week:2026-11-02.note", "week:2026-11-02.title"]);
+  });
+
   test("Korean overlays carry Hangul in translatable fields only", () => {
     assert.deepEqual(rules(base(ko({ "vocab:sagwa": { gloss: "빨갛고 동그란 과일" }, "vocab:bap": { senseNote: "끼니를 뜻하기도 해요." } }))), []);
     assert.deepEqual(rules(base(ko({ "card:gangaji": { ko: "개" } }))), ["korean-in-ui-field", "overlay-forbidden-field"]);
