@@ -1,5 +1,7 @@
 Status: ready (spec only; no row has started). Revised 2026-10-21 after review round 1 (section 20), then with the owner decisions of 2026-10-21 (section 21): every decision in section 16 is decided, and OD-2 changed to horizontally swiped topic pages on the Journey view.
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Card Match keeps a selection until a pair resolves (its wrong-flash timer clears only the pick it was set for), accepts either side first and gives every card 64 dp (section 6.2); Hidden Heritage spots hit-test a rectangle of at least 64 dp that never overlaps a neighbour, with no schema change (section 6.6); Match Shape, Syllable Build, Cloze Pick and Daily Review take touches through the shared tap board (rows KT-3, KT-4a, KT-4b, KT-6).
+
 # F-CURR-002 — Category expansion and mastery: one memory model, review sessions, mastery and stage checks, Volume 2 of the five themes, and Topic Packs
 
 > **Owner request 2026-10-21 (B, binding):** plan further development of the lesson categories. Today there are five themes (Letters 글자, Food 음식, Holidays 명절, Nature 자연, Play 놀이). Plan both directions: richer content inside each category, and new categories. The service must be more fun and varied, and above all give a sense of achievement and efficient learning. Production level: every row ships finished content reviewed by the multi-agent review (MAR, owner decision 2026-10-12). Rows do not wait on the owner. Every decision in section 16 was decided by the owner on 2026-10-21 (section 21).

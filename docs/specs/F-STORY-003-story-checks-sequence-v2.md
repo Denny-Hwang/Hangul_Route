@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Story Sequence, Story Order and the checks take touches through the shared tap board: a bounce on a placed card no longer lands on the card that reflows under the finger (400 ms lock), and ChoiceCard's pressed look becomes a thick `border.shape` outline instead of the focus-blue border it shared with `hint` (sections 4.3, 6; rows KT-2, KT-3, KT-5).
+
 # F-STORY-003 — Story checks, Story Order v2, word recap and the story reward flow
 
 > **Start order (review 2, 2026-10-10)**: the blocker of review 1 is gone: F-STORY-001 (schema) and F-STORY-002 (reader) are specs now, and every name this spec uses from them was checked against their text (`Tier.checks`, `sequenceSceneIds`, `newKeywordIds`, `scene.captionEn`, `StoryScope`, the `story-read` ref grammar, `StoryReader` params). `StoryCheckSchema` is **implemented by F-STORY-001 PR 1.1a** from §3.1 below (so PR 3.1 here shrinks to the minigame kind, telemetry names and tests). **Startable now, independent of the story chain**: PR 3.3 (`ChoiceCard`, after F-I18N-001 PR 4), 3.5a (Story Order v2 on the legacy scopes, after F-CNT-002 PR 2a), 3.6 (monotonic stars), 3.8 (validator fields). PRs 3.2b-3.7 follow F-STORY-001 PR 1.1a/1.1b and F-STORY-002 PR 2.6.

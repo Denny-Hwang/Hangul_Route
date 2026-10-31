@@ -1,5 +1,7 @@
 Status: ready
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): an item takes one answer: the flow ignores a second answer for an answered item and the choices lock for 400 ms after a tap, so a bounce never answers the next item blind (section 6.4; row KT-5).
+
 # F-PLC-001 — Placement (the level check): choose a test language and a length (Short, Standard or Deep), answer a short adaptive run, start the route at the right spot
 
 > Start order: P-1 (shared question engine) and P-2 (schemas, telemetry names) have no external dependency and can start now; P-2 must be **deployed to the API before** any app build that sends the new snapshot or summary fields (section 3.8). P-4 (bank content) shipped every template `ready` after the production review of 2026-10-11, which the owner decided replaces the native-speaker review (section 9, item 1). The route integration (P-5) works against today's 8 Stage 1 quests and against F-QUEST-002's 15 without code change; the full mapping table of section 3.6 is tested against a 15-quest fixture now and against the real bundle once F-QUEST-002 Q-6b lands.

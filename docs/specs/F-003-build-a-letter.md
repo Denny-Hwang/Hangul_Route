@@ -8,6 +8,8 @@
 
 ---
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): a placed tile can be taken back by tapping it or its filled slot (the tiles after it shift left; a bounce on a tile just placed does not remove it), and taps during the 900 ms wrong reset are swallowed instead of accepted and wiped (section 6.5; row KT-6).
+
 ## 1. Context
 
 Build a Letter is the Construction-family counterpart to F-001's Recognition game. Where Match Sound teaches *which letter is this sound*, Build a Letter teaches *how letters combine to form syllables*. The child is shown a target Korean syllable (e.g., `가`, `gа`) and must tap the constituent jamo (`ㄱ` then `ㅏ`) in left-to-right order.
