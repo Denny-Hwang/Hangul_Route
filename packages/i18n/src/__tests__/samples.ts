@@ -1043,4 +1043,17 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
+  // name, a formatted date) and the asking-to-join card's source class.
+  'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
+  'console.status.newDevice': [[1], [8]],
+  'console.status.moveTo': [['Evening Class D']],
+  'console.status.waitingFor': [['Evening Class D']],
+  'console.status.moving': [['Nov 3']],
+  'console.status.minutesLeft': [[1], [8]],
+  'console.attention.from': [['Class B']],
+  // AMENDMENTS-GROWNUP-UX GX-10: the family code in the invite line, and a family learner's one class or class count.
+  'console.settings.inviteGrownUpLine': [['K7PM4Q']],
+  'console.parentHome.classLine.one': [['Sunday Class A']],
+  'console.parentHome.classLine.many': [[2], [3]],
 };

@@ -994,6 +994,10 @@ export const consoleMsgs = {
       n === null
         ? `이미 반 ${cap}개에 들어가 있는 학생이 있어요. 보관을 풀기 전에 그 학생을 다른 반으로 옮기거나 빼 주세요.`
         : `학생 ${n}명이 이미 반 ${cap}개에 들어가 있어요. 보관을 풀기 전에 다른 반으로 옮기거나 빼 주세요.`,
+    /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
+    moveOpen: '이미 진행 중인 이동이 있어요.',
+    inviteGrownUp: { cta: '다른 어른 초대하기' },
+    inviteGrownUpLine: (code: string) => `로그인한 뒤 이 코드를 입력하면 돼요: ${code}`,
   },
   school: {
     title: '학교',
@@ -1063,6 +1067,12 @@ export const consoleMsgs = {
     actionsFor: (family: string) => `${family}의 메뉴`,
     askOwner: '가족 코드는 가족 공간을 만든 어른에게 부탁해요.',
     copyFailed: '복사하지 못했어요. 코드는 화면에 그대로 있어요.',
+    /** AMENDMENTS-GROWNUP-UX GX-10 (P7, section 7.2): a family learner's classes. */
+    classLine: {
+      one: (className: string) => `소속: ${className}`,
+      many: (n: number) => `소속 반 ${n}곳`,
+      none: '반 없이 가족 학습',
+    },
   },
   journey: {
     title: '학습 루트',
@@ -1730,5 +1740,24 @@ export const consoleMsgs = {
     firstSignIn: '어른이 이 기기에서 PIN으로 어른용 페이지를 연 적이 있어야 쓸 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
     noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
     unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
+  },
+  status: {
+    inClass: '참여 중',
+    needsOk: '승인 대기',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `새 기기 · ${minutes}분 남음`,
+    moveTo: (className: string) => `반 이동: ${className}`,
+    moveWaiting: '이동 대기 중',
+    waitingFor: (className: string) => `기다리는 반: ${className}`,
+    moving: (date: string) => `이동 예정 · ${date}`,
+    waitingSeat: '자리 기다리는 중',
+    new: '새로 참여',
+    noPractice: '아직 연습 기록이 없어요',
+    minutesLeft: (minutes: number) => `${minutes}분 남음`,
+    review: { cta: '확인하기' },
+  },
+  attention: {
+    incomingHeading: '이 반에 들어오려는 학생',
+    from: (className: string) => `보낸 반: ${className}`,
   },
 } satisfies DeepPartial<Messages['console']>;

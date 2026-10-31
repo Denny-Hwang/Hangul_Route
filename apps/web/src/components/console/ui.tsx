@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
@@ -14,8 +14,21 @@ export const panelStyle: CSSProperties = {
   border: `1px solid ${colors.border.subtle}`,
 };
 
-/** The console button look; also used by a link that navigates (one interactive element, not a button inside a link). */
+/**
+ * The console button look; also used by a link that navigates (one interactive element, not a button inside a link).
+ * It owns the size (AMENDMENTS-GROWNUP-UX GX-D11, row GX-6): never shorter than `touchTarget.min`, never narrower than
+ * `touchTarget.child`, the label centred, so a short label never turns into a circle and no row mixes heights. A spread
+ * of it sets no size or box of its own (`button-size.test.tsx` scans the console for that).
+ */
 export const buttonBase: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box',
+  minHeight: touchTarget.min,
+  minWidth: touchTarget.child,
+  textAlign: 'center',
+  textDecoration: 'none',
   padding: `${spacing.sm}px ${spacing.lg}px`,
   borderRadius: radii.pill,
   fontWeight: typography.weight.bold,
@@ -26,13 +39,22 @@ export const buttonBase: CSSProperties = {
   cursor: 'pointer',
 };
 
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
+/**
+ * `dangerText` (AMENDMENTS-GROWNUP-UX GX-10, T11 and P7): the quieter look of a destructive action that sits beside a
+ * main one on a row (Remove beside Move): the same size and box as every console button, no fill and no border, the
+ * label underlined in the danger colour. It always runs behind the shipped confirm.
+ */
+export type ButtonTone = 'primary' | 'secondary' | 'danger' | 'dangerText';
+
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: ButtonTone; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
       : tone === 'danger'
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
-        : {};
+        : tone === 'dangerText'
+          ? { color: colors.feedback.danger, borderColor: 'transparent', backgroundColor: 'transparent', textDecoration: 'underline' }
+          : {};
   return (
     <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}

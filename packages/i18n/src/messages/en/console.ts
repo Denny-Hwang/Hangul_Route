@@ -1343,6 +1343,13 @@ export const consoleMsgs = {
             one: `${n} learner is already in ${cap} classes. Move or remove them before unarchiving.`,
             other: `${n} learners are already in ${cap} classes. Move or remove them before unarchiving.`,
           }),
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): a learner row's Move is off while a move of that learner is open, with this
+     * reason beside it; a family's **Invite another grown-up** copies the family code and says what the other grown-up does.
+     */
+    moveOpen: 'A move is already open.',
+    inviteGrownUp: { cta: 'Invite another grown-up' },
+    inviteGrownUpLine: (code: string) => `They sign in, then enter this code: ${code}`,
   },
   /**
    * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
@@ -1437,6 +1444,15 @@ export const consoleMsgs = {
     askOwner: 'Ask the family owner for a family code.',
     /** The clipboard refused: the code is still on screen. */
     copyFailed: "Couldn't copy. The code is on the screen.",
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-10 (P7, section 7.2): a family learner's classes, on the settings row (and the child card,
+     * GX-4). Omitted when the read of the family's classes was skipped or failed, never "Family only" on a guess.
+     */
+    classLine: {
+      one: (className: string) => `In: ${className}`,
+      many: (n: number) => `In ${n} classes`,
+      none: 'Family only',
+    },
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B
@@ -2282,5 +2298,32 @@ export const consoleMsgs = {
     firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
     noPin: 'This device has no grown-up PIN to reset.',
     unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
+  },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-1 (section 4, owner request 2026-10-31): the status chip next to every learner's name on a
+   * class or family roster, and its one reason line. One action wording per locale (section 10.1): every state that asks
+   * the grown-up to decide reads `needsOk`. No state says late, behind or missing; `new` describes a join, not a lack.
+   */
+  status: {
+    inClass: 'In class',
+    needsOk: 'Needs your OK',
+    /** An action chip's accessible name: the chip, then its reason line. */
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `New device · ${minutes} min left`,
+    moveTo: (className: string) => `Class move: ${className}`,
+    moveWaiting: 'Move waiting',
+    waitingFor: (className: string) => `Waiting for: ${className}`,
+    /** The date arrives formatted (`formatDate`, `monthDay`). */
+    moving: (date: string) => `Moving ${date}`,
+    waitingSeat: 'Waiting for a seat',
+    new: 'New',
+    noPractice: 'No practice shared yet',
+    minutesLeft: (minutes: number) => `${minutes} min left`,
+    review: { cta: 'Review' },
+  },
+  /** GX-1 section 4.1: learners asking to join this class (initials, picture and level only until accepted, T8). */
+  attention: {
+    incomingHeading: 'Asking to join this class',
+    from: (className: string) => `From ${className}`,
   },
 } as const;

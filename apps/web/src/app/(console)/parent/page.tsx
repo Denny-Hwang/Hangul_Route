@@ -12,7 +12,7 @@ import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { LectureModeCard, useGridColumns, useMinWidth } from '@/components/console/LectureModeCard';
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
-import { useMovesWaiting } from '@/components/console/MovesEntry';
+import { useApprovalsWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
@@ -84,16 +84,7 @@ const HOME_CSS = `
 @media (min-width:${FULL}){.hr-ph-family{grid-template-columns:minmax(0,1fr) ${layout.pane.master}px;column-gap:${spacing.xxl}px;align-items:start}}
 `;
 
-const button: CSSProperties = {
-  ...buttonBase,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxSizing: 'border-box',
-  minHeight: touchTarget.min,
-  textAlign: 'center',
-  textDecoration: 'none',
-};
+const button: CSSProperties = buttonBase;
 const primary: CSSProperties = { ...button, fontSize: rem(typography.size.body), backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const pressed: CSSProperties = { ...button, backgroundColor: colors.surface.sunken };
 const textLink: CSSProperties = {
@@ -148,7 +139,8 @@ export default function ParentHomePage(): JSX.Element {
   const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
   const homeView = items ? parentHomeView(items) : null;
-  const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
+  // The family's waiting moves (a family has no teacher moves into it; its re-links join the Needs you strip in GX-4).
+  const moves = useApprovalsWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : [], 0, { relinks: false, classMoves: false });
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
   const movesShown = useTransfersShown();
   // The Lecture mode card's slot follows the 70em switch of the page's own CSS (lecture-card.md "Placement").
@@ -448,9 +440,9 @@ export default function ParentHomePage(): JSX.Element {
             {p.actions.addLearner}
           </button>
         ) : null}
-        {(moves[id] ?? 0) > 0 ? (
+        {(moves[id]?.moves ?? 0) > 0 ? (
           <Link href={ROUTES.spaceTransfers(id, 'family')} style={button} data-testid="family-moves-waiting">
-            {c.transfer.waiting(moves[id] ?? 0)}
+            {c.transfer.waiting(moves[id]?.moves ?? 0)}
           </Link>
         ) : null}
       </div>

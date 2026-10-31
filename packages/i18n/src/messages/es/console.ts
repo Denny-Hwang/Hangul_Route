@@ -1080,6 +1080,10 @@ export const consoleMsgs = {
             one: `${n} estudiante ya está en ${cap} clases. Antes de desarchivar, mueve o quita a ese estudiante.`,
             other: `${n} estudiantes ya están en ${cap} clases. Antes de desarchivar, mueve o quita a esos estudiantes.`,
           }),
+    /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
+    moveOpen: 'Ya hay un cambio abierto.',
+    inviteGrownUp: { cta: 'Invitar a otro adulto' },
+    inviteGrownUpLine: (code: string) => `La otra persona inicia sesión y escribe este código: ${code}`,
   },
   school: {
     title: 'Escuela',
@@ -1156,6 +1160,12 @@ export const consoleMsgs = {
     actionsFor: (family: string) => `Acciones de ${family}`,
     askOwner: 'Pide un código familiar a quien creó el espacio familiar.',
     copyFailed: 'No se pudo copiar. El código está en la pantalla.',
+    /** AMENDMENTS-GROWNUP-UX GX-10 (P7, section 7.2): a family learner's classes. */
+    classLine: {
+      one: (className: string) => `En: ${className}`,
+      many: (n: number) => `En ${n} clases`,
+      none: 'Solo en familia',
+    },
   },
   journey: {
     title: 'Ruta de aprendizaje',
@@ -1832,5 +1842,24 @@ export const consoleMsgs = {
     firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
     noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
     unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
+  },
+  status: {
+    inClass: 'En la clase',
+    needsOk: 'Por aprobar',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
+    moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveWaiting: 'Cambio en espera',
+    waitingFor: (className: string) => `Esperando a: ${className}`,
+    moving: (date: string) => `Cambia de clase el ${date}`,
+    waitingSeat: 'Esperando un lugar',
+    new: 'Nueva llegada',
+    noPractice: 'Aún sin práctica registrada',
+    minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
+    review: { cta: 'Revisar' },
+  },
+  attention: {
+    incomingHeading: 'Quieren unirse a esta clase',
+    from: (className: string) => `Viene de ${className}`,
   },
 } satisfies DeepPartial<Messages['console']>;
