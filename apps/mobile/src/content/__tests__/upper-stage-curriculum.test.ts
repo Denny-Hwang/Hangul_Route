@@ -954,7 +954,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(87);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(90);
   });
 
   for (const quest of QUESTS) {
@@ -1003,12 +1003,13 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 84 of 87 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 87 of 90 shipped Practices scaffold.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
     // Row CM-41 S7 adds the three quests of Stage 7 Nature Volume 2, each of whose Practices scaffolds.
     // Row CM-42 S7 adds the three quests of Stage 7 Play & Crafts Volume 2, each of whose Practices scaffolds.
     // Row CM-43 S7 adds the three quests of Stage 7 Food & Daily Life Volume 2, each of whose Practices scaffolds.
-    expect([QUESTS.length, scaffolding.size]).toEqual([87, 84]);
+    // Row CM-45 S7 adds the three quests of Stage 7 Holidays & Traditions Volume 2, each of whose Practices scaffolds.
+    expect([QUESTS.length, scaffolding.size]).toEqual([90, 87]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
