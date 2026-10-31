@@ -136,11 +136,12 @@ describe('the idle check follows the fingers (AMENDMENTS-TOUCH KT-D9, 6.8)', () 
     pointers = out.state;
     for (const e of out.effects) {
       if (e.kind === 'start') strokes += 1;
+      if (e.kind === 'drop') strokes -= 1;
       idleOnTouch(gate, e.kind, strokes > 0);
     }
   };
   const down = (id: number, x: number, y: number) => touch((s) => traceTouchesDown(s, [{ id, x, y }]));
-  const move = (id: number, x: number, y: number) => touch((s) => traceTouchesMove(s, [{ id, x, y }], 4));
+  const move = (id: number, x: number, y: number) => touch((s) => traceTouchesMove(s, [{ id, x, y }], 4, 8));
   const up = (id: number) => touch((s) => traceTouchesUp(s, [{ id, x: 0, y: 0 }]));
   const line = (id: number): void => {
     down(id, 10, 10);
@@ -211,6 +212,24 @@ describe('the idle check follows the fingers (AMENDMENTS-TOUCH KT-D9, 6.8)', () 
     vi.advanceTimersByTime(TRACE_IDLE_MS);
     expect(onEvaluate).toHaveBeenCalledTimes(1);
     up(9);
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+  });
+
+  it('a palm that drifted first hands the stroke to the finger: one stroke, checked once the finger lifts', () => {
+    down(9, 100, 100);
+    move(9, 103, 103);
+    expect(strokes).toBe(1);
+    down(0, 10, 10);
+    move(0, 20, 10);
+    expect(strokes).toBe(1);
+    move(0, 40, 10);
+    up(0);
+    vi.advanceTimersByTime(TRACE_IDLE_MS);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    move(9, 120, 120);
+    up(9);
+    expect(strokes).toBe(1);
     vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
     expect(onEvaluate).toHaveBeenCalledTimes(1);
   });

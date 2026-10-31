@@ -188,6 +188,36 @@ async function palmAndFinger(root: ReactTestInstance): Promise<{ fingerY: number
   return { fingerY, palm };
 }
 
+/**
+ * A palm lands and its contact patch drifts 4.24 px (past the activation distance) before the finger
+ * moves, so the palm starts a stroke; then a finger draws a line while the palm stays down.
+ */
+async function driftingPalmThenFinger(root: ReactTestInstance): Promise<{ fingerY: number }> {
+  const size = canvasSize(root);
+  const palm = { x: size * 0.9, y: size * 0.9 };
+  const fingerY = size * 0.2;
+  await begin();
+  await fire('touchesDown', { id: 9, ...palm });
+  await fire('touchesMove', { id: 9, x: palm.x - 3, y: palm.y - 3 });
+  await fire('touchesDown', { id: 0, x: size * 0.1, y: fingerY });
+  for (let i = 1; i <= 8; i += 1) await fire('touchesMove', { id: 0, x: size * 0.1 + i * size * 0.08, y: fingerY });
+  await fire('touchesUp', { id: 0, x: size * 0.74, y: fingerY });
+  await fire('touchesMove', { id: 9, x: palm.x - 20, y: palm.y - 20 });
+  await fire('touchesUp', { id: 9, x: palm.x - 20, y: palm.y - 20 });
+  await finalize();
+  return { fingerY };
+}
+
+/** A stroke the system cuts off: down and moves, then the gesture finalizes with no lift (a cancel). */
+async function cutOffStroke(from: { x: number; y: number }, to: { x: number; y: number }): Promise<void> {
+  await begin();
+  await fire('touchesDown', { id: 0, ...from });
+  for (let i = 1; i <= 10; i += 1) {
+    await fire('touchesMove', { id: 0, x: from.x + ((to.x - from.x) * i) / 10, y: from.y + ((to.y - from.y) * i) / 10 });
+  }
+  await finalize();
+}
+
 const host = (): MinigameHost => ({ mode: 'quest', answer: () => undefined, complete: () => undefined });
 
 describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
@@ -211,6 +241,52 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     const points = lastInk(r.root);
     expect(points[0]!.x).toBeCloseTo(canvasSize(r.root) * 0.1 * scale);
     for (const p of points) expect(p.y).toBeCloseTo(fingerY * scale);
+  });
+
+  it('a palm that drifted first: the finger takes the stroke and the palm leaves no ink', async () => {
+    const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    const scale = 200 / canvasSize(r.root);
+    const { fingerY } = await driftingPalmThenFinger(r.root);
+    expect(ink(r.root)).toBe(1);
+    const points = lastInk(r.root);
+    expect(points[0]!.x).toBeCloseTo(canvasSize(r.root) * 0.1 * scale);
+    for (const p of points) expect(p.y).toBeCloseTo(fingerY * scale);
+  });
+
+  it('a stroke cut off by the system (finalize with no lift) keeps its ink and is still scored', async () => {
+    const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    await cutOffStroke({ x: 20, y: 20 }, { x: 120, y: 20 });
+    expect(ink(r.root)).toBe(1);
+    await wait(TRACE_IDLE_MS - 10);
+    expect(canvasBorder(r.root)).toBe(colors.brand.primary);
+    await wait(10);
+    expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
+  });
+
+  it('a finger still drawing when the canvas is cleared for the next try keeps drawing', async () => {
+    const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    await stroke({ x: 20, y: 20 }, { x: 40, y: 20 });
+    await wait(TRACE_IDLE_MS);
+    expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
+    // The child keeps drawing through the result, past the moment the canvas clears.
+    await begin();
+    await fire('touchesDown', { id: 0, x: 20, y: 60 });
+    await fire('touchesMove', { id: 0, x: 40, y: 60 });
+    await wait(2_500);
+    expect(ink(r.root)).toBe(0);
+    await fire('touchesMove', { id: 0, x: 60, y: 60 });
+    await fire('touchesMove', { id: 0, x: 80, y: 60 });
+    expect(ink(r.root)).toBe(1);
+    const scale = 200 / canvasSize(r.root);
+    expect(lastInk(r.root).map((p) => Math.round(p.x / scale))).toEqual([60, 80]);
+    await fire('touchesUp', { id: 0, x: 80, y: 60 });
+    await finalize();
   });
 
   it('a second touch mid-stroke neither cancels nor moves the stroke', async () => {
@@ -290,6 +366,29 @@ describe('Trace a Word: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     for (const p of lastInk(r.root)) expect(p.y).toBeCloseTo(fingerY * scale);
   });
 
+  it('a palm that drifted first: the finger takes the stroke and the palm leaves no ink', async () => {
+    const r = await render(<TraceWordGame scope={scope} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    const scale = 200 / canvasSize(r.root);
+    const { fingerY } = await driftingPalmThenFinger(r.root);
+    expect(ink(r.root)).toBe(1);
+    for (const p of lastInk(r.root)) expect(p.y).toBeCloseTo(fingerY * scale);
+  });
+
+  it('a stroke cut off by the system (finalize with no lift) keeps its ink and lets a later lift re-arm', async () => {
+    const r = await render(<TraceWordGame scope={scope} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    const size = canvasSize(r.root);
+    await cutOffStroke({ x: size * 0.05, y: size * 0.3 }, { x: size * 0.95, y: size * 0.3 });
+    expect(ink(r.root)).toBe(1);
+    // The finger state was settled: the next stroke draws from its own landing point.
+    await stroke({ x: size * 0.05, y: size * 0.6 }, { x: size * 0.95, y: size * 0.6 });
+    expect(ink(r.root)).toBe(2);
+    expect(lastInk(r.root)[0]!.y).toBeCloseTo((size * 0.6 * 200) / size);
+  });
+
   it('a dot on an empty canvas leaves no ink and scores nothing', async () => {
     const r = await render(<TraceWordGame scope={scope} host={host()} />);
     mounted.push(r);
@@ -318,5 +417,6 @@ describe('Trace a Word: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     await wait(10);
     // Checked: the canvas shows the retry or the pass look.
     expect(canvasBorder(r.root)).not.toBe(live);
-  });
+    // Six strokes through the render lane: slow on a busy runner.
+  }, 20_000);
 });

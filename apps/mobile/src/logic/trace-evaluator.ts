@@ -103,7 +103,7 @@ export function createTraceEvaluator({
  */
 export function idleOnTouch(
   gate: Pick<TraceEvaluator, 'strokeStarted' | 'strokeEnded'> | null,
-  effect: 'hold' | 'start' | 'point' | 'end' | 'release',
+  effect: 'hold' | 'start' | 'drop' | 'point' | 'end' | 'release',
   hasInk: boolean,
 ): void {
   if (!gate) return;

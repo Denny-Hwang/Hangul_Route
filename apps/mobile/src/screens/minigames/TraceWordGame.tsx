@@ -126,6 +126,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const strokesRef = useRef<JamoStrokePoint[][]>([]);
   // Which finger draws (AMENDMENTS-TOUCH 6.8): the fingers on the canvas, by pointer id.
   const pointersRef = useRef<TracePointers>(NO_TRACE_POINTERS);
+  // The last stroke is the drawing finger's own, still being drawn (cleared when the canvas is).
+  const liveStrokeRef = useRef(false);
   // The passed blocks' strokes, kept for the word-done strip and the tablet's done canvas, then dropped.
   const [traced, setTraced] = useState<JamoStrokePoint[][][]>([]);
   const [coaching, setCoaching] = useState<TraceWordCoaching | null>(null);
@@ -163,6 +165,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
 
   const setStrokes = (next: JamoStrokePoint[][]): void => {
     strokesRef.current = next;
+    if (next.length === 0) liveStrokeRef.current = false;
     setStrokesState(next);
   };
 
@@ -281,14 +284,20 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const beginStroke = (from: JamoStrokePoint, to: JamoStrokePoint): void => {
     if (stateRef.current.phase !== 'drawing') return;
     setStrokes([...strokesRef.current, [from, to]]);
+    liveStrokeRef.current = true;
   };
   const appendPoint = (point: JamoStrokePoint): void => {
-    if (stateRef.current.phase !== 'drawing') return;
+    if (stateRef.current.phase !== 'drawing' || !liveStrokeRef.current) return;
     const prev = strokesRef.current;
     if (prev.length === 0) return;
     const next = [...prev];
     next[next.length - 1] = [...next[next.length - 1]!, point];
     setStrokes(next);
+  };
+  // A drifting palm had the stroke; the finger took it: the palm's few points go.
+  const dropStroke = (): void => {
+    if (stateRef.current.phase === 'drawing' && liveStrokeRef.current) setStrokes(strokesRef.current.slice(0, -1));
+    liveStrokeRef.current = false;
   };
   const fingerDown = (): void => setStroking(true);
   const fingerUp = (): void => setStroking(false);
@@ -312,6 +321,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const onTouchEffect = (effect: TraceTouchEffect): void => {
     if (effect.kind === 'start') beginStroke(toViewBox(effect.from.x, effect.from.y), toViewBox(effect.to.x, effect.to.y));
     else if (effect.kind === 'point') appendPoint(toViewBox(effect.at.x, effect.at.y));
+    else if (effect.kind === 'drop') dropStroke();
+    else if (effect.kind === 'end') liveStrokeRef.current = false;
     if (stateRef.current.phase !== 'drawing') return;
     idleOnTouch(gateRef.current, effect.kind, strokesRef.current.length > 0);
   };

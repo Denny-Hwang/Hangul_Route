@@ -18,6 +18,7 @@ import {
  */
 
 const MIN = spacing.xs;
+const HANDOVER = spacing.sm;
 
 /** Runs touch steps one after another and collects every effect. */
 function run(steps: Array<(s: TracePointers) => TraceTouchStep>): { state: TracePointers; effects: TraceTouchEffect[] } {
@@ -32,7 +33,7 @@ function run(steps: Array<(s: TracePointers) => TraceTouchStep>): { state: Trace
 }
 
 const down = (id: number, x: number, y: number) => (s: TracePointers) => traceTouchesDown(s, [{ id, x, y }]);
-const move = (id: number, x: number, y: number) => (s: TracePointers) => traceTouchesMove(s, [{ id, x, y }], MIN);
+const move = (id: number, x: number, y: number) => (s: TracePointers) => traceTouchesMove(s, [{ id, x, y }], MIN, HANDOVER);
 const up = (id: number, x = 0, y = 0) => (s: TracePointers) => traceTouchesUp(s, [{ id, x, y }]);
 
 describe('trace pointers: one finger draws (AMENDMENTS-TOUCH 6.8)', () => {
@@ -100,6 +101,55 @@ describe('trace pointers: one finger draws (AMENDMENTS-TOUCH 6.8)', () => {
     ]);
   });
 
+  it('the hand-over distance is the spacing.sm token, 8 px', () => {
+    expect(HANDOVER).toBe(8);
+  });
+
+  it('a palm that drifts first, then a finger: the finger takes the stroke and the palm ink is dropped', () => {
+    const { effects, state } = run([
+      down(9, 100, 100),
+      // The palm's contact patch drifts 4.24 px before the finger moves: it starts a stroke.
+      move(9, 103, 103),
+      down(0, 10, 10),
+      move(0, 15, 10),
+      move(9, 104, 104),
+      move(0, 30, 10),
+      up(0),
+      move(9, 130, 130),
+      up(9),
+    ]);
+    expect(effects).toEqual([
+      { kind: 'hold' },
+      { kind: 'start', from: { x: 100, y: 100 }, to: { x: 103, y: 103 } },
+      { kind: 'drop' },
+      { kind: 'start', from: { x: 10, y: 10 }, to: { x: 15, y: 10 } },
+      { kind: 'point', at: { x: 30, y: 10 } },
+      { kind: 'end' },
+    ]);
+    expect(state).toEqual(NO_TRACE_POINTERS);
+  });
+
+  it('a finger takes the stroke only after travelling farther than the owner', () => {
+    const { effects } = run([down(9, 100, 100), move(9, 106, 100), down(0, 10, 10), move(0, 15, 10), move(0, 17, 10)]);
+    // 5 px is not past the palm's 6 px; 7 px is.
+    expect(effects).toEqual([
+      { kind: 'hold' },
+      { kind: 'start', from: { x: 100, y: 100 }, to: { x: 106, y: 100 } },
+      { kind: 'drop' },
+      { kind: 'start', from: { x: 10, y: 10 }, to: { x: 17, y: 10 } },
+    ]);
+  });
+
+  it('a stroke that has travelled spacing.sm is never taken', () => {
+    const { effects } = run([down(0, 10, 10), move(0, 18, 10), down(1, 150, 150), move(1, 120, 120), move(0, 19, 10), up(0)]);
+    expect(effects).toEqual([
+      { kind: 'hold' },
+      { kind: 'start', from: { x: 10, y: 10 }, to: { x: 18, y: 10 } },
+      { kind: 'point', at: { x: 19, y: 10 } },
+      { kind: 'end' },
+    ]);
+  });
+
   it('a palm still down when the stroke ends rests until it lifts: it never draws and its lift is silent', () => {
     const { effects, state } = run([
       down(9, 150, 150),
@@ -143,6 +193,7 @@ describe('trace pointers: one finger draws (AMENDMENTS-TOUCH 6.8)', () => {
         { id: 0, x: 10, y: 20 },
       ],
       MIN,
+      HANDOVER,
     );
     expect(step.effects).toEqual([{ kind: 'start', from: { x: 100, y: 100 }, to: { x: 100, y: 110 } }]);
     expect(step.state.owner).toBe(1);
@@ -156,7 +207,7 @@ describe('trace pointers: one finger draws (AMENDMENTS-TOUCH 6.8)', () => {
 
   it('a move that changes nothing returns the same state', () => {
     const s = run([down(0, 10, 10)]).state;
-    expect(traceTouchesMove(s, [{ id: 0, x: 11, y: 10 }], MIN).state).toBe(s);
+    expect(traceTouchesMove(s, [{ id: 0, x: 11, y: 10 }], MIN, HANDOVER).state).toBe(s);
   });
 
   describe('traceTouchesEnd: the gesture finished (cancelled, or the lifts never came)', () => {
