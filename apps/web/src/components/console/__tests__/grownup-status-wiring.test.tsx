@@ -262,11 +262,13 @@ describe('the class page shows a status next to every learner (GX-1, section 4)'
     expect(textOf(mina)).not.toContain('not synced yet');
   });
 
-  it('the action chip moves focus to the inline Approve', async () => {
+  it('the action chip opens the decision for its request: the re-link pop-up (GX-2, section 5.3)', async () => {
     await render();
-    focused.length = 0;
+    const later = (): ReactTestInstance | undefined => byTestId('relink-popup-later')[0];
+    await press(later() as ReactTestInstance);
+    expect(byTestId('relink-popup')).toEqual([]);
     await press(chipIn(cardOf('Jaehan')) as ReactTestInstance);
-    expect(focused).toEqual(['button, a']);
+    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('New device request: Jaehan');
   });
 
   it('Approve inline answers the request, says so on the card, reads the re-links again and keeps the card in place 5 s', async () => {

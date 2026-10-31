@@ -1052,4 +1052,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.status.moving': [['Nov 3']],
   'console.status.minutesLeft': [[1], [8]],
   'console.attention.from': [['Class B']],
+  // AMENDMENTS-GROWNUP-UX GX-2: the attention banner's counts (1 and many) and the re-link pop-up's name and minutes.
+  'console.attention.title': [[1], [3], [12]],
+  'console.attention.devices': [[1], [3]],
+  'console.attention.moves': [[1], [3]],
+  'console.relinkPopup.title': [['Jaehan']],
+  'console.relinkPopup.closes': [[1], [8]],
 };
