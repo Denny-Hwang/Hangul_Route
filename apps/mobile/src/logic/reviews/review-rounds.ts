@@ -1,6 +1,7 @@
 import { blockParts, REPRESENTATIVE_FINALS, SHAPE_LOOK_ALIKES, type SyllableZone } from '@hangul-route/content-schema';
 import type { ReviewFormat, ReviewItem, ReviewItemKind } from '@hangul-route/content-schema/review-items';
 import { CLOZE_GAP } from '@hangul-route/content-schema';
+import { normalizeAskedKo } from '../memory/resolve';
 import { jitter, type EngineContext, type EngineStates, type ReviewQuestion } from './engine';
 
 /**
@@ -397,7 +398,7 @@ const seededOrder = <T>(list: readonly T[], seed: string, keyOf: (t: T) => strin
 /**
  * Up to 3 other items of the same kind whose option text differs from the answer's and from each other's: the
  * same theme first (a fairer choice), then any; an item with the same spelling or the same sound as the answer
- * (a homophone) is never one.
+ * (a homophone) is never one, nor is the option text of another item with the answer's line (a second right reply).
  */
 function distractors(target: ReviewItem, input: RoundInput, textOf: (item: ReviewItem) => string | undefined): ReviewItem[] {
   const answerText = textOf(target);
@@ -417,12 +418,16 @@ function distractors(target: ReviewItem, input: RoundInput, textOf: (item: Revie
     (i) => i.id,
   );
   const out: ReviewItem[] = [];
-  const seen = new Set([answerText]);
+  // Another item with the same line is a second right answer to it (an exchange the lessons taught with two good
+  // replies, or one spelling with two meanings): its option text is never offered as a wrong one.
+  const line = normalizeAskedKo(target.ko);
+  const siblings = itemsOfKind(input.index, target.kind).filter((i) => i.id !== target.id && normalizeAskedKo(i.ko) === line);
+  const seen = new Set([answerText, ...siblings.map(textOf).filter((t): t is string => t !== undefined)].map(normalizeAskedKo));
   for (const item of [...near, ...far]) {
     if (out.length >= MAX_OPTIONS - 1) break;
     const text = textOf(item);
-    if (text === undefined || seen.has(text)) continue;
-    seen.add(text);
+    if (text === undefined || seen.has(normalizeAskedKo(text))) continue;
+    seen.add(normalizeAskedKo(text));
     out.push(item);
   }
   return out;
