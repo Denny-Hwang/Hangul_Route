@@ -1,0 +1,1009 @@
+{
+  "id": "episode:stage7-letters-v2",
+  "stage": "stage7",
+  "theme": "letters",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "My Postcard",
+  "subtitleEn": "Write a postcard and a one-line diary, from a word bank.",
+  "hoyaIntroEn": "Let us write a postcard to a friend, and one line about today!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-letters-v2-q1",
+      "titleEn": "Dear Hoya",
+      "blurbEn": "Start a letter: who it is for, and how they have been.",
+      "teaserEn": "Next: write one line about your day.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Dear Hoya",
+          "hoyaLineEn": "Let us write a letter in Korean. Write the first one to me!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "To Hoya",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "편지",
+                      "romanization": "pyeonji",
+                      "en": "letter"
+                    },
+                    "noteEn": "Words you write to someone and send, on paper or a card."
+                  },
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에게",
+                      "romanization": "___ege",
+                      "en": "To ___."
+                    },
+                    "noteEn": "A letter starts with who it is for: the name, then {ko:에게}, which means to.",
+                    "examples": [
+                      {
+                        "ko": "호야에게",
+                        "romanization": "hoyaege",
+                        "en": "To Hoya."
+                      },
+                      {
+                        "ko": "친구에게",
+                        "romanization": "chinguege",
+                        "en": "To a friend."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A new word, and how a letter starts."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "잘 지냈어요?",
+                      "romanization": "jal jinaesseoyo",
+                      "en": "Have you been well?"
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "호야에게 편지를 써요.",
+                      "romanization": "hoyaege pyeonjireul sseoyo",
+                      "en": "I write a letter to Hoya."
+                    }
+                  }
+                ],
+                "captionEn": "Ask how they have been, then write your letter."
+              }
+            ]
+          },
+          "durationSeconds": 75
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Words",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-letters-v2-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Letter",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-v2-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s7-letters-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Letter Writer!",
+          "hoyaLineEn": "You started a letter in Korean. I love it!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-v2-q1-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for letter.",
+              "target": {
+                "ko": "편지",
+                "romanization": "pyeonji",
+                "en": "letter"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: To Hoya.",
+              "target": {
+                "ko": "호야에게",
+                "romanization": "hoyaege",
+                "en": "to Hoya"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for friend.",
+              "pictureRef": "word:school-friend",
+              "target": {
+                "ko": "친구",
+                "romanization": "chingu",
+                "en": "friend"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Have you been well?",
+              "target": {
+                "ko": "잘 지냈어요",
+                "romanization": "jal jinaesseoyo",
+                "en": "have you been well"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q1-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "호야에게 편지를 써요.",
+                "romanization": "hoyaege pyeonjireul sseoyo",
+                "en": "I write a letter to Hoya."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "친구에게 편지를 써요.",
+                "romanization": "chinguege pyeonjireul sseoyo",
+                "en": "I write a letter to a friend."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "I eat"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "호야, 잘 지냈어요?",
+                "romanization": "hoya jal jinaesseoyo",
+                "en": "Hoya, have you been well?"
+              },
+              "distractors": [
+                {
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "미나에게 편지를 써요.",
+                "romanization": "minaege pyeonjireul sseoyo",
+                "en": "I write a letter to Mina."
+              },
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "I go"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "___에게 편지를 써요.",
+                "romanization": "___ege pyeonjireul sseoyo",
+                "en": "I write a letter to a friend."
+              },
+              "tiles": [
+                {
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
+                },
+                {
+                  "ko": "친구",
+                  "romanization": "chingu",
+                  "en": "friend"
+                },
+                {
+                  "ko": "한글",
+                  "romanization": "hangeul",
+                  "en": "Hangul, the Korean alphabet"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "호야___ 편지를 써요.",
+                "romanization": "hoya___ pyeonjireul sseoyo",
+                "en": "I write a letter to Hoya."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "에게",
+                  "romanization": "ege",
+                  "en": "to (a person)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                },
+                {
+                  "ko": "이에요",
+                  "romanization": "ieyo",
+                  "en": "it is (after a final consonant)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "hoyaege pyeonjireul sseoyo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-letters-v2-q2",
+      "titleEn": "One-Line Diary",
+      "blurbEn": "Write one line about your day, the way a diary does.",
+      "teaserEn": "Next: write a postcard of your own.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "One-Line Diary",
+          "hoyaLineEn": "A diary keeps your day in writing. One line is enough!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Today I Wrote",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "일기",
+                      "romanization": "ilgi",
+                      "en": "diary"
+                    },
+                    "noteEn": "A record of your own day, written one day at a time."
+                  },
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "오늘 ___을/를 썼어요.",
+                      "romanization": "oneul ___eul/reul sseosseoyo",
+                      "en": "Today I wrote ___."
+                    },
+                    "noteEn": "{ko:썼어요} means wrote: it is {ko:써요}, said about the past. Use {ko:을} after a final consonant, {ko:를} after a vowel.",
+                    "examples": [
+                      {
+                        "ko": "오늘 편지를 썼어요.",
+                        "romanization": "oneul pyeonjireul sseosseoyo",
+                        "en": "Today I wrote a letter."
+                      },
+                      {
+                        "ko": "오늘 일기를 썼어요.",
+                        "romanization": "oneul ilgireul sseosseoyo",
+                        "en": "Today I wrote in my diary."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A new word, and a frame for one line about today."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "오늘 친구에게 편지를 썼어요.",
+                      "romanization": "oneul chinguege pyeonjireul sseosseoyo",
+                      "en": "Today I wrote a letter to a friend."
+                    },
+                    "picture": "word:school-friend"
+                  }
+                ],
+                "captionEn": "One line can also say who the letter was for."
+              }
+            ]
+          },
+          "durationSeconds": 75
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-letters-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Diary Line",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-v2-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-letters-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Diary Writer!",
+          "hoyaLineEn": "You wrote a line of your own diary, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-v2-q2-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "일기",
+                "romanization": "ilgi",
+                "en": "diary"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "편지",
+                "romanization": "pyeonji",
+                "en": "letter"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "붓",
+                "romanization": "but",
+                "en": "writing brush"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "한글",
+                "romanization": "hangeul",
+                "en": "Hangul, the Korean alphabet"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q2-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "오늘 편지를 썼어요.",
+                "romanization": "oneul pyeonjireul sseosseoyo",
+                "en": "Today I wrote a letter."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "오늘 일기를 썼어요.",
+                "romanization": "oneul ilgireul sseosseoyo",
+                "en": "Today I wrote in my diary."
+              },
+              "distractors": [
+                {
+                  "ko": "먹었어요",
+                  "romanization": "meogeosseoyo",
+                  "en": "I ate"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "오늘 친구에게 편지를 썼어요.",
+                "romanization": "oneul chinguege pyeonjireul sseosseoyo",
+                "en": "Today I wrote a letter to a friend."
+              },
+              "pictureRef": "word:school-friend",
+              "distractors": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "I write"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "오늘 이름을 썼어요.",
+                "romanization": "oneul ireumeul sseosseoyo",
+                "en": "Today I wrote my name."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q2-check",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "오늘 ___을/를 썼어요.",
+                "romanization": "oneul ___eul/reul sseosseoyo",
+                "en": "Today I wrote ___."
+              },
+              "slots": [
+                {
+                  "id": "what",
+                  "bank": [
+                    {
+                      "ko": "편지",
+                      "romanization": "pyeonji",
+                      "en": "a letter"
+                    },
+                    {
+                      "ko": "일기",
+                      "romanization": "ilgi",
+                      "en": "a diary entry"
+                    },
+                    {
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "my name"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "___에게 편지를 썼어요.",
+                "romanization": "___ege pyeonjireul sseosseoyo",
+                "en": "I wrote a letter to ___."
+              },
+              "slots": [
+                {
+                  "id": "who",
+                  "bank": [
+                    {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "a friend"
+                    },
+                    {
+                      "ko": "미나",
+                      "romanization": "mina",
+                      "en": "Mina"
+                    },
+                    {
+                      "ko": "호야",
+                      "romanization": "hoya",
+                      "en": "Hoya"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-letters-v2-q3",
+      "titleEn": "My Postcard",
+      "blurbEn": "Write a postcard of your own, from a word bank.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Postcard",
+          "hoyaLineEn": "Now write a postcard of your own. Any words you pick are good ones!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "See You at the Park",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___에서 만나요.",
+                      "romanization": "___eseo mannayo",
+                      "en": "See you at ___."
+                    },
+                    "noteEn": "{ko:만나요} means meet. {ko:에서} after a place says where. A postcard can end with where you will meet.",
+                    "examples": [
+                      {
+                        "ko": "공원에서 만나요.",
+                        "romanization": "gongwoneseo mannayo",
+                        "en": "See you at the park."
+                      },
+                      {
+                        "ko": "학교에서 만나요.",
+                        "romanization": "hakgyoeseo mannayo",
+                        "en": "See you at school."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A frame to end a postcard."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "오늘 바다에 가요.",
+                      "romanization": "oneul badae gayo",
+                      "en": "Today I go to the sea."
+                    },
+                    "picture": "card:sea"
+                  }
+                ],
+                "captionEn": "Put your news in the middle: where you go today."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Postcard",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-letters-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Postcard",
+          "minigameKind": "my-story",
+          "minigameRef": "minigame:s7-letters-v2-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-letters-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Postcard!",
+          "hoyaLineEn": "You wrote a postcard of your own, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-letters-v2-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for park.",
+              "target": {
+                "ko": "공원",
+                "romanization": "gongwon",
+                "en": "park"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: See you at the park.",
+              "target": {
+                "ko": "공원에서 만나요",
+                "romanization": "gongwoneseo mannayo",
+                "en": "see you at the park"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type: Today I go to the sea.",
+              "pictureRef": "card:sea",
+              "target": {
+                "ko": "오늘 바다에 가요",
+                "romanization": "oneul badae gayo",
+                "en": "today I go to the sea"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: To a friend.",
+              "target": {
+                "ko": "친구에게",
+                "romanization": "chinguege",
+                "en": "to a friend"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q3-apply",
+          "kind": "my-story",
+          "frames": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "___에게",
+                "romanization": "___ege",
+                "en": "To ___."
+              },
+              "slots": [
+                {
+                  "id": "who",
+                  "bank": [
+                    {
+                      "ko": "친구",
+                      "romanization": "chingu",
+                      "en": "a friend"
+                    },
+                    {
+                      "ko": "미나",
+                      "romanization": "mina",
+                      "en": "Mina"
+                    },
+                    {
+                      "ko": "호야",
+                      "romanization": "hoya",
+                      "en": "Hoya",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "오늘 ___에 가요.",
+                "romanization": "oneul ___e gayo",
+                "en": "Today I go to ___."
+              },
+              "slots": [
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "바다",
+                      "romanization": "bada",
+                      "en": "the sea"
+                    },
+                    {
+                      "ko": "산",
+                      "romanization": "san",
+                      "en": "the mountains"
+                    },
+                    {
+                      "ko": "강",
+                      "romanization": "gang",
+                      "en": "the river"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "the park",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___에서 만나요.",
+                "romanization": "___eseo mannayo",
+                "en": "See you at ___."
+              },
+              "slots": [
+                {
+                  "id": "place",
+                  "bank": [
+                    {
+                      "ko": "학교",
+                      "romanization": "hakgyo",
+                      "en": "school"
+                    },
+                    {
+                      "ko": "기차역",
+                      "romanization": "gichayeok",
+                      "en": "the train station"
+                    },
+                    {
+                      "ko": "공원",
+                      "romanization": "gongwon",
+                      "en": "the park",
+                      "neutral": true
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-letters-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "오늘 바다에 가요.",
+                "romanization": "oneul badae gayo",
+                "en": "Today I go to the sea."
+              },
+              "pictureRef": "card:sea",
+              "distractors": [
+                {
+                  "ko": "만나요",
+                  "romanization": "mannayo",
+                  "en": "let's meet"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "학교에서 만나요.",
+                "romanization": "hakgyoeseo mannayo",
+                "en": "See you at school."
+              },
+              "distractors": [
+                {
+                  "ko": "편지",
+                  "romanization": "pyeonji",
+                  "en": "letter"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "The oldest Hangul letter found so far is thought to date from the 1490s. Na Sin-geol, an army officer serving far from home, wrote it to his wife.",
+      "sources": [
+        {
+          "title": "한글 편지, 시대를 읽다 (기획 전시, 2015)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/exhibition/550",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘현존하는 가장 오래된 한글 편지’ 단락: “현재 전하고 있는 한글 편지 중에 가장 오래된 것은 1490년대에 작성된 것으로 추정되는 나신걸(羅臣傑: 1461∼1524)의 편지이다.” / “나신걸이 부인 신창 맹씨에게 보낸 것이다. 영안도(永安道: 함경도) 경성에 군관(軍官)으로 가면서 고향 회덕(懷德)에 들르지 못하게 된 것을 안타까워하며”"
+        },
+        {
+          "title": "보물 나신걸 한글편지 (羅臣傑 한글便紙)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1122522090000&ccbaKdcd=12&ccbaAsno=22090000&ccbaCtcd=25",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "기본 정보: 시대 “1490년대 추정”. 설명: “‘나신걸 한글편지’는 조선 초기 군관(軍官) 나신걸(羅臣傑, 1461∼1524)이 아내 신창맹씨(新昌孟氏)에게 한글로 써서 보낸 편지 2장으로” / “‘나신걸 한글편지’는 현재까지 발견된 한글편지 가운데 가장 오래된 자료이자”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-31): the National Hangeul Museum exhibition page 한글 편지, 시대를 읽다 (exhibition 550, HTTP 200) says the oldest Hangul letter that survives is Na Sin-geol's, thought to date from the 1490s, sent to his wife as he went north as an army officer and could not stop at his home town; the Korea Heritage Service portal entry for the Treasure 나신걸 한글편지 (HTTP 200; its 설명 tab) dates it to the 1490s (estimated), names the writer as an army officer (군관) writing to his wife, and calls it the oldest Hangul letter found so far. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order), beside the letter opening.\nLine 2 (pass 2b, fact check lens, 2026-10-31): 'thought to date from the 1490s' keeps both sources' 추정; 'found so far' renders 현재까지 발견된 and 현재 전하고 있는; 'serving far from home' renders the NHM line (going to Gyeongseong in Hamgyeong, unable to stop at Hoedeok) and the KHS 함경도에서 하급 군관. The year the grave was opened is left out (the two pages give 2011 and 2012), and so are the letter's requests (clothes, the farm). Outcome: pass, wording kept to what both pages say.\nLine 3 (pass 5, MAR culture review, 2026-10-31): institutions named as on the access date (국립한글박물관; 국가유산청, the Korea Heritage Service since 2024-05-17); no living person; no 'only in Korea' or origin claim; the name follows the KHS English title (Na Sin-geol). Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:궁체} is a style of Hangul brush writing that ladies of the Joseon court used. Its lines are clear and straight. In modern times, school textbooks taught Hangul brush writing mainly in this style.",
+      "sources": [
+        {
+          "title": "궁체 2 (宮體) (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=402332&searchKeywordTo=3",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘궁체 2(宮體)’(word_no 402332) 「명사」「1」: “조선 시대에, 궁녀들이 쓰던 한글 서체. 선이 맑고 곧으며 단정하고 아담한 점이 특징이다.”"
+        },
+        {
+          "title": "한글 편지, 시대를 읽다 (기획 전시, 2015)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/exhibition/550",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘서예와 한글 편지’ 단락: “궁체는 17세기 숙종 연간부터 시작되어 19세기 후반에 이르러 더욱 발전하였다.” / “왕후의 편지를 대필하는 일이 많았고 이를 전문으로 하는 서사상궁(書寫尙宮)까지 있어서 궁체의 조형미가 더욱 발전할 수 있었다.”"
+        },
+        {
+          "title": "명필을 꿈꾸다 (기획 전시, 2018-2019)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/exhibition/589",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "3부 ‘조선 왕실의 임서 문화와 근현대 한글 서예 교육’: “근현대 교육과정이 수립되면서 교과서에는 궁체를 중심으로 한글 서예를 다루었다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-31): the Standard Korean Language Dictionary entry 궁체 2 (宮體, word_no 402332, read on the search page, HTTP 200) defines it as the Hangul style the court ladies of Joseon wrote, with clear, straight, neat lines; the National Hangeul Museum exhibition page 한글 편지, 시대를 읽다 (exhibition 550) dates its start to King Sukjong's reign in the 17th century and names the court ladies who wrote letters for queens; the exhibition page 명필을 꿈꾸다 (exhibition 589) says modern textbooks taught Hangul calligraphy centred on 궁체. Restated in own words; nothing copied. Carried by: the q2 Did you know? tip, after the q2 Trace a Word round (the brush-written letters of §5.2 S7).\nLine 2 (pass 2b, fact check lens, 2026-10-31): 'ladies of the Joseon court' renders 궁녀; 'clear and straight' renders 선이 맑고 곧으며; 'mainly in this style' renders 궁체를 중심으로. The 17th-century start and the named court writers are left out of the line to keep it short; no claim that brush writing began in Korea (brush calligraphy is shared East Asian heritage, F-CURR-002 5.1): the note names a Hangul style only. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-31): institutions named as on the access date (국립국어원, 국립한글박물관); es and ko keep the one {ko:} token; no living person. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "To show respect, for example to a teacher, a letter uses {ko:께} in place of {ko:에게}: {ko:선생님께}.",
+      "sources": [
+        {
+          "title": "께 1 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=403851&searchKeywordTo=3",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘께 1’(word_no 403851) 「조사」「1」: “‘에게’의 높임말.”"
+        },
+        {
+          "title": "께 (조사)",
+          "publisher": "국립국어원 우리말샘 (Urimalsaem)",
+          "url": "https://opendict.korean.go.kr/search/searchResult?focus_name_top=query&query=%EA%BB%98&dicType=1&wordMatch=Y",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "찾기 결과 ‘께’ 「003」 「조사」: “‘에게’의 높임말.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-31): the Standard Korean Language Dictionary entry 께 1 (word_no 403851, a particle, read on the search page, HTTP 200) and the Urimalsaem entry 께 (a particle, HTTP 200) both define it as the honorific form of 에게. Restated in own words; nothing copied. The ending -께 (→ -ㄹ게) and the suffix -께 (그믐께) are homographs and are not this note's. Carried by: the q3 Did you know? tip, beside the postcard chain, whose receivers (a friend, Mina, Hoya) all take 에게.\nLine 2 (pass 2b, fact check lens, 2026-10-31): 'to show respect' renders 높임말; 선생님께 is the note's own example of the rule, not a quote. The chain never offers a receiver who would need 께, so the note and the cell agree. Outcome: pass, no change.\nLine 3 (pass 5, MAR language review, 2026-10-31): plain language note, no cultural claim; es and ko keep the three {ko:} tokens; the ko overlay explains 께 without using it to gloss itself. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Author pass (MAR, 2026-10-31): §5.2 S7 in three quests: start a letter (편지; ___에게; 잘 지냈어요?), a one-line diary (일기; 오늘 ___을/를 썼어요), and a postcard of the learner's own (___에서 만나요) with the q3 My Story chain. Triples type-hangul / order-it / cloze-pick, trace-word / order-it / write-frame, type-hangul / my-story / order-it: no Volume 1 triple; three Checks, three games.",
+      "Language lens (MAR, 2026-10-31): 해요체 throughout; particles clean (호야에게, 편지를, 이름을, 공원에서, 바다에); 썼어요 taught as the past of 써요; romanization from the F-CNT-002 converter (썼어요 sseosseoyo, 지냈어요 jinaesseoyo, 만나요 mannayo); every chain line reads as a postcard line (친구에게 / 오늘 바다에 가요. / 공원에서 만나요.).",
+      "Culture and facts lens (MAR, 2026-10-31): n1 (the oldest Hangul letter found so far, Na Sin-geol, 1490s) against the National Hangeul Museum and the Korea Heritage Service; n2 (궁체, the court ladies' Hangul brush style, later the textbook style) against stdict and two National Hangeul Museum pages; n3 (께), stdict and Urimalsaem. None repeats a Volume 1 note; names as of the access date.",
+      "Learning design lens (MAR, 2026-10-31): curriculum lint clean; one new frame a quest and at most 3 new words (편지, 써요; 일기, 썼어요; 만나요); lesson-recycle 30 in 100 or more in every quest; no Dictation round; the Checks ask only what the quest has shown; the brush-written letters of §5.2 are the q2 Trace a Word round (일기, 편지, 붓, 한글) with the 궁체 note beside it.",
+      "My Story lens (MAR, 2026-10-31, §6.6): one neutral option per bank, never first (호야; 공원 twice); every receiver is a friend or the cast (친구, 미나, 호야), never the learner's family; no frame asks about family, feelings, home or school name; with game.my-story off the step plays frame 1 alone (친구에게), a postcard's opening line.",
+      "My Story hand-off (MAR, 2026-10-31, CM-38): frame 2 is the Volume 1 Stage 7 frame 오늘 ___에 가요 with Volume 1 places, and frame 3 and its places are the q3 Discover and Check, so a step that plays with the switch off teaches every tail item.",
+      "Reviser and third pass (MAR, 2026-10-31): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+    ]
+  },
+  "contentVer": 1
+}
