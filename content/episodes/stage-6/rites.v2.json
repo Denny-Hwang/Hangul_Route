@@ -1,0 +1,1762 @@
+{
+  "id": "episode:stage6-rites-v2",
+  "stage": "stage6",
+  "theme": "rites",
+  "volume": 2,
+  "status": "ready",
+  "titleEn": "Holiday Calendar",
+  "subtitleEn": "Read a calendar, a festival poster and a train ticket.",
+  "hoyaIntroEn": "Chuseok is coming! Let's read the calendar, a festival poster and a train ticket.",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-rites-v2-q1",
+      "titleEn": "Calendar Page",
+      "blurbEn": "Find Chuseok on a calendar page, in solar and lunar dates.",
+      "teaserEn": "Next: read a festival poster and its timetable.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Calendar Page",
+          "hoyaLineEn": "A calendar page for September! When is Chuseok this year?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Calendar",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q1-calendar",
+                    "keyWords": [
+                      {
+                        "ko": "달력",
+                        "romanization": "dallyeok",
+                        "en": "calendar"
+                      },
+                      {
+                        "ko": "추석",
+                        "romanization": "chuseok",
+                        "en": "the autumn harvest festival"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A calendar page shows the days of one month and the holidays on them."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q1-calendar",
+                    "keyWords": [
+                      {
+                        "ko": "음력",
+                        "romanization": "eumnyeok",
+                        "en": "lunar calendar"
+                      },
+                      {
+                        "ko": "추분",
+                        "romanization": "chubun",
+                        "en": "Autumn Equinox, a solar term"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Some days also give the date on the lunar calendar, or a solar term."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "추석은 9월 25일이에요.",
+                      "romanization": "chuseogeun guwol isiboirieyo",
+                      "en": "Chuseok is on September 25."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "추석에 송편을 먹어요.",
+                      "romanization": "chuseoge songpyeoneul meogeoyo",
+                      "en": "We eat songpyeon at Chuseok."
+                    }
+                  }
+                ],
+                "captionEn": "Now read the calendar in a sentence."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Calendar",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-v2-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-rites-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-rites-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Calendar Reader!",
+          "hoyaLineEn": "You found Chuseok on the calendar. See you on the 25th!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-v2-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-v2-q1-calendar",
+            "kind": "calendar",
+            "title": {
+              "ko": "9월",
+              "romanization": "guwol",
+              "en": "September"
+            },
+            "entries": [
+              {
+                "id": "d7",
+                "text": {
+                  "ko": "7일",
+                  "romanization": "chiril",
+                  "en": "the 7th"
+                },
+                "value": {
+                  "ko": "백로",
+                  "romanization": "baengno",
+                  "en": "White Dew, a solar term"
+                }
+              },
+              {
+                "id": "d11",
+                "text": {
+                  "ko": "11일",
+                  "romanization": "sibiril",
+                  "en": "the 11th"
+                },
+                "value": {
+                  "ko": "음력 8월 1일",
+                  "romanization": "eumnyeok parwol iril",
+                  "en": "the 1st day of the 8th lunar month"
+                }
+              },
+              {
+                "id": "d23",
+                "text": {
+                  "ko": "23일",
+                  "romanization": "isipsamil",
+                  "en": "the 23rd"
+                },
+                "value": {
+                  "ko": "추분",
+                  "romanization": "chubun",
+                  "en": "Autumn Equinox, a solar term"
+                }
+              },
+              {
+                "id": "d25",
+                "text": {
+                  "ko": "25일",
+                  "romanization": "isiboil",
+                  "en": "the 25th"
+                },
+                "value": {
+                  "ko": "추석 (음력 8월 15일)",
+                  "romanization": "chuseok eumnyeok parwol siboil",
+                  "en": "Chuseok (the 15th day of the 8th lunar month)"
+                }
+              }
+            ],
+            "altEn": "A calendar page for September: White Dew on the 7th, lunar month 8 begins on the 11th, the equinox on the 23rd, Chuseok on the 25th"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which day is Chuseok?",
+              "key": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              },
+              "options": [
+                {
+                  "id": "d11",
+                  "figure": "11"
+                },
+                {
+                  "id": "d23",
+                  "figure": "23"
+                },
+                {
+                  "id": "d25",
+                  "figure": "25"
+                }
+              ],
+              "answerId": "d25",
+              "answerEntryId": "d25"
+            },
+            {
+              "id": "r2",
+              "questionEn": "What is on this day?",
+              "key": {
+                "ko": "23일",
+                "romanization": "isipsamil",
+                "en": "the 23rd"
+              },
+              "options": [
+                {
+                  "id": "baengno",
+                  "text": {
+                    "ko": "백로",
+                    "romanization": "baengno",
+                    "en": "White Dew, a solar term"
+                  }
+                },
+                {
+                  "id": "chubun",
+                  "text": {
+                    "ko": "추분",
+                    "romanization": "chubun",
+                    "en": "Autumn Equinox, a solar term"
+                  }
+                },
+                {
+                  "id": "chuseok",
+                  "text": {
+                    "ko": "추석",
+                    "romanization": "chuseok",
+                    "en": "the autumn harvest festival"
+                  }
+                }
+              ],
+              "answerId": "chubun",
+              "answerEntryId": "d23"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which day is the 1st day of the 8th lunar month?",
+              "options": [
+                {
+                  "id": "d11",
+                  "figure": "11"
+                },
+                {
+                  "id": "d15",
+                  "figure": "15"
+                },
+                {
+                  "id": "d25",
+                  "figure": "25"
+                }
+              ],
+              "answerId": "d11",
+              "answerEntryId": "d11"
+            },
+            {
+              "id": "r4",
+              "questionEn": "What is the lunar date of Chuseok?",
+              "key": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              },
+              "options": [
+                {
+                  "id": "lunar-8-1",
+                  "text": {
+                    "ko": "음력 8월 1일",
+                    "romanization": "eumnyeok parwol iril",
+                    "en": "the 1st day of the 8th lunar month"
+                  }
+                },
+                {
+                  "id": "lunar-8-15",
+                  "text": {
+                    "ko": "음력 8월 15일",
+                    "romanization": "eumnyeok parwol siboil",
+                    "en": "the 15th day of the 8th lunar month"
+                  }
+                },
+                {
+                  "id": "lunar-1-1",
+                  "text": {
+                    "ko": "음력 1월 1일",
+                    "romanization": "eumnyeok irwol iril",
+                    "en": "the 1st day of the 1st lunar month"
+                  }
+                }
+              ],
+              "answerId": "lunar-8-15",
+              "answerEntryId": "d25"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "추석은 9월 ___이에요.",
+                "romanization": "chuseogeun guwol ___ieyo",
+                "en": "Chuseok is on September ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "5일",
+                  "romanization": "oil",
+                  "en": "the 5th"
+                },
+                {
+                  "ko": "15일",
+                  "romanization": "siboil",
+                  "en": "the 15th"
+                },
+                {
+                  "ko": "25일",
+                  "romanization": "isiboil",
+                  "en": "the 25th"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "9월 23일은 ___이에요.",
+                "romanization": "guwol isipsamireun ___ieyo",
+                "en": "September 23 is ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "설날",
+                  "romanization": "seollal",
+                  "en": "Lunar New Year's Day"
+                },
+                {
+                  "ko": "추분",
+                  "romanization": "chubun",
+                  "en": "Autumn Equinox, a solar term"
+                },
+                {
+                  "ko": "추석",
+                  "romanization": "chuseok",
+                  "en": "the autumn harvest festival"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "음력 8월 1일은 9월 ___이에요.",
+                "romanization": "eumnyeok parwol irireun guwol ___ieyo",
+                "en": "The 1st day of the 8th lunar month is September ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "1일",
+                  "romanization": "iril",
+                  "en": "the 1st"
+                },
+                {
+                  "ko": "11일",
+                  "romanization": "sibiril",
+                  "en": "the 11th"
+                },
+                {
+                  "ko": "21일",
+                  "romanization": "isibiril",
+                  "en": "the 21st"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-rites-v2-q1-calendar",
+            "kind": "calendar",
+            "title": {
+              "ko": "9월",
+              "romanization": "guwol",
+              "en": "September"
+            },
+            "entries": [
+              {
+                "id": "d7",
+                "text": {
+                  "ko": "7일",
+                  "romanization": "chiril",
+                  "en": "the 7th"
+                },
+                "value": {
+                  "ko": "백로",
+                  "romanization": "baengno",
+                  "en": "White Dew, a solar term"
+                }
+              },
+              {
+                "id": "d11",
+                "text": {
+                  "ko": "11일",
+                  "romanization": "sibiril",
+                  "en": "the 11th"
+                },
+                "value": {
+                  "ko": "음력 8월 1일",
+                  "romanization": "eumnyeok parwol iril",
+                  "en": "the 1st day of the 8th lunar month"
+                }
+              },
+              {
+                "id": "d23",
+                "text": {
+                  "ko": "23일",
+                  "romanization": "isipsamil",
+                  "en": "the 23rd"
+                },
+                "value": {
+                  "ko": "추분",
+                  "romanization": "chubun",
+                  "en": "Autumn Equinox, a solar term"
+                }
+              },
+              {
+                "id": "d25",
+                "text": {
+                  "ko": "25일",
+                  "romanization": "isiboil",
+                  "en": "the 25th"
+                },
+                "value": {
+                  "ko": "추석 (음력 8월 15일)",
+                  "romanization": "chuseok eumnyeok parwol siboil",
+                  "en": "Chuseok (the 15th day of the 8th lunar month)"
+                }
+              }
+            ],
+            "altEn": "A calendar page for September: White Dew on the 7th, lunar month 8 begins on the 11th, the equinox on the 23rd, Chuseok on the 25th"
+          }
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptEn": "Type the holiday word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "추석",
+                "romanization": "chuseok",
+                "en": "the autumn harvest festival"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the food word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cake"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-rites-v2-q2",
+      "titleEn": "Festival Poster",
+      "blurbEn": "Read a Chuseok festival poster and its timetable.",
+      "teaserEn": "Next: read a holiday train ticket.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Festival Poster",
+          "hoyaLineEn": "A poster for a Chuseok festival in the park! Let's see what is on.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Poster",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q2-poster",
+                    "keyWords": [
+                      {
+                        "ko": "축제",
+                        "romanization": "chukje",
+                        "en": "festival"
+                      },
+                      {
+                        "ko": "마을",
+                        "romanization": "maeul",
+                        "en": "village"
+                      },
+                      {
+                        "ko": "오후",
+                        "romanization": "ohu",
+                        "en": "afternoon, p.m."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A poster says what the event is, where it is and when."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q2-timetable",
+                    "keyWords": [
+                      {
+                        "ko": "시간표",
+                        "romanization": "siganpyo",
+                        "en": "timetable"
+                      },
+                      {
+                        "ko": "강강술래",
+                        "romanization": "ganggangsullae",
+                        "en": "a Chuseok circle dance"
+                      },
+                      {
+                        "ko": "일곱 시",
+                        "romanization": "ilgop si",
+                        "en": "seven o'clock"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The timetable gives each event with its time."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "강강술래는 일곱 시에 해요.",
+                      "romanization": "ganggangsullaeneun ilgop sie haeyo",
+                      "en": "Ganggangsullae is at seven o'clock."
+                    }
+                  }
+                ],
+                "captionEn": "Now read the timetable in a sentence."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Poster",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-rites-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Festival Ready!",
+          "hoyaLineEn": "You read a poster and a timetable. See you at the festival!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-v2-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-v2-q2-poster",
+            "kind": "poster",
+            "title": {
+              "ko": "추석 축제",
+              "romanization": "chuseok chukje",
+              "en": "Chuseok festival"
+            },
+            "entries": [
+              {
+                "id": "date",
+                "text": {
+                  "ko": "9월 25일",
+                  "romanization": "guwol isiboil",
+                  "en": "September 25"
+                }
+              },
+              {
+                "id": "place",
+                "text": {
+                  "ko": "마을 공원",
+                  "romanization": "maeul gongwon",
+                  "en": "the village park"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "오후 한 시",
+                  "romanization": "ohu han si",
+                  "en": "1 p.m."
+                }
+              }
+            ],
+            "altEn": "A poster for a Chuseok festival: September 25, at the village park, at 1 p.m."
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Where is the festival?",
+              "options": [
+                {
+                  "id": "gichayeok",
+                  "text": {
+                    "ko": "기차역",
+                    "romanization": "gichayeok",
+                    "en": "train station"
+                  }
+                },
+                {
+                  "id": "maeul-gongwon",
+                  "text": {
+                    "ko": "마을 공원",
+                    "romanization": "maeul gongwon",
+                    "en": "the village park"
+                  }
+                },
+                {
+                  "id": "halmeoni-daek",
+                  "text": {
+                    "ko": "할머니 댁",
+                    "romanization": "halmeoni daek",
+                    "en": "Grandma's home"
+                  }
+                }
+              ],
+              "answerId": "maeul-gongwon",
+              "answerEntryId": "place"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Which day is the festival?",
+              "options": [
+                {
+                  "id": "sep-23",
+                  "text": {
+                    "ko": "9월 23일",
+                    "romanization": "guwol isipsamil",
+                    "en": "September 23"
+                  }
+                },
+                {
+                  "id": "sep-25",
+                  "text": {
+                    "ko": "9월 25일",
+                    "romanization": "guwol isiboil",
+                    "en": "September 25"
+                  }
+                },
+                {
+                  "id": "sep-11",
+                  "text": {
+                    "ko": "9월 11일",
+                    "romanization": "guwol sibiril",
+                    "en": "September 11"
+                  }
+                }
+              ],
+              "answerId": "sep-25",
+              "answerEntryId": "date"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What time does it start?",
+              "options": [
+                {
+                  "id": "ohu-han-si",
+                  "text": {
+                    "ko": "오후 한 시",
+                    "romanization": "ohu han si",
+                    "en": "1 p.m."
+                  }
+                },
+                {
+                  "id": "ohu-se-si",
+                  "text": {
+                    "ko": "오후 세 시",
+                    "romanization": "ohu se si",
+                    "en": "3 p.m."
+                  }
+                },
+                {
+                  "id": "ohu-daseot-si",
+                  "text": {
+                    "ko": "오후 다섯 시",
+                    "romanization": "ohu daseot si",
+                    "en": "5 p.m."
+                  }
+                }
+              ],
+              "answerId": "ohu-han-si",
+              "answerEntryId": "time"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q2-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "윷놀이는 ___에 해요.",
+                "romanization": "yunnorineun ___e haeyo",
+                "en": "Yut is at ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                },
+                {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "2:00"
+                },
+                {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "3:00"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "송편 만들기는 ___에 해요.",
+                "romanization": "songpyeon mandeulgineun ___e haeyo",
+                "en": "Making songpyeon is at ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                },
+                {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "3:00"
+                },
+                {
+                  "ko": "일곱 시",
+                  "romanization": "ilgop si",
+                  "en": "7:00"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "___는 일곱 시에 해요.",
+                "romanization": "___neun ilgop sie haeyo",
+                "en": "___ is at seven o'clock."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "윷놀이",
+                  "romanization": "yunnori",
+                  "en": "yut, the stick-throwing board game"
+                },
+                {
+                  "ko": "송편 만들기",
+                  "romanization": "songpyeon mandeulgi",
+                  "en": "making songpyeon"
+                },
+                {
+                  "ko": "강강술래",
+                  "romanization": "ganggangsullae",
+                  "en": "a Chuseok circle dance"
+                }
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-rites-v2-q2-timetable",
+            "kind": "timetable",
+            "title": {
+              "ko": "시간표",
+              "romanization": "siganpyo",
+              "en": "timetable"
+            },
+            "entries": [
+              {
+                "id": "yut",
+                "text": {
+                  "ko": "윷놀이",
+                  "romanization": "yunnori",
+                  "en": "yut, the stick-throwing board game"
+                },
+                "value": {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                }
+              },
+              {
+                "id": "songpyeon",
+                "text": {
+                  "ko": "송편 만들기",
+                  "romanization": "songpyeon mandeulgi",
+                  "en": "making songpyeon"
+                },
+                "value": {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "3:00"
+                }
+              },
+              {
+                "id": "ganggang",
+                "text": {
+                  "ko": "강강술래",
+                  "romanization": "ganggangsullae",
+                  "en": "a Chuseok circle dance"
+                },
+                "value": {
+                  "ko": "일곱 시",
+                  "romanization": "ilgop si",
+                  "en": "7:00"
+                }
+              }
+            ],
+            "altEn": "The festival timetable: yut at 1:00, making songpyeon at 3:00 and the Ganggangsullae circle dance at 7:00"
+          }
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q2-check",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-v2-q2-timetable",
+            "kind": "timetable",
+            "title": {
+              "ko": "시간표",
+              "romanization": "siganpyo",
+              "en": "timetable"
+            },
+            "entries": [
+              {
+                "id": "yut",
+                "text": {
+                  "ko": "윷놀이",
+                  "romanization": "yunnori",
+                  "en": "yut, the stick-throwing board game"
+                },
+                "value": {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
+                }
+              },
+              {
+                "id": "songpyeon",
+                "text": {
+                  "ko": "송편 만들기",
+                  "romanization": "songpyeon mandeulgi",
+                  "en": "making songpyeon"
+                },
+                "value": {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "3:00"
+                }
+              },
+              {
+                "id": "ganggang",
+                "text": {
+                  "ko": "강강술래",
+                  "romanization": "ganggangsullae",
+                  "en": "a Chuseok circle dance"
+                },
+                "value": {
+                  "ko": "일곱 시",
+                  "romanization": "ilgop si",
+                  "en": "7:00"
+                }
+              }
+            ],
+            "altEn": "The festival timetable: yut at 1:00, making songpyeon at 3:00 and the Ganggangsullae circle dance at 7:00"
+          },
+          "rounds": [
+            {
+              "id": "c1",
+              "questionEn": "What is at this time?",
+              "key": {
+                "ko": "세 시",
+                "romanization": "se si",
+                "en": "three o'clock"
+              },
+              "options": [
+                {
+                  "id": "yut",
+                  "text": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
+                },
+                {
+                  "id": "songpyeon",
+                  "text": {
+                    "ko": "송편 만들기",
+                    "romanization": "songpyeon mandeulgi",
+                    "en": "making songpyeon"
+                  }
+                },
+                {
+                  "id": "ganggang",
+                  "text": {
+                    "ko": "강강술래",
+                    "romanization": "ganggangsullae",
+                    "en": "a Chuseok circle dance"
+                  }
+                }
+              ],
+              "answerId": "songpyeon",
+              "answerEntryId": "songpyeon"
+            },
+            {
+              "id": "c2",
+              "questionEn": "What is at this time?",
+              "key": {
+                "ko": "한 시",
+                "romanization": "han si",
+                "en": "one o'clock"
+              },
+              "options": [
+                {
+                  "id": "ganggang",
+                  "text": {
+                    "ko": "강강술래",
+                    "romanization": "ganggangsullae",
+                    "en": "a Chuseok circle dance"
+                  }
+                },
+                {
+                  "id": "yut",
+                  "text": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
+                },
+                {
+                  "id": "songpyeon",
+                  "text": {
+                    "ko": "송편 만들기",
+                    "romanization": "songpyeon mandeulgi",
+                    "en": "making songpyeon"
+                  }
+                }
+              ],
+              "answerId": "yut",
+              "answerEntryId": "yut"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-rites-v2-q3",
+      "titleEn": "Holiday Ticket",
+      "blurbEn": "Read a train ticket for the Chuseok trip, and buy one at the window.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Holiday Ticket",
+          "hoyaLineEn": "Hoya's family takes the train the day before Chuseok. Let's read the ticket!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Ticket",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q3-ticket",
+                    "keyWords": [
+                      {
+                        "ko": "날짜",
+                        "romanization": "naljja",
+                        "en": "date"
+                      },
+                      {
+                        "ko": "좌석",
+                        "romanization": "jwaseok",
+                        "en": "seat"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A train ticket gives the date and the seat."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-rites-v2-q3-ticket",
+                    "keyWords": [
+                      {
+                        "ko": "출발 시간",
+                        "romanization": "chulbal sigan",
+                        "en": "departure time"
+                      },
+                      {
+                        "ko": "대구",
+                        "romanization": "Daegu",
+                        "en": "Daegu (a city)"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "It also gives where the train goes and when it leaves."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Clerk",
+                        "line": {
+                          "ko": "어디로 가세요?",
+                          "romanization": "eodiro gaseyo",
+                          "en": "Where are you going?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "대구요.",
+                          "romanization": "daeguyo",
+                          "en": "To Daegu."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "At the ticket window, the clerk asks where you are going."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Find It on the Ticket",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-rites-v2-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "At the Window",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s6-rites-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-rites-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Ticket Reader!",
+          "hoyaLineEn": "You read a holiday train ticket. Have a good trip!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-rites-v2-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-rites-v2-q3-ticket",
+            "kind": "ticket",
+            "title": {
+              "ko": "기차표",
+              "romanization": "gichapyo",
+              "en": "train ticket"
+            },
+            "entries": [
+              {
+                "id": "date",
+                "text": {
+                  "ko": "날짜",
+                  "romanization": "naljja",
+                  "en": "date"
+                },
+                "value": {
+                  "ko": "9월 24일",
+                  "romanization": "guwol isipsail",
+                  "en": "September 24"
+                }
+              },
+              {
+                "id": "dep",
+                "text": {
+                  "ko": "출발",
+                  "romanization": "chulbal",
+                  "en": "departure"
+                },
+                "value": {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                }
+              },
+              {
+                "id": "arr",
+                "text": {
+                  "ko": "도착",
+                  "romanization": "dochak",
+                  "en": "arrival"
+                },
+                "value": {
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu (a city)"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "출발 시간",
+                  "romanization": "chulbal sigan",
+                  "en": "departure time"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "2:00"
+                }
+              },
+              {
+                "id": "seat",
+                "text": {
+                  "ko": "좌석",
+                  "romanization": "jwaseok",
+                  "en": "seat"
+                },
+                "value": {
+                  "ko": "12번",
+                  "romanization": "sibibeon",
+                  "en": "number 12"
+                }
+              }
+            ],
+            "altEn": "A train ticket for September 24: from Seoul to Daegu, leaving at two o'clock, seat number 12"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which day is the train?",
+              "key": {
+                "ko": "날짜",
+                "romanization": "naljja",
+                "en": "date"
+              },
+              "options": [
+                {
+                  "id": "sep-24",
+                  "text": {
+                    "ko": "9월 24일",
+                    "romanization": "guwol isipsail",
+                    "en": "September 24"
+                  }
+                },
+                {
+                  "id": "sep-25",
+                  "text": {
+                    "ko": "9월 25일",
+                    "romanization": "guwol isiboil",
+                    "en": "September 25"
+                  }
+                },
+                {
+                  "id": "sep-26",
+                  "text": {
+                    "ko": "9월 26일",
+                    "romanization": "guwol isimnyugil",
+                    "en": "September 26"
+                  }
+                }
+              ],
+              "answerId": "sep-24",
+              "answerEntryId": "date"
+            },
+            {
+              "id": "r2",
+              "questionEn": "Where does the train arrive?",
+              "key": {
+                "ko": "도착",
+                "romanization": "dochak",
+                "en": "arrival"
+              },
+              "options": [
+                {
+                  "id": "seoul",
+                  "text": {
+                    "ko": "서울",
+                    "romanization": "Seoul",
+                    "en": "Seoul (a city)"
+                  }
+                },
+                {
+                  "id": "busan",
+                  "text": {
+                    "ko": "부산",
+                    "romanization": "Busan",
+                    "en": "Busan (a city)"
+                  }
+                },
+                {
+                  "id": "daegu",
+                  "text": {
+                    "ko": "대구",
+                    "romanization": "Daegu",
+                    "en": "Daegu (a city)"
+                  }
+                }
+              ],
+              "answerId": "daegu",
+              "answerEntryId": "arr"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What time does the train leave?",
+              "options": [
+                {
+                  "id": "han-si",
+                  "text": {
+                    "ko": "한 시",
+                    "romanization": "han si",
+                    "en": "1:00"
+                  }
+                },
+                {
+                  "id": "du-si",
+                  "text": {
+                    "ko": "두 시",
+                    "romanization": "du si",
+                    "en": "2:00"
+                  }
+                },
+                {
+                  "id": "se-si",
+                  "text": {
+                    "ko": "세 시",
+                    "romanization": "se si",
+                    "en": "3:00"
+                  }
+                }
+              ],
+              "answerId": "du-si",
+              "answerEntryId": "time"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q3-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Clerk",
+              "line": {
+                "ko": "어디로 가세요?",
+                "romanization": "eodiro gaseyo",
+                "en": "Where are you going?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "대구요.",
+                    "romanization": "daeguyo",
+                    "en": "To Daegu."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "두 시 기차요.",
+                    "romanization": "du si gichayo",
+                    "en": "The two o'clock train."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Clerk",
+              "line": {
+                "ko": "언제 가세요?",
+                "romanization": "eonje gaseyo",
+                "en": "When are you going?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "대구요.",
+                    "romanization": "daeguyo",
+                    "en": "To Daegu."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "9월 24일이요.",
+                    "romanization": "guwol isipsairiyo",
+                    "en": "On September 24."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "여기 있어요.",
+                    "romanization": "yeogi isseoyo",
+                    "en": "Here you are."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Clerk",
+              "line": {
+                "ko": "몇 시 기차로 드릴까요?",
+                "romanization": "myeot si gicharo deurilkkayo",
+                "en": "What time would you like?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "9월 24일이요.",
+                    "romanization": "guwol isipsairiyo",
+                    "en": "On September 24."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "두 시 기차요.",
+                    "romanization": "du si gichayo",
+                    "en": "The two o'clock train."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Clerk",
+              "line": {
+                "ko": "여기 있어요.",
+                "romanization": "yeogi isseoyo",
+                "en": "Here you are."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "어디로 가세요?",
+                    "romanization": "eodiro gaseyo",
+                    "en": "Where are you going?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "두 시 기차요.",
+                    "romanization": "du si gichayo",
+                    "en": "The two o'clock train."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-rites-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "기차는 ___에서 출발해요.",
+                "romanization": "gichaneun ___eseo chulbalhaeyo",
+                "en": "The train leaves from ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "부산",
+                  "romanization": "Busan",
+                  "en": "Busan (a city)"
+                },
+                {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                },
+                {
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu (a city)"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "좌석은 ___이에요.",
+                "romanization": "jwaseogeun ___ieyo",
+                "en": "The seat is ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "2번",
+                  "romanization": "ibeon",
+                  "en": "number 2"
+                },
+                {
+                  "ko": "12번",
+                  "romanization": "sibibeon",
+                  "en": "number 12"
+                },
+                {
+                  "ko": "21번",
+                  "romanization": "isibilbeon",
+                  "en": "number 21"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-rites-v2-q3-ticket",
+            "kind": "ticket",
+            "title": {
+              "ko": "기차표",
+              "romanization": "gichapyo",
+              "en": "train ticket"
+            },
+            "entries": [
+              {
+                "id": "date",
+                "text": {
+                  "ko": "날짜",
+                  "romanization": "naljja",
+                  "en": "date"
+                },
+                "value": {
+                  "ko": "9월 24일",
+                  "romanization": "guwol isipsail",
+                  "en": "September 24"
+                }
+              },
+              {
+                "id": "dep",
+                "text": {
+                  "ko": "출발",
+                  "romanization": "chulbal",
+                  "en": "departure"
+                },
+                "value": {
+                  "ko": "서울",
+                  "romanization": "Seoul",
+                  "en": "Seoul (a city)"
+                }
+              },
+              {
+                "id": "arr",
+                "text": {
+                  "ko": "도착",
+                  "romanization": "dochak",
+                  "en": "arrival"
+                },
+                "value": {
+                  "ko": "대구",
+                  "romanization": "Daegu",
+                  "en": "Daegu (a city)"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "출발 시간",
+                  "romanization": "chulbal sigan",
+                  "en": "departure time"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "2:00"
+                }
+              },
+              {
+                "id": "seat",
+                "text": {
+                  "ko": "좌석",
+                  "romanization": "jwaseok",
+                  "en": "seat"
+                },
+                "value": {
+                  "ko": "12번",
+                  "romanization": "sibibeon",
+                  "en": "number 12"
+                }
+              }
+            ],
+            "altEn": "A train ticket for September 24: from Seoul to Daegu, leaving at two o'clock, seat number 12"
+          }
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:추석} (Chuseok) is the 15th day of the 8th month of the lunar calendar, so its date on the solar calendar moves each year: in 2026 it is 25 September. Korea's lunar calendar came mainly from China.",
+      "sources": [
+        {
+          "title": "2026년 달력자료: 국경일과 공휴일, 음력 (2026 calendar data: national holidays and public holidays, lunar months)",
+          "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+          "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Holiday table (명칭, 날짜(요일)): “추석 9월24일~ 9월26일 (목,금,토)”. Lunar table (음력의 월일, 대소, 월건, 일진, 양력의 월일), row of lunar month 8: “8 1 대 정유 무자 2026 9 11”, so lunar 8/1 is 11 September and lunar 8/15 is 25 September. 24절기 table: “백로 9 7 23 41”, “추분 9 23 9 5”. Page note: “이 자료는 공식 발표 자료가 아닙니다. 공식 발표 자료는 월력요항을 확인해주시기 바랍니다.”"
+        },
+        {
+          "title": "추석 (Encyclopedia of Korean Seasonal Customs entry 추석, topic 5060)",
+          "publisher": "National Folk Museum of Korea (국립민속박물관) — 한국민속대백과사전, 한국세시풍속사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/5060",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: “음력 팔월 보름을 일컫는 말. 가을의 한가운데 달이며 또한 팔월의 한가운데 날이라는 뜻을 지니고 있는 연중 으뜸 명절이다.” 어원: “중국인들은 추석 무렵을 중추(中秋) 또는 월석(月夕)이라 하는데,”"
+        },
+        {
+          "title": "음력 2 (陰曆) (Standard Korean Language Dictionary entry 음력 2, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9D%8C%EB%A0%A5",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Entry 음력 2 (陰曆) 「명사」 『천문』: “1896년에 양력으로 역법이 고쳐지기 전까지 우리나라에서 공식적으로 사용하였다. 현재에도 설, 추석과 같은 명절 등의 날짜를 정할 때 사용한다. 역법 분류상 태음 태양력에 해당하며,”"
+        },
+        {
+          "title": "역법 (曆法)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0036603",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "내용 요약: “우리나라는 주로 중국의 태음태양력을 도입하여 사용했다.” 본문: “우리 민족이 오래도록 써왔던 태음태양력은 중국력이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): the KASI 2026 calendar data page, the Encyclopedia of Korean Seasonal Customs entry 추석, the dictionary entry 음력 2 and the Encyclopedia of Korean Culture entry 역법 read on 2026-10-31. 'the 15th day of the 8th month of the lunar calendar' = 음력 팔월 보름 (NFMK); 'its solar date moves each year' = 음력 is used to set the dates of 설 and 추석 (NIKL) while the official calendar is the solar one; 'in 2026 it is 25 September' = KASI lunar month 8 begins 2026-09-11, so 8/15 is 2026-09-25, inside the KASI holiday 9월24일~9월26일; 'Korea's lunar calendar came mainly from China' = 우리나라는 주로 중국의 태음태양력을 도입하여 사용했다 (AKS). Used in: q1 (the calendar page, its Discover and rounds) and the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-31): all four pages re-read; each quote found. The calendar page's four days are KASI's: 백로 9/7, lunar 8/1 on 9/11, 추분 9/23, 추석 9/25 (lunar 8/15); KASI marks its table as not the official announcement (월력요항), and the dates were checked to agree with each other (lunar 8/1 + 14 days = 9/25, the middle of the 24-26 holiday). Shared heritage (§5.1): the note says the calendar came mainly from China and never calls it Korean in origin; the NIKL wording 우리나라의 전통 역법 is not used. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the drawn calendar names no maker or brand; the institutions are named as on the access date (한국천문연구원, 국립민속박물관, 국립국어원). Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:강강술래} (Ganggangsullae) is a circle dance done mostly on Chuseok night: under the full moon, women hold hands and sing as they dance in a ring. UNESCO inscribed Ganggangsullae in 2009.",
+      "sources": [
+        {
+          "title": "강강술래 (Encyclopedia of Korean Folklore entry 강강술래, topic 3145)",
+          "publisher": "National Folk Museum of Korea (국립민속박물관) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3145",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: “가무악(歌舞樂)이 일체화된 강강술래는 주로 추석날 밤에 행해지며, 지방에 따라서는 정월대보름 밤에 하기도 한다.” 내용: “동산에 보름달이 떠오르면 마을의 넓은 마당으로 모인 여자들이 느린 가락에 맞춰 늦은강강술래를 추다가” … “여자들이 손에 손을 잡고 둥글게 원을 그려 돌며 추는 춤은 협의의 강강술래요,”"
+        },
+        {
+          "title": "Ganggangsullae",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/ganggangsullae-00188",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "“Inscribed in 2009 (4.COM) on the Representative List of the Intangible Cultural Heritage of Humanity”; Republic of Korea; “Under a bright full moon, dozens of young, unmarried village women gather in a circle, join hands” … “sing and dance all night under the direction of a lead singer.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): the Encyclopedia of Korean Folklore entry 강강술래 (topic 3145, read through the encyclopedia's own topic API) and the UNESCO element page read on 2026-10-31. 'a circle dance done mostly on Chuseok night' = 주로 추석날 밤에 행해지며; 'under the full moon, women hold hands and sing as they dance in a ring' = 보름달이 떠오르면 … 여자들이; 손에 손을 잡고 둥글게 원을 그려 돌며 추는 춤; 가무악이 일체화; UNESCO 'join hands', 'sing and dance'. 'UNESCO inscribed Ganggangsullae in 2009' = Inscribed in 2009 (4.COM), the element's UNESCO name. Used in: q2 (the festival timetable, its Discover sentence and rounds) and the q2 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-31): both pages re-read; the quotes match. §5.1: the element was inscribed in 2009 and never proclaimed, so 'inscribed' alone; the UNESCO name is Ganggangsullae. 'mostly' keeps the encyclopedia's 주로 (it is also done on the first full moon in some places); the note leaves out the origin stories, which the encyclopedia calls unfounded, and the unmarried and young wording, so it suits any age. Finding fixed: the draft's 'women hold hands, sing and dance' read as three acts; it now says they sing as they dance, the encyclopedia's 가무악이 일체화 (es cantan mientras bailan; ko 노래하며 둥글게 돌아요). Outcome: fixed.\npass 3 (MAR third pass, 2026-10-31): the drawn poster and timetable name no organiser, park or brand; the 7:00 time is a practice time for an evening dance, not a claim about a real event. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "Months are a number with {ko:월}: September is {ko:구월}. Two months are said another way: June is {ko:유월}, not {ko:육월}, and October is {ko:시월}, not {ko:십월}.",
+      "sources": [
+        {
+          "title": "한글 맞춤법 제52항 (Hangul Orthography, article 52)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 한국어 어문 규범",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=272",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "제52항: “한자어에서 본음으로도 나고 속음으로도 나는 것은 각각 그 소리에 따라 적는다.” 예시 (본음으로 나는 것 / 속음으로 나는 것): “오륙십(五六十) / 오뉴월, 유월(六月)”; “십일(十日) / 시방정토(十方淨土), 시왕(十王), 시월(十月)”."
+        },
+        {
+          "title": "유월 1 (六▽月) and 시월 1 (十▽月) (Standard Korean Language Dictionary entries, noun)",
+          "publisher": "표준국어대사전 (Standard Korean Language Dictionary), National Institute of Korean Language",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9C%A0%EC%9B%94",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Entry 유월 1 (六▽月) 「명사」: “한 해 열두 달 가운데 여섯째 달.” Entry 시월 1 (十▽月) 「명사」: “한 해 열두 달 가운데 열째 달.” (searchKeyword=시월)"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): Hangul Orthography article 52 and the dictionary entries 유월 1 and 시월 1 read on 2026-10-31. 'Months are a number with 월' = the entries define 유월 and 시월 as the sixth and tenth of the twelve months (六月, 十月); 'June is 유월, not 육월, and October is 시월, not 십월' = article 52 lists 유월(六月) and 시월(十月) as the 속음 written as said, beside 오륙십 and 십일 in the 본음. 'September is 구월' follows the same pattern with no change. Used in: q3 (the ticket's date 9월 24일, the window's 9월 24일이요) and the q3 Did you know? tip; q1 and q2 read 9월 too.\npass 2 (MAR language, 2026-10-31): both pages re-read; the quotes match. The note teaches the reading only and makes no claim about history; 육월 and 십월 appear as the forms not used, inside {ko:} tokens, and no round asks them. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the institution is named as on the access date (국립국어원). Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Volume 2 MAR (row CM-45 S6, F-CURR-002 9.2, 2026-10-31; passes: author, language, culture and facts, learning design, reviser, third pass). No native-speaker or expert review is claimed; language: native-reviewed is the schema's name for the signed-off language gate.",
+      "Language pass: spelling, spacing, particles and 해요체 line by line (추석은 9월 25일이에요; 9월 23일은 ___이에요 with consonant-final tiles; ___는 일곱 시에 해요 with vowel-final tiles; 9월 24일이요); romanization is the F-CNT-002 converter's, and the dates and seat numbers written in digits were read by hand (25일 isiboil, 26일 isimnyugil, 12번 sibibeon, 8월 parwol).",
+      "Language pass (cont.): Applied: the clerk asks 몇 시 기차로 드릴까요? (not 몇 시 기차요?); the gloss of 강강술래 no longer opens with its romanization (a Chuseok circle dance); the calendar's alt text says lunar month 8 begins on the 11th, not 8/1 read aloud; the poster's Practice step is Find It on the Poster, not a second Read the Poster.",
+      "Culture and facts pass: n1 (Chuseok is lunar 8/15, 25 September in 2026; the calendar came to Korea mainly from China) on KASI's 2026 calendar data, the NFMK seasonal-customs entry 추석, the NIKL entry 음력 and the AKS entry 역법; n2 (Ganggangsullae, inscribed 2009) on the NFMK entry and UNESCO; n3 (유월 and 시월) on Hangul Orthography article 52 and the NIKL entries.",
+      "Culture and facts pass (cont.): every calendar day is KASI's (백로 9/7, lunar month 8 from 9/11, 추분 9/23, 추석 9/25, holiday 9/24-26), and the ticket's 24 September is the day before Chuseok; the poster, timetable and ticket are drawn and generic (no organiser, park, operator, line or train number); the lunar calendar is never called Korean in origin; suits any age.",
+      "Learning design pass: 3 quests; new items per quest 5, 7 and 4 (at most 8); Practice and Check items from earlier quests 2 of 5, 3 of 7 and 3 of 5 (8 of 17 in all), with the Volume 1 words 추석, 송편, 윷놀이, 도착, 대구 and the hours in new contexts; Checks Type Hangul (Dictation), Realia Read (the timetable) and Cloze Pick (ticket values), one of each.",
+      "Learning design pass (cont.): triples RR/CP/TH, RR/CP/RR, RR/TR/CP differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and adjacent quests differ. Applied: q3's Check asked the date and time its Practice had asked; it now reads the departure and the seat, and the seat round left Practice. Each Check reads its own quest's card or words.",
+      "Learning design pass (cont.): device voice: the Dictation targets 추석 and 송편 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0; dates and seats read Sino-Korean (9월 구월, 24일 이십사일, 12번 십이 번) and the hours native (일곱 시), as the voice reads them; no number is dictated.",
+      "Reviser: applied the fixes above. Third pass: no change. The checker passes ran in one authoring session as separate passes against the checklists of 9.2 and 9.3."
+    ]
+  },
+  "contentVer": 1
+}
