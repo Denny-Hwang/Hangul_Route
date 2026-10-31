@@ -77,8 +77,11 @@ export function RealiaSheetStage({ sheet, rom, width, answer, tight = false }: {
   // A CM-47 kind is drawn from the realia kinds chunk once it is in; before (or if it cannot load), as the plain sheet.
   const kind = realiaBaseKind(sheet.kind);
   const kinds = useRealiaKinds(kind !== sheet.kind);
-  if (kinds !== null && kind !== sheet.kind) {
-    return <KindSheet sheet={sheet} kinds={kinds} look={kinds.REALIA_KIND_LOOKS[sheet.kind as keyof typeof kinds.REALIA_KIND_LOOKS]} rom={rom} width={width} mark={mark} roomy={roomy} tight={tight} />;
+  // A kind the chunk has no look for (one this build does not know) falls through to the plain sheet, never a blank slide.
+  const looks: Partial<Record<string, RealiaKindLook>> | undefined = kinds?.REALIA_KIND_LOOKS;
+  const look = looks !== undefined && kind !== sheet.kind && Object.prototype.hasOwnProperty.call(looks, sheet.kind) ? looks[sheet.kind] : undefined;
+  if (kinds !== null && look !== undefined) {
+    return <KindSheet sheet={sheet} kinds={kinds} look={look} rom={rom} width={width} mark={mark} roomy={roomy} tight={tight} />;
   }
   const paper = realiaPaper(kind);
   const dressing = REALIA_DRESSINGS[kind];

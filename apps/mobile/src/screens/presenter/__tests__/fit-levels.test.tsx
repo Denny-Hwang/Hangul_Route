@@ -244,6 +244,17 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
     expect((await tree(false)).findAll((n) => n.props.testID === `presenter-realia-kind-${kind}`).length).toBeGreaterThan(0);
   });
 
+  it('a kind the chunk has no look for (off the enum) is drawn as the plain sheet with every line, never a crash', async () => {
+    const unknown = asKind('brochure');
+    const plain = sheetsByKind.find((s) => s.prompt.sheet.kind === 'plain')!;
+    const root = composite((await draw(unknown, false)).root, 'presenter-realia-sheet');
+    expect(root.findAll((n) => typeof n.props.testID === 'string' && n.props.testID.startsWith('presenter-realia-kind-'))).toEqual([]);
+    const shape = async (slide: RealiaQuestionBody): Promise<Record<string, unknown>[]> => views(composite((await draw(slide, false)).root, 'presenter-realia-sheet'), () => true).map(styleOf);
+    expect(await shape(unknown)).toEqual(await shape(plain));
+    // A key every object inherits is no look either.
+    expect(composite((await draw(asKind('constructor'), false)).root, 'presenter-realia-sheet').findAll((n) => typeof n.props.testID === 'string' && n.props.testID.startsWith('presenter-realia-kind-'))).toEqual([]);
+  });
+
   it('every kind keeps its width and its horizontal padding, so no line wraps anew', async () => {
     for (const slide of [...sheetsByKind, ...Object.keys(ADDED).map(asKind)]) {
       const widths = async (tight: boolean): Promise<unknown[]> => {
