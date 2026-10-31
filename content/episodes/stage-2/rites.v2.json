@@ -1,0 +1,1652 @@
+{
+  "id": "episode:stage2-rites-v2",
+  "stage": "stage2",
+  "theme": "rites",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Holidays Through the Year",
+  "subtitleEn": "Holiday foods, Dano, Dongji and a first birthday",
+  "hoyaIntroEn": "Five-grain rice, swings and red bean porridge! Let's read holiday words of the year.",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-rites-v2-q1",
+      "titleEn": "From Seollal to the Full Moon",
+      "blurbEn": "Read the foods of the first lunar month: tteokguk, ogokbap and bureom.",
+      "teaserEn": "Next: Dano, Dongji and charye.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "A New Year Begins!",
+          "hoyaLineEn": "Tteokguk, hanbok, five-grain rice: let's read the words of the first lunar month!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "First Month Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "떡국",
+                      "romanization": "tteokguk",
+                      "en": "rice-cake soup",
+                      "syllables": [
+                        "tteok",
+                        "guk"
+                      ]
+                    },
+                    "picture": "card:tteokguk"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "한복",
+                      "romanization": "hanbok",
+                      "en": "traditional Korean clothes",
+                      "syllables": [
+                        "han",
+                        "bok"
+                      ]
+                    },
+                    "picture": "card:hanbok"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "오곡밥",
+                      "romanization": "ogokbap",
+                      "en": "five-grain rice",
+                      "syllables": [
+                        "o",
+                        "gok",
+                        "bap"
+                      ]
+                    },
+                    "noteEn": "Rice cooked with five kinds of grain for the first full moon."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "부럼",
+                      "romanization": "bureom",
+                      "en": "nuts cracked at the first full moon",
+                      "syllables": [
+                        "bu",
+                        "reom"
+                      ]
+                    },
+                    "noteEn": "Nuts cracked with the teeth on the morning of the first full moon."
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-rites-v2-q1-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Find It in the Room",
+          "minigameKind": "hidden-heritage",
+          "minigameRef": "minigame:s2-rites-v2-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-rites-v2-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy New Year!",
+          "hoyaLineEn": "You read the foods of the new year. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-rites-v2-q1-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-ogokbap",
+              "prompt": {
+                "ko": "오곡밥",
+                "romanization": "ogokbap",
+                "en": "five-grain rice"
+              },
+              "options": [
+                {
+                  "id": "ogokbap",
+                  "text": {
+                    "ko": "오곡밥",
+                    "romanization": "ogokbap",
+                    "en": "five-grain rice"
+                  }
+                },
+                {
+                  "id": "bureom",
+                  "text": {
+                    "ko": "부럼",
+                    "romanization": "bureom",
+                    "en": "nuts cracked at the first full moon"
+                  }
+                },
+                {
+                  "id": "songpyeon",
+                  "text": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "hanbok",
+                  "text": {
+                    "ko": "한복",
+                    "romanization": "hanbok",
+                    "en": "traditional Korean clothes"
+                  }
+                }
+              ],
+              "answerId": "ogokbap"
+            },
+            {
+              "id": "hear-tteokguk",
+              "prompt": {
+                "ko": "떡국",
+                "romanization": "tteokguk",
+                "en": "rice-cake soup"
+              },
+              "options": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                }
+              ],
+              "answerId": "tteokguk"
+            },
+            {
+              "id": "hear-bureom",
+              "prompt": {
+                "ko": "부럼",
+                "romanization": "bureom",
+                "en": "nuts cracked at the first full moon"
+              },
+              "options": [
+                {
+                  "id": "seollal",
+                  "text": {
+                    "ko": "설날",
+                    "romanization": "seollal",
+                    "en": "Lunar New Year's Day"
+                  }
+                },
+                {
+                  "id": "ogokbap",
+                  "text": {
+                    "ko": "오곡밥",
+                    "romanization": "ogokbap",
+                    "en": "five-grain rice"
+                  }
+                },
+                {
+                  "id": "bureom",
+                  "text": {
+                    "ko": "부럼",
+                    "romanization": "bureom",
+                    "en": "nuts cracked at the first full moon"
+                  }
+                },
+                {
+                  "id": "boreumdal",
+                  "text": {
+                    "ko": "보름달",
+                    "romanization": "boreumdal",
+                    "en": "full moon"
+                  }
+                }
+              ],
+              "answerId": "bureom"
+            },
+            {
+              "id": "hear-hanbok",
+              "prompt": {
+                "ko": "한복",
+                "romanization": "hanbok",
+                "en": "traditional Korean clothes"
+              },
+              "options": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                }
+              ],
+              "answerId": "hanbok"
+            },
+            {
+              "id": "hear-songpyeon",
+              "prompt": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cake"
+              },
+              "options": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                }
+              ],
+              "answerId": "songpyeon"
+            },
+            {
+              "id": "hear-yeon",
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "yeon"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q1-apply",
+          "kind": "hidden-heritage",
+          "rounds": [
+            {
+              "id": "hh1",
+              "sceneId": "scene:seollal-room",
+              "altEn": "A hanok room on Seollal morning, with a window open to the sky.",
+              "targets": [
+                {
+                  "id": "hanbok",
+                  "word": {
+                    "ko": "한복",
+                    "romanization": "hanbok",
+                    "en": "traditional Korean clothes"
+                  },
+                  "spot": {
+                    "x": 18,
+                    "y": 38,
+                    "w": 106,
+                    "h": 128
+                  },
+                  "picture": "card:hanbok"
+                },
+                {
+                  "id": "tteokguk",
+                  "word": {
+                    "ko": "떡국",
+                    "romanization": "tteokguk",
+                    "en": "rice-cake soup"
+                  },
+                  "spot": {
+                    "x": 66,
+                    "y": 178,
+                    "w": 94,
+                    "h": 76
+                  },
+                  "picture": "card:tteokguk"
+                },
+                {
+                  "id": "yeon",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  },
+                  "spot": {
+                    "x": 254,
+                    "y": 40,
+                    "w": 84,
+                    "h": 104
+                  },
+                  "picture": "card:kite"
+                }
+              ],
+              "others": [
+                {
+                  "id": "bokjumeoni",
+                  "word": {
+                    "ko": "복주머니",
+                    "romanization": "bokjumeoni",
+                    "en": "lucky pouch"
+                  },
+                  "spot": {
+                    "x": 136,
+                    "y": 54,
+                    "w": 76,
+                    "h": 92
+                  }
+                },
+                {
+                  "id": "bangseok",
+                  "word": {
+                    "ko": "방석",
+                    "romanization": "bangseok",
+                    "en": "floor cushion"
+                  },
+                  "spot": {
+                    "x": 172,
+                    "y": 220,
+                    "w": 108,
+                    "h": 76
+                  }
+                },
+                {
+                  "id": "yut",
+                  "word": {
+                    "ko": "윷",
+                    "romanization": "yut",
+                    "en": "yut sticks"
+                  },
+                  "spot": {
+                    "x": 292,
+                    "y": 216,
+                    "w": 94,
+                    "h": 76
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-hanbok",
+              "promptShown": true,
+              "prompt": {
+                "ko": "한복",
+                "romanization": "hanbok",
+                "en": "traditional Korean clothes"
+              },
+              "options": [
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "hanbok"
+            },
+            {
+              "id": "see-songpyeon",
+              "promptShown": true,
+              "prompt": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cake"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                }
+              ],
+              "answerId": "songpyeon"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-rites-v2-q2",
+      "titleEn": "Summer, Autumn and Winter",
+      "blurbEn": "Read holiday words through the seasons: Dano, songpyeon, Dongji and charye.",
+      "teaserEn": "Next: the first birthday.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Holidays All Year!",
+          "hoyaLineEn": "Dano in summer, songpyeon in autumn, red bean porridge in winter: let's read!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Holiday Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "단오",
+                      "romanization": "dano",
+                      "en": "the holiday on the fifth day of the fifth lunar month",
+                      "syllables": [
+                        "da",
+                        "no"
+                      ]
+                    },
+                    "noteEn": "The fifth day of the fifth lunar month, a summer holiday."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "송편",
+                      "romanization": "songpyeon",
+                      "en": "half-moon rice cake",
+                      "syllables": [
+                        "song",
+                        "pyeon"
+                      ]
+                    },
+                    "picture": "card:songpyeon"
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "동지",
+                      "romanization": "dongji",
+                      "en": "the winter solstice",
+                      "syllables": [
+                        "dong",
+                        "ji"
+                      ]
+                    },
+                    "noteEn": "The day with the longest night of the year."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "팥죽",
+                      "romanization": "patjuk",
+                      "en": "red bean porridge",
+                      "syllables": [
+                        "pat",
+                        "juk"
+                      ]
+                    },
+                    "noteEn": "Porridge of red beans, eaten on Dongji."
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "차례",
+                      "romanization": "charye",
+                      "en": "a holiday memorial rite for ancestors",
+                      "syllables": [
+                        "cha",
+                        "rye"
+                      ]
+                    },
+                    "noteEn": "A rite for ancestors on some holiday mornings; it differs from family to family."
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-rites-v2-q2-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-rites-v2-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Match",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-rites-v2-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Holiday Reader!",
+          "hoyaLineEn": "You read holiday words from summer to winter. Great job!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-rites-v2-q2-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-dano",
+              "prompt": {
+                "ko": "단오",
+                "romanization": "dano",
+                "en": "the holiday on the fifth day of the fifth lunar month"
+              },
+              "options": [
+                {
+                  "id": "dano",
+                  "text": {
+                    "ko": "단오",
+                    "romanization": "dano",
+                    "en": "the holiday on the fifth day of the fifth lunar month"
+                  }
+                },
+                {
+                  "id": "dongji",
+                  "text": {
+                    "ko": "동지",
+                    "romanization": "dongji",
+                    "en": "the winter solstice"
+                  }
+                },
+                {
+                  "id": "bureom",
+                  "text": {
+                    "ko": "부럼",
+                    "romanization": "bureom",
+                    "en": "nuts cracked at the first full moon"
+                  }
+                },
+                {
+                  "id": "ogokbap",
+                  "text": {
+                    "ko": "오곡밥",
+                    "romanization": "ogokbap",
+                    "en": "five-grain rice"
+                  }
+                }
+              ],
+              "answerId": "dano"
+            },
+            {
+              "id": "hear-songpyeon",
+              "prompt": {
+                "ko": "송편",
+                "romanization": "songpyeon",
+                "en": "half-moon rice cake"
+              },
+              "options": [
+                {
+                  "id": "boreumdal",
+                  "pictureRef": "card:moon",
+                  "labelEn": "full moon"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                }
+              ],
+              "answerId": "songpyeon"
+            },
+            {
+              "id": "hear-dongji",
+              "prompt": {
+                "ko": "동지",
+                "romanization": "dongji",
+                "en": "the winter solstice"
+              },
+              "options": [
+                {
+                  "id": "songpyeon",
+                  "text": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "hanbok",
+                  "text": {
+                    "ko": "한복",
+                    "romanization": "hanbok",
+                    "en": "traditional Korean clothes"
+                  }
+                },
+                {
+                  "id": "dongji",
+                  "text": {
+                    "ko": "동지",
+                    "romanization": "dongji",
+                    "en": "the winter solstice"
+                  }
+                },
+                {
+                  "id": "dano",
+                  "text": {
+                    "ko": "단오",
+                    "romanization": "dano",
+                    "en": "the holiday on the fifth day of the fifth lunar month"
+                  }
+                }
+              ],
+              "answerId": "dongji"
+            },
+            {
+              "id": "hear-boreumdal",
+              "prompt": {
+                "ko": "보름달",
+                "romanization": "boreumdal",
+                "en": "full moon"
+              },
+              "options": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "boreumdal",
+                  "pictureRef": "card:moon",
+                  "labelEn": "full moon"
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                }
+              ],
+              "answerId": "boreumdal"
+            },
+            {
+              "id": "hear-bureom",
+              "prompt": {
+                "ko": "부럼",
+                "romanization": "bureom",
+                "en": "nuts cracked at the first full moon"
+              },
+              "options": [
+                {
+                  "id": "dongji",
+                  "text": {
+                    "ko": "동지",
+                    "romanization": "dongji",
+                    "en": "the winter solstice"
+                  }
+                },
+                {
+                  "id": "bureom",
+                  "text": {
+                    "ko": "부럼",
+                    "romanization": "bureom",
+                    "en": "nuts cracked at the first full moon"
+                  }
+                },
+                {
+                  "id": "dano",
+                  "text": {
+                    "ko": "단오",
+                    "romanization": "dano",
+                    "en": "the holiday on the fifth day of the fifth lunar month"
+                  }
+                },
+                {
+                  "id": "ogokbap",
+                  "text": {
+                    "ko": "오곡밥",
+                    "romanization": "ogokbap",
+                    "en": "five-grain rice"
+                  }
+                }
+              ],
+              "answerId": "bureom"
+            },
+            {
+              "id": "hear-yeon",
+              "prompt": {
+                "ko": "연",
+                "romanization": "yeon",
+                "en": "kite"
+              },
+              "options": [
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "labelEn": "kite"
+                },
+                {
+                  "id": "boreumdal",
+                  "pictureRef": "card:moon",
+                  "labelEn": "full moon"
+                },
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "labelEn": "traditional Korean clothes"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                }
+              ],
+              "answerId": "yeon"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q2-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "단오",
+              "romanization": "dano",
+              "en": "the holiday on the fifth day of the fifth lunar month"
+            },
+            {
+              "ko": "동지",
+              "romanization": "dongji",
+              "en": "the day with the longest night"
+            },
+            {
+              "ko": "팥죽",
+              "romanization": "patjuk",
+              "en": "red bean porridge"
+            },
+            {
+              "ko": "차례",
+              "romanization": "charye",
+              "en": "a holiday memorial rite for ancestors"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q2-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "word": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "boreumdal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "보름달",
+                    "romanization": "boreumdal",
+                    "en": "full moon"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "pictureRef": "card:kite",
+                  "word": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "hanbok",
+                  "pictureRef": "card:hanbok",
+                  "word": {
+                    "ko": "한복",
+                    "romanization": "hanbok",
+                    "en": "traditional Korean clothes"
+                  }
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "word": {
+                    "ko": "송편",
+                    "romanization": "songpyeon",
+                    "en": "half-moon rice cake"
+                  }
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "word": {
+                    "ko": "떡국",
+                    "romanization": "tteokguk",
+                    "en": "rice-cake soup"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-rites-v2-q3",
+      "titleEn": "A First Birthday",
+      "blurbEn": "Read the words of a first birthday: doljanchi, doljabi, thread and noodles.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "One Year Old!",
+          "hoyaLineEn": "A first birthday is a big day: let's read its words!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "First Birthday Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "돌잔치",
+                      "romanization": "doljanchi",
+                      "en": "first-birthday party",
+                      "syllables": [
+                        "dol",
+                        "jan",
+                        "chi"
+                      ]
+                    },
+                    "noteEn": "A party for a child's first birthday."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "돌잡이",
+                      "romanization": "doljabi",
+                      "en": "the first-birthday pick",
+                      "syllables": [
+                        "dol",
+                        "ja",
+                        "bi"
+                      ]
+                    },
+                    "noteEn": "The child picks one thing from a table of objects."
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "실",
+                      "romanization": "sil",
+                      "en": "thread"
+                    },
+                    "noteEn": "Long thread on the table stands for a long life."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "국수",
+                      "romanization": "guksu",
+                      "en": "noodles",
+                      "syllables": [
+                        "guk",
+                        "su"
+                      ]
+                    },
+                    "noteEn": "Long noodles on the table stand for a long life too."
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-rites-v2-q3-practice",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Block",
+          "minigameKind": "syllable-build",
+          "minigameRef": "minigame:s2-rites-v2-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-rites-v2-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy Birthday Words!",
+          "hoyaLineEn": "You read the words of a first birthday. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-rites-v2-q3-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-doljanchi",
+              "prompt": {
+                "ko": "돌잔치",
+                "romanization": "doljanchi",
+                "en": "first-birthday party"
+              },
+              "options": [
+                {
+                  "id": "doljanchi",
+                  "text": {
+                    "ko": "돌잔치",
+                    "romanization": "doljanchi",
+                    "en": "first-birthday party"
+                  }
+                },
+                {
+                  "id": "doljabi",
+                  "text": {
+                    "ko": "돌잡이",
+                    "romanization": "doljabi",
+                    "en": "the first-birthday pick"
+                  }
+                },
+                {
+                  "id": "dongji",
+                  "text": {
+                    "ko": "동지",
+                    "romanization": "dongji",
+                    "en": "the winter solstice"
+                  }
+                },
+                {
+                  "id": "dano",
+                  "text": {
+                    "ko": "단오",
+                    "romanization": "dano",
+                    "en": "the holiday on the fifth day of the fifth lunar month"
+                  }
+                }
+              ],
+              "answerId": "doljanchi"
+            },
+            {
+              "id": "hear-sil",
+              "prompt": {
+                "ko": "실",
+                "romanization": "sil",
+                "en": "thread"
+              },
+              "options": [
+                {
+                  "id": "guksu",
+                  "text": {
+                    "ko": "국수",
+                    "romanization": "guksu",
+                    "en": "noodles"
+                  }
+                },
+                {
+                  "id": "sil",
+                  "text": {
+                    "ko": "실",
+                    "romanization": "sil",
+                    "en": "thread"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "text": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "text": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "cooked rice"
+                  }
+                }
+              ],
+              "answerId": "sil"
+            },
+            {
+              "id": "hear-tteok",
+              "prompt": {
+                "ko": "떡",
+                "romanization": "tteok",
+                "en": "rice cake"
+              },
+              "options": [
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "labelEn": "rice cake"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                }
+              ],
+              "answerId": "tteok"
+            },
+            {
+              "id": "hear-doljabi",
+              "prompt": {
+                "ko": "돌잡이",
+                "romanization": "doljabi",
+                "en": "the first-birthday pick"
+              },
+              "options": [
+                {
+                  "id": "ogokbap",
+                  "text": {
+                    "ko": "오곡밥",
+                    "romanization": "ogokbap",
+                    "en": "five-grain rice"
+                  }
+                },
+                {
+                  "id": "doljanchi",
+                  "text": {
+                    "ko": "돌잔치",
+                    "romanization": "doljanchi",
+                    "en": "first-birthday party"
+                  }
+                },
+                {
+                  "id": "bureom",
+                  "text": {
+                    "ko": "부럼",
+                    "romanization": "bureom",
+                    "en": "nuts cracked at the first full moon"
+                  }
+                },
+                {
+                  "id": "doljabi",
+                  "text": {
+                    "ko": "돌잡이",
+                    "romanization": "doljabi",
+                    "en": "the first-birthday pick"
+                  }
+                }
+              ],
+              "answerId": "doljabi"
+            },
+            {
+              "id": "hear-guksu",
+              "prompt": {
+                "ko": "국수",
+                "romanization": "guksu",
+                "en": "noodles"
+              },
+              "options": [
+                {
+                  "id": "guk",
+                  "text": {
+                    "ko": "국",
+                    "romanization": "guk",
+                    "en": "soup"
+                  }
+                },
+                {
+                  "id": "yeon",
+                  "text": {
+                    "ko": "연",
+                    "romanization": "yeon",
+                    "en": "kite"
+                  }
+                },
+                {
+                  "id": "guksu",
+                  "text": {
+                    "ko": "국수",
+                    "romanization": "guksu",
+                    "en": "noodles"
+                  }
+                },
+                {
+                  "id": "sil",
+                  "text": {
+                    "ko": "실",
+                    "romanization": "sil",
+                    "en": "thread"
+                  }
+                }
+              ],
+              "answerId": "guksu"
+            },
+            {
+              "id": "hear-bap",
+              "prompt": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "options": [
+                {
+                  "id": "tteokguk",
+                  "pictureRef": "card:tteokguk",
+                  "labelEn": "rice-cake soup"
+                },
+                {
+                  "id": "songpyeon",
+                  "pictureRef": "card:songpyeon",
+                  "labelEn": "half-moon rice cake"
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "labelEn": "rice cake"
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "labelEn": "cooked rice"
+                }
+              ],
+              "answerId": "bap"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q3-apply",
+          "kind": "syllable-build",
+          "rounds": [
+            {
+              "id": "sil",
+              "target": {
+                "ko": "실",
+                "romanization": "sil",
+                "en": "thread"
+              },
+              "firstTiles": [
+                "ㅅ",
+                "ㅈ",
+                "ㄷ"
+              ],
+              "vowelTiles": [
+                "ㅣ",
+                "ㅏ",
+                "ㅜ"
+              ],
+              "finalTiles": [
+                "ㄹ",
+                "ㄴ",
+                "ㅁ"
+              ]
+            },
+            {
+              "id": "guk",
+              "target": {
+                "ko": "국",
+                "romanization": "guk",
+                "en": "soup"
+              },
+              "firstTiles": [
+                "ㄱ",
+                "ㅋ",
+                "ㄴ"
+              ],
+              "vowelTiles": [
+                "ㅜ",
+                "ㅗ",
+                "ㅡ"
+              ],
+              "finalTiles": [
+                "ㄱ",
+                "ㄴ",
+                "ㅇ"
+              ]
+            },
+            {
+              "id": "bap",
+              "target": {
+                "ko": "밥",
+                "romanization": "bap",
+                "en": "cooked rice"
+              },
+              "firstTiles": [
+                "ㅂ",
+                "ㅁ",
+                "ㅍ"
+              ],
+              "vowelTiles": [
+                "ㅏ",
+                "ㅓ",
+                "ㅗ"
+              ],
+              "finalTiles": [
+                "ㅂ",
+                "ㄱ",
+                "ㅁ"
+              ]
+            },
+            {
+              "id": "dal",
+              "target": {
+                "ko": "달",
+                "romanization": "dal",
+                "en": "moon"
+              },
+              "firstTiles": [
+                "ㄷ",
+                "ㅌ",
+                "ㄴ"
+              ],
+              "vowelTiles": [
+                "ㅏ",
+                "ㅓ",
+                "ㅗ"
+              ],
+              "finalTiles": [
+                "ㄹ",
+                "ㄴ",
+                "ㅇ"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-rites-v2-q3-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "hear-sil",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "실",
+                "romanization": "sil",
+                "en": "thread"
+              }
+            },
+            {
+              "id": "hear-dongji",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "동지",
+                "romanization": "dongji",
+                "en": "the winter solstice"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:대보름} is the first full moon of the lunar year. People eat {ko:오곡밥}, rice cooked with five grains, which differ by region, and early that morning crack nuts called {ko:부럼} to keep teeth strong and ward off boils.",
+      "sources": [
+        {
+          "title": "부럼깨기 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4070",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘정월 대보름날 이른 아침에 한 해 동안의 각종 부스럼을 예방하고 이[齒]를 튼튼하게 하려는 뜻으로 날밤·호두·은행·잣 등 견과류를 어금니로 깨무는 풍속.’ ‘그러한 견과류를 일반적으로 ‘부럼’ 또는 ‘부름’이라고 부르기도 했다.’"
+        },
+        {
+          "title": "오곡밥 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4573",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘다섯 가지 곡식, 즉 쌀, 조, 수수, 팥, 콩 등을 섞어 지은 밥.’ 내용: ‘정월 대보름날의 전통적인 절식(節食)인 오곡밥은 … 지역에 따라 섞는 곡식의 종류는 차이가 있다.’"
+        },
+        {
+          "title": "대보름 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3580",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘정월 대보름을 특별히 일컫는 말.’ 이칭: ‘정월 대보름은 한국 세시풍속에서 비중이 크고 뜻이 깊은 날이기 때문에 ‘대보름’이라고 특별히 일컫는다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-31): National Folk Museum of Korea, Encyclopedia of Korean Seasonal Customs (한국세시풍속사전) in the Encyclopedia of Korean Folk Culture, topics 4070 (부럼깨기), 4573 (오곡밥) and 3580 (대보름), read through the site's topic API on 2026-10-31; every quote is copied from the entry text.\nPass 2 (culture and facts checker): 'the first full moon of the lunar year' is 3580 (정월 대보름; 정월 is the first lunar month, 보름 its fifteenth day); the five grains named are 4573 정의 (쌀, 조, 수수, 팥, 콩) and 'which grains go in differs by region' is 4573 내용 (지역에 따라 섞는 곡식의 종류는 차이가 있다); 'early that morning … crack nuts … with their back teeth … keep teeth strong and ward off boils for the year' is 4070 정의 (이른 아침, 견과류를 어금니로 깨무는 풍속, 부스럼을 예방하고 이를 튼튼하게); 'nuts called bureom' is 4070 (그러한 견과류를 … ‘부럼’). 'People eat' and 'people crack' name a custom the entries describe, with no claim about every household. No UNESCO status and no origin is claimed. Institution named as on the access date.\nPass 3 (third pass, after the reviser): the reviser changed 'five grains' to 'five grains such as …' and added the regional difference, so the note does not fix one recipe; es and ko keep the three {ko:} tokens and say the same facts; outcome pass.\nThe checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:차례} is a short memorial rite for ancestors held on a holiday morning, today mainly at Seollal and Chuseok; on Seollal a bowl of {ko:떡국} is set out. How the rite and its table are set differs by region and family.",
+      "sources": [
+        {
+          "title": "차례 (한국일생의례사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/439",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "역사: ‘오늘날 절기 차례는 거의 사라지고 설과 추석의 명절 차례만 전승되고 있다.’ 내용: ‘차례는 날이 밝은 아침에 지내므로 촛불을 켜지 않는다.’ 특징 및 의의: ‘명절 차례는 예서에 없던 것으로 … 일종의 약식제사이다.’"
+        },
+        {
+          "title": "설차례 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4256",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘설날에 조상에게 올리는 제사. … 떡국을 올렸다 하여 설차례를 떡국차례라고도 한다.’ 진설법: ‘제사의 상차림과 지내는 방법은 지방과 가정에 따라 각기 달라 일명 가가례(家家禮)라고 한다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-31): owner decision OD-9 (F-CURR-002 §16): 차례 is taught as a reading word with a neutral, sourced note. National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, topics 439 (한국일생의례사전 차례) and 4256 (한국세시풍속사전 설차례), read through the site's topic API on 2026-10-31; every quote is copied from the entry text.\nPass 2 (culture and facts checker, with the OD-9 neutrality check): 'a short memorial rite for ancestors' is 439 (약식제사; 조상) and 4256 정의 (조상에게 올리는 제사); 'held on the morning of a holiday' is 439 (명절; 날이 밝은 아침에 지내므로); 'handed down mainly as a rite of Seollal and Chuseok' is 439 역사 (설과 추석의 명절 차례만 전승); 'on Seollal a bowl of tteokguk is set out' is 4256 정의 (떡국을 올렸다 하여 … 떡국차례); 'the foods on the table and the way the rite is held differ by region and by family' is 4256 진설법 (상차림과 지내는 방법은 지방과 가정에 따라 각기 달라). Neutrality: the note describes the rite and says it differs between families; it never says that all Koreans or all families hold it, never asks the learner about their own family, and makes no religious claim (no spirits, no worship words); the Discover note under 차례 says the same in fewer words. No UNESCO status and no origin is claimed.\nPass 3 (third pass, after the reviser): the reviser replaced 'is kept at Seollal and Chuseok' with 'is handed down mainly as a rite of Seollal and Chuseok', which is the entry's claim and does not imply every household; es and ko keep both {ko:} tokens; outcome pass.\nThe checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "At a {ko:돌잔치}, a first-birthday party, thread, noodles, grain and money are set out, and what the child picks, the {ko:돌잡이}, is read as a guess at the future: thread or noodles for a long life. Old Chinese books record a similar custom.",
+      "sources": [
+        {
+          "title": "돌잡이 (한국일생의례사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/109",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘아이의 첫 생일인 돌에 상 위에 여러 가지 물건을 놓고 무엇을 집는지 보아 장래를 짐작해보는 풍속.’ 내용: ‘돌잡이는 중국 육조시대六朝時代부터 있었던 풍속으로’ ‘남자아이와 여자아이의 상 위에는 공통으로실 꾸러미와 국수, 곡식과 돈을 올려놓고 아이가 무엇을 집는가에 따라 그 해석을 달리 한다. 예컨대, 긴 실과 국수는 무병장수를 의미한다.’"
+        },
+        {
+          "title": "돌 (한국일생의례사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/107",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘아이가 태어나 처음 맞이하는 생일.’ 내용: ‘이때 돌상 위에 활과 화살, 책과 붓, 쌀과 돈, 실타래, 가위와 자 등 성별에 따라 다양한 물건을 늘어놓고 아이가 무엇을 잡는가에 따라 미래를 예측하는 돌잡이를 한다.’"
+        },
+        {
+          "title": "돌상 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/7513",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘아기가 태어난 지 일 년이 되는 날을 맞아 아기의 첫 생일을 축하하기 위해 차린 음식상.’ 개관: ‘또 이 음식상과 함께 아기의 장래를 예측해 보는 돌잡이상도 함께 차린다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-31): 'a first-birthday party' is 107 정의 (아이가 태어나 처음 맞이하는 생일) with its 잔치. National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, topics 109 (한국일생의례사전 돌잡이), 107 (한국일생의례사전 돌) and 7513 (한국의식주생활사전 돌상), read through the site's topic API on 2026-10-31; every quote is copied from the entry text.\nPass 2 (culture and facts checker): 'a child's first birthday' is 107 정의; 'thread, noodles, grain and money are set out' is 109 내용, the objects it lists for every child (공통으로 실 꾸러미와 국수, 곡식과 돈); 'what the child picks … is read as a guess at the future' is 109 정의 (무엇을 집는지 보아 장래를 짐작해보는 풍속) and 107 내용 (미래를 예측하는 돌잡이); 'thread or noodles for a long life' is 109 (긴 실과 국수는 무병장수를 의미한다); 'Old Chinese books record a similar custom' is 109 (중국 육조시대부터 있었던 풍속; the 안씨가훈 record), so the custom is never framed as Korean in origin (F-CURR-002 §5.1). The objects named are the ones 109 lists for every child; the gendered lists of the entries are left out on purpose.\nPass 3 (third pass, after the reviser): the reviser removed 'playful' (no source says so) and swapped books and a brush (listed by gender in 109) for the objects 109 lists for every child; es and ko keep both {ko:} tokens; outcome pass.\nThe checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "culture",
+      "textEn": "{ko:단오} is the fifth day of the fifth lunar month; swinging on a {ko:그네} was one of its popular games in the Joseon period. UNESCO proclaimed the Gangneung Danoje festival in 2005 and inscribed it in 2008.",
+      "sources": [
+        {
+          "title": "단오 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3529",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘음력 5월 5일을 명절로 이르는 말.’ 내용: ‘조선시대에는 정조(正朝), 동지(冬至)와 아울러 3절일(節日)이 되었으며, 민간에서도 그네와 씨름이 성행하였다.’"
+        },
+        {
+          "title": "그네뛰기 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3343",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘5월 단오에 젊은 여인들이 그네를 뛰면서 즐기는 놀이.’"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘강릉단오제 (2005/2008)’"
+        },
+        {
+          "title": "Gangneung Danoje festival",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00114",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribed in 2008 (3.COM) on the Representative List of the Intangible Cultural Heritage of Humanity (originally proclaimed in 2005)’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-31): National Folk Museum of Korea, Encyclopedia of Korean Seasonal Customs, topics 3529 (단오) and 3343 (그네뛰기), read through the site's topic API on 2026-10-31; the Korea Heritage Service list of Korea's UNESCO intangible heritage, opened on 2026-10-31; the UNESCO element page as cited by fact f9 of the reviewed story dano-ssireum (opened 2026-10-09; the UNESCO site answered this run's request with a bot check on 2026-10-31, so its quote is carried from that story, and the Korea Heritage Service list re-checked the two years today).\nPass 2 (culture and facts checker): 'the fifth day of the fifth lunar month' is 3529 정의 (음력 5월 5일); 'in the Joseon period, swinging … was one of its most popular games' is 3529 내용 (조선시대 … 민간에서도 그네와 씨름이 성행하였다) with 3343 (5월 단오에 … 그네를 뛰면서 즐기는 놀이); the UNESCO line follows §5.1: the exact element under its UNESCO name, 'Gangneung Danoje festival', 'proclaimed 2005, inscribed 2008' (UNESCO: inscribed in 2008, originally proclaimed in 2005; Korea Heritage Service: 강릉단오제 (2005/2008)); the UNESCO status is given to that festival only, never to Dano itself. No origin is claimed for Dano (3529 traces the day to an old custom of the Jingchu region, so the note stays silent on origin rather than call it Korean). No designation number is given.\nPass 3 (third pass, after the reviser): the reviser named the Masterpiece programme in full and dropped 'in Korea' after the festival name; es and ko keep the two {ko:} tokens and give the UNESCO element name in its English form; outcome pass.\nThe checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "culture",
+      "textEn": "{ko:동지}, the winter solstice, has the longest night of the year. It is one of the 24 solar terms of a calendar shared across East Asia. Its food is red bean porridge, {ko:팥죽}, a dish an old Chinese book of customs also records.",
+      "sources": [
+        {
+          "title": "동지 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3637",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘24절후의 스물두 번째 절기. 일년 중에서 밤이 가장 길고 낮이 가장 짧은 날이다.’ 개관: ‘우리나라는 신라에 이어 고려시대에도 당(唐)의 선명력을 그대로 썼으며’"
+        },
+        {
+          "title": "동지팥죽 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3649",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘동짓날에 쑤는 붉은 팥죽.’ ‘… 새해의 무사안일을 빌던 풍습에서 남아 있는 절식이다.’ 유래: ‘『형초세시기(荊楚歲時記)』에 의하면 … 故冬至日作赤豆粥以禳之’ ‘이러한 풍속이 우리나라에 전래된 것으로 여겨지나 전래된 시기는 알 수 없다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, 2026-10-31): National Folk Museum of Korea, Encyclopedia of Korean Seasonal Customs, topics 3637 (동지) and 3649 (동지팥죽), read through the site's topic API on 2026-10-31; every quote is copied from the entry text.\nPass 2 (culture and facts checker): 'the winter solstice, the day with the longest night of the year' and 'one of the 24 solar terms' are 3637 정의 (24절후의 스물두 번째 절기; 밤이 가장 길고); 'a calendar shared across East Asia' rests on 3637 개관 (Korea long used the Tang calendar 선명력), so the solar terms are framed as shared East Asian heritage and never as Korean in origin (F-CURR-002 §5.1); 'red bean porridge is the food of the day' is 3649 정의 (동짓날에 쑤는 붉은 팥죽 … 절식); 'an old Chinese book of seasonal customs tells of the same dish' is 3649 유래 (형초세시기 … 冬至日作赤豆粥), which the entry says is thought to have come to Korea. The note gives no belief about spirits as fact. No UNESCO status is claimed (the Twenty-Four Solar Terms element is China's, inscribed 2016, and is not named here).\nPass 3 (third pass, after the reviser): the reviser changed 'people eat' to 'is the food of the day' (the entry's 절식) and the date-free wording; es and ko keep both {ko:} tokens; outcome pass.\nThe checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Pass 1 author (2026-10-31, content-skill): Holidays Volume 2 of Stage 2 (F-CURR-002 §5.4 S2, OD-9). q1 the foods of the first lunar month (떡국, 한복; 오곡밥 and 부럼) with scene:seollal-room as its Apply; q2 단오, 송편, 동지, 팥죽 and 차례; q3 the first birthday (돌잔치, 돌잡이, 실, 국수) with Syllable Build.",
+      "Pass 1 overlays: es and ko for every English field; the scene's es and ko entries of hidden-heritage.json are copied into minigame:s2-rites-v2-q1-apply.",
+      "Pass 2 language checker: romanization through the F-CNT-002 converter (ogokbap, bureom, dano, dongji, patjuk, charye, doljanchi, doljabi, sil, guksu); ko in polite 해요체; ko glosses never contain their own word; es and en glosses never open with the romanization; the 동지 Dictation meaning carries no sound of the word.",
+      "Pass 3 culture and facts checker: five notes against the National Folk Museum of Korea, the Korea Heritage Service and UNESCO (verification records). OD-9: 차례 is a reading word; its Discover note and culture note describe the rite neutrally and say it differs by family, with no claim about every family and no religious claim.",
+      "Pass 3 conventions (§5.1): the Gangneung Danoje festival under its UNESCO name, proclaimed 2005 and inscribed 2008, and no UNESCO claim for Dano itself; Dongji and the solar terms, red bean porridge and the first-birthday pick framed as shared East Asian heritage, never Korean in origin; the card back is the scene's reviewed note (CM-37 part 2).",
+      "Pass 4 learning design checker: §9.3 lints clean (lesson-new-load, lesson-recycle, lesson-check-variety with Read Pick Meaning, Pic-Word Match and Dictation, lesson-culture-coverage 5, dictation-unambiguous: 실 and 동지 have one spelling and no sound change); U-1 to U-11; scaffoldable Practices; one picture names one word per quest.",
+      "Pass 4 decodability: every scored read and every Syllable Build tile uses Stage 1 symbols only; 차례 and 팥죽 hold a Word Builder symbol, so they are matched (Card Match), never a scored read; 떡국 and 떡 are heard and pictured.",
+      "Reviser: 부럼's meaning says 'first full moon', not 'Daeboreum'; 단오 and 동지 meanings drop their romanization; 돈 and 그네 left out (돈 is a held-out probe block of the Block Sprint; 그네, another cell's word, made q2 five new words), so q3 teaches 국수 and q2 recycles 송편; 돌 alone is not taught (a homograph of 'stone').",
+      "Pass 5 third pass: validate-content, the lesson build, the review-item freeze and the content suites re-run clean. The checker passes ran as separate checklist passes inside the authoring session (no independent reviewer agent was available to this run); the PR asks the independent review stage to confirm them. No native-speaker or expert review is claimed."
+    ]
+  },
+  "contentVer": 1
+}
