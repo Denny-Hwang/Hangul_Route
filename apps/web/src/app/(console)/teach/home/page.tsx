@@ -164,7 +164,8 @@ export default function HomePage(): JSX.Element {
             </div>
             <p style={{ margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{statusLine(item, locale)}</p>
           </div>
-          <Link href={ROUTES.space(item.space.id, item.space.kind)} style={smallButton}>
+          {/* [GX-3] A row whose chip wraps Open onto its own line keeps Open at the end, as on the rows without a chip. */}
+          <Link href={ROUTES.space(item.space.id, item.space.kind)} style={{ ...smallButton, marginInlineStart: 'auto' }} data-testid={`space-open-${item.space.id}`}>
             {c.home.open.cta}
           </Link>
         </div>

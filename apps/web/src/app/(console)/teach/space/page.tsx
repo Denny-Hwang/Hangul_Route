@@ -342,6 +342,8 @@ function SpaceInner(): JSX.Element {
     <AdultFrame
       onSignOut={signOut}
       attentionHere
+      // [GX-3] The frame reads its counts again when this page's own change, so the Classes tab's number follows a decision.
+      attentionKey={attention ? `${relinksWaiting}:${movesWaiting}` : undefined}
       back={spacePageBack(roster?.space.kind ?? pathKind, c)}
       title={roster ? undefined : c.space.loading}
     >

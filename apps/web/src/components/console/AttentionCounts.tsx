@@ -24,6 +24,7 @@ export const ATTENTION_CSS = `
 .hr-attn-chip{position:relative;display:inline-flex;align-items:center;gap:${spacing.xs}px;padding:${spacing.xs}px ${spacing.md}px;border-radius:${radii.pill}px;border:${borderWidth.base}px solid ${colors.feedback.nudge};background:${colors.feedback.nudgeLight};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};white-space:nowrap;text-decoration:none}
 .hr-attn-chip::before{content:"";flex:none;width:${spacing.sm}px;height:${spacing.sm}px;border-radius:${radii.circle}px;background:${colors.feedback.nudge}}
 .hr-attn-chip::after{content:"";position:absolute;left:0;right:0;top:50%;height:${touchTarget.min}px;transform:translateY(-50%)}
+.hr-attn-hidden{position:absolute;width:${borderWidth.thin}px;height:${borderWidth.thin}px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .hr-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:${spacing.lg}px;padding:0 ${spacing.xs}px;margin-inline-start:${spacing.xs}px;border-radius:${radii.pill}px;background:${colors.feedback.nudge};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 `;
 
@@ -96,11 +97,34 @@ export function SchoolAttentionLinks({ schoolId, fallback }: { schoolId: string;
 
 const MINUTE_MS = 60_000;
 
+type ConsoleMessages = ReturnType<typeof useConsoleLocale>['messages']['console'];
+
+/** The bar's sentence: one device with its class name, or the count. */
+function relinkSentence(c: ConsoleMessages, view: { count: number; name: string | null }): string {
+  return view.count === 1 && view.name ? c.relinkBar.one(view.name) : c.relinkBar.many(view.count);
+}
+
+/**
+ * The re-link bar's live region (section 5.5: announced once when the bar appears, and when the count changes). The frame
+ * keeps it mounted, visually hidden and empty, on every teacher page that can show the bar, so the sentence arrives in a
+ * region already in the page: a screen reader announces a region's changes, not a region inserted with its text. Its
+ * text is the bar's sentence only (never the minutes line), so it changes only with the count or the class.
+ */
+export function RelinkLive({ attention }: { attention: PersonaAttention | null }): JSX.Element {
+  const { messages } = useConsoleLocale();
+  const view = relinkBarView(attention, new Date());
+  return (
+    <p role="status" className="hr-attn-hidden" data-testid="relink-bar-live">
+      {view ? relinkSentence(messages.console, view) : ''}
+    </p>
+  );
+}
+
 /**
  * The re-link bar (section 5.5): while a new device waits in any class the teacher answers for, on every teacher page but
- * the class page, lecture mode and the presenter. Its sentence is the live region (announced when it appears and when
- * the count changes); the minutes line under it changes once a minute and is not announced. **Review** opens the class
- * page at its review; the bar never approves (GX-D12: the pop-up carries the safety hint). Not dismissible.
+ * the class page, lecture mode and the presenter. Its sentence is said by `RelinkLive` (the frame's live region); the
+ * minutes line under it changes once a minute and is not announced. **Review** opens the class page at its review; the
+ * bar never approves (GX-D12: the pop-up carries the safety hint). Not dismissible.
  */
 export function RelinkBar({ attention, now = () => Date.now() }: { attention: PersonaAttention | null; now?: () => number }): JSX.Element | null {
   const { messages } = useConsoleLocale();
@@ -118,7 +142,6 @@ export function RelinkBar({ attention, now = () => Date.now() }: { attention: Pe
   }, [waiting, attention]);
   const view = relinkBarView(attention, new Date(at));
   if (!view) return null;
-  const sentence = view.count === 1 && view.name ? c.relinkBar.one(view.name) : c.relinkBar.many(view.count);
   return (
     <div
       data-testid="relink-bar"
@@ -137,8 +160,8 @@ export function RelinkBar({ attention, now = () => Date.now() }: { attention: Pe
       }}
     >
       <div style={{ flex: '1 1 12rem', minWidth: 0 }}>
-        <p role="status" data-testid="relink-bar-text" style={{ margin: 0, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>
-          {sentence}
+        <p data-testid="relink-bar-text" style={{ margin: 0, fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>
+          {relinkSentence(c, view)}
         </p>
         {view.minutes !== null ? (
           <p data-testid="relink-bar-minutes" style={{ margin: 0, fontSize: rem(typography.size.bodySm) }}>

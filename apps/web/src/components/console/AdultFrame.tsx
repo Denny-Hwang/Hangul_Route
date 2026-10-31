@@ -18,7 +18,7 @@ import { navCountText } from '@/lib/console/persona-attention';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { useConsoleAuth } from './auth-context';
-import { ATTENTION_CSS, RelinkBar } from './AttentionCounts';
+import { ATTENTION_CSS, RelinkBar, RelinkLive } from './AttentionCounts';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
 import { DisplayButton } from './DisplaySheet';
@@ -280,6 +280,7 @@ export function AdultFrame({
   env,
   attentionHere,
   attentionTotal,
+  attentionKey,
 }: {
   children: ReactNode;
   /** The page's context line (a space or a page name), shown at the top of the content. */
@@ -292,7 +293,8 @@ export function AdultFrame({
   env?: AdultFrameEnvironment;
   /**
    * [GX-3] The page draws its own approvals (the class page: banner, chips, pop-up, its 20 s re-link read): the frame
-   * then draws no re-link bar, sets no title count and does not read the counts again on a timer.
+   * then draws no re-link bar, sets no title count and does not read the counts again on a timer (it still reads them on
+   * focus, when the tab comes back into view and when `attentionKey` changes).
    */
   attentionHere?: boolean;
   /**
@@ -300,6 +302,11 @@ export function AdultFrame({
    * the persona's tab and in the tab title, and reads no counts of its own.
    */
   attentionTotal?: number;
+  /**
+   * [GX-3] The page's own waiting counts as a key (the class page): when it changes (a decision on the page, a request
+   * its 20 s read found), the frame reads the counts again once, so the Classes tab's number follows the page.
+   */
+  attentionKey?: string;
 }): JSX.Element {
   const { api, m, locale, signOut } = useConsole();
   const auth = useConsoleAuth();
@@ -392,7 +399,7 @@ export function AdultFrame({
   // parent's: the Home tab's number and the parent re-link bar; the family home hands the frame its own count instead.
   const personaFrame = !!list && !isLecturePage(pathname);
   const ownCount = personaFrame && attentionTotal !== undefined;
-  const attention = usePersonaAttention(api, list, { enabled: personaFrame && !ownCount, persona: active.persona, poll: !attentionHere });
+  const attention = usePersonaAttention(api, list, { enabled: personaFrame && !ownCount, persona: active.persona, poll: !attentionHere, refreshKey: attentionKey });
   const waitingTotal = ownCount ? Math.max(0, attentionTotal) : (attention?.total ?? 0);
   useTitleCount(waitingTotal, personaFrame && (!attentionHere || ownCount));
   // The tab that carries the number: Classes for the teacher, Home for the parent.
@@ -523,6 +530,8 @@ export function AdultFrame({
           </p>
         ) : null}
         <FrameAttentionContext.Provider value={attention}>{children}</FrameAttentionContext.Provider>
+        {/* [GX-3] The bar's live region, mounted (empty) on every teacher page that can show the bar, so its arrival is said. */}
+        {teacherFrame && !attentionHere ? <RelinkLive attention={attention} /> : null}
       </main>
       <footer className="hr-frame-foot">
         <div className="hr-frame-foot-inner">
