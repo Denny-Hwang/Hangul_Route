@@ -3,6 +3,7 @@ import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -19,7 +20,7 @@ const VOLUMES_ON = { volumes: { on: true, pct: 100 } };
 const lettersCell = (page: Page) => page.getByRole('button', { name: journeyCellName(4, 'Letters & Books'), exact: true });
 
 /** A learner with Stage 4 Letters' Volume 1 done, and the switches as given; ends on the Journey. */
-async function learner(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+async function learner(page: Page, flags: Record<string, { on: boolean; pct: number }>, settings?: { uiLocale: 'en'; textSize: 'largest' }): Promise<void> {
   const AT = '2026-10-01T10:00:00.000Z';
   await page.goto('/');
   await keepSidewaysIfAsked(page);
@@ -33,6 +34,7 @@ async function learner(page: Page, flags: Record<string, { on: boolean; pct: num
   await seedStoredAll(page, {
     [`progress:${id}`]: { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt: Object.fromEntries(questIds.map((q) => [q, AT])) },
     'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    ...(settings ? { 'device:settings': { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
   });
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -43,9 +45,9 @@ async function learner(page: Page, flags: Record<string, { on: boolean; pct: num
   await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
 }
 
-/** Start the page's first quest (a soft-prerequisite sheet may ask first) and pass its intro. */
-async function startFirstQuest(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+/** Start the page's quest at `index` (the first by default; a soft-prerequisite sheet may ask first) and pass its intro. */
+async function startFirstQuest(page: Page, index = 0): Promise<void> {
+  await page.getByRole('button', { name: 'Start', exact: true }).nth(index).click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await anyway.isVisible()) await anyway.click();
@@ -143,4 +145,44 @@ test.describe('Letters Volume 2, Stage 4, at launch state (F-CURR-002 row CM-44 
     await expect(page.getByTestId('role-play-partner-newest')).toContainText('도서관 카드 있어요?');
     expect(errors).toEqual([]);
   });
+  // The longest replies of the cell (quest 2: 감사합니다! 한글 책은 어디 있어요?, with its gloss) at 320 and the Largest
+  // text size: the reply buttons wrap inside the screen and no text is clipped, as Tap to Respond (game.role-play off)
+  // and as the Role Play chat (on).
+  for (const rolePlay of [false, true]) {
+    test(`320 at the Largest text size: quest 2's longest replies fit, game.role-play ${rolePlay ? 'on' : 'off'}`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.setViewportSize({ width: 320, height: 800 });
+      await learner(page, { ...VOLUMES_ON, ...(rolePlay ? { 'game.role-play': { on: true, pct: 100 } } : {}) }, { uiLocale: 'en', textSize: 'largest' });
+      await lettersCell(page).click();
+      await expect(page.getByText('At the Library').first()).toBeVisible();
+      await startFirstQuest(page, 1);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByText('안녕하세요!').first()).toBeVisible();
+      if (rolePlay) {
+        await expect(page.getByTestId('role-play-reply-ask')).toBeVisible();
+        await page.getByTestId('role-play-reply-ask').click();
+        await expect(page.getByTestId('role-play-partner-newest')).toContainText('저기 있어요.');
+        await expect(page.getByTestId('role-play-reply-next')).toBeVisible();
+        await page.getByTestId('role-play-reply-next').scrollIntoViewIfNeeded();
+      } else {
+        // Tap to Respond on the main path: turn 1's natural reply, then turn 2 offers the longest one.
+        await expect(page.getByText('1 / 4', { exact: true })).toBeVisible({ timeout: 5_000 });
+        const turn2 = page.getByText('2 / 4', { exact: true });
+        await expect(async () => {
+          if (await turn2.isVisible()) return;
+          await page.getByRole('button', { name: /^안녕하세요! 그림책이 어디 있어요\? · / }).click();
+          await expect(turn2).toBeVisible({ timeout: 1500 });
+        }).toPass();
+        const long = page.getByRole('button', { name: /^감사합니다! 한글 책은 어디 있어요\? · / });
+        await expect(long).toBeVisible();
+        await long.scrollIntoViewIfNeeded();
+      }
+      await expectNoHorizontalOverflow(page);
+      await expectTextFits(page, `Letters Volume 2 quest 2 Practice at Largest, role-play ${rolePlay ? 'on' : 'off'}`);
+      await shot(page, `cm44-s4-v2-q2-practice-320-largest-${rolePlay ? 'role-play' : 'tap-respond'}`);
+      expect(errors).toEqual([]);
+    });
+  }
 });
