@@ -669,6 +669,7 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(stemOf('친구가', new Set())).toBe('친구');
     expect(stemOf('학교에', new Set())).toBe('학교');
     expect(stemOf('송편하고', new Set())).toBe('송편');
+    expect(stemOf('친구에게', new Set())).toBe('친구'); // F-CURR-002 row CM-44 S7: the letter frame ___에게
     expect(stemOf('책이에요', new Set())).toBe('책');
     expect(stemOf('학교예요', new Set())).toBe('학교');
     expect(stemOf('고양이', new Set(['고양이']))).toBe('고양이');
@@ -954,7 +955,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(87);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(90);
   });
 
   for (const quest of QUESTS) {
@@ -1003,12 +1004,13 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 84 of 87 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 87 of 90 shipped Practices scaffold.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
     // Row CM-41 S7 adds the three quests of Stage 7 Nature Volume 2, each of whose Practices scaffolds.
     // Row CM-42 S7 adds the three quests of Stage 7 Play & Crafts Volume 2, each of whose Practices scaffolds.
     // Row CM-43 S7 adds the three quests of Stage 7 Food & Daily Life Volume 2, each of whose Practices scaffolds.
-    expect([QUESTS.length, scaffolding.size]).toEqual([87, 84]);
+    // Row CM-44 S7 adds the three quests of Stage 7 Letters & Books Volume 2, each of whose Practices scaffolds.
+    expect([QUESTS.length, scaffolding.size]).toEqual([90, 87]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
