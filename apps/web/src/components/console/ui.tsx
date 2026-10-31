@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
@@ -43,8 +43,11 @@ export const buttonBase: CSSProperties = {
  * `dangerText` (AMENDMENTS-GROWNUP-UX GX-10, T11 and P7): the quieter look of a destructive action that sits beside a
  * main one on a row (Remove beside Move): the same size and box as every console button, no fill and no border, the
  * label underlined in the danger colour. It always runs behind the shipped confirm.
+ *
+ * `nudge`: a secondary action that waits for the grown-up (a count of requests to answer): the amber fill and border of
+ * `Notice tone="nudge"`, text `text.primary` (AMENDMENTS-GROWNUP-UX section 4; never the danger colour).
  */
-export type ButtonTone = 'primary' | 'secondary' | 'danger' | 'dangerText';
+export type ButtonTone = 'primary' | 'secondary' | 'danger' | 'dangerText' | 'nudge';
 
 export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: ButtonTone; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
   const toneStyle: CSSProperties =
@@ -54,7 +57,9 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
         : tone === 'dangerText'
           ? { color: colors.feedback.danger, borderColor: 'transparent', backgroundColor: 'transparent', textDecoration: 'underline' }
-          : {};
+          : tone === 'nudge'
+            ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
+            : {};
   return (
     <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}

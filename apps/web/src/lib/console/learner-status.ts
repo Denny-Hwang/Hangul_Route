@@ -190,9 +190,13 @@ export function attentionModel(input: AttentionInput): AttentionModel {
   const byLearner: Record<string, LearnerStatus> = {};
   let pendingRelinks = 0;
   for (const learner of input.roster) {
-    // `pending` preferred when present (GX-W): the roster's own field is the newest read of the same rows.
+    // `pending` preferred when present (GX-W): the roster's own field is the newest read of the same rows. The re-link
+    // is the exception: the page reads the re-link list alone every 20 s and right after an answer, so a list that was
+    // read is fresher than the roster's 90 s read; a re-link just answered never comes back from an older roster row.
     const fromRow = readPending(learner);
-    const candidates = (fromRow ?? fromLists.get(learner.id) ?? []).filter((c) => c.kind !== 'relink' || (c.relink && future(c.relink.expiresAt, input.now)));
+    const listed = fromLists.get(learner.id) ?? [];
+    const merged = fromRow && input.relinks !== null ? [...fromRow.filter((c) => c.kind !== 'relink'), ...listed.filter((c) => c.kind === 'relink')] : (fromRow ?? listed);
+    const candidates = merged.filter((c) => c.kind !== 'relink' || (c.relink && future(c.relink.expiresAt, input.now)));
     if (fromRow?.some((c) => c.kind === 'relink' && c.relink && future(c.relink.expiresAt, input.now))) pendingRelinks += 1;
     const top = best(candidates, baseKind(learner, input.kind, input.now));
     byLearner[learner.id] = {

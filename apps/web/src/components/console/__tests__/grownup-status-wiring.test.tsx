@@ -49,7 +49,7 @@ const spaceOf = (kind: 'class' | 'family') => ({
   name: kind === 'class' ? 'Sunflower' : 'Kim family',
   parentSpaceId: null,
   settings: { consentMode: 'parent', anonymizeRoster: false },
-  archivedAt: null,
+  archivedAt: state.archived ? '2026-10-20T00:00:00.000Z' : null,
   createdAt: '2026-09-01T00:00:00.000Z',
 });
 const member = (id: string, name: string, over: Record<string, unknown> = {}) => ({
@@ -108,6 +108,8 @@ const state = {
   transfers: [] as unknown[],
   incoming: [] as unknown[],
   decide: ok({}) as Result,
+  archived: false,
+  movesThrow: false,
 };
 const calls: Array<{ name: string; args: unknown[] }> = [];
 
@@ -120,6 +122,7 @@ const api = new Proxy(
         calls.push({ name, args });
         if (name === 'roster') return ok({ space: spaceOf(state.kind), learners: state.learners, joinCode: 'ABCD', joinCodeExpiresAt: null });
         if (name === 'relinkRequests') return ok(state.relinks);
+        if (name === 'transferRequests' && state.movesThrow) throw new TypeError('api.transferRequests is not a function');
         if (name === 'transferRequests') return ok({ requests: state.transfers });
         if (name === 'classMoves') return ok({ outgoing: [], incoming: state.incoming });
         if (name === 'listSpaces') return ok([{ space: spaceOf(state.kind), role: 'teacher', counts: { learners: 1, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]);
@@ -174,6 +177,8 @@ beforeEach(() => {
   state.transfers = [incomingTransfer];
   state.incoming = [teacherMoveIn];
   state.decide = ok({});
+  state.archived = false;
+  state.movesThrow = false;
   nav.query = 'id=space%3Asunflower';
   lang.locale = 'en';
 });
@@ -207,7 +212,10 @@ const count = (name: string): number => calls.filter((c) => c.name === name).len
 
 /** What the page asked to focus: react-test-renderer has no DOM, so each ref gets a node that records it. */
 const focused: string[] = [];
-const nodeMock = () => ({ focus: () => focused.push('self'), querySelector: (selector: string) => ({ focus: () => focused.push(selector) }) });
+const nodeMock = (element: { type: unknown; props: Record<string, unknown> }) => ({
+  focus: () => focused.push(`self:${String(element.type)}:${String(element.props['data-testid'] ?? '')}`),
+  querySelector: (selector: string) => ({ focus: () => focused.push(selector) }),
+});
 
 async function render(): Promise<void> {
   await act(async () => {
@@ -414,6 +422,92 @@ describe('the family roster (section 4)', () => {
     expect(textOf(review)).toBe('Review');
     expect(byTestId('asking-to-join')).toEqual([]);
     expect(count('classMoves')).toBe(0);
+  });
+});
+
+describe('GX-1 review fixes', () => {
+  it('a failure that leaves the re-link open keeps the chip, the amber border and the answers, with the line under them', async () => {
+    await render();
+    focused.length = 0;
+    state.decide = { ok: false, error: 'unknown', status: 503 };
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    const card = cardOf('Jaehan');
+    expect(textOf(chipIn(card) as ReactTestInstance)).toBe('Needs your OK');
+    expect(card.props.style.border).toContain(colors.feedback.nudge);
+    expect(card.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline')).toHaveLength(1);
+    expect(card.findAll((n) => n.props['data-testid'] === 'relink-answer-failed' && n.type === 'p')).toHaveLength(1);
+    expect(card.findAll((n) => n.props['data-testid'] === 'learner-decided')).toHaveLength(0);
+    // Focus stays on the button the grown-up pressed: nothing moved it.
+    expect(focused).toEqual([]);
+    state.decide = { ok: false, error: 'network', status: 0 };
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-deny-inline'));
+    expect(cardOf('Jaehan').findAll((n) => n.type === 'button' && n.props['data-testid'] === 'relink-deny-inline')).toHaveLength(1);
+  });
+
+  it('a settled inline answer moves focus to the learner name, which stays on the card', async () => {
+    await render();
+    focused.length = 0;
+    state.relinks = [];
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    expect(focused).toEqual(['self:strong:']);
+    const name = cardOf('Jaehan').find((n) => n.type === 'strong');
+    expect(name.props.tabIndex).toBe(-1);
+  });
+
+  it('the last asking-to-join card answered moves focus to the roster heading', async () => {
+    state.transfers = [];
+    await render();
+    focused.length = 0;
+    state.incoming = [];
+    await press(byTestId('incoming-card')[0]?.find((n) => n.type === 'button' && n.props['data-testid'] === 'incoming-accept') as ReactTestInstance);
+    await act(async () => undefined);
+    expect(byTestId('asking-to-join')).toEqual([]);
+    expect(focused.at(-1)).toBe('self:h2:roster-heading');
+  });
+
+  it('on an archived class the action chip is the amber span, never a button that does nothing', async () => {
+    state.archived = true;
+    await render();
+    const chip = byTestId('incoming-card')[0]?.find((n) => n.props['data-testid'] === 'incoming-status') as ReactTestInstance;
+    expect(chip.type).toBe('span');
+    expect(chip.props['data-tone']).toBe('action');
+    expect(byTestId('incoming-accept')).toEqual([]);
+  });
+
+  it('asking-to-join comes before the class code; waiting counts take the amber nudge style', async () => {
+    await render();
+    const order = root().findAll((n) => n.props['data-testid'] === 'asking-to-join' || n.props['data-testid'] === 'join-code').map((n) => n.props['data-testid']);
+    expect(order).toEqual(['asking-to-join', 'join-code']);
+    for (const id of ['relink-requests', 'class-moves']) {
+      const button = byTestId(id)[0] as ReactTestInstance;
+      expect(button.props.style.border).toContain(colors.feedback.nudge);
+      expect(button.props.style.backgroundColor).toBe(colors.feedback.nudgeLight);
+    }
+  });
+
+  it('with nothing waiting the counts are the plain buttons', async () => {
+    state.relinks = [];
+    state.transfers = [];
+    state.incoming = [];
+    await render();
+    for (const id of ['relink-requests', 'class-moves']) expect(String((byTestId(id)[0] as ReactTestInstance).props.style.border ?? '')).not.toContain(colors.feedback.nudge);
+  });
+
+  it('the roster heading says Students while action cards lead, and the activity order otherwise', async () => {
+    await render();
+    expect(textOf(byTestId('roster-heading')[0] as ReactTestInstance)).toBe('Students');
+    act(() => mounted?.unmount());
+    state.relinks = [];
+    await render();
+    expect(textOf(byTestId('roster-heading')[0] as ReactTestInstance)).toBe('Most recent activity first');
+  });
+
+  it('a move read that throws adds nothing and never breaks the page', async () => {
+    state.movesThrow = true;
+    await render();
+    // The transfer read added nothing; the teacher move read still drew its card.
+    expect(byTestId('incoming-card').map((c) => c.props['data-source'])).toEqual(['teacher']);
+    expect(textOf(chipIn(cardOf('Jaehan')) as ReactTestInstance)).toBe('Needs your OK');
   });
 });
 
