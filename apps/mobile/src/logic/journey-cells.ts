@@ -1,7 +1,7 @@
 import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { episodesFor } from '../content/episodes';
-import { isCellComplete, isEpisodeComplete } from './journey';
+import { isEpisodeComplete } from './journey';
 import type { JourneyCellMarks } from './journey-grid';
 import { entriesForCell, type StoryIndexEntry } from './story/story-index';
 
@@ -33,7 +33,12 @@ export interface CellModel {
    * (the "first incomplete volume" rule of F-STORY-005 PR 5.8); absent for stories-only and placeholder cells.
    */
   episodeId?: string;
-  /** Every grid episode of the cell is complete; never for a stories-only or placeholder cell. */
+  /**
+   * The cell's first volume is complete (with one volume, every grid episode of the cell); never for a stories-only or
+   * placeholder cell. The cell's look (the success tint, `learnerCellMarks`) and its label read this one value, so a cell
+   * that turned complete stays complete when a Volume 2 ships or `volumes` turns on (F-CURR-002 §7.7, row CM-40); a
+   * later volume's state shows in its volume dot and in the "Opens Volume 2" sentence.
+   */
   completed: boolean;
   /**
    * The cell's playable volumes in order, with each one's completion: the volume dots, drawn when there are two or more
@@ -76,7 +81,7 @@ export function cellModel(i: CellModelInput): CellModel {
       ...base,
       kind: first.format === 'story' ? 'book' : 'lesson',
       episodeId: (volumes.find((v) => !v.complete) ?? volumes[0])?.episodeId ?? first.id,
-      completed: isCellComplete(playable, i.quests),
+      completed: volumes[0]?.complete ?? false,
       volumes,
     };
   }

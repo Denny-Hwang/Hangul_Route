@@ -1,6 +1,6 @@
 # Journey / Volumes: a cell's two volumes on the map and on its page (wireframe v1)
 
-Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.1 rules 1, 2 and 5, §3.5 and PR 5.8 (`MAX_EPISODES_PER_CELL = 2`, the volume dots, the "first incomplete volume" open rule, `isCellComplete` in the look) · `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §5.1 (Volume 2 is a second episode in the same cell), §6.2 (ids), §4.4 and `journey/mastery-ring.md` C (the New volume marker), §12.2 (`volumes` off)
+Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.1 rules 1, 2 and 5, §3.5 and PR 5.8 (`MAX_EPISODES_PER_CELL = 2`, the volume dots, the "first incomplete volume" open rule; the look reads Volume 1, row CM-40 fix stage) · `docs/specs/F-CURR-002-category-expansion-and-mastery.md` §5.1 (Volume 2 is a second episode in the same cell), §6.2 (ids), §4.4 and `journey/mastery-ring.md` C (the New volume marker), §12.2 (`volumes` off)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). A second volume is more to enjoy in a place the learner knows, never a debt: nothing says "unfinished", nothing drops, and a finished stage stays Complete.
 Code: built by row CM-40 part 2: `content/episodes.ts` (`volumeEpisodes`, `withVolumes`, `episodesFor`), `logic/journey-cells.ts` (`CellModel.volumes`, the open rule), `logic/journey-grid.ts` (`openId`), `components/JourneyGrid.tsx` (`VolumeDots`), `logic/episode/volumes.ts` and `screens/episode/VolumeTabs.tsx` (the page's tabs, on `SectionTabs`). Base screens: `journey/grid.md` (the cell), `episode/detail.md` (the page), `layout/wide.md` C (two panes).
 Notation: `( Vol 1 )` a section tab, `o` an open volume dot, `*` a done volume dot.
@@ -26,7 +26,7 @@ Then: the cell shows one small dot per volume (filled once that volume is done),
 - **When drawn**: a lesson or book cell with two or more playable volumes, only while `volumes` is on (the screen passes the later volumes then). Never on a coming-later or stories-only cell.
 - **Where**: inside the glyph box, under the glyph: clear of every corner mark (the band holds the pin, the check and the count mark) and inside the In your plan / Not open yet ring, so no mark covers another. The cell keeps its size.
 - **Tap**: opens the first volume that is not complete, or Volume 1 when every one is (F-STORY-005 PR 5.8).
-- **Complete look**: `isCellComplete`, every visible volume done; the stage's completion reads each cell's Volume 1 (row CM-40 part 2), so a Volume 2 never holds a stage back.
+- **Complete look**: the cell's Volume 1 done (`CellModel.completed`, the same value `learnerCellMarks` tints by), and the label's ", complete" reads that one value too, so the colour and the spoken label never disagree. A cell that turned complete stays complete when a Volume 2 ships or `volumes` turns on (F-CURR-002 §7.7: nothing drops); a Volume 2's own state is its volume dot and the "Opens Volume 2" sentence. The stage's completion reads each cell's Volume 1 as well (row CM-40 part 2), so a Volume 2 never holds a stage back.
 - **Two panes**: the cell is selected while the right pane shows any of its volumes.
 - **Accessibility**: the dots are hidden from screen readers; the cell's label adds one sentence, "Opens Volume 2." (`a11y.journeyVolume`), after the mastery words.
 
