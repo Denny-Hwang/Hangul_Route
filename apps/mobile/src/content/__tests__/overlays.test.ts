@@ -21,7 +21,7 @@ import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
@@ -47,7 +47,8 @@ type Shipped = Record<string, ReadonlyMap<string, object>>;
 const SHIPPED: Shipped = {
   jamo: new Map(jamoAll.map((j) => [j.id, j])),
   card: new Map(heritageCardsAll.map((c) => [c.id, c])),
-  episode: new Map(episodesAll.map((e) => [e.id, e])),
+  // A cell's later volumes too (F-CURR-002 rows CM-40, CM-41 S2): their overlays name shipped episodes.
+  episode: new Map(episodesWithVolumes.map((e) => [e.id, e])),
   quest: new Map(questsAll.map((q) => [q.id, q])),
   minigame: new Map([...Object.entries(minigameScopes), ...Object.entries(ALL_LESSON_SCOPES)]),
   stage: new Map(stages.map((s) => [`stage:${s.key}`, s])),

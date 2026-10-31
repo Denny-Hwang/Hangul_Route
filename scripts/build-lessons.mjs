@@ -1005,11 +1005,15 @@ export function readCellsWithFixtures(root) {
   return at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
 }
 
-/** The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent. */
+/**
+ * The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent,
+ * and none once the cell ships a Volume 2 of its own (row CM-41 S2, `nature.v2.json`): the shipped Volume 2 is then the
+ * one the e2e plays, so the bundle never holds two cells of one id.
+ */
 export function fixtureCells(root) {
   const { stageNo, theme } = FIXTURE_VOLUME2;
   const full = join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.json`);
-  if (!existsSync(full)) return [];
+  if (!existsSync(full) || existsSync(join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.v2.json`))) return [];
   const files = OVERLAY_LOCALES.flatMap((locale) => {
     const overlay = join(root, cellOverlayFile(locale, stageNo, theme));
     return existsSync(overlay) ? [{ ...readJson(root, overlay), locale }] : [];
