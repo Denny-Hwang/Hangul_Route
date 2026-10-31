@@ -6,27 +6,34 @@
 // provenance, never shipped), drops `state: 'draft'` files, sorts by `id` and
 // writes, under apps/mobile/src/content/__generated__/:
 //
-//   stories-index.ts                     the story shelf (imported at start; part of the manifest)
+//   stories-index.ts                     the story loaders (imported at start; part of the manifest)
+//       STORY_SHELF_HASH                     the hash the shelf chunk carries
+//       loadStoryShelf                       the literal `import()` of the shelf chunk
+//       loadStoryBody                        one literal `import()` per body chunk
+//   stories-shelf.ts                     the story shelf chunk (row CM-8b: loaded before the first screen)
+//       CHUNK_HASH
 //       STORY_SHELF       StoryShelfEntry[]  each story without its body: ids, titles, theme, stage,
 //                                            minutes, review gate, shelf / card / reward blocks, Hoya
-//                                            lines, the levels of its tiers, its card's keyword, and
+//                                            lines, the levels of its tiers, its card's Korean word, and
 //                                            the hash of its chunk
 //       HELD_STORY_CARDS  HeldStoryCard[]    the card of each held story (a draft with a `card` and
 //                                            a `shelf` block), so an owned card stays visible (F-STORY-006 §3.8)
-//       loadStoryBody                        one literal `import()` per chunk
 //   story-chunks/story-<slug>.ts         one body chunk per story (on demand)
 //       CHUNK_HASH, STORY_BODY (the fields of STORY_BODY_FIELDS: tiers with their scenes and art,
-//       facts, keywords, summary, verification, ...)
+//       facts, keywords, summary, verification, the cover scene, the whole review block, ...)
 //
 // The shelf episodes and quests (F-STORY-001 §3.9 "derived, not hand-written") are derived from
 // the shelf in the app (`content/stories.ts`); `buildBundle` below is their reference and
 // apps/mobile/src/content/__tests__/story-chunks.test.ts keeps the two equal.
 //
-// Nothing imports a chunk statically: Metro splits every `import()` of the shelf into its own web
-// bundle (the PWA precaches it, the app loads it on demand) and keeps them all in the one native
+// Nothing in the web build imports a chunk statically: Metro splits every `import()` of the index into its
+// own web bundle (the PWA precaches it, the app loads it on demand) and keeps them all in the one native
 // bundle. The hash is the sha256 of the chunk's data (`chunkHash` of build-lessons.mjs, the same
 // hashing); apps/mobile/scripts/pwa-postbuild.mjs checks every chunk against the web bundle that
-// carries it (F-CURR-002 §10 decision record).
+// carries it (F-CURR-002 §10 decision record). Row CM-8b: the shelf itself is a chunk, so the start
+// bundle names only the shelf's hash and the shelf names each body chunk's; the web app loads the shelf
+// before it evaluates the app (apps/mobile/index.ts, `content/story-shelf.web.ts`), and the native app
+// and the tests import it statically (`content/story-shelf.ts`).
 //
 // The literals are typed by contextual typing, so `tsc --noEmit` proves the
 // data matches the schema; there is no runtime parse. The zod schema test is
@@ -66,6 +73,9 @@ export const GENERATED_HEADER =
 export const OUT_DIR = join("apps", "mobile", "src", "content", "__generated__");
 export const CHUNK_DIR = "story-chunks";
 export const INDEX_MODULE = "stories-index.ts";
+/** The shelf chunk's module and the name of its web bundle (row CM-8b). */
+export const SHELF_MODULE = "stories-shelf.ts";
+export const SHELF_CHUNK = "stories-shelf";
 /** The one-file bundle of F-STORY-001 (before CM-8); a run removes it and --check fails while it is there. */
 export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.generated.ts");
 
@@ -79,9 +89,12 @@ export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.g
  *   measurement (869,644 B raw / 220,524 B gzip for 24 stories) scaled to the raw line (507,155 B) and
  *   rounded up.
  * - `manifestRaw`: the start-loaded manifest, lessons-index.ts and stories-index.ts together
- *   (F-CURR-002 CM-5 / CM-8: 60,000 B, the line of build-lessons.mjs `BUDGET.manifestRaw`). Today this line, not
- *   `totalRaw`, sets how many stories fit (2,520 B left at CM-8, about two shelf entries); row CM-8b makes the room
- *   before CM-46a adds to the shelf (F-CURR-002 §10, CM-8 decision record).
+ *   (F-CURR-002 CM-5 / CM-8: 60,000 B, the line of build-lessons.mjs `BUDGET.manifestRaw`). At CM-8 this line, not
+ *   `totalRaw`, set how many stories fit (2,520 B left, about two shelf entries); row CM-8b moved the shelf into a
+ *   chunk of its own, so stories-index.ts holds only the loaders (about 95 B a story).
+ * - `shelfRaw`: the shelf chunk, stories-shelf.ts (row CM-8b), which the web app loads before its first screen: 45,000 B,
+ *   the plan's 35 stories at about 1,000 B a shelf entry (24 measure 23,964 B at CM-8b) leave it near 78%, as the
+ *   lesson headers chunk line of row CM-40 does.
  * pwa-postbuild.mjs holds the built story bundles to `perStoryRaw`, `totalRaw` and `totalGzip` too
  * (`PRECACHE_BUDGET` of apps/mobile/scripts/pwa/lesson-chunks.mjs, kept equal by its test).
  * - `artRaw`: the scene-art share (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
@@ -91,13 +104,16 @@ export const BUDGET = Object.freeze({
   totalRaw: 2_000_000,
   totalGzip: 510_000,
   manifestRaw: 60_000,
+  shelfRaw: 40_000,
   artRaw: 130_000,
 });
 
 /**
- * The fields of a story that leave the start bundle for its chunk; every other field is in the
- * shelf, and `review` is in both (the shelf keeps the gate only, `shelfReview`). The twin is
- * `STORY_BODY_FIELDS` in apps/mobile/src/logic/story/story-chunk-store.ts.
+ * The fields of a story that live in its body chunk; every other field is in the shelf, and
+ * `review` is in both (the shelf keeps the gate only, `shelfReview`). The twin is
+ * `STORY_BODY_FIELDS` in apps/mobile/src/logic/story/story-chunk-store.ts. Row CM-8b moved
+ * `coverSceneId` here (read only with the tiers it names) and the advisory note and the card's
+ * keyword with the review block and the keywords.
  */
 export const STORY_BODY_FIELDS = Object.freeze([
   "v",
@@ -113,6 +129,7 @@ export const STORY_BODY_FIELDS = Object.freeze([
   "authorNotes",
   "errata",
   "review",
+  "coverSceneId",
 ]);
 
 
@@ -299,7 +316,8 @@ export const SHELF_DEFAULTS = Object.freeze({ pillarTags: [], companionId: "hoya
 
 /**
  * The review gate as the shelf keeps it: the two sign-offs, and the advisory when there is one.
- * The whole block (with `reviewedBy` and `reviewedAt`) is in the body.
+ * The whole block (with `advisoryNoteEn`, `reviewedBy` and `reviewedAt`) is in the body: the note is
+ * read only by the reader, Sources and the presenter, which all wait for the chunk (row CM-8b).
  */
 export function shelfReview(review) {
   const advisory = Array.isArray(review?.advisory) ? review.advisory : [];
@@ -307,7 +325,6 @@ export function shelfReview(review) {
     language: review?.language,
     culture: review?.culture,
     ...(advisory.length > 0 ? { advisory } : {}),
-    ...(typeof review?.advisoryNoteEn === "string" ? { advisoryNoteEn: review.advisoryNoteEn } : {}),
   };
 }
 
@@ -326,8 +343,10 @@ export function splitStory(story) {
   }
   const tiers = Array.isArray(story.tiers) ? story.tiers : [];
   shelf.levels = tiers.map((t) => ({ level: t.level, scenes: Array.isArray(t.scenes) ? t.scenes.length : 0 }));
+  // The card's face (its Korean word and romanization) is drawn wherever the card is listed, before any chunk;
+  // the rest of the keyword (its id, gloss and kind) is in the body with the other keywords (row CM-8b).
   const cardKeyword = story.card ? (story.keywords ?? []).find((k) => k.id === story.card.keywordId) : undefined;
-  if (cardKeyword) shelf.cardKeyword = cardKeyword;
+  if (cardKeyword) shelf.cardWord = { ko: cardKeyword.ko, romanization: cardKeyword.romanization };
   return { shelf, body };
 }
 
@@ -348,12 +367,35 @@ export function planChunks(stories) {
   return { entries, chunks };
 }
 
-/** Pure: the chunk names and hashes the shelf names (pwa-postbuild.mjs checks the web bundles against them). */
-export function chunkManifest(stories) {
-  return planChunks(stories).chunks.map(({ name, hash }) => ({ name, hash }));
+/** Pure: the shelf chunk's literals and the hash of their data (row CM-8b), the `CHUNK_HASH` its module carries. */
+export function planShelf(entries, held = []) {
+  const shelf = literal(entries);
+  const cards = literal(held);
+  return { shelf, cards, hash: chunkHash(`${shelf}\n${cards}`) };
 }
 
-const loaderSource = (chunks) =>
+/** Pure: the fixture shelf chunk's data (an e2e build): the content shelf, the fixtures in their input form and the held cards. */
+function planFixtureShelf(entries, fixtures, held = []) {
+  const shelf = literal(entries);
+  const raw = literal(fixtures);
+  const cards = literal(held);
+  return { shelf, raw, cards, hash: chunkHash(`${shelf}\n${raw}\n${cards}`) };
+}
+
+/**
+ * Pure: the chunk names and hashes (pwa-postbuild.mjs checks the web bundles against them): one per story, named
+ * by the shelf chunk (`namedBy`: its hash is in the shelf, not in the start bundle), then the shelf chunk, whose hash
+ * the start bundle names. `fixtures` (the ready story fixtures of an e2e build) changes the shelf alone.
+ */
+export function chunkManifest(stories, { fixtures, held = [] } = {}) {
+  const shelfStories = fixtures === undefined ? stories : stories.map(offShelfStory);
+  const plan = planChunks(shelfStories);
+  const shelfHash =
+    fixtures === undefined ? planShelf(plan.entries, held).hash : planFixtureShelf(plan.entries, [...fixtures].sort(byId), held).hash;
+  return [...plan.chunks.map(({ name, hash }) => ({ name, hash, namedBy: SHELF_CHUNK })), { name: SHELF_CHUNK, hash: shelfHash }];
+}
+
+const bodyLoaderSource = (chunks) =>
   "/** The body chunk of a story of the shelf; undefined for any other id. One literal `import()` per chunk (Metro resolves only literals). */\n" +
   "export function loadStoryBody(storyId: string): Promise<StoryBodyChunk> | undefined {\n" +
   "  switch (storyId) {\n" +
@@ -363,13 +405,36 @@ const loaderSource = (chunks) =>
   "  }\n" +
   "}\n";
 
+const INDEX_DOC =
+  "/**\n" +
+  " * The story loaders of the start bundle (F-CURR-002 §10, rows CM-8 and CM-8b). The shelf (each story without its\n" +
+  " * body) is one content-hashed chunk, `stories-shelf.ts`, which the web app loads before its first screen\n" +
+  " * (`content/story-shelf.web.ts`); a story's tiers, scenes, art, facts and the other body fields are one chunk per\n" +
+  " * story. Each is reached only through a literal `import()` here: Metro emits each as its own web bundle (precached\n" +
+  " * by the service worker) and keeps them in the one native bundle.\n" +
+  " */\n";
+
 const SHELF_DOC =
   "/**\n" +
-  " * The start-loaded story shelf (F-CURR-002 §10, row CM-8): each story without its body. A story's tiers,\n" +
-  " * scenes, art, facts and the other body fields are one content-hashed chunk, reached only through the literal\n" +
-  " * `import()`s of `loadStoryBody`: Metro emits each as its own web bundle (precached by the service worker,\n" +
-  " * loaded on demand) and keeps them in the one native bundle.\n" +
+  " * The story shelf (F-CURR-002 §10, rows CM-8 and CM-8b): each story without its body. A chunk of its own, reached\n" +
+  " * only through `loadStoryShelf` in ./" + INDEX_MODULE + " on the web, which loads it before the app's first screen; the\n" +
+  " * native app and the tests import it statically (`content/story-shelf.ts`).\n" +
   " */\n";
+
+/** The start-loaded index: the shelf's hash and loader, and one body loader per story. */
+function indexModule(shelfHash, chunks) {
+  return (
+    GENERATED_HEADER +
+    "import type { StoryBodyChunk, StoryShelfChunk } from '../../logic/story/story-chunk-store';\n\n" +
+    INDEX_DOC +
+    `export const STORY_SHELF_HASH = ${q(shelfHash)};\n\n` +
+    "/** The story shelf chunk (row CM-8b). A literal `import()`, so the web build emits it as a bundle of its own. */\n" +
+    "export function loadStoryShelf(): Promise<StoryShelfChunk> {\n" +
+    `  return import('./${SHELF_MODULE.replace(/\.ts$/, "")}');\n` +
+    "}\n\n" +
+    bodyLoaderSource(chunks)
+  );
+}
 
 function chunkModules(chunks) {
   const modules = {};
@@ -387,15 +452,17 @@ function chunkModules(chunks) {
 /** Pure: the stories that ship and the held cards -> the module sources by path under OUT_DIR. */
 export function buildModules({ stories, held = [] }) {
   const plan = planChunks(stories);
+  const shelf = planShelf(plan.entries, held);
   return {
-    [INDEX_MODULE]:
+    [INDEX_MODULE]: indexModule(shelf.hash, plan.chunks),
+    [SHELF_MODULE]:
       GENERATED_HEADER +
       "import type { HeldStoryCard } from '@hangul-route/content-schema';\n" +
-      "import type { StoryBodyChunk, StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
+      "import type { StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
       SHELF_DOC +
-      `export const STORY_SHELF: StoryShelfEntry[] = ${literal(plan.entries)};\n\n` +
-      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${literal(held)};\n\n` +
-      loaderSource(plan.chunks),
+      `export const CHUNK_HASH = ${q(shelf.hash)};\n\n` +
+      `export const STORY_SHELF: StoryShelfEntry[] = ${shelf.shelf};\n\n` +
+      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${shelf.cards};\n`,
     ...chunkModules(plan.chunks),
   };
 }
@@ -403,30 +470,32 @@ export function buildModules({ stories, held = [] }) {
 /**
  * The e2e modules (--include-fixtures). Test fixtures are written in the input form (schema
  * defaults left out), so unlike content they are not typed literals: they go through the real
- * schema (`parseStory`, zod defaults) when the shelf loads, and their bodies stay inline (they
- * have no chunk). Content stories keep their typed shelf entries and their chunks.
+ * schema (`parseStory`, zod defaults) when the shelf chunk loads, and their bodies stay inline in it
+ * (they have no chunk). Content stories keep their typed shelf entries and their chunks.
  */
 export function buildFixtureModules({ stories, fixtures, held = [] }) {
   const plan = planChunks(stories);
   const sortedFixtures = [...fixtures].sort(byId);
+  const shelf = planFixtureShelf(plan.entries, sortedFixtures, held);
   return {
-    [INDEX_MODULE]:
+    [INDEX_MODULE]: indexModule(shelf.hash, plan.chunks),
+    [SHELF_MODULE]:
       GENERATED_HEADER +
       "// E2E FIXTURE MODULES (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
       "import { parseStory, type HeldStoryCard } from '@hangul-route/content-schema';\n" +
-      "import { splitStory, type StoryBody, type StoryBodyChunk, type StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
-      `const contentShelf: StoryShelfEntry[] = ${literal(plan.entries)};\n\n` +
-      `const fixtures = (${literal(sortedFixtures)} as unknown[]).map((raw) => splitStory(parseStory(raw), 'inline'));\n\n` +
+      "import { splitStory, type StoryBody, type StoryShelfEntry } from '../../logic/story/story-chunk-store';\n\n" +
+      `export const CHUNK_HASH = ${q(shelf.hash)};\n\n` +
+      `const contentShelf: StoryShelfEntry[] = ${shelf.shelf};\n\n` +
+      `const fixtures = (${shelf.raw} as unknown[]).map((raw) => splitStory(parseStory(raw), 'inline'));\n\n` +
       SHELF_DOC +
       "export const STORY_SHELF: StoryShelfEntry[] = [...contentShelf, ...fixtures.map((f) => f.entry)].sort((a, b) =>\n" +
       "  a.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n" +
       ");\n\n" +
-      "/** The fixtures' bodies: they ship in this module (an e2e build only), so they are ready at start. */\n" +
+      "/** The fixtures' bodies: they ship in this module (an e2e build only), so they are ready with the shelf. */\n" +
       "export const STORY_INLINE_BODIES: Readonly<Record<string, StoryBody>> = Object.fromEntries(fixtures.map((f) => [f.entry.id, f.body]));\n\n" +
-      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${literal(held)};\n\n` +
+      `export const HELD_STORY_CARDS: HeldStoryCard[] = ${shelf.cards};\n\n` +
       "/** Only an e2e build has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
-      `export const STORY_FIXTURE_IDS: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n\n` +
-      loaderSource(plan.chunks),
+      `export const STORY_FIXTURE_IDS: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`,
     ...chunkModules(plan.chunks),
   };
 }
@@ -468,8 +537,8 @@ const bytes = (text) => Buffer.byteLength(text, "utf8");
 const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
 
 /**
- * Pure: bytes of each story's chunk module, the shelf module, the manifest (the lesson manifest
- * `lessonIndex` and the shelf, both loaded at start), all story modules together (raw, and gzip of
+ * Pure: bytes of each story's chunk module, the shelf chunk module, the start-loaded index, the manifest (the lesson
+ * manifest `lessonIndex` and the story index, both loaded at start), all story modules together (raw, and gzip of
  * the concatenation, as build-lessons.mjs measures its total) and the scene art.
  */
 export function sizes(stories, modules, lessonIndex = "") {
@@ -477,24 +546,29 @@ export function sizes(stories, modules, lessonIndex = "") {
     .map((s) => s.id)
     .sort()
     .map((id) => ({ id, ...measure(`${CHUNK_DIR}/${storyChunkName(id)}.ts`, modules[`${CHUNK_DIR}/${storyChunkName(id)}.ts`] ?? "") }));
-  const shelf = measure(INDEX_MODULE, modules[INDEX_MODULE] ?? "");
+  const shelf = measure(SHELF_MODULE, modules[SHELF_MODULE] ?? "");
+  const index = measure(INDEX_MODULE, modules[INDEX_MODULE] ?? "");
   const all = Object.values(modules).join("");
   return {
     perStory,
     shelf,
-    manifest: { raw: bytes(lessonIndex) + shelf.raw, lessons: bytes(lessonIndex) },
+    index,
+    manifest: { raw: bytes(lessonIndex) + index.raw, lessons: bytes(lessonIndex) },
     total: { raw: bytes(all), gzip: gzipSync(all).length },
     art: artBytes(stories),
   };
 }
 
 /** Pure: size problems as human-readable strings (empty = within budget). */
-export function checkBudget({ perStory, manifest, total, art }) {
+export function checkBudget({ perStory, shelf, manifest, total, art }) {
   const problems = [];
   for (const s of perStory) {
     if (s.raw > BUDGET.perStoryRaw) {
       problems.push(`${s.id}'s chunk is ${s.raw} B raw, over the per-story ceiling of ${BUDGET.perStoryRaw} B`);
     }
+  }
+  if (shelf && shelf.raw > BUDGET.shelfRaw) {
+    problems.push(`the story shelf chunk (${SHELF_MODULE}) is ${shelf.raw} B raw, over its ceiling of ${BUDGET.shelfRaw} B`);
   }
   if (manifest && manifest.raw > BUDGET.manifestRaw) {
     problems.push(
@@ -609,9 +683,14 @@ function parseArgs(argv) {
   return { opts };
 }
 
-/** The chunk names and hashes of the stories content/stories ships (pwa-postbuild.mjs reads the build's manifest from here). */
-export function readChunkManifest(root) {
-  return chunkManifest(readStories(root).filter((s) => s.state === "ready"));
+/**
+ * The chunk names and hashes of the stories content/stories ships, and of their shelf (pwa-postbuild.mjs reads the
+ * build's manifest from here). `fixtures`: the e2e build of `--include-fixtures`, whose shelf adds the story fixtures.
+ */
+export function readChunkManifest(root, { fixtures = false } = {}) {
+  const all = readStories(root);
+  const stories = all.filter((s) => s.state === "ready");
+  return chunkManifest(stories, { held: heldStoryCards(all), ...(fixtures ? { fixtures: readFixtureStories(root) } : {}) });
 }
 
 /** Every story file of content/stories as a content tree (`content/stories/<slug>.json` -> the story): the review-item source of row CM-10. */
@@ -711,7 +790,8 @@ export function main(argv, root) {
     for (const s of report.perStory) {
       process.stdout.write(`  ${s.id}  chunk ${s.raw} B raw  ${s.gzip} B gzip\n`);
     }
-    process.stdout.write(`  ${INDEX_MODULE} (start)  ${report.shelf.raw} B raw  ${report.shelf.gzip} B gzip\n`);
+    process.stdout.write(`  ${SHELF_MODULE} (shelf chunk, before the first screen)  ${report.shelf.raw} B raw  ${report.shelf.gzip} B gzip (budget ${BUDGET.shelfRaw} B)\n`);
+    process.stdout.write(`  ${INDEX_MODULE} (start)  ${report.index.raw} B raw  ${report.index.gzip} B gzip\n`);
     process.stdout.write(
       `  manifest (start: lessons-index.ts ${report.manifest.lessons} B + ${INDEX_MODULE})  ${report.manifest.raw} B raw (budget ${BUDGET.manifestRaw} B)\n`
     );
@@ -760,7 +840,7 @@ export function main(argv, root) {
   );
   if (opts.includeFixtures) {
     process.stdout.write(
-      `::warning file=${outRel}/${INDEX_MODULE}::test fixture modules for an e2e build: do not commit them; run node scripts/build-stories.mjs to restore\n`
+      `::warning file=${outRel}/${SHELF_MODULE}::test fixture modules for an e2e build: do not commit them; run node scripts/build-stories.mjs to restore\n`
     );
   }
   return 0;

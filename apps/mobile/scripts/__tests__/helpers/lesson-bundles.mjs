@@ -1,7 +1,7 @@
 // Test support (F-CURR-002 §10): the lesson chunks (row CM-5), the story chunks (row CM-8) and the review-item chunk (row CM-10) of a stand-in
 // export, as Metro emits them. The start bundle names every hash of the repository's lesson and story
-// manifests and each chunk is its own `<name>-<md5>.js` bundle carrying its hash, so pwa-postbuild.mjs's
-// chunk check passes. The locale chunks, the grown-up roots and the learner screen chunks ([GU] GU-3) are bundles
+// manifests but the story bodies', which the story shelf chunk names (row CM-8b), and each chunk is its own
+// `<name>-<md5>.js` bundle carrying its hash, so pwa-postbuild.mjs's chunk check passes. The locale chunks, the grown-up roots and the learner screen chunks ([GU] GU-3) are bundles
 // of their own too, each carrying its marker. `skip` leaves one chunk out.
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ const reviewItems = await import(join(repo, 'scripts', 'build-review-items.mjs')
 /** The repository's lesson manifest (chunk names and hashes). */
 export const LESSON_MANIFEST = lessons.chunkManifest(lessons.readCells(repo));
 
-/** The repository's story manifest (chunk names and hashes, row CM-8). */
+/** The repository's story manifest (chunk names and hashes, rows CM-8 and CM-8b: the bodies, then the shelf). */
 export const STORY_MANIFEST = stories.readChunkManifest(repo);
 
 /** The repository's review-item chunk (its name and hash, row CM-10). */
@@ -24,10 +24,12 @@ export const REVIEW_ITEM_MANIFEST = await reviewItems.readChunkManifest(repo);
 /** The stand-in start bundle and lesson and story chunk bundles, by export path. */
 export function lessonBundles(skip) {
   const all = [...LESSON_MANIFEST, ...STORY_MANIFEST, ...REVIEW_ITEM_MANIFEST];
-  const files = { '_expo/static/js/web/index-abc.js': `console.info("learner bundle", ${JSON.stringify(all.map((m) => m.hash))});` };
+  const started = all.filter((m) => m.namedBy === undefined);
+  const files = { '_expo/static/js/web/index-abc.js': `console.info("learner bundle", ${JSON.stringify(started.map((m) => m.hash))});` };
   for (const { name, hash } of all) {
     if (name === skip) continue;
-    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}"});`;
+    const named = all.filter((m) => m.namedBy === name).map((m) => m.hash);
+    const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}"${named.length > 0 ? `;e.NAMES=${JSON.stringify(named)}` : ''}});`;
     files[`_expo/static/js/web/${name}-${md5(text)}.js`] = text;
   }
   for (const { name, marker } of [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS]) {

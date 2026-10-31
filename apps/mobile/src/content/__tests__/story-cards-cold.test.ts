@@ -1,6 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { HELD_STORY_CARDS, STORY_SHELF, loadStoryBody } from '../__generated__/stories-index';
+import { loadStoryBody } from '../__generated__/stories-index';
+import { HELD_STORY_CARDS, STORY_SHELF } from '../__generated__/stories-shelf';
 import { buildStoryCards } from '../../logic/awards/story-cards';
 import { createStoryStore, storiesOverStore, type StoryBodyChunk } from '../../logic/story/story-chunk-store';
 import { liveStoryCard, storyCards, storySets, heldStoryCardIds, heldSetCardIds } from '../story-cards';
@@ -11,8 +12,8 @@ import { storySetDefs } from '../story-sets';
  * still cold: keywords hold only the card's keyword, facts are empty and the summary is blank. The global
  * test setup preloads every chunk, so the app's `storyCards` here were built warm. This builds them again
  * from a store whose chunks have not arrived and checks that a cold build lists, groups and awards the
- * same cards with the same faces, and that a live card's back moves from the placeholder to the loaded
- * values once its story's chunk is in.
+ * same cards with the same faces (the card's Korean word is in the shelf, row CM-8b), and that a live card's
+ * back moves from the placeholder to the loaded values once its story's chunk is in.
  */
 const FACE = ['id', 'titleEn', 'subtitleKo', 'romanization', 'theme', 'stage', 'rarity', 'unlockedBy', 'storyId'] as const;
 const face = (card: HeritageCard): Partial<HeritageCard> => Object.fromEntries(FACE.map((k) => [k, card[k]]));

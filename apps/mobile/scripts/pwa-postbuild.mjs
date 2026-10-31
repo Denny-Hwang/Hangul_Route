@@ -272,9 +272,12 @@ if (existsSync(jsDir)) {
 }
 
 // The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
-// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline fixtures, never chunks).
-const lessonManifest = lessonBuild.chunkManifest(lessonBuild.readCells(repo));
-const storyManifest = storyBuild.readChunkManifest(repo);
+// build-lessons.mjs and build-stories.mjs read it (with --lesson-fixtures, the fixture Volume 2 cell of
+// `build-lessons.mjs --include-fixtures`, F-CURR-002 row CM-40; with --story-fixtures, the story shelf of
+// `build-stories.mjs --include-fixtures`, which adds the inline story fixtures to the shelf chunk, never a body chunk,
+// row CM-8b). The story bodies are named by the shelf chunk, and the shelf by the start bundle.
+const lessonManifest = lessonBuild.chunkManifest(args.includes('--lesson-fixtures') ? lessonBuild.readCellsWithFixtures(repo) : lessonBuild.readCells(repo));
+const storyManifest = storyBuild.readChunkManifest(repo, { fixtures: args.includes('--story-fixtures') });
 // The review-item index (F-CURR-002 §4.2, row CM-10): one chunk, under the same checks.
 const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);
 const bundles = existsSync(jsDir)
@@ -303,6 +306,7 @@ if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, loc
 const report = precacheReport({
   manifest: lessonManifest,
   stories: storyManifest,
+  storyShelf: storyManifest.filter((m) => m.name === storyBuild.SHELF_CHUNK),
   locales: LOCALE_CHUNKS,
   roots: ROOT_CHUNKS,
   reviewItems: reviewItemManifest,

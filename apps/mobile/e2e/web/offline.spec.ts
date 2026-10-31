@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { GROWN_UP_PREFIXES, isGrownUpPath } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
-import { STORY_SHELF } from '../../src/content/__generated__/stories-index';
+import { STORY_SHELF } from '../../src/content/__generated__/stories-shelf';
 import { expect, test } from './fixtures';
 import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, seedStored } from './helpers';
 import { nameIn } from './locale-matrix';
@@ -187,9 +187,13 @@ async function loadedLessonChunks(page: Page): Promise<string[]> {
   );
 }
 
-const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+-[0-9a-f]{32}\.js$/;
+// A cell's Volume 2 has a body chunk of its own (F-CURR-002 row CM-40): lessons-cell-stage<n>-<theme>-v2.
+const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+(?:-v2)?-[0-9a-f]{32}\.js$/;
 const TITLE_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-titles-(es|ko)-[0-9a-f]{32}\.js$/;
+// The display lines (row CM-40): one headers chunk per locale, English included, loaded before the first screen.
+const HEADERS_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-headers-(en|es|ko)-[0-9a-f]{32}\.js$/;
 const LETTERS_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-letters-[0-9a-f]{32}\.js$/;
+const STAGE2_LETTERS_SUBTITLE = 'The rest of Hangul, and the words it opens.';
 
 /** Journey > Stage 2 Letters & Books > Start, up to the first quest's Discover step (ㅐ and its example 개, from the chunk). */
 async function playStage2LettersDiscover(page: Page): Promise<void> {
@@ -199,6 +203,8 @@ async function playStage2LettersDiscover(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(2, 'Letters & Books'), exact: true }).click();
   await expect(page.getByText('Word Builder').first()).toBeVisible();
+  // The cell's subtitle is a display line of the English headers chunk (F-CURR-002 row CM-40), there offline.
+  await expect(page.getByText(STAGE2_LETTERS_SUBTITLE).first()).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -230,6 +236,7 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   const cached = await cachedPaths(page);
   expect(cached.filter((p) => CELL_BUNDLE.test(p))).toHaveLength(LESSON_EPISODES.length);
   expect(cached.filter((p) => TITLE_BUNDLE.test(p))).toHaveLength(2);
+  expect(cached.filter((p) => HEADERS_BUNDLE.test(p))).toHaveLength(3);
 
   // The worker serves the shell; with the network gone, the learner home opens, then every cell's chunk loads from the precache.
   await page.reload();
@@ -240,8 +247,11 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   await expect(page.getByText('Hi, Suni!')).toBeVisible();
   await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => CELL_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(LESSON_EPISODES.length);
   expect((await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([]);
+  // The English learner's first screen waited for the English headers alone (row CM-40).
+  expect((await loadedLessonChunks(page)).filter((p) => HEADERS_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-headers-en-[0-9a-f]{32}\.js$/)]);
 
-  // Journey > Stage 2 Letters & Books: the cell page reads the manifest, and its first quest plays offline from its chunk.
+  // Journey > Stage 2 Letters & Books: the cell page reads the manifest and its subtitle from the English headers chunk,
+  // and its first quest plays offline from its chunk.
   await playStage2LettersDiscover(page);
   expect((await loadedLessonChunks(page)).filter((p) => LETTERS_BUNDLE.test(p))).toHaveLength(1);
   expect(errors).toEqual([]);
@@ -260,6 +270,10 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-titles-es-[0-9a-f]{32}\.js$/)]);
+    // The Spanish display lines and their English base (row CM-40), never the Korean ones.
+    await expect
+      .poll(async () => (await loadedLessonChunks(page)).filter((p) => HEADERS_BUNDLE.test(p)).sort())
+      .toEqual([expect.stringMatching(/\/lessons-headers-en-[0-9a-f]{32}\.js$/), expect.stringMatching(/\/lessons-headers-es-[0-9a-f]{32}\.js$/)]);
     expect(errors).toEqual([]);
   });
 
@@ -468,9 +482,11 @@ async function loadedStoryChunks(page: Page): Promise<string[]> {
 }
 
 const STORY_BUNDLE = /^\/_expo\/static\/js\/web\/story-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
+/** The story shelf chunk (row CM-8b), which the app loads before its first screen. */
+const SHELF_BUNDLE = /^\/_expo\/static\/js\/web\/stories-shelf-[0-9a-f]{32}\.js$/;
 const TALE = 'story:sun-and-moon';
 const TALE_BUNDLE = /^\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/;
-/** The shelf (start bundle) knows the tale's levels and scene counts before its chunk loads. */
+/** The shelf knows the tale's levels and scene counts before its chunk loads. */
 const TALE_SCENES = STORY_SHELF.find((e) => e.id === TALE)?.levels.find((t) => t.level === 'listen')?.scenes ?? 0;
 
 /** One online visit, then the network goes: the learner home opens from the precache. */
@@ -483,6 +499,7 @@ async function onboardThenOffline(page: Page, context: import('@playwright/test'
   await controlledBySw(page);
   const cached = await cachedPaths(page);
   expect(cached.filter((p) => STORY_BUNDLE.test(p))).toHaveLength(STORY_SHELF.length);
+  expect(cached.filter((p) => SHELF_BUNDLE.test(p))).toHaveLength(1);
   await page.reload();
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -546,11 +563,14 @@ test('in Spanish, offline: the story overlays apply to a story read from its chu
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'es');
   await expect(page.getByText('¡Hola, Suni!')).toBeVisible();
+  // Row CM-8b: the story shelf is a chunk of its own, loaded once, offline, from the precache before the first screen.
+  const shelfLoads = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+  expect(shelfLoads.filter((p) => /\/_expo\/static\/js\/web\/stories-shelf-[0-9a-f]{32}\.js$/.test(p))).toHaveLength(1);
   await closeInstallGuide(page, 'Ahora no');
   await page.getByText('Colección', { exact: true }).last().click();
   await page.getByRole('tab', { name: 'Cuentos', exact: true }).click();
   const tile = page.getByTestId(`story-tile-${TALE}`).filter({ visible: true });
-  // The title overlay is in the start bundle; the shelf draws it before any chunk.
+  // The title overlay is in the Spanish locale chunk; the shelf draws it before the tale's chunk.
   await expect(tile).toContainText('El sol y la luna (cuento tradicional)');
   await tile.click();
   await page.getByTestId(`story-episode-start-${TALE}`).filter({ visible: true }).click();
@@ -608,6 +628,29 @@ test.describe('story chunks without a service worker (F-CURR-002 CM-8 recovery)'
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(position(page)).toHaveText(`1 / ${TALE_SCENES}`);
+    expect(served).toBe(2);
+  });
+
+  /**
+   * Row CM-8b: the story shelf is a chunk the app loads before its first screen. A shelf URL that answers with the
+   * app's HTML page (a deploy landed) reloads the page once, onto the new build, and the app then opens.
+   */
+  test('a story shelf of a newer build reloads once and the app then opens (F-CURR-002 CM-8b)', async ({ page }) => {
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    await page.getByRole('button', { name: "Let's start" }).click();
+    await completeChildForm(page, { name: 'Suni' });
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    let served = 0;
+    await page.route(/\/_expo\/static\/js\/web\/stories-shelf-[0-9a-f]{32}\.js$/, async (route) => {
+      served += 1;
+      if (served === 1) await route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><html><body><div id="root"></div></body></html>' });
+      else await route.continue();
+    });
+    const reloaded = page.waitForEvent('load');
+    await page.goto('/');
+    await reloaded;
+    await expect(page.getByText('Hi, Suni!')).toBeVisible();
     expect(served).toBe(2);
   });
 });
