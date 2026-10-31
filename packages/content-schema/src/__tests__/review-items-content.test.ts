@@ -141,6 +141,25 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
     }
   });
 
+  it('leaves every item of Volume 1 as it is when a later volume ships (row CM-41): its cells add the volume, nothing else moves', () => {
+    const laterVolume = /\/[a-z]+\.v\d+\.json$/;
+    const later = [...tree.keys()].filter((rel) => laterVolume.test(rel));
+    expect(later.length).toBeGreaterThan(0);
+    const volumeOne = new Map([...tree].filter(([rel]) => !laterVolume.test(rel)));
+    const before = reviewItemsOf({ stage1, lessons: lessonSourcesOfTree(volumeOne), stories, ...vocabOfTree(volumeOne), snapshot });
+    const now = new Map(built.items.map((i) => [i.id, i]));
+    // What a shipped item is to a learner who never opens Volume 2: its teaching cell, its stage and
+    // memory shard (home, stage), its volume, its text and gloss, its picture and reply.
+    const shipped = (i: ReviewItem): unknown => [i.kind, i.ko, i.romanization, i.en, i.glossKey, i.home, i.stage, i.volume, i.cells[0], i.picture, i.reply];
+    for (const item of before.items) {
+      const after = now.get(item.id);
+      expect(after, item.id).toBeDefined();
+      expect(shipped(after as ReviewItem), item.id).toEqual(shipped(item));
+      // A Volume 1 cell keeps every item it taught (its Cell Check, Test out and mastery pools).
+      expect(item.cells.every((cell) => (after as ReviewItem).cells.includes(cell)), item.id).toBe(true);
+    }
+  });
+
   it('keeps topic words as one item under their vocab: id, with the topic gloss', () => {
     const { topicWords } = vocabOfTree(tree);
     const topic = new Map(topicWords.map((w) => [w.id, w]));
