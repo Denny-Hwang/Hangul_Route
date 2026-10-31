@@ -1,4 +1,4 @@
-import type { Space } from '@hangul-route/content-schema';
+import { CATALOG, laterVolumeQuestIds, type Space } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { D1Db, noteRateKey, type Db, type StoredNote } from '../db';
 import type { D1Like, D1PreparedLike } from '../db/d1';
@@ -196,6 +196,10 @@ describe('POST /api/spaces/:id/notes', () => {
       [CLASS, { presetId: 'next_try_this', suggest: { kind: 'quest', id: 'quest:nope' } }, 'bad_suggest'],
       [CLASS, { presetId: 'progress_reading', suggest: { kind: 'quest', id: 'quest:nope' } }, 'bad_suggest'],
     ];
+    // A cell's later volume is a catalogue quest no device opens from a note (F-CURR-002 row CM-40, review of #922).
+    const later = [...laterVolumeQuestIds(CATALOG)];
+    expect(later.length).toBeGreaterThan(0);
+    for (const id of later) cases.push([CLASS, { presetId: 'next_try_this', suggest: { kind: 'quest', id } }, 'bad_suggest']);
     for (const [spaceId, over, code] of cases) {
       const res = await send(spaceId, spaceId === CLASS ? 'teacher' : 'mom', basic(over));
       expect(res.status, JSON.stringify(over)).toBe(422);

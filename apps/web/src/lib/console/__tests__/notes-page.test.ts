@@ -1,4 +1,4 @@
-import { CATALOG, type SpaceRole } from '@hangul-route/content-schema';
+import { CATALOG, laterVolumeQuestIds, type SpaceRole } from '@hangul-route/content-schema';
 import type { SpaceListItem } from '../api';
 import { describe, expect, it } from 'vitest';
 import {
@@ -100,13 +100,22 @@ describe('questPrefill', () => {
     expect(questPrefill('quest:not-in-the-catalogue')).toBeNull();
     expect(questPrefill(null)).toBeNull();
   });
+
+  it('drops a later volume quest: no device opens one from a note (F-CURR-002 row CM-40, review of #922)', () => {
+    const later = [...laterVolumeQuestIds(CATALOG)];
+    expect(later.length).toBeGreaterThan(0);
+    for (const id of later) expect(questPrefill(id), id).toBeNull();
+  });
 });
 
 describe('questOptions', () => {
-  it('lists every catalogue quest once, grouped by stage in catalogue order, with the stage title', () => {
+  it('lists every catalogue quest once but a later volume\'s, grouped by stage in catalogue order, with the stage title', () => {
     const groups = questOptions((stage) => `T-${stage}`);
     const ids = groups.flatMap((g) => g.quests.map((q) => q.id));
-    expect(ids).toHaveLength(CATALOG.quests.length);
+    const later = laterVolumeQuestIds(CATALOG);
+    expect(later.size).toBeGreaterThan(0);
+    expect([...ids].sort()).toEqual(CATALOG.quests.map((q) => q.id).filter((id) => !later.has(id)).sort());
+    expect(ids.some((id) => /-v[2-9]-q\d+$/.test(id))).toBe(false);
     expect(new Set(ids).size).toBe(ids.length);
     expect(groups[0]?.title).toBe(`T-${groups[0]?.stage}`);
     for (const g of groups) for (const q of g.quests) expect(CATALOG.quests.find((c) => c.id === q.id)?.stage).toBe(g.stage);
