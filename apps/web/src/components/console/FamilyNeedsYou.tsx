@@ -66,6 +66,7 @@ export function FamilyNeedsYou({
   onApproveRelink,
   onDialog,
   result: popupResult = null,
+  onReviewing,
 }: {
   familyId: string;
   familyName: string;
@@ -88,6 +89,11 @@ export function FamilyNeedsYou({
   onDialog?: (open: boolean) => void;
   /** The pop-up's answer, said here (a new `key` says it again). */
   result?: { key: number; text: string } | null;
+  /**
+   * While the consent sheet is open (true) and after it closes (false): the page holds this family's background reads,
+   * as the family moves page does, so a poll never remounts the sheet (the picked language) or closes it with no word.
+   */
+  onReviewing?: (open: boolean) => void;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -102,6 +108,33 @@ export function FamilyNeedsYou({
   const [reviewing, setReviewing] = useState<Reviewing | null>(null);
   const [sheetFailed, setSheetFailed] = useState(false);
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Read and OK from the See all sheet: the card is focused once the sheet has closed and given focus back to its opener.
+  const [scopeAfterClose, setScopeAfterClose] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const sheetListRef = useRef<HTMLDivElement | null>(null);
+  const wasOpen = useRef(false);
+  const open = reviewing !== null;
+  // The page passes fresh callbacks on every render; the effects below read the latest without running again for it.
+  const callbacks = useRef({ onReviewing, onReadScope });
+  callbacks.current = { onReviewing, onReadScope };
+
+  useEffect(() => {
+    callbacks.current.onReviewing?.(open);
+  }, [open]);
+  useEffect(() => () => callbacks.current.onReviewing?.(false), []);
+
+  useEffect(() => {
+    const closed = wasOpen.current && !allOpen;
+    wasOpen.current = allOpen;
+    if (!closed) return;
+    if (scopeAfterClose) {
+      callbacks.current.onReadScope(scopeAfterClose);
+      setScopeAfterClose(null);
+      return;
+    }
+    // The See all row (the sheet's opener) left while the sheet was open: focus goes to the strip's heading, not the page.
+    if (typeof document !== 'undefined' && (document.activeElement === null || document.activeElement === document.body)) headingRef.current?.focus?.({ preventScroll: true });
+  }, [allOpen, scopeAfterClose]);
 
   useEffect(
     () => () => {
@@ -162,6 +195,16 @@ export function FamilyNeedsYou({
   };
 
   const reviewed = reviewing ? views.find((v) => v.id === reviewing.id) ?? null : null;
+
+  // A row answered inside the See all sheet leaves with its focused button: focus stays in the sheet, on the next row's
+  // first button, or on the list when none is left.
+  useEffect(() => {
+    const list = sheetListRef.current;
+    if (!allOpen || !list || typeof document === 'undefined') return;
+    if (document.activeElement !== null && document.activeElement !== document.body) return;
+    const next = list.querySelector<HTMLElement>('button:not([disabled])');
+    (next ?? list).focus?.({ preventScroll: true });
+  }, [items, allOpen]);
 
   const approveMove = async (view: TransferLearnerSideView, sheetLocale: UiLocale, introduce: boolean): Promise<void> => {
     if (busy) return;
@@ -267,8 +310,10 @@ export function FamilyNeedsYou({
               primary
               describedBy={describedBy}
               onClick={() => {
-                setAllOpen(false);
-                onReadScope(item.learnerId);
+                if (where === 'sheet') {
+                  setScopeAfterClose(item.learnerId);
+                  setAllOpen(false);
+                } else onReadScope(item.learnerId);
               }}
               testId="needs-you-read"
             >
@@ -287,12 +332,12 @@ export function FamilyNeedsYou({
     <>
       <style>{STRIP_CSS}</style>
       {/* Mounted always, so a result is still said when its row (or the whole strip) has gone. */}
-      <div role="status" aria-live="polite" data-testid="needs-you-result" style={note ? { padding: `0 ${spacing.xs}px` } : undefined}>
-        {note ? <p style={resultStyle}>{note}</p> : null}
+      <div role="status" aria-live="polite" data-testid="needs-you-result" style={note && !allOpen ? { padding: `0 ${spacing.xs}px` } : undefined}>
+        {note && !allOpen ? <p style={resultStyle}>{note}</p> : null}
       </div>
       {items.length > 0 || stale ? (
         <section role="region" aria-labelledby={headingId} data-testid="needs-you" style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-          <h3 id={headingId} style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
+          <h3 id={headingId} ref={headingRef} tabIndex={-1} style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {w.title}
           </h3>
           {stale ? <ReloadNotice /> : null}
@@ -315,7 +360,11 @@ export function FamilyNeedsYou({
       ) : null}
       {allOpen ? (
         <TransferSheet title={w.title} onClose={() => setAllOpen(false)} testId="needs-you-sheet">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+          {/* The result of an answer given here is said and shown inside the sheet, not behind its scrim. */}
+          <div role="status" aria-live="polite" data-testid="needs-you-sheet-result">
+            {note ? <p style={{ ...resultStyle, marginBlockEnd: spacing.sm }}>{note}</p> : null}
+          </div>
+          <div ref={sheetListRef} tabIndex={-1} style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
             {items.length > 0 ? items.map((item, index) => row(item, 'sheet', index)) : <p style={{ margin: 0, color: colors.text.secondary }}>{t.empty}</p>}
           </div>
         </TransferSheet>

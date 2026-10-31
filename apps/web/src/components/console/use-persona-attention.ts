@@ -1,7 +1,7 @@
 'use client';
 
 import type { AdultPersona, ClassAttention } from '@hangul-route/content-schema';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
@@ -22,6 +22,10 @@ import { ATTENTION_GAP_MS, ATTENTION_POLL_MS, adminSchoolIds, attentionDeployed,
  * The parent persona (GX-5, sections 5.4 and 7.4): the same spaces list and 30 s read for the families' `attention`, and
  * each live family's `classScope` once on mount and again on focus or when the tab comes back into view (never on the
  * 30 s timer): the Home tab's number and the parent re-link bar. No school read.
+ *
+ * The class page (`poll: false`) runs no 30 s timer, but the frame still reads again on focus and when the tab comes
+ * back into view, and whenever the page's own counts change (`refreshKey`, after a decision or a new request found by
+ * its 20 s read), so the Classes tab's number never stays at a count the page has already answered.
  */
 
 export type AttentionApi = Pick<ConsoleApi, 'listSpaces' | 'schoolAttention' | 'school' | 'classScope'>;
@@ -33,26 +37,44 @@ export interface PersonaAttentionOptions {
   persona?: AdultPersona;
   /** Read again every 30 s while in view; off on the class page, which reads its own every 20 s (section 5.4). */
   poll: boolean;
+  /**
+   * The page's own counts, as a key (the class page). The first value is taken as is; each later change reads the
+   * counts again once, so the frame's number follows a decision made on the page.
+   */
+  refreshKey?: string;
 }
 
 /** One read that never throws: a failed or missing call answers null. */
 const quietly = <T,>(read: () => Promise<T>): Promise<T | null> => Promise.resolve().then(read).catch(() => null);
 
-/** A school's class names, read once per tab per school (memory only). */
-const schoolNames = new Map<string, Promise<Record<string, string>>>();
+/**
+ * A school's class names, per tab per school (memory only): read once, and again only for a waiting class the last read
+ * was not asked about (a class made after it). A failed read is not kept, so the next poll asks again.
+ */
+interface SchoolNamesRead {
+  read: Promise<Record<string, string>>;
+  asked: ReadonlySet<string>;
+}
+const schoolNames = new Map<string, SchoolNamesRead>();
 
 /** Test hook (and sign-out): forget the per-tab school name reads. */
 export function resetAttentionMemory(): void {
   schoolNames.clear();
 }
 
-function readSchoolNames(api: AttentionApi, schoolId: string): Promise<Record<string, string>> {
-  let pending = schoolNames.get(schoolId);
-  if (!pending) {
-    pending = quietly(() => api.school(schoolId)).then((result) => (result?.ok ? Object.fromEntries(result.data.classes.map((row) => [row.space.id, row.space.name])) : {}));
-    schoolNames.set(schoolId, pending);
-  }
-  return pending;
+function readSchoolNames(api: AttentionApi, schoolId: string, need: readonly string[]): Promise<Record<string, string>> {
+  const known = schoolNames.get(schoolId);
+  if (known && need.every((id) => known.asked.has(id))) return known.read;
+  const entry: SchoolNamesRead = {
+    asked: new Set([...(known?.asked ?? []), ...need]),
+    read: quietly(() => api.school(schoolId)).then((result) => {
+      if (result?.ok) return Object.fromEntries(result.data.classes.map((row) => [row.space.id, row.space.name]));
+      if (schoolNames.get(schoolId) === entry) schoolNames.delete(schoolId);
+      return {};
+    }),
+  };
+  schoolNames.set(schoolId, entry);
+  return entry.read;
 }
 
 export function usePersonaAttention(api: AttentionApi | null, list: readonly SpaceListItem[] | null, options: PersonaAttentionOptions): PersonaAttention | null {
@@ -79,10 +101,18 @@ export function usePersonaAttention(api: AttentionApi | null, list: readonly Spa
       : '';
 
   const again = (): void => setTick((n) => n + 1);
-  useVisibleRefresh(again, deployed && options.poll, { pollMs: ATTENTION_POLL_MS, gapMs: ATTENTION_GAP_MS });
+  // The class page keeps the focus and in-view reads (section 5.4) without the 30 s timer.
+  useVisibleRefresh(again, deployed, options.poll ? { pollMs: ATTENTION_POLL_MS, gapMs: ATTENTION_GAP_MS } : { gapMs: ATTENTION_GAP_MS });
   useRosterChanges(again, deployed);
   // GX-5: the class-scope part on focus and when the tab comes back into view only (section 7.4).
   useVisibleRefresh(() => setScopeTick((n) => n + 1), familyKey !== '' && options.poll);
+  // The page's own counts moved (a decision on the class page, a request its 20 s read found): read the counts once.
+  const pageKey = useRef(options.refreshKey);
+  useEffect(() => {
+    const before = pageKey.current;
+    pageKey.current = options.refreshKey;
+    if (before !== undefined && options.refreshKey !== undefined && before !== options.refreshKey && deployed) again();
+  }, [options.refreshKey, deployed]);
 
   useEffect(() => {
     if (tick === 0 || !api || !deployed) return undefined;
@@ -135,23 +165,30 @@ export function usePersonaAttention(api: AttentionApi | null, list: readonly Spa
     [live, current, schools, scope, shown, parent],
   );
 
-  // A school class that waits and that the list cannot name (the admin is not a member): its school's names, once.
+  // A school class that waits and that the list cannot name (the admin is not a member): its school's names, read once
+  // (`readSchoolNames`); a poll asks again only after a failed read or for a class that read was not asked about.
   const unnamed = view
     ? Object.entries(view.schools)
-        .filter(([, ids]) => ids.some((id) => (view.bySpace[id]?.all ?? 0) > 0 && view.names[id] === undefined && names[id] === undefined))
-        .map(([schoolId]) => schoolId)
+        .map(([schoolId, ids]) => [schoolId, ids.filter((id) => (view.bySpace[id]?.all ?? 0) > 0 && view.names[id] === undefined && names[id] === undefined)] as const)
+        .filter(([, ids]) => ids.length > 0)
+        .map(([schoolId, ids]) => `${schoolId}\t${ids.join(',')}`)
         .join('\n')
     : '';
   useEffect(() => {
     if (!api || unnamed === '') return undefined;
     let alive = true;
-    void Promise.all(unnamed.split('\n').map((id) => readSchoolNames(api, id))).then((found) => {
-      if (alive) setNames((prev) => Object.assign({}, prev, ...found) as Record<string, string>);
+    const reads = unnamed.split('\n').map((row) => {
+      const [schoolId = '', ids = ''] = row.split('\t');
+      return readSchoolNames(api, schoolId, ids.split(','));
+    });
+    void Promise.all(reads).then((found) => {
+      const fresh = Object.assign({}, ...found) as Record<string, string>;
+      if (alive && Object.keys(fresh).length > 0) setNames((prev) => (Object.entries(fresh).every(([id, name]) => prev[id] === name) ? prev : { ...prev, ...fresh }));
     });
     return () => {
       alive = false;
     };
-  }, [api, unnamed]);
+  }, [api, unnamed, tick]);
 
   return useMemo(() => (view ? { ...view, names: { ...names, ...view.names } } : null), [view, names]);
 }

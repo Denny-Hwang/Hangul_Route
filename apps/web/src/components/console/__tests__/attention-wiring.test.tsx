@@ -49,7 +49,7 @@ const spaceOf = (kind: 'class' | 'family') => ({
   name: kind === 'class' ? 'Sunflower' : 'Kim family',
   parentSpaceId: null,
   settings: { consentMode: 'parent', anonymizeRoster: false },
-  archivedAt: null,
+  archivedAt: state.archivedAt,
   createdAt: '2026-09-01T00:00:00.000Z',
 });
 const member = (id: string, name: string, over: Record<string, unknown> = {}) => ({
@@ -91,6 +91,8 @@ const familyMove = {
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
   to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
   learnerState: 'pending',
+  // The family answers for this learner (GX-4 review: only a caregiver-route move waits for the family).
+  learnerRoute: 'caregiver',
   sourceState: 'yes',
   destinationState: 'waiting',
   blockReason: null,
@@ -106,6 +108,7 @@ const state = {
   transfers: [] as unknown[],
   incoming: [] as unknown[],
   decide: ok({}) as Result,
+  archivedAt: null as string | null,
 };
 const calls: Array<{ name: string; args: unknown[] }> = [];
 
@@ -182,6 +185,7 @@ beforeEach(() => {
   state.transfers = [incomingTransfer];
   state.incoming = [teacherMoveIn];
   state.decide = ok({});
+  state.archivedAt = null;
   nav.query = 'id=space%3Asunflower';
   lang.locale = 'en';
   for (const k of Object.keys(session)) delete session[k];
@@ -243,11 +247,11 @@ describe('the attention banner and the review sheet (sections 5.1, 5.2)', () => 
     await render();
     const banner = byTestId('attention-banner')[0] as ReactTestInstance;
     expect(textOf(banner.find((n) => n.props.role === 'status'))).toBe('3 requests need your OK1 new device · 2 class moves');
-    // Under the title, above everything else of the page.
+    // Under the title, above everything else of the page (the asks to join come next, before the class code: GX-1).
     const order = root()
       .findAll((n) => typeof n.type === 'string' && ['space-head', 'attention-banner', 'join-code', 'asking-to-join'].includes(String(n.props['data-testid'])))
       .map((n) => n.props['data-testid']);
-    expect(order).toEqual(['space-head', 'attention-banner', 'join-code', 'asking-to-join']);
+    expect(order).toEqual(['space-head', 'attention-banner', 'asking-to-join', 'join-code']);
   });
 
   it('Review now opens the sheet with the device, both learners asking to join and Accept first; nothing waiting: no banner', async () => {
@@ -365,6 +369,20 @@ describe('the re-link pop-up (section 5.3)', () => {
     });
     expect(popupOpen()).toBeUndefined();
     expect(byTestId('sheet-device-row')).toHaveLength(1);
+  });
+
+  it('an archived class answers nothing here: no pop-up (the sheet and the cards are read-only too)', async () => {
+    state.archivedAt = '2026-10-30T00:00:00.000Z';
+    await render();
+    expect(popupOpen()).toBeUndefined();
+  });
+
+  it('opening the sheet reads the classes once when the roster did not (Agree for both classes in the sheet)', async () => {
+    await render();
+    const before = count('listSpaces');
+    await press(popupOpen()?.find((n) => n.props['data-testid'] === 'relink-popup-later' && n.type === 'button') as ReactTestInstance);
+    await press(byTestId('attention-review-now')[0] as ReactTestInstance);
+    expect(count('listSpaces')).toBe(before === 0 ? 1 : before);
   });
 
   it('the family roster gets the banner and the sheet, never the pop-up (it gets the re-link bar of GX-5)', async () => {

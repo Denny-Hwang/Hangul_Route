@@ -3,7 +3,7 @@ import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { LOCALES, type UiLocale } from '@hangul-route/i18n';
 import { act, create, type ReactTestInstance } from 'react-test-renderer';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { StatusChip, useDecided, DECIDED_HOLD_MS } from '@/components/console/LearnerStatusParts';
+import { StatusChip, relinkSettled, revealAnswers, useDecided, DECIDED_HOLD_MS } from '@/components/console/LearnerStatusParts';
 import { statusWords, type LearnerStatus, type LearnerStatusKind } from '@/lib/console/learner-status';
 
 /** AMENDMENTS-GROWNUP-UX GX-1 section 4: the chip has text in every locale; amber only on the action states; never red. */
@@ -59,12 +59,39 @@ describe('StatusChip', () => {
     expect(button.props['aria-label']).toBe('Needs your OK: New device · 8 min left');
     act(() => (button.props.onClick as () => void)());
     expect(tapped).toHaveBeenCalledTimes(1);
-    expect(chip('move_yours').props['aria-label']).toBe('Needs your OK: Class move: Class D');
+    expect(chip('move_yours', 'en', tapped).props['aria-label']).toBe('Needs your OK: Class move: Class D');
+  });
+
+  it('an action chip with nothing to open is the amber span, never a button that does nothing', () => {
+    const node = chip('relink', 'en');
+    expect(node.type).toBe('span');
+    expect(node.props['data-tone']).toBe('action');
+    expect(node.props.style.border).toContain(colors.feedback.nudge);
+    expect(textOf(node)).toBe('Needs your OK');
+  });
+
+  it('relinkSettled: answered or closed meanwhile settles; a network error or a 5xx leaves the request open', () => {
+    expect(relinkSettled({ ok: true, data: {} })).toBe(true);
+    expect(relinkSettled({ ok: false, error: 'unknown', status: 409, code: 'expired' })).toBe(true);
+    expect(relinkSettled({ ok: false, error: 'not_found', status: 404 })).toBe(true);
+    expect(relinkSettled({ ok: false, error: 'unknown', status: 409, code: 'not_a_member' })).toBe(false);
+    expect(relinkSettled({ ok: false, error: 'unknown', status: 503 })).toBe(false);
+    expect(relinkSettled({ ok: false, error: 'network', status: 0 })).toBe(false);
+  });
+
+  it('revealAnswers scrolls the answers into view and focuses the first; nothing drawn is a no-op', () => {
+    const focus = vi.fn();
+    const scrollIntoView = vi.fn();
+    revealAnswers({ scrollIntoView, querySelector: () => ({ focus }) } as unknown as HTMLElement);
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(() => revealAnswers(null)).not.toThrow();
+    expect(() => revealAnswers({ querySelector: () => null } as unknown as HTMLElement)).not.toThrow();
   });
 
   it('amber only on the action states; quiet and info states carry no nudge colour', () => {
     for (const kind of KINDS) {
-      const node = chip(kind);
+      const node = chip(kind, 'en', () => undefined);
       const styles = JSON.stringify([node.props.style, ...node.findAll((n) => typeof n.type === 'string').map((n) => n.props.style)]);
       if (kind === 'relink' || kind === 'move_yours') expect(styles).toContain(colors.feedback.nudge);
       else {

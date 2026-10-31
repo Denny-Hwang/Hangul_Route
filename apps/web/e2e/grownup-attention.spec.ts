@@ -138,6 +138,8 @@ for (const { locale, browser } of LOCALES) {
         await expect(popup).toBeVisible();
         await expect(popup.getByText(c.relinkPopup.closes(8))).toBeVisible();
         await expect(popup.getByRole('heading', { name: c.relinkPopup.title('Jaehan') })).toBeFocused();
+        // The title takes focus without a click: no focus ring boxes it (the buttons keep theirs).
+        expect(await popup.getByRole('heading', { name: c.relinkPopup.title('Jaehan') }).evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none');
         const buttons = popup.getByRole('button');
         await expect(buttons).toHaveText([c.relink.approve.cta, c.relink.deny.cta, c.relinkPopup.later.cta]);
         await page.screenshot({ path: test.info().outputPath(`grownup-attention-popup-${locale}-${label}.png`) });
@@ -165,6 +167,16 @@ for (const { locale, browser } of LOCALES) {
         await expect(sheet.getByTestId('incoming-card')).toHaveCount(2);
         await expect(sheet.getByTestId('sheet-outgoing-row')).toContainText(c.status.moveTo('Evening Class D'));
         await page.screenshot({ path: test.info().outputPath(`grownup-attention-sheet-${locale}-${label}.png`) });
+        if (label === '360') await noSidewaysScroll(page);
+        // Close is a pill, never a circle, even with a two-letter label (the ko Close).
+        const closeBox = await sheet.getByRole('button', { name: getMessages(locale).common.buttons.close }).boundingBox();
+        expect((closeBox?.width ?? 0) > (closeBox?.height ?? 0)).toBeTruthy();
+        // The move out of this class: Review opens the shipped consent card inside the sheet.
+        await sheet.getByTestId('sheet-outgoing-review').click();
+        const consent = sheet.getByTestId('sheet-consent');
+        await expect(consent.getByTestId('move-agree')).toBeVisible();
+        await consent.scrollIntoViewIfNeeded();
+        await page.screenshot({ path: test.info().outputPath(`grownup-attention-sheet-outgoing-${locale}-${label}.png`) });
         if (label === '360') await noSidewaysScroll(page);
         await sheet.getByRole('button', { name: getMessages(locale).common.buttons.close }).click();
         await expect(sheet).toHaveCount(0);

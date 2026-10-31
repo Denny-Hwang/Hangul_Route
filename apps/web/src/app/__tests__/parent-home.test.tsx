@@ -67,6 +67,12 @@ const data = vi.hoisted(() => ({
   transfers: null as unknown,
   notices: null as unknown,
   calls: [] as string[],
+  /** The next re-link read answers with this promise instead (a read that is still under way). */
+  relinkNext: null as Promise<unknown> | null,
+  /** GX-5: a family's own re-link read (by family id), before `relinks`. */
+  relinksBy: {} as Record<string, unknown>,
+  /** GX-5: the next decision fails with this answer instead. */
+  decideFails: null as unknown,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -101,7 +107,12 @@ vi.mock('@/components/console/use-console', async () => {
     },
     relinkRequests: async (id: string) => {
       data.calls.push(`relinks:${id}`);
-      return data.relinks ?? { ok: true, data: [] };
+      if (data.relinkNext) {
+        const next = data.relinkNext;
+        data.relinkNext = null;
+        return next;
+      }
+      return data.relinksBy[id] ?? data.relinks ?? { ok: true, data: [] };
     },
     transferRequests: async (id: string) => {
       data.calls.push(`transfers:${id}`);
@@ -109,7 +120,13 @@ vi.mock('@/components/console/use-console', async () => {
     },
     decideRelink: async (id: string, requestId: string, approve: boolean) => {
       data.calls.push(`decide:${id}:${requestId}:${approve}`);
+      if (data.decideFails) {
+        const failure = data.decideFails;
+        data.decideFails = null;
+        return failure;
+      }
       data.relinks = { ok: true, data: [] };
+      delete data.relinksBy[id];
       return { ok: true, data: { id: requestId } };
     },
     renameSpace: async (id: string, name: string) => {
@@ -185,6 +202,9 @@ beforeEach(() => {
   data.transfers = null;
   data.notices = null;
   data.calls = [];
+  data.relinkNext = null;
+  data.relinksBy = {};
+  data.decideFails = null;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -722,6 +742,31 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     vi.unstubAllGlobals();
   });
 
+  it('a read that started before an answer and ends after it never puts the answered row back (the newest read draws)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+    // A read of the family starts and is still under way (it will say the re-link is pending)...
+    let finishOld: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finishOld = resolve;
+    });
+    const classCards = r.root.find((n) => typeof n.type !== 'string' && typeof n.props.onStale === 'function' && 'scope' in n.props);
+    act(() => classCards.props.onStale());
+    // ...then Approve (GX-5: the strip's Approve opens the pop-up, which answers): the answer's own read lands first and
+    // the row leaves.
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now: it is dropped, so the decided row and its chip do not come back.
+    await act(async () => finishOld({ ok: true, data: [pendingRelink] }));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
+  });
+
   it('an archived family asks nothing and draws no strip', async () => {
     const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
     data.rosters = { sp_f: roster(archived, [mina]) };
@@ -877,6 +922,47 @@ describe('the family home: the re-link pop-up, the 20 s re-link read and the tab
     expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 2 });
     await tap(r, 'relink-popup-approve');
     expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 1 });
+  });
+
+  it('two families: the pop-up for the second family\'s request answers on that family\'s route', async () => {
+    const lee = item('sp_l', 'family', 'caregiver', 'Lee family');
+    data.rosters = { sp_f: roster(family, [ana]), sp_l: roster(lee, [jun]) };
+    data.relinksBy = { sp_f: { ok: true, data: [] }, sp_l: { ok: true, data: [request({ id: 'relink:b', learnerId: 'profile:jun', learnerName: 'Jun' })] } };
+    const r = await render([family, lee]);
+    expect(textOf(popup(r)[0] as ReactTestInstance)).toContain(en.console.relinkPopup.title('Jun'));
+    await tap(r, 'relink-popup-approve');
+    expect(data.calls).toContain('decide:sp_l:relink:b:true');
+    expect(data.calls.some((call) => call.startsWith('decide:sp_f:'))).toBe(false);
+    data.relinksBy = {};
+  });
+
+  it('a failed answer (offline, a 5xx) keeps the pop-up open with its line, so the parent can try again', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    data.decideFails = { ok: false, error: 'network', status: -1 };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-approve');
+    expect(popup(r)).toHaveLength(1);
+    expect(byTestId(r, 'relink-popup-failed')).toHaveLength(1);
+    await tap(r, 'relink-popup-approve');
+    expect(popup(r)).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+  });
+
+  it('a 20 s read that began before an answer never puts the answered request back (no row, no pop-up)', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    let finish: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finish = resolve;
+    });
+    await advance(20_000);
+    await tap(r, 'relink-popup-approve');
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now, still listing the request as pending.
+    await act(async () => finish({ ok: true, data: [request()] }));
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(popup(r)).toHaveLength(0);
   });
 
   it('an archived family: no pop-up and no 20 s read', async () => {

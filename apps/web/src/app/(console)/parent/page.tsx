@@ -246,16 +246,25 @@ export default function ParentHomePage(): JSX.Element {
   // GX-4: what waits for the family (section 7.1). The class-move reads follow the flag and the transfer lock
   // (`useTransfersShown`): skipped, they are null, so no move row, no move chip and no class line (never a guess). A read
   // that fails keeps what the last good read drew (a background read never removes a row on a network blip); expiry is
-  // checked again at every render, so a re-link past its end still leaves.
+  // checked again at every render, so a re-link past its end still leaves. Each read takes a number per family and only the
+  // newest one started may draw, so a background read that ends after an answer's read never puts a decided row back. While
+  // the strip's consent sheet is open the background reads of that family wait (as on the family moves page); a read after
+  // an answer (`force`) still runs.
+  const asksSeq = useRef<Record<string, number>>({});
+  const asksHeld = useRef<Set<string>>(new Set());
   const loadAsks = useCallback(
-    async (spaceId: string): Promise<void> => {
+    async (spaceId: string, force = false): Promise<void> => {
       if (!api) return;
+      if (!force && asksHeld.current.has(spaceId)) return;
+      const call = (asksSeq.current[spaceId] ?? 0) + 1;
+      asksSeq.current[spaceId] = call;
       const [relinks, transfers, scope, notices] = await Promise.all([
         quietly(() => api.relinkRequests(spaceId)),
         movesShown ? quietly(() => api.transferRequests(spaceId)) : null,
         quietly(() => api.classScope(spaceId)),
         movesShown ? quietly(() => api.moveNotices(spaceId)) : null,
       ]);
+      if (call !== asksSeq.current[spaceId]) return;
       setAsks((prev) => {
         const old = prev[spaceId];
         return {
@@ -324,15 +333,18 @@ export default function ParentHomePage(): JSX.Element {
   // while the tab is in view, and on focus, so a child waiting at a new device is seen within one read.
   const liveFamilyIds = homeView?.state === 'families' ? homeView.families.filter((family) => !isArchivedFamily(family)).map((family) => family.space.id) : [];
   const liveKey = liveFamilyIds.join('\n');
+  // A family's full read (`loadAsks`, after an answer for one) that started after this read began is newer: this read's
+  // answer for that family is dropped, so an answered request never comes back for a moment.
   const readRelinks = useCallback(async (): Promise<void> => {
     if (!api || liveKey === '') return;
     const ids = liveKey.split('\n');
+    const started = Object.fromEntries(ids.map((id) => [id, asksSeq.current[id] ?? 0]));
     const answers = await Promise.all(ids.map(async (id) => [id, await quietly(() => api.relinkRequests(id))] as const));
     setAsks((prev) => {
       let next = prev;
       for (const [id, result] of answers) {
         const entry = next[id];
-        if (!entry || !result?.ok) continue;
+        if (!entry || !result?.ok || (asksSeq.current[id] ?? 0) !== started[id]) continue;
         next = { ...next, [id]: { ...entry, relinks: result.data } };
       }
       return next;
@@ -666,11 +678,15 @@ export default function ParentHomePage(): JSX.Element {
               api={api}
               online={online}
               now={now}
-              onChanged={() => Promise.all([loadAsks(id), loadRoster(id, family.role, true)]).then(() => undefined)}
+              onChanged={() => Promise.all([loadAsks(id, true), loadRoster(id, family.role, true)]).then(() => undefined)}
               onReadScope={(learnerId) => readScope(id, learnerId)}
               onApproveRelink={popup.openFor}
               onDialog={(open) => onStripDialog(id, open)}
               result={popupResults[id] ?? null}
+              onReviewing={(open) => {
+                if (open) asksHeld.current.add(id);
+                else asksHeld.current.delete(id);
+              }}
             />
           ) : null}
           {api && !archived && !scopeSheet ? (
@@ -679,7 +695,7 @@ export default function ParentHomePage(): JSX.Element {
               api={api}
               scope={asks[id]?.scope ?? null}
               onScope={(next) => setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev))}
-              onStale={() => void loadAsks(id)}
+              onStale={() => void loadAsks(id, true)}
             />
           ) : null}
           {entry.state === 'loading' ? (
@@ -836,13 +852,22 @@ export default function ParentHomePage(): JSX.Element {
           spaceId={popupFamily}
           online={online}
           onLater={popup.close}
-          onResult={(_learnerId, text) => {
-            popup.close();
+          onResult={(_learnerId, text, settled) => {
             resultSeq.current += 1;
             const key = resultSeq.current;
             setPopupResults((prev) => ({ ...prev, [popupFamily]: { key, text } }));
+            // Not settled (offline, a 5xx): the pop-up stays with its line under the buttons, so the parent can try again.
+            if (!settled) return;
+            const answered = popup.pick?.request.id;
+            popup.close();
+            // The answered request leaves the strip, the count and the pop-up's pool at once (the read below confirms it).
+            setAsks((prev) => {
+              const entry = prev[popupFamily];
+              if (!entry?.relinks || !answered) return prev;
+              return { ...prev, [popupFamily]: { ...entry, relinks: entry.relinks.filter((r) => r.id !== answered) } };
+            });
             const family = view?.state === 'families' ? view.families.find((f) => f.space.id === popupFamily) : undefined;
-            void loadAsks(popupFamily);
+            void loadAsks(popupFamily, true);
             if (family) void loadRoster(popupFamily, family.role, true);
           }}
         />

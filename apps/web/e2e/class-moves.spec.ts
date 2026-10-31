@@ -175,8 +175,8 @@ test.describe('the receiving class accepts (TV-D8)', () => {
   test('an ask shows initials only; Accept moves the student in', async ({ page }) => {
     await mockConsole(page, 'class', { incoming: [{ id: 'move:2', kind: 'accept', status: 'waiting', from: { name: 'Weekday Class W' }, learner: { alias: 'J. L.', avatar: 'hoya-orange', level: 'starter' }, createdAt: NOW, expiresAt: NOW, at: null }] });
     await page.goto('/teach/space/transfers?id=space%3Aa');
-    const section = page.getByTestId('teacher-moves');
-    await expect(section.getByRole('heading', { name: tm.section.title })).toBeVisible();
+    // With nothing sent from this class and no history, the Teacher moves section is left out (GX-2).
+    await expect(page.getByTestId('teacher-moves')).toHaveCount(0);
     // AMENDMENTS-GROWNUP-UX GX-2: one incoming list. The ask is drawn under *Joining this class*, Accept first.
     const joining = page.getByRole('region', { name: en.console.transfer.groups.joining });
     const card = joining.getByTestId('teacher-move-incoming');
@@ -491,6 +491,22 @@ test.describe('en: answering from Needs you (GX-4)', () => {
     await card.getByRole('button', { name: en.common.buttons.ok }).click();
     await expect(page.getByTestId('class-scope-card')).toHaveCount(0);
     await expect(page.getByRole('region', { name: p.needsYou.title })).toHaveCount(0);
+  });
+
+  test('Read and OK from the See all sheet: the sheet closes and the class-scope card keeps focus and stays in view', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all.
+    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], notice: false });
+    await page.goto('/parent');
+    const strip = page.getByRole('region', { name: p.needsYou.title });
+    await strip.getByRole('button', { name: p.needsYou.seeAll.cta }).click();
+    const sheet = page.getByTestId('needs-you-sheet');
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole('button', { name: p.needsYou.readOk.cta }).click();
+    await expect(page.getByTestId('needs-you-sheet')).toHaveCount(0);
+    const card = page.getByTestId('class-scope-card');
+    await expect(card).toBeFocused();
+    await expect(card).toBeInViewport();
   });
 });
 

@@ -19,7 +19,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => lang.locale, useSetLocale: () => () => undefined };
 });
 
-import { RelinkPopup, shownKeys, useRelinkPopup } from '@/components/console/RelinkPopup';
+import { RelinkPopup, shownKeys, typingInField, useRelinkPopup } from '@/components/console/RelinkPopup';
 
 const NOW = new Date('2026-10-31T12:00:00.000Z');
 const at = (minutes: number): string => new Date(NOW.getTime() + minutes * 60_000).toISOString();
@@ -29,6 +29,11 @@ const session: Record<string, string> = {};
 const keyListeners = new Set<(e: { key: string; shiftKey: boolean; defaultPrevented?: boolean; preventDefault: () => void }) => void>();
 const fakeDocument = {
   visibilityState: 'visible',
+  /** Another modal dialog on the page (`[aria-modal="true"]`): null when there is none. */
+  modal: null as unknown,
+  querySelector(selector: string): unknown {
+    return selector.includes('aria-modal') ? this.modal : null;
+  },
   activeElement: null as unknown,
   body: {},
   addEventListener: (type: string, l: (e: never) => void) => {
@@ -59,6 +64,8 @@ beforeEach(() => {
     },
   });
   fakeDocument.visibilityState = 'visible';
+  fakeDocument.modal = null;
+  fakeDocument.activeElement = null;
   lang.locale = 'en';
 });
 
@@ -82,7 +89,7 @@ const byTestId = (id: string): ReactTestInstance[] => root().findAll((n) => type
 
 describe('RelinkPopup', () => {
   async function popup(pick: PopupPick, decide = vi.fn(async () => ({ ok: true as const, data: {} }))) {
-    const calls = { later: 0, results: [] as Array<[string, string]> };
+    const calls = { later: 0, results: [] as Array<[string, string]>, settled: [] as boolean[] };
     await act(async () => {
       renderer = create(
         <RelinkPopup
@@ -94,7 +101,10 @@ describe('RelinkPopup', () => {
           onLater={() => {
             calls.later += 1;
           }}
-          onResult={(learnerId, text) => calls.results.push([learnerId, text])}
+          onResult={(learnerId, text, settled) => {
+            calls.results.push([learnerId, text]);
+            calls.settled.push(settled);
+          }}
         />,
         { createNodeMock: nodeMock as never },
       );
@@ -129,6 +139,22 @@ describe('RelinkPopup', () => {
     const { calls } = await popup({ request: relink('r1', 7.5), reminder: false }, vi.fn(async () => ({ ok: false as const, error: 'unknown' as const, status: 409, code: 'expired' })) as never);
     await act(async () => (byTestId('relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     expect(calls.results[0]?.[1]).toContain('This request already closed');
+    expect(calls.settled).toEqual([true]);
+  });
+
+  it('a failure that leaves the request open (a 5xx) keeps the pop-up with its line under the buttons', async () => {
+    const { calls } = await popup({ request: relink('r1', 7.5), reminder: false }, vi.fn(async () => ({ ok: false as const, error: 'unknown' as const, status: 503 })) as never);
+    await act(async () => (byTestId('relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    expect(calls.settled).toEqual([false]);
+    const line = byTestId('relink-popup-failed')[0] as ReactTestInstance;
+    expect(textOf(line)).toBe(calls.results[0]?.[1]);
+    expect(byTestId('relink-popup-approve')).toHaveLength(1);
+  });
+
+  it('the focused title draws no focus ring (it opens without a click); the buttons keep theirs', () => {
+    const source = readFileSync(new URL('../RelinkPopup.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}');
+    expect(source).toContain('.hr-relink-pop :focus-visible{outline:');
   });
 
   it('Escape and Later put it off; the page behind gets the key from anywhere', async () => {
@@ -147,7 +173,7 @@ describe('RelinkPopup', () => {
     lang.locale = 'ko';
     await popup({ request: relink('r1', 7.5), reminder: false });
     expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('새 기기 연결 요청: Jaehan');
-    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('8분 뒤에 이 요청이 닫혀요.');
+    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('8분 뒤에 이 요청이 마감돼요.');
     expect(textOf(byTestId('relink-popup-later')[0] as ReactTestInstance)).toBe('나중에');
     act(() => renderer?.unmount());
     lang.locale = 'es';
@@ -160,8 +186,8 @@ describe('RelinkPopup', () => {
 describe('useRelinkPopup', () => {
   const seen: Array<PopupPick | null> = [];
   let control: ReturnType<typeof useRelinkPopup> | null = null;
-  function Harness({ relinks, blocked = false, enabled = true }: { relinks: RelinkView[] | null; blocked?: boolean; enabled?: boolean }): null {
-    control = useRelinkPopup({ relinks, blocked, enabled });
+  function Harness({ relinks, blocked = false, enabled = true, listed = [] }: { relinks: RelinkView[] | null; blocked?: boolean; enabled?: boolean; listed?: string[] }): null {
+    control = useRelinkPopup({ relinks, blocked, enabled, listed });
     seen.push(control.pick);
     return null;
   }
@@ -224,6 +250,29 @@ describe('useRelinkPopup', () => {
     expect(current()?.request.id).toBe('r1');
   });
 
+  it('never opens over another modal dialog (the frame display sheet); the next read with none open does', async () => {
+    fakeDocument.modal = { role: 'dialog' };
+    await mount([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    fakeDocument.modal = null;
+    await update([relink('r1', 8)]);
+    expect(current()?.request.id).toBe('r1');
+  });
+
+  it('a request listed in the open review sheet counts as shown and reminded: no pop-up and no reminder after the sheet', async () => {
+    seen.length = 0;
+    await act(async () => {
+      renderer = create(<Harness relinks={[relink('r1', 8)]} blocked listed={['r1']} />);
+    });
+    expect(JSON.parse(session[RELINK_SHOWN_KEY] ?? '[]')).toEqual(['r1']);
+    expect(JSON.parse(session[RELINK_REMINDED_KEY] ?? '[]')).toEqual(['r1']);
+    await update([relink('r1', 8)], false);
+    expect(current()).toBeNull();
+    vi.setSystemTime(new Date(NOW.getTime() + 6 * 60_000));
+    await update([relink('r1', 8)], false);
+    expect(current()).toBeNull();
+  });
+
   it('closes when its request leaves the list (answered elsewhere, expired); a failed read keeps it', async () => {
     await mount([relink('r1', 8)]);
     await update(null);
@@ -239,6 +288,54 @@ describe('useRelinkPopup', () => {
     expect(current()).toEqual({ request: expect.objectContaining({ id: 'r1' }), reminder: false });
     await act(async () => control?.openFor('gone'));
     expect(current()?.request.id).toBe('r1');
+  });
+
+  it('shown with more than 2 minutes left and closed after the 2-minute mark: the reminder does not open at once', async () => {
+    await mount([relink('r1', 8)]);
+    expect(current()?.reminder).toBe(false);
+    // The pop-up stays open while the grown-up is away; they tap Later with 1:50 left.
+    vi.setSystemTime(new Date(NOW.getTime() + (6 * 60 + 10) * 1000));
+    await act(async () => control?.close());
+    await update([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    expect(JSON.parse(session[RELINK_REMINDED_KEY] ?? '[]')).toEqual(['r1']);
+  });
+
+  it('closed with more than 2 minutes left: the reminder still comes at 2 minutes', async () => {
+    await mount([relink('r1', 8)]);
+    await act(async () => control?.close());
+    expect(session[RELINK_REMINDED_KEY]).toBeUndefined();
+    vi.setSystemTime(new Date(NOW.getTime() + (6 * 60 + 10) * 1000));
+    await update([relink('r1', 8)]);
+    expect(current()?.reminder).toBe(true);
+  });
+
+  it('never opens on its own while a text field has focus (a rename being typed); the next read without one does', async () => {
+    fakeDocument.activeElement = { tagName: 'INPUT', getAttribute: () => 'text' };
+    await mount([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    fakeDocument.activeElement = { tagName: 'BUTTON', getAttribute: () => null };
+    await update([relink('r1', 8)]);
+    expect(current()?.request.id).toBe('r1');
+    fakeDocument.activeElement = null;
+  });
+
+  it('typingInField: text inputs, text areas and editable regions; never buttons or check boxes', () => {
+    const el = (tagName: string, type: string | null = null, editable = false) => ({ tagName, getAttribute: () => type, isContentEditable: editable });
+    const cases: Array<[unknown, boolean]> = [
+      [el('INPUT'), true],
+      [el('INPUT', 'search'), true],
+      [el('TEXTAREA'), true],
+      [el('DIV', null, true), true],
+      [el('INPUT', 'checkbox'), false],
+      [el('BUTTON'), false],
+      [null, false],
+    ];
+    for (const [active, typing] of cases) {
+      fakeDocument.activeElement = active;
+      expect(typingInField()).toBe(typing);
+    }
+    fakeDocument.activeElement = null;
   });
 
   it('without session storage it still opens once, not after each Later', async () => {

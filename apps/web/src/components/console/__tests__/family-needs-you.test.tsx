@@ -324,6 +324,122 @@ describe('FamilyNeedsYou: the strip', () => {
   });
 });
 
+describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 review)', () => {
+  /** A stand-in document whose focus moves through `createNodeMock` nodes, so the order of focus moves can be read. */
+  function focusWorld() {
+    const log: string[] = [];
+    const doc: { activeElement: unknown; body: unknown } = { activeElement: null, body: { name: 'body' } };
+    vi.stubGlobal('document', doc);
+    const node = (name: string, extra: Record<string, unknown> = {}) => {
+      const n: Record<string, unknown> = {
+        name,
+        ...extra,
+        focus: () => {
+          doc.activeElement = n;
+          log.push(name);
+        },
+        scrollIntoView: () => undefined,
+      };
+      return n;
+    };
+    const firstButton = node('sheet-first-button');
+    const createNodeMock = (el: { type: unknown; props: Record<string, unknown> }) => {
+      if (el.type === 'h3') return node('strip-heading');
+      if (el.type === 'div' && el.props.tabIndex === -1) return node('sheet-list', { querySelector: () => firstButton });
+      return node(String(el.props['data-testid'] ?? el.type));
+    };
+    return { log, doc, node, createNodeMock };
+  }
+
+  type Extra = { onReadScope?: (id: string) => void; onReviewing?: (open: boolean) => void; api?: MockApi };
+  const strip = (state: FamilyAsks, extra: Extra) => (
+    <FamilyNeedsYou
+      familyId="space:f"
+      familyName="Kim family"
+      items={needsYou(state, NOW)}
+      views={(state.transfers?.requests ?? []) as TransferLearnerSideView[]}
+      avatars={{}}
+      api={(extra.api ?? makeApi()) as unknown as NeedsYouApi}
+      online
+      now={NOW}
+      onChanged={async () => undefined}
+      onReadScope={extra.onReadScope ?? (() => undefined)}
+      onApproveRelink={() => undefined}
+      onReviewing={extra.onReviewing}
+    />
+  );
+
+  const three = (): FamilyAsks => asks({ relinks: [relink()], transfers: { requests: [sideView()], options: [] }, scope: SCOPE });
+
+  it('Read and OK from See all focuses the class-scope card after the sheet gave focus back to See all, never before', async () => {
+    const world = focusWorld();
+    const onReadScope = vi.fn((id: string) => world.log.push(`card:${id}`));
+    await act(async () => {
+      renderer = create(strip(three(), { onReadScope }), { createNodeMock: world.createNodeMock });
+    });
+    world.doc.activeElement = world.node('see-all-opener');
+    await click('needs-you-see-all');
+    const read = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-read' && typeof n.type === 'string');
+    await act(async () => read.props.onClick());
+    expect(all('needs-you-sheet')).toHaveLength(0);
+    expect(onReadScope).toHaveBeenCalledTimes(1);
+    expect(onReadScope).toHaveBeenCalledWith('profile:sora');
+    // The sheet's close hands focus back to its opener first; the card's focus comes last and so stays.
+    expect(world.log.indexOf('see-all-opener')).toBeGreaterThanOrEqual(0);
+    expect(world.log.indexOf('card:profile:sora')).toBeGreaterThan(world.log.indexOf('see-all-opener'));
+  });
+
+  it('an answer given in the See all sheet is said inside the sheet, not behind its scrim; focus stays in the sheet when its row leaves', async () => {
+    const world = focusWorld();
+    const api = makeApi();
+    await act(async () => {
+      renderer = create(strip(three(), { api }), { createNodeMock: world.createNodeMock });
+    });
+    await click('needs-you-see-all');
+    // GX-5: Approve leaves the sheet for the page's pop-up (the safety hint); Deny answers here, in one tap.
+    const deny = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-deny' && typeof n.type === 'string');
+    await act(async () => deny.props.onClick());
+    expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
+    expect(text(one('needs-you-result')).trim()).toBe('');
+    // The page read again and the answered row left with its focused button: focus goes to the next row in the sheet.
+    world.doc.activeElement = world.doc.body;
+    await act(async () => {
+      (renderer as ReactTestRenderer).update(strip(asks({ transfers: { requests: [sideView()], options: [] }, scope: SCOPE }), { api }));
+    });
+    expect(all('needs-you-sheet')).toHaveLength(1);
+    expect(world.log[world.log.length - 1]).toBe('sheet-first-button');
+  });
+
+  it('closing the sheet after the See all row left moves focus to the strip heading, not the page', async () => {
+    const world = focusWorld();
+    await act(async () => {
+      renderer = create(strip(three(), {}), { createNodeMock: world.createNodeMock });
+    });
+    await click('needs-you-see-all');
+    // Two items are left: the See all row is gone, so the sheet's opener can no longer take focus.
+    await act(async () => {
+      (renderer as ReactTestRenderer).update(strip(asks({ transfers: { requests: [sideView()], options: [] }, scope: SCOPE }), {}));
+    });
+    expect(all('needs-you-more')).toHaveLength(0);
+    world.doc.activeElement = world.doc.body;
+    await act(async () => one('needs-you-sheet').props.onKeyDown({ key: 'Escape', stopPropagation: () => undefined }));
+    expect(all('needs-you-sheet')).toHaveLength(0);
+    expect(world.log[world.log.length - 1]).toBe('strip-heading');
+  });
+
+  it('tells the page while the consent sheet is open, so the page holds that family\'s background reads', async () => {
+    const onReviewing = vi.fn();
+    await act(async () => {
+      renderer = create(strip(asks({ transfers: { requests: [sideView()], options: [] } }), { onReviewing }), { createNodeMock: () => ({}) });
+    });
+    expect(onReviewing).toHaveBeenLastCalledWith(false);
+    await click('needs-you-review');
+    expect(onReviewing).toHaveBeenLastCalledWith(true);
+    await click('consent-not-now');
+    expect(onReviewing).toHaveBeenLastCalledWith(false);
+  });
+});
+
 describe('style rules', () => {
   it('FamilyNeedsYou.tsx uses tokens only: no colour literal and never the danger colour', () => {
     const source = readFileSync(new URL('../FamilyNeedsYou.tsx', import.meta.url), 'utf8');

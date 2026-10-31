@@ -102,8 +102,6 @@ function TransfersInner(): JSX.Element {
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
       ) : space && api && space.kind === 'class' && spacesRead ? (
         <>
-        {/* [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8): asks into and out of this class. */}
-        <TeacherMovesSection spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} moves={teacherMoves} incomingHere={false} />
         <ClassMoves
           spaceId={spaceId}
           spaceName={space.name}
@@ -117,6 +115,9 @@ function TransfersInner(): JSX.Element {
           joiningLead={<TeacherMovesIncoming moves={teacherMoves} spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} />}
           joiningLeadCount={waitingIncomingCount(teacherMoves)}
         />
+        {/* [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8): asks sent from this class and their history.
+            GX-2: after Leaving and Joining, so the cards that need an answer come first; absent when it has nothing. */}
+        <TeacherMovesSection spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} moves={teacherMoves} incomingHere={false} />
         </>
       ) : null}
     </AdultFrame>

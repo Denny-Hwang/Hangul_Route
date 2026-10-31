@@ -54,11 +54,12 @@ export function stepDone(slot: TransferSlot, view: TransferSourceView | Transfer
 
 /**
  * A step's state word ("said yes", "waiting"); a class's own yes reads "you said yes". Never colour alone. On the family
- * page the family's own waiting step reads "your answer needed" (AMENDMENTS-GROWNUP-UX GX-4 Fix D, section 7.5).
+ * page the family's own waiting step reads "your answer needed" (AMENDMENTS-GROWNUP-UX GX-4 Fix D, section 7.5), only
+ * when the family can answer it (`learnerRoute` caregiver); a learner who manages their own classes answers on the device.
  */
 export function stepWord(slot: TransferSlot, view: TransferSourceView | TransferLearnerSideView, locale: UiLocale = DEFAULT_LOCALE): string {
   const steps = words(locale).steps;
-  if (stepState(slot, view) === 'waiting') return view.role === 'learner_side' && slot === 'learner' ? steps.yourAnswer : steps.waiting;
+  if (stepState(slot, view) === 'waiting') return view.role === 'learner_side' && slot === 'learner' && view.learnerRoute === 'caregiver' ? steps.yourAnswer : steps.waiting;
   return view.role === 'source' && slot === 'source' ? steps.youSaidYes : steps.saidYes;
 }
 
@@ -142,10 +143,19 @@ export function canCancel(view: TransferView): boolean {
   return view.role === 'learner_side';
 }
 
+/**
+ * Whether the family can and must answer the learner step now: open, the step pending, and the caregiver route is the one
+ * that fills it (`learnerRoute`, spec 4.4). A self-managed learner's step (`device` or `none`) is not the family's to
+ * answer: the Worker refuses it (409 `learner_manages_own`), so it is never counted, named or put in Needs you.
+ */
+export function familyMustAnswer(view: TransferLearnerSideView): boolean {
+  return view.status === 'requested' && view.learnerState === 'pending' && view.learnerRoute === 'caregiver';
+}
+
 /** Whether this page's own step still waits on an open request. */
 function ownStepWaits(view: TransferView): boolean {
   if (view.status !== 'requested') return false;
-  if (view.role === 'learner_side') return view.learnerState === 'pending';
+  if (view.role === 'learner_side') return familyMustAnswer(view);
   return view.steps?.[view.role] === 'waiting';
 }
 

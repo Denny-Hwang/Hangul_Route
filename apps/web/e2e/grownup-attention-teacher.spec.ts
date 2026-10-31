@@ -101,9 +101,16 @@ for (const { locale, browser } of LOCALES) {
         const nameBox = await page.getByTestId('space-row-space:a').getByText(a, { exact: true }).boundingBox();
         const chipBox = await chip.boundingBox();
         expect(nameBox && chipBox && chipBox.y + chipBox.height > nameBox.y).toBeTruthy();
+        // A row with the chip keeps Open at the row's end, as the row without one does (even when Open wraps at 360).
+        const openA = await page.getByTestId('space-open-space:a').boundingBox();
+        const openB = await page.getByTestId('space-open-space:b').boundingBox();
+        expect(Math.abs((openA?.x ?? 0) + (openA?.width ?? 0) - ((openB?.x ?? 0) + (openB?.width ?? 0)))).toBeLessThanOrEqual(1);
         // The re-link bar under the nav: the class name, the minutes, Review.
         const bar = page.getByTestId('relink-bar');
-        await expect(bar.getByRole('status')).toHaveText(c.relinkBar.one(a));
+        await expect(page.getByTestId('relink-bar-text')).toHaveText(c.relinkBar.one(a));
+        // The live region is the frame's own hidden line (mounted before the bar), never the minutes line.
+        await expect(page.getByTestId('relink-bar-live')).toHaveText(c.relinkBar.one(a));
+        await expect(page.getByTestId('relink-bar-live')).toHaveAttribute('role', 'status');
         await expect(page.getByTestId('relink-bar-minutes')).toHaveText(c.status.minutesLeft(8));
         const review = page.getByTestId('relink-bar-review');
         await expect(review).toHaveText(c.status.review.cta);
@@ -127,12 +134,14 @@ test.describe('en: the bar on another page, its Review, and the 30 s read', () =
   test('the Notes page shows the bar; Review opens the class page at its review, which draws no bar', async ({ page }) => {
     const mock = await mockTeacher(page, 'en');
     await page.goto('/teach/notes');
-    await expect(page.getByTestId('relink-bar').getByRole('status')).toHaveText(c.relinkBar.one(a));
+    await expect(page.getByTestId('relink-bar-text')).toHaveText(c.relinkBar.one(a));
+    await expect(page.getByTestId('relink-bar-live')).toHaveText(c.relinkBar.one(a));
     await page.screenshot({ path: test.info().outputPath('grownup-attention-notes-en.png') });
     await page.getByTestId('relink-bar-review').click();
     await expect(page).toHaveURL(/\/teach\/space\?id=space%3Aa#attention$/);
     await expect(page.getByTestId('space-head')).toBeVisible();
     await expect(page.getByTestId('relink-bar')).toHaveCount(0);
+    await expect(page.getByTestId('relink-bar-live')).toHaveCount(0);
     // No name of a learner in any address the console asked for.
     for (const call of mock.calls) expect(call.path).not.toMatch(/Jaehan|Yuhan|Mina/);
   });
@@ -141,7 +150,8 @@ test.describe('en: the bar on another page, its Review, and the 30 s read', () =
     const [x, y] = CLASS_NAMES.en;
     await mockTeacher(page, 'en', { spaces: [row('space:a', x, { relinks: 1, moves: 0, relinkExpiresAt: at(9) }), row('space:b', y, { relinks: 1, moves: 0, relinkExpiresAt: at(3) })] });
     await page.goto('/teach/home');
-    await expect(page.getByTestId('relink-bar').getByRole('status')).toHaveText(c.relinkBar.many(2));
+    await expect(page.getByTestId('relink-bar-text')).toHaveText(c.relinkBar.many(2));
+    await expect(page.getByTestId('relink-bar-live')).toHaveText(c.relinkBar.many(2));
     await expect(page.getByTestId('relink-bar-review')).toHaveAttribute('href', /id=space%3Ab#attention$/);
     await expect(page.getByTestId('relink-bar-minutes')).toHaveText(c.status.minutesLeft(3));
   });
@@ -155,6 +165,7 @@ test.describe('en: the bar on another page, its Review, and the 30 s read', () =
     mock.spaces = [row('space:a', x, { relinks: 0, moves: 0, relinkExpiresAt: null }), row('space:b', y, { relinks: 0, moves: 0, relinkExpiresAt: null })];
     await page.clock.runFor(30_000);
     await expect(page.getByTestId('relink-bar')).toHaveCount(0);
+    await expect(page.getByTestId('relink-bar-live')).toHaveText('');
     await expect(page.getByTestId('nav-count')).toHaveCount(0);
     await expect(page.getByTestId('class-attention-space:a')).toHaveCount(0);
     await expect(page.getByTestId('nav-classes')).toHaveAccessibleName(c.shell.nav.classes);

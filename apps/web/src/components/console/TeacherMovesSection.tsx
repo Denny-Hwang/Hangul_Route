@@ -225,6 +225,9 @@ export function TeacherMovesSection(props: TeacherMovesSectionProps): JSX.Elemen
     ...lists.incoming.filter((m) => m.status !== 'waiting').map((m) => ({ id: m.id, text: incomingDone(m), at: m.at })),
     ...lists.outgoing.filter((m) => m.status !== 'waiting').map((m) => ({ id: m.id, text: outgoingDone(m), at: m.at })),
   ].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''));
+  // With the asks drawn under *Joining this class* (GX-2), a section with nothing sent and no history says nothing: it is
+  // left out rather than drawn as an empty block.
+  if (!incomingHere && waitingOut.length === 0 && doneRows.length === 0) return null;
 
   function incomingDone(m: IncomingMove): string {
     if (m.status === 'moved' && m.learner && 'name' in m.learner) return t.joined(m.learner.name);

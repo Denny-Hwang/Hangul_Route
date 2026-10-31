@@ -6,7 +6,7 @@ import { memo, useCallback, useEffect, useId, useRef, useState, type CSSProperti
 import { AvatarChip } from '@/components/AvatarChip';
 import { SourceConsent } from '@/components/console/ClassTransferParts';
 import { inertOthers, tabTarget } from '@/components/console/ConfirmSheet';
-import { DECIDED_HOLD_MS, IncomingCard, actionCardStyle, incomingKey, type IncomingApi } from '@/components/console/LearnerStatusParts';
+import { DECIDED_HOLD_MS, IncomingCard, actionCardStyle, incomingKey, relinkSettled, type IncomingApi } from '@/components/console/LearnerStatusParts';
 import { MoveButton } from '@/components/console/TransferParts';
 import type { ConsoleApi, TransferSourceView } from '@/lib/console/api';
 import { minutesShown, type IncomingItem, type OutgoingItem } from '@/lib/console/learner-status';
@@ -42,6 +42,8 @@ export interface AttentionCounts {
   moves: number;
 }
 
+const hidden: CSSProperties = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' };
+
 const bannerStyle: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
@@ -59,32 +61,39 @@ const bannerStyle: CSSProperties = {
 /** Whether two renders of the banner say the same thing: its text changes only when a count changes (section 5.1). */
 export const sameCounts = (a: AttentionCounts, b: AttentionCounts): boolean => a.relinks === b.relinks && a.moves === b.moves;
 
-function BannerView({ relinks, moves, onReview }: AttentionCounts & { onReview: () => void }): JSX.Element | null {
+function BannerView({ relinks, moves, onReview }: AttentionCounts & { onReview: () => void }): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.attention;
   const total = relinks + moves;
-  if (total <= 0) return null;
   const parts = [relinks > 0 ? t.devices(relinks) : null, moves > 0 ? t.moves(moves) : null].filter((p): p is string => p !== null);
+  // The status region stays mounted at 0 (empty and visually hidden): a region inserted together with its words is often
+  // not announced, so the first request after none is filled into a region that is already there.
   return (
-    <section style={bannerStyle} data-testid="attention-banner" aria-labelledby="attention-banner-title">
-      <div role="status" aria-live="polite" style={{ minWidth: 0, flex: '1 1 14rem' }}>
-        <p id="attention-banner-title" style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
-          {t.title(total)}
-        </p>
-        <p style={{ margin: `${spacing.xs}px 0 0`, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.normal }} data-testid="attention-banner-parts">
-          {parts.join(' · ')}
-        </p>
+    <section style={total > 0 ? bannerStyle : hidden} data-testid={total > 0 ? 'attention-banner' : 'attention-banner-idle'} aria-labelledby={total > 0 ? 'attention-banner-title' : undefined}>
+      <div role="status" aria-live="polite" style={{ minWidth: 0, flex: '1 1 14rem' }} data-testid="attention-banner-live">
+        {total > 0 ? (
+          <>
+            <p id="attention-banner-title" style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, lineHeight: typography.leading.tight }}>
+              {t.title(total)}
+            </p>
+            <p style={{ margin: `${spacing.xs}px 0 0`, fontSize: rem(typography.size.bodySm), lineHeight: typography.leading.normal }} data-testid="attention-banner-parts">
+              {parts.join(' · ')}
+            </p>
+          </>
+        ) : null}
       </div>
-      <MoveButton primary onClick={onReview} testId="attention-review-now">
-        {t.reviewNow.cta}
-      </MoveButton>
+      {total > 0 ? (
+        <MoveButton primary onClick={onReview} testId="attention-review-now">
+          {t.reviewNow.cta}
+        </MoveButton>
+      ) : null}
     </section>
   );
 }
 
 /**
  * The banner under the class title while anything needs this space's answer: `role="status"`, never auto-dismissed, gone
- * at 0. It re-renders only when a count changes, so a 20 s read does not repeat the announcement; the page passes a
+ * at 0 (only its empty status region stays). It re-renders only when a count changes, so a 20 s read does not repeat the announcement; the page passes a
  * stable `onReview`. The locale is read through context, so a language change still redraws it.
  */
 export const AttentionBanner = memo(BannerView, (a, b) => sameCounts(a, b) && a.onReview === b.onReview);
@@ -166,7 +175,6 @@ const SHEET_CSS = `
 @media (min-width:45em){.hr-attn{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;max-height:85vh;border-radius:${radii.xl}px;padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
 
 const TABBABLE = 'button:not([disabled]), a[href]';
-const hidden: CSSProperties = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' };
 const rowStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -218,6 +226,9 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
   const [held, setHeld] = useState<Record<string, Held>>({});
   const [said, setSaid] = useState('');
   const [reviewing, setReviewing] = useState<string | null>(null);
+  // A consent answer the page itself must handle (the session ended, the role or the switch changed): its words on the
+  // row (the moves page's page-state lines), also said, so a press never ends in silence.
+  const [rowState, setRowState] = useState<Record<string, string>>({});
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const order = useRef<Record<Held['section'], string[]>>({ devices: [], incoming: [], outgoing: [], family: [] });
 
@@ -342,7 +353,8 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
             style={{
               minHeight: touchTarget.min,
               minWidth: touchTarget.min,
-              padding: `${spacing.xs}px ${spacing.lg}px`,
+              // The move buttons' padding: a two-letter label (the ko Close) stays a pill, never a circle.
+              padding: `${spacing.sm}px ${spacing.xl}px`,
               borderRadius: radii.pill,
               border: `${borderWidth.base}px solid ${colors.border.strong}`,
               backgroundColor: colors.surface.paper,
@@ -378,6 +390,7 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
                 spaceId={spaceId}
                 online={online && !readOnly}
                 onAnswered={(text) => answered(key, { section: 'devices', name: item.name, avatar: item.avatar }, text, item.learnerId)}
+                onFailed={setSaid}
               />
             ),
           ),
@@ -415,6 +428,11 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
                   <strong id={`${key}-name`}>{item.item.name ?? ''}</strong>
                 </span>
                 {item.item.to ? <p style={lineStyle}>{c.status.moveTo(item.item.to)}</p> : null}
+                {rowState[key] ? (
+                  <p style={lineStyle} data-testid="sheet-outgoing-state">
+                    {rowState[key]}
+                  </p>
+                ) : null}
                 {reviewing === key && item.view ? (
                   <SourceConsent
                     view={item.view}
@@ -423,6 +441,11 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
                     online={online}
                     direct={direct}
                     onAnswered={(text) => answered(key, { section: 'outgoing', name: item.item.name ?? '', avatar: item.item.avatar }, text, item.item.learnerId)}
+                    onPageState={(state) => {
+                      const text = state === 'signIn' ? c.start.signInAgain : state === 'forbidden' ? c.transfer.states.forbidden : c.transfer.states.locked;
+                      setRowState((prev) => ({ ...prev, [key]: text }));
+                      setSaid(text);
+                    }}
                   />
                 ) : readOnly || !item.view ? null : (
                   <div style={actions}>
@@ -487,6 +510,7 @@ function DeviceRow({
   spaceId,
   online,
   onAnswered,
+  onFailed,
 }: {
   rowKey: string;
   device: SheetDevice;
@@ -494,22 +518,36 @@ function DeviceRow({
   api: Pick<ConsoleApi, 'decideRelink'>;
   spaceId: string;
   online: boolean;
+  /** Answered, or closed meanwhile: the row is held with its line, then leaves. */
   onAnswered: (text: string) => void;
+  /** A failure that leaves the request open (offline, a 5xx, a learner who left): said; the row keeps its answers. */
+  onFailed: (text: string) => void;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const nameId = `${rowKey}-name`;
   const reasonId = `${rowKey}-reason`;
   const decide = async (approve: boolean): Promise<void> => {
     if (busy) return;
     setBusy(true);
+    setFailed(null);
     const result = await api.decideRelink(spaceId, device.id, approve);
     setBusy(false);
     if (result.ok) {
       announceRosterChange();
       onAnswered(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: device.name }, locale));
-    } else onAnswered(relinkNoteText({ kind: 'decideFailed', result }, locale));
+      return;
+    }
+    const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
+    if (relinkSettled(result)) {
+      onAnswered(text);
+      return;
+    }
+    // Still open: the line shows under the answers, so a sighted grown-up sees why nothing changed and can try again.
+    setFailed(text);
+    onFailed(text);
   };
   return (
     <article style={rowStyle} data-sheet-key={rowKey} data-testid="sheet-device-row" tabIndex={-1} aria-labelledby={nameId}>
@@ -528,6 +566,11 @@ function DeviceRow({
           {c.relink.deny.cta}
         </MoveButton>
       </div>
+      {failed ? (
+        <p style={lineStyle} data-testid="sheet-device-failed">
+          {failed}
+        </p>
+      ) : null}
     </article>
   );
 }

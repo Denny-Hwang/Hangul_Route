@@ -7,6 +7,7 @@ import { MoveButton } from '@/components/console/TransferParts';
 import type { ConsoleApi, RelinkView } from '@/lib/console/api';
 import { minutesShown } from '@/lib/console/learner-status';
 import { relinkNoteText } from '@/lib/console/relink';
+import { relinkSettled } from '@/components/console/LearnerStatusParts';
 import { RELINK_REMINDED_KEY, RELINK_REMIND_MS, RELINK_SHOWN_KEY, addId, nextRelinkPopup, popupStorage, readIds, type PopupPick } from '@/lib/console/relink-popup';
 import { rem } from '@/lib/console/rem';
 import { announceRosterChange } from '@/lib/console/roster-broadcast';
@@ -36,6 +37,7 @@ const POPUP_CSS = `
 .hr-relink-pop-actions>*{flex:1 1 ${rem(spacing.xxxl * 3)}}
 .hr-relink-pop-actions button{width:100%}
 .hr-relink-pop :focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
+.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}
 @media (min-width:45em){.hr-relink-pop{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;border-radius:${radii.xl}px;border-top:none;border-inline-start:${borderWidth.thick}px solid ${colors.feedback.nudge};padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
 
 const TABBABLE = 'button:not([disabled])';
@@ -54,8 +56,12 @@ export function RelinkPopup({
   api: RelinkPopupApi;
   spaceId: string;
   online: boolean;
-  /** After Approve or Deny: the result line for the learner's card and the page's polite region; the pop-up closes. */
-  onResult: (learnerId: string, text: string) => void;
+  /**
+   * After Approve or Deny: the result line for the page's polite region. `settled` (answered, or closed meanwhile): the
+   * pop-up closes and the learner's card shows the line. Otherwise (offline, a 5xx) the pop-up stays with its line under
+   * the buttons, so the grown-up can try again while the minutes run.
+   */
+  onResult: (learnerId: string, text: string, settled: boolean) => void;
   /** Later, Escape: the pop-up closes; the chip and the banner stay. */
   onLater: () => void;
 }): JSX.Element {
@@ -67,6 +73,7 @@ export function RelinkPopup({
   const box = useRef<HTMLDivElement | null>(null);
   const title = useRef<HTMLHeadingElement | null>(null);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const latestLater = useRef(onLater);
   latestLater.current = onLater;
   const request = pick.request;
@@ -111,10 +118,18 @@ export function RelinkPopup({
   const decide = async (approve: boolean): Promise<void> => {
     if (busy) return;
     setBusy(true);
+    setFailed(null);
     const result = await api.decideRelink(spaceId, request.id, approve);
     setBusy(false);
-    if (result.ok) announceRosterChange();
-    onResult(request.learnerId, result.ok ? relinkNoteText({ kind: approve ? 'approved' : 'denied', name: request.learnerName }, locale) : relinkNoteText({ kind: 'decideFailed', result }, locale));
+    if (result.ok) {
+      announceRosterChange();
+      onResult(request.learnerId, relinkNoteText({ kind: approve ? 'approved' : 'denied', name: request.learnerName }, locale), true);
+      return;
+    }
+    const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
+    const settled = relinkSettled(result);
+    if (!settled) setFailed(text);
+    onResult(request.learnerId, text, settled);
   };
 
   return (
@@ -131,6 +146,11 @@ export function RelinkPopup({
             {c.relinkPopup.closes(minutesShown(request.expiresAt, now))}
           </p>
         </div>
+        {failed ? (
+          <p style={{ fontWeight: typography.weight.semibold }} data-testid="relink-popup-failed">
+            {failed}
+          </p>
+        ) : null}
         <div className="hr-relink-pop-actions">
           <MoveButton primary waiting={busy} disabled={!online} onClick={() => void decide(true)} testId="relink-popup-approve">
             {c.relink.approve.cta}
@@ -203,7 +223,14 @@ export function useRelinkPopup({
     if (!enabled || listedKey === '') return;
     const shown = seen(RELINK_SHOWN_KEY);
     const now = new Date();
-    for (const request of relinks ?? []) if (listed.includes(request.id) && !shown.has(request.id)) mark({ request, reminder: false }, now);
+    const reminded = seen(RELINK_REMINDED_KEY);
+    // Listed in the sheet the grown-up opened: seen there, so neither the first pop-up nor the 2-minute reminder comes
+    // back for it after the sheet closes (the reminder is for a request put off with Later, section 5.3).
+    for (const request of relinks ?? []) {
+      if (!listed.includes(request.id)) continue;
+      if (!shown.has(request.id)) mark({ request, reminder: false }, now);
+      if (!reminded.has(request.id)) mark({ request, reminder: true }, now);
+    }
     // `listed` is keyed by its ids; `seen` and `mark` read refs and storage only.
   }, [listedKey, enabled, relinks]);
 
@@ -218,6 +245,9 @@ export function useRelinkPopup({
     }
     if (blocked) return;
     if (typeof document !== 'undefined' && typeof document.visibilityState === 'string' && document.visibilityState !== 'visible') return;
+    // Any other modal dialog open (the frame's display sheet, for one), or a text field being typed in (a family's
+    // rename): no dialog over it and no focus taken; the next read tries again.
+    if (otherModalOpen() || typingInField()) return;
     const now = new Date();
     const next = nextRelinkPopup(relinks, seen(RELINK_SHOWN_KEY), seen(RELINK_REMINDED_KEY), now);
     if (!next) return;
@@ -236,8 +266,41 @@ export function useRelinkPopup({
     },
     [relinks],
   );
-  const close = useCallback(() => setPick(null), []);
+  // Closed (Later, an answer) with 2 minutes or less left: that was its last showing, so the reminder never opens
+  // straight after it (section 5.3: never a third time, and never at once after Later).
+  const shownPick = useRef(pick);
+  shownPick.current = pick;
+  const close = useCallback(() => {
+    const current = shownPick.current;
+    const now = new Date();
+    if (current && closingLate(current.request, now)) mark({ request: current.request, reminder: true }, now);
+    setPick(null);
+    // `mark` reads refs and storage only.
+  }, []);
   return { pick, openFor, close };
+}
+
+/** Whether `request` has `RELINK_REMIND_MS` or less left at `now` (its reminder's time has come). */
+export function closingLate(request: RelinkView, now: Date): boolean {
+  return Date.parse(request.expiresAt) - now.getTime() <= RELINK_REMIND_MS;
+}
+
+/** Whether focus is in a field the grown-up types in (an input, a text area, an editable region). */
+export function typingInField(): boolean {
+  if (typeof document === 'undefined') return false;
+  const active = document.activeElement as (Element & { isContentEditable?: boolean }) | null;
+  if (!active || typeof active.tagName !== 'string') return false;
+  const tag = active.tagName.toLowerCase();
+  if (tag === 'textarea' || active.isContentEditable === true) return true;
+  if (tag !== 'input') return false;
+  const type = (active.getAttribute?.('type') ?? 'text').toLowerCase();
+  return !['button', 'checkbox', 'radio', 'submit', 'reset', 'range', 'color', 'file', 'image', 'hidden'].includes(type);
+}
+
+/** Whether a modal dialog other than the re-link pop-up is open on the page (`aria-modal="true"`). */
+export function otherModalOpen(): boolean {
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return false;
+  return document.querySelector('[aria-modal="true"]:not([data-testid="relink-popup"])') !== null;
 }
 
 /** Which sets a showing writes its id to: shown; reminded too for the reminder, or when 2 minutes or less are left. */
