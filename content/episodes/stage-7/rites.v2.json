@@ -1,0 +1,969 @@
+{
+  "id": "episode:stage7-rites-v2",
+  "stage": "stage7",
+  "theme": "rites",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "My New Year Card",
+  "subtitleEn": "Write a card to Hoya's grandmother, a teacher or a friend.",
+  "hoyaIntroEn": "A card carries good wishes into the new year. Let us write one!",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage7-rites-v2-q1",
+      "titleEn": "Who Is It For?",
+      "blurbEn": "Write who your New Year card is for: Grandma, a teacher or a friend.",
+      "teaserEn": "Next: write a short holiday message.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Who Is It For?",
+          "hoyaLineEn": "A New Year card starts with who it is for. Let us write that line first!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "A Card For You",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "카드",
+                      "romanization": "kadeu",
+                      "en": "card"
+                    },
+                    "noteEn": "A card you write on and give, like a New Year card."
+                  },
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___께 카드를 써요.",
+                      "romanization": "___kke kadeureul sseoyo",
+                      "en": "I write a card to ___."
+                    },
+                    "noteEn": "{ko:께} means to, for an elder or a teacher: {ko:할머니께}, {ko:선생님께}. To a friend, write {ko:에게}: {ko:호야에게}.",
+                    "examples": [
+                      {
+                        "ko": "할머니께 카드를 써요.",
+                        "romanization": "halmeonikke kadeureul sseoyo",
+                        "en": "I write a card to Grandma."
+                      },
+                      {
+                        "ko": "선생님께 카드를 써요.",
+                        "romanization": "seonsaengnimkke kadeureul sseoyo",
+                        "en": "I write a card to the teacher."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A new word, and a frame for who the card is for."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "써요",
+                      "romanization": "sseoyo",
+                      "en": "I write"
+                    },
+                    "noteEn": "Put words down on paper: a card, a letter or your name."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "호야에게 카드를 써요.",
+                      "romanization": "hoyaege kadeureul sseoyo",
+                      "en": "I write a card to Hoya."
+                    }
+                  }
+                ],
+                "captionEn": "A card to a friend such as Hoya uses a different word for to."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Trace the Words",
+          "minigameKind": "trace-word",
+          "minigameRef": "minigame:s7-rites-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Line",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-rites-v2-q1-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s7-rites-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Card Started!",
+          "hoyaLineEn": "You wrote who your card is for, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-v2-q1-practice",
+          "kind": "trace-word",
+          "rounds": [
+            {
+              "id": "w1",
+              "word": {
+                "ko": "카드",
+                "romanization": "kadeu",
+                "en": "card"
+              }
+            },
+            {
+              "id": "w2",
+              "word": {
+                "ko": "써요",
+                "romanization": "sseoyo",
+                "en": "I write"
+              }
+            },
+            {
+              "id": "w3",
+              "word": {
+                "ko": "새해",
+                "romanization": "saehae",
+                "en": "new year"
+              }
+            },
+            {
+              "id": "w4",
+              "word": {
+                "ko": "설날",
+                "romanization": "seollal",
+                "en": "Lunar New Year's Day"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q1-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type: I write a card to Grandma.",
+              "pictureRef": "word:family-grandma",
+              "target": {
+                "ko": "할머니께 카드를 써요",
+                "romanization": "halmeonikke kadeureul sseoyo",
+                "en": "I write a card to Grandma"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: I write a card to Hoya.",
+              "target": {
+                "ko": "호야에게 카드를 써요",
+                "romanization": "hoyaege kadeureul sseoyo",
+                "en": "I write a card to Hoya"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: I write a card to the teacher.",
+              "target": {
+                "ko": "선생님께 카드를 써요",
+                "romanization": "seonsaengnimkke kadeureul sseoyo",
+                "en": "I write a card to the teacher"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: Happy New Year.",
+              "pictureRef": "card:seollal",
+              "target": {
+                "ko": "새해 복 많이 받으세요",
+                "romanization": "saehae bok mani badeuseyo",
+                "en": "Happy New Year"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "선생님___ 카드를 써요.",
+                "romanization": "seonsaengnim___ kadeureul sseoyo",
+                "en": "I write a card to the teacher."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "께",
+                  "romanization": "kke",
+                  "en": "to (for someone you respect)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                },
+                {
+                  "ko": "에",
+                  "romanization": "e",
+                  "en": "at, on (a time or a place)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "seonsaengnimkke kadeureul sseoyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "호야___ 카드를 써요.",
+                "romanization": "hoya___ kadeureul sseoyo",
+                "en": "I write a card to Hoya."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker (after a final consonant)"
+                },
+                {
+                  "ko": "에게",
+                  "romanization": "ege",
+                  "en": "to (a friend)"
+                },
+                {
+                  "ko": "에",
+                  "romanization": "e",
+                  "en": "at, on (a time or a place)"
+                }
+              ],
+              "answerIndex": 1,
+              "filledRomanization": "hoyaege kadeureul sseoyo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-rites-v2-q2",
+      "titleEn": "Have a Good Holiday",
+      "blurbEn": "Write a holiday wish, and a line of your own news.",
+      "teaserEn": "Next: write a whole New Year card.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Have a Good Holiday",
+          "hoyaLineEn": "A short holiday wish suits anyone. Let us write one!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Wishing a Good Day",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___ 잘 보내세요.",
+                      "romanization": "___ jal bonaeseyo",
+                      "en": "Have a good time on ___."
+                    },
+                    "noteEn": "Put a day in the slot. {ko:보내세요} asks politely and shows respect, so it suits Grandma, a teacher or a friend.",
+                    "examples": [
+                      {
+                        "ko": "추석 잘 보내세요.",
+                        "romanization": "chuseok jal bonaeseyo",
+                        "en": "Have a good Chuseok."
+                      },
+                      {
+                        "ko": "주말 잘 보내세요.",
+                        "romanization": "jumal jal bonaeseyo",
+                        "en": "Have a good weekend."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A frame for wishing someone a good day."
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "명절",
+                      "romanization": "myeongjeol",
+                      "en": "holiday"
+                    },
+                    "noteEn": "A big holiday, such as {ko:설날} or {ko:추석}."
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "명절 잘 보내세요.",
+                      "romanization": "myeongjeol jal bonaeseyo",
+                      "en": "Have a good holiday."
+                    }
+                  }
+                ],
+                "captionEn": "One word for any big holiday."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "아침에 떡국을 먹었어요.",
+                      "romanization": "achime tteokgugeul meogeosseoyo",
+                      "en": "I ate tteokguk in the morning."
+                    },
+                    "picture": "card:tteokguk"
+                  }
+                ],
+                "captionEn": "A card can also share a little news about you."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Message",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Type the Message",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-rites-v2-q2-apply",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "write-frame",
+          "minigameRef": "minigame:s7-rites-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Message Written!",
+          "hoyaLineEn": "You wrote a holiday message, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "추석 잘 보내세요.",
+                "romanization": "chuseok jal bonaeseyo",
+                "en": "Have a good Chuseok."
+              },
+              "pictureRef": "card:chuseok",
+              "distractors": []
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "새해 복 많이 받으세요.",
+                "romanization": "saehae bok mani badeuseyo",
+                "en": "Happy New Year."
+              },
+              "pictureRef": "card:seollal",
+              "distractors": []
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "명절 잘 보내세요.",
+                "romanization": "myeongjeol jal bonaeseyo",
+                "en": "Have a good holiday."
+              },
+              "distractors": [
+                {
+                  "ko": "받으세요",
+                  "romanization": "badeuseyo",
+                  "en": "please receive"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "아침에 떡국을 먹었어요.",
+                "romanization": "achime tteokgugeul meogeosseoyo",
+                "en": "I ate tteokguk in the morning."
+              },
+              "pictureRef": "card:tteokguk",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "I eat"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q2-apply",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "y1",
+              "promptEn": "Type the word for holiday.",
+              "target": {
+                "ko": "명절",
+                "romanization": "myeongjeol",
+                "en": "holiday"
+              }
+            },
+            {
+              "id": "y2",
+              "promptEn": "Type: Have a good weekend.",
+              "target": {
+                "ko": "주말 잘 보내세요",
+                "romanization": "jumal jal bonaeseyo",
+                "en": "have a good weekend"
+              }
+            },
+            {
+              "id": "y3",
+              "promptEn": "Type: Have a good Seollal.",
+              "pictureRef": "card:seollal",
+              "target": {
+                "ko": "설날 잘 보내세요",
+                "romanization": "seollal jal bonaeseyo",
+                "en": "have a good Seollal"
+              }
+            },
+            {
+              "id": "y4",
+              "promptEn": "Type: I ate tteokguk.",
+              "pictureRef": "card:tteokguk",
+              "target": {
+                "ko": "떡국을 먹었어요",
+                "romanization": "tteokgugeul meogeosseoyo",
+                "en": "I ate tteokguk"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q2-check",
+          "kind": "write-frame",
+          "rounds": [
+            {
+              "id": "w1",
+              "frame": {
+                "ko": "설날에 ___을/를 먹었어요.",
+                "romanization": "seollare ___eul/reul meogeosseoyo",
+                "en": "On Seollal, I ate ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "떡국",
+                      "romanization": "tteokguk",
+                      "en": "rice-cake soup"
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    },
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "w2",
+              "frame": {
+                "ko": "___ 잘 보내세요.",
+                "romanization": "___ jal bonaeseyo",
+                "en": "Have a good time on ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "명절",
+                      "romanization": "myeongjeol",
+                      "en": "the holiday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend"
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage7-rites-v2-q3",
+      "titleEn": "My New Year Card",
+      "blurbEn": "Write a New Year card of your own, from a word bank.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My New Year Card",
+          "hoyaLineEn": "Now write a whole New Year card. Who will it be for?",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Happy New Year, Grandma",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___, 새해 복 많이 받으세요.",
+                      "romanization": "___ saehae bok mani badeuseyo",
+                      "en": "Happy New Year, ___."
+                    },
+                    "noteEn": "Start the card with who it is for. {ko:받으세요} shows respect, so the wish suits Grandma, a teacher or a friend.",
+                    "examples": [
+                      {
+                        "ko": "할머니, 새해 복 많이 받으세요.",
+                        "romanization": "halmeoni saehae bok mani badeuseyo",
+                        "en": "Happy New Year, Grandma."
+                      },
+                      {
+                        "ko": "선생님, 새해 복 많이 받으세요.",
+                        "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                        "en": "Happy New Year, Teacher."
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Who it is for comes first, then the New Year wish."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "호야, 새해 복 많이 받으세요.",
+                      "romanization": "hoya saehae bok mani badeuseyo",
+                      "en": "Happy New Year, Hoya."
+                    }
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "명절 잘 보내세요.",
+                      "romanization": "myeongjeol jal bonaeseyo",
+                      "en": "Have a good holiday."
+                    }
+                  }
+                ],
+                "captionEn": "A whole card: who it is for, then your good wishes."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Type the Card",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s7-rites-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Write Your Card",
+          "minigameKind": "my-story",
+          "minigameRef": "minigame:s7-rites-v2-q3-apply",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s7-rites-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Your Own Card!",
+          "hoyaLineEn": "You wrote a New Year card of your own, in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s7-rites-v2-q3-practice",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "t1",
+              "promptEn": "Type the word for Grandma.",
+              "pictureRef": "word:family-grandma",
+              "target": {
+                "ko": "할머니",
+                "romanization": "halmeoni",
+                "en": "Grandma"
+              }
+            },
+            {
+              "id": "t2",
+              "promptEn": "Type: Happy New Year.",
+              "pictureRef": "card:seollal",
+              "target": {
+                "ko": "새해 복 많이 받으세요",
+                "romanization": "saehae bok mani badeuseyo",
+                "en": "Happy New Year"
+              }
+            },
+            {
+              "id": "t3",
+              "promptEn": "Type the word for Teacher.",
+              "target": {
+                "ko": "선생님",
+                "romanization": "seonsaengnim",
+                "en": "Teacher"
+              }
+            },
+            {
+              "id": "t4",
+              "promptEn": "Type: Have a good Chuseok.",
+              "pictureRef": "card:chuseok",
+              "target": {
+                "ko": "추석 잘 보내세요",
+                "romanization": "chuseok jal bonaeseyo",
+                "en": "have a good Chuseok"
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q3-apply",
+          "kind": "my-story",
+          "frames": [
+            {
+              "id": "f1",
+              "frame": {
+                "ko": "___, 새해 복 많이 받으세요.",
+                "romanization": "___ saehae bok mani badeuseyo",
+                "en": "Happy New Year, ___."
+              },
+              "slots": [
+                {
+                  "id": "who",
+                  "bank": [
+                    {
+                      "ko": "할머니",
+                      "romanization": "halmeoni",
+                      "en": "Grandma"
+                    },
+                    {
+                      "ko": "호야",
+                      "romanization": "Hoya",
+                      "en": "Hoya",
+                      "neutral": true
+                    },
+                    {
+                      "ko": "선생님",
+                      "romanization": "seonsaengnim",
+                      "en": "Teacher"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            },
+            {
+              "id": "f2",
+              "frame": {
+                "ko": "설날에 ___을/를 먹었어요.",
+                "romanization": "seollare ___eul/reul meogeosseoyo",
+                "en": "On Seollal, I ate ___."
+              },
+              "slots": [
+                {
+                  "id": "food",
+                  "bank": [
+                    {
+                      "ko": "떡국",
+                      "romanization": "tteokguk",
+                      "en": "rice-cake soup"
+                    },
+                    {
+                      "ko": "밥",
+                      "romanization": "bap",
+                      "en": "rice",
+                      "neutral": true
+                    },
+                    {
+                      "ko": "사과",
+                      "romanization": "sagwa",
+                      "en": "an apple"
+                    }
+                  ]
+                }
+              ],
+              "entry": "pick",
+              "freeEntry": false
+            },
+            {
+              "id": "f3",
+              "frame": {
+                "ko": "___ 잘 보내세요.",
+                "romanization": "___ jal bonaeseyo",
+                "en": "Have a good time on ___."
+              },
+              "slots": [
+                {
+                  "id": "day",
+                  "bank": [
+                    {
+                      "ko": "명절",
+                      "romanization": "myeongjeol",
+                      "en": "the holiday"
+                    },
+                    {
+                      "ko": "주말",
+                      "romanization": "jumal",
+                      "en": "the weekend",
+                      "neutral": true
+                    },
+                    {
+                      "ko": "추석",
+                      "romanization": "chuseok",
+                      "en": "the autumn harvest festival"
+                    }
+                  ]
+                }
+              ],
+              "entry": "type",
+              "freeEntry": false
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s7-rites-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "선생님, 새해 복 많이 받으세요.",
+                "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                "en": "Happy New Year, Teacher."
+              },
+              "distractors": []
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "할머니께 카드를 써요.",
+                "romanization": "halmeonikke kadeureul sseoyo",
+                "en": "I write a card to Grandma."
+              },
+              "pictureRef": "word:family-grandma",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "A New Year card is called {ko:연하장}: a card or postcard that wishes someone a happy new year. As society industrialized and grew, people could no longer visit everyone with New Year greetings, and cards took the place of those visits.",
+      "sources": [
+        {
+          "title": "연하장 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4538",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘새해를 축하하는 엽서 혹은 카드.’ / 의의: ‘산업화와 인구 증가로 인하여 사람들 사이의 관계가 복잡해짐에 따라 일일이 찾아다니면서 새해인사를 할 수가 없게 된 상황에서 연하장이 이를 대신하게 된 것이다.’"
+        },
+        {
+          "title": "연하장 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=238036&searchKeywordTo=3",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘연하-장(年賀狀)’(word_no 238036) 「명사」: “새해를 축하하기 위하여 간단한 글이나 그림을 담아 보내는 서장(書狀).”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 연하장 (topic 4538, read through the site's own topic API, HTTP 200): 정의, a postcard or card that celebrates the new year; 의의, as industrialization and a growing population made it impossible to call on everyone for New Year greetings, the card took their place. Standard Korean Language Dictionary 연하장 (word_no 238036, search page, HTTP 200): a short letter of words or a picture sent to celebrate the new year. Restated in own words; the locators quote the Korean. Carried by: the q1 Did you know? tip, beside the card words.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): both pages read again against the note. The author's draft said 'as towns grew and people knew more people than they could visit'; the source names industrialization and population growth, so the note now says 'as society industrialized and grew, people could no longer visit everyone with New Year greetings'. The entry also says the card came to Korea through Japan and began abroad; the note makes no origin claim at all (§5.1: shared customs are never framed as Korean in origin). No UNESCO status, brand or person. Outcome: wording fixed.\nLine 3 (pass 3, MAR third pass after the reviser, 2026-10-31): note, sources and locators re-read against the fetched pages; the institution is named as on the access date (국립민속박물관); no run of words is shared with a quoted source; the es and ko texts say the same and keep the one {ko:} token."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "New Year wishes, {ko:덕담}, go to elders, friends and younger people alike, and are fitted to the person who hears them. In the past, a wish was said as if it had already come true.",
+      "sources": [
+        {
+          "title": "덕담 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3593",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘새해를 맞이하여 어른·친구·아랫사람에게 해주는 인사말.’ / 내용: ‘주로 한 해 동안의 일들이 잘 되기를 기원하는 것인데 상대의 형편에 따라 말한다.’ / ‘과거형의 말을 통해 일이 이루어지기를 기원하는 의미를 담고 있다.’ / ‘지금 양력 연시(年始)에 연하장을 보내는 것도 이 덕담을 글로써 표현하는 것이다.’"
+        },
+        {
+          "title": "덕담 (명사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=412271&searchKeywordTo=3",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘덕담(德談)’(word_no 412271) 「명사」: “남이 잘되기를 비는 말. 주로 새해에 많이 나누는 말이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Folk Museum of Korea, 한국세시풍속사전 entry 덕담 (topic 3593, site topic API, HTTP 200): 정의, the greeting said at the new year to elders, friends and younger people; 내용, it is fitted to the other person's situation, and wishes were put in the past tense so that they would come true; sending a New Year card is this wish in writing. Standard Korean Language Dictionary 덕담 (word_no 412271, search page, HTTP 200): words wishing others well, mostly exchanged at the new year. Carried by: the q2 Did you know? tip, beside the holiday wishes.\nLine 2 (pass 2, MAR culture and facts checker, 2026-10-31): 'elders, friends and younger people' is the 정의 list; 'fitted to the person who hears them' renders 상대의 형편에 따라 말한다; the draft said a wish 'was often said' in the past tense, but the entry gives the past-tense wish as the traditional form and says the custom is now hard to find, so the note says 'In the past, a wish was said as if it had already come true', with no 'often' and no claim about today. The entry's examples (a son, wealth, passing an exam) are left out: they would ask about family and money. Outcome: wording narrowed.\nLine 3 (pass 3, MAR third pass, 2026-10-31): re-read; institution named as on the access date; a custom described, no blame for doing otherwise (anti-shame, F-CURR-002 7.7); es and ko keep the one {ko:} token."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "{ko:께} is the respectful form of {ko:에게}, to. A letter or card to an elder or a teacher can open with it: {ko:할머니께}, {ko:선생님께}. To a close friend, {ko:에게} is used: {ko:호야에게}.",
+      "sources": [
+        {
+          "title": "언어 예절 (편지 쓰기), a column by 허철구",
+          "publisher": "국립국어원 (National Institute of Korean Language), 언어 예절 column",
+          "url": "https://www.korean.go.kr/nkview/news/11/11_7.htm",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘웃어른께는 ‘아버님 보시옵소서’라거나 ‘선생님께 올립니다’와 같이 쓰면 무난하며 친한 친구나 사랑하는 자녀에게라면 좀더 정겨운 표현을 동원할 수도 있을 것이다. 이를테면 ‘그리운 벗에게 보낸다’나 ‘사랑하는 딸에게’ 등도 좋은 표현이라 할 만하다.’"
+        },
+        {
+          "title": "께 1 (조사)",
+          "publisher": "국립국어원 표준국어대사전 (Standard Korean Language Dictionary)",
+          "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=403851&searchKeywordTo=3",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘께 1’(word_no 403851) 「조사」「1」: “‘에게’의 높임말.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Line 1 (pass 1, MAR author sourcing, 2026-10-31): National Institute of Korean Language, 언어 예절 column by 허철구 on letter writing (korean.go.kr/nkview/news/11/11_7.htm, HTTP 200; the byline names the institute's pre-2004 name 국립국어연구원, and the page is published today by 국립국어원, the name the publisher field gives as of the access date): a letter to an elder opens like '선생님께 올립니다', one to a close friend like '그리운 벗에게 보낸다'. Standard Korean Language Dictionary 께 1 「조사」 (word_no 403851, search page, HTTP 200): the honorific of 에게. The 2011 「표준 언어 예절」 report (korean.go.kr report_seq 770) is a PDF whose text layer is font-encoded and could not be read, so the note cites the institute's own column and dictionary, which state the same rule. Carried by: the q3 Did you know? tip, after the learner has written 께 and 에게 in q1.\nLine 2 (pass 2, MAR language and culture checkers, 2026-10-31): the draft said 'A card to an elder or a teacher opens with it'; the column says such an opening is fitting (무난하며) and speaks of letters, so the note says 'A letter or card ... can open with it'. The column's own examples (아버님, 딸) are family words and are left out; the note's examples are the cell's cast. Outcome: wording fixed.\nLine 3 (pass 3, MAR third pass, 2026-10-31): re-read; es and ko keep the six {ko:} tokens in order; no claim about any group as a whole."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Author pass (MAR, 2026-10-31): §5.4 S7 in three quests: who the card is for (___께 카드를 써요), a holiday wish (___ 잘 보내세요, with 명절) and a line of the writer's news, and the whole New Year card as the q3 My Story chain (___, 새해 복 많이 받으세요). Triples trace-word / type-hangul / cloze-pick, order-it / type-hangul / write-frame, type-hangul / my-story / order-it: none is a Volume 1 triple.",
+      "Language lens (MAR, 2026-10-31): 해요체 throughout; the receiver's honorific per NIKL 언어 예절: 할머니께 and 선생님께, 호야에게; every wish to the receiver in the respectful -(으)세요 (받으세요, 보내세요), which suits an elder, a teacher and a friend alike; romanization from the F-CNT-002 converter (halmeonikke, seonsaengnimkke, myeongjeol, seollare).",
+      "Language lens (cont.): applied: the draft's last chain frame ___에 또 만나요 put an elder after 만나요, where the humble 뵈어요 belongs, and a chain cannot change a later frame by the first pick, so 또 and 만나요 left the cell and the middle frame became the writer's own news (설날에 ___을/를 먹었어요). No health wish (건강하세요): the NIKL New Year column asks for care with it toward elders.",
+      "Culture and facts lens (MAR, 2026-10-31): n1 (연하장; cards took the place of New Year visits), n2 (덕담 to elders, friends and younger people, fitted to the hearer, once said as if already come true) and n3 (께, the respectful 에게, in a letter's opening) were each matched to NFM, NIKL and stdict quotes. Applied: n1 names industrialization, n2 drops 'often', n3 says 'can open'.",
+      "Culture and facts lens (cont.): all three notes are new beside Volume 1's; institutions named as on the access date; no origin claim (the NFM entry says the card came to Korea from abroad, and the note says nothing of origin), no UNESCO status, no brand, no living person in the copy.",
+      "Learning design lens (MAR, 2026-10-31): curriculum lint clean; one new frame a quest and at most 2 new words (카드, 써요; 명절); lesson-recycle 33, 50 and 83 in 100. Of the 14 words and set lines the cell asks, 11 were taught before it: 5 by Volume 1 of this cell (설날, 추석, 주말, 떡국, 사과; 36 in 100) and 6 by earlier cells (새해, 밥, 할머니, 선생님, 호야, 새해 복 많이 받으세요).",
+      "Learning design lens (cont.): applied: the q1 Cloze Pick distractors are forms no sentence takes (선생님를, 선생님에; 호야을, 호야에), so each gap has one right answer without leaning on the meaning line, and 에게 is never offered before 선생님 nor 께 before 호야. No Dictation round.",
+      "My Story lens (MAR, 2026-10-31, §6.6): the receiver is picked from Hoya's grandmother, the friend Hoya (neutral) and a teacher; one neutral option per bank, never first (호야, 밥, 주말); the only family word is Hoya's grandmother, the receiver §5.4 names; no frame asks about the learner's family, feelings, home or school.",
+      "My Story lens (cont.): with game.my-story off the step plays frame 1 alone, which reads well (할머니, 새해 복 많이 받으세요); frames 2 and 3 and every word of their banks are the q2 Write Frame Check, so the switch-off path teaches them (the CM-38 hand-off).",
+      "Reviser and third pass (MAR, 2026-10-31): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text. The passes ran inside the authoring session; no native-speaker or expert review is claimed."
+    ]
+  },
+  "contentVer": 1
+}

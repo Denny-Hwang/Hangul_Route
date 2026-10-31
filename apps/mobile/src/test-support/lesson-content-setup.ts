@@ -1,8 +1,9 @@
 export {};
 
 /**
- * Setup for every vitest project: the app loads each lesson cell's chunk on demand and the es / ko
- * titles for the active locale only (F-CURR-002 §10, `content/lessons.ts`), and each story's body
+ * Setup for every vitest project: the app loads each lesson cell's chunk on demand, the English lesson
+ * headers (row CM-40) and the es / ko titles and headers for the active locale only (F-CURR-002 §10,
+ * `content/lessons.ts`; `ensureTitles` of es or ko loads the English headers too), and each story's body
  * from its own chunk (row CM-8, `content/stories.ts`); a test reads the shipped content as if every
  * chunk had loaded, from the first line of the test file (some build their fixtures at module
  * level). The real loaders (the manifests' literal `import()`s) run here;

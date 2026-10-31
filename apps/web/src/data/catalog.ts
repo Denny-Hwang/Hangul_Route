@@ -36,7 +36,8 @@ function indexOf(source: Catalog): { quests: Map<string, CatalogQuest>; cells: M
 function englishTitle(id: string, source: Catalog): string | null {
   const index = indexOf(source);
   if (id.startsWith('quest:')) return index.quests.get(id)?.title ?? null;
-  if (id.startsWith('episode:')) return index.cells.get(id)?.title ?? null;
+  // A cell's Volume 2 (F-CURR-002 row CM-40) has its own title, on its cell's `volumes`.
+  if (id.startsWith('episode:')) return index.cells.get(id)?.title ?? source.cells.flatMap((c) => c.volumes ?? []).find((v) => v.episodeId === id)?.title ?? null;
   if (id.startsWith('story:')) return source.stories.find((s) => s.id === id)?.title ?? null;
   const key = id.startsWith('vocab-topic:') ? id.slice('vocab-topic:'.length) : id.startsWith('topic:') ? id.slice('topic:'.length) : null;
   return key === null ? null : (source.topics.find((t) => t.key === key)?.title ?? null);

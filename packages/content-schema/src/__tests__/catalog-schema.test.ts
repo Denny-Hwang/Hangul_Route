@@ -139,7 +139,11 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + My Favorite Season, Stage 7 Nature Volume 2 (F-CURR-002 CM-41 S7): +3 lesson quests on its own episode.
+    // + My Own Game, Stage 7 Play & Crafts Volume 2 (F-CURR-002 CM-42 S7): +3 lesson quests on its own episode.
+    // + My Favorite Food, Stage 7 Food & Daily Life Volume 2 (F-CURR-002 CM-43 S7): +3 lesson quests on its own episode.
+    // + My New Year Card, Stage 7 Holidays & Traditions Volume 2 (F-CURR-002 CM-45 S7): +3 lesson quests on its own episode.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(120);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -547,6 +551,21 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // F-CURR-002 row CM-40: the later volumes' quests follow every first volume's (row CM-41 S7 ships the first),
+      // in theme order (row CM-43 S7: Food & Daily Life before Nature and Play & Crafts; row CM-45 S7: Holidays &
+      // Traditions after Food & Daily Life).
+      'quest:stage7-life-v2-q1',
+      'quest:stage7-life-v2-q2',
+      'quest:stage7-life-v2-q3',
+      'quest:stage7-rites-v2-q1',
+      'quest:stage7-rites-v2-q2',
+      'quest:stage7-rites-v2-q3',
+      'quest:stage7-nature-v2-q1',
+      'quest:stage7-nature-v2-q2',
+      'quest:stage7-nature-v2-q3',
+      'quest:stage7-crafts-v2-q1',
+      'quest:stage7-crafts-v2-q2',
+      'quest:stage7-crafts-v2-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

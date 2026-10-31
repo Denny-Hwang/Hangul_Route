@@ -33,9 +33,14 @@ describe('route days from the manifest', () => {
     expect(routeDaysOf(CATALOG).map((day) => [day.episodeId, day.minutes, [...day.questIds]])).toEqual(manifestDays.map(([id, minutes, quests]) => [id, minutes, [...quests]]));
   });
 
-  it('every cell of the generated lesson manifest is a route day', () => {
+  it('every cell of the generated lesson manifest is a route day; a later volume is none (F-CURR-002 row CM-40)', () => {
     const days = new Set(routeDaysOf(CATALOG).map((day) => day.episodeId));
-    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe(true);
+    const later = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
+    // Row CM-41 S7 ships the first Volume 2; it adds no route day and no quest to one.
+    expect(later.map((episode) => episode.id)).toContain('episode:stage7-nature-v2');
+    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe((episode.volume ?? 1) === 1);
+    const dayQuests = new Set(routeDaysOf(CATALOG).flatMap((day) => [...day.questIds]));
+    for (const episode of later) for (const id of episode.questIds) expect(dayQuests.has(id), id).toBe(false);
   });
 
   it('numbers the days from 1 with no gap', () => {

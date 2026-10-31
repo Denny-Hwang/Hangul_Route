@@ -119,13 +119,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', () => {
-  const snap = finished(108);
+describe('the all-quests fixture (scenario S-c; 120 quests since rows CM-41 S7, CM-42 S7, CM-43 S7 and CM-45 S7 added the Stage 7 Nature, Play & Crafts, Food & Daily Life and Holidays & Traditions Volume 2)', () => {
+  const snap = finished(120);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
+    expect(LESSON_QUESTS).toHaveLength(120);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(120);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {
@@ -143,7 +143,7 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
   });
 
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
-    const lastQuest = LESSON_QUESTS[106];
+    const lastQuest = LESSON_QUESTS[LESSON_QUESTS.length - 2];
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
     const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
     expect(firstDay.some((id) => lastCellItems.includes(id))).toBe(true);
