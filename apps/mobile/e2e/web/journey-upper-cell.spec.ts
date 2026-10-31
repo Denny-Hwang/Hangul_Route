@@ -1457,6 +1457,7 @@ test.describe('Stage 6 Nature Volume 2 sheets (F-CURR-002 row CM-41 S6)', () => 
     await openVolumeQuest(page, episode, 2);
     const map = page.getByRole('group', { name: 'Map, 4 lines' });
     await expect(map).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('realia-read-sheet-kind-map')).toBeVisible({ timeout: 10_000 });
     // The way is printed on the sheet, not only in the line's accessible name.
     await expect(map.getByText('왼쪽', { exact: true })).toHaveCount(2);
     await expect(map.getByText('오른쪽', { exact: true })).toHaveCount(2);
@@ -1473,16 +1474,18 @@ test.describe('Stage 6 Nature Volume 2 sheets (F-CURR-002 row CM-41 S6)', () => 
     expect(errors).toEqual([]);
   });
 
-  for (const [index, group, ko] of [
-    [0, 'Weather forecast, 3 lines', '모레'],
-    [1, 'Trail sign, 4 lines', '대피소'],
-    [2, 'Map, 4 lines', '오른쪽'],
+  for (const [index, group, ko, lazyKind] of [
+    [0, 'Weather forecast, 3 lines', '모레', 'forecast'],
+    [1, 'Trail sign, 4 lines', '대피소', undefined],
+    [2, 'Map, 4 lines', '오른쪽', 'map'],
   ] as const) {
     test(`320 at the Largest text size: q${index + 1}'s sheet keeps every line button in the column`, async ({ page }) => {
       await journeyWithFlags(page, { volumes: { on: true, pct: 100 } }, { 'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' } });
       await openVolumeQuest(page, episode, index);
       const sheet = page.getByRole('group', { name: group });
       await expect(sheet).toBeVisible({ timeout: 10_000 });
+      // A CM-47 kind first draws as the plain sheet and redraws once its chunk is in: measure the kind's own layout.
+      if (lazyKind !== undefined) await expect(page.getByTestId(`realia-read-sheet-kind-${lazyKind}`)).toBeVisible({ timeout: 10_000 });
       // bodyLg (20) x 1.5: the setting reached the sheet.
       expect(await sheet.getByText(ko, { exact: true }).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(30);
       await expectSheetFits320(page, group);
