@@ -10,12 +10,15 @@ import type { NavLayout } from './stage-scale';
  * phone bar's strip (`inBarStrip`).
  *
  * Like `stage-scale.ts`, it imports no design-system runtime: the token values are named here and
- * a test holds them to the tokens (`TAP_SLOP` = `spacing.md`, `EDGE_GUARD_MIN` = `spacing.xl`,
+ * a test holds them to the tokens (`TAP_SLOP` = `spacing.xl`, `EDGE_GUARD_MIN` = `spacing.xl`,
  * `EDGE_GUARD_PAD` = `spacing.sm`).
  */
 
-/** A tap moves less than this on both axes, in window px (`spacing.md`). Between a tap and a swipe is nothing. */
-export const TAP_SLOP = 12;
+/**
+ * A tap moves less than this on both axes, in window px (`spacing.xl`; AMENDMENTS-TOUCH section 6.10 raised it
+ * from `spacing.md`, so a fingertip that rolls or grazes still taps). Between a tap and a swipe is nothing.
+ */
+export const TAP_SLOP = 24;
 /** A touch swipe never starts this close to the window's left or right edge: the system's own back and forward gestures own it (`spacing.xl`). */
 export const EDGE_GUARD_MIN = 24;
 /** Past a safe-area inset the guard reaches this much further (`spacing.sm`). */

@@ -46,8 +46,8 @@ function g(over: Partial<StageGesture> = {}): StageGesture {
 }
 
 describe('the constants are the tokens the spec names', () => {
-  it('TAP_SLOP is spacing.md, the edge guard spacing.xl or the inset plus spacing.sm, the ring 1 s', () => {
-    expect(TAP_SLOP).toBe(spacing.md);
+  it('TAP_SLOP is spacing.xl (AMENDMENTS-TOUCH 6.10), the edge guard spacing.xl or the inset plus spacing.sm, the ring 1 s', () => {
+    expect(TAP_SLOP).toBe(spacing.xl);
     expect(EDGE_GUARD_MIN).toBe(spacing.xl);
     expect(EDGE_GUARD_PAD).toBe(spacing.sm);
     expect(NUDGE_MS).toBe(1000);
@@ -146,14 +146,32 @@ describe('rule 2: a swipe (section 6)', () => {
 });
 
 describe('rule 3: anything between a tap and a swipe does nothing', () => {
-  it('a move of 11 px is a tap; 12 px on either axis is not', () => {
-    expect(stageGesture(g({ dx: 11, dy: -11 }))).toBe('nudge-next');
-    expect(stageGesture(g({ dx: -12 }))).toBeNull();
-    expect(stageGesture(g({ dy: 12 }))).toBeNull();
-    expect(stageGesture(g({ pointer: 'mouse', dx: 11 }))).toBe('next');
-    expect(stageGesture(g({ pointer: 'mouse', dx: 12 }))).toBeNull();
-    expect(stageGesture(g({ dy: 11, target: { kind: 'option', index: 2 } }))).toEqual({ point: 2 });
-    expect(stageGesture(g({ dy: 12, target: { kind: 'option', index: 2 } }))).toBeNull();
+  it('a move of 23 px is a tap; 24 px on either axis is not (AMENDMENTS-TOUCH 6.10)', () => {
+    expect(stageGesture(g({ dx: 23, dy: -23 }))).toBe('nudge-next');
+    expect(stageGesture(g({ dx: -24 }))).toBeNull();
+    expect(stageGesture(g({ dy: 24 }))).toBeNull();
+    expect(stageGesture(g({ pointer: 'mouse', dx: 23 }))).toBe('next');
+    expect(stageGesture(g({ pointer: 'mouse', dx: 24 }))).toBeNull();
+    expect(stageGesture(g({ dy: 23, target: { kind: 'option', index: 2 } }))).toEqual({ point: 2 });
+    expect(stageGesture(g({ dy: 24, target: { kind: 'option', index: 2 } }))).toBeNull();
+    expect(stageGesture(g({ layout: 'overlay', dx: -23, dy: 23 }))).toBe('toggle-bar');
+    expect(stageGesture(g({ covering: 'more', dx: 23 }))).toBe('close-more');
+    expect(stageGesture(g({ covering: 'more', dx: 24 }))).toBeNull();
+  });
+
+  it('a graze of 12 to 23 px, which did nothing under the old 12 px slop, is now a tap (owner report 2026-10-31)', () => {
+    for (const d of [12, 16, 20, 23]) {
+      expect(stageGesture(g({ dx: d, dy: d })), `${d} px`).toBe('nudge-next');
+      expect(stageGesture(g({ dx: -d, target: { kind: 'option', index: 1 } })), `${d} px on an option`).toEqual({ point: 1 });
+    }
+  });
+
+  it('the swipe distance, the edge guard and two fingers are unchanged', () => {
+    expect(stageGesture(g({ dx: -(SWIPE_MIN - 1) }))).toBeNull();
+    expect(stageGesture(g({ dx: -SWIPE_MIN }))).toBe('next');
+    expect(stageGesture(g({ startX: EDGE_GUARD_MIN - 1, dx: SWIPE_MIN }))).toBeNull();
+    expect(stageGesture(g({ touches: 2 }))).toBeNull();
+    expect(stageGesture(g({ touches: 2, target: { kind: 'option', index: 1 } }))).toBeNull();
   });
 });
 

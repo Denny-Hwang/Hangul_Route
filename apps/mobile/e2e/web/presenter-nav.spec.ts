@@ -1396,3 +1396,72 @@ for (const vp of POINT_MATRIX) {
     });
   }
 }
+
+/**
+ * AMENDMENTS-TOUCH section 6.10, row KT-10 (owner report 2026-10-31, "a slight graze selects and then
+ * un-selects"): the stage's `TAP_SLOP` is `spacing.xl` (24 px). A real touch that wanders 20 px on both
+ * axes before it lifts is still a tap: on empty stage it rings Next (docked) or shows and hides the bar
+ * (overlay); on an option it points at it, and a second such graze clears it. A 30 px move is neither a
+ * tap nor a swipe and does nothing. The swipe distance, the edge guard and two fingers keep their cases
+ * above. On the smallest presenter window (568 x 320, a 320 px phone held sideways; upright it shows the
+ * rotate page) and an upright tablet (820 x 1180). CDP touch events (`swipeStage`), Chromium only.
+ */
+const SLOP_MATRIX: readonly Viewport[] = MATRIX.filter((vp) => vp.id === 'V1' || vp.id === 'V3-upright');
+/** Inside the 24 px slop on both axes, and past the old 12 px one. */
+const GRAZE = 20;
+/** Past the slop, short of a 60 px swipe. */
+const DRIFT = 30;
+
+for (const vp of SLOP_MATRIX) {
+  const layout = layoutOf(vp);
+  test.describe(`KT-10 tap slop: ${vp.id} ${vp.width} x ${vp.height}, touch (${layout})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height }, isMobile: vp.phone, hasTouch: true });
+
+    test('a 20 px graze is a tap on empty stage and on an option; a 30 px drift does nothing', async ({ page }) => {
+      test.skip(SWIPES_SKIPPED, 'grazes drive CDP touch events (Chromium only)');
+      test.setTimeout(120_000);
+      await open(page, vp, 'touch');
+      if (layout === 'overlay') await overlayBar(page, false);
+      const presses = await familyPresses(page);
+      const graze = async (from: WindowPoint, d: number): Promise<void> => swipeStage(page, from, { x: from.x + d, y: from.y + d });
+
+      // Empty stage on the title slide.
+      const title = await counter(page);
+      const empty = await emptyPoint(page);
+      await graze(empty, GRAZE);
+      if (layout === 'overlay') {
+        await overlayBar(page, true);
+        await graze(empty, GRAZE);
+        await overlayBar(page, false);
+      } else {
+        await expect(page.getByTestId('presenter-next')).toHaveAttribute('data-nudge', 'on');
+      }
+      expect(await counter(page)).toBe(title);
+
+      // An option on the 2 x 2 grid.
+      await goToFamily(page, presses, 'grid');
+      if (layout === 'overlay') await overlayBar(page, false);
+      else {
+        await tapAt(page, 'touch', await emptyPoint(page));
+        await page.waitForTimeout(600);
+      }
+      const options = (await settledTargets(page)).filter((b) => /^option:[1-4]$/.test(b.marker));
+      expect(options.length).toBeGreaterThanOrEqual(3);
+      const before = await state(page);
+      const centre = (t: TargetBox): WindowPoint => ({ x: (t.left + t.right) / 2, y: (t.top + t.bottom) / 2 });
+      const [first, second] = options as [TargetBox, TargetBox];
+      await graze(centre(first), -GRAZE);
+      await expect.poll(() => pointedNow(page), 'a 20 px graze points').toEqual([first.marker]);
+      expect({ ...(await state(page)), live: '' }).toEqual({ ...before, live: '' });
+      await graze(centre(first), GRAZE);
+      await expect.poll(() => pointedNow(page), 'a second 20 px graze clears').toEqual([]);
+
+      // Neither a tap nor a swipe: nothing points, nothing steps, no control is pressed.
+      const settled = await state(page);
+      await swipeStage(page, centre(second), { x: centre(second).x - DRIFT, y: centre(second).y });
+      await page.waitForTimeout(150);
+      expect(await pointedNow(page), 'a 30 px drift').toEqual([]);
+      expect(await state(page), 'a 30 px drift').toEqual(settled);
+    });
+  });
+}
