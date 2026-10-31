@@ -156,7 +156,7 @@ test.describe('Hidden Heritage, the Seollal room (F-CURR-002 CM-37)', () => {
       });
     }
 
-    test('at the Largest text size: the prompt, the found row and the end panel fit at 320, nothing clipped', async ({ page }) => {
+    test('at the Largest text size (150%): the prompt, the found row, the end panel and the card back fit at 320, nothing clipped', async ({ page }) => {
       await open(page, true, undefined, 'largest');
       await expect(page.getByTestId('hh-scene')).toBeVisible();
       await asked(page);
@@ -171,6 +171,17 @@ test.describe('Hidden Heritage, the Seollal room (F-CURR-002 CM-37)', () => {
       await expect(page.getByText('You found them all')).toBeVisible();
       await expectTextFits(page, 'Seollal room end panel at Largest');
       await shot(page, 'hidden-heritage-seollal-end-largest-320');
+      // F-CURR-002 row CM-45 S2 (review of #922): the card back's five facts and their source lines at 150%.
+      const back = page.getByTestId('hh-card-back');
+      await back.scrollIntoViewIfNeeded();
+      for (const fact of SEOLLAL_ROOM_SCENE.note.facts) {
+        await page.getByTestId(`hh-fact-${fact.id}-text`).scrollIntoViewIfNeeded();
+        await expect(page.getByTestId(`hh-fact-${fact.id}-text`)).toHaveText(fact.claimEn);
+        await expect(page.getByTestId(`hh-fact-${fact.id}-source`)).toBeVisible();
+      }
+      await expectTextFits(page, 'Seollal room card back at Largest');
+      await expectNoHorizontalOverflow(page);
+      await shot(page, 'hidden-heritage-seollal-card-back-largest-320');
     });
 
     test('game.hidden-heritage off (the launch state): Pic-Word Match on the same three targets, from their card pictures', async ({ page }) => {
