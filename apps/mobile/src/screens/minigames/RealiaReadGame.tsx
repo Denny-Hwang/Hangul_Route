@@ -8,7 +8,6 @@ import {
   layout,
   Pill,
   Progress,
-  RealiaSheet,
   Screen,
   Spacer,
   spacing,
@@ -52,6 +51,7 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
+import { RealiaSheetView } from './realia-kinds-entry';
 
 /**
  * Realia Read (F-CURR-001 §3.6, row G-2): read a drawn menu, ticket, trail sign or price cards
@@ -239,7 +239,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
         feedbackKey={status.hoya || status.lookHere ? `${state.wrongIds.length}|${status.hoya ?? ''}|${status.lookHere ?? ''}` : undefined}
         prompt={
           <View testID="realia-read-sheet-column" style={{ gap: spacing.sm }}>
-            <RealiaSheet
+            <RealiaSheetView
               testID="realia-read-sheet"
               kind={sheetKind(play.realia)}
               title={title ? { ko: title.ko, romanization: title.romanization } : undefined}

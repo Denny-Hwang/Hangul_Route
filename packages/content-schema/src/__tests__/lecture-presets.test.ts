@@ -653,6 +653,18 @@ describe('learnerPosition (N3)', () => {
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
   });
+
+  it('a later volume is off the route (F-CURR-002 rows CM-40, CM-41 S6, CM-45 S6): its quests are never a position, and a stage stays one run', () => {
+    // A Stage 6 cell ships a Volume 2; the route still ends at the last Stage 7 quest of each cell's first volume.
+    const later = CATALOG.cells.find((c) => c.stage === 'stage6' && (c.episodeIds?.length ?? 0) > 1)?.episodeIds?.[1];
+    expect(later).toMatch(/^episode:stage6-[a-z]+-v2$/);
+    const quest = (n: number) => `${(later as string).replace('episode:', 'quest:')}-q${n}`;
+    expect(learnerPosition(quest(1), [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, [quest(3)], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    // 15 Stage 6 quests on the route: the 16th place of the stage is the first Stage 7 quest, not a Volume 2 one.
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 14, 0]]) }], CATALOG)?.questId).toBe('quest:stage6-crafts-q3');
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 15, 0]]) }], CATALOG)?.questId).toBe('quest:stage7-letters-q1');
+  });
 });
 
 describe('fallbacks on a catalogue missing what a preset needs', () => {

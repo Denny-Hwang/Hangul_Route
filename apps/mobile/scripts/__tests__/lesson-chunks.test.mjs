@@ -49,6 +49,23 @@ describe('lessonChunkProblems', () => {
     expect(isStartBundle(bundles[1].url)).toBe(false);
   });
 
+  it('checks the headers chunks and a Volume 2 body chunk like any other (F-CURR-002 row CM-40)', () => {
+    const manifest = [
+      { name: 'lessons-cell-stage2-rites', hash: '0123456789abcdef' },
+      { name: 'lessons-cell-stage2-rites-v2', hash: '1123456789abcdef' },
+      { name: 'lessons-headers-en', hash: '2123456789abcdef' },
+    ];
+    const start = { url: START, text: `var m={"a":"0123456789abcdef","b":"1123456789abcdef"},h={"en":"2123456789abcdef"};` };
+    const bundles = [start, ...manifest.map((m) => chunk(m.name, m.hash))];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    // Volume 1's bundle is never taken for Volume 2's (the md5 suffix ends the name).
+    expect(lessonChunkUrls(manifest.slice(0, 1), bundles)).toEqual([bundles[1].url]);
+    const missing = bundles.filter((b) => !b.url.includes('lessons-headers-en'));
+    expect(lessonChunkProblems({ manifest, bundles: missing, precached: all(missing) })).toEqual(['lessons-headers-en has no web bundle: the chunk is missing from the build']);
+    const pulledIn = [{ url: START, text: `${start.text}e.CHUNK_HASH="2123456789abcdef";` }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: pulledIn, precached: all(pulledIn) })).toContain(`lessons-headers-en is in the start bundle ${START}: a static import pulled the chunk in`);
+  });
+
   it('fails a chunk missing from the build, and one missing from the precache (the clip gaps mechanism)', () => {
     const bundles = sound().filter((b) => !b.url.includes('lessons-titles-es'));
     expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual(['lessons-titles-es has no web bundle: the chunk is missing from the build']);
@@ -188,6 +205,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'syllable-build-chunk', marker: 'screen-chunk:syllable-build' },
       { name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' },
       { name: 'my-story-chunk', marker: 'screen-chunk:my-story' },
+      // Row CM-47: the added realia layouts.
+      { name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -249,6 +268,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-38: the My Story game's chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/my-story-chunk.tsx')).toContain(`export const MY_STORY_CHUNK = '${SCREEN_CHUNKS[13].marker}';`);
     expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
+    // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
+    expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
+    expect(read('src/screens/minigames/realia-kinds-entry.tsx')).toContain("import('./realia-kinds-chunk')");
     // Row CM-37 part 1: the Letters school room.
     expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-letters-school')");
@@ -393,6 +415,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'syllable-build-chunk has no web bundle: the chunk is missing from the build',
       'match-shape-chunk has no web bundle: the chunk is missing from the build',
       'my-story-chunk has no web bundle: the chunk is missing from the build',
+      'realia-kinds-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

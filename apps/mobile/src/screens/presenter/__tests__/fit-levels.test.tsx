@@ -3,7 +3,7 @@ import { REALIA_DRESSINGS, presenter, spacing } from '@hangul-route/design-syste
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BuildName } from '../../../logic/lecture/build-steps';
 import { questsAll } from '../../../content';
 import { lectureBundle } from '../../../logic/lecture/content';
@@ -11,11 +11,13 @@ import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
 import { MARKER_BODY_FACTOR } from '../../../logic/lecture/stage-constants';
 import { cleanup, render, unmount } from '../../../test-support/render';
 import { PresenterViewProvider, TaughtKo as TaughtKoType } from '../presenter-context';
-import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER } from '../stage-metrics';
+import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER, TEXT_FLOOR } from '../stage-metrics';
 import { pictureCrowded, QuizOptions } from '../slides/QuizParts';
 import { QuizSlide } from '../slides/QuizSlide';
-import { RealiaQuestionSlide, isRealiaQuestion, type RealiaQuestionBody } from '../slides/RealiaQuestionSlide';
+import { RealiaQuestionSlide, isRealiaQuestion, showsRealiaKind, type RealiaQuestionBody } from '../slides/RealiaQuestionSlide';
 import { RealiaSheetStage } from '../slides/RealiaSheetStage';
+import { loadRealiaKinds } from '../../minigames/realia-kinds-entry';
+import { REALIA_KIND_LOOKS } from '@hangul-route/design-system/src/components/RealiaSheet/kinds-style';
 import { WriteTogetherSlide, type WriteTogetherBody } from '../slides/WriteTogetherSlide';
 
 /**
@@ -133,6 +135,10 @@ describe('pictureCrowded: a picture card never draws below its marker (QuizOptio
 });
 
 describe('RealiaSheetStage tight: the same lines at the same width, less room around them (slide-realia.md "Fit")', () => {
+  // The CM-47 kinds are drawn from the realia kinds chunk (`useRealiaKinds`); load it first, as a deck that shows one does.
+  beforeAll(async () => {
+    expect(await loadRealiaKinds()).not.toBeNull();
+  });
   const menu = REALIA_ALL.find((s) => s.prompt.sheet.kind === 'menu')!;
   const shippedKinds = [...new Map(REALIA_ALL.map((s) => [s.prompt.sheet.kind, s] as const)).values()];
   // Since row CM-3A S6 every shipped realia has a kind (F-CURR-002 section 5.7), so the plain sheet, the layout of a
@@ -141,9 +147,12 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
   const draw = (slide: RealiaQuestionBody, tight: boolean): Promise<ReactTestRenderer> =>
     render(atOneUnit(<RealiaSheetStage sheet={slide.prompt.sheet} rom width={512} answer={{ entryId: slide.prompt.answerEntryId, shown: false }} tight={tight} />));
 
-  it('the shipped Stage 6 realia questions carry every kind of sheet: a menu, a ticket, a trail sign and price cards, none plain', () => {
-    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card']));
-    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'plain']));
+  it('the shipped Stage 6 realia questions carry the four G-2 sheets, the two CM-47 kinds of the re-kinded stand-ins and the Volume 2 calendar and poster, none plain', () => {
+    // Row CM-47: the departure board and the trip plan are timetables, the order slip a receipt; row CM-45 S6: the
+    // Stage 6 Holidays Volume 2 adds a calendar page and a poster (its timetable and ticket are kinds already shipped).
+    const kinds = ['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'calendar', 'poster'];
+    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(kinds));
+    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set([...kinds, 'plain']));
   });
 
   it('a menu: the dressing strip at spacing.sm, not spacing.xl', async () => {
@@ -201,14 +210,76 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
     expect(changes.sort()).toEqual([...EXPECTED[kind]].sort());
   });
 
+  /**
+   * Row CM-47: the eight added kinds, each drawn from the menu's slide with its kind changed (four lines with values), as
+   * `property: loose -> tight`: the top strip (a map's park from `spacing.jumbo` to `spacing.xl`; a receipt has none, its
+   * torn edge below keeps its height), the sheet's padding and its gap after the title, and between lines either each
+   * row's half gap (the ruled rows) or the list's gap (a map, a poster); tiles keep their gap.
+   */
+  const ROW = `paddingVertical: ${spacing.xs / 2} -> 0`;
+  const ADDED: Record<string, string[]> = {
+    recipe: [STRIP, PAD, INNER, ROW, ROW, ROW, ROW],
+    receipt: [PAD, INNER, ROW, ROW, ROW, ROW],
+    label: [STRIP, PAD, INNER, ROW, ROW, ROW, ROW],
+    forecast: [STRIP, PAD, INNER],
+    calendar: [STRIP, PAD, INNER],
+    timetable: [STRIP, PAD, INNER, ROW, ROW, ROW, ROW],
+    map: [`height: ${spacing.jumbo} -> ${spacing.xl}`, PAD, INNER, ROWS],
+    poster: [STRIP, PAD, INNER, ROWS],
+  };
+  const asKind = (kind: string): RealiaQuestionBody => ({ ...menu, prompt: { ...menu.prompt, sheet: { ...menu.prompt.sheet, kind: kind as RealiaQuestionBody['prompt']['sheet']['kind'] } } });
+
+  it.each(Object.keys(ADDED))('a %s (CM-47): only its strip, its padding and its gaps get smaller, at the same width', async (kind) => {
+    expect(REALIA_KIND_LOOKS[kind as keyof typeof REALIA_KIND_LOOKS].top !== undefined).toBe(ADDED[kind]!.some((c) => c.startsWith('height')));
+    const slide = asKind(kind);
+    const tree = async (tight: boolean): Promise<Node> => composite((await draw(slide, tight)).root, 'presenter-realia-sheet');
+    const styles = async (tight: boolean): Promise<Record<string, unknown>[]> => views(await tree(tight), () => true).map(styleOf);
+    const loose = await styles(false);
+    const tight = await styles(true);
+    expect(tight.length).toBe(loose.length);
+    const changes = loose.flatMap((before, i) => {
+      const after = tight[i]!;
+      return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((k) => before[k] !== after[k]).map((k) => `${k}: ${String(before[k])} -> ${String(after[k])}`);
+    });
+    expect(changes.sort()).toEqual([...ADDED[kind]!].sort());
+    // Its own layout, never the plain sheet's, and every line still on it.
+    expect((await tree(false)).findAll((n) => n.props.testID === `presenter-realia-kind-${kind}`).length).toBeGreaterThan(0);
+  });
+
   it('every kind keeps its width and its horizontal padding, so no line wraps anew', async () => {
-    for (const slide of sheetsByKind) {
+    for (const slide of [...sheetsByKind, ...Object.keys(ADDED).map(asKind)]) {
       const widths = async (tight: boolean): Promise<unknown[]> => {
         const root = composite((await draw(slide, tight)).root, 'presenter-realia-sheet');
         return [styleOf(root).width, ...views(root, () => true).map((n) => [styleOf(n).width, styleOf(n).paddingHorizontal, styleOf(n).minWidth])];
       };
       expect(await widths(true), slide.prompt.sheet.kind).toEqual(await widths(false));
     }
+  });
+
+  it('a deck asks for the realia kinds chunk when it opens only for a slide with a CM-47 sheet (showsRealiaKind)', () => {
+    const byKind = (kind: string): RealiaQuestionBody => shippedKinds.find((x) => x.prompt.sheet.kind === kind)!;
+    for (const kind of ['timetable', 'receipt']) expect(showsRealiaKind(byKind(kind)), kind).toBe(true);
+    for (const kind of ['menu', 'ticket', 'sign', 'price-card']) expect(showsRealiaKind(byKind(kind)), kind).toBe(false);
+    for (const kind of Object.keys(ADDED)) expect(showsRealiaKind(asKind(kind)), kind).toBe(true);
+  });
+
+  it("a receipt's strip widens with its text on a small phone (the 18 px floor), as the sheet does (sheetUnits)", async () => {
+    const receiptWidth = async (unit: number): Promise<number> => {
+      const r = await render(
+        <PresenterViewProvider value={{ messages: en, locale: 'en', unit, reducedMotion: true }}>
+          <RealiaSheetStage sheet={asKind('receipt').prompt.sheet} rom width={4000} answer={{ entryId: menu.prompt.answerEntryId, shown: false }} />
+        </PresenterViewProvider>,
+      );
+      return styleOf(composite(r.root, 'presenter-realia-kind-receipt')).maxWidth as number;
+    };
+    const max = REALIA_KIND_LOOKS.receipt.maxWidth!;
+    // At one unit the caption is above the floor: the cap is its units.
+    expect(await receiptWidth(1)).toBe(max);
+    // On a small phone the floor draws the caption bigger than its units, and the cap grows by the same factor.
+    const unit = 0.4;
+    const scale = Math.max(TEXT_FLOOR, Math.round(unit * presenter.size.caption)) / (unit * presenter.size.caption);
+    expect(scale).toBeGreaterThan(1);
+    expect(await receiptWidth(unit)).toBe(Math.round(unit * Math.round(max * scale)));
   });
 });
 

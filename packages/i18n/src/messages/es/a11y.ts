@@ -123,7 +123,21 @@ export const a11y = {
     },
     realia: {
       summary: (kind: string, lines: number) => `${kind}, ${plural('es', lines, { one: '1 línea', other: `${lines} líneas` })}`,
-      kind: { menu: 'Menú', ticket: 'Boleto de tren', sign: 'Letrero de ruta', priceCards: 'Precios', plain: 'Hoja para leer' },
+      kind: {
+        menu: 'Menú',
+        ticket: 'Boleto de tren',
+        sign: 'Letrero de ruta',
+        priceCards: 'Precios',
+        plain: 'Hoja para leer',
+        recipe: 'Receta',
+        receipt: 'Recibo',
+        label: 'Etiqueta de alimento',
+        forecast: 'Pronóstico del tiempo',
+        calendar: 'Calendario',
+        timetable: 'Horario',
+        map: 'Mapa',
+        poster: 'Cartel',
+      },
       lineHint: 'Toca para escucharla',
       found: 'Está aquí',
       lookHere: 'Mira aquí',
@@ -364,4 +378,5 @@ export const a11y = {
     throw: (ko: string, romanization: string, n: number) =>
       plural('es', n, { one: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó 1 casilla.`, other: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó ${n} casillas.` }),
   },
+  journeyVolume: (n: number) => `Abre el volumen ${n}`,
 } satisfies DeepPartial<Messages['a11y']>;

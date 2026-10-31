@@ -1,4 +1,4 @@
-import type { ReactElement, ComponentType } from 'react';
+import type { ReactElement, ReactNode, ComponentType } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { Svg, Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { KOREAN_LANGUAGE } from '../../korean-text';
@@ -19,6 +19,7 @@ import {
   REALIA_STUB_WIDTH,
   REALIA_TOP_DRESSING,
   realiaGoodsRef,
+  realiaBaseKind,
   realiaLineLook,
   realiaPaper,
   realiaSummaryOnNative,
@@ -39,9 +40,9 @@ const TAGS = { rect: Rect, circle: Circle, ellipse: Ellipse, line: Line, path: P
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 const hidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' as const, 'aria-hidden': true };
 
-/** One dressing prop, stretched to its box (`stretch`) or kept at its aspect ratio. */
-function Dressing({ refId, height, stretch, width, centered = false }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean }): ReactElement | null {
-  const drawn = drawProp(refId, REALIA_REGISTRY);
+/** One dressing prop, stretched to its box (`stretch`) or kept at its aspect ratio; `registry`: CM-47's dressings. */
+export function Dressing({ refId, height, stretch, width, centered = false, registry = REALIA_REGISTRY }: { refId: string; height: number; stretch: boolean; width?: number; centered?: boolean; registry?: typeof REALIA_REGISTRY }): ReactElement | null {
+  const drawn = drawProp(refId, registry);
   if (!drawn) return null;
   return (
     <View {...hidden} style={{ height, width: width ?? '100%' }}>
@@ -56,7 +57,7 @@ function Dressing({ refId, height, stretch, width, centered = false }: { refId: 
   );
 }
 
-function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' | 'right' | 'center' }): ReactElement {
+export function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' | 'right' | 'center' }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View style={{ alignItems: align === 'right' ? 'flex-end' : align === 'center' ? 'center' : 'flex-start', flexShrink: 1 }}>
@@ -79,7 +80,7 @@ function Part({ part, align = 'left' }: { part: RealiaSheetText; align?: 'left' 
   );
 }
 
-function Title({ title, label, centered }: { title: RealiaSheetText; label?: string; centered: boolean }): ReactElement {
+export function Title({ title, label, centered }: { title: RealiaSheetText; label?: string; centered: boolean }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
@@ -97,16 +98,18 @@ function Title({ title, label, centered }: { title: RealiaSheetText; label?: str
   );
 }
 
-interface LineProps {
+export interface LineProps {
   line: RealiaSheetLine;
   layout: 'row' | 'stack';
+  /** A row's dotted leader between its text and its value (CM-47's ruled kinds draw none). */
+  leader?: boolean;
   hint: string;
   onPress?: (id: string) => void;
   testID?: string;
 }
 
 /** A line of the text layer: the button, its mark and, once found, its gloss. */
-function LineButton({ line, layout, hint, onPress, testID }: LineProps): ReactElement {
+export function LineButton({ line, layout, leader = true, hint, onPress, testID }: LineProps): ReactElement {
   const textScale = useTypeScale();
   const look = realiaLineLook(line.mark);
   return (
@@ -140,7 +143,7 @@ function LineButton({ line, layout, hint, onPress, testID }: LineProps): ReactEl
             <Part part={line.text} />
             {line.value ? (
               <>
-                <View {...hidden} style={{ flexGrow: 1, minWidth: spacing.lg, borderBottomWidth: borderWidth.base, borderStyle: 'dotted', borderColor: colors.border.strong, marginBottom: spacing.md }} />
+                <View {...hidden} style={{ flexGrow: 1, minWidth: spacing.lg, borderBottomWidth: leader ? borderWidth.base : 0, borderStyle: 'dotted', borderColor: colors.border.strong, marginBottom: spacing.md }} />
                 {/* Pushed to the end of its row, also when it wraps under the text at a large text size. */}
                 <View style={{ marginLeft: 'auto' }}>
                   <Part part={line.value} align="right" />
@@ -193,7 +196,21 @@ function Board({ line, hint, onPress, testID }: LineProps): ReactElement {
   );
 }
 
-export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel, lineHint, onPressLine, testID }: RealiaSheetProps): ReactElement {
+/** The sheet's named group (its summary read first on native) around a kind's body. */
+export function SheetGroup({ accessibilityLabel, testID, children }: { accessibilityLabel: string; testID?: string; children: ReactNode }): ReactElement {
+  return (
+    <View role="group" accessibilityLabel={accessibilityLabel} aria-label={accessibilityLabel} testID={testID} style={{ width: '100%' }}>
+      {realiaSummaryOnNative(Platform.OS) ? (
+        <View accessible accessibilityRole="text" accessibilityLabel={accessibilityLabel} testID={testID ? `${testID}-summary` : undefined} style={REALIA_SR_ONLY} />
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+export function RealiaSheet({ kind: asked, title, titleLabel, lines, accessibilityLabel, lineHint, onPressLine, testID }: RealiaSheetProps): ReactElement {
+  // A CM-47 kind is drawn by `RealiaKindSheet` (its own chunk); here, as any kind not drawn below, it is the plain sheet.
+  const kind = realiaBaseKind(asked);
   const dressing = REALIA_DRESSINGS[kind];
   const paper = realiaPaper(kind);
   const lineId = (id: string): string | undefined => (testID ? `${testID}-line-${id}` : undefined);
@@ -282,11 +299,8 @@ export function RealiaSheet({ kind, title, titleLabel, lines, accessibilityLabel
   }
 
   return (
-    <View role="group" accessibilityLabel={accessibilityLabel} aria-label={accessibilityLabel} testID={testID} style={{ width: '100%' }}>
-      {realiaSummaryOnNative(Platform.OS) ? (
-        <View accessible accessibilityRole="text" accessibilityLabel={accessibilityLabel} testID={testID ? `${testID}-summary` : undefined} style={REALIA_SR_ONLY} />
-      ) : null}
+    <SheetGroup accessibilityLabel={accessibilityLabel} testID={testID}>
       {body}
-    </View>
+    </SheetGroup>
   );
 }
