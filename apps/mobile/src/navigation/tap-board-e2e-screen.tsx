@@ -1,4 +1,4 @@
-import { Screen, TapBoard, TapTarget, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Screen, TapBoard, TapControl, TapTarget, borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
@@ -8,8 +8,8 @@ import type { RootStackParamList } from './types';
 /**
  * The `TapBoard` e2e screen (docs/specs/AMENDMENTS-TOUCH.md row KT-1; fixture builds only), loaded by
  * `./tap-board-e2e.tsx` through its literal `import()`. Four targets of `touchTarget.hero` (96) on a row that wraps,
- * `spacing.md` (12) apart, and one plain control after them within the gap reach of the last target; under them, in
- * the `tall` layout, a block twice the window's height so the screen scrolls. A pressed target draws the press look of
+ * `spacing.md` (12) apart, and one plain control after them (in `TapControl`) within the gap reach of a target;
+ * under them, in the `tall` layout, a block twice the window's height so the screen scrolls and the board drives it. A pressed target draws the press look of
  * section 4.3 (`border.shape` at `borderWidth.thick`), so the e2e can read it.
  */
 
@@ -47,17 +47,19 @@ export function TapBoardE2eBody({ route }: Props): ReactElement {
               {() => <Text style={{ fontSize: typography.size.title, color: colors.text.primary }}>{letter}</Text>}
             </TapTarget>
           ))}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={CONTROL}
-            testID="tap-control"
-            onPress={() => {
-              log.controls += 1;
-            }}
-            style={{ width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}
-          >
-            <Text style={{ fontSize: typography.size.body, color: colors.text.primary }}>{CONTROL}</Text>
-          </Pressable>
+          <TapControl testID="tap-control-wrap">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={CONTROL}
+              testID="tap-control"
+              onPress={() => {
+                log.controls += 1;
+              }}
+              style={{ width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}
+            >
+              <Text style={{ fontSize: typography.size.body, color: colors.text.primary }}>{CONTROL}</Text>
+            </Pressable>
+          </TapControl>
         </View>
       </TapBoard>
       {layout === 'tall' ? <View testID="tap-board-e2e-tall" style={{ height: window.height * 2 }} /> : null}

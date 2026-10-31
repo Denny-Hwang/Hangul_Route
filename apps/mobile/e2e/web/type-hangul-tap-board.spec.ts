@@ -3,8 +3,8 @@ import { expect, test } from './fixtures';
 import { Touchscreen, pointIn } from './touch';
 
 /**
- * AMENDMENTS-TOUCH row KT-1: the design-system `TapBoard` under real touches (section 3.3, rows T1-T16 with an e2e
- * half). No learner surface uses a board until rows KT-2 to KT-7, so this suite opens a board of four 96 x 96 targets,
+ * AMENDMENTS-TOUCH row KT-1: the design-system `TapBoard` under real touches (section 3.3, the rows with an e2e half:
+ * T1-T3, T6, T7, T9, T9b, T10, T14, T15, T15b, T17; and T4, T5, T13, T16, T20). No learner surface uses a board until rows KT-2 to KT-7, so this suite opens a board of four 96 x 96 targets,
  * 12 px apart, through `window.__hrTapBoardE2E`, which exists only in the fixture bundle (served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
@@ -36,6 +36,8 @@ async function open(page: Page, params: Params): Promise<Touchscreen> {
   await expect(page.getByTestId('tap-board')).toBeVisible();
   // The fit is measured after the first layout: wait for the board's touch-action before the first touch.
   await expect.poll(() => touchAction(page, 'tap-board')).toBe(params.layout === 'fit' ? 'pinch-zoom' : 'pan-y pinch-zoom');
+  // Reload-free runs share the app lock clock: start every case after any lock from the open.
+  await page.waitForTimeout(AFTER_LOCK);
   return Touchscreen.of(page);
 }
 
@@ -62,6 +64,8 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
       test('a board on a screen that fits stops the browser pan (pinch-zoom); the screen has manipulation', async ({ page }) => {
         await open(page, { lock: 'board', layout: 'fit' });
         expect(await touchAction(page, 'tap-board-e2e')).toBe('manipulation');
+        // A touch that starts on an answer never becomes a browser pan.
+        for (const id of ['tap-target-0', 'tap-target-3']) expect(await touchAction(page, id)).toBe('pinch-zoom');
         // 64 dp floor: every target and the control.
         for (const id of ['tap-target-0', 'tap-target-1', 'tap-target-2', 'tap-target-3', 'tap-control']) {
           const box = (await page.getByTestId(id).boundingBox())!;
@@ -97,8 +101,9 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
 
       test('T2 a 40 px slide that ends 20 px past the edge commits; T3 one that ends 80 px away commits nothing', async ({ page }) => {
         const touch = await open(page, { lock: 'board', layout: 'fit' });
-        const nearBottom = await pointIn(page, 'tap-target-0', { dx: 48, dy: 76 });
-        await touch.graze(nearBottom, 0, 40);
+        // Up, away from the neighbours (rule 4: a slide onto another answer is outside).
+        const nearTop = await pointIn(page, 'tap-target-0', { dx: 48, dy: 20 });
+        await touch.graze(nearTop, 0, -40);
         await page.waitForTimeout(AFTER_LOCK);
         const centre = await pointIn(page, 'tap-target-0');
         await touch.graze(centre, -80, 0);
@@ -119,16 +124,16 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(await commits(page)).toEqual([0]);
       });
 
-      test('T6 a bounce: two taps 60, 150 or 300 ms apart commit once', async ({ page }) => {
+      test('T6 a bounce: two taps 60 or 150 ms apart (release to touch-down) commit once', async ({ page }) => {
         const touch = await open(page, { lock: 'board', layout: 'fit' });
         const centre = await pointIn(page, 'tap-target-2');
-        for (const gap of [60, 150, 300]) {
+        for (const gap of [60, 150]) {
           await touch.tap(centre, 20);
           await page.waitForTimeout(gap);
           await touch.tap(centre, 20);
           await page.waitForTimeout(AFTER_LOCK);
         }
-        expect(await commits(page)).toEqual([2, 2, 2]);
+        expect(await commits(page)).toEqual([2, 2]);
       });
 
       test('T7 a target board: two different targets 150 ms apart both commit', async ({ page }) => {
@@ -140,21 +145,49 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(await commits(page)).toEqual([0, 1]);
       });
 
-      test('T9 two fingers: the first commits when it lifts, the second does nothing', async ({ page }) => {
+      test('T9 two fingers: the later finger on an answer commits, the earlier one never does', async ({ page }) => {
         const touch = await open(page, { lock: 'target', layout: 'fit' });
         const a = await pointIn(page, 'tap-target-0');
         const b = await pointIn(page, 'tap-target-1');
         await touch.start({ id: 1, ...a });
         await page.waitForTimeout(40);
         await touch.start({ id: 2, ...b });
-        await page.waitForTimeout(100); // a press look would have painted by now
-        await expect.poll(() => outline(page, 1)).not.toBe(PRESS_OUTLINE);
+        await expect.poll(() => outline(page, 1)).toBe(PRESS_OUTLINE);
+        await expect.poll(() => outline(page, 0)).not.toBe(PRESS_OUTLINE);
         await page.waitForTimeout(40);
         await touch.end(1);
         await page.waitForTimeout(40);
         await touch.end(2);
         await settle(page);
-        expect(await commits(page)).toEqual([0]);
+        expect(await commits(page)).toEqual([1]);
+      });
+
+      test('T9b a thumb resting on an answer never blocks a tap with the other hand, and its lift answers nothing', async ({ page }) => {
+        const touch = await open(page, { lock: 'target', layout: 'fit' });
+        const thumb = await pointIn(page, 'tap-target-2');
+        const tap = await pointIn(page, 'tap-target-1');
+        await touch.start({ id: 1, ...thumb });
+        await page.waitForTimeout(600);
+        await touch.start({ id: 2, ...tap });
+        await page.waitForTimeout(40);
+        await touch.end(2);
+        await page.waitForTimeout(600);
+        await touch.end(1);
+        await settle(page);
+        expect(await commits(page)).toEqual([1]);
+      });
+
+      test('T17 a slide from one answer into its neighbour commits nothing', async ({ page }) => {
+        const touch = await open(page, { lock: 'board', layout: 'fit' });
+        const a = (await page.getByTestId('tap-target-0').boundingBox())!;
+        const from = { x: a.x + a.width - 4, y: a.y + a.height / 2 };
+        await touch.start({ id: 1, ...from });
+        await touch.move({ id: 1, x: from.x + 12, y: from.y });
+        await touch.move({ id: 1, x: from.x + 25, y: from.y });
+        await expect.poll(() => outline(page, 0)).not.toBe(PRESS_OUTLINE);
+        await touch.end(1);
+        await settle(page);
+        expect(await commits(page)).toEqual([]);
       });
 
       test('T10 a hold of 900 ms commits on release', async ({ page }) => {
@@ -175,7 +208,7 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(await commits(page)).toEqual([]);
       });
 
-      test('rule 2: a control inside the board is never claimed, even within the gap reach of a target', async ({ page }) => {
+      test('T20 a control inside the board (TapControl) is never claimed, even within the gap reach of a target', async ({ page }) => {
         const touch = await open(page, { lock: 'board', layout: 'fit' });
         const control = (await page.getByTestId('tap-control').boundingBox())!;
         // Just inside the control's edge nearest the targets.
@@ -193,18 +226,32 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(await commits(page)).toEqual([2]);
       });
 
-      test('a scrolling screen: T14 a 20 px sideways graze commits; T15 a 40 px vertical drag scrolls and commits nothing', async ({ page }) => {
+      test('a scrolling screen: T14 a sideways graze and T15 vertical grazes of 16 to 32 px commit, and the page stays', async ({ page }) => {
         const touch = await open(page, { lock: 'board', layout: 'tall' });
-        await touch.graze(await pointIn(page, 'tap-target-0'), 20, 0);
-        await page.waitForTimeout(AFTER_LOCK);
-        expect(await commits(page)).toEqual([0]);
         const scroller = page.getByTestId('tap-board-e2e');
         const before = await scroller.evaluate((el) => el.scrollTop);
-        await touch.graze(await pointIn(page, 'tap-target-1'), 0, -40, { steps: 8 });
+        await touch.graze(await pointIn(page, 'tap-target-0'), 20, 0);
+        await page.waitForTimeout(AFTER_LOCK);
+        for (const d of [16, 24, 32]) {
+          await touch.graze(await pointIn(page, 'tap-target-0'), 0, -d);
+          await page.waitForTimeout(AFTER_LOCK);
+        }
+        expect(await commits(page)).toEqual([0, 0, 0, 0]);
+        expect(await scroller.evaluate((el) => el.scrollTop)).toBe(before);
+      });
+
+      test('T15b a 72 px drag from an answer scrolls the page 40 px with the finger and changes nothing', async ({ page }) => {
+        const touch = await open(page, { lock: 'board', layout: 'tall' });
+        const scroller = page.getByTestId('tap-board-e2e');
+        const before = await scroller.evaluate((el) => el.scrollTop);
+        // A still hold before the lift: no fling, so the page moved exactly with the finger.
+        await touch.graze(await pointIn(page, 'tap-target-2'), 0, -72, { steps: 9, holdMs: 250 });
         await settle(page);
-        expect(await scroller.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
-        expect(await commits(page)).toEqual([0]);
-        await expect.poll(() => outline(page, 1)).not.toBe(PRESS_OUTLINE);
+        const moved = (await scroller.evaluate((el) => el.scrollTop)) - before;
+        expect(moved).toBeGreaterThanOrEqual(39);
+        expect(moved).toBeLessThanOrEqual(41);
+        expect(await commits(page)).toEqual([]);
+        await expect.poll(() => outline(page, 2)).not.toBe(PRESS_OUTLINE);
       });
     });
   }
