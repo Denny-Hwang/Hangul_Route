@@ -8,7 +8,7 @@
       "hoyaIntro": "오늘은 도서관 가는 날이에요! 가는 길에 보이는 글을 모두 읽어 봐요.",
       "culture.n1.text": "한글날은 3월 1일, 7월 17일, 8월 15일, 10월 3일과 함께 대한민국의 5대 {ko:국경일} 가운데 하나예요. 2005년에 법이 바뀌면서 국경일이 되었어요.",
       "culture.n2.text": "한글날은 한글을 처음 널리 알린 지 500년이 되던 1946년에 처음으로 쉬는 날이 되었어요. 1991년부터는 쉬는 날이 아니었다가, 2013년부터 다시 쉬는 날이 되었어요.",
-      "culture.n3.text": "2000년부터 우리말을 로마자로 적는 나라의 규칙은 글자 하나하나가 아니라 소리 나는 대로 적어요. {ko:신라}는 [실라]로 소리 나서 Silla라고 적어요. 이 앱의 로마자도 이 규칙을 따라요."
+      "culture.n3.text": "2000년에 고친, 우리말을 로마자로 적는 나라의 규칙에서는 글자 하나하나가 아니라 소리 나는 대로 적어요. {ko:신라}는 [실라]로 소리 나서 Silla라고 적어요. 이 앱의 로마자도 이 규칙을 따라요."
     },
     "quest:stage6-letters-v2-q1": {
       "title": "도서관 카드",
@@ -56,8 +56,8 @@
       "realiaRead.rounds.r4.options.woryoil.text.gloss": "일요일 다음 날"
     },
     "minigame:s6-letters-v2-q1-apply": {
-      "clozePick.rounds.a1.sentence.gloss": "___ 썼어요.",
-      "clozePick.rounds.a2.sentence.gloss": "___ 그렸어요.",
+      "clozePick.rounds.a1.sentence.gloss": "___가 글을 썼어요.",
+      "clozePick.rounds.a2.sentence.gloss": "___가 그림을 그렸어요.",
       "clozePick.rounds.a3.sentence.gloss": "책을 빌리는 곳에서 책 속 글을 봐요.",
       "clozePick.rounds.a1.tiles.hoya.gloss": "호야라는 이름",
       "clozePick.rounds.a1.tiles.mina.gloss": "미나라는 이름",
@@ -172,7 +172,7 @@
       "steps.s2.discover.pages.0.caption": "지하철에서 {ko:이번 역}은 지금 멈춘 역이고, {ko:다음 역}은 그다음에 설 역이에요.",
       "steps.s2.discover.pages.1.caption": "역 이름은 한 글자씩 읽어요. {ko:시청}과 {ko:시장}은 한 글자가 달라요.",
       "steps.s2.discover.pages.2.caption": "이제 여기가 무슨 역인지 말해 봐요.",
-      "steps.s2.discover.pages.2.items.0.sentence.gloss": "지금 멈춘 역은 시의 일을 보는 관청이에요.",
+      "steps.s2.discover.pages.2.items.0.sentence.gloss": "지금 멈춘 역의 이름은 시청이에요.",
       "steps.s2.discover.pages.0.items.0.keyWords.jihacheol.gloss": "땅속으로 다니는 전철",
       "steps.s2.discover.pages.0.items.0.keyWords.ibeon-yeok.gloss": "지금 멈춘 역",
       "steps.s2.discover.pages.0.items.0.keyWords.daeum-yeok.gloss": "그다음에 설 역",

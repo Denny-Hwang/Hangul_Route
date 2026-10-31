@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CATALOG, StageKeySchema, checkKindsFor, classPosition, learnerPosition, resolvePreset } from '..';
 import { allowlistedInstitution, lintCurriculum } from '../lesson-lint';
-import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE } from '../review-items/sources';
+import { Stage1TableSchema, reviewItemsOf } from '../review-items/build';
+import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from '../review-items/sources';
+import { StableIdSnapshotSchema } from '../review-items/stable-ids';
 import { LessonCellSchema, clozePickIssues, type LessonCell, type LessonQuest, type LessonScope } from '../schemas/lesson';
 import { REPO_ROOT } from './helpers/romanization-registry';
 
@@ -145,5 +147,36 @@ describe('Letters Volume 2 of Stage 6 stays off the lecture route (row CM-40)', 
     expect(learnerPosition(null, ['quest:stage6-letters-q3'], CATALOG)?.questId).not.toMatch(/-v2-/);
     const journey = { v: 1, here: 'stage6', stages: [{ stage: 'stage6', done: 15, known: 0 }] };
     expect(classPosition([{ journey }] as never, CATALOG)?.questId).not.toMatch(/-v2-/);
+  });
+
+  // Where a later volume would sit if the route kept it (after its cell, at the end of its stage or of the route),
+  // each case below lands on it, so these fail when routeQuests stops leaving later volumes out.
+  const firstVolumeQuests = CATALOG.quests.map((q) => q.id).filter((id) => !/-v[2-9]-q[0-9]+$/.test(id));
+  const stageQuestCount = (stage: string): number => firstVolumeQuests.filter((id) => id.startsWith(`quest:${stage}-`)).length;
+
+  it('with every first-volume quest done, the learner position is past the end of the route (null), not a Volume 2', () => {
+    expect(learnerPosition(null, firstVolumeQuests, CATALOG)).toBeNull();
+  });
+
+  it('a class that finished every Stage 6 Volume 1 quest is placed on Stage 7, and one that finished Stage 7 on no Volume 2', () => {
+    const at = (stage: string, done: number) => classPosition([{ journey: { v: 1, here: stage, stages: [{ stage, done, known: 0 }] } }] as never, CATALOG);
+    expect(at('stage6', stageQuestCount('stage6'))?.questId).toMatch(/^quest:stage7-/);
+    expect(at('stage7', stageQuestCount('stage7'))?.questId ?? '').not.toMatch(/-v[2-9]-/);
+  });
+
+  it('marks 이번 역, 다음 역 and 이전 역 as a sound change ([이번녁], ㄴ-insertion), so they are never dictated (section 4.5)', () => {
+    const built = reviewItemsOf({
+      stage1: Stage1TableSchema.parse(tree.get(REVIEW_STAGE1_FILE)),
+      lessons: lessonSourcesOfTree(tree),
+      stories: storySourcesOfTree(tree),
+      ...vocabOfTree(tree),
+      snapshot: StableIdSnapshotSchema.parse(tree.get(REVIEW_SNAPSHOT_FILE)),
+    });
+    for (const id of ['lex:ibeon-yeok', 'lex:daeum-yeok', 'lex:ijeon-yeok']) {
+      const item = built.items.find((i) => i.id === id);
+      expect(item?.soundChange, id).toBe(true);
+      expect(item?.formats, id).toContain('hear-pick');
+      expect(item?.formats, id).not.toContain('dictation');
+    }
   });
 });

@@ -8,7 +8,7 @@
       "hoyaIntro": "¡Hoy es día de biblioteca! Vamos a leer todo lo que veamos por el camino.",
       "culture.n1.text": "El Día del Hangeul es una de las cinco fiestas nacionales de Corea del Sur, {ko:국경일}, junto con el 1 de marzo, el 17 de julio, el 15 de agosto y el 3 de octubre. Una ley aprobada en 2005 la convirtió en una de ellas.",
       "culture.n2.text": "En 1946, 500 años después de darse a conocer las letras, el Día del Hangeul fue por primera vez un día libre. Desde 1991 dejó de serlo, y desde 2013 vuelve a ser un día libre.",
-      "culture.n3.text": "Desde 2000, las normas nacionales para escribir el coreano con letras latinas siguen cómo suena la palabra, no cada letra: {ko:신라} se dice con doble l, así que se escribe Silla. La romanización de esta app sigue estas normas."
+      "culture.n3.text": "Las normas nacionales de Corea para escribir el coreano con letras latinas, revisadas en 2000, siguen cómo suena la palabra, no cada letra: {ko:신라} se dice con doble l, así que se escribe Silla. La romanización de esta app sigue estas normas."
     },
     "quest:stage6-letters-v2-q1": {
       "title": "Tarjeta de biblioteca",
@@ -22,7 +22,7 @@
       "steps.s6.title": "¡Lees tarjetas!",
       "steps.s1.hoyaLine": "¡Una tarjeta de biblioteca nueva! Leamos qué dice.",
       "steps.s6.hoyaLine": "Leíste una tarjeta de biblioteca y una portada. ¡Que disfrutes la lectura!",
-      "steps.s2.discover.pages.0.caption": "La tarjeta dice tu nombre, cuántos libros y cuándo abre. «gwon» sirve para contar libros.",
+      "steps.s2.discover.pages.0.caption": "La tarjeta dice un nombre, cuántos libros y cuándo abre. «gwon» sirve para contar libros.",
       "steps.s2.discover.pages.1.caption": "La portada dice quién escribió el texto y quién hizo los dibujos.",
       "steps.s2.discover.pages.2.caption": "Ahora di qué haces en la biblioteca.",
       "steps.s2.discover.pages.2.items.0.sentence.gloss": "Leo un libro en la biblioteca.",
