@@ -19,7 +19,7 @@
       "blurbEn": "Write what a game needs: a ball, yut sticks or a friend.",
       "teaserEn": "Next: write how to take turns.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261031,
       "steps": [
         {
           "id": "s1",
@@ -164,7 +164,7 @@
           "rounds": [
             {
               "id": "y1",
-              "promptEn": "Type the word for needed.",
+              "promptEn": "Type the word for \"it is needed\".",
               "target": {
                 "ko": "필요해요",
                 "romanization": "piryohaeyo",
@@ -271,7 +271,7 @@
       "blurbEn": "Write the rules for taking turns and going again.",
       "teaserEn": "Next: write how to play your own game.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261031,
       "steps": [
         {
           "id": "s1",
@@ -581,7 +581,7 @@
       "titleEn": "How to Play",
       "blurbEn": "Write the rules of your own game, from a word bank.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261031,
       "steps": [
         {
           "id": "s1",
@@ -882,16 +882,16 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "한 번 더 던져요.",
-                "romanization": "han beon deo deonjyeoyo",
-                "en": "Throw one more time."
+                "ko": "제기차기하는 법",
+                "romanization": "jegichagihaneun beop",
+                "en": "How to play jegichagi"
               },
-              "pictureRef": "card:yutnori",
+              "pictureRef": "card:jegi",
               "distractors": [
                 {
-                  "ko": "차례대로",
-                  "romanization": "charyedaero",
-                  "en": "in turn, one after another"
+                  "ko": "던져요",
+                  "romanization": "deonjyeoyo",
+                  "en": "throw"
                 }
               ]
             }
@@ -958,7 +958,7 @@
     {
       "id": "n3",
       "kind": "language",
-      "textEn": "{ko:차례} is a turn, the chance that comes to each one in order, and {ko:대로} means following it, so {ko:차례대로} is in turn, one after another.",
+      "textEn": "{ko:차례} is a turn, the chance that comes to each one in order, and {ko:대로} means \"following\" or \"as\", so {ko:차례대로} is in turn, one after another.",
       "sources": [
         {
           "title": "차례 2 (명사)",
@@ -977,9 +977,9 @@
       ],
       "verification": {
         "passes": 3,
-        "checkedAt": "2026-10-30",
+        "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): stdict entries 차례 2 (次例, word_no 490075, sense 1: an order of parts, or the chance that comes to each in that order; example 차례대로 차에 오르다) and 대로 10 (조사, word_no 78254, sense 1: following what comes before, without change) read through contentViewOne.do (HTTP 200). The note restates them; nothing copied. 차례 1 (茶禮), a rite written the same, is a different word and is not this lesson's (F-CURR-002 OD-9 keeps it for Holidays Volume 2). Carried by: the q3 Did you know? tip, the q2 frame 차례대로 ___ and the q3 chain.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both entries re-read; 'a turn, the chance that comes to each one in order' renders sense 1 of 차례 2, and 'following it' renders sense 1 of 대로 10; the stdict example 차례대로 차에 오르다 uses the same compound. Outcome: pass, no change.\nLine 3 (pass 5, MAR language review, 2026-10-30): plain language note, no cultural claim; es and ko keep the three {ko:} tokens; the ko overlay does not gloss 차례 as the rite. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): stdict entries 차례 2 (次例, word_no 490075, sense 1: an order of parts, or the chance that comes to each in that order; example 차례대로 차에 오르다) and 대로 10 (조사, word_no 78254, sense 1: following what comes before, without change) read through contentViewOne.do (HTTP 200). The note restates them; nothing copied. 차례 1 (茶禮), a rite written the same, is a different word and is not this lesson's (F-CURR-002 OD-9 keeps it for Holidays Volume 2). Carried by: the q3 Did you know? tip, the q2 frame 차례대로 ___ and the q3 chain.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both entries re-read; 'a turn, the chance that comes to each one in order' renders sense 1 of 차례 2, and 'following it' renders sense 1 of 대로 10; the stdict example 차례대로 차에 오르다 uses the same compound. Outcome: pass, no change.\nLine 3 (pass 5, MAR language review, 2026-10-30): plain language note, no cultural claim; es and ko keep the three {ko:} tokens; the ko overlay does not gloss 차례 as the rite. Outcome: pass, no change.\nLine 4 (review fix stage, 2026-10-31): the en wording of 대로 changed from 'following it' to '\"following\" or \"as\"' (es «según» o «como»), which still renders sense 1 of 대로 10 (근거하거나 달라짐이 없음); the fact and the sources are unchanged, and the {ko:} tokens are kept in es and ko. Outcome: pass."
       }
     }
   ],

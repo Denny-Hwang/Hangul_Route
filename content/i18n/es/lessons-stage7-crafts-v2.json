@@ -8,7 +8,7 @@
       "hoyaIntro": "¡Inventemos un juego juntos y escribamos cómo se juega!",
       "culture.n1.text": "En el {ko:윷놀이} se lanzan cuatro palitos, que caen como {ko:도}, {ko:개}, {ko:걸}, {ko:윷} o {ko:모} y mueven una ficha 1, 2, 3, 4 o 5 casillas. Un {ko:윷} o un {ko:모} da un lanzamiento más.",
       "culture.n2.text": "El {ko:꼬리따기} es un juego tradicional de Chuseok. Se forma una fila, cada persona sujeta la cintura de quien tiene delante, y alguien intenta atrapar a la última. Se juega de tres maneras: con dos equipos, con una persona que atrapa o con la primera de la fila atrapando a la última.",
-      "culture.n3.text": "{ko:차례} es un turno, la oportunidad que le llega a cada uno en orden, y {ko:대로} significa siguiéndolo; así, {ko:차례대로} es por turnos, uno tras otro."
+      "culture.n3.text": "{ko:차례} es un turno, la oportunidad que le llega a cada uno en orden, y {ko:대로} significa «según» o «como»; así, {ko:차례대로} es por turnos, uno tras otro."
     },
     "quest:stage7-crafts-v2-q1": {
       "title": "Lo que necesitas",
@@ -161,8 +161,8 @@
     },
     "minigame:s7-crafts-v2-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "Lanza los palitos de yut por turnos.",
-      "orderIt.rounds.c2.sentence.gloss": "Lanza una vez más.",
-      "orderIt.rounds.c2.distractors.charyedaero.gloss": "por turnos, uno tras otro",
+      "orderIt.rounds.c2.sentence.gloss": "Cómo se juega al jegichagi",
+      "orderIt.rounds.c2.distractors.deonjyeoyo.gloss": "lanza",
       "orderIt.rounds.c1.particle.choices.eul.gloss": "marca de objeto (después de una consonante final)",
       "orderIt.rounds.c1.particle.choices.reul.gloss": "marca de objeto (después de una vocal)"
     }
