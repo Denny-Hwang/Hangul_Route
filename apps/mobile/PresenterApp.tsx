@@ -1069,7 +1069,13 @@ function Presenter(): ReactElement {
   // ---- the presenter home (section 3.12; AMENDMENTS-LECTURE-V2 sections 4 and 18) ----
   // Customize's chooser in the presenter language, and the ready-made lessons' context from Recent.
   const quickWords = messages.learner.presenter.home.quick;
-  const groups = useMemo(() => presenterChooserGroups(locale, { consonants: quickWords.consonants, vowels: quickWords.vowels }), [locale, quickWords]);
+  // A cell's Volume 2 (F-CURR-002 row CM-40) is offered only while `volumes` is on (a room has no profile: on once its
+  // ramp reaches everyone), read when the copy can decide.
+  const volumesOn = switchesKnown && currFlagOn('volumes', null);
+  const groups = useMemo(
+    () => presenterChooserGroups(locale, { consonants: quickWords.consonants, vowels: quickWords.vowels }, { volumes: volumesOn }),
+    [locale, quickWords, volumesOn],
+  );
   const presetCtx = useMemo(() => presenterPresetContext(recentLoaded?.list ?? null, new Date()), [recentLoaded]);
   // Word review's second fallback (section 4.2 W) counts the words a block shows once expanded with the
   // presenter's bundle; a block is counted once.

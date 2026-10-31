@@ -211,6 +211,29 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
     ]);
   });
 
+  it('reads a Syllable Build block as a word with its meaning (row CM-44 S2); its tiles are no items', () => {
+    const body = {
+      ...cell,
+      quests: [
+        {
+          id: 'quest:stage2-life-q3',
+          steps: [step('s1', 'apply', 'minigame:s2-life-q3-a')],
+          scopes: [
+            {
+              ref: 'minigame:s2-life-q3-a',
+              kind: 'syllable-build',
+              rounds: [{ id: 'son', target: kt('손', 'son', 'hand'), firstTiles: ['ㅅ', 'ㅈ', 'ㄴ'], vowelTiles: ['ㅗ', 'ㅜ', 'ㅏ'], finalTiles: ['ㄴ', 'ㅁ', 'ㅇ'] }],
+            },
+          ],
+        },
+      ],
+    };
+    const got = lessonOccurrences({ ...source, body }, SYMBOLS).map((o) => [o.kind, o.ko, o.glossKey ?? '', o.loose === true ? 'loose' : '', o.at]);
+    expect(got).toEqual([
+      ['lex', '손', 'minigame:s2-life-q3-a#syllableBuild.rounds.son.target.gloss', 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].rounds[0]'],
+    ]);
+  });
+
   it('places each occurrence in its cell, at its file and path', () => {
     expect(new Set(occs.map((o) => `${o.cell} ${o.home} ${o.stage} ${o.volume}`))).toEqual(new Set(['episode:stage2-life life 2 1']));
     expect(occs[0]?.at).toBe('content/episodes/stage-2/life.json quests[0].steps[1].discover.pages[0].items[0]');

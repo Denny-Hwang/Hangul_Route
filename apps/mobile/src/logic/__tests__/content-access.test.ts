@@ -30,7 +30,8 @@ const LESSON_IDS = new Set(CATALOG.quests.filter((q) => q.kind === 'lesson').map
 const lessonsOfReadyCells = (stage?: string): string[] =>
   CATALOG.cells
     .filter((c) => cellIsReady(c) && (stage === undefined || c.stage === stage))
-    .flatMap((c) => c.questIds.filter((id) => LESSON_IDS.has(id)));
+    // A cell's later volumes are grid lessons of the cell too (F-CURR-002 row CM-40; row CM-45 S2 ships the first).
+    .flatMap((c) => [...c.questIds, ...(c.volumes ?? []).flatMap((v) => v.questIds)].filter((id) => LESSON_IDS.has(id)));
 const STAGE1_LESSONS = lessonsOfReadyCells('stage1');
 const GRID_LESSONS = lessonsOfReadyCells();
 const LATER_LESSONS = GRID_LESSONS.filter((id) => !STAGE1_LESSONS.includes(id));

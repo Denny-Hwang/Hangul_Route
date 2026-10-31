@@ -398,6 +398,12 @@ function scopeAnswers(c: Collector, scope: Rec, at: string): void {
         });
       });
       return;
+    case 'syllable-build':
+      // Row CM-44 S2: a block built in a quest is a word asked (its tiles are letters, never items of their own).
+      rounds.forEach((round, ri) => {
+        c.text(round.target, 'loose', 'round', `${at}.rounds[${ri}]`, { glossKey: k(`syllableBuild.rounds.${key(round, ri)}.target.gloss`) });
+      });
+      return;
     default:
       // A scope kind a later row adds: every Korean answer it holds is a word.
       for (const [field, value] of Object.entries(scope)) if (field !== 'ref' && field !== 'kind') walkTexts(c, value, `${at}.${field}`);
