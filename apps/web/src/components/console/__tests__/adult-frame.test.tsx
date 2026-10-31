@@ -441,8 +441,10 @@ describe('the phone layout and the footer (section 3.8)', () => {
     expect(css).toMatch(/\.hr-frame-list\{[^}]*flex-wrap:nowrap/);
     expect(css).toMatch(/\.hr-frame-list\{[^}]*overflow-x:auto/);
     expect(css).not.toMatch(/\.hr-frame-list\{[^}]*flex-wrap:wrap/);
-    // The phone row hides its scrollbar; the fade says "more this way" instead (app-shell D3, the GX-0 360 mocks).
-    expect(css).toMatch(/@media \(max-width:44\.99em\)\{[\s\S]*\.hr-frame-list\{scrollbar-width:none\}/);
+    // A touch phone row hides its scrollbar; the fade says "more this way" instead (app-shell D3, the GX-0 360 mocks).
+    // A mouse in a narrow or zoomed window keeps it, the one thing it can drag (GX-14 review, WCAG 1.4.10).
+    expect(css).toMatch(/@media \(max-width:44\.99em\) and \(pointer:coarse\)\{[\s\S]*\.hr-frame-list\{scrollbar-width:none\}/);
+    expect(css).not.toMatch(/@media \(max-width:44\.99em\)\{[^@]*scrollbar-width:none/);
     // The fades are drawn in the bar's own paper colour and never catch a tap.
     expect(css).toMatch(/\.hr-frame-row::before,\.hr-frame-row::after\{[^}]*pointer-events:none/);
     expect(css).toContain(`.hr-frame-row[data-more-end="true"]::after{opacity:1}`);

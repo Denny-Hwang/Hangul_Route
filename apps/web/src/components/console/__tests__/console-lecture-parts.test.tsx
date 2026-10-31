@@ -250,6 +250,22 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expect(html).not.toContain(htmlText(w.minutesOf(held, held)));
   });
 
+  it('GX-14 review: the open card\'s minutes line joins its description when it says something its name does not', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const outline: LectureBlock[] = [revisit];
+    const held = aboutMinutes(outline);
+    const describedBy = (html: string): string | undefined =>
+      /<button[^>]*aria-describedby="([^"]*)"[^>]*data-testid="lecture-preset-hangul-week-1"/.exec(html)?.[1];
+    for (const own of [null, held]) {
+      const html = openCard(outline, 20, own);
+      expect(describedBy(html)).toBe('lecture-preset-line-hangul-week-1 lecture-preset-minutes-hangul-week-1');
+      // The described span is the one that carries "about 14 min (of 20)".
+      expect(html).toContain(`id="lecture-preset-minutes-hangul-week-1" data-testid="lecture-preset-minutes">${htmlText(w.minutesOf(held, 20))}<`);
+    }
+    // When the line repeats the name's minutes, the description stays the card's line alone.
+    expect(describedBy(openCard(outline, held as PresetMinutes, null))).toBe('lecture-preset-line-hangul-week-1');
+  });
+
   it('a card that cannot build what it names says so in its line, open or closed; the open card holds the note (section 4.1)', () => {
     const w = getMessages(PSEUDO).console.lecture;
     const fallbacks: Partial<Record<string, string>> = { 'next-lesson': w.presets.fallback.zero, 'word-review': w.presets.fallback.warmUp };

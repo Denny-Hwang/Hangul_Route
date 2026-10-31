@@ -1,9 +1,9 @@
-import type { DeviceSettings, UiLocale } from '@hangul-route/content-schema';
+import { UNLOCK_SESSION_KEY, type DeviceSettings, type UiLocale } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { ConsoleErrorPage, reloadPage } from '@/components/console/ConsoleErrorPage';
+import { ConsoleErrorPage, leaveToLearnerApp, reloadPage } from '@/components/console/ConsoleErrorPage';
 import type { LocaleProviderDeps } from '@/lib/i18n/locale-context';
 import ConsoleError from '../(console)/error';
 
@@ -44,10 +44,10 @@ function browser(record: DeviceSettings): LocaleProviderDeps {
 const textOf = (n: ReactTestInstance): string => n.children.map((child) => (typeof child === 'string' ? child : textOf(child))).join('');
 const byTestId = (r: ReactTestRenderer, id: string): ReactTestInstance[] => r.root.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === id);
 
-async function render(locale: UiLocale, retry: () => void, focused: string[] = []): Promise<ReactTestRenderer> {
+async function render(locale: UiLocale, retry: () => void, focused: string[] = [], leave: (locale: UiLocale) => void = () => undefined): Promise<ReactTestRenderer> {
   const deps = browser({ uiLocale: locale, uiLocaleAt: '2026-10-30T12:00:00.000Z' });
   await act(async () => {
-    mounted = create(<ConsoleErrorPage retry={retry} deps={deps} />, {
+    mounted = create(<ConsoleErrorPage retry={retry} leave={leave} deps={deps} />, {
       createNodeMock: (element) => (element.type === 'h1' ? { focus: () => focused.push('h1') } : null),
     });
   });
@@ -76,6 +76,31 @@ describe('the console error page (GX-14, P5)', () => {
     expect(textOf(button)).toBe(m.tryAgain);
     await act(async () => button.props.onClick());
     expect(retries).toBe(1);
+  });
+
+  it.each(['en', 'es', 'ko'] as const)('%s: the shipped Learner app under Try again is a way out, in the page language (GX-14 review)', async (locale) => {
+    const m = getMessages(locale).console;
+    const left: UiLocale[] = [];
+    const r = await render(locale, () => undefined, [], (l) => left.push(l));
+    const buttons = byTestId(r, 'console-error')[0]?.findAll((n) => n.type === 'button') ?? [];
+    expect(buttons.map(textOf)).toEqual([m.tryAgain, m.shell.backToLearning]);
+    const exit = byTestId(r, 'console-error-learner-app')[0] as ReactTestInstance;
+    await act(async () => exit.props.onClick());
+    expect(left).toEqual([locale]);
+  });
+
+  it('Learner app ends this tab\'s grown-up unlock and opens the learner app, with no id, name or error in the address', () => {
+    const session = new Map<string, string>([[UNLOCK_SESSION_KEY, '{"v":1}']]);
+    const assigned: string[] = [];
+    vi.stubGlobal('window', {
+      location: { origin: 'https://app.example.test', assign: (url: string) => assigned.push(url) },
+      sessionStorage: { getItem: (k: string) => session.get(k) ?? null, setItem: (k: string, v: string) => session.set(k, v), removeItem: (k: string) => session.delete(k) },
+      localStorage: { getItem: () => null, setItem: () => undefined, removeItem: () => undefined },
+    });
+    leaveToLearnerApp('ko');
+    expect(session.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(assigned).toHaveLength(1);
+    expect(assigned[0]).toMatch(/^\/[^?]*\?lang=ko&who=1$/);
   });
 
   it('takes focus on its heading once, so a screen reader hears what happened', async () => {

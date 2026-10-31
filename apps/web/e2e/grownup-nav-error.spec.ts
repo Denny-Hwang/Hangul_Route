@@ -88,6 +88,7 @@ async function measureRow(page: Page) {
       endFade: getComputedStyle(row, '::after').opacity,
       startFade: getComputedStyle(row, '::before').opacity,
       scrollbar: getComputedStyle(list).scrollbarWidth,
+      coarse: matchMedia('(pointer:coarse)').matches,
     };
   });
 }
@@ -116,7 +117,8 @@ for (const locale of LOCALES) {
         expect(first.end).toBe(String(overflows));
         expect(first.endFade).toBe(overflows ? '1' : '0');
         expect(first.startFade).toBe('0');
-        if (size.width === 360) expect(first.scrollbar).toBe('none');
+        // A touch phone hides the row's scrollbar; a mouse in a narrow window keeps it to drag.
+        if (size.width === 360) expect(first.scrollbar).toBe(first.coarse ? 'none' : 'auto');
         await page.screenshot({ path: test.info().outputPath(`gx14-nav-${persona}-${locale}-${size.width}.png`), clip: { x: 0, y: 0, width: size.width, height: 200 } });
         if (!overflows) return;
         // Scrolled to its end: the last tab shows whole, the end fade goes and the start fade shows.
@@ -146,6 +148,10 @@ for (const locale of LOCALES) {
       await expect(page.getByText('Application error')).toHaveCount(0);
       const retry = box.getByRole('button', { name: c.tryAgain });
       expect((await retry.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
+      // Never a dead end: the shipped Learner app is the way out below it (GX-14 review).
+      const exit = box.getByRole('button', { name: c.shell.backToLearning });
+      await expect(exit).toBeVisible();
+      expect((await exit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
       await noSidewaysScroll(page);
       await page.screenshot({ path: test.info().outputPath(`gx14-error-${locale}-${size.width}.png`) });
       // The read answers properly again: Try again loads the page, with its nav.

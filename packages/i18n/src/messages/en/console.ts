@@ -52,7 +52,8 @@ export const consoleMsgs = {
   tryAgain: 'Try again',
   /**
    * AMENDMENTS-GROWNUP-UX GX-14 (P5): `app/(console)/error.tsx`, shown in the console's language when a page fails to
-   * draw, in place of the framework's white English page. Its one button is `tryAgain`. Blames nobody, names nothing.
+   * draw, in place of the framework's white English page. Its buttons are `tryAgain` and the way out
+   * `shell.backToLearning`. Blames nobody, names nothing.
    */
   errorPage: { title: 'Something went wrong on this page.' },
   noSpaces: "You're not in any space yet.",

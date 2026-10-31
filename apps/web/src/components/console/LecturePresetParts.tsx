@@ -169,6 +169,10 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
           const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
           const lineId = `lecture-preset-line-${preset}`;
+          const minutesId = `lecture-preset-minutes-${preset}`;
+          // The name keeps its minutes (LV-4); when the visible minutes line says something the name does not,
+          // it joins the description so screen readers and voice control hear what the screen shows.
+          const describedBy = held === shown && held === minutes ? lineId : `${lineId} ${minutesId}`;
           const lengths = PRESET_LENGTHS[preset];
           return (
             <li key={preset} className="hr-lp-card" data-open={isOpen} data-testid={`lecture-preset-card-${preset}`}>
@@ -178,7 +182,7 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 aria-label={m.a11y.presenter.presetCard(words.title, shown)}
-                aria-describedby={lineId}
+                aria-describedby={describedBy}
                 onClick={() => onToggle(preset)}
                 data-testid={`lecture-preset-${preset}`}
               >
@@ -187,7 +191,9 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                   {fallback ?? words.line}
                 </span>
                 <span className="hr-lp-meta">
-                  <span data-testid={isOpen ? 'lecture-preset-minutes' : undefined}>{minutesLine}</span>
+                  <span id={minutesId} data-testid={isOpen ? 'lecture-preset-minutes' : undefined}>
+                    {minutesLine}
+                  </span>
                   <IconSvg name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                 </span>
               </button>

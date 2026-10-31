@@ -1,8 +1,11 @@
 'use client';
 
+import type { UiLocale } from '@hangul-route/content-schema';
 import { layout, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useEffect, useRef } from 'react';
+import { learnerHome } from '@/lib/console/grown-up-lock';
 import { headRem } from '@/lib/console/rem';
+import { clearGrownUpTab } from '@/lib/console/unlock';
 import { LocaleProvider, useConsoleLocale, type LocaleProviderDeps } from '@/lib/i18n/locale-context';
 import { Button, panelStyle } from './ui';
 
@@ -13,13 +16,24 @@ import { Button, panelStyle } from './ui';
  * the language, as on every console page, and nothing paints until it is known (no English flash on a Korean or
  * Spanish device; the provider's wait is capped at `RECORD_WAIT_MS`). One heading that blames nobody, which takes
  * focus so a screen reader hears it, and the console's shipped **Try again**. No error text, no digest, no telemetry.
+ * Below it, the frame's shipped **Learner app** way out (GX-14 review): a page that fails every time is never a dead
+ * end, and on a shared device the grown-up can close the grown-up pages and hand it back.
  */
-export function ConsoleErrorPage({ retry, deps }: { retry: () => void; deps?: LocaleProviderDeps }): JSX.Element {
+export function ConsoleErrorPage({ retry, leave = leaveToLearnerApp, deps }: { retry: () => void; leave?: (locale: UiLocale) => void; deps?: LocaleProviderDeps }): JSX.Element {
   return (
     <LocaleProvider deps={deps}>
-      <ConsoleErrorBody retry={retry} />
+      <ConsoleErrorBody retry={retry} leave={leave} />
     </LocaleProvider>
   );
+}
+
+/**
+ * Learner app on the error page, as the frame's own exit does it: the grown-up unlock of this tab ends, then the
+ * learner app opens in the page's language ("Who is using this?" when it is on). No id, name or error in the address.
+ */
+export function leaveToLearnerApp(locale: UiLocale): void {
+  clearGrownUpTab();
+  window.location.assign(learnerHome(window.location.origin, locale, { who: true }));
 }
 
 /**
@@ -31,8 +45,8 @@ export function reloadPage(): void {
   window.location.reload();
 }
 
-function ConsoleErrorBody({ retry }: { retry: () => void }): JSX.Element {
-  const { messages, ready } = useConsoleLocale();
+function ConsoleErrorBody({ retry, leave }: { retry: () => void; leave: (locale: UiLocale) => void }): JSX.Element {
+  const { messages, locale, ready } = useConsoleLocale();
   const heading = useRef<HTMLHeadingElement | null>(null);
   useEffect(() => {
     if (ready) heading.current?.focus();
@@ -50,6 +64,9 @@ function ConsoleErrorBody({ retry }: { retry: () => void }): JSX.Element {
         </h1>
         <Button tone="primary" onClick={retry} testId="console-error-retry">
           {c.tryAgain}
+        </Button>
+        <Button onClick={() => leave(locale)} testId="console-error-learner-app">
+          {c.shell.backToLearning}
         </Button>
       </div>
     </main>

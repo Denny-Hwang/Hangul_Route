@@ -43,7 +43,7 @@ import { rem } from '@/lib/console/rem';
  *   space page under either prefix (looked up in the spaces list the frame reads), never the path.
  * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates, in one tab row at every
  *   width that scrolls inside itself (AMENDMENTS-GROWNUP-UX GX-14, P6; app-shell D3), never a second row: an end with
- *   tabs hidden past it fades into the bar (the phone row hides its scrollbar). When the tab row scrolls
+ *   tabs hidden past it fades into the bar (a touch phone row hides its scrollbar). When the tab row scrolls
  *   sideways it shows its current item on load (AMENDMENTS-LECTURE-V2 E3, LV-5), moving the row only. An item whose
  *   target is a part of the page already open (Lecture mode's `/parent#lecture-mode` on `/parent`) moves there itself:
  *   the fragment is set and the page's card takes focus. A tab keeps its label on one line (it is never narrower than
@@ -126,7 +126,10 @@ export function resetFrameMemory(): void {
 /** The phone / wide switch (45em = `layout.maxWidth.reading`) and the step where the brand name joins (70em = `layout.maxWidth.full`). */
 const WIDE = `${layout.maxWidth.reading / 16}em`;
 const FULL = `${layout.maxWidth.full / 16}em`;
-/** Just under WIDE: the phone rules with no wide counterpart (the tab row's hidden scrollbar; its fades say "more"). */
+/**
+ * Just under WIDE: the phone rules with no wide counterpart (the tab row's hidden scrollbar on a touch screen, where the
+ * fades say "more" and a swipe scrolls it; a mouse in a narrow or zoomed window keeps the scrollbar to drag, WCAG 1.4.10).
+ */
 const PHONE_MAX = `${layout.maxWidth.reading / 16 - 0.01}em`;
 
 /** Layout rules that change at a breakpoint live here (inline styles would beat them); every value is a token. */
@@ -177,7 +180,7 @@ const FRAME_CSS = `
 .hr-frame-item{padding:0 ${spacing.md}px}
 .hr-frame-tools{display:none}
 }
-@media (max-width:${PHONE_MAX}){
+@media (max-width:${PHONE_MAX}) and (pointer:coarse){
 .hr-frame-list{scrollbar-width:none}
 .hr-frame-list::-webkit-scrollbar{display:none}
 }
