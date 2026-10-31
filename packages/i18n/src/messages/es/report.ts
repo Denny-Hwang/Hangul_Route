@@ -289,6 +289,8 @@ export const report = {
     readyToRefresh: (count: number) => `Elementos listos para repasar, en total: ${count}`,
     stageChecks: (count: number) => `Repasos de etapa superados, en total: ${count}`,
   },
+  minutesTile: (minutes: number) => `${minutes} min`,
+  classesLine: (classes: readonly string[]) => `Clases: ${classes.join(', ')}`,
   print: {
     button: 'Imprimir o guardar en PDF',
     hint: 'Desactiva encabezados y pies de página al imprimir.',

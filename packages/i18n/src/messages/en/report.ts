@@ -376,6 +376,13 @@ export const report = {
     readyToRefresh: (count: number) => `Items ready to refresh, added together: ${count}`,
     stageChecks: (count: number) => `Stage Checks passed, added together: ${count}`,
   },
+  /** The minutes tile's figure, with its unit (AMENDMENTS-GROWNUP-UX GX-13, T13: a bare "36" read as nothing). */
+  minutesTile: (minutes: number) => `${minutes} min`,
+  /**
+   * At a glance, under the learner's last practice (GX-13): the learner's live classes, as the family's transfer read
+   * lists them, in that order. Left out when that read was skipped or failed, or listed none.
+   */
+  classesLine: (classes: readonly string[]) => `Classes: ${classes.join(', ')}`,
   /** Print or save as PDF (OD-7): the header button, its helper line and the printed footer. */
   print: {
     button: 'Print or save as PDF',

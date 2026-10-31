@@ -423,7 +423,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       ['label', 20, ['report.figure', 'report.growth.quests', 'report.growth.cards', 'report.growth.month', 'report.strand.status', 'report.class.band']],
       ['up marker', 36, ['report.figure.up']],
       ['words inside a sentence', 32, ['report.when', 'report.previous']],
-      ['at-a-glance line', 48, ['report.glance.nowOn', 'report.glance.lastPractice', 'report.scope']],
+      ['at-a-glance line', 48, ['report.glance.nowOn', 'report.glance.lastPractice', 'report.scope', 'report.classesLine']],
+      ['figure', 12, ['report.minutesTile']],
       [
         'line',
         100,

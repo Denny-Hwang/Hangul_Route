@@ -83,7 +83,7 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('reads the headline, the two at-a-glance lines and no notice', () => {
     expect(v.state).toBe('ready');
     expect(v.headline).toEqual({ text: 'Mina practiced on 3 days this week.', horizon: null });
-    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: 'Last practice: Oct 15', route: null, region: 'Learning Route' });
+    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: 'Last practice: Oct 15', classes: null, route: null, region: 'Learning Route' });
     expect(v.notices).toEqual([]);
     expect(v.archived).toBeNull();
   });
@@ -131,11 +131,11 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
   it('shows the figures with "More than last week" only where they grew, and the calendar sentence', () => {
     expect(v.thisPeriod?.heading).toBe('This period');
     expect(v.thisPeriod?.figures).toEqual([
-      { key: 'days', label: 'Practice days', count: 3, up: 'More than last week' },
-      { key: 'minutes', label: 'Minutes', count: 36, up: null },
-      { key: 'quests', label: 'New quests', count: 2, up: null },
-      { key: 'cards', label: 'New cards', count: 1, up: null },
-      { key: 'letters', label: 'New letters', count: 2, up: 'More than last week' },
+      { key: 'days', label: 'Practice days', count: 3, value: '3', up: 'More than last week' },
+      { key: 'minutes', label: 'Minutes', count: 36, value: '36 min', up: null },
+      { key: 'quests', label: 'New quests', count: 2, value: '2', up: null },
+      { key: 'cards', label: 'New cards', count: 1, value: '1', up: null },
+      { key: 'letters', label: 'New letters', count: 2, value: '2', up: 'More than last week' },
     ]);
     const calendar = v.thisPeriod?.calendar;
     expect(calendar?.cells.map((cell) => [cell.day, cell.kind, cell.weekday, cell.date])).toEqual([
@@ -437,7 +437,7 @@ describe('states (section 3.14)', () => {
   it('empty: Now on without Last practice, the not-started line and the app\'s next quest, no tabs', () => {
     const v = view(EMPTY);
     expect(v.state).toBe('empty');
-    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: null, route: null, region: 'Learning Route' });
+    expect(v.glance).toEqual({ nowOn: 'Now on Stage 1: Hangul', goal: null, lastPractice: null, classes: null, route: null, region: 'Learning Route' });
     expect(v.notices).toEqual(['Mina has not started yet. The report fills in after the first practice.']);
     expect(v.tabs).toBeNull();
     expect(texts(v.practiceNext?.lines)).toEqual(['Next on the Learning Route: Meet a, eo, g, n.']);
@@ -999,5 +999,36 @@ describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
     const levels = { wordsKnown: 3, readyToRefresh: 2, levels: [1, 0, 0] as [number, number, number], stageChecks: 0 };
     expect(memoryLinesOf(levels, getMessages('es'))).toEqual(['Palabras conocidas: 3', '2 elementos están listos para repasar', 'Episodios: 1 terminado']);
     expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 낱말: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
+  });
+});
+
+describe('AMENDMENTS-GROWNUP-UX GX-13 (T13): minutes with a unit, no repeated stage, the classes line', () => {
+  it('the minutes tile carries its unit in every console locale; the other tiles are bare counts', () => {
+    const minutes = (locale: 'en' | 'es' | 'ko') => view(STEADY, { locale }).thisPeriod?.figures?.find((f) => f.key === 'minutes')?.value;
+    expect(minutes('en')).toBe('36 min');
+    expect(minutes('es')).toBe('36 min');
+    expect(minutes('ko')).toBe('36분');
+    expect(view(STEADY, { locale: 'ko' }).thisPeriod?.figures?.find((f) => f.key === 'days')?.value).toBe('3');
+  });
+
+  it('hides the next open stage when it is the stage the learner is on now (case 3 only)', () => {
+    const line = 'Next open stage: Stage 1 · Hangul';
+    expect(view(STEADY, { goal: { case: 3, line, stage: 'stage1' } }).glance?.goal).toBeNull();
+    // Another stage is news: it stays, without the flag.
+    expect(view(STEADY, { goal: { case: 3, line: 'Next open stage: Stage 2 · Words', stage: 'stage2' } }).glance?.goal).toEqual({ line: 'Next open stage: Stage 2 · Words', flag: false });
+    // A plan's goal on the same stage is a goal, not a repeat: it stays with its flag.
+    expect(view(STEADY, { goal: { case: 2, line: 'The class plan reaches Stage 1 · Hangul', stage: 'stage1' } }).glance?.goal).toEqual({ line: 'The class plan reaches Stage 1 · Hangul', flag: true });
+    // Without a readable "Now on" stage nothing is repeated, so the line stays.
+    const { journey: _journey, ...noJourney } = EMPTY;
+    expect(view(noJourney, { goal: { case: 3, line, stage: 'stage1' } }).glance?.goal).toEqual({ line, flag: false });
+  });
+
+  it('the classes line: the names in order, in the console locale; none when the read gave no list or an empty one', () => {
+    expect(view(STEADY, { classes: ['Sunday Class A', 'Saturday B'] }).glance?.classes).toBe('Classes: Sunday Class A, Saturday B');
+    expect(view(STEADY, { classes: ['Sunday Class A'], locale: 'es' }).glance?.classes).toBe('Clases: Sunday Class A');
+    expect(view(STEADY, { classes: ['Sunday Class A'], locale: 'ko' }).glance?.classes).toBe('소속 반: Sunday Class A');
+    expect(view(STEADY, { classes: [] }).glance?.classes).toBeNull();
+    expect(view(STEADY, { classes: null }).glance?.classes).toBeNull();
+    expect(view(STEADY).glance?.classes).toBeNull();
   });
 });

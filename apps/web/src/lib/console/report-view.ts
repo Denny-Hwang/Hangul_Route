@@ -498,6 +498,11 @@ export interface ReportGlance {
   goal: { line: string; flag: boolean } | null;
   /** "Last practice: Oct 12"; null when there is none (the empty state). */
   lastPractice: string | null;
+  /**
+   * "Classes: Sunday Class A, Saturday B" (AMENDMENTS-GROWNUP-UX GX-13, T13): the learner's live classes as the
+   * family's transfer read lists them; null when that read was skipped, failed or listed none (never a guess).
+   */
+  classes: string | null;
   /** **Open Learning Route**, only when that page exists on this build. */
   route: ReportLink | null;
   /** The region's label (`console.learningRoute.section`). */
@@ -513,6 +518,8 @@ export interface ReportFigureTile {
   key: 'days' | 'minutes' | 'quests' | 'cards' | 'letters' | 'words';
   label: string;
   count: number;
+  /** The tile's figure as drawn: the count, with its unit for minutes ("36 min", GX-13). */
+  value: string;
   /** "More than last week", only when the figure grew (OD-11). */
   up: string | null;
 }
@@ -627,8 +634,16 @@ export interface LearnerReportViewInput {
   tipGames?: ReportTipGames;
   /** The Learning Route stage list exists on this build (LR-8): the glance links to it. */
   learningRoute?: boolean;
-  /** The learner's Learning Route goal (`learningRouteView`'s card goal), when the page could read one. */
-  goal?: Pick<LearningRouteGoal, 'case' | 'line'> | null;
+  /**
+   * The learner's Learning Route goal (`learningRouteView`'s card goal), when the page could read one. A case 3 goal
+   * ("Next open stage") on the stage the glance already names ("Now on") is not drawn (GX-13: no repeated stage).
+   */
+  goal?: (Pick<LearningRouteGoal, 'case' | 'line'> & { stage?: StageKey }) | null;
+  /**
+   * The names of the learner's live classes (the family's `transferRequests` `options`); null or omitted when that
+   * read was skipped or failed, so the classes line is left out (GX-13).
+   */
+  classes?: readonly string[] | null;
   catalog?: Catalog;
   locale?: UiLocale;
 }
@@ -703,7 +718,8 @@ function figuresView(report: LearnerReport, w: ReportWords): ReportFigureTile[] 
   const keys = ['days', 'minutes', 'quests', 'cards', 'letters', 'words'] as const;
   return keys.flatMap((key) => {
     const figure = figures[key];
-    return figure === null ? [] : [{ key, label: labels[key], count: figure.count, up: figure.up ? up : null }];
+    if (figure === null) return [];
+    return [{ key, label: labels[key], count: figure.count, value: key === 'minutes' ? w.m.report.minutesTile(figure.count) : String(figure.count), up: figure.up ? up : null }];
   });
 }
 
@@ -864,10 +880,14 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     const route = input.learningRoute ? { href: ROUTES.learnerRoute(space.id, data.learner.id, space.kind), text: m.console.learningRoute.open } : null;
     // The empty state shows "Now on" without "Last practice" (design: states); the module has no glance for it.
     const stage = report.glance?.nowOn ?? (report.state === 'empty' ? emptyStageOf(summary) : null);
+    // "Next open stage" names the stage "Now on" already names: one line says it (GX-13). A plan's goal stays.
+    const repeat = input.goal?.case === 3 && stage !== null && input.goal.stage === stage.stage;
+    const classes = input.classes ?? [];
     return {
       nowOn: stage ? m.report.glance.nowOn(stage.n, input.stageTitle(stage.stage)) : null,
-      goal: input.goal ? { line: input.goal.line, flag: input.goal.case !== 3 } : null,
+      goal: input.goal && !repeat ? { line: input.goal.line, flag: input.goal.case !== 3 } : null,
       lastPractice: report.glance ? lastPracticeOf(summary, w) : null,
+      classes: classes.length > 0 ? m.report.classesLine(classes) : null,
       route,
       region: m.console.learningRoute.section,
     };

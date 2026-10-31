@@ -418,6 +418,7 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
 /** Messages with a number that is not a noun count (no plural to choose), each with the reason. */
 const NUMBER_NOT_COUNTED: Readonly<Record<string, string>> = {
   'report.glance.nowOn': 'a stage number',
+  'report.minutesTile': 'a number with the short unit "min" / "min" / "분", the same for one and many (GX-13)',
   'report.headline.stageDone': 'a stage number',
   'report.headline.stageDoneAll': 'a stage number',
   'report.you.headline.stageDone': 'a stage number',

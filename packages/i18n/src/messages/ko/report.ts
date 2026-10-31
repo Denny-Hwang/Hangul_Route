@@ -251,6 +251,8 @@ export const report = {
     readyToRefresh: (count: number) => `복습할 때가 된 항목 합계: ${count}개`,
     stageChecks: (count: number) => `통과한 단계 확인 합계: ${count}개`,
   },
+  minutesTile: (minutes: number) => `${minutes}분`,
+  classesLine: (classes: readonly string[]) => `소속 반: ${classes.join(', ')}`,
   print: {
     button: '인쇄 또는 PDF로 저장',
     hint: '인쇄 창에서 머리글과 바닥글을 꺼 주세요.',
