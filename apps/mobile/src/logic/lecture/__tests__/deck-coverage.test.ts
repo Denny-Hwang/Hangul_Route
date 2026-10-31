@@ -18,7 +18,7 @@ import {
   type ThemeKey,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, gridEpisodes } from '../../../content';
+import { episodesAll, episodesWithVolumes, gridEpisodes } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
@@ -115,6 +115,10 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 18, skipped: {}, flattened: {} },
   'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 16, skipped: {}, flattened: {} },
   'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 25, skipped: {}, flattened: {} },
+  // F-CURR-002 row CM-41 S4: Stage 4 Nature's Volume 2 (Hiking Plans), with `game.role-play` off: the 12 reply slides of
+  // its Role Play main paths, 4 Realia Read, 2 Cloze Pick and 2 Tap to Respond question slides; the rolePlay-on deck is
+  // pinned in its own test below.
+  'stage4:nature:v2': { quests: 3, slides: 47, wordCards: 3, differentWords: 3, quiz: 20, skipped: {}, flattened: {} },
   'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 16, skipped: {}, flattened: {} },
   stage5: { quests: 14, slides: 186, wordCards: 0, differentWords: 0, quiz: 42, skipped: {}, flattened: {} },
   'stage6:letters': {
@@ -272,11 +276,16 @@ function measure(episodes: readonly Episode[], bundle: LectureBundle): Measured 
   return { ...row, skipped, flattened };
 }
 
+/**
+ * Every shipped grid episode by cell, a cell's later volume as its own row (`stage4:nature:v2`, F-CURR-002 row CM-40):
+ * the presenter's chooser lists a Volume 2 while `volumes` is on, so its deck has a floor of its own (row CM-41 S4).
+ */
 function shippedCells(): Map<string, Episode[]> {
   const cells = new Map<string, Episode[]>();
-  for (const episode of gridEpisodes(episodesAll)) {
+  for (const episode of gridEpisodes(episodesWithVolumes)) {
     if (episode.status === 'preview' || episode.questIds.length === 0) continue;
-    const key = episode.stage === 'stage5' ? 'stage5' : `${episode.stage satisfies StageKey}:${episode.theme satisfies ThemeKey}`;
+    const cell = episode.stage === 'stage5' ? 'stage5' : `${episode.stage satisfies StageKey}:${episode.theme satisfies ThemeKey}`;
+    const key = (episode.volume ?? 1) > 1 ? `${cell}:v${episode.volume}` : cell;
     cells.set(key, [...(cells.get(key) ?? []), episode]);
   }
   return cells;
@@ -351,6 +360,35 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     for (const [key, row] of measured) expect(row.skipped, key).toEqual({});
   });
 
+  it('a later volume holds its floors with game.role-play off and on: one Role Play slide per main-path turn on, its reply slides off, no step skipped (row CM-41 S4)', () => {
+    const later = gridEpisodes(episodesWithVolumes).filter((e) => (e.volume ?? 1) > 1 && e.status !== 'preview');
+    expect(later.map((e) => e.id)).toContain('episode:stage4-nature-v2');
+    for (const episode of later) {
+      const deck = LectureDeckSchema.parse({ v: 1, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [{ kind: 'episode', id: episode.id }] });
+      const off = expandDeck(deck, bundle, { canPlayKorean: true }, { rolePlay: false });
+      const on = expandDeck(deck, bundle, { canPlayKorean: true }, { rolePlay: true });
+      expect(off.skipped, episode.id).toEqual([]);
+      expect(on.skipped, episode.id).toEqual([]);
+      // Each Role Play step: its main-path turns as role-play slides (on) or as reply question slides (off), one for one.
+      const rolePlaySteps = episode.questIds.flatMap((questId) =>
+        (bundle.questById(questId)?.steps ?? []).flatMap((step) => (step.minigameRef !== undefined && bundle.scopeFor(step.minigameRef)?.kind === 'role-play' ? [`/${questId}/${step.id}/`] : [])),
+      );
+      expect(rolePlaySteps.length, episode.id).toBe(episode.questIds.length);
+      for (const path of rolePlaySteps) {
+        const onSlides = on.slides.filter((s) => s.key.includes(path));
+        const offSlides = off.slides.filter((s) => s.key.includes(path));
+        expect(onSlides.length, path).toBeGreaterThanOrEqual(4);
+        expect(onSlides.every((s) => s.kind === 'role-play'), path).toBe(true);
+        expect(offSlides.map((s) => s.kind), path).toEqual(onSlides.map(() => 'quiz'));
+      }
+      const count = (slides: readonly { kind: string }[], kind: string): number => slides.filter((s) => s.kind === kind).length;
+      expect(count(off.slides, 'role-play'), episode.id).toBe(0);
+      expect(count(on.slides, 'role-play'), episode.id).toBe(12);
+      expect(count(off.slides, 'quiz') - count(on.slides, 'quiz'), episode.id).toBe(12);
+      expect(on.slides.length, episode.id).toBe(off.slides.length);
+    }
+  });
+
   it('every shipped type-hangul, trace-word and write-frame round has its own write-together slide (LV-S4)', () => {
     const counts = { type: 0, trace: 0, frame: 0, 'own-name': 0 };
     let rounds = 0;
@@ -404,8 +442,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S3 adds the five
     // Stage 3 Sentence Builder Checks (10 rounds), row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
     // Stage 4 Sentence Builder Checks (8 rounds), and row CM-3A S7 keeps 5 of the Stage 7 Checks as Sentence Builder
-    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation).
-    expect({ rounds, built }).toEqual({ rounds: 145, built: 145 });
+    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation). Row CM-41 S4 adds Stage 4 Nature
+    // Volume 2's Sentence Builder Apply (4 rounds) and Check (2 rounds).
+    expect({ rounds, built }).toEqual({ rounds: 151, built: 151 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {
@@ -513,7 +552,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
   });
 
   it('the BASELINE constant matches the section 1 totals, less what the LV-S rows lowered (pins the table text, not the builder)', () => {
-    const upper = Object.entries(BASELINE).filter(([key]) => /^stage[23467]:/.test(key));
+    // The section 1 cells: each cell's first volume (a later volume's row, row CM-41 S4, came after section 1).
+    const upper = Object.entries(BASELINE).filter(([key]) => /^stage[23467]:[a-z]+$/.test(key));
     expect(upper).toHaveLength(25);
     const steps = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [s]) => m + s, 0), 0);
     const rounds = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [, r]) => m + r, 0), 0);
