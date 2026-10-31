@@ -1,0 +1,1568 @@
+{
+  "id": "episode:stage4-letters-v2",
+  "stage": "stage4",
+  "theme": "letters",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "At the Library",
+  "subtitleEn": "Borrow a book, find a shelf and visit a bookshop.",
+  "hoyaIntroEn": "I love books! Let's read how to borrow one and find where it is.",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-letters-v2-q1",
+      "titleEn": "Borrow a Book",
+      "blurbEn": "Read how to borrow a book at the library desk.",
+      "teaserEn": "Next: find the shelf you want.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "At the Desk",
+          "hoyaLineEn": "I found a book I like. Let's read how to borrow it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Borrowing",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "이 책 빌려 주세요.",
+                          "romanization": "i chaek billyeo juseyo",
+                          "en": "I'd like to borrow this book, please."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Librarian",
+                        "line": {
+                          "ko": "도서관 카드 있어요?",
+                          "romanization": "doseogwan kadeu isseoyo",
+                          "en": "Do you have a library card?"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Billyeo juseyo asks to borrow. The librarian asks for a library card."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 여기 있어요.",
+                          "romanization": "ne yeogi isseoyo",
+                          "en": "Yes, here it is."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Librarian",
+                        "line": {
+                          "ko": "책 여기 있어요.",
+                          "romanization": "chaek yeogi isseoyo",
+                          "en": "Here is your book."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya hands over the card, and the librarian hands over the book."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Talk with the Librarian",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-letters-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-order",
+          "minigameRef": "minigame:s4-letters-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-letters-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy Reading!",
+          "hoyaLineEn": "You read how to borrow a book at the library!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-v2-q1-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "도서관",
+              "romanization": "doseogwan",
+              "en": "At the library"
+            },
+            "partner": {
+              "ko": "사서",
+              "romanization": "saseo",
+              "en": "librarian"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "호야, 안녕하세요!",
+                  "romanization": "hoya annyeonghaseyo",
+                  "en": "Hello, Hoya!"
+                },
+                "replies": [
+                  {
+                    "id": "hi",
+                    "text": {
+                      "ko": "안녕!",
+                      "romanization": "annyeong",
+                      "en": "hi! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Annyeong is for friends. With the librarian, pick the polite hello."
+                  },
+                  {
+                    "id": "borrow",
+                    "text": {
+                      "ko": "안녕하세요! 이 책 빌려 주세요.",
+                      "romanization": "annyeonghaseyo i chaek billyeo juseyo",
+                      "en": "Hello! I'd like to borrow this book, please."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "hello",
+                    "text": {
+                      "ko": "안녕하세요!",
+                      "romanization": "annyeonghaseyo",
+                      "en": "Hello!"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "도서관 카드 있어요?",
+                  "romanization": "doseogwan kadeu isseoyo",
+                  "en": "Do you have a library card?"
+                },
+                "replies": [
+                  {
+                    "id": "who",
+                    "text": {
+                      "ko": "누구예요?",
+                      "romanization": "nuguyeyo",
+                      "en": "Who is it?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks who someone is. The librarian asks about your library card."
+                  },
+                  {
+                    "id": "card",
+                    "text": {
+                      "ko": "네, 여기 있어요.",
+                      "romanization": "ne yeogi isseoyo",
+                      "en": "Yes, here it is."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "there",
+                    "text": {
+                      "ko": "저기예요.",
+                      "romanization": "jeogiyeyo",
+                      "en": "It is over there."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says where something is. Hand the librarian your card."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "책 여기 있어요.",
+                  "romanization": "chaek yeogi isseoyo",
+                  "en": "Here is your book."
+                },
+                "replies": [
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다!",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you!"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "casual",
+                    "text": {
+                      "ko": "고마워!",
+                      "romanization": "gomawo",
+                      "en": "thanks! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Gomawo is for friends. With the librarian, pick the polite thank-you."
+                  },
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "이 책 빌려 주세요.",
+                      "romanization": "i chaek billyeo juseyo",
+                      "en": "I'd like to borrow this book, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You asked for it already. The librarian is giving you the book now."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "도서관 카드도 여기 있어요.",
+                  "romanization": "doseogwan kadeudo yeogi isseoyo",
+                  "en": "And here is your library card."
+                },
+                "replies": [
+                  {
+                    "id": "ask",
+                    "text": {
+                      "ko": "도서관 카드 있어요?",
+                      "romanization": "doseogwan kadeu isseoyo",
+                      "en": "Do you have a library card?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks about a card. The librarian is giving yours back, so thank the librarian."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다!",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "grandma",
+                    "text": {
+                      "ko": "할머니예요.",
+                      "romanization": "halmeoniyeyo",
+                      "en": "It is Grandma."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That names a person. The librarian is giving your card back."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You borrowed a book. Happy reading!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q1-apply",
+          "kind": "story-order",
+          "rounds": [
+            {
+              "id": "borrow-a-book",
+              "captionsOnly": true,
+              "panels": [
+                {
+                  "id": "borrow",
+                  "caption": {
+                    "ko": "이 책 빌려 주세요.",
+                    "romanization": "i chaek billyeo juseyo",
+                    "en": "I'd like to borrow this book, please."
+                  }
+                },
+                {
+                  "id": "card",
+                  "caption": {
+                    "ko": "도서관 카드 있어요?",
+                    "romanization": "doseogwan kadeu isseoyo",
+                    "en": "Do you have a library card?"
+                  }
+                },
+                {
+                  "id": "here",
+                  "caption": {
+                    "ko": "네, 여기 있어요.",
+                    "romanization": "ne yeogi isseoyo",
+                    "en": "Yes, here it is."
+                  }
+                },
+                {
+                  "id": "book",
+                  "caption": {
+                    "ko": "책 여기 있어요.",
+                    "romanization": "chaek yeogi isseoyo",
+                    "en": "Here is your book."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q1-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Librarian",
+              "line": {
+                "ko": "도서관 카드 있어요?",
+                "romanization": "doseogwan kadeu isseoyo",
+                "en": "Do you have a library card?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 여기 있어요.",
+                    "romanization": "ne yeogi isseoyo",
+                    "en": "Yes, here it is."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니예요.",
+                    "romanization": "halmeoniyeyo",
+                    "en": "It is Grandma."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Librarian",
+              "line": {
+                "ko": "책 여기 있어요.",
+                "romanization": "chaek yeogi isseoyo",
+                "en": "Here is your book."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "가방이에요.",
+                    "romanization": "gabangieyo",
+                    "en": "It is a bag."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-letters-v2-q2",
+      "titleEn": "Find the Shelf",
+      "blurbEn": "Ask the librarian where the books you want are.",
+      "teaserEn": "Next: a visit to the bookshop.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "So Many Shelves",
+          "hoyaLineEn": "So many books! Let's ask where the picture books are.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Where Are They?",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "그림책이 어디 있어요?",
+                          "romanization": "geurimchaegi eodi isseoyo",
+                          "en": "Where are the picture books?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Librarian",
+                        "line": {
+                          "ko": "저기 있어요.",
+                          "romanization": "jeogi isseoyo",
+                          "en": "They are over there."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Eodi isseoyo asks where something is. Jeogi means over there."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "한글 책은 어디 있어요?",
+                          "romanization": "hangeul chaegeun eodi isseoyo",
+                          "en": "And where are the books about Hangul?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Librarian",
+                        "line": {
+                          "ko": "이쪽에 있어요.",
+                          "romanization": "ijjoge isseoyo",
+                          "en": "They are this way."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya asks about one more shelf. Ijjoge means this way."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Ask the Librarian",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-letters-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-letters-v2-q2-apply",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-letters-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Found Them!",
+          "hoyaLineEn": "You asked where the books are, and found them!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-v2-q2-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "도서관",
+              "romanization": "doseogwan",
+              "en": "At the library"
+            },
+            "partner": {
+              "ko": "사서",
+              "romanization": "saseo",
+              "en": "librarian"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "안녕하세요!",
+                  "romanization": "annyeonghaseyo",
+                  "en": "Hello!"
+                },
+                "replies": [
+                  {
+                    "id": "ask",
+                    "text": {
+                      "ko": "안녕하세요! 그림책이 어디 있어요?",
+                      "romanization": "annyeonghaseyo geurimchaegi eodi isseoyo",
+                      "en": "Hello! Where are the picture books?"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "hi",
+                    "text": {
+                      "ko": "안녕!",
+                      "romanization": "annyeong",
+                      "en": "hi! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Annyeong is for friends. With the librarian, pick the polite hello."
+                  },
+                  {
+                    "id": "book",
+                    "text": {
+                      "ko": "책 여기 있어요.",
+                      "romanization": "chaek yeogi isseoyo",
+                      "en": "Here is your book."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That hands over a book. Greet the librarian and ask where the picture books are."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "저기 있어요.",
+                  "romanization": "jeogi isseoyo",
+                  "en": "They are over there."
+                },
+                "replies": [
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "그림책이 어디 있어요?",
+                      "romanization": "geurimchaegi eodi isseoyo",
+                      "en": "Where are the picture books?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "The librarian just told you: over there. Thank the librarian, then ask about the next shelf."
+                  },
+                  {
+                    "id": "next",
+                    "text": {
+                      "ko": "감사합니다! 한글 책은 어디 있어요?",
+                      "romanization": "gamsahamnida hangeul chaegeun eodi isseoyo",
+                      "en": "Thank you! And where are the books about Hangul?"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "casual",
+                    "text": {
+                      "ko": "고마워!",
+                      "romanization": "gomawo",
+                      "en": "thanks! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Gomawo is for friends. With the librarian, pick the polite thank-you."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "이쪽에 있어요.",
+                  "romanization": "ijjoge isseoyo",
+                  "en": "They are this way."
+                },
+                "replies": [
+                  {
+                    "id": "grandma",
+                    "text": {
+                      "ko": "할머니예요.",
+                      "romanization": "halmeoniyeyo",
+                      "en": "It is Grandma."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That names a person. The librarian showed you the way, so thank the librarian."
+                  },
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "한글 책은 어디 있어요?",
+                      "romanization": "hangeul chaegeun eodi isseoyo",
+                      "en": "And where are the books about Hangul?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You asked already. The librarian showed you the way: this way."
+                  },
+                  {
+                    "id": "restroom",
+                    "text": {
+                      "ko": "감사합니다! 화장실이 어디예요?",
+                      "romanization": "gamsahamnida hwajangsiri eodiyeyo",
+                      "en": "Thank you! Where is the restroom?"
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "저기예요.",
+                  "romanization": "jeogiyeyo",
+                  "en": "It is over there."
+                },
+                "replies": [
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다!",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "화장실이 어디예요?",
+                      "romanization": "hwajangsiri eodiyeyo",
+                      "en": "Where is the restroom?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You asked already. The librarian said over there, so thank the librarian."
+                  },
+                  {
+                    "id": "casual",
+                    "text": {
+                      "ko": "고마워!",
+                      "romanization": "gomawo",
+                      "en": "thanks! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Gomawo is for friends. With the librarian, pick the polite thank-you."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You asked where everything is, and found it!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q2-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "그림책이 어디 있어요?",
+                "romanization": "geurimchaegi eodi isseoyo",
+                "en": "Where are the picture books?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "저기 있어요.",
+                    "romanization": "jeogi isseoyo",
+                    "en": "They are over there."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "누구예요?",
+                    "romanization": "nuguyeyo",
+                    "en": "Who is it?"
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "한글 책은 어디 있어요?",
+                "romanization": "hangeul chaegeun eodi isseoyo",
+                "en": "And where are the books about Hangul?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "이쪽에 있어요.",
+                    "romanization": "ijjoge isseoyo",
+                    "en": "They are this way."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "도서관 카드 있어요?",
+                    "romanization": "doseogwan kadeu isseoyo",
+                    "en": "Do you have a library card?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니예요.",
+                    "romanization": "halmeoniyeyo",
+                    "en": "It is Grandma."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Librarian",
+              "line": {
+                "ko": "저기 있어요.",
+                "romanization": "jeogi isseoyo",
+                "en": "They are over there."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "책 여기 있어요.",
+                    "romanization": "chaek yeogi isseoyo",
+                    "en": "Here is your book."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "그림책이 어디 있어요?",
+                    "romanization": "geurimchaegi eodi isseoyo",
+                    "en": "Where are the picture books?"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Hoya",
+              "line": {
+                "ko": "화장실이 어디예요?",
+                "romanization": "hwajangsiri eodiyeyo",
+                "en": "Where is the restroom?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다!",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you!"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "저기예요.",
+                    "romanization": "jeogiyeyo",
+                    "en": "It is over there."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "가방이에요.",
+                    "romanization": "gabangieyo",
+                    "en": "It is a bag."
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q2-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "그림책___ 어디 있어요?",
+                "romanization": "geurimchaek___ eodi isseoyo",
+                "en": "Where are the picture books?"
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "geurimchaegi eodi isseoyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "화장실___ 어디예요?",
+                "romanization": "hwajangsil___ eodiyeyo",
+                "en": "Where is the restroom?"
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 2,
+              "filledRomanization": "hwajangsiri eodiyeyo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-letters-v2-q3",
+      "titleEn": "At the Bookshop",
+      "blurbEn": "Find a book about Hangul at the bookshop.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "To the Bookshop",
+          "hoyaLineEn": "Now let's visit a bookshop and find a book about Hangul!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Shopping for Books",
+          "hoyaLineEn": "Tap Hear it to listen to each line.",
+          "durationSeconds": 65,
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "한글 책 있어요?",
+                          "romanization": "hangeul chaek isseoyo",
+                          "en": "Do you have books about Hangul?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Shop worker",
+                        "line": {
+                          "ko": "네, 저기 있어요.",
+                          "romanization": "ne jeogi isseoyo",
+                          "en": "Yes, they are over there."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "At a bookshop, isseoyo asks if they have the book you want."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "이 책 주세요.",
+                          "romanization": "i chaek juseyo",
+                          "en": "I'll take this book, please."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Shop worker",
+                        "line": {
+                          "ko": "네, 감사합니다.",
+                          "romanization": "ne gamsahamnida",
+                          "en": "Sure, thank you."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Juseyo asks for the book you pick. The shop worker thanks you."
+              }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Talk at the Bookshop",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-letters-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-letters-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Build the Line",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-letters-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Great Find!",
+          "hoyaLineEn": "You found a book about Hangul and asked for it, all in Korean!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-letters-v2-q3-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "서점",
+              "romanization": "seojeom",
+              "en": "At the bookshop"
+            },
+            "partner": {
+              "ko": "직원",
+              "romanization": "jigwon",
+              "en": "shop worker"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "안녕하세요!",
+                  "romanization": "annyeonghaseyo",
+                  "en": "Hello!"
+                },
+                "replies": [
+                  {
+                    "id": "borrow",
+                    "text": {
+                      "ko": "이 책 빌려 주세요.",
+                      "romanization": "i chaek billyeo juseyo",
+                      "en": "I'd like to borrow this book, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "This is a bookshop, not a library. Ask if they have a book about Hangul."
+                  },
+                  {
+                    "id": "have",
+                    "text": {
+                      "ko": "안녕하세요! 한글 책 있어요?",
+                      "romanization": "annyeonghaseyo hangeul chaek isseoyo",
+                      "en": "Hello! Do you have books about Hangul?"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "hi",
+                    "text": {
+                      "ko": "안녕!",
+                      "romanization": "annyeong",
+                      "en": "hi! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Annyeong is for friends. With the shop worker, pick the polite hello."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "네, 저기 있어요.",
+                  "romanization": "ne jeogi isseoyo",
+                  "en": "Yes, they are over there."
+                },
+                "replies": [
+                  {
+                    "id": "casual",
+                    "text": {
+                      "ko": "고마워!",
+                      "romanization": "gomawo",
+                      "en": "thanks! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Gomawo is for friends. With the shop worker, pick the polite thank-you."
+                  },
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "한글 책 있어요?",
+                      "romanization": "hangeul chaek isseoyo",
+                      "en": "Do you have books about Hangul?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You asked already. The shop worker said over there, so thank them."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다!",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you!"
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "책 여기 있어요.",
+                  "romanization": "chaek yeogi isseoyo",
+                  "en": "Here is your book."
+                },
+                "replies": [
+                  {
+                    "id": "take",
+                    "text": {
+                      "ko": "이 책 주세요.",
+                      "romanization": "i chaek juseyo",
+                      "en": "I'll take this book, please."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "card",
+                    "text": {
+                      "ko": "도서관 카드 있어요?",
+                      "romanization": "doseogwan kadeu isseoyo",
+                      "en": "Do you have a library card?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a library question. At the bookshop, ask for the book you want."
+                  },
+                  {
+                    "id": "who",
+                    "text": {
+                      "ko": "누구예요?",
+                      "romanization": "nuguyeyo",
+                      "en": "Who is it?"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That asks who someone is. The shop worker is showing you a book."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "네, 감사합니다.",
+                  "romanization": "ne gamsahamnida",
+                  "en": "Sure, thank you."
+                },
+                "replies": [
+                  {
+                    "id": "again",
+                    "text": {
+                      "ko": "이 책 주세요.",
+                      "romanization": "i chaek juseyo",
+                      "en": "I'll take this book, please."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "You asked for it already. The shop worker thanked you, so thank them back."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다!",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you!"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "casual",
+                    "text": {
+                      "ko": "고마워!",
+                      "romanization": "gomawo",
+                      "en": "thanks! (casual)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "Gomawo is for friends. With the shop worker, pick the polite thank-you."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You found a book about Hangul at the bookshop!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "한글 책 ___?",
+                "romanization": "hangeul chaek ___",
+                "en": "Do you have books about Hangul?"
+              },
+              "tiles": [
+                {
+                  "ko": "있어요",
+                  "romanization": "isseoyo",
+                  "en": "do you have"
+                },
+                {
+                  "ko": "누구",
+                  "romanization": "nugu",
+                  "en": "who"
+                },
+                {
+                  "ko": "저기",
+                  "romanization": "jeogi",
+                  "en": "over there"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "네, ___ 있어요.",
+                "romanization": "ne ___ isseoyo",
+                "en": "Yes, they are over there."
+              },
+              "tiles": [
+                {
+                  "ko": "누구",
+                  "romanization": "nugu",
+                  "en": "who"
+                },
+                {
+                  "ko": "저기",
+                  "romanization": "jeogi",
+                  "en": "over there"
+                },
+                {
+                  "ko": "감사합니다",
+                  "romanization": "gamsahamnida",
+                  "en": "thank you"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "이 책 ___.",
+                "romanization": "i chaek ___",
+                "en": "I'll take this book, please."
+              },
+              "tiles": [
+                {
+                  "ko": "어디",
+                  "romanization": "eodi",
+                  "en": "where"
+                },
+                {
+                  "ko": "누구예요",
+                  "romanization": "nuguyeyo",
+                  "en": "who is it"
+                },
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "이 책 빌려 ___.",
+                "romanization": "i chaek billyeo ___",
+                "en": "I'd like to borrow this book, please."
+              },
+              "tiles": [
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please do it for me"
+                },
+                {
+                  "ko": "어디",
+                  "romanization": "eodi",
+                  "en": "where"
+                },
+                {
+                  "ko": "할머니예요",
+                  "romanization": "halmeoniyeyo",
+                  "en": "it is Grandma"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-letters-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "한글 책 있어요?",
+                "romanization": "hangeul chaek isseoyo",
+                "en": "Do you have books about Hangul?"
+              },
+              "distractors": [
+                {
+                  "ko": "어디",
+                  "romanization": "eodi",
+                  "en": "where"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "이 책 주세요.",
+                "romanization": "i chaek juseyo",
+                "en": "I'll take this book, please."
+              },
+              "distractors": [
+                {
+                  "ko": "누구",
+                  "romanization": "nugu",
+                  "en": "who"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Hangeul Day began in 1926 as {ko:가갸날} (Gagyanal). The name seems to come from {ko:가} and {ko:갸}, the first two syllables of the old letter chart. Since 1928 it has been called Hangeul Day.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는? (한박웃음 2018년 10월 제63호)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘1926년, 한글의 새로운 빛 가갸날’ 단락: “1926년 11월 조선어연구회는 훈민정음 반포 8회갑(480년)을 기념하여 … ‘가갸날’ 축하회를 열었다.” “‘가갸날’이라는 이름은 당시 한글 교육에 널리 사용되었던 한글 반절표 첫 행(가갸거겨고교구규그기 )의 처음 두 글자를 딴 것으로 보인다.” “1928년부터 ‘가갸날’은 ‘한글날’로 바뀌게 되었다.”"
+        },
+        {
+          "title": "가갸날",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B0%80%EA%B0%B8%EB%82%A0",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "가갸-날 「명사」: “‘한글날’의 처음 이름. 1926년 한글날 기념식을 처음으로 치르는 자리에서 정해졌으며, 그 이후 여러 해 동안 사용되었다.”"
+        },
+        {
+          "title": "반절표",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B0%98%EC%A0%88%ED%91%9C",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "반절-표 (反切表) 「명사」: “자음 ‘ㄱ, ㄴ, ㄷ, ㄹ ……’과 모음 ‘ㅏ, ㅑ, ㅓ, ㅕ ……’를 합쳐 ‘가, 갸, 거, 겨 …… 나, 냐, 너, 녀 ……’의 순서로 늘어놓은 것이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that Hangeul Day began in 1926 as 가갸날, that the name seems to come from the first two syllables of the letter chart (반절표), and that it has been called 한글날 since 1928. The National Hangeul Museum article gives the 1926 celebration, the probable source of the name (its own hedge, 보인다, kept as seems to) and the 1928 renaming; the NIKL dictionary entries 가갸날 and 반절표 give the first name of Hangeul Day and the chart order 가, 갸. All three sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): the three claims matched to the Museum article (1926 가갸날, the 보인다 hedge kept as seems to, 1928 renaming) and to the NIKL entries 가갸날 and 반절표 (chart order 가, 갸). National Hangeul Museum first, on the section 6.6 allowlist under its name as of the access date. New against the Volume 1 notes, which do not name 가갸날. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "Why 9 October? The 1446 book says it was published in the first ten days of the ninth month of the old calendar. The last of those days falls on 9 October today.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는? (한박웃음 2018년 10월 제63호)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘1940년, 한글날은 10월 9일’ 단락: “책의 말미에는 ≪훈민정음≫(해례본)의 간행 시점이 1446년(세종 28년) 9월 상한(上澣)임이 기록되어 있다. 상한은 상순(上旬)과 같은 말로 한 달 가운데 1일에서 10일까지를 이르는 말이다. 이 기록에 따라 9월 상한의 마지막 날인 음력 9월 10일을 양력으로 환산한 10월 9일을 한글날로 정하게 되었다.”"
+        },
+        {
+          "title": "상순",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%83%81%EC%88%9C",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "상순 1 (上旬) 「명사」: “한 달 가운데 1일에서 10일까지의 동안.≒상완, 상한, 초순.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that the 1446 book (the Hunminjeongeum Haerye) records that it was finished early in the ninth month, that this means the first ten days, and that the last of them, the 10th, falls on 9 October in the solar calendar. The National Hangeul Museum article states all three (9월 상한, 1일에서 10일, 음력 9월 10일을 양력으로 환산한 10월 9일); the NIKL dictionary entry 상순 (≒상한) gives the first ten days of a month. Both sources resolved on 2026-10-30. The Volume 1 notes say only that Hangeul Day is on 9 October; this note adds why.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): matched to the Museum article (간행 시점 1446년 9월 상한; 상한 = 1일에서 10일; 음력 9월 10일 → 10월 9일) and the NIKL entry 상순 1 (≒상한). Finding (nit): 'finished' was looser than 간행. Reviser: 'published' in en, es and ko; the third pass then trimmed a repeated 책 in the ko text. Volume 1 says only that Hangeul Day is on 9 October; this note adds why. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "When King Sejong's letters were shared in 1446, there were 28 of them. Korean spelling today uses 24 letters.",
+      "sources": [
+        {
+          "title": "한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C%EA%B8%80",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "한글 1 「명사」: “1446년 반포될 당시에는 28자모(字母)였지만, 현행 한글 맞춤법에서는 24자모만 쓴다.”"
+        },
+        {
+          "title": "한글날이 10월 9일인 이유는? (한박웃음 2018년 10월 제63호)",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘훈민정음과 ≪훈민정음≫’ 단락, ≪세종실록≫ 1443년 12월 30일 기사 인용: “이달에 임금이 친히 언문(諺文) 28자를 지었는데 …… 이것을 훈민정음이라고 일렀다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that the letters had 28 symbols when they were made public in 1446 and that Korean spelling today uses 24. The NIKL Standard Korean Language Dictionary entry 한글 states both (28자모 in 1446, 24자모 in the current spelling rules); the National Hangeul Museum article quotes the Annals entry of 1443 on the 28 letters. Both sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): matched to the NIKL entry 한글 1 (28자모 in 1446, 24자모 in the current spelling rules) and the Museum article's quotation of the 1443 Annals entry on the 28 letters. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "A {ko:사서} (saseo) is a librarian. {ko:빌려} (billyeo) comes from {ko:빌리다}, to borrow: you use a thing for a while, then bring it back.",
+      "sources": [
+        {
+          "title": "사서",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%82%AC%EC%84%9C",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "사서 3 (司書) 「명사」 「1」: “도서관 따위에서, 일정한 자격을 가지고 자료의 수집, 정리, 보존 및 열람에 관한 사무에 종사하는 사람.”"
+        },
+        {
+          "title": "빌리다",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B9%8C%EB%A6%AC%EB%8B%A4",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "빌리다 「동사」: “남의 물건이나 돈 따위를 나중에 도로 돌려주거나 대가를 갚기로 하고 얼마 동안 쓰다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that 사서 is a librarian and that 빌리다, the verb in 빌려, means to borrow: to use something for a while and give it back. The NIKL Standard Korean Language Dictionary entries 사서 (司書) and 빌리다 give both senses. Both sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): the right homonym 사서 3 (司書), not 士庶 or 史書, and the single sense of 빌리다 (use for a while and give back). Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n5",
+      "kind": "language",
+      "textEn": "{ko:서점} (seojeom) and {ko:책방} (chaekbang) both name a bookshop, a shop where you buy books.",
+      "sources": [
+        {
+          "title": "서점",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%9C%EC%A0%90",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "서점 3 (書店) 「명사」: “책을 갖추어 놓고 팔거나 사는 가게.≒서관, 서림, 서사, 서포, 책방, 책사, 책전, 책점.”"
+        },
+        {
+          "title": "책방",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B1%85%EB%B0%A9",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "책방 1 (冊房) 「명사」: “책을 갖추어 놓고 팔거나 사는 가게.=서점.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claim is that 서점 and 책방 both name a bookshop. The NIKL Standard Korean Language Dictionary entries 서점 (書店) and 책방 give the same sense and list each other. Both sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): the right homonyms 서점 3 (書店) and 책방 1 (冊房), not 西漸, 西點 or the Joseon office 책방 2. Finding (nit, es): word order of the es text; reviser reworded it. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "MAR (F-CURR-002 section 9.2, 2026-10-30 to 2026-10-31): author; three checkers run in parallel as separate reviewer agents (language with the F-CNT-002 converter and polite register; culture and facts against each source; learning design); a reviser; an independent third pass; the reviser's fixes of its findings.",
+      "The language field's value is the schema's reviewed state. No native-speaker or expert review is claimed.",
+      "Language: the librarian and the shop worker speak polite 해요체; Hoya answers in 해요체 with 감사합니다 in 합쇼체; each casual foil (안녕!, 고마워!) is a less natural reply with a gentle reason. Every romanization matches the converter (책이 chaegi, 책은 chaegeun, 쪽에 jjoge, 실이 siri, 합니다 hamnida, 책방 chaekbang, 서점 seojeom).",
+      "Language findings fixed: the es partner is named without gender (Personal de biblioteca, Personal de librería; glosses bibliotecario o bibliotecaria, dependiente o dependienta; no el bibliotecario or el dependiente); 한글 책 reads 'books about Hangul' or 'a book about Hangul' in every quest, as in es and ko; ko glosses no longer restate 책; es n5 reworded.",
+      "Culture and facts: five notes, each with two or three sources, an allowlisted institution first (National Hangeul Museum for n1 and n2, NIKL for n3 to n5), quoted words, access date 2026-10-30 and names as of that date. n2 says 'published' for 간행 (finding fixed).",
+      "Culture and facts (cont.): the Hangeul Day facts are new against Volume 1's note: 1926 가갸날 and the 1928 name, why 9 October, 28 letters in 1446 and 24 today. No UNESCO claim. Library and bookshop are generic, the partners named by role (사서, 직원); no brand, shop, library, person or price.",
+      "Learning design: at most 4 new Discover lines a quest (lesson-new-load); lesson-recycle 37.5% or more of each quest's Practice and Check items come from earlier quests (Volume 1 S2 to S4 and this cell); no Dictation; no wrong option is also right.",
+      "Learning design (cont.): triples Role Play / Story Order / Tap to Respond, Role Play / Tap to Respond / Cloze Pick, Role Play / Cloze Pick / Sentence Builder; none is a Volume 1 triple and the three Checks differ. Every Role Play path has 4 turns and ends on its closing; off, each plays Tap to Respond. Fixed: the quest 2 closing reads 'You asked where everything is, and found it!'.",
+      "Third pass (2026-10-30): every first-round revision landed. Fixed on 2026-10-31: the es shop partner and its gloss without gender; three quest 3 English lines say 'a book about Hangul'; status stayed draft until this record; ko n2 drops a repeated 책.",
+      "Third pass (cont.): declined keeping only one natural reply at quest 1 turn 1: the learner stands at the desk with the book, so 도서관 카드 있어요? follows either 안녕하세요! reply, and that line recycles a Volume 1 item. validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (pct 0)."
+    ]
+  },
+  "contentVer": 1
+}
