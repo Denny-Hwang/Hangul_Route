@@ -346,22 +346,21 @@
                   {
                     "type": "sentence",
                     "sentence": {
-                      "ko": "가을은 시원해요.",
-                      "romanization": "gaeureun siwonhaeyo",
-                      "en": "Autumn is cool."
+                      "ko": "날씨가 시원해요.",
+                      "romanization": "nalssiga siwonhaeyo",
+                      "en": "The weather is cool."
                     }
                   },
                   {
                     "type": "sentence",
                     "sentence": {
-                      "ko": "겨울에 눈이 와요.",
-                      "romanization": "gyeoure nuni wayo",
-                      "en": "It snows in winter."
-                    },
-                    "picture": "word:nature-snow"
+                      "ko": "호야는 가을이 좋아요.",
+                      "romanization": "hoyaneun gaeuri joayo",
+                      "en": "Hoya likes autumn."
+                    }
                   }
                 ],
-                "captionEn": "Autumn is cool, and snow comes in winter."
+                "captionEn": "The weather is cool, and Hoya likes autumn."
               }
             ]
           },
@@ -495,12 +494,12 @@
             },
             {
               "id": "y3",
-              "promptEn": "Type: It is snowing.",
+              "promptEn": "Type: It snows in winter.",
               "pictureRef": "word:nature-snow",
               "target": {
-                "ko": "눈이 와요",
-                "romanization": "nuni wayo",
-                "en": "it is snowing"
+                "ko": "겨울에 눈이 와요",
+                "romanization": "gyeoure nuni wayo",
+                "en": "it snows in winter"
               }
             }
           ]
@@ -978,7 +977,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "The Korea Meteorological Administration starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C. In 1991-2020, summer was the longest season, 118 days.",
+      "textEn": "The Korea Meteorological Administration starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C. On average over 1991-2020, summer was the longest season, at 118 days.",
       "sources": [
         {
           "title": "보도자료: 기상청, 새로운 기후평년값(1991~2020년) 산출 (2021-03-25)",
@@ -999,13 +998,13 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): both Korea Meteorological Administration press releases opened (kma.go.kr flexer pages, HTTP 200). The 2021-03-25 release on the 1991-2020 normals defines each season's start (spring and summer: the first day the daily mean temperature rises to 5 °C / 20 °C or above and does not fall back; autumn and winter: below 20 °C / 5 °C and does not rise back) and gives the new-normal summer as 5/31-9/25, 118 days. The 2021-04-27 release says that over the recent 30 years (1991-2020) summer, 118 days, is the longest season. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order).\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched and read against the note. 'Starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C' matches the definition note of the 2021-03-25 table; '1991-2020' and '118 days, the longest season' match the 2021-04-27 line and the 2021-03-25 new-normal row. No moving-average detail is claimed. The institution is named as on the access date (기상청, Korea Meteorological Administration). Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-opened both releases; the claim is about the KMA's own season definition and its own normals, so no 'all Koreans' or origin claim; the ko overlay said '5 °C 넘게' (above 5), now '5 °C 이상으로' (5 or above), as the source says. Outcome: pass, ko overlay wording fixed."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): both Korea Meteorological Administration press releases opened (kma.go.kr flexer pages, HTTP 200). The 2021-03-25 release on the 1991-2020 normals defines each season's start (spring and summer: the first day the daily mean temperature rises to 5 °C / 20 °C or above and does not fall back; autumn and winter: below 20 °C / 5 °C and does not rise back) and gives the new-normal summer as 5/31-9/25, 118 days. The 2021-04-27 release says that over the recent 30 years (1991-2020) summer, 118 days, is the longest season. Restated in own words; nothing copied. Carried by: the q1 Did you know? tip (CM-3C note order).\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched and read against the note. 'Starts spring on the first day the daily mean temperature rises to 5 °C and stays there, and summer at 20 °C' matches the definition note of the 2021-03-25 table; '1991-2020' and '118 days, the longest season' match the 2021-04-27 line and the 2021-03-25 new-normal row. No moving-average detail is claimed. The institution is named as on the access date (기상청, Korea Meteorological Administration). Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-opened both releases; the claim is about the KMA's own season definition and its own normals, so no 'all Koreans' or origin claim; the ko overlay said '5 °C 넘게' (above 5), now '5 °C 이상으로' (5 or above), as the source says. Outcome: pass, ko overlay wording fixed.\nLine 4 (fix stage, 2026-10-31): the 118 days are the new-normal (평년값) season length, so the note now says 'On average over 1991-2020' in en, es and ko; the ko summer start now reads as the first day that rises to 20 °C or above and stays, as the source defines it. Outcome: pass, wording fixed."
       }
     },
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "{ko:동지}, around 22 December, is the longest night of the year. A Dongji custom is to make and eat red bean porridge, {ko:팥죽}.",
+      "textEn": "{ko:동지}, around 22 December, is the longest night of the year in Korea. A Dongji custom is to make and eat red bean porridge, {ko:팥죽}.",
       "sources": [
         {
           "title": "동지 (어린이민속사전, 명절)",
@@ -1026,7 +1025,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea children's folk dictionary page on 동지 (nfm.go.kr/kids, HTTP 200) says Dongji is usually around 22 December, the day of the year with the longest night and shortest day, and that on Dongji people make and eat 팥죽 (red bean porridge); the KMA 2021-04-27 release lists 동지 at 12.22./23. with '밤이 가장 긺'. The note says only these three things in its own words. Carried by: the q2 Did you know? tip.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched. Date (around 22 December), longest night and the porridge custom match the quotes; the note claims no origin, no belief about the porridge and no solar-term framing, so the §5.1 shared-calendar rule is not engaged; 'a Dongji custom' does not say everyone keeps it. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-read against the NFM page; neutral, no religious practice presented as universal, no peril; es and ko keep the two {ko:} tokens. Outcome: pass, no change."
+        "notes": "Line 1 (pass 2, author sourcing, 2026-10-30): the National Folk Museum of Korea children's folk dictionary page on 동지 (nfm.go.kr/kids, HTTP 200) says Dongji is usually around 22 December, the day of the year with the longest night and shortest day, and that on Dongji people make and eat 팥죽 (red bean porridge); the KMA 2021-04-27 release lists 동지 at 12.22./23. with '밤이 가장 긺'. The note says only these three things in its own words. Carried by: the q2 Did you know? tip.\nLine 2 (pass 2b, fact check lens, 2026-10-30): both pages re-fetched. Date (around 22 December), longest night and the porridge custom match the quotes; the note claims no origin, no belief about the porridge and no solar-term framing, so the §5.1 shared-calendar rule is not engaged; 'a Dongji custom' does not say everyone keeps it. Outcome: pass, no change.\nLine 3 (pass 5, MAR culture review, 2026-10-30): re-read against the NFM page; neutral, no religious practice presented as universal, no peril; es and ko keep the two {ko:} tokens. Outcome: pass, no change.\nLine 4 (fix stage, 2026-10-31): both sources describe Korea, and in the Southern Hemisphere 22 December is the shortest night, so en, es and ko now say the longest night of the year in Korea; es names the bean as frijol rojo (azuki), the 팥 of the source. Outcome: pass, wording fixed."
       }
     },
     {
@@ -1067,8 +1066,13 @@
       "Language lens (MAR, 2026-10-30): 해요체, spacing and particles clean; romanization from the F-CNT-002 converter (따뜻해요 ttatteuthaeyo, 사계절이 sagyejeori); applied: es 'Voy a el mar' contraction fixed (frame 'Voy hacia ___'), es 'calorcito' replaced, ko park gloss shortened to a definition; ko glosses describe and never echo the taught Korean.",
       "Culture and facts lens (MAR, 2026-10-30): n1 (KMA season start and 1991-2020 summer of 118 days) and n2 (Dongji, about 22 December, the longest night, red bean porridge) checked against KMA and National Folk Museum of Korea pages, n3 against stdict; names as of the access date; no brand, lyric, artist or living person; ko n1 '5 °C 넘게' corrected to '이상으로'.",
       "Learning design lens (MAR, 2026-10-30): curriculum lint clean; new Discover items 5, 5, 3 a quest (Stage 7 cap: 3 new words and one frame); lesson-recycle 33, 33 and 43 in 100; Dictation only 봄 and 여름, shown whole on Discover, no sound change (따뜻해요 and 사계절 are typed with the word shown); a cloze-pick Practice could not scaffold (CM-24), so q2 Practice is Sentence Builder.",
-      "My Story lens (MAR, 2026-10-30, §6.6): every bank has one neutral option, never first (사계절, 좋아요, 공원); no frame asks about the learner's family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (봄이 좋아요); frames 2-3 teach no item that a played step does not (날씨가 ___ and its bank are the q2 Check, ___에 가요 and its places are Volume 1 items).",
-      "Reviser and third pass (MAR, 2026-10-30): the lens fixes above applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+      "My Story lens (MAR, 2026-10-30, §6.6): every bank has one neutral option, never first (사계절, 좋아요, 공원); no frame asks about the learner's family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (봄이 좋아요); frames 2-3 teach nothing a played step does not (q2 Discover shows 날씨가 ___ and the q2 Check asks it; ___에 가요 and its places are Volume 1).",
+      "My Story lens (fix stage, 2026-10-31): the neutral options are slot answers, not a someone-else subject. A favourite season, a weather word and a place are no private topic (no family, feelings, home or school), nothing is kept after the quest and nothing is sent, so a slot-level neutral is enough here; the q2 Write Frame Check keeps Hoya as the subject of its liking frame.",
+      "Reviser and third pass (MAR, 2026-10-30): the lens fixes above applied; every rule test, overlay check and the 320 px play re-run clean on the final text.",
+      "Fix stage (MAR, 2026-10-31, PR #900 review): the q2 Check asked two frames no Discover showed (F-CURR-001 §3.1 rule 4, F-CURR-002 §4.1). q2 Discover page 3 now shows 날씨가 시원해요 (the 날씨가 ___ frame, after Stage 4's 날씨가 좋아요) and 호야는 가을이 좋아요 (the Check frame 호야는 ___이/가 좋아요, on the Volume 1 frame ___이/가 좋아요); the quest keeps one new frame.",
+      "Fix stage (cont.): 가을은 시원해요 now reuses the q1 and q2 ___은/는 frame with 시원해요 from page 3; q2 Apply y3 types 겨울에 눈이 와요 (route words: 눈, Stage 2; 와요, Stage 4), so the q3 Cloze Pick still recycles it. New Discover items stay 5, 5, 3 a quest, new words 3, 3, 1 (Stage 7 cap 3); lesson-recycle stays 33, 33, 43 in 100.",
+      "Fix stage (cont.): n1 now says the 118 days are the 1991-2020 average, n2 says the longest night is in Korea (the Southern Hemisphere reads the UI too).",
+      "Fix stage (cont.): ko glosses 추워요 as 기온이 낮다 and 더워요 as 기온이 높다 everywhere, n1 names the summer start as a first day, the 오늘 example no longer reads as 이날, and the 봄에 꽃을 봐요 gloss no longer echoes a tile; es uses cálido for 따뜻해요 throughout, qué tiempo hace for the weather captions, the Administración Meteorológica de Corea, frijol rojo (azuki), and con tus propias palabras for the q3 reward."
     ]
   },
   "contentVer": 1
