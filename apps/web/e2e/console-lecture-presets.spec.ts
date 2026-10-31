@@ -677,7 +677,8 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
 
   test('the space page: the button keeps its place and secondary weight and reads Lecture mode (E4)', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await mock(page);
+    // AMENDMENTS-GROWNUP-UX GX-7 (section 8 T5): an empty class hides Lecture mode, so the class has a learner.
+    await mock(page, { learners: [ON_THE_ROUTE] });
     await page.goto(`/teach/space?id=${encodeURIComponent(space('class').id)}`);
     const button = page.getByTestId('open-lecture');
     await expect(button).toHaveText(l.entry.cta);

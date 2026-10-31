@@ -61,6 +61,17 @@ async function mockRoster(page: Page, withLearner: boolean): Promise<void> {
   });
 }
 
+/**
+ * AMENDMENTS-GROWNUP-UX GX-7 (section 8 T3): on a class page the code and the link sit in the Invite students
+ * disclosure at the end of the page, open while the class is empty and collapsed once it has learners.
+ */
+async function openInvite(page: Page): Promise<void> {
+  const toggle = page.getByTestId('invite-toggle');
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
 const noSideScroll = (page: Page): Promise<boolean> => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 /** Reads the drawn QR code back with the browser's BarcodeDetector; null where the browser has none. */
@@ -91,6 +102,7 @@ test.describe('the class join link and its QR code', () => {
       await page.setViewportSize({ width, height: 800 });
       await mockRoster(page, width !== 320);
       await page.goto(`/teach/space?id=${encodeURIComponent(CLASS_ID)}`);
+      await openInvite(page);
       const panel = page.getByTestId('join-link');
       await expect(panel).toBeVisible();
       await expect(page.getByTestId('join-code')).toHaveText(CODE);
@@ -120,6 +132,7 @@ test.describe('the class join link and its QR code', () => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await mockRoster(page, true);
     await page.goto(`/teach/space?id=${encodeURIComponent(CLASS_ID)}`);
+    await openInvite(page);
     await page.getByRole('button', { name: en.space.joinLink.copy.cta, exact: true }).click();
     await expect(page.getByRole('button', { name: en.space.joinLink.copied.cta, exact: true })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(LINK);

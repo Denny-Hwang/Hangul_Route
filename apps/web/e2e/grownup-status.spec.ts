@@ -160,7 +160,8 @@ for (const { locale, browser } of LOCALES) {
         const groupBox = await group.boundingBox();
         const firstCard = await page.getByTestId('student-card').first().boundingBox();
         expect((groupBox?.y ?? 0) < (firstCard?.y ?? 0)).toBeTruthy();
-        // Counts include the teacher move.
+        // Counts include the teacher move (Class moves sits under More, GX-7).
+        await page.getByTestId('class-more-toggle').click();
         await expect(page.getByText(c.transfer.waiting(2), { exact: true })).toBeVisible();
 
         await group.scrollIntoViewIfNeeded();
