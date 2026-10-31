@@ -17,8 +17,13 @@ export interface TapBoardE2eParams {
   lock: 'board' | 'target';
   /** `fit`: the board alone, the screen fits. `tall`: a tall block under the board, so the screen scrolls. */
   layout: 'fit' | 'tall';
-  /** Indexes of targets drawn as locked wrong tiles (`disabled`). */
+  /** Indexes of targets drawn as locked wrong tiles (`disabled`); with `cards`, ChoiceCards drawn as an answered miss. */
   disabled?: readonly number[];
+  /**
+   * `targets` (default): four bare `TapTarget`s. `cards` (row KT-2): two ChoiceCards and two Tiles in the board, and a
+   * Button under it, outside the board. A ChoiceCard commits as 10 + its index, a Tile as 20 + its index.
+   */
+  kind?: 'targets' | 'cards';
 }
 
 export interface TapBoardE2eLog {
@@ -26,6 +31,8 @@ export interface TapBoardE2eLog {
   commits: Array<{ index: number; at: number }>;
   /** Presses of the plain control inside the board (never claimed by the board, rule 2). */
   controls: number;
+  /** Presses of the Button outside the board (`cards`; the press guard, KT-2). */
+  buttons: number;
 }
 
 export interface TapBoardE2eHandle {
@@ -34,7 +41,7 @@ export interface TapBoardE2eHandle {
 }
 
 /** What the screen saw since it opened (the screen module writes it). */
-export const e2eLog: TapBoardE2eLog = { commits: [], controls: 0 };
+export const e2eLog: TapBoardE2eLog = { commits: [], controls: 0, buttons: 0 };
 
 export function TapBoardE2eHook(): null {
   const navigation = useNavigation();
@@ -44,9 +51,10 @@ export function TapBoardE2eHook(): null {
       open: (params) => {
         e2eLog.commits = [];
         e2eLog.controls = 0;
+        e2eLog.buttons = 0;
         navigation.dispatch(StackActions.push('TapBoardE2e', params));
       },
-      log: () => ({ commits: e2eLog.commits.map((c) => ({ ...c })), controls: e2eLog.controls }),
+      log: () => ({ commits: e2eLog.commits.map((c) => ({ ...c })), controls: e2eLog.controls, buttons: e2eLog.buttons }),
     };
     return () => {
       delete g.__hrTapBoardE2E;
