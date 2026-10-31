@@ -1,4 +1,4 @@
-import { CATALOG, NOTE_LEARNER_ID_MAX, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteAccountReportSchema, NoteIdSchema, NotePrefsPutSchema, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
+import { CATALOG, laterVolumeQuestIds, NOTE_LEARNER_ID_MAX, NOTE_PRESET_AUDIENCE, NOTE_PRESETS_NEED_SUGGEST, NOTE_SEND_MAX_LEARNERS, NoteAccountReportSchema, NoteIdSchema, NotePrefsPutSchema, NoteSendSchema, type NotesMode, type Space } from '@hangul-route/content-schema';
 import { checkNoteText } from '@hangul-route/i18n/note-text';
 import { Hono, type Context } from 'hono';
 import { dbFor, noteRateKey, noteRetentionCuts, type Db, type NewNote, type NoteCursor, type SpaceNoteListRow, type StoredNote, type StoredSenderBlock } from '../db';
@@ -37,7 +37,13 @@ type Ctx = Context<{ Bindings: NotesEnv }>;
 /** Sends (batches) per account per minute, per isolate (section 7.3); the durable daily limits back it. */
 export const notesSendLimiter = createRateLimiter(NOTE_LIMIT_SENDS_PER_MINUTE, 60_000);
 
-const QUEST_IDS: ReadonlySet<string> = new Set(CATALOG.quests.map((q) => q.id));
+/**
+ * The quests a note may suggest: the catalogue's, a cell's later volume aside. The learner's device opens a suggestion
+ * from its first volumes only, so a Volume 2 suggestion would show a Start that does nothing (F-CURR-002 row CM-40,
+ * review of #922); the console's picker leaves them out too.
+ */
+const LATER_VOLUME = laterVolumeQuestIds(CATALOG);
+const QUEST_IDS: ReadonlySet<string> = new Set(CATALOG.quests.map((q) => q.id).filter((id) => !LATER_VOLUME.has(id)));
 
 const notFound = (c: Ctx): Response => fail(c, 'not_found', 'Not found', 404);
 
