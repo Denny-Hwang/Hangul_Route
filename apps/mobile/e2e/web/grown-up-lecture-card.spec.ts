@@ -109,8 +109,11 @@ test.describe('the card, on the release build (the launch default since LV-7)', 
     const id = profiles?.[0]?.id;
     if (!id) throw new Error('no profile stored');
     const [tab] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: en.caregiver.lecture.next(NAME) }).click()]);
-    await tab.waitForLoadState();
+    // The address the tab opened with, read when it commits: the presenter takes the deck out of the address as it
+    // boots, which since the story shelf chunk (F-CURR-002 row CM-8b) can be before the page's load event.
+    await tab.waitForURL(/\/present#d=/, { waitUntil: 'commit' });
     const url = new URL(tab.url());
+    await tab.waitForLoadState();
     expect(url.pathname).toBe('/present');
     expect(url.hash.startsWith('#d=')).toBe(true);
     expect(url.search).toBe('');
