@@ -3,6 +3,7 @@ import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, headerBack, readStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -333,7 +334,7 @@ const V2_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-nature-v2-[0-9a
 const natureCell = (page: Page) => page.getByRole('button', { name: /^Stage 2 [^,]+, Nature & Animals/ });
 
 /** A learner with Stage 2 Nature's Volume 1 done, and `volumes` as given. */
-async function volumesLearner(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+async function volumesLearner(page: Page, flags: Record<string, { on: boolean; pct: number }>, settings?: { uiLocale: 'en'; textSize: 'largest' }): Promise<void> {
   const AT = '2026-10-01T10:00:00.000Z';
   await page.goto('/');
   await keepSidewaysIfAsked(page);
@@ -348,6 +349,7 @@ async function volumesLearner(page: Page, flags: Record<string, { on: boolean; p
   await seedStoredAll(page, {
     [`progress:${id}`]: { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt },
     'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    ...(settings ? { 'device:settings': { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
   });
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -396,6 +398,36 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
       if (label === '320') await expectNoHorizontalOverflow(page);
     });
   }
+
+  test('320 at the Largest text size: the dots stay inside the cell, the cell keeps its width, Vol 1 / Vol 2 fit at 48 dp', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await volumesLearner(page, VOLUMES_ON, { uiLocale: 'en', textSize: 'largest' });
+    await natureCell(page).scrollIntoViewIfNeeded();
+    await expect(natureCell(page)).toHaveAccessibleName(/Opens Volume 2\.$/);
+    const cell = await natureCell(page).boundingBox();
+    const dots = await page.getByTestId('journey-volumes-stage2-nature').boundingBox();
+    const life = await page.getByRole('button', { name: /^Stage 2 [^,]+, Food & Daily Life/ }).boundingBox();
+    expect(cell && dots).toBeTruthy();
+    if (cell && dots) {
+      // Inside the cell, below its top band (where the corner marks sit) and above its bottom edge.
+      expect(dots.x).toBeGreaterThanOrEqual(cell.x);
+      expect(dots.x + dots.width).toBeLessThanOrEqual(cell.x + cell.width + 0.5);
+      expect(dots.y).toBeGreaterThan(cell.y);
+      expect(dots.y + dots.height).toBeLessThanOrEqual(cell.y + cell.height + 0.5);
+    }
+    expect(cell?.width).toBeCloseTo(life?.width ?? 0, 1);
+    await expectTextFits(page, 'the Journey grid with volume dots at Largest');
+    await shot(page, 'volumes-grid-320-largest');
+    await natureCell(page).click();
+    const tabs = page.getByRole('tablist', { name: 'Volumes' });
+    await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+    for (const name of ['Volume 1', 'Volume 2']) {
+      const box = await tabs.getByRole('tab', { name }).boundingBox();
+      expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(48);
+    }
+    await expectTextFits(page, 'the cell page with Vol 1 / Vol 2 at Largest');
+    await shot(page, 'volumes-page-320-largest');
+  });
 
   test('volumes off: no dots, no volume sentence, the cell opens Volume 1 and its page has no tabs', async ({ page }) => {
     await volumesLearner(page, {});
