@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sillok-royal-historians",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "호야, 사관을 만나다",
     "romanization": "Hoya, sagwaneul mannada",
@@ -34,7 +34,7 @@
     ],
     "advisoryNoteEn": "A king falls from his horse while hunting; he is not hurt.",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -92,6 +92,27 @@
       "romanization": "Sagwani alge haji malla.",
       "en": "Do not let the historian know.",
       "kind": "phrase"
+    },
+    {
+      "id": "girokaesseoyo",
+      "ko": "기록했어요",
+      "romanization": "girokaesseoyo",
+      "en": "recorded; wrote down",
+      "kind": "word"
+    },
+    {
+      "id": "tteoreojyeosseoyo",
+      "ko": "떨어졌어요",
+      "romanization": "tteoreojyeosseoyo",
+      "en": "fell",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureosseoyo",
+      "ko": "만들었어요",
+      "romanization": "mandeureosseoyo",
+      "en": "made",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -484,6 +505,408 @@
         "sacho",
         "mal"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "In Joseon, royal historians, {kw:sagwan}, wrote down the events of the royal court every day.",
+          "captionEn": "Hoya asks how we know what kings said",
+          "keyword": {
+            "id": "girokaesseoyo",
+            "ko": "기록했어요",
+            "romanization": "girokaesseoyo",
+            "en": "recorded; wrote down",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사관이 기록했어요.",
+            "romanization": "Sagwani girokaesseoyo.",
+            "en": "The historians wrote it down.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 258,
+                "y": 262,
+                "s": 2.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 105,
+                "y": 282,
+                "s": 1
+              }
+            ],
+            "altEn": "Hoya, a curious young tiger, stands by a stack of old thread-bound books and wonders how we know the past."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Wherever the king met his officials, a historian was there, recording what they saw and heard.",
+          "captionEn": "A historian writes beside the king",
+          "keyword": {
+            "id": "mal",
+            "ko": "말",
+            "romanization": "mal",
+            "en": "words (the same spelling also means 'horse')",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사관이 왕의 말을 기록했어요.",
+            "romanization": "Sagwani wangui mareul girokaesseoyo.",
+            "en": "The historian recorded the king's words.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king",
+                "x": 200,
+                "y": 186,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 140,
+                "y": 248,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 170,
+                "y": 298,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 335,
+                "y": 292,
+                "s": 1.1,
+                "flip": true
+              }
+            ],
+            "altEn": "In a palace hall the king sits on a raised seat, officials kneel in rows and a historian at the side writes with a brush."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "By rule, no one could read the {kw:sacho}, not even the king. This let the historians write fairly.",
+          "captionEn": "Not even the king may read them",
+          "keyword": {
+            "id": "sacho",
+            "ko": "사초",
+            "romanization": "sacho",
+            "en": "draft history notes",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사초는 왕도 볼 수 없었어요.",
+            "romanization": "Sachoneun wangdo bol su eopseosseoyo.",
+            "en": "Even the king was not allowed to read the sacho.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:document-box",
+                "x": 130,
+                "y": 250,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 270,
+                "y": 282,
+                "s": 1
+              }
+            ],
+            "altEn": "The king walks past a closed wooden box of the historians' notes, tied with a red cord, and leaves it shut."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "In 1404, King Taejong fell from his horse, {kw:mal}, while hunting. Luckily, he was not hurt.",
+          "captionEn": "King Taejong falls from his horse",
+          "keyword": {
+            "id": "tteoreojyeosseoyo",
+            "ko": "떨어졌어요",
+            "romanization": "tteoreojyeosseoyo",
+            "en": "fell",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "왕이 말에서 떨어졌어요.",
+            "romanization": "Wangi mareseo tteoreojyeosseoyo.",
+            "en": "The king fell from his horse.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 64,
+                "y": 232,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:horse",
+                "x": 220,
+                "y": 258,
+                "s": 1.7
+              }
+            ],
+            "altEn": "A brown horse grazes calmly in the green countryside where King Taejong went hunting in 1404."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Taejong said, 'Do not let the historian know!' But the historian wrote down even that, and it is in the Annals today.",
+          "captionEn": "'Do not let the historian know!'",
+          "keyword": {
+            "id": "sagwan",
+            "ko": "사관",
+            "romanization": "sagwan",
+            "en": "royal historian",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사관이 알게 하지 말라.",
+            "romanization": "Sagwani alge haji malla.",
+            "en": "Do not let the historian know.",
+            "speaker": "character"
+          },
+          "factIds": [
+            "f6",
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-historian",
+                "x": 330,
+                "y": 214,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 210,
+                "y": 272,
+                "s": 1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 286,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 80,
+                "y": 284,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "The king looks around while a historian writes quietly in the distance, and Hoya peeks out from behind a pine tree."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The {kw:sacho} were the most important source for the {kw:sillok}, the Annals of the Joseon Dynasty.",
+          "captionEn": "The notes help make the Annals",
+          "keyword": {
+            "id": "mandeureosseoyo",
+            "ko": "만들었어요",
+            "romanization": "mandeureosseoyo",
+            "en": "made",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사초로 실록을 만들었어요.",
+            "romanization": "Sachoro sillogeul mandeureosseoyo.",
+            "en": "They made the Annals from the sacho.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-case",
+                "x": 245,
+                "y": 272,
+                "s": 2.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 80,
+                "y": 286,
+                "s": 0.95
+              }
+            ],
+            "altEn": "Hoya proudly waves beside a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "기록했어요",
+            "romanization": "girokaesseoyo",
+            "en": "recorded; wrote down"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Hunted",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wrote down",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Fell",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Sang",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "Girokaesseoyo means recorded, or wrote down. The historians recorded the court every day."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "떨어졌어요",
+            "romanization": "tteoreojyeosseoyo",
+            "en": "fell"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Ran",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Laughed",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Wrote",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Fell",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Tteoreojyeosseoyo means fell. King Taejong fell from his horse, but he was not hurt."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What did the historians' draft notes help make?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The Annals",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A map",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A song",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A palace",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f8"
+          ],
+          "explainEn": "The sacho were the most important source for the Annals of the Joseon Dynasty."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s4",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "girokaesseoyo",
+        "tteoreojyeosseoyo",
+        "mandeureosseoyo"
+      ],
+      "grammarFocusEn": "Past -eosseoyo (recorded, fell, made); -eseo (from) and -ro (from, with)"
     }
   ],
   "coverSceneId": "s1",
@@ -789,7 +1212,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Taejong's fall is told exactly as the entry states (不傷, not hurt); the deer-shooting detail and season are omitted (lunar-to-solar conversion not verified from two sources). The secrecy rule is narrated as a rule ('supposed to'): the NIKH introduction notes that in practice some historians avoided frank writing out of fear and that leaks led to tragic purges (e.g., 1498), which are omitted as out of scope for a gentle all-ages story. Revision: the English-language portal description quote ('Nobody was allowed to read the sacho...') was dropped from f4; the portal's Korean description sentence is kept in f5/f8/f9/f10 (re-checked against a saved copy of the portal page, 2026-10-09/10). The NIKH f9 quote was corrected to '일컫는다'. UNESCO Annals page is paraphrased, not quoted (unesco.org was unreachable on 2026-10-10 for re-quoting). Added 'from Taejo to Cheoljong' (the Annals do not include the Gojong/Sunjong reigns' records, so 25 kings, not 27). Alignment flag: BP05 1.A3 describes the Sillok as 'a diary people wrote every day' - inaccurate; the Sillok was compiled after each king's death from daily drafts (see story-sillok-mountain-archives). Designation numbers are deliberately not used. Narration scene 2: 'with brush and paper' removed (not stated in the cited sources).",
   "errata": []

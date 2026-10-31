@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:joseon-records-today",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "오래된 기록, 새로운 발견",
     "romanization": "Oraedoen girok, saeroun balgyeon",
@@ -29,7 +29,7 @@
     "culture": "culture-reviewed",
     "advisory": [],
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -122,6 +122,20 @@
       "romanization": "Suwon Hwaseong Munhwaje",
       "en": "Suwon Hwaseong Cultural Festival",
       "kind": "term"
+    },
+    {
+      "id": "girokaesseoyo",
+      "ko": "기록했어요",
+      "romanization": "girokaesseoyo",
+      "en": "recorded; wrote down",
+      "kind": "word"
+    },
+    {
+      "id": "nuguna",
+      "ko": "누구나",
+      "romanization": "nuguna",
+      "en": "anyone",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -591,6 +605,433 @@
         "haengnyeol",
         "yuneseuko"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "Suwon {kw:hwaseong} Fortress was finished in 1796. Every step of the work was recorded in an uigwe, with drawings and the sizes and amounts of materials.",
+          "captionEn": "Hwaseong Fortress, recorded step by step",
+          "keyword": {
+            "id": "girokaesseoyo",
+            "ko": "기록했어요",
+            "romanization": "girokaesseoyo",
+            "en": "recorded; wrote down",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "화성을 기록했어요.",
+            "romanization": "Hwaseongeul girokaesseoyo.",
+            "en": "They recorded Hwaseong.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A stone-and-brick fortress wall with a gate tower; beside it, an open book showing a drawing of a lifting machine with pulleys.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fortress-gate",
+                "x": 150,
+                "y": 252,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:book-geojunggi",
+                "x": 322,
+                "y": 292,
+                "s": 1,
+                "z": "front"
+              }
+            ],
+            "altEn": "A gate of Hwaseong Fortress stands over its stone walls, beside an open book with a drawing of a pulley lifting machine."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Later, parts of the fortress, {kw:seong}, were damaged. Workers followed the uigwe to rebuild it as it first looked, and repairs still use it today.",
+          "captionEn": "Repairing the fortress from the uigwe",
+          "keyword": {
+            "id": "seong",
+            "ko": "성",
+            "romanization": "seong",
+            "en": "fortress, castle wall",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "기록으로 성을 고쳐요.",
+            "romanization": "Girogeuro seongeul gochyeoyo.",
+            "en": "They repair the fortress with the record.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Modern workers in helmets fitting stones into a fortress wall while one checks a page of old drawings on a tablet.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fortress-wall",
+                "x": 200,
+                "y": 230,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-worker",
+                "x": 140,
+                "y": 292,
+                "s": 0.9,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-worker",
+                "x": 290,
+                "y": 294,
+                "s": 0.9,
+                "z": "front",
+                "flip": true
+              },
+              {
+                "ref": "prop:tablet",
+                "x": 332,
+                "y": 298,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Workers in hard hats fit a stone back into the fortress wall, checking the old uigwe drawings on a tablet."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Today, the {kw:suwon-hwaseong-munhwaje} includes a recreation of King Jeongjo's royal procession, {kw:haengnyeol}, based on the uigwe of his trip.",
+          "captionEn": "A festival recreates the royal procession",
+          "keyword": {
+            "id": "haengnyeol",
+            "ko": "행렬",
+            "romanization": "haengnyeol",
+            "en": "procession",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "오늘도 행렬이 있어요.",
+            "romanization": "Oneuldo haengnyeori isseoyo.",
+            "en": "There is still a procession today.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A modern street festival: people in colorful Joseon costumes marching with flags and a palanquin, families watching and waving.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:palanquin",
+                "x": 200,
+                "y": 234,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:procession-row",
+                "x": 200,
+                "y": 272,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-modern",
+                "x": 50,
+                "y": 292,
+                "s": 0.9,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "prop:fig-modern",
+                "x": 352,
+                "y": 294,
+                "s": 0.6,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "At Suwon's festival today, people in Joseon costumes march with flags and a palanquin while families watch."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The Seungjeongwon Ilgi recorded the weather every day for 288 years. Scientists can use these weather records, {kw:nalssi-girok}, to study nature in the past.",
+          "captionEn": "Scientists can study old weather notes",
+          "keyword": {
+            "id": "nalssi-girok",
+            "ko": "날씨 기록",
+            "romanization": "nalssi girok",
+            "en": "weather records",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "날씨 기록이 있어요.",
+            "romanization": "Nalssi girogi isseoyo.",
+            "en": "There are weather records.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A scientist at a computer showing a simple line chart, with an old diary open on the desk and a window showing rain clouds.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:weather-signs",
+                "x": 292,
+                "y": 124,
+                "s": 0.9,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-researcher",
+                "x": 160,
+                "y": 284,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:book-open-entry",
+                "x": 318,
+                "y": 282,
+                "s": 0.9,
+                "z": "front"
+              }
+            ],
+            "altEn": "A scientist studies a weather chart on a computer beside an old diary, with rain clouds outside the window."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The Annals were written in classical Chinese. Now a Korean translation is online with the original text, so anyone can read them.",
+          "captionEn": "Anyone can read the Annals online",
+          "keyword": {
+            "id": "nuguna",
+            "ko": "누구나",
+            "romanization": "nuguna",
+            "en": "anyone",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "누구나 읽을 수 있어요.",
+            "romanization": "Nuguna ilgeul su isseoyo.",
+            "en": "Anyone can read it.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A child and a grandparent looking at a tablet showing two columns of text shapes, one old style and one modern (no readable characters).",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:fig-modern",
+                "x": 160,
+                "y": 290,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-modern",
+                "x": 262,
+                "y": 290,
+                "s": 0.9,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "prop:tablet",
+                "x": 212,
+                "y": 236,
+                "s": 1.5
+              }
+            ],
+            "altEn": "A grandparent and a child read the Annals together on a tablet, the old text beside a modern translation."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Hoya smiles. Thanks to careful writers long ago, we can still learn from the past. What will you write down today?",
+          "captionEn": "Records are treasures",
+          "keyword": {
+            "id": "bomul",
+            "ko": "보물",
+            "romanization": "bomul",
+            "en": "treasure",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "기록은 보물이에요.",
+            "romanization": "Girogeun bomurieyo.",
+            "en": "Records are treasures.",
+            "speaker": "hoya"
+          },
+          "factIds": [],
+          "framing": true,
+          "approximations": [],
+          "artBrief": "Hoya holding up a small notebook and brush, grinning, with the fortress, books and a sunny sky behind him.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fortress-gate",
+                "x": 280,
+                "y": 212,
+                "s": 0.8,
+                "z": "back"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 160,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 332,
+                "y": 288,
+                "s": 1,
+                "z": "front"
+              }
+            ],
+            "altEn": "Hoya cheers in front of the fortress and a stack of old books: records are treasures!"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "기록했어요",
+            "romanization": "girokaesseoyo",
+            "en": "recorded; wrote down"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Repaired",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Recorded",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Painted",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Forgot",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "Girokaesseoyo means recorded. Every step of building Hwaseong was recorded."
+        },
+        {
+          "id": "r2",
+          "kind": "detail",
+          "promptEn": "How do workers repair Hwaseong to look as it first did?",
+          "options": [
+            {
+              "id": "a",
+              "en": "From old photos only",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "By guessing",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "By following the uigwe",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "With a new design",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Workers follow the Hwaseong Seongyeok Uigwe to repair the fortress."
+        },
+        {
+          "id": "r3",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "행렬",
+            "romanization": "haengnyeol",
+            "en": "procession"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Procession",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Fortress",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Weather",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Treasure",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Haengnyeol means procession. The festival recreates King Jeongjo's royal procession."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s3",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "girokaesseoyo",
+        "seong",
+        "haengnyeol",
+        "bomul"
+      ],
+      "grammarFocusEn": "Past -aesseoyo (recorded); -euro (with); -do (also, still)"
     }
   ],
   "coverSceneId": "s1",
@@ -811,7 +1252,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "The restoration years (1975-1979) appear in only one Korean source, so narration gives no year. Causes of the fortress damage (colonial period and Korean War) are omitted as out of scope; narration says only 'parts were damaged'. Festival: the official Korean name is 수원화성문화제 (the draft's '화성문화제' was the English-page rendering and the Encyclopedia headword); the claim is now backed by the KHS English page, the Suwon City page for the procession (which states it is based on the uigwe) and the Encyclopedia entry on the festival; 'every year in October' and any dates are left out of narration because the schedule can change (2026 events were held in early October). The translation completion year (1993) is single-source and omitted. Scenes 1 and 8 are story framing with no factual claims. UNESCO register pages are cited for registration years only (page wording not quoted; unesco.org was unreachable on 2026-10-10), and the NIKH list of Korean Memory of the World items is a second source for all four years. PASS 3: the festival-includes-procession link is now backed by the festival's own official site (63rd festival, 2026) in addition to the KHS English page and the Encyclopedia; Suwon City's tourism site lists the two as separate menu items, so the narration keeps the neutral 'includes'.",
   "errata": []

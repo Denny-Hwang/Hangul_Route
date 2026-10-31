@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sillok-mountain-archives",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "산으로 간 실록",
     "romanization": "Saneuro gan sillok",
@@ -35,7 +35,7 @@
     ],
     "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail.",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -121,6 +121,48 @@
       "romanization": "sacho",
       "en": "draft history notes",
       "kind": "term"
+    },
+    {
+      "id": "moasseoyo",
+      "ko": "모았어요",
+      "romanization": "moasseoyo",
+      "en": "gathered; collected",
+      "kind": "word"
+    },
+    {
+      "id": "ssiseosseoyo",
+      "ko": "씻었어요",
+      "romanization": "ssiseosseoyo",
+      "en": "washed",
+      "kind": "word"
+    },
+    {
+      "id": "namasseoyo",
+      "ko": "남았어요",
+      "romanization": "namasseoyo",
+      "en": "was left; remained",
+      "kind": "word"
+    },
+    {
+      "id": "jeonju",
+      "ko": "전주",
+      "romanization": "Jeonju",
+      "en": "a city in Korea",
+      "kind": "term"
+    },
+    {
+      "id": "jikyeosseoyo",
+      "ko": "지켰어요",
+      "romanization": "jikyeosseoyo",
+      "en": "guarded; protected",
+      "kind": "word"
+    },
+    {
+      "id": "dueosseoyo",
+      "ko": "두었어요",
+      "romanization": "dueosseoyo",
+      "en": "kept; put",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -610,6 +652,452 @@
         "secho",
         "sago"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "After a king died, an office called the {kw:sillokcheong} compiled his Annals. Its officials gathered the historians' {kw:sacho} and other court records.",
+          "captionEn": "An office gathers the historians' notes",
+          "keyword": {
+            "id": "moasseoyo",
+            "ko": "모았어요",
+            "romanization": "moasseoyo",
+            "en": "gathered; collected",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "실록청에서 사초를 모았어요.",
+            "romanization": "Sillokcheongeseo sachoreul moasseoyo.",
+            "en": "The Sillokcheong gathered the sacho.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-historian",
+                "x": 120,
+                "y": 262,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 120,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 70,
+                "y": 233,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 290,
+                "y": 262,
+                "s": 1.1,
+                "flip": true
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 290,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 233,
+                "s": 1,
+                "z": "front"
+              }
+            ],
+            "altEn": "Officials at low desks sort piles of court records in a quiet office set up to write a late king's Annals."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "In early Joseon, used drafts were washed in a stream, to keep secrets safe and to reuse the paper. This was called {kw:secho}.",
+          "captionEn": "In early Joseon, drafts were washed in a stream",
+          "keyword": {
+            "id": "ssiseosseoyo",
+            "ko": "씻었어요",
+            "romanization": "ssiseosseoyo",
+            "en": "washed",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "사초를 씻었어요.",
+            "romanization": "Sachoreul ssiseosseoyo.",
+            "en": "They washed the drafts.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock.",
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:flat-rock",
+                "x": 172,
+                "y": 262,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 172,
+                "y": 236,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 262,
+                "y": 290,
+                "s": 0.9,
+                "flip": true
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 72,
+                "y": 262,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 72,
+                "y": 288,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "By a clear stream used draft sheets are washed on a flat rock so no one can read them, while an official and Hoya watch."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The Annals were kept in archives, {kw:sago}. In a war that began in 1592, the copies in Seoul, Chungju and Seongju were lost. Only the copy in {kw:jeonju} survived.",
+          "captionEn": "Only the Jeonju copy survives a war",
+          "keyword": {
+            "id": "namasseoyo",
+            "ko": "남았어요",
+            "romanization": "namasseoyo",
+            "en": "was left; remained",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "전주 사고만 남았어요.",
+            "romanization": "Jeonju sagoman namasseoyo.",
+            "en": "Only the Jeonju archive was left.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 200,
+                "y": 252,
+                "s": 1.4,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "An archive of tiled-roof storehouses where the Annals were kept, its doorways glowing like the one copy that survived."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Local scholars An Ui and Son Hongrok carried the Jeonju copy to {kw:naejangsan} and took turns guarding it.",
+          "captionEn": "Scholars carry the books to a mountain",
+          "keyword": {
+            "id": "jikyeosseoyo",
+            "ko": "지켰어요",
+            "romanization": "jikyeosseoyo",
+            "en": "guarded; protected",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "내장산에서 책을 지켰어요.",
+            "romanization": "Naejangsaneseo chaegeul jikyeosseoyo.",
+            "en": "They guarded the books on Naejangsan Mountain.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:fig-scholar",
+                "x": 150,
+                "y": 272,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-scholar",
+                "x": 272,
+                "y": 262,
+                "s": 0.95,
+                "flip": true
+              },
+              {
+                "ref": "prop:book-bundle",
+                "x": 212,
+                "y": 286,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "Two scholars in wide-brimmed hats guard a bundle of the Annals wrapped in red cloth on a misty mountain path."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Later, most sets were kept deep in the mountains, {kw:sansogui-sago}, or on an island, where war was less likely to reach them.",
+          "captionEn": "Most copies sent to mountain archives",
+          "keyword": {
+            "id": "dueosseoyo",
+            "ko": "두었어요",
+            "romanization": "dueosseoyo",
+            "en": "kept; put",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "산속의 사고에 책을 두었어요.",
+            "romanization": "Sansogui sagoe chaegeul dueosseoyo.",
+            "en": "They kept the books in archives in the mountains.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 200,
+                "y": 244,
+                "s": 1
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 52,
+                "y": 292,
+                "s": 1.1,
+                "z": "front"
+              }
+            ],
+            "altEn": "A small walled archive sits among pine-covered mountain ridges, with clouds drifting below the peaks."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Every few years, historians took the books out on a clear day and aired them in the sun and wind. This was called {kw:poswae}.",
+          "captionEn": "Airing the books in the sun",
+          "keyword": {
+            "id": "poswae",
+            "ko": "포쇄",
+            "romanization": "poswae",
+            "en": "airing books in the sun",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "책을 햇볕에 말려요.",
+            "romanization": "Chaegeul haetbyeote mallyeoyo.",
+            "en": "They dry the books in the sunshine.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 250,
+                "y": 214,
+                "s": 0.8,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 246,
+                "y": 256,
+                "s": 1.15,
+                "flip": true
+              },
+              {
+                "ref": "prop:books-airing",
+                "x": 166,
+                "y": 292,
+                "s": 1.5,
+                "z": "front"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 56,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "At a mountain archive old books lie open in the sun to air while a historian checks them and Hoya basks nearby."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "씻었어요",
+            "romanization": "ssiseosseoyo",
+            "en": "washed"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Burned",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Sold",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Washed",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Hid",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "Ssiseosseoyo means washed. In early Joseon, used drafts were washed in a stream."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "지켰어요",
+            "romanization": "jikyeosseoyo",
+            "en": "guarded; protected"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Guarded",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Lost",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Printed",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Opened",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Jikyeosseoyo means guarded. Local scholars guarded the Jeonju copy on Naejangsan Mountain."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "Why were most sets kept deep in the mountains or on an island?",
+          "options": [
+            {
+              "id": "a",
+              "en": "To be near the palace",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "To be safer from war",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "To dry them faster",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "To sell them",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f8"
+          ],
+          "explainEn": "Archives deep in the mountains or on an island were safer from war."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "moasseoyo",
+        "ssiseosseoyo",
+        "namasseoyo",
+        "jikyeosseoyo"
+      ],
+      "grammarFocusEn": "Past -asseoyo/-eosseoyo (gathered, washed, guarded); -eseo (at, in); -man (only)"
     }
   ],
   "coverSceneId": "s1",
@@ -908,7 +1396,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Sources disagree on how many sets were newly printed in 1603-1606 (Korea Heritage Service and National Archives: four; Encyclopedia of Korean Culture: three printed plus the original and a proof copy); all agree on five sets in five archives, so narration says 'making five sets'. Poswae frequency also differs slightly (every 3 years in NIKH and the Annals entry; every 2-3 years in National Archives; the 진술축미 schedule of the Encyclopedia's poswae entry, i.e. every third year, though it often slipped), so narration says 'every few years'. Revision: 'red silk' changed to 'red cloth' (the poswae entry says 홍보 'red wrapping cloth'; only the National Archives says silk); the herbs' purpose is now stated generally ('protect from bugs and rot', per the poswae entry and the National Archives) rather than the National Archives' split into cheongung = insects and changpo = germs/fragrance; 'on a sunny day' replaced by 'on a clear day' (supported by two sources); the closing sentence 'Thanks to such care, the Annals survive today' was removed because it was not backed by a fact entry. Secho by washing is limited to early Joseon (later drafts were mostly burned). The Imjin War is mentioned only as 'a great war' with no violent detail. Omitted as out of scope or tragic: later moves to Jeongjoksan/Jeoksangsan, the Qing invasion, colonial-era removal of the Odaesan copy and its loss in the 1923 Kanto earthquake, the Korean War, and the 2006 return.",
   "errata": []

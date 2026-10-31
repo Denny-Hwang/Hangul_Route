@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:janggyeong-panjeon",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "바람이 지키는 장경판전",
     "romanization": "Barami jikineun Janggyeongpanjeon",
@@ -30,7 +30,7 @@
     "culture": "culture-reviewed",
     "advisory": [],
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-13"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -94,6 +94,34 @@
       "ko": "우리가 지켜요",
       "romanization": "uriga jikyeoyo",
       "en": "We protect it.",
+      "kind": "word"
+    },
+    {
+      "id": "oraedoen",
+      "ko": "오래된",
+      "romanization": "oraedoen",
+      "en": "old",
+      "kind": "word"
+    },
+    {
+      "id": "dallayo",
+      "ko": "달라요",
+      "romanization": "dallayo",
+      "en": "are different",
+      "kind": "word"
+    },
+    {
+      "id": "isseoyo",
+      "ko": "있어요",
+      "romanization": "isseoyo",
+      "en": "there is; is (there)",
+      "kind": "word"
+    },
+    {
+      "id": "gyeongpan",
+      "ko": "경판",
+      "romanization": "gyeongpan",
+      "en": "scripture woodblock",
       "kind": "word"
     }
   ],
@@ -555,6 +583,437 @@
         "sut",
         "baram"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:janggyeongpanjeon} are the halls built at Haeinsa to store the Tripitaka woodblocks. They are the oldest buildings still standing there.",
+          "captionEn": "The oldest halls still standing at Haeinsa",
+          "keyword": {
+            "id": "oraedoen",
+            "ko": "오래된",
+            "romanization": "oraedoen",
+            "en": "old",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "장경판전은 오래된 건물이에요.",
+            "romanization": "Janggyeongpanjeoneun oraedoen geonmurieyo.",
+            "en": "Janggyeong Panjeon are old buildings.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 282,
+                "y": 198,
+                "s": 0.72,
+                "z": "back"
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 128,
+                "y": 240,
+                "s": 0.8
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 262,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya climbs to the highest part of Haeinsa, where the two long halls of Janggyeong Panjeon, its oldest buildings, stand."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The {kw:changmun} on the front and back walls are different sizes, and the upper and lower ones differ too. This helps air flow through the halls.",
+          "captionEn": "Windows of different sizes",
+          "keyword": {
+            "id": "dallayo",
+            "ko": "달라요",
+            "romanization": "dallayo",
+            "en": "are different",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "창문이 달라요.",
+            "romanization": "Changmuni dallayo.",
+            "en": "The windows are different.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:hall-section",
+                "x": 186,
+                "y": 284,
+                "s": 1.4,
+                "z": "back"
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 186,
+                "y": 200,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 346,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A cutaway hall shows windows of different sizes, high and low on its two walls, letting a breeze flow past the shelves."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Under the earthen floor are layers of charcoal, {kw:sut}, with lime, salt and sand. They soak up extra moisture and give it back when the air is dry.",
+          "captionEn": "Charcoal, lime and salt under the floor",
+          "keyword": {
+            "id": "isseoyo",
+            "ko": "있어요",
+            "romanization": "isseoyo",
+            "en": "there is; is (there)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "숯이 있어요.",
+            "romanization": "Suchi isseoyo.",
+            "en": "There is charcoal.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:hall-section",
+                "x": 176,
+                "y": 298,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 364,
+                "y": 296,
+                "s": 0.5
+              }
+            ],
+            "altEn": "Under the earthen floor lie layers of charcoal, lime and salt with sand, soaking up damp and giving it back when the air is dry."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Wind, {kw:baram}, sunlight and the design keep the woodblocks safe from damp, mice and insects. They have lasted some 500 years.",
+          "captionEn": "Wind, sun and earth keep blocks safe",
+          "keyword": {
+            "id": "gyeongpan",
+            "ko": "경판",
+            "romanization": "gyeongpan",
+            "en": "scripture woodblock",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "바람이 경판을 지켜요.",
+            "romanization": "Barami gyeongpaneul jikyeoyo.",
+            "en": "The wind protects the woodblocks.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 340,
+                "y": 120,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 176,
+                "y": 266,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 318,
+                "y": 156,
+                "s": 1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 334,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Sunlight and a gentle breeze keep the woodblocks dry and safe from damp, mice and insects, and Hoya smiles."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List, {kw:segyeyusan}.",
+          "captionEn": "A UNESCO World Heritage site",
+          "keyword": {
+            "id": "segyeyusan",
+            "ko": "세계유산",
+            "romanization": "segyeyusan",
+            "en": "World Heritage",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "장경판전은 세계유산이에요.",
+            "romanization": "Janggyeongpanjeoneun segyeyusanieyo.",
+            "en": "Janggyeong Panjeon is World Heritage.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 236,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 258,
+                "y": 198,
+                "s": 0.72,
+                "z": "back"
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 150,
+                "y": 244,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 48,
+                "y": 272,
+                "s": 1,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 356,
+                "y": 274,
+                "s": 0.9,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "The two long halls stand under a clear autumn sky among maple trees: Janggyeong Panjeon is on the World Heritage List."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Visitor entry is limited, to keep the air inside steady. Hoya whispers, \"{kw:uriga-jikyeoyo}!\"",
+          "captionEn": "Entry is limited to keep the air steady",
+          "keyword": {
+            "id": "jikyeoyo",
+            "ko": "지켜요",
+            "romanization": "jikyeoyo",
+            "en": "(we) protect; guard",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "우리가 지켜요.",
+            "romanization": "Uriga jikyeoyo.",
+            "en": "We protect it.",
+            "speaker": "hoya"
+          },
+          "factIds": [
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 262,
+                "s": 1.7
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 150,
+                "y": 296,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 250,
+                "y": 296,
+                "s": 0.9,
+                "tint": "theme.crafts"
+              }
+            ],
+            "altEn": "Hoya and a child peek through the slatted windows from outside without touching, because entry is limited to protect the blocks."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "달라요",
+            "romanization": "dallayo",
+            "en": "are different"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Are open",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Are the same",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Are different",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Are broken",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "Dallayo means are different. The windows differ in size to help air flow."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "경판",
+            "romanization": "gyeongpan",
+            "en": "scripture woodblock"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Scripture woodblock",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Window",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Charcoal",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Wind",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "Gyeongpan means scripture woodblock. These halls were built to store the woodblocks."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "For how long have the halls kept the woodblocks safe?",
+          "options": [
+            {
+              "id": "a",
+              "en": "About 50 years",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "About 100 years",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "About 200 years",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Some 500 years",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f7"
+          ],
+          "explainEn": "Thanks to the natural design, the woodblocks have been preserved for some 500 years."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s4",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "oraedoen",
+        "dallayo",
+        "isseoyo",
+        "gyeongpan"
+      ],
+      "grammarFocusEn": "Topic -eun/-neun with -ieyo (is); -i/-ga with isseoyo (there is)"
     }
   ],
   "coverSceneId": "s1",
@@ -837,7 +1296,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady. REVIEW FIX (PR 1.8b round 2): s7 renders UNESCO's 'oldest depository' as 'the oldest storehouse of the Tripitaka' (no added 'built to' inside the UNESCO attribution). s8 is back to the time-independent UNESCO wording, 'visitor entry is limited' (f9), not 'only a few visitors may go in', which leaned on the 2021 tour reports; caption to match. The gloss of 'Uriga jikyeoyo' is now 'we protect it!' (no 'together' in the Korean). c1/c2 options rebalanced for length. Release check before PR 1.9 flips the catalogue status: re-check entry rules on haeinsa.or.kr; s8 holds either way.",
   "errata": []

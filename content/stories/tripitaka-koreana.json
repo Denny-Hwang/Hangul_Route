@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:tripitaka-koreana",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "팔만대장경",
     "romanization": "Palmandaejanggyeong",
@@ -33,7 +33,7 @@
     ],
     "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown.",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-13"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -97,6 +97,34 @@
       "ko": "소중해요",
       "romanization": "sojunghaeyo",
       "en": "(It's) precious.",
+      "kind": "word"
+    },
+    {
+      "id": "isseoyo",
+      "ko": "있어요",
+      "romanization": "isseoyo",
+      "en": "is (there); there is",
+      "kind": "word"
+    },
+    {
+      "id": "bulgyo-gyeongjeon",
+      "ko": "불교 경전",
+      "romanization": "bulgyo gyeongjeon",
+      "en": "Buddhist scriptures",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureosseoyo",
+      "ko": "만들었어요",
+      "romanization": "mandeureosseoyo",
+      "en": "made",
+      "kind": "word"
+    },
+    {
+      "id": "manayo",
+      "ko": "많아요",
+      "romanization": "manayo",
+      "en": "there are many; a lot",
       "kind": "word"
     }
   ],
@@ -549,6 +577,406 @@
         "palman",
         "namu"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "The {kw:daejanggyeong} woodblocks are kept at {kw:haeinsa}, a temple on Gayasan Mountain in Hapcheon, in two halls called Beopbojeon and Sudarajang.",
+          "captionEn": "Hoya climbs to Haeinsa Temple",
+          "keyword": {
+            "id": "isseoyo",
+            "ko": "있어요",
+            "romanization": "isseoyo",
+            "en": "is (there); there is",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "해인사에 대장경이 있어요.",
+            "romanization": "Haeinsae daejanggyeongi isseoyo.",
+            "en": "The Tripitaka is at Haeinsa.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 40,
+                "y": 262,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 206,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 330,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya climbs to Haeinsa Temple on Gayasan Mountain and peeks at a long wooden hall full of carved woodblocks."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "{kw:daejanggyeong} means the complete collection of Buddhist scriptures, {kw:bulgyo-gyeongjeon}.",
+          "captionEn": "The Tripitaka Koreana woodblocks",
+          "keyword": {
+            "id": "bulgyo-gyeongjeon",
+            "ko": "불교 경전",
+            "romanization": "bulgyo gyeongjeon",
+            "en": "Buddhist scriptures",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "대장경은 불교 경전이에요.",
+            "romanization": "Daejanggyeongeun bulgyo gyeongjeonieyo.",
+            "en": "The Tripitaka is a set of Buddhist scriptures.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 96,
+                "y": 266,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 304,
+                "y": 266,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 294,
+                "s": 0.55
+              }
+            ],
+            "altEn": "Hoya stands amazed between shelves packed with the Tripitaka Koreana woodblocks, a complete collection of Buddhist scriptures."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The woodblocks were carved in {kw:goryeo} from 1237 to 1248. People hoped the Buddha's power would drive back the Mongol invasions.",
+          "captionEn": "Carved in Goryeo, hoping for protection",
+          "keyword": {
+            "id": "mandeureosseoyo",
+            "ko": "만들었어요",
+            "romanization": "mandeureosseoyo",
+            "en": "made",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "고려에서 대장경을 만들었어요.",
+            "romanization": "Goryeoeseo daejanggyeongeul mandeureosseoyo.",
+            "en": "The Tripitaka was made in Goryeo.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-carver",
+                "x": 140,
+                "y": 288,
+                "s": 1.15,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-carver",
+                "x": 288,
+                "y": 288,
+                "s": 1.15,
+                "flip": true
+              }
+            ],
+            "altEn": "In Goryeo, from 1237 to 1248, carvers kneel calmly over wooden boards, cutting the scriptures with small knives."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Each {kw:gyeongpan} has text carved on both sides. Most are made of wild cherry wood, {kw:namu}, coated with lacquer, with metal plates at the corners.",
+          "captionEn": "Each block is carved on both sides",
+          "keyword": {
+            "id": "namu",
+            "ko": "나무",
+            "romanization": "namu",
+            "en": "wood",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "경판은 나무로 만들었어요.",
+            "romanization": "Gyeongpaneun namuro mandeureosseoyo.",
+            "en": "The woodblocks were made of wood.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 322,
+                "y": 232,
+                "s": 1.3,
+                "tint": "brand.primaryLight"
+              },
+              {
+                "ref": "prop:woodblock",
+                "x": 180,
+                "y": 276,
+                "s": 2.4
+              }
+            ],
+            "altEn": "One woodblock, carved on both sides, lacquered and fitted with metal corner plates, with a wild cherry tree in blossom behind it."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The carvers cut tens of millions of {kw:geulja} so evenly that they look as if one person carved them all.",
+          "captionEn": "Tens of millions of neat characters",
+          "keyword": {
+            "id": "manayo",
+            "ko": "많아요",
+            "romanization": "manayo",
+            "en": "there are many; a lot",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "경판에 글자가 많아요.",
+            "romanization": "Gyeongpane geuljaga manayo.",
+            "en": "There are many letters on the woodblocks.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-carver",
+                "x": 196,
+                "y": 284,
+                "s": 2,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 342,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A carver cuts tiny, even characters into a board with a small knife, and Hoya watches, holding his breath."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Centuries later, the woodblocks are still kept safe at {kw:haeinsa}. Hoya whispers, \"{kw:sojunghaeyo}!\"",
+          "captionEn": "Still kept safe at Haeinsa",
+          "keyword": {
+            "id": "sojunghaeyo",
+            "ko": "소중해요",
+            "romanization": "sojunghaeyo",
+            "en": "(It's) precious.",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "대장경은 소중해요.",
+            "romanization": "Daejanggyeongeun sojunghaeyo.",
+            "en": "The Tripitaka is precious.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 206,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "In the evening the long storage halls of Haeinsa rest under the stars, and Hoya waits quietly in front of them."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "불교 경전",
+            "romanization": "bulgyo gyeongjeon",
+            "en": "Buddhist scriptures"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Buddhist scriptures",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Woodblocks",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A temple",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A mountain",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Bulgyo gyeongjeon means Buddhist scriptures. The Daejanggyeong is the complete collection of them."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "만들었어요",
+            "romanization": "mandeureosseoyo",
+            "en": "made"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Lost",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Read",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Made",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Washed",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Mandeureosseoyo means made. The woodblocks were made in Goryeo."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What are most of the woodblocks made of?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Stone",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wild cherry wood",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Metal",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Paper",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Most of the blocks are made of wild cherry wood and coated with lacquer."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "isseoyo",
+        "bulgyo-gyeongjeon",
+        "mandeureosseoyo",
+        "manayo"
+      ],
+      "grammarFocusEn": "Place + -e isseoyo (is at); -ro (made of); past -eosseoyo (was made)"
     }
   ],
   "coverSceneId": "s1",
@@ -836,7 +1264,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged; findings and outcomes in the PR."
   },
   "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order). REVIEW FIX (PR 1.8b round 2): c1 options are now parallel ('More than ...') so the wording does not give the answer away. Name romanization follows the converter ('Palmandaejanggyeong') in the title and goals; s4 keeps the two-word 'Palman Daejanggyeong' on purpose, because the next sentence explains 'Palman means eighty thousand'.",
   "errata": []
