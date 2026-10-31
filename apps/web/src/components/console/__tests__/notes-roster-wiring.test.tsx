@@ -143,6 +143,9 @@ async function roster(): Promise<ReactTestInstance> {
     mounted = create(<Page />);
   });
   if (!mounted) throw new Error('not mounted');
+  // GX-7 (section 8 T3): a class page keeps Notes under More; open it so the entry can be found (a family has no More).
+  const more = mounted.root.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'class-more-toggle')[0];
+  if (more) act(() => more.props.onClick());
   return mounted.root;
 }
 

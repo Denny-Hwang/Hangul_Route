@@ -349,8 +349,10 @@ describe('learners asking to join get their own cards above the roster (section 
 });
 
 describe('the counts and the reads (sections 3.4, 5.4)', () => {
-  it('the class moves button counts the teacher move too; the re-link button counts the re-link', async () => {
+  it('the class moves button counts the teacher move too; the re-link button counts the re-link (both under More, GX-7)', async () => {
     await render();
+    const [more] = byTestId('class-more-toggle');
+    act(() => (more as ReactTestInstance).props.onClick());
     const text = textOf(root());
     expect(text).toContain('2 class moves waiting');
     expect(text).toContain('1 re-link request');
