@@ -299,7 +299,7 @@ export const consoleMsgs = {
       questsCards: (done: number, total: number, cards: number) =>
         plural('es', cards, { one: `Misiones ${done} / ${total} · ${cards} tarjeta`, other: `Misiones ${done} / ${total} · ${cards} tarjetas` }),
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
-      practiced: (when: string, minutes: number) => `Practicó ${when} · ${minutes} min esta semana`,
+      practiced: (when: string, minutes: number) => `Última práctica: ${when} · ${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `se unió ${when}`,

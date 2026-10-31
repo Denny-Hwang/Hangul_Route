@@ -37,6 +37,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 const NOW = new Date('2026-10-31T12:00:00.000Z');
+const MOVE_IN = { id: 'move:in1', kind: 'accept', status: 'waiting', from: { name: 'Class C' }, learner: { alias: 'J. K.', avatar: 'rabbit', level: '5-7' }, createdAt: '2026-10-30T12:00:00.000Z', at: null };
 type Result = { ok: true; data: unknown } | { ok: false; error: string; status: number };
 const ok = (data: unknown): Result => ({ ok: true, data });
 
@@ -61,14 +62,14 @@ const member = (id: string, name: string, over: Record<string, unknown> = {}) =>
   ...over,
 });
 
-const state = { kind: 'class' as 'class' | 'family', learners: [] as unknown[], incoming: [] as unknown[] };
+const state = { kind: 'class' as 'class' | 'family', learners: [] as unknown[], incoming: [] as unknown[], seats: undefined as undefined | { learners: number; cap: number } };
 const api = new Proxy(
   {},
   {
     get:
       (_target, name: string) =>
       async () => {
-        if (name === 'roster') return ok({ space: spaceOf(state.kind), learners: state.learners, joinCode: 'ABC234', joinCodeExpiresAt: '2026-11-20T00:00:00.000Z' });
+        if (name === 'roster') return ok({ space: spaceOf(state.kind), learners: state.learners, joinCode: 'ABC234', joinCodeExpiresAt: '2026-11-20T00:00:00.000Z', ...(state.seats ? { seats: state.seats } : {}) });
         if (name === 'transferRequests') return ok({ requests: [] });
         if (name === 'classMoves') return ok({ outgoing: [], incoming: state.incoming });
         if (name === 'listSpaces') return ok([{ space: spaceOf(state.kind), role: 'owner', counts: { learners: 1, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]);
@@ -100,6 +101,7 @@ beforeEach(() => {
   state.kind = 'class';
   state.learners = [member('profile:yuhan', 'Yuhan'), member('profile:mina', 'Mina', { summary: null, lastSyncedAt: null, joinedAt: '2026-09-10T00:00:00.000Z' })];
   state.incoming = [];
+  state.seats = undefined;
   nav.query = 'id=space%3Asunflower';
   lang.locale = 'en';
 });
@@ -169,6 +171,26 @@ describe('a class with learners (T3)', () => {
     expect(byTestId('first-run')).toHaveLength(0);
   });
 
+  it('a waiting class move stands in the bar with its count, not behind More (GX-7 review)', async () => {
+    state.incoming = [MOVE_IN];
+    await render();
+    const c = getMessages('en').console;
+    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'open-lecture', 'class-report-link', 'class-moves', 'class-more-toggle']);
+    expect(textOf(one('class-moves'))).toBe(c.transfer.waiting(1));
+    await press(one('class-more-toggle'));
+    expect(controlsIn(one('class-more'))).toEqual(['roster-notes', 'relink-requests', 'space-settings']);
+  });
+
+  it('a seat-cap notice stays near the top, before This week and the roster, never at the end (GX-7 review)', async () => {
+    state.seats = { learners: 2, cap: 2 };
+    await render();
+    const c = getMessages('en').console;
+    const text = textOf(root());
+    const at = c.seats.class.at(2);
+    expect(text).toContain(at);
+    expect(text.indexOf(at)).toBeLessThan(text.indexOf(c.space.week.title));
+  });
+
   it.each(['en', 'es', 'ko'] as UiLocale[])('%s: the invite button and More in the console language', async (locale) => {
     lang.locale = locale;
     await render();
@@ -179,7 +201,7 @@ describe('a class with learners (T3)', () => {
 });
 
 describe('the roster card (T4)', () => {
-  it('a learner who practiced: the activity line, the segments with the quests, the revisit line, then Report and Note in one row', async () => {
+  it('a learner who practiced: the activity line, the segments with the quests, the revisit line, then Report, Note (and Suggest a different start) in one row', async () => {
     await render();
     const c = getMessages('en').console;
     const card = byTestId('student-card')[0] as ReactTestInstance;
@@ -192,7 +214,35 @@ describe('the roster card (T4)', () => {
     // The old separate lines are gone.
     expect(textOf(card)).not.toContain(c.space.learner.lastActive('yesterday'));
     expect(card.findAll((n) => typeof n.type === 'string' && n.children.length === 1 && n.children[0] === c.space.learner.minutesThisWeek(36))).toHaveLength(0);
-    expect(controlsIn(one('card-actions', card))).toEqual(['see-report', 'send-note']);
+    expect(controlsIn(one('card-actions', card))).toEqual(['see-report', 'send-note', 'suggest-start']);
+  });
+
+  it.each(['en', 'es', 'ko'] as UiLocale[])('%s: past Stage 1, the quests (Stage 1\'s) take a line of their own that names Stage 1, never "On Stage 2 · Quests"', async (locale) => {
+    lang.locale = locale;
+    const journey = {
+      v: 1,
+      here: 'stage2',
+      stages: [
+        { stage: 'stage1', state: 'complete', done: 15, known: 0, total: 15 },
+        { stage: 'stage2', state: 'open', done: 1, known: 0, total: 2 },
+      ],
+    };
+    state.learners = [member('profile:yuhan', 'Yuhan', { summary: { ...STEADY, stage1: { ...STEADY.stage1, questsDone: 15 }, journey, lastActiveAt: '2026-10-30T09:30:00.000Z' } })];
+    await render();
+    const c = getMessages(locale).console;
+    const card = byTestId('student-card')[0] as ReactTestInstance;
+    const quests = c.space.learner.questsCards(15, 15, 5);
+    expect(textOf(one('journey-strip', card))).not.toContain(quests);
+    expect(textOf(one('journey-strip', card))).toContain(c.journey.onStage(2));
+    expect(textOf(one('quests-line', card))).toBe(c.journey.stage(1, quests));
+  });
+
+  it('Suggest a different start sits in the card\'s one row of buttons, after See report and Send a note (GX-7 review)', async () => {
+    await render();
+    const card = byTestId('student-card')[0] as ReactTestInstance;
+    expect(byTestId('starting-spot', card)).toHaveLength(1);
+    expect(byTestId('suggest-start', one('starting-spot', card))).toHaveLength(0);
+    expect(controlsIn(one('card-actions', card))).toEqual(['see-report', 'send-note', 'suggest-start']);
   });
 
   it('a learner with no journey yet: the quests text on its own line', async () => {
@@ -227,11 +277,12 @@ describe('an empty class (T5)', () => {
     expect(controlsIn(one('class-more'))).toEqual(['space-settings']);
   });
 
-  it('a teacher move into the empty class: Class moves comes back under More', async () => {
-    state.incoming = [{ id: 'move:in1', kind: 'accept', status: 'waiting', from: { name: 'Class C' }, learner: { alias: 'J. K.', avatar: 'rabbit', level: '5-7' }, createdAt: '2026-10-30T12:00:00.000Z', at: null }];
+  it('a teacher move into the empty class: Class moves comes back, in the bar with its count', async () => {
+    state.incoming = [MOVE_IN];
     await render();
+    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'class-moves', 'class-more-toggle']);
     await press(one('class-more-toggle'));
-    expect(byTestId('class-moves')).toHaveLength(1);
+    expect(controlsIn(one('class-more'))).toEqual(['space-settings']);
   });
 });
 

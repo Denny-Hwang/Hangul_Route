@@ -1,4 +1,4 @@
-import { getMessages } from '@hangul-route/i18n';
+import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { classActions, practicedLine, type ClassActionsInput } from '../class-page';
 
@@ -21,11 +21,20 @@ describe('classActions (T3, T5)', () => {
     expect(classActions({ ...base, empty: true })).toEqual({ bar: ['plan', 'termPlan'], more: ['settings'] });
   });
 
-  it('an empty class still shows Class moves while a move into it waits, and the re-link entry while a re-link waits', () => {
-    expect(classActions({ ...base, empty: true, movesWaiting: 2 }).more).toEqual(['moves', 'settings']);
-    expect(classActions({ ...base, empty: true, relinksWaiting: 1 }).more).toEqual(['relink', 'settings']);
+  it('an empty class still shows Class moves while a move into it waits, and the re-link entry while a re-link waits, in the bar', () => {
+    expect(classActions({ ...base, empty: true, movesWaiting: 2 })).toEqual({ bar: ['plan', 'termPlan', 'moves'], more: ['settings'] });
+    expect(classActions({ ...base, empty: true, relinksWaiting: 1 })).toEqual({ bar: ['plan', 'termPlan', 'relink'], more: ['settings'] });
     // Class moves hidden by the build: a waiting count never brings the entry back.
-    expect(classActions({ ...base, empty: true, moves: false, movesWaiting: 2 }).more).toEqual(['settings']);
+    expect(classActions({ ...base, empty: true, moves: false, movesWaiting: 2 })).toEqual({ bar: ['plan', 'termPlan'], more: ['settings'] });
+  });
+
+  it('a waiting entry leaves More for the bar (its count is on the button), and folds back once nothing waits (GX-7 review)', () => {
+    expect(classActions({ ...base, relinksWaiting: 1, movesWaiting: 3 })).toEqual({
+      bar: ['plan', 'termPlan', 'lecture', 'classReport', 'relink', 'moves'],
+      more: ['notes', 'settings'],
+    });
+    expect(classActions({ ...base, movesWaiting: 3 })).toEqual({ bar: ['plan', 'termPlan', 'lecture', 'classReport', 'moves'], more: ['notes', 'relink', 'settings'] });
+    expect(classActions({ ...base, relinksWaiting: 2 })).toEqual({ bar: ['plan', 'termPlan', 'lecture', 'classReport', 'relink'], more: ['notes', 'moves', 'settings'] });
   });
 });
 
@@ -36,8 +45,23 @@ describe('practicedLine (T4 line 2)', () => {
     const summary = { lastActiveAt: '2026-10-31T09:00:00.000Z', minutesLast7d: 14 };
     expect(practicedLine(summary, now, 'en')).toBe(getMessages('en').console.space.learner.practiced('today', 14));
     expect(practicedLine(summary, now, 'en')).toBe('Practiced today · 14 min this week');
-    expect(practicedLine(summary, now, 'es')).toBe('Practicó hoy · 14 min esta semana');
+    expect(practicedLine(summary, now, 'es')).toBe('Última práctica: hoy · 14 min esta semana');
     expect(practicedLine(summary, now, 'ko')).toBe('연습: 오늘 · 이번 주 14분');
+  });
+
+  it('yesterday, a whole weekday inside the last week and a date beyond, in each locale (GX-7 review: es grammar, ko weekday)', () => {
+    const line = (iso: string, locale: 'en' | 'es' | 'ko') => practicedLine({ lastActiveAt: iso, minutesLast7d: 1 }, now, locale);
+    expect(line('2026-10-30T09:00:00.000Z', 'en')).toBe('Practiced yesterday · 1 min this week');
+    expect(line('2026-10-30T09:00:00.000Z', 'es')).toBe('Última práctica: ayer · 1 min esta semana');
+    expect(line('2026-10-30T09:00:00.000Z', 'ko')).toBe('연습: 어제 · 이번 주 1분');
+    // 3 days back: Wednesday 28 Oct.
+    expect(line('2026-10-28T09:00:00.000Z', 'en')).toBe('Practiced Wednesday · 1 min this week');
+    expect(line('2026-10-28T09:00:00.000Z', 'es')).toBe('Última práctica: miércoles · 1 min esta semana');
+    expect(line('2026-10-28T09:00:00.000Z', 'ko')).toBe('연습: 수요일 · 이번 주 1분');
+    // 20 days back: 11 Oct.
+    expect(line('2026-10-11T09:00:00.000Z', 'en')).toBe(`Practiced ${formatDate('en', new Date('2026-10-11T09:00:00.000Z'), 'monthDay')} · 1 min this week`);
+    expect(line('2026-10-11T09:00:00.000Z', 'es')).toBe(`Última práctica: ${formatDate('es', new Date('2026-10-11T09:00:00.000Z'), 'monthDay')} · 1 min esta semana`);
+    expect(line('2026-10-11T09:00:00.000Z', 'ko')).toBe('연습: 10월 11일 · 이번 주 1분');
   });
 
   it('with no readable day, only the minutes (never "Practiced not yet")', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
 import { buttonBase, panelStyle } from './ui';
@@ -14,6 +14,9 @@ import { buttonBase, panelStyle } from './ui';
  */
 
 const CHEVRON = 16;
+
+/** A layout effect in the browser (it runs before React removes the old nodes), a plain effect in the static prerender. */
+const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /** A small chevron that turns when its disclosure opens; decoration only (the button says expanded or not). */
 function Chevron({ open }: { open: boolean }): JSX.Element {
@@ -34,11 +37,12 @@ function Chevron({ open }: { open: boolean }): JSX.Element {
 /**
  * T3: the bar keeps the everyday buttons in view (`bar`, the plan first as the primary) and folds the rest (`more`)
  * under **More**, a disclosure button (`aria-expanded`, `aria-controls`), not a menu: the folded buttons show in a row
- * right under the bar, in the reading order, so a keyboard or a screen reader reaches them next. `nudge`: a folded
- * entry carries a waiting count (new devices, class moves), so More takes the amber nudge look of those entries (the
- * GX-1 review rule; the banner says in words what waits, the colour is never the only cue).
+ * right under the bar, in the reading order, so a keyboard or a screen reader reaches them next. An entry with a waiting
+ * count (new devices, class moves) is never folded here: `classActions` puts it in the bar, its count in words on the
+ * button (GX-7 review), so More itself never needs a waiting look. `aria-controls` is set only while the panel is
+ * mounted, so it never points at a missing id.
  */
-export function ClassActionBar({ bar, more, nudge = false }: { bar: ReactNode[]; more: ReactNode[]; nudge?: boolean }): JSX.Element {
+export function ClassActionBar({ bar, more }: { bar: ReactNode[]; more: ReactNode[] }): JSX.Element {
   const { messages } = useConsoleLocale();
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -52,10 +56,9 @@ export function ClassActionBar({ bar, more, nudge = false }: { bar: ReactNode[];
             type="button"
             data-testid="class-more-toggle"
             aria-expanded={open}
-            aria-controls={panelId}
+            aria-controls={open ? panelId : undefined}
             onClick={() => setOpen((was) => !was)}
-            data-nudge={nudge ? 'true' : undefined}
-            style={{ ...buttonBase, gap: spacing.xs, ...(nudge ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` } : {}) }}
+            style={{ ...buttonBase, gap: spacing.xs }}
           >
             {messages.console.space.more}
             <Chevron open={open} />
@@ -74,21 +77,50 @@ export function ClassActionBar({ bar, more, nudge = false }: { bar: ReactNode[];
 /**
  * T3 and T5: **Invite students · code {code}** at the end of the page. Collapsed while the class has learners (the
  * code no longer pushes the roster down); open from the start, with the code hero-size, while the class is empty (the
- * page then puts it first, so the code is on the first phone screen). The page passes the code panel as a function of `hero`. A class that fills up remounts it (the page keys it by
- * `empty`), so it closes once the first learner joins.
+ * page then puts it first, so the code is on the first phone screen). The page passes the code panel as a function of
+ * `hero`. A class that fills up remounts it (the page keys it by `empty`), so it closes once the first learner joins.
+ * `focusMemo` (one ref the page keeps across both mounts): when focus was inside the old disclosure as it went away
+ * (Copy, Regenerate, the join link), the new one takes focus on its button instead of leaving it on the page body.
+ * `aria-controls` is set only while the body is mounted.
  */
-export function InviteDisclosure({ code, empty, children }: { code: string | null; empty: boolean; children: (hero: boolean) => ReactNode }): JSX.Element {
+export function InviteDisclosure({
+  code,
+  empty,
+  focusMemo,
+  children,
+}: {
+  code: string | null;
+  empty: boolean;
+  focusMemo?: MutableRefObject<boolean>;
+  children: (hero: boolean) => ReactNode;
+}): JSX.Element {
   const { messages } = useConsoleLocale();
   const [open, setOpen] = useState(empty);
   const bodyId = useId();
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const toggleRef = useRef<HTMLButtonElement | null>(null);
+  useIsoLayoutEffect(() => {
+    const section = sectionRef.current;
+    if (focusMemo?.current) {
+      focusMemo.current = false;
+      const active = typeof document === 'undefined' ? null : document.activeElement;
+      if (active === null || active === document.body) toggleRef.current?.focus();
+    }
+    return () => {
+      // Runs before React removes the old nodes, so the focused element is still inside.
+      if (focusMemo && typeof section?.contains === 'function' && typeof document !== 'undefined') focusMemo.current = section.contains(document.activeElement);
+    };
+    // Once per mount: the page remounts the disclosure (its key) when the class fills up or empties.
+  }, []);
   return (
-    <section data-testid="invite" style={{ ...panelStyle, padding: spacing.none, marginBottom: spacing.lg, overflow: 'hidden' }}>
+    <section ref={sectionRef} data-testid="invite" style={{ ...panelStyle, padding: spacing.none, marginBottom: spacing.lg, overflow: 'hidden' }}>
       <h2 style={{ margin: 0, fontSize: rem(typography.size.bodyLg) }}>
         <button
           type="button"
+          ref={toggleRef}
           data-testid="invite-toggle"
           aria-expanded={open}
-          aria-controls={bodyId}
+          aria-controls={open ? bodyId : undefined}
           onClick={() => setOpen((was) => !was)}
           style={{
             width: '100%',

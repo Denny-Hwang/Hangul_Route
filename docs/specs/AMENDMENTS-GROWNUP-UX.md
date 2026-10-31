@@ -386,7 +386,7 @@ The parent's **Moving {date}** chip reuses `status.moving(date)`; the minutes li
 | `space.week.practicedFamily(p, n)` (new) | {p} of {n} learners practiced this week | {p} de {n} practicaron esta semana | 이번 주 연습한 학습자: {p}명 / {n}명 |
 | `space.learner.questsCards(d, t, c)` (changed) | Stage 1 quests: {d} of {t} · {c} cards | Misiones de la Etapa 1: {d} de {t} · {c} tarjetas | 1단계 퀘스트 {d}/{t} · 카드 {c}장 |
 | `space.learner.firstQuest` (new) | Working on the first quest | En la primera misión | 첫 퀘스트 진행 중 |
-| `space.learner.practiced(when, n)` (new) | Practiced {when} · {n} min this week | Practicó {when} · {n} min esta semana | 연습: {when} · 이번 주 {n}분 |
+| `space.learner.practiced(when, n)` (new) | Practiced {when} · {n} min this week | Última práctica: {when} · {n} min esta semana | 연습: {when} · 이번 주 {n}분 |
 | `plan.readout.notDelivered` (new) | Gets this plan next time the app opens | Recibe este plan al abrir la app | 앱을 다시 열면 이 계획을 받아요 |
 | `plan.readout.notStarted(t)` (new) | Not started yet (0 / {t}) | Aún sin empezar (0 / {t}) | 아직 시작 전 (0 / {t}) |
 | `space.rosterHeadingFamily` (new) | Learners | Quienes aprenden | 우리 가족 학습자 |

@@ -58,13 +58,20 @@ describe('ClassActionBar (T3)', () => {
     expect(toggle.props.style.minWidth).toBe(touchTarget.child);
   });
 
-  it('nudge: More takes the amber look of a waiting count (fill and border), never the danger colour; plain otherwise', () => {
-    const nudged = byTestId(create(<ClassActionBar bar={bar} more={more} nudge />).root, 'class-more-toggle')[0] as ReactTestInstance;
-    expect(nudged.props.style.backgroundColor).toBe(colors.feedback.nudgeLight);
-    expect(nudged.props.style.border).toContain(colors.feedback.nudge);
-    expect(JSON.stringify(nudged.props.style)).not.toContain(colors.feedback.danger);
-    const plain = byTestId(create(<ClassActionBar bar={bar} more={more} />).root, 'class-more-toggle')[0] as ReactTestInstance;
-    expect(String(plain.props.style.border)).not.toContain(colors.feedback.nudge);
+  it('More is always the plain secondary look: a waiting entry is in the bar, never folded (GX-7 review)', () => {
+    const toggle = byTestId(create(<ClassActionBar bar={bar} more={more} />).root, 'class-more-toggle')[0] as ReactTestInstance;
+    expect(String(toggle.props.style.border ?? '')).not.toContain(colors.feedback.nudge);
+    expect(toggle.props.style.backgroundColor).not.toBe(colors.feedback.nudgeLight);
+  });
+
+  it('aria-controls only while the panel is mounted, so it never names a missing id', () => {
+    const root = create(<ClassActionBar bar={bar} more={more} />).root;
+    const toggle = byTestId(root, 'class-more-toggle')[0] as ReactTestInstance;
+    expect(toggle.props['aria-controls']).toBeUndefined();
+    act(() => toggle.props.onClick());
+    expect(toggle.props['aria-controls']).toBe((byTestId(root, 'class-more')[0] as ReactTestInstance).props.id);
+    act(() => toggle.props.onClick());
+    expect(toggle.props['aria-controls']).toBeUndefined();
   });
 
   it('with nothing to fold, no More button', () => {
@@ -99,6 +106,51 @@ describe('InviteDisclosure (T3, T5)', () => {
   it('no code yet: the button names the missing code with a dash', () => {
     const r = create(<InviteDisclosure code={null} empty={false}>{panel}</InviteDisclosure>);
     expect(textOf(byTestId(r.root, 'invite-toggle')[0] as ReactTestInstance)).toBe(getMessages('en').console.space.invite('—'));
+  });
+
+  it('aria-controls only while the body is mounted', () => {
+    const r = create(<InviteDisclosure code="ABC234" empty={false}>{panel}</InviteDisclosure>);
+    const toggle = byTestId(r.root, 'invite-toggle')[0] as ReactTestInstance;
+    expect(toggle.props['aria-controls']).toBeUndefined();
+    act(() => toggle.props.onClick());
+    expect(toggle.props['aria-controls']).toBe((byTestId(r.root, 'invite-body')[0] as ReactTestInstance).props.id);
+  });
+
+  it('focusMemo: focus inside the old disclosure as it goes away lands on the new one\'s button (the class fills up)', () => {
+    const focused: string[] = [];
+    const body = { tag: 'body' };
+    const inside = { tag: 'copy' };
+    const doc = { activeElement: inside as unknown, body };
+    vi.stubGlobal('document', doc);
+    const memo = { current: false };
+    const createNodeMock = (element: { type: unknown; props: Record<string, unknown> }) => {
+      if (element.type === 'section') return { contains: (node: unknown) => node === inside };
+      if (element.type === 'button') return { focus: () => focused.push(String(element.props['data-testid'])) };
+      return null;
+    };
+    let r!: ReturnType<typeof create>;
+    act(() => {
+      r = create(<InviteDisclosure key="empty" code="ABC234" empty focusMemo={memo}>{panel}</InviteDisclosure>, { createNodeMock });
+    });
+    expect(focused).toEqual([]);
+    // The old one goes while focus is on its Copy button; the browser then leaves focus on the body.
+    act(() => r.unmount());
+    expect(memo.current).toBe(true);
+    doc.activeElement = body;
+    act(() => {
+      r = create(<InviteDisclosure key="learners" code="ABC234" empty={false} focusMemo={memo}>{panel}</InviteDisclosure>, { createNodeMock });
+    });
+    expect(focused).toEqual(['invite-toggle']);
+    expect(memo.current).toBe(false);
+    // Focus elsewhere when it goes: nothing is moved.
+    doc.activeElement = { tag: 'elsewhere' };
+    act(() => r.unmount());
+    expect(memo.current).toBe(false);
+    act(() => {
+      create(<InviteDisclosure code="ABC234" empty={false} focusMemo={memo}>{panel}</InviteDisclosure>, { createNodeMock });
+    });
+    expect(focused).toEqual(['invite-toggle']);
+    vi.unstubAllGlobals();
   });
 
   it('the toggle is at least the touch target tall', () => {

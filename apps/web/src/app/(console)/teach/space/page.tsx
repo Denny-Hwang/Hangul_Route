@@ -11,12 +11,13 @@ import { useConfirm } from '@/components/console/ConfirmSheet';
 import { RevisitLetterLinks } from '@/components/console/BrowseLink';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
-import { StartingSpot } from '@/components/console/PlacementParts';
+import { StartingSpot, SuggestStartLink } from '@/components/console/PlacementParts';
 import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
 import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
 import { classActions, practicedLine, type ClassAction } from '@/lib/console/class-page';
 import { journeyStrip } from '@/lib/console/journey-strip';
+import { startingSpotLine } from '@/lib/console/placement';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
@@ -105,6 +106,8 @@ function SpaceInner(): JSX.Element {
   const relinkSeq = useRef(0);
   const rosterHeading = useRef<HTMLHeadingElement>(null);
   const spaceHead = useRef<HTMLDivElement>(null);
+  // GX-7 review: focus inside Invite students when it moves (empty class to first learner) lands on its new button.
+  const inviteFocus = useRef(false);
   // [SA] A rename never drops a read: the renamed name is laid over each read that lands (section 5.3, `NameOverrides`).
   const names = useNameOverrides();
 
@@ -441,7 +444,7 @@ function SpaceInner(): JSX.Element {
     );
   };
   const invite = roster ? (
-    <InviteDisclosure key={empty ? 'empty' : 'learners'} code={roster.joinCode} empty={empty}>
+    <InviteDisclosure key={empty ? 'empty' : 'learners'} code={roster.joinCode} empty={empty} focusMemo={inviteFocus}>
       {(hero) => codePanel(hero, false)}
     </InviteDisclosure>
   ) : null;
@@ -546,8 +549,10 @@ function SpaceInner(): JSX.Element {
           ) : null}
 
 
+          {/* GX-7 review: a seat-cap notice (near or at the cap, joins failing) stays near the top of a class page, with
+              learners or without, never below the roster. */}
+          {classPage ? capNotice : null}
           {/* GX-7 (T5): an empty class leads with the code (on the first phone screen), then its three first steps. */}
-          {classPage && empty ? capNotice : null}
           {classPage && empty ? invite : null}
           {classPage && empty ? <FirstRunCard /> : null}
           {classPage ? null : codePanel(empty, true)}
@@ -587,11 +592,7 @@ function SpaceInner(): JSX.Element {
           {classPage ? <ClassGoalLineView line={goalLine} /> : null}
 
           {classPage ? (
-            <ClassActionBar
-              bar={classActionList.bar.map(actionNode)}
-              more={classActionList.more.map(actionNode)}
-              nudge={(classActionList.more.includes('relink') && relinksWaiting > 0) || (classActionList.more.includes('moves') && movesWaiting > 0)}
-            />
+            <ClassActionBar bar={classActionList.bar.map(actionNode)} more={classActionList.more.map(actionNode)} />
           ) : (
             <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
               {actionNode('plan')}
@@ -620,6 +621,12 @@ function SpaceInner(): JSX.Element {
                   const report = rosterReportLink({ spaceId, kind: roster.space.kind, learnerId: l.id, enabled: reportsEnabled(locale), locale });
                   const noteHref = notesLinks?.card(l.id) ?? null;
                   const quests = l.summary ? c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked) : '';
+                  // The quests count is Stage 1's (`summary.stage1`). It joins "On Stage N" only on Stage 1; past it, a line of
+                  // its own names the stage ("Stage 1: Quests 15 / 15 · 5 cards"), so it never reads as the current stage's.
+                  const strip = l.summary ? journeyStrip(roster.space.kind, l.summary.journey, locale) : null;
+                  const hereOrder = strip?.segments.find((segment) => segment.here)?.order ?? null;
+                  const questsJoin = hereOrder === null || hereOrder === 1;
+                  const suggestShown = startingSpotLine(l.summary, locale) !== null;
                   return (
                     <article key={l.id} style={{ ...panelStyle, ...(attention?.byLearner[l.id]?.action && !decided.lines[l.id] ? actionCardStyle : {}) }} data-testid="student-card" data-status={attention?.byLearner[l.id]?.kind}>
                       <LearnerCardHead
@@ -641,11 +648,9 @@ function SpaceInner(): JSX.Element {
                         // revisit, (5) the plan lines; the card's buttons follow in one row.
                         <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                           <div data-testid="practiced-line">{practicedLine(l.summary, now, locale)}</div>
-                          {journeyStrip(roster.space.kind, l.summary.journey, locale) ? (
-                            <JourneyStrip kind={roster.space.kind} summary={l.summary} variant="card" trailing={quests} />
-                          ) : (
-                            <div data-testid="quests-line">{quests}</div>
-                          )}
+                          {strip ? <JourneyStrip kind={roster.space.kind} summary={l.summary} variant="card" trailing={questsJoin ? quests : undefined} /> : null}
+                          {strip === null ? <div data-testid="quests-line">{quests}</div> : null}
+                          {strip && !questsJoin ? <div data-testid="quests-line">{c.journey.stage(1, quests)}</div> : null}
                           {l.summary.needsPractice.length ? (
                             <div>
                               {learnerRevisit.before}
@@ -665,7 +670,7 @@ function SpaceInner(): JSX.Element {
                             </div>
                           ) : null}
                           <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
-                          <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
+                          <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} link={false} />
                           {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                           <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                         </div>
@@ -674,7 +679,9 @@ function SpaceInner(): JSX.Element {
                           {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
                         </Muted>
                       )}
-                      {report || noteHref ? (
+                      {report || noteHref || suggestShown ? (
+                        // T4 (6): the card's one row of buttons; Suggest a different start joins it (GX-7 review) rather
+                        // than drawing a second row under the starting-spot line.
                         <div data-testid="card-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
                           {report ? (
                             <Link href={report.href} data-testid="see-report" style={buttonBase}>
@@ -682,6 +689,7 @@ function SpaceInner(): JSX.Element {
                             </Link>
                           ) : null}
                           {noteHref ? <NotesLink href={noteHref} testId="send-note" text={c.notes.sendNote.cta} describedBy={`roster-learner-${index}`} /> : null}
+                          <SuggestStartLink summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         </div>
                       ) : null}
                     </article>
@@ -691,7 +699,6 @@ function SpaceInner(): JSX.Element {
             </section>
           ) : null}
 
-          {classPage && !empty ? capNotice : null}
           {classPage && !empty ? invite : null}
         </>
       ) : null}
