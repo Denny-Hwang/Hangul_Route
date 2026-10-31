@@ -8,8 +8,9 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
  * apart.
  *
  * AMENDMENTS-GROWNUP-UX section 10.3 (GX-9, GX-OD-7): the titles live in `console.stageTitles`, so a Korean or Spanish
- * grown-up reads "4단계 · 대화" or "Etapa 4 · Diálogo", not an English title inside their own line. Every console view
- * takes `stageTitleIn(locale)` with the locale it renders in; there is no locale-blind getter left to pass by mistake.
+ * grown-up reads stage 4 in their own language ("Etapa 4 · Diálogo"), not an English title inside their own line. Every
+ * console view takes `stageTitleIn(locale)` with the locale it renders in; there is no locale-blind getter left to pass
+ * by mistake.
  */
 export const STAGE_TITLES: Readonly<Record<StageKey, string>> = getMessages('en').console.stageTitles;
 
