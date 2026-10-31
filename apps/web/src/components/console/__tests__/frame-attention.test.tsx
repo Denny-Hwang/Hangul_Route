@@ -230,8 +230,12 @@ describe('the re-link bar (section 5.5)', () => {
   it('one new device: the class name, the minutes left, and Review to the class page\'s review', async () => {
     answers.spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(7.5)))];
     const r = await render(answers.spaces);
-    const bar = one(r, 'relink-bar');
-    expect(bar.findAll((n) => n.props.role === 'status')).toHaveLength(1);
+    one(r, 'relink-bar');
+    // The live region is the frame's own hidden line, outside the bar: the minutes line is never in it.
+    const live = one(r, 'relink-bar-live');
+    expect(live.props.role).toBe('status');
+    expect(textOf(live)).toBe('A new device needs your OK · Sunday Class A');
+    expect(one(r, 'relink-bar').findAll((n) => n.props.role === 'status')).toHaveLength(0);
     expect(textOf(one(r, 'relink-bar-text'))).toBe('A new device needs your OK · Sunday Class A');
     expect(textOf(one(r, 'relink-bar-minutes'))).toBe('8 min left');
     const review = one(r, 'relink-bar-review');
@@ -247,6 +251,20 @@ describe('the re-link bar (section 5.5)', () => {
     const r = await render([item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(9))), item('c2', 'class', 'owner', 'Beginners B', att(1, 0, at(3)))]);
     expect(textOf(one(r, 'relink-bar-text'))).toBe('2 new devices need your OK');
     expect(one(r, 'relink-bar-review').props.href).toBe('/teach/space?id=c2#attention');
+  });
+
+  it('the live region is in the page before a new device waits, so the bar\'s arrival is announced', async () => {
+    answers.spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(9)))];
+    const r = await render([item('c1', 'class', 'owner', 'Sunday Class A', att(0, 0))]);
+    const before = one(r, 'relink-bar-live');
+    expect(before.props.role).toBe('status');
+    expect(textOf(before)).toBe('');
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    await advance(ATTENTION_POLL_MS);
+    const after = one(r, 'relink-bar-live');
+    expect(after).toBe(before);
+    expect(textOf(after)).toBe('A new device needs your OK · Sunday Class A');
+    expect(byTestId(r, 'relink-bar')).toHaveLength(1);
   });
 
   it('a move alone never draws the bar (moves stay open 14 days)', async () => {
@@ -290,6 +308,52 @@ describe('reads (section 5.4)', () => {
     await render([item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(8)))], { attentionHere: true, pathname: '/teach/space' });
     await advance(10 * 60_000);
     expect(calls).toEqual([]);
+  });
+
+  it('on the class page the tab\'s number follows the page: one read when the page\'s own counts change, none for the first', async () => {
+    const spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(1, 2, at(8))), item('c2', 'class', 'owner', 'Beginners B', att(0, 0))];
+    answers.spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(0, 0)), item('c2', 'class', 'owner', 'Beginners B', att(0, 0))];
+    const frame = (key: string | undefined): JSX.Element => (
+      <AdultFrame env={env('/teach/space')} spaces={spaces} attentionHere attentionKey={key}>
+        <p>page</p>
+      </AdultFrame>
+    );
+    await act(async () => {
+      mounted = create(frame(undefined));
+    });
+    const r = mounted as unknown as ReactTestRenderer;
+    await act(async () => {
+      r.update(frame('1:2'));
+    });
+    expect(calls).toEqual([]);
+    expect(textOf(one(r, 'nav-count'))).toBe('3');
+    // The teacher approves the re-link and accepts both moves on the page: its counts go to 0, the frame reads once.
+    await act(async () => {
+      r.update(frame('0:0'));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(calls).toEqual([{ name: 'listSpaces' }]);
+    expect(byTestId(r, 'nav-count')).toHaveLength(0);
+    expect(one(r, 'nav-classes').props['aria-label']).toBeUndefined();
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    expect(byTestId(r, 'relink-bar-live')).toHaveLength(0);
+  });
+
+  it('on the class page the counts are read again when the tab comes back into view (no timer)', async () => {
+    answers.spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(0, 0))];
+    const r = await render([item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(8)))], { attentionHere: true, pathname: '/teach/space' });
+    await advance(60_000);
+    expect(calls).toEqual([]);
+    await act(async () => {
+      for (const l of [...listeners]) l();
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(calls).toEqual([{ name: 'listSpaces' }]);
+    expect(byTestId(r, 'nav-count')).toHaveLength(0);
   });
 
   it('without GX-W (no attention on the list) nothing is drawn and nothing is read, even after 10 minutes in view', async () => {
@@ -341,6 +405,54 @@ describe('a school admin (section 6, GX-W school attention)', () => {
     await advance(ATTENTION_POLL_MS);
     expect(count('school')).toBe(1);
     expect(count('schoolAttention')).toBe(2);
+  });
+
+  it('a failed names read is not kept: the next poll asks again and names the class', async () => {
+    answers.schools.s1 = { ok: true, data: [{ spaceId: 'c9', relinks: 0, moves: 1, relinkExpiresAt: null }] };
+    const good = answers.schoolViews.s1;
+    answers.schoolViews.s1 = { ok: false, error: 'network', status: -1 };
+    answers.spaces = [school];
+    const r = await render([school], { children: <SchoolAttentionLinks schoolId="s1" fallback={[]} /> });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(count('school')).toBe(1);
+    expect(textOf(one(r, 'school-attention-c9'))).toBe('1 needs your OK');
+    answers.schoolViews.s1 = good as Result;
+    await advance(ATTENTION_POLL_MS);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(count('school')).toBe(2);
+    expect(textOf(one(r, 'school-attention-c9'))).toBe('Class Nine: 1 needs your OK');
+    await advance(ATTENTION_POLL_MS);
+    expect(count('school')).toBe(2);
+  });
+
+  it('a class made after the names read is named by one more read', async () => {
+    answers.schools.s1 = { ok: true, data: [{ spaceId: 'c9', relinks: 0, moves: 1, relinkExpiresAt: null }] };
+    answers.spaces = [school];
+    const r = await render([school], { children: <SchoolAttentionLinks schoolId="s1" fallback={[]} /> });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(count('school')).toBe(1);
+    answers.schools.s1 = {
+      ok: true,
+      data: [
+        { spaceId: 'c9', relinks: 0, moves: 1, relinkExpiresAt: null },
+        { spaceId: 'c7', relinks: 0, moves: 1, relinkExpiresAt: null },
+      ],
+    };
+    answers.schoolViews.s1 = { ok: true, data: { classes: [{ space: { id: 'c9', name: 'Class Nine' } }, { space: { id: 'c7', name: 'Class Seven' } }] } };
+    await advance(ATTENTION_POLL_MS);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(count('school')).toBe(2);
+    expect(textOf(one(r, 'school-attention-c7'))).toBe('Class Seven: 1 needs your OK');
+    await advance(ATTENTION_POLL_MS);
+    expect(count('school')).toBe(2);
   });
 
   it('a school row lists only its classes with requests waiting, and the class rows of the school page get the chip', async () => {
