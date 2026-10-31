@@ -254,3 +254,41 @@ describe('extraction coverage over the three sources (F-CURR-002 §4.2)', () => 
     }
   });
 });
+
+describe('a shipped later volume leaves every first-volume item as it was (F-CURR-002 §4.2, §4.4, row CM-40)', () => {
+  const firstVolumesOnly = new Map([...tree].filter(([file]) => !/\.v[2-9]\.json$/.test(file) && !(isRec(tree.get(file)) && (tree.get(file) as Rec).volume !== undefined && (tree.get(file) as Rec).volume !== 1)));
+  const before = reviewItemsOf({ stage1, lessons: lessonSourcesOfTree(firstVolumesOnly), stories, ...vocabOfTree(firstVolumesOnly), snapshot });
+  const after = new Map(built.items.map((i) => [i.id, i]));
+  const laterVolumeCells = new Set(lessons.filter((l) => l.volume > 1).map((l) => l.cellId));
+
+  it('the repository ships a later volume, so the check below compares two different trees', () => {
+    expect(laterVolumeCells.size).toBeGreaterThan(0);
+  });
+
+  it("keeps each existing item's cells, volume, stage, home, English and gloss key; a later volume only adds its own cell or an asked entry", () => {
+    for (const item of before.items) {
+      const now = after.get(item.id);
+      expect(now, item.id).toBeDefined();
+      const pick = (i: ReviewItem) => ({
+        cells: i.cells.filter((cell) => !laterVolumeCells.has(cell)),
+        volume: i.volume,
+        stage: i.stage,
+        home: i.home,
+        en: i.en,
+        glossKey: i.glossKey,
+      });
+      expect(pick(now as ReviewItem), item.id).toEqual(pick(item));
+      expect((now as ReviewItem).cells.slice(0, item.cells.length), item.id).toEqual(item.cells);
+      expect((now as ReviewItem).asked.filter((cell) => !laterVolumeCells.has(cell)), item.id).toEqual(item.asked);
+    }
+  });
+
+  it('keeps every first-volume cell denominator (the items whose cells hold it)', () => {
+    const denominators = (items: readonly ReviewItem[]): Map<string, number> => {
+      const out = new Map<string, number>();
+      for (const i of items) for (const cell of i.cells) if (!laterVolumeCells.has(cell)) out.set(cell, (out.get(cell) ?? 0) + 1);
+      return out;
+    };
+    expect(denominators(built.items)).toEqual(denominators(before.items));
+  });
+});

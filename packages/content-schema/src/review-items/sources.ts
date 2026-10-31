@@ -22,7 +22,12 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 const byPath = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-/** The ready lesson cells and pack levels of the tree, in path order. */
+/**
+ * The ready lesson cells and pack levels of the tree, in route order: every Volume 1 cell and pack level in path
+ * order, then each later volume's cells in path order. A later volume is learned after every first volume
+ * (F-CURR-002 row CM-40), so it never becomes an item's first teaching cell, volume or gloss source in place of a
+ * Volume 1 cell (§4.2, §4.4): adding a Volume 2 leaves every existing item's data unchanged.
+ */
 export function lessonSourcesOfTree(tree: ReadonlyMap<string, unknown>): LessonSource[] {
   const out: LessonSource[] = [];
   for (const file of [...tree.keys()].sort(byPath)) {
@@ -43,7 +48,8 @@ export function lessonSourcesOfTree(tree: ReadonlyMap<string, unknown>): LessonS
       out.push({ file, body, cellId: `episode:pack-${key}-s${stage}`, stage, home: `pack:${key}`, volume: 1 });
     }
   }
-  return out;
+  // Array.prototype.sort is stable, so within one volume the path order stays.
+  return out.sort((a, b) => a.volume - b.volume);
 }
 
 /** The ready stories of the tree, in path order. */

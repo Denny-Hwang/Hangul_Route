@@ -473,14 +473,22 @@ const glossText = (ko: string, en: string): string => `${normalizeKo(ko)}|${en}`
  * that only asks it again is `asked` (§4.4: its denominator does not hold the item). Its English and
  * its gloss key come from one occurrence, so the overlay translates that English; when that one has
  * no key, the first field anywhere that glosses the same Korean with the same English.
+ *
+ * A first-volume occurrence always leads (F-CURR-002 row CM-40, §4.2, §4.4): when a first volume or a story teaches
+ * the item, its text, English, gloss key, home, stage and volume come from those occurrences only, and a later volume
+ * adds its own cell (when its Discover shows the item) or an `asked` entry, never a change to that data. So shipping
+ * a Volume 2 dark leaves every existing item, and every Volume 1 denominator, as it was.
  */
-function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrence[], vocab: VocabIndex, glossAt: ReadonlyMap<string, string>): ReviewItem {
+function mergeGroup(id: string, identity: Identity, all: readonly ItemOccurrence[], vocab: VocabIndex, glossAt: ReadonlyMap<string, string>): ReviewItem {
+  const firstVolume = all.filter((o) => o.volume === 1);
+  const list = firstVolume.length > 0 ? firstVolume : all;
+  const later = all.filter((o) => !list.includes(o));
   const first = list[0] as ItemOccurrence;
   const lead = list.find((o) => o.source === 'discover') ?? first;
   const glossed = list.find((o) => o.en !== undefined && o.source === 'discover') ?? list.find((o) => o.en !== undefined);
   const word = identity.vocabId === undefined ? undefined : vocab.byId.get(identity.vocabId);
-  const inOrder = [...new Set(list.map((o) => o.cell))];
-  const discovered = new Set(list.filter((o) => o.source === 'discover').map((o) => o.cell));
+  const inOrder = [...new Set([...list, ...later].map((o) => o.cell))];
+  const discovered = new Set(all.filter((o) => o.source === 'discover').map((o) => o.cell));
   const firstEpisode = inOrder.find((cell) => cell.startsWith('episode:'));
   const cells = inOrder.filter((cell, i) => i === 0 || cell === firstEpisode || discovered.has(cell));
   const teaching = list.filter((o) => cells.includes(o.cell));
@@ -495,7 +503,7 @@ function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrenc
     cells,
     asked: inOrder.filter((cell) => !cells.includes(cell)),
     formats: [],
-    soundChange: list.some((o) => o.soundChange === true) || (identity.kind !== 'sym' && identity.kind !== 'rea' && hasSoundChange(lead.ko)),
+    soundChange: all.some((o) => o.soundChange === true) || (identity.kind !== 'sym' && identity.kind !== 'rea' && hasSoundChange(lead.ko)),
     homophoneOf: [],
   };
   const en = word?.en ?? glossed?.en;
