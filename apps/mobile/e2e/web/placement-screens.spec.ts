@@ -73,6 +73,22 @@ async function voicedSpeech(page: Page): Promise<void> {
         removeEventListener: () => undefined,
       },
     });
+    // The fixture bundle carries clips for a few letters (e2e/fixtures/audio/jamo), and a prompt with one plays the clip,
+    // not the voice: "the voice stops working" stops the clips too, or the run's seeded draw would decide the test.
+    type Source = { start: (...args: unknown[]) => void };
+    const Context = (window as unknown as { AudioContext?: { prototype: { createBufferSource: () => Source } } }).AudioContext;
+    if (Context !== undefined) {
+      const create = Context.prototype.createBufferSource;
+      Context.prototype.createBufferSource = function createBufferSource(this: unknown): Source {
+        const source = create.call(this);
+        const start = source.start.bind(source);
+        source.start = (...args: unknown[]) => {
+          if ((window as E2eWindow).__speechFails === true) throw new Error('playback failed');
+          start(...args);
+        };
+        return source;
+      };
+    }
   });
 }
 
@@ -133,6 +149,21 @@ async function warmUp(page: Page, picture: 'rice' | 'tiger', sound = true): Prom
   if (sound) await expect(page.getByTestId('placement-warmup-speaker')).toHaveAttribute('aria-label', 'Hear it again');
   else await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
   await page.getByTestId(`placement-warmup-option-${picture}`).click();
+}
+
+/**
+ * Short: taps the first choice until the answer counts. The cards enable when the prompt ends, and a prompt with a
+ * bundled clip ends later than the fake voice's; a tap in the frame where the cards turn on can reach the press
+ * handler before it takes the new state, so the tap is repeated only while no answer has been recorded.
+ */
+async function answerFirstChoice(page: Page): Promise<void> {
+  const answered = async (): Promise<number> => (await events(page)).filter((e) => e.name === 'placement.item_answered').length;
+  const before = await answered();
+  await expect(async () => {
+    if ((await answered()) > before) return;
+    await page.locator('[data-testid^="placement-option-"]').first().click();
+    await expect.poll(answered, { timeout: 1_500 }).toBeGreaterThan(before);
+  }).toPass({ timeout: 15_000 });
 }
 
 /** Taps "I am not sure" until the result shows (a pause sheet, if one opens, is answered with Keep going). */
@@ -364,7 +395,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-hoya-start').click();
     await warmUp(page, 'tiger');
     await expect(page.getByTestId('placement-item')).toBeVisible();
-    await page.locator('[data-testid^="placement-option-"]').first().click();
+    await answerFirstChoice(page);
     const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     await expect.poll(async () => (await readStored<{ run: { responses: unknown[] } }>(page, `placement-run:${profileId}`))?.run.responses.length).toBe(1);
     const open = await savedQuestion(page, profileId);
@@ -429,7 +460,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.evaluate(() => {
       (window as E2eWindow).__speechFails = true;
     });
-    await page.locator('[data-testid^="placement-option-"]').first().click();
+    await answerFirstChoice(page);
     await expect(page.getByTestId('placement-tap-to-hear')).toBeVisible();
     await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Tap to hear it.');
     await expect(page.getByTestId('placement-sound-pause')).toHaveCount(0);

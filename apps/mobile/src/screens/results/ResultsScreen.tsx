@@ -24,7 +24,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { cardById, episodeById, episodesAll, episodesWithVolumes, questById, questsAll } from '../../content';
 import { storyById, storyLevels } from '../../content/stories';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
@@ -279,7 +279,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         ...(routeInput ? { route: routeInput } : {}),
         ...(planBefore.current ? { planBefore: planBefore.current } : {}),
       }),
-    [snapshot, questId, total, tier, questOpen, locale, routeInput],
+    // A lesson quest's teaser and blurb come with the headers chunk (F-CURR-002 row CM-40): `titles` bumps when it lands.
+    [snapshot, questId, total, tier, questOpen, locale, routeInput, titles],
   );
 
   // `route.offplan_finished` once per results visit, for a first completion of an off-plan quest (section 3.12).
@@ -287,7 +288,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   useEffect(() => {
     if (offplanSent.current || !profile || total === 0 || planBefore.current === null) return;
     offplanSent.current = true;
-    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesAll);
+    // The finished quest's episode, a cell's Volume 2 too (F-CURR-002 row CM-40).
+    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesWithVolumes);
     if (event) void track(event);
   }, [profile, total, questId, routeInput]);
   // The run that completed Stage 1 leads to its ceremony (F-QUEST-002 §3.8): See your Stage 1 prize is the one primary.
@@ -334,7 +336,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         return card && localizeCard(card, locale);
       })
       .filter((c): c is HeritageCard => Boolean(c));
-  }, [freeEnd, snapshot, locale]);
+    // A lesson episode's reward cards come with the headers chunk (F-CURR-002 row CM-40).
+  }, [freeEnd, snapshot, locale, titles]);
   const memberships = useMembershipStore((s) => (profileId ? s.byLearner[profileId] : undefined));
   const { audience } = useAudience();
   const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);

@@ -1,7 +1,7 @@
 import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { episodesFor } from '../content/episodes';
-import { isCellComplete } from './journey';
+import { isEpisodeComplete } from './journey';
 import type { JourneyCellMarks } from './journey-grid';
 import { entriesForCell, type StoryIndexEntry } from './story/story-index';
 
@@ -17,14 +17,34 @@ import { entriesForCell, type StoryIndexEntry } from './story/story-index';
  */
 export type CellKind = 'lesson' | 'book' | 'stories-only' | 'placeholder';
 
+/** One playable volume of a cell (F-STORY-005 PR 5.8, F-CURR-002 row CM-40): drawn as a volume dot. */
+export interface CellVolume {
+  episodeId: string;
+  volume: number;
+  complete: boolean;
+}
+
 export interface CellModel {
   stage: StageKey;
   theme: ThemeKey;
   kind: CellKind;
-  /** The lesson or book to open; absent for stories-only and placeholder cells. */
+  /**
+   * The lesson or book to open: the cell's first volume that is not complete, or its first volume when every one is
+   * (the "first incomplete volume" rule of F-STORY-005 PR 5.8); absent for stories-only and placeholder cells.
+   */
   episodeId?: string;
-  /** Every grid episode of the cell is complete; never for a stories-only or placeholder cell. */
+  /**
+   * The cell's first volume is complete (with one volume, every grid episode of the cell); never for a stories-only or
+   * placeholder cell. The cell's look (the success tint, `learnerCellMarks`) and its label read this one value, so a cell
+   * that turned complete stays complete when a Volume 2 ships or `volumes` turns on (F-CURR-002 §7.7, row CM-40); a
+   * later volume's state shows in its volume dot and in the "Opens Volume 2" sentence.
+   */
   completed: boolean;
+  /**
+   * The cell's playable volumes in order, with each one's completion: the volume dots, drawn when there are two or more
+   * (only while `volumes` is on, since the caller passes the later volumes then). Empty for a cell with none.
+   */
+  volumes: readonly CellVolume[];
   /** Playable shelf stories whose home cell is this cell (the story index's review gate applied). */
   storyCount: number;
   /** For the screen-reader label only; never shown as a fraction. */
@@ -56,14 +76,16 @@ export function cellModel(i: CellModelInput): CellModel {
   const storiesFinished = stories.filter((e) => finishedIds.has(e.questId)).length;
   const base = { stage: i.stage, theme: i.theme, storyCount, storiesFinished };
   if (first) {
+    const volumes = playable.map((e) => ({ episodeId: e.id, volume: e.volume ?? 1, complete: isEpisodeComplete(e, i.quests) }));
     return {
       ...base,
       kind: first.format === 'story' ? 'book' : 'lesson',
-      episodeId: first.id,
-      completed: isCellComplete(playable, i.quests),
+      episodeId: (volumes.find((v) => !v.complete) ?? volumes[0])?.episodeId ?? first.id,
+      completed: volumes[0]?.complete ?? false,
+      volumes,
     };
   }
-  return { ...base, kind: storyCount > 0 ? 'stories-only' : 'placeholder', completed: false };
+  return { ...base, kind: storyCount > 0 ? 'stories-only' : 'placeholder', completed: false, volumes: [] };
 }
 
 /** The count mark shows the number up to this, then "5+" (F-STORY-005 §3.6). */

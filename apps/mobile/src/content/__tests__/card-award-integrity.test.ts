@@ -28,13 +28,14 @@ import { obtainableCards } from '../../logic/awards/obtainable';
 import { parseUnlockedBy } from '../../logic/awards/rules';
 import { buildStoryCards } from '../../logic/awards/story-cards';
 import { cardArtSource } from '../../logic/card-art';
-import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
+import { LESSON_QUESTS } from '../__generated__/lessons-index';
+import { lessonEpisodes } from '../lessons';
 import { cardCitationView } from '../../logic/library/card-citation';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
 import { albumCardSets, awardWorld } from '../award-world';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { albumLegendCards, heritageCardsAll, stage1Cards, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { heldStoryCards, storiesAll, storyById } from '../stories';
@@ -344,7 +345,8 @@ describe('refreshed taste cells keep their card awards (F-CURR-001 section 3.12 
   });
 
   it.each(cases)('the generated stage2-$theme cell carries the same awards: $card on q1, no card on q2 and q3', ({ theme, card, cards }) => {
-    expect(LESSON_EPISODES.find((e) => e.id === `episode:stage2-${theme}`)?.rewardCardIds).toEqual(cards);
+    // The episode's cards are a display line of the English headers chunk (F-CURR-002 row CM-40), laid in by content/lessons.ts.
+    expect(lessonEpisodes.find((e) => e.id === `episode:stage2-${theme}`)?.rewardCardIds).toEqual(cards);
     expect([1, 2, 3].map((k) => LESSON_QUESTS.find((q) => q.id === `quest:stage2-${theme}-q${k}`)?.rewardCardId)).toEqual([card, undefined, undefined]);
   });
 });
@@ -362,6 +364,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     expect(heritageCardsAll).toEqual([...handWritten, ...storyCards]);
     // Row CM-23 part 3: the five album sets follow the story sets.
     expect(awardWorld.sets).toEqual([...storySets, ...albumCardSets]);
+    // Row CM-40: the award world reads every shipped episode, a cell's later volume too, whatever `volumes` says.
+    expect(awardWorld.episodes).toBe(episodesWithVolumes);
   });
 
   it('T-AWARD-6: every bundled story card carries its story fact verbatim, the first source and a story keyword', () => {
