@@ -182,9 +182,11 @@ export function EpisodeDetailView({
   const unlockedCardIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
   // F-CURR-002 row CM-23: a cell's upper-cell card shows while `upperCards` is on, or once it is held.
   const upperCards = useCurrFlag('upperCards');
+  // An English episode is the same object before and after its headers chunk arrives (F-CURR-002 row CM-40), so the
+  // cards key on `titles` too: a chunk that lands after the grace fills them in without a remount.
   const rewardCardIds = useMemo(
     () => shownRewardCardIds(episode?.rewardCardIds ?? [], upperCards, UPPER_CARD_GATED_IDS, unlockedCardIds),
-    [episode, upperCards, unlockedCardIds],
+    [episode, upperCards, unlockedCardIds, titles],
   );
 
   const questProgress = useMemo(() => {
