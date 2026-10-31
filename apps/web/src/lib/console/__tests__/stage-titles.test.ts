@@ -52,17 +52,27 @@ describe('stage titles in the viewer locale (GX-9, AMENDMENTS-GROWNUP-UX section
       stage4: '대화',
       stage5: '이야기',
       stage6: '실생활',
-      stage7: '내 말로',
+      stage7: '자기표현',
     });
     expect(getMessages('es').console.stageTitles).toEqual({
       stage1: 'Hangul',
       stage2: 'Palabras',
       stage3: 'Oraciones',
       stage4: 'Diálogo',
-      stage5: 'Cuentos',
-      stage6: 'Vida real',
-      stage7: 'Con tus palabras',
+      stage5: 'Historias',
+      stage6: 'Uso real',
+      stage7: 'Expresión personal',
     });
+  });
+
+  // A parent's console and the child's app name a stage the same way: the learner app reads its es / ko titles from the
+  // content overlay (`localizeStage`, `content/i18n/{locale}/stages.json`), so the dictionary must equal it, key by key.
+  it.each(['es', 'ko'] as const)("%s titles equal the learner app's overlay titles", (locale) => {
+    const overlay = JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/stages.json`, import.meta.url), 'utf8')) as {
+      entries: Record<string, { title?: string }>;
+    };
+    const fromOverlay = Object.fromEntries(StageKeySchema.options.map((stage) => [stage, overlay.entries[`stage:${stage}`]?.title]));
+    expect(fromOverlay).toEqual(getMessages(locale).console.stageTitles);
   });
 
   it('Korean titles carry no Latin letters (no English title left inside a Korean line)', () => {

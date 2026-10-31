@@ -406,17 +406,17 @@ The parent's **Moving {date}** chip reuses `status.moving(date)`; the minutes li
 
 ### 10.3 Stage titles (GX-9; content, heritage-accuracy bar)
 
-| Stage | en (unchanged) | es (draft) | ko (draft) |
+| Stage | en (unchanged) | es | ko |
 |---|---|---|---|
 | 1 | Hangul | Hangul | 한글 |
 | 2 | Words | Palabras | 낱말 |
 | 3 | Sentences | Oraciones | 문장 |
 | 4 | Dialogue | Diálogo | 대화 |
-| 5 | Stories | Cuentos | 이야기 |
-| 6 | Real life | Vida real | 실생활 |
-| 7 | In your own words | Con tus palabras | 내 말로 |
+| 5 | Stories | Historias | 이야기 |
+| 6 | Real-use | Uso real | 실생활 |
+| 7 | Self-expression | Expresión personal | 자기표현 |
 
-The en values are the shipped `STAGE_TITLES`; the row reads them, the test asserts en equals `apps/mobile/src/content/stages.ts`. 낱말 is the F-I18N-001 glossary word. The MAR checks each title against the stage's can-do line (F-ROUTE-001 Appendix A) before the row's fix stage re-signs `console`.
+The en values are the shipped `STAGE_TITLES`; the row reads them, the test asserts en equals `apps/mobile/src/content/stages.ts`. The es and ko values are the learner app's shipped titles (`content/i18n/{es,ko}/stages.json`, read by `localizeStage`), so a parent's console and the child's app name a stage the same way; the test asserts they are equal (GX-9 review: the first drafts Cuentos, Vida real, Con tus palabras and 내 말로 differed from the app). 낱말 is the F-I18N-001 glossary word. The MAR checks each title against the stage's can-do line (F-ROUTE-001 Appendix A) before the row's fix stage re-signs `console`.
 
 ## 11. Accessibility, privacy, anti-shame, telemetry
 

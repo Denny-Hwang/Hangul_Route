@@ -1144,7 +1144,10 @@ export const consoleMsgs = {
     knownLine: (known: number) => `수준 확인으로 ${known}개 알고 있음`,
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
-  /** GX-9 (AMENDMENTS-GROWNUP-UX section 10.3): 낱말 is the F-I18N-001 glossary word; the titles stand after a "·" or a colon, never before a particle. */
+  /**
+   * GX-9 (AMENDMENTS-GROWNUP-UX section 10.3): 낱말 is the F-I18N-001 glossary word; the titles stand after a "·" or a
+   * colon, never before a particle. The values equal the learner app's titles (`content/i18n/ko/stages.json`).
+   */
   stageTitles: {
     stage1: '한글',
     stage2: '낱말',
@@ -1152,7 +1155,7 @@ export const consoleMsgs = {
     stage4: '대화',
     stage5: '이야기',
     stage6: '실생활',
-    stage7: '내 말로',
+    stage7: '자기표현',
   },
   /** The adult nav item of F-FEEDBACK-001 (FB-5b) lives in `shell.nav.notes` above. */
   notes: {
