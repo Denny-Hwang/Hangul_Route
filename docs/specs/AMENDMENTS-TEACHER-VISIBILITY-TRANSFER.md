@@ -8,6 +8,8 @@ Status: ready
 >
 > Basis: `origin/main` `ce583aa01`. Every `file:line` below is at that commit.
 
+> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]**: section 5's family class-scope card opens as a sheet from the parent home's Needs you strip, text unchanged and its list always open (row GX-5, GX-OD-3 default); TV-D8's incoming list is shown in the class page's review sheet as "Asking to join this class", Accept first (row GX-2); the outgoing class-move view carries `learnerId` while `requested` (row GX-W).
+
 **Owner request (2026-10-14, Korean, translated):** "Teachers and parents must be able to see all of a student's information and settings. Moving a student to another class should be at the teacher's discretion. On the teacher screen, show each student's full learning progress. Go ahead."
 
 **Standing rules that apply here:**

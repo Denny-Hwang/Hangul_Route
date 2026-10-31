@@ -5,6 +5,8 @@
 **Owner**: solo dev
 **Rollout**: Phase 2 (post-MVP). MVP placeholder only — Profile role enum reserves `teacher` and `co-parent`, no UI ships.
 
+> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (§10.1 re-link): a waiting re-link shows as **Needs your OK** next to the learner's name with inline Approve / Deny, a pop-up for a new request, and a 10 s poll while one waits (rows GX-1, GX-2); the re-link page's copy and controls are revised (row GX-12).
+
 Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §3, and `02-core-feature-spec §6` (Classroom).
 
 ---

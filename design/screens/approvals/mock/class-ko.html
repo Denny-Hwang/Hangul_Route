@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class page with status chips and the attention banner (GX-0 mock)</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="approvals.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-10-31, design pass GX-0: docs/specs/AMENDMENTS-GROWNUP-UX.md), not shipped code. Strings are the section 10 drafts; names and class names are sample data. -->
+<div class="frame"><header class="frame-top"><div class="frame-bar"><a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a><span class="persona-text">선생님</span><a class="way-back" href="#"><span>학습 앱</span></a></div><nav class="frame-nav"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page" aria-label="반, 승인 대기 2">반<span class="dot" aria-hidden="true"></span></a></li><li><a class="nav-item" href="#">레슨</a></li><li><a class="nav-item" href="#">강의 모드</a></li><li><a class="nav-item" href="#">결제</a></li></ul></nav></header><main class="frame-main" id="content">
+<a class="page-back text-link" href="#">반 목록으로</a>
+<div class="page-head"><h1>일요일 반 A</h1><span class="secondary">학생 4명</span></div>
+<div class="stack-lg">
+<div class="attention" role="status" aria-live="polite"><div><p class="attention-title">승인을 기다리는 요청 3건</p><p class="attention-parts">새 기기 1 · 반 이동 2</p></div><a class="btn btn-primary" href="#">지금 확인</a></div>
+<section class="panel stack"><h2 class="section-title">이번 주</h2><p class="line">이번 주 학생 4명 중 3명이 연습했어요</p><div class="row-wrap"><a class="btn btn-primary btn-small" href="#">계획: 루트 · 26주</a><a class="btn btn-small" href="#">더 보기</a></div></section>
+<h2 class="section-title">학생</h2>
+<article class="student needs"><div class="student-head"><span class="avatar a1" aria-hidden="true"></span><strong class="student-name" id="n0">재한</strong><button class="gx-chip gx-chip-action" type="button" aria-describedby="n0">승인 대기</button><span class="level">술술 읽어요</span></div><p class="reason">새 기기 · 8분 남음</p><div class="card-row"><button class="btn btn-primary" type="button">승인</button><button class="btn" type="button">거절</button></div><p class="line">연습: 목 · 이번 주 2분</p></article>
+<article class="student"><div class="student-head"><span class="avatar a2" aria-hidden="true"></span><strong class="student-name">유한</strong><span class="gx-chip gx-chip-in">참여 중</span><span class="level">조금 읽어요</span></div><p class="line">연습: 목 · 이번 주 2분</p><p class="line">1단계 퀘스트 0/15 · 카드 1장</p><p class="line">첫 퀘스트 진행 중</p><div class="card-row"><a class="btn" href="#">리포트 보기</a><a class="btn" href="#">쪽지 보내기</a></div></article>
+<article class="student"><div class="student-head"><span class="avatar a3" aria-hidden="true"></span><strong class="student-name">미나</strong><span class="gx-chip gx-chip-info">새로 참여</span><span class="level">조금 읽어요</span></div><p class="reason">아직 앱을 열지 않았어요</p></article>
+<article class="student"><div class="student-head"><span class="avatar a4" aria-hidden="true"></span><strong class="student-name">수지</strong><span class="gx-chip gx-chip-quiet">이동 대기 중</span><span class="level">술술 읽어요</span></div><p class="reason">기다리는 반: 저녁 반 D</p></article>
+</div></main></div>
+</body>
+</html>
