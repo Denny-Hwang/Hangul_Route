@@ -474,7 +474,8 @@ export function MoveRowAction({ name, online, onMove, family, blocked }: { name:
         {family ? t.start.move.family.cta : t.start.move.class.cta}
       </button>
       {reason ? (
-        <span id={helpId} data-testid="move-row-reason" style={{ flexBasis: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
+        // `order: 1`: the reason takes its own line after the row's buttons, so Move and Remove stay side by side.
+        <span id={helpId} data-testid="move-row-reason" style={{ order: 1, flexBasis: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
           {reason}
         </span>
       ) : null}
