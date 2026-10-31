@@ -7,14 +7,17 @@ import {
   catalogEpisode,
   cellEpisodeIds,
   chooserGroups,
+  classPosition,
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
+  learnerPosition,
   placedOutGrowth,
   presetBlockMinutes,
   questIdsOfBlocks,
   questIdsAtVersion,
   questsPlacedOutAtLevel,
+  resolvePreset,
   routeCatalogOf,
   routeDaysOf,
   selectionBlocks,
@@ -198,5 +201,37 @@ describe('the lecture deck and the chooser take a Volume 2 id (row CM-40)', () =
     expect(rowsOf(false).some((r) => r.key === V2_ID)).toBe(false);
     expect(groupOfKey(chooserGroups({ catalog, title: (id) => id, volumes: true }), NATURE_V2[0] as string)).toBe('stage2');
     expect(selectionBlocks([V2_ID], chooserGroups({ catalog, title: (id) => id, volumes: true }))).toEqual([{ kind: 'episode', id: V2_ID }]);
+  });
+});
+
+describe('a later volume is no lecture route quest (row CM-40)', () => {
+  const catalog = withVolumes();
+  const later = new Set([...NATURE_V2, ...catalog.quests.filter((q) => q.episodeId === 'episode:stage4-crafts-v2').map((q) => q.id)]);
+  const routeOrder = routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable).map((q) => q.id);
+
+  it('the fixture puts the Volume 2 quests among the playable grid quests, so the filter is what keeps them out', () => {
+    expect(routeOrder.filter((id) => later.has(id))).toHaveLength(later.size);
+  });
+
+  it('no learner position lands on a Volume 2 quest, whatever is done or named next', () => {
+    expect(learnerPosition(NATURE_V2[0] as string, [], catalog)).toEqual(learnerPosition(null, [], CATALOG));
+    const done: string[] = [];
+    for (const id of routeOrder) {
+      done.push(id);
+      const at = learnerPosition(null, done, catalog);
+      if (at !== null) expect(later.has(at.questId), `after ${id}`).toBe(false);
+    }
+  });
+
+  it('no class position and no preset lands on a Volume 2 quest', () => {
+    for (const stage of ['stage2', 'stage4'] as const) {
+      for (let reached = 0; reached < 40; reached += 1) {
+        const at = classPosition([{ journey: { v: 1, here: stage, stages: [{ stage, done: reached, known: 0 }] } }], catalog);
+        if (at !== null) expect(later.has(at.questId), `${stage} at ${reached}`).toBe(false);
+      }
+      const preset = resolvePreset('by-stage', 60, { catalog, stage });
+      expect(preset.blocks.some((b) => b.kind === 'quest')).toBe(true);
+      expect(preset.blocks.some((b) => b.kind === 'quest' && later.has(b.id))).toBe(false);
+    }
   });
 });
