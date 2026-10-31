@@ -84,12 +84,14 @@ afterEach(() => {
 });
 
 describe('the shipped My Story steps through MinigameScreen (F-CURR-002 §12.2, rows CM-38 and CM-41 S7)', () => {
-  it('reads the shipped chains: Stage 7 Nature, Play & Crafts and Food & Daily Life Volume 2, q3 Apply', () => {
+  it('reads the shipped chains: Stage 7 Nature, Play & Crafts, Food & Daily Life and Letters & Books Volume 2, q3 Apply', () => {
     expect(STORY_STEPS.map(({ questId, stepIndex }) => `${questId} ${stepIndex}`)).toContain('quest:stage7-nature-v2-q3 3');
     // Row CM-42 S7: the rules of the learner's own game.
     expect(STORY_STEPS.map(({ questId, stepIndex }) => `${questId} ${stepIndex}`)).toContain('quest:stage7-crafts-v2-q3 3');
     // Row CM-43 S7: a recipe of the learner's own.
     expect(STORY_STEPS.map(({ questId, stepIndex }) => `${questId} ${stepIndex}`)).toContain('quest:stage7-life-v2-q3 3');
+    // Row CM-44 S7: a postcard of the learner's own.
+    expect(STORY_STEPS.map(({ questId, stepIndex }) => `${questId} ${stepIndex}`)).toContain('quest:stage7-letters-v2-q3 3');
     for (const { scope } of STORY_STEPS) expect(scope.kind).toBe('my-story');
   });
 

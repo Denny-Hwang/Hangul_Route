@@ -9,9 +9,10 @@ import { discoverItemTexts } from '@hangul-route/content-schema';
 
 /**
  * What follows a noun in the Stage 3-4 patterns, longest first: the copula of "It is a N"
- * (책이에요, 학교예요) and the particles (하고 before the one-syllable ones).
+ * (책이에요, 학교예요) and the particles (하고 before the one-syllable ones; 에게, to a person, from the
+ * Stage 7 letter frame ___에게 of F-CURR-002 row CM-44 S7).
  */
-const PARTICLES = ['이에요', '예요', '하고', '에서', '을', '를', '이', '가', '에', '은', '는', '도', '의'] as const;
+const PARTICLES = ['이에요', '예요', '하고', '에서', '에게', '을', '를', '이', '가', '에', '은', '는', '도', '의'] as const;
 
 /** The space-separated words (어절) of a text, sentence marks dropped; only words with Hangul. */
 export function eojeolOf(text: string): string[] {
