@@ -1,6 +1,7 @@
 import {
   effectiveRoute,
   inRouteOrder,
+  isRouteStartQuest,
   modeOf,
   placementStageNumber,
   type PlacementGate,
@@ -127,7 +128,8 @@ export function startChoices(
 ): StartChoice[] {
   const placedOut = new Set(seed.placedOutQuestIds);
   return inRouteOrder(catalog)
-    .filter((quest) => quest.grid && quest.playable && isEntitled(quest.stage))
+    // A cell's later volume is no start to choose (F-CURR-002 row CM-41).
+    .filter((quest) => isRouteStartQuest(quest) && quest.playable && isEntitled(quest.stage))
     .map((quest) => ({
       questId: quest.id,
       state:

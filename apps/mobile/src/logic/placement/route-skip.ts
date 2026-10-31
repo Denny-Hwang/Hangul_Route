@@ -29,6 +29,8 @@ export function appRouteCatalog(quests: readonly Quest[], episodes: readonly Epi
           teaches: [],
           playable: playable.has(episode.id),
           grid: grid.has(episode.id),
+          // A cell's later volume is placed out like Volume 1 but is no start (F-CURR-002 row CM-41, `isRouteStartQuest`).
+          ...((episode.volume ?? 1) > 1 ? { laterVolume: true } : {}),
         },
       ];
     }),
